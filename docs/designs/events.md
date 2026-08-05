@@ -46,6 +46,13 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+Debt enforcement uses that code-queued boundary for its last claim. Once distraint
+exhausts seizable property, `js/economy.js` queues exactly one station-specific event:
+`manor_forfeit` for gentry, `bondage_sentence` for freeholders, or
+`debt_labor_sentence` for serfs. They share the existing settlement and flight handlers
+but keep foreclosure, enserfment, and extraordinary labor as distinct player-facing
+outcomes rather than a second social-status system.
+
 The `guild_monopoly_petition` event is one such code-queued contract. Its JSON-safe
 context freezes the selected profession, grantor/scope identity, tier-scaled terms, and
 display percentages before the event opens. The deed stamps its 360-day cooldown and

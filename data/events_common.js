@@ -895,7 +895,8 @@ FBDATA.events.push(
 /* ---------- distraint & debt bondage (docs/designs/descent.md) ----------
    A defaulted loan outliving its grace becomes a writ of distraint: pay,
    yield goods, or stall and face the bailiffs. A family with nothing left
-   to take is bound to the land for the debt — the old road into serfdom. */
+   to take faces a station-specific last claim: manor forfeiture for gentry,
+   bondage for freeholders, or extraordinary labor for an existing serf. */
 { id:'distraint_writ', title:'A Writ of Distraint',
   trigger:{ tierMax:2, minAge:16, notFlags:['debt_distraint'], custom:'finance_in_default', chance:0.3 }, weight:10, cooldown:2,
   text:'The creditor has been to the lord’s court, and the court has listened. Two men with a writ wait by your door, patient as stones: the debt is called, every penny of it, and the law of the manor is on their side of it.',
@@ -919,13 +920,31 @@ FBDATA.events.push(
       success:{ text:'Shouting, shoving, a slammed door — and they withdraw, vowing to return. You have won a season, no more.', effects:{ prestige:-3, popularOpinion:-3 } },
       failure:{ text:'The door gives. So does your lip. They take what the writ allows, and a little dignity besides.', effects:{ health:-1, custom:'distraint_seize' } } }
   ]},
+{ id:'manor_forfeit', title:'The Manor Forfeit', trigger:{ never:true },
+  contextValidator:'finance_in_default',
+  text:'The bailiffs have taken every movable claim they can find, yet the debt remains. The creditor now claims the manor itself. Its surrender will clear the account, but your house will no longer possess the estate that made it gentle.',
+  options:[
+    { label:'Surrender the manor.', desc:'The debt is extinguished. Your house falls to Freeholder.',
+      effects:{ custom:'bondage_submit', log:'Surrendered the manor for debt.' } },
+    { label:'Flee beyond the court’s reach.', desc:'Keep your station for now, but carry the debt and default into a new parish.',
+      effects:{ custom:'bondage_flee', log:'Fled a final debt judgment.' } }
+  ]},
 { id:'bondage_sentence', title:'Bound to the Land', trigger:{ never:true },
   contextValidator:'finance_in_default',
-  text:'The bailiffs’ cart is full and the debt still stands. There is only one thing left to give: yourselves. The lord’s steward reads the sentence without pleasure — the family is bound to the land for the debt, to work it out in the lord’s own fields. The free days are over.',
+  text:'The bailiffs’ cart is full and the debt still stands. With neither goods nor land left to answer it, the lord’s steward offers the final settlement: the account will be cleared, but your free household will be bound to the lord’s land.',
   options:[
-    { label:'Bend your neck to the land.', desc:'The debt dies here. So does something else.',
+    { label:'Bend your neck to the land.', desc:'The debt is extinguished. Your household becomes Serf.',
       effects:{ custom:'bondage_submit', log:'Bound to the land for debt.' } },
     { label:'Flee in the night.', desc:'A cart, a dark road, a new parish where no one knows your name — or your debts. Both follow you anyway.',
       effects:{ custom:'bondage_flee', log:'Fled a debt-bondage sentence.' } }
+  ]},
+{ id:'debt_labor_sentence', title:'Labor for the Debt', trigger:{ never:true },
+  contextValidator:'finance_in_default',
+  text:'The bailiffs find nothing more to take. You are already bound to the lord’s land, so the steward adds extraordinary labor in the demesne fields until the creditor’s claim is satisfied.',
+  options:[
+    { label:'Accept the extra labor.', desc:'The debt is cleared. Your station does not change.',
+      effects:{ custom:'bondage_submit', log:'Worked off a debt in the lord’s fields.' } },
+    { label:'Flee in the night.', desc:'Remain a serf, but carry the debt and default into a new parish.',
+      effects:{ custom:'bondage_flee', log:'Fled rather than labor for a debt.' } }
   ]}
 );

@@ -517,6 +517,36 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function financeDistraintPreview(s, ev) {
+    if (!ev || (ev.id !== 'distraint_writ' && ev.id !== 'distraint_seizure')) return '';
+    const holdings = FB.holdingList(s);
+    const holdingNames = [];
+    for (const id of holdings) {
+      const def = FBDATA.holdings && FBDATA.holdings[id];
+      holdingNames.push(def ? dt(s, 'holding', id, def, 'name') : id);
+    }
+    const plots = FB.landPlots(s).length;
+    let consequence;
+    if (s.player.tier === 2) {
+      consequence = FB.T('The manor is forfeited and the house falls to Freeholder.');
+    } else if (s.player.tier === 1) {
+      consequence = FB.T('The debt is extinguished and the household becomes Serf.');
+    } else {
+      consequence = FB.T('Extraordinary labor clears the debt; station does not change.');
+    }
+    return '<div class="progressnote warnote"><b>' +
+      esc(FB.T('What distraint means')) + '</b><p class="hint">' +
+      esc(FB.T('Distraint is a court order allowing bailiffs to seize household property for an unpaid debt.')) +
+      '</p>' +
+      kv('Outstanding default', esc(FB.T('{money:amount}', {
+        amount:FB.financeDefaultDue(s)
+      }))) +
+      kv('Household holdings at risk', esc(holdingNames.length
+        ? holdingNames.join(', ') : FB.T('None'))) +
+      kv('Land plots at risk', esc(String(plots))) +
+      kv('If property is exhausted', esc(consequence)) + '</div>';
+  }
+
   function showEvent(ev, ctx) {
     const s = FB.state;
     eventOpen = true;
@@ -547,6 +577,7 @@ window.FB = window.FB || {};
     if (ev.warStatus && FB.warStateText) {
       bodyHtml += '<p class="adesc">' + esc(FB.warStateText(s, s.player.charId)) + '</p>';
     }
+    bodyHtml += financeDistraintPreview(s, ev);
     const carded = {};
     if (ev.charCard) {
       const cc = FB.getRole(s, ev.charCard, false);
@@ -6813,6 +6844,11 @@ window.FB = window.FB || {};
         asset:financeAssetName(s, contract.collateral)
       });
     }
+    if (s.player.tier <= 2) {
+      return FB.T('One quarter of regular revenues is assigned until the debt is cleared. If the default remains after {days} days, the lord’s court may seize household holdings and land; a destitute household can lose station. Prestige falls, and lenders refuse the household for four seasons.', {
+        days:FBDATA.balance.distraintGraceDays || 90
+      });
+    }
     return FB.T('One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons.');
   }
 
@@ -6838,7 +6874,7 @@ window.FB = window.FB || {};
     }, { count:count, amount:amount }), { state:s, viewer:s.player.charId });
   }
 
-  function financeLoanCard(s, loan) {
+  function financeLoanCard(s, loan, showDefaultSettlement) {
     const due = financeAmount(FB.financeDueNow(s, loan));
     const nominal = loan.denomination !== 'real';
     const canRepay = loan.status !== 'default' && s.player.gold + 0.000001 >= due;
@@ -6868,6 +6904,26 @@ window.FB = window.FB || {};
       h += '<br><span class="op-bad">' + esc(FB.T('In arrears — the next missed deadline defaults.')) + '</span>';
     } else if (loan.status === 'default') {
       h += '<br><span class="op-bad">' + esc(FB.T('In default — assigned revenues are paying this down.')) + '</span>';
+      if (s.player.tier <= 2 && FB.financeDistraintDaysRemaining) {
+        const days = FB.financeDistraintDaysRemaining(s);
+        if (days !== null) {
+          h += '<br><span class="op-bad">' + esc(days > 0
+            ? FB.T('{days}-day grace remaining before a creditor may seek a writ, a court order to seize property.', {
+              days:days
+            })
+            : FB.T('The grace period has ended — a creditor may now seek a writ, a court order to seize property.')) +
+            '</span>';
+        }
+      }
+      if (showDefaultSettlement) {
+        const defaultDue = financeAmount(FB.financeDefaultDue(s));
+        h += '<button class="btn" data-finance-default-settle="1"' +
+          (FB.financeCanSettleDefault(s) ? '' : ' disabled') +
+          ' style="margin-top:8px">' +
+          esc(FB.T('Settle default balance ({money:amount})', {
+            amount:defaultDue
+          })) + '</button>';
+      }
     }
     if (loan.status !== 'default') {
       h += '<button class="btn" data-finance-repay="' + loan.id + '"' +
@@ -6894,7 +6950,12 @@ window.FB = window.FB || {};
        before background metrics or optional transactions. */
     if (loans.length) {
       h += panelh('Urgent obligations');
-      for (const loan of loans) h += financeLoanCard(s, loan);
+      let defaultSettlementShown = false;
+      for (const loan of loans) {
+        const showDefaultSettlement = loan.status === 'default' && !defaultSettlementShown;
+        h += financeLoanCard(s, loan, showDefaultSettlement);
+        if (showDefaultSettlement) defaultSettlementShown = true;
+      }
     }
 
     h += panelh('Coin and household means') +
@@ -7022,6 +7083,8 @@ window.FB = window.FB || {};
         UI.showFinanceRepay(parseInt(button.dataset.financeRepay, 10));
       });
     });
+    const settleDefault = document.querySelector('[data-finance-default-settle]');
+    if (settleDefault) settleDefault.addEventListener('click', UI.showFinanceDefaultRepay);
     document.querySelectorAll('[data-finance-invest]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showFinanceInvestment(parseInt(button.dataset.financeInvest, 10));
@@ -7122,6 +7185,29 @@ window.FB = window.FB || {};
     $('finance-pay').addEventListener('click', function () {
       FB.repayFinanceLoan(s, id, false);
       UI.showFinance();
+    });
+    $('finance-cancel').addEventListener('click', UI.showFinance);
+  };
+
+  UI.showFinanceDefaultRepay = function () {
+    const s = FB.state;
+    const due = financeAmount(FB.financeDefaultDue(s));
+    if (!(due > 0)) { UI.showFinance(); return; }
+    const canSettle = FB.financeCanSettleDefault(s);
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Pay {money:amount} now to clear every defaulted obligation. Assigned revenues stop, any pending writ is withdrawn, and no household property is seized.', {
+        amount:due
+      })) + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="finance-default-pay"' +
+      (canSettle ? '' : ' disabled') + '>⚖ ' +
+      esc(FB.T('Settle defaults for {money:amount}', { amount:due })) +
+      '</button></div><button class="btn" id="finance-cancel">' +
+      esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Settle the default'), h);
+    const pay = $('finance-default-pay');
+    if (pay) pay.addEventListener('click', function () {
+      if (FB.settleFinanceDefault(s)) UI.showFinance();
+      else UI.showFinanceDefaultRepay();
     });
     $('finance-cancel').addEventListener('click', UI.showFinance);
   };

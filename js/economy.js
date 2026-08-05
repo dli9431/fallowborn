@@ -4481,6 +4481,33 @@ window.FB = window.FB || {};
     for (const loan of defaultedLoans(state)) due += FB.financeDueNow(state, loan);
     return due;
   }
+  FB.financeDefaultDue = function (state) {
+    return totalDefaultDue(state);
+  };
+  FB.financeDistraintDaysRemaining = function (state) {
+    const grace = FBDATA.balance.distraintGraceDays || 90;
+    let remaining = null;
+    for (const loan of defaultedLoans(state)) {
+      if (loan.defaultTurn === undefined) continue;
+      const days = Math.max(0, loan.defaultTurn + grace - state.turn);
+      if (remaining === null || days < remaining) remaining = days;
+    }
+    return remaining;
+  };
+  FB.financeCanSettleDefault = function (state) {
+    const due = totalDefaultDue(state);
+    return due > 0.01 && state.player.gold + 0.000001 >= due;
+  };
+  FB.settleFinanceDefault = function (state) {
+    if (!FB.financeCanSettleDefault(state)) return false;
+    const p = state.player;
+    p.gold = Math.max(0, p.gold - totalDefaultDue(state));
+    for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
+    delete p.flags.debt_distraint;
+    FB.news(state, FB.msg('news.finance.distraint_settled',
+      '⚖ The debt is paid to the last penny; the writ is burned.', {}));
+    return true;
+  };
   function reduceLoanFace(state, loan, goldValue) {
     if (loan.denomination === 'real') loan.face = Math.max(0, loan.face - goldValue);
     else loan.face = Math.max(0, loan.face - goldValue * FB.ensureEconomy(state).price);
@@ -4534,15 +4561,10 @@ window.FB = window.FB || {};
     return false;
   };
   FB.fns.distraint_can_settle = function (state) {
-    return FB.fns.finance_in_default(state) && state.player.gold >= totalDefaultDue(state);
+    return FB.fns.finance_in_default(state) && FB.financeCanSettleDefault(state);
   };
   FB.fns.distraint_settle = function (state) {
-    const p = state.player;
-    p.gold = Math.max(0, p.gold - totalDefaultDue(state));
-    for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
-    delete p.flags.debt_distraint;
-    FB.news(state, FB.msg('news.finance.distraint_settled',
-      '⚖ The debt is paid to the last penny; the writ is burned.', {}));
+    return FB.settleFinanceDefault(state);
   };
   FB.fns.distraint_can_yield = function (state) {
     return FB.holdingList(state).length > 0 || FB.landPlots(state).length > 0;
@@ -4569,10 +4591,13 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.finance.distraint_cleared',
         '⚖ The distraint is satisfied; what is left is yours again.', {}));
     } else {
-      FB.queueEvent(state, 'bondage_sentence', {});
+      const eventId = p.tier === 2 ? 'manor_forfeit' :
+        (p.tier === 1 ? 'bondage_sentence' : 'debt_labor_sentence');
+      FB.queueEvent(state, eventId, {});
     }
   };
-  /* the debt is worked off in the lord's own fields */
+  /* One settlement handler, three station-specific scenes: manor forfeiture,
+     enserfment, or extraordinary labor at the serf floor. */
   FB.fns.bondage_submit = function (state) {
     const p = state.player;
     for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
@@ -4581,7 +4606,7 @@ window.FB = window.FB || {};
       p.manor = null;
       FB.setPlayerTier(state, 1);
       FB.news(state, FB.msg('news.economy.bondage_gentry',
-        '⛓ The manor passes to the creditor. The family is gentle now in name only.', {}));
+        '⛓ The manor passes to the creditor. The debt is extinguished, and the family falls to freeholder.', {}));
     } else if (p.tier === 1) {
       FB.setPlayerTier(state, 0);
       FB.news(state, FB.msg('news.economy.bondage',
@@ -4589,7 +4614,7 @@ window.FB = window.FB || {};
     } else {
       p.prestige = Math.max(0, p.prestige - 5);
       FB.news(state, FB.msg('news.economy.bondage_serf',
-        '⛓ The debt is worked off in the lord’s own fields, season upon season.', {}));
+        '⛓ Extraordinary labor in the lord’s fields clears the debt without changing the family’s station.', {}));
     }
   };
   /* flight preserves freedom and tier — but the debt and the default travel

@@ -4039,7 +4039,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "The debt dies here. So does something else."
+        "text": "The debt is extinguished. Your household becomes Serf."
       }
     },
     "event.bondage_sentence.options.0.effects.log.default": {
@@ -4087,7 +4087,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "The bailiffs’ cart is full and the debt still stands. There is only one thing left to give: yourselves. The lord’s steward reads the sentence without pleasure — the family is bound to the land for the debt, to work it out in the lord’s own fields. The free days are over."
+        "text": "The bailiffs’ cart is full and the debt still stands. With neither goods nor land left to answer it, the lord’s steward offers the final settlement: the account will be cleared, but your free household will be bound to the lord’s land."
       }
     },
     "event.bondage_sentence.title.default": {
@@ -7630,6 +7630,70 @@
       "location": "data/events_noble.js",
       "source": {
         "text": "Who Stands Nearest"
+      }
+    },
+    "event.debt_labor_sentence.options.0.desc.default": {
+      "context": "Event debt_labor_sentence, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The debt is cleared. Your station does not change."
+      }
+    },
+    "event.debt_labor_sentence.options.0.effects.log.default": {
+      "context": "Durable event log for debt_labor_sentence, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Worked off a debt in the lord’s fields."
+      }
+    },
+    "event.debt_labor_sentence.options.0.label.default": {
+      "context": "Event debt_labor_sentence, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Accept the extra labor."
+      }
+    },
+    "event.debt_labor_sentence.options.1.desc.default": {
+      "context": "Event debt_labor_sentence, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Remain a serf, but carry the debt and default into a new parish."
+      }
+    },
+    "event.debt_labor_sentence.options.1.effects.log.default": {
+      "context": "Durable event log for debt_labor_sentence, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Fled rather than labor for a debt."
+      }
+    },
+    "event.debt_labor_sentence.options.1.label.default": {
+      "context": "Event debt_labor_sentence, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Flee in the night."
+      }
+    },
+    "event.debt_labor_sentence.text.default": {
+      "context": "Event debt_labor_sentence, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The bailiffs find nothing more to take. You are already bound to the lord’s land, so the steward adds extraordinary labor in the demesne fields until the creditor’s claim is satisfied."
+      }
+    },
+    "event.debt_labor_sentence.title.default": {
+      "context": "Event debt_labor_sentence, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Labor for the Debt"
       }
     },
     "event.devastation_protection.options.0.desc.default": {
@@ -14086,6 +14150,70 @@
       "location": "data/events_common.js",
       "source": {
         "text": "Bad Blood"
+      }
+    },
+    "event.manor_forfeit.options.0.desc.default": {
+      "context": "Event manor_forfeit, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The debt is extinguished. Your house falls to Freeholder."
+      }
+    },
+    "event.manor_forfeit.options.0.effects.log.default": {
+      "context": "Durable event log for manor_forfeit, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Surrendered the manor for debt."
+      }
+    },
+    "event.manor_forfeit.options.0.label.default": {
+      "context": "Event manor_forfeit, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Surrender the manor."
+      }
+    },
+    "event.manor_forfeit.options.1.desc.default": {
+      "context": "Event manor_forfeit, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Keep your station for now, but carry the debt and default into a new parish."
+      }
+    },
+    "event.manor_forfeit.options.1.effects.log.default": {
+      "context": "Durable event log for manor_forfeit, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Fled a final debt judgment."
+      }
+    },
+    "event.manor_forfeit.options.1.label.default": {
+      "context": "Event manor_forfeit, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Flee beyond the court’s reach."
+      }
+    },
+    "event.manor_forfeit.text.default": {
+      "context": "Event manor_forfeit, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The bailiffs have taken every movable claim they can find, yet the debt remains. The creditor now claims the manor itself. Its surrender will clear the account, but your house will no longer possess the estate that made it gentle."
+      }
+    },
+    "event.manor_forfeit.title.default": {
+      "context": "Event manor_forfeit, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Manor Forfeit"
       }
     },
     "event.manumission.options.0.desc.default": {
@@ -31792,7 +31920,7 @@
       "glossary": [],
       "location": "js/economy.js",
       "source": {
-        "text": "⛓ The manor passes to the creditor. The family is gentle now in name only."
+        "text": "⛓ The manor passes to the creditor. The debt is extinguished, and the family falls to freeholder."
       }
     },
     "news.economy.bondage_serf": {
@@ -31800,7 +31928,7 @@
       "glossary": [],
       "location": "js/economy.js",
       "source": {
-        "text": "⛓ The debt is worked off in the lord’s own fields, season upon season."
+        "text": "⛓ Extraordinary labor in the lord’s fields clears the debt without changing the family’s station."
       }
     },
     "news.education.academy_death": {
@@ -42292,6 +42420,16 @@
         "text": "Unknown bookmark:"
       }
     },
+    "src.01d9b63c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⛓ Extraordinary labor in the lord’s fields clears the debt without changing the family’s station."
+      }
+    },
     "src.01e1ac83": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52558,6 +52696,16 @@
         "text": "has no targets."
       }
     },
+    "src.1c8b874e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The debt is extinguished. Your house falls to Freeholder."
+      }
+    },
     "src.1c9f04bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53278,6 +53426,16 @@
       ],
       "source": {
         "text": "Rayy"
+      }
+    },
+    "src.1ec8d55c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pay {money:amount} now to clear every defaulted obligation. Assigned revenues stop, any pending writ is withdrawn, and no household property is seized."
       }
     },
     "src.1eca0627": {
@@ -54476,6 +54634,16 @@
         "text": "The wedding county can no longer receive the household."
       }
     },
+    "src.21c06dbb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Surrender the manor."
+      }
+    },
     "src.21cbaab2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54684,6 +54852,16 @@
       ],
       "source": {
         "text": "live troops only"
+      }
+    },
+    "src.2242802f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The debt is extinguished and the household becomes Serf."
       }
     },
     "src.22464686": {
@@ -57497,6 +57675,16 @@
         "text": "📜 The household’s {profession} monopoly ends with its direct bond to {grantor}."
       }
     },
+    "src.29eac0b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Fled rather than labor for a debt."
+      }
+    },
     "src.29eac42d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59229,6 +59417,16 @@
         "text": "Out of the Earth"
       }
     },
+    "src.2ea8e0a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Surrendered the manor for debt."
+      }
+    },
     "src.2eb1629e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59237,6 +59435,16 @@
       ],
       "source": {
         "text": "Klagenfurt"
+      }
+    },
+    "src.2eb46455": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The bailiffs have taken every movable claim they can find, yet the debt remains. The creditor now claims the manor itself. Its surrender will clear the account, but your house will no longer possess the estate that made it gentle."
       }
     },
     "src.2ec5ddf7": {
@@ -63054,6 +63262,16 @@
         "text": "A house name can be at most twenty letters long."
       }
     },
+    "src.39a7ae3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "What distraint means"
+      }
+    },
     "src.39a902e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65313,6 +65531,16 @@
         "text": "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]"
       }
     },
+    "src.3fecdec8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Land plots at risk"
+      }
+    },
     "src.3ff50c63": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65864,6 +66092,16 @@
       ],
       "source": {
         "text": "Broken in body."
+      }
+    },
+    "src.41665780": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The bailiffs’ cart is full and the debt still stands. With neither goods nor land left to answer it, the lord’s steward offers the final settlement: the account will be cleared, but your free household will be bound to the lord’s land."
       }
     },
     "src.417ce5ff": {
@@ -71448,6 +71686,16 @@
         "text": "Pack Saddles"
       }
     },
+    "src.507d6938": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Settle the default"
+      }
+    },
     "src.507d72c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72705,6 +72953,16 @@
       ],
       "source": {
         "text": "Departure uses the one personal-attention assignment."
+      }
+    },
+    "src.53850290": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The debt is cleared. Your station does not change."
       }
     },
     "src.53875036": {
@@ -74329,6 +74587,16 @@
       ],
       "source": {
         "text": "Ballot rule"
+      }
+    },
+    "src.57db5306": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Manor Forfeit"
       }
     },
     "src.57deb4ea": {
@@ -76910,6 +77178,16 @@
       ],
       "source": {
         "text": "Charity asked for is charity halved."
+      }
+    },
+    "src.5f371eba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Extraordinary labor clears the debt; station does not change."
       }
     },
     "src.5f396765": {
@@ -88515,16 +88793,6 @@
         "text": "Merchant’s Ledger"
       }
     },
-    "src.7e424efa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The debt dies here. So does something else."
-      }
-    },
     "src.7e4b1cf1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89526,6 +89794,16 @@
       ],
       "source": {
         "text": "{amount} prestige a season"
+      }
+    },
+    "src.80a00a13": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Settle defaults for {money:amount}"
       }
     },
     "src.80a62b55": {
@@ -92354,6 +92632,16 @@
         "text": "Vote the subsidy, and give generously. ({money:20})"
       }
     },
+    "src.87bd7c5b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⛓ The manor passes to the creditor. The debt is extinguished, and the family falls to freeholder."
+      }
+    },
     "src.87c16873": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94930,6 +95218,16 @@
       ],
       "source": {
         "text": "Stand for election"
+      }
+    },
+    "src.8e573c84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The debt is extinguished. Your household becomes Serf."
       }
     },
     "src.8e58b20e": {
@@ -99379,6 +99677,16 @@
         "text": "📯 The courier reaches your home and restores the undelivered {money:amount} to the household purse."
       }
     },
+    "src.9af69f1f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Distraint is a court order allowing bailiffs to seize household property for an unpaid debt."
+      }
+    },
     "src.9af9b149": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100600,6 +100908,16 @@
       ],
       "source": {
         "text": "Crushed a peasant revolt."
+      }
+    },
+    "src.9e280cc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Keep your station for now, but carry the debt and default into a new parish."
       }
     },
     "src.9e2e6154": {
@@ -106422,6 +106740,16 @@
         "text": "First to charge is first remembered."
       }
     },
+    "src.adf0a7d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Accept the extra labor."
+      }
+    },
     "src.adf0ae52": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107715,6 +108043,16 @@
       ],
       "source": {
         "text": "No household member is currently old enough to work or train."
+      }
+    },
+    "src.b0f0d9fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Remain a serf, but carry the debt and default into a new parish."
       }
     },
     "src.b0f290bc": {
@@ -110048,6 +110386,16 @@
       ],
       "source": {
         "text": "Dangerous Questions"
+      }
+    },
+    "src.b6ff3514": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The bailiffs find nothing more to take. You are already bound to the lord’s land, so the steward adds extraordinary labor in the demesne fields until the creditor’s claim is satisfied."
       }
     },
     "src.b7034f41": {
@@ -115813,6 +116161,16 @@
         "text": "This ruler is not your direct vassal."
       }
     },
+    "src.c70dd7ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Flee beyond the court’s reach."
+      }
+    },
     "src.c70ff75a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116614,6 +116972,16 @@
       ],
       "source": {
         "text": "A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain."
+      }
+    },
+    "src.c9004d3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Labor for the Debt"
       }
     },
     "src.c905610a": {
@@ -118228,6 +118596,16 @@
         "text": "Guard the baggage (a basket)."
       }
     },
+    "src.cd4b5c3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "If property is exhausted"
+      }
+    },
     "src.cd4ddbc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118256,6 +118634,16 @@
       ],
       "source": {
         "text": "has invalid realm"
+      }
+    },
+    "src.cd680014": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Settle default balance ({money:amount})"
       }
     },
     "src.cd6a6cec": {
@@ -121036,16 +121424,6 @@
         "text": "Silver marches for you, and is noted."
       }
     },
-    "src.d5a8d05b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "⛓ The manor passes to the creditor. The family is gentle now in name only."
-      }
-    },
     "src.d5aba1f9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121144,6 +121522,16 @@
       ],
       "source": {
         "text": "Offer it as a gift."
+      }
+    },
+    "src.d6150e06": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Worked off a debt in the lord’s fields."
       }
     },
     "src.d6155a7a": {
@@ -126856,6 +127244,16 @@
         "text": "A landed affinity gathered around an influential house."
       }
     },
+    "src.e4b23e64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Fled a final debt judgment."
+      }
+    },
     "src.e4bdd6be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126874,6 +127272,16 @@
       ],
       "source": {
         "text": "A wealthy house, a careless steward, and a chest that sings when tapped."
+      }
+    },
+    "src.e4cafa6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{days}-day grace remaining before a creditor may seek a writ, a court order to seize property."
       }
     },
     "src.e4d39fd6": {
@@ -127074,6 +127482,16 @@
       ],
       "source": {
         "text": "+10% taxes while he serves"
+      }
+    },
+    "src.e5682078": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The manor is forfeited and the house falls to Freeholder."
       }
     },
     "src.e56984d6": {
@@ -129270,6 +129688,16 @@
         "text": "birth culture religion faith dynasty house father mother collateral protagonist marriage"
       }
     },
+    "src.eb6d1d88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The grace period has ended — a creditor may now seek a writ, a court order to seize property."
+      }
+    },
     "src.eb720a72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130262,16 +130690,6 @@
         "text": "That is already the name of your house."
       }
     },
-    "src.ee6850a9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "⛓ The debt is worked off in the lord’s own fields, season upon season."
-      }
-    },
     "src.ee6af7d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130772,6 +131190,16 @@
         "text": "occupied by the attacking camp"
       }
     },
+    "src.ef860a72": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Household holdings at risk"
+      }
+    },
     "src.ef897d32": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131142,6 +131570,16 @@
       ],
       "source": {
         "text": "Tabaristan"
+      }
+    },
+    "src.f05a9c55": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "One quarter of regular revenues is assigned until the debt is cleared. If the default remains after {days} days, the lord’s court may seize household holdings and land; a destitute household can lose station. Prestige falls, and lenders refuse the household for four seasons."
       }
     },
     "src.f0657ab8": {
@@ -134053,6 +134491,16 @@
         "text": "Custody of the sacred places"
       }
     },
+    "src.f89c054e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Outstanding default"
+      }
+    },
     "src.f89f7cf1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134281,16 +134729,6 @@
       ],
       "source": {
         "text": "Sweat now, and winter will tell you what it was worth."
-      }
-    },
-    "src.f9180154": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "The bailiffs’ cart is full and the debt still stands. There is only one thing left to give: yourselves. The lord’s steward reads the sentence without pleasure — the family is bound to the land for the debt, to work it out in the lord’s own fields. The free days are over."
       }
     },
     "src.f92d6ed9": {
@@ -146777,6 +147215,14 @@
         "text": "Distant rights"
       }
     },
+    "ui:Distraint is a court order allowing bailiffs to seize household property for an unpaid debt.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Distraint is a court order allowing bailiffs to seize household property for an unpaid debt."
+      }
+    },
     "ui:Does not transfer to another campaign": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -147603,6 +148049,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Exposed · prerequisites needed"
+      }
+    },
+    "ui:Extraordinary labor clears the debt; station does not change.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Extraordinary labor clears the debt; station does not change."
       }
     },
     "ui:Fabricated county claim": {
@@ -152503,6 +152957,16 @@
         "text": "One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there."
       }
     },
+    "ui:One quarter of regular revenues is assigned until the debt is cleared. If the default remains after {days} days, the lord’s court may seize household holdings and land; a destitute household can lose station. Prestige falls, and lenders refuse the household for four seasons.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "One quarter of regular revenues is assigned until the debt is cleared. If the default remains after {days} days, the lord’s court may seize household holdings and land; a destitute household can lose station. Prestige falls, and lenders refuse the household for four seasons."
+      }
+    },
     "ui:One quarter of regular revenues is assigned until the debt is cleared; prestige and political standing fall, and lenders refuse the household for four seasons.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153292,6 +153756,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Pay {money:amount} now and clear this obligation. There is no early-payment penalty."
+      }
+    },
+    "ui:Pay {money:amount} now to clear every defaulted obligation. Assigned revenues stop, any pending writ is withdrawn, and no household property is seized.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pay {money:amount} now to clear every defaulted obligation. Assigned revenues stop, any pending writ is withdrawn, and no household property is seized."
       }
     },
     "ui:Pay {money:cost} and establish {name}": {
@@ -156570,6 +157044,26 @@
         "text": "Set political and research priorities."
       }
     },
+    "ui:Settle default balance ({money:amount})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Settle default balance ({money:amount})"
+      }
+    },
+    "ui:Settle defaults for {money:amount}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Settle defaults for {money:amount}"
+      }
+    },
     "ui:Settle permanently in {destination}?": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -156586,6 +157080,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Settle the Wasteland"
+      }
+    },
+    "ui:Settle the default": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Settle the default"
       }
     },
     "ui:Settlement": {
@@ -158123,6 +158625,14 @@
         "text": "The current protections do not permit a complete cleanup proposal."
       }
     },
+    "ui:The debt is extinguished and the household becomes Serf.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The debt is extinguished and the household becomes Serf."
+      }
+    },
     "ui:The designated heir can transmit the crown to your shared branch.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158255,6 +158765,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The gold and yearly motion remain spent; unused redress evidence is preserved."
+      }
+    },
+    "ui:The grace period has ended — a creditor may now seek a writ, a court order to seize property.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The grace period has ended — a creditor may now seek a writ, a court order to seize property."
       }
     },
     "ui:The great holy war must be resolved before retiring.": {
@@ -158408,6 +158926,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "The liege’s aid is already at its customary minimum."
+      }
+    },
+    "ui:The manor is forfeited and the house falls to Freeholder.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The manor is forfeited and the house falls to Freeholder."
       }
     },
     "ui:The marriage doctrine of this era does not recognize this match.": {
@@ -160326,6 +160852,14 @@
       "location": "js/items.js",
       "source": {
         "text": "Well-made {item}"
+      }
+    },
+    "ui:What distraint means": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "What distraint means"
       }
     },
     "ui:What do these skills affect?": {
@@ -164322,6 +164856,16 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{days} travel days remain"
+      }
+    },
+    "ui:{days}-day grace remaining before a creditor may seek a writ, a court order to seize property.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{days}-day grace remaining before a creditor may seek a writ, a court order to seize property."
       }
     },
     "ui:{description} · {days}-day cooldown": {

@@ -483,7 +483,7 @@ test('a beaten lord is taken, ransomed, or freed with the peace', async function
   });
 });
 
-test('distraint strips goods, then binds the destitute to the land', async function ({ page }, testInfo) {
+test('distraint strips goods, then applies the station-specific last claim', async function ({ page }, testInfo) {
   await startGame(page, testInfo);
   var result = await page.evaluate(function () {
     var s = FB.state;
@@ -505,6 +505,7 @@ test('distraint strips goods, then binds the destitute to the land', async funct
     // fresh default inside the grace window: no writ yet
     defaultedLoan(9001, 30, s.turn - 10);
     out.graceSafe = !FB.fns.finance_in_default(s);
+    out.graceDays = FB.financeDistraintDaysRemaining(s);
     // an old default past the grace window: the writ is due
     defaultedLoan(9002, 50, s.turn - 100);
     out.writDue = FB.fns.finance_in_default(s);
@@ -524,6 +525,7 @@ test('distraint strips goods, then binds the destitute to the land', async funct
     defaultedLoan(9003, 60, s.turn - 100);
     FB.fns.distraint_seize(s);
     out.bondageQueued = DSC.queueIds(s).indexOf('bondage_sentence') >= 0;
+    out.freeholderEvent = FB.eventById('bondage_sentence').title;
     FB.fns.bondage_submit(s);
     out.serfTier = p.tier;
     out.debtCleared = FB.financeActiveLoans(s).filter(function (loan) {
@@ -531,17 +533,25 @@ test('distraint strips goods, then binds the destitute to the land', async funct
     }).length === 0;
 
     // gentry lose the manor first, their freedom later
+    s.eventQueue = [];
     p.tier = 2;
     p.manor = { provinceId:p.provinceId, settlement:0 };
     defaultedLoan(9004, 40, s.turn - 100);
+    FB.fns.distraint_seize(s);
+    out.gentryQueued = DSC.queueIds(s).indexOf('manor_forfeit') >= 0;
+    out.gentryEvent = FB.eventById('manor_forfeit').title;
     FB.fns.bondage_submit(s);
     out.gentryFallenTo = p.tier;
     out.manorGone = p.manor === null;
 
     // a serf cannot fall further: the debt is worked off in the lord's fields
+    s.eventQueue = [];
     p.tier = 0;
     var prestigeBefore = p.prestige;
     defaultedLoan(9005, 20, s.turn - 100);
+    FB.fns.distraint_seize(s);
+    out.serfLaborQueued = DSC.queueIds(s).indexOf('debt_labor_sentence') >= 0;
+    out.serfEvent = FB.eventById('debt_labor_sentence').title;
     FB.fns.bondage_submit(s);
     out.serfFloor = p.tier;
     out.serfPrestigeCost = prestigeBefore - p.prestige;
@@ -550,20 +560,124 @@ test('distraint strips goods, then binds the destitute to the land', async funct
 
   expect(result).toEqual({
     graceSafe: true,
+    graceDays: 80,
     writDue: true,
     holdingsLeft: 0,
     plotsLeft: 0,
     allSettled: true,
     noBondageYet: true,
     bondageQueued: true,
+    freeholderEvent: 'Bound to the Land',
     serfTier: 0,
     debtCleared: true,
+    gentryQueued: true,
+    gentryEvent: 'The Manor Forfeit',
     gentryFallenTo: 1,
     manorGone: true,
+    serfLaborQueued: true,
+    serfEvent: 'Labor for the Debt',
     serfFloor: 0,
     serfPrestigeCost: 5
   });
 });
+
+test('finance discloses writ risk and permits a default to be settled',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var economy = FB.ensureEconomy(s);
+      FB.game.setPaused(true);
+      p.tier = 1;
+      p.flags = {};
+      p.gold = 100;
+      economy.price = 1;
+      economy.loans = [{
+        id:9101, kind:'merchant', defaultKind:'revenue', status:'default',
+        denomination:'real', face:30, dueTurn:s.turn,
+        dueSeason:s.date.season, dueYear:s.date.year,
+        defaultTurn:s.turn - 10, arrears:1
+      }];
+      FB.ui.showFinance();
+    });
+
+    await expect(page.locator('#gm-body')).toContainText(
+      '80-day grace remaining before a creditor may seek a writ');
+    const settle = page.getByRole('button', {
+      name:/Settle default balance/
+    });
+    await expect(settle).toBeEnabled();
+    await settle.click();
+    await expect(page.getByRole('heading', {
+      name:'Settle the default', exact:true
+    })).toBeVisible();
+    await page.getByRole('button', {
+      name:/Settle defaults for/
+    }).click();
+
+    const result = await page.evaluate(function () {
+      return {
+        gold:FB.state.player.gold,
+        defaults:FB.financeActiveLoans(FB.state).filter(function (loan) {
+          return loan.status === 'default';
+        }).length
+      };
+    });
+    expect(result).toEqual({ gold:70, defaults:0 });
+
+    await page.evaluate(function () {
+      var offers = FB.financeLoanOffers;
+      FB.financeLoanOffers = function () {
+        return [{ kind:'merchant', principal:20, collateral:null }];
+      };
+      FB.ui.showFinanceLoanConfirm('merchant', null);
+      FB.financeLoanOffers = offers;
+    });
+    await expect(page.locator('#gm-body')).toContainText(
+      'If the default remains after 90 days');
+    await expect(page.locator('#gm-body')).toContainText(
+      'the lord’s court may seize household holdings and land');
+  });
+
+test('the writ explains distraint and the exact property and station at risk',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var economy = FB.ensureEconomy(s);
+      FB.game.setPaused(true);
+      p.tier = 1;
+      p.flags = {};
+      p.gold = 0;
+      p.holdings = ['hearth_garden'];
+      p.landPlots = [{ provinceId:p.provinceId, settlement:0 }];
+      economy.price = 1;
+      economy.loans = [{
+        id:9102, kind:'merchant', defaultKind:'revenue', status:'default',
+        denomination:'real', face:40, dueTurn:s.turn,
+        dueSeason:s.date.season, dueYear:s.date.year,
+        defaultTurn:s.turn - 100, arrears:1
+      }];
+      FB.ui.runEvents([{ id:'distraint_writ', ctx:{} }]);
+    });
+
+    await expect(page.locator('#ev-title')).toHaveText('A Writ of Distraint');
+    const text = page.locator('#ev-text');
+    await expect(text).toContainText('What distraint means');
+    await expect(text).toContainText(
+      'Distraint is a court order allowing bailiffs to seize household property');
+    await expect(text.locator('.kv').filter({
+      hasText:'Outstanding default'
+    }).locator('b')).toContainText('40');
+    await expect(text).toContainText('Hearth Garden');
+    await expect(text.locator('.kv').filter({
+      hasText:'Land plots at risk'
+    }).locator('b')).toHaveText('1');
+    await expect(text).toContainText(
+      'The debt is extinguished and the household becomes Serf.');
+  });
 
 test('raiders burn the home parish and the lord sells his wall', async function ({ page }, testInfo) {
   await startGame(page, testInfo);

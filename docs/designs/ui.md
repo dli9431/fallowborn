@@ -402,7 +402,12 @@ panel's **Finance…** shortcut follows the same rule. Active
 obligations are ordered by deadline before metrics so the urgent contract remains first on
 a narrow phone. The sheet shows purse, price index, last movement and purse adjustment,
 reliable net income, credit capacity and defaults, exact loan faces/current values/dates,
-pledges, and investment maturities. Passive partnerships are labeled as backing another
+pledges, and investment maturities. A revenue default at commoner station keeps a
+direct full-balance settlement action and shows the exact days until its writ becomes
+eligible; the signing confirmation discloses that unresolved default may expose
+holdings, land, and station. The writ event defines distraint as court-authorized
+property seizure and lists the live debt, named holdings, plot count, and
+station-specific final consequence. Passive partnerships are labeled as backing another
 merchant. A separate self-founded venture section shows its destination, strategy, stake,
 separately paid overhead, and exact resolution date, and opens the shared stake/market
 setup. Borrowing, investment, debasement, and recoinage use a

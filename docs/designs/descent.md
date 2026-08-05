@@ -85,20 +85,28 @@ not ransomed — the mechanic stays tier ≥3, as it was in the chronicles.
 ## Distraint & debt bondage (commoners, tiers 0–2)
 
 The old road into serfdom runs through debt. A loan in `default` status
-older than `distraintGraceDays` (90) opens the writ (`finance_in_default`):
+shows its remaining grace in Coin & Credit and may still be settled there in
+full. Once it is older than `distraintGraceDays` (90), the creditor may open
+the writ (`finance_in_default`):
 `distraint_writ` offers to **pay** (`distraint_settle`), to **yield goods**
 (`distraint_yield_one` — one asset quietly against the balance), or to
 **stall**, which serves the writ (`distraint_seizure`). The bailiffs
 (`distraint_seize`) take holdings at their cost value, then land plots at
 `FB.landPlotCost`, cheapest first, until the book-debt is covered — items
 are never distrained, matching `loseAllLand`'s rule that personal treasures
-stay sacred. If nothing remains to take and the debt still stands, the
-bondage court sits (`bondage_sentence`): **submit** (`bondage_submit`)
-clears the debt and binds the family — a freeholder becomes a serf, a gentle
-family loses its manor (`p.manor` nulled) and falls to freeholder, a serf
-works the debt out in the lord's fields (prestige cost only, the floor of
-the ladder) — or **flee** (`bondage_flee`), which keeps tier and freedom but
-carries the debt and the default to a new parish. `gentryGeneration`
+stay sacred. The writ scene defines distraint in plain language and lists the
+live debt, holdings, plots, and station consequence before the player chooses.
+
+If nothing remains to take and the debt still stands, one station-specific
+last claim follows. **The Manor Forfeit** (`manor_forfeit`) clears a gentry
+house's debt, removes its manor (`p.manor` nulled), and casts it down to
+freeholder. **Bound to the Land** (`bondage_sentence`) clears a freeholder's
+debt and makes the family serfs. **Labor for the Debt**
+(`debt_labor_sentence`) clears a serf's debt through extraordinary demesne
+labor and a prestige cost without inventing another status beneath serf.
+Each scene also permits **flight** (`bondage_flee`), which preserves the
+current tier but carries the debt and default to a new parish. Submission in
+all three scenes resolves through `bondage_submit`. `gentryGeneration`
 survives the fall: the house stays *established*, so the climb back is
 shorter than the first.
 
