@@ -22,9 +22,35 @@
       (function () {
         "use strict";
 
-        var isPlay =
-          window.location.protocol === "https:" &&
-          window.location.hostname === "play.fallowborn.com";
+        function isOfficialPlay(location) {
+          return !!location &&
+            location.protocol === "https:" &&
+            location.hostname === "play.fallowborn.com";
+        }
+
+        var isPlay = isOfficialPlay(window.location);
+        var pending = [];
+
+        window.FB = window.FB || {};
+        window.FB.telemetry = {
+          enabled: function () {
+            return isOfficialPlay(window.location);
+          },
+          isOfficialPlay: isOfficialPlay,
+          track: function (name, data) {
+            if (!isOfficialPlay(window.location) || !name) return false;
+            if (window.umami && typeof window.umami.track === "function") {
+              try {
+                window.umami.track(name, data || {});
+                return true;
+              } catch (error) {
+                return false;
+              }
+            }
+            if (pending.length < 32) pending.push([name, data || {}]);
+            return false;
+          }
+        };
 
         if (!isPlay) return;
 
@@ -35,6 +61,18 @@
         tracker.setAttribute("data-domains", "play.fallowborn.com");
         tracker.setAttribute("data-do-not-track", "true");
         tracker.setAttribute("data-auto-track", "true");
+        tracker.addEventListener("load", function () {
+          while (pending.length && window.umami &&
+              typeof window.umami.track === "function") {
+            var event = pending.shift();
+            try {
+              window.umami.track(event[0], event[1]);
+            } catch (error) {
+              pending.unshift(event);
+              break;
+            }
+          }
+        });
 
         document.head.appendChild(tracker);
       })();

@@ -31,6 +31,20 @@ both the served `index.html` asset URLs and the worker cache name. Versioned `cs
 assets remain **immutable**; `index.html`, `sw.js`, and the manifest are always revalidated.
 Cloudflare must preserve the worker's `no-cache` policy.
 
+### First-party play telemetry
+
+The committed `index.html` loads the self-hosted Umami tracker only when the document itself is
+served from exactly `https://play.fallowborn.com`. The event dispatcher repeats that exact
+protocol-and-host check before accepting an event. It therefore sends no pageviews or gameplay
+events from itch's iframe origin, `file://`, localhost, staging hosts, forks, or mirrors.
+
+The hosted game records a small anonymous vocabulary: starts and continues, Observe starts,
+active-play milestones, background/exit checkpoints, succession or retirement, individual life
+endings, and a saga ending without an heir. Event properties stay low-cardinality and describe
+the game build and campaign shape, such as version, locale, bookmark, tier, generation, scenario,
+and elapsed active time. Player and dynasty names, world seeds, province choices, rendered death
+text, and save contents must never be sent. Do Not Track remains respected by the Umami loader.
+
 `js/util.js` adds the manifest metadata and `js/main.js` registers `/sw.js` only when the page
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the
 Docker build from every `css/js/data/mods` reference in the unstamped `index.html` plus every

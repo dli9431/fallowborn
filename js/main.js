@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.110.3';
+  FB.VERSION = '1.110.4';
   FB.CHANGELOG = [
+    { v: '1.110.4', date: '2026-08-05', changes: [
+      'First-party play analytics now distinguish starts, returns, engagement, succession, and completed sagas without sending names, seeds, or save contents.'
+    ] },
     { v: '1.110.3', date: '2026-08-05', changes: [
       'Technology and realm automation controls now appear only for roles that can use them, while locked household choices still name their national prerequisite.'
     ] },
@@ -662,6 +665,121 @@ window.FB = window.FB || {};
       'First release.'
     ] }
   ];
+
+  /* Anonymous gameplay events are a progressive enhancement on the official
+     play origin only. index.html owns the exact-origin gate and Umami queue;
+     this layer owns the small, low-cardinality gameplay vocabulary. */
+  const TELEMETRY_MILESTONES = [
+    { seconds:60, name:'play-1m' },
+    { seconds:300, name:'play-5m' },
+    { seconds:900, name:'play-15m' },
+    { seconds:1800, name:'play-30m' }
+  ];
+  let telemetrySession = null;
+  let telemetryTimer = null;
+
+  function telemetryEnabled() {
+    return !!(FB.telemetry &&
+      typeof FB.telemetry.enabled === 'function' &&
+      FB.telemetry.enabled());
+  }
+
+  function telemetryData(extra) {
+    const s = FB.state;
+    const data = {
+      version:FB.VERSION,
+      locale:FB.locale || 'en'
+    };
+    if (s && s.start && s.start.id) data.bookmark = String(s.start.id);
+    if (s && s.player) {
+      data.tier = Number(s.player.tier) || 0;
+      data.generation = Number(s.generation) || 1;
+    }
+    if (extra) {
+      for (const key in extra) {
+        if (Object.prototype.hasOwnProperty.call(extra, key)) {
+          data[key] = extra[key];
+        }
+      }
+    }
+    return data;
+  }
+
+  function trackTelemetry(name, extra) {
+    if (!telemetryEnabled() ||
+        typeof FB.telemetry.track !== 'function') return false;
+    return FB.telemetry.track(name, telemetryData(extra));
+  }
+
+  function clearTelemetryTimer() {
+    if (telemetryTimer) clearInterval(telemetryTimer);
+    telemetryTimer = null;
+  }
+
+  function telemetryPulse(now) {
+    if (!telemetrySession) return 0;
+    const at = typeof now === 'number' ? now : Date.now();
+    const elapsed = Math.max(0, Math.min(30000, at - telemetrySession.lastAt));
+    telemetrySession.lastAt = at;
+    if (!document.hidden && FB.state && FB.state.player &&
+        !FB.state.player.dead) {
+      telemetrySession.activeMs += elapsed;
+    }
+    while (telemetrySession.nextMilestone < TELEMETRY_MILESTONES.length &&
+        telemetrySession.activeMs >=
+          TELEMETRY_MILESTONES[telemetrySession.nextMilestone].seconds * 1000) {
+      const milestone = TELEMETRY_MILESTONES[telemetrySession.nextMilestone++];
+      trackTelemetry(milestone.name, {
+        mode:telemetrySession.mode,
+        active_seconds:milestone.seconds
+      });
+    }
+    return Math.floor(telemetrySession.activeMs / 1000);
+  }
+
+  function beginTelemetrySession(mode) {
+    clearTelemetryTimer();
+    telemetrySession = null;
+    if (!telemetryEnabled()) return;
+    telemetrySession = {
+      mode:mode,
+      activeMs:0,
+      lastAt:Date.now(),
+      nextMilestone:0,
+      lastCheckpointSeconds:0
+    };
+    telemetryTimer = setInterval(function () {
+      telemetryPulse();
+    }, 15000);
+  }
+
+  function telemetryCheckpoint() {
+    if (!telemetrySession) return;
+    const activeSeconds = telemetryPulse();
+    if (activeSeconds <= telemetrySession.lastCheckpointSeconds) return;
+    telemetrySession.lastCheckpointSeconds = activeSeconds;
+    trackTelemetry('play-session', {
+      mode:telemetrySession.mode,
+      active_seconds:activeSeconds
+    });
+  }
+
+  function endTelemetrySession() {
+    if (!telemetrySession) return null;
+    const summary = {
+      mode:telemetrySession.mode,
+      active_seconds:telemetryPulse()
+    };
+    clearTelemetryTimer();
+    telemetrySession = null;
+    return summary;
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) telemetryCheckpoint();
+    else telemetryPulse();
+  });
+  window.addEventListener('pagehide', telemetryCheckpoint);
 
   function refreshOfflineStatus() {
     const note = document.getElementById('offline-status');
@@ -1419,6 +1537,12 @@ window.FB = window.FB || {};
     });
     FB.save.autosave();
     FB.save.warnIfBlocked();
+    beginTelemetrySession('new');
+    trackTelemetry('game-start', {
+      mode:'new',
+      scenario:sc.id,
+      family_preset:preset.id
+    });
   };
 
   /* ================= observe mode =================
@@ -1511,6 +1635,8 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.life.observe_begins',
       '👁 You settle in to watch the realms go about their centuries.', {}));
     FB.ui.toast('☰ → Settings sets the speed of days.');
+    beginTelemetrySession('observe');
+    trackTelemetry('observe-start', { mode:'observe' });
   };
 
   /* ================= daily loop ================= */
@@ -2563,6 +2689,8 @@ window.FB = window.FB || {};
     const causeText = causeMsg
       ? FB.renderMessage(causeMsg, { state: s, viewer: p.charId })
       : String(cause === undefined || cause === null ? '' : cause);
+    const telemetryMode = telemetrySession ? telemetrySession.mode : 'play';
+    const activeSeconds = telemetryPulse();
     const titleDataAtDeath = FB.titleSnapshot(s);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
@@ -2580,7 +2708,21 @@ window.FB = window.FB || {};
       /* Compatibility for mods that still pass rendered death prose. */
       FB.news(s, '☠ ' + causeText);
     }
-    FB.ui.showDeath(FB.heirsOf(s).slice(0, 4), causeText);
+    const heirs = FB.heirsOf(s).slice(0, 4);
+    const deathTelemetry = {
+      mode:telemetryMode,
+      active_seconds:activeSeconds,
+      life_years:Math.max(0, s.date.year - me.born)
+    };
+    if (heirs.length) {
+      trackTelemetry('life-ended', deathTelemetry);
+    } else {
+      endTelemetrySession();
+      deathTelemetry.campaign_years = FB.campaignYears(s);
+      deathTelemetry.peak_tier = Number(s.peakTier) || 0;
+      trackTelemetry('game-over', deathTelemetry);
+    }
+    FB.ui.showDeath(heirs, causeText);
   };
 
   /* the chronicle keeps one entry per life the player lived; the end screen
@@ -2897,6 +3039,10 @@ window.FB = window.FB || {};
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();
+    trackTelemetry(livingAbdication ? 'retirement' : 'succession', {
+      mode:telemetrySession ? telemetrySession.mode : 'play',
+      active_seconds:telemetryPulse()
+    });
     return true;
   };
 
@@ -3041,6 +3187,8 @@ window.FB = window.FB || {};
         year: FB.state.date.year
       });
       FB.save.warnIfBlocked();
+      beginTelemetrySession('continue');
+      trackTelemetry('game-continue', { mode:'continue' });
       if (FB.ui.showPendingMarriageResidence) {
         FB.ui.showPendingMarriageResidence();
       }
@@ -3052,6 +3200,8 @@ window.FB = window.FB || {};
   G.toTitle = function () {
     // an observe session is never saved — it must not bury a real life
     if (FB.state && !FB.state.player.dead && !G.observe) FB.save.autosave();
+    const telemetrySummary = endTelemetrySession();
+    if (telemetrySummary) trackTelemetry('game-exit', telemetrySummary);
     FB.state = null;
     G.observe = false;
     document.body.classList.remove('observing');
