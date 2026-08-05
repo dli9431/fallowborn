@@ -33,7 +33,12 @@ async function openGame(page, testInfo) {
 async function startDeterministicGame(page) {
   await page.getByRole('button', { name: 'New Game', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'New Game', exact: true })).toBeVisible();
-  await page.locator('#ng-seed').fill(START_CODE);
+  const seedInput = page.locator('#ng-seed');
+  await seedInput.fill(START_CODE);
+  if (await seedInput.inputValue() !== START_CODE) {
+    await seedInput.fill(START_CODE);
+  }
+  await expect(seedInput).toHaveValue(START_CODE);
   await page.getByRole('button', { name: /Use this seed/ })
     .click({ timeout:30 * 1000 });
 

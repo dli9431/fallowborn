@@ -14,6 +14,11 @@ test.beforeEach(async function ({ page }, testInfo) {
 
 test('ongoing commitments adapt by layout and route to existing controls',
   async function ({ page }) {
+    await page.evaluate(function () {
+      const seen = FB.state.player.panelIntrosSeen =
+        FB.state.player.panelIntrosSeen || {};
+      seen.network = 1;
+    });
     const summary = page.locator('#ongoing-commitments');
     await expect(summary).toBeVisible();
     await expect(summary.getByRole('heading', {
@@ -73,6 +78,9 @@ test('ongoing commitments adapt by layout and route to existing controls',
 test('common households do not see ruler-only technology or automation controls',
   async function ({ page }) {
     const access = await page.evaluate(function () {
+      FB.state.player.panelIntrosSeen =
+        FB.state.player.panelIntrosSeen || {};
+      FB.state.player.panelIntrosSeen.prov = 1;
       FB.game.auto.hosts = 'off';
       FB.game.auto.build = true;
       FB.game.auto.research = true;
@@ -317,6 +325,8 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
       s.player.tier = 0;
       s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
       s.player.roleOrientationsSeen['role-tier-0'] = 1;
+      s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};
+      s.player.panelIntrosSeen.network = 1;
       FB.ui.refresh();
     });
     await waitForUiRefresh(page);

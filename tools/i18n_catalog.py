@@ -502,11 +502,24 @@ def looks_translatable(text: str) -> bool:
     )
 
 
+NON_DISPLAY_HTML_RE = re.compile(
+    r"<(?:script|style)\b[^>]*>.*?</(?:script|style)>",
+    flags=re.I | re.S,
+)
+
+
+def strip_non_display_html(value: str) -> str:
+    return NON_DISPLAY_HTML_RE.sub(
+        lambda match: re.sub(r"[^\r\n]", " ", match.group(0)),
+        value,
+    )
+
+
 def html_segments(value: str) -> Iterable[str]:
     if "<" not in value:
         yield value
         return
-    cleaned = re.sub(r"<script\b[^>]*>.*?</script>", "", value, flags=re.I | re.S)
+    cleaned = strip_non_display_html(value)
     for chunk in HTML_TAG_RE.split(cleaned):
         chunk = html.unescape(chunk).strip()
         chunk = re.sub(r"\s+", " ", chunk)
@@ -1031,9 +1044,10 @@ def extract_literal_aliases(inv: Inventory) -> None:
         rel = path.relative_to(ROOT).as_posix()
         if path.suffix == ".html":
             text = path.read_text(encoding="utf-8")
+            display_text = strip_non_display_html(text)
             for match in re.finditer(
                 r">\s*([^<>\r\n][^<>]*?)\s*<|(?:title|placeholder|aria-label)=\"([^\"]+)\"",
-                text,
+                display_text,
             ):
                 value = next(group for group in match.groups() if group is not None)
                 value = html.unescape(re.sub(r"\s+", " ", value).strip())
