@@ -1,264 +1,494 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>Fallowborn</title>
-<link rel="icon" type="image/png" sizes="32x32" href="static/favicon-32.png">
-<link rel="apple-touch-icon" href="static/apple-touch-icon.png">
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-<div id="app">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Fallowborn</title>
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="static/favicon-32.png"
+    />
+    <link rel="apple-touch-icon" href="static/apple-touch-icon.png" />
+    <link rel="stylesheet" href="css/style.css" />
+    <!-- Umami analytics: play.fallowborn.com only -->
+    <script>
+      (function () {
+        "use strict";
 
-  <!-- ======== LOADING ======== -->
-  <div id="loading" class="screen">
-    <h1 class="gametitle">Fallowborn</h1>
-    <p id="loadmsg" data-i18n="Drawing the known world…">Drawing the known world&hellip;</p>
-    <div class="loadbarwrap"><div id="loadbar"></div></div>
-  </div>
+        var isPlay =
+          window.location.protocol === "https:" &&
+          window.location.hostname === "play.fallowborn.com";
 
-  <!-- ======== TITLE ======== -->
-  <div id="title" class="screen hidden">
-    <canvas id="titlecrest" width="120" height="140"></canvas>
-    <h1 class="gametitle">Fallowborn</h1>
-    <p class="subtitle" data-i18n="From serf to sovereign — a dynasty saga of the early Middle Ages">From serf to sovereign &mdash; a dynasty saga of the early Middle Ages</p>
-    <p id="title-mods" class="modnote hidden"></p>
-    <div class="menubtns">
-      <button id="btn-continue" class="bigbtn hidden" data-i18n="Continue">Continue</button>
-      <button id="btn-newgame" class="bigbtn" data-i18n="New Game">New Game</button>
-      <button id="btn-load" class="bigbtn" data-i18n="Load Game">Load Game</button>
-      <button id="btn-mods" class="bigbtn" data-i18n="Mods">Mods</button>
-      <button id="btn-settings" class="bigbtn" data-i18n="⚙ Settings">&#9881; Settings</button>
-      <button id="btn-help" class="bigbtn" data-i18n="How to Play">How to Play</button>
-      <button id="btn-changelog" class="bigbtn" data-i18n="Changelog">Changelog</button>
-    </div>
-    <p class="credits"><span data-i18n="A one-file-folder game for the browser">A one-file-folder game for the browser</span> &middot; <span data-i18n="all art procedural">all art procedural</span> &middot; <span data-i18n="moddable">moddable</span> &middot; <span id="title-version"></span></p>
-    <p id="offline-status" class="offline-status hidden" role="status" aria-live="polite"></p>
-  </div>
+        if (!isPlay) return;
 
-  <!-- ======== NEW GAME: BOOKMARK ======== -->
-  <div id="bookmarks" class="screen hidden">
-    <h2 data-i18n="Choose a Starting Date">Choose a Starting Date</h2>
-    <div id="bookmarklist"></div>
-    <p id="bookmark-note" class="hint hidden"></p>
-    <div class="row gap">
-      <button id="btn-bm-back" class="btn" data-i18n="Back">Back</button>
-    </div>
-  </div>
+        var tracker = document.createElement("script");
+        tracker.async = true;
+        tracker.src = "https://stats.fallowborn.com/script.js";
+        tracker.setAttribute("data-website-id", "a47e9dbf-6d23-417d-9755-a6bbec58c703");
+        tracker.setAttribute("data-domains", "play.fallowborn.com");
+        tracker.setAttribute("data-do-not-track", "true");
+        tracker.setAttribute("data-auto-track", "true");
 
-  <!-- ======== NEW GAME: SCENARIO ======== -->
-  <div id="newgame" class="screen hidden">
-    <h2 id="ng-heading" data-i18n="Choose Your Beginning">Choose Your Beginning</h2>
-    <div id="scenariolist"></div>
-    <div class="row gap">
-      <button id="btn-ng-back" class="btn" data-i18n="Back">Back</button>
-    </div>
-  </div>
-
-  <!-- ======== NEW GAME: PROVINCE PICK ======== -->
-  <div id="pickprov" class="screen hidden">
-    <h2 data-i18n="Where were you born?">Where were you born?</h2>
-    <p class="hint" data-i18n="Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.">Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland.</p>
-    <div id="pickinfo" class="pickinfo"
-      data-i18n="No province chosen yet. Tap the map or use Random Province.">No province chosen yet. Tap the map or use Random Province.</div>
-    <div class="row gap wrap">
-      <button id="btn-pick-back" class="btn" data-i18n="Back">Back</button>
-      <button id="btn-pick-random" class="btn primary"
-        data-i18n="Random Province">Random Province</button>
-    </div>
-  </div>
-
-  <!-- ======== NEW GAME: CHARACTER ======== -->
-  <div id="chargen" class="screen hidden">
-    <h2 data-i18n="Who are you?">Who are you?</h2>
-    <div class="cgform">
-      <label><span data-i18n="Name">Name</span> <input id="cg-name" type="text" maxlength="20"></label>
-      <button id="cg-reroll" class="btn small"><span data-i18n="🎲 Random name">&#127922; Random name</span></button>
-      <div class="row gap">
-        <label class="radio"><input type="radio" name="cg-sex" value="m" checked> <span data-i18n="Man">Man</span></label>
-        <label class="radio"><input type="radio" name="cg-sex" value="f"> <span data-i18n="Woman">Woman</span></label>
+        document.head.appendChild(tracker);
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app">
+      <!-- ======== LOADING ======== -->
+      <div id="loading" class="screen">
+        <h1 class="gametitle">Fallowborn</h1>
+        <p id="loadmsg" data-i18n="Drawing the known world…">
+          Drawing the known world&hellip;
+        </p>
+        <div class="loadbarwrap"><div id="loadbar"></div></div>
       </div>
-      <p id="cg-era-hint" class="hint">Playing a woman is a harder road: some doors open only by marriage, others only by defiance.</p>
-      <div id="cg-family" class="cgfamily"></div>
-      <div id="cg-summary" class="pickinfo"></div>
-    </div>
-    <div class="row gap">
-      <button id="btn-cg-back" class="btn" data-i18n="Back">Back</button>
-      <button id="btn-cg-start" class="btn primary" data-i18n="Begin Your Story">Begin Your Story</button>
-    </div>
-  </div>
 
-  <!-- ======== GAME ======== -->
-  <div id="game" class="hidden">
-    <div id="topbar">
-      <canvas id="tb-portrait" width="30" height="34"></canvas>
-      <canvas id="crest" width="26" height="30"></canvas>
-      <div id="tb-id">
-        <div id="tb-name">&mdash;</div>
-        <div id="tb-title">&mdash;</div>
-      </div>
-      <div id="tb-stats">
-        <button type="button" class="stat" id="tb-gold" data-stat="gold" aria-label="Money" data-i18n-aria-label="Money">&#128176; 0</button>
-        <button type="button" class="stat" id="tb-prestige" data-stat="prestige" aria-label="Prestige" data-i18n-aria-label="Prestige">&#11088; 0</button>
-        <button type="button" class="stat" id="tb-piety" data-stat="piety" aria-label="Piety" data-i18n-aria-label="Piety">&#128591; 0</button>
-        <span class="stat" id="tb-health" title="Health" data-i18n-title="Health">&#10084;&#65039; 10</span>
-      </div>
-      <div id="tb-date">&mdash;</div>
-      <button id="btn-menu" class="btn small" title="Menu" aria-label="Menu"
-        data-i18n-title="Menu" data-i18n-aria-label="Menu">&#9776;</button>
-    </div>
-
-    <div id="main">
-      <div id="mapwrap">
-        <canvas id="map"></canvas>
-        <div id="maphud">
-          <button id="btn-zoomin" class="btn hudbtn" title="Zoom in" aria-label="Zoom in"
-            data-i18n-title="Zoom in" data-i18n-aria-label="Zoom in">+</button>
-          <button id="btn-zoomout" class="btn hudbtn" title="Zoom out" aria-label="Zoom out"
-            data-i18n-title="Zoom out" data-i18n-aria-label="Zoom out">&minus;</button>
-          <button id="btn-home" class="btn hudbtn" title="Center on home" aria-label="Center on home"
-            data-i18n-title="Center on home" data-i18n-aria-label="Center on home">&#8962;</button>
-          <button id="btn-mapmode" class="btn hudbtn" title="Map filter: Realm (R)"
-            aria-label="Map filter: Realm (R)" data-i18n-title="Map filter: Realm (R)"
-            data-i18n-aria-label="Map filter: Realm (R)">&#128506;</button>
+      <!-- ======== TITLE ======== -->
+      <div id="title" class="screen hidden">
+        <canvas id="titlecrest" width="120" height="140"></canvas>
+        <h1 class="gametitle">Fallowborn</h1>
+        <p
+          class="subtitle"
+          data-i18n="From serf to sovereign — a dynasty saga of the early Middle Ages"
+        >
+          From serf to sovereign &mdash; a dynasty saga of the early Middle Ages
+        </p>
+        <p id="title-mods" class="modnote hidden"></p>
+        <div class="menubtns">
+          <button id="btn-continue" class="bigbtn hidden" data-i18n="Continue">
+            Continue
+          </button>
+          <button id="btn-newgame" class="bigbtn" data-i18n="New Game">
+            New Game
+          </button>
+          <button id="btn-load" class="bigbtn" data-i18n="Load Game">
+            Load Game
+          </button>
+          <button id="btn-mods" class="bigbtn" data-i18n="Mods">Mods</button>
+          <button id="btn-settings" class="bigbtn" data-i18n="⚙ Settings">
+            &#9881; Settings
+          </button>
+          <button id="btn-help" class="bigbtn" data-i18n="How to Play">
+            How to Play
+          </button>
+          <button id="btn-changelog" class="bigbtn" data-i18n="Changelog">
+            Changelog
+          </button>
         </div>
-        <div id="travel-picker" class="travel-picker hidden" role="dialog"
-          aria-labelledby="travel-picker-title">
-          <h3 id="travel-picker-title" data-i18n="Choose a destination">Choose a destination</h3>
-          <div id="travel-picker-summary" class="hint"></div>
-          <div id="travel-destination-list" class="travel-destination-list"></div>
-          <div class="travel-picker-actions">
-            <button class="btn" id="travel-picker-cancel" data-i18n="Cancel">Cancel</button>
-            <button class="btn primary" id="travel-picker-continue" disabled
-              data-i18n="Review journey">Review journey</button>
+        <p class="credits">
+          <span data-i18n="A one-file-folder game for the browser"
+            >A one-file-folder game for the browser</span
+          >
+          &middot;
+          <span data-i18n="all art procedural">all art procedural</span>
+          &middot; <span data-i18n="moddable">moddable</span> &middot;
+          <span id="title-version"></span>
+        </p>
+        <p
+          id="offline-status"
+          class="offline-status hidden"
+          role="status"
+          aria-live="polite"
+        ></p>
+      </div>
+
+      <!-- ======== NEW GAME: BOOKMARK ======== -->
+      <div id="bookmarks" class="screen hidden">
+        <h2 data-i18n="Choose a Starting Date">Choose a Starting Date</h2>
+        <div id="bookmarklist"></div>
+        <p id="bookmark-note" class="hint hidden"></p>
+        <div class="row gap">
+          <button id="btn-bm-back" class="btn" data-i18n="Back">Back</button>
+        </div>
+      </div>
+
+      <!-- ======== NEW GAME: SCENARIO ======== -->
+      <div id="newgame" class="screen hidden">
+        <h2 id="ng-heading" data-i18n="Choose Your Beginning">
+          Choose Your Beginning
+        </h2>
+        <div id="scenariolist"></div>
+        <div class="row gap">
+          <button id="btn-ng-back" class="btn" data-i18n="Back">Back</button>
+        </div>
+      </div>
+
+      <!-- ======== NEW GAME: PROVINCE PICK ======== -->
+      <div id="pickprov" class="screen hidden">
+        <h2 data-i18n="Where were you born?">Where were you born?</h2>
+        <p
+          class="hint"
+          data-i18n="Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland."
+        >
+          Tap a province on the map, or leave fate to decide. Your culture and
+          faith follow your homeland.
+        </p>
+        <div
+          id="pickinfo"
+          class="pickinfo"
+          data-i18n="No province chosen yet. Tap the map or use Random Province."
+        >
+          No province chosen yet. Tap the map or use Random Province.
+        </div>
+        <div class="row gap wrap">
+          <button id="btn-pick-back" class="btn" data-i18n="Back">Back</button>
+          <button
+            id="btn-pick-random"
+            class="btn primary"
+            data-i18n="Random Province"
+          >
+            Random Province
+          </button>
+        </div>
+      </div>
+
+      <!-- ======== NEW GAME: CHARACTER ======== -->
+      <div id="chargen" class="screen hidden">
+        <h2 data-i18n="Who are you?">Who are you?</h2>
+        <div class="cgform">
+          <label
+            ><span data-i18n="Name">Name</span>
+            <input id="cg-name" type="text" maxlength="20"
+          /></label>
+          <button id="cg-reroll" class="btn small">
+            <span data-i18n="🎲 Random name">&#127922; Random name</span>
+          </button>
+          <div class="row gap">
+            <label class="radio"
+              ><input type="radio" name="cg-sex" value="m" checked />
+              <span data-i18n="Man">Man</span></label
+            >
+            <label class="radio"
+              ><input type="radio" name="cg-sex" value="f" />
+              <span data-i18n="Woman">Woman</span></label
+            >
           </div>
+          <p id="cg-era-hint" class="hint">
+            Playing a woman is a harder road: some doors open only by marriage,
+            others only by defiance.
+          </p>
+          <div id="cg-family" class="cgfamily"></div>
+          <div id="cg-summary" class="pickinfo"></div>
         </div>
-        <div id="toasts"></div>
+        <div class="row gap">
+          <button id="btn-cg-back" class="btn" data-i18n="Back">Back</button>
+          <button
+            id="btn-cg-start"
+            class="btn primary"
+            data-i18n="Begin Your Story"
+          >
+            Begin Your Story
+          </button>
+        </div>
       </div>
-      <!-- #panels is invisible on desktop (display:contents) and becomes a
+
+      <!-- ======== GAME ======== -->
+      <div id="game" class="hidden">
+        <div id="topbar">
+          <canvas id="tb-portrait" width="30" height="34"></canvas>
+          <canvas id="crest" width="26" height="30"></canvas>
+          <div id="tb-id">
+            <div id="tb-name">&mdash;</div>
+            <div id="tb-title">&mdash;</div>
+          </div>
+          <div id="tb-stats">
+            <button
+              type="button"
+              class="stat"
+              id="tb-gold"
+              data-stat="gold"
+              aria-label="Money"
+              data-i18n-aria-label="Money"
+            >
+              &#128176; 0
+            </button>
+            <button
+              type="button"
+              class="stat"
+              id="tb-prestige"
+              data-stat="prestige"
+              aria-label="Prestige"
+              data-i18n-aria-label="Prestige"
+            >
+              &#11088; 0
+            </button>
+            <button
+              type="button"
+              class="stat"
+              id="tb-piety"
+              data-stat="piety"
+              aria-label="Piety"
+              data-i18n-aria-label="Piety"
+            >
+              &#128591; 0
+            </button>
+            <span
+              class="stat"
+              id="tb-health"
+              title="Health"
+              data-i18n-title="Health"
+              >&#10084;&#65039; 10</span
+            >
+          </div>
+          <div id="tb-date">&mdash;</div>
+          <button
+            id="btn-menu"
+            class="btn small"
+            title="Menu"
+            aria-label="Menu"
+            data-i18n-title="Menu"
+            data-i18n-aria-label="Menu"
+          >
+            &#9776;
+          </button>
+        </div>
+
+        <div id="main">
+          <div id="mapwrap">
+            <canvas id="map"></canvas>
+            <div id="maphud">
+              <button
+                id="btn-zoomin"
+                class="btn hudbtn"
+                title="Zoom in"
+                aria-label="Zoom in"
+                data-i18n-title="Zoom in"
+                data-i18n-aria-label="Zoom in"
+              >
+                +
+              </button>
+              <button
+                id="btn-zoomout"
+                class="btn hudbtn"
+                title="Zoom out"
+                aria-label="Zoom out"
+                data-i18n-title="Zoom out"
+                data-i18n-aria-label="Zoom out"
+              >
+                &minus;
+              </button>
+              <button
+                id="btn-home"
+                class="btn hudbtn"
+                title="Center on home"
+                aria-label="Center on home"
+                data-i18n-title="Center on home"
+                data-i18n-aria-label="Center on home"
+              >
+                &#8962;
+              </button>
+              <button
+                id="btn-mapmode"
+                class="btn hudbtn"
+                title="Map filter: Realm (R)"
+                aria-label="Map filter: Realm (R)"
+                data-i18n-title="Map filter: Realm (R)"
+                data-i18n-aria-label="Map filter: Realm (R)"
+              >
+                &#128506;
+              </button>
+            </div>
+            <div
+              id="travel-picker"
+              class="travel-picker hidden"
+              role="dialog"
+              aria-labelledby="travel-picker-title"
+            >
+              <h3 id="travel-picker-title" data-i18n="Choose a destination">
+                Choose a destination
+              </h3>
+              <div id="travel-picker-summary" class="hint"></div>
+              <div
+                id="travel-destination-list"
+                class="travel-destination-list"
+              ></div>
+              <div class="travel-picker-actions">
+                <button
+                  class="btn"
+                  id="travel-picker-cancel"
+                  data-i18n="Cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="btn primary"
+                  id="travel-picker-continue"
+                  disabled
+                  data-i18n="Review journey"
+                >
+                  Review journey
+                </button>
+              </div>
+            </div>
+            <div id="toasts"></div>
+          </div>
+          <!-- #panels is invisible on desktop (display:contents) and becomes a
            swipeable page carousel on phones -->
-      <div id="panels">
-        <div id="left">
-          <div id="lefttabs">
-            <button class="tab active" data-tab="char" data-i18n="Self">Self</button>
-            <button class="tab" data-tab="family" data-i18n="Kin">Kin</button>
-          </div>
-          <div id="leftbody">
-            <div id="tab-char" class="tabpane active"></div>
-            <div id="tab-family" class="tabpane"></div>
-          </div>
-          <div class="drawer-footer">
-            <button type="button" id="btn-closeself" class="btn"
-              data-i18n="Close">Close</button>
-          </div>
-        </div>
-        <div id="side">
-          <div id="sidetabs">
-            <button class="tab active" data-tab="actions" data-i18n="Deeds">Deeds</button>
-            <button class="tab" data-tab="prov" data-i18n="Land">Land</button>
-            <button class="tab" data-tab="network" data-i18n="Network">Network</button>
-            <button class="tab" data-tab="log" data-i18n="Chronicle">Chronicle</button>
-          </div>
-          <div id="sidebody">
-            <div id="tab-actions" class="tabpane active"></div>
-            <div id="tab-prov" class="tabpane"></div>
-            <div id="tab-network" class="tabpane"></div>
-            <div id="tab-log" class="tabpane"></div>
-          </div>
-          <div id="timebtns">
-            <button id="btn-endturn" class="bigbtn" data-i18n="▶ Play">&#9654; Play</button>
-            <button id="btn-skip" class="bigbtn" title="Skip ahead to the next happening (F)"
-              aria-label="Skip ahead to the next happening (F)"
-              data-i18n-title="Skip ahead to the next happening (F)"
-              data-i18n-aria-label="Skip ahead to the next happening (F)">&#9654;&#9654;</button>
-            <button id="btn-auto" class="bigbtn" title="Automation (Z)" aria-label="Automation (Z)"
-              data-i18n-title="Automation (Z)" data-i18n-aria-label="Automation (Z)">&#9881;</button>
+          <div id="panels">
+            <div id="left">
+              <div id="lefttabs">
+                <button class="tab active" data-tab="char" data-i18n="Self">
+                  Self
+                </button>
+                <button class="tab" data-tab="family" data-i18n="Kin">
+                  Kin
+                </button>
+              </div>
+              <div id="leftbody">
+                <div id="tab-char" class="tabpane active"></div>
+                <div id="tab-family" class="tabpane"></div>
+              </div>
+              <div class="drawer-footer">
+                <button
+                  type="button"
+                  id="btn-closeself"
+                  class="btn"
+                  data-i18n="Close"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+            <div id="side">
+              <div id="sidetabs">
+                <button class="tab active" data-tab="actions" data-i18n="Deeds">
+                  Deeds
+                </button>
+                <button class="tab" data-tab="prov" data-i18n="Land">
+                  Land
+                </button>
+                <button class="tab" data-tab="network" data-i18n="Network">
+                  Network
+                </button>
+                <button class="tab" data-tab="log" data-i18n="Chronicle">
+                  Chronicle
+                </button>
+              </div>
+              <div id="sidebody">
+                <div id="tab-actions" class="tabpane active"></div>
+                <div id="tab-prov" class="tabpane"></div>
+                <div id="tab-network" class="tabpane"></div>
+                <div id="tab-log" class="tabpane"></div>
+              </div>
+              <div id="timebtns">
+                <button id="btn-endturn" class="bigbtn" data-i18n="▶ Play">
+                  &#9654; Play
+                </button>
+                <button
+                  id="btn-skip"
+                  class="bigbtn"
+                  title="Skip ahead to the next happening (F)"
+                  aria-label="Skip ahead to the next happening (F)"
+                  data-i18n-title="Skip ahead to the next happening (F)"
+                  data-i18n-aria-label="Skip ahead to the next happening (F)"
+                >
+                  &#9654;&#9654;
+                </button>
+                <button
+                  id="btn-auto"
+                  class="bigbtn"
+                  title="Automation (Z)"
+                  aria-label="Automation (Z)"
+                  data-i18n-title="Automation (Z)"
+                  data-i18n-aria-label="Automation (Z)"
+                >
+                  &#9881;
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- ======== EVENT MODAL ======== -->
-  <div id="eventmodal" class="modal hidden">
-    <div class="modalcard">
-      <h3 id="ev-title" data-i18n="Event">Event</h3>
-      <div id="ev-text" class="evtext"></div>
-      <div id="ev-options"></div>
-    </div>
-  </div>
-
-  <!-- ======== GENERIC MODAL (menu, help, mods, load, death...) ======== -->
-  <div id="genmodal" class="modal hidden" role="dialog" aria-modal="true"
-    aria-labelledby="gm-title">
-    <div class="modalcard">
-      <div class="gm-heading">
-        <h3 id="gm-title"></h3>
+      <!-- ======== EVENT MODAL ======== -->
+      <div id="eventmodal" class="modal hidden">
+        <div class="modalcard">
+          <h3 id="ev-title" data-i18n="Event">Event</h3>
+          <div id="ev-text" class="evtext"></div>
+          <div id="ev-options"></div>
+        </div>
       </div>
-      <div id="gm-body"></div>
+
+      <!-- ======== GENERIC MODAL (menu, help, mods, load, death...) ======== -->
+      <div
+        id="genmodal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="gm-title"
+      >
+        <div class="modalcard">
+          <div class="gm-heading">
+            <h3 id="gm-title"></h3>
+          </div>
+          <div id="gm-body"></div>
+        </div>
+      </div>
     </div>
-  </div>
 
-</div>
-
-<!-- data (moddable) -->
-<script src="data/map_data.js"></script>
-<script src="data/counties.js"></script>
-<script src="data/cultures.js"></script>
-<script src="data/technology.js"></script>
-<script src="data/bookmarks.js"></script>
-<script src="data/traits.js"></script>
-<script src="data/economy.js"></script>
-<script src="data/papacy.js"></script>
-<script src="data/modifiers.js"></script>
-<script src="data/travel.js"></script>
-<script src="data/political_blocs.js"></script>
-<script src="data/policies.js"></script>
-<script src="data/events_common.js"></script>
-<script src="data/events_peasant.js"></script>
-<script src="data/events_paths.js"></script>
-<script src="data/events_noble.js"></script>
-<script src="data/events_world.js"></script>
-<script src="data/events_war.js"></script>
-<script src="data/events_council.js"></script>
-<script src="data/events_parliament.js"></script>
-<script src="data/events_travel.js"></script>
-<script src="data/events_tournament.js"></script>
-<script src="data/events_tutorial.js"></script>
-<!-- bundled mods (register into window.FBMODS): add <script> tags here -->
-<!-- engine -->
-<script src="js/util.js"></script>
-<script src="js/messages.js"></script>
-<script src="js/i18n.js"></script>
-<script src="data/lang_en.js"></script>
-<script src="js/model.js"></script>
-<script src="js/portrait.js"></script>
-<script src="js/world.js"></script>
-<script src="js/settlement.js"></script>
-<script src="js/holywar.js"></script>
-<script src="js/modifiers.js"></script>
-<script src="js/economy.js"></script>
-<script src="js/papacy.js"></script>
-<script src="js/armies.js"></script>
-<script src="js/travel.js"></script>
-<script src="js/mapview.js"></script>
-<script src="js/events.js"></script>
-<script src="js/items.js"></script>
-<script src="js/actions.js"></script>
-<script src="js/technology.js"></script>
-<script src="js/council.js"></script>
-<script src="js/politics.js"></script>
-<script src="js/parliament.js"></script>
-<script src="js/ui_misc.js"></script>
-<script src="js/ui_panels.js"></script>
-<script src="js/ui_topbar.js"></script>
-<script src="js/ui_modals.js"></script>
-<script src="js/keys.js"></script>
-<script src="js/save.js"></script>
-<script src="js/mods.js"></script>
-<script src="js/main.js"></script>
-</body>
+    <!-- data (moddable) -->
+    <script src="data/map_data.js"></script>
+    <script src="data/counties.js"></script>
+    <script src="data/cultures.js"></script>
+    <script src="data/technology.js"></script>
+    <script src="data/bookmarks.js"></script>
+    <script src="data/traits.js"></script>
+    <script src="data/economy.js"></script>
+    <script src="data/papacy.js"></script>
+    <script src="data/modifiers.js"></script>
+    <script src="data/travel.js"></script>
+    <script src="data/political_blocs.js"></script>
+    <script src="data/policies.js"></script>
+    <script src="data/events_common.js"></script>
+    <script src="data/events_peasant.js"></script>
+    <script src="data/events_paths.js"></script>
+    <script src="data/events_noble.js"></script>
+    <script src="data/events_world.js"></script>
+    <script src="data/events_war.js"></script>
+    <script src="data/events_council.js"></script>
+    <script src="data/events_parliament.js"></script>
+    <script src="data/events_travel.js"></script>
+    <script src="data/events_tournament.js"></script>
+    <script src="data/events_tutorial.js"></script>
+    <!-- bundled mods (register into window.FBMODS): add <script> tags here -->
+    <!-- engine -->
+    <script src="js/util.js"></script>
+    <script src="js/messages.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="data/lang_en.js"></script>
+    <script src="js/model.js"></script>
+    <script src="js/portrait.js"></script>
+    <script src="js/world.js"></script>
+    <script src="js/settlement.js"></script>
+    <script src="js/holywar.js"></script>
+    <script src="js/modifiers.js"></script>
+    <script src="js/economy.js"></script>
+    <script src="js/papacy.js"></script>
+    <script src="js/armies.js"></script>
+    <script src="js/travel.js"></script>
+    <script src="js/mapview.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/items.js"></script>
+    <script src="js/actions.js"></script>
+    <script src="js/technology.js"></script>
+    <script src="js/council.js"></script>
+    <script src="js/politics.js"></script>
+    <script src="js/parliament.js"></script>
+    <script src="js/ui_misc.js"></script>
+    <script src="js/ui_panels.js"></script>
+    <script src="js/ui_topbar.js"></script>
+    <script src="js/ui_modals.js"></script>
+    <script src="js/keys.js"></script>
+    <script src="js/save.js"></script>
+    <script src="js/mods.js"></script>
+    <script src="js/main.js"></script>
+  </body>
 </html>
