@@ -87,6 +87,8 @@ async function configurePolitics(page) {
     p.professionBack = null;
     p.enterprises = [];
     p.guildMonopolies = { incoming:null, outgoing:null };
+    p.panelIntrosSeen = p.panelIntrosSeen || {};
+    p.panelIntrosSeen.network = 1;
 
     realm(polityId, 'Test Crown', 3, null, countyIds[0],
       'ambitious', 0);

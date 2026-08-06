@@ -21,6 +21,8 @@ async function startCapitalRealm(page, testInfo, options) {
     p.liege = null;
     p.provs = counties.slice();
     p.capitalRelocation = null;
+    p.panelIntrosSeen = p.panelIntrosSeen || {};
+    p.panelIntrosSeen.prov = 1;
     for (var i = 0; i < counties.length; i++) {
       s.owner[counties[i]] = 'player';
       s.holder[counties[i]] = 'player';

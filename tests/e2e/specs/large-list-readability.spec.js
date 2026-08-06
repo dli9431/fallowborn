@@ -33,6 +33,8 @@ async function makeLargeListFixture(page) {
     p.enterprises = [];
     p.friendContacts = {};
     p.socialAttention = {};
+    p.panelIntrosSeen = p.panelIntrosSeen || {};
+    p.panelIntrosSeen.network = 1;
     me.childrenIds = me.childrenIds || [];
     FB.careerOf(s, me).rank = 'unassigned';
 

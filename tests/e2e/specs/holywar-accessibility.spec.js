@@ -15,6 +15,13 @@ test('the council is keyboard-operable at desktop and mobile widths',
     await openGame(page, testInfo);
     await startDeterministicGame(page);
     await injectHolyWarHarness(page);
+    await page.evaluate(function () {
+      var seen = FB.state.player.panelIntrosSeen =
+        FB.state.player.panelIntrosSeen || {};
+      seen.family = 1;
+      seen.prov = 1;
+      seen.network = 1;
+    });
     const baseline = await page.evaluate(function () {
       return FB.save.serialize();
     });
