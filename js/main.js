@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.110.6';
+  FB.VERSION = '1.111.0';
   FB.CHANGELOG = [
+    { v: '1.111.0', date: '2026-08-06', changes: [
+      'Faiths can now fracture into new reform movements that spread through families and realms, reshape diplomacy and war, and persist in saves and mods.'
+    ] },
     { v: '1.110.6', date: '2026-08-06', changes: [
       'Hosted play analytics now use clearer campaign and active-play events, with one campaign resume counted per page.'
     ] },
@@ -973,6 +976,7 @@ window.FB = window.FB || {};
       /* Mods establish the effective English source before hashes are checked.
          A changed mod string therefore falls back to that exact current English. */
       FB.mods.applyStored();
+      if (FB.configureReligions) FB.configureReligions();
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
       refreshOfflineStatus();
@@ -1348,6 +1352,7 @@ window.FB = window.FB || {};
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
+      faiths: {}, faithRelations: {}, faithNextId: 1,
       religiousHeads: {},
       religiousHeadVacancies: {},
       papacy: null,
@@ -1584,6 +1589,7 @@ window.FB = window.FB || {};
       itemInstances: {}, itemNextId: 1,
       armies: [], armyDown: {},
       alliances: [],
+      faiths: {}, faithRelations: {}, faithNextId: 1,
       religiousHeads: {},
       religiousHeadVacancies: {},
       papacy: null,
@@ -2542,9 +2548,10 @@ window.FB = window.FB || {};
       return;
     }
     if (p.flags.noChildren) return; // the house is full enough — no new conceptions
-    // every wife of the household may conceive (one pregnancy at a time) —
-    // the all-characters spousesOf scan runs only under polygynous doctrine
-    const mates = me.sex === 'f' || FB.marriageDoctrine(me.religion).wives <= 1
+    // Every spouse pairing may conceive (one household pregnancy at a time).
+    // The all-characters scan runs only when this faith permits several spouses.
+    const marriage = FB.marriageDoctrine(me.religion, s);
+    const mates = marriage.spouseLimit[me.sex === 'f' ? 'f' : 'm'] <= 1
       ? (sp ? [sp] : []) : FB.spousesOf(s, me);
     for (const mate of mates) {
       if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(s, mate)) {

@@ -84,8 +84,9 @@ territorial office to the claimant recognized by the conqueror without automatic
 reuniting the Church. Losing Rome or a decisive war by a claimant or last patron removes
 15 authority. See [papacy.md](papacy.md).
 
-`FB.sameFaithHeadWarPolicy` is the shared target check. It reads the exact attacker's
-religion, the live office assignment, and `religion.head.sameFaithWar`; it never matches
+`FB.sameFaithHeadWarPolicy` is the shared target check. It reads the attacker's
+effective inherited faith definition, the live office assignment, and
+`religion.properties.head.sameFaithWar`; it never matches
 realm names. Catholic player causes against the active Papacy remain legal when an
 ordinary de jure, fabricated, or restoration cause exists, but the picker marks them
 as sacrilege and opens a second confirmation. Canceling that confirmation changes no
@@ -377,9 +378,10 @@ before ordinary enemies, so same-camp hosts are friendly and opposite camps figh
 they share a county. `FB.isRealmAtWar` includes preparation pledges and active
 participants, preventing a participant from opening another ordinary war.
 
-Preparation lasts 180 days. Attackers must be exact-faith sovereign volunteers.
-Sovereigns controlling frozen objective land are mandatory defenders; other
-sovereigns from a religion group opposed to the caller may volunteer. Each camp has
+Preparation lasts 180 days. Attackers may volunteer when their faith remains in the
+caller's fold. Sovereigns controlling frozen objective land are mandatory defenders;
+other sovereigns whose faith is `hostile` or `foreign` to the caller may volunteer.
+Each camp has
 eight voluntary AI places, while mandatory defenders and the player do not consume
 that cap. At launch, attacking volunteers still entangled in an ordinary war drop
 out, mandatory defenders receive white peace, and cross-camp alliances and player
@@ -411,7 +413,7 @@ the default additions cost about 0.6, 4, 1.5, and 2 gold per season respectively
 campaign supply modifiers. No bonus is written to the vow or base muster; dispersal or
 disbanding loses the recruits, and a later remuster starts from the ordinary composition.
 
-Objectives are the target kingdom's counties controlled by another religion group at
+Objectives are the target kingdom's counties controlled outside the caller's fold at
 the call. They keep their normal owner and holder throughout the campaign.
 `campaign.occupations[provinceId]` holds only temporary occupation, siege progress,
 the progressing camp, and the occupying host. An uncontested qualifying camp gains

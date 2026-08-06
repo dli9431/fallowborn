@@ -94,12 +94,12 @@ FBDATA.events.push(
   trigger:{ never:true }, /* fired from the spouse's character sheet (Christians only) */
   text:'You lay your case before the church: some closeness of blood overlooked, some defect in the vows. The marriage to {spouse}, you argue, never truly was. Learned men stroke their beards; a donation changes hands.',
   options:[
-    { label:'Press the plea.', desc:'{money:15} and 20 piety ride on the church’s judgment.',
-      require:{ goldMin:15, pietyMin:20 }, chance:'annulment',
+    { label:'Press the plea.', desc:'{money:marriageGold} and {marriagePiety} piety ride on the church’s judgment.',
+      require:{ marriageEndReady:true }, chance:'annulment',
       success:{ text:'The judgment comes down: null and void from the first day. {spouse} returns to their kin, and you stand free before {god}.',
-        effects:{ gold:-15, piety:-20, custom:'annul_granted', log:'The church annulled the marriage.' } },
+        effects:{ marriageEnd:'success', custom:'annul_granted', log:'The church annulled the marriage.' } },
       failure:{ text:'The church finds the marriage sound — and your motives less so. The plea is refused; the donation is kept, and {spouse} learns what you tried.',
-        effects:{ gold:-15, piety:-25, popularOpinion:-5, opinion:{role:'spouse', amt:-30} } } },
+        effects:{ marriageEnd:'failure', popularOpinion:-5, opinion:{role:'spouse', amt:-30} } } },
     { label:'Withdraw the plea.', desc:'Let sleeping vows lie.', effects:{ log:'Thought better of an annulment plea.' } }
   ]},
 

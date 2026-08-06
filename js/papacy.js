@@ -19,6 +19,16 @@ window.FB = window.FB || {};
       state.chars[state.player.charId] || null;
   }
 
+  function catholicFaith(state, c) {
+    return !!(c && FB.faithHasSystem &&
+      FB.faithHasSystem(c.religion, 'papacy', state));
+  }
+
+  function catholicReligion(state, religionId) {
+    return !!(religionId && FB.faithHasSystem &&
+      FB.faithHasSystem(religionId, 'papacy', state));
+  }
+
   function activeBookmarkId(state) {
     if (state && state.start && state.start.id) return String(state.start.id);
     return state && state.date && state.date.year >= 1000 ? '1066' : '867';
@@ -65,10 +75,10 @@ window.FB = window.FB || {};
     for (var rid in state.realms) {
       var realm = state.realms[rid];
       if (!realm || !realm.alive || realm.liege || rid === 'player') continue;
-      if (realmReligion(state, rid) === 'catholic') out.push(rid);
+      if (FB.faithHasSystem(realmReligion(state, rid), 'papacy', state)) out.push(rid);
     }
     if (FB.isPlayerSovereign && FB.isPlayerSovereign(state) &&
-        playerChar(state) && playerChar(state).religion === 'catholic') {
+        catholicFaith(state, playerChar(state))) {
       out.push('player');
     }
     out.sort();
@@ -295,7 +305,8 @@ window.FB = window.FB || {};
     var papacy = FB.ensurePapacy(state);
     if (!papacy) return null;
     var sovereign = realmSovereign(state, rid);
-    if (!sovereign || realmReligion(state, sovereign) !== 'catholic') {
+    if (!sovereign || !catholicReligion(state,
+        realmReligion(state, sovereign))) {
       return papacy.romanObedience;
     }
     var oid = papacy.realmObedience[sovereign];
@@ -425,7 +436,7 @@ window.FB = window.FB || {};
     var obedience = papacy && papacy.obediences[
       obedienceId || papacy.romanObedience
     ];
-    if (!c || c.dead || c.religion !== 'catholic' || c.sex !== 'm' ||
+    if (!c || c.dead || !catholicFaith(state, c) || c.sex !== 'm' ||
         !obedience || obedience.college.length >= (definition().hardCap || 18)) {
       return false;
     }
@@ -585,7 +596,7 @@ window.FB = window.FB || {};
   }
 
   FB.isCatholicBishop = function (state, c) {
-    if (!c || c.dead || c.religion !== 'catholic') return false;
+    if (!c || c.dead || !catholicFaith(state, c)) return false;
     var office = papalRecord(state, c.id);
     if (office && (office.office === 'cardinal' || office.office === 'pope')) return true;
     return !!(FB.bishopricOf && FB.bishopricOf(state, c));
@@ -663,7 +674,7 @@ window.FB = window.FB || {};
     var obedience = papacy && papacy.obediences[papacy.romanObedience];
     var missing = [];
     if (!c || c.dead) return { visible:false, ready:false, missing:[FB.T('No living candidate.')] };
-    if (c.religion !== 'catholic') missing.push(FB.T('Catholic faith'));
+    if (!catholicFaith(state, c)) missing.push(FB.T('Catholic faith'));
     if (c.sex !== 'm') missing.push(FB.T('a man'));
     if (hasLivingSpouse(state, c)) missing.push(FB.T('unmarried or widowed'));
     if (c.betrothedId) missing.push(FB.T('not betrothed'));
@@ -713,7 +724,7 @@ window.FB = window.FB || {};
       missing.push(FB.T('not already a Cardinal or Pope'));
     }
     return {
-      visible:c.religion === 'catholic' && FB.isCatholicBishop(state, c) &&
+      visible:catholicFaith(state, c) && FB.isCatholicBishop(state, c) &&
         !FB.isCardinal(state, c) && !FB.isPapalClaimant(state, c),
       ready:missing.length === 0,
       missing:missing,
@@ -753,7 +764,7 @@ window.FB = window.FB || {};
 
   function candidateEligibleForAppointment(state, c, obedience) {
     var req = definition().cardinalRequirements || {};
-    return !!(c && !c.dead && c.religion === 'catholic' && c.sex === 'm' &&
+    return !!(c && !c.dead && catholicFaith(state, c) && c.sex === 'm' &&
       !hasLivingSpouse(state, c) && !c.betrothedId &&
       FB.isCatholicBishop(state, c) &&
       FB.ageOf(c, state.date.year) >= req.age &&
@@ -1554,7 +1565,8 @@ window.FB = window.FB || {};
 
   FB.investiturePolicyForRealm = function (state, rid) {
     var sovereign = realmSovereign(state, rid);
-    if (!sovereign || realmReligion(state, sovereign) !== 'catholic') return null;
+    if (!sovereign || !catholicReligion(state,
+        realmReligion(state, sovereign))) return null;
     return investitureRecordSnapshot(state, sovereign);
   };
 
@@ -1564,7 +1576,7 @@ window.FB = window.FB || {};
 
   FB.papacyInvestitureTaxRate = function (state) {
     var me = playerChar(state);
-    if (!me || me.religion !== 'catholic' || FB.playerPope(state)) return 0;
+    if (!me || !catholicFaith(state, me) || FB.playerPope(state)) return 0;
     var record = FB.investiturePolicyForPlayer(state);
     var policy = record && definition().investiture.policies[record.policy];
     return policy ? policy.tax || 0 : 0;
@@ -1573,7 +1585,7 @@ window.FB = window.FB || {};
   FB.papacyRealmStrengthMultiplier = function (state, rid) {
     var rate = 0;
     var religionId = realmReligion(state, rid);
-    if (religionId === 'catholic') {
+    if (catholicReligion(state, religionId)) {
       var investiture = FB.investiturePolicyForRealm(state, rid);
       var policy = investiture &&
         definition().investiture.policies[investiture.policy];
@@ -1590,7 +1602,7 @@ window.FB = window.FB || {};
 
   FB.papacyInvestiturePiety = function (state) {
     var me = playerChar(state);
-    if (!me || me.religion !== 'catholic' || FB.playerPope(state)) return 0;
+    if (!me || !catholicFaith(state, me) || FB.playerPope(state)) return 0;
     var record = FB.investiturePolicyForPlayer(state);
     var policy = record && definition().investiture.policies[record.policy];
     if (!policy) return 0;
@@ -1646,7 +1658,7 @@ window.FB = window.FB || {};
     if (!obedience || !obedience.claimantId || obedience.authority < gate ||
         state.date.year < definition().investiture.reformFrom ||
         !record || record.policy !== 'lay' ||
-        realmReligion(state, sovereign) !== 'catholic') return false;
+        !catholicReligion(state, realmReligion(state, sovereign))) return false;
     record.demandedTurn = state.turn;
     record.demandObedience = obedience.id;
     if (sovereign === 'player') {
@@ -1834,7 +1846,7 @@ window.FB = window.FB || {};
       ? Math.max(0, conf.cooldownDays - (state.turn - last.issuedTurn)) : 0;
     var reason = null;
     if (!obedience || !obedience.claimantId) reason = FB.T('This obedience has no living claimant.');
-    else if (!c || c.dead || c.religion !== 'catholic') reason = FB.T('The target is not a living Catholic ruler.');
+    else if (!c || c.dead || !catholicFaith(state, c)) reason = FB.T('The target is not a living Catholic ruler.');
     else if (c.id === obedience.claimantId) {
       reason = FB.T('A claimant cannot issue a sentence against himself.');
     }
@@ -2008,7 +2020,7 @@ window.FB = window.FB || {};
     for (var rid in state.realms) {
       var realm = state.realms[rid];
       if (!realm || !realm.alive || rid === 'player' ||
-          realmReligion(state, rid) !== 'catholic') continue;
+          !catholicReligion(state, realmReligion(state, rid))) continue;
       var c = rulerCharacter(state, rid, true);
       if (c && !seen[c.id]) {
         seen[c.id] = 1;
@@ -2016,7 +2028,7 @@ window.FB = window.FB || {};
       }
     }
     var me = playerChar(state);
-    if (me && me.religion === 'catholic' && !seen[me.id]) {
+    if (me && catholicFaith(state, me) && !seen[me.id]) {
       out.push({ realmId:'player', realm:state.realms.player || null, c:me });
     }
     out.sort(function (a, b) {
@@ -2107,7 +2119,7 @@ window.FB = window.FB || {};
       installPope(state, election, winnerId, chosen);
     }
     if (state.greatHolyWar && state.greatHolyWar.phase === 'preparation' &&
-        state.greatHolyWar.callingReligion === 'catholic') {
+        FB.faithHasSystem(state.greatHolyWar.callingReligion, 'papacy', state)) {
       if (FB.cancelGreatHolyWar) FB.cancelGreatHolyWar(state, 'schism');
       else state.greatHolyWar = null;
     }
@@ -2762,7 +2774,7 @@ window.FB = window.FB || {};
   };
 
   FB.papacyReligiousHeadRestored = function (state, religionId, rid) {
-    if (religionId !== 'catholic') return false;
+    if (!FB.faithHasSystem(religionId, 'papacy', state)) return false;
     var papacy = FB.ensurePapacy(state);
     var obedience = papacy && papacy.obediences[papacy.romanObedience];
     if (!obedience) return false;
@@ -2841,7 +2853,7 @@ window.FB = window.FB || {};
       state, realmSovereign(state, realmId), true
     );
     if (!obedience || obedience.claimantId !== state.player.charId ||
-        !realmId || realmReligion(state, realmId) !== 'catholic' ||
+        !realmId || !catholicReligion(state, realmReligion(state, realmId)) ||
         target && target.id === obedience.claimantId) return false;
     var key = obedienceId + ':' + realmId;
     papacy.audiences = papacy.audiences || {};
@@ -2876,7 +2888,7 @@ window.FB = window.FB || {};
     var cost = definition().balance.recognitionBargainGold || 25;
     if (!obedience || obedience.claimantId !== state.player.charId ||
         !FB.papacyInSchism(state) || !sovereign || sovereign === 'player' ||
-        realmReligion(state, sovereign) !== 'catholic' ||
+        !catholicReligion(state, realmReligion(state, sovereign)) ||
         FB.papalObedienceForRealm(state, sovereign) === obedience.id ||
         state.player.gold < cost) return false;
     papacy.recognitionBargains = papacy.recognitionBargains || {};

@@ -2203,11 +2203,12 @@
     "event.annulment_plea.options.0.desc.default": {
       "context": "Event annulment_plea, authored option 0, desc, branch default.",
       "glossary": [
-        "money:15"
+        "marriagePiety",
+        "money:marriageGold"
       ],
       "location": "data/events_common.js",
       "source": {
-        "text": "{money:15} and 20 piety ride on the church’s judgment."
+        "text": "{money:marriageGold} and {marriagePiety} piety ride on the church’s judgment."
       }
     },
     "event.annulment_plea.options.0.failure.text.default": {
@@ -28416,11 +28417,14 @@
     },
     "fx.epithet.cleric": {
       "context": "Durable message descriptor; English source remains at its callsite.",
-      "glossary": [],
+      "glossary": [
+        "cleric"
+      ],
       "location": "js/events.js",
       "source": {
         "forms": {
           "cases": {
+            "custom": "{cleric}",
             "jewish": "Rabbi",
             "muslim": "Imam",
             "other": "Priest",
@@ -28470,6 +28474,7 @@
     "fx.epithet.province_lord": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
+        "landed",
         "province"
       ],
       "location": "js/events.js",
@@ -28477,6 +28482,7 @@
         "forms": {
           "cases": {
             "chief": "Chief of {province}",
+            "custom": "{landed} of {province}",
             "emir": "Emir of {province}",
             "other": "Lord of {province}"
           },
@@ -32218,12 +32224,14 @@
     "news.event.annulment": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
+        "deity",
         "name"
       ],
       "location": "js/events.js",
       "source": {
         "forms": {
           "cases": {
+            "custom": "⛪ The marriage to {name} is declared void — before {deity}, it never was.",
             "jewish": "⛪ The marriage to {name} is declared void — before the Lord, it never was.",
             "muslim": "⛪ The marriage to {name} is declared void — before Allah, it never was.",
             "other": "⛪ The marriage to {name} is declared void — before God, it never was.",
@@ -41274,6 +41282,22 @@
         "text": "Kingdom of Jórvík"
       }
     },
+    "religion.ashari.adjective.default": {
+      "context": "religion ashari, adjective, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Ash’ari"
+      }
+    },
+    "religion.ashari.name.default": {
+      "context": "religion ashari, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Ash’ari School"
+      }
+    },
     "religion.baltic_pagan.name.default": {
       "context": "religion baltic_pagan, name, faith branch default.",
       "glossary": [],
@@ -41306,6 +41330,278 @@
         "text": "Latin Christianity"
       }
     },
+    "religion.catholic.roles.bishop.default": {
+      "context": "religion catholic, roles bishop.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Bishop"
+      }
+    },
+    "religion.catholic.roles.cardinal.default": {
+      "context": "religion catholic, roles cardinal.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Cardinal"
+      }
+    },
+    "religion.christian.name.default": {
+      "context": "religion christian, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Christianity"
+      }
+    },
+    "religion.christian.rankTitles.f.0.default": {
+      "context": "religion christian, f rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Serf"
+      }
+    },
+    "religion.christian.rankTitles.f.1.default": {
+      "context": "religion christian, f rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freeholder"
+      }
+    },
+    "religion.christian.rankTitles.f.2.default": {
+      "context": "religion christian, f rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Gentlewoman"
+      }
+    },
+    "religion.christian.rankTitles.f.3.default": {
+      "context": "religion christian, f rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Baroness"
+      }
+    },
+    "religion.christian.rankTitles.f.4.default": {
+      "context": "religion christian, f rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Countess"
+      }
+    },
+    "religion.christian.rankTitles.f.5.default": {
+      "context": "religion christian, f rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Duchess"
+      }
+    },
+    "religion.christian.rankTitles.f.6.default": {
+      "context": "religion christian, f rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Queen"
+      }
+    },
+    "religion.christian.rankTitles.f.7.default": {
+      "context": "religion christian, f rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Empress"
+      }
+    },
+    "religion.christian.rankTitles.m.0.default": {
+      "context": "religion christian, m rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Serf"
+      }
+    },
+    "religion.christian.rankTitles.m.1.default": {
+      "context": "religion christian, m rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freeholder"
+      }
+    },
+    "religion.christian.rankTitles.m.2.default": {
+      "context": "religion christian, m rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Gentry"
+      }
+    },
+    "religion.christian.rankTitles.m.3.default": {
+      "context": "religion christian, m rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Baron"
+      }
+    },
+    "religion.christian.rankTitles.m.4.default": {
+      "context": "religion christian, m rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Count"
+      }
+    },
+    "religion.christian.rankTitles.m.5.default": {
+      "context": "religion christian, m rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Duke"
+      }
+    },
+    "religion.christian.rankTitles.m.6.default": {
+      "context": "religion christian, m rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "King"
+      }
+    },
+    "religion.christian.rankTitles.m.7.default": {
+      "context": "religion christian, m rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Emperor"
+      }
+    },
+    "religion.christian.roles.abbotF.default": {
+      "context": "religion christian, roles abbotF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Abbess"
+      }
+    },
+    "religion.christian.roles.abbotM.default": {
+      "context": "religion christian, roles abbotM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Abbot"
+      }
+    },
+    "religion.christian.roles.monasticF.default": {
+      "context": "religion christian, roles monasticF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Nun"
+      }
+    },
+    "religion.christian.roles.monasticM.default": {
+      "context": "religion christian, roles monasticM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Monk"
+      }
+    },
+    "religion.christian.roles.priestF.default": {
+      "context": "religion christian, roles priestF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Priest"
+      }
+    },
+    "religion.christian.roles.priestM.default": {
+      "context": "religion christian, roles priestM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Priest"
+      }
+    },
+    "religion.christian.words.cleric.default": {
+      "context": "religion christian, words cleric.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "priest"
+      }
+    },
+    "religion.christian.words.deity.default": {
+      "context": "religion christian, words deity.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "God"
+      }
+    },
+    "religion.christian.words.landed.default": {
+      "context": "religion christian, words landed.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Lord"
+      }
+    },
+    "religion.christian.words.partnership.default": {
+      "context": "religion christian, words partnership.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Commenda partnership"
+      }
+    },
+    "religion.christian.words.temple.default": {
+      "context": "religion christian, words temple.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "church"
+      }
+    },
     "religion.eastern.name.default": {
       "context": "religion eastern, name, faith branch default.",
       "glossary": [],
@@ -41322,6 +41618,510 @@
         "text": "Judaism"
       }
     },
+    "religion.jewish.rankTitles.f.0.default": {
+      "context": "religion jewish, f rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Serf"
+      }
+    },
+    "religion.jewish.rankTitles.f.1.default": {
+      "context": "religion jewish, f rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freeholder"
+      }
+    },
+    "religion.jewish.rankTitles.f.2.default": {
+      "context": "religion jewish, f rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Gentlewoman"
+      }
+    },
+    "religion.jewish.rankTitles.f.3.default": {
+      "context": "religion jewish, f rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Elder"
+      }
+    },
+    "religion.jewish.rankTitles.f.4.default": {
+      "context": "religion jewish, f rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Begum"
+      }
+    },
+    "religion.jewish.rankTitles.f.5.default": {
+      "context": "religion jewish, f rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Great Begum"
+      }
+    },
+    "religion.jewish.rankTitles.f.6.default": {
+      "context": "religion jewish, f rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Khatun"
+      }
+    },
+    "religion.jewish.rankTitles.f.7.default": {
+      "context": "religion jewish, f rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Khatun"
+      }
+    },
+    "religion.jewish.rankTitles.m.0.default": {
+      "context": "religion jewish, m rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Serf"
+      }
+    },
+    "religion.jewish.rankTitles.m.1.default": {
+      "context": "religion jewish, m rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freeholder"
+      }
+    },
+    "religion.jewish.rankTitles.m.2.default": {
+      "context": "religion jewish, m rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Gentry"
+      }
+    },
+    "religion.jewish.rankTitles.m.3.default": {
+      "context": "religion jewish, m rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Elder"
+      }
+    },
+    "religion.jewish.rankTitles.m.4.default": {
+      "context": "religion jewish, m rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Bek"
+      }
+    },
+    "religion.jewish.rankTitles.m.5.default": {
+      "context": "religion jewish, m rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Great Bek"
+      }
+    },
+    "religion.jewish.rankTitles.m.6.default": {
+      "context": "religion jewish, m rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Khagan"
+      }
+    },
+    "religion.jewish.rankTitles.m.7.default": {
+      "context": "religion jewish, m rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Khagan"
+      }
+    },
+    "religion.jewish.roles.monasticF.default": {
+      "context": "religion jewish, roles monasticF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Nun"
+      }
+    },
+    "religion.jewish.roles.monasticM.default": {
+      "context": "religion jewish, roles monasticM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Monk"
+      }
+    },
+    "religion.jewish.roles.priestF.default": {
+      "context": "religion jewish, roles priestF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Rabbi"
+      }
+    },
+    "religion.jewish.roles.priestM.default": {
+      "context": "religion jewish, roles priestM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Rabbi"
+      }
+    },
+    "religion.jewish.words.cleric.default": {
+      "context": "religion jewish, words cleric.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "rabbi"
+      }
+    },
+    "religion.jewish.words.deity.default": {
+      "context": "religion jewish, words deity.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "the Lord"
+      }
+    },
+    "religion.jewish.words.landed.default": {
+      "context": "religion jewish, words landed.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Elder"
+      }
+    },
+    "religion.jewish.words.partnership.default": {
+      "context": "religion jewish, words partnership.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Trade partnership"
+      }
+    },
+    "religion.jewish.words.temple.default": {
+      "context": "religion jewish, words temple.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "synagogue"
+      }
+    },
+    "religion.maturidi.adjective.default": {
+      "context": "religion maturidi, adjective, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Maturidi"
+      }
+    },
+    "religion.maturidi.name.default": {
+      "context": "religion maturidi, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Maturidi School"
+      }
+    },
+    "religion.muslim.name.default": {
+      "context": "religion muslim, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Islam"
+      }
+    },
+    "religion.muslim.rankTitles.f.0.default": {
+      "context": "religion muslim, f rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Fellaha"
+      }
+    },
+    "religion.muslim.rankTitles.f.1.default": {
+      "context": "religion muslim, f rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freewoman"
+      }
+    },
+    "religion.muslim.rankTitles.f.2.default": {
+      "context": "religion muslim, f rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sayyida"
+      }
+    },
+    "religion.muslim.rankTitles.f.3.default": {
+      "context": "religion muslim, f rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sheikha"
+      }
+    },
+    "religion.muslim.rankTitles.f.4.default": {
+      "context": "religion muslim, f rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Emira"
+      }
+    },
+    "religion.muslim.rankTitles.f.5.default": {
+      "context": "religion muslim, f rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Grand Emira"
+      }
+    },
+    "religion.muslim.rankTitles.f.6.default": {
+      "context": "religion muslim, f rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sultana"
+      }
+    },
+    "religion.muslim.rankTitles.f.7.default": {
+      "context": "religion muslim, f rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Great Sultana"
+      }
+    },
+    "religion.muslim.rankTitles.m.0.default": {
+      "context": "religion muslim, m rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Fellah"
+      }
+    },
+    "religion.muslim.rankTitles.m.1.default": {
+      "context": "religion muslim, m rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freeman"
+      }
+    },
+    "religion.muslim.rankTitles.m.2.default": {
+      "context": "religion muslim, m rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sayyid"
+      }
+    },
+    "religion.muslim.rankTitles.m.3.default": {
+      "context": "religion muslim, m rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sheikh"
+      }
+    },
+    "religion.muslim.rankTitles.m.4.default": {
+      "context": "religion muslim, m rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Emir"
+      }
+    },
+    "religion.muslim.rankTitles.m.5.default": {
+      "context": "religion muslim, m rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Grand Emir"
+      }
+    },
+    "religion.muslim.rankTitles.m.6.default": {
+      "context": "religion muslim, m rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sultan"
+      }
+    },
+    "religion.muslim.rankTitles.m.7.default": {
+      "context": "religion muslim, m rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Great Sultan"
+      }
+    },
+    "religion.muslim.roles.grandQadi.default": {
+      "context": "religion muslim, roles grandQadi.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Grand Qadi"
+      }
+    },
+    "religion.muslim.roles.monasticF.default": {
+      "context": "religion muslim, roles monasticF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Scholar"
+      }
+    },
+    "religion.muslim.roles.monasticM.default": {
+      "context": "religion muslim, roles monasticM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Scholar"
+      }
+    },
+    "religion.muslim.roles.priestF.default": {
+      "context": "religion muslim, roles priestF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Imam"
+      }
+    },
+    "religion.muslim.roles.priestM.default": {
+      "context": "religion muslim, roles priestM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Imam"
+      }
+    },
+    "religion.muslim.roles.qadi.default": {
+      "context": "religion muslim, roles qadi.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Qadi"
+      }
+    },
+    "religion.muslim.words.cleric.default": {
+      "context": "religion muslim, words cleric.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "imam"
+      }
+    },
+    "religion.muslim.words.deity.default": {
+      "context": "religion muslim, words deity.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Allah"
+      }
+    },
+    "religion.muslim.words.landed.default": {
+      "context": "religion muslim, words landed.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Emir"
+      }
+    },
+    "religion.muslim.words.partnership.default": {
+      "context": "religion muslim, words partnership.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Qirad partnership"
+      }
+    },
+    "religion.muslim.words.temple.default": {
+      "context": "religion muslim, words temple.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "mosque"
+      }
+    },
     "religion.norse_pagan.name.default": {
       "context": "religion norse_pagan, name, faith branch default.",
       "glossary": [],
@@ -41336,6 +42136,246 @@
       "location": "data/cultures.js",
       "source": {
         "text": "Greek Christianity"
+      }
+    },
+    "religion.pagan.name.default": {
+      "context": "religion pagan, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Paganism"
+      }
+    },
+    "religion.pagan.rankTitles.f.0.default": {
+      "context": "religion pagan, f rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Thrall"
+      }
+    },
+    "religion.pagan.rankTitles.f.1.default": {
+      "context": "religion pagan, f rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Karl"
+      }
+    },
+    "religion.pagan.rankTitles.f.2.default": {
+      "context": "religion pagan, f rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Shieldmaiden"
+      }
+    },
+    "religion.pagan.rankTitles.f.3.default": {
+      "context": "religion pagan, f rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Lady"
+      }
+    },
+    "religion.pagan.rankTitles.f.4.default": {
+      "context": "religion pagan, f rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Jarl"
+      }
+    },
+    "religion.pagan.rankTitles.f.5.default": {
+      "context": "religion pagan, f rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "High Chief"
+      }
+    },
+    "religion.pagan.rankTitles.f.6.default": {
+      "context": "religion pagan, f rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Queen"
+      }
+    },
+    "religion.pagan.rankTitles.f.7.default": {
+      "context": "religion pagan, f rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "High Queen"
+      }
+    },
+    "religion.pagan.rankTitles.m.0.default": {
+      "context": "religion pagan, m rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Thrall"
+      }
+    },
+    "religion.pagan.rankTitles.m.1.default": {
+      "context": "religion pagan, m rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Karl"
+      }
+    },
+    "religion.pagan.rankTitles.m.2.default": {
+      "context": "religion pagan, m rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Huscarl"
+      }
+    },
+    "religion.pagan.rankTitles.m.3.default": {
+      "context": "religion pagan, m rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Hersir"
+      }
+    },
+    "religion.pagan.rankTitles.m.4.default": {
+      "context": "religion pagan, m rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Jarl"
+      }
+    },
+    "religion.pagan.rankTitles.m.5.default": {
+      "context": "religion pagan, m rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "High Chief"
+      }
+    },
+    "religion.pagan.rankTitles.m.6.default": {
+      "context": "religion pagan, m rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "King"
+      }
+    },
+    "religion.pagan.rankTitles.m.7.default": {
+      "context": "religion pagan, m rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "High King"
+      }
+    },
+    "religion.pagan.roles.monasticF.default": {
+      "context": "religion pagan, roles monasticF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Nun"
+      }
+    },
+    "religion.pagan.roles.monasticM.default": {
+      "context": "religion pagan, roles monasticM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Monk"
+      }
+    },
+    "religion.pagan.roles.priestF.default": {
+      "context": "religion pagan, roles priestF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Godi"
+      }
+    },
+    "religion.pagan.roles.priestM.default": {
+      "context": "religion pagan, roles priestM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Godi"
+      }
+    },
+    "religion.pagan.words.cleric.default": {
+      "context": "religion pagan, words cleric.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "godi"
+      }
+    },
+    "religion.pagan.words.deity.default": {
+      "context": "religion pagan, words deity.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "the gods"
+      }
+    },
+    "religion.pagan.words.landed.default": {
+      "context": "religion pagan, words landed.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Chief"
+      }
+    },
+    "religion.pagan.words.partnership.default": {
+      "context": "religion pagan, words partnership.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Commenda partnership"
+      }
+    },
+    "religion.pagan.words.temple.default": {
+      "context": "religion pagan, words temple.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "shrine"
       }
     },
     "religion.shia.name.default": {
@@ -42835,6 +43875,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -42899,6 +43940,16 @@
       ],
       "source": {
         "text": "Your child"
+      }
+    },
+    "src.03693f10": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "relationToParent has an invalid directional status."
       }
     },
     "src.037cb64e": {
@@ -43421,6 +44472,16 @@
         "text": "This realm is already at war."
       }
     },
+    "src.04dd8ffa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "assignable definitions need a name."
+      }
+    },
     "src.04e28c61": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -43635,6 +44696,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -43685,6 +44747,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -43799,6 +44862,16 @@
       ],
       "source": {
         "text": "Sovereign nation and every realm using its knowledge"
+      }
+    },
+    "src.05ee54f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Paganism"
       }
     },
     "src.05f0d432": {
@@ -44445,6 +45518,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/economy.js",
         "js/ui_modals.js"
@@ -47304,6 +48378,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/economy.js"
       ],
       "source": {
@@ -48760,6 +49835,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -49410,6 +50486,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -50344,6 +51421,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -50846,6 +51924,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -51270,6 +52349,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -51770,6 +52850,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -52861,6 +53942,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -53711,6 +54793,16 @@
         "text": "Connections form through deeds, work, guilds, and your lord’s court."
       }
     },
+    "src.1f8334ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "⛪ The marriage to {name} is declared void — before {deity}, it never was."
+      }
+    },
     "src.1f89134f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54224,6 +55316,16 @@
         "text": "Royal Catalogue"
       }
     },
+    "src.20c590f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Spends the day."
+      }
+    },
     "src.20c7cf16": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54358,6 +55460,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -56983,6 +58086,16 @@
         "text": "Jersika"
       }
     },
+    "src.2781b47e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Maturidi School"
+      }
+    },
     "src.27862faa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57037,6 +58150,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -58459,6 +59573,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -59255,6 +60370,16 @@
       ],
       "source": {
         "text": "Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life."
+      }
+    },
+    "src.2dcb15d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "unknown parent"
       }
     },
     "src.2dd29628": {
@@ -60285,6 +61410,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -60791,16 +61917,6 @@
         "text": "Withdrawal costs piety and prestige. Breaking an unfinished vow increases the cost, and active campaign effects determine the final amount."
       }
     },
-    "src.323fed34": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "— rank titles come from the capital county's faith group (rank+3 indexes FBDATA.titles: count→4 … emperor→7); a female ruler uses the group's"
-      }
-    },
     "src.324699c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60996,6 +62112,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -61050,6 +62167,16 @@
       ],
       "source": {
         "text": "Money first, honor second."
+      }
+    },
+    "src.332db6b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Ash’ari School"
       }
     },
     "src.332e8cc6": {
@@ -61556,6 +62683,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
@@ -62622,6 +63750,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -63206,6 +64335,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -64617,16 +65747,6 @@
         "text": "Claim it for yourself"
       }
     },
-    "src.3d7c73bd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "— falls back to the bare rank when unlanded */ FB.styledTitle = function (state) { return FB.renderTitleSnapshot(FB.titleSnapshot(state)); }; FB.titleSnapshot = function (state) { const p = state.player; const me = state.chars[p.charId]; const rel = FB.religionOf(me.religion); let group = rel.group === 'muslim' ? 'muslim' : rel.group === 'pagan' ? 'pagan' : rel.group === 'jewish' ? 'jewish' : 'christian'; if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f'; const arr = FBDATA.titles[group] || FBDATA.titles.christian; const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) }; if (FB.playerPope && FB.playerPope(state)) { snap.special = 'pope'; return snap; } if (FB.playerCardinal && FB.playerCardinal(state)) { snap.special = 'cardinal'; return snap; } const headed = FB.religionsHeadedBy(state, 'player'); if (headed.length) { const headReligion = headed[0]; snap.headReligion = headReligion; snap.headTitle = FBDATA.religions[headReligion].head.title; return snap; } if (p.tier"
-      }
-    },
     "src.3d866c03": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65107,6 +66227,16 @@
       ],
       "source": {
         "text": "Muscat"
+      }
+    },
+    "src.3ef34443": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "relation references unknown faith"
       }
     },
     "src.3ef694d3": {
@@ -65895,6 +67025,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -65905,6 +67036,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
@@ -67544,6 +68676,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js",
         "js/events.js"
       ],
@@ -67922,6 +69055,16 @@
         "text": "{money:gold} per plot. Land held together in one settlement is more productive."
       }
     },
+    "src.45d71961": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "relationToParent requires a parent."
+      }
+    },
     "src.45d746e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68164,6 +69307,19 @@
         "text": "Age {age}"
       }
     },
+    "src.469bccc0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/holywar.js",
+        "js/ui_modals.js",
+        "js/world.js"
+      ],
+      "source": {
+        "text": "head.greatHolyWar"
+      }
+    },
     "src.469d73cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68299,6 +69455,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js"
       ],
       "source": {
@@ -69518,6 +70675,16 @@
         "text": "A polished answer can carry both judgment and audience."
       }
     },
+    "src.4a94d2e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "marriage.spouseLimit needs positive integer m and f values."
+      }
+    },
     "src.4a9db838": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70068,6 +71235,16 @@
       ],
       "source": {
         "text": "Take a season’s freedom from toll instead."
+      }
+    },
+    "src.4c418d5f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "marriage.divorce has an invalid kind."
       }
     },
     "src.4c42a06c": {
@@ -71009,6 +72186,7 @@
       "glossary": [],
       "location": [
         "js/ui_modals.js",
+        "js/model.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -72540,6 +73718,16 @@
         "text": "{title} {name}"
       }
     },
+    "src.5253bc5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Maturidi"
+      }
+    },
     "src.5256d7e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72685,6 +73873,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
@@ -73466,6 +74655,16 @@
         "text": "Not yet. Save more first."
       }
     },
+    "src.5514f62f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "religiousHeads has invalid faith or office"
+      }
+    },
     "src.5516c9b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73564,6 +74763,16 @@
       ],
       "source": {
         "text": "Choose work or training…"
+      }
+    },
+    "src.55667f3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Monk"
       }
     },
     "src.5567075a": {
@@ -73735,6 +74944,16 @@
       ],
       "source": {
         "text": "Govern the church, appointments, sanctions, and any rival obedience."
+      }
+    },
+    "src.55f4d03c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "relationToParent has an invalid status."
       }
     },
     "src.55f76a98": {
@@ -73912,6 +75131,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -75013,6 +76233,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -75287,6 +76508,16 @@
       ],
       "source": {
         "text": "The supply wagons are late again, and the host eats the countryside as it goes. A farmstead ahead has full cribs and frightened eyes."
+      }
+    },
+    "src.59fcd77e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "relation to"
       }
     },
     "src.5a03f4ac": {
@@ -75591,6 +76822,16 @@
         "text": "Turn service rolls and aid tallies into leverage before the estates."
       }
     },
+    "src.5ab34ed1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{money:marriageGold} and {marriagePiety} piety ride on the church’s judgment."
+      }
+    },
     "src.5ab88593": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75605,6 +76846,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js"
       ],
       "source": {
@@ -77420,6 +78662,16 @@
         "text": "Mâcon"
       }
     },
+    "src.5fd4301a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Requires {prestige} prestige; you have {current}."
+      }
+    },
     "src.5fdb0914": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77444,6 +78696,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
@@ -77758,6 +79011,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js"
       ],
       "source": {
@@ -78468,6 +79722,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -79078,6 +80333,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -79438,6 +80694,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js",
         "js/ui_modals.js"
       ],
@@ -79489,6 +80746,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -80810,6 +82068,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -82414,6 +83673,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -83802,16 +85062,6 @@
         "text": "Barqa"
       }
     },
-    "src.70e487b4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Costs 5 prestige and spends the day."
-      }
-    },
     "src.70e4acc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83850,6 +85100,16 @@
       ],
       "source": {
         "text": "{name} ({role})"
+      }
+    },
+    "src.70f1dbc4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "marriage.acceptedRelations must be a non-empty array."
       }
     },
     "src.71019e10": {
@@ -84190,6 +85450,16 @@
       ],
       "source": {
         "text": "Stewards and secretaries, all day. The great remain unseen."
+      }
+    },
+    "src.71fcf6e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Nun"
       }
     },
     "src.720f11cd": {
@@ -84717,6 +85987,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -85162,6 +86433,16 @@
       ],
       "source": {
         "text": "Raised-host base logistics"
+      }
+    },
+    "src.746db2ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Grand Qadi"
       }
     },
     "src.747b2619": {
@@ -86040,6 +87321,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js",
         "js/ui_misc.js"
       ],
@@ -86691,6 +87973,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -87162,6 +88445,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -87966,6 +89250,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -89605,6 +90890,16 @@
         "text": "Save failed: {message}"
       }
     },
+    "src.802a4dd4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "definition must contain only finite JSON-safe values."
+      }
+    },
     "src.802f81c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90297,6 +91592,16 @@
         "text": "Sternpost Rudder"
       }
     },
+    "src.81e006d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Islam"
+      }
+    },
     "src.81e666bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90511,7 +91816,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Qirad partnership"
@@ -91689,6 +92994,16 @@
       ],
       "source": {
         "text": "Székesfehérvár"
+      }
+    },
+    "src.8514b5c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Christianity"
       }
     },
     "src.851bcd01": {
@@ -93172,6 +94487,17 @@
         "text": "Tutor a younger pupil."
       }
     },
+    "src.8921d916": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js",
+        "js/world.js"
+      ],
+      "source": {
+        "text": "head.officeId"
+      }
+    },
     "src.89223ca3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93333,16 +94659,6 @@
         "text": "A few coins to drown the picture."
       }
     },
-    "src.896ff208": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "has invalid faith"
-      }
-    },
     "src.8975e43e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93492,6 +94808,16 @@
       ],
       "source": {
         "text": "Patience looks much like fear from the border."
+      }
+    },
+    "src.89d430d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has invalid or unassignable faith"
       }
     },
     "src.89d491fe": {
@@ -93996,6 +95322,16 @@
       ],
       "source": {
         "text": "Runs from the fray."
+      }
+    },
+    "src.8b1c5302": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Costs {prestige} prestige and spends the day."
       }
     },
     "src.8b1ebf51": {
@@ -95515,6 +96851,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js"
       ],
       "source": {
@@ -95630,6 +96967,16 @@
       ],
       "source": {
         "text": "Silver where oaths would serve — {enemy} will name a conqueror’s price."
+      }
+    },
+    "src.8f330a75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "has an invalid status."
       }
     },
     "src.8f35d7a8": {
@@ -96259,6 +97606,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/events.js"
       ],
@@ -96600,6 +97948,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -97681,6 +99030,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js",
         "js/events.js",
         "js/ui_misc.js"
@@ -97773,6 +99123,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -98003,6 +99354,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/economy.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
@@ -98445,6 +99797,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -99590,6 +100943,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -100793,6 +102147,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -103616,6 +104971,16 @@
         "text": "Advanced Gate Defenses"
       }
     },
+    "src.a5115575": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "head needs a stable officeId."
+      }
+    },
     "src.a516c579": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103914,6 +105279,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -105671,6 +107037,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -105681,6 +107048,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -105853,6 +107221,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -106233,6 +107602,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -106553,6 +107923,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -106664,6 +108035,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -106955,6 +108327,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -109751,6 +111124,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -109811,6 +111185,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -111494,6 +112869,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -112145,6 +113521,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -112365,6 +113742,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -112515,7 +113893,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Commenda partnership"
@@ -114418,16 +115796,6 @@
         "text": "Spiced and Imported Table"
       }
     },
-    "src.c238b73c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "religiousHeads has invalid faith"
-      }
-    },
     "src.c24015c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115353,6 +116721,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -117209,6 +118578,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/events.js"
       ],
       "source": {
@@ -120812,6 +122182,16 @@
         "text": "Carolingian Italy"
       }
     },
+    "src.d3b9678d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "rankTitles needs m and f arrays with eight tiers."
+      }
+    },
     "src.d3bbc387": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120820,6 +122200,16 @@
       ],
       "source": {
         "text": "An ambitious vassal makes his case in public, voice carrying: has he not served? Is his house not great? Every eye at court turns to see whether the crown rewards merit — or can be seen to refuse it."
+      }
+    },
+    "src.d3c2a59a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{landed} of {province}"
       }
     },
     "src.d3c40102": {
@@ -125153,16 +126543,6 @@
         "text": "Face value: {money:face} in nominal coin. What that face value can buy may rise or fall with prices."
       }
     },
-    "src.df36b1fc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_common.js"
-      ],
-      "source": {
-        "text": "{money:15} and 20 piety ride on the church’s judgment."
-      }
-    },
     "src.df3a4738": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125774,6 +127154,16 @@
         "text": "{name} is already at the +{threshold} Standing threshold."
       }
     },
+    "src.e0f9e619": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "marriage must be an object."
+      }
+    },
     "src.e0ff1baf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126148,6 +127538,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
@@ -126271,6 +127662,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/economy.js",
         "js/ui_modals.js"
@@ -127995,6 +129387,16 @@
         "text": "Offer a peace pact…"
       }
     },
+    "src.e6a4fe51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "inheritance cycle."
+      }
+    },
     "src.e6a9e0fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129009,6 +130411,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -129407,6 +130810,16 @@
         "text": "Some injuries deserve a longer memory."
       }
     },
+    "src.ea3d87b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Ash’ari"
+      }
+    },
     "src.ea449564": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129542,6 +130955,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -130176,6 +131590,16 @@
       ],
       "source": {
         "text": "Gains +10 Standing; no one is displaced from this vacant seat."
+      }
+    },
+    "src.eccf10f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "definition must be an object."
       }
     },
     "src.ecd150dd": {
@@ -131024,6 +132448,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -133127,6 +134552,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js",
         "js/main.js",
         "js/economy.js",
@@ -135056,6 +136482,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "data/map_data.js"
       ],
       "source": {
@@ -135220,6 +136647,16 @@
       ],
       "source": {
         "text": "Craft outfit"
+      }
+    },
+    "src.fa5f6c9f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "[object Object]"
       }
     },
     "src.fa602d60": {
@@ -136097,6 +137534,16 @@
         "text": "🕯 Your child {name} has died, aged {age}."
       }
     },
+    "src.fcea13ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "— falls back to the bare rank when unlanded */ FB.styledTitle = function (state) { return FB.renderTitleSnapshot(FB.titleSnapshot(state)); }; FB.titleSnapshot = function (state) { const p = state.player; const me = state.chars[p.charId]; const rank = rankTitleRecord(state, me.religion, me.sex, p.tier); let group = FB.faithGroup(me.religion, state) || 'christian'; if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f'; const snap = { group:group, religion:me.religion, titleReligion:rank.sourceId || null, titleSex:rank.sex || me.sex, tier:rank.tier, word:rank.word }; if (FB.playerPope && FB.playerPope(state)) { snap.headReligion = me.religion; const head = FB.faithValue(state, me.religion, 'head.title'); snap.headTitleReligion = head.sourceId || me.religion; snap.headTitle = head.value || 'Pope'; return snap; } if (FB.playerCardinal && FB.playerCardinal(state)) { snap.special = 'cardinal'; snapshotFaithRole(snap, state, me.religion, 'cardinal'); return snap; } const headed = FB.religionsHeadedBy(state, 'player'); if (headed.length) { const headReligion = headed[0]; snap.headReligion = headReligion; const head = FB.faithValue(state, headReligion, 'head.title'); snap.headTitleReligion = head.sourceId || headReligion; snap.headTitle = head.value; return snap; } if (p.tier"
+      }
+    },
     "src.fced05c2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136357,6 +137804,16 @@
       ],
       "source": {
         "text": "Astonishingly, the lie holds."
+      }
+    },
+    "src.fdc18606": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "marriage.acceptedRelations contains"
       }
     },
     "src.fdc20a7b": {
@@ -145903,14 +147360,6 @@
         "text": "Command your host in war (it marches only while standing idle — a route you tap by hand always plays out, and a halted host holds):"
       }
     },
-    "ui:Commenda partnership": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/economy.js",
-      "source": {
-        "text": "Commenda partnership"
-      }
-    },
     "ui:Commoner household": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -146110,14 +147559,6 @@
         "text": "Controlled by its current owner"
       }
     },
-    "ui:Costs 5 prestige and spends the day.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Costs 5 prestige and spends the day."
-      }
-    },
     "ui:Costs {money:10}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -146159,6 +147600,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Costs {money:gold} and {piety} piety; the church decides after you spend the day."
+      }
+    },
+    "ui:Costs {prestige} prestige and spends the day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "prestige"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Costs {prestige} prestige and spends the day."
       }
     },
     "ui:Count": {
@@ -154642,14 +156093,6 @@
         "text": "Qadi"
       }
     },
-    "ui:Qirad partnership": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/economy.js",
-      "source": {
-        "text": "Qirad partnership"
-      }
-    },
     "ui:Qualify as {rank}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -155694,6 +157137,17 @@
       "location": "js/world.js",
       "source": {
         "text": "Requires {prestige} prestige; currently {current}."
+      }
+    },
+    "ui:Requires {prestige} prestige; you have {current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "prestige"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Requires {prestige} prestige; you have {current}."
       }
     },
     "ui:Requires {rank} rank or higher.": {
@@ -157386,6 +158840,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)"
+      }
+    },
+    "ui:Spends the day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Spends the day."
       }
     },
     "ui:Sponsor the rival": {

@@ -15,7 +15,634 @@ window.FB = window.FB || {};
   };
 
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
-  FB.religionOf = function (id) { return FBDATA.religions[id] || FBDATA.religions.catholic; };
+
+  /* ---------- faith definitions ----------
+     Authored and generated faiths share one inheritance graph. Definitions
+     keep identity/lifecycle fields locally and recursively inherit only the
+     JSON-safe values inside `properties`; legacy top-level qualities and the
+     old `group` parent spelling remain accepted for existing mods. */
+  const FAITH_META = {
+    id:true, name:true, adjective:true, collective:true, desc:true, icon:true,
+    parent:true, group:true, assignable:true, active:true,
+    relationToParent:true, relations:true, properties:true,
+    createdTurn:true, founderId:true, originProvinceId:true
+  };
+  const FAITH_RELATIONS = {
+    same:0, in_fold:1, schismatic:2, hostile:3, foreign:4
+  };
+  const LEGACY_FAITH_GROUPS = {
+    christian:true, muslim:true, pagan:true, jewish:true
+  };
+  let staticFaithCompiled = null;
+  let liveFaithState = null;
+  let liveFaithRevision = -1;
+  let liveFaithCompiled = null;
+
+  function own(obj, key) {
+    return Object.prototype.hasOwnProperty.call(obj, key);
+  }
+
+  function plainObject(value) {
+    return !!value && Object.prototype.toString.call(value) === '[object Object]';
+  }
+
+  function cloneFaithValue(value) {
+    if (Array.isArray(value)) {
+      return value.map(function (item) { return cloneFaithValue(item); });
+    }
+    if (plainObject(value)) {
+      const out = {};
+      for (const key in value) if (own(value, key)) {
+        out[key] = cloneFaithValue(value[key]);
+      }
+      return out;
+    }
+    return value;
+  }
+
+  function jsonSafeFaithValue(value, stack) {
+    if (value === null || typeof value === 'string' ||
+        typeof value === 'boolean') return true;
+    if (typeof value === 'number') return isFinite(value);
+    if (!Array.isArray(value) && !plainObject(value)) return false;
+    stack = stack || [];
+    if (stack.indexOf(value) >= 0) return false;
+    stack.push(value);
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        if (!jsonSafeFaithValue(value[i], stack)) { stack.pop(); return false; }
+      }
+    } else {
+      for (const key in value) if (own(value, key) &&
+          !jsonSafeFaithValue(value[key], stack)) {
+        stack.pop();
+        return false;
+      }
+    }
+    stack.pop();
+    return true;
+  }
+
+  function mergeFaithValues(target, additions, sources, sourceId, prefix) {
+    if (!plainObject(additions)) return target;
+    for (const key in additions) {
+      if (!own(additions, key)) continue;
+      const path = prefix ? prefix + '.' + key : key;
+      const value = additions[key];
+      if (plainObject(value)) {
+        if (!plainObject(target[key])) target[key] = {};
+        if (path) sources[path] = sourceId;
+        mergeFaithValues(target[key], value, sources, sourceId, path);
+      } else {
+        target[key] = cloneFaithValue(value);
+        sources[path] = sourceId;
+      }
+    }
+    return target;
+  }
+
+  function faithParent(def) {
+    if (!def || typeof def !== 'object') return null;
+    const value = own(def, 'parent') ? def.parent : def.group;
+    if (value === undefined || value === null || value === '') return null;
+    /* Old Judaism replacements commonly repeated `group:'jewish'`. It was a
+       category label, not an attempt to make the faith inherit from itself. */
+    return String(value) === String(def.id || '') ? null : String(value);
+  }
+
+  function localFaithProperties(def) {
+    const out = {};
+    if (plainObject(def && def.properties)) {
+      mergeFaithValues(out, def.properties, {}, '', '');
+    }
+    /* Compatibility: religion records historically placed `head` and any
+       mod-added qualities beside name/group/icon. Treat every non-meta field
+       as an inheritable property without mutating the mod's raw object. */
+    if (def && typeof def === 'object') {
+      for (const key in def) {
+        if (!own(def, key) || FAITH_META[key]) continue;
+        out[key] = cloneFaithValue(def[key]);
+      }
+    }
+    return out;
+  }
+
+  function faithRawTable(state) {
+    const table = {};
+    const base = FBDATA.religions || {};
+    for (const id in base) if (own(base, id)) table[id] = base[id];
+    const generated = state && plainObject(state.faiths) ? state.faiths : null;
+    if (generated) for (const id in generated) if (own(generated, id)) {
+      table[id] = generated[id];
+    }
+    return table;
+  }
+
+  function normalizeFaithRelation(value, direction) {
+    let status = value;
+    if (plainObject(value)) {
+      status = direction === 'parentView' ? value.parentView : value.childView;
+    }
+    return own(FAITH_RELATIONS, status) && status !== 'same' && status !== 'foreign'
+      ? status : 'schismatic';
+  }
+
+  function compileFaithTable(state) {
+    const raw = faithRawTable(state);
+    const resolved = {}, errors = [], visiting = {};
+    function fault(id, text) { errors.push('Faith ' + id + ': ' + text); }
+    function resolve(id) {
+      if (resolved[id]) return resolved[id];
+      const def = raw[id];
+      if (!plainObject(def)) {
+        fault(id, 'definition must be an object.');
+        return null;
+      }
+      if (!jsonSafeFaithValue(def)) {
+        fault(id, 'definition must contain only finite JSON-safe values.');
+        return null;
+      }
+      if (visiting[id]) {
+        fault(id, 'inheritance cycle.');
+        return null;
+      }
+      visiting[id] = true;
+      const local = cloneFaithValue(def);
+      local.id = id;
+      const parentId = faithParent(local);
+      let parent = null;
+      if (parentId) {
+        if (!raw[parentId]) fault(id, 'unknown parent ' + parentId + '.');
+        else parent = resolve(parentId);
+      }
+      const properties = parent ? cloneFaithValue(parent.properties) : {};
+      const sources = parent ? cloneFaithValue(parent._faithSources) : {};
+      const localProperties = localFaithProperties(local);
+      mergeFaithValues(properties, localProperties, sources, id, '');
+      /* Before officeId existed, a head definition's faith id was also its
+         save key. Preserve that contract for old mods while new definitions
+         can deliberately share a stable office across inherited children. */
+      if (plainObject(local.head) && !own(local.head, 'officeId')) {
+        properties.head.officeId = id;
+        sources['head.officeId'] = id;
+      } else if (plainObject(properties.head) && !own(properties.head, 'officeId')) {
+        properties.head.officeId = id;
+        sources['head.officeId'] = id;
+      }
+      const effective = {
+        id:id,
+        name:typeof local.name === 'string' && local.name ? local.name : id,
+        adjective:local.adjective,
+        collective:local.collective,
+        desc:local.desc,
+        icon:local.icon || (parent && parent.icon) || '',
+        parent:parentId,
+        assignable:local.assignable !== false,
+        active:local.active !== false,
+        relationToParent:local.relationToParent,
+        relations:plainObject(local.relations) ? cloneFaithValue(local.relations) : {},
+        properties:properties,
+        createdTurn:local.createdTurn,
+        founderId:local.founderId,
+        originProvinceId:local.originProvinceId
+      };
+      for (const key in properties) if (own(properties, key)) {
+        effective[key] = properties[key];
+      }
+      const lineage = [id];
+      if (parent && parent._faithLineage) {
+        for (let i = 0; i < parent._faithLineage.length; i++) {
+          lineage.push(parent._faithLineage[i]);
+        }
+      }
+      let legacyGroup = null;
+      for (let i = 0; i < lineage.length; i++) {
+        if (LEGACY_FAITH_GROUPS[lineage[i]]) legacyGroup = lineage[i];
+      }
+      effective.group = legacyGroup || parentId || id;
+      Object.defineProperty(effective, '_faithLineage', {
+        value:lineage, enumerable:false
+      });
+      Object.defineProperty(effective, '_faithSources', {
+        value:sources, enumerable:false
+      });
+      Object.defineProperty(effective, '_faithRaw', {
+        value:local, enumerable:false
+      });
+      resolved[id] = effective;
+      visiting[id] = false;
+      return effective;
+    }
+    for (const id in raw) if (own(raw, id)) resolve(id);
+
+    for (const id in resolved) {
+      if (!own(resolved, id)) continue;
+      const rel = resolved[id];
+      const rawDef = raw[id];
+      if (rawDef.assignable !== false &&
+          (typeof rawDef.name !== 'string' || !rawDef.name)) {
+        fault(id, 'assignable definitions need a name.');
+      }
+      if (rawDef.relationToParent !== undefined && !rel.parent) {
+        fault(id, 'relationToParent requires a parent.');
+      }
+      if (rel.parent) {
+        const relation = rawDef.relationToParent;
+        if (plainObject(relation)) {
+          if (!own(FAITH_RELATIONS, relation.childView) ||
+              !own(FAITH_RELATIONS, relation.parentView) ||
+              relation.childView === 'same' || relation.childView === 'foreign' ||
+              relation.parentView === 'same' || relation.parentView === 'foreign') {
+            fault(id, 'relationToParent has an invalid directional status.');
+          }
+        } else if (relation !== undefined &&
+            (!own(FAITH_RELATIONS, relation) || relation === 'same' ||
+             relation === 'foreign')) {
+          fault(id, 'relationToParent has an invalid status.');
+        }
+      }
+      for (const targetId in rel.relations) {
+        if (!own(rel.relations, targetId)) continue;
+        if (!resolved[targetId]) fault(id, 'relation references unknown faith ' + targetId + '.');
+        const status = rel.relations[targetId];
+        if (!own(FAITH_RELATIONS, status) || status === 'same') {
+          fault(id, 'relation to ' + targetId + ' has an invalid status.');
+        }
+      }
+      const marriage = rel.marriage;
+      if (marriage !== undefined) {
+        if (!plainObject(marriage)) {
+          fault(id, 'marriage must be an object.');
+        } else {
+          const limits = marriage.spouseLimit;
+          if (!plainObject(limits) || !isFinite(limits.m) || !isFinite(limits.f) ||
+              limits.m < 1 || limits.f < 1 || Math.floor(limits.m) !== limits.m ||
+              Math.floor(limits.f) !== limits.f) {
+            fault(id, 'marriage.spouseLimit needs positive integer m and f values.');
+          }
+          const accepted = marriage.acceptedRelations;
+          if (!Array.isArray(accepted) || !accepted.length) {
+            fault(id, 'marriage.acceptedRelations must be a non-empty array.');
+          } else for (let ai = 0; ai < accepted.length; ai++) {
+            if (!own(FAITH_RELATIONS, accepted[ai])) {
+              fault(id, 'marriage.acceptedRelations contains ' + accepted[ai] + '.');
+            }
+          }
+          const ending = marriage.divorce;
+          if (!plainObject(ending) ||
+              ['annulment','talaq','get','sunder'].indexOf(ending.kind) < 0) {
+            fault(id, 'marriage.divorce has an invalid kind.');
+          }
+        }
+      }
+      const titles = rel.rankTitles;
+      if (titles !== undefined) {
+        if (!plainObject(titles) || !Array.isArray(titles.m) ||
+            !Array.isArray(titles.f) || titles.m.length < 8 || titles.f.length < 8) {
+          fault(id, 'rankTitles needs m and f arrays with eight tiers.');
+        }
+      }
+      if (rel.head !== undefined && rel.head !== null) {
+        if (!plainObject(rel.head) || typeof rel.head.officeId !== 'string' ||
+            !rel.head.officeId) fault(id, 'head needs a stable officeId.');
+      }
+    }
+    return { raw:raw, resolved:resolved, errors:errors };
+  }
+
+  function stateFaithRevision(state) {
+    return state && isFinite(state._faithRevision) ? state._faithRevision : 0;
+  }
+
+  function requestedFaithState(state) {
+    return state === undefined ? FB.state : state;
+  }
+
+  function compiledFaiths(state) {
+    if (state && plainObject(state.faiths) && Object.keys(state.faiths).length) {
+      const revision = stateFaithRevision(state);
+      if (liveFaithState !== state || liveFaithRevision !== revision ||
+          !liveFaithCompiled) {
+        liveFaithState = state;
+        liveFaithRevision = revision;
+        liveFaithCompiled = compileFaithTable(state);
+      }
+      return liveFaithCompiled;
+    }
+    if (!staticFaithCompiled) staticFaithCompiled = compileFaithTable(null);
+    return staticFaithCompiled;
+  }
+
+  function touchFaithState(state) {
+    if (!state) return;
+    const next = stateFaithRevision(state) + 1;
+    try {
+      Object.defineProperty(state, '_faithRevision', {
+        value:next, writable:true, configurable:true, enumerable:false
+      });
+    } catch (e) { state._faithRevision = next; }
+    if (liveFaithState === state) liveFaithCompiled = null;
+  }
+
+  FB.invalidateReligionData = function () {
+    staticFaithCompiled = null;
+    liveFaithCompiled = null;
+  };
+
+  FB.invalidateFaithState = function (state) {
+    touchFaithState(state);
+  };
+
+  FB.configureReligions = function (state) {
+    if (state) touchFaithState(state);
+    else FB.invalidateReligionData();
+    return compiledFaiths(state).errors.slice();
+  };
+
+  FB.validateReligionData = function (state) {
+    return compiledFaiths(state).errors.slice();
+  };
+
+  FB.ensureFaithState = function (state) {
+    if (!state) return {};
+    let changed = false;
+    if (!plainObject(state.faiths)) { state.faiths = {}; changed = true; }
+    if (!plainObject(state.faithRelations)) { state.faithRelations = {}; changed = true; }
+    if (!isFinite(state.faithNextId) || state.faithNextId < 1) {
+      state.faithNextId = 1;
+      changed = true;
+    } else state.faithNextId = Math.floor(state.faithNextId);
+    if (changed) touchFaithState(state);
+    return state.faiths;
+  };
+
+  FB.religionIds = function (state, assignableOnly) {
+    const compiled = compiledFaiths(requestedFaithState(state));
+    const out = [];
+    for (const id in compiled.resolved) {
+      if (!own(compiled.resolved, id)) continue;
+      const rel = compiled.resolved[id];
+      if (assignableOnly && (!rel.assignable || !rel.active)) continue;
+      out.push(id);
+    }
+    return out;
+  };
+
+  FB.religionOf = function (id, state) {
+    const compiled = compiledFaiths(requestedFaithState(state));
+    return compiled.resolved[id] || compiled.resolved.catholic ||
+      compiled.resolved[Object.keys(compiled.resolved)[0]] || null;
+  };
+
+  FB.faithExists = function (id, state) {
+    return !!compiledFaiths(requestedFaithState(state)).resolved[id];
+  };
+
+  FB.faithAssignable = function (id, state) {
+    const rel = compiledFaiths(requestedFaithState(state)).resolved[id];
+    return !!(rel && rel.assignable && rel.active);
+  };
+
+  FB.faithLineage = function (id, state) {
+    const rel = compiledFaiths(requestedFaithState(state)).resolved[id];
+    return rel && rel._faithLineage ? rel._faithLineage.slice() : [];
+  };
+
+  FB.faithIsA = function (id, ancestorId, state) {
+    return FB.faithLineage(id, state).indexOf(ancestorId) >= 0;
+  };
+
+  FB.faithGroup = function (id, state) {
+    const lineage = FB.faithLineage(id, state);
+    let group = null;
+    for (let i = 0; i < lineage.length; i++) {
+      if (LEGACY_FAITH_GROUPS[lineage[i]]) group = lineage[i];
+    }
+    return group || (lineage.length > 1 ? lineage[lineage.length - 1] : id);
+  };
+
+  function faithPath(obj, path) {
+    const parts = String(path || '').split('.');
+    let cur = obj;
+    for (let i = 0; i < parts.length; i++) {
+      if (!parts[i]) continue;
+      if (cur === undefined || cur === null) return undefined;
+      cur = cur[parts[i]];
+    }
+    return cur;
+  }
+
+  FB.faithValue = function (state, id, path) {
+    const rel = compiledFaiths(requestedFaithState(state)).resolved[id];
+    if (!rel) return { value:undefined, sourceId:null };
+    let sourceId = id;
+    if (path !== 'name' && path !== 'adjective' && path !== 'collective' &&
+        path !== 'desc' && path !== 'icon') {
+      let probe = String(path || '');
+      while (probe) {
+        if (rel._faithSources[probe]) { sourceId = rel._faithSources[probe]; break; }
+        const dot = probe.lastIndexOf('.');
+        probe = dot >= 0 ? probe.slice(0, dot) : '';
+      }
+    }
+    return { value:faithPath(rel, path), sourceId:sourceId };
+  };
+
+  FB.faithDataText = function (state, viewer, id, path, ctx) {
+    const found = FB.faithValue(state, id, path);
+    const sourceId = found.sourceId || id;
+    const source = FB.religionOf(sourceId, state);
+    if (!source) return '';
+    return FB.dataText(state, viewer, 'religion', sourceId, source, path, ctx || {});
+  };
+
+  FB.faithBranch = function (state, id, value) {
+    if (!plainObject(value) || value.text !== undefined || value.forms) {
+      return { branch:'default', value:value };
+    }
+    const lineage = FB.faithLineage(id, state);
+    for (let i = 0; i < lineage.length; i++) {
+      if (own(value, lineage[i])) {
+        return { branch:lineage[i], value:value[lineage[i]] };
+      }
+    }
+    return { branch:'default', value:value.default };
+  };
+
+  function explicitFaithRelation(state, observerId, targetId) {
+    const overrides = state && plainObject(state.faithRelations)
+      ? state.faithRelations : null;
+    const compiled = compiledFaiths(requestedFaithState(state)).resolved;
+    const observerLine = FB.faithLineage(observerId, state);
+    const targetLine = FB.faithLineage(targetId, state);
+    for (let oi = 0; oi < observerLine.length; oi++) {
+      const observer = observerLine[oi];
+      for (let ti = 0; ti < targetLine.length; ti++) {
+        const target = targetLine[ti];
+        if (overrides && plainObject(overrides[observer]) &&
+            own(overrides[observer], target)) {
+          return overrides[observer][target];
+        }
+        const rel = compiled[observer];
+        if (rel && own(rel.relations, target)) return rel.relations[target];
+      }
+    }
+    return null;
+  }
+
+  FB.faithRelation = function (state, observerId, targetId) {
+    if (observerId === targetId && FB.faithExists(observerId, state)) return 'same';
+    if (!FB.faithExists(observerId, state) || !FB.faithExists(targetId, state)) {
+      return 'foreign';
+    }
+    const explicit = explicitFaithRelation(state, observerId, targetId);
+    if (own(FAITH_RELATIONS, explicit)) return explicit;
+    const observerLine = FB.faithLineage(observerId, state);
+    const targetLine = FB.faithLineage(targetId, state);
+    let common = null, observerCommon = -1, targetCommon = -1;
+    for (let oi = 0; oi < observerLine.length && common === null; oi++) {
+      const ti = targetLine.indexOf(observerLine[oi]);
+      if (ti >= 0) { common = observerLine[oi]; observerCommon = oi; targetCommon = ti; }
+    }
+    if (common === null) return 'foreign';
+    let worst = FAITH_RELATIONS.in_fold;
+    const compiled = compiledFaiths(requestedFaithState(state)).resolved;
+    for (let oi = 0; oi < observerCommon; oi++) {
+      const status = normalizeFaithRelation(
+        compiled[observerLine[oi]].relationToParent, 'childView');
+      worst = Math.max(worst, FAITH_RELATIONS[status]);
+    }
+    for (let ti = 0; ti < targetCommon; ti++) {
+      const status = normalizeFaithRelation(
+        compiled[targetLine[ti]].relationToParent, 'parentView');
+      worst = Math.max(worst, FAITH_RELATIONS[status]);
+    }
+    for (const status in FAITH_RELATIONS) {
+      if (FAITH_RELATIONS[status] === worst) return status;
+    }
+    return 'schismatic';
+  };
+
+  FB.faithInFold = function (state, observerId, targetId) {
+    const relation = FB.faithRelation(state, observerId, targetId);
+    return relation === 'same' || relation === 'in_fold';
+  };
+
+  FB.setFaithRelation = function (state, observerId, targetId, status) {
+    if (!state || observerId === targetId || !FB.faithExists(observerId, state) ||
+        !FB.faithExists(targetId, state) || !own(FAITH_RELATIONS, status) ||
+        status === 'same') return false;
+    FB.ensureFaithState(state);
+    if (!plainObject(state.faithRelations[observerId])) {
+      state.faithRelations[observerId] = {};
+    }
+    state.faithRelations[observerId][targetId] = status;
+    return true;
+  };
+
+  FB.faithAllowsMarriage = function (state, observerId, targetId) {
+    if (!FB.faithExists(observerId, state) || !FB.faithExists(targetId, state)) return false;
+    const rel = FB.religionOf(observerId, state);
+    const accepted = rel && rel.marriage && rel.marriage.acceptedRelations || ['same'];
+    return accepted.indexOf(FB.faithRelation(state, observerId, targetId)) >= 0;
+  };
+
+  FB.faithHasSystem = function (id, systemId, state) {
+    if (!FB.faithExists(id, state)) return false;
+    const rel = FB.religionOf(id, state);
+    return !!(rel && rel.systems && rel.systems[systemId]);
+  };
+
+  FB.faithOfficeId = function (id, state) {
+    if (!FB.faithExists(id, state)) return null;
+    const rel = FB.religionOf(id, state);
+    return rel && rel.head && rel.head.officeId || null;
+  };
+
+  FB.createFaith = function (state, definition) {
+    if (!state || !plainObject(definition) ||
+        !jsonSafeFaithValue(definition)) return null;
+    FB.ensureFaithState(state);
+    const suppliedId = definition.id === undefined ? null : String(definition.id);
+    let id = suppliedId;
+    if (!id) {
+      do { id = 'generated_faith_' + state.faithNextId++; }
+      while (FB.faithExists(id, state));
+    }
+    if (!/^[a-z0-9_-]+$/i.test(id) || FB.faithExists(id, state)) return null;
+    const stored = cloneFaithValue(definition);
+    delete stored.id;
+    if (stored.assignable === undefined) stored.assignable = true;
+    if (stored.active === undefined) stored.active = true;
+    if (stored.createdTurn === undefined) stored.createdTurn = Number(state.turn) || 0;
+    state.faiths[id] = stored;
+    touchFaithState(state);
+    const errors = FB.validateReligionData(state);
+    if (errors.length) {
+      delete state.faiths[id];
+      touchFaithState(state);
+      return null;
+    }
+    return id;
+  };
+
+  /* Runtime schisms use the same JSON definition as seeded faiths. The
+     definition is saved in state; only actor/realm conversion is performed
+     here because county religion still belongs to the authored world map. */
+  FB.foundFaith = function (state, definition, options) {
+    if (!state || !definition || typeof definition !== 'object') return null;
+    options = options || {};
+    const me = state.chars && state.chars[state.player.charId];
+    const stored = cloneFaithValue(definition);
+    if (!own(stored, 'group') && !own(stored, 'parent') && me) {
+      stored.group = me.religion;
+    } else if (stored.group === '$current' && me) {
+      stored.group = me.religion;
+    } else if (stored.parent === '$current' && me) {
+      stored.parent = me.religion;
+    }
+    if ((stored.group || stored.parent) && stored.relationToParent === undefined) {
+      stored.relationToParent = 'schismatic';
+    }
+    if (stored.founderId === undefined && me) stored.founderId = me.id;
+    if (stored.originProvinceId === undefined && state.player) {
+      stored.originProvinceId = state.player.provinceId;
+    }
+    const id = FB.createFaith(state, stored);
+    if (!id) return null;
+    if (!FB.faithAssignable(id, state)) return id;
+    if (me && options.convertFounder !== false) me.religion = id;
+    if (me && options.convertHousehold && FB.householdMembers) {
+      const household = FB.householdMembers(state);
+      for (let i = 0; i < household.length; i++) household[i].religion = id;
+    }
+    if (options.convertRealm && state.realms && state.realms.player &&
+        state.realms.player.alive) state.realms.player.religion = id;
+    if (FB.clearPortraitCache) FB.clearPortraitCache();
+    return id;
+  };
+
+  function religiousOfficeDefinitions(state) {
+    const out = {};
+    const ids = FB.religionIds(state, false);
+    for (let i = 0; i < ids.length; i++) {
+      const religionId = ids[i];
+      const rel = FB.religionOf(religionId, state);
+      if (!rel || !rel.head || !rel.head.officeId) continue;
+      const officeId = rel.head.officeId;
+      const source = FB.faithValue(state, religionId, 'head.officeId').sourceId ||
+        religionId;
+      if (!out[officeId] || source === religionId) {
+        out[officeId] = { id:officeId, religionId:source, head:rel.head };
+      }
+    }
+    return out;
+  }
+
+  FB.religiousOfficeReligion = function (state, officeId) {
+    const office = religiousOfficeDefinitions(state)[officeId];
+    return office ? office.religionId : null;
+  };
 
   function bookmarkReligiousHead(state, religionId) {
     var bookmark = null;
@@ -25,7 +652,20 @@ window.FB = window.FB || {};
     if (mapping && Object.prototype.hasOwnProperty.call(mapping, religionId)) {
       return mapping[religionId];
     }
-    var rel = FBDATA.religions[religionId];
+    var rel = FB.religionOf(religionId, state);
+    var officeId = rel && rel.head && rel.head.officeId;
+    if (mapping && officeId && Object.prototype.hasOwnProperty.call(mapping, officeId)) {
+      return mapping[officeId];
+    }
+    if (mapping && officeId) {
+      for (var mappedFaithId in mapping) {
+        if (!own(mapping, mappedFaithId) ||
+            !FB.faithExists(mappedFaithId, state)) continue;
+        var mappedFaith = FB.religionOf(mappedFaithId, state);
+        if (mappedFaith && mappedFaith.head &&
+            mappedFaith.head.officeId === officeId) return mapping[mappedFaithId];
+      }
+    }
     return rel && rel.head ? rel.head.realm : null;
   }
 
@@ -39,6 +679,7 @@ window.FB = window.FB || {};
      turn and former realm are preserved beside it for delayed recovery. */
   FB.ensureReligiousHeads = function (state) {
     if (!state) return {};
+    FB.ensureFaithState(state);
     if (!state.religiousHeads || typeof state.religiousHeads !== 'object' ||
         Array.isArray(state.religiousHeads)) state.religiousHeads = {};
     if (!state.religiousHeadVacancies ||
@@ -46,16 +687,19 @@ window.FB = window.FB || {};
         Array.isArray(state.religiousHeadVacancies)) {
       state.religiousHeadVacancies = {};
     }
-    for (const id in FBDATA.religions) {
-      const rel = FBDATA.religions[id];
-      if (!rel || !rel.head) continue;
-      if (!Object.prototype.hasOwnProperty.call(state.religiousHeads, id)) {
-        state.religiousHeads[id] = bookmarkReligiousHead(state, id);
+    const offices = religiousOfficeDefinitions(state);
+    for (const officeId in offices) {
+      if (!own(offices, officeId)) continue;
+      const office = offices[officeId];
+      const religionId = office.religionId;
+      const rel = FB.religionOf(religionId, state);
+      if (!Object.prototype.hasOwnProperty.call(state.religiousHeads, officeId)) {
+        state.religiousHeads[officeId] = bookmarkReligiousHead(state, religionId);
       }
-      const assigned = state.religiousHeads[id];
+      const assigned = state.religiousHeads[officeId];
       if (assigned !== null && state.realms &&
           (!state.realms[assigned] || !state.realms[assigned].alive)) {
-        const bookmarkDefault = bookmarkReligiousHead(state, id);
+        const bookmarkDefault = bookmarkReligiousHead(state, religionId);
         /* Older 1066 saves were seeded with the global 867 ids even though
            those realm records never existed in their bookmark. Repair only
            that missing-default signature; a realm that existed and died is
@@ -63,28 +707,28 @@ window.FB = window.FB || {};
         if (!state.realms[assigned] && assigned === rel.head.realm &&
             bookmarkDefault && bookmarkDefault !== assigned &&
             state.realms[bookmarkDefault] && state.realms[bookmarkDefault].alive &&
-            !state.religiousHeadVacancies[id]) {
-          state.religiousHeads[id] = bookmarkDefault;
-          delete state.religiousHeadVacancies[id];
+            !state.religiousHeadVacancies[officeId]) {
+          state.religiousHeads[officeId] = bookmarkDefault;
+          delete state.religiousHeadVacancies[officeId];
         } else {
-          state.religiousHeads[id] = null;
-          if (!state.religiousHeadVacancies[id]) {
-            state.religiousHeadVacancies[id] = {
+          state.religiousHeads[officeId] = null;
+          if (!state.religiousHeadVacancies[officeId]) {
+            state.religiousHeadVacancies[officeId] = {
               turn:isFinite(state.turn) ? state.turn : 0,
               formerHolder:assigned
             };
           }
         }
-      } else if (state.religiousHeads[id] === null) {
-        const vacancy = state.religiousHeadVacancies[id];
+      } else if (state.religiousHeads[officeId] === null) {
+        const vacancy = state.religiousHeadVacancies[officeId];
         if (!vacancy || !isFinite(vacancy.turn)) {
-          state.religiousHeadVacancies[id] = {
+          state.religiousHeadVacancies[officeId] = {
             turn:isFinite(state.turn) ? state.turn : 0,
             formerHolder:vacancy && vacancy.formerHolder || null
           };
         }
       } else {
-        delete state.religiousHeadVacancies[id];
+        delete state.religiousHeadVacancies[officeId];
       }
     }
     return state.religiousHeads;
@@ -92,17 +736,19 @@ window.FB = window.FB || {};
 
   FB.religiousHeadVacancy = function (state, religionId) {
     FB.ensureReligiousHeads(state);
-    if (!state || state.religiousHeads[religionId] !== null) return null;
-    return state.religiousHeadVacancies[religionId] || null;
+    const officeId = FB.faithOfficeId(religionId, state);
+    if (!state || !officeId || state.religiousHeads[officeId] !== null) return null;
+    return state.religiousHeadVacancies[officeId] || null;
   };
 
   FB.assignReligiousHead = function (state, religionId, realmId) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, state);
+    const officeId = rel && rel.head && rel.head.officeId;
     const realm = state && state.realms && state.realms[realmId];
-    if (!state || !rel || !rel.head || !realm || !realm.alive) return false;
+    if (!state || !rel || !officeId || !realm || !realm.alive) return false;
     FB.ensureReligiousHeads(state);
-    state.religiousHeads[religionId] = realmId;
-    delete state.religiousHeadVacancies[religionId];
+    state.religiousHeads[officeId] = realmId;
+    delete state.religiousHeadVacancies[officeId];
     return true;
   };
 
@@ -115,10 +761,12 @@ window.FB = window.FB || {};
     FB.ensureReligiousHeads(state);
     const vacated = [];
     const realm = state.realms && state.realms[realmId];
-    for (const religionId in FBDATA.religions) {
-      if (state.religiousHeads[religionId] !== realmId) continue;
-      state.religiousHeads[religionId] = null;
-      state.religiousHeadVacancies[religionId] = {
+    const offices = religiousOfficeDefinitions(state);
+    for (const officeId in offices) {
+      if (!own(offices, officeId) || state.religiousHeads[officeId] !== realmId) continue;
+      const religionId = offices[officeId].religionId;
+      state.religiousHeads[officeId] = null;
+      state.religiousHeadVacancies[officeId] = {
         turn:isFinite(state.turn) ? state.turn : 0,
         formerHolder:realmId
       };
@@ -151,23 +799,25 @@ window.FB = window.FB || {};
   /* The live realm holding an exact faith's central office, or null while the
      assignment is vacant, missing, or points at a dead realm. */
   FB.religiousHeadOf = function (state, religionId) {
-    const rel = FBDATA.religions[religionId];
-    if (!state || !rel || !rel.head) return null;
+    const rel = FB.religionOf(religionId, state);
+    const officeId = rel && rel.head && rel.head.officeId;
+    if (!state || !officeId) return null;
     const heads = FB.ensureReligiousHeads(state);
-    if (!Object.prototype.hasOwnProperty.call(heads, religionId)) return null;
-    const rid = heads[religionId];
+    if (!Object.prototype.hasOwnProperty.call(heads, officeId)) return null;
+    const rid = heads[officeId];
     const realm = rid !== null && state.realms ? state.realms[rid] : null;
     return realm && realm.alive ? realm : null;
   };
 
   FB.religiousHeadSnapshot = function (state, religionId) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, state);
+    const officeId = rel && rel.head && rel.head.officeId;
     const heads = state && state.religiousHeads;
-    if (!state || !rel || !rel.head) return null;
+    if (!state || !officeId) return null;
     const saved = !!(heads && typeof heads === 'object' &&
       !Array.isArray(heads) &&
-      Object.prototype.hasOwnProperty.call(heads, religionId));
-    let rid = saved ? heads[religionId] :
+      Object.prototype.hasOwnProperty.call(heads, officeId));
+    let rid = saved ? heads[officeId] :
       bookmarkReligiousHead(state, religionId);
     if (rid === null) return null;
     let realm = state.realms && state.realms[rid];
@@ -178,7 +828,7 @@ window.FB = window.FB || {};
           bookmarkDefault !== rid && state.realms &&
           state.realms[bookmarkDefault] &&
           state.realms[bookmarkDefault].alive &&
-          !(vacancies && vacancies[religionId])) {
+          !(vacancies && vacancies[officeId])) {
         rid = bookmarkDefault;
         realm = state.realms[rid];
       }
@@ -189,9 +839,12 @@ window.FB = window.FB || {};
   FB.religionsHeadedBy = function (state, realmId) {
     const out = [];
     if (!state || !realmId) return out;
-    for (const id in FBDATA.religions) {
-      const head = FB.religiousHeadSnapshot(state, id);
-      if (head && head.id === realmId) out.push(id);
+    const offices = religiousOfficeDefinitions(state);
+    for (const officeId in offices) {
+      if (!own(offices, officeId)) continue;
+      const religionId = offices[officeId].religionId;
+      const head = FB.religiousHeadSnapshot(state, religionId);
+      if (head && head.id === realmId) out.push(religionId);
     }
     return out;
   };
@@ -205,10 +858,10 @@ window.FB = window.FB || {};
   };
 
   FB.religiousHeadTitle = function (state, religionId) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, state);
     if (!rel || !rel.head || !rel.head.title) return '';
     const viewer = state && state.player ? state.player.charId : null;
-    return FB.dataText(state, viewer, 'religion', religionId, rel, 'head.title', {});
+    return FB.faithDataText(state, viewer, religionId, 'head.title', {});
   };
 
   /* avoid (optional): a plain object used as a set of lowercase names,
@@ -588,18 +1241,41 @@ window.FB = window.FB || {};
      Mirrors the player's tier ladder (tier 4+ all count as royalty). Marriage
      is gated on it: kin weigh a suit by the gap between the two houses.
      Characters from older saves carry no station — infer a coarse one. */
-  /* What a faith allows in marriage, by 9th-century convention:
-     divorce — 'talaq' (pronounced, the mahr repaid) · 'get' (written and
-     witnessed, the ketubah paid) · 'sunder' (declared before witnesses) ·
-     null (Christians: annulment by the church or nothing).
-     wives — how many a MAN may hold at once (balance.wivesByGroup). */
-  FB.marriageDoctrine = function (religionId) {
-    const g = FB.religionOf(religionId).group;
-    const wives = (FBDATA.balance.wivesByGroup || {})[g] || 1;
-    if (g === 'muslim') return { divorce: 'talaq', wives: wives };
-    if (g === 'pagan') return { divorce: 'sunder', wives: wives };
-    if (g === 'jewish') return { divorce: 'get', wives: wives };
-    return { divorce: null, wives: wives };
+  /* Effective faith doctrine keeps spouse limits, accepted relations, and
+     the costs/route for ending a marriage together. The old group balance
+     table is only a compatibility fallback for a definition with no doctrine. */
+  FB.marriageDoctrine = function (religionId, state) {
+    const rel = FB.religionOf(religionId, state);
+    let marriage = rel && rel.marriage;
+    if (!marriage) {
+      const g = FB.faithGroup(religionId, state);
+      const wives = (FBDATA.balance.wivesByGroup || {})[g] || 1;
+      const legacyKind = g === 'muslim' ? 'talaq' :
+        (g === 'pagan' ? 'sunder' : (g === 'jewish' ? 'get' : 'annulment'));
+      const legacyEnding = legacyKind === 'annulment'
+        ? { kind:'annulment', direct:false, gold:15, piety:20,
+          failurePiety:25, prestige:0, cooldownDays:360 }
+        : { kind:legacyKind, direct:true,
+          gold:legacyKind === 'sunder' ? 0 : 'dowry', piety:0,
+          prestige:legacyKind === 'sunder' ? 5 : 0, cooldownDays:0 };
+      marriage = {
+        spouseLimit:{ m:wives, f:1 },
+        divorce:legacyEnding,
+        acceptedRelations:['same']
+      };
+    }
+    const limits = marriage.spouseLimit || { m:1, f:1 };
+    const ending = marriage.divorce || { kind:'annulment', direct:false };
+    return {
+      divorce:ending.kind === 'annulment' ? null : ending.kind,
+      wives:Math.max(1, Math.floor(Number(limits.m) || 1)),
+      spouseLimit:{
+        m:Math.max(1, Math.floor(Number(limits.m) || 1)),
+        f:Math.max(1, Math.floor(Number(limits.f) || 1))
+      },
+      acceptedRelations:(marriage.acceptedRelations || ['same']).slice(),
+      end:cloneFaithValue(ending)
+    };
   };
 
   FB.STATION_NAMES = ['Lowborn', 'Freeholder', 'Gentry', 'Noble', 'Royalty'];
@@ -1093,45 +1769,108 @@ window.FB = window.FB || {};
   };
 
   /* ---------- titles ---------- */
-  /* the bare rank word for any tier ("Count", "Emira"…) from the player's
-     faith group and sex — without profession/clergy overrides */
+  /* The bare rank word for any tier ("Count", "Emira"…) from the player's
+     effective faith and sex — without profession/clergy overrides. */
+  function rankTitleRecord(state, religionId, sex, tier) {
+    const rel = FB.religionOf(religionId, state);
+    const useSex = sex === 'f' ? 'f' : 'm';
+    const titles = rel && rel.rankTitles && rel.rankTitles[useSex];
+    if (Array.isArray(titles) && titles.length) {
+      const index = FB.clamp(tier, 0, titles.length - 1);
+      const found = FB.faithValue(state, religionId, 'rankTitles.' + useSex);
+      return { religionId:religionId, sourceId:found.sourceId || religionId,
+        sex:useSex, tier:index, word:titles[index] };
+    }
+    let group = FB.faithGroup(religionId, state) || 'christian';
+    if (useSex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
+    const legacy = FBDATA.titles[group] || FBDATA.titles.christian;
+    const index = FB.clamp(tier, 0, legacy.length - 1);
+    return { group:group, tier:index, word:legacy[index] };
+  }
+
+  function renderRankTitle(record) {
+    if (record.sourceId) {
+      return FB.renderKey('religion.' + record.sourceId + '.rankTitles.' +
+        record.sex + '.' + record.tier + '.default', { text:record.word }, {});
+    }
+    return FB.renderKey('title.' + record.group + '.' + record.tier + '.default',
+      { text:record.word }, {});
+  }
+
+  function faithRoleRecord(state, religionId, profession, sex) {
+    let path = null;
+    if (profession === 'monk') path = 'roles.monastic' + (sex === 'f' ? 'F' : 'M');
+    else if (profession === 'priest') path = 'roles.priest' + (sex === 'f' ? 'F' : 'M');
+    if (!path) return null;
+    const found = FB.faithValue(state, religionId, path);
+    return found.value ? { path:path, sourceId:found.sourceId || religionId,
+      word:found.value } : null;
+  }
+
+  function namedFaithRoleRecord(state, religionId, roleId) {
+    const path = 'roles.' + roleId;
+    const found = FB.faithValue(state, religionId, path);
+    return found.value ? { path:path, sourceId:found.sourceId || religionId,
+      word:found.value } : null;
+  }
+
+  function renderFaithRole(state, viewer, religionId, roleId, fallback) {
+    const role = namedFaithRoleRecord(state, religionId, roleId);
+    return role ? FB.faithDataText(state, viewer, religionId, role.path, {}) :
+      FB.T(fallback);
+  }
+
+  function snapshotFaithRole(snapshot, state, religionId, roleId) {
+    const role = namedFaithRoleRecord(state, religionId, roleId);
+    if (!role) return false;
+    snapshot.faithRolePath = role.path;
+    snapshot.faithRoleReligion = role.sourceId;
+    snapshot.faithRoleWord = role.word;
+    return true;
+  }
+
   FB.titleWordFor = function (state, tier) {
     const me = state.chars[state.player.charId];
-    const rel = FB.religionOf(me.religion);
-    let key = rel.group === 'muslim' ? 'muslim' : rel.group === 'pagan' ? 'pagan' :
-      rel.group === 'jewish' ? 'jewish' : 'christian';
-    if (me.sex === 'f' && FBDATA.titles[key + '_f']) key = key + '_f';
-    const arr = FBDATA.titles[key] || FBDATA.titles.christian;
-    const index = FB.clamp(tier, 0, arr.length - 1);
-    return FB.dataText(state, state.player.charId, 'title', key + '.' + index, arr[index], '', {});
+    return renderRankTitle(rankTitleRecord(state, me.religion, me.sex, tier));
   };
   FB.titleFor = function (state) {
     const p = state.player;
     const me = state.chars[p.charId];
-    const rel = FB.religionOf(me.religion);
-    if (FB.playerPope && FB.playerPope(state)) return FB.T('Pope');
-    if (FB.playerCardinal && FB.playerCardinal(state)) return FB.T('Cardinal');
+    if (FB.playerPope && FB.playerPope(state)) {
+      return FB.religiousHeadTitle(state, me.religion);
+    }
+    if (FB.playerCardinal && FB.playerCardinal(state)) {
+      return renderFaithRole(state, p.charId, me.religion,
+        'cardinal', 'Cardinal');
+    }
     const headed = FB.religionsHeadedBy(state, 'player');
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     let t = FB.titleWordFor(state, p.tier);
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
-      const g = rel.group;
       const profNames = {
-        craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
-        monk: g === 'muslim' ? 'Scholar' : me.sex === 'f' ? 'Nun' : 'Monk',
-        priest: g === 'muslim' ? 'Imam' : g === 'pagan' ? 'Godi' : 'Priest'
+        craftsman:'Craftsman', merchant:'Merchant', soldier:'Soldier'
       };
-      if (profNames[p.profession]) t = FB.T(profNames[p.profession]);
+      const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
+      if (role) t = FB.faithDataText(state, p.charId, me.religion, role.path, {});
+      else if (profNames[p.profession]) t = FB.T(profNames[p.profession]);
     }
     if (state.player.flags.bishop &&
         (!FB.playerBishopricOnly || FB.playerBishopricOnly(state))) {
-      t = FB.T('Bishop');
+      t = renderFaithRole(state, p.charId, me.religion,
+        'bishop', 'Bishop');
     }
-    else if (state.player.flags.chief_qadi) t = FB.T('Grand Qadi');
+    else if (state.player.flags.chief_qadi) {
+      t = renderFaithRole(state, p.charId, me.religion,
+        'grandQadi', 'Grand Qadi');
+    }
     else if (state.player.flags.abbot && p.tier === 2) {
-      t = me.sex === 'f' ? FB.T('Abbess') : FB.T('Abbot');
+      t = renderFaithRole(state, p.charId, me.religion,
+        me.sex === 'f' ? 'abbotF' : 'abbotM',
+        me.sex === 'f' ? 'Abbess' : 'Abbot');
     }
-    else if (state.player.flags.qadi && p.tier === 2) t = FB.T('Qadi');
+    else if (state.player.flags.qadi && p.tier === 2) {
+      t = renderFaithRole(state, p.charId, me.religion, 'qadi', 'Qadi');
+    }
     return t;
   };
 
@@ -1144,33 +1883,44 @@ window.FB = window.FB || {};
   FB.titleSnapshot = function (state) {
     const p = state.player;
     const me = state.chars[p.charId];
-    const rel = FB.religionOf(me.religion);
-    let group = rel.group === 'muslim' ? 'muslim' : rel.group === 'pagan' ? 'pagan' :
-      rel.group === 'jewish' ? 'jewish' : 'christian';
+    const rank = rankTitleRecord(state, me.religion, me.sex, p.tier);
+    let group = FB.faithGroup(me.religion, state) || 'christian';
     if (me.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
-    const arr = FBDATA.titles[group] || FBDATA.titles.christian;
-    const snap = { group: group, tier: FB.clamp(p.tier, 0, arr.length - 1) };
+    const snap = {
+      group:group,
+      religion:me.religion,
+      titleReligion:rank.sourceId || null,
+      titleSex:rank.sex || me.sex,
+      tier:rank.tier,
+      word:rank.word
+    };
     if (FB.playerPope && FB.playerPope(state)) {
-      snap.special = 'pope';
+      snap.headReligion = me.religion;
+      const head = FB.faithValue(state, me.religion, 'head.title');
+      snap.headTitleReligion = head.sourceId || me.religion;
+      snap.headTitle = head.value || 'Pope';
       return snap;
     }
     if (FB.playerCardinal && FB.playerCardinal(state)) {
       snap.special = 'cardinal';
+      snapshotFaithRole(snap, state, me.religion, 'cardinal');
       return snap;
     }
     const headed = FB.religionsHeadedBy(state, 'player');
     if (headed.length) {
       const headReligion = headed[0];
       snap.headReligion = headReligion;
-      snap.headTitle = FBDATA.religions[headReligion].head.title;
+      const head = FB.faithValue(state, headReligion, 'head.title');
+      snap.headTitleReligion = head.sourceId || headReligion;
+      snap.headTitle = head.value;
       return snap;
     }
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
-      if (p.profession === 'monk') {
-        snap.special = rel.group === 'muslim' ? 'scholar' : me.sex === 'f' ? 'nun' : 'monk';
-      } else if (p.profession === 'priest') {
-        snap.special = rel.group === 'muslim' ? 'imam' :
-          (rel.group === 'pagan' ? 'godi' : 'priest');
+      const role = faithRoleRecord(state, me.religion, p.profession, me.sex);
+      if (role) {
+        snap.faithRolePath = role.path;
+        snap.faithRoleReligion = role.sourceId;
+        snap.faithRoleWord = role.word;
       } else if (p.profession === 'craftsman' || p.profession === 'merchant' ||
         p.profession === 'soldier') {
         snap.special = p.profession;
@@ -1179,13 +1929,22 @@ window.FB = window.FB || {};
     if (p.flags.bishop &&
         (!FB.playerBishopricOnly || FB.playerBishopricOnly(state))) {
       snap.special = 'bishop';
+      snapshotFaithRole(snap, state, me.religion, 'bishop');
       const bishopric = FB.bishopricOf && FB.bishopricOf(state, me);
       const see = bishopric && FB.world && FB.world.byId[bishopric.seeProvinceId];
       if (see) snap.place = see.name;
     }
-    else if (p.flags.chief_qadi) snap.special = 'grand_qadi';
-    else if (p.flags.abbot && p.tier === 2) snap.special = me.sex === 'f' ? 'abbess' : 'abbot';
-    else if (p.flags.qadi && p.tier === 2) snap.special = 'qadi';
+    else if (p.flags.chief_qadi) {
+      snap.special = 'grand_qadi';
+      snapshotFaithRole(snap, state, me.religion, 'grandQadi');
+    } else if (p.flags.abbot && p.tier === 2) {
+      snap.special = me.sex === 'f' ? 'abbess' : 'abbot';
+      snapshotFaithRole(snap, state, me.religion,
+        me.sex === 'f' ? 'abbotF' : 'abbotM');
+    } else if (p.flags.qadi && p.tier === 2) {
+      snap.special = 'qadi';
+      snapshotFaithRole(snap, state, me.religion, 'qadi');
+    }
     if (!snap.place && p.tier === 4 && p.provs && p.provs.length) {
       const pr = FB.world && FB.world.byId[p.provs[0]];
       if (pr) snap.place = pr.name;
@@ -1201,17 +1960,27 @@ window.FB = window.FB || {};
   };
   FB.rankTitleSnapshot = function (state, tier, place) {
     const current = FB.titleSnapshot(state);
-    const snap = { group: current.group, tier: tier };
+    const rank = rankTitleRecord(state, current.religion,
+      current.titleSex || 'm', tier);
+    const snap = {
+      group:current.group,
+      religion:current.religion,
+      titleReligion:rank.sourceId || null,
+      titleSex:rank.sex || current.titleSex,
+      tier:rank.tier,
+      word:rank.word
+    };
     if (place) snap.place = place;
     return snap;
   };
   FB.renderTitleSnapshot = function (snapshot) {
     if (!snapshot) return '';
     if (snapshot.headReligion) {
-      const rel = FBDATA.religions[snapshot.headReligion];
+      const sourceId = snapshot.headTitleReligion || snapshot.headReligion;
+      const rel = FB.faithExists(sourceId) ? FB.religionOf(sourceId) : null;
       const source = rel && rel.head && rel.head.title || snapshot.headTitle;
       if (source) {
-        return FB.renderKey('religion.' + snapshot.headReligion + '.head.title.default',
+        return FB.renderKey('religion.' + sourceId + '.head.title.default',
           { text: source }, {});
       }
     }
@@ -1223,52 +1992,49 @@ window.FB = window.FB || {};
       bishop: 'Bishop', cardinal: 'Cardinal', pope: 'Pope',
       grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi'
     };
-    const title = snapshot.special && specialWords[snapshot.special]
+    const title = snapshot.faithRolePath && snapshot.faithRoleWord
+      ? FB.renderKey('religion.' + snapshot.faithRoleReligion + '.' +
+        snapshot.faithRolePath + '.default', { text:snapshot.faithRoleWord }, {})
+      : snapshot.special && specialWords[snapshot.special]
       ? (snapshot.special === 'nun' ? FB.T('Nun') : FB.T(specialWords[snapshot.special]))
-      : (snapshot.word ? FB.T(snapshot.word) :
+      : (snapshot.titleReligion && snapshot.word
+        ? FB.renderKey('religion.' + snapshot.titleReligion + '.rankTitles.' +
+          (snapshot.titleSex === 'f' ? 'f' : 'm') + '.' + index + '.default',
+          { text:snapshot.word }, {})
+        : (snapshot.word ? FB.T(snapshot.word) :
         FB.renderKey('title.' + snapshot.group + '.' + index + '.default',
-          { text: arr[index] }, {}));
+          { text: arr[index] }, {})));
     return snapshot.place ? FB.T('{title} of {place}', {
       title: title, place: snapshot.place
     }) : title;
   };
 
-  /* an AI realm ruler's style: "Emir Yusuf", "High King Ragnarr" — rank
-     titles come from the capital county's faith group (rank+3 indexes
-     FBDATA.titles: count→4 … emperor→7); a female ruler uses the group's
-     <group>_f array when one is defined */
+  /* An AI realm ruler's style: "Emir Yusuf", "High King Ragnarr". Rank and
+     sex select the effective title array inherited by the realm's faith. */
   FB.realmRankTitle = function (state, realm) {
     const headed = FB.religionsHeadedBy(state, realm.id);
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     const pr = FB.world && FB.world.byId[realm.capital];
-    let group = pr ? FB.religionOf(pr.religion).group : 'christian';
-    if (realm.ruler && realm.ruler.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
-    const arr = FBDATA.titles[group] || FBDATA.titles.christian;
-    const index = FB.clamp((realm.rank || 3) + 3, 4, arr.length - 1);
-    return FB.dataText(state, state.player.charId, 'title', group + '.' + index, arr[index], '', {});
+    const religionId = FB.realmReligionId
+      ? (FB.realmReligionId(state, realm.id) || 'catholic')
+      : (pr ? pr.religion : 'catholic');
+    const sex = realm.ruler && realm.ruler.sex === 'f' ? 'f' : 'm';
+    return renderRankTitle(rankTitleRecord(state, religionId, sex,
+      FB.clamp((realm.rank || 3) + 3, 4, 7)));
   };
 
   /* words for text templating */
-  FB.holyWord = function (religionId) {
-    const g = FB.religionOf(religionId).group;
-    if (g === 'muslim') return FB.T('imam');
-    if (g === 'pagan') return FB.T('godi');
-    if (g === 'jewish') return FB.T('rabbi');
-    return FB.T('priest');
+  FB.holyWord = function (religionId, state) {
+    return FB.faithDataText(state || FB.state, null, religionId,
+      'words.cleric', {});
   };
-  FB.godWord = function (religionId) {
-    const g = FB.religionOf(religionId).group;
-    if (g === 'muslim') return FB.T('Allah');
-    if (g === 'pagan') return FB.T('the gods');
-    if (g === 'jewish') return FB.T('the Lord');
-    return FB.T('God');
+  FB.godWord = function (religionId, state) {
+    return FB.faithDataText(state || FB.state, null, religionId,
+      'words.deity', {});
   };
-  FB.templeWord = function (religionId) {
-    const g = FB.religionOf(religionId).group;
-    if (g === 'muslim') return FB.T('mosque');
-    if (g === 'pagan') return FB.T('shrine');
-    if (g === 'jewish') return FB.T('synagogue');
-    return FB.T('church');
+  FB.templeWord = function (religionId, state) {
+    return FB.faithDataText(state || FB.state, null, religionId,
+      'words.temple', {});
   };
 
   /* Historical name retained for mods; Standing presentation owns the

@@ -505,6 +505,11 @@ window.FB = window.FB || {};
     }
     // the realm cache is keyed by state.turn, which two lives can share
     FB.invalidateRealmCache();
+    /* Faith definitions are an additive version-3 field. Old lives begin
+       with no generated faiths; new lives rebuild the derived graph from the
+       saved JSON deltas before any office or character repair consults it. */
+    if (FB.ensureFaithState) FB.ensureFaithState(FB.state);
+    if (FB.configureReligions) FB.configureReligions(FB.state);
     /* Save format 3 remains stable: missing religious-office assignments gain
        bookmark-aware defaults; vacancies gain additive turn/former-holder
        metadata, while own null vacancies and changed holders persist. */

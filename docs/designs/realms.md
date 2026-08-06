@@ -231,15 +231,16 @@ The Papal States keep their realm, vassals, and revenue during a vacancy under t
 Camerlengo and never advance through `realm.succession`.
 
 Central religious leadership is an office assignment, not a territorial tier.
-`FBDATA.religions[id].head` supplies the global fallback `realm`, localized `title`,
-recovery policy, required seat or alternative claim-county sets, and the policy for
-same-faith wars against the office. The active bookmark may override the initial realm
-through `bookmark.religiousHeads`: 867 assigns `papacy`/`abbasid`, while 1066 assigns
+The effective faith `properties.head` supplies a stable `officeId`, global fallback
+`realm`, localized `title`, recovery policy, required seat or alternative claim-county
+sets, and the policy for same-faith wars against the office. Inherited faiths share that
+office id unless they explicitly override or remove the head. The active bookmark may
+override the initial realm through `bookmark.religiousHeads`: 867 assigns
+`papacy`/`abbasid`, while 1066 assigns
 `papacy_1066`/`abbasid_1066`. Faiths without `head` metadata, including Shia Islam,
 have no centralized head. Ordinary Muslim emperor-tier rulers use Great Sultan or
-Great Sultana instead. At every rank, a female AI ruler is styled from the
-`FBDATA.titles.<group>_f` array when one is defined (Sultana, Emira, Duchess,
-Khatun, …), falling back to the base array otherwise.
+Great Sultana instead. At every rank, male and female AI rulers are styled from their
+effective faith's `rankTitles` arrays, with `FBDATA.titles` retained as a legacy fallback.
 
 A Catholic Bishopric is also an office assignment, but local and personal rather than a
 centralized religious head. `character.bishopric` names an abstract see at the holder's
@@ -250,9 +251,10 @@ may retain separately inherited counties and crowns. Cardinals retain their sees
 elevation to Pope vacates them, and a see-only dynasty heir returns to tier-2 gentry while
 private household property remains intact.
 
-The live assignment belongs to `state.religiousHeads[religionId]`, whose value is an
+The live assignment belongs to `state.religiousHeads[officeId]`, whose value is an
 exact realm id or `null` for an explicit vacancy. `FB.religiousHeadOf` returns the
-assigned living realm or `null`; `FB.religionsHeadedBy` returns exact religion ids;
+assigned living realm or `null`; `FB.religionsHeadedBy` returns the faith definitions
+that own the held offices;
 `FB.isReligiousHead` tests either one faith or any office; and
 `FB.religiousHeadTitle` renders the localized office title. AI and player title
 rendering query these helpers before secular rank, and semantic player title snapshots
@@ -262,7 +264,7 @@ and durable messages render in the active locale.
 Every realm-death boundary calls `FB.markRealmDead`, which passes its assigned offices
 through `FB.vacateReligiousHeads` before killing the temporal realm. The assignment
 becomes `null` exactly once, a durable vacancy notice is emitted, and
-`state.religiousHeadVacancies[religionId]` records `{turn,formerHolder}`. Losing only
+`state.religiousHeadVacancies[officeId]` records `{turn,formerHolder}`. Losing only
 part of the office realm changes nothing. County conquest, inheritance, and absorption
 never grant the office; ordinary county conquest also never grants the defeated crown.
 Explicit recovery — and the player-only Sunni succession war below — is the only
@@ -607,6 +609,9 @@ religion for authored realms and old saves. This separates ruler faith from loca
 population: conquest, capital relocation, and great holy-war settlement do not
 silently convert county culture or religion. Fresh authored realms and generated
 vassals initialize the field from their capital when no explicit value is supplied.
+The rare AI dynastic-alliance pairing accepts `same`, `in_fold`, or `schismatic`
+neighbors only when neither direction is `hostile` or `foreign`; it no longer compares
+the four legacy broad groups.
 
 Great holy-war occupations are not realms and never alter ownership during combat.
 Final settlement collects every award before changing an owner or holder, then applies
@@ -616,7 +621,8 @@ receive the calling religion explicitly, plus a sponsor-derived culture and dyna
 identity. Empty displaced realms are buried and surviving capitals relocate only after
 the complete ownership pass.
 
-A same-faith local holder may be confirmed only when their entire vassal subtree lies
+A local holder in the caller's faith fold may be confirmed only when their entire
+vassal subtree lies
 inside the awarded package. Confirmation reparents that realm intact beneath the new
 campaign sovereign. A ruler crossing the captured boundary cannot carry uncaptured
 land into the settlement; their right and local support instead belong to a generated

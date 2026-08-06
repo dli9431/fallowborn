@@ -260,7 +260,29 @@ window.FBMODS = window.FBMODS || [];
     if (mod.finance) for (const k in mod.finance) FBDATA.finance[k] = mod.finance[k];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];
-    if (mod.titles) for (const k in mod.titles) FBDATA.titles[k] = mod.titles[k];
+    if (mod.titles) {
+      for (const k in mod.titles) {
+        FBDATA.titles[k] = mod.titles[k];
+        /* Title tables predate faith properties. Mirror the four historical
+           group keys into their new roots so an existing title-only mod keeps
+           changing live rulers as well as old saved snapshots. */
+        const female = k.slice(-2) === '_f';
+        const rootId = female ? k.slice(0, -2) : k;
+        const root = FBDATA.religions && FBDATA.religions[rootId];
+        if (root && ['christian','muslim','pagan','jewish'].indexOf(rootId) >= 0) {
+          root.properties = root.properties || {};
+          root.properties.rankTitles = root.properties.rankTitles || {};
+          root.properties.rankTitles[female ? 'f' : 'm'] = mod.titles[k];
+          if (!root.properties.rankTitles.m) {
+            root.properties.rankTitles.m = FBDATA.titles[rootId];
+          }
+          if (!root.properties.rankTitles.f) {
+            root.properties.rankTitles.f = FBDATA.titles[rootId + '_f'] ||
+              FBDATA.titles[rootId];
+          }
+        }
+      }
+    }
     if (mod.politicalBlocs) {
       for (const k in mod.politicalBlocs) {
         FBDATA.politicalBlocs[k] = mod.politicalBlocs[k];
@@ -282,6 +304,9 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
     if ((mod.items || mod.cultures || mod.religions || mod.traits || mod.ailments) &&
         FB.clearPortraitCache) FB.clearPortraitCache();
+    if ((mod.religions || mod.titles) && FB.invalidateReligionData) {
+      FB.invalidateReligionData();
+    }
   };
 
   M.applyStored = function () {

@@ -102,43 +102,132 @@ FBDATA.settlementNames = {
 };
 
 FBDATA.religions = {
-  catholic:     { name:'Latin Christianity',  group:'christian', icon:'✝',
-    head:{
-      realm:'papacy', title:'Pope', recovery:'grant_seat', seat:'roma',
-      restoredRank:3, sameFaithWar:'sacrilege',
-      greatHolyWar:{
-        name:'Crusade',
-        minDate:{ year:1095, season:3, day:1 },
-        firstTarget:'k_syria', firstByYear:1100,
-        yearlyChance:0.25, crisisChance:0.75,
-        crisisKingdoms:['k_armenia','k_anatolia'],
-        crisisGroup:'muslim', crisisShare:0.25,
-        sacredTargets:[
-          { kingdom:'k_syria', counties:['jerusalem'] }
-        ]
+  christian: { name:'Christianity', assignable:false, icon:'✝',
+    properties:{
+      marriage:{
+        spouseLimit:{ m:1, f:1 },
+        divorce:{ kind:'annulment', direct:false, gold:15, piety:20,
+          failurePiety:25, cooldownDays:360 },
+        acceptedRelations:['same','in_fold']
+      },
+      rankTitles:{
+        m:['Serf','Freeholder','Gentry','Baron','Count','Duke','King','Emperor'],
+        f:['Serf','Freeholder','Gentlewoman','Baroness','Countess','Duchess','Queen','Empress']
+      },
+      words:{ deity:'God', cleric:'priest', temple:'church', landed:'Lord',
+        partnership:'Commenda partnership' },
+      roles:{ monasticM:'Monk', monasticF:'Nun', priestM:'Priest', priestF:'Priest',
+        abbotM:'Abbot', abbotF:'Abbess' },
+      clergyMarriage:false
+    } },
+  catholic: { name:'Latin Christianity', group:'christian',
+    relationToParent:'schismatic', icon:'✝',
+    properties:{
+      systems:{ papacy:true },
+      roles:{ bishop:'Bishop', cardinal:'Cardinal' },
+      head:{
+        officeId:'catholic', realm:'papacy', title:'Pope',
+        recovery:'grant_seat', seat:'roma', restoredRank:3,
+        sameFaithWar:'sacrilege',
+        greatHolyWar:{
+          name:'Crusade',
+          minDate:{ year:1095, season:3, day:1 },
+          firstTarget:'k_syria', firstByYear:1100,
+          yearlyChance:0.25, crisisChance:0.75,
+          crisisKingdoms:['k_armenia','k_anatolia'],
+          crisisGroup:'muslim', crisisShare:0.25,
+          sacredTargets:[
+            { kingdom:'k_syria', counties:['jerusalem'] }
+          ]
+        }
       }
     } },
-  orthodox:     { name:'Greek Christianity',  group:'christian', icon:'☦' },
-  eastern:      { name:'Eastern Christianity',group:'christian', icon:'☧' },
-  sunni:        { name:'Islam (Sunni)',       group:'muslim',    icon:'☪',
-    head:{
-      realm:'abbasid', title:'Caliph', recovery:'claim',
-      claimCounties:[['baghdad'],['mecca','medina']], sameFaithWar:'ordinary',
-      greatHolyWar:{
-        name:'Jihad',
-        minDate:{ year:1105, season:0, day:1 },
-        yearlyChance:0.35, lossGuaranteeYears:10,
-        sacredTargets:[
-          { kingdom:'k_syria', counties:['jerusalem'] },
-          { kingdom:'k_iraq', counties:['baghdad'] },
-          { kingdom:'k_arabia', counties:['mecca','medina'] }
-        ]
+  orthodox: { name:'Greek Christianity', group:'christian',
+    relationToParent:'schismatic', icon:'☦' },
+  eastern: { name:'Eastern Christianity', group:'christian',
+    relationToParent:'schismatic', icon:'☧' },
+  muslim: { name:'Islam', assignable:false, icon:'☪',
+    properties:{
+      marriage:{
+        spouseLimit:{ m:4, f:1 },
+        divorce:{ kind:'talaq', direct:true, gold:'dowry', piety:0,
+          prestige:0, cooldownDays:0 },
+        acceptedRelations:['same','in_fold']
+      },
+      rankTitles:{
+        m:['Fellah','Freeman','Sayyid','Sheikh','Emir','Grand Emir','Sultan','Great Sultan'],
+        f:['Fellaha','Freewoman','Sayyida','Sheikha','Emira','Grand Emira','Sultana','Great Sultana']
+      },
+      words:{ deity:'Allah', cleric:'imam', temple:'mosque', landed:'Emir',
+        partnership:'Qirad partnership' },
+      roles:{ monasticM:'Scholar', monasticF:'Scholar', priestM:'Imam', priestF:'Imam',
+        qadi:'Qadi', grandQadi:'Grand Qadi' },
+      clergyMarriage:true
+    } },
+  sunni: { name:'Islam (Sunni)', group:'muslim',
+    relationToParent:'schismatic', icon:'☪',
+    properties:{
+      head:{
+        officeId:'sunni', realm:'abbasid', title:'Caliph', recovery:'claim',
+        claimCounties:[['baghdad'],['mecca','medina']], sameFaithWar:'ordinary',
+        greatHolyWar:{
+          name:'Jihad',
+          minDate:{ year:1105, season:0, day:1 },
+          yearlyChance:0.35, lossGuaranteeYears:10,
+          sacredTargets:[
+            { kingdom:'k_syria', counties:['jerusalem'] },
+            { kingdom:'k_iraq', counties:['baghdad'] },
+            { kingdom:'k_arabia', counties:['mecca','medina'] }
+          ]
+        }
       }
     } },
-  shia:         { name:'Islam (Shia)',        group:'muslim',    icon:'☪' },
-  norse_pagan:  { name:'Norse Paganism',      group:'pagan',     icon:'ᚠ' },
-  slavic_pagan: { name:'Slavic Paganism',     group:'pagan',     icon:'☀' },
-  baltic_pagan: { name:'Baltic Paganism',     group:'pagan',     icon:'☽' },
-  tengri:       { name:'Tengrism',            group:'pagan',     icon:'⧙' },
-  jewish:       { name:'Judaism',             group:'jewish',    icon:'✡' }
+  ashari: { name:'Ash’ari School', adjective:'Ash’ari', group:'sunni',
+    relationToParent:'in_fold', icon:'☪' },
+  maturidi: { name:'Maturidi School', adjective:'Maturidi', group:'sunni',
+    relationToParent:'in_fold', icon:'☪' },
+  shia: { name:'Islam (Shia)', group:'muslim',
+    relationToParent:'schismatic', icon:'☪' },
+  pagan: { name:'Paganism', assignable:false, icon:'☀',
+    properties:{
+      marriage:{
+        spouseLimit:{ m:3, f:1 },
+        divorce:{ kind:'sunder', direct:true, gold:0, piety:0,
+          prestige:5, cooldownDays:0 },
+        acceptedRelations:['same','in_fold']
+      },
+      rankTitles:{
+        m:['Thrall','Karl','Huscarl','Hersir','Jarl','High Chief','King','High King'],
+        f:['Thrall','Karl','Shieldmaiden','Lady','Jarl','High Chief','Queen','High Queen']
+      },
+      words:{ deity:'the gods', cleric:'godi', temple:'shrine', landed:'Chief',
+        partnership:'Commenda partnership' },
+      roles:{ monasticM:'Monk', monasticF:'Nun', priestM:'Godi', priestF:'Godi' },
+      clergyMarriage:false
+    } },
+  norse_pagan: { name:'Norse Paganism', group:'pagan',
+    relationToParent:'schismatic', icon:'ᚠ' },
+  slavic_pagan: { name:'Slavic Paganism', group:'pagan',
+    relationToParent:'schismatic', icon:'☀' },
+  baltic_pagan: { name:'Baltic Paganism', group:'pagan',
+    relationToParent:'schismatic', icon:'☽' },
+  tengri: { name:'Tengrism', group:'pagan',
+    relationToParent:'schismatic', icon:'⧙' },
+  jewish: { name:'Judaism', icon:'✡',
+    properties:{
+      marriage:{
+        spouseLimit:{ m:1, f:1 },
+        divorce:{ kind:'get', direct:true, gold:'dowry', piety:0,
+          prestige:0, cooldownDays:0 },
+        acceptedRelations:['same','in_fold']
+      },
+      rankTitles:{
+        m:['Serf','Freeholder','Gentry','Elder','Bek','Great Bek','Khagan','Khagan'],
+        f:['Serf','Freeholder','Gentlewoman','Elder','Begum','Great Begum','Khatun','Khatun']
+      },
+      words:{ deity:'the Lord', cleric:'rabbi', temple:'synagogue', landed:'Elder',
+        partnership:'Trade partnership' },
+      roles:{ monasticM:'Monk', monasticF:'Nun', priestM:'Rabbi', priestF:'Rabbi' },
+      clergyMarriage:false
+    } }
 };
