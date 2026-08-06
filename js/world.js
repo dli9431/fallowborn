@@ -73,6 +73,10 @@ window.FB = window.FB || {};
       var technologyErrors = FB.validateTechnologyData();
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
     }
+    if (FB.validateReligionData) {
+      var religionErrors = FB.validateReligionData(null);
+      for (var re = 0; re < religionErrors.length; re++) errors.push(religionErrors[re]);
+    }
     if (!definition.id || !/^[a-z0-9_]+$/i.test(definition.id)) fault('invalid id.');
     var date = definition.date || {};
     if (!isFinite(date.year) || date.season < 0 || date.season > 3 ||
@@ -119,8 +123,11 @@ window.FB = window.FB || {};
           fault('realm ' + rid + ' has an invalid ruler profile.');
         }
       }
-      if (realmDef.religion !== undefined && !FBDATA.religions[realmDef.religion]) {
-        fault('realm ' + rid + ' has invalid faith ' + realmDef.religion + '.');
+      if (realmDef.religion !== undefined &&
+          (!FB.faithExists(realmDef.religion, null) ||
+           !FB.faithAssignable(realmDef.religion, null))) {
+        fault('realm ' + rid + ' has invalid or unassignable faith ' +
+          realmDef.religion + '.');
       }
     }
 
@@ -132,10 +139,13 @@ window.FB = window.FB || {};
       } else {
         for (var religionId in religiousHeads) {
           if (!Object.prototype.hasOwnProperty.call(religiousHeads, religionId)) continue;
-          var religion = FBDATA.religions[religionId];
+          var mappedFaithId = FB.faithExists(religionId, null) ? religionId :
+            (FB.religiousOfficeReligion &&
+              FB.religiousOfficeReligion(null, religionId));
+          var religion = mappedFaithId ? FB.religionOf(mappedFaithId, null) : null;
           var headRealmId = religiousHeads[religionId];
           if (!religion || !religion.head) {
-            fault('religiousHeads has invalid faith ' + religionId + '.');
+            fault('religiousHeads has invalid faith or office ' + religionId + '.');
           } else if (typeof headRealmId !== 'string' || !headRealmId ||
               !realms[headRealmId]) {
             fault('religiousHeads.' + religionId + ' has invalid realm ' +
@@ -151,7 +161,11 @@ window.FB = window.FB || {};
       if (!realms[pr.realm]) fault('province ' + pr.id + ' has invalid realm ' + pr.realm + '.');
       if (!pr.duchy || !duchies[pr.duchy]) fault('province ' + pr.id + ' has invalid duchy ' + pr.duchy + '.');
       if (!FBDATA.cultures[pr.culture]) fault('province ' + pr.id + ' has invalid culture ' + pr.culture + '.');
-      if (!FBDATA.religions[pr.religion]) fault('province ' + pr.id + ' has invalid faith ' + pr.religion + '.');
+      if (!FB.faithExists(pr.religion, null) ||
+          !FB.faithAssignable(pr.religion, null)) {
+        fault('province ' + pr.id + ' has invalid or unassignable faith ' +
+          pr.religion + '.');
+      }
       if (!isFinite(pr.dev) || pr.dev < 1 || pr.dev > 10) {
         fault('province ' + pr.id + ' has development outside 1–10.');
       }
@@ -172,11 +186,17 @@ window.FB = window.FB || {};
     /* Great holy wars are optional head metadata. Their ids must resolve
        against this exact bookmark so a mod cannot install a campaign whose
        sacred counties or target kingdoms disappear at activation. */
-    for (var ghwReligionId in FBDATA.religions) {
-      if (!Object.prototype.hasOwnProperty.call(FBDATA.religions, ghwReligionId)) continue;
-      var ghwReligion = FBDATA.religions[ghwReligionId];
+    var ghwReligionIds = FB.religionIds ? FB.religionIds(null, false) :
+      Object.keys(FBDATA.religions);
+    for (var ghwReligionIndex = 0; ghwReligionIndex < ghwReligionIds.length;
+        ghwReligionIndex++) {
+      var ghwReligionId = ghwReligionIds[ghwReligionIndex];
+      var ghwReligion = FB.religionOf(ghwReligionId, null);
       var ghw = ghwReligion && ghwReligion.head && ghwReligion.head.greatHolyWar;
       if (!ghw) continue;
+      var ghwSource = FB.faithValue &&
+        FB.faithValue(null, ghwReligionId, 'head.greatHolyWar').sourceId;
+      if (ghwSource && ghwSource !== ghwReligionId) continue;
       if (typeof ghw !== 'object' || Array.isArray(ghw)) {
         fault('faith ' + ghwReligionId + ' greatHolyWar must be an object.');
         continue;
@@ -336,7 +356,9 @@ window.FB = window.FB || {};
             realms[event.newRealm.id] || !provinceIds[event.newRealm.capital] ||
             provinceIds[event.newRealm.capital].wasteland ||
             (event.newRealm.liege && !realms[event.newRealm.liege]) ||
-            (event.newRealm.religion && !FBDATA.religions[event.newRealm.religion]) ||
+            (event.newRealm.religion &&
+              (!FB.faithExists(event.newRealm.religion, null) ||
+               !FB.faithAssignable(event.newRealm.religion, null))) ||
             (event.newRealm.ruler && !validRulerProfile(event.newRealm.ruler))) {
           fault('scripted event at index ' + ei + ' has an invalid new realm.');
         }
@@ -918,9 +940,21 @@ window.FB = window.FB || {};
       String(a.id).localeCompare(String(b.id));
   }
 
+  function realmsFaithCompatible(state, firstRealmId, secondRealmId) {
+    const first = FB.realmReligionId(state, firstRealmId);
+    const second = FB.realmReligionId(state, secondRealmId);
+    if (!first || !second) return false;
+    const firstView = FB.faithRelation(state, first, second);
+    const secondView = FB.faithRelation(state, second, first);
+    return firstView !== 'hostile' && firstView !== 'foreign' &&
+      secondView !== 'hostile' && secondView !== 'foreign';
+  }
+
+  /* Compatibility facade for callers that still need the four historical
+     visual/balance families; social rules use the relation graph above. */
   function realmFaithGroup(state, rid) {
     const religionId = FB.realmReligionId(state, rid);
-    return religionId ? FB.religionOf(religionId).group : null;
+    return religionId ? FB.faithGroup(religionId, state) : null;
   }
   FB.realmFaithGroup = realmFaithGroup;
 
@@ -948,7 +982,7 @@ window.FB = window.FB || {};
     for (const rid in state.realms) {
       const realm = state.realms[rid];
       if (rid === 'player' || !realm || !realm.alive) continue;
-      if (FB.realmReligionId(state, rid) === religionId) {
+      if (FB.faithInFold(state, FB.realmReligionId(state, rid), religionId)) {
         FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
           'religion:realm_wide');
       }
@@ -960,7 +994,7 @@ window.FB = window.FB || {};
      sovereign realm; a vassal head protects only its own subtree. */
   FB.sameFaithHeadWarPolicy = function (
       state, attackerReligionId, defenderRealmId, pid, readOnly) {
-    const rel = FBDATA.religions[attackerReligionId];
+    const rel = FB.religionOf(attackerReligionId, state);
     const policy = rel && rel.head && rel.head.sameFaithWar;
     if (!policy || policy === 'ordinary') return null;
     const head = readOnly && FB.religiousHeadSnapshot
@@ -980,7 +1014,7 @@ window.FB = window.FB || {};
 
   FB.playerExcommunicated = function (state) {
     const c = state && state.chars && state.chars[state.player.charId];
-    if (c && c.religion === 'catholic' && state.papacy &&
+    if (c && FB.faithHasSystem(c.religion, 'papacy', state) && state.papacy &&
         FB.playerExcommunicatedBy) {
       return !!FB.playerExcommunicatedBy(state);
     }
@@ -997,20 +1031,21 @@ window.FB = window.FB || {};
         ? B.religiousHeadWarPietyRetained : 0));
     const opinionLoss = B.religiousHeadWarOpinion !== undefined
       ? B.religiousHeadWarOpinion : -40;
-    if (religionId === 'catholic' && FB.adjustPapalSupporterOpinions) {
+    const papalFaith = FB.faithHasSystem(religionId, 'papacy', state);
+    if (papalFaith && FB.adjustPapalSupporterOpinions) {
       const recognized = FB.papalObedienceForCharacter &&
         FB.papalObedienceForCharacter(state, c);
       FB.adjustPapalSupporterOpinions(state, recognized, opinionLoss);
     } else {
       FB.adjustReligionRealmOpinions(state, religionId, opinionLoss);
     }
-    if (religionId === 'catholic' && FB.addPapalGround) {
+    if (papalFaith && FB.addPapalGround) {
       const obedienceId = FB.papalObedienceForCharacter &&
         FB.papalObedienceForCharacter(state, c);
       FB.addPapalGround(state, c, 'attack_pope', obedienceId);
     }
     FB.addTrait(c, 'excommunicated');
-    if (religionId === 'catholic' && FB.ensureLegacyPapalSentence) {
+    if (papalFaith && FB.ensureLegacyPapalSentence) {
       FB.ensureLegacyPapalSentence(state);
     }
     FB.news(state, FB.msg('news.religion.sacrilegious_war',
@@ -1082,13 +1117,13 @@ window.FB = window.FB || {};
   }
 
   FB.controlsReligiousHeadClaim = function (state, religionId, rid) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, state);
     return !!(rel && rel.head &&
       realmControlsClaimCounties(state, rid, rel.head.claimCounties));
   };
 
   FB.canRestoreReligiousHead = function (state, religionId, controllerId) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, state);
     const meta = rel && rel.head;
     const vacancy = FB.religiousHeadVacancy(state, religionId);
     if (!state || !meta || meta.recovery !== 'grant_seat' || !meta.seat || !vacancy) {
@@ -1101,7 +1136,7 @@ window.FB = window.FB || {};
       return false;
     }
     if (state.owner[meta.seat] !== FB.topRealm(state, controllerId)) return false;
-    if (FB.realmReligionId(state, controllerId) !== religionId) return false;
+    if (!FB.faithInFold(state, FB.realmReligionId(state, controllerId), religionId)) return false;
     if (controllerId === 'player') {
       return FB.isPlayerSovereign(state) &&
         state.holder[meta.seat] === 'player' &&
@@ -1115,7 +1150,7 @@ window.FB = window.FB || {};
 
   FB.restoreReligiousHead = function (state, religionId, controllerId) {
     if (!FB.canRestoreReligiousHead(state, religionId, controllerId)) return false;
-    const meta = FBDATA.religions[religionId].head;
+    const meta = FB.religionOf(religionId, state).head;
     const canonicalId = FB.religiousHeadDefaultRealm(state, religionId);
     const definition = activeBookmarkRealmDefinition(state, canonicalId);
     const seat = FB.world.byId[meta.seat];
@@ -1176,13 +1211,13 @@ window.FB = window.FB || {};
   };
 
   FB.canClaimReligiousHead = function (state, religionId, rid) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, state);
     const meta = rel && rel.head;
     const realm = state && state.realms && state.realms[rid];
     if (!meta || meta.recovery !== 'claim' ||
         !FB.religiousHeadVacancy(state, religionId) ||
         !realm || !realm.alive || realm.liege ||
-        FB.realmReligionId(state, rid) !== religionId ||
+        !FB.faithInFold(state, FB.realmReligionId(state, rid), religionId) ||
         !FB.controlsReligiousHeadClaim(state, religionId, rid)) {
       return false;
     }
@@ -1225,9 +1260,13 @@ window.FB = window.FB || {};
   FB.religiousHeadRecoveryTick = function (state) {
     const wait = FB.religiousHeadBalance('religiousHeadVacancyDays', 360);
     FB.ensureReligiousHeads(state);
-    for (const religionId in FBDATA.religions) {
+    const religionIds = FB.religionIds(state, false);
+    for (let religionIndex = 0; religionIndex < religionIds.length; religionIndex++) {
+      const religionId = religionIds[religionIndex];
+      const source = FB.faithValue(state, religionId, 'head.officeId').sourceId;
+      if (source && source !== religionId) continue;
       const vacancy = FB.religiousHeadVacancy(state, religionId);
-      const rel = FBDATA.religions[religionId];
+      const rel = FB.religionOf(religionId, state);
       const meta = rel && rel.head;
       if (!vacancy || !meta || state.turn - vacancy.turn < wait) continue;
       if (meta.recovery === 'grant_seat') {
@@ -4002,7 +4041,7 @@ window.FB = window.FB || {};
         if (id2 === id || id2 === 'player' || !r2.alive || r2.liege || r2.rank < 3 ||
             FB.isRealmAtWar(state, id2) || courted[id2] || FB.allianceOf(state, id2)) continue;
         if (!FB.realmsAdjacent(state, id, id2)) continue;
-        if (realmFaithGroup(state, id) !== realmFaithGroup(state, id2)) continue;
+        if (!realmsFaithCompatible(state, id, id2)) continue;
         choices.push(id2);
       }
       if (choices.length) {
@@ -5436,9 +5475,9 @@ window.FB = window.FB || {};
       if (other.liege === 'player') other.liege = rid;
       if (other.war && other.war.enemy === 'player') other.war.enemy = rid;
     }
-    for (const religionId in (state.religiousHeads || {})) {
-      if (state.religiousHeads[religionId] === 'player') {
-        state.religiousHeads[religionId] = rid;
+    for (const officeId in (state.religiousHeads || {})) {
+      if (state.religiousHeads[officeId] === 'player') {
+        state.religiousHeads[officeId] = rid;
       }
     }
     if (state.realmTech &&

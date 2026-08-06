@@ -21,10 +21,10 @@ only when activated, after all enabled mods have applied. The existing top-level
 867 merge API. `straits` keep their two-id pair format; `crossingClasses` merges by its
 canonical pair key and may classify an existing edge as `narrow`, `coastal`, or `open`.
 An omitted classification defaults to `narrow`.
-An optional `religiousHeads` map binds centralized faith offices to realm ids inside
-that atomic bookmark. Activation rejects unknown faiths, faiths without head metadata,
-and mapped realms absent from the bookmark; omission uses each religion's global
-`head.realm` fallback.
+An optional `religiousHeads` map binds faith ids or stable `head.officeId` values to
+realm ids inside that atomic bookmark. Activation rejects unknown offices, effective
+faiths without head metadata, and mapped realms absent from the bookmark; omission uses
+each office's effective `head.realm` fallback.
 
 A legacy mod that changes any world-shaping top-level field—provinces, realms,
 hierarchy, straits, crossing classes, scripted history, coastline, seas, or bounds—without also providing
@@ -49,6 +49,19 @@ The source hash is calculated after mods are applied. Effective event sources ar
 before locale validation so newly added mod text always has an English fallback. A mod's
 authored name, description, and prose remain English unless they exactly match a known
 catalog source; translation packs for third-party mods are outside the core v1 contract.
+
+Religion definitions replace or add atomically by id under `religions`, then compile as
+one inheritance graph after the complete mod stack is applied. `group` is the parent
+definition, broad `assignable:false` nodes can hold shared doctrine, and nested
+`properties` objects inherit recursively; arrays, scalars, and `null` replace inherited
+values. The compiler also accepts old top-level qualities such as `head`, so existing
+religion mods remain valid. New definitions should use `properties`, directional
+`relationToParent`, and a stable `head.officeId` where applicable. Runtime faiths use the
+same definition shape in saved state and remain covered by the existing active-mod
+fingerprint because their parent and inherited sources must resolve against the same mod
+set. See [religions.md](religions.md) and `docs/MODDING.md`.
+Legacy `titles.christian|muslim|pagan|jewish` and `_f` overrides are mirrored into
+the corresponding root's `rankTitles`, so title-only mods keep their former live effect.
 
 Livelihood and instruction definitions are moddable data too. Top-level `careers`,
 `schooling`, `enterprises`, and `householdStandards` tables

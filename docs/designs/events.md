@@ -46,6 +46,14 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+Faith fracture uses that same data boundary. `foundFaith` validates and stores a
+JSON-safe definition, optionally converts the founder, household, and player realm, and
+places the resulting id in `ctx.faithId`. A following `faithRelation` effect may refer to
+it as `$founded` and persist directional recognition changes. `marriageEndReady` gates
+the doctrine-defined petition route, while `marriageEnd` charges its snapshotted
+success or failure costs. These keys keep authored schisms and marriage doctrine in
+event data without allowing events to mutate `FBDATA`.
+
 Debt enforcement uses that code-queued boundary for its last claim. Once distraint
 exhausts seizable property, `js/economy.js` queues exactly one station-specific event:
 `manor_forfeit` for gentry, `bondage_sentence` for freeholders, or

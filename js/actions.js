@@ -547,7 +547,8 @@ window.FB = window.FB || {};
     desc: function () { return 'Ask kin and gossips to find you a spouse from your own walk of life.'; },
     show: function (s) {
       const m = me(s);
-      const clergyCelibate = s.player.profession === 'monk' && FB.religionOf(m.religion).group !== 'muslim';
+      const clergyCelibate = s.player.profession === 'monk' &&
+        !FB.religionOf(m.religion, s).clergyMarriage;
       return adult(s) && FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
     },
     run: function (s) {
@@ -719,7 +720,8 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const c = me(s);
-      return adult(s) && c && c.religion === 'catholic' && !!FB.ensurePapacy;
+      return adult(s) && c && FB.faithHasSystem(c.religion, 'papacy', s) &&
+        !!FB.ensurePapacy;
     },
     run: function () {
       if (FB.ui && FB.ui.showPapacy) FB.ui.showPapacy();
@@ -732,11 +734,13 @@ window.FB = window.FB || {};
       });
     },
     show: function (s) {
-      return adult(s) && me(s).religion === 'catholic' && FB.isPlayerSovereign(s) &&
+      return adult(s) && FB.faithHasSystem(me(s).religion, 'papacy', s) &&
+        FB.isPlayerSovereign(s) &&
         !!FB.religiousHeadVacancy(s, 'catholic');
     },
     can: function (s) {
-      const seat = FBDATA.religions.catholic.head.seat;
+      const catholic = FB.religionOf('catholic', s);
+      const seat = catholic && catholic.head && catholic.head.seat;
       if (!FB.isPlayerSovereign(s)) return FB.T('Only a sovereign may restore the Papacy.');
       if (!s.holder || s.holder[seat] !== 'player' ||
           s.player.provs.indexOf(seat) < 0) {
@@ -771,7 +775,8 @@ window.FB = window.FB || {};
       });
     },
     show: function (s) {
-      return adult(s) && me(s).religion === 'sunni' && s.player.tier >= 6 &&
+      return adult(s) && FB.faithOfficeId(me(s).religion, s) === 'sunni' &&
+        s.player.tier >= 6 &&
         (!!FB.religiousHeadVacancy(s, 'sunni') || !!FB.caliphateWarCause(s));
     },
     can: function (s) {
@@ -834,8 +839,12 @@ window.FB = window.FB || {};
     show: function (s) {
       if (!adult(s) || s.greatHolyWar) return false;
       if (FB.playerPope && FB.playerPope(s)) return true;
-      for (const religionId in FBDATA.religions) {
-        const religion = FBDATA.religions[religionId];
+      const religionIds = FB.religionIds(s, false);
+      for (let i = 0; i < religionIds.length; i++) {
+        const religionId = religionIds[i];
+        const religion = FB.religionOf(religionId, s);
+        const source = FB.faithValue(s, religionId, 'head.greatHolyWar').sourceId;
+        if (source && source !== religionId) continue;
         const head = religion && religion.head && religion.head.greatHolyWar &&
           FB.religiousHeadOf(s, religionId);
         if (head && head.id === 'player') return true;
@@ -848,8 +857,12 @@ window.FB = window.FB || {};
           ? true
           : FB.T('Papal authority, schism, the target list, or the campaign cooldown prevents a new call.');
       }
-      for (const religionId in FBDATA.religions) {
-        const religion = FBDATA.religions[religionId];
+      const religionIds = FB.religionIds(s, false);
+      for (let i = 0; i < religionIds.length; i++) {
+        const religionId = religionIds[i];
+        const religion = FB.religionOf(religionId, s);
+        const source = FB.faithValue(s, religionId, 'head.greatHolyWar').sourceId;
+        if (source && source !== religionId) continue;
         const head = religion && religion.head && religion.head.greatHolyWar &&
           FB.religiousHeadOf(s, religionId);
         if (!head || head.id !== 'player') continue;
@@ -1266,7 +1279,7 @@ window.FB = window.FB || {};
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
   { id: 'hold_feast', label: '🍗 Hold a feast', cd: 180,
     desc: function (s) {
-      return FB.religionOf(me(s).religion).group === 'muslim'
+      return FB.faithIsA(me(s).religion, 'muslim', s)
         ? 'Meat, sherbet, and politics.' : 'Meat, mead, and politics.';
     },
     show: function (s) { return s.player.tier >= 3; },
@@ -1906,7 +1919,7 @@ window.FB = window.FB || {};
     if (p.provs && p.provs.length) return true;
     const me = state.chars && state.chars[p.charId];
     const ranks = me && me.religiousRanks || {};
-    const seeOnly = !!(me && me.religion === 'catholic' &&
+    const seeOnly = !!(me && FB.faithHasSystem(me.religion, 'papacy', state) &&
       me.papalOffice !== 'pope' && !(p.flags && p.flags.pope) &&
       ((me.bishopric && typeof me.bishopric === 'object' &&
         !Array.isArray(me.bishopric)) ||
@@ -3603,7 +3616,9 @@ window.FB = window.FB || {};
       FB.standingOf(state, { kind:'realm', id:rid }) /
         B.foreignOpinionEnvoyDivisor;
     if (FB.playerExcommunicated && FB.playerExcommunicated(state) &&
-        FB.realmReligionId(state, rid) === 'catholic') chance -= 0.2;
+        FB.faithHasSystem(FB.realmReligionId(state, rid), 'papacy', state)) {
+      chance -= 0.2;
+    }
     return FB.clamp(chance, 0.1, 0.9);
   };
 
@@ -4229,7 +4244,8 @@ window.FB = window.FB || {};
   FB.caliphateWarClaimantEligible = function (state) {
     const p = state.player;
     const c = state.chars[p.charId];
-    return !!(c && !c.dead && c.religion === 'sunni' && p.tier >= 6 &&
+    return !!(c && !c.dead && FB.faithOfficeId(c.religion, state) === 'sunni' &&
+      p.tier >= 6 &&
       FB.isPlayerSovereign(state));
   };
 

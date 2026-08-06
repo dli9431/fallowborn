@@ -70,12 +70,23 @@ rank compatibility. `FB.bishopricOf` lazily gives an old terminal Catholic rank 
 Ordinary death succession and Papal elevation release the office without transferring
 its abstract see, revenue, or retinue to the dynasty.
 
+Faith-fracture state is additive and keeps save version 3. `state.faiths` maps generated
+ids to the same JSON-safe definitions used by `FBDATA.religions`;
+`state.faithRelations[observerId][targetId]` stores directional relationship changes;
+and `state.faithNextId` supplies deterministic generated ids. `FB.ensureFaithState`
+initializes `{}`, `{}`, and `1` when those fields are absent, then restore recompiles the
+effective graph before any character or office repair. An old version-3 life therefore
+means “no generated faiths,” while a new life preserves its non-historical sects. The
+derived graph, lineage, and property-source maps never live on state. See
+[religions.md](religions.md).
+
 Religious-head state is additive and keeps save version 3.
-`state.religiousHeads` maps an exact religion id to a realm id or to `null` for an
-explicit vacancy. New games seed missing entries from optional
-`bookmark.religiousHeads`, falling back to `FBDATA.religions[id].head.realm`; this lets
+`state.religiousHeads` maps a stable `head.officeId` to a realm id or to `null` for an
+explicit vacancy. The built-in office ids equal the old Catholic and Sunni religion ids,
+so old saves need no key migration. New games seed missing entries from optional
+`bookmark.religiousHeads`, falling back to the effective head's `realm`; this lets
 867 and 1066 use different canonical realm ids. `state.religiousHeadVacancies` maps a
-vacant exact religion id to `{turn,formerHolder}`, where `formerHolder` is the old realm
+vacant office id to `{turn,formerHolder}`, where `formerHolder` is the old realm
 id. The turn gates delayed AI recovery and is never reset by repeated cleanup.
 
 `FB.ensureReligiousHeads` performs additive repair on restore. It preserves a living
@@ -88,11 +99,13 @@ once. The ordinary JSON
 snapshot/export round trip preserves both maps unchanged, so an unresolved vacancy can
 persist indefinitely without raising save version 3.
 
-Player title snapshots may add `headReligion` and `headTitle`. The former selects the
-stable religion-owned catalog key and the latter is its English fallback, so save-slot
-metadata, legends, and structured messages can render Pope or Caliph in the active
-locale without storing rendered prose. A snapshot records the office held at that
-moment; rendering it later does not consult the live assignment.
+Player title snapshots retain the legacy `group` and `tier` fields and may add
+`religion`, `titleReligion`, `titleSex`, and `word`. The source faith selects the stable
+catalog key and `word` is its English fallback, so metadata from a generated faith can
+render even before live state is restored; an old snapshot still renders through
+`FBDATA.titles`. Head snapshots likewise add source-faith and English fallback fields.
+A snapshot records the office and title held at that moment; rendering it later does
+not consult the live assignment.
 
 Dynastic diplomacy is additive and does not change save version 3.
 `realm.succession` holds lightweight royal members and a ruler-generation identity;

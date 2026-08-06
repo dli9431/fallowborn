@@ -534,7 +534,6 @@ window.FB = window.FB || {};
     if (!managedCareerCharacter(state, c)) return [];
     if (c.id === state.player.charId && state.player.tier >= 3) return [];
     const age = FB.ageOf(c, state.date.year);
-    const religionGroup = FB.religionOf(c.religion).group;
     const current = FB.careerOf(state, c);
     const playerClericalOffice = (c.id === state.player.charId &&
       (state.player.flags.abbot || state.player.flags.bishop ||
@@ -547,7 +546,9 @@ window.FB = window.FB || {};
       if (def.tierMin !== undefined && state.player.tier < def.tierMin) continue;
       if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) continue;
       if (def.maleOnly && c.sex !== 'm') continue;
-      if (def.religionGroups && def.religionGroups.indexOf(religionGroup) < 0) continue;
+      if (def.religionGroups && !def.religionGroups.some(function (id) {
+        return FB.faithIsA(c.religion, id, state);
+      })) continue;
       if (age < 16 && age < (def.apprenticeAge || 10)) continue;
       if (playerClericalOffice && id !== current.profession) continue;
       const archived = c.careerHistory && c.careerHistory[id];
@@ -574,12 +575,12 @@ window.FB = window.FB || {};
   function religiousPathId(state, c) {
     const career = FB.careerOf(state, c);
     if (!career) return null;
-    if (c.religion === 'catholic') {
+    if (FB.faithHasSystem(c.religion, 'papacy', state)) {
       if (career.profession === 'monk') return 'catholic_monastic';
       if (career.profession === 'priest') return 'catholic_clerical';
       return 'catholic_lay';
     }
-    if (FB.religionOf(c.religion).group === 'muslim') {
+    if (FB.faithIsA(c.religion, 'muslim', state)) {
       if (career.profession === 'monk') return 'muslim_scholar';
       if (career.profession === 'priest') return 'muslim_mosque';
       return 'muslim_lay';
@@ -637,8 +638,8 @@ window.FB = window.FB || {};
     if (!c) return [];
     const activeId = religiousPathId(state, c);
     if (!activeId) return [];
-    const layId = c.religion === 'catholic' ? 'catholic_lay' :
-      (FB.religionOf(c.religion).group === 'muslim' ? 'muslim_lay' : null);
+    const layId = FB.faithHasSystem(c.religion, 'papacy', state) ? 'catholic_lay' :
+      (FB.faithIsA(c.religion, 'muslim', state) ? 'muslim_lay' : null);
     const out = [];
     if (layId) out.push({ kind:'lay', path:religiousPathRecord(state, c, layId) });
     if (activeId !== layId) {
@@ -714,8 +715,8 @@ window.FB = window.FB || {};
   }
 
   function layStandingIndex(state, c) {
-    const pathId = c.religion === 'catholic' ? 'catholic_lay' :
-      (FB.religionOf(c.religion).group === 'muslim' ? 'muslim_lay' : null);
+    const pathId = FB.faithHasSystem(c.religion, 'papacy', state) ? 'catholic_lay' :
+      (FB.faithIsA(c.religion, 'muslim', state) ? 'muslim_lay' : null);
     return pathId ? religiousRankIndex(state, c, pathId) : 0;
   }
 
@@ -729,8 +730,8 @@ window.FB = window.FB || {};
         ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId));
   }
 
-  function bishopricSeeReserved(provinceId) {
-    const catholic = FBDATA.religions && FBDATA.religions.catholic;
+  function bishopricSeeReserved(state, provinceId) {
+    const catholic = FB.religionOf('catholic', state);
     const head = catholic && catholic.head;
     return !!(provinceId && head && head.seat === provinceId);
   }
@@ -739,7 +740,7 @@ window.FB = window.FB || {};
      terminal Catholic ranks acquire a home-county record lazily. A vacated
      marker prevents that compatibility path from recreating a returned see. */
   FB.bishopricOf = function (state, c) {
-    if (!state || !c || c.religion !== 'catholic') return null;
+    if (!state || !c || !FB.faithHasSystem(c.religion, 'papacy', state)) return null;
     if (c.papalOffice === 'pope' ||
         (c.id === state.player.charId && state.player.flags &&
           state.player.flags.pope)) {
@@ -774,7 +775,7 @@ window.FB = window.FB || {};
   };
 
   FB.bishopricSnapshot = function (state, c) {
-    if (!state || !c || c.religion !== 'catholic') return null;
+    if (!state || !c || !FB.faithHasSystem(c.religion, 'papacy', state)) return null;
     if (c.papalOffice === 'pope' ||
         (c.id === state.player.charId && state.player.flags &&
           state.player.flags.pope)) return null;
@@ -822,10 +823,10 @@ window.FB = window.FB || {};
   FB.installBishopric = function (state, c, status, opts) {
     opts = opts || {};
     c = c || playerChar(state);
-    if (!c || c.dead || c.religion !== 'catholic') return false;
+    if (!c || c.dead || !FB.faithHasSystem(c.religion, 'papacy', state)) return false;
     status = status || {};
     const seeProvinceId = bishopricSeeProvinceId(state, c, status);
-    if (bishopricSeeReserved(seeProvinceId)) return false;
+    if (bishopricSeeReserved(state, seeProvinceId)) return false;
     delete c.bishopricVacatedTurn;
     c.bishopric = {
       seeProvinceId:seeProvinceId,
@@ -989,7 +990,7 @@ window.FB = window.FB || {};
     c = c || playerChar(state);
     const path = c && FB.religiousPathOf(state, c);
     const step = path && path.next;
-    const visible = !!(c && c.religion === 'catholic' && step &&
+    const visible = !!(c && FB.faithHasSystem(c.religion, 'papacy', state) && step &&
       step.id === 'bishop');
     if (!visible) return { visible:false, ready:false, missing:[] };
     const cfg = catholicOfficeBalance('bishopric');
@@ -1055,7 +1056,7 @@ window.FB = window.FB || {};
     if (bishopCandidateExcommunicated(state, c, obedienceId)) {
       missing.push(FB.T('not excommunicated'));
     }
-    if (bishopricSeeReserved(seeProvinceId)) {
+    if (bishopricSeeReserved(state, seeProvinceId)) {
       const reservedSee = FB.world && FB.world.byId[seeProvinceId];
       missing.push(FB.T('a bishopric outside the Pope’s diocese of {province}', {
         province:reservedSee ? reservedSee.name : seeProvinceId
@@ -4646,10 +4647,8 @@ window.FB = window.FB || {};
 
   FB.tradePartnershipName = function (state) {
     const c = state.chars[state.player.charId];
-    const group = c ? FB.religionOf(c.religion).group : 'default';
-    if (group === 'muslim') return FB.T('Qirad partnership');
-    if (group === 'jewish') return FB.T('Trade partnership');
-    return FB.T('Commenda partnership');
+    return c ? FB.faithDataText(state, c.id, c.religion,
+      'words.partnership', {}) : FB.T('Trade partnership');
   };
 
   function hasTradeHouse(state) {

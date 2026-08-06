@@ -1464,7 +1464,7 @@ window.FB = window.FB || {};
   UI.showReligiousHeadRestoration = function (religionId) {
     const s = FB.state;
     if (!s || !FB.canRestoreReligiousHead(s, religionId, 'player')) return;
-    const meta = FBDATA.religions[religionId].head;
+    const meta = FB.religionOf(religionId, s).head;
     const seat = FB.world.byId[meta.seat];
     const title = FB.religiousHeadTitle(s, religionId);
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
@@ -1556,7 +1556,7 @@ window.FB = window.FB || {};
   }
 
   function greatHolyWarName(s, campaign) {
-    const religion = campaign && FBDATA.religions[campaign.callingReligion];
+    const religion = campaign && FB.religionOf(campaign.callingReligion, s);
     return religion
       ? dt(s, 'religion', campaign.callingReligion, religion,
         'head.greatHolyWar.name')
@@ -1635,11 +1635,15 @@ window.FB = window.FB || {};
       'The target freezes when the call is made. The banners gather for 180 days; a vacant religious head or an invalid target collapses the call.')) +
       '</p></div><div class="gm-list">';
     let count = 0;
-    for (const religionId in FBDATA.religions) {
-      const religion = FBDATA.religions[religionId];
+    const religionIds = FB.religionIds(s, false);
+    for (let religionIndex = 0; religionIndex < religionIds.length; religionIndex++) {
+      const religionId = religionIds[religionIndex];
+      const religion = FB.religionOf(religionId, s);
+      const source = FB.faithValue(s, religionId, 'head.greatHolyWar').sourceId;
+      if (source && source !== religionId) continue;
       const head = religion && religion.head && religion.head.greatHolyWar &&
         FB.religiousHeadOf(s, religionId);
-      const playerCatholicPope = religionId === 'catholic' &&
+      const playerCatholicPope = FB.faithHasSystem(religionId, 'papacy', s) &&
         FB.playerPope && FB.playerPope(s);
       if (((!head || head.id !== 'player') && !playerCatholicPope) ||
           !FB.canCallGreatHolyWar(s, religionId, null, 'player')) continue;
@@ -12338,7 +12342,7 @@ window.FB = window.FB || {};
 
     if (isSpouse) {
       const marriageEnd = FB.marriageEndStatus(s, c);
-      if (marriageEnd.kind !== 'annulment') {
+      if (marriageEnd.direct) {
         addInteractionAction(model, {
           id:'relationship.marriage.divorce',
           group:'relationship',
@@ -12347,11 +12351,15 @@ window.FB = window.FB || {};
             : (marriageEnd.kind === 'get'
               ? FB.T('Grant a get')
               : FB.T('Declare the marriage sundered')),
-          detail:marriageEnd.kind === 'sunder'
-            ? FB.T('Costs 5 prestige and spends the day.')
-            : FB.T('Pays {money:cost} and spends the day.', {
-              cost:marriageEnd.cost
-            }),
+          detail:marriageEnd.prestige
+            ? FB.T('Costs {prestige} prestige and spends the day.', {
+              prestige:marriageEnd.prestige
+            })
+            : (marriageEnd.cost
+              ? FB.T('Pays {money:cost} and spends the day.', {
+                cost:marriageEnd.cost
+              })
+              : FB.T('Spends the day.')),
           enabled:marriageEnd.ready,
           blockedReason:marriageEnd.reason || null,
           consequence:FB.T(
@@ -12365,7 +12373,7 @@ window.FB = window.FB || {};
           label:FB.T('Petition to annul the marriage'),
           detail:FB.T(
             'Costs {money:gold} and {piety} piety; the church decides after you spend the day.', {
-              gold:15, piety:20
+              gold:marriageEnd.cost, piety:marriageEnd.piety
             }),
           enabled:marriageEnd.ready,
           blockedReason:marriageEnd.reason || null,
@@ -12621,13 +12629,18 @@ window.FB = window.FB || {};
           UI.refresh();
         } else if (action.route === 'divorce') {
           const status = FB.marriageEndStatus(s, c);
-          if (!status.ready || status.kind === 'annulment') return;
+          if (!status.ready || !status.direct) return;
           actThen(function () {
             const cost = status.cost;
             const gap = FB.stationOf(c) - FB.playerStation(s);
             if (cost) s.player.gold = Math.max(0, s.player.gold - cost);
-            if (status.kind === 'sunder') {
-              s.player.prestige = Math.max(0, s.player.prestige - 5);
+            if (status.piety) s.player.piety = Math.max(0,
+              s.player.piety - status.piety);
+            if (status.prestige) s.player.prestige = Math.max(0,
+              s.player.prestige - status.prestige);
+            if (status.cooldown) {
+              s.player.cooldowns = s.player.cooldowns || {};
+              s.player.cooldowns.annul = s.turn;
             }
             if (gap > 0) {
               s.player.prestige = Math.max(0,
@@ -12659,11 +12672,21 @@ window.FB = window.FB || {};
           });
         } else if (action.route === 'annul') {
           const status = FB.marriageEndStatus(s, c);
-          if (!status.ready || status.kind !== 'annulment') return;
+          if (!status.ready || status.direct) return;
           UI.closeModal();
           s.player.cooldowns = s.player.cooldowns || {};
           s.player.cooldowns.annul = s.turn;
-          FB.queueEvent(s, 'annulment_plea', {});
+          const doctrine = FB.marriageDoctrine(
+            s.chars[s.player.charId].religion, s);
+          const ending = doctrine.end || {};
+          FB.queueEvent(s, 'annulment_plea', {
+            marriageEndInitiated:true,
+            marriageGold:status.cost,
+            marriagePiety:status.piety,
+            marriageFailurePiety:Math.max(0,
+              Number(ending.failurePiety) || status.piety),
+            marriagePrestige:status.prestige
+          });
           FB.game.passDay({ skipFocus:true });
         } else if (action.route === 'children-toggle') {
           if (s.player.flags.noChildren) {

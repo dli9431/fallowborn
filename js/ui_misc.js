@@ -39,8 +39,8 @@ window.FB = window.FB || {};
     return dt(s, 'culture', id, def, 'name');
   }
   function religionName(s, id) {
-    const def = FB.religionOf(id);
-    return dt(s, 'religion', id, def, 'name');
+    return FB.faithDataText(s, s && s.player ? s.player.charId : null,
+      id, 'name', {});
   }
   function positionName(s, id) {
     const def = FBDATA.positions && FBDATA.positions[id];

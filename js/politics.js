@@ -284,7 +284,8 @@ window.FB = window.FB || {};
       }));
     }
     var ruler = courtHouseMap(court)[court.rulerHouseId];
-    if (ruler && ruler.religion && house.religion === ruler.religion) {
+    if (ruler && ruler.religion &&
+        FB.faithInFold(state, house.religion, ruler.religion)) {
       score += 12;
       reasons.push(reason('shared_faith', 12));
     }
@@ -294,7 +295,7 @@ window.FB = window.FB || {};
     };
     var traitScore = traitScores[house.traitId] || 0;
     if (house.traitId === 'zealous' && ruler &&
-        ruler.religion === house.religion) traitScore = 10;
+        FB.faithInFold(state, ruler.religion, house.religion)) traitScore = 10;
     if (traitScore) {
       score += traitScore;
       reasons.push(reason('temperament', traitScore, {
@@ -457,7 +458,8 @@ window.FB = window.FB || {};
         leaderHouseId:leader.id
       }));
     }
-    if (house.religion && leader.religion === house.religion) {
+    if (house.religion &&
+        FB.faithInFold(state, leader.religion, house.religion)) {
       score += 14;
       reasons.push(reason('shared_faith', 14, {
         leaderHouseId:leader.id

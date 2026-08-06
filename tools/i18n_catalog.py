@@ -675,6 +675,8 @@ def extract_structured(inv: Inventory) -> None:
         for item_id, item_node in root.items():
             item = node_object(item_node) or {}
             fields = DATA_FIELDS + (("earned",) if data_name == "traits" else ())
+            if data_name == "religions":
+                fields += ("adjective", "collective")
             for field in fields:
                 for branch, record, line in branch_records(item.get(field)):
                     inv.add(
@@ -685,7 +687,9 @@ def extract_structured(inv: Inventory) -> None:
                         TOKEN_RE.findall(record["text"]),
                     )
             if data_name == "religions":
-                head = node_object(item.get("head")) or {}
+                properties = node_object(item.get("properties")) or {}
+                head = (node_object(properties.get("head")) or
+                        node_object(item.get("head")) or {})
                 for branch, record, line in branch_records(head.get("title")):
                     inv.add(
                         f"{namespace}.{item_id}.head.title.{branch}",
@@ -694,6 +698,28 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, central religious office title, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
+                rank_titles = node_object(properties.get("rankTitles")) or {}
+                for sex in ("m", "f"):
+                    for index, value in enumerate(node_array(rank_titles.get(sex)) or []):
+                        if value.kind == "string":
+                            inv.add(
+                                f"{namespace}.{item_id}.rankTitles.{sex}.{index}.default",
+                                {"text": value.value},
+                                f"{rel}:{value.line}",
+                                f"{namespace} {item_id}, {sex} rank title, tier {index}.",
+                                ("rank_title",),
+                            )
+                for collection_name in ("words", "roles"):
+                    collection = node_object(properties.get(collection_name)) or {}
+                    for field, value in collection.items():
+                        for branch, record, line in branch_records(value):
+                            inv.add(
+                                f"{namespace}.{item_id}.{collection_name}.{field}.{branch}",
+                                record,
+                                f"{rel}:{line}",
+                                f"{namespace} {item_id}, {collection_name} {field}.",
+                                TOKEN_RE.findall(record["text"]),
+                            )
                 great_holy_war = node_object(head.get("greatHolyWar")) or {}
                 for branch, record, line in branch_records(great_holy_war.get("name")):
                     inv.add(

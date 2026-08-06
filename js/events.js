@@ -766,22 +766,22 @@ window.FB = window.FB || {};
         FB.papacyCelibateSnapshot(state, player)) return false;
     const spouses = FB.spousesSnapshot(state, player).length;
     if (spouses === 0) return true;
-    if (player.sex !== 'm') return false;
-    return spouses < FB.marriageDoctrine(player.religion).wives;
+    const doctrine = FB.marriageDoctrine(player.religion, state);
+    return spouses < doctrine.spouseLimit[player.sex === 'f' ? 'f' : 'm'];
   };
 
-  /* May the player take a(nother) spouse? Polygyny only — a man of a faith
-     that permits it may hold several wives; everyone else weds one at a time. */
+  /* May the player take a(nother) spouse? Capacity is an inherited doctrine
+     for the protagonist's sex; the first spouse remains the addressed role. */
   FB.canWed = function (state) {
     const me = state.chars[state.player.charId];
     if (FB.papacyCelibate && FB.papacyCelibate(state, me)) return false;
     const n = FB.spousesOf(state, me).length;
     if (n === 0) return true;
-    if (me.sex !== 'm') return false;
-    return n < FB.marriageDoctrine(me.religion).wives;
+    const doctrine = FB.marriageDoctrine(me.religion, state);
+    return n < doctrine.spouseLimit[me.sex === 'f' ? 'f' : 'm'];
   };
 
-  /* The first wife has died or been set aside — the next steps up. */
+  /* The addressed spouse has died or been set aside — promote the next link. */
   FB.promoteSpouse = function (state) {
     const me = state.chars[state.player.charId];
     if (me.spouseId && state.chars[me.spouseId] && !state.chars[me.spouseId].dead) return;
@@ -1004,23 +1004,30 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const spouse = c && me &&
       (c.spouseId === me.id || me.spouseId === c.id);
-    const doctrine = me ? FB.marriageDoctrine(me.religion) : null;
-    const kind = doctrine && doctrine.divorce
-      ? doctrine.divorce : 'annulment';
-    const cost = spouse && kind !== 'annulment' && kind !== 'sunder'
+    const doctrine = me ? FB.marriageDoctrine(me.religion, state) : null;
+    const ending = doctrine && doctrine.end || {
+      kind:'annulment', gold:15, piety:20, prestige:0, cooldownDays:360
+    };
+    const kind = ending.kind || 'annulment';
+    const cost = spouse && ending.gold === 'dowry'
       ? (FBDATA.balance.dowryByStation[FB.stationOf(c)] || 0)
-      : (kind === 'annulment' ? 15 : 0);
-    const piety = kind === 'annulment' ? 20 : 0;
+      : Math.max(0, Number(ending.gold) || 0);
+    const piety = Math.max(0, Number(ending.piety) || 0);
+    const prestige = Math.max(0, Number(ending.prestige) || 0);
     const cooldowns = state.player.cooldowns || {};
     const last = cooldowns.annul;
-    const cooldownDays = kind === 'annulment' && last !== undefined
-      ? Math.max(0, 360 - (state.turn - last)) : 0;
+    const cooldown = Math.max(0, Number(ending.cooldownDays) || 0);
+    const cooldownDays = cooldown && last !== undefined
+      ? Math.max(0, cooldown - (state.turn - last)) : 0;
     const status = {
       ready:false,
       characterId:c && c.id || null,
       kind:kind,
+      direct:!!ending.direct,
       cost:cost,
       piety:piety,
+      prestige:prestige,
+      cooldown:cooldown,
       cooldownDays:cooldownDays,
       reason:''
     };
@@ -1041,6 +1048,12 @@ window.FB = window.FB || {};
         'Requires {piety} piety; you have {current}.', {
           piety:piety,
           current:Math.floor(state.player.piety)
+        });
+    } else if ((Number(state.player.prestige) || 0) < prestige) {
+      status.reason = FB.T(
+        'Requires {prestige} prestige; you have {current}.', {
+          prestige:prestige,
+          current:Math.floor(state.player.prestige)
         });
     } else {
       status.ready = true;
@@ -1116,9 +1129,8 @@ window.FB = window.FB || {};
 
   /* Notable folk of a province — the local cast for the player's home,
      lazily-generated worthies elsewhere (persisted in state.provChars). */
-  function lordWord(pr) {
-    const g = FB.religionOf(pr.religion).group;
-    return g === 'muslim' ? 'Emir' : g === 'pagan' ? 'Chief' : 'Lord';
+  function lordWord(state, pr) {
+    return FB.faithValue(state, pr.religion, 'words.landed').value || 'Lord';
   }
 
   /* Reusable explanation adapter over the authoritative FB.canCourt gate.
@@ -1203,7 +1215,7 @@ window.FB = window.FB || {};
       return blocked('close_kin', FB.T('You are too close in blood.'), false);
     }
     if (state.player.profession === 'monk' &&
-        FB.religionOf(me.religion).group !== 'muslim') {
+        !FB.religionOf(me.religion, state).clergyMarriage) {
       return blocked('vocation_vow', FB.T('Your vows forbid marriage.'));
     }
     if (!allowCurrent && state.player.courtingId === c.id) {
@@ -1244,18 +1256,21 @@ window.FB = window.FB || {};
         ids.push(c.id);
         return c;
       }
-      const lw = lordWord(pr);
+      const lw = lordWord(state, pr);
       const lord = mk({ culture: pr.culture, religion: pr.religion, sex: 'm', born: y - FB.ri(28, 55), quality: 4, role: 'notable', station: 3 },
         FB.msg('fx.epithet.province_lord', {
           forms: {
             select: 'value', param: 'kind', cases: {
               emir: 'Emir of {province}',
               chief: 'Chief of {province}',
+              custom: '{landed} of {province}',
               other: 'Lord of {province}'
             }
           }
         }, {
-          kind: lw === 'Emir' ? 'emir' : (lw === 'Chief' ? 'chief' : 'other'),
+          kind: lw === 'Emir' ? 'emir' : (lw === 'Chief' ? 'chief' :
+            (lw === 'Lord' ? 'other' : 'custom')),
+          landed:FB.dataParam('religion', pr.religion, 'words.landed'),
           province: pr.name
         }));
       lord.dyn = 'of ' + pr.name;
@@ -1266,10 +1281,19 @@ window.FB = window.FB || {};
               muslim: 'Imam',
               pagan: 'Godi',
               jewish: 'Rabbi',
+              custom: '{cleric}',
               other: 'Priest'
             }
           }
-        }, { faith: FB.religionOf(pr.religion).group }));
+        }, {
+          faith:(function () {
+            const word = String(FB.faithValue(
+              state, pr.religion, 'words.cleric').value || '').toLowerCase();
+            return word === 'imam' ? 'muslim' : (word === 'godi' ? 'pagan' :
+              (word === 'rabbi' ? 'jewish' : (word === 'priest' ? 'other' : 'custom')));
+          })(),
+          cleric:FB.dataParam('religion', pr.religion, 'words.cleric')
+        }));
       const mkt = (state.dev[pid] || 1) >= 5;
       mk({ culture: pr.culture, religion: pr.religion, born: y - FB.ri(38, 62), quality: 2, role: 'notable', station: mkt ? 2 : 1 },
         mkt
@@ -1534,7 +1558,8 @@ window.FB = window.FB || {};
     else if (FB.ageOf(cand, state.date.year) < 12) reason = 'age';
     else if (FB.spousesOf(state, cand).length || cand.betrothedId) reason = 'pledged';
     else if (cand.sex === child.sex) reason = 'doctrine';
-    else if (cand.religion !== child.religion) reason = 'faith';
+    else if (!FB.faithAllowsMarriage(state, child.religion, cand.religion) ||
+        !FB.faithAllowsMarriage(state, cand.religion, child.religion)) reason = 'faith';
     else if (closeMatchKin(state, child, cand)) reason = 'kinship';
     else if (FB.papacyCelibate &&
         (FB.papacyCelibate(state, child) ||
@@ -1892,20 +1917,9 @@ window.FB = window.FB || {};
     return FB.messageParam(FB.message(key, {}));
   }
   function faithParam(kind, religionId) {
-    const group = FB.religionOf(religionId).group;
-    if (kind === 'holy') {
-      return neutralParam('fx.param.holy.' +
-        (group === 'muslim' ? 'imam' : group === 'pagan' ? 'godi' :
-          group === 'jewish' ? 'rabbi' : 'priest'));
-    }
-    if (kind === 'god') {
-      return neutralParam('fx.param.god.' +
-        (group === 'muslim' ? 'allah' : group === 'pagan' ? 'gods' :
-          group === 'jewish' ? 'lord' : 'god'));
-    }
-    return neutralParam('fx.param.temple.' +
-      (group === 'muslim' ? 'mosque' : group === 'pagan' ? 'grove' :
-        group === 'jewish' ? 'synagogue' : 'church'));
+    const path = kind === 'holy' ? 'words.cleric' :
+      (kind === 'god' ? 'words.deity' : 'words.temple');
+    return FB.dataParam('religion', religionId, path);
   }
   FB.textParams = function (state, viewer, source, ctx, semantic) {
     /* No running game (title-screen label lookups): only caller context is
@@ -2113,8 +2127,7 @@ window.FB = window.FB || {};
       return value;
     }
     const me = state.chars[state.player.charId];
-    const group = FB.religionOf(me.religion).group;
-    return value[group] !== undefined ? value[group] : value.default;
+    return FB.faithBranch(state, me.religion, value).value;
   }
   function selectedEventText(state, value, ctx, depth) {
     depth = depth || 0;
@@ -2452,7 +2465,7 @@ window.FB = window.FB || {};
         else c += Math.min(0.1, -gap * 0.05); // marrying down is easy
         if (me.traits.indexOf('comely') >= 0) c += 0.08;
         if (me.traits.indexOf('homely') >= 0) c -= 0.08;
-        if (s && s.religion === 'catholic' &&
+        if (s && FB.faithHasSystem(s.religion, 'papacy', state) &&
             FB.playerExcommunicated && FB.playerExcommunicated(state)) {
           c -= 0.2;
         }
@@ -2699,6 +2712,23 @@ window.FB = window.FB || {};
     if (tg.healthMax !== undefined && (me.health === undefined || me.health > tg.healthMax)) return false;
     if (tg.prestigeMin !== undefined && p.prestige < tg.prestigeMin) return false;
     if (tg.pietyMin !== undefined && p.piety < tg.pietyMin) return false;
+    if (tg.marriageEndReady) {
+      const marriageSpouse = FB.spouseOf(state, me);
+      if (!marriageSpouse) return false;
+      if (!(ctx && ctx.marriageEndInitiated)) {
+        if (!FB.marriageEndStatus(state, marriageSpouse).ready) return false;
+      } else {
+        const marriageEnding = FB.marriageDoctrine(me.religion, state).end || {};
+        const marriageGold = ctx.marriageGold !== undefined
+          ? Number(ctx.marriageGold) || 0 : Number(marriageEnding.gold) || 0;
+        const marriagePiety = ctx.marriagePiety !== undefined
+          ? Number(ctx.marriagePiety) || 0 : Number(marriageEnding.piety) || 0;
+        const marriagePrestige = ctx.marriagePrestige !== undefined
+          ? Number(ctx.marriagePrestige) || 0 : Number(marriageEnding.prestige) || 0;
+        if (marriageEnding.direct || p.gold < marriageGold ||
+            p.piety < marriagePiety || p.prestige < marriagePrestige) return false;
+      }
+    }
     if (tg.leaMin !== undefined && FB.skillOf(me, 'lea') < tg.leaMin) return false;
     if (tg.flags) for (const fl of tg.flags) if (!p.flags[fl]) return false;
     if (tg.notFlags) for (const fl of tg.notFlags) if (p.flags[fl]) return false;
@@ -2717,9 +2747,12 @@ window.FB = window.FB || {};
     if (tg.notTechs) for (const t of tg.notTechs) if (FB.techList(state).indexOf(t) >= 0) return false;
     if (tg.holdings) for (const hd of tg.holdings) if (!FB.hasHouseholdAsset(state, hd)) return false;
     if (tg.notHoldings) for (const hd of tg.notHoldings) if (FB.hasHouseholdAsset(state, hd)) return false;
-    if (tg.religionGroup && FB.religionOf(me.religion).group !== tg.religionGroup) return false;
-    if (tg.religionGroups && tg.religionGroups.indexOf(FB.religionOf(me.religion).group) < 0) return false;
-    if (tg.provinceReligionGroup && (!pr || FB.religionOf(pr.religion).group !== tg.provinceReligionGroup)) return false;
+    if (tg.religionGroup && !FB.faithIsA(me.religion, tg.religionGroup, state)) return false;
+    if (tg.religionGroups && !tg.religionGroups.some(function (id) {
+      return FB.faithIsA(me.religion, id, state);
+    })) return false;
+    if (tg.provinceReligionGroup &&
+        (!pr || !FB.faithIsA(pr.religion, tg.provinceReligionGroup, state))) return false;
     if (tg.cultures && tg.cultures.indexOf(me.culture) < 0) return false;
     if (tg.provinceCultures && (!pr || tg.provinceCultures.indexOf(pr.culture) < 0)) return false;
     if (tg.terrains && (!pr || tg.terrains.indexOf(pr.terrain) < 0)) return false;
@@ -3130,11 +3163,11 @@ window.FB = window.FB || {};
       return FB.message(key, FB.textParams(state, state.player.charId, raw, ctx, true));
     }
     const me = state.chars[state.player.charId];
-    const group = FB.religionOf(me.religion).group;
-    const source = typeof info.source === 'string' ? info.source :
-      (info.source[group] !== undefined ? info.source[group] : info.source.default);
-    const branch = typeof info.source === 'string' ? 'default' :
-      (info.source[group] !== undefined ? group : 'default');
+    const selected = typeof info.source === 'string'
+      ? { branch:'default', value:info.source }
+      : FB.faithBranch(state, me.religion, info.source);
+    const source = selected.value;
+    const branch = selected.branch;
     materializeTextRoles(state, source, ctx);
     return FB.message(info.key + '.' + branch,
       FB.textParams(state, state.player.charId, source, ctx, true));
@@ -3196,6 +3229,23 @@ window.FB = window.FB || {};
     const lethalProvenance = fx.deathProvenance
       ? deathProvenance(state, fx.deathProvenance, ctx, ev) : null;
     ctx = ctx || {};
+
+    if (fx.marriageEnd) {
+      const doctrine = FB.marriageDoctrine(me.religion, state);
+      const ending = doctrine.end || {};
+      const failed = fx.marriageEnd === 'failure';
+      const marriageGold = ctx.marriageGold !== undefined
+        ? ctx.marriageGold : ending.gold;
+      const marriagePiety = failed && ctx.marriageFailurePiety !== undefined
+        ? ctx.marriageFailurePiety
+        : (ctx.marriagePiety !== undefined ? ctx.marriagePiety : ending.piety);
+      const marriagePrestige = ctx.marriagePrestige !== undefined
+        ? ctx.marriagePrestige : ending.prestige;
+      p.gold = Math.max(0, p.gold - Math.max(0, Number(marriageGold) || 0));
+      p.piety = Math.max(0, p.piety - Math.max(0, Number(marriagePiety) || 0));
+      p.prestige = Math.max(0,
+        p.prestige - Math.max(0, Number(marriagePrestige) || 0));
+    }
 
     if (fx.gold !== undefined) {
       let g = fx.gold;
@@ -3428,6 +3478,39 @@ window.FB = window.FB || {};
     if (fx.moveRandom) FB.movePlayerRandom(state);
     if (fx.travelReturn && FB.travelReturn) FB.travelReturn(state);
     if (fx.travelSettle && FB.travelSettle) FB.travelSettle(state);
+    if (fx.foundFaith && FB.foundFaith) {
+      const founding = fx.foundFaith;
+      let definition = founding.definition;
+      if (!definition) {
+        definition = {};
+        for (const faithKey in founding) {
+          if (faithKey !== 'convertFounder' && faithKey !== 'convertHousehold' &&
+              faithKey !== 'convertRealm') definition[faithKey] = founding[faithKey];
+        }
+      }
+      const faithId = FB.foundFaith(state, definition, {
+        convertFounder:founding.convertFounder !== false,
+        convertHousehold:!!founding.convertHousehold,
+        convertRealm:!!founding.convertRealm
+      });
+      if (faithId) ctx.faithId = faithId;
+    }
+    if (fx.faithRelation && FB.setFaithRelation) {
+      const relation = fx.faithRelation;
+      const faithRef = function (value) {
+        if (value === '$founded') return ctx.faithId;
+        if (value === '$current' || value === undefined) return me.religion;
+        return value;
+      };
+      const observerId = faithRef(relation.observer);
+      const targetId = faithRef(relation.target);
+      if (FB.setFaithRelation(state, observerId, targetId, relation.status) &&
+          relation.reciprocal) {
+        FB.setFaithRelation(state, targetId, observerId,
+          typeof relation.reciprocal === 'string'
+            ? relation.reciprocal : relation.status);
+      }
+    }
     if (fx.convertToProvince) {
       const pr = FB.world.byId[p.provinceId];
       if (pr) {
@@ -3780,6 +3863,11 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const sp = FB.spouseOf(state, me);
     if (!sp) return;
+    const deity = String(FB.faithValue(
+      state, me.religion, 'words.deity').value || 'God');
+    const knownDeity = deity === 'Allah' ? 'muslim' :
+      (deity === 'the gods' ? 'pagan' :
+        (deity === 'the Lord' ? 'jewish' : (deity === 'God' ? 'other' : 'custom')));
     FB.doDivorce(state, sp.id);
     FB.news(state, FB.msg('news.event.annulment', {
       forms: {
@@ -3787,10 +3875,15 @@ window.FB = window.FB || {};
           muslim: '⛪ The marriage to {name} is declared void — before Allah, it never was.',
           pagan: '⛪ The marriage to {name} is declared void — before the gods, it never was.',
           jewish: '⛪ The marriage to {name} is declared void — before the Lord, it never was.',
+          custom: '⛪ The marriage to {name} is declared void — before {deity}, it never was.',
           other: '⛪ The marriage to {name} is declared void — before God, it never was.'
         }
       }
-    }, { faith: FB.religionOf(me.religion).group, name: sp.name }));
+    }, {
+      faith:knownDeity,
+      deity:FB.dataParam('religion', me.religion, 'words.deity'),
+      name:sp.name
+    }));
   };
 
   /* ---------- Sweet Polly Oliver (disguise-at-war chain, events_peasant.js) ----------

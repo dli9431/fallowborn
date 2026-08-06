@@ -1,0 +1,120 @@
+# Religions and faith fracture
+
+Religion is one inheritance graph, not a pair of engine concepts for “religion” and
+“religious group.” Seeded definitions live in `FBDATA.religions`; faiths founded during
+a campaign use the same JSON-safe definition shape in `state.faiths`. Characters,
+provinces, and realms continue to store one stable faith id.
+
+## Definition graph
+
+Every table key is a faith id. `group` points to the definition inherited from; `parent`
+is accepted as an equivalent spelling for programmatic callers. A root omits both.
+Broad identities such as `christian`, `muslim`, and `pagan` are ordinary nodes with
+`assignable:false`: they supply shared doctrine and vocabulary but cannot be assigned to
+a person or map province. This keeps “Christian” useful as an ancestor without creating
+characters whose only identity is Christianity.
+
+Identity and lifecycle fields stay local (an omitted icon alone may fall back to the
+parent's icon):
+
+- `name`, `adjective`, `collective`, `desc`, and `icon` describe this node;
+- `group`/`parent`, `relationToParent`, and `relations` define graph edges;
+- `assignable` and `active` control whether a node may appear in play;
+- generated records may also carry `createdTurn`, `founderId`, and
+  `originProvinceId`.
+
+Mechanics live under `properties`. Objects merge recursively from the root toward the
+leaf. Scalars, arrays, and `null` replace the inherited value. Thus a child can override
+only `marriage.spouseLimit.m`, explicitly remove an inherited religious head with
+`head:null`, or replace a complete title array. Identity text is deliberately not
+inherited. Legacy definitions that put qualities such as `head` at the top level still
+compile as properties, and old `group:'christian'` mods now naturally inherit the
+Christian root.
+
+The initial property vocabulary is intentionally extensible rather than a closed enum:
+
+- `marriage.spouseLimit`, `marriage.divorce`, and
+  `marriage.acceptedRelations`;
+- `rankTitles.m` / `rankTitles.f`;
+- `words.deity`, `words.cleric`, `words.temple`, `words.landed`, and the
+  faith-flavored `words.partnership` label;
+- `roles` for monastic, priestly, episcopal, cardinal, abbatial, and qadi titles,
+  plus `clergyMarriage`;
+- `systems` capability flags such as `papacy`;
+- optional `head` metadata, including great holy wars.
+
+Engine code reads these through `FB.religionOf`, `FB.faithValue`, and capability helpers,
+not by switching on ids or broad groups. `FB.faithValue` also reports the ancestor that
+authored the effective value. That source id owns its localization key.
+On the compiled compatibility view, `parent` is the exact inherited-from id while
+`group` remains the old four-family alias for legacy callers; new ancestry checks use
+`FB.faithLineage`, `FB.faithIsA`, or `FB.faithGroup` explicitly.
+
+## Relations and branch selection
+
+`relationToParent` is either one status or a directional pair:
+
+```json
+{
+  "childView": "in_fold",
+  "parentView": "schismatic"
+}
+```
+
+The statuses are `in_fold`, `schismatic`, and `hostile`; identical ids resolve as
+`same`, while graphs with no common ancestor resolve as `foreign`. A scalar edge applies
+in both directions, and an omitted edge status defaults to `schismatic` for legacy
+definitions. `relations` supplies authored directional exceptions, and
+`state.faithRelations[observerId][targetId]` stores changes that happen during play.
+When two cousins are compared, the strictest edge on the path through their nearest
+common ancestor wins. Consequently Ash’ari and Maturidi can both remain in the Sunni
+fold, while Catholic and Orthodox remain schismatic descendants of Christianity.
+
+Marriage, realm opinion, religious war alignment, and religion-group triggers consult
+the graph. Each faith chooses which relation statuses it accepts for marriage. Structured
+text and event variants search exact faith id, then each ancestor, then `default`; a new
+Catholic child therefore receives Catholic prose before generic Christian prose without
+copying either branch.
+
+## Central offices
+
+An inherited religious head uses a stable `head.officeId`; a legacy head definition
+without one infers its defining faith id. Saved assignments and
+vacancies are keyed by that office id, not by every inheriting child. Catholic children
+can therefore recognize the same Roman office without creating duplicate Popes, and a
+child can opt out with `head:null`. The core office ids remain `catholic` and `sunni`, so
+existing version-3 saves retain their exact keys and assignments.
+
+## Seeded and generated faiths
+
+Historical definitions and broad roots are seeded in `data/cultures.js`. The core graph
+includes Ash’ari and Maturidi as assignable in-fold children of Sunni even though no
+bookmark county is forced to use them.
+
+`FB.createFaith(state, definition)` validates and saves a new definition without changing
+followers. `FB.foundFaith` adds founder/origin metadata, defaults the group to the current
+faith, and may convert the founder, managed household, and player realm. Declarative
+events expose the same operation through a `foundFaith` effect and can persist later
+directional changes with `faithRelation`. This is the extension
+point for authored historical outbreaks and seeded-RNG future fracture events; no engine
+enum or new script file is required for a new sect.
+
+County faith remains authored world data rather than mutable campaign state. Founding a
+faith can convert characters and a player realm, but a future county-conversion system
+must first add an explicit saved county-faith overlay instead of mutating `FBDATA`.
+
+## Validation and saves
+
+The compiler rejects missing parents, cycles, invalid directional statuses, unknown
+relationship targets, malformed marriage doctrine, short rank-title arrays, and invalid
+explicit office ids. Bookmark validation also rejects abstract or unknown faith ids on
+people-facing world records and validates each effective great-holy-war definition once
+at its authoring source.
+
+The save envelope remains strict version 3. New games initialize `faiths:{}`,
+`faithRelations:{}`, and `faithNextId:1`. Restore supplies those defaults when absent,
+then rebuilds the derived graph before repairing religious offices. Generated definitions
+and relationship changes therefore round-trip, while every older version-3 save behaves
+as a campaign with no generated faiths. Title snapshots retain the legacy `group`/`tier`
+fields and add source faith, sex, and English fallback words, so both old snapshots and
+new generated-faith snapshots remain renderable.

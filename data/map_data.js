@@ -989,7 +989,7 @@ FBDATA.balance = {
     crowned:  { common:2,  fine:7,  famed:6 }
   },
   peddlerWealthShift: [150, 600], // each purse threshold crossed shops one band higher
-  wivesByGroup: { muslim: 4, pagan: 3 },
+  wivesByGroup: { muslim: 4, pagan: 3 }, // deprecated fallback; faith properties own doctrine
   warWinsToTakeProvince: 3, aiWarChance: 0.14,
   /* unjustified player wars: the current ruler's recent declarations make
      each new political cost harsher and keep vassal breakaway pressure high */

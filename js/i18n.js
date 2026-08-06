@@ -449,9 +449,14 @@ window.FBDATA = window.FBDATA || {};
           enterprise: FBDATA.enterprises, householdStandard:FBDATA.householdStandards,
           travelPurpose: FBDATA.travelPurposes
         };
-        const def = tables[value.$data] && tables[value.$data][value.id];
+        const def = value.$data === 'religion' && FB.religionOf
+          ? FB.religionOf(value.id, state)
+          : (tables[value.$data] && tables[value.$data][value.id]);
         out[key] = def && state
-          ? FB.dataText(state, viewer, value.$data, value.id, def, value.path || 'name', {})
+          ? (value.$data === 'religion' && FB.faithDataText
+            ? FB.faithDataText(state, viewer, value.id, value.path || 'name', {})
+            : FB.dataText(state, viewer, value.$data, value.id, def,
+              value.path || 'name', {}))
           : value.id;
         if (value.transform === 'lower') out[key] = String(out[key]).toLowerCase();
         if (def && value.icon) out[key] = (def.icon || '') + (def.icon ? ' ' : '') + out[key];
@@ -553,7 +558,8 @@ window.FBDATA = window.FBDATA || {};
       return { branch: 'default', value: value };
     }
     const c = viewerChar(state, viewer);
-    const rel = c && FB.religionOf ? FB.religionOf(c.religion) : null;
+    if (c && FB.faithBranch) return FB.faithBranch(state, c.religion, value);
+    const rel = c && FB.religionOf ? FB.religionOf(c.religion, state) : null;
     const group = rel ? rel.group : 'default';
     return {
       branch: own(value, group) ? group : 'default',

@@ -15,8 +15,8 @@ move.
 travel balance values. The five core purposes are pilgrimage, trade, study, paid
 service, and a character-targeted relationship visit:
 
-- pilgrimage uses authored sites filtered by the traveler’s exact religion or
-  religion group;
+- pilgrimage uses authored sites filtered by the traveler's exact faith or any faith
+  in its inheritance lineage;
 - trade routes the player into the self-founded venture setup, whose finance
   definition accepts developed counties at or above `minDevelopment`;
 - study uses authored learned/urban sites;

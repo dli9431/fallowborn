@@ -563,7 +563,7 @@ window.FB = window.FB || {};
     }
     if (s.greatHolyWar) {
       const great = s.greatHolyWar;
-      const greatReligion = FBDATA.religions[great.callingReligion];
+      const greatReligion = FB.religionOf(great.callingReligion, s);
       const greatName = greatReligion
         ? dt(s, 'religion', great.callingReligion, greatReligion,
           'head.greatHolyWar.name') : FB.T('great holy war');
@@ -1180,9 +1180,9 @@ window.FB = window.FB || {};
   }
 
   function religiousHeadStatusRow(s, religionId) {
-    const rel = FBDATA.religions[religionId];
+    const rel = FB.religionOf(religionId, s);
     if (!rel || !rel.head) return '';
-    if (religionId === 'catholic' && FB.ensurePapacy) {
+    if (FB.faithHasSystem(religionId, 'papacy', s) && FB.ensurePapacy) {
       const papacy = FB.ensurePapacy(s);
       const me = s.chars[s.player.charId];
       const obedienceId = FB.papalObedienceForCharacter(s, me) ||

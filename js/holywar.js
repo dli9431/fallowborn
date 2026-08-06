@@ -13,14 +13,22 @@ window.FB = window.FB || {};
     return value === undefined ? fallback : value;
   }
 
-  function config(religionId) {
-    var religion = FBDATA.religions[religionId];
+  function config(state, religionId) {
+    var religion = FB.religionOf(religionId, state);
     return religion && religion.head && religion.head.greatHolyWar || null;
   }
 
-  function callingGroup(religionId) {
-    var religion = FBDATA.religions[religionId];
-    return religion ? religion.group : null;
+  function papalFaith(state, religionId) {
+    return FB.faithHasSystem && FB.faithHasSystem(religionId, 'papacy', state);
+  }
+
+  function callingGroup(state, religionId) {
+    return FB.faithGroup(religionId, state);
+  }
+
+  function opposedToCall(state, religionId, callingReligion) {
+    var relation = FB.faithRelation(state, religionId, callingReligion);
+    return relation === 'hostile' || relation === 'foreign';
   }
 
   function dateNumber(date) {
@@ -40,15 +48,15 @@ window.FB = window.FB || {};
     return state.realms[rid] ? state.realms[rid].name : rid;
   }
 
-  function ownerGroup(state, pid) {
+  function ownerFaith(state, pid) {
     var rid = state.owner && state.owner[pid];
-    var religionId = rid && FB.realmReligionId(state, rid);
-    return religionId ? FB.religionOf(religionId).group : null;
+    return rid && FB.realmReligionId(state, rid) || null;
   }
 
   function countyLost(state, religionId, pid) {
-    var group = ownerGroup(state, pid);
-    return !!group && group !== callingGroup(religionId);
+    var ownerReligion = ownerFaith(state, pid);
+    return !!ownerReligion &&
+      !FB.faithInFold(state, religionId, ownerReligion);
   }
 
   function sovereignRealm(state, rid) {
@@ -164,7 +172,7 @@ window.FB = window.FB || {};
   }
 
   function sacredForKingdom(state, religionId, kingdomId, lostOnly) {
-    var conf = config(religionId), rows = sacredTargets(conf), out = [];
+    var conf = config(state, religionId), rows = sacredTargets(conf), out = [];
     for (var i = 0; i < rows.length; i++) {
       if (!rows[i] || rows[i].kingdom !== kingdomId || !Array.isArray(rows[i].counties)) continue;
       for (var j = 0; j < rows[i].counties.length; j++) {
@@ -179,17 +187,17 @@ window.FB = window.FB || {};
   function objectiveRecord(state, religionId, kingdomId, specialFirst) {
     var counties = FB.kingdomCounties(kingdomId).slice();
     if (!counties.length) return null;
-    var group = callingGroup(religionId), objectives = [];
+    var objectives = [];
     var originalFaith = 0, total = 0, lostDev = 0, totalDev = 0;
     for (var i = 0; i < counties.length; i++) {
       var pid = counties[i], province = FB.world.byId[pid];
       if (!province || province.wasteland) continue;
       total++;
-      if (province.religion === religionId) originalFaith++;
+      if (FB.faithInFold(state, religionId, province.religion)) originalFaith++;
       var dev = state.dev[pid] || 1;
       totalDev += dev;
-      var currentGroup = ownerGroup(state, pid);
-      if (currentGroup && currentGroup !== group) {
+      var currentFaith = ownerFaith(state, pid);
+      if (currentFaith && !FB.faithInFold(state, religionId, currentFaith)) {
         objectives.push(pid);
         lostDev += dev;
       }
@@ -213,8 +221,9 @@ window.FB = window.FB || {};
      rank before later heartland reconquests; ties prefer more lost development
      and then the stable kingdom id. */
   FB.greatHolyWarTargets = function (state, religionId) {
-    if (!state || !config(religionId) || !callingGroup(religionId)) return [];
-    var history = ensureHistory(state), conf = config(religionId), out = [];
+    if (!state || !config(state, religionId) ||
+        !callingGroup(state, religionId)) return [];
+    var history = ensureHistory(state), conf = config(state, religionId), out = [];
     if (conf.firstTarget && !history.firstLaunched[religionId]) {
       var first = objectiveRecord(state, religionId, conf.firstTarget, true);
       if (first && first.holyCounties.length) out.push(first);
@@ -252,8 +261,9 @@ window.FB = window.FB || {};
   function campaignEventContext(state, campaign) {
     var kingdom = FBDATA.kingdoms[campaign.targetKingdom];
     return {
-      campaignType:campaign.callingReligion === 'catholic' ? 'crusade' :
-        (campaign.callingReligion === 'sunni' ? 'jihad' : 'other'),
+      campaignType:papalFaith(state, campaign.callingReligion) ? 'crusade' :
+        (FB.faithOfficeId(campaign.callingReligion, state) === 'sunni'
+          ? 'jihad' : 'other'),
       caller:realmName(state, campaign.callerRealm),
       leader:realmName(state, campaign.leaderRealm),
       kingdom:kingdom ? kingdom.name : campaign.targetKingdom
@@ -261,13 +271,13 @@ window.FB = window.FB || {};
   }
 
   FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
-    if (!state || state.greatHolyWar || !config(religionId)) return false;
-    var conf = config(religionId), history = ensureHistory(state);
+    if (!state || state.greatHolyWar || !config(state, religionId)) return false;
+    var conf = config(state, religionId), history = ensureHistory(state);
     if (!dateReached(state, conf.minDate)) return false;
     if ((history.cooldownUntil[religionId] || 0) > state.turn) return false;
     var head = FB.religiousHeadOf(state, religionId);
     if (!head) return false;
-    if (religionId === 'catholic' && FB.ensurePapacy) {
+    if (papalFaith(state, religionId) && FB.ensurePapacy) {
       var papacy = FB.ensurePapacy(state);
       var obedience = papacy && papacy.obediences[papacy.romanObedience];
       var authorityGate = FBDATA.papacy &&
@@ -484,10 +494,11 @@ window.FB = window.FB || {};
     for (var rid in state.realms) {
       if (rid === 'player' || rid === campaign.callerRealm ||
           !livingSovereign(state, rid)) continue;
-      if (FB.realmReligionId(state, rid) !== faith) continue;
+      if (!FB.faithInFold(state, faith, FB.realmReligionId(state, rid))) continue;
       var ruler = FB.realmRulerCharacter &&
         FB.realmRulerCharacter(state, rid);
-      if (faith === 'catholic' && ruler && FB.excommunicationOf &&
+      if (papalFaith(state, FB.realmReligionId(state, rid)) && ruler &&
+          FB.excommunicationOf &&
           FB.excommunicationOf(state, ruler.id,
             FB.papalObedienceForRealm(state, rid))) continue;
       candidates.push(rid);
@@ -510,8 +521,9 @@ window.FB = window.FB || {};
     var seen = {};
     for (var i = 0; i < campaign.objectiveCounties.length; i++) {
       var rid = sovereignRealm(state, state.owner[campaign.objectiveCounties[i]]);
-      if (!rid || seen[rid] || ownerGroup(state, campaign.objectiveCounties[i]) ===
-          callingGroup(campaign.callingReligion)) continue;
+      if (!rid || seen[rid] ||
+          !countyLost(state, campaign.callingReligion,
+            campaign.objectiveCounties[i])) continue;
       seen[rid] = 1;
       addParticipant(campaign, 'defenders', {
         realm:rid, sovereign:true, mandatory:true, voluntary:false,
@@ -537,7 +549,7 @@ window.FB = window.FB || {};
           participantOf(campaign, 'defenders', rid) || ordinaryWarInvolves(state, rid)) continue;
       var faith = FB.realmReligionId(state, rid);
       if (!faith ||
-          FB.religionOf(faith).group === callingGroup(campaign.callingReligion)) continue;
+          !opposedToCall(state, faith, campaign.callingReligion)) continue;
       candidates.push(rid);
     }
     candidates.sort(function (a, b) {
@@ -566,9 +578,9 @@ window.FB = window.FB || {};
       phase:'preparation',
       callingReligion:religionId,
       callerRealm:head.id,
-      callerClaimantId:religionId === 'catholic' && FB.romanPope
+      callerClaimantId:papalFaith(state, religionId) && FB.romanPope
         ? (FB.romanPope(state) || {}).id || null : null,
-      callerObedienceId:religionId === 'catholic' &&
+      callerObedienceId:papalFaith(state, religionId) &&
         FB.papalObedienceForRealm
         ? FB.papalObedienceForRealm(state, head.id) : null,
       leaderRealm:null,
@@ -612,11 +624,12 @@ window.FB = window.FB || {};
     if (!character || FB.ageOf(character, state.date.year) < 16 || state.player.tier < 1) {
       return null;
     }
-    if (campaign.callingReligion === 'catholic' &&
+    if (papalFaith(state, character.religion) &&
         FB.playerExcommunicated && FB.playerExcommunicated(state)) return null;
-    if (character.religion === campaign.callingReligion) return 'attackers';
-    if (FB.religionOf(character.religion).group !==
-        callingGroup(campaign.callingReligion)) return 'defenders';
+    if (FB.faithInFold(state, campaign.callingReligion,
+        character.religion)) return 'attackers';
+    if (opposedToCall(state, character.religion,
+        campaign.callingReligion)) return 'defenders';
     return null;
   }
 
@@ -687,14 +700,15 @@ window.FB = window.FB || {};
     var realmReligion = FB.realmReligionId(state, realmId);
     var joiningRuler = FB.realmRulerCharacter &&
       FB.realmRulerCharacter(state, realmId);
-    if (camp === 'attackers' && realmReligion === 'catholic' &&
+    if (camp === 'attackers' && papalFaith(state, realmReligion) &&
         joiningRuler && FB.excommunicationOf &&
         FB.excommunicationOf(state, joiningRuler.id,
           FB.papalObedienceForRealm(state, realmId))) return false;
-    var realmGroup = realmReligion && FB.religionOf(realmReligion).group;
-    if (camp === 'attackers' && realmReligion !== campaign.callingReligion) return false;
+    if (camp === 'attackers' &&
+        !FB.faithInFold(state, campaign.callingReligion, realmReligion)) return false;
     if (camp === 'defenders' &&
-        (!realmGroup || realmGroup === callingGroup(campaign.callingReligion) ||
+        (!realmReligion || !opposedToCall(state, realmReligion,
+          campaign.callingReligion) ||
          ordinaryWarInvolves(state, realmId))) return false;
     if (camp !== 'attackers' && camp !== 'defenders') return false;
     if (voluntaryCount(campaign, camp) >= B('greatHolyWarVolunteersPerCamp', 8)) return false;
@@ -885,12 +899,13 @@ window.FB = window.FB || {};
   }
 
   function campaignTargetValid(state, campaign) {
-    var opposing = 0, group = callingGroup(campaign.callingReligion);
+    var opposing = 0;
     for (var i = 0; i < campaign.holyCounties.length; i++) {
       if (!countyLost(state, campaign.callingReligion, campaign.holyCounties[i])) return false;
     }
     for (var j = 0; j < campaign.objectiveCounties.length; j++) {
-      if (ownerGroup(state, campaign.objectiveCounties[j]) !== group) opposing++;
+      if (countyLost(state, campaign.callingReligion,
+          campaign.objectiveCounties[j])) opposing++;
     }
     return opposing > 0;
   }
@@ -1447,7 +1462,8 @@ window.FB = window.FB || {};
       var rid = (state.holder && state.holder[ids[i]]) || state.owner[ids[i]];
       if (!rid || seen[rid] || !state.realms[rid] ||
           !state.realms[rid].alive ||
-          FB.realmReligionId(state, rid) !== campaign.callingReligion) continue;
+          !FB.faithInFold(state, campaign.callingReligion,
+            FB.realmReligionId(state, rid))) continue;
       seen[rid] = 1;
       var territory = FB.realmTerritory(state, rid).slice();
       var intact = territory.length > 0;
@@ -1665,7 +1681,8 @@ window.FB = window.FB || {};
       var pid = asset.ids[i], province = FB.world.byId[pid];
       var dev = state.dev[pid] || 1;
       total += dev;
-      if (province && province.religion === identity.religion) matched += dev * 0.5;
+      if (province && FB.faithInFold(state, province.religion,
+          identity.religion)) matched += dev * 0.5;
       if (province && province.culture === identity.culture) matched += dev * 0.5;
     }
     return total ? matched / total : 0;
@@ -2578,8 +2595,12 @@ window.FB = window.FB || {};
 
   function trackSacredLosses(state) {
     var history = ensureHistory(state);
-    for (var religionId in FBDATA.religions) {
-      var conf = config(religionId);
+    var religionIds = FB.religionIds(state, false);
+    for (var religionIndex = 0; religionIndex < religionIds.length; religionIndex++) {
+      var religionId = religionIds[religionIndex];
+      var source = FB.faithValue(state, religionId, 'head.greatHolyWar').sourceId;
+      if (source && source !== religionId) continue;
+      var conf = config(state, religionId);
       if (!conf) continue;
       var map = history.sacredLossSince[religionId];
       if (!map || typeof map !== 'object') {
@@ -2620,7 +2641,8 @@ window.FB = window.FB || {};
       var counties = FB.kingdomCounties(conf.crisisKingdoms[i]);
       for (var j = 0; j < counties.length; j++) {
         total++;
-        if (ownerGroup(state, counties[j]) === conf.crisisGroup) crisis++;
+        var countyFaith = ownerFaith(state, counties[j]);
+        if (countyFaith && FB.faithIsA(countyFaith, conf.crisisGroup, state)) crisis++;
       }
     }
     return total && crisis / total >= (conf.crisisShare || 0.25)
@@ -2644,14 +2666,17 @@ window.FB = window.FB || {};
     FB.ensureGreatHolyWar(state);
     trackSacredLosses(state);
     if (state.greatHolyWar) return;
-    var ids = Object.keys(FBDATA.religions).sort();
+    var ids = FB.religionIds(state, false).filter(function (religionId) {
+      var source = FB.faithValue(state, religionId, 'head.greatHolyWar').sourceId;
+      return !source || source === religionId;
+    }).sort();
     for (var i = 0; i < ids.length; i++) {
-      var religionId = ids[i], conf = config(religionId);
+      var religionId = ids[i], conf = config(state, religionId);
       if (!conf || !dateReached(state, conf.minDate)) continue;
       var history = ensureHistory(state);
       history.unlockChecked[religionId] = true;
       var head = FB.religiousHeadOf(state, religionId);
-      if (religionId === 'catholic' && FB.playerPope &&
+      if (papalFaith(state, religionId) && FB.playerPope &&
           FB.playerPope(state)) continue;
       if (!head || head.id === 'player') continue;
       if ((history.cooldownUntil[religionId] || 0) > state.turn) continue;
@@ -2783,10 +2808,13 @@ window.FB = window.FB || {};
     var campaign = state.greatHolyWar;
     if (!campaign) {
       var history = ensureHistory(state);
-      var unlockIds = Object.keys(FBDATA.religions).sort();
+      var unlockIds = FB.religionIds(state, false).filter(function (religionId) {
+        var source = FB.faithValue(state, religionId, 'head.greatHolyWar').sourceId;
+        return !source || source === religionId;
+      }).sort();
       for (var unlockIndex = 0; unlockIndex < unlockIds.length; unlockIndex++) {
         var unlockReligionId = unlockIds[unlockIndex];
-        var unlockConf = config(unlockReligionId);
+        var unlockConf = config(state, unlockReligionId);
         if (!unlockConf || history.unlockChecked[unlockReligionId] ||
             !dateReached(state, unlockConf.minDate)) continue;
         history.unlockChecked[unlockReligionId] = true;
@@ -2795,7 +2823,7 @@ window.FB = window.FB || {};
         var unlockForced = (!history.firstLaunched[unlockReligionId] &&
           unlockConf.firstByYear && state.date.year >= unlockConf.firstByYear) ||
           guaranteedByLoss(state, unlockReligionId, unlockConf);
-        if (!(unlockReligionId === 'catholic' && FB.playerPope &&
+        if (!(papalFaith(state, unlockReligionId) && FB.playerPope &&
               FB.playerPope(state)) &&
             unlockHead && unlockHead.id !== 'player' && unlockTargets.length &&
             (history.cooldownUntil[unlockReligionId] || 0) <= state.turn &&
@@ -2807,12 +2835,12 @@ window.FB = window.FB || {};
         }
       }
       for (var religionId in history.headState) {
-        var conf = config(religionId), hs = history.headState[religionId];
+        var conf = config(state, religionId), hs = history.headState[religionId];
         if (!conf || history.firstLaunched[religionId] || !hs ||
             !isFinite(hs.restoredTurn) || state.turn - hs.restoredTurn < 360) continue;
         var head = FB.religiousHeadOf(state, religionId);
         var targets = FB.greatHolyWarTargets(state, religionId);
-        if (!(religionId === 'catholic' && FB.playerPope &&
+        if (!(papalFaith(state, religionId) && FB.playerPope &&
               FB.playerPope(state)) &&
             head && head.id !== 'player' && targets.length &&
             dateReached(state, conf.minDate) &&
@@ -2830,7 +2858,7 @@ window.FB = window.FB || {};
         collapse(state, 'vacancy');
         return;
       }
-      if (campaign.callingReligion === 'catholic' &&
+      if (papalFaith(state, campaign.callingReligion) &&
           campaign.callerClaimantId && FB.ensurePapacy) {
         var papacy = FB.ensurePapacy(state);
         var callingObedience = papacy.obediences[
@@ -2881,7 +2909,7 @@ window.FB = window.FB || {};
     if (!campaign) return;
     var validPhase = campaign.phase === 'preparation' || campaign.phase === 'active' ||
       campaign.phase === 'settlement';
-    if (!campaign.id || !validPhase || !config(campaign.callingReligion) ||
+    if (!campaign.id || !validPhase || !config(state, campaign.callingReligion) ||
         !FBDATA.kingdoms[campaign.targetKingdom] ||
         !Array.isArray(campaign.objectiveCounties) ||
         !campaign.participants || typeof campaign.participants !== 'object' ||

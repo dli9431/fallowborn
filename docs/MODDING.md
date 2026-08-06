@@ -431,9 +431,9 @@ capitals; invalid province realm/de-jure/culture/faith references; development o
 1–10; broken straits; invalid crossing classifications; or invalid scripted targets.
 `crossingClasses` is optional and missing entries default to `narrow`.
 `religiousHeads` is optional; when
-present it is an exact religion-id to authored-realm-id map. Every faith must define
-`religion.head`, and every mapped realm must exist in this complete bookmark. Omitting
-the map falls back to each faith's global `head.realm`, which is suitable only when the
+present it maps a faith id or stable `head.officeId` to an authored realm id. The
+effective faith must define `properties.head`, and every mapped realm must exist in this
+complete bookmark. Omitting the map falls back to each office's effective `head.realm`, which is suitable only when the
 same realm id exists in every bookmark. Bookmark ids use letters, digits, and
 underscores. Preserve an existing county id when it still denotes the same place; give
 genuinely different geography a new stable id, and never recycle a retired id.
@@ -514,13 +514,14 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `married`, `hasChildren`, `hasYoungChild` | booleans |
 | `maxSeasonsSinceMarriage` | requires a recorded marriage no more than this many 90-day seasons ago |
 | `goldMin/Max`, `prestigeMin`, `pietyMin`, `leaMin` | resource gates |
+| `marriageEndReady` | current primary spouse exists and the effective faith's divorce/annulment costs and cooldown are satisfied |
 | `healthMax` | player health at or below (0–10) |
 | `flags` / `notFlags` | player flags set by other events |
 | `buildings` / `notBuildings` | building ids standing (or not) anywhere in the player's demesne |
 | `techs` / `notTechs` | technology ids completed (or not) by the player's effective sovereign nation |
 | `holdings` / `notHoldings` | household holding ids owned (or not) by the family |
-| `religionGroup` | `christian muslim pagan jewish` (player's) |
-| `religionGroups` | array form: any of the listed groups matches |
+| `religionGroup` | any faith id in the player's inheritance lineage |
+| `religionGroups` | array form: any listed faith or ancestor matches |
 | `cultures` | array of culture ids — any matches the player's culture |
 | `provinceReligionGroup`, `provinceCultures`, `terrains`, `coastal` | home province checks |
 | `atWar`, `realmAtWar`, `liegeAtWar`, `isVassal`, `isLiege` | war/politics (`isLiege`: the player has vassals of their own) |
@@ -655,16 +656,17 @@ a noble into the gentry). Their payouts scale off `dowryByStation` via the custo
 fns `dower_take dower_take_full claim_won claim_lost claim_sold` (js/events.js), and their
 texts use the `{late}` token (the dead spouse's name, carried in the event ctx).
 
-Faith sets the rest of the rules (`FB.marriageDoctrine` in js/model.js). Muslim, pagan, and
-Jewish players may divorce from the spouse's character sheet (the mahr/ketubah owed scales
-off `dowryByStation`; pagans pay in prestige instead); Christians must petition the church —
-the `annulment_plea` event, decided by the `annulment` named chance and settled by the
-`annul_granted` fn, one plea a year. Men of faiths listed in `balance.wivesByGroup`
-(default: Muslim 4, pagan 3) may hold that many wives at once — every wife can bear
-children, the first is the one `{spouse}` and the spouse role address, and the next in
-line is promoted when she dies or is set aside (`FB.spousesOf` / `FB.canWed` /
-`FB.promoteSpouse`). The married may also weave the `widow_veil` plot (map_data.js) to be
-rid of a spouse the darker way — its resolution is `plot_spouse_end`.
+Faith sets the rest of the rules (`FB.marriageDoctrine` in js/model.js).
+`properties.marriage.spouseLimit` controls spouse capacity;
+`properties.marriage.divorce` controls direct or petitioned separation, cost, and
+cooldown; and `acceptedRelations` filters cross-faith matches through the directional
+faith graph. `balance.wivesByGroup` remains only a fallback for legacy definitions with
+no marriage property. Every eligible spouse pairing can bear children, the first is the
+one `{spouse}` and the spouse-role address, and the next in line is promoted when the
+first dies or is set aside
+(`FB.spousesOf` / `FB.canWed` / `FB.promoteSpouse`). The married may also weave the
+`widow_veil` plot (map_data.js) to be rid of a spouse the darker way — its resolution is
+`plot_spouse_end`.
 
 ### Effects
 
@@ -679,6 +681,9 @@ go through `FB.gainSkill`, so the soft cap applies — see balance below) ·
 trait grants already do nothing when the character has that trait) ·
 `traitProgress: {id, amount?}` (default amount 1; progress is
 clamped at the trait's `earn.threshold`, then the trait is awarded) ·
+`marriageEnd:"success|failure"` (deduct the queued/effective faith-doctrine
+gold, piety, and prestige for an annulment outcome; failure may use
+`marriage.divorce.failurePiety`) ·
 `ailment: "id"` (a named wound/sickness from `FBDATA.ailments`) ·
 `setFlag / clearFlag` (+`setFlag2`/`clearFlag2` for a second one) ·
 `clearHarvestFlags: true` (clears `crop_safe`, `crop_risky`, `crop_ruined`, and the
@@ -707,7 +712,16 @@ raises him to duke only when his living liege is a king or greater) · `professi
 `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,
 `killRole` (optionally accompanied by `kinslayer:true`; this grants Kinslayer only when
 the killed role is the protagonist's spouse or blood relative), `educateChild` · `moveRandom` ·
-`convertToProvince` · `declareIndependence` · `devUp` ·
+`convertToProvince` ·
+`foundFaith:{definition:{...},convertFounder?,convertHousehold?,convertRealm?}` (validate
+and save a new faith definition, defaulting an omitted `group` or `"$current"` group to
+the protagonist's current faith; the founder converts unless explicitly false, optional
+household and player-realm conversion use the same id, and successful creation exposes
+that id as `ctx.faithId`) ·
+`faithRelation:{observer?,target,status,reciprocal?}` (save a directional relation;
+`observer` defaults to `"$current"`, either id may use `"$founded"`, and reciprocal is
+either `true` for the same reverse status or an explicit reverse status) ·
+`declareIndependence` · `devUp` ·
 `pickHeir: true` (opens the eligible-heir picker; automation names the first heir in line;
 either result grants 8 prestige and records the choice) · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or
@@ -831,15 +845,16 @@ Muslim player. Three tools, from lightest to heaviest:
 
 1. **Tokens** — `{god}`/`{holy}`/`{temple}` for generic religious words (see above).
 2. **Variant text** — any text field (`text`, `title`, `label`, `desc`, success/failure
-   `text`, `log`) may be an object keyed by religion group instead of a plain string:
+   `text`, `log`) may be an object keyed by faith id or ancestor id instead of a plain
+   string:
 
    ```json
    "text": { "default": "…a pig, a bolt of cloth…",
              "muslim":  "…a lamb, a bolt of cloth…" }
    ```
 
-   The player's religion group picks the variant; `default` covers everyone else and is
-   required.
+   The engine checks the player's exact faith first, then each ancestor in order;
+   `default` covers everyone else and is required.
 3. **Gated options / paired events** — an option that only suits some faiths gets a
    `require` with `religionGroups` (add a counterpart option for the others, so no faith
    sees fewer choices — see `village_festival`, `court_feast`). A whole event that only
@@ -1857,32 +1872,103 @@ no trait cap. Named wounds and sicknesses in `FBDATA.ailments` remain timed cond
 with their existing lifecycle; assigning a trait to the `condition` display class does
 not turn it into an ailment or change ailment behavior.
 
-A religion has `name`, `group`, and `icon`, plus an optional centralized religious
-office:
+Religions are one inheritance graph. A table key is the stable faith id; `group` points
+to the definition it inherits. A root omits `group`, and a broad root normally sets
+`assignable:false` so it can supply shared doctrine without producing characters called
+only “Christian” or “Muslim.” `parent` is accepted as an equivalent programmatic
+spelling. For example:
 
 ```json
-{ "catholic": {
-  "name": "Latin Christianity", "group": "christian", "icon": "✝",
-  "head": {
-    "realm": "papacy",
-    "title": "Pope",
-    "recovery": "grant_seat",
-    "seat": "roma",
-    "restoredRank": 3,
-    "sameFaithWar": "sacrilege"
+{
+  "christian": {
+    "name": "Christianity",
+    "assignable": false,
+    "icon": "✝",
+    "properties": {
+      "marriage": {
+        "spouseLimit": { "m": 1, "f": 1 },
+        "divorce": {
+          "kind": "annulment", "direct": false,
+          "gold": 15, "piety": 20, "cooldownDays": 360
+        },
+        "acceptedRelations": ["same", "in_fold"]
+      },
+      "rankTitles": {
+        "m": ["Serf", "Freeholder", "Gentry", "Baron", "Count", "Duke", "King", "Emperor"],
+        "f": ["Serf", "Freeholder", "Gentlewoman", "Baroness", "Countess", "Duchess", "Queen", "Empress"]
+      },
+      "words": {
+        "deity": "God", "cleric": "priest",
+        "temple": "church", "landed": "Lord",
+        "partnership": "Commenda partnership"
+      },
+      "roles": {
+        "monasticM": "Monk", "monasticF": "Nun",
+        "priestM": "Priest", "priestF": "Priest",
+        "abbotM": "Abbot", "abbotF": "Abbess"
+      },
+      "clergyMarriage": false
+    }
+  },
+  "catholic": {
+    "name": "Latin Christianity",
+    "group": "christian",
+    "relationToParent": "schismatic",
+    "icon": "✝",
+    "properties": {
+      "systems": { "papacy": true },
+      "roles": { "bishop": "Bishop", "cardinal": "Cardinal" },
+      "head": {
+        "officeId": "catholic",
+        "realm": "papacy",
+        "title": "Pope",
+        "recovery": "grant_seat",
+        "seat": "roma",
+        "restoredRank": 3,
+        "sameFaithWar": "sacrilege"
+      }
+    }
   }
-} }
+}
 ```
 
-`head.realm` is the global initial/canonical realm fallback when the active bookmark has
-no `religiousHeads[religionId]`; `head.title` is localized pure-display text. The live
-mapping is saved independently, may be reassigned to another realm, and may be
-explicitly vacant with `null`. `state.religiousHeadVacancies[religionId]` then records
-`{"turn":1234,"formerHolder":"papacy"}`. It is never inferred from capital faith or
-territorial rank, and absorbing or conquering the holder never makes the office
-hereditary. (Core adds one deliberate exception: a victorious player `caliphate`
-succession war reassigns a `claim` office to the victor's realm without moving land.)
-Religions without `head` metadata have no centralized office.
+Identity text (`name`, `adjective`, `collective`, `desc`), lifecycle fields, and graph
+edges stay local; an omitted `icon` may fall back to the parent. Values inside
+`properties` inherit recursively. Nested
+objects merge; arrays, scalars, and `null` replace the inherited value. A child can
+therefore author only `properties.marriage.spouseLimit.m:3`, or use
+`properties.head:null` to remove an inherited office. Legacy definitions that put
+qualities such as `head` at the top level still work, but new data should use
+`properties`. `rankTitles.m` and `.f` each contain all eight tiers. `FBDATA.titles` is
+retained only as a compatibility fallback for old mods and saved title snapshots.
+When a mod supplies one of the historical `titles.christian|muslim|pagan|jewish`
+or `_f` keys, the loader also mirrors it into that root's effective `rankTitles`,
+preserving title-only mods. New mods should edit the faith property directly.
+
+`relationToParent` is `in_fold`, `schismatic`, or `hostile`, or a directional object
+`{"childView":"in_fold","parentView":"schismatic"}`. A scalar applies both ways.
+An omitted status defaults to `schismatic` for legacy definitions. Same ids resolve as
+`same`; faiths with no common ancestor are `foreign`. Optional
+`relations:{"other_faith":"hostile"}` adds authored directional exceptions. Runtime
+changes use `FB.setFaithRelation(state,observerId,targetId,status)` and persist in
+`state.faithRelations`. `marriage.acceptedRelations` controls which of those statuses
+the faith permits in a match. Event and data variant objects search the exact faith,
+then every ancestor, then `default`; `religionGroup`/`religionGroups` gates likewise
+match any ancestor rather than only a hard-coded family.
+
+`properties.head.realm` is the global initial/canonical realm fallback when the active
+bookmark has no matching `religiousHeads` entry; `head.title` is localized pure-display
+text. New heads should declare a stable `officeId`; a legacy head that omits it infers
+the defining faith id, preserving the former save-key contract. An inherited office
+keeps the same id, so Sunni schools do not produce duplicate Caliphs. The live mapping is saved independently
+under `state.religiousHeads[officeId]`, may be reassigned, and may be explicitly vacant
+with `null`. `state.religiousHeadVacancies[officeId]` then records
+`{"turn":1234,"formerHolder":"papacy"}`. The built-in office ids remain `catholic`
+and `sunni`, preserving old version-3 saves. A head is never inferred from capital faith
+or territorial rank, and absorbing its holder never makes it hereditary. (Core adds one
+deliberate exception: a victorious player `caliphate` succession war reassigns a `claim`
+office to the victor's realm without moving land.) Faiths without effective `head`
+metadata have no centralized office.
 
 `head.recovery` is `grant_seat` or `claim`. A `grant_seat` office requires `seat`; the
 Catholic seat is also reserved from personal Bishopric appointments. The head definition
@@ -1891,13 +1977,14 @@ copy of the bookmark's canonical realm. A `claim` office supplies alternative co
 county sets in `claimCounties`, for example:
 
 ```json
-{ "head": {
+{ "properties": { "head": {
+  "officeId": "sunni",
   "realm": "abbasid",
   "title": "Caliph",
   "recovery": "claim",
   "claimCounties": [ ["baghdad"], ["mecca", "medina"] ],
   "sameFaithWar": "ordinary"
-} }
+} } }
 ```
 
 Each inner array is one sufficient alternative. Core player/AI rank and resource gates
@@ -1906,20 +1993,29 @@ land. `sameFaithWar` is `ordinary` or `sacrilege`. Core `sacrilege` policy leave
 causes legal behind a second confirmation, blocks ordinary same-faith AI selection, and
 protects the office realm's counties from incidental same-faith AI captures.
 
-Core and custom systems should query `FB.religiousHeadOf(state, religionId)`,
+Core and custom systems should query `FB.religionOf(id,state)`, `FB.faithValue`,
+`FB.faithLineage`, `FB.faithRelation`, and `FB.faithHasSystem` rather than switching on
+groups or ids. The effective record's `parent` is its exact parent; its `group` remains
+the historical four-family compatibility alias, so it must not be used for new graph
+logic. Central-office consumers should query `FB.religiousHeadOf(state, faithId)`,
 `FB.religionsHeadedBy(state, realmId)`, or
 `FB.isReligiousHead(state, realmId, religionId?)`; use
-`FB.religiousHeadTitle(state, religionId)` for the localized title. These APIs match
-exact religion ids, not broad religion groups. Generic rank words remain in
-`FBDATA.titles`; a `<group>_f` array (for example `muslim_f`) supplies the female
-forms of one group's list and is used by female players and female AI realm rulers
-when present, falling back to the base array otherwise. In core data, Muslim tier 7
-is Great Sultan/Great Sultana because Caliph is reserved for the Sunni office.
+`FB.religiousHeadTitle(state, faithId)` for the localized title. In core data, Muslim
+tier 7 is Great Sultan/Great Sultana because Caliph is reserved for the Sunni office.
 Realm-death and recovery code should use `FB.markRealmDead`,
 `FB.vacateReligiousHeads`, `FB.assignReligiousHead`,
 `FB.canRestoreReligiousHead` / `FB.restoreReligiousHead`, and
 `FB.canClaimReligiousHead` / `FB.claimReligiousHead` so assignments, vacancy clocks,
 and durable notices remain consistent.
+
+Runtime sects use the exact same definition shape. `FB.createFaith(state,definition)`
+adds a validated definition without converting anyone. `FB.foundFaith` additionally
+records founder/origin metadata and can convert the founder, managed household, and
+player realm; declarative events normally use the `foundFaith` effect documented above.
+Generated definitions live in `state.faiths`, relationship changes in
+`state.faithRelations`, and both stay in the version-3 save envelope. County faith is
+still authored bookmark data, so founding does not mutate a county. See
+[designs/religions.md](designs/religions.md) for the complete resolution and save model.
 
 ### Catholic Papacy definition
 
@@ -1959,7 +2055,8 @@ use `state.papacy`.
 A centralized religious head may optionally authorize a global, two-camp campaign:
 
 ```json
-{ "head": {
+{ "properties": { "head": {
+  "officeId": "catholic",
   "realm": "papacy",
   "title": "Pope",
   "greatHolyWar": {
@@ -1977,7 +2074,7 @@ A centralized religious head may optionally authorize a global, two-camp campaig
       { "kingdom": "k_syria", "counties": ["jerusalem"] }
     ]
   }
-} }
+} } }
 ```
 
 - `name` is localized pure-display text. The i18n key is
@@ -1985,7 +2082,8 @@ A centralized religious head may optionally authorize a global, two-camp campaig
 - `minDate` is required and uses the normal 0–3 season and 1–90 day calendar.
 - `sacredTargets` is required. Every `kingdom` must exist in the active bookmark and
   each listed county must belong de jure to that kingdom. A sacred target becomes
-  eligible when at least one listed county is ruled by another religion group.
+  eligible when at least one listed county is ruled by a faith outside the caller's
+  accepted fold.
 - `firstTarget` optionally restricts the faith's first launched campaign to one
   kingdom; one of its listed holy counties must be lost. `firstByYear` guarantees an
   eligible first AI call by that year.
@@ -1993,11 +2091,11 @@ A centralized religious head may optionally authorize a global, two-camp campaig
   least `crisisShare` of the combined `crisisKingdoms` is controlled by
   `crisisGroup`.
 - `lossGuaranteeYears` guarantees an AI call after that many uninterrupted years in
-  which any configured holy county remains under another religion group.
+  which any configured holy county remains under a faith outside the caller's fold.
 
 After the first launch, the engine also considers kingdoms whose bookmark population
 is predominantly the calling faith and whose current controlled development is
-predominantly held by another religion group. Lost holy places rank first, then the
+predominantly held outside the caller's fold. Lost holy places rank first, then the
 greatest displaced development, then stable kingdom id. A faith without both a
 central `head` and `head.greatHolyWar` cannot call this system; this is how core Shia
 Islam remains decentralized while a mod may opt it in.
@@ -2187,8 +2285,9 @@ fertility roll at every conception site (the player's household and kin alike).
 The marriage-of-station knobs live there too: `dowryByStation` (gold by the spouse's rank
 0–4; the bride's house pays, and protagonist courtship snapshots the resulting
 amount/direction before proposal), `marryUpPrestige` / `marryDownPrestigeLoss` (per step of difference),
-`proposalStationPenalty` (chance lost per step the suitor stands above the player), and
-`wivesByGroup` (wives a man of each religion group may hold; unlisted groups are monogamous).
+`proposalStationPenalty` (chance lost per step the suitor stands above the player).
+`wivesByGroup` is deprecated compatibility data used only when a legacy faith has no
+effective `properties.marriage`; new spouse limits belong in the faith graph.
 Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,
 `rivalContactMaxAge`, `rivalHeatPlayerStart`, `rivalHeatNpcStart`,
 `rivalHeatLegacyStart`, `rivalHeatOldSave`, `rivalContactHeat`, `rivalHeatDecayDelay`,

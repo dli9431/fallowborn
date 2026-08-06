@@ -786,9 +786,10 @@ window.FB = window.FB || {};
 
   function siteAllowed(state, site) {
     const c = me(state);
-    const rel = FB.religionOf(c.religion);
     if (site.religions && site.religions.indexOf(c.religion) < 0) return false;
-    if (site.religionGroups && site.religionGroups.indexOf(rel.group) < 0) return false;
+    if (site.religionGroups && !site.religionGroups.some(function (id) {
+      return FB.faithIsA(c.religion, id, state);
+    })) return false;
     return true;
   }
 

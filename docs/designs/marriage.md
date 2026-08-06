@@ -110,12 +110,18 @@ the money exactly once. Authored story weddings may use `marry:'informal'` when
 the story itself replaces formal family negotiations; those marriages transfer
 no dowry.
 
-Faith sets doctrine (`FB.marriageDoctrine` in model.js): muslim/pagan/jewish players
-divorce from the spouse's char sheet (muslim `talaq` and jewish `get` scale off
-`dowryByStation`; pagan `sunder` costs no coin but a prestige hit instead), Christians
-petition via the `annulment_plea` event (`annulment` named chance, yearly cooldown), and
-`balance.wivesByGroup` grants polygyny (`FB.spousesOf`/`FB.canWed`/`FB.promoteSpouse`;
-every wife can conceive, the first holds the spouse role). The spouse sheet carries a
+Faith inheritance sets doctrine (`FB.marriageDoctrine` in model.js). Effective
+`properties.marriage.spouseLimit.m` / `.f` grants monogamy, polygyny, or
+polyandry;
+`properties.marriage.divorce` supplies the kind, direct/petition route, costs, and
+cooldown; and `acceptedRelations` says whether another faith is eligible according to
+the directional relation graph. Muslim `talaq` and Jewish `get` scale off
+`dowryByStation`; pagan `sunder` costs no coin but prestige; Christians petition via
+the `annulment_plea` event. `balance.wivesByGroup` is read only as a compatibility
+fallback for a legacy faith definition with no inherited marriage property. The family
+mechanics remain `FB.spousesOf`/`FB.canWed`/`FB.promoteSpouse`: every eligible spouse
+pairing can conceive, and the first holds the spouse role. See
+[religions.md](religions.md). The spouse sheet carries a
 🛑 No more children toggle (`player.flags.noChildren`) that skips the conception rolls in
 `birthTick` — a pregnancy already begun still comes to term, and kin households are
 unaffected. Pregnancy follows its recorded parents across succession: a surviving
