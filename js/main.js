@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.111.0';
+  FB.VERSION = '1.112.0';
   FB.CHANGELOG = [
+    { v: '1.112.0', date: '2026-08-06', changes: [
+      'AI rulers now pursue long-term aims, maintain political relationships, and make bounded approaches, while managed relatives develop ambitions and can hold family offices.'
+    ] },
     { v: '1.111.0', date: '2026-08-06', changes: [
       'Faiths can now fracture into new reform movements that spread through families and realms, reshape diplomacy and war, and persist in saves and mods.'
     ] },
@@ -1512,6 +1515,7 @@ window.FB = window.FB || {};
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
     }
+    if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     state.player.focus = sc.focus || FB.defaultFocus(state);
     state.player.startGold = state.player.gold; // First steps: earn-your-first-coin baseline

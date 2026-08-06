@@ -155,6 +155,52 @@ sovereign rulers; sworn territorial rulers as vassals.
 
 ## The relevant political court
 
+### Bounded ruler agency
+
+Every living AI ruler has one generation-stamped aim in
+`state.agency.rulerAims`: secure the dynasty, expand, accumulate wealth,
+defend the faith, strengthen the crown, seek independence, or preserve peace.
+The aim is chosen deterministically from the ruler, realm position, court
+family, and temperament. Succession replaces it because the generation stamp
+no longer matches; opening a realm sheet only reads the saved aim.
+
+Ruler-to-ruler regard is deliberately sparse. `state.agency.relations` stores
+only structural contacts cultivated by the yearly pass: liege/vassal ties,
+neighboring sovereigns, and one peer per house in the protagonist's already
+bounded political court. A vassal's regard for their liege continues to use
+`realm.favor`, and either direction involving the protagonist continues to use
+typed realm Standing. An absent sparse edge derives a neutral baseline from
+culture, faith, alliance, and war. Stale edges expire after eight years. There
+is no all-ruler pairwise matrix and no all-character social graph. Both ruler
+generations are stamped on a stored edge, so either succession returns that
+pair to its derived baseline instead of inheriting a predecessor's friendship.
+
+Magnate affinity adds the member's regard for its prospective leader. Estates
+motion posture also adds the bloc members' relationships with the player's
+house and their current ruler aims. These remain visible reason-coded parts of
+the deterministic forecast; only the sparse relation records and ordinary
+annual allegiance are durable.
+
+AI approaches to the protagonist are globally capped at one per year and must
+pass `FB.rulerPlayerRelevance`. The check performs one cached county-distance
+walk from the household home. A foreign court may reach farther when it shares
+the protagonist's culture and faith group, less far when it shares only one,
+and only a few county steps when it shares neither. Exact faith improves its
+priority, while a four-year per-ruler cooldown prevents one favored court from
+monopolizing the annual slot. Rulers in the same sovereign hierarchy and
+already-committed war, pact, alliance, or royal-marriage relationships remain
+relevant. Thus an
+unconnected Sunni ruler in Iraq cannot send social or marriage overtures to an
+Irish Catholic household, while a nearby foreign ruler or an actual liege can.
+Hostile border wars retain their existing adjacency gate.
+
+Expansionist sovereigns may fund one discontented vassal of an adjacent rival.
+`state.agency.rebelSupport` stores at most three five-year records and increases
+the existing seeded breakaway probability; it does not create a second civil-war
+engine. Funding directed at the player's own vassal also passes the player
+relevance gate and queues an exact sponsor-generation event to expose the money,
+buy back the oath, or watch it continue.
+
 Political blocs are simulated only where they can affect the protagonist.
 `FB.politicalCourt` derives the ruler's house, living landed houses sworn
 directly to that ruler, and the player's house when sworn there. It excludes

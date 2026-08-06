@@ -513,6 +513,21 @@ window.FB = window.FB || {};
         }
       }
     }
+    if (FB.familyOfficeRecords) {
+      for (const record of FB.familyOfficeRecords(state)) {
+        const c = state.chars[record.charId];
+        if (!c || FB.standingOf(state, {
+          kind:'character', id:c.id
+        }) <= -40) continue;
+        const def = FB.positionDef(record.office);
+        if (def && def.fx && def.fx[key]) {
+          out.push({
+            kind:'family-office', id:record.office,
+            charId:record.charId, amount:def.fx[key]
+          });
+        }
+      }
+    }
     return out;
   };
 
@@ -1577,7 +1592,9 @@ window.FB = window.FB || {};
     for (const c of FB.householdMembers(state)) family[c.id] = 1;
     for (const id of retainerCandidateIds(state)) {
       const c = state.chars[id];
-      if (family[id] || FB.ageOf(c, state.date.year) < 16 ||
+      if (family[id] || (FB.isAgencyFamilyMember &&
+          FB.isAgencyFamilyMember(state, id)) ||
+          FB.ageOf(c, state.date.year) < 16 ||
           FB.standingOf(state, { kind:'character', id:c.id }) <= -40 ||
           (def.maleOnly && c.sex !== 'm')) continue;
       const career = FB.careerOf(state, c);
@@ -1595,7 +1612,8 @@ window.FB = window.FB || {};
     const def = FB.positionDef(office);
     if (!def || def.kind !== 'retainer' || state.player.tier < (def.minTier || 0)) return false;
     if (FB.retainerRecords(state).length >= FB.retainerCapacity(state)) return false;
-    if (FB.retainerOfficeRecord(state, office)) return false;
+    if (FB.retainerOfficeRecord(state, office) ||
+        (FB.familyOfficeHolder && FB.familyOfficeHolder(state, office))) return false;
     if (state.player.gold < (def.pay || 0)) return false;
     if (!cid) return true;
     for (const c of FB.retainerCandidates(state, office)) if (c.id === cid) return true;
@@ -2627,6 +2645,7 @@ window.FB = window.FB || {};
     if (!def) return out;
     for (const c of FB.householdWorkers(state)) {
       if (c.id === state.player.charId && state.player.tier >= 3) continue;
+      if (FB.familyOfficeRecord && FB.familyOfficeRecord(state, c.id)) continue;
       const age = FB.ageOf(c, state.date.year);
       const career = FB.careerOf(state, c);
       if (age < 16 || !career || career.profession !== def.profession) continue;

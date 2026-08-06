@@ -443,7 +443,7 @@ window.FB = window.FB || {};
     return leaders;
   }
 
-  function magnateInterest(house, leader) {
+  function magnateInterest(state, house, leader) {
     var reasons = [];
     if (house.id === leader.id) {
       reasons.push(reason('magnate_leader', 60, {
@@ -479,6 +479,16 @@ window.FB = window.FB || {};
         rank:leader.rank
       }));
     }
+    if (FB.rulerRegard) {
+      var regard = FB.rulerRegard(state, house.id, leader.id);
+      var regardScore = FB.clamp(Math.round(regard / 4), -25, 25);
+      if (regardScore) {
+        score += regardScore;
+        reasons.push(reason('ruler_relationship', regardScore, {
+          leaderHouseId:leader.id, regard:regard
+        }));
+      }
+    }
     return { score:score, reasons:reasons };
   }
 
@@ -503,7 +513,7 @@ window.FB = window.FB || {};
       };
       for (var j = 0; j < leaderIds.length; j++) {
         options[MAGNATE_PREFIX + leaderIds[j]] =
-          magnateInterest(member, byId[leaderIds[j]]);
+          magnateInterest(state, member, byId[leaderIds[j]]);
       }
       options[INDEPENDENT_PREFIX + member.id] = {
         score:0,
@@ -900,8 +910,27 @@ window.FB = window.FB || {};
         martial:Math.round(averageMartial * 10) / 10
       }));
     }
+    var relationships = 0;
+    if (FB.rulerRegard) {
+      relationships = Math.round(weightedMemberAverage(bloc, function (house) {
+        if (house.isPlayer) return 0;
+        return FB.clamp(FB.rulerRegard(state, house.id, 'player') / 6,
+          -15, 15);
+      }));
+      if (relationships) {
+        reasons.push(reason('player_relationship', relationships));
+      }
+    }
+    var ambitions = 0;
+    if (FB.rulerAimMotionValue) {
+      ambitions = Math.round(weightedMemberAverage(bloc, function (house) {
+        return house.isPlayer ? 0 :
+          FB.rulerAimMotionValue(state, house.id, motionId);
+      }));
+      if (ambitions) reasons.push(reason('ruler_ambitions', ambitions));
+    }
     return {
-      score:base + aidValue + traits + martial,
+      score:base + aidValue + traits + martial + relationships + ambitions,
       reasons:reasons
     };
   }

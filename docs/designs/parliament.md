@@ -71,6 +71,13 @@ this). Scores at +25 or above lock support;
 scores at −25 or below lock opposition. An undecided bloc's support chance is
 `clamp(50% + score, 15%, 85%)`.
 
+The same forecast includes two bounded agency factors. Magnate affiliation uses
+sparse ruler regard toward the proposed leader, while a motion's posture uses
+the bloc's influence-weighted relationship with the player's house and the
+members' generation-stamped ruler aims. Both appear as signed explanation rows.
+They consume no RNG during display and do not create relationships for unrelated
+courts.
+
 One targeted lobbying attempt is included in the motion cost. It may target
 only an undecided bloc, and its visible chance is the average of that bloc's
 natural support chance and `FB.parliamentVoteChance`. Exact-contract redress

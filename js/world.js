@@ -3747,15 +3747,19 @@ window.FB = window.FB || {};
     const base = FB.clamp(
       aggressionBalance('breakawayChance', 0.015), 0, 1);
     const realm = state && state.realms && state.realms[rid];
-    if (!realm || !realm.alive || !realm.liege ||
-        FB.topRealm(state, rid) !== 'player') return base;
+    const support = FB.rebelSupportMultiplier
+      ? FB.rebelSupportMultiplier(state, rid) : 1;
+    if (!realm || !realm.alive || !realm.liege) return base;
+    if (FB.topRealm(state, rid) !== 'player') {
+      return FB.clamp(base * support, 0, 1);
+    }
     const aggression = FB.aggressiveWarBreakawayMultiplier(state);
-    if (aggression <= 1) return base;
+    if (aggression <= 1) return FB.clamp(base * support, 0, 1);
     const standing = FB.standingOf
       ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
     const discontent = 1 + Math.min(1,
       Math.max(0, -(Number(standing) || 0)) / 100);
-    return FB.clamp(base * aggression * discontent, 0, 1);
+    return FB.clamp(base * aggression * discontent * support, 0, 1);
   };
 
   /* Automatic war prestige is cause-aware in every settlement path. Event
@@ -4056,6 +4060,8 @@ window.FB = window.FB || {};
         }
       }
     }
+
+    if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state);
 
     // development drift (tech can lift the ceiling for the player's lands)
     for (const pid in state.dev) {
