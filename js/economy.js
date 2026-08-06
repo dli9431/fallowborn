@@ -723,6 +723,18 @@ window.FB = window.FB || {};
     return FBDATA.papacy && FBDATA.papacy[key] || {};
   }
 
+  function bishopricSeeProvinceId(state, c, status) {
+    return status && status.seeProvinceId ||
+      (c.id === state.player.charId
+        ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId));
+  }
+
+  function bishopricSeeReserved(provinceId) {
+    const catholic = FBDATA.religions && FBDATA.religions.catholic;
+    const head = catholic && catholic.head;
+    return !!(provinceId && head && head.seat === provinceId);
+  }
+
   /* A see is personal church office, not dynasty land. Old Bishop flags and
      terminal Catholic ranks acquire a home-county record lazily. A vacated
      marker prevents that compatibility path from recreating a returned see. */
@@ -812,11 +824,11 @@ window.FB = window.FB || {};
     c = c || playerChar(state);
     if (!c || c.dead || c.religion !== 'catholic') return false;
     status = status || {};
+    const seeProvinceId = bishopricSeeProvinceId(state, c, status);
+    if (bishopricSeeReserved(seeProvinceId)) return false;
     delete c.bishopricVacatedTurn;
     c.bishopric = {
-      seeProvinceId:status.seeProvinceId ||
-        (c.id === state.player.charId
-          ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId)),
+      seeProvinceId:seeProvinceId,
       appointedTurn:state.turn,
       previousTier:2,
       appointerKind:status.appointerKind || 'canonical',
@@ -984,6 +996,7 @@ window.FB = window.FB || {};
     const missing = [];
     const age = FB.ageOf(c, state.date.year);
     const career = FB.careerOf(state, c);
+    const seeProvinceId = bishopricSeeProvinceId(state, c);
     const papacy = FB.ensurePapacy ? FB.ensurePapacy(state) : null;
     const obedienceId = FB.papalObedienceForCharacter
       ? FB.papalObedienceForCharacter(state, c)
@@ -1042,6 +1055,12 @@ window.FB = window.FB || {};
     if (bishopCandidateExcommunicated(state, c, obedienceId)) {
       missing.push(FB.T('not excommunicated'));
     }
+    if (bishopricSeeReserved(seeProvinceId)) {
+      const reservedSee = FB.world && FB.world.byId[seeProvinceId];
+      missing.push(FB.T('a bishopric outside the Pope’s diocese of {province}', {
+        province:reservedSee ? reservedSee.name : seeProvinceId
+      }));
+    }
     if (c.id === state.player.charId && (state.player.tier > 2 ||
         (state.player.provs && state.player.provs.length))) {
       missing.push(FB.T('not already holding secular land or baronial rank'));
@@ -1075,8 +1094,7 @@ window.FB = window.FB || {};
       support:support, localOpinion:local.opinion, papalOpinion:papalOpinion,
       policyId:policyId, appointerKind:appointerKind, appointerId:appointerId,
       obedienceId:obedienceId, path:path, step:step,
-      seeProvinceId:c.id === state.player.charId
-        ? state.player.provinceId : (c.homeProvinceId || state.player.provinceId)
+      seeProvinceId:seeProvinceId
     };
   };
 

@@ -1884,7 +1884,8 @@ hereditary. (Core adds one deliberate exception: a victorious player `caliphate`
 succession war reassigns a `claim` office to the victor's realm without moving land.)
 Religions without `head` metadata have no centralized office.
 
-`head.recovery` is `grant_seat` or `claim`. A `grant_seat` office requires `seat` and
+`head.recovery` is `grant_seat` or `claim`. A `grant_seat` office requires `seat`; the
+Catholic seat is also reserved from personal Bishopric appointments. The head definition
 may set `restoredRank` (default 3); recovery grants that county to a fresh independent
 copy of the bookmark's canonical realm. A `claim` office supplies alternative complete
 county sets in `claimCounties`, for example:

@@ -61502,6 +61502,16 @@
         "text": "Endowed Hospitals"
       }
     },
+    "src.344ddf0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "a bishopric outside the Pope’s diocese of {province}"
+      }
+    },
     "src.3457f715": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -162088,6 +162098,16 @@
       "location": "js/papacy.js",
       "source": {
         "text": "a Bishop"
+      }
+    },
+    "ui:a bishopric outside the Pope’s diocese of {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "a bishopric outside the Pope’s diocese of {province}"
       }
     },
     "ui:a curiosity": {

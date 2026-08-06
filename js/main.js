@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.110.4';
+  FB.VERSION = '1.110.5';
   FB.CHANGELOG = [
+    { v: '1.110.5', date: '2026-08-06', changes: [
+      'Rome is reserved for the Pope and can no longer be granted as a personal Bishopric.'
+    ] },
     { v: '1.110.4', date: '2026-08-05', changes: [
       'First-party play analytics now distinguish starts, returns, engagement, succession, and completed sagas without sending names, seeds, or save contents.'
     ] },

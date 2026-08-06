@@ -29,7 +29,9 @@ purchased promotion. Abbot or Abbess uses a contested election with a 360-day re
 cooldown. A Bishop candidate must be a living Catholic man, unmarried or widowed and not
 betrothed or excommunicated, at least 30, an Abbot or Archpriest with fourteen vocational
 years, Learning 12+, and backed by 160 piety and 80 prestige. The initial player route is
-limited to gentry or below; gaining later lay titles does not strip an existing see.
+limited to gentry or below; gaining later lay titles does not strip an existing see. The
+centralized Catholic head's `head.seat` is reserved for that office, so Roma cannot also
+be granted as a personal Bishopric.
 
 `state.papacy.investiture` selects the appointing authority through the candidate's
 independent sovereign. Lay investiture relies on the liege, canonical investiture on the
