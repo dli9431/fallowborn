@@ -1817,6 +1817,9 @@ window.FB = window.FB || {};
     if (k.id !== p.charId && FB.unassignEnterpriseWorker) {
       FB.unassignEnterpriseWorker(state, k.id);
     }
+    if (k.id !== p.charId && FB.removeFamilyOffice) {
+      FB.removeFamilyOffice(state, k.id);
+    }
     if (k.id !== p.charId && FB.clearLoadout) FB.clearLoadout(state, k.id);
     k.betrothedId = null; sp.betrothedId = null;
     k.spouseId = sp.id; sp.spouseId = k.id;
@@ -2089,6 +2092,18 @@ window.FB = window.FB || {};
           const student = ctx && ctx.studentId ? state.chars[ctx.studentId] : null;
           out[k] = student ? student.name :
             (semantic ? neutralParam('fx.param.your_child') : FB.T('your child'));
+          break;
+        }
+        case 'partner': {
+          const partner = ctx && ctx.partnerId ? state.chars[ctx.partnerId] : null;
+          out[k] = partner ? partner.name :
+            (semantic ? neutralParam('fx.param.a_stranger') : FB.T('a stranger'));
+          break;
+        }
+        case 'ambition': {
+          out[k] = ctx && ctx.studentId && FB.familyAmbitionLabel
+            ? FB.familyAmbitionLabel(state, ctx.studentId)
+            : (semantic ? neutralParam('fx.param.an_ambition') : FB.T('an ambition'));
           break;
         }
         case 'late':
@@ -2460,6 +2475,11 @@ window.FB = window.FB || {};
             !(FB.isReigningRealmRuler &&
               FB.isReigningRealmRuler(state, s))) {
           c += realmStanding(state, s.royalLine.realmId) / 400;
+          const aim = FB.rulerAimSnapshot &&
+            FB.rulerAimSnapshot(state, s.royalLine.realmId);
+          if (aim && aim.id === 'secure_dynasty') c += 0.12;
+          else if (aim && aim.id === 'keep_peace') c += 0.04;
+          else if (aim && aim.id === 'strengthen_crown') c -= 0.05;
           return FB.clamp(c, 0.05, 0.9);
         }
         return FB.clamp(c, 0.05, 0.95);
@@ -2597,9 +2617,13 @@ window.FB = window.FB || {};
       case 'liege_grant': {
         // no land adjoining the player's to give → the suit fails outright
         if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
+        const aim = p.liege && FB.rulerAimSnapshot &&
+          FB.rulerAimSnapshot(state, p.liege);
+        const aimValue = aim && aim.id === 'expand_realm' ? 0.04 :
+          (aim && aim.id === 'strengthen_crown' ? -0.04 : 0);
         return FB.liegeGrantChance(state,
           FB.clamp(0.05 + realmStanding(state, p.liege) / 450 +
-            p.prestige / 1800, 0.02, 0.35));
+            p.prestige / 1800 + aimValue, 0.02, 0.35));
       }
       case 'county_petition': {
         // stripping a disgraced vassal for the player's sake: the liege's love
@@ -2609,10 +2633,15 @@ window.FB = window.FB || {};
         const hr = hp ? state.realms[hp] : null;
         if (!hr || !hr.alive) return 0;
         const fav = hr.favor || 0;
+        const aim = p.liege && FB.rulerAimSnapshot &&
+          FB.rulerAimSnapshot(state, p.liege);
+        const aimValue = aim && aim.id === 'expand_realm' ? 0.05 :
+          (aim && aim.id === 'strengthen_crown' ? -0.05 : 0);
         return FB.liegeGrantChance(state,
           FB.clamp(0.35 + realmStanding(state, p.liege) / 300 +
             p.prestige / 1500 +
-            (p.warService || 0) / 80 - fav / 150, 0.1, 0.85));
+            (p.warService || 0) / 80 - fav / 150 + aimValue,
+          0.1, 0.85));
       }
       case 'appeal_outcome': {
         // a suit carried over the liege's head: charm, cunning, and how the

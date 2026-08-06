@@ -499,6 +499,13 @@ window.FB = window.FB || {};
         h += UI.charCardHtml(s, student);
       }
     }
+    if (raw.indexOf('{partner}') >= 0 && ctx && ctx.partnerId) {
+      const partner = s.chars[ctx.partnerId];
+      if (partner && !partner.dead && !carded[partner.id]) {
+        carded[partner.id] = 1;
+        h += UI.charCardHtml(s, partner);
+      }
+    }
     if ((raw.indexOf('{rname}') >= 0 || raw.indexOf('{rulername}') >= 0) &&
         ctx && ctx.realmId) {
       h += UI.realmCardHtml(s, ctx.realmId);
@@ -4308,6 +4315,10 @@ window.FB = window.FB || {};
           value:realmRelationshipText(s, rid) },
         { label:FB.T('Rank'), value:FB.realmRankTitle(s, realm) },
         { label:FB.T('Ruler'), value:realm.ruler.name },
+        { label:FB.T('Ruler’s ambition'), value:FB.rulerAimLabel
+          ? FB.rulerAimLabel(s, rid) : FB.T('Unknown') },
+        { label:FB.T('Diplomatic reach'), value:FB.rulerPlayerRelevanceText
+          ? FB.rulerPlayerRelevanceText(s, rid) : FB.T('Unknown') },
         { label:FB.T('Faith'), value:faithId
           ? religionName(s, faithId) : FB.T('Unknown') },
         { label:FB.T('Capital'), value:cap ? cap.name : FB.T('Unknown') },
@@ -5420,6 +5431,11 @@ window.FB = window.FB || {};
         leader:leader ? leader.name : '',
         house:houseName
       });
+    } else if (item.id === 'ruler_relationship') {
+      text = FB.T('{house}’s relationship with {leader}: {regard}.', {
+        house:houseName, leader:leader ? leader.name : '',
+        regard:Math.round(item.regard || 0)
+      });
     } else {
       text = FB.T('{house} keeps its own counsel.', {
         house:houseName
@@ -5442,6 +5458,14 @@ window.FB = window.FB || {};
     }
     if (item.id === 'ruler_traits') {
       return FB.T('Member ruler traits') +
+        ' (' + politicalSigned(item.value) + ')';
+    }
+    if (item.id === 'player_relationship') {
+      return FB.T('Members’ relationships with your house') +
+        ' (' + politicalSigned(item.value) + ')';
+    }
+    if (item.id === 'ruler_ambitions') {
+      return FB.T('Members’ current ambitions') +
         ' (' + politicalSigned(item.value) + ')';
     }
     return FB.T('Martial inclination: {martial}', {
@@ -8209,6 +8233,9 @@ window.FB = window.FB || {};
     }
     const offices = [];
     if (retainer) offices.push(positionName(s, retainer.office));
+    const familyOffice = FB.familyOfficeRecord &&
+      FB.familyOfficeRecord(s, c.id);
+    if (familyOffice) offices.push(positionName(s, familyOffice.office));
     if (c.id === s.player.charId) {
       for (const id of FB.playerPositionIds(s)) offices.push(positionName(s, id));
     }
@@ -9069,6 +9096,147 @@ window.FB = window.FB || {};
     return FB.T('Passes to heirs as family property; does not follow conquest');
   }
 
+  UI.showFamilyAmbition = function (cid, returnContext, replaceView) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const ambition = c && FB.familyAmbitionSnapshot
+      ? FB.familyAmbitionSnapshot(s, cid) : null;
+    if (!c || !ambition) return;
+    const progress = Math.max(0, Number(ambition.progress) || 0);
+    let h = UI.charCardHtml(s, c) +
+      kv('Personal ambition', esc(FB.familyAmbitionLabel(s, cid))) +
+      kv('Your guidance', esc(FB.familyAmbitionGuidanceLabel(
+        ambition.guidance))) +
+      kv('Encouraged progress', esc(FB.T('{progress} of 3', {
+        progress:progress
+      }))) +
+      '<p class="hint">' + esc(FB.T(
+        'Encouragement gives this family member a yearly chance to gain the skill tied to the goal. Steering them away replaces the goal immediately; leaving it alone preserves their own agency.')) +
+      '</p><div class="gm-list">' +
+      '<button class="actionbtn" data-family-guidance="encouraged">' +
+      esc(FB.T('Encourage this ambition')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Back this road with the family’s attention.')) + '</span></button>' +
+      '<button class="actionbtn" data-family-guidance="neutral">' +
+      esc(FB.T('Leave the choice to them')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Offer no continuing direction.')) + '</span></button>' +
+      '<button class="actionbtn" data-family-guidance="discouraged">' +
+      esc(FB.T('Steer them toward another road')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Replace this ambition without choosing the replacement yourself.')) +
+      '</span></button></div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Ambition of {name}', { name:c.name }), h, {
+      historyView:!replaceView,
+      replaceView:!!replaceView,
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext && returnContext.returnContext);
+      }
+    });
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-family-guidance]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.setFamilyAmbitionGuidance(
+            s, cid, button.dataset.familyGuidance)) return;
+        UI.showFamilyAmbition(cid, returnContext, true);
+        UI.refresh();
+      });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext && returnContext.returnContext);
+      });
+    });
+  };
+
+  UI.showFamilyOffice = function (cid, returnContext) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    if (!c || !FB.isAgencyFamilyMember ||
+        !FB.isAgencyFamilyMember(s, cid)) return;
+    const current = FB.familyOfficeRecord(s, cid);
+    let h = UI.charCardHtml(s, c) + '<p class="hint">' + esc(FB.T(
+      'Family offices are unpaid duties. The holder keeps their occupation, but leaves enterprise work while serving. One person and one holder per office.')) +
+      '</p><div class="gm-list">';
+    for (const office in FBDATA.positions) {
+      const def = FBDATA.positions[office];
+      if (!def || def.kind !== 'retainer') continue;
+      const retainer = FB.retainerOfficeRecord(s, office);
+      const familyHolder = FB.familyOfficeHolder(s, office);
+      const occupied = retainer
+        ? s.chars[retainer.charId] : familyHolder;
+      const already = current && current.office === office;
+      const eligible = already || FB.canAppointFamilyOffice(s, office, cid);
+      let reason = '';
+      if (already) reason = FB.T('This is their current household office.');
+      else if (current) reason = FB.T(
+        'Relieve them of {office} before assigning another office.', {
+          office:positionName(s, current.office)
+        });
+      else if (occupied) reason = FB.T('Already held by {name}.', {
+        name:occupied.name
+      });
+      else if (s.player.tier < (def.minTier || 0)) {
+        reason = FB.T('Requires station {station}.', {
+          station:FB.stationName(def.minTier || 0)
+        });
+      } else if (def.maleOnly && c.sex !== 'm') {
+        reason = FB.T('This office is restricted by the realm’s custom.');
+      } else {
+        reason = FB.T('Requires the {career} occupation.', {
+          career:FBDATA.careers[def.profession]
+            ? dt(s, 'career', def.profession,
+              FBDATA.careers[def.profession], 'name') : def.profession
+        });
+      }
+      h += '<button class="actionbtn" data-family-office="' + esc(office) + '"' +
+        (!eligible || already ? ' disabled' : '') + '>' +
+        esc(def.icon + ' ' + positionName(s, office)) +
+        '<span class="adesc">' + esc(positionDesc(s, office)) + ' ' +
+        esc(eligible && !already
+          ? (positionEffectText(office) || FB.T('Provides its listed household benefit.'))
+          : reason) + '</span></button>';
+    }
+    if (current) {
+      h += '<button class="actionbtn danger" id="family-office-remove">' +
+        esc(FB.T('Relieve them of {office}', {
+          office:positionName(s, current.office)
+        })) + '<span class="adesc">' + esc(FB.T(
+          'The office becomes vacant. This spends the day.')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Household office for {name}', { name:c.name }), h, {
+      historyView:true,
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext && returnContext.returnContext);
+      }
+    });
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-family-office]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.appointFamilyOffice(s, button.dataset.familyOffice, cid)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext);
+      });
+    });
+    const remove = $('family-office-remove');
+    if (remove) remove.addEventListener('click', function () {
+      if (!FB.removeFamilyOffice(s, cid)) return;
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+      resumeManagementAfterDay(returnContext);
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext && returnContext.returnContext);
+      });
+    });
+  };
+
   UI.showRetainerHire = function (returnContext) {
     const s = FB.state;
     const used = FB.retainerRecords(s).length;
@@ -9083,7 +9251,8 @@ window.FB = window.FB || {};
       if (def.kind !== 'retainer') continue;
       const blockedTier = s.player.tier < (def.minTier || 0);
       const blockedGold = s.player.gold < (def.pay || 0);
-      const occupied = FB.retainerOfficeRecord(s, id);
+      const occupied = FB.retainerOfficeRecord(s, id) ||
+        (FB.familyOfficeHolder && FB.familyOfficeHolder(s, id));
       h += '<button class="actionbtn" data-retainer-office="' + esc(id) + '"' +
         (blockedTier || blockedGold || occupied || used >= capacity ? ' disabled' : '') + '>' +
         esc(def.icon + ' ' + positionName(s, id)) +
@@ -9143,7 +9312,8 @@ window.FB = window.FB || {};
       if (FB.retainerRecords(s).length >= FB.retainerCapacity(s)) {
         return FB.T('Household retainer capacity is full.');
       }
-      if (FB.retainerOfficeRecord(s, office)) {
+      if (FB.retainerOfficeRecord(s, office) ||
+          (FB.familyOfficeHolder && FB.familyOfficeHolder(s, office))) {
         return FB.T('This household office is already filled.');
       }
       if (s.player.gold < (def.pay || 0)) {
@@ -9329,6 +9499,8 @@ window.FB = window.FB || {};
       const career = FB.careerOf(s, c);
       const def = career && FBDATA.careers[career.profession];
       const retainer = FB.retainerRecord(s, c.id);
+      const familyOffice = FB.familyOfficeRecord &&
+        FB.familyOfficeRecord(s, c.id);
       const landedSelf = c.id === me.id && s.player.tier >= 3;
       const choices = FB.careerChoices(s, c);
       const missingChoice = !career || !def || career.rank === 'unassigned';
@@ -9362,6 +9534,7 @@ window.FB = window.FB || {};
         else if (!retainer) roles.push(FB.T('Resident family'));
       }
       if (retainer) roles.push(positionName(s, retainer.office));
+      if (familyOffice) roles.push(positionName(s, familyOffice.office));
       if (c.id === me.id) {
         for (const positionId of FB.playerPositionIds(s)) {
           roles.push(positionName(s, positionId));
@@ -12019,6 +12192,12 @@ window.FB = window.FB || {};
       FB.isHouseholdCharacter(s, c.id);
     const retainer = !c.dead
       ? interactionRetainerRecord(s, c.id) : null;
+    const agencyFamily = !c.dead && FB.isAgencyFamilyMember &&
+      FB.isAgencyFamilyMember(s, c.id);
+    const familyOffice = agencyFamily && FB.familyOfficeRecord
+      ? FB.familyOfficeRecord(s, c.id) : null;
+    const ambition = agencyFamily && FB.familyAmbitionSnapshot
+      ? FB.familyAmbitionSnapshot(s, c.id) : null;
     const relation = relationText(s, c) || (household
       ? FB.T('Your household') : FB.T('Known character'));
     const model = {
@@ -12106,6 +12285,23 @@ window.FB = window.FB || {};
           position:positionName(s, retainer.office),
           pay:retainer.pay || 0
         })
+      });
+    }
+    if (ambition) {
+      model.commitments.push({
+        id:'family-ambition',
+        label:FB.T('Personal ambition'),
+        detail:FB.T('{ambition} · {guidance}', {
+          ambition:FB.familyAmbitionLabel(s, c.id),
+          guidance:FB.familyAmbitionGuidanceLabel(ambition.guidance)
+        })
+      });
+    }
+    if (familyOffice) {
+      model.commitments.push({
+        id:'family-office',
+        label:FB.T('Household office'),
+        detail:positionName(s, familyOffice.office)
       });
     }
     const pupils = [];
@@ -12481,6 +12677,34 @@ window.FB = window.FB || {};
         });
       }
     }
+    if (agencyFamily) {
+      addInteractionAction(model, {
+        id:'management.family.ambition',
+        group:'management',
+        label:FB.T('Guide their ambition…'),
+        detail:FB.T('Encourage this goal, leave it alone, or steer them toward another road.'),
+        enabled:true,
+        blockedReason:null,
+        consequence:FB.T('Guidance changes their yearly personal progress and family requests.'),
+        route:'family-ambition'
+      });
+      if (FB.ageOf(c, s.date.year) >= 16) {
+        addInteractionAction(model, {
+          id:'management.family.office',
+          group:'management',
+          label:FB.T('Assign a household office…'),
+          detail:familyOffice
+            ? FB.T('Currently serving as {office}.', {
+              office:positionName(s, familyOffice.office)
+            })
+            : FB.T('Match their occupation to an available household office.'),
+          enabled:true,
+          blockedReason:null,
+          consequence:FB.T('An office replaces enterprise work and spends the day.'),
+          route:'family-office'
+        });
+      }
+    }
     if (retainer) {
       addInteractionAction(model, {
         id:'management.retainer',
@@ -12734,6 +12958,18 @@ window.FB = window.FB || {};
           UI.showEquipmentModal(c.id, 'character', returnContext);
         } else if (action.route === 'career') {
           UI.showCareerPicker(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'family-ambition') {
+          UI.showFamilyAmbition(c.id, {
+            view:'character',
+            characterId:c.id,
+            returnContext:returnContext
+          });
+        } else if (action.route === 'family-office') {
+          UI.showFamilyOffice(c.id, {
             view:'character',
             characterId:c.id,
             returnContext:returnContext

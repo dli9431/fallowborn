@@ -1496,6 +1496,7 @@ window.FB = window.FB || {};
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
     }
+    if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     state.player.focus = sc.focus || FB.defaultFocus(state);
     state.player.startGold = state.player.gold; // First steps: earn-your-first-coin baseline

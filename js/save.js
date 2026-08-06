@@ -543,6 +543,7 @@ window.FB = window.FB || {};
     if (FB.socialGiftTurns) FB.socialGiftTurns(FB.state);
     if (FB.realmGiftTurns) FB.realmGiftTurns(FB.state);
     if (FB.giftDeliveryEnsure) FB.giftDeliveryEnsure(FB.state);
+    if (FB.ensureAgency) FB.ensureAgency(FB.state);
     if (FB.repairPolitics) FB.repairPolitics(FB.state);
     return FB.state;
   };

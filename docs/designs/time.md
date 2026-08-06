@@ -49,6 +49,14 @@ and start-relative display use this origin. Turn-based future dates such as pact
 expiry are converted relative to the current saved date, rather than assuming turn
 zero was 867.
 
+`FB.worldTick` also runs `FB.rulerAgencyYearly` once per New Year. It repairs
+generation-stamped aims, updates only structural ruler relations, advances the
+bounded managed-family ambitions, maintains at most three rebel-sponsorship
+records, and may queue at most one relevant ruler approach plus one family
+request. A single cached breadth-first county walk supplies every player-distance
+gate for that pass. No agency work runs daily, and Observe mode updates AI-to-AI
+aims, relations, and rebel support without queuing player decisions.
+
 Bookmark scripted history is checked after every calendar advance in both play and
 Observe mode. A legacy `{year,...}` entry is due on Spring day 1 and retains its
 existing flag and durable-message keys. Entries with `season` or `day` must also

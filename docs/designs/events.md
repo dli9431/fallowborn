@@ -174,6 +174,13 @@ Diplomatic events that name `{rname}` or `{rulername}` from `ctx.realmId` add th
 realm card with arms, ruler, rank, Standing, and current relationship, so a compact AI
 ruler is not presented as bare prose.
 
+`data/events_agency.js` contains the four code-queued ruler/family agency
+decisions. Their validators recheck the exact ruler generation, managed family
+member, marriage pair, or active rebel-sponsorship record before either visible
+or automated resolution. `{partner}` reads `ctx.partnerId` and adds that exact
+character's card beside `{student}`; `{ambition}` renders the locale-neutral
+managed ambition attached to `ctx.studentId`.
+
 A queued event with `nameChild: true` (births, `ctx.childId`) adds a rename field to the
 modal — prefilled with the generated name, applied when any option is chosen; autoresolve
 keeps the generated name.

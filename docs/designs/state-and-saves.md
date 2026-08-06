@@ -196,6 +196,18 @@ context so save/load cannot reroll it; the event validator prevents that
 result from crossing a later liege change. Annual reviews and all repair paths
 are deterministic and RNG-neutral.
 
+Ruler and family agency is additive save-format-3 state. `state.agency` contains
+plain JSON maps for generation-stamped `rulerAims`, managed-character
+`familyAmbitions`, sparse directed `relations`, and temporary `rebelSupport`,
+plus the last annual player-approach and family-request years. Locale-neutral ids
+and numbers are saved; labels, relevance, distances, bloc scores, and candidate
+matches are derived. `player.familyOffices` is a plain office-id to character-id
+map. `FB.ensureAgency` runs before political repair on new game and restore,
+adds deterministic defaults without consuming RNG, discards dead generations or
+unmanaged family, and validates family offices through current occupation and
+residence rules. Missing state therefore means no history and requires no save
+version bump.
+
 National technology is additive version-3 state. `state.realmTech[realmId]` stores
 `{completed,exposed,active,progress,reserve,priorities}` for that sovereign identity;
 `active` is an array of up to three project ids and `priorities` maps advocated ids to

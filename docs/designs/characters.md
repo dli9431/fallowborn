@@ -500,6 +500,27 @@ The retainer candidate picker uses the shared person-assignment card to preview 
 effect, entry and seasonal pay, occupation, Standing, and additive-office consequence before
 the existing hire action spends the day.
 
+**Managed family members have ambitions and may hold household offices.** The
+bounded family set is the current protagonist's resident spouse, unmarried
+children and grandchildren, and resident manageable siblings; it never expands
+to every visible or historical relative. `state.agency.familyAmbitions` stores
+one locale-neutral goal, its start year, neutral/encouraged guidance, progress,
+and the last yearly request for each member. Encouragement gives a seeded yearly
+chance to gain the goal's skill; three gains complete a small prestige milestone.
+Neutral kin may bring at most one family request to the household each year.
+Steering someone away selects another appropriate goal without letting the
+player dictate the exact replacement. Marriage or loss of manageability removes
+the record through the ordinary ensure boundary.
+
+`player.familyOffices` maps an existing retainer-office id to one managed adult
+family character. The holder must have the office's required occupation, sex,
+station, and residence, receives the same listed contribution without retainer
+capacity or pay, and cannot staff an enterprise simultaneously. A family holder
+and a paid retainer compete for the same unique office slot. Marriage removes a
+non-head holder before the ordinary household transfer. The character card owns
+the ambition-guidance and family-office sheets; the Household Plan and Work view
+derive the resulting commitment from the same records.
+
 **The Household Plan is a derived overview, not character state.** Network → Household
 opens one row for the living household head, each resident family member, and each paid
 retainer, in that order. The row reads the existing education, instruction, career, guild,

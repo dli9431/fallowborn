@@ -795,7 +795,7 @@ key is `ailments`.
 
 ### Text tokens
 
-`{name} {dyn} {title} {spouse} {suitor} {late} {lord} {priest} {friend} {rival} {childname} {student}
+`{name} {dyn} {title} {spouse} {suitor} {partner} {late} {lord} {priest} {friend} {rival} {childname} {student} {ambition}
 {province} {location} {destination} {realm} {enemy} {settlement} {god} {holy} {temple} {year}` work in titles,
 texts, labels, and `log`. `{enemy}` is the realm the player is at war with (or "the
 enemy"); `{target}` is the province an attacking war aims at; `{settlement}` reads
@@ -809,6 +809,9 @@ liege realm; `{rname}` / `{rulername}` are the realm and ruler named by
 `{student}` is the exact character named by queued-event `ctx.studentId`; mentioning it
 also gives that student a character card in the event modal. Annual schooling queues also
 provide `ctx.studentFocus` and `ctx.schoolId` for custom effects.
+`{partner}` is the exact character named by queued-event `ctx.partnerId`; it also adds that
+character's card to the event modal. `{ambition}` renders the managed family ambition of
+`ctx.studentId` when the ruler-agency system is available.
 During an active ordinary player war, `{hostMen}` is the current live host headcount,
 `{warLosses}` is the campaign ledger's cumulative live-host loss total, `{alliedMen}` is
 the current allied contribution, and `{deserterMinPercent}` / `{deserterMaxPercent}` are

@@ -2,6 +2,23 @@
 
 ## Royal marriages
 
+AI rulers may initiate a bounded royal-family offer during the annual ruler
+agency pass. The proposing ruler must pass the distance/culture/faith relevance
+rule in [realms.md](realms.md), and their current aim must favor dynastic security,
+peace, or crown consolidation. The candidate on the player's side is drawn only
+from managed family, never arbitrary visible kin; both people must be at least
+twelve, uncommitted, opposite-sex under the modeled doctrine, exact-faith
+compatible, and outside the close-kin gate. The proposing court weighs realm
+Standing, player prestige and station, the family member's station and Diplomacy,
+and the ruler's dynastic aim. The queued context freezes exact character ids,
+ruler generation, payer, and dowry; resolution revalidates every live gate.
+
+Acceptance uses the ordinary bride's-house transfer exactly once and the normal
+`FB.doKinWedding` path at majority. Declining cools Standing with the proposing
+realm. Player-initiated royal proposals continue to use the ordinary formula;
+the target ruler's current aim now modestly favors a dynasty-securing or peaceful
+match and resists one while consolidating the crown.
+
 Royal courtship uses the ordinary marriage rules. Ruler sheets in the player's liege
 chain show their compact family and ordered succession, and an independent player king
 or emperor may also approach an adjacent sovereign royal court. Count and duke children
