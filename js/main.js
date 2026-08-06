@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.110.5';
+  FB.VERSION = '1.110.6';
   FB.CHANGELOG = [
+    { v: '1.110.6', date: '2026-08-06', changes: [
+      'Hosted play analytics now use clearer campaign and active-play events, with one campaign resume counted per page.'
+    ] },
     { v: '1.110.5', date: '2026-08-06', changes: [
       'Rome is reserved for the Pope and can no longer be granted as a personal Bishopric.'
     ] },
@@ -673,13 +676,14 @@ window.FB = window.FB || {};
      play origin only. index.html owns the exact-origin gate and Umami queue;
      this layer owns the small, low-cardinality gameplay vocabulary. */
   const TELEMETRY_MILESTONES = [
-    { seconds:60, name:'play-1m' },
-    { seconds:300, name:'play-5m' },
-    { seconds:900, name:'play-15m' },
-    { seconds:1800, name:'play-30m' }
+    { seconds:60, name:'active-play-reached-1-minute' },
+    { seconds:300, name:'active-play-reached-5-minutes' },
+    { seconds:900, name:'active-play-reached-15-minutes' },
+    { seconds:1800, name:'active-play-reached-30-minutes' }
   ];
   let telemetrySession = null;
   let telemetryTimer = null;
+  let telemetryResumeReported = false;
 
   function telemetryEnabled() {
     return !!(FB.telemetry &&
@@ -690,13 +694,14 @@ window.FB = window.FB || {};
   function telemetryData(extra) {
     const s = FB.state;
     const data = {
-      version:FB.VERSION,
+      telemetry_schema:2,
+      game_version:FB.VERSION,
       locale:FB.locale || 'en'
     };
-    if (s && s.start && s.start.id) data.bookmark = String(s.start.id);
+    if (s && s.start && s.start.id) data.start_bookmark = String(s.start.id);
     if (s && s.player) {
-      data.tier = Number(s.player.tier) || 0;
-      data.generation = Number(s.generation) || 1;
+      data.player_tier = Number(s.player.tier) || 0;
+      data.dynasty_generation = Number(s.generation) || 1;
     }
     if (extra) {
       for (const key in extra) {
@@ -733,19 +738,19 @@ window.FB = window.FB || {};
           TELEMETRY_MILESTONES[telemetrySession.nextMilestone].seconds * 1000) {
       const milestone = TELEMETRY_MILESTONES[telemetrySession.nextMilestone++];
       trackTelemetry(milestone.name, {
-        mode:telemetrySession.mode,
+        entry_type:telemetrySession.entryType,
         active_seconds:milestone.seconds
       });
     }
     return Math.floor(telemetrySession.activeMs / 1000);
   }
 
-  function beginTelemetrySession(mode) {
+  function beginTelemetrySession(entryType) {
     clearTelemetryTimer();
     telemetrySession = null;
     if (!telemetryEnabled()) return;
     telemetrySession = {
-      mode:mode,
+      entryType:entryType,
       activeMs:0,
       lastAt:Date.now(),
       nextMilestone:0,
@@ -756,21 +761,22 @@ window.FB = window.FB || {};
     }, 15000);
   }
 
-  function telemetryCheckpoint() {
+  function telemetryCheckpoint(reason) {
     if (!telemetrySession) return;
     const activeSeconds = telemetryPulse();
     if (activeSeconds <= telemetrySession.lastCheckpointSeconds) return;
     telemetrySession.lastCheckpointSeconds = activeSeconds;
-    trackTelemetry('play-session', {
-      mode:telemetrySession.mode,
-      active_seconds:activeSeconds
+    trackTelemetry('active-play-checkpoint', {
+      entry_type:telemetrySession.entryType,
+      active_seconds:activeSeconds,
+      checkpoint_reason:reason
     });
   }
 
   function endTelemetrySession() {
     if (!telemetrySession) return null;
     const summary = {
-      mode:telemetrySession.mode,
+      entry_type:telemetrySession.entryType,
       active_seconds:telemetryPulse()
     };
     clearTelemetryTimer();
@@ -779,10 +785,12 @@ window.FB = window.FB || {};
   }
 
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) telemetryCheckpoint();
+    if (document.hidden) telemetryCheckpoint('page-hidden');
     else telemetryPulse();
   });
-  window.addEventListener('pagehide', telemetryCheckpoint);
+  window.addEventListener('pagehide', function () {
+    telemetryCheckpoint('page-hide');
+  });
 
   function refreshOfflineStatus() {
     const note = document.getElementById('offline-status');
@@ -1540,9 +1548,9 @@ window.FB = window.FB || {};
     });
     FB.save.autosave();
     FB.save.warnIfBlocked();
-    beginTelemetrySession('new');
-    trackTelemetry('game-start', {
-      mode:'new',
+    beginTelemetrySession('new-campaign');
+    trackTelemetry('campaign-started', {
+      entry_type:'new-campaign',
       scenario:sc.id,
       family_preset:preset.id
     });
@@ -1638,8 +1646,8 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.life.observe_begins',
       '👁 You settle in to watch the realms go about their centuries.', {}));
     FB.ui.toast('☰ → Settings sets the speed of days.');
-    beginTelemetrySession('observe');
-    trackTelemetry('observe-start', { mode:'observe' });
+    beginTelemetrySession('observer-mode');
+    trackTelemetry('observer-mode-started', { entry_type:'observer-mode' });
   };
 
   /* ================= daily loop ================= */
@@ -2692,7 +2700,8 @@ window.FB = window.FB || {};
     const causeText = causeMsg
       ? FB.renderMessage(causeMsg, { state: s, viewer: p.charId })
       : String(cause === undefined || cause === null ? '' : cause);
-    const telemetryMode = telemetrySession ? telemetrySession.mode : 'play';
+    const telemetryEntryType = telemetrySession ?
+      telemetrySession.entryType : 'unknown';
     const activeSeconds = telemetryPulse();
     const titleDataAtDeath = FB.titleSnapshot(s);
     me.dead = true;
@@ -2713,17 +2722,17 @@ window.FB = window.FB || {};
     }
     const heirs = FB.heirsOf(s).slice(0, 4);
     const deathTelemetry = {
-      mode:telemetryMode,
+      entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
-      life_years:Math.max(0, s.date.year - me.born)
+      lifespan_years:Math.max(0, s.date.year - me.born)
     };
     if (heirs.length) {
-      trackTelemetry('life-ended', deathTelemetry);
+      trackTelemetry('player-life-ended', deathTelemetry);
     } else {
       endTelemetrySession();
-      deathTelemetry.campaign_years = FB.campaignYears(s);
-      deathTelemetry.peak_tier = Number(s.peakTier) || 0;
-      trackTelemetry('game-over', deathTelemetry);
+      deathTelemetry.campaign_duration_years = FB.campaignYears(s);
+      deathTelemetry.peak_player_tier = Number(s.peakTier) || 0;
+      trackTelemetry('campaign-ended-no-heir', deathTelemetry);
     }
     FB.ui.showDeath(heirs, causeText);
   };
@@ -3042,8 +3051,9 @@ window.FB = window.FB || {};
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();
     FB.save.autosave();
-    trackTelemetry(livingAbdication ? 'retirement' : 'succession', {
-      mode:telemetrySession ? telemetrySession.mode : 'play',
+    trackTelemetry(livingAbdication ?
+      'retirement-completed' : 'succession-completed', {
+      entry_type:telemetrySession ? telemetrySession.entryType : 'unknown',
       active_seconds:telemetryPulse()
     });
     return true;
@@ -3190,8 +3200,13 @@ window.FB = window.FB || {};
         year: FB.state.date.year
       });
       FB.save.warnIfBlocked();
-      beginTelemetrySession('continue');
-      trackTelemetry('game-continue', { mode:'continue' });
+      beginTelemetrySession('resumed-campaign');
+      if (!telemetryResumeReported) {
+        telemetryResumeReported = true;
+        trackTelemetry('campaign-resumed', {
+          entry_type:'resumed-campaign'
+        });
+      }
       if (FB.ui.showPendingMarriageResidence) {
         FB.ui.showPendingMarriageResidence();
       }
@@ -3204,7 +3219,9 @@ window.FB = window.FB || {};
     // an observe session is never saved — it must not bury a real life
     if (FB.state && !FB.state.player.dead && !G.observe) FB.save.autosave();
     const telemetrySummary = endTelemetrySession();
-    if (telemetrySummary) trackTelemetry('game-exit', telemetrySummary);
+    if (telemetrySummary) {
+      trackTelemetry('returned-to-title', telemetrySummary);
+    }
     FB.state = null;
     G.observe = false;
     document.body.classList.remove('observing');

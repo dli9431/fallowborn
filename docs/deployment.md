@@ -38,12 +38,28 @@ served from exactly `https://play.fallowborn.com`. The event dispatcher repeats 
 protocol-and-host check before accepting an event. It therefore sends no pageviews or gameplay
 events from itch's iframe origin, `file://`, localhost, staging hosts, forks, or mirrors.
 
-The hosted game records a small anonymous vocabulary: starts and continues, Observe starts,
-active-play milestones, background/exit checkpoints, succession or retirement, individual life
-endings, and a saga ending without an heir. Event properties stay low-cardinality and describe
-the game build and campaign shape, such as version, locale, bookmark, tier, generation, scenario,
-and elapsed active time. Player and dynasty names, world seeds, province choices, rendered death
-text, and save contents must never be sent. Do Not Track remains respected by the Umami loader.
+The hosted game records a small anonymous vocabulary. Schema 2 uses event names that describe the
+player action or campaign transition directly:
+
+| Event | Meaning and cadence |
+| --- | --- |
+| `campaign-started` | A new campaign was created. |
+| `campaign-resumed` | A saved campaign was loaded; emitted at most once per page visit. |
+| `observer-mode-started` | A new observer-mode world was started. |
+| `active-play-reached-{1,5,15,30}-minute(s)` | The current gameplay session reached that much visible, active play. |
+| `active-play-checkpoint` | Active time was recorded because the page was hidden or unloading; this is not a unique visit or session count. |
+| `returned-to-title` | The player deliberately returned from a running campaign or observer world to the title screen. |
+| `player-life-ended` | The current player character died with at least one playable heir. |
+| `succession-completed` | An heir took over after a death. |
+| `retirement-completed` | A living player character handed the dynasty to a successor. |
+| `campaign-ended-no-heir` | The campaign ended because no playable heir remained. |
+
+Every event carries `telemetry_schema`, `game_version`, and `locale`. When available, the shared
+campaign properties are `start_bookmark`, `player_tier`, and `dynasty_generation`; lifecycle
+events add only low-cardinality context such as `entry_type`, `scenario`, `family_preset`,
+`active_seconds`, or checkpoint reason. Player and dynasty names, world seeds, province choices,
+rendered death text, and save contents must never be sent. Do Not Track remains respected by the
+Umami loader. Older event names remain only as historical schema-1 rows in Umami.
 
 `js/util.js` adds the manifest metadata and `js/main.js` registers `/sw.js` only when the page
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the

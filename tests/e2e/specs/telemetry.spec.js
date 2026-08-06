@@ -56,7 +56,7 @@ test('telemetry accepts only the exact official play origin and stays silent loc
     })).toEqual([]);
   });
 
-test('gameplay telemetry reports lifecycle and bounded engagement events',
+test('gameplay telemetry reports descriptive lifecycle and engagement events',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await page.evaluate(function () {
@@ -75,14 +75,15 @@ test('gameplay telemetry reports lifecycle and bounded engagement events',
       return window.__telemetryEvents;
     });
     expect(events[0]).toEqual({
-      name:'game-start',
+      name:'campaign-started',
       data:expect.objectContaining({
-        version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
+        telemetry_schema:2,
+        game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
         locale:'en',
-        bookmark:'867',
-        tier:1,
-        generation:1,
-        mode:'new',
+        start_bookmark:'867',
+        player_tier:1,
+        dynasty_generation:1,
+        entry_type:'new-campaign',
         scenario:'farmer',
         family_preset:'standard'
       })
@@ -99,14 +100,25 @@ test('gameplay telemetry reports lifecycle and bounded engagement events',
         simulatedNow += 15000;
         document.dispatchEvent(new Event('visibilitychange'));
       }
+      window.dispatchEvent(new Event('pagehide'));
       Date.now = realNow;
     });
     events = await page.evaluate(function () {
       return window.__telemetryEvents;
     });
     expect(events.map(function (event) { return event.name; })).toEqual([
-      'game-start', 'play-1m', 'play-5m', 'play-15m', 'play-30m'
+      'campaign-started',
+      'active-play-reached-1-minute',
+      'active-play-reached-5-minutes',
+      'active-play-reached-15-minutes',
+      'active-play-reached-30-minutes',
+      'active-play-checkpoint'
     ]);
+    expect(events[events.length - 1].data).toEqual(expect.objectContaining({
+      entry_type:'new-campaign',
+      active_seconds:1800,
+      checkpoint_reason:'page-hide'
+    }));
 
     const saved = await page.evaluate(function () {
       return JSON.parse(FB.save.serialize());
@@ -122,13 +134,27 @@ test('gameplay telemetry reports lifecycle and bounded engagement events',
       return window.__telemetryEvents;
     });
     expect(events[events.length - 1]).toEqual({
-      name:'game-continue',
+      name:'campaign-resumed',
       data:expect.objectContaining({
-        version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
-        bookmark:'867',
-        mode:'continue'
+        telemetry_schema:2,
+        game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
+        start_bookmark:'867',
+        entry_type:'resumed-campaign'
       })
     });
+
+    await page.evaluate(function (data) {
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(data, resolve)) {
+          reject(new Error('Second synthetic save was rejected'));
+        }
+      });
+    }, saved);
+    expect(await page.evaluate(function () {
+      return window.__telemetryEvents.filter(function (event) {
+        return event.name === 'campaign-resumed';
+      }).length;
+    })).toBe(1);
 
     await page.evaluate(function () {
       FB.game.toTitle();
@@ -138,11 +164,11 @@ test('gameplay telemetry reports lifecycle and bounded engagement events',
       return window.__telemetryEvents;
     });
     expect(events.slice(-2).map(function (event) { return event.name; }))
-      .toEqual(['game-exit', 'observe-start']);
+      .toEqual(['returned-to-title', 'observer-mode-started']);
     expect(events[events.length - 1].data).toEqual(expect.objectContaining({
-      version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
-      bookmark:'867',
-      mode:'observe'
+      game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
+      start_bookmark:'867',
+      entry_type:'observer-mode'
     }));
   });
 
@@ -180,13 +206,58 @@ test('death telemetry distinguishes succession from a completed saga',
       };
     })).toEqual({
       succeeded:true,
-      eventNames:['game-start', 'life-ended', 'succession', 'game-over'],
+      eventNames:[
+        'campaign-started',
+        'player-life-ended',
+        'succession-completed',
+        'campaign-ended-no-heir'
+      ],
       finalEvent:{
-        name:'game-over',
+        name:'campaign-ended-no-heir',
         data:expect.objectContaining({
-          version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
-          mode:'new',
-          peak_tier:1
+          telemetry_schema:2,
+          game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
+          entry_type:'new-campaign',
+          peak_player_tier:1
+        })
+      }
+    });
+  });
+
+test('living succession reports a completed retirement explicitly',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const firstHeir = FB.heirsOf(FB.state)[0];
+      const succeeded = FB.game.succeedTo(firstHeir.id, {
+        livingAbdication:true,
+        retirement:true
+      });
+      return {
+        succeeded:succeeded,
+        event:window.__telemetryEvents[window.__telemetryEvents.length - 1]
+      };
+    });
+    expect(result).toEqual({
+      succeeded:true,
+      event:{
+        name:'retirement-completed',
+        data:expect.objectContaining({
+          telemetry_schema:2,
+          entry_type:'new-campaign',
+          dynasty_generation:2
         })
       }
     });
