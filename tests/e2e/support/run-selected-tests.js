@@ -3,9 +3,11 @@
 const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const testRunState = require('./test-run-state');
 
 const testRoot = path.resolve(__dirname, '..');
 const markerPath = path.join(testRoot, '.last-tested-commit');
+const lastRunPath = path.join(testRoot, '.last-test-run.json');
 const mode = process.argv[2];
 const extraArgs = process.argv.slice(3);
 
@@ -14,24 +16,11 @@ if (mode !== 'all' && mode !== 'changed') {
   process.exit(2);
 }
 
-function git(args) {
-  const result = childProcess.spawnSync('git', args, {
-    cwd:testRoot,
-    encoding:'utf8',
-    stdio:['ignore', 'pipe', 'pipe']
-  });
-  if (result.status !== 0) {
-    const detail = (result.stderr || result.stdout || '').trim();
-    throw new Error(detail || 'Git command failed: git ' + args.join(' '));
-  }
-  return result.stdout.trim();
-}
-
-let currentCommit;
+let snapshot;
 try {
-  currentCommit = git(['rev-parse', 'HEAD']);
+  snapshot = testRunState.createWorkingTreeSnapshot(testRoot);
 } catch (error) {
-  console.error('Cannot identify the current Git commit: ' + error.message);
+  console.error('Cannot snapshot the current Git working tree: ' + error.message);
   process.exit(2);
 }
 
@@ -40,29 +29,34 @@ const playwrightCli = path.join(path.dirname(playwrightPackage), 'cli.js');
 const playwrightArgs = [playwrightCli, 'test'];
 
 if (mode === 'changed') {
-  if (!fs.existsSync(markerPath)) {
-    console.error(
-      'No successful test baseline exists. Run "npm run test:all" once first.');
-    process.exit(2);
+  const selection = testRunState.changedSelection(testRunState.readLastRun(lastRunPath));
+  if (selection === 'failed') {
+    console.log('Previous Playwright run failed; rerunning its failed tests.');
+    playwrightArgs.push('--last-failed');
+  } else {
+    if (!fs.existsSync(markerPath)) {
+      console.error(
+        'No successful test baseline exists. Run "npm run test:all" once first.');
+      process.exit(2);
+    }
+    const baseline = fs.readFileSync(markerPath, 'utf8').trim();
+    if (!/^[0-9a-f]{40}$/i.test(baseline)) {
+      console.error(
+        'The test baseline is invalid. Delete .last-tested-commit and run ' +
+        '"npm run test:all" again.');
+      process.exit(2);
+    }
+    if (!testRunState.validateBaseline(testRoot, baseline)) {
+      console.error(
+        'The recorded test baseline is unavailable in this clone. Run ' +
+        '"npm run test:all" to establish a new baseline.');
+      process.exit(2);
+    }
+    playwrightArgs.push('--only-changed=' + baseline);
   }
-  const baseline = fs.readFileSync(markerPath, 'utf8').trim();
-  if (!/^[0-9a-f]{40}$/i.test(baseline)) {
-    console.error(
-      'The test baseline is invalid. Delete .last-tested-commit and run ' +
-      '"npm run test:all" again.');
-    process.exit(2);
-  }
-  try {
-    git(['cat-file', '-e', baseline + '^{commit}']);
-  } catch (_error) {
-    console.error(
-      'The recorded test baseline is unavailable in this clone. Run ' +
-      '"npm run test:all" to establish a new baseline.');
-    process.exit(2);
-  }
-  playwrightArgs.push('--only-changed=' + baseline);
 }
 
+playwrightArgs.push('--last-failed-file=' + lastRunPath);
 playwrightArgs.push.apply(playwrightArgs, extraArgs);
 
 const result = childProcess.spawnSync(process.execPath, playwrightArgs, {
@@ -76,5 +70,7 @@ if (result.error) {
 }
 if (result.status !== 0) process.exit(result.status === null ? 1 : result.status);
 
-fs.writeFileSync(markerPath, currentCommit + '\n', 'utf8');
-console.log('Recorded successful test baseline: ' + currentCommit);
+testRunState.recordBaseline(markerPath, snapshot.commit);
+console.log(
+  'Recorded successful tracked-worktree test baseline: ' + snapshot.commit +
+  ' (HEAD ' + snapshot.head + ')');

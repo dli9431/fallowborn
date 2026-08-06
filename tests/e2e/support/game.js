@@ -57,7 +57,12 @@ async function startDeterministicGame(page) {
     .toBeVisible();
   await expect(page.locator('#gm-body')).toContainText('Good first actions');
   await expect(page.locator('#guide-controls')).toHaveCount(0);
-  await page.locator('#orientation-continue').click();
+  const orientationContinue = page.locator('#orientation-continue');
+  await expect(orientationContinue).toBeFocused();
+  // Setup only needs to dismiss the focused sheet. The dedicated onboarding
+  // spec retains pointer coverage; Enter avoids a WebKit click-stability stall
+  // during the first painted game frame while using the real button handler.
+  await page.keyboard.press('Enter');
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   await expect.poll(function () {
     return page.evaluate(function () {

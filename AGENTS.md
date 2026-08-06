@@ -31,8 +31,11 @@ From `tests/e2e/`:
 - `npm ci` installs the pinned test dependency graph.
 - `npx playwright install chromium` installs the pinned local browser revision.
 - `npm run check` runs the fast `node --check` syntax gate.
-- `npm run test:server` runs the in-process static-server lifecycle regression.
-- `npm run test:changed` runs test files affected since the last successful tracked run.
+- `npm run test:server` runs the in-process server, offline-cache, and test-runner support
+  regressions.
+- `npm run test:changed` automatically reruns the preceding Playwright failures, or when the
+  preceding run did not fail, runs test files affected since the last successful tracked-worktree
+  snapshot.
 - `npm run test:all` runs the server regression and every configured browser project.
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
 - `npm test` is an alias for `npm run test:all`.
