@@ -204,8 +204,13 @@ window.FB = window.FB || {};
   FB.councilAvgOpinion = FB.councilAvgStanding;
 
   FB.councilAuthority = function (state, amt) {
-    const c = FB.councilEnsure(state);
+    if (!FB.councilActive(state)) return;
+    /* Authority is often changed after an explicit dismissal or punishment.
+       Re-healing an already assembled board here would fill that vacancy in
+       the middle of the same action, sometimes with the officer just removed. */
+    const c = state.council || FB.councilEnsure(state);
     if (!c) return;
+    if (c.authority === undefined) c.authority = 60;
     c.authority = FB.clamp(c.authority + amt, 0, 100);
   };
 

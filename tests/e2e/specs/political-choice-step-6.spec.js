@@ -160,7 +160,10 @@ test('Council remains appointive by default and chartered offices require confir
 
       const direct = FB.councilAppoint(s, 'treasurer', 'choice_vassal_a');
       const directHolder = s.council.seats.treasurer;
-      FB.councilDismiss(s, 'treasurer');
+      const directDismissed = FB.councilDismiss(s, 'treasurer');
+      const seatsAfterDismissal = FB.councilSeats().filter(function (seat) {
+        return s.council.seats[seat.id] === 'choice_vassal_a';
+      }).map(function (seat) { return seat.id; });
       FB.grantPrivilege(s, 'office_confirmation', {
         sourceType:'charter', sourceId:'test_charter',
         grantorType:'realm', grantorId:'player'
@@ -168,23 +171,29 @@ test('Council remains appointive by default and chartered offices require confir
       const pending = FB.councilAppoint(
         s, 'treasurer', 'choice_vassal_a');
       const holderBeforeVote = s.council.seats.treasurer;
-      const forecast = FB.electionForecast(s, pending.election);
-      FB.chooseElectionTactic(s, 'reputation');
-      const originalRng = FB.rng;
-      FB.rng = function () { return 0; };
-      const vote = FB.resolveElection(s);
-      FB.rng = originalRng;
+      const forecast = pending && pending.election
+        ? FB.electionForecast(s, pending.election) : null;
+      let vote = null;
+      if (forecast) {
+        FB.chooseElectionTactic(s, 'reputation');
+        const originalRng = FB.rng;
+        FB.rng = function () { return 0; };
+        vote = FB.resolveElection(s);
+        FB.rng = originalRng;
+      }
       const holderAfterVote = s.council.seats.treasurer;
       const dismissal = FB.councilDismissalStatus(s, 'treasurer');
       const dismissed = FB.councilDismiss(s, 'treasurer');
       return {
         direct:direct.appointed,
         directHolder:directHolder,
-        pending:pending.pending,
+        directDismissed:directDismissed,
+        seatsAfterDismissal:seatsAfterDismissal,
+        pending:!!(pending && pending.pending),
         holderBeforeVote:holderBeforeVote,
-        electorates:forecast.electorates.length,
-        termDays:forecast.termDays,
-        passed:vote.passed,
+        electorates:forecast ? forecast.electorates.length : null,
+        termDays:forecast ? forecast.termDays : null,
+        passed:vote ? vote.passed : null,
         holderAfterVote:holderAfterVote,
         dismissalReady:dismissal.ready,
         dismissed:dismissed,
@@ -194,6 +203,8 @@ test('Council remains appointive by default and chartered offices require confir
 
     expect(result.direct).toBe(true);
     expect(result.directHolder).toBe('choice_vassal_a');
+    expect(result.directDismissed).toBe(true);
+    expect(result.seatsAfterDismissal).toEqual([]);
     expect(result.pending).toBe(true);
     expect(result.holderBeforeVote).toBeNull();
     expect(result.electorates).toBe(3);

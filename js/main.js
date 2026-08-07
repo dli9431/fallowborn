@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.113.3';
+  FB.VERSION = '1.113.4';
   FB.CHANGELOG = [
+    { v: '1.113.4', date: '2026-08-07', changes: [
+      'Council dismissals and punishments now leave the intended office vacant instead of immediately moving the removed magnate into another seat.'
+    ] },
     { v: '1.113.3', date: '2026-08-07', changes: [
       'Faith details now recount each branch’s origin, lineage, doctrine, and authority, while newly founded faiths no longer inherit a Pope or Caliph unless they explicitly retain the office. Election, privilege, debt, family, and exceptional-courtship dialogs now use consistent exits and safer confirmation focus.'
     ] },

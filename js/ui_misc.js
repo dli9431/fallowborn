@@ -2196,6 +2196,33 @@ window.FB = window.FB || {};
     return (rounded > 0 ? '+' : '') + rounded;
   }
 
+  function siblingCourtshipTraitEffect(key, value) {
+    const labels = {
+      siblingInitiate:FB.T('Exceptional sibling approach'),
+      siblingDynasticInitiate:FB.T('Dynastic sibling approach'),
+      siblingRiteInitiate:FB.T('Recognized-rite sibling approach'),
+      siblingTabooInitiate:FB.T('Illicit sibling approach'),
+      siblingAccept:FB.T('Response to a sibling approach'),
+      siblingRiteAccept:FB.T('Response under a recognized rite'),
+      siblingIllicitAccept:FB.T('Response to an illicit approach'),
+      siblingTabooAccept:FB.T('Response where the union is taboo'),
+      siblingDynasticAccept:FB.T('Response to a dynastically relevant approach'),
+      siblingProposal:FB.T('Sibling marriage proposal'),
+      siblingRiteProposal:FB.T('Proposal under a recognized rite'),
+      siblingTabooProposal:FB.T('Proposal where the union is taboo'),
+      siblingDynasticProposal:FB.T('Dynastically relevant proposal'),
+      siblingExposure:FB.T('Illicit sibling-courtship exposure')
+    };
+    if (!Object.prototype.hasOwnProperty.call(labels, key)) return null;
+    const initiation = /Initiate$/.test(key);
+    return {
+      label:labels[key],
+      value:value === 0 ? FB.T('No effect') : (value > 0
+        ? (initiation ? FB.T('Encourages') : FB.T('More likely'))
+        : (initiation ? FB.T('Discourages') : FB.T('Less likely')))
+    };
+  }
+
   function traitGroupedEffects(t) {
     const out = [];
     for (const group in t) {
@@ -2211,7 +2238,12 @@ window.FB = window.FB || {};
         const id = group + '.' + key;
         let label = id;
         let shown = signedTraitEffect(value);
-        if (id === 'assembly.voteChance') {
+        const siblingCourtship = group === 'courtship'
+          ? siblingCourtshipTraitEffect(key, value) : null;
+        if (siblingCourtship) {
+          label = siblingCourtship.label;
+          shown = siblingCourtship.value;
+        } else if (id === 'assembly.voteChance') {
           label = 'Assembly vote chance';
           shown = FB.T('{amount} percentage points', {
             amount:signedTraitEffect(value * 100)

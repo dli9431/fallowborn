@@ -89,6 +89,10 @@ An occupied seat may also deliberately replace its holder with an unseated vassa
 the same existing appointment mechanic. Council candidates use the shared
 person-assignment card to preview the office benefit, absence of household pay, current
 Standing and position, and the appointment or replacement consequences.
+An explicit dismissal or punishment changes Crown Authority without running vacancy
+healing in the middle of that action, so the removed magnate is not silently moved into
+another office before the action completes. Ordinary vacancy healing remains simulation
+work, and chartered vacancies remain open for nomination.
 Any direct vassal may be placed in the `councilRealm` protection scope from Governance or
 the Council manager. `FB.councilEnsure` leaves that vassal out when it fills a vacancy, and
 `FB.councilRecommendation` uses the same rank/Standing order while omitting protected and

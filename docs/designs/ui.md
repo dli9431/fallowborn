@@ -279,8 +279,10 @@ group trait chips in the fixed order Disposition, Formation, Reputation, Conditi
 then Other, preserving the character's stored order inside each class. Compact event,
 family, and other character cards keep one flat chip row. Trait chips are native
 focusable buttons: hover gives the class, acquisition guidance, and exact root/grouped
-effects, while click, tap, Enter, or Space opens the same detail modal. Unclassed mod
-traits appear under Other. Titles and Possessions use collapsed-by-default,
+effects, while click, tap, Enter, or Space opens the same detail modal. Sibling-courtship
+trait effects are the exception: both surfaces name the affected stage and show only a
+directional hint, leaving the exact live score and chance to the courtship review. Unclassed
+mod traits appear under Other. Titles and Possessions use collapsed-by-default,
 counted accordion rows matching the Deeds group controls so large realms and armories do
 not dominate the Self panel. Active maintained standards appear in the livelihood summary
 as compact icons with numeric levels; dormant purchased levels stay off that active row.

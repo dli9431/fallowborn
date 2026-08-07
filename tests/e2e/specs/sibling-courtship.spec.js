@@ -8,6 +8,62 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('sibling courtship trait tooltips show direction without exact modifiers',
+  async function ({ page }) {
+    const effects = await page.evaluate(function () {
+      const chip = document.createElement('button');
+      chip.id = 'sibling-courtship-trait-test';
+      chip.className = 'traitchip';
+      chip.setAttribute('data-trait', 'lustful');
+      chip.textContent = 'Lustful';
+      chip.style.cssText = 'position:fixed;left:4px;top:4px;z-index:99999';
+      document.body.appendChild(chip);
+      const authored = [];
+      for (const traitId in FBDATA.traits) {
+        const courtship = FBDATA.traits[traitId].courtship;
+        if (!courtship) continue;
+        for (const key in courtship) {
+          if (key.indexOf('sibling') !== 0) continue;
+          const source = { courtship:{} };
+          source.courtship[key] = courtship[key];
+          const effect = FB.ui._shared.traitGroupedEffects(source)[0];
+          authored.push({ traitId:traitId, key:key, effect:effect });
+        }
+      }
+      return {
+        lustful:FB.ui._shared.traitGroupedEffects(FBDATA.traits.lustful),
+        chaste:FB.ui._shared.traitGroupedEffects(FBDATA.traits.chaste),
+        authored:authored
+      };
+    });
+
+    expect(effects.lustful).toEqual(expect.arrayContaining([
+      { label:'Exceptional sibling approach', value:'Encourages' },
+      { label:'Response to a sibling approach', value:'More likely' },
+      { label:'Sibling marriage proposal', value:'More likely' }
+    ]));
+    expect(effects.chaste).toEqual(expect.arrayContaining([
+      { label:'Exceptional sibling approach', value:'Discourages' },
+      { label:'Response to a sibling approach', value:'Less likely' },
+      { label:'Sibling marriage proposal', value:'Less likely' }
+    ]));
+    expect(effects.authored.length).toBeGreaterThan(0);
+    for (const item of effects.authored) {
+      expect(item.effect.label).not.toContain('courtship.sibling');
+      expect(item.effect.value).toMatch(
+        /^(Encourages|Discourages|More likely|Less likely|No effect)$/);
+      expect(item.effect.value).not.toMatch(/[0-9%+-]/);
+    }
+
+    await page.locator('#sibling-courtship-trait-test').hover();
+    const tooltip = page.locator('#tooltip');
+    await expect(tooltip).toContainText('Exceptional sibling approach: Encourages');
+    await expect(tooltip).toContainText('Response to a sibling approach: More likely');
+    await expect(tooltip).toContainText('Sibling marriage proposal: More likely');
+    await expect(tooltip).not.toContainText('courtship.sibling');
+    await expect(tooltip).not.toContainText('+0.25');
+  });
+
 test('traits gate the one sibling approach and target traits cap consent',
   async function ({ page }) {
     const result = await page.evaluate(function () {
