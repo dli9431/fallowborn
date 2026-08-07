@@ -22,6 +22,14 @@ authority gates, Abbot and Bishop appointment chances, investiture policies,
 excommunication costs, schism limits, and Papal income. Game logic belongs to
 `js/papacy.js`, with household religious progression in `js/economy.js`.
 
+Faith fracture is separate from a rival-Pope schism inside Latin Christianity. Papal
+obedience is available only when a character or realm's effective faith retains both its
+Catholic office and `systems.papacy` capability. A campaign-founded child drops that
+office by default, even when its relation to the parent is `in_fold`; Papal obedience and
+recognized-Pope lookups then return `null`, and Papal absolution is unavailable. A faith
+definition that deliberately remains under Rome must explicitly retain
+`properties.head`. See [religions.md](religions.md) for the inheritance rule.
+
 ## Bishoprics and investiture
 
 The Catholic monastic and clerical ladders end in eligibility for office rather than a

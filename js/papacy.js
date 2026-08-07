@@ -306,9 +306,7 @@ window.FB = window.FB || {};
     if (!papacy) return null;
     var sovereign = realmSovereign(state, rid);
     if (!sovereign || !catholicReligion(state,
-        realmReligion(state, sovereign))) {
-      return papacy.romanObedience;
-    }
+        realmReligion(state, sovereign))) return null;
     var oid = papacy.realmObedience[sovereign];
     if (!papacy.obediences[oid] || papacy.obediences[oid].status !== 'active') {
       oid = papacy.romanObedience;
@@ -319,7 +317,7 @@ window.FB = window.FB || {};
 
   FB.papalObedienceForCharacter = function (state, value) {
     var c = typeof value === 'string' ? state.chars[value] : value;
-    if (!c) return null;
+    if (!c || !catholicFaith(state, c)) return null;
     var office = papalRecord(state, c.id);
     if (office && office.obedienceId) return office.obedienceId;
     if (c.id === state.player.charId) {
@@ -1783,7 +1781,7 @@ window.FB = window.FB || {};
 
   FB.playerExcommunicatedBy = function (state) {
     var me = playerChar(state);
-    if (!me) return null;
+    if (!me || !catholicFaith(state, me)) return null;
     var obedienceId = FB.papalObedienceForCharacter(state, me);
     return FB.excommunicationOf(state, me.id, obedienceId);
   };
@@ -1947,8 +1945,11 @@ window.FB = window.FB || {};
 
   FB.papalAbsolutionStatus = function (state, charId) {
     var c = state.chars[charId];
-    var obedienceId = c && FB.papalObedienceForCharacter(state, c);
-    var sentence = c && FB.excommunicationOf(state, c.id, obedienceId);
+    var recognizesPapacy = catholicFaith(state, c);
+    var obedienceId = recognizesPapacy &&
+      FB.papalObedienceForCharacter(state, c);
+    var sentence = recognizesPapacy &&
+      FB.excommunicationOf(state, c.id, obedienceId);
     var realmId = c && (c.id === state.player.charId ? 'player' :
       FB.realmIdForRulerCharacter && FB.realmIdForRulerCharacter(state, c));
     var offering = 50 + Math.max(0, realmRank(state, realmId)) * 25;
@@ -1957,7 +1958,9 @@ window.FB = window.FB || {};
       : !!(realmId && state.realms[realmId] &&
         state.realms[realmId].war);
     var reason = null;
-    if (!sentence) reason = FB.T('No active sentence from the recognized obedience.');
+    if (!recognizesPapacy) {
+      reason = FB.T('This faith does not recognize Papal authority.');
+    } else if (!sentence) reason = FB.T('No active sentence from the recognized obedience.');
     else if (atWar) reason = FB.T('The petitioner must first make peace.');
     else if (!absolutionRemedyMet(state, sentence)) {
       reason = FB.T('The recorded offense must be remedied, or a penance accepted.');

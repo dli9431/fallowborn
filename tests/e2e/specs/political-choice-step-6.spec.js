@@ -319,6 +319,25 @@ test('election and privilege sheets expose constituencies, terms, and revocation
     await expect(page.locator('#gm-body')).toContainText('Masters’ bench');
     await expect(page.locator('#gm-body')).toContainText('1440 fixed days');
     await expect(page.locator('#gm-body')).toContainText('Pending a recorded vote');
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #election-back')).toBeVisible();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return document.activeElement && document.activeElement.id;
+      });
+    }).toBe('genmodal');
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      FB.chooseElectionTactic(s, 'reputation');
+      const originalRng = FB.rng;
+      FB.rng = function () { return 0; };
+      const result = FB.resolveElection(s);
+      FB.rng = originalRng;
+      FB.ui.showElectionResult(result, { view:'career' });
+    });
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #election-result-close')).toBeVisible();
 
     await page.evaluate(function () {
       const s = FB.state;
@@ -334,4 +353,17 @@ test('election and privilege sheets expose constituencies, terms, and revocation
     await expect(page.locator('#gm-body')).toContainText('Scope');
     await expect(page.locator('#gm-body')).toContainText('Exact effect');
     await expect(page.locator('#gm-body')).toContainText('Revocation');
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #privileges-back')).toBeVisible();
+
+    await page.locator('[data-revoke-privilege]').click();
+    await expect(page.locator(
+      '#gm-body > .gm-list > #privilege-revoke-confirm')).toBeVisible();
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #privilege-revoke-back')).toBeVisible();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return document.activeElement && document.activeElement.id;
+      });
+    }).toBe('genmodal');
   });

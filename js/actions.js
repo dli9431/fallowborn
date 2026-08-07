@@ -692,7 +692,9 @@ window.FB = window.FB || {};
       });
     },
     show: function (s) {
-      return adult(s) && FB.playerExcommunicated && FB.playerExcommunicated(s);
+      const c = me(s);
+      return adult(s) && c && FB.faithHasSystem(c.religion, 'papacy', s) &&
+        FB.playerExcommunicated && FB.playerExcommunicated(s);
     },
     can: function (s) {
       if (FB.papalAbsolutionStatus) {

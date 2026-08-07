@@ -6456,6 +6456,7 @@ window.FB = window.FB || {};
       s, active.definitionId, def, 'name'), h, {
       historyView:true,
       replaceView:!!replaceView,
+      noFocus:true,
       historyBackRender:function () { electionReturn(returnContext); }
     });
     document.querySelectorAll('[data-election-tactic]').forEach(
@@ -6519,8 +6520,9 @@ window.FB = window.FB || {};
           ? FB.T('Supported the candidate') : FB.T('Opposed the candidate')) +
         '</b></div>';
     }
-    h += '<button type="button" class="btn primary" id="election-result-close">' +
-      esc(FB.T('Continue')) + '</button>';
+    h += '<div class="gm-footer"><button type="button" class="btn primary" ' +
+      'id="election-result-close">' + esc(FB.T('Continue')) +
+      '</button></div>';
     openModal((def.icon || '🗳') + ' ' + FB.T('Election result'), h, {
       historyView:true,
       replaceView:true,
@@ -6660,9 +6662,10 @@ window.FB = window.FB || {};
             : FB.T('unrecorded grievance')
         })));
     }
-    h += '<button type="button" class="btn" id="privileges-back">' +
+    h += '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="privileges-back">' +
       esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
-      '</button>';
+      '</button></div>';
     openModal(FB.T('📜 Privileges & collective demands'), h, {
       modalClass:'fullsheet-modal', historyView:returnView === 'governance',
       replaceView:!!replaceView,
@@ -6694,12 +6697,13 @@ window.FB = window.FB || {};
       '</div>' + kv('Privilege', esc(dt(s, 'privilege', status.record.defId,
         def, 'name'))) + kv('Protected duration', esc(FB.T(
         '{days} days remain', { days:remainingDays }))) +
-      '<button type="button" class="btn" id="privilege-revoke-back">' +
-      esc(FB.T('Keep the privilege')) + '</button> ' +
-      '<button type="button" class="btn danger" id="privilege-revoke-confirm">' +
-      esc(FB.T('Revoke unlawfully')) + '</button>';
+      '<div class="gm-list"><button type="button" class="actionbtn op-bad" ' +
+      'id="privilege-revoke-confirm">' + esc(FB.T('Revoke unlawfully')) +
+      '</button></div><div class="gm-footer"><button type="button" ' +
+      'class="btn" id="privilege-revoke-back">' +
+      esc(FB.T('Keep the privilege')) + '</button></div>';
     openModal(FB.T('Revoke a protected privilege?'), h, {
-      historyView:true, replaceView:true,
+      historyView:true, replaceView:true, noFocus:true,
       historyBackRender:function () { UI.showPrivileges(returnView); }
     });
     $('privilege-revoke-back').addEventListener('click', function () {
@@ -7663,9 +7667,9 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="finance-default-pay"' +
       (canSettle ? '' : ' disabled') + '>⚖ ' +
       esc(FB.T('Settle defaults for {money:amount}', { amount:due })) +
-      '</button></div><button class="btn" id="finance-cancel">' +
-      esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Settle the default'), h);
+      '</button></div><div class="gm-footer"><button class="btn" ' +
+      'id="finance-cancel">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Settle the default'), h, { noFocus:true });
     const pay = $('finance-default-pay');
     if (pay) pay.addEventListener('click', function () {
       if (FB.settleFinanceDefault(s)) UI.showFinance();
@@ -9555,11 +9559,12 @@ window.FB = window.FB || {};
       esc(FB.T('Steer them toward another road')) +
       '<span class="adesc">' + esc(FB.T(
         'Replace this ambition without choosing the replacement yourself.')) +
-      '</span></button></div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Back')) + '</button>';
+      '</span></button></div><div class="gm-footer"><button class="btn" ' +
+      'id="gm-cancel">' + esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Ambition of {name}', { name:c.name }), h, {
       historyView:!replaceView,
       replaceView:!!replaceView,
+      noFocus:true,
       historyBackRender:function () {
         UI.showCharModal(cid, returnContext && returnContext.returnContext);
       }
@@ -9636,10 +9641,11 @@ window.FB = window.FB || {};
           'The office becomes vacant. This spends the day.')) +
         '</span></button>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Back')) + '</button>';
+    h += '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Household office for {name}', { name:c.name }), h, {
       historyView:true,
+      noFocus:true,
       historyBackRender:function () {
         UI.showCharModal(cid, returnContext && returnContext.returnContext);
       }
@@ -12634,13 +12640,13 @@ window.FB = window.FB || {};
       esc(modifiers(status.targetModifiers, true)) + '<br><b>' +
       esc(FB.T('Standing contribution')) + ':</b> +' +
       esc(Math.round(status.acceptance.standingBonus * 100)) + '%</div>' +
-      '<p class="muted">' + esc(route) + '</p>' +
-      '<button class="btn primary" id="sibling-approach-confirm">' +
-      esc(FB.T('Make the approach')) + '</button> ' +
-      '<button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) +
-      '</button>';
+      '<p class="muted">' + esc(route) + '</p><div class="gm-list">' +
+      '<button class="actionbtn" id="sibling-approach-confirm">' +
+      esc(FB.T('Make the approach')) + '</button></div>' +
+      '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('An Exceptional Courtship'), h, {
-      historyView:true,
+      historyView:true, noFocus:true,
       historyBackRender:function () {
         UI.showCharModal(cid, returnContext);
       }
@@ -12690,12 +12696,12 @@ window.FB = window.FB || {};
       (authority ? '<p>' + esc(authority) + '</p>' : '') +
       '<p class="muted">' + esc(FB.T(
         'Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap.')) +
-      '</p><button class="btn primary" id="sibling-proposal-confirm">' +
-      esc(FB.T('Ask for the vows')) + '</button> ' +
-      '<button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) +
-      '</button>';
+      '</p><div class="gm-list"><button class="actionbtn" ' +
+      'id="sibling-proposal-confirm">' + esc(FB.T('Ask for the vows')) +
+      '</button></div><div class="gm-footer"><button class="btn" ' +
+      'id="gm-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('An Exceptional Marriage'), h, {
-      historyView:true,
+      historyView:true, noFocus:true,
       historyBackRender:function () {
         UI.showCharModal(cid, returnContext);
       }
@@ -15199,7 +15205,7 @@ window.FB = window.FB || {};
     const me = s.chars[s.player.charId];
     const title = stat === 'gold' ? FB.T('💰 Money each season') :
       stat === 'prestige' ? FB.T('⭐ Prestige each season') :
-      FB.religionOf(me.religion).icon + ' ' + FB.T('Piety each season');
+      FB.religionOf(me.religion, s).icon + ' ' + FB.T('Piety each season');
     openModal(title, statBreakdownHtml(stat) +
       '<button class="btn" id="stat-close">Close</button>');
     $('stat-close').addEventListener('click', UI.closeModal);

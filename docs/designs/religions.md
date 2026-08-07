@@ -95,6 +95,16 @@ can therefore recognize the same Roman office without creating duplicate Popes, 
 child can opt out with `head:null`. The core office ids remain `catholic` and `sunni`, so
 existing version-3 saves retain their exact keys and assignments.
 
+Campaign-founded faiths use a stricter default than authored definitions. Doctrine still
+inherits through the graph, but central-office allegiance does not: a record carrying
+founder/origin metadata compiles with `head:null` when it has no local `properties.head`,
+and an inherited `systems.papacy` flag is disabled with it. This rule is also applied when
+older saves compile, so previously founded branches stop silently recognizing a parent
+Pope or Caliph without a save-version migration. An event or mod that intends continued
+obedience must declare `properties.head` explicitly (`head:{}` is sufficient to retain the
+inherited office). `relationToParent:'in_fold'` describes the faiths' relationship; it does
+not by itself grant the parent office authority over the child.
+
 The seeded Zoroastrian root is assignable and authors
 `marriage.kinship.siblingRite:'xwedodah'`. Both characters must share that
 exact effective faith and doctrine for the recognized route; inheritance from
@@ -115,6 +125,12 @@ events expose the same operation through a `foundFaith` effect and can persist l
 directional changes with `faithRelation`. This is the extension
 point for authored historical outbreaks and seeded-RNG future fracture events; no engine
 enum or new script file is required for a new sect.
+
+The faith details sheet gives campaign-founded records a short in-world origin account
+assembled from the founder, place, date, faith name, and parent tradition. It also shows
+the complete lineage, directional parent relation,
+central office (or explicit independence), spouse and clergy rules, and the ancestor that
+supplies inherited doctrine. The same sheet opens from Faith entries on Self and Land.
 
 County faith remains authored world data rather than mutable campaign state. Founding a
 faith can convert characters and a player realm, but a future county-conversion system

@@ -256,6 +256,28 @@ test('only managed family receive ambitions and family offices exclude enterpris
     }, result.childId);
     await expect(page.locator('#gm-body')).toContainText('Personal ambition');
     await expect(page.locator('#gm-body')).toContainText('Guide their ambition');
+
+    await page.evaluate(function (cid) {
+      FB.ui.showFamilyAmbition(cid);
+    }, result.childId);
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #gm-cancel')).toBeVisible();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return document.activeElement && document.activeElement.id;
+      });
+    }).toBe('genmodal');
+
+    await page.evaluate(function (cid) {
+      FB.ui.showFamilyOffice(cid);
+    }, result.childId);
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #gm-cancel')).toBeVisible();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return document.activeElement && document.activeElement.id;
+      });
+    }).toBe('genmodal');
   });
 
 test('AI royal offers revalidate exact managed kin, ruler generation, and dowry',

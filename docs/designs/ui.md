@@ -51,6 +51,8 @@ Tab and Shift+Tab wrap between the first and last focusable controls of an open 
 dialog, so keyboard focus cannot move into the obscured game until the dialog closes.
 Dialogs whose first choice must be deliberate focus the dialog container on entry rather
 than preselecting a choice; the first Tab still enters the dialog's controls.
+Costed election tactics, full default settlement, family ambition and office changes,
+unlawful privilege revocation, and exceptional sibling courtship use that neutral entry.
 Closing a generic dialog restores its activating control after keyboard or pointer
 activation, including browsers that do not focus a button when it is clicked.
 An Enter handler that closes a dialog and changes screens must prevent the key's
@@ -477,8 +479,11 @@ one-line lesson the first time its moment arrives — time controls on the first
 unpause, "events pause time" inside the first event modal — each recorded as a
 per-save `hint_*` flag so a life teaches it exactly once. The new-game intro modal
 keeps only the scenario flavor and a one-line pointer to the Deeds tab.
-The Self sheet's faith block names the live religious head or the number of days its
-office has been vacant, and states excommunication separately from the trait chip.
+The Self sheet's faith block names the live religious head, the number of days its office
+has been vacant, or the branch's lack of a centralized office, and states excommunication
+separately from the trait chip. Faith names on Self and Land are focusable links to a
+details sheet with an in-world origin account, founder/date/place, lineage,
+directional parent relations, authority, spouse and clergy rules, and doctrine sources.
 Faith & Community contains the contextual absolution, Papal-restoration, and
 Caliphate-claim deeds. Their resource/land consequences use ordinary focusable
 confirmation sheets. The occupied Caliphate deed remains visible but disabled while

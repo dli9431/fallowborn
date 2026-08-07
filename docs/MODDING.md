@@ -730,7 +730,8 @@ the killed role is the protagonist's spouse or blood relative), `educateChild` �
 and save a new faith definition, defaulting an omitted `group` or `"$current"` group to
 the protagonist's current faith; the founder converts unless explicitly false, optional
 household and player-realm conversion use the same id, and successful creation exposes
-that id as `ctx.faithId`) ·
+that id as `ctx.faithId`; a founded branch does not inherit its parent's religious head
+unless the definition explicitly includes `properties.head`) ·
 `faithRelation:{observer?,target,status,reciprocal?}` (save a directional relation;
 `observer` defaults to `"$current"`, either id may use `"$founded"`, and reciprocal is
 either `true` for the same reverse status or an explicit reverse status) ·
@@ -2073,8 +2074,9 @@ edges stay local; an omitted `icon` may fall back to the parent. Values inside
 `properties` inherit recursively. Nested
 objects merge; arrays, scalars, and `null` replace the inherited value. A child can
 therefore author only `properties.marriage.spouseLimit.m:3`, or use
-`properties.head:null` to remove an inherited office. Legacy definitions that put
-qualities such as `head` at the top level still work, but new data should use
+`properties.head:null` to remove an inherited office; this also disables an inherited
+`systems.papacy` capability. Legacy definitions that put qualities such as `head` at the
+top level still work, but new data should use
 `properties`. `rankTitles.m` and `.f` each contain all eight tiers. `FBDATA.titles` is
 retained only as a compatibility fallback for old mods and saved title snapshots.
 When a mod supplies one of the historical `titles.christian|muslim|pagan|jewish`
@@ -2091,6 +2093,13 @@ changes use `FB.setFaithRelation(state,observerId,targetId,status)` and persist 
 the faith permits in a match. Event and data variant objects search the exact faith,
 then every ancestor, then `default`; `religionGroup`/`religionGroups` gates likewise
 match any ancestor rather than only a hard-coded family.
+
+For `foundFaith`, doctrine inherits but central-office allegiance does not. Unless the
+new definition locally supplies `properties.head`, the effective branch receives
+`head:null` and an inherited `systems.papacy` capability is disabled. This also applies
+when older campaign-founded faiths are loaded. To keep recognizing an inherited office,
+declare the intent explicitly; `"properties":{"head":{}}` retains the parent's office
+and stable `officeId`. `relationToParent:"in_fold"` alone does not imply obedience.
 
 `properties.head.realm` is the global initial/canonical realm fallback when the active
 bookmark has no matching `religiousHeads` entry; `head.title` is localized pure-display

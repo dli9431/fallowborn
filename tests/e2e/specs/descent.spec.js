@@ -612,6 +612,13 @@ test('finance discloses writ risk and permits a default to be settled',
     await expect(page.getByRole('heading', {
       name:'Settle the default', exact:true
     })).toBeVisible();
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #finance-cancel')).toBeVisible();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return document.activeElement && document.activeElement.id;
+      });
+    }).toBe('genmodal');
     await page.getByRole('button', {
       name:/Settle defaults for/
     }).click();

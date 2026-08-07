@@ -134,7 +134,7 @@ window.FB = window.FB || {};
       label:FB.currencyLabel(), amount:FB.money(s.player.gold, { style:'long' })
     }));
     $('tb-prestige').innerHTML = '⭐ <span class="mono">' + Math.floor(s.player.prestige) + '</span>' + netBadge(net.prestige);
-    $('tb-piety').innerHTML = FB.religionOf(me.religion).icon + ' <span class="mono">' + Math.floor(s.player.piety) + '</span>' + netBadge(net.piety);
+    $('tb-piety').innerHTML = FB.religionOf(me.religion, s).icon + ' <span class="mono">' + Math.floor(s.player.piety) + '</span>' + netBadge(net.piety);
     $('tb-health').innerHTML = '❤️ <span class="mono">' + Math.round(me.health) + '</span>';
     $('tb-date').innerHTML = '<span class="mono">' + dateStr + '</span>';
     const kh = FB.isTouch ? '' : '<span class="keyhint">Space</span> ';

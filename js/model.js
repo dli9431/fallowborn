@@ -185,6 +185,26 @@ window.FB = window.FB || {};
       const sources = parent ? cloneFaithValue(parent._faithSources) : {};
       const localProperties = localFaithProperties(local);
       mergeFaithValues(properties, localProperties, sources, id, '');
+      /* A faith founded during play is a new institution, even when it keeps
+         friendly relations with its parent. Doctrines continue to inherit,
+         but a central office is allegiance rather than doctrine: the branch
+         must explicitly author `properties.head` to keep recognizing it.
+         Applying this while compiling also repairs campaign faiths created by
+         older builds, whose saved definitions inherited an office silently. */
+      const campaignFounded = local.founderId !== undefined ||
+        local.originProvinceId !== undefined;
+      if (parent && campaignFounded && !own(localProperties, 'head')) {
+        properties.head = null;
+        sources.head = id;
+      }
+      /* Papal mechanics cannot survive an explicit or automatic removal of
+         the office. Keep the effective capability tree consistent even when
+         an older definition supplied only `head:null`. */
+      if (properties.head === null && plainObject(properties.systems) &&
+          properties.systems.papacy) {
+        properties.systems.papacy = false;
+        sources['systems.papacy'] = id;
+      }
       /* Before officeId existed, a head definition's faith id was also its
          save key. Preserve that contract for old mods while new definitions
          can deliberately share a stable office across inherited children. */

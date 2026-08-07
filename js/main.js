@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.113.2';
+  FB.VERSION = '1.113.3';
   FB.CHANGELOG = [
+    { v: '1.113.3', date: '2026-08-07', changes: [
+      'Faith details now recount each branch’s origin, lineage, doctrine, and authority, while newly founded faiths no longer inherit a Pope or Caliph unless they explicitly retain the office. Election, privilege, debt, family, and exceptional-courtship dialogs now use consistent exits and safer confirmation focus.'
+    ] },
     { v: '1.113.2', date: '2026-08-06', changes: [
       'Submitting a shared start code with Enter no longer reopens New Game over character creation.'
     ] },

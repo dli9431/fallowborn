@@ -1181,7 +1181,18 @@ window.FB = window.FB || {};
 
   function religiousHeadStatusRow(s, religionId) {
     const rel = FB.religionOf(religionId, s);
-    if (!rel || !rel.head) return '';
+    if (!rel) return '';
+    if (!rel.head) {
+      const parent = rel.parent && FB.religionOf(rel.parent, s);
+      if (parent && parent.head) {
+        const parentTitle = FB.faithDataText(
+          s, s.player.charId, rel.parent, 'head.title', {});
+        return kv('Religious head', esc(FB.T('None — separate from the {title}', {
+          title:parentTitle
+        })));
+      }
+      return kv('Religious head', esc(FB.T('None — no centralized office')));
+    }
     if (FB.faithHasSystem(religionId, 'papacy', s) && FB.ensurePapacy) {
       const papacy = FB.ensurePapacy(s);
       const me = s.chars[s.player.charId];
@@ -1225,9 +1236,177 @@ window.FB = window.FB || {};
     })));
   }
 
+  function faithDetailsLink(s, religionId, id) {
+    const rel = FB.religionOf(religionId, s);
+    if (!rel) return esc(religionId);
+    return '<button type="button" class="linklike"' +
+      (id ? ' id="' + esc(id) + '"' : '') +
+      ' data-faith-details="' + esc(religionId) + '" aria-label="' +
+      esc(FB.T('Open details for {faith}', {
+        faith:religionName(s, religionId)
+      })) + '">' + esc(rel.icon) + ' ' + esc(religionName(s, religionId)) +
+      '</button>';
+  }
+
+  function faithRelationText(status) {
+    if (status === 'same') return FB.T('The same faith');
+    if (status === 'in_fold') return FB.T('In communion');
+    if (status === 'schismatic') return FB.T('Separate communion');
+    if (status === 'hostile') return FB.T('Condemned as hostile');
+    return FB.T('Unrelated faith');
+  }
+
+  function faithRelationListText(statuses) {
+    return statuses.map(function (status) {
+      if (status === 'same') return FB.T('Exact faith');
+      if (status === 'in_fold') return FB.T('In-communion branches');
+      if (status === 'schismatic') return FB.T('Separate branches');
+      if (status === 'hostile') return FB.T('Hostile faiths');
+      if (status === 'foreign') return FB.T('Unrelated faiths');
+      return status;
+    }).join(' · ');
+  }
+
+  function faithRuleSource(s, religionId, path) {
+    const source = FB.faithValue(s, religionId, path).sourceId;
+    return source ? religionName(s, source) : FB.T('Unknown');
+  }
+
+  function bindFaithDetails(root) {
+    const buttons = root.querySelectorAll('[data-faith-details]');
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        UI.showFaithDetails(buttons[i].getAttribute('data-faith-details'));
+      });
+    }
+  }
+
+  function foundedFaithOriginText(s, religionId, rel, parent, founder,
+      origin, founded) {
+    const faith = religionName(s, religionId);
+    const parentName = parent ? religionName(s, rel.parent) : FB.T('the old faith');
+    const founderName = founder ? FB.fullName(founder) : null;
+    const placeName = origin ? origin.name : null;
+    const date = founded ? FB.T('{season} {year}', {
+      season:FB.seasonName(founded.season), year:founded.year
+    }) : null;
+    if (founderName && placeName && date) {
+      return FB.T(
+        'In {date}, a new community gathered around {founder} in {place}; from {parent}, {faith} took shape.', {
+          date:date, founder:founderName, place:placeName,
+          parent:parentName, faith:faith
+        });
+    }
+    if (founderName && date) {
+      return FB.T(
+        'In {date}, a new community gathered around {founder}; from {parent}, {faith} took shape.', {
+          date:date, founder:founderName, parent:parentName, faith:faith
+        });
+    }
+    if (placeName && date) {
+      return FB.T(
+        'In {date}, {faith} took root in {place} as a new branch of {parent}.', {
+          date:date, faith:faith, place:placeName, parent:parentName
+        });
+    }
+    return FB.T('{faith} arose as a new branch of {parent}.', {
+      faith:faith, parent:parentName
+    });
+  }
+
+  UI.showFaithDetails = function (religionId) {
+    const s = FB.state;
+    const rel = s && FB.faithExists(religionId, s)
+      ? FB.religionOf(religionId, s) : null;
+    if (!rel) return;
+    const parent = rel.parent && FB.religionOf(rel.parent, s);
+    const lineage = FB.faithLineage(religionId, s).map(function (id) {
+      return religionName(s, id);
+    });
+    const campaignFounded = rel.founderId !== undefined ||
+      rel.originProvinceId !== undefined;
+    const founder = rel.founderId !== undefined && s.chars[rel.founderId];
+    const origin = rel.originProvinceId && FB.world.byId[rel.originProvinceId];
+    const founded = isFinite(rel.createdTurn)
+      ? FB.dateAtTurn(s, rel.createdTurn) : null;
+    const doctrine = FB.marriageDoctrine(religionId, s);
+    let h = '<div class="progressnote">' + esc(campaignFounded
+      ? foundedFaithOriginText(
+        s, religionId, rel, parent, founder, origin, founded)
+      : (parent
+        ? FB.T('{faith} is an established branch of {parent}.', {
+          faith:religionName(s, religionId),
+          parent:religionName(s, rel.parent)
+        })
+        : FB.T('{faith} is an old and established tradition.', {
+          faith:religionName(s, religionId)
+        }))) +
+      '</div>' + panelh('Identity') +
+      kv('Faith', esc(rel.icon) + ' ' + esc(religionName(s, religionId))) +
+      kv('Type', esc(campaignFounded ? FB.T('Founded branch') :
+        (parent ? FB.T('Established branch') : FB.T('Root tradition')))) +
+      (parent ? kv('Parent tradition', esc(religionName(s, rel.parent))) : '') +
+      kv('Lineage', esc(lineage.join(' › ')));
+    if (rel.desc) {
+      h += '<p class="adesc">' + esc(FB.faithDataText(
+        s, s.player.charId, religionId, 'desc', {})) + '</p>';
+    }
+    if (campaignFounded) {
+      if (founder) h += kv('Founder', esc(FB.fullName(founder)));
+      if (origin) h += kv('Place of origin', esc(origin.name));
+      if (founded) {
+        h += kv('Founded', esc(FB.T('{season} {year}', {
+          season:FB.seasonName(founded.season), year:founded.year
+        })));
+      }
+    }
+    if (parent && parent.assignable) {
+      const childView = FB.faithRelation(s, religionId, rel.parent);
+      const parentView = FB.faithRelation(s, rel.parent, religionId);
+      h += panelh('Relations');
+      if (childView === parentView) {
+        h += kv('Relationship with parent', esc(faithRelationText(childView)));
+      } else {
+        h += kv('View of parent', esc(faithRelationText(childView))) +
+          kv('Parent’s view', esc(faithRelationText(parentView)));
+      }
+    }
+    h += panelh('Authority');
+    if (!rel.head) {
+      if (parent && parent.head) {
+        h += kv('Religious head', esc(FB.T(
+          'None — this branch does not recognize the {title}', {
+            title:FB.faithDataText(
+              s, s.player.charId, rel.parent, 'head.title', {})
+          })));
+      } else {
+        h += kv('Religious head', esc(FB.T('None — no centralized office')));
+      }
+    } else {
+      h += religiousHeadStatusRow(s, religionId) +
+        kv('Office tradition', esc(faithRuleSource(
+          s, religionId, 'head.officeId')));
+    }
+    h += panelh('Doctrine') +
+      kv('Spouse limits (men / women)', esc(
+        doctrine.spouseLimit.m + ' / ' + doctrine.spouseLimit.f)) +
+      kv('Marriage accepted with', esc(faithRelationListText(
+        doctrine.acceptedRelations))) +
+      kv('Marriage rules from', esc(faithRuleSource(
+        s, religionId, 'marriage'))) +
+      kv('Clergy marriage', esc(rel.clergyMarriage
+        ? FB.T('Permitted') : FB.T('Forbidden'))) +
+      kv('Clergy rule from', esc(faithRuleSource(
+        s, religionId, 'clergyMarriage'))) +
+      '<div class="gm-footer"><button class="btn" id="faith-details-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(rel.icon + ' ' + religionName(s, religionId), h);
+    $('faith-details-close').addEventListener('click', UI.closeModal);
+  };
+
   function renderChar() {
     const s = FB.state, me = s.chars[s.player.charId];
-    const rel = FB.religionOf(me.religion), cul = FB.cultureOf(me.culture);
+    const rel = FB.religionOf(me.religion, s), cul = FB.cultureOf(me.culture);
     const titles = FB.playerTitles(s);
     const titleCount = titles.high.length + titles.counties.length;
     const items = FB.itemList(s);
@@ -1251,7 +1430,7 @@ window.FB = window.FB || {};
       papalOfficeHtml(s, me) +
       kv('Age', FB.ageOf(me, s.date.year)) +
       kv('Culture', esc(cultureName(s, me.culture))) +
-      kv('Faith', rel.icon + ' ' + esc(religionName(s, me.religion))) +
+      kv('Faith', faithDetailsLink(s, me.religion, 'self-faith-details')) +
       religiousHeadStatusRow(s, me.religion) +
       (FB.playerExcommunicated && FB.playerExcommunicated(s)
         ? kv('Church standing', esc(FB.T('Excommunicated'))) : '') +
@@ -1308,6 +1487,7 @@ window.FB = window.FB || {};
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
+    bindFaithDetails(box);
     const equipmentTriggers = box.querySelectorAll(
       '#self-equipment-portrait, #self-equipment');
     for (let i = 0; i < equipmentTriggers.length; i++) {
@@ -1551,7 +1731,7 @@ window.FB = window.FB || {};
   };
 
   UI.charCardHtml = function (s, c, clickable, groupedTraits) {
-    const rel = FB.religionOf(c.religion), cul = FB.cultureOf(c.culture);
+    const rel = FB.religionOf(c.religion, s), cul = FB.cultureOf(c.culture);
     const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
     let sk = '';
     for (const k of FB.SKILLS) {
@@ -3582,7 +3762,7 @@ window.FB = window.FB || {};
     } else {
       const rid = s.owner[pid];
       const realm = s.realms[rid];
-      const rel = FB.religionOf(pr.religion), cul = FB.cultureOf(pr.culture);
+      const rel = FB.religionOf(pr.religion, s), cul = FB.cultureOf(pr.culture);
       const B = FBDATA.balance;
       const myRealm = rid === 'player';
       const realmMen = realm ? (myRealm ? FB.realmDefensiveStrength(s, 'player') :
@@ -3631,7 +3811,7 @@ window.FB = window.FB || {};
         (realm ? kv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
         (realm ? kv('Defensive alliance', esc(allianceText(s, rid))) : '') +
         kv('Culture', esc(cultureName(s, pr.culture))) +
-        kv('Faith', rel.icon + ' ' + esc(religionName(s, pr.religion))) +
+        kv('Faith', faithDetailsLink(s, pr.religion)) +
         kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         kv('Economic development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         kv('Settlement growth', esc(settlementDevelopmentText(s, pid))) +
@@ -3767,6 +3947,7 @@ window.FB = window.FB || {};
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
+    bindFaithDetails(box);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
     const relocate = $('btn-relocate-capital');

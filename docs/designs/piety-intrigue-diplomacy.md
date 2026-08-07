@@ -55,7 +55,9 @@ Absolution requires peace, a rank-scaled offering, piety, and remedy or penance 
 saved cause. Investiture policy likewise belongs to each independent Catholic sovereign:
 lay, canonical, and post-1122 concordat choices trade tax and strength against seasonal
 piety. Authority gates formal demands, arbitrary sanctions, councils, and Catholic great
-holy wars. See [papacy.md](papacy.md).
+holy wars. A campaign-founded branch without an explicitly retained Catholic office has
+no Papal obedience and cannot seek Papal absolution, even when it remains `in_fold` with
+Latin Christianity. See [papacy.md](papacy.md).
 
 Intrigue runs on plots: `FBDATA.plots` (map_data.js) + the Scheming
 focus accrue power with discovery risk, then a resolution event fires (`plot` named

@@ -190,6 +190,13 @@ test('runtime faiths and relations round-trip while old v3 saves self-heal',
         }
       }, ctx);
       var createdId = ctx.faithId;
+      var obedientId = FB.foundFaith(FB.state, {
+        id:'roman_fellowship',
+        name:'Roman Fellowship',
+        group:originalFaith,
+        relationToParent:'in_fold',
+        properties:{ head:{} }
+      }, { convertFounder:false });
       FB.applyEffects(FB.state, {
         faithRelation:{
           observer:'$current', target:'orthodox', status:'hostile'
@@ -198,6 +205,9 @@ test('runtime faiths and relations round-trip while old v3 saves self-heal',
       var saved = JSON.parse(FB.save.serialize());
       var savedTitle = FB.renderTitleSnapshot(saved.meta.titleData);
       FB.save.restore(JSON.parse(JSON.stringify(saved)));
+      var restoredMe = FB.state.chars[FB.state.player.charId];
+      FB.addTrait(restoredMe, 'excommunicated');
+      var absolution = FB.papalAbsolutionStatus(FB.state, restoredMe.id);
       var restored = {
         version:saved.v,
         stored:!!saved.state.faiths.living_way,
@@ -206,6 +216,15 @@ test('runtime faiths and relations round-trip while old v3 saves self-heal',
         name:FB.religionOf(createdId, FB.state).name,
         wives:FB.marriageDoctrine(createdId, FB.state).wives,
         relation:FB.faithRelation(FB.state, createdId, 'orthodox'),
+        office:FB.faithOfficeId(createdId, FB.state),
+        papacy:FB.faithHasSystem(createdId, 'papacy', FB.state),
+        headSource:FB.faithValue(FB.state, createdId, 'head').sourceId,
+        obedience:FB.papalObedienceForCharacter(FB.state, restoredMe),
+        recognizedPope:FB.popeRecognizedBy(FB.state, restoredMe),
+        absolutionReason:absolution.reason,
+        absolutionShown:FB.instantStatus(FB.state, 'seek_absolution').shown,
+        obedientOffice:FB.faithOfficeId(obedientId, FB.state),
+        obedientPapacy:FB.faithHasSystem(obedientId, 'papacy', FB.state),
         title:savedTitle
       };
 
@@ -240,6 +259,16 @@ test('runtime faiths and relations round-trip while old v3 saves self-heal',
     expect(result.restored.name).toBe('The Living Way');
     expect(result.restored.wives).toBe(2);
     expect(result.restored.relation).toBe('hostile');
+    expect(result.restored.office).toBe(null);
+    expect(result.restored.papacy).toBe(false);
+    expect(result.restored.headSource).toBe('living_way');
+    expect(result.restored.obedience).toBe(null);
+    expect(result.restored.recognizedPope).toBe(null);
+    expect(result.restored.absolutionReason).toBe(
+      'This faith does not recognize Papal authority.');
+    expect(result.restored.absolutionShown).toBe(false);
+    expect(result.restored.obedientOffice).toBe('catholic');
+    expect(result.restored.obedientPapacy).toBe(true);
     expect(result.restored.title).toBe('Freeholder');
     expect(result.old.faiths).toEqual({});
     expect(result.old.relations).toEqual({});
@@ -247,4 +276,57 @@ test('runtime faiths and relations round-trip while old v3 saves self-heal',
     expect(result.old.playerFaith).toBe(result.originalFaith);
     expect(result.old.heads).toEqual(result.baselineHeads);
     expect(result.old.oldTitle).toBe('Sultana');
+  });
+
+test('faith details explain a campaign branch, lineage, doctrine, and authority',
+  async function ({ page }, testInfo) {
+    primaryFileOnly(testInfo);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    await page.evaluate(function () {
+      var s = FB.state;
+      FB.foundFaith(s, {
+        id:'living_way',
+        name:'The Living Way',
+        icon:'◇',
+        group:'$current',
+        relationToParent:'in_fold',
+        properties:{ marriage:{ spouseLimit:{ m:2 } } }
+      }, { convertHousehold:true, convertRealm:true });
+      FB.ui.showTab('char');
+      FB.ui.refresh();
+    });
+
+    const faithButton = page.locator('#self-faith-details');
+    await expect(faithButton).toContainText('◇ The Living Way');
+    await expect(page.locator('#tb-piety')).toContainText('◇');
+    const headRow = page.locator(
+      '#tab-char .kv:has(span:text-is("Religious head")) b');
+    await expect(headRow).toContainText('None');
+    await expect(headRow).toContainText('Pope');
+
+    await faithButton.click();
+    await expect(page.locator('#gm-title')).toContainText('The Living Way');
+    const body = page.locator('#gm-body');
+    await expect(body).toContainText('a new community gathered around');
+    await expect(body).toContainText('from Latin Christianity');
+    await expect(body).toContainText('The Living Way took shape');
+    await expect(body).not.toContainText('event or mod');
+    await expect(body).not.toContainText('during this campaign');
+    await expect(body).toContainText('Founded branch');
+    await expect(body).toContainText(
+      'The Living Way › Latin Christianity › Christianity');
+    await expect(body).toContainText('In communion');
+    await expect(body).toContainText('does not recognize the Pope');
+    await expect(body).toContainText('Spouse limits (men / women)');
+    await expect(body).toContainText('2 / 1');
+    await expect(body).toContainText('Marriage rules from');
+    await expect(body).toContainText('The Living Way');
+    const close = body.locator(
+      ':scope > .gm-footer > #faith-details-close');
+    await expect(close).toBeVisible();
+    const closeBox = await close.boundingBox();
+    expect(closeBox.width).toBeGreaterThanOrEqual(199);
+    expect(closeBox.height).toBeGreaterThanOrEqual(52);
   });

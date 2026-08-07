@@ -46613,6 +46613,16 @@
         "text": "Patient"
       }
     },
+    "src.0791881a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "None — this branch does not recognize the {title}"
+      }
+    },
     "src.079f6178": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47793,6 +47803,16 @@
       ],
       "source": {
         "text": "A wound — it knits as your strength returns, a year or so at most."
+      }
+    },
+    "src.0a609467": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Permitted"
       }
     },
     "src.0a6d6e23": {
@@ -51027,6 +51047,16 @@
         "text": "The Last Bed"
       }
     },
+    "src.1285bef2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Parent’s view"
+      }
+    },
     "src.128b550a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52884,6 +52914,16 @@
         "text": "🕊 The pact with {realm} is allowed to lapse."
       }
     },
+    "src.169eb6f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "None — no centralized office"
+      }
+    },
     "src.169efb53": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54681,6 +54721,16 @@
       ],
       "source": {
         "text": "Total paid now"
+      }
+    },
+    "src.1ad4a17f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Separate communion"
       }
     },
     "src.1adb76f4": {
@@ -59844,6 +59894,16 @@
         "text": "Your realm changes obedience."
       }
     },
+    "src.280aa336": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Relations"
+      }
+    },
     "src.281293e0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62326,6 +62386,16 @@
       ],
       "source": {
         "text": "Concordances organize ecclesiastical rules for courts and schools."
+      }
+    },
+    "src.2ee19362": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Founded branch"
       }
     },
     "src.2ee69693": {
@@ -68777,6 +68847,16 @@
         "text": "Household Factor"
       }
     },
+    "src.4052065c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Separate branches"
+      }
+    },
     "src.40532063": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69140,6 +69220,16 @@
       ],
       "source": {
         "text": "Climb. Jump."
+      }
+    },
+    "src.41536799": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "In communion"
       }
     },
     "src.415e42bd": {
@@ -70646,6 +70736,16 @@
       ],
       "source": {
         "text": "{office} · {trait} · Standing {standing}"
+      }
+    },
+    "src.44e84d3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Open details for {faith}"
       }
     },
     "src.44ecb9df": {
@@ -76720,6 +76820,16 @@
         "text": "the county"
       }
     },
+    "src.54c8aabf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Doctrine"
+      }
+    },
     "src.54ca6edd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80809,6 +80919,16 @@
         "text": "See your liege’s sheet"
       }
     },
+    "src.5f5d2896": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Marriage accepted with"
+      }
+    },
     "src.5f5eebab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81020,6 +81140,16 @@
       ],
       "source": {
         "text": "Glory and grave both live in the shield-wall. Stand."
+      }
+    },
+    "src.5ffb9df0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Condemned as hostile"
       }
     },
     "src.5fffc4f7": {
@@ -85892,7 +86022,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "{season} {year}"
@@ -89335,6 +89466,16 @@
         "text": "A grizzled sergeant taps your shoulder with a practice blade: “Young ones always think it’s about strength. Care to learn otherwise, for a wager?”"
       }
     },
+    "src.753f71ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Unrelated faiths"
+      }
+    },
     "src.75437bd9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91211,6 +91352,16 @@
         "text": "Oran"
       }
     },
+    "src.7a564dc0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "In-communion branches"
+      }
+    },
     "src.7a59c9cf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92137,6 +92288,16 @@
         "text": "Current total"
       }
     },
+    "src.7ce32633": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "View of parent"
+      }
+    },
     "src.7ce42f13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92217,6 +92378,16 @@
         "text": "🏛 The protected term of {ruler} ends; the Constabulary awaits a new nominee."
       }
     },
+    "src.7d248bdf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Relationship with parent"
+      }
+    },
     "src.7d2d9c00": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92285,6 +92456,16 @@
       ],
       "source": {
         "text": "Pisa"
+      }
+    },
+    "src.7d75726b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{faith} is an established branch of {parent}."
       }
     },
     "src.7d774ab1": {
@@ -94091,6 +94272,16 @@
         "text": "Requires {money:gold}; you have {money:current}."
       }
     },
+    "src.8171e707": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Clergy marriage"
+      }
+    },
     "src.817c050f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95112,6 +95303,16 @@
       ],
       "source": {
         "text": "Bookmark start: {start}; change during play: {amount}."
+      }
+    },
+    "src.83ec3fd5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "the old faith"
       }
     },
     "src.83ed2aa9": {
@@ -96818,6 +97019,16 @@
         "text": "Clergy and learned advisers assemble beneath your seal. The ten measures of silver spent on the gathering can now be turned toward discipline, learning, or mercy."
       }
     },
+    "src.87db3a1d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{faith} arose as a new branch of {parent}."
+      }
+    },
     "src.87dee7e1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97068,6 +97279,16 @@
         "text": "Withdraw the petition."
       }
     },
+    "src.8870bbd1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Parent tradition"
+      }
+    },
     "src.8889b1b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97273,6 +97494,7 @@
       "glossary": [],
       "location": [
         "js/model.js",
+        "js/ui_panels.js",
         "js/world.js"
       ],
       "source": {
@@ -97973,6 +98195,26 @@
       ],
       "source": {
         "text": "recognition promise"
+      }
+    },
+    "src.8ab3d932": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Marriage rules from"
+      }
+    },
+    "src.8ab53369": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Unrelated faith"
       }
     },
     "src.8acd33b1": {
@@ -99558,6 +99800,16 @@
         "text": "Let the child find their own way."
       }
     },
+    "src.8e95bf33": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "In {date}, a new community gathered around {founder} in {place}; from {parent}, {faith} took shape."
+      }
+    },
     "src.8e95d616": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99716,6 +99968,16 @@
       ],
       "source": {
         "text": "Sweat now, live later — and grow strong enough to matter."
+      }
+    },
+    "src.8ee4e73e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Lineage"
       }
     },
     "src.8ef1fe15": {
@@ -106488,6 +106750,16 @@
         "text": "Master"
       }
     },
+    "src.a119bd67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Established branch"
+      }
+    },
     "src.a12df6bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106829,6 +107101,16 @@
       ],
       "source": {
         "text": "Let the petitions stand over."
+      }
+    },
+    "src.a1d4160f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "None — separate from the {title}"
       }
     },
     "src.a1d42d8d": {
@@ -108778,6 +109060,16 @@
         "text": "Active courtship"
       }
     },
+    "src.a695dfbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/papacy.js"
+      ],
+      "source": {
+        "text": "This faith does not recognize Papal authority."
+      }
+    },
     "src.a69d1f4c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109971,6 +110263,16 @@
       ],
       "source": {
         "text": "Send to {lord} for soldiers."
+      }
+    },
+    "src.a9a831b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Forbidden"
       }
     },
     "src.a9be3ec1": {
@@ -112699,6 +113001,16 @@
         "text": "No household member is currently old enough to work or train."
       }
     },
+    "src.b0e25fd3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "In {date}, {faith} took root in {place} as a new branch of {parent}."
+      }
+    },
     "src.b0f0d9fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113067,6 +113379,16 @@
       ],
       "source": {
         "text": "By the fire, when the day’s work is done, the thought comes unbidden: a life is short, but a house endures. The children who carry your name will inherit more than your goods — your standing, your grudges, your chronicle. What you begin, they will continue; what you become, they will remember."
+      }
+    },
+    "src.b20fea39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Root tradition"
       }
     },
     "src.b211d390": {
@@ -115886,6 +116208,16 @@
         "text": "The court listens politely — and finds for its lord. Now there is a second writ, with a harder word on it."
       }
     },
+    "src.b8c734b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{faith} is an old and established tradition."
+      }
+    },
     "src.b8c85276": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117117,6 +117449,16 @@
       ],
       "source": {
         "text": "Viterbo"
+      }
+    },
+    "src.bcb27efe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Hostile faiths"
       }
     },
     "src.bcb35291": {
@@ -120509,6 +120851,16 @@
         "text": "Run."
       }
     },
+    "src.c56062e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Exact faith"
+      }
+    },
     "src.c562c25d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120919,6 +121271,16 @@
       ],
       "source": {
         "text": "Steel bites before help comes. You survive — barely."
+      }
+    },
+    "src.c6a0a6dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Office tradition"
       }
     },
     "src.c6a79504": {
@@ -123048,7 +123410,8 @@
       "glossary": [],
       "location": [
         "js/agency.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Unknown"
@@ -123744,8 +124107,8 @@
       "location": [
         "js/main.js",
         "js/ui_modals.js",
-        "index.html",
-        "js/ui_panels.js"
+        "js/ui_panels.js",
+        "index.html"
       ],
       "source": {
         "text": "Close"
@@ -124079,6 +124442,16 @@
       ],
       "source": {
         "text": "Coin over ceremony."
+      }
+    },
+    "src.ce7c69fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Founded"
       }
     },
     "src.ce7d5677": {
@@ -124525,7 +124898,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Authority"
@@ -125040,6 +125414,16 @@
       ],
       "source": {
         "text": "Name {name} your enemy. Spends the day."
+      }
+    },
+    "src.d155d06d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Type"
       }
     },
     "src.d1571f8e": {
@@ -130635,6 +131019,16 @@
         "text": "Demolish {building}"
       }
     },
+    "src.dfc1d0bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Identity"
+      }
+    },
     "src.dfc7627a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130906,6 +131300,16 @@
         "text": "Biological father"
       }
     },
+    "src.e07c8654": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Founder"
+      }
+    },
     "src.e0911029": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131154,6 +131558,16 @@
       ],
       "source": {
         "text": "Refuse the responsibility."
+      }
+    },
+    "src.e11a7d71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Place of origin"
       }
     },
     "src.e11e9551": {
@@ -138069,6 +138483,16 @@
         "text": "Slavic Paganism"
       }
     },
+    "src.f31d9bec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Spouse limits (men / women)"
+      }
+    },
     "src.f31f01e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138319,6 +138743,16 @@
         "text": "Bent entries, towers, portcullises, and murder holes reinforce the weakest wall."
       }
     },
+    "src.f3b34632": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "The same faith"
+      }
+    },
     "src.f3b52386": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138497,6 +138931,16 @@
       ],
       "source": {
         "text": "A cart, a dark road, a new parish where no one knows your name — or your debts. Both follow you anyway."
+      }
+    },
+    "src.f42f0263": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "In {date}, a new community gathered around {founder}; from {parent}, {faith} took shape."
       }
     },
     "src.f42ff828": {
@@ -142277,6 +142721,16 @@
       ],
       "source": {
         "text": "The door gives, then you do. They leave bruises and an empty larder."
+      }
+    },
+    "src.fe69cd0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Clergy rule from"
       }
     },
     "src.fe6cfd68": {
@@ -151879,7 +152333,7 @@
     "ui:Close": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "Close"
       }
@@ -151964,6 +152418,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Completed"
+      }
+    },
+    "ui:Condemned as hostile": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Condemned as hostile"
       }
     },
     "ui:Confirm the contract": {
@@ -154075,6 +154537,14 @@
         "text": "Established"
       }
     },
+    "ui:Established branch": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Established branch"
+      }
+    },
     "ui:Event: {event}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -154147,6 +154617,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Every undecided bloc resolves once, in stable order. There is no final global roll."
+      }
+    },
+    "ui:Exact faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Exact faith"
       }
     },
     "ui:Exact upfront cost: {money:cost}.": {
@@ -154626,6 +155104,14 @@
         "text": "For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)"
       }
     },
+    "ui:Forbidden": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Forbidden"
+      }
+    },
     "ui:Foreign Policy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -154693,6 +155179,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Former calling of {name}"
+      }
+    },
+    "ui:Founded branch": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Founded branch"
       }
     },
     "ui:Free": {
@@ -155527,6 +156021,14 @@
         "text": "Hostile"
       }
     },
+    "ui:Hostile faiths": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Hostile faiths"
+      }
+    },
     "ui:House founder": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155839,6 +156341,14 @@
         "text": "In arrears — the next missed deadline defaults."
       }
     },
+    "ui:In communion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "In communion"
+      }
+    },
     "ui:In default — assigned revenues are paying this down.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155871,6 +156381,46 @@
         "text": "In the armory"
       }
     },
+    "ui:In {date}, a new community gathered around {founder} in {place}; from {parent}, {faith} took shape.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "faith",
+        "founder",
+        "parent",
+        "place"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "In {date}, a new community gathered around {founder} in {place}; from {parent}, {faith} took shape."
+      }
+    },
+    "ui:In {date}, a new community gathered around {founder}; from {parent}, {faith} took shape.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "faith",
+        "founder",
+        "parent"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "In {date}, a new community gathered around {founder}; from {parent}, {faith} took shape."
+      }
+    },
+    "ui:In {date}, {faith} took root in {place} as a new branch of {parent}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "faith",
+        "parent",
+        "place"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "In {date}, {faith} took root in {place} as a new branch of {parent}."
+      }
+    },
     "ui:In {days} days": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -155879,6 +156429,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "In {days} days"
+      }
+    },
+    "ui:In-communion branches": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "In-communion branches"
       }
     },
     "ui:Incoming monopoly": {
@@ -159058,6 +159616,34 @@
         "text": "None while dormant"
       }
     },
+    "ui:None — no centralized office": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "None — no centralized office"
+      }
+    },
+    "ui:None — separate from the {title}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "None — separate from the {title}"
+      }
+    },
+    "ui:None — this branch does not recognize the {title}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "title"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "None — this branch does not recognize the {title}"
+      }
+    },
     "ui:None — this land feeds no duchy or crown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -159738,6 +160324,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Open an enterprise in {settlement}…"
+      }
+    },
+    "ui:Open details for {faith}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "faith"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Open details for {faith}"
       }
     },
     "ui:Open election": {
@@ -160461,6 +161057,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Permanent ruins; the site remains occupied"
+      }
+    },
+    "ui:Permitted": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Permitted"
       }
     },
     "ui:Person": {
@@ -163239,6 +163843,14 @@
         "text": "Rome refuses the petition."
       }
     },
+    "ui:Root tradition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Root tradition"
+      }
+    },
     "ui:Routine": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -163816,6 +164428,22 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "Seneschal"
+      }
+    },
+    "ui:Separate branches": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Separate branches"
+      }
+    },
+    "ui:Separate communion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Separate communion"
       }
     },
     "ui:Serf": {
@@ -166166,6 +166794,14 @@
         "text": "The runner-up"
       }
     },
+    "ui:The same faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "The same faith"
+      }
+    },
     "ui:The see returns to the Church; private property and separate secular titles follow dynasty law.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166696,6 +167332,14 @@
       "location": "js/events.js",
       "source": {
         "text": "This exceptional courtship has not been accepted."
+      }
+    },
+    "ui:This faith does not recognize Papal authority.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/papacy.js",
+      "source": {
+        "text": "This faith does not recognize Papal authority."
       }
     },
     "ui:This household office is already filled.": {
@@ -167424,7 +168068,7 @@
     "ui:Unknown": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "Unknown"
       }
@@ -167525,6 +168169,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Unrecorded party"
+      }
+    },
+    "ui:Unrelated faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Unrelated faith"
+      }
+    },
+    "ui:Unrelated faiths": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Unrelated faiths"
       }
     },
     "ui:Unresolved": {
@@ -170844,6 +171504,14 @@
         "text": "the lost realm"
       }
     },
+    "ui:the old faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "the old faith"
+      }
+    },
     "ui:the realm": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172433,6 +173101,38 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{expense} · {prestige}"
+      }
+    },
+    "ui:{faith} arose as a new branch of {parent}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "faith",
+        "parent"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{faith} arose as a new branch of {parent}."
+      }
+    },
+    "ui:{faith} is an established branch of {parent}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "faith",
+        "parent"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{faith} is an established branch of {parent}."
+      }
+    },
+    "ui:{faith} is an old and established tradition.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "faith"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{faith} is an old and established tradition."
       }
     },
     "ui:{family}: {focus}": {
@@ -174356,7 +175056,7 @@
         "season",
         "year"
       ],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "{season} {year}"
       }
