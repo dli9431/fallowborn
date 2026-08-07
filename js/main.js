@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.113.1';
+  FB.VERSION = '1.113.2';
   FB.CHANGELOG = [
+    { v: '1.113.2', date: '2026-08-06', changes: [
+      'Submitting a shared start code with Enter no longer reopens New Game over character creation.'
+    ] },
     { v: '1.113.1', date: '2026-08-06', changes: [
       'Faith relationships now shape Standing: shared and related faiths begin warmer, foreign faiths guarded, and explicitly hostile faiths sharply opposed.'
     ] },
@@ -1109,7 +1112,14 @@ window.FB = window.FB || {};
     }
     $('ng-seed-go').addEventListener('click', useSeed);
     $('ng-seed').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { e.stopPropagation(); useSeed(); }
+      if (e.key === 'Enter') {
+        /* closeModal restores the title-screen trigger's focus. Consume this
+           key before that happens, or the same Enter can activate New Game
+           again and reopen its dialog over character creation. */
+        e.preventDefault();
+        e.stopPropagation();
+        useSeed();
+      }
     });
   }
 

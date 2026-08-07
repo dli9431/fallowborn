@@ -45,6 +45,7 @@ async function startDeterministicGame(page) {
   await seedInput.press('Enter');
 
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+  await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   await expect(page.locator('#cg-name')).toHaveValue('Ada');
   await page.getByRole('button', { name: 'Begin Your Story', exact: true })
     .click({ timeout:30 * 1000 });

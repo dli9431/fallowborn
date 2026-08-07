@@ -53,6 +53,9 @@ Dialogs whose first choice must be deliberate focus the dialog container on entr
 than preselecting a choice; the first Tab still enters the dialog's controls.
 Closing a generic dialog restores its activating control after keyboard or pointer
 activation, including browsers that do not focus a button when it is clicked.
+An Enter handler that closes a dialog and changes screens must prevent the key's
+native default before focus restoration; otherwise that same key can activate the
+restored opener and place the old dialog over the new screen.
 Desktop Settings also owns persistent semantic action bindings. They map an otherwise
 unused letter to `action:<instant id>`, `focus:<focus id>`, or an authored
 `focus-family:<family id>` instead of a rendered list position. The default Q binding
