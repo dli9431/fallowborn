@@ -213,6 +213,26 @@ FBDATA.religions = {
     relationToParent:'schismatic', icon:'☽' },
   tengri: { name:'Tengrism', group:'pagan',
     relationToParent:'schismatic', icon:'⧙' },
+  zoroastrian: { name:'Zoroastrianism', adjective:'Zoroastrian',
+    collective:'Zoroastrians', icon:'🔥',
+    properties:{
+      marriage:{
+        spouseLimit:{ m:1, f:1 },
+        divorce:{ kind:'sunder', direct:true, gold:0, piety:15,
+          prestige:5, cooldownDays:360 },
+        acceptedRelations:['same','in_fold'],
+        kinship:{ siblingRite:'xwedodah' }
+      },
+      rankTitles:{
+        m:['Bondman','Freeman','Dehqan','Azat','Marzban','Satrap','Shah','Shahanshah'],
+        f:['Bondwoman','Freewoman','Dehqan','Azat','Marzban','Satrap','Banbishn','Banbishnan Banbishn']
+      },
+      words:{ deity:'Ahura Mazda', cleric:'mobed', temple:'fire temple',
+        landed:'Lord', partnership:'Trade partnership' },
+      roles:{ monasticM:'Herbad', monasticF:'Herbad', priestM:'Mobed',
+        priestF:'Mobed' },
+      clergyMarriage:true
+    } },
   jewish: { name:'Judaism', icon:'✡',
     properties:{
       marriage:{

@@ -545,6 +545,7 @@ window.FB = window.FB || {};
        fields. This also converts the removed court_suitor focus in old saves. */
     if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(FB.state);
     if (FB.ensureCourtshipTerms) FB.ensureCourtshipTerms(FB.state);
+    if (FB.ensureSiblingCourtships) FB.ensureSiblingCourtships(FB.state);
     if (FB.socialGiftTurns) FB.socialGiftTurns(FB.state);
     if (FB.realmGiftTurns) FB.realmGiftTurns(FB.state);
     if (FB.giftDeliveryEnsure) FB.giftDeliveryEnsure(FB.state);

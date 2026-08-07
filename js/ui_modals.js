@@ -4667,8 +4667,8 @@ window.FB = window.FB || {};
       const station = realm.rank <= 2 ? 3 : 4;
       const canTry = mayApproach && age >= 16 && child.sex !== me.sex &&
         !compact && FB.canWedSnapshot(s) &&
-        !(FB.royalCloseKinSnapshot &&
-          FB.royalCloseKinSnapshot(s, me, {
+        !(FB.closeMarriageKinSnapshot &&
+          FB.closeMarriageKinSnapshot(s, me, {
           royalLine:{ realmId:rid, memberId:child.id }
         })) &&
         station - FB.playerStation(s) < 3;
@@ -12600,6 +12600,121 @@ window.FB = window.FB || {};
     });
   };
 
+  UI.showSiblingCourtshipConfirm = function (cid, returnContext) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const status = c && FB.siblingCourtshipStatus(s, c);
+    if (!status || !status.ready) return;
+    const route = status.route === 'xwedodah'
+      ? FB.T('Your shared faith recognizes xwēdōdah, so discovery does not create the illicit-courtship exposure risk.')
+      : FB.T('Your faith does not recognize this union. While the courtship continues, it may be exposed once each season.');
+    function modifiers(items, percent) {
+      const out = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const def = FBDATA.traits[item.id];
+        const value = percent ? Math.round(item.value * 100) : item.value;
+        out.push(dt(s, 'trait', item.id, def, 'name') + ' ' +
+          (value > 0 ? '+' : '') + value + (percent ? '%' : ''));
+      }
+      return out.length ? out.join(' · ') : FB.T('No trait modifier');
+    }
+    const h = '<p>' + esc(FB.T(
+      'Make the one approach to {name}? Refusal is permanent.', {
+        name:FB.fullName(c)
+      })) + '</p>' +
+      '<div class="decision-cost"><b>' + esc(FB.T('Your trait score')) +
+      ':</b> ' + esc(status.traitScore) + ' / ' +
+      esc(status.requiredTraitScore) + '<br><b>' +
+      esc(FB.T('Your modifiers')) + ':</b> ' +
+      esc(modifiers(status.playerModifiers, false)) + '<br><b>' +
+      esc(FB.T('Their response chance')) + ':</b> ' +
+      esc(Math.round(status.acceptance.chance * 100)) + '%<br><b>' +
+      esc(FB.T('Their modifiers')) + ':</b> ' +
+      esc(modifiers(status.targetModifiers, true)) + '<br><b>' +
+      esc(FB.T('Standing contribution')) + ':</b> +' +
+      esc(Math.round(status.acceptance.standingBonus * 100)) + '%</div>' +
+      '<p class="muted">' + esc(route) + '</p>' +
+      '<button class="btn primary" id="sibling-approach-confirm">' +
+      esc(FB.T('Make the approach')) + '</button> ' +
+      '<button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) +
+      '</button>';
+    openModal(FB.T('An Exceptional Courtship'), h, {
+      historyView:true,
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext);
+      }
+    });
+    $('sibling-approach-confirm').addEventListener('click', function () {
+      if (!FB.siblingCourtshipStatus(s, c).ready) return;
+      UI.closeModal();
+      FB.queueEvent(s, 'sibling_courtship_approach', {
+        siblingTargetId:c.id,
+        siblingRoute:status.route,
+        siblingResponseChance:status.acceptance.chance
+      });
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext);
+      });
+    });
+  };
+
+  UI.showSiblingProposalConfirm = function (cid, returnContext) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const status = c && FB.siblingProposalStatus(s, c);
+    if (!status || !status.ready) return;
+    const consequence = status.route === 'xwedodah'
+      ? FB.T('A recognized xwēdōdah wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance.', {
+        piety:status.piety, gold:status.gold
+      })
+      : FB.T('An irregular wedding costs {piety} piety and {prestige} prestige, lowers Common Voice by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance.', {
+        piety:status.piety,
+        prestige:status.prestige,
+        voice:status.commonVoice,
+        standing:status.liegeStanding
+      });
+    const authority = status.route === 'xwedodah' ? '' :
+      (FB.faithHasSystem(s.chars[s.player.charId].religion, 'papacy', s)
+        ? FB.T('You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you.')
+        : FB.T('Rulers of your faith also lose 8 Standing.'));
+    const h = '<p>' + esc(FB.T('Propose marriage to {name}?', {
+      name:FB.fullName(c)
+    })) + '</p><div class="decision-cost"><b>' +
+      esc(FB.T('Acceptance chance')) + ':</b> ' +
+      esc(Math.round(FB.siblingProposalChance(s, c) * 100)) + '%</div>' +
+      '<p>' + esc(consequence) + '</p>' +
+      (authority ? '<p>' + esc(authority) + '</p>' : '') +
+      '<p class="muted">' + esc(FB.T(
+        'Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap.')) +
+      '</p><button class="btn primary" id="sibling-proposal-confirm">' +
+      esc(FB.T('Ask for the vows')) + '</button> ' +
+      '<button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) +
+      '</button>';
+    openModal(FB.T('An Exceptional Marriage'), h, {
+      historyView:true,
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext);
+      }
+    });
+    $('sibling-proposal-confirm').addEventListener('click', function () {
+      if (!FB.siblingProposalStatus(s, c).ready) return;
+      UI.closeModal();
+      FB.queueEvent(s, 'sibling_proposal_made', {
+        siblingTargetId:c.id
+      });
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext);
+      });
+    });
+  };
+
   function characterGiftAction(s, c, household) {
     const gift = FB.characterGiftStatus(s, c.id);
     const deliveryReason = gift.delivery && gift.delivery.pending
@@ -12709,7 +12824,7 @@ window.FB = window.FB || {};
         label:FB.T('Active courtship'),
         detail:FB.T(
           'A proposal becomes available at +{threshold} Standing.', {
-            threshold:FB.relationshipOpinionThreshold()
+            threshold:FB.courtshipStandingThreshold(s, c)
           })
       });
     }
@@ -12914,6 +13029,25 @@ window.FB = window.FB || {};
     }
 
     const isSpouse = c.spouseId === me.id || me.spouseId === c.id;
+    const siblingApproach = !isSpouse && s.player.courtingId !== c.id &&
+      FB.siblingCourtshipStatus ? FB.siblingCourtshipStatus(s, c) : null;
+    if (siblingApproach && siblingApproach.relevant &&
+        siblingApproach.code !== 'accepted') {
+      addInteractionAction(model, {
+        id:'relationship.sibling-courtship.approach',
+        group:'relationship',
+        label:FB.T('Make an exceptional approach…'),
+        detail:FB.T(
+          'Requires +40 Standing and a net player trait score of +1. Current score: {score}. Their response chance is {chance}%.', {
+            score:siblingApproach.traitScore,
+            chance:Math.round(siblingApproach.acceptance.chance * 100)
+          }),
+        enabled:siblingApproach.ready,
+        blockedReason:siblingApproach.reason || null,
+        consequence:FB.T('Refusal is permanent; acceptance begins a courtship and spends the day.'),
+        route:'sibling-approach'
+      });
+    }
     if (!isSpouse && s.player.courtingId !== c.id) {
       const courtship = FB.courtshipStatus(s, c, false);
       if (courtship.relevant) {
@@ -12941,7 +13075,7 @@ window.FB = window.FB || {};
           detail:together
             ? FB.T(
               'Beginning spends the day and assigns personal attention; a proposal requires +{threshold} Standing.', {
-                threshold:FB.relationshipOpinionThreshold()
+                threshold:FB.courtshipStandingThreshold(s, c)
               })
             : (visit && visit.eligible
               ? FB.T(
@@ -12960,7 +13094,11 @@ window.FB = window.FB || {};
         });
       }
     } else if (s.player.courtingId === c.id) {
-      const proposal = FB.proposalStatus(s, c);
+      const siblingRecord = FB.siblingCourtshipRecord &&
+        FB.siblingCourtshipRecord(s, me, c);
+      const siblingSuit = siblingRecord && siblingRecord.status === 'accepted';
+      const proposal = siblingSuit
+        ? FB.siblingProposalStatus(s, c) : FB.proposalStatus(s, c);
       const proposalDowry = proposal.terms && proposal.terms.amount
         ? (proposal.terms.playerPays
           ? FB.T('Your house will provide {money:gold}.', {
@@ -12982,8 +13120,14 @@ window.FB = window.FB || {};
           }),
         enabled:proposal.ready,
         blockedReason:proposal.reason || null,
-        consequence:FB.T('The existing proposal event decides the answer.'),
-        route:'proposal'
+        consequence:siblingSuit
+          ? (proposal.route === 'xwedodah'
+            ? FB.T('A recognized rite costs 75 piety and {money:gold}; no dowry, compact, or alliance follows.', {
+              gold:proposal.gold
+            })
+            : FB.T('An irregular union costs 75 piety and 25 prestige, and brings public and political penalties.'))
+          : FB.T('The existing proposal event decides the answer.'),
+        route:siblingSuit ? 'sibling-proposal' : 'proposal'
       });
       addInteractionAction(model, {
         id:'relationship.courtship.end',
@@ -13008,15 +13152,24 @@ window.FB = window.FB || {};
             : (marriageEnd.kind === 'get'
               ? FB.T('Grant a get')
               : FB.T('Declare the marriage sundered')),
-          detail:marriageEnd.prestige
-            ? FB.T('Costs {prestige} prestige and spends the day.', {
+          detail:marriageEnd.prestige && marriageEnd.piety
+            ? FB.T('Costs {piety} piety and {prestige} prestige, and spends the day.', {
+              piety:marriageEnd.piety,
               prestige:marriageEnd.prestige
             })
-            : (marriageEnd.cost
-              ? FB.T('Pays {money:cost} and spends the day.', {
-                cost:marriageEnd.cost
+            : (marriageEnd.prestige
+              ? FB.T('Costs {prestige} prestige and spends the day.', {
+                prestige:marriageEnd.prestige
               })
-              : FB.T('Spends the day.')),
+              : (marriageEnd.piety
+                ? FB.T('Costs {piety} piety and spends the day.', {
+                  piety:marriageEnd.piety
+                })
+                : (marriageEnd.cost
+                  ? FB.T('Pays {money:cost} and spends the day.', {
+                    cost:marriageEnd.cost
+                  })
+                  : FB.T('Spends the day.')))),
           enabled:marriageEnd.ready,
           blockedReason:marriageEnd.reason || null,
           consequence:FB.T(
@@ -13289,6 +13442,8 @@ window.FB = window.FB || {};
           UI.showSocialVisit(c.id, { returnContext:returnContext });
         } else if (action.route === 'friend') {
           UI.showFriendConfirm(c.id, returnContext);
+        } else if (action.route === 'sibling-approach') {
+          UI.showSiblingCourtshipConfirm(c.id, returnContext);
         } else if (action.route === 'character-gift') {
           UI.showCharacterGiftModal(c.id, returnContext);
         } else if (action.route === 'courtship-begin') {
@@ -13307,6 +13462,8 @@ window.FB = window.FB || {};
           UI.closeModal();
           FB.queueEvent(s, 'proposal_made', {});
           FB.game.passDay({ skipFocus:true });
+        } else if (action.route === 'sibling-proposal') {
+          UI.showSiblingProposalConfirm(c.id, returnContext);
         } else if (action.route === 'courtship-end') {
           UI.closeModal();
           FB.clearCourtship(s, { penalty:true, news:true });
@@ -16144,6 +16301,17 @@ window.FB = window.FB || {};
         FB.T('Collateral births take culture and faith from the managed family parent. Their house follows the father: a son keeps his house, while a daughter’s child normally belongs to her spouse’s house.'),
         FB.T('These identity rules do not change the child’s recorded mother and father.')
       ]), 'birth culture religion faith dynasty house father mother collateral protagonist marriage');
+    add('exceptional-sibling-courtship', 'family',
+      FB.T('Exceptional sibling courtship'),
+      FB.T('A rare player-only route uses traits, one irreversible approach, and severe social or religious costs.'),
+      guideBody([
+        FB.T('Ordinary courtship, arranged matches, AI marriages, and royal offers still forbid siblings and every closer lineal or avuncular relation. Only the current player may approach an adult opposite-sex full or half sibling who is free to marry, in the same county, at +40 Standing, and only while no other courtship is active.'),
+        FB.T('The player needs a net trait score of +1: Lustful +2; Cynical or Deceitful +1; Chaste −2; Honest −1; Ambitious +1 only when succession or title interests make the match dynastically relevant; Zealous +1 under an authorizing rite but −2 otherwise; Lettered +1 under that rite.'),
+        FB.T('The sibling then makes an independent response roll. Their Standing contributes up to +30 percentage points. Lustful, Ambitious, Cynical, Deceitful, Zealous, Chaste, Content, and Honest alter consent according to the route and dynastic stakes. Without any receptive target trait, an illicit response chance cannot exceed 10%. A refusal is permanent.'),
+        FB.T('An accepted suit uses ordinary personal attention and needs +80 Standing before proposal. A rejected proposal is permanent; breaking off an accepted suit prevents renewal for five years. No sibling match ever creates a dowry, royal compact, or alliance.'),
+        FB.T('A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union.'),
+        FB.T('Children of full siblings receive a 20% close-kin health-risk roll; children of half siblings receive 10%. Each parent already born of close kin adds five percentage points, to a maximum of 35%. The roll may add Frail, add Sickly, or reduce health by one.')
+      ]), 'sibling brother sister courtship incest forbidden xwedodah scandal traits consent exposure child health');
 
     const provinceId = s && s.player && s.player.provinceId;
     add('settlements-development', 'settlements',

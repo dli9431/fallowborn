@@ -1,5 +1,45 @@
 # Marriage & child matches
 
+## Exceptional sibling courtship
+
+Close-kin prohibition remains the default and the AI rule. Parent/child,
+grandparent/grandchild, sibling, and avuncular pairs fail the centralized
+`FB.kinshipDegreeSnapshot` / `FB.closeMarriageKinSnapshot` gate in ordinary
+courtship, descendant matchmaking, royal offers, and ruler-agency marriages;
+cousins remain eligible under the ordinary rule. The sole exception is an
+explicit player approach to an adult opposite-sex full or half sibling. It
+never authorizes an arranged match or AI choice.
+
+The approach is available only while both characters are alive, unwed,
+unbetrothed, able to marry under their offices and vows, co-located, free of
+another courtship, and at +40 personal Standing. Player traits must total at
+least +1: Lustful +2; Cynical or Deceitful +1; Chaste -2; Honest -1;
+Ambitious +1 only when titled succession makes the sibling relevant; Zealous
++1 under an authorizing rite and -2 otherwise; Lettered +1 under the rite.
+The target then makes a separate seeded response roll: 5% base, up to 30
+percentage points from Standing above +40, and route-sensitive modifiers from
+Lustful, Ambitious, Cynical, Deceitful, Zealous, Chaste, Content, and Honest.
+Illicit approaches without a receptive target trait cap at 10%. Refusal is
+permanent for the pair.
+
+Acceptance creates the ordinary single personal-attention assignment, but
+`FB.courtshipStandingThreshold` raises proposal readiness to +80. Proposal is
+another target-trait roll capped at 60%. Rejection permanently closes the
+pair; a player breakoff applies the ordinary -20 Standing and a five-year
+pair cooldown. An illicit accepted courtship makes one exposure check per
+season (4-18%, traits and Intrigue included) until exposed. The exposure event
+can end, deny, or openly persist in the relationship.
+
+Exact shared faith with `marriage.kinship.siblingRite:'xwedodah'` authorizes a
+recognized rite costing 75 piety and 25 gold. Every other route is an
+irregular union costing 75 piety, 25 prestige, 15 Common Voice, and 20 liege
+Standing; both spouses gain the non-inherited `scandalous_union` reputation,
+and the relevant faith authority receives a consequence. Neither route pays
+a dowry, forms a royal compact, or creates an alliance. Full-sibling children
+receive a 20% health-risk roll and half-sibling children 10%; each parent with
+recorded close-kin parentage adds five percentage points, capped at 35%.
+Outcomes are Frail, Sickly, or one lost health point.
+
 ## Royal marriages
 
 AI rulers may initiate a bounded royal-family offer during the annual ruler

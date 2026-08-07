@@ -33,8 +33,9 @@ Christian root.
 
 The initial property vocabulary is intentionally extensible rather than a closed enum:
 
-- `marriage.spouseLimit`, `marriage.divorce`, and
-  `marriage.acceptedRelations`;
+- `marriage.spouseLimit`, `marriage.divorce`,
+  `marriage.acceptedRelations`, and optional
+  `marriage.kinship.siblingRite` for a narrowly recognized sibling rite;
 - `rankTitles.m` / `rankTitles.f`;
 - `words.deity`, `words.cleric`, `words.temple`, `words.landed`, and the
   faith-flavored `words.partnership` label;
@@ -84,6 +85,13 @@ vacancies are keyed by that office id, not by every inheriting child. Catholic c
 can therefore recognize the same Roman office without creating duplicate Popes, and a
 child can opt out with `head:null`. The core office ids remain `catholic` and `sunni`, so
 existing version-3 saves retain their exact keys and assignments.
+
+The seeded Zoroastrian root is assignable and authors
+`marriage.kinship.siblingRite:'xwedodah'`. Both characters must share that
+exact effective faith and doctrine for the recognized route; inheritance from
+a shared authoring root remains available to future definitions. Istakhr is
+the 867 map access point. The 1066 Seljuk bookmark's existing realm-faith
+override continues to make conquered Fars Sunni at that later start.
 
 ## Seeded and generated faiths
 

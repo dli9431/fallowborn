@@ -1274,6 +1274,7 @@ window.FB = window.FB || {};
         f:Math.max(1, Math.floor(Number(limits.f) || 1))
       },
       acceptedRelations:(marriage.acceptedRelations || ['same']).slice(),
+      kinship:cloneFaithValue(marriage.kinship || {}),
       end:cloneFaithValue(ending)
     };
   };
@@ -1493,6 +1494,76 @@ window.FB = window.FB || {};
     }
     return out;
   }
+
+  /* One non-mutating vocabulary for marriage blood gates. Full characters
+     use their recorded parents; compact royal courts may supply the same
+     answer through world.js. Cousins are named because ordinary marriage
+     permits them, while every closer degree remains barred unless a caller
+     deliberately opens the exceptional sibling route. */
+  FB.kinshipDegreeSnapshot = function (state, a, b) {
+    if (!state || !state.chars || !a || !b) return 'unrelated';
+    if (a.id === b.id) return 'self';
+    function ids(c) {
+      const out = [];
+      if (c.fatherId) out.push(c.fatherId);
+      if (c.motherId && c.motherId !== c.fatherId) out.push(c.motherId);
+      return out;
+    }
+    function childOf(parent, child) {
+      return !!(parent && child &&
+        ((parent.childrenIds || []).indexOf(child.id) >= 0 ||
+          child.fatherId === parent.id || child.motherId === parent.id));
+    }
+    if (childOf(a, b) || childOf(b, a)) return 'parent_child';
+    const ap = ids(a), bp = ids(b);
+    const shared = ap.filter(function (id) { return bp.indexOf(id) >= 0; });
+    if (shared.length) {
+      const bothRecorded = !!(a.fatherId && a.motherId &&
+        b.fatherId && b.motherId);
+      return bothRecorded && shared.length >= 2 ? 'full_sibling' : 'half_sibling';
+    }
+    function ancestry(c) {
+      const out = {};
+      let frontier = ids(c);
+      for (let depth = 1; depth <= 2; depth++) {
+        const next = [];
+        for (let i = 0; i < frontier.length; i++) {
+          const id = frontier[i];
+          if (out[id] !== undefined && out[id] <= depth) continue;
+          out[id] = depth;
+          const parent = state.chars[id];
+          if (parent) next.push.apply(next, ids(parent));
+        }
+        frontier = next;
+      }
+      return out;
+    }
+    const aa = ancestry(a), ba = ancestry(b);
+    if (aa[b.id] === 2 || ba[a.id] === 2) return 'grandparent';
+    let nearest = 99;
+    for (const id in aa) {
+      if (ba[id] !== undefined) nearest = Math.min(nearest, aa[id] + ba[id]);
+    }
+    if (nearest === 3) return 'avuncular';
+    if (nearest === 4) return 'cousin';
+    if (FB.royalKinshipDegreeSnapshot) {
+      const royal = FB.royalKinshipDegreeSnapshot(state, a, b);
+      if (royal && royal !== 'unrelated') return royal;
+    }
+    /* First-generation saves predate parent ids for generated siblings. */
+    const me = state.player && state.chars[state.player.charId];
+    const other = me && (a.id === me.id ? b : (b.id === me.id ? a : null));
+    if (other && other.role === 'sibling' && me.dyn && other.dyn === me.dyn) {
+      return 'full_sibling';
+    }
+    return 'unrelated';
+  };
+
+  FB.closeMarriageKinSnapshot = function (state, a, b) {
+    const degree = FB.kinshipDegreeSnapshot(state, a, b);
+    return ['self','parent_child','grandparent','full_sibling',
+      'half_sibling','avuncular'].indexOf(degree) >= 0;
+  };
   function siblingsOf(state, c) {
     const out = [], seen = {};
     const ps = parentsOf(state, c);

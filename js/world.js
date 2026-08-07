@@ -2589,27 +2589,39 @@ window.FB = window.FB || {};
   /* The compact tree still enforces the ordinary close-blood marriage bar.
      Sibling members share one parent (including a materialized ruler root);
      cousins remain eligible, matching the full-character kin rules. */
-  function royalCloseKinFromSuccession(a, b, succession) {
+  function royalKinshipDegreeFromSuccession(a, b, succession) {
     const members = succession && succession.members;
     const ma = members && members[a.royalLine.memberId];
     const mb = members && members[b.royalLine.memberId];
-    if (!ma || !mb) return false;
-    if (ma.id === mb.id || ma.parentId === mb.id || mb.parentId === ma.id) {
-      return true;
-    }
+    if (!ma || !mb) return 'unrelated';
+    if (ma.id === mb.id) return 'self';
+    if (ma.parentId === mb.id || mb.parentId === ma.id) return 'parent_child';
     function siblings(x, y) {
       return !!x && !!y && x.id !== y.id &&
         (x.parentId || null) === (y.parentId || null);
     }
-    if (siblings(ma, mb)) return true;
+    if (siblings(ma, mb)) return 'full_sibling';
     const pa = ma.parentId && members[ma.parentId];
     const pb = mb.parentId && members[mb.parentId];
-    if ((pa && siblings(pa, mb)) || (pb && siblings(pb, ma))) return true;
+    if ((pa && siblings(pa, mb)) || (pb && siblings(pb, ma))) return 'avuncular';
     if ((pa && pa.parentId === mb.id) || (pb && pb.parentId === ma.id)) {
-      return true;
+      return 'grandparent';
     }
-    return false;
+    if (pa && pb && siblings(pa, pb)) return 'cousin';
+    return 'unrelated';
   }
+
+  function royalCloseKinFromSuccession(a, b, succession) {
+    const degree = royalKinshipDegreeFromSuccession(a, b, succession);
+    return degree !== 'unrelated' && degree !== 'cousin';
+  }
+
+  FB.royalKinshipDegreeSnapshot = function (state, a, b) {
+    if (!a || !b || !a.royalLine || !b.royalLine ||
+        a.royalLine.realmId !== b.royalLine.realmId) return 'unrelated';
+    const r = state.realms[a.royalLine.realmId];
+    return r ? royalKinshipDegreeFromSuccession(a, b, r.succession) : 'unrelated';
+  };
 
   FB.royalCloseKinSnapshot = function (state, a, b) {
     if (!a || !b || !a.royalLine || !b.royalLine ||

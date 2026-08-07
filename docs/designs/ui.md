@@ -1,5 +1,14 @@
 # UI: keyboard & mobile
 
+The character interaction card exposes exceptional sibling courtship only on
+an actual full- or half-sibling target. Its disabled state explains the first
+failed hard gate or trait score. The approach review shows player trait score,
+target response chance, permanent refusal, and illicit exposure versus shared
+xwēdōdah recognition before spending a day. The proposal review shows the
+60%-capped final chance, exact rite or irregular-union costs, absence of dowry,
+compact, and alliance, plus child health-risk bands. The Guide's Family
+category preserves the complete rule summary and searchable trait list.
+
 **Where the UI code lives.** The former `js/ui.js` is split into four files that load
 consecutively in this order and augment one `FB.ui` namespace:
 

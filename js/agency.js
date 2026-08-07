@@ -580,8 +580,8 @@ window.FB = window.FB || {};
       for (var j = 0; j < partners.length; j++) {
         var target = family[i], other = partners[j];
         if (target.sex === other.sex || target.religion !== other.religion ||
-            FB.royalCloseKinSnapshot &&
-              FB.royalCloseKinSnapshot(state, target, other)) continue;
+            FB.closeMarriageKinSnapshot &&
+              FB.closeMarriageKinSnapshot(state, target, other)) continue;
         var terms = FB.marriageTerms(state, target, other);
         var score = relevance.score +
           FB.standingOf(state, { kind:'realm', id:rid }) +
@@ -906,8 +906,8 @@ window.FB = window.FB || {};
       FB.isAgencyFamilyMember(state, target.id) &&
       target.sex !== partner.sex && target.religion === partner.religion &&
       partner.royalLine && partner.royalLine.realmId === ctx.realmId &&
-      !(FB.royalCloseKinSnapshot &&
-        FB.royalCloseKinSnapshot(state, target, partner)));
+      !(FB.closeMarriageKinSnapshot &&
+        FB.closeMarriageKinSnapshot(state, target, partner)));
   };
 
   FB.fns.agency_marriage_affordable = function (state, ctx) {
