@@ -35,6 +35,12 @@ FBDATA.modifiers = {
     scope:'county', days:1080,
     fx:{ levy:-0.12, commonVoice:6 }
   },
+  tax_concession: {
+    name:'Tax Concession', icon:'🌾',
+    desc:'A witnessed remission eases collection after an extraordinary burden.',
+    scope:'county', days:1080,
+    fx:{ tax:-0.08, commonVoice:6, unrest:-0.10 }
+  },
   muster_burden: {
     name:'Muster Burden', icon:'🛡',
     desc:'An extraordinary call brings more spears at the cost of local patience.',

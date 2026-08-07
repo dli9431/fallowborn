@@ -535,6 +535,20 @@ that grant or remove a modifier append the same information in text before the c
 icons and color never carry a consequence alone. County transfer automatically removes
 the record from Governance while Land continues to show it on the selected county.
 
+The Institution section and Network's Trade & Guild summary also open the shared
+**Privileges & collective demands** sheet. Each contract names its holder, grantor,
+territorial scope, exact authoritative-ledger effect, remaining or indefinite duration,
+rights, exemptions, obligations, and revocation rule. A deliberate confirmation sheet
+precedes unlawful early revocation and states the Common Voice, mistreatment, and organized
+opposition consequences. Pending demands and bounded opposition remain visible below the
+contract roll.
+
+Guild officer/guildmaster and chartered Council confirmation campaigns use one election
+sheet. It always shows the office, weighted electorate, fixed term, candidates, expected
+support, campaign closing date, and pending result. One native-button tactic may be chosen;
+the final result view records each constituency and the weighted tally. Career and Council
+management expose active campaigns and preserve their originating Back route.
+
 Work & Wealth includes **Petition for a guild monopoly** only for a Craft or Trade
 guildmaster; its locked description exposes the exact missing technology, guild standing,
 Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank & Realm includes
@@ -638,8 +652,8 @@ what that relationship does. Its five sections are Household (resident family,
 capacity-limited retainers, office, pay, work assignment, and maintained-standard
 summary/upkeep), Connections (canonical
 friend, cultivated contacts, rival, suitor, priest, and lord), Trade & Guild (career,
-rank, standing, exact income modifier, enterprises, partnerships, positions, and bounded
-guild commissions), Political Blocs, and Realm. For a qualified territorial ruler,
+rank, standing, exact income modifier, enterprises, partnerships, positions, bounded
+guild commissions, and the shared privilege roll), Political Blocs, and Realm. For a qualified territorial ruler,
 Political Blocs is the compact shared-court summary and Realm contains one
 Governance route, foreign ties, and the computed levy ledger rather than duplicating
 liege, vassal, Estates, or Council prose. Other protagonists retain the compact legacy

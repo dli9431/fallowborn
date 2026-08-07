@@ -447,7 +447,9 @@ window.FBDATA = window.FBDATA || {};
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
           career: FBDATA.careers, position: FBDATA.positions, schooling: FBDATA.schooling,
           enterprise: FBDATA.enterprises, householdStandard:FBDATA.householdStandards,
-          travelPurpose: FBDATA.travelPurposes
+          travelPurpose: FBDATA.travelPurposes,
+          election:FBDATA.elections, privilege:FBDATA.privileges,
+          collectiveDemand:FBDATA.collectiveDemands
         };
         const def = value.$data === 'religion' && FB.religionOf
           ? FB.religionOf(value.id, state)

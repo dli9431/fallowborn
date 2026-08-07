@@ -42,8 +42,9 @@ window.FB = window.FB || {};
   FB.councilActive = function (state) { return state.player.tier >= 6; };
 
   /* create/heal the council: forms when the player is crowned (also heals
-     old saves), drops seat-holders who died or turned, fills vacancies with
-     the best available vassal, and repairs vassal rulers missing a trait */
+     old saves), drops seat-holders who died or turned, fills ordinary
+     vacancies with the best available vassal, leaves chartered confirmation
+     seats vacant for nomination, and repairs vassal rulers missing a trait */
   FB.councilEnsure = function (state) {
     if (!FB.councilActive(state)) return null;
     const fresh = !state.council;
@@ -62,7 +63,7 @@ window.FB = window.FB || {};
         c.seats[s.id] = null;
       }
     }
-    // fill vacancies: the greatest vassals first (rank, then Standing)
+    // fill ordinary vacancies: the greatest vassals first (rank, then Standing)
     const seated = {};
     for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     const cand = FB.playerVassals(state).filter(function (vid) {
@@ -75,7 +76,11 @@ window.FB = window.FB || {};
         (a < b ? -1 : a > b ? 1 : 0);
     });
     for (const s of SEATS) {
-      if (!c.seats[s.id] && cand.length) c.seats[s.id] = cand.shift();
+      if (!c.seats[s.id] && cand.length &&
+          !(FB.councilSeatRequiresConfirmation &&
+            FB.councilSeatRequiresConfirmation(state, s.id))) {
+        c.seats[s.id] = cand.shift();
+      }
     }
     if (fresh) {
       FB.news(state, FB.msg('news.council.forms',
@@ -220,11 +225,20 @@ window.FB = window.FB || {};
     else if (c.authority < 50) c.authority = Math.min(50, c.authority + 1);
   };
 
-  FB.councilAppoint = function (state, seatId, rid) {
+  FB.councilAppoint = function (state, seatId, rid, options) {
+    options = options || {};
     const c = FB.councilEnsure(state);
     const seat = FB.councilSeat(seatId);
     const r = rid && state.realms[rid];
     if (!c || !seat || !r || !r.alive || r.liege !== 'player') return;
+    if (!options.confirmed && FB.councilAppointmentStatus) {
+      const status = FB.councilAppointmentStatus(state, seatId, rid);
+      if (!status.ready) return false;
+      if (status.requiresConfirmation) {
+        const election = FB.beginCouncilConfirmation(state, seatId, rid);
+        return election ? { pending:true, election:election } : false;
+      }
+    }
     // no man holds two offices; the displaced go back to the benches
     for (const s of SEATS) if (c.seats[s.id] === rid) c.seats[s.id] = null;
     const old = c.seats[seatId];
@@ -234,6 +248,7 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, -2); // every appointment embeds a magnate
     FB.news(state, FB.msg('news.council.appointed',
       '🏛 {ruler} of {realm} is raised to your council.', { ruler: r.ruler.name, realm: r.name }));
+    return { appointed:true, seatId:seatId, holderId:rid };
   };
 
   FB.councilDismiss = function (state, seatId) {
@@ -242,6 +257,10 @@ window.FB = window.FB || {};
     if (!c || !seat) return;
     const rid = c.seats[seatId];
     if (!rid) return;
+    if (FB.councilDismissalStatus) {
+      const status = FB.councilDismissalStatus(state, seatId);
+      if (!status.ready) return false;
+    }
     c.seats[seatId] = null;
     const r = state.realms[rid];
     adjustStanding(state, rid, -15, 'dismissal');
@@ -249,6 +268,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.council.dismissed',
       '🏛 {ruler} of {realm} is dismissed from your council — and will not forget it.',
       { ruler: r ? r.ruler.name : '?', realm: r ? r.name : '?' }));
+    return true;
   };
 
   /* Compatibility entry point: Council callers use the same rank-priced,
@@ -426,7 +446,8 @@ window.FB = window.FB || {};
         if (op < worstOp) { worstOp = op; seatId = s.id; }
       }
     }
-    FB.councilAppoint(state, seatId, who);
+    const appointed = FB.councilAppoint(state, seatId, who);
+    if (!appointed) return;
     adjustStanding(state, who, 5, 'seat_demand_yes');
     FB.councilAuthority(state, -1);
   };
@@ -447,6 +468,16 @@ window.FB = window.FB || {};
     const m = schemer(state);
     if (!m) return;
     const c = state.council;
+    const dismissal = FB.councilDismissalStatus
+      ? FB.councilDismissalStatus(state, m.seat.id) : { ready:true };
+    if (!dismissal.ready) {
+      adjustStanding(state, m.rid, -10, 'scheme_exposed');
+      FB.councilAuthority(state, 3);
+      FB.news(state, FB.msg('news.council.scheme_holder_protected',
+        '🕸 Evidence stains {ruler} of {realm}, but the charter keeps the confirmed officer at the board for the protected term.',
+        { ruler:m.realm.ruler.name, realm:m.realm.name }));
+      return;
+    }
     if (c && c.seats[m.seat.id] === m.rid) c.seats[m.seat.id] = null;
     adjustStanding(state, m.rid, -10, 'scheme_punish');
     FB.councilAuthority(state, 3);
@@ -471,6 +502,12 @@ window.FB = window.FB || {};
     FB.councilAuthority(state, -25);
     for (const vid of FB.playerVassals(state)) {
       adjustStanding(state, vid, 15, 'charter_seal');
+    }
+    if (FB.grantPrivilege) {
+      FB.grantPrivilege(state, 'office_confirmation', {
+        sourceType:'charter', sourceId:'council_charter',
+        grantorType:'realm', grantorId:'player'
+      });
     }
     FB.news(state, FB.msg('news.council.charter_sealed',
       '📜 You set your seal to the charter of liberties. The barons disperse, satisfied — for now.', {}));
@@ -533,6 +570,17 @@ window.FB = window.FB || {};
         FB.fns.plot_end(state);
       }
       return false;
+    }
+    const dismissal = FB.councilDismissalStatus
+      ? FB.councilDismissalStatus(state, member.seat.id) : { ready:true };
+    if (!dismissal.ready) {
+      adjustStanding(state, member.rid, -10, 'plot_exposed_protected');
+      FB.councilAuthority(state, 3);
+      FB.news(state, FB.msg('news.council.plot_exposed_protected',
+        '🕸 {ruler} of {realm} is exposed before the board, but the charter preserves the confirmed term.',
+        { ruler:member.realm.ruler.name, realm:member.realm.name }));
+      FB.fns.plot_end(state);
+      return true;
     }
     if (state.council && state.council.seats[member.seat.id] === member.rid) {
       state.council.seats[member.seat.id] = null;

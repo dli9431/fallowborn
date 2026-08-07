@@ -106,6 +106,16 @@ commenda, qirad, or trade partnership as appropriate. There is no passive
 interest-bearing savings account. These records are explicitly presented as backing
 another merchant and retain their independent three-partnership capacity.
 
+Guild rank above master is political rather than a purchase. Membership and master rank
+retain their direct advancement gates, but officer and guildmaster require a vacant office,
+an eligible current rank, nomination expense, and a vote defined in
+`FBDATA.elections`. The campaign shows each weighted constituency and rival, then permits
+one of canvassing, favors, expense, or reputation before the recorded vote. Victory creates
+a territorial profession-specific fixed term; defeat creates the rival term and a
+candidacy cooldown. Expiry returns the worker to master (or from guildmaster to a still
+valid officer term). Guild Standing remains both visible support and, for favor tactics,
+a spendable reputation rather than a second currency.
+
 **Self-founded ventures are separate household investments.** Any adult tier-1/2
 protagonist may choose a configured stake, select a reachable development-4+ market,
 and pay route overhead separately from the invested capital. Maintained transport may

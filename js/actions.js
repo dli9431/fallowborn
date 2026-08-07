@@ -3231,6 +3231,11 @@ window.FB = window.FB || {};
     gold = Math.ceil(gold * steMul);
     if (gold > 0) {
       p.gold += gold;
+      if (FB.notePoliticalMistreatment) {
+        FB.notePoliticalMistreatment(state, 'extraordinary_tax', {
+          vassals:FB.playerVassals(state).length, gold:gold
+        });
+      }
       if (FB.councilAuthority) FB.councilAuthority(state, 4); // the crown rules without its council — they notice
       FB.news(state, FB.msg('news.action.extraordinary_taxes',
         '💰 Your vassals render {money:gold} in extraordinary taxes — grumbling all the while.',
@@ -4749,8 +4754,7 @@ window.FB = window.FB || {};
         state.council && state.council.seats && FB.councilDismiss) {
       for (const seatId in state.council.seats) {
         if (state.council.seats[seatId] === ctx.realmId) {
-          FB.councilDismiss(state, seatId);
-          consequence = 'council';
+          if (FB.councilDismiss(state, seatId)) consequence = 'council';
           break;
         }
       }

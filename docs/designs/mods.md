@@ -83,6 +83,14 @@ bloc ids and allegiances, not a frozen copy of the definition. The active mod
 fingerprint therefore remains the compatibility boundary for saves whose
 forecast is affected by a replacement.
 
+Election, privilege, and collective-demand definitions replace atomically by id under
+the top-level `elections`, `privileges`, and `collectiveDemands` keys. Elections define
+office, term, eligibility, constituencies, rivals, and tactics; privileges describe legal
+parties and point to one existing effect ledger; demands name a privilege, constituency,
+rank range, cooldown, and an engine-registered gate. Saved campaigns and contracts retain
+only stable ids and semantic facts, so the active mod fingerprint is their compatibility
+boundary. See `docs/MODDING.md` for the complete schemas.
+
 The Catholic Papacy is a top-level atomic definition. A mod with `papacy` replaces
 `FBDATA.papacy` as one complete value before a campaign begins; nested arrays and tables
 are not deep-merged. This keeps election eras, thresholds, ids, and saved Papal state

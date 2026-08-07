@@ -141,6 +141,15 @@ county is one of `FB.modifierCounties`, which is the county itself for a baron w
 none directly; the levy and unrest effects remain attached to the county.
 See [modifiers.md](modifiers.md).
 
+Estates laws and story grants also participate in the shared privilege roll.
+`market_charter`, `custom_confirmed`, and `levy_exemption` modifier records remain the
+sole mechanical source of tax, construction, Common Voice, and levy arithmetic; the
+parallel `state.privileges` entry records holder, grantor, territorial scope, rights,
+exemptions, obligations, protected duration, revocation rule, and semantic source.
+`obl.revocationConsent` likewise remains the authoritative law while its privilege record
+describes the institutional holder and estates-vote revocation rule. This is provenance,
+not a second modifier or law calculation.
+
 The four authored institution agendas use the same county contract. Market settlements
 grant Market Charter or Contested Tolls; wartime service grants Muster Burden, Levy
 Exemption, or Roads Patrolled; local redress declaratively removes a dispute and

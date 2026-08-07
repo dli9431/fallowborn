@@ -550,6 +550,9 @@ window.FB = window.FB || {};
     if (FB.giftDeliveryEnsure) FB.giftDeliveryEnsure(FB.state);
     if (FB.ensureAgency) FB.ensureAgency(FB.state);
     if (FB.repairPolitics) FB.repairPolitics(FB.state);
+    if (FB.ensureInstitutions) {
+      FB.ensureInstitutions(FB.state, { silent:true });
+    }
     return FB.state;
   };
 })();

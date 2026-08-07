@@ -42,9 +42,15 @@ natural expiries. Adding an already-active id refreshes its catalog duration wit
 stacking it or repeating the gain notice. A refreshed event grant also replaces the
 semantic source id with the most recent granting event.
 
+When `js/institutions.js` is present, adding or refreshing a recognized county effect
+also upserts its legal `state.privileges` provenance; removing or naturally expiring the
+effect removes that wrapper. This does not change modifier storage or arithmetic. The
+wrapper supplies holder, grantor, scope, rights, duration, and revocation terms to the
+privilege sheet and survives county transfer for exactly as long as this record does.
+
 ## Core county content
 
-The institution-content tranche adds six bounded county definitions:
+The institution-content tranche adds seven bounded county definitions:
 
 - `market_charter` — +8% county tax, −8% construction cost, and 1 gold seasonal
   upkeep for 1,440 days;
@@ -58,9 +64,12 @@ The institution-content tranche adds six bounded county definitions:
   1 gold seasonal upkeep for 720 days;
 - `settlement_grudge` — −7 effective Common Voice and +25% harmful `unrest`
   exposure for 900 days.
+- `tax_concession` — −8% county tax, +6 effective Common Voice, and −10%
+  harmful `unrest` exposure for 1,080 days.
 
-Council and Estates choices grant all six. Plot discovery, a failed obligation scheme,
-a border response, and a foreign merchant compact provide cross-system sources.
+Council and Estates choices grant the original six; a settled collective demand for
+tax remission grants `tax_concession`. Plot discovery, a failed obligation scheme, a
+border response, and a foreign merchant compact provide cross-system sources.
 `parliament_local_redress` can end Contested Tolls or Settlement Grudge and replace the
 dispute with a positive charter; natural expiry remains the fallback.
 

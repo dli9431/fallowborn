@@ -3362,19 +3362,21 @@ window.FB = window.FB || {};
       const merchantLearning = career.profession === 'merchant' ? 6 : 0;
       const lettered = !merchantLearning || hasTrait(c, 'literate');
       const learning = FB.skillOf(c, 'lea');
-      return { to:'officer', cost:25, prestige:60, need:10,
+      const step = { to:'officer', cost:25, prestige:60, need:10,
         learning:merchantLearning, lettered:lettered,
         blocked:ste < 10 || state.player.prestige < 60 ||
           !lettered || learning < merchantLearning };
+      return FB.guildElectionStep ? FB.guildElectionStep(state, c, step) : step;
     }
     if (career.guildRank === 'officer') {
       const merchantLearning = career.profession === 'merchant' ? 8 : 0;
       const lettered = !merchantLearning || hasTrait(c, 'literate');
       const learning = FB.skillOf(c, 'lea');
-      return { to:'guildmaster', cost:50, prestige:120, need:12,
+      const step = { to:'guildmaster', cost:50, prestige:120, need:12,
         learning:merchantLearning, lettered:lettered,
         blocked:ste < 12 || state.player.prestige < 120 ||
           !lettered || learning < merchantLearning };
+      return FB.guildElectionStep ? FB.guildElectionStep(state, c, step) : step;
     }
     return null;
   };
@@ -3386,6 +3388,9 @@ window.FB = window.FB || {};
     const career = FB.careerOf(state, c);
     const step = FB.guildAdvance(state, c);
     if (!step || step.blocked || state.player.gold < step.cost) return false;
+    if (step.election && FB.beginGuildElection) {
+      return FB.beginGuildElection(state, c, step.to);
+    }
     state.player.gold -= step.cost;
     career.guildRank = step.to;
     career.guildStanding += step.to === 'member' ? 20 : 25;

@@ -161,6 +161,9 @@ window.FB = window.FB || {};
           options.sourceEventId) {
         record.sourceEventId = options.sourceEventId;
       }
+      if (def.scope === 'county' && FB.recordModifierPrivilege) {
+        FB.recordModifierPrivilege(state, id, pid, options || {});
+      }
       return true;
     }
     record = { id:id };
@@ -170,6 +173,9 @@ window.FB = window.FB || {};
       record.sourceEventId = options.sourceEventId;
     }
     list.push(record);
+    if (def.scope === 'county' && FB.recordModifierPrivilege) {
+      FB.recordModifierPrivilege(state, id, pid, options || {});
+    }
     if (!(options && options.silent)) notice(state, id, def.scope, pid, true);
     return true;
   };
@@ -186,6 +192,9 @@ window.FB = window.FB || {};
       removed = true;
     }
     if (def.scope === 'county' && !list.length) delete state.modifiers.county[pid];
+    if (removed && def.scope === 'county' && FB.removePrivilegeForModifier) {
+      FB.removePrivilegeForModifier(state, id, pid);
+    }
     if (removed && options && options.notice) notice(state, id, def.scope, pid, false);
     return removed;
   };

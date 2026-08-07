@@ -39,6 +39,15 @@ and confirm a recipient through Governance's existing grant flow. Domain pressur
 suppressed once Crown Authority reaches the charter threshold, where the existing
 charter confrontation owns that tension.
 
+The Council remains appointed by default. Sealing the Charter of Liberties now records
+the durable `office_confirmation` privilege. While it survives, Treasurer and Constable
+vacancies are not automatically filled: the crown nominates one living direct vassal and
+the data-defined constituencies hold a confirmation election. A successful nominee gains
+a saved 1,440-day term and cannot be dismissed or silently replaced before it ends; a
+rejected nominee receives a bounded candidacy cooldown and the existing holder or vacancy
+remains. Seneschal, Almoner, and Chamberlain keep the original appointment rules. Existing
+holders are grandfathered into one protected term when the charter first takes effect.
+
 Triggers and effects are the `council_*` custom fns in `js/council.js`; like the older
 vassal events, slot-day council events stay archetypal (no named ruler tokens) and let
 the effect fns pick the councillor involved. The new custom handlers mutate only Crown
@@ -56,7 +65,9 @@ the evidence to a new officer.
 
 **Interaction** is summarized in the landed ruler's **Governance** sheet and managed in
 the focused `UI.showCouncil` modal: the authority meter, every seat with its holder's
-trait and Standing, and the levers — offer a gift, dismiss, appoint to vacant seats.
+trait and Standing, term protection where applicable, and the levers — offer a gift,
+dismiss, nominate, or appoint to vacant seats. The confirmation sheet exposes the office,
+electorate, term, candidates, expected support, campaign tactic, and final tally.
 `FB.councilSummary` is the deterministic, locale-neutral read model shared by both
 surfaces. It reads the saved seats as they stand and never calls `FB.councilEnsure`,
 repairs rulers, fills vacancies, consumes RNG, or writes Chronicle news. Formation and

@@ -151,7 +151,8 @@ test('institution catalog is complete and every county modifier has a core grant
         'levy_exemption',
         'muster_burden',
         'roads_patrolled',
-        'settlement_grudge'
+        'settlement_grudge',
+        'tax_concession'
       ];
       var allowed = {
         tax:1,
@@ -177,6 +178,14 @@ test('institution catalog is complete and every county modifier has a core grant
           scan(option.success && option.success.effects, event.id);
           scan(option.failure && option.failure.effects, event.id);
         });
+      });
+      Object.keys(FBDATA.collectiveDemands || {}).forEach(function (demandId) {
+        var demand = FBDATA.collectiveDemands[demandId];
+        var privilege = demand && FBDATA.privileges[demand.privilege];
+        var effect = privilege && privilege.effect;
+        if (!effect || effect.kind !== 'modifier') return;
+        grants[effect.id] = grants[effect.id] || [];
+        grants[effect.id].push('collective:' + demandId);
       });
       crossLinks.plotDiscovery = grants.settlement_grudge &&
         grants.settlement_grudge.indexOf('plot_discovered') >= 0;
@@ -213,7 +222,7 @@ test('institution catalog is complete and every county modifier has a core grant
       };
     });
 
-    expect(result.definitions).toHaveLength(6);
+    expect(result.definitions).toHaveLength(7);
     for (var definition of result.definitions) {
       expect(definition.scope).toBe('county');
       expect(definition.days).toBeGreaterThan(0);

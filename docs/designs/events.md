@@ -54,6 +54,15 @@ the doctrine-defined petition route, while `marriageEnd` charges its snapshotted
 success or failure costs. These keys keep authored schisms and marriage doctrine in
 event data without allowing events to mutate `FBDATA`.
 
+`collective_privilege_demand` is another code-queued boundary. Once per annual
+institution tick, deterministic pressure gates choose at most the highest eligible demand
+and save only stable demand, privilege, constituency, scope, polity, reason, and turn
+ids. `contextValidator:'collective_demand_valid'` prevents a stale audience from granting
+or refusing a different demand. Grant and negotiated settlement create the privilege
+through its owning API; refusal lowers political support and adds bounded constituency
+opposition, which increases that constituency's later demand pressure after the cooldown.
+None of the choices creates an autonomous realm or starts a revolt directly.
+
 Debt enforcement uses that code-queued boundary for its last claim. Once distraint
 exhausts seizable property, `js/economy.js` queues exactly one station-specific event:
 `manor_forfeit` for gentry, `bondage_sentence` for freeholders, or

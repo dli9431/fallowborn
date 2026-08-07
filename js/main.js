@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.112.0';
+  FB.VERSION = '1.113.0';
   FB.CHANGELOG = [
+    { v: '1.113.0', date: '2026-08-06', changes: [
+      'Guild officers and guildmasters now win fixed-term elections, while charters can require confirmation of great Council offices and organized groups can demand durable privileges.'
+    ] },
     { v: '1.112.0', date: '2026-08-06', changes: [
       'AI rulers now pursue long-term aims, maintain political relationships, and make bounded approaches, while managed relatives develop ambitions and can hold family offices.'
     ] },
@@ -1517,6 +1520,7 @@ window.FB = window.FB || {};
     }
     if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
+    if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     state.player.focus = sc.focus || FB.defaultFocus(state);
     state.player.startGold = state.player.gold; // First steps: earn-your-first-coin baseline
     state.player.flags.tutorial = 1; // offer the First-steps checklist this life
@@ -1733,6 +1737,7 @@ window.FB = window.FB || {};
       return seasonBoundary ? 'season' : 'day';
     }
 
+    if (FB.institutionsDay) FB.institutionsDay(s);
     if (FB.financeDay) FB.financeDay(s);
 
     if (seasonBoundary) {
@@ -2332,6 +2337,7 @@ window.FB = window.FB || {};
     if (FB.councilYearly) FB.councilYearly(s); // crown authority settles back toward custom
     if (FB.politicsYearly) FB.politicsYearly(s);
     if (FB.parliamentYearly) FB.parliamentYearly(s); // the liege may summon the estates to sit
+    if (FB.institutionsYearly) FB.institutionsYearly(s);
   }
 
   /* ---------- education (yearly) ----------

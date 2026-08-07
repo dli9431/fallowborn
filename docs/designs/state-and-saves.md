@@ -209,6 +209,22 @@ context so save/load cannot reroll it; the event validator prevents that
 result from crossing a later liege change. Annual reviews and all repair paths
 are deterministic and RNG-neutral.
 
+Elections, privileges, and collective demands are additive save-format-3 state.
+`state.elections` stores at most one active campaign, profession-and-county guild office
+terms, chartered Council terms, stable cooldown clocks, and a bounded outcome history.
+Forecasts, localized candidate labels, and support prose are derived. Legacy officer and
+guildmaster careers receive one current term during repair instead of losing rank on load.
+
+`state.privileges` is a list of legal records with stable definition, holder, grantor,
+scope, source, effect-ledger, grant turn, optional end turn, and revocation ids. It never
+duplicates modifier effects, monopoly arithmetic, obligations, or Council seats; repair
+keeps a record only while that authoritative effect survives and backfills recognizable
+legacy effects. County-scoped records therefore survive county transfer and expire with
+their modifier. `state.collectiveDemands` keeps one pending semantic demand, per-definition
+cooldown years, bounded mistreatment evidence, and bounded organized opposition. Loading
+calls `FB.ensureInstitutions` only after modifier, realm, agency, and political repair;
+protagonist-stamped pending demands clear rather than crossing succession.
+
 Ruler and family agency is additive save-format-3 state. `state.agency` contains
 plain JSON maps for generation-stamped `rulerAims`, managed-character
 `familyAmbitions`, sparse directed `relations`, and temporary `rebelSupport`,

@@ -2,11 +2,11 @@
 
 Date: 2026-07-30
 
-Status: **in progress; steps 1–5 implemented**. This plan organizes player feedback
+Status: **in progress; steps 1–6 implemented**. This plan organizes player feedback
 about political blocs, elections, laws, military depth, tournaments, careers,
 religious policy, frontier settlement, migration, and wars without claims. It
 prioritizes player-facing quality of life before the larger simulation and content
-expansions. Steps 6–11 remain proposed.
+expansions. Steps 7–11 remain proposed.
 
 Related design:
 [realms](../designs/realms.md),
@@ -384,7 +384,18 @@ crown-side institutions and repeal flows are schema room, not yet content.
 
 Classification: **Balance with Writing support**.
 
-Status: **proposed**.
+Status: **complete (2026-08-06)**.
+
+Implemented as a bounded additive institution layer. Guild officer and guildmaster
+advancement now opens vacancy-gated, fixed-term elections with visible constituencies,
+candidates, support, one campaign approach, recorded outcomes, and defeat cooldowns.
+Council appointment remains the default; sealing the charter (or granting its reusable
+privilege) makes Treasurer and Constable nominations require confirmation and protects
+the successful holder through a fixed term. Durable privilege records wrap existing
+modifier, monopoly, obligation, and Council ledgers without duplicating their arithmetic.
+Annual pressure gates can queue one semantic collective demand from Standing, Common
+Voice, extraordinary tax, revocation, persecution, local burdens, Crown Authority, or
+recent aggressive wars. Refusal creates bounded organized opposition rather than a realm.
 
 Implement elections in increasing order of political risk.
 

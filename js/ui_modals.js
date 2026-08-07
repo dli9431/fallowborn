@@ -5970,6 +5970,12 @@ window.FB = window.FB || {};
 
   function governanceInstitutionHtml(s, summary) {
     const modifierConsequences = governanceModifierConsequencesHtml(s, summary);
+    const privilegeButton = '<button type="button" class="actionbtn" ' +
+      'data-governance-privileges="1">📜 ' +
+      esc(FB.T('Privileges, charters & collective demands…')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Review every holder, scope, effect, protected duration, revocation rule, and organized opposition.')) +
+      '</span></button>';
     if (summary.institution === 'estates' && summary.estates) {
       const estates = summary.estates;
       const activeForecast = estates.motionForecast;
@@ -6018,7 +6024,7 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T(
           'Review the terms and put an eligible motion to the hall.')) +
         '</span></button>';
-      return h + modifierConsequences;
+      return h + modifierConsequences + privilegeButton;
     }
     if (summary.institution === 'council' && summary.council) {
       const council = summary.council;
@@ -6077,11 +6083,11 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T(
           'Appoint officers, replace holders, dismiss councillors, and offer gifts.')) +
         '</span></button>';
-      return h + modifierConsequences;
+      return h + modifierConsequences + privilegeButton;
     }
     return '<div class="progressnote">' + esc(FB.T(
       'No simulated institution applies. Independent counts and dukes govern their own domain without the liege’s Estates or a Royal Council.')) +
-      '</div>';
+      '</div>' + privilegeButton;
   }
 
   /* One authoritative political sheet. Its summary is derived and opening
@@ -6334,6 +6340,12 @@ window.FB = window.FB || {};
           }
         });
       });
+    document.querySelectorAll('[data-governance-privileges]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showPrivileges('governance');
+        });
+      });
     $('governance-guide').addEventListener('click', function () {
       UI.showGuideEntry('government');
     });
@@ -6345,11 +6357,368 @@ window.FB = window.FB || {};
     }
   };
 
+  function electionReturn(context) {
+    context = context || {};
+    if (context.view === 'career') {
+      UI.showCareerPicker(context.cid, context.returnContext);
+    } else if (context.view === 'council') {
+      UI.showCouncil(context.returnView, context.returnContext);
+    } else if (context.view === 'governance') {
+      UI.showGovernance(context.section || 'institution');
+    } else {
+      UI.closeModal();
+      UI.refresh();
+    }
+  }
+
+  function electionDefinitionText(s, definitionId, def, path) {
+    return dt(s, 'election', definitionId, def, path);
+  }
+
+  function electionRivalName(s, active, candidate) {
+    const def = FBDATA.elections[active.definitionId] || {};
+    if (candidate.kind !== 'abstract') {
+      return candidate.id === (active.candidateId || active.nomineeRealmId)
+        ? FB.electionForecast(s, active).candidate.name : candidate.id;
+    }
+    const rival = (def.rivals || [])[candidate.definitionIndex];
+    return rival
+      ? electionDefinitionText(s, active.definitionId, def,
+        'rivals.' + candidate.definitionIndex + '.name')
+      : FB.T('Organized opposition');
+  }
+
+  UI.showElection = function (returnContext, replaceView) {
+    const s = FB.state;
+    const active = FB.activeElection && FB.activeElection(s);
+    const forecast = active && FB.electionForecast(s, active);
+    const def = active && FBDATA.elections[active.definitionId];
+    if (!active || !forecast || !def) {
+      electionReturn(returnContext);
+      return;
+    }
+    let h = '<p class="hint">' + esc(electionDefinitionText(
+      s, active.definitionId, def, 'desc')) + '</p>' +
+      kv('Office', esc(electionDefinitionText(
+        s, active.definitionId, def, 'name'))) +
+      kv('Electorate', esc(FB.T('{count} constituencies · {weight} weighted votes', {
+        count:forecast.electorates.length, weight:forecast.totalWeight
+      }))) +
+      kv('Term', esc(FB.T('{days} fixed days', { days:forecast.termDays }))) +
+      kv('Campaign closes', esc(FB.T('In {days} days', {
+        days:Math.max(0, Math.ceil(active.expiresTurn - s.turn))
+      }))) +
+      kv('Result', esc(FB.T('Pending a recorded vote'))) +
+      '<div class="panelh">' + esc(FB.T('Candidates & expected support')) + '</div>';
+    for (const candidate of forecast.candidates) {
+      h += '<div class="kv"><span>' + esc(electionRivalName(
+        s, active, candidate)) + '</span><b>' +
+        esc(FB.T('{percent}%', {
+          percent:Math.round(candidate.support * 100)
+        })) + '</b></div>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('Electorate')) + '</div>';
+    for (const electorate of forecast.electorates) {
+      h += '<div class="kv"><span>' + esc(electionDefinitionText(
+        s, active.definitionId, def,
+        'electorates.' + electorate.index + '.name')) + '</span><b>' +
+        esc(FB.T('{weight} votes · {percent}% expected support', {
+          weight:electorate.weight,
+          percent:Math.round(electorate.supportChance * 100)
+        })) + '</b></div>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('One campaign approach')) + '</div>' +
+      '<div class="gm-list">';
+    for (const tacticId in (def.tactics || {})) {
+      const tactic = def.tactics[tacticId];
+      const status = FB.electionTacticStatus(s, tacticId);
+      const selected = active.tacticId === tacticId;
+      h += '<button type="button" class="actionbtn" data-election-tactic="' +
+        esc(tacticId) + '"' + (status.ready ? '' : ' disabled') + '>' +
+        (tactic.icon || '🗳') + ' ' + esc(electionDefinitionText(
+          s, active.definitionId, def, 'tactics.' + tacticId + '.name')) +
+        '<span class="adesc">' + esc(selected ? FB.T('Selected.') :
+          (status.ready
+            ? electionDefinitionText(s, active.definitionId, def,
+              'tactics.' + tacticId + '.desc')
+            : FB.T('Unmet: {requirements}', {
+              requirements:status.missing.join('; ')
+            }))) + '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
+      'id="election-back">' + esc(FB.T('Back')) + '</button>' +
+      '<button type="button" class="btn" id="election-withdraw">' +
+      esc(FB.T('Withdraw')) + '</button>' +
+      '<button type="button" class="btn primary" id="election-resolve"' +
+      (active.tacticId ? '' : ' disabled') + '>' +
+      esc(FB.T('Hold the election')) + '</button></div>';
+    openModal((def.icon || '🗳') + ' ' + electionDefinitionText(
+      s, active.definitionId, def, 'name'), h, {
+      historyView:true,
+      replaceView:!!replaceView,
+      historyBackRender:function () { electionReturn(returnContext); }
+    });
+    document.querySelectorAll('[data-election-tactic]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          if (!FB.chooseElectionTactic(s, button.dataset.electionTactic)) return;
+          UI.showElection(returnContext, true);
+        });
+      });
+    $('election-resolve').addEventListener('click', function () {
+      const result = FB.resolveElection(s);
+      if (result) UI.showElectionResult(result, returnContext);
+    });
+    $('election-withdraw').addEventListener('click', function () {
+      if (!FB.withdrawElection(s)) return;
+      modalHistoryBack(function () { electionReturn(returnContext); });
+    });
+    $('election-back').addEventListener('click', function () {
+      modalHistoryBack(function () { electionReturn(returnContext); });
+    });
+  };
+
+  UI.showElectionResult = function (result, returnContext) {
+    const s = FB.state;
+    const def = FBDATA.elections[result.definitionId] || {};
+    const electorates = Array.isArray(def.electorates) ? def.electorates : [];
+    let candidateName = result.kind === 'guild' && s.chars[result.candidateId]
+      ? FB.fullName(s.chars[result.candidateId]) :
+      (result.kind === 'council' && s.realms[result.nomineeRealmId]
+        ? s.realms[result.nomineeRealmId].ruler.name : FB.T('The nominee'));
+    let winnerName = candidateName;
+    if (!result.passed) {
+      winnerName = FB.T('The organized opposition');
+      for (let rivalIndex = 0; rivalIndex < (def.rivals || []).length;
+          rivalIndex++) {
+        if (def.rivals[rivalIndex].id === result.winnerId) {
+          winnerName = electionDefinitionText(s, result.definitionId, def,
+            'rivals.' + rivalIndex + '.name');
+        }
+      }
+    }
+    let h = '<div class="progressnote' + (result.passed ? '' : ' warnote') + '">' +
+      esc(result.passed
+        ? FB.T('Won — the candidate begins the recorded fixed term.')
+        : FB.T('Lost — the successful rival or vacancy holds until the next opening.')) +
+      '</div>' + kv('Candidate', esc(candidateName)) +
+      kv('Winner', esc(winnerName)) +
+      kv('Term', esc(FB.T('{days} fixed days', {
+        days:def.termDays || 0
+      }))) +
+      kv('Result', esc(result.passed ? FB.T('Elected') : FB.T('Defeated'))) +
+      kv('Tally', esc(FB.T('{support} of {total} weighted votes; {majority} required', {
+        support:result.supportWeight, total:result.totalWeight,
+        majority:result.majority
+      }))) + '<div class="panelh">' + esc(FB.T('Recorded electorate result')) + '</div>';
+    for (let i = 0; i < electorates.length; i++) {
+      const electorate = electorates[i];
+      h += '<div class="kv"><span>' + esc(electionDefinitionText(
+        s, result.definitionId, def, 'electorates.' + i + '.name')) +
+        '</span><b>' + esc(result.outcomes[electorate.id] === 'support'
+          ? FB.T('Supported the candidate') : FB.T('Opposed the candidate')) +
+        '</b></div>';
+    }
+    h += '<button type="button" class="btn primary" id="election-result-close">' +
+      esc(FB.T('Continue')) + '</button>';
+    openModal((def.icon || '🗳') + ' ' + FB.T('Election result'), h, {
+      historyView:true,
+      replaceView:true,
+      historyBackRender:function () { electionReturn(returnContext); }
+    });
+    $('election-result-close').addEventListener('click', function () {
+      modalHistoryBack(function () { electionReturn(returnContext); });
+    });
+    UI.refresh();
+  };
+
+  function privilegePartyName(s, type, id) {
+    if (type === 'character' && s.chars[id]) return FB.fullName(s.chars[id]);
+    if (type === 'realm') {
+      if (id === 'player') return FB.T('The player crown');
+      if (s.realms[id]) return s.realms[id].name;
+    }
+    if (type === 'county' && FB.world.byId[id]) return FB.world.byId[id].name;
+    if (type === 'house' && s.chars[id]) return FB.fullName(s.chars[id]);
+    if (type === 'faith') return religionName(s, id);
+    if (type === 'guild') return FB.T('The chartered guild');
+    if (type === 'institution') {
+      return id && id.indexOf('council:') === 0
+        ? FB.T('The Royal Council') : FB.T('The Estates');
+    }
+    if (type === 'local') return FB.T('Local authority');
+    return id || FB.T('Unrecorded party');
+  }
+
+  function privilegeEffectDescription(s, record, def) {
+    if (record.effectKind === 'modifier') {
+      return modifierEffectText(s, record.effectId) ||
+        dt(s, 'privilege', record.defId, def, 'desc');
+    }
+    if (record.effectKind === 'guild_monopoly') {
+      const careerDef = FBDATA.careers[record.profession];
+      return FB.T('Exclusive {profession} practice; +{enterprise}% matching enterprise profit and +{tax}% issuer tax under the surviving contract.', {
+        profession:careerDef
+          ? dt(s, 'career', record.profession, careerDef, 'name')
+          : record.profession || FB.T('guild'),
+        enterprise:Math.round(record.enterpriseBonus * 100),
+        tax:Math.round(record.taxBonus * 100)
+      });
+    }
+    if (record.effectKind === 'obligation') {
+      return FB.T('New extraordinary aids require the Estates’ consent.');
+    }
+    if (record.effectKind === 'council_confirmation') {
+      return FB.T('Treasurer and Constable nominees require a vote and receive protected fixed terms.');
+    }
+    return dt(s, 'privilege', record.defId, def, 'desc');
+  }
+
+  function privilegeTermsList(s, defId, def, label, path, rows) {
+    if (!Array.isArray(rows) || !rows.length) return '';
+    let h = '<div class="ccmeta"><b>' + esc(label) + ':</b><ul>';
+    for (let i = 0; i < rows.length; i++) {
+      h += '<li>' + esc(dt(s, 'privilege', defId, def,
+        path + '.' + i)) + '</li>';
+    }
+    return h + '</ul></div>';
+  }
+
+  function privilegeDisplayName(s, defId) {
+    const def = FBDATA.privileges[defId];
+    return def ? dt(s, 'privilege', defId, def, 'name') : defId;
+  }
+
+  UI.showPrivileges = function (returnView, replaceView) {
+    const s = FB.state;
+    const records = FB.privilegeSummary ? FB.privilegeSummary(s) : [];
+    const demands = FB.collectiveDemandSummary
+      ? FB.collectiveDemandSummary(s) : { pending:null, opposition:[] };
+    let h = '<p class="hint">' + esc(FB.T(
+      'Privileges are durable legal contracts. Mechanical effects remain in their ordinary modifier, monopoly, obligation, or Council ledger; this roll records who holds them and on what terms.')) + '</p>';
+    if (!records.length) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'No active privilege is recorded.')) + '</div>';
+    }
+    for (const record of records) {
+      const def = FBDATA.privileges[record.defId] || {};
+      const revoke = FB.privilegeRevocationStatus(s, record.id);
+      h += '<div class="charcard"><div><div class="ccname">' +
+        (def.icon || '📜') + ' ' + esc(dt(s, 'privilege', record.defId,
+          def, 'name')) + '</div>' +
+        kv('Holder', esc(FB.T('{type}: {name}', {
+          type:record.holderType,
+          name:privilegePartyName(s, record.holderType, record.holderId)
+        }))) +
+        kv('Scope', esc(FB.T('{type}: {name}', {
+          type:record.scopeType,
+          name:privilegePartyName(s, record.scopeType, record.scopeId)
+        }))) +
+        kv('Grantor', esc(FB.T('{type}: {name}', {
+          type:record.grantorType,
+          name:privilegePartyName(s, record.grantorType, record.grantorId)
+        }))) +
+        kv('Exact effect', esc(privilegeEffectDescription(s, record, def))) +
+        kv('Duration', esc(record.remainingDays === null
+          ? FB.T('Indefinite while its legal source survives')
+          : FB.T('{days} protected days remain', {
+            days:record.remainingDays
+          }))) +
+        kv('Revocation', esc(FB.T('{rule}: {reason}', {
+          rule:record.revocationRule,
+          reason:revoke.reason || FB.T('No unilateral revocation path')
+        }))) +
+        privilegeTermsList(s, record.defId, def, FB.T('Rights'),
+          'rights', def.rights) +
+        privilegeTermsList(s, record.defId, def, FB.T('Exemptions'),
+          'exemptions', def.exemptions) +
+        privilegeTermsList(s, record.defId, def, FB.T('Obligations'),
+          'obligations', def.obligations) +
+        (revoke.ready
+          ? '<button type="button" class="btn" data-revoke-privilege="' +
+            esc(record.id) + '">' + esc(FB.T('Begin unlawful revocation…')) +
+            '</button>' : '') + '</div></div>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('Collective opposition')) + '</div>';
+    if (demands.pending) {
+      h += '<div class="progressnote warnote">' + esc(FB.T(
+        '{constituency} currently demands {privilege}.', {
+          constituency:demands.pending.constituency,
+          privilege:privilegeDisplayName(s, demands.pending.privilegeId)
+        })) + '</div>';
+    }
+    if (!demands.opposition.length) {
+      h += '<div class="hint">' + esc(FB.T(
+        'No constituency is presently organized around a refused demand.')) + '</div>';
+    }
+    for (const opposition of demands.opposition) {
+      h += kv(opposition.constituency, esc(FB.T(
+        'Organization level {level}/5 · cause: {privilege}', {
+          level:opposition.level,
+          privilege:opposition.privilegeId
+            ? privilegeDisplayName(s, opposition.privilegeId)
+            : FB.T('unrecorded grievance')
+        })));
+    }
+    h += '<button type="button" class="btn" id="privileges-back">' +
+      esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
+      '</button>';
+    openModal(FB.T('📜 Privileges & collective demands'), h, {
+      modalClass:'fullsheet-modal', historyView:returnView === 'governance',
+      replaceView:!!replaceView,
+      historyBackRender:function () { UI.showGovernance('institution'); }
+    });
+    document.querySelectorAll('[data-revoke-privilege]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showPrivilegeRevocation(button.dataset.revokePrivilege,
+            returnView);
+        });
+      });
+    $('privileges-back').addEventListener('click', function () {
+      if (returnView === 'governance') {
+        modalHistoryBack(function () { UI.showGovernance('institution'); });
+      } else UI.closeModal();
+    });
+  };
+
+  UI.showPrivilegeRevocation = function (recordId, returnView) {
+    const s = FB.state;
+    const status = FB.privilegeRevocationStatus(s, recordId);
+    if (!status.ready) return UI.showPrivileges(returnView, true);
+    const def = FBDATA.privileges[status.record.defId] || {};
+    const remainingDays = isFinite(Number(status.record.endTurn))
+      ? Math.max(0, Math.ceil(status.record.endTurn - s.turn)) : 0;
+    const h = '<div class="progressnote warnote">' + esc(FB.T(
+      'This revocation breaks the protected term. Common Voice falls, mistreatment is recorded, and the affected constituency organizes opposition.')) +
+      '</div>' + kv('Privilege', esc(dt(s, 'privilege', status.record.defId,
+        def, 'name'))) + kv('Protected duration', esc(FB.T(
+        '{days} days remain', { days:remainingDays }))) +
+      '<button type="button" class="btn" id="privilege-revoke-back">' +
+      esc(FB.T('Keep the privilege')) + '</button> ' +
+      '<button type="button" class="btn danger" id="privilege-revoke-confirm">' +
+      esc(FB.T('Revoke unlawfully')) + '</button>';
+    openModal(FB.T('Revoke a protected privilege?'), h, {
+      historyView:true, replaceView:true,
+      historyBackRender:function () { UI.showPrivileges(returnView); }
+    });
+    $('privilege-revoke-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showPrivileges(returnView); });
+    });
+    $('privilege-revoke-confirm').addEventListener('click', function () {
+      if (!FB.revokePrivilege(s, recordId)) return;
+      UI.showPrivileges(returnView, true);
+      UI.refresh();
+    });
+  };
+
   function councilAssignmentCard(s, seat, rid, oldRid, selected, data,
       recommended) {
     const realm = rid && s.realms[rid];
     if (!realm) return '';
     const oldRealm = oldRid && s.realms[oldRid];
+    const appointment = !selected && FB.councilAppointmentStatus
+      ? FB.councilAppointmentStatus(s, seat.id, rid) : null;
     let consequence = FB.T('Gains +10 Standing; no one is displaced from this vacant seat.');
     if (selected) consequence = FB.T('Keeps the current office.');
     else if (oldRealm) {
@@ -6357,22 +6726,34 @@ window.FB = window.FB || {};
         'Replaces {name}; the former officer loses 8 Standing and the appointee gains 10 Standing.',
         { name:oldRealm.ruler.name });
     }
+    if (appointment && appointment.requiresConfirmation) {
+      consequence = appointment.ready
+        ? FB.T('Begins a visible confirmation election. Appointment and its protected fixed term occur only if the nominee wins.')
+        : FB.T('Cannot be nominated: {requirements}', {
+          requirements:appointment.missing.join('; ')
+        });
+    }
     return personAssignmentCard({
       name:realm.ruler.name,
       art:FB.crestTag(rid, 34, 40),
       selected:selected,
-      disabled:selected,
+      disabled:selected || !!(appointment && !appointment.ready),
       eligibility:selected ? FB.T('Current officer') :
+        (appointment && appointment.requiresConfirmation
+          ? (appointment.ready ? FB.T('Eligible for confirmation')
+            : FB.T('Nomination blocked')) :
         (recommended ? FB.T('Recommended unseated vassal') :
           (FB.isProtected(s, 'councilRealm', rid)
             ? FB.T('Reserved from automatic appointment; manual choice remains available')
-            : FB.T('Eligible unseated vassal'))),
+            : FB.T('Eligible unseated vassal')))),
       data:data || {},
       rows:[
         { label:'Expected benefit', value:councilSeatDesc(seat.id) },
         { label:'Cost / pay', value:selected
           ? FB.T('No household wage')
-          : FB.T('No household wage; appointment lowers crown authority by 2.') },
+          : (appointment && appointment.requiresConfirmation
+            ? FB.T('No wage; choose one campaign approach before the confirmation vote.')
+            : FB.T('No household wage; appointment lowers crown authority by 2.')) },
         { label:'Current position', value:FB.T('Ruler of {realm}', { realm:realm.name }) },
         { label:'Standing', value:standingText(FB.standingOf(s, {
           kind:'realm', id:rid
@@ -6399,6 +6780,18 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
       'The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.')) + '</p>';
+    const activeElection = FB.activeCouncilElection &&
+      FB.activeCouncilElection(s);
+    if (activeElection) {
+      const electionDef = FBDATA.elections[activeElection.definitionId] || {};
+      h += '<button type="button" class="actionbtn" id="council-election">🗳 ' +
+        esc(FB.T('Manage active confirmation — {office}', {
+          office:dt(s, 'election', activeElection.definitionId,
+            electionDef, 'name')
+        })) + '<span class="adesc">' + esc(FB.T(
+          'Review candidates, constituencies, term, support, and record the vote.')) +
+        '</span></button>';
+    }
     h += '<div class="kv"><span>' + esc(FB.T('Crown authority')) + '</span><b>' +
       Math.round(projection.authority) + '/100</b></div>';
     if (!projection.formed) {
@@ -6443,6 +6836,10 @@ window.FB = window.FB || {};
         const op = FB.standingOf(s, { kind:'realm', id:rid });
         const trait = r.ruler.trait && FBDATA.traits[r.ruler.trait]
           ? dt(s, 'trait', r.ruler.trait, FBDATA.traits[r.ruler.trait], 'name') : '';
+        const electionStore = s.elections && s.elections.councilTerms;
+        const term = electionStore && electionStore[seat.id];
+        const dismissal = FB.councilDismissalStatus
+          ? FB.councilDismissalStatus(s, seat.id) : { ready:true };
         h += '<div class="charcard"><canvas class="pface" width="56" height="64" id="crest_' + esc(seat.id) + '"></canvas>' +
           '<div><div class="ccname">' + esc(r.ruler.name) + '</div>' +
           '<div class="ccmeta">' + esc(r.name) + (trait ? ' · ' + esc(trait) : '') + '</div>' +
@@ -6450,6 +6847,11 @@ window.FB = window.FB || {};
           esc(FB.T('Standing {standing}', {
             standing:standingText(op)
           })) + '</div>' +
+          (term && term.holderId === rid
+            ? '<div class="ccmeta">' + esc(FB.T(
+              'Confirmed fixed term · {days} days remain', {
+                days:Math.max(0, Math.ceil(term.endTurn - s.turn))
+              })) + '</div>' : '') +
           '<div style="margin-top:6px">' +
           '<button class="btn" data-council-realm="' + esc(rid) + '">' +
           esc(FB.T('Ruler card…')) + '</button> ' +
@@ -6459,7 +6861,11 @@ window.FB = window.FB || {};
             ? '<button class="btn" data-council-assign="' + esc(seat.id) + '">🏛 ' +
               esc(FB.T('Choose another officer…')) + '</button> '
             : '') +
-          '<button class="btn" data-dismiss="' + esc(seat.id) + '">' + esc(FB.T('Dismiss')) + '</button>' +
+          '<button class="btn" data-dismiss="' + esc(seat.id) + '"' +
+          (dismissal.ready ? '' : ' disabled') + '>' +
+          esc(FB.T('Dismiss')) + '</button>' +
+          (dismissal.ready ? '' : '<div class="ccmeta">' +
+            esc(dismissal.reason) + '</div>') +
           '</div></div></div>';
       } else {
         h += '<div class="cmeta">' + esc(FB.T('Vacant.')) + '</div>';
@@ -6498,6 +6904,12 @@ window.FB = window.FB || {};
       if (cv && seats[seat.id]) FB.drawCrest(cv, seats[seat.id]);
     }
     FB.paintCrests($('gm-body'));
+    const electionButton = $('council-election');
+    if (electionButton) electionButton.addEventListener('click', function () {
+      UI.showElection({
+        view:'council', returnView:returnView, returnContext:returnContext
+      });
+    });
     document.querySelectorAll('[data-council-realm]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         UI.showLiegeModal(btn.dataset.councilRealm, {
@@ -6540,7 +6952,14 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-appoint]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const parts = btn.dataset.appoint.split('|');
-        FB.councilAppoint(FB.state, parts[0], parts[1]);
+        const result = FB.councilAppoint(FB.state, parts[0], parts[1]);
+        if (result && result.pending) {
+          UI.showElection({
+            view:'council', returnView:returnView,
+            returnContext:returnContext
+          });
+          return;
+        }
         UI.showCouncil(returnView, returnContext, true);
       });
     });
@@ -6610,7 +7029,14 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-council-candidate]').forEach(function (button) {
       button.addEventListener('click', function () {
         const rid = button.dataset.councilCandidate;
-        FB.councilAppoint(s, seat.id, rid);
+        const result = FB.councilAppoint(s, seat.id, rid);
+        if (result && result.pending) {
+          UI.showElection({
+            view:'council', returnView:returnView,
+            returnContext:returnContext
+          });
+          return;
+        }
         if (!s.council || s.council.seats[seat.id] !== rid) return;
         modalHistoryBack(function () {
           UI.showCouncil(returnView, returnContext);
@@ -9899,7 +10325,18 @@ window.FB = window.FB || {};
           })) + '</span></button>';
     }
     const step = FB.guildAdvance(s, c);
-    if (step) {
+    const activeGuildElection = FB.activeElectionForCharacter &&
+      FB.activeElectionForCharacter(s, c.id);
+    if (activeGuildElection) {
+      const electionDef = FBDATA.elections[activeGuildElection.definitionId] || {};
+      h += '<button class="actionbtn" id="career-election">🗳 ' +
+        esc(FB.T('Manage active election — {office}', {
+          office:dt(s, 'election', activeGuildElection.definitionId,
+            electionDef, 'name')
+        })) + '<span class="adesc">' + esc(FB.T(
+          'Review the electorate, candidates, term, support, and campaign approach.')) +
+        '</span></button>';
+    } else if (step) {
       const blocked = step.blocked || s.player.gold < step.cost;
       const guildRequirements = [
         FB.T('Stewardship {value}', { value:step.need })
@@ -9913,15 +10350,28 @@ window.FB = window.FB || {};
           value:step.learning
         }));
       }
+      const guildMissing = step.missing && step.missing.length
+        ? step.missing.slice() : guildRequirements.slice();
+      if (s.player.gold < step.cost) {
+        guildMissing.push(FB.T('Requires {money:gold}; you have {money:current}.', {
+          gold:step.cost, current:Math.floor(s.player.gold)
+        }));
+      }
       h += '<button class="actionbtn" id="career-guild"' + (blocked ? ' disabled' : '') + '>🏅 ' +
-        esc(FB.T('Seek the next guild rank — {rank} ({money:gold})', {
+        esc(step.election
+          ? FB.T('Stand for election as {rank} ({money:gold})', {
+            rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
+          })
+          : FB.T('Seek the next guild rank — {rank} ({money:gold})', {
           rank:FB.guildTitle({ guildRank:step.to }), gold:step.cost
         })) + '<span class="adesc">' +
-        esc(step.blocked
-          ? FB.T('Requires {requirements}.', {
-            requirements:guildRequirements.join(', ')
+        esc(blocked
+          ? FB.T('Unmet: {requirements}', {
+            requirements:guildMissing.join('; ')
           })
-          : FB.T('Guild standing brings commissions, enterprise access, and better profits.')) +
+          : (step.election
+            ? FB.T('A vacancy, visible constituencies, one campaign approach, a recorded result, and a protected fixed term replace automatic promotion.')
+            : FB.T('Guild standing brings commissions, enterprise access, and better profits.'))) +
         '</span></button>';
     }
     const religiousAdvance = FB.religiousAdvance(s, c);
@@ -10040,11 +10490,22 @@ window.FB = window.FB || {};
     });
     const guild = $('career-guild');
     if (guild) guild.addEventListener('click', function () {
-      if (!FB.takeGuildStep(s, c)) return;
+      const result = FB.takeGuildStep(s, c);
+      if (!result) return;
       UI.closeModal();
       FB.game.passDay({ skipFocus:true });
       resumeManagementAfterDay(returnContext, function () {
-        UI.showCareerPicker(cid, returnContext);
+        if (result && result.kind === 'guild') {
+          UI.showElection({
+            view:'career', cid:cid, returnContext:returnContext
+          });
+        } else UI.showCareerPicker(cid, returnContext);
+      });
+    });
+    const election = $('career-election');
+    if (election) election.addEventListener('click', function () {
+      UI.showElection({
+        view:'career', cid:cid, returnContext:returnContext
       });
     });
     const religious = $('career-religious');

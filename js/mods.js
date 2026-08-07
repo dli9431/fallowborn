@@ -291,6 +291,17 @@ window.FBMODS = window.FBMODS || [];
     if (mod.policies) {
       for (const k in mod.policies) FBDATA.policies[k] = mod.policies[k];
     }
+    if (mod.elections) {
+      for (const k in mod.elections) FBDATA.elections[k] = mod.elections[k];
+    }
+    if (mod.privileges) {
+      for (const k in mod.privileges) FBDATA.privileges[k] = mod.privileges[k];
+    }
+    if (mod.collectiveDemands) {
+      for (const k in mod.collectiveDemands) {
+        FBDATA.collectiveDemands[k] = mod.collectiveDemands[k];
+      }
+    }
     if (own(mod, 'papacy')) FBDATA.papacy = mod.papacy;
     if (own(mod, 'currency')) {
       FBDATA.currency = mod.currency;

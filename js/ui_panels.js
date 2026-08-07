@@ -2342,6 +2342,18 @@ window.FB = window.FB || {};
           'Review loans, trade partnerships, dispatched ventures, and coinage.')) +
         '</span></button>';
     }
+    if (FB.privilegeSummary) {
+      const privilegeCount = FB.privilegeSummary(s).length;
+      const demandSummary = FB.collectiveDemandSummary
+        ? FB.collectiveDemandSummary(s) : { opposition:[] };
+      tradeSummary += '<button class="actionbtn" id="network-privileges">📜 ' +
+        esc(FB.T('Privileges & charters…')) + '<span class="adesc">' +
+        esc(FB.T(
+          '{count} active legal contracts · {opposition} organized constituencies. Review holders, scope, exact effects, terms, and revocation.', {
+            count:privilegeCount,
+            opposition:demandSummary.opposition.length
+          })) + '</span></button>';
+    }
     if (incomingMonopoly || outgoingMonopoly) {
       tradeSummary += '<div class="hint">' + esc(FB.T(
         'Active charters cannot be renewed, revoked, or replaced before they end. Matching incoming and outgoing enterprise bonuses add together, capped at +50%.')) +
@@ -2731,6 +2743,12 @@ window.FB = window.FB || {};
     if (workButton) workButton.addEventListener('click', UI.showLivelihoods);
     const financeButton = $('network-finance');
     if (financeButton) financeButton.addEventListener('click', UI.showFinance);
+    const privilegesButton = $('network-privileges');
+    if (privilegesButton) {
+      privilegesButton.addEventListener('click', function () {
+        UI.showPrivileges();
+      });
+    }
     box.querySelectorAll('[data-guild-favor]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.callGuildFavor(s, button.dataset.guildFavor)) return;

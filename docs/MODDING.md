@@ -167,6 +167,10 @@ A JSON mod is one object with any of these keys:
   "politicalBlocs": {
     "crown": { "name": "Crown", "motions": { "redress": -20, "scutage": -10 }, ... }
   },
+  "policies": { "market_charter": { ...complete policy... } },
+  "elections": { "guild_officer": { ...complete election... } },
+  "privileges": { "market_charter": { ...complete privilege... } },
+  "collectiveDemands": { "commons_custom": { ...complete demand... } },
   "modifiers": { "id": { "name": "...", "scope": "county", "fx": { ... } } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
   "titles":    { "christian": ["Serf", "..."], "christian_f": ["Serf", "..."] },
@@ -1021,6 +1025,119 @@ The durable law `obl.revocationConsent` (consent of the estates) removes the
 liege's unilateral aid demand from the yearly session agenda. Forecasts and
 postures are always derived; only terms, cooldown years, consent, and the
 pending campaign are saved.
+
+## Elections, privileges, and collective demands
+
+`FBDATA.elections`, `FBDATA.privileges`, and `FBDATA.collectiveDemands` live in
+`data/political_institutions.js`. Runtime mods replace complete same-id definitions under
+the top-level `elections`, `privileges`, and `collectiveDemands` tables; nested arrays and
+objects are not deep-merged.
+
+An election declares its office, fixed term, gates, weighted constituencies, visible
+rivals, and one-choice campaign tactics:
+
+```json
+{
+  "elections": {
+    "guild_officer": {
+      "name": "Guild Officer Election",
+      "icon": "🏅",
+      "desc": "The masters choose an officer for a fixed term.",
+      "kind": "guild",
+      "office": "officer",
+      "order": 0,
+      "termDays": 1440,
+      "campaignDays": 90,
+      "nominationCost": 25,
+      "defeatCooldownDays": 720,
+      "requiredRank": "master",
+      "stewardship": 10,
+      "prestige": 60,
+      "guildStanding": 45,
+      "electorates": [
+        { "id": "masters", "name": "Masters' bench", "weight": 3,
+          "base": 0.42, "standingRate": 0.004,
+          "stewardshipRate": 0.025 }
+      ],
+      "rivals": [{ "id": "senior_master", "name": "The senior master" }],
+      "tactics": {
+        "canvass": { "name": "Canvass", "icon": "🗣", "desc": "...",
+          "gold": 0, "guildStanding": 0, "authority": 0,
+          "support": { "masters": 0.10 } }
+      }
+    }
+  }
+}
+```
+
+Core recognizes `kind:"guild"` for the `officer` and `guildmaster` career transitions,
+and `kind:"council"` for the `treasurer` and `constable` confirmation ids. Electorate
+`id` values must be unique within the definition; tactic `support` keys refer to those
+ids. `base` and the optional standing, Stewardship, Diplomacy, Martial, prestige, and rank
+rates build a clamped support chance. Council tactics may spend Crown Authority; guild
+tactics may spend Guild Standing. Adding another kind or office requires matching engine
+code even though replacing the four core definitions is data-only.
+
+A privilege is a legal wrapper around one authoritative effect ledger:
+
+```json
+{
+  "privileges": {
+    "market_charter": {
+      "name": "Market Charter",
+      "icon": "⚖",
+      "desc": "Measured tolls and protected stalls.",
+      "order": 1,
+      "holderTypes": ["county"],
+      "scopeTypes": ["county"],
+      "rights": ["Protected market and measured tolls."],
+      "exemptions": [],
+      "obligations": ["Pay recorded upkeep."],
+      "duration": "modifier",
+      "revocation": "protected_term",
+      "effect": { "kind": "modifier", "id": "market_charter" },
+      "sourceEvents": ["optional_event_id"]
+    }
+  }
+}
+```
+
+Supported effect kinds are `modifier` (an existing county modifier id),
+`guild_monopoly` (the existing incoming/outgoing contract ledger), `obligation`
+(`revocationConsent`), and `council_confirmation` (with a `seats` array). The effect
+remains the sole mechanical calculation. The privilege record supplies stable holder,
+grantor, scope, source, duration, and revocation provenance for saves and UI.
+`sourceEvents` disambiguates two privileges that wrap the same modifier, as Sanctuary and
+ordinary Levy Exemption do. Keep holder/scope values within `holderTypes` and
+`scopeTypes`: `house`, `guild`, `county`, `faith`, and `institution` are the core holder
+categories; `county` and `realm` are the core territorial scopes.
+
+A collective demand points at one privilege and one engine-registered pressure gate:
+
+```json
+{
+  "collectiveDemands": {
+    "commons_custom": {
+      "name": "Petition of the Commons",
+      "constituency": "commons",
+      "privilege": "confirmed_custom",
+      "order": 0,
+      "minTier": 3,
+      "maxTier": 7,
+      "gate": "collective_demand_commons",
+      "cooldownYears": 3
+    }
+  }
+}
+```
+
+The `gate` names an `FB.fns` function returning `false` or a semantic
+`{pressure,scopeId,reasons}` record. A pasted JSON mod can replace a core demand or point
+to an already registered gate; a genuinely new gate requires a bundled mod that registers
+the function. The annual driver queues at most the highest-pressure eligible demand.
+Refusal creates bounded opposition and never creates a realm directly. Election campaigns,
+terms, privilege records, and demands save definition ids, so changing these tables changes
+the active mod fingerprint and intentionally prevents loading the life under a different set.
 
 ## Temporary modifiers
 

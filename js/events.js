@@ -4273,6 +4273,9 @@ window.FB = window.FB || {};
     p.revokeRid = null;
     const r = state.realms[rid];
     if (!r || !r.alive) return;
+    if (FB.notePoliticalMistreatment) {
+      FB.notePoliticalMistreatment(state, 'revocation', { realmId:rid });
+    }
     for (const pid of FB.realmHeldCounties(state, rid)) {
       state.holder[pid] = 'player';
       if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
@@ -4289,6 +4292,9 @@ window.FB = window.FB || {};
     const p = state.player;
     const rid = p.revokeRid || (ctx && ctx.rid);
     p.revokeRid = null;
+    if (FB.notePoliticalMistreatment) {
+      FB.notePoliticalMistreatment(state, 'revocation', { realmId:rid });
+    }
     adjustRealmStanding(state, rid, -20, 'event:vassal_refuse');
     FB.fns.vassal_crush(state, { rid: rid });
   };
