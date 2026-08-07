@@ -28,6 +28,12 @@ test('boots the real game without browser, asset, or network errors',
         stylesheets: document.styleSheets.length,
         platform: FB.platform,
         platformOrder: scripts.indexOf('js/util.js') < scripts.indexOf('js/main.js'),
+        musicOrder: scripts.indexOf('data/music_catalog.js') < scripts.indexOf('js/music.js') &&
+          scripts.indexOf('js/model.js') < scripts.indexOf('js/music.js') &&
+          scripts.indexOf('js/music.js') < scripts.indexOf('js/portrait.js'),
+        musicCatalog: FB.music && FB.music.catalog(),
+        musicChoiceHidden: document.getElementById('music-choice')
+          .classList.contains('hidden'),
         manifests: document.querySelectorAll('link[rel="manifest"]').length,
         themeColors: document.querySelectorAll('meta[name="theme-color"]').length,
         offlineStatusHidden: document.getElementById('offline-status')
@@ -50,6 +56,14 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.platform.isFile).toBe(
       testInfo.project.name === 'chromium-file');
     expect(contract.platformOrder).toBe(true);
+    expect(contract.musicOrder).toBe(true);
+    expect(contract.musicCatalog).toEqual(expect.objectContaining({
+      schema:1,
+      intro:null,
+      tracks:[],
+      banks:[]
+    }));
+    expect(contract.musicChoiceHidden).toBe(true);
     expect(contract.manifests).toBe(0);
     expect(contract.themeColors).toBe(0);
     expect(contract.offlineStatusHidden).toBe(true);

@@ -1,3 +1,10 @@
+FROM python:3.13-alpine AS music-catalog
+
+WORKDIR /catalog
+COPY music/ music/
+COPY tools/music_catalog.py tools/music_catalog.py
+RUN mkdir -p data && python tools/music_catalog.py build --root /catalog
+
 FROM nginx:alpine
 
 # Serve the static game via nginx (play.fallowborn.com), with cache-busting
@@ -13,8 +20,10 @@ COPY css/ /usr/share/nginx/html/css/
 COPY data/ /usr/share/nginx/html/data/
 COPY docs/ /usr/share/nginx/html/docs/
 COPY js/ /usr/share/nginx/html/js/
+COPY music/ /usr/share/nginx/html/music/
 COPY mods/ /usr/share/nginx/html/mods/
 COPY static/ /usr/share/nginx/html/static/
+COPY --from=music-catalog /catalog/data/music_catalog.js /usr/share/nginx/html/data/music_catalog.js
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Derive the offline asset list before stamping index.html (the match excludes
@@ -30,6 +39,8 @@ RUN set -eu; \
     { grep -o -E '(src|href)="(css|js|data|mods)/[^"?#]+"' "$root/index.html" \
         | sed -r 's/^(src|href)="//; s/"$//'; \
       ls "$root"/data/lang_*.js | sed "s|^$root/||"; \
+      grep -o -E '"src": "music/intro/[^"]+\.opus"' "$root/data/music_catalog.js" \
+        | sed -r 's/^"src": "//; s/"$//'; \
     } | awk '!seen[$0]++' | sed "s|.*|  '/&',|" > /tmp/fb-assets.txt; \
     ASSET_COUNT="$(wc -l < /tmp/fb-assets.txt | tr -d ' ')"; \
     sed -i -e "/'__FB_ASSET_LIST__'/r /tmp/fb-assets.txt" \

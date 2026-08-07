@@ -44395,6 +44395,16 @@
         "text": "Campaign losses from the live host: none recorded"
       }
     },
+    "src.01b02b3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download all"
+      }
+    },
     "src.01b4638d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45336,6 +45346,16 @@
       ],
       "source": {
         "text": "Great {temple}"
+      }
+    },
+    "src.046dd191": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download bank"
       }
     },
     "src.046f3216": {
@@ -46853,6 +46873,16 @@
       ],
       "source": {
         "text": "Expose the scheme before the full Council."
+      }
+    },
+    "src.0811baa1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download a bank or the complete soundtrack before going offline."
       }
     },
     "src.0823a3f4": {
@@ -48888,6 +48918,16 @@
         "text": "Discipline rises while Common Voice falls."
       }
     },
+    "src.0d17f0d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Illicit sibling-courtship exposure"
+      }
+    },
     "src.0d18e734": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50494,6 +50534,16 @@
       ],
       "source": {
         "text": "Give the sickness a warm bed and time."
+      }
+    },
+    "src.115438a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Hear this more"
       }
     },
     "src.115cbd65": {
@@ -54142,6 +54192,16 @@
         "text": "The host eats; the merchant curses your name in three ports."
       }
     },
+    "src.199e74b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Offline copy"
+      }
+    },
     "src.19a137c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54611,6 +54671,27 @@
       ],
       "source": {
         "text": "Verona"
+      }
+    },
+    "src.1a8bdbe2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js",
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download cancelled"
+      }
+    },
+    "src.1a92d3a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Average bitrate"
       }
     },
     "src.1a992fc9": {
@@ -55143,6 +55224,16 @@
         "text": "Refuse him flatly."
       }
     },
+    "src.1c6c47ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "All soundtrack music"
+      }
+    },
     "src.1c6cc1d8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55281,6 +55372,16 @@
       ],
       "source": {
         "text": "Drainable basins expose hulls for inspection and major repair."
+      }
+    },
+    "src.1cc52063": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "✓ Hear this more"
       }
     },
     "src.1cc90638": {
@@ -55513,6 +55614,16 @@
       ],
       "source": {
         "text": "your line"
+      }
+    },
+    "src.1d910739": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "audio/ogg; codecs=\"opus\""
       }
     },
     "src.1d94bd2d": {
@@ -56267,6 +56378,16 @@
       ],
       "source": {
         "text": "A Demand for {privilege}"
+      }
+    },
+    "src.1f81bc8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Any culture"
       }
     },
     "src.1f8334ca": {
@@ -57825,6 +57946,16 @@
         "text": "Unavailable during an unresolved event"
       }
     },
+    "src.2337df0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Proposal where the union is taboo"
+      }
+    },
     "src.2337fffc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58144,6 +58275,16 @@
       ],
       "source": {
         "text": "Only {count} may stand across your demesne."
+      }
+    },
+    "src.23d46641": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Repeat this track"
       }
     },
     "src.23dc6d99": {
@@ -59843,6 +59984,16 @@
         "text": "🕯 Serve the faithful"
       }
     },
+    "src.27d1a714": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Keyboard"
+      }
+    },
     "src.27d1f7f9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61125,6 +61276,16 @@
         "text": "This calling is part of your life history. A landed ruler may patronize former peers, but does not change occupation or work the trade personally."
       }
     },
+    "src.2b7b6897": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "✓ Repeating"
+      }
+    },
     "src.2b7e3395": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61585,6 +61746,16 @@
       ],
       "source": {
         "text": "Hålogaland"
+      }
+    },
+    "src.2c905533": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cached"
       }
     },
     "src.2c90cda9": {
@@ -63102,6 +63273,16 @@
         "text": "Strange letters may mean honest foreign coin."
       }
     },
+    "src.30b3920c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Complete soundtrack"
+      }
+    },
     "src.30b5c3cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63373,6 +63554,26 @@
         "text": "Relationship journey"
       }
     },
+    "src.314f14bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Remove all music"
+      }
+    },
+    "src.3165181c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Proposal under a recognized rite"
+      }
+    },
     "src.3165e04d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63561,6 +63762,16 @@
       ],
       "source": {
         "text": "Opposition"
+      }
+    },
+    "src.31fba7cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Dynastically relevant proposal"
       }
     },
     "src.32035a59": {
@@ -65220,6 +65431,16 @@
       ],
       "source": {
         "text": "Secure the dynasty"
+      }
+    },
+    "src.36a229f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Downloaded"
       }
     },
     "src.36a37733": {
@@ -69453,6 +69674,16 @@
         "text": "No save found."
       }
     },
+    "src.41f0f8d3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Sibling marriage proposal"
+      }
+    },
     "src.41fd4a2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69491,6 +69722,16 @@
       ],
       "source": {
         "text": "After the Field"
+      }
+    },
+    "src.4220552e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Music downloads one song at a time. The average song is {average}; banks range from {low} to {high}; the complete soundtrack is {total}."
       }
     },
     "src.422d9896": {
@@ -71311,6 +71552,16 @@
         "text": "In force"
       }
     },
+    "src.463e7eaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Music request failed"
+      }
+    },
     "src.464bb423": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72380,16 +72631,6 @@
         "text": "Soldier’s work outfit"
       }
     },
-    "src.4941013f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Available offline"
-      }
-    },
     "src.4943b649": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72518,6 +72759,16 @@
       ],
       "source": {
         "text": "Caught lingering behind the arras. The steward’s cuff rings your ear."
+      }
+    },
+    "src.4981905b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Music is ready for offline play."
       }
     },
     "src.49836972": {
@@ -73031,6 +73282,16 @@
       ],
       "source": {
         "text": "Mint Assaying"
+      }
+    },
+    "src.4b14a7da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Discourages"
       }
     },
     "src.4b1a5b7d": {
@@ -74437,6 +74698,16 @@
       ],
       "source": {
         "text": "Financial contract"
+      }
+    },
+    "src.4ec4d838": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Offline music storage is unavailable"
       }
     },
     "src.4ed0004a": {
@@ -76500,6 +76771,16 @@
         "text": "All causes"
       }
     },
+    "src.53bcd8ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No soundtrack song is playing."
+      }
+    },
     "src.53cc6e55": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76568,6 +76849,16 @@
       ],
       "source": {
         "text": "Requires a coastal county."
+      }
+    },
+    "src.53f609f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Downloading {done}/{total} · {bytes}/{size}"
       }
     },
     "src.53ff9035": {
@@ -78325,6 +78616,17 @@
         "text": "Harold wears England’s crown; Normandy and Norway have not yet crossed the sea."
       }
     },
+    "src.584a1d74": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "Music"
+      }
+    },
     "src.584acc6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79059,6 +79361,16 @@
         "text": "{needed} prestige (now {current})"
       }
     },
+    "src.5a7133ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Pause music"
+      }
+    },
     "src.5a7755df": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79147,6 +79459,16 @@
       ],
       "source": {
         "text": "Bless {claimant} · +0.10 to this claim"
+      }
+    },
+    "src.5a9c1ff9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Any faith"
       }
     },
     "src.5aa14fe7": {
@@ -80747,6 +81069,16 @@
       ],
       "source": {
         "text": "Tutoring assignment"
+      }
+    },
+    "src.5efb695f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Game available offline"
       }
     },
     "src.5f0205f9": {
@@ -84472,6 +84804,16 @@
         "text": "🧭 The venture to {destination} limps home with {money:payout}."
       }
     },
+    "src.68b63db8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Response to an illicit approach"
+      }
+    },
     "src.68c3e96d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84520,6 +84862,16 @@
       ],
       "source": {
         "text": "A broken bone"
+      }
+    },
+    "src.68f2b5d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download the complete {size} soundtrack for offline play?"
       }
     },
     "src.68f2c53f": {
@@ -87782,6 +88134,16 @@
         "text": "Your good name, wagered on theirs."
       }
     },
+    "src.7136cbc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download {size} for offline music?"
+      }
+    },
     "src.71581e25": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88541,6 +88903,16 @@
       ],
       "source": {
         "text": "Former calling"
+      }
+    },
+    "src.732bdad5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Checking…"
       }
     },
     "src.732d3ef8": {
@@ -89817,6 +90189,16 @@
         "text": "The lord spoke of freedom."
       }
     },
+    "src.76237e0f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Next ⏭"
+      }
+    },
     "src.76256f4b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89965,6 +90347,16 @@
       ],
       "source": {
         "text": "Manual selection"
+      }
+    },
+    "src.76a927ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Offline fallback"
       }
     },
     "src.76b727cf": {
@@ -90197,6 +90589,16 @@
       ],
       "source": {
         "text": "Steady hands, steady coin."
+      }
+    },
+    "src.7728506c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Open music controls"
       }
     },
     "src.772b9a81": {
@@ -90557,6 +90959,16 @@
       ],
       "source": {
         "text": "A merchant train needs spears for the road. Easy duty, fair pay."
+      }
+    },
+    "src.78634944": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Response to a dynastically relevant approach"
       }
     },
     "src.78702e89": {
@@ -91653,6 +92065,16 @@
         "text": "Realm stewardship (once a season):"
       }
     },
+    "src.7af47b44": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No soundtrack files are installed in this build."
+      }
+    },
     "src.7b032c18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92176,6 +92598,16 @@
       ],
       "source": {
         "text": "Tell them to choose another road."
+      }
+    },
+    "src.7c880a51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "👎 Dislike"
       }
     },
     "src.7c8d0614": {
@@ -94574,6 +95006,16 @@
         "text": "No more land is for sale here."
       }
     },
+    "src.8236afb4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The browser did not report its available storage."
+      }
+    },
     "src.823a3bdb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95103,6 +95545,16 @@
       ],
       "source": {
         "text": "Let the lie die on its own."
+      }
+    },
+    "src.83807d77": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} songs · {duration} · {size}"
       }
     },
     "src.8381b88e": {
@@ -96126,6 +96578,16 @@
       ],
       "source": {
         "text": "🎓 Your household policy assigns instruction at home."
+      }
+    },
+    "src.85b430d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Unknown music bank"
       }
     },
     "src.85b50a93": {
@@ -98417,6 +98879,16 @@
         "text": "The council has concluded and every award now takes effect."
       }
     },
+    "src.8b2bcea1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Now playing: {song}. Open music controls."
+      }
+    },
     "src.8b2ced34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99487,6 +99959,16 @@
       ],
       "source": {
         "text": "Fertility"
+      }
+    },
+    "src.8dd2b347": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{used} used of approximately {quota} available to this browser."
       }
     },
     "src.8dd31791": {
@@ -101057,6 +101539,16 @@
         "text": "+{amount} national research each season"
       }
     },
+    "src.91d07b4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download complete banks before going offline. Browser storage can still be cleared by the browser or by clearing site data."
+      }
+    },
     "src.91dac4d2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101686,6 +102178,16 @@
       ],
       "source": {
         "text": "{rival} laughs at the demand. The mediator’s table has merely given the quarrel a new insult."
+      }
+    },
+    "src.9422d7ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Music downloads one song at a time and may use up to {total} over time in this itch release. The average song is {average}."
       }
     },
     "src.94243dda": {
@@ -103097,6 +103599,16 @@
         "text": "Bath"
       }
     },
+    "src.97ae9dec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "More likely"
+      }
+    },
     "src.97b86a29": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103498,6 +104010,18 @@
       ],
       "source": {
         "text": "Letters & Faith"
+      }
+    },
+    "src.9878c390": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "index.html",
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Play music"
       }
     },
     "src.987e2d71": {
@@ -103911,6 +104435,16 @@
         "text": "Fund a joint survey. ({money:10})"
       }
     },
+    "src.99d8a6cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Response under a recognized rite"
+      }
+    },
     "src.99f031c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103939,6 +104473,16 @@
       ],
       "source": {
         "text": "Dongola"
+      }
+    },
+    "src.9a0fc21d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Music download failed."
       }
     },
     "src.9a11e1b8": {
@@ -105175,6 +105719,16 @@
         "text": "Hide until the muster passes."
       }
     },
+    "src.9cd7e199": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Could not download"
+      }
+    },
     "src.9cdb3d50": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105464,6 +106018,16 @@
       ],
       "source": {
         "text": "Secrets, shadows, and leverage."
+      }
+    },
+    "src.9db6bdc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Recognized-rite sibling approach"
       }
     },
     "src.9db71640": {
@@ -105808,6 +106372,16 @@
         "text": "Let them take what the law says is owed. Hiding goods from a writ costs more than goods."
       }
     },
+    "src.9e895144": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Less likely"
+      }
+    },
     "src.9e8cdc2f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105836,6 +106410,16 @@
       ],
       "source": {
         "text": "A mind like lightning."
+      }
+    },
+    "src.9e94b6fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Music volume"
       }
     },
     "src.9e992fb9": {
@@ -107753,6 +108337,16 @@
         "text": "Give thanks, then tend the wounded."
       }
     },
+    "src.a364c908": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Not cached"
+      }
+    },
     "src.a3664733": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108757,6 +109351,16 @@
       ],
       "source": {
         "text": "Venison in the pot, and none the wiser."
+      }
+    },
+    "src.a5f704ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Volume {percent}%"
       }
     },
     "src.a5f97fae": {
@@ -113952,6 +114556,16 @@
         "text": "A fugitive clings to the cathedral door-ring while armed men demand surrender. Sanctuary, justice, and your liege’s patience pull in different directions."
       }
     },
+    "src.b34b17e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "Music is unavailable. Download an offline bank or reconnect to continue listening."
+      }
+    },
     "src.b34b4bef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113990,6 +114604,16 @@
       ],
       "source": {
         "text": "The steward calls it noise, not law. The reeve’s smile returns."
+      }
+    },
+    "src.b3585028": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "kbps Opus"
       }
     },
     "src.b35bb61a": {
@@ -114551,6 +115175,16 @@
       ],
       "source": {
         "text": "Press on for {target}."
+      }
+    },
+    "src.b4ad746e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "👍 Like"
       }
     },
     "src.b4b54bbf": {
@@ -116890,6 +117524,16 @@
         "text": "🕯 The claimant of a rival obedience is dead; its Cardinals gather to choose a successor."
       }
     },
+    "src.bae7c8a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "The game and title theme are ready. Soundtrack music downloads as you play and is cached after it arrives."
+      }
+    },
     "src.baf5c27d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118636,6 +119280,16 @@
       ],
       "source": {
         "text": "Send a rich first gift. ({money:15})"
+      }
+    },
+    "src.c007623a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Checking browser storage…"
       }
     },
     "src.c00b1c4e": {
@@ -123568,6 +124222,16 @@
         "text": "Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}"
       }
     },
+    "src.cc5e1935": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Length"
+      }
+    },
     "src.cc618a07": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126609,6 +127273,16 @@
         "text": "Titles"
       }
     },
+    "src.d476bcda": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Download size"
+      }
+    },
     "src.d4885b7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127888,6 +128562,16 @@
       ],
       "source": {
         "text": "Stirrup Cavalry"
+      }
+    },
+    "src.d7b4e00b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Encourages"
       }
     },
     "src.d7cc2e02": {
@@ -129367,6 +130051,16 @@
         "text": "a royal or ruling house"
       }
     },
+    "src.db91e43f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Exceptional sibling approach"
+      }
+    },
     "src.dba766a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129985,6 +130679,16 @@
       ],
       "source": {
         "text": "The gifts are received and the oaths exchanged."
+      }
+    },
+    "src.dd65b0c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal music-download-modal"
       }
     },
     "src.dd74bd8a": {
@@ -131993,6 +132697,16 @@
         "text": "Workshop"
       }
     },
+    "src.e2396366": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "⏮ Previous"
+      }
+    },
     "src.e23db5a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132046,6 +132760,16 @@
       ],
       "source": {
         "text": "Stewardship {value}"
+      }
+    },
+    "src.e275abee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Use if unmatched"
       }
     },
     "src.e27847b4": {
@@ -132256,6 +132980,16 @@
       ],
       "source": {
         "text": "Merit against money; money usually wins."
+      }
+    },
+    "src.e2b90c4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cancel download"
       }
     },
     "src.e2c0c769": {
@@ -132587,6 +133321,16 @@
       ],
       "source": {
         "text": "{count} possible"
+      }
+    },
+    "src.e3a999ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Dynastic sibling approach"
       }
     },
     "src.e3abdac3": {
@@ -135276,6 +136020,16 @@
         "text": "🛑 No more children — open your spouse’s sheet to change this."
       }
     },
+    "src.ea4a05e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "No effect"
+      }
+    },
     "src.ea5bc95e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135304,6 +136058,16 @@
       ],
       "source": {
         "text": "Councillors propose a progress through the realm: justice beneath open skies, feasts in loyal towns, and a royal household consuming supplies everywhere it passes."
+      }
+    },
+    "src.ea6597d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Music for offline play"
       }
     },
     "src.ea7de527": {
@@ -135686,6 +136450,16 @@
       ],
       "source": {
         "text": "{authority} authority"
+      }
+    },
+    "src.ebaa2202": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Response where the union is taboo"
       }
     },
     "src.ebb5dcde": {
@@ -136528,6 +137302,16 @@
       ],
       "source": {
         "text": "Land"
+      }
+    },
+    "src.ee208ed0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Music for offline play…"
       }
     },
     "src.ee2d6eb6": {
@@ -139560,6 +140344,16 @@
         "text": "the realm"
       }
     },
+    "src.f5b99906": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Continue silently"
+      }
+    },
     "src.f5b9dae4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140773,6 +141567,16 @@
         "text": "Intrigue finds secrets, hides intentions, and anticipates hostile schemes."
       }
     },
+    "src.f905f55c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This browser cannot play the Opus soundtrack."
+      }
+    },
     "src.f91230b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141255,6 +142059,16 @@
         "text": "The existing deed revalidates its gates and spends the day."
       }
     },
+    "src.fa46cc6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js"
+      ],
+      "source": {
+        "text": "?m="
+      }
+    },
     "src.fa49cdba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141333,6 +142147,16 @@
       ],
       "source": {
         "text": "Weather on the Road"
+      }
+    },
+    "src.fa718f75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Illicit sibling approach"
       }
     },
     "src.fa759946": {
@@ -142631,6 +143455,16 @@
       ],
       "source": {
         "text": "How quickly the days flow while time runs — on a keyboard, −/+ change it at any time."
+      }
+    },
+    "src.fdfc0a0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Response to a sibling approach"
       }
     },
     "src.fe0765be": {
@@ -149663,6 +150497,14 @@
         "text": "All political attention is assigned. Set another court to Neutral before choosing a new direction here."
       }
     },
+    "ui:All soundtrack music": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/music.js",
+      "source": {
+        "text": "All soundtrack music"
+      }
+    },
     "ui:All topics": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -149992,6 +150834,14 @@
         "text": "Answer the {campaign}"
       }
     },
+    "ui:Any culture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/music.js",
+      "source": {
+        "text": "Any culture"
+      }
+    },
     "ui:Any direction chosen here remains assigned but is suspended until the war ends.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -150006,6 +150856,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Any distance"
+      }
+    },
+    "ui:Any faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/music.js",
+      "source": {
+        "text": "Any faith"
       }
     },
     "ui:Any rank": {
@@ -150708,12 +151566,12 @@
         "text": "Available now: {action}"
       }
     },
-    "ui:Available offline": {
+    "ui:Average bitrate": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/main.js",
+      "location": "js/ui_modals.js",
       "source": {
-        "text": "Available offline"
+        "text": "Average bitrate"
       }
     },
     "ui:Back": {
@@ -151541,6 +152399,14 @@
         "text": "Cancel"
       }
     },
+    "ui:Cancel download": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cancel download"
+      }
+    },
     "ui:Canceling here changes nothing. After peace, an active Pope may grant costly absolution.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -151807,6 +152673,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Cheapest available first"
+      }
+    },
+    "ui:Checking browser storage…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Checking browser storage…"
+      }
+    },
+    "ui:Checking…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Checking…"
       }
     },
     "ui:Chief Imam": {
@@ -152410,6 +153292,14 @@
       "location": "js/main.js",
       "source": {
         "text": "Complete a deed"
+      }
+    },
+    "ui:Complete soundtrack": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Complete soundtrack"
       }
     },
     "ui:Completed": {
@@ -153674,6 +154564,14 @@
         "text": "Discouraged"
       }
     },
+    "ui:Discourages": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Discourages"
+      }
+    },
     "ui:Dismiss": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153849,6 +154747,71 @@
         "text": "Dormant — no current benefit"
       }
     },
+    "ui:Download a bank or the complete soundtrack before going offline.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download a bank or the complete soundtrack before going offline."
+      }
+    },
+    "ui:Download bank": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download bank"
+      }
+    },
+    "ui:Download complete banks before going offline. Browser storage can still be cleared by the browser or by clearing site data.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download complete banks before going offline. Browser storage can still be cleared by the browser or by clearing site data."
+      }
+    },
+    "ui:Download size": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download size"
+      }
+    },
+    "ui:Download the complete {size} soundtrack for offline play?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "size"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download the complete {size} soundtrack for offline play?"
+      }
+    },
+    "ui:Download {size} for offline music?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "size"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Download {size} for offline music?"
+      }
+    },
+    "ui:Downloading {done}/{total} · {bytes}/{size}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "bytes",
+        "done",
+        "size",
+        "total"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Downloading {done}/{total} · {bytes}/{size}"
+      }
+    },
     "ui:Dowry": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153909,6 +154872,22 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Duke"
+      }
+    },
+    "ui:Dynastic sibling approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Dynastic sibling approach"
+      }
+    },
+    "ui:Dynastically relevant proposal": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Dynastically relevant proposal"
       }
     },
     "ui:Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details.": {
@@ -154239,6 +155218,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Encouragement gives this family member a yearly chance to gain the skill tied to the goal. Steering them away replaces the goal immediately; leaving it alone preserves their own agency."
+      }
+    },
+    "ui:Encourages": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Encourages"
       }
     },
     "ui:End the courtship before releasing this assignment.": {
@@ -154635,6 +155622,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Exact upfront cost: {money:cost}."
+      }
+    },
+    "ui:Exceptional sibling approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Exceptional sibling approach"
       }
     },
     "ui:Exceptional sibling courtship": {
@@ -155273,6 +156268,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Gains +10 Standing; no one is displaced from this vacant seat."
+      }
+    },
+    "ui:Game available offline": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Game available offline"
       }
     },
     "ui:Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.": {
@@ -156259,6 +157262,22 @@
         "text": "Ill"
       }
     },
+    "ui:Illicit sibling approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Illicit sibling approach"
+      }
+    },
+    "ui:Illicit sibling-courtship exposure": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Illicit sibling-courtship exposure"
+      }
+    },
     "ui:Imam": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -156925,6 +157944,14 @@
         "text": "Key"
       }
     },
+    "ui:Keyboard": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Keyboard"
+      }
+    },
     "ui:Keyboard shortcuts": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -157116,6 +158143,22 @@
       "location": "js/agency.js",
       "source": {
         "text": "Left to their judgment"
+      }
+    },
+    "ui:Length": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Length"
+      }
+    },
+    "ui:Less likely": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Less likely"
       }
     },
     "ui:Lessons begin at age 6": {
@@ -158045,6 +159088,14 @@
         "text": "Money, land plots, guild Standing, and local relationships open longer plans."
       }
     },
+    "ui:More likely": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "More likely"
+      }
+    },
     "ui:Mosque Servant": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158148,6 +159199,54 @@
       "location": "js/economy.js",
       "source": {
         "text": "Mufti"
+      }
+    },
+    "ui:Music": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Music"
+      }
+    },
+    "ui:Music downloads one song at a time and may use up to {total} over time in this itch release. The average song is {average}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "average",
+        "total"
+      ],
+      "location": "js/music.js",
+      "source": {
+        "text": "Music downloads one song at a time and may use up to {total} over time in this itch release. The average song is {average}."
+      }
+    },
+    "ui:Music downloads one song at a time. The average song is {average}; banks range from {low} to {high}; the complete soundtrack is {total}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "average",
+        "high",
+        "low",
+        "total"
+      ],
+      "location": "js/music.js",
+      "source": {
+        "text": "Music downloads one song at a time. The average song is {average}; banks range from {low} to {high}; the complete soundtrack is {total}."
+      }
+    },
+    "ui:Music for offline play…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Music for offline play…"
+      }
+    },
+    "ui:Music volume": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Music volume"
       }
     },
     "ui:Muster count adjustment": {
@@ -158418,6 +159517,14 @@
         "text": "Next setup"
       }
     },
+    "ui:Next ⏭": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Next ⏭"
+      }
+    },
     "ui:No Council office": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158658,6 +159765,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No dowry will change hands."
+      }
+    },
+    "ui:No effect": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "No effect"
       }
     },
     "ui:No eligible claimant remains for this asset.": {
@@ -159440,6 +160555,14 @@
         "text": "No sounded-out family meets the assistant limits"
       }
     },
+    "ui:No soundtrack files are installed in this build.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No soundtrack files are installed in this build."
+      }
+    },
     "ui:No special prerequisite.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -159840,6 +160963,16 @@
         "text": "Novice"
       }
     },
+    "ui:Now playing: {song}. Open music controls.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "song"
+      ],
+      "location": "js/music.js",
+      "source": {
+        "text": "Now playing: {song}. Open music controls."
+      }
+    },
     "ui:Object · spend 1 settlement standing · {odds}% chance for the runner-up · {leader} loses 10 Standing": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -160016,6 +161149,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Office: {offices}"
+      }
+    },
+    "ui:Offline copy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Offline copy"
       }
     },
     "ui:On failure: {result}": {
@@ -161250,6 +162391,14 @@
         "text": "Plain {item}"
       }
     },
+    "ui:Play music": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Play music"
+      }
+    },
     "ui:Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161747,6 +162896,22 @@
         "text": "Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property."
       }
     },
+    "ui:Proposal under a recognized rite": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Proposal under a recognized rite"
+      }
+    },
+    "ui:Proposal where the union is taboo": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Proposal where the union is taboo"
+      }
+    },
     "ui:Propose marriage": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -162226,6 +163391,14 @@
         "text": "Recognized rights avoid aggression penalties; land changes hands only through siege."
       }
     },
+    "ui:Recognized-rite sibling approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Recognized-rite sibling approach"
+      }
+    },
     "ui:Recommend descendant matches": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -162486,6 +163659,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Remove"
+      }
+    },
+    "ui:Remove all music": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Remove all music"
       }
     },
     "ui:Remove shortcut": {
@@ -163283,6 +164464,46 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Resources and reputation"
+      }
+    },
+    "ui:Response to a dynastically relevant approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Response to a dynastically relevant approach"
+      }
+    },
+    "ui:Response to a sibling approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Response to a sibling approach"
+      }
+    },
+    "ui:Response to an illicit approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Response to an illicit approach"
+      }
+    },
+    "ui:Response under a recognized rite": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Response under a recognized rite"
+      }
+    },
+    "ui:Response where the union is taboo": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Response where the union is taboo"
       }
     },
     "ui:Restore the Papacy?": {
@@ -164648,6 +165869,14 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "Show all {count}"
+      }
+    },
+    "ui:Sibling marriage proposal": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Sibling marriage proposal"
       }
     },
     "ui:Siblings": {
@@ -166035,6 +167264,14 @@
         "text": "The bloc remains undecided."
       }
     },
+    "ui:The browser did not report its available storage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The browser did not report its available storage."
+      }
+    },
     "ui:The campaign has already chosen its one election tactic.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167220,6 +168457,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "This barony is a territorial office inside the home county; no county is held directly in your hand."
+      }
+    },
+    "ui:This browser cannot play the Opus soundtrack.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This browser cannot play the Opus soundtrack."
       }
     },
     "ui:This cause cannot be pressed now.": {
@@ -168463,6 +169708,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Visit the capital: {days} travel days, {money:cost}, at least {stay} days in residence, then +{rate} Standing each ordinary day."
+      }
+    },
+    "ui:Volume {percent}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Volume {percent}%"
       }
     },
     "ui:Voted: {name}": {
@@ -172719,6 +173974,18 @@
         "text": "{count} semantic bindings saved. Number keys remain positional in dialogs."
       }
     },
+    "ui:{count} songs · {duration} · {size}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "duration",
+        "size"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} songs · {duration} · {size}"
+      }
+    },
     "ui:{count} sovereign realms": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -175546,6 +176813,17 @@
         "text": "{used} of {capacity}"
       }
     },
+    "ui:{used} used of approximately {quota} available to this browser.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "quota",
+        "used"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{used} used of approximately {quota} available to this browser."
+      }
+    },
     "ui:{used}/{capacity} assigned · {assignments}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -175736,6 +177014,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "−{amount} percentage points yearly household mortality"
+      }
+    },
+    "ui:⏮ Previous": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "⏮ Previous"
       }
     },
     "ui:☠ {name} is Dead": {
@@ -176114,6 +177400,22 @@
       "location": "js/ui_topbar.js",
       "source": {
         "text": "👁 Observing"
+      }
+    },
+    "ui:👍 Like": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "👍 Like"
+      }
+    },
+    "ui:👎 Dislike": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "👎 Dislike"
       }
     },
     "ui:👑 Royal line of {realm} · {status}": {

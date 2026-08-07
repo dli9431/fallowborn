@@ -12,6 +12,7 @@ const runtimeDirectories = new Set([
   'data',
   'docs',
   'js',
+  'music',
   'mods',
   'static'
 ]);

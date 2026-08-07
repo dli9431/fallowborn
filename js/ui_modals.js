@@ -15645,18 +15645,232 @@ window.FB = window.FB || {};
   }
   UI.showShortcutSettings = function () { showShortcutSettings(false); };
 
+  /* ================= music ================= */
+  UI.showMusicTrack = function (replaceView) {
+    const music = FB.music;
+    const track = music && music.current();
+    if (!music || !track || track.kind === 'intro') {
+      UI.toast('No soundtrack song is playing.');
+      return;
+    }
+    const bank = music.currentBank() || (music.banks().filter(function (candidate) {
+      return candidate.id === track.bankId;
+    })[0] || null);
+    const preferred = music.isPreferred(track.id);
+    const rating = music.rating(track.id);
+    let h = '<div class="gm-body-text"><p><b>' + esc(track.title) + '</b></p>' +
+      '<p>' + esc(music.bankLabel(bank)) + '</p></div>' +
+      '<div class="kv"><span>' + esc(FB.T('Length')) + '</span><b>' +
+      esc(music.formatDuration(track.duration)) + '</b></div>' +
+      '<div class="kv"><span>' + esc(FB.T('Download size')) + '</span><b>' +
+      esc(music.formatBytes(track.bytes)) + '</b></div>' +
+      '<div class="kv"><span>' + esc(FB.T('Average bitrate')) + '</span><b>' +
+      esc(Math.round((track.bitrate || 0) / 1000) + ' kbps Opus') + '</b></div>' +
+      '<div class="kv"><span>' + esc(FB.T('Offline copy')) + '</span><b id="music-cache-status">' +
+      esc(FB.T('Checking…')) + '</b></div>' +
+      '<div class="music-track-actions">' +
+      '<button class="btn" id="music-previous"' +
+      (music.canPrevious() ? '' : ' disabled') + '>' + esc(FB.T('⏮ Previous')) + '</button>' +
+      '<button class="btn" id="music-next">' + esc(FB.T('Next ⏭')) + '</button>' +
+      '<button class="btn' + (preferred ? ' primary' : '') + '" id="music-prefer">' +
+      esc(FB.T(preferred ? '✓ Hear this more' : 'Hear this more')) + '</button>' +
+      '<button class="btn' + (music.isRepeating() ? ' primary' : '') + '" id="music-repeat">' +
+      esc(FB.T(music.isRepeating() ? '✓ Repeating' : 'Repeat this track')) + '</button>';
+    if (FB.platform.isPlay) {
+      h += '<button class="btn' + (rating === 1 ? ' primary' : '') + '" id="music-up">' +
+        esc(FB.T('👍 Like')) + '</button>' +
+        '<button class="btn' + (rating === -1 ? ' primary' : '') + '" id="music-down">' +
+        esc(FB.T('👎 Dislike')) + '</button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="music-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal('Music', h, {
+      historyView:!replaceView,
+      replaceView:!!replaceView,
+      modalClass:'music-track-modal'
+    });
+    music.isTrackCached(track, function (cached) {
+      const status = $('music-cache-status');
+      if (status && music.current() && music.current().id === track.id) {
+        status.textContent = FB.T(cached ? 'Cached' : 'Not cached');
+      }
+    });
+    $('music-previous').addEventListener('click', function () {
+      if (music.previous()) UI.showMusicTrack(true);
+    });
+    $('music-next').addEventListener('click', function () {
+      if (music.next()) UI.showMusicTrack(true);
+    });
+    $('music-prefer').addEventListener('click', function () {
+      music.togglePreferred(track.id);
+      UI.showMusicTrack(true);
+    });
+    $('music-repeat').addEventListener('click', function () {
+      music.setRepeat(!music.isRepeating());
+      UI.showMusicTrack(true);
+    });
+    if ($('music-up')) {
+      $('music-up').addEventListener('click', function () {
+        music.rate(track.id, 1);
+        UI.showMusicTrack(true);
+      });
+      $('music-down').addEventListener('click', function () {
+        music.rate(track.id, -1);
+        UI.showMusicTrack(true);
+      });
+    }
+    $('music-close').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showMusicDownloads = function (replaceView) {
+    const music = FB.music;
+    if (!music || !FB.platform.isPlay) return;
+    const banks = music.banks();
+    const catalog = music.catalog();
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Download complete banks before going offline. Browser storage can still be cleared by the browser or by clearing site data.')) +
+      '</p><p id="music-storage-summary" class="hint">' + esc(FB.T('Checking browser storage…')) +
+      '</p></div><div id="music-download-progress" class="music-download-progress hidden"></div>';
+    for (let i = 0; i < banks.length; i++) {
+      const bank = banks[i];
+      const downloaded = music.isBankDownloaded(bank.id);
+      const selected = FB.game.uiPrefs.musicOfflineFallback === bank.id;
+      h += '<div class="music-bank-row"><b>' + esc(music.bankLabel(bank)) + '</b>' +
+        '<span class="adesc">' + esc(FB.T('{count} songs · {duration} · {size}', {
+          count:bank.trackIds.length,
+          duration:music.formatDuration(bank.duration),
+          size:music.formatBytes(bank.bytes)
+        })) + '</span><div class="music-bank-actions">' +
+        (downloaded
+          ? '<button class="btn small" data-music-use="' + esc(bank.id) + '"' +
+            (selected ? ' disabled' : '') + '>' + esc(FB.T(selected ? 'Offline fallback' : 'Use if unmatched')) + '</button>' +
+            '<button class="btn small danger" data-music-remove="' + esc(bank.id) + '">' +
+            esc(FB.T('Remove')) + '</button>'
+          : '<button class="btn small" data-music-download="' + esc(bank.id) + '">' +
+            esc(FB.T('Download bank')) + '</button>') +
+        '</div></div>';
+    }
+    h += '<div class="music-bank-row"><b>' + esc(FB.T('Complete soundtrack')) + '</b>' +
+      '<span class="adesc">' + esc(FB.T('{count} songs · {duration} · {size}', {
+        count:catalog.tracks.length,
+        duration:music.formatDuration(catalog.totalDuration),
+        size:music.formatBytes(catalog.totalBytes)
+      })) + '</span><div class="music-bank-actions">' +
+      '<button class="btn small primary" id="music-download-all">' +
+      esc(FB.T(FB.game.uiPrefs.musicOfflineAll ? 'Downloaded' : 'Download all')) + '</button>' +
+      '<button class="btn small danger" id="music-remove-all">' + esc(FB.T('Remove all music')) + '</button>' +
+      '<button class="btn small hidden" id="music-cancel-download">' + esc(FB.T('Cancel download')) + '</button>' +
+      '</div></div><div class="gm-footer"><button class="btn" id="music-download-back">' +
+      esc(FB.T('Back to Settings')) + '</button></div>';
+    openModal('Music for offline play', h, {
+      historyView:!replaceView,
+      replaceView:!!replaceView,
+      modalClass:'fullsheet-modal music-download-modal',
+      historyBackRender:function () { UI.showSettings(); }
+    });
+
+    music.storageSummary(function (storage) {
+      const note = $('music-storage-summary');
+      if (!note) return;
+      note.textContent = storage && storage.quota
+        ? FB.T('{used} used of approximately {quota} available to this browser.', {
+          used:music.formatBytes(storage.usage), quota:music.formatBytes(storage.quota)
+        })
+        : FB.T('The browser did not report its available storage.');
+    });
+
+    function progress(done, total, bytes, totalBytes) {
+      const note = $('music-download-progress');
+      if (!note) return;
+      note.classList.remove('hidden');
+      note.textContent = FB.T('Downloading {done}/{total} · {bytes}/{size}', {
+        done:done, total:total,
+        bytes:music.formatBytes(bytes), size:music.formatBytes(totalBytes)
+      });
+      $('music-cancel-download').classList.remove('hidden');
+    }
+    function finished(error) {
+      if (error && error.message !== 'Download cancelled') UI.toast('Music download failed.');
+      else if (!error) UI.toast('Music is ready for offline play.');
+      UI.showMusicDownloads(true);
+    }
+    document.querySelectorAll('[data-music-download]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const id = button.getAttribute('data-music-download');
+        const bank = banks.filter(function (candidate) { return candidate.id === id; })[0];
+        if (!bank || !window.confirm(FB.T('Download {size} for offline music?', {
+          size:music.formatBytes(bank.bytes)
+        }))) return;
+        music.requestPersistentStorage();
+        music.downloadBank(id, progress, finished);
+      });
+    });
+    document.querySelectorAll('[data-music-use]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        music.useOfflineBank(button.getAttribute('data-music-use'));
+        UI.showMusicDownloads(true);
+      });
+    });
+    document.querySelectorAll('[data-music-remove]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        music.removeBank(button.getAttribute('data-music-remove'), function () {
+          UI.showMusicDownloads(true);
+        });
+      });
+    });
+    $('music-download-all').disabled = !!FB.game.uiPrefs.musicOfflineAll;
+    $('music-download-all').addEventListener('click', function () {
+      if (!window.confirm(FB.T('Download the complete {size} soundtrack for offline play?', {
+        size:music.formatBytes(catalog.totalBytes)
+      }))) return;
+      music.requestPersistentStorage();
+      music.downloadAll(progress, finished);
+    });
+    $('music-remove-all').addEventListener('click', function () {
+      music.removeAll(function () { UI.showMusicDownloads(true); });
+    });
+    $('music-cancel-download').addEventListener('click', function () {
+      music.cancelDownload();
+    });
+    $('music-download-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showSettings(); });
+    });
+  };
+
   /* ================= settings ================= */
   UI.showSettings = function () {
     const G = FB.game;
     const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
-    let h = '<div class="gm-body-text"><p>' + (FB.isTouch
-      ? esc(FB.T('How quickly the days flow while time runs.'))
-      : esc(FB.T('How quickly the days flow while time runs — on a keyboard, −/+ change it at any time.'))) +
+    const desktopKeyboard = !FB.isTouch && !FB.isSmallScreen();
+    let h = '<div class="gm-body-text"><p>' + (desktopKeyboard
+      ? esc(FB.T('How quickly the days flow while time runs — on a keyboard, −/+ change it at any time.'))
+      : esc(FB.T('How quickly the days flow while time runs.'))) +
       '</p></div>';
     h += '<div class="speedrow"><input type="range" id="set-speed" min="0" max="' +
       (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="' +
       esc(FB.T('Speed of days')) + '">' +
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+      esc(FB.T('Music')) + '</p></div>';
+    if (!FB.music || !FB.music.hasCatalog()) {
+      h += '<div class="hint">' + esc(FB.T('No soundtrack files are installed in this build.')) + '</div>';
+    } else if (!FB.music.supported()) {
+      h += '<div class="hint">' + esc(FB.T('This browser cannot play the Opus soundtrack.')) + '</div>';
+    } else {
+      h += '<label class="autorow"><input type="checkbox" id="set-music-enabled"' +
+        (FB.music.enabled() ? ' checked' : '') + '> <b>' + esc(FB.T('Play music')) +
+        '</b><span class="adesc">' + esc(FB.music.bandwidthText()) + '</span></label>' +
+        '<div class="speedrow"><input type="range" id="set-music-volume" min="0" max="100" step="1" value="' +
+        Math.round(G.uiPrefs.musicVolume * 100) + '" aria-label="' + esc(FB.T('Music volume')) + '">' +
+        '<div class="adesc" id="set-music-volume-label">' +
+        esc(FB.T('Volume {percent}%', { percent:Math.round(G.uiPrefs.musicVolume * 100) })) + '</div></div>' +
+        (FB.platform.isPlay
+          ? '<button type="button" class="btn shortcut-settings-entry" id="set-music-offline">' +
+            '<span class="shortcut-settings-title">' + esc(FB.T('Music for offline play…')) +
+            '</span><span class="adesc">' +
+            esc(FB.T('Download a bank or the complete soundtrack before going offline.')) + '</span></button>'
+          : '');
+    }
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Deeds panel')) + '</p></div>' +
       '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
@@ -15664,11 +15878,13 @@ window.FB = window.FB || {};
       esc(FB.T('Hide beginner hints')) + '</b><span class="adesc">' +
       esc(FB.T('Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too.')) +
       '</span></label>';
-    if (!FB.isTouch) {
+    if (desktopKeyboard) {
       const bindingCount = Object.keys(shortcutBindings()).length;
-      h += '<button type="button" class="btn shortcut-settings-entry" ' +
-        'id="set-shortcuts">' + esc(FB.T('Keyboard shortcuts…')) +
-        '<span class="adesc">' + esc(FB.T(
+      h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+        esc(FB.T('Keyboard')) + '</p></div>' +
+        '<button type="button" class="btn shortcut-settings-entry" ' +
+        'id="set-shortcuts"><span class="shortcut-settings-title">' +
+        esc(FB.T('Keyboard shortcuts…')) + '</span><span class="adesc">' + esc(FB.T(
           '{count} semantic bindings saved. Number keys remain positional in dialogs.', {
             count:bindingCount
           })) + '</span></button>';
@@ -15697,6 +15913,22 @@ window.FB = window.FB || {};
     slider.addEventListener('change', function () { // commit once, on release
       G.setSpeed(parseInt(slider.value, 10) - G.speedIdx);
     });
+    if ($('set-music-enabled')) {
+      $('set-music-enabled').addEventListener('change', function () {
+        FB.music.setEnabled($('set-music-enabled').checked);
+      });
+      const musicVolume = $('set-music-volume');
+      musicVolume.addEventListener('input', function () {
+        const value = parseInt(musicVolume.value, 10);
+        $('set-music-volume-label').textContent = FB.T('Volume {percent}%', { percent:value });
+        FB.music.setVolume(value / 100);
+      });
+      if ($('set-music-offline')) {
+        $('set-music-offline').addEventListener('click', function () {
+          UI.showMusicDownloads(false);
+        });
+      }
+    }
     $('set-hide-beginner-hints').addEventListener('change', function () {
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
       G.saveUiPrefs();

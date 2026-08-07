@@ -9,12 +9,22 @@ manors, baronies, and — if fortune and cunning allow — crowns.
 
 Open `index.html` in any modern browser. That's it — no build step, no server, no dependencies.
 
-- On **play.fallowborn.com**, one complete online visit prepares the game for offline play. Once
-  **Available offline** appears on the title screen, the hosted URL can be refreshed, closed, and
+- On **play.fallowborn.com**, one complete online visit prepares the core game for offline play. Once
+  **Game available offline** appears on the title screen, the hosted URL can be refreshed, closed, and
   reopened without connectivity, including in the selected language. Supporting browsers can
   also install it from their address bar or browser menu. Offline availability is not permanent:
   clearing site data removes both cached game files and local saves, and browsers may evict cache
   storage under pressure, so export important lives as text.
+- On first load, choose whether to play music. The intro theme is bundled with the core game;
+  other Opus tracks stream only when needed and remain cached after a complete download. The
+  initial choice, volume, preferred tracks, and ratings can be changed later under **Settings**.
+  The now-playing title at the bottom of the map opens track controls with **Previous**, **Next**,
+  **Hear this more**, and **Repeat**. Ratings are available only on play.fallowborn.com.
+- Music needs its own preparation for offline play. On play.fallowborn.com, open
+  **Settings → Music → Offline music** while online, then download one or more named banks or the
+  complete soundtrack. Offline play selects the closest fully downloaded bank and otherwise uses
+  the bank marked as the fallback. With only one bank downloaded, that bank simply loops. itch.io
+  does not offer offline music downloads and shuffles all music included in its upload for variety.
 - **Desktop (mouse):** drag to pan the map, scroll to zoom (county names appear as you zoom
   in — small counties name themselves only close up), click provinces for details.
 - **Desktop (keyboard only):** fully playable without a mouse —

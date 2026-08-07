@@ -1551,6 +1551,7 @@ window.FB = window.FB || {};
       el.classList.remove('asbar');
     }
     $('game').classList.toggle('hidden', id !== null);
+    if (FB.music && FB.music.refreshTitleToggle) FB.music.refreshTitleToggle();
     if (id && id !== 'loading') {
       setTimeout(function () {
         const scr = $(id);

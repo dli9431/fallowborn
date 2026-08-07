@@ -4,6 +4,7 @@
 var CACHE_PREFIX = 'fallowborn-offline-';
 var BUILD_KEY = '__FB_CACHE_KEY__';
 var CACHE_NAME = CACHE_PREFIX + BUILD_KEY;
+var MUSIC_CACHE_NAME = 'fallowborn-music-v1';
 var VERSION_QUERY = '?v=' + encodeURIComponent(BUILD_KEY);
 
 /* Replaced at build time with one quoted, root-relative path per line, derived
@@ -93,6 +94,39 @@ function assetResponse(request) {
   });
 }
 
+function musicResponse(request) {
+  /* The player requests complete files before creating Blob URLs. A direct
+     media Range request is left to the network instead of storing a partial
+     206 response as though it were the complete song. */
+  if (request.headers && request.headers.get('range')) return fetch(request);
+  return caches.open(MUSIC_CACHE_NAME).then(function (cache) {
+    return cache.match(request).then(function (cached) {
+      if (cached) return cached;
+      return caches.open(CACHE_NAME).then(function (appCache) {
+        return appCache.match(request, { ignoreSearch:true });
+      }).then(function (bundled) {
+        if (bundled) {
+          return cache.put(request, bundled.clone()).then(function () {
+            return bundled;
+          }, function () {
+            return bundled;
+          });
+        }
+        return fetch(request).then(function (response) {
+          if (!response || !response.ok || response.status !== 200) return response;
+          return cache.put(request, response.clone()).then(function () {
+            return response;
+          }, function () {
+            return response;
+          });
+        });
+      });
+    });
+  }, function () {
+    return fetch(request);
+  });
+}
+
 self.addEventListener('fetch', function (event) {
   var request = event.request;
   var url;
@@ -104,6 +138,11 @@ self.addEventListener('fetch', function (event) {
 
   if (request.mode === 'navigate') {
     event.respondWith(navigationResponse(request));
+    return;
+  }
+
+  if (/\/music\/.*\.opus$/i.test(url.pathname)) {
+    event.respondWith(musicResponse(request));
     return;
   }
 

@@ -1,0 +1,79 @@
+# Music
+
+Fallowborn's soundtrack is optional, self-hosted Opus audio. The core game must still boot when
+the catalog is empty, the browser cannot decode Ogg Opus, a track fails, or the player stays
+silent. Music is not simulation state and never changes deterministic gameplay.
+
+## Catalog and files
+
+The source of truth is the `music/` directory. `tools/music_catalog.py build` validates the files
+and writes the classic-script catalog at `data/music_catalog.js`; runtime code never scans a web
+directory. The title theme is `music/intro/000-fallowborn.opus`. Gameplay tracks use:
+
+`music/<faith>/<culture>/<role>/<NNN>-<slug>.opus`
+
+`faith` and `culture` are lowercase selector ids. The role is `folk`, `war`, or `court`. File
+numbers make ordering stable, while the slug becomes the displayed title. A content change also
+changes the generated revision token, allowing the persistent music cache to keep exact files.
+
+## Choosing music
+
+The first boot with a non-empty catalog asks whether to play music and shows the expected download
+size. The answer is remembered, and Settings can change it later. The title theme may play before
+a campaign. In a campaign the context resolver selects:
+
+- `war` during the player's active war or a soldier/campaign context;
+- `court` for ruler tier 3 or greater;
+- `folk` otherwise.
+
+Faith and culture selectors prefer an exact bank, then related lineage/group selectors, then a
+broad faith fallback. Jewish and Zoroastrian starts currently fall back to the Muslim collection;
+the final general fallback is the Christian collection. Adding a more precise folder and
+regenerating the catalog makes it available without changing runtime code.
+
+itch.io deliberately ignores campaign context and weighted bank selection. If the player enables
+music, it shuffles every track included in the itch artifact for maximum variety.
+
+## Playback and controls
+
+The player keeps two audio elements and crossfades between fully loaded tracks. A seeded weighted
+shuffle avoids immediate repeats where possible. **Hear this more** gives a persistent weight to
+the current track. The bounded listening history powers both **Previous** and **Next**, while
+**Repeat** replays the current track without changing that history.
+
+The pregame screens share one compact bottom-corner music control. It displays a pause icon while
+music plays and a music icon while silent. Pausing retains the intro element and playback position
+for an in-session resume, while also saving the persistent **Play music** choice as off. The next
+visit therefore stays silent without asking again. Resuming the same page continues from the saved
+position and stores the choice as on, so later visits autoplay the title theme. Enabling music from
+a newly loaded silent preference starts the intro normally. Entering gameplay releases any paused
+title element. The control stays hidden during loading, gameplay, or when the soundtrack cannot
+play.
+
+The now-playing title sits at the bottom of the map and opens the track modal. Like and dislike
+are available only on play.fallowborn.com. Each changed rating persists locally and emits the
+first-party event `event-<track-id>-thumbsup` or `event-<track-id>-thumbsdown` through the existing
+telemetry boundary. Ratings do not affect shuffle weight.
+
+## Caching and offline play
+
+Online playback fetches a complete track, verifies the response, stores it in the stable
+`fallowborn-music-v1` Cache Storage cache, and then plays a blob URL. Replaying it uses the cached
+response. The service worker also treats full music requests as cache-first and bypasses Range
+requests. Old revisions are cleaned without deleting still-current music.
+
+Only play.fallowborn.com exposes offline downloads. A player can download any complete bank or the
+entire soundtrack. A bank is marked complete only after all its tracks are cached. Offline
+selection uses the best matching complete bank; if there is no match, it uses the most recently
+chosen fallback bank. One downloaded bank therefore loops by itself. Browser storage is evictable,
+so the engine checks the actual cache rather than trusting completion markers alone.
+
+The service worker's app shell includes the intro but excludes gameplay tracks. The title's
+**Game available offline** message refers to the core game, not to every music bank.
+
+## Distribution
+
+The play.fallowborn.com Docker build validates and ships the full catalog. The private itch deploy
+uses `stage-itch` to choose tracks round-robin across banks up to 200,000,000 gameplay-audio bytes,
+with the intro outside the cap, and regenerates a catalog that describes only those staged files.
+This keeps the itch artifact bounded while preserving representation across available banks.

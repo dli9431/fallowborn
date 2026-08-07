@@ -14,6 +14,7 @@ const allowedDirectories = new Set([
   'data',
   'docs',
   'js',
+  'music',
   'mods',
   'static'
 ]);
@@ -23,6 +24,7 @@ const contentTypes = {
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.md': 'text/markdown; charset=utf-8',
+  '.opus': 'audio/ogg',
   '.png': 'image/png',
   '.txt': 'text/plain; charset=utf-8',
   '.xml': 'application/xml; charset=utf-8'

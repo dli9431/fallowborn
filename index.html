@@ -87,6 +87,32 @@
           Drawing the known world&hellip;
         </p>
         <div class="loadbarwrap"><div id="loadbar"></div></div>
+        <div id="music-choice" class="music-choice hidden">
+          <h2 data-i18n="Music">Music</h2>
+          <p
+            data-i18n="The game and title theme are ready. Soundtrack music downloads as you play and is cached after it arrives."
+          >
+            The game and title theme are ready. Soundtrack music downloads as
+            you play and is cached after it arrives.
+          </p>
+          <p id="music-choice-copy" class="hint"></p>
+          <div class="row gap wrap">
+            <button
+              id="music-choice-play"
+              class="btn primary"
+              data-i18n="Play music"
+            >
+              Play music
+            </button>
+            <button
+              id="music-choice-silent"
+              class="btn"
+              data-i18n="Continue silently"
+            >
+              Continue silently
+            </button>
+          </div>
+        </div>
       </div>
 
       <!-- ======== TITLE ======== -->
@@ -228,6 +254,17 @@
         </div>
       </div>
 
+      <button
+        id="btn-title-music"
+        type="button"
+        class="title-music-toggle hidden"
+        aria-label="Play music"
+        aria-pressed="false"
+        title="Play music"
+      >
+        &#9835;
+      </button>
+
       <!-- ======== GAME ======== -->
       <div id="game" class="hidden">
         <div id="topbar">
@@ -366,6 +403,16 @@
                 </button>
               </div>
             </div>
+            <button
+              id="music-now-playing"
+              class="music-now-playing hidden"
+              type="button"
+              aria-label="Open music controls"
+              data-i18n-aria-label="Open music controls"
+            >
+              <span aria-hidden="true">&#9835;</span>
+              <span id="music-now-playing-title"></span>
+            </button>
             <div id="toasts"></div>
           </div>
           <!-- #panels is invisible on desktop (display:contents) and becomes a
@@ -499,6 +546,7 @@
     <script src="data/events_tournament.js"></script>
     <script src="data/events_agency.js"></script>
     <script src="data/events_tutorial.js"></script>
+    <script src="data/music_catalog.js"></script>
     <!-- bundled mods (register into window.FBMODS): add <script> tags here -->
     <!-- engine -->
     <script src="js/util.js"></script>
@@ -506,6 +554,7 @@
     <script src="js/i18n.js"></script>
     <script src="data/lang_en.js"></script>
     <script src="js/model.js"></script>
+    <script src="js/music.js"></script>
     <script src="js/portrait.js"></script>
     <script src="js/world.js"></script>
     <script src="js/settlement.js"></script>

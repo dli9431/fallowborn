@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.113.4';
+  FB.VERSION = '1.114.0';
   FB.CHANGELOG = [
+    { v: '1.114.0', date: '2026-08-07', changes: [
+      'Added an optional contextual soundtrack with remembered title controls, cached Opus playback, and downloadable offline music banks. Compact Settings now hides desktop keyboard controls.'
+    ] },
     { v: '1.113.4', date: '2026-08-07', changes: [
       'Council dismissals and punishments now leave the intended office vacant instead of immediately moving the removed magnate into another seat.'
     ] },
@@ -739,6 +742,7 @@ window.FB = window.FB || {};
         typeof FB.telemetry.track !== 'function') return false;
     return FB.telemetry.track(name, telemetryData(extra));
   }
+  FB.trackTelemetry = trackTelemetry;
 
   function clearTelemetryTimer() {
     if (telemetryTimer) clearInterval(telemetryTimer);
@@ -824,7 +828,7 @@ window.FB = window.FB || {};
     }
     if (!note) return;
     note.classList.toggle('hidden', !ready);
-    if (ready) note.textContent = FB.T('Available offline');
+    if (ready) note.textContent = FB.T('Game available offline');
   }
 
   /* Offline refresh belongs only to the first-party hosted surface. A failed
@@ -990,6 +994,7 @@ window.FB = window.FB || {};
     // pre-game draws (random province, name suggestions) differ per visit;
     // loading a save overwrites the state from the file
     FB.seedRng((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0);
+    if (FB.music) FB.music.init();
     FB.loadSelectedLocale(function (loaded) {
       /* Mods establish the effective English source before hashes are checked.
          A changed mod string therefore falls back to that exact current English. */
@@ -1013,8 +1018,13 @@ window.FB = window.FB || {};
           FB.ui.wire();
           wireMenus();
           FB.drawCrest($('titlecrest'), 'Fallowborn');
-          refreshTitle();
-          FB.ui.showScreen('title');
+          function finishBoot() {
+            refreshTitle();
+            FB.ui.showScreen('title');
+            if (FB.music) FB.music.showTitle();
+          }
+          if (FB.music && FB.music.offerBootChoice(finishBoot)) return;
+          finishBoot();
         }
       );
     });
@@ -1875,6 +1885,13 @@ window.FB = window.FB || {};
   G.uiPrefs = {
     commitmentsCollapsed:false,
     hideBeginnerHints:false,
+    musicChoice:null,
+    musicVolume:0.55,
+    musicPreferred:{},
+    musicRatings:{},
+    musicOfflineBanks:{},
+    musicOfflineFallback:null,
+    musicOfflineAll:false,
     actionBindings:{ q:'action:livelihoods' }
   };
   try {
@@ -1886,6 +1903,27 @@ window.FB = window.FB || {};
           ? !!storedUiPrefs.commitmentsCollapsed
           : !!storedUiPrefs.hideOngoingCommitments;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
+      G.uiPrefs.musicChoice = storedUiPrefs.musicChoice === 'on' ||
+        storedUiPrefs.musicChoice === 'off' ? storedUiPrefs.musicChoice : null;
+      if (typeof storedUiPrefs.musicVolume === 'number') {
+        G.uiPrefs.musicVolume = FB.clamp(storedUiPrefs.musicVolume, 0, 1);
+      }
+      if (storedUiPrefs.musicPreferred &&
+          typeof storedUiPrefs.musicPreferred === 'object') {
+        G.uiPrefs.musicPreferred = storedUiPrefs.musicPreferred;
+      }
+      if (storedUiPrefs.musicRatings &&
+          typeof storedUiPrefs.musicRatings === 'object') {
+        G.uiPrefs.musicRatings = storedUiPrefs.musicRatings;
+      }
+      if (storedUiPrefs.musicOfflineBanks &&
+          typeof storedUiPrefs.musicOfflineBanks === 'object') {
+        G.uiPrefs.musicOfflineBanks = storedUiPrefs.musicOfflineBanks;
+      }
+      if (typeof storedUiPrefs.musicOfflineFallback === 'string') {
+        G.uiPrefs.musicOfflineFallback = storedUiPrefs.musicOfflineFallback;
+      }
+      G.uiPrefs.musicOfflineAll = !!storedUiPrefs.musicOfflineAll;
       if (storedUiPrefs.actionBindings &&
           typeof storedUiPrefs.actionBindings === 'object') {
         G.uiPrefs.actionBindings = {};
@@ -3281,5 +3319,6 @@ window.FB = window.FB || {};
     G.paused = true;
     refreshTitle();
     FB.ui.showScreen('title');
+    if (FB.music) FB.music.showTitle(true);
   };
 })();

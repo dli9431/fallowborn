@@ -14,17 +14,23 @@ Zip the folder contents with `index.html` at the zip root, upload to itch.io as 
 `data/`, and `mods/` URL in the **staged** `index.html` before the push. That makes the version
 the cache key for the itch build, so browsers and the itch CDN fetch fresh files on each release.
 The script stages only `index.html`, `LICENSE`, `css/`, `data/`, `docs/`, `js/`, `mods/`, and
-`static/`. That fail-closed list is the artifact boundary. Test files, Node packages, reports,
-and repository metadata must not be added to it.
+`static/`, then uses `tools/music_catalog.py` to add a validated, balanced soundtrack subset.
+Gameplay music is capped at 200,000,000 bytes; the intro is required and sits outside that cap.
+The staged generated catalog contains only the copied tracks. That fail-closed process is the
+artifact boundary. Test files, Node packages, reports, and repository metadata must not be added
+to it.
 
 The itch page does not register a service worker or advertise the hosted web-app manifest.
 `FB.platform.isPlay` is false inside the itch-owned iframe, so the root-scoped offline shell
 cannot compete with itch's CDN or depend on third-party iframe storage.
+When music is enabled on itch, the player shuffles every track in the staged catalog rather than
+selecting by character context.
 
 ## play.fallowborn.com
 
 A **separate** origin - a Coolify app (nginx behind Cloudflare) that auto-deploys on every push to
-`main` (`deploy.cmd` does not touch it). Its Dockerfile copies the explicit runtime allowlist plus
+`main` (`deploy.cmd` does not touch it). Its Dockerfile validates the full `music/` tree and
+generates `data/music_catalog.js`, then copies the explicit runtime allowlist plus
 the play-only `sw.js` and `manifest.webmanifest` into the nginx document root. It stamps one
 deployment fingerprint (Coolify's `SOURCE_COMMIT`, with `FB.VERSION` as the local fallback) into
 both the served `index.html` asset URLs and the worker cache name. Versioned `css/js/data/mods`
@@ -64,8 +70,9 @@ Umami loader. Older event names remain only as historical schema-1 rows in Umami
 `js/util.js` adds the manifest metadata and `js/main.js` registers `/sw.js` only when the page
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the
 Docker build from every `css/js/data/mods` reference in the unstamped `index.html` plus every
-shipped `data/lang_*.js` catalog. Installation activates only after that whole bundle and the
-unversioned HTML, manifest, favicons, and install icons have cached successfully.
+shipped `data/lang_*.js` catalog. It also precaches the intro theme, but not the full soundtrack.
+Installation activates only after that whole bundle and the unversioned HTML, manifest, favicons,
+install icons, and intro have cached successfully.
 
 Hosted navigation is network-first so an online visit still receives the newest deployment.
 The response is not written into the active worker's cache: only a completed worker installation
@@ -74,8 +81,15 @@ expects partial or missing assets. Versioned assets are exact cache-first; only 
 failure may a query-insensitive fallback serve a precached asset. That last fallback is required
 for dynamically loaded language catalogs, whose runtime query uses `FB.VERSION` while the Docker
 precache uses the deployment fingerprint. Activation claims existing pages, deletes only older
-`fallowborn-offline-*` caches, and makes the title-screen **Available offline** status visible once
-the page has a controlling worker.
+`fallowborn-offline-*` caches, preserves the separate stable `fallowborn-music-v1` cache, and makes
+the title-screen **Game available offline** status visible once the page has a controlling worker.
+
+Gameplay music is fetched a complete track at a time and stored in `fallowborn-music-v1` under a
+revisioned URL. A repeated track reuses that response. The offline-music screen can download or
+remove a complete selector bank or the entire soundtrack; completion markers are recorded only
+after every required track is present. Range requests bypass this cache so a partial response can
+never masquerade as a fully downloaded track. Cached soundtrack storage remains subject to normal
+browser eviction.
 
 The manifest makes the hosted game eligible for browser installation, but the service worker is
 what provides offline refresh. Browser storage remains evictable: clearing site data removes the
@@ -94,8 +108,9 @@ staging check remains part of the separate release workflow.
 
 Never add `?v=` to the **committed** `index.html`: query strings break `file://` loads, and the
 game must run by opening the folder directly. The stamp is applied only in the deploy/build stage,
-never to the repo. Likewise there are no external assets of any kind — the folder stays
-self-contained so it works inside the itch iframe and from `file://`.
+never to the repo. Likewise there are no external network assets. The generated Opus catalog uses
+only files under the self-contained `music/` folder, so playback still works inside the itch iframe
+and from `file://`.
 
 The committed worker remains a deliberately unsubstituted template and is never registered from
 `file://`; the hosted Docker build is the only path that stamps and activates it. The manifest

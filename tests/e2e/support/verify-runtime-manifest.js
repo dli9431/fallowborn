@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const commonEntries = [
   'LICENSE',
@@ -10,10 +11,13 @@ const commonEntries = [
   'docs',
   'index.html',
   'js',
+  'music',
   'mods',
   'static'
 ];
-const requiredDirectories = new Set(['css', 'data', 'docs', 'js', 'mods', 'static']);
+const requiredDirectories = new Set([
+  'css', 'data', 'docs', 'js', 'music', 'mods', 'static'
+]);
 const forbiddenNames = new Set([
   '.git',
   '.github',
@@ -103,6 +107,65 @@ if (fingerprints.size !== 1) {
   fail('index.html must use one deployment fingerprint for every runtime asset.');
 }
 
+const musicCatalogPath = path.join(root, 'data', 'music_catalog.js');
+if (!fs.existsSync(musicCatalogPath)) fail('data/music_catalog.js is missing.');
+const musicData = {};
+try {
+  vm.runInNewContext(fs.readFileSync(musicCatalogPath, 'utf8'), {
+    window:{ FBDATA:musicData },
+    FBDATA:musicData
+  }, { filename:musicCatalogPath });
+} catch (error) {
+  fail('data/music_catalog.js could not be evaluated.');
+}
+const musicCatalog = musicData.musicCatalog;
+if (!musicCatalog || musicCatalog.schema !== 1 ||
+    !Array.isArray(musicCatalog.tracks) || !Array.isArray(musicCatalog.banks)) {
+  fail('data/music_catalog.js has an invalid schema.');
+}
+const musicRecords = (musicCatalog.intro ? [musicCatalog.intro] : [])
+  .concat(musicCatalog.tracks);
+const catalogSources = [];
+for (const track of musicRecords) {
+  if (!track || typeof track.id !== 'string' ||
+      !/^music\/[a-z0-9_/-]+\.opus$/.test(track.src || '') ||
+      !/^[a-f0-9]{16}$/.test(track.rev || '') ||
+      !Number.isFinite(track.bytes) || track.bytes <= 0 ||
+      !Number.isFinite(track.duration) || track.duration <= 0) {
+    fail('invalid music catalog track record.');
+  }
+  const trackPath = path.join(root, ...track.src.split('/'));
+  if (!fs.existsSync(trackPath) || !fs.statSync(trackPath).isFile()) {
+    fail('cataloged music file is missing: ' + track.src + '.');
+  }
+  if (fs.statSync(trackPath).size !== track.bytes) {
+    fail('cataloged music size differs for ' + track.src + '.');
+  }
+  catalogSources.push(track.src);
+}
+const actualMusic = [];
+function collectMusic(directory) {
+  for (const entry of fs.readdirSync(directory, { withFileTypes:true })) {
+    const absolute = path.join(directory, entry.name);
+    if (entry.isDirectory()) collectMusic(absolute);
+    else if (entry.isFile() && entry.name.endsWith('.opus')) {
+      actualMusic.push(path.relative(root, absolute).replace(/\\/g, '/'));
+    }
+  }
+}
+collectMusic(path.join(root, 'music'));
+if (JSON.stringify(actualMusic.sort()) !== JSON.stringify(catalogSources.slice().sort())) {
+  fail('music files and data/music_catalog.js differ.');
+}
+if (target === 'itch') {
+  const gameplayBytes = musicCatalog.tracks.reduce(function (sum, track) {
+    return sum + track.bytes;
+  }, 0);
+  if (gameplayBytes > 200000000) {
+    fail('itch gameplay music exceeds the 200,000,000 byte budget.');
+  }
+}
+
 if (hasWorker) {
   const manifestPath = path.join(root, 'manifest.webmanifest');
   if (!fs.existsSync(manifestPath)) {
@@ -179,7 +242,8 @@ if (hasWorker) {
     fail('sw.js VERSIONED_ASSETS contains duplicate paths.');
   }
   for (const asset of versionedAssets) {
-    if (!/^\/(?:css|data|js|mods)\/[^?#]+$/.test(asset)) {
+    if (!/^\/(?:css|data|js|mods)\/[^?#]+$/.test(asset) &&
+        !/^\/music\/intro\/[a-z0-9-]+\.opus$/.test(asset)) {
       fail('invalid service-worker asset path: ' + asset + '.');
     }
   }
@@ -192,6 +256,7 @@ if (hasWorker) {
       expectedAssets.push('/data/' + filename);
     }
   }
+  if (musicCatalog.intro) expectedAssets.push('/' + musicCatalog.intro.src);
   const expectedUnique = Array.from(new Set(expectedAssets)).sort();
   const actualUnique = versionedAssets.slice().sort();
   if (JSON.stringify(actualUnique) !== JSON.stringify(expectedUnique)) {

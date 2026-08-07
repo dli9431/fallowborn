@@ -9,9 +9,11 @@ const vm = require('node:vm');
 const workerPath = path.resolve(__dirname, '..', '..', '..', 'sw.js');
 const workerSource = fs.readFileSync(workerPath, 'utf8');
 
-function workerHarness(cachedIndex) {
+function workerHarness(cachedIndex, cachedMusic) {
   const listeners = {};
   const puts = [];
+  const deletedCaches = [];
+  let cacheNames = [];
   let fetchRequest = function () {
     return Promise.reject(new Error('Network unavailable'));
   };
@@ -28,18 +30,29 @@ function workerHarness(cachedIndex) {
       return Promise.resolve();
     }
   };
+  const musicCache = {
+    match:function () {
+      return Promise.resolve(cachedMusic);
+    },
+    put:function (request, response) {
+      cachedMusic = response;
+      puts.push({ request:request, response:response, cache:'music' });
+      return Promise.resolve();
+    }
+  };
   const sandbox = {
     URL:URL,
     encodeURIComponent:encodeURIComponent,
     Promise:Promise,
     caches:{
-      open:function () {
-        return Promise.resolve(cache);
+      open:function (name) {
+        return Promise.resolve(name === 'fallowborn-music-v1' ? musicCache : cache);
       },
       keys:function () {
-        return Promise.resolve([]);
+        return Promise.resolve(cacheNames.slice());
       },
-      delete:function () {
+      delete:function (name) {
+        deletedCaches.push(name);
         return Promise.resolve(true);
       }
     },
@@ -83,9 +96,41 @@ function workerHarness(cachedIndex) {
       assert.ok(responsePromise, 'the worker must handle same-origin navigation');
       return responsePromise;
     },
+    dispatchMusic:function (range) {
+      let responsePromise = null;
+      listeners.fetch({
+        request:{
+          method:'GET',
+          mode:'cors',
+          url:'https://play.fallowborn.com/music/christian/all/folk/001-song.opus',
+          headers:{
+            get:function (name) {
+              return name.toLowerCase() === 'range' ? range || null : null;
+            }
+          }
+        },
+        respondWith:function (promise) {
+          responsePromise = Promise.resolve(promise);
+        }
+      });
+      assert.ok(responsePromise, 'the worker must handle same-origin Opus audio');
+      return responsePromise;
+    },
+    dispatchActivate:function () {
+      let completion = null;
+      listeners.activate({
+        waitUntil:function (promise) { completion = Promise.resolve(promise); }
+      });
+      assert.ok(completion, 'the worker must handle activation');
+      return completion;
+    },
+    deletedCaches:deletedCaches,
     puts:puts,
     setFetch:function (handler) {
       fetchRequest = handler;
+    },
+    setCacheNames:function (names) {
+      cacheNames = names.slice();
     }
   };
 }
@@ -114,4 +159,29 @@ test('online navigation preserves the last complete offline HTML until install',
     });
     assert.strictEqual(await harness.dispatchNavigation(), releaseA);
     assert.strictEqual(harness.cachedIndex(), releaseA);
+  });
+
+test('music is cache-first, Range requests bypass storage, and activation preserves it',
+  async function () {
+    const cachedTrack = { id:'cached-track', ok:true, status:200 };
+    const networkTrack = { id:'network-range', ok:true, status:206 };
+    const harness = workerHarness({ id:'release-a', ok:true }, cachedTrack);
+    let networkRequests = 0;
+    harness.setFetch(function () {
+      networkRequests++;
+      return Promise.resolve(networkTrack);
+    });
+
+    assert.strictEqual(await harness.dispatchMusic(null), cachedTrack);
+    assert.equal(networkRequests, 0);
+    assert.strictEqual(await harness.dispatchMusic('bytes=0-1023'), networkTrack);
+    assert.equal(networkRequests, 1);
+
+    harness.setCacheNames([
+      'fallowborn-offline-old-release',
+      'fallowborn-offline-__FB_CACHE_KEY__',
+      'fallowborn-music-v1'
+    ]);
+    await harness.dispatchActivate();
+    assert.deepEqual(harness.deletedCaches, ['fallowborn-offline-old-release']);
   });

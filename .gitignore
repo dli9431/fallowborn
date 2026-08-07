@@ -33,6 +33,18 @@ __pycache__/
 # Deployment artifacts (itch.io zips are built from a fail-closed allowlist)
 *.zip
 
+# The Opus soundtrack under music/ is shipped and tracked. Generated source
+# audio is converted and archived outside this public repository.
+music/**/*.wav
+music/**/*.wave
+music/**/*.flac
+music/**/*.mp3
+music/**/*.m4a
+music/**/*.aac
+music/**/*.aif
+music/**/*.aiff
+music/**/*.wma
+
 # Developer notes — local-only working files (deploy scripts, devlogs, planning,
 # site mockups). Never shipped and not part of the game. Kept out of the repo.
 # Localization caches and reports are the exception: they live in tracked i18n/.

@@ -15,9 +15,10 @@ itch.io as a plain zipped folder.
   play or distribute the game.** Open `index.html` in a modern browser and the game runs,
   including from `file://`. Development-only Playwright dependencies are isolated under
   `tests/e2e/` and are never part of a deployed artifact.
-- No external assets of any kind (no fonts, images, CDNs). All art is procedural: canvas-drawn
-  map, generated heraldry, system emoji. The folder must stay fully self-contained so it works
-  inside the itch.io iframe.
+- No external network assets (no fonts, images, CDNs). All art is procedural: canvas-drawn map,
+  generated heraldry, system emoji. The self-hosted Opus soundtrack under `music/` is the one
+  authored media asset. The folder must stay fully self-contained so it works inside the itch.io
+  iframe and from `file://`.
 
 ## Build, run, and test
 
@@ -149,10 +150,10 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
   `data/cultures.js`,
-  `data/traits.js`, `data/economy.js`, then ten event packs
+  `data/traits.js`, `data/economy.js`, the generated `data/music_catalog.js`, then ten event packs
   (`events_common/peasant/paths/noble/world/war/council/parliament/travel/tournament.js`).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
-  model → portrait → world → economy → armies → mapview → events → actions → council →
+  model → music → portrait → world → economy → armies → mapview → events → actions → council →
   parliament → ui (ui_misc → ui_panels → ui_topbar → ui_modals) → keys → save → mods →
   main`. The four `ui_*.js` files are one system split for size: `ui_misc.js` loads first
   and owns the shared internals (`FB.ui._shared`) the other three bind at load, so their
@@ -184,6 +185,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/mods.md` — runtime + bundled mods, save stamping.
 - `docs/designs/ui.md` — keyboard support requirements, mobile layout.
 - `docs/designs/i18n.md` — localization catalogs, message descriptors, locale lifecycle.
+- `docs/designs/music.md` - generated soundtrack catalog, contextual playback, and offline banks.
 
 ## Code style conventions
 
@@ -253,6 +255,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   (pickers, coin & credit, household, technology, character sheets, menu,
   settings, save/load, the Guide) — largest file.
 - `js/model.js` — characters, dynasties, traits, titles.
+- `js/music.js` - Opus playback, contextual banks, shuffle history, preferences, and offline downloads.
 - `js/portrait.js` — procedural portraits/heraldry.
 - `js/util.js` — RNG, projection, helpers.
 - `js/keys.js`, `js/save.js`, `js/mods.js` — keyboard, persistence, runtime mods.
@@ -262,6 +265,9 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   (every economy/war/mortality knob in one place). `data/counties.js` holds the county
   table (one historical county per province, each tagged with its de jure duchy).
   `data/economy.js` holds careers, enterprises, and finance-contract terms.
+- `music/` - self-hosted Opus tracks arranged by intro or faith/culture/role selector folders.
+- `tools/music_catalog.py` - validates soundtrack files, generates `data/music_catalog.js`, and
+  selects the balanced 200 MB itch soundtrack.
 
 ## Reference docs
 

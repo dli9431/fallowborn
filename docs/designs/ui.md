@@ -65,8 +65,9 @@ opens `livelihoods`; Reset to Defaults restores it. Duplicate keys block saving,
 action ids remain visible as unavailable saved bindings, and hidden or disabled targets
 keep their key while reporting the current reason. `toil` and `work_land` deliberately
 share the `farmer-work` focus family, so promotion preserves that binding's meaning.
-Modal 1–9/Shift+1–9 navigation still wins while a dialog is open. Touch layouts omit
-the desktop configuration entry and global-key badges.
+Modal 1–9/Shift+1–9 navigation still wins while a dialog is open. Desktop Settings places the
+shortcut entry in its own Keyboard section. Touch and compact layouts omit that section and
+global-key badges.
 Desktop panel tabs render the matching label letter as a compact keycap (`[S]elf`, `[K]in`,
 `[D]eeds`, `[L]and`, `[N]etwork`, `[C]hronicle`) rather than repeating it in the remaining
 text; narrow or short non-desktop layouts and coarse-pointer touch layouts keep the ordinary
@@ -131,13 +132,19 @@ Touch devices keep their platform-native overlay scrolling.
 The title screen scales its crest, heading, button height, gaps, and footer spacing against
 viewport height so the full menu fits common standalone and itch iframe heights; genuinely
 short viewports retain `.screen` scrolling as the fallback.
+The title and its pregame flow share a compact bottom-corner music button. Its pause or music icon
+reflects whether the title theme is currently playing. Pausing retains the current title-track
+position for an in-session resume and remembers silent title playback for the next visit. Resuming
+stores title autoplay again. The button remains hidden while loading, during gameplay, or when the
+soundtrack cannot play.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
 `js/util.js` before boot. Its current `isPlay` flag is true only for the HTTPS
 `play.fallowborn.com` origin; `file://`, local test servers, and itch-owned embeds remain false.
 Only the play surface injects web-app manifest metadata and registers the offline worker. The
 title-screen offline status is an `aria-live` region that stays absent from layout until a worker
-actually controls the page, at which point it shows localized **Available offline** copy. A
+actually controls the page, at which point it shows localized **Game available offline** copy.
+That status covers the core game and intro; soundtrack banks have separate download controls. A
 rendered page alone is never treated as proof that its complete bundle was cached.
 
 New Game proceeds through bookmark → social scenario → province → character. Bookmark
