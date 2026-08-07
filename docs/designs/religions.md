@@ -71,7 +71,16 @@ When two cousins are compared, the strictest edge on the path through their near
 common ancestor wins. Consequently Ash’ari and Maturidi can both remain in the Sunni
 fold, while Catholic and Orthodox remain schismatic descendants of Christianity.
 
-Marriage, realm opinion, religious war alignment, and religion-group triggers consult
+`FB.faithRelationBaseline` converts that directional status into the modest social
+prior used by Standing and ruler regard: `same` +15, `in_fold` +10,
+`schismatic` +5, `foreign` −10, and `hostile` −25. Shared religion is an initial
+source of trust rather than a verdict: culture, allegiance, gifts, grievances, and war
+continue to outweigh it. An unrelated faith begins guarded but not automatically
+condemned, while the severe penalty is reserved for an authored or campaign-created
+hostile relation. Because the lookup is directional, a reform may still regard its
+parent as in the fold while the parent regards the reform as schismatic.
+
+Marriage, Standing, ruler regard, religious war alignment, and religion-group triggers consult
 the graph. Each faith chooses which relation statuses it accepts for marriage. Structured
 text and event variants search exact faith id, then each ancestor, then `default`; a new
 Catholic child therefore receives Catholic prose before generic Christian prose without

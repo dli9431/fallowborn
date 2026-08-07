@@ -89,6 +89,7 @@ async function configurePolicies(page) {
       'ambitious', -60);
     realm(unrelatedId, 'Remote Crown', 3, null, countyIds[10],
       'content', 0);
+    FB.setRealmRulerStanding(s, polityId, -60);
 
     for (i = 0; i < countyIds.length; i++) {
       s.dev[countyIds[i]] = 5 + i;

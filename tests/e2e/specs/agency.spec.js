@@ -105,6 +105,47 @@ test('ruler contact is gated by county distance, culture, and faith',
     expect(result.supportedBreakaway).toBeGreaterThan(result.baseBreakaway);
   });
 
+test('ruler regard uses the directional historical faith baselines',
+  async function ({ page }, testInfo) {
+    await startAgencyGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      function addRealm(id, religion) {
+        s.realms[id] = {
+          id:id, name:id, color:'#123456', capital:s.player.provinceId,
+          rank:3, liege:null, alive:true, religion:religion,
+          ruler:{
+            name:id + ' ruler', sex:'m', culture:'frankish',
+            age:40, born:s.date.year - 40, mar:5, trait:'content',
+            generation:1
+          }
+        };
+      }
+      addRealm('faith_regard_from', 'catholic');
+      addRealm('faith_regard_same', 'catholic');
+      addRealm('faith_regard_schism', 'orthodox');
+      addRealm('faith_regard_foreign', 'sunni');
+      var answer = {
+        same:FB.rulerRegard(s, 'faith_regard_from', 'faith_regard_same'),
+        schismatic:FB.rulerRegard(
+          s, 'faith_regard_from', 'faith_regard_schism'),
+        foreign:FB.rulerRegard(
+          s, 'faith_regard_from', 'faith_regard_foreign')
+      };
+      FB.setFaithRelation(s, 'catholic', 'orthodox', 'hostile');
+      answer.hostile = FB.rulerRegard(
+        s, 'faith_regard_from', 'faith_regard_schism');
+      return answer;
+    });
+
+    expect(result).toEqual({
+      same:30,
+      schismatic:20,
+      foreign:5,
+      hostile:-10
+    });
+  });
+
 test('ruler aims and sparse regard survive restore and reset on succession',
   async function ({ page }, testInfo) {
     await startAgencyGame(page, testInfo);

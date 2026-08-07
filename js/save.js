@@ -517,6 +517,9 @@ window.FB = window.FB || {};
     backfillParents(FB.state);
     if (FB.ensureCharacterBynames) FB.ensureCharacterBynames(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    if (FB.ensureFaithStandingBaselines) {
+      FB.ensureFaithStandingBaselines(FB.state);
+    }
     if (FB.ensureStepRelations) {
       const stepfamilyRng = FB.getRngState();
       FB.ensureStepRelations(FB.state);

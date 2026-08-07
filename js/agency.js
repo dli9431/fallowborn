@@ -279,10 +279,8 @@ window.FB = window.FB || {};
     var fromReligion = realmReligion(state, fromRid);
     var toReligion = realmReligion(state, toRid);
     if (fromCulture && fromCulture === toCulture) score += 15;
-    if (fromReligion && fromReligion === toReligion) score += 20;
-    else if (fromReligion && toReligion &&
-        FB.religionOf(fromReligion).group === FB.religionOf(toReligion).group) {
-      score += 8;
+    if (fromReligion && toReligion && FB.faithRelationBaseline) {
+      score += FB.faithRelationBaseline(state, fromReligion, toReligion);
     }
     if (FB.areAlliedSnapshot && FB.areAlliedSnapshot(state, fromRid, toRid)) {
       score += 25;
@@ -386,8 +384,12 @@ window.FB = window.FB || {};
     var religion = realmReligion(state, rid);
     var sameCulture = !!culture && culture === me.culture;
     var sameReligion = !!religion && religion === me.religion;
-    var sameFaithGroup = !!religion &&
-      FB.religionOf(religion).group === FB.religionOf(me.religion).group;
+    var faithRelation = religion && FB.faithRelation
+      ? FB.faithRelation(state, religion, me.religion) : 'foreign';
+    var sameFaithGroup = faithRelation === 'same' ||
+      faithRelation === 'in_fold' || faithRelation === 'schismatic';
+    var faithBaseline = religion && FB.faithRelationBaseline
+      ? FB.faithRelationBaseline(state, religion, me.religion) : 0;
     var playerRealm = FB.playerRealmId ? FB.playerRealmId(state) :
       (state.player.liege || 'player');
     var inRealm = FB.topRealm(state, rid) === playerRealm;
@@ -401,13 +403,13 @@ window.FB = window.FB || {};
     var scoreDistance = isFinite(distance) ? distance :
       (inRealm ? 0 : (committed ? maxDistance : 50));
     var score = 100 - scoreDistance * 8 +
-      (sameCulture ? 18 : 0) + (sameReligion ? 28 :
-        (sameFaithGroup ? 10 : -15)) + (inRealm ? 35 : 0) +
+      (sameCulture ? 18 : 0) + faithBaseline + (inRealm ? 35 : 0) +
       (committed ? 25 : 0);
     return {
       eligible:eligible, reason:reason, distance:isFinite(distance) ? distance : null,
       maxDistance:maxDistance, sameCulture:sameCulture,
       sameReligion:sameReligion, sameFaithGroup:sameFaithGroup,
+      faithRelation:faithRelation, faithBaseline:faithBaseline,
       inRealm:inRealm, committed:committed, score:score
     };
   };

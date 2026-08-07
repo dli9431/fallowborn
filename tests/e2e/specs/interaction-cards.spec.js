@@ -260,7 +260,7 @@ test('realm cards distinguish lieges, vassals, neighbors, allies, and war enemie
         }
       };
       p.liegeOps = p.liegeOps || {};
-      p.liegeOps[vassalId] = 45;
+      FB.setRealmRulerStanding(s, vassalId, 45);
       FB.invalidateRealmCache();
       var vassalModel = FB.ui.realmInteractionCard(s, vassalId);
 
@@ -287,7 +287,7 @@ test('realm cards distinguish lieges, vassals, neighbors, allies, and war enemie
         s.holder[adjacent] = neighborId;
       }
       s.realms[neighborId].rank = 3;
-      p.liegeOps[neighborId] = 60;
+      FB.setRealmRulerStanding(s, neighborId, 60);
       p.war = null;
       s.alliances = [];
       s.pacts = s.pacts || {};
@@ -512,7 +512,7 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
         }
       };
       p.liegeOps = p.liegeOps || {};
-      p.liegeOps[rid] = 42;
+      FB.setRealmRulerStanding(s, rid, 42);
       s.council = {
         authority:55,
         seats:{

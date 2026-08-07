@@ -78,7 +78,7 @@ async function configureGovernance(page, kind) {
       p.tier = 3;
       p.provs = [];
       p.liege = liegeId;
-      p.liegeOp = 28;
+      FB.setRealmRulerStanding(s, liegeId, 28);
       if (s.realms.player) s.realms.player.alive = false;
       s.holder[homeId] = liegeId;
       s.owner[homeId] = FB.topRealm(s, liegeId);
@@ -118,7 +118,7 @@ async function configureGovernance(page, kind) {
           generation:1
         }
       };
-      p.liegeOps[vassalId] = 48;
+      FB.setRealmRulerStanding(s, vassalId, 48);
       p.vassalLevyFavors[vassalId] = s.turn + 120;
       s.council = {
         authority:32,

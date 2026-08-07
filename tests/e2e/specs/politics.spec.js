@@ -106,6 +106,7 @@ async function configurePolitics(page) {
       'content', -60);
     realm(unrelatedId, 'Remote Crown', 3, null, countyIds[10],
       'content', 0);
+    FB.setRealmRulerStanding(s, polityId, 0);
     s.realms[syntheticId] = {
       id:syntheticId,
       name:'Empty Placeholder',
@@ -297,7 +298,7 @@ test('direct-court scope, affiliation interests, and influence are authoritative
       s.player.liege = null;
       s.player.tier = 6;
       s.realms.player.rank = 3;
-      s.player.liegeOps[setup.alphaId] = 40;
+      FB.setRealmRulerStanding(s, setup.alphaId, 40);
       s.council = {
         authority:50,
         seats:{

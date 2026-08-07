@@ -30,6 +30,12 @@ window.FB = window.FB || {};
   const FAITH_RELATIONS = {
     same:0, in_fold:1, schismatic:2, hostile:3, foreign:4
   };
+  /* A shared faith is a useful prior, not a verdict. Related branches retain
+     some trust, unfamiliar faiths begin guarded, and the severe penalty is
+     reserved for an explicitly condemned relationship. */
+  const FAITH_RELATION_BASELINES = {
+    same:15, in_fold:10, schismatic:5, hostile:-25, foreign:-10
+  };
   const LEGACY_FAITH_GROUPS = {
     christian:true, muslim:true, pagan:true, jewish:true
   };
@@ -523,6 +529,12 @@ window.FB = window.FB || {};
     return 'schismatic';
   };
 
+  FB.faithRelationBaseline = function (state, observerId, targetId) {
+    const relation = FB.faithRelation(state, observerId, targetId);
+    return own(FAITH_RELATION_BASELINES, relation)
+      ? FAITH_RELATION_BASELINES[relation] : 0;
+  };
+
   FB.faithInFold = function (state, observerId, targetId) {
     const relation = FB.faithRelation(state, observerId, targetId);
     return relation === 'same' || relation === 'in_fold';
@@ -995,6 +1007,18 @@ window.FB = window.FB || {};
       spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null,
       childrenIds: []
     };
+    /* Explicit opinion remains an exact authored total. A newly encountered
+       neutral character instead begins at the current directional faith
+       baseline, and the marker lets later schisms rebase only that component. */
+    const playerCharacter = state && state.player && state.chars &&
+      state.chars[state.player.charId];
+    if (playerCharacter && playerCharacter.id !== c.id &&
+        FB.faithRelationBaseline) {
+      const faithBase = FB.faithRelationBaseline(
+        state, c.religion, playerCharacter.religion);
+      c.faithStandingBase = faithBase;
+      if (opts.opinion === undefined) c.opinion = faithBase;
+    }
     if (Object.prototype.hasOwnProperty.call(opts, 'byname')) {
       c.byname = opts.byname;
     } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' &&

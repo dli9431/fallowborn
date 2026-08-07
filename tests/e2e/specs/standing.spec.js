@@ -97,6 +97,132 @@ test('typed Standing facade preserves legacy character, realm, event, and save a
     });
   });
 
+test('Standing preserves earned history while directional faith baselines change',
+  async function ({ page }, testInfo) {
+    await startStandingGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var me = s.chars[s.player.charId];
+      var schismId = FB.createFaith(s, {
+        id:'standing_schism', name:'Standing Schism', group:me.religion,
+        relationToParent:'schismatic'
+      });
+      var inFoldId = FB.createFaith(s, {
+        id:'standing_in_fold', name:'Standing Concord', group:me.religion,
+        relationToParent:'in_fold'
+      });
+      var foreignId = FB.religionIds(s, true).filter(function (id) {
+        return FB.faithRelation(s, id, me.religion) === 'foreign';
+      })[0];
+      function person(name, religion) {
+        return FB.makeCharacter(s, {
+          name:name, sex:'m', culture:me.culture, religion:religion,
+          born:s.date.year - 30, station:2, quality:2
+        });
+      }
+      var same = person('Same Faith', me.religion);
+      var inFold = person('Accepted Branch', inFoldId);
+      var schismatic = person('Schismatic Branch', schismId);
+      var foreign = person('Foreign Faith', foreignId);
+      var initial = {
+        same:FB.standingOf(s, { kind:'character', id:same.id }),
+        inFold:FB.standingOf(s, { kind:'character', id:inFold.id }),
+        schismatic:FB.standingOf(s, { kind:'character', id:schismatic.id }),
+        foreign:FB.standingOf(s, { kind:'character', id:foreign.id })
+      };
+      FB.adjustStanding(s, { kind:'character', id:schismatic.id }, 7,
+        'test:earned_over_faith');
+
+      var rid = Object.keys(s.realms).filter(function (id) {
+        return id !== 'player' && s.realms[id] && s.realms[id].alive;
+      })[0];
+      s.realms[rid].religion = schismId;
+      FB.setRealmRulerStanding(s, rid, 5);
+      var realmBefore = FB.standingOf(s, { kind:'realm', id:rid });
+
+      FB.setFaithRelation(s, schismId, me.religion, 'hostile');
+      var hostile = {
+        character:FB.standingOf(s, {
+          kind:'character', id:schismatic.id
+        }),
+        realm:FB.standingOf(s, { kind:'realm', id:rid })
+      };
+      FB.adjustStanding(s, { kind:'realm', id:rid }, 4,
+        'test:earned_after_hostility');
+      var payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      return {
+        initial:initial,
+        realmBefore:realmBefore,
+        hostile:hostile,
+        restoredCharacter:FB.standingOf(FB.state, {
+          kind:'character', id:schismatic.id
+        }),
+        restoredRealm:FB.standingOf(FB.state, { kind:'realm', id:rid })
+      };
+    });
+
+    expect(result).toEqual({
+      initial:{ same:15, inFold:10, schismatic:5, foreign:-10 },
+      realmBefore:5,
+      hostile:{ character:-18, realm:-25 },
+      restoredCharacter:-18,
+      restoredRealm:-21
+    });
+  });
+
+test('older version-3 Standing gains the faith baseline exactly once',
+  async function ({ page }, testInfo) {
+    await startStandingGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var me = s.chars[s.player.charId];
+      var person = FB.makeCharacter(s, {
+        name:'Legacy Standing', sex:'f', culture:me.culture,
+        religion:me.religion, born:s.date.year - 30,
+        station:2, quality:2, opinion:20
+      });
+      var rid = Object.keys(s.realms).filter(function (id) {
+        return id !== 'player' && s.realms[id] && s.realms[id].alive;
+      })[0];
+      s.realms[rid].religion = me.religion;
+      if (rid === s.player.liege) s.player.liegeOp = 30;
+      else s.player.liegeOps[rid] = 30;
+
+      var payload = JSON.parse(FB.save.serialize());
+      delete payload.state.player.faithStandingMigration;
+      delete payload.state.player.realmStandingFaithBases;
+      Object.keys(payload.state.chars).forEach(function (id) {
+        delete payload.state.chars[id].faithStandingBase;
+      });
+      FB.save.restore(payload);
+      var first = {
+        character:FB.standingOf(FB.state, {
+          kind:'character', id:person.id
+        }),
+        realm:FB.standingOf(FB.state, { kind:'realm', id:rid })
+      };
+      var migrated = JSON.parse(FB.save.serialize());
+      FB.save.restore(migrated);
+      return {
+        first:first,
+        second:{
+          character:FB.standingOf(FB.state, {
+            kind:'character', id:person.id
+          }),
+          realm:FB.standingOf(FB.state, { kind:'realm', id:rid })
+        },
+        migration:FB.state.player.faithStandingMigration
+      };
+    });
+
+    expect(result).toEqual({
+      first:{ character:35, realm:45 },
+      second:{ character:35, realm:45 },
+      migration:1
+    });
+  });
+
 test('a materialized heir keeps tracked Standing without inheriting the ruler score',
   async function ({ page }, testInfo) {
     await startStandingGame(page, testInfo);
@@ -256,6 +382,15 @@ test('player succession clears predecessor Standing and applies only bounded ser
       var heir = FB.heirsOf(s)[0];
       heir.dead = false;
       var succeeded = FB.game.succeedTo(heir.id);
+      var counterpartBase = FB.standingFaithBaseline(s, {
+        kind:'character', id:counterpart.id
+      });
+      var servantBase = FB.standingFaithBaseline(s, {
+        kind:'character', id:servant.id
+      });
+      var realmBase = FB.standingFaithBaseline(s, {
+        kind:'realm', id:rid
+      });
       return {
         succeeded:succeeded,
         counterpart:FB.standingOf(s, {
@@ -265,17 +400,20 @@ test('player succession clears predecessor Standing and applies only bounded ser
           kind:'character', id:servant.id
         }),
         realm:FB.standingOf(s, { kind:'realm', id:rid }),
-        foreignPolicy:Object.keys(p.foreignPolicy)
+        foreignPolicy:Object.keys(p.foreignPolicy),
+        expected:{
+          counterpart:counterpartBase,
+          servant:FB.clamp(servantBase - 15, -100, 100),
+          realm:realmBase
+        }
       };
     });
 
-    expect(result).toEqual({
-      succeeded:true,
-      counterpart:0,
-      servant:-15,
-      realm:0,
-      foreignPolicy:[]
-    });
+    expect(result.succeeded).toBe(true);
+    expect(result.counterpart).toBe(result.expected.counterpart);
+    expect(result.servant).toBe(result.expected.servant);
+    expect(result.realm).toBe(result.expected.realm);
+    expect(result.foreignPolicy).toEqual([]);
   });
 
 test('realm and character sheets show the same Standing value, band, and context',

@@ -21992,6 +21992,188 @@
         "text": "Fire!"
       }
     },
+    "event.sibling_courtship_approach.options.0.desc.default": {
+      "context": "Event sibling_courtship_approach, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Their own traits and Standing decide the answer; refusal is permanent."
+      }
+    },
+    "event.sibling_courtship_approach.options.0.label.default": {
+      "context": "Event sibling_courtship_approach, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Speak plainly."
+      }
+    },
+    "event.sibling_courtship_approach.options.1.desc.default": {
+      "context": "Event sibling_courtship_approach, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Withdraw before the question is asked; the day is still spent."
+      }
+    },
+    "event.sibling_courtship_approach.options.1.label.default": {
+      "context": "Event sibling_courtship_approach, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Keep silence."
+      }
+    },
+    "event.sibling_courtship_approach.text.default": {
+      "context": "Event sibling_courtship_approach, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Trust, appetite, ambition, and taboo have narrowed to one dangerous question. You can speak to your sibling now, but a refusal will end the matter forever."
+      }
+    },
+    "event.sibling_courtship_approach.title.default": {
+      "context": "Event sibling_courtship_approach, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A Word That Cannot Be Recalled"
+      }
+    },
+    "event.sibling_courtship_exposed.options.0.desc.default": {
+      "context": "Event sibling_courtship_exposed, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Break off the courtship and accept the lasting five-year separation."
+      }
+    },
+    "event.sibling_courtship_exposed.options.0.label.default": {
+      "context": "Event sibling_courtship_exposed, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "End it before worse follows."
+      }
+    },
+    "event.sibling_courtship_exposed.options.1.desc.default": {
+      "context": "Event sibling_courtship_exposed, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Intrigue may quiet the story; discovery will deepen the scandal."
+      }
+    },
+    "event.sibling_courtship_exposed.options.1.failure.text.default": {
+      "context": "Event sibling_courtship_exposed, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The denial collapses. Now the secret and the lie are both common knowledge."
+      }
+    },
+    "event.sibling_courtship_exposed.options.1.label.default": {
+      "context": "Event sibling_courtship_exposed, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Deny everything."
+      }
+    },
+    "event.sibling_courtship_exposed.options.1.success.text.default": {
+      "context": "Event sibling_courtship_exposed, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Contradictory stories and careful pressure leave the gossips uncertain."
+      }
+    },
+    "event.sibling_courtship_exposed.options.2.desc.default": {
+      "context": "Event sibling_courtship_exposed, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Keep the courtship and bear the immediate public cost."
+      }
+    },
+    "event.sibling_courtship_exposed.options.2.label.default": {
+      "context": "Event sibling_courtship_exposed, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Persist openly."
+      }
+    },
+    "event.sibling_courtship_exposed.text.default": {
+      "context": "Event sibling_courtship_exposed, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "A servant saw a hand linger; a cousin heard a door close. What passed for private devotion is becoming a public scandal."
+      }
+    },
+    "event.sibling_courtship_exposed.title.default": {
+      "context": "Event sibling_courtship_exposed, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The Household Whispers"
+      }
+    },
+    "event.sibling_proposal_made.options.0.desc.default": {
+      "context": "Event sibling_proposal_made, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Standing and their traits decide the answer. The reviewed rite or scandal costs apply only if they accept."
+      }
+    },
+    "event.sibling_proposal_made.options.0.failure.text.default": {
+      "context": "Event sibling_proposal_made, authored option 0, failure text, branch default.",
+      "glossary": [
+        "suitor"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "At the final threshold, {suitor} refuses. The courtship is over and will never be renewed."
+      }
+    },
+    "event.sibling_proposal_made.options.0.label.default": {
+      "context": "Event sibling_proposal_made, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Ask for the vows."
+      }
+    },
+    "event.sibling_proposal_made.options.0.success.text.default": {
+      "context": "Event sibling_proposal_made, authored option 0, success text, branch default.",
+      "glossary": [
+        "suitor"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "{suitor} accepts. Whatever the world calls it, the two of you will make a household."
+      }
+    },
+    "event.sibling_proposal_made.text.default": {
+      "context": "Event sibling_proposal_made, text, faith branch default.",
+      "glossary": [
+        "suitor"
+      ],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "The courtship has survived its first impossible question. You ask {suitor} for vows that may be sanctified by a rare rite — or condemned as an irregular union."
+      }
+    },
+    "event.sibling_proposal_made.title.default": {
+      "context": "Event sibling_proposal_made, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Vows Against the World"
+      }
+    },
     "event.sparring_challenge.options.0.desc.default": {
       "context": "Event sparring_challenge, authored option 0, desc, branch default.",
       "glossary": [
@@ -34882,6 +35064,46 @@
         "text": "🌷 You begin courting {name} of {realm}."
       }
     },
+    "news.social.scandalous_sibling_marriage": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "🕯 You and {name} persist in an irregular union. Kin, neighbors, and rulers recoil; no dowry or alliance follows."
+      }
+    },
+    "news.social.sibling_courtship_accepted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "🕯 {name} answers yes. The dangerous courtship begins."
+      }
+    },
+    "news.social.sibling_courtship_refused": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "🚪 {name} refuses the forbidden approach, once and for all."
+      }
+    },
+    "news.social.sibling_proposal_refused": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "💔 {name} refuses to make the dangerous courtship a marriage."
+      }
+    },
     "news.social.undermine_failure": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -34900,6 +35122,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Your quiet work costs {name} dearly, and no one can prove a thing."
+      }
+    },
+    "news.social.xwedodah_marriage": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "🔥 Before the sacred fire, you and {name} enter xwēdōdah. No dowry or alliance follows."
       }
     },
     "news.tech.advocated": {
@@ -42934,6 +43166,262 @@
         "text": "Tengrism"
       }
     },
+    "religion.zoroastrian.adjective.default": {
+      "context": "religion zoroastrian, adjective, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Zoroastrian"
+      }
+    },
+    "religion.zoroastrian.collective.default": {
+      "context": "religion zoroastrian, collective, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Zoroastrians"
+      }
+    },
+    "religion.zoroastrian.name.default": {
+      "context": "religion zoroastrian, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Zoroastrianism"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.0.default": {
+      "context": "religion zoroastrian, f rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Bondwoman"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.1.default": {
+      "context": "religion zoroastrian, f rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freewoman"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.2.default": {
+      "context": "religion zoroastrian, f rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Dehqan"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.3.default": {
+      "context": "religion zoroastrian, f rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Azat"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.4.default": {
+      "context": "religion zoroastrian, f rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Marzban"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.5.default": {
+      "context": "religion zoroastrian, f rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Satrap"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.6.default": {
+      "context": "religion zoroastrian, f rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Banbishn"
+      }
+    },
+    "religion.zoroastrian.rankTitles.f.7.default": {
+      "context": "religion zoroastrian, f rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Banbishnan Banbishn"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.0.default": {
+      "context": "religion zoroastrian, m rank title, tier 0.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Bondman"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.1.default": {
+      "context": "religion zoroastrian, m rank title, tier 1.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Freeman"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.2.default": {
+      "context": "religion zoroastrian, m rank title, tier 2.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Dehqan"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.3.default": {
+      "context": "religion zoroastrian, m rank title, tier 3.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Azat"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.4.default": {
+      "context": "religion zoroastrian, m rank title, tier 4.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Marzban"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.5.default": {
+      "context": "religion zoroastrian, m rank title, tier 5.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Satrap"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.6.default": {
+      "context": "religion zoroastrian, m rank title, tier 6.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Shah"
+      }
+    },
+    "religion.zoroastrian.rankTitles.m.7.default": {
+      "context": "religion zoroastrian, m rank title, tier 7.",
+      "glossary": [
+        "rank_title"
+      ],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Shahanshah"
+      }
+    },
+    "religion.zoroastrian.roles.monasticF.default": {
+      "context": "religion zoroastrian, roles monasticF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Herbad"
+      }
+    },
+    "religion.zoroastrian.roles.monasticM.default": {
+      "context": "religion zoroastrian, roles monasticM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Herbad"
+      }
+    },
+    "religion.zoroastrian.roles.priestF.default": {
+      "context": "religion zoroastrian, roles priestF.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Mobed"
+      }
+    },
+    "religion.zoroastrian.roles.priestM.default": {
+      "context": "religion zoroastrian, roles priestM.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Mobed"
+      }
+    },
+    "religion.zoroastrian.words.cleric.default": {
+      "context": "religion zoroastrian, words cleric.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "mobed"
+      }
+    },
+    "religion.zoroastrian.words.deity.default": {
+      "context": "religion zoroastrian, words deity.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Ahura Mazda"
+      }
+    },
+    "religion.zoroastrian.words.landed.default": {
+      "context": "religion zoroastrian, words landed.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Lord"
+      }
+    },
+    "religion.zoroastrian.words.partnership.default": {
+      "context": "religion zoroastrian, words partnership.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Trade partnership"
+      }
+    },
+    "religion.zoroastrian.words.temple.default": {
+      "context": "religion zoroastrian, words temple.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "fire temple"
+      }
+    },
     "scenario.apprentice.desc.default": {
       "context": "New-game scenario apprentice, desc.",
       "glossary": [],
@@ -43596,6 +44084,16 @@
         "text": "The liege’s captains ask the estates for service beyond custom. The benches answer with three prices: men now, silver every season, or guarded roads that keep the host supplied without stripping another field."
       }
     },
+    "src.00b10b39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Their modifiers"
+      }
+    },
     "src.00c27443": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -44186,6 +44684,16 @@
       ],
       "source": {
         "text": "💒 Your son {child} weds {spouse}, as was pledged."
+      }
+    },
+    "src.027c459b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Ordinary courtship, arranged matches, AI marriages, and royal offers still forbid siblings and every closer lineal or avuncular relation. Only the current player may approach an adult opposite-sex full or half sibling who is free to marry, in the same county, at +40 Standing, and only while no other courtship is active."
       }
     },
     "src.028b1df6": {
@@ -44838,6 +45346,16 @@
       ],
       "source": {
         "text": "👴 Hand over the house"
+      }
+    },
+    "src.0478725c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Mobed"
       }
     },
     "src.0478e50f": {
@@ -45540,6 +46058,16 @@
       ],
       "source": {
         "text": "The missionaries grow bolder, and converts multiply around you. The old gods’ shrines stand quieter each year. To rise here may mean to kneel at their font."
+      }
+    },
+    "src.063014d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The courtship has survived its first impossible question. You ask {suitor} for vows that may be sanctified by a rare rite — or condemned as an irregular union."
       }
     },
     "src.06381510": {
@@ -46315,6 +46843,16 @@
       ],
       "source": {
         "text": "Expose the scheme before the full Council."
+      }
+    },
+    "src.0823a3f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Make an exceptional approach…"
       }
     },
     "src.082da04d": {
@@ -47650,6 +48188,16 @@
         "text": "One by one, every hand reaches the bank. The whole road saw who went first."
       }
     },
+    "src.0b15e130": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Speak plainly."
+      }
+    },
     "src.0b198115": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48238,16 +48786,6 @@
       ],
       "source": {
         "text": "Used for {claimant}"
-      }
-    },
-    "src.0cfd14a9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/model.js"
-      ],
-      "source": {
-        "text": "20) return { ok:false, reason:'long' }; if (!houseNameCharsOk(nm)) return { ok:false, reason:'chars' }; return { ok:true, name:nm }; }; /* A house is just the c.dyn string its members share, so a rename rewrites every character carrying the old string — the same membership rule FB.dynastyNameSet uses — plus the player realm identity when it was derived from the house. Personal names and bynames are untouched, and chronicle or legend text already written keeps the old name. Heraldry is seeded from the dyn string, so the coat of arms is redrawn. */ FB.renameHouse = function (state, newName) { const me = state && state.player && state.chars && state.chars[state.player.charId]; if (!me || !me.dyn) return { ok:false, reason:'nohouse' }; const oldDyn = me.dyn; const check = FB.validateHouseName(newName, oldDyn); if (!check.ok) return check; const nm = check.name; for (const id in state.chars) { const c = state.chars[id]; if (c && c.dyn === oldDyn) c.dyn = nm; } const realm = state.realms && state.realms.player; if (realm) { if (realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm; if (realm.dynasty === oldDyn) realm.dynasty = nm; } FB.touchFamily(); FB.news(state, FB.msg('news.house.renamed', '👑 The house of {old} is henceforth known as {dynasty}.', { old:oldDyn, dynasty:nm })); return { ok:true, name:nm, old:oldDyn }; }; /* ---------- character factory ---------- opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN} opts.id installs a caller-derived identity instead of drawing the next sequential uid. Court records use it so the same succession member always resolves to the same character id, whether it was created at world creation or at the moment a player first opened the realm. */ FB.makeCharacter = function (state, opts) { const sex = opts.sex || (FB.chance(0.5) ? 'm' : 'f'); const c = { id: opts.id || FB.uid(), name: opts.name || FB.randomName(opts.culture, sex, opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null), sex: sex, culture: opts.culture, religion: opts.religion, born: opts.born, dead: false, dyn: opts.dyn || null, role: opts.role || null, traits: opts.traits || [], skills: {}, opinion: opts.opinion !== undefined ? opts.opinion : 0, fertility: FB.rf(0.7, 1.3), station: opts.station !== undefined ? opts.station : null, spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null, childrenIds: [] }; if (Object.prototype.hasOwnProperty.call(opts, 'byname')) { c.byname = opts.byname; } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' && c.fatherId && state.chars[c.fatherId]) { c.byname = FB.patronym(state.chars[c.fatherId].name, c.sex); } const q = opts.quality || 0; for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q); if (!opts.traits) { const pool = Object.keys(FBDATA.traits).filter(function (t) { return !FBDATA.traits[t].noRandom; }); const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3); for (let i = 0; i"
       }
     },
     "src.0cff5b48": {
@@ -49574,6 +50112,16 @@
       ],
       "source": {
         "text": "Gniezno"
+      }
+    },
+    "src.10549dfe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An irregular wedding costs {piety} piety and {prestige} prestige, lowers Common Voice by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance."
       }
     },
     "src.1059b818": {
@@ -51351,6 +51899,16 @@
         "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
       }
     },
+    "src.144d910f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Neither sibling may be pledged to another."
+      }
+    },
     "src.146304c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51669,6 +52227,16 @@
       ],
       "source": {
         "text": "Hang them before the tents."
+      }
+    },
+    "src.15071d45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Persist in a close-kin marriage without a rite recognized by the couple’s faith."
       }
     },
     "src.150e851f": {
@@ -52022,6 +52590,16 @@
       ],
       "source": {
         "text": "Sanaa"
+      }
+    },
+    "src.1616178a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Zoroastrians"
       }
     },
     "src.16161e01": {
@@ -52465,6 +53043,16 @@
       ],
       "source": {
         "text": "Defend the sanctuary."
+      }
+    },
+    "src.170cde4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "💔 {name} refuses to make the dangerous courtship a marriage."
       }
     },
     "src.1714ef60": {
@@ -54355,6 +54943,16 @@
         "text": "Open Governance…"
       }
     },
+    "src.1bd43bb7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Keep the courtship and bear the immediate public cost."
+      }
+    },
     "src.1be87da7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54603,6 +55201,16 @@
       ],
       "source": {
         "text": "Disputed crown"
+      }
+    },
+    "src.1cb52846": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🕯 {name} answers yes. The dangerous courtship begins."
       }
     },
     "src.1cb85199": {
@@ -56224,6 +56832,16 @@
         "text": "In arrears — the next missed deadline defaults."
       }
     },
+    "src.20d82042": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "They have already refused this approach, and will not hear it again."
+      }
+    },
     "src.20f19772": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56523,6 +57141,16 @@
       ],
       "source": {
         "text": "🤝 You and {name} now call one another friend."
+      }
+    },
+    "src.219d72b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Banbishnan Banbishn"
       }
     },
     "src.21a28d1f": {
@@ -56975,6 +57603,16 @@
       ],
       "source": {
         "text": "More ears, less argument — if they arrive in time."
+      }
+    },
+    "src.22ced3ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Intrigue may quiet the story; discovery will deepen the scandal."
       }
     },
     "src.22de6e0a": {
@@ -57747,6 +58385,16 @@
       ],
       "source": {
         "text": "Another sentence may be issued in {days} days."
+      }
+    },
+    "src.2496b8bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Shah"
       }
     },
     "src.249b6302": {
@@ -58944,6 +59592,16 @@
         "text": "Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming."
       }
     },
+    "src.274914cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Scandalous Union"
+      }
+    },
     "src.276368dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59093,6 +59751,16 @@
       ],
       "source": {
         "text": "Keys, stores, and spinning — a well-run house turns thrift into coin. (stewardship pays)"
+      }
+    },
+    "src.27b8e8fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Zoroastrian"
       }
     },
     "src.27c3ca0c": {
@@ -60638,6 +61306,16 @@
         "text": "🧑‍🏫 Instruction for {name}"
       }
     },
+    "src.2c29d15d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Break off the courtship and accept the lasting five-year separation."
+      }
+    },
     "src.2c31097c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61350,6 +62028,16 @@
         "text": "unknown parent"
       }
     },
+    "src.2dcdc3a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "This exceptional courtship has not been accepted."
+      }
+    },
     "src.2dd29628": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61388,6 +62076,16 @@
       ],
       "source": {
         "text": "Diplomacy wins trust and makes other people easier to persuade."
+      }
+    },
+    "src.2e03aab0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Only a brother or sister can receive this exceptional approach."
       }
     },
     "src.2e0bf99a": {
@@ -62050,6 +62748,16 @@
       ],
       "source": {
         "text": "Kiev"
+      }
+    },
+    "src.300386bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "mobed"
       }
     },
     "src.301e895c": {
@@ -62813,6 +63521,16 @@
       ],
       "source": {
         "text": "no one, watching"
+      }
+    },
+    "src.320cb228": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your traits do not overcome the restraint needed to keep silent. Net score {score}; requires +1."
       }
     },
     "src.3215cb15": {
@@ -64101,6 +64819,16 @@
         "text": "Iron ends rebellions — or feeds them martyrs."
       }
     },
+    "src.358161d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your trait score"
+      }
+    },
     "src.358267d9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64754,6 +65482,16 @@
         "text": "Gamble on wheat — richer, riskier."
       }
     },
+    "src.378c6cdd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "End your current courtship before making this approach."
+      }
+    },
     "src.378fd7ae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65379,6 +66117,16 @@
         "text": "🧭 The household commits {money:stake} to a distant trade partnership."
       }
     },
+    "src.39426f04": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "They have already accepted the courtship."
+      }
+    },
     "src.3948d780": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65508,6 +66256,16 @@
       ],
       "source": {
         "text": "Warm words stop short of a military oath."
+      }
+    },
+    "src.399a1f2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A recognized xwēdōdah wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance."
       }
     },
     "src.399a8516": {
@@ -65788,6 +66546,16 @@
       ],
       "source": {
         "text": "No household office"
+      }
+    },
+    "src.3a53ae90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Exceptional sibling courtship"
       }
     },
     "src.3a5618b1": {
@@ -68605,6 +69373,16 @@
         "text": "Buried at a crossroads by popular ecclesiastical demand."
       }
     },
+    "src.4207dd9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An irregular union costs 75 piety and 25 prestige, and brings public and political penalties."
+      }
+    },
     "src.420d1d0e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69387,6 +70165,16 @@
       ],
       "source": {
         "text": "The town has fallen and discipline with it. Doors splinter; men stagger past with armfuls of plate and cloth. The {temple} stands unguarded."
+      }
+    },
+    "src.440164f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Ahura Mazda"
       }
     },
     "src.4403826b": {
@@ -71250,6 +72038,16 @@
         "text": "Antioch"
       }
     },
+    "src.48199f99": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Both siblings must be at least sixteen."
+      }
+    },
     "src.481d7826": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71590,6 +72388,16 @@
       ],
       "source": {
         "text": "Hold your ground and spend your men carefully."
+      }
+    },
+    "src.497613d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "fire temple"
       }
     },
     "src.497929a6": {
@@ -72755,6 +73563,16 @@
       ],
       "source": {
         "text": "Alba"
+      }
+    },
+    "src.4cca9051": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "That person is not available."
       }
     },
     "src.4ccc3fdc": {
@@ -79418,6 +80236,16 @@
         "text": "About {money:amount} each season"
       }
     },
+    "src.5df1d2c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "You are pledged to another."
+      }
+    },
     "src.5dfa81cf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79749,6 +80577,16 @@
       ],
       "source": {
         "text": "Gdańsk"
+      }
+    },
+    "src.5eb8a02a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Children of full siblings receive a 20% close-kin health-risk roll; children of half siblings receive 10%. Each parent already born of close kin adds five percentage points, to a maximum of 35%. The roll may add Frail, add Sickly, or reduce health by one."
       }
     },
     "src.5ebf7076": {
@@ -80344,6 +81182,16 @@
         "text": "Build a connected holding."
       }
     },
+    "src.603c47f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The Household Whispers"
+      }
+    },
     "src.604b2702": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80647,6 +81495,16 @@
         "text": "No guide entries match this search."
       }
     },
+    "src.610a8b37": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap."
+      }
+    },
     "src.610f6d24": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80905,6 +81763,16 @@
       ],
       "source": {
         "text": "Fever season fills the infirmary. The sick call for water, for prayers, for their mothers."
+      }
+    },
+    "src.6193be28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Contradictory stories and careful pressure leave the gossips uncertain."
       }
     },
     "src.619ae6b1": {
@@ -81870,6 +82738,16 @@
         "text": "Best instruction up to {money:amount} per child each season"
       }
     },
+    "src.644be5d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Bondman"
+      }
+    },
     "src.644d9ac8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81918,16 +82796,6 @@
       ],
       "source": {
         "text": "Equip…"
-      }
-    },
-    "src.6460a6a4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "Cousin"
       }
     },
     "src.646249d9": {
@@ -83004,6 +83872,16 @@
         "text": "The council has not yet assembled. Appointing an officer will convene it."
       }
     },
+    "src.676cbd5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you."
+      }
+    },
     "src.67713967": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83472,6 +84350,16 @@
       ],
       "source": {
         "text": "Envoys Under a White Flag"
+      }
+    },
+    "src.68e064be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Banbishn"
       }
     },
     "src.68e6575c": {
@@ -84588,6 +85476,16 @@
       ],
       "source": {
         "text": "Pay {money:amount} now and clear this obligation. There is no early-payment penalty."
+      }
+    },
+    "src.6ba7f8a8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Persist openly."
       }
     },
     "src.6baafd9f": {
@@ -85731,6 +86629,16 @@
         "text": "Other"
       }
     },
+    "src.6e39f9b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A servant saw a hand linger; a cousin heard a door close. What passed for private devotion is becoming a public scandal."
+      }
+    },
     "src.6e3a9efe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86581,6 +87489,16 @@
       ],
       "source": {
         "text": "Siblings"
+      }
+    },
+    "src.70b60860": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Vows Against the World"
       }
     },
     "src.70bb9e41": {
@@ -88355,6 +89273,16 @@
       ],
       "source": {
         "text": "Ephesos"
+      }
+    },
+    "src.7512a07b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Withdraw before the question is asked; the day is still spent."
       }
     },
     "src.751b5b9b": {
@@ -92702,6 +93630,16 @@
         "text": "Oviedo"
       }
     },
+    "src.80569eb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "This union has already been made."
+      }
+    },
     "src.805778fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92840,6 +93778,16 @@
       ],
       "source": {
         "text": "paste back an exported save text"
+      }
+    },
+    "src.80acf1e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "You broke off this suit. It cannot be renewed for {days} days."
       }
     },
     "src.80b1ef84": {
@@ -94076,6 +95024,16 @@
         "text": "no longer eligible"
       }
     },
+    "src.83bc2d82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Their response chance"
+      }
+    },
     "src.83bffafa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94709,6 +95667,16 @@
         "text": "Discipline rises in the abstract ledger; the war continues."
       }
     },
+    "src.850e027a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "End it before worse follows."
+      }
+    },
     "src.850f334e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95149,6 +96117,16 @@
         "text": "Enable"
       }
     },
+    "src.86155405": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Standing contribution"
+      }
+    },
     "src.861b7035": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95370,6 +96348,16 @@
         "text": "A sickness — it must run its course; rest and time are the only physic."
       }
     },
+    "src.86ebb575": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Requires +40 Standing; currently {standing}."
+      }
+    },
     "src.86f149b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95478,6 +96466,16 @@
       ],
       "source": {
         "text": "Set straight, splinted, and slow to knit."
+      }
+    },
+    "src.872d9ff0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Make the approach"
       }
     },
     "src.87388365": {
@@ -96725,6 +97723,16 @@
         "text": "The same lessons, heard with a polite nod and a closed door."
       }
     },
+    "src.8a442a0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Trust, appetite, ambition, and taboo have narrowed to one dangerous question. You can speak to your sibling now, but a refusal will end the matter forever."
+      }
+    },
     "src.8a4538e7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97475,6 +98483,16 @@
       ],
       "source": {
         "text": "Grant their petition. ({money:10})"
+      }
+    },
+    "src.8c1223f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Religious vows forbid this marriage."
       }
     },
     "src.8c1be1a5": {
@@ -99394,6 +100412,16 @@
         "text": "Their coin, their strings — but the war needs both."
       }
     },
+    "src.909aec47": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Make the one approach to {name}? Refusal is permanent."
+      }
+    },
     "src.909b7f32": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100558,6 +101586,16 @@
         "text": "This sacrilegious war can no longer be declared."
       }
     },
+    "src.94a7b5d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your modifiers"
+      }
+    },
     "src.94b3eaed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100697,6 +101735,16 @@
       ],
       "source": {
         "text": "What does {skill} affect?"
+      }
+    },
+    "src.95108b02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your faith does not recognize this union. While the courtship continues, it may be exposed once each season."
       }
     },
     "src.95186a89": {
@@ -101012,6 +102060,16 @@
         "text": "Household education policy will not fill or refill this person’s choices. Manual choices remain available."
       }
     },
+    "src.95d2a67f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your shared faith recognizes xwēdōdah, so discovery does not create the illicit-courtship exposure risk."
+      }
+    },
     "src.95d50747": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101286,6 +102344,16 @@
         "text": "Cardinal"
       }
     },
+    "src.966f56bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Their own traits and Standing decide the answer; refusal is permanent."
+      }
+    },
     "src.9693b1e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101514,6 +102582,16 @@
       ],
       "source": {
         "text": "🏰 Move capital here…"
+      }
+    },
+    "src.9739b9b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requires +40 Standing and a net player trait score of +1. Current score: {score}. Their response chance is {chance}%."
       }
     },
     "src.973a7ce9": {
@@ -103323,6 +104401,16 @@
       ],
       "source": {
         "text": "The intercepted letters name {rulername} of {rname}: payments to singers, promises to dissatisfied captains, careful guesses at how long your crown would survive a bad harvest. The evidence is real. How honestly you use it is another question."
+      }
+    },
+    "src.9b9bfeef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An Exceptional Courtship"
       }
     },
     "src.9ba238e7": {
@@ -105440,6 +106528,16 @@
         "text": "This is their current household office."
       }
     },
+    "src.a13b01d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A recognized rite costs 75 piety and {money:gold}; no dowry, compact, or alliance follows."
+      }
+    },
     "src.a13db2a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106021,6 +107119,16 @@
       ],
       "source": {
         "text": "Nothing. So savor the days that remain."
+      }
+    },
+    "src.a2682472": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Refusal is permanent; acceptance begins a courtship and spends the day."
       }
     },
     "src.a2691ca4": {
@@ -107790,6 +108898,16 @@
         "text": "A lie that holds is as good as the truth."
       }
     },
+    "src.a705efea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An Exceptional Marriage"
+      }
+    },
     "src.a709a23b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108231,6 +109349,16 @@
       ],
       "source": {
         "text": "Library"
+      }
+    },
+    "src.a85cddcf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Herbad"
       }
     },
     "src.a8630a55": {
@@ -109351,6 +110479,16 @@
         "text": "Knew everything except how to stay."
       }
     },
+    "src.ab979e8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "At the final threshold, {suitor} refuses. The courtship is over and will never be renewed."
+      }
+    },
     "src.ab99f271": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109722,6 +110860,16 @@
         "text": "Household equipment remains in the shared family armory."
       }
     },
+    "src.ac7d874a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A rare player-only route uses traits, one irreversible approach, and severe social or religious costs."
+      }
+    },
     "src.ac829f30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109980,6 +111128,16 @@
       ],
       "source": {
         "text": "{ruler} of {realm}"
+      }
+    },
+    "src.ad240ffa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Costs {piety} piety and spends the day."
       }
     },
     "src.ad25ae3f": {
@@ -110425,6 +111583,16 @@
       ],
       "source": {
         "text": "Pledged: {asset}"
+      }
+    },
+    "src.ae77e4ce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Dehqan"
       }
     },
     "src.ae792e01": {
@@ -111038,6 +112206,16 @@
       ],
       "source": {
         "text": "Buy quiet, and hope quiet stays bought."
+      }
+    },
+    "src.b0079b9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "A Word That Cannot Be Recalled"
       }
     },
     "src.b0111ce3": {
@@ -111891,6 +113069,16 @@
         "text": "By the fire, when the day’s work is done, the thought comes unbidden: a life is short, but a house endures. The children who carry your name will inherit more than your goods — your standing, your grudges, your chronicle. What you begin, they will continue; what you become, they will remember."
       }
     },
+    "src.b211d390": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🕯 You and {name} persist in an irregular union. Kin, neighbors, and rulers recoil; no dowry or alliance follows."
+      }
+    },
     "src.b21973ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112329,6 +113517,16 @@
       ],
       "source": {
         "text": "Good manners preserve what daily closeness has built."
+      }
+    },
+    "src.b2fc44b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🔥 Before the sacred fire, you and {name} enter xwēdōdah. No dowry or alliance follows."
       }
     },
     "src.b2fca5d1": {
@@ -113041,6 +114239,16 @@
       ],
       "source": {
         "text": "Oathbound Host"
+      }
+    },
+    "src.b4cac586": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Shahanshah"
       }
     },
     "src.b4d0a0b9": {
@@ -114848,6 +116056,16 @@
         "text": "Requisition under written receipts."
       }
     },
+    "src.b95bfaf3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The player needs a net trait score of +1: Lustful +2; Cynical or Deceitful +1; Chaste −2; Honest −1; Ambitious +1 only when succession or title interests make the match dynastically relevant; Zealous +1 under an authorizing rite but −2 otherwise; Lettered +1 under that rite."
+      }
+    },
     "src.b95f4e76": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116344,6 +117562,16 @@
         "text": "Terror may find the knife — or blind your friends."
       }
     },
+    "src.bdba4f92": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An accepted suit uses ordinary personal attention and needs +80 Standing before proposal. A rejected proposal is permanent; breaking off an accepted suit prevents renewal for five years. No sibling match ever creates a dowry, royal compact, or alliance."
+      }
+    },
     "src.bdbf4250": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117118,6 +118346,16 @@
         "text": "A fat purse, and a colder look from {lord}."
       }
     },
+    "src.c038f97c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "You must be in the same county to make so dangerous an approach."
+      }
+    },
     "src.c04ae076": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117186,6 +118424,16 @@
       ],
       "source": {
         "text": "No one believes it. The flogging is worse for the insult."
+      }
+    },
+    "src.c06f92bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No trait modifier"
       }
     },
     "src.c07106ec": {
@@ -117316,6 +118564,16 @@
       ],
       "source": {
         "text": "★★★ tricky"
+      }
+    },
+    "src.c0ca682e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Rulers of your faith also lose 8 Standing."
       }
     },
     "src.c0cb31d9": {
@@ -118550,6 +119808,16 @@
         "text": "Bought food raises abstract supply; live troops do not change."
       }
     },
+    "src.c376a5d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Azat"
+      }
+    },
     "src.c3894449": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118578,6 +119846,16 @@
       ],
       "source": {
         "text": "Their house will provide {money:gold}."
+      }
+    },
+    "src.c3ac16d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Keep silence."
       }
     },
     "src.c3ad2060": {
@@ -118968,6 +120246,16 @@
       ],
       "source": {
         "text": "Propose a defensive alliance. ({money:25})"
+      }
+    },
+    "src.c4d1dc76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🚪 {name} refuses the forbidden approach, once and for all."
       }
     },
     "src.c4d38622": {
@@ -119893,6 +121181,16 @@
         "text": "Tax and levy comparisons cover base land contributions; personal and realm-wide modifiers remain outside the estimate."
       }
     },
+    "src.c718103a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Lives openly in a union forbidden by most neighbors."
+      }
+    },
     "src.c7330e60": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120774,6 +122072,16 @@
       ],
       "source": {
         "text": "Surveyors from {rname} dispute three old boundary stones and one newer sheep-track. {rulername} offers joint arbitration before armed shepherds make law of their own."
+      }
+    },
+    "src.c95668fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union."
       }
     },
     "src.c956c935": {
@@ -121948,6 +123256,16 @@
         "text": "Peace-pact partner"
       }
     },
+    "src.cc6cff70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "{suitor} accepts. Whatever the world calls it, the two of you will make a household."
+      }
+    },
     "src.cc79b32f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123013,6 +124331,16 @@
         "text": "A strip of land is cheaper than a feud."
       }
     },
+    "src.cf40be08": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The sibling then makes an independent response roll. Their Standing contributes up to +30 percentage points. Lustful, Ambitious, Cynical, Deceitful, Zealous, Chaste, Content, and Honest alter consent according to the route and dynastic stakes. Without any receptive target trait, an illicit response chance cannot exceed 10%. A refusal is permanent."
+      }
+    },
     "src.cf41e796": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123451,6 +124779,16 @@
       ],
       "source": {
         "text": "Bones in the Crypt"
+      }
+    },
+    "src.d085eddc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "20) return { ok:false, reason:'long' }; if (!houseNameCharsOk(nm)) return { ok:false, reason:'chars' }; return { ok:true, name:nm }; }; /* A house is just the c.dyn string its members share, so a rename rewrites every character carrying the old string — the same membership rule FB.dynastyNameSet uses — plus the player realm identity when it was derived from the house. Personal names and bynames are untouched, and chronicle or legend text already written keeps the old name. Heraldry is seeded from the dyn string, so the coat of arms is redrawn. */ FB.renameHouse = function (state, newName) { const me = state && state.player && state.chars && state.chars[state.player.charId]; if (!me || !me.dyn) return { ok:false, reason:'nohouse' }; const oldDyn = me.dyn; const check = FB.validateHouseName(newName, oldDyn); if (!check.ok) return check; const nm = check.name; for (const id in state.chars) { const c = state.chars[id]; if (c && c.dyn === oldDyn) c.dyn = nm; } const realm = state.realms && state.realms.player; if (realm) { if (realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm; if (realm.dynasty === oldDyn) realm.dynasty = nm; } FB.touchFamily(); FB.news(state, FB.msg('news.house.renamed', '👑 The house of {old} is henceforth known as {dynasty}.', { old:oldDyn, dynasty:nm })); return { ok:true, name:nm, old:oldDyn }; }; /* ---------- character factory ---------- opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN} opts.id installs a caller-derived identity instead of drawing the next sequential uid. Court records use it so the same succession member always resolves to the same character id, whether it was created at world creation or at the moment a player first opened the realm. */ FB.makeCharacter = function (state, opts) { const sex = opts.sex || (FB.chance(0.5) ? 'm' : 'f'); const c = { id: opts.id || FB.uid(), name: opts.name || FB.randomName(opts.culture, sex, opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null), sex: sex, culture: opts.culture, religion: opts.religion, born: opts.born, dead: false, dyn: opts.dyn || null, role: opts.role || null, traits: opts.traits || [], skills: {}, opinion: opts.opinion !== undefined ? opts.opinion : 0, fertility: FB.rf(0.7, 1.3), station: opts.station !== undefined ? opts.station : null, spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null, childrenIds: [] }; /* Explicit opinion remains an exact authored total. A newly encountered neutral character instead begins at the current directional faith baseline, and the marker lets later schisms rebase only that component. */ const playerCharacter = state && state.player && state.chars && state.chars[state.player.charId]; if (playerCharacter && playerCharacter.id !== c.id && FB.faithRelationBaseline) { const faithBase = FB.faithRelationBaseline( state, c.religion, playerCharacter.religion); c.faithStandingBase = faithBase; if (opts.opinion === undefined) c.opinion = faithBase; } if (Object.prototype.hasOwnProperty.call(opts, 'byname')) { c.byname = opts.byname; } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' && c.fatherId && state.chars[c.fatherId]) { c.byname = FB.patronym(state.chars[c.fatherId].name, c.sex); } const q = opts.quality || 0; for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q); if (!opts.traits) { const pool = Object.keys(FBDATA.traits).filter(function (t) { return !FBDATA.traits[t].noRandom; }); const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3); for (let i = 0; i"
       }
     },
     "src.d0868b0c": {
@@ -126821,6 +128159,16 @@
         "text": "Settlement growth"
       }
     },
+    "src.d96770d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Bondwoman"
+      }
+    },
     "src.d969b70d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127605,6 +128953,16 @@
         "text": "preparation"
       }
     },
+    "src.db8784de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Satrap"
+      }
+    },
     "src.db8ff5fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127955,6 +129313,16 @@
         "text": "Loose your own falcon first."
       }
     },
+    "src.dc875f46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Standing and their traits decide the answer. The reviewed rite or scandal costs apply only if they accept."
+      }
+    },
     "src.dc89116c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128035,6 +129403,16 @@
         "text": "Office: {offices}"
       }
     },
+    "src.dcfa024b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "scandalous sibling union"
+      }
+    },
     "src.dcfeb62f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128053,6 +129431,16 @@
       ],
       "source": {
         "text": "Withdraw personal attention. This costs no day."
+      }
+    },
+    "src.dd0aa42e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "A sibling must first accept the exceptional approach."
       }
     },
     "src.dd0abfcc": {
@@ -128827,6 +130215,16 @@
         "text": "Take the wager. ({money:2})"
       }
     },
+    "src.deb60350": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Zoroastrianism"
+      }
+    },
     "src.dec25460": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129105,6 +130503,16 @@
       ],
       "source": {
         "text": "{settlement}, {province}"
+      }
+    },
+    "src.df777b37": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Costs {piety} piety and {prestige} prestige, and spends the day."
       }
     },
     "src.df7a89d3": {
@@ -132151,6 +133559,16 @@
         "text": "🎓 You will be schooled in learning."
       }
     },
+    "src.e71a1bc9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "sibling brother sister courtship incest forbidden xwedodah scandal traits consent exposure child health"
+      }
+    },
     "src.e71d77c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133646,6 +135064,16 @@
         "text": "Adds 1.5 prestige each season."
       }
     },
+    "src.eb2050da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Propose marriage to {name}?"
+      }
+    },
     "src.eb22e83b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134004,6 +135432,16 @@
       ],
       "source": {
         "text": "Cynical"
+      }
+    },
+    "src.ec5334d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Ask for the vows"
       }
     },
     "src.ec6066b3": {
@@ -134495,6 +135933,16 @@
       ],
       "source": {
         "text": "loss of Rome"
+      }
+    },
+    "src.eda6547e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Acceptance chance"
       }
     },
     "src.edacb11d": {
@@ -135237,6 +136685,16 @@
       ],
       "source": {
         "text": "Your chosen version becomes the court’s version. The claimant pays well."
+      }
+    },
+    "src.ef7cf3e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Marzban"
       }
     },
     "src.ef7de3ca": {
@@ -138017,6 +139475,16 @@
       ],
       "source": {
         "text": "🤰 You are with child."
+      }
+    },
+    "src.f6bc96e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The denial collapses. Now the secret and the lie are both common knowledge."
       }
     },
     "src.f6bca956": {
@@ -141111,6 +142579,16 @@
         "text": "Fabricated a claim to {cname}."
       }
     },
+    "src.ff4ee32a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Deny everything."
+      }
+    },
     "src.ff5c6c0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141209,6 +142687,16 @@
       ],
       "source": {
         "text": "higher"
+      }
+    },
+    "src.ff93b64f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "A sacred office forbids this marriage."
       }
     },
     "src.ff965d03": {
@@ -141389,6 +142877,16 @@
       ],
       "source": {
         "text": "{type}: {name}"
+      }
+    },
+    "src.fffc63fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Ask for the vows."
       }
     },
     "src.fffda848": {
@@ -145801,6 +147299,30 @@
         "text": "Robust"
       }
     },
+    "trait.scandalous_union.desc.default": {
+      "context": "trait scandalous_union, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Lives openly in a union forbidden by most neighbors."
+      }
+    },
+    "trait.scandalous_union.earned.default": {
+      "context": "trait scandalous_union, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Persist in a close-kin marriage without a rite recognized by the couple’s faith."
+      }
+    },
+    "trait.scandalous_union.name.default": {
+      "context": "trait scandalous_union, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Scandalous Union"
+      }
+    },
     "trait.scarred.desc.default": {
       "context": "trait scarred, desc, faith branch default.",
       "glossary": [],
@@ -146663,6 +148185,16 @@
         "text": "A county and its settlements now anchor your territorial house."
       }
     },
+    "ui:A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:25"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union."
+      }
+    },
     "ui:A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -146980,12 +148512,49 @@
         "text": "A public religious vocation combines worship, teaching, law, and care of souls."
       }
     },
+    "ui:A rare player-only route uses traits, one irreversible approach, and severe social or religious costs.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A rare player-only route uses traits, one irreversible approach, and severe social or religious costs."
+      }
+    },
+    "ui:A recognized rite costs 75 piety and {money:gold}; no dowry, compact, or alliance follows.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A recognized rite costs 75 piety and {money:gold}; no dowry, compact, or alliance follows."
+      }
+    },
+    "ui:A recognized xwēdōdah wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "piety"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A recognized xwēdōdah wedding costs {piety} piety and {money:gold}. It creates no dowry, royal compact, or alliance."
+      }
+    },
     "ui:A required national technology has not been completed.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "A required national technology has not been completed."
+      }
+    },
+    "ui:A sacred office forbids this marriage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "A sacred office forbids this marriage."
       }
     },
     "ui:A separate condemnation confirmation appears before war can begin.": {
@@ -147010,6 +148579,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "A session or motion is pending"
+      }
+    },
+    "ui:A sibling must first accept the exceptional approach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "A sibling must first accept the exceptional approach."
       }
     },
     "ui:A stranger of real accomplishment.": {
@@ -147235,6 +148812,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Accept the territorial grant"
+      }
+    },
+    "ui:Acceptance chance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Acceptance chance"
       }
     },
     "ui:Accepting attaches this foreign grant to your existing sovereign realm.": {
@@ -147766,6 +149351,30 @@
         "text": "Ambition of {name}"
       }
     },
+    "ui:An Exceptional Courtship": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An Exceptional Courtship"
+      }
+    },
+    "ui:An Exceptional Marriage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An Exceptional Marriage"
+      }
+    },
+    "ui:An accepted suit uses ordinary personal attention and needs +80 Standing before proposal. A rejected proposal is permanent; breaking off an accepted suit prevents renewal for five years. No sibling match ever creates a dowry, royal compact, or alliance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An accepted suit uses ordinary personal attention and needs +80 Standing before proposal. A rejected proposal is permanent; breaking off an accepted suit prevents renewal for five years. No sibling match ever creates a dowry, royal compact, or alliance."
+      }
+    },
     "ui:An active mod has an invalid currency definition. The default currency is being used.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -147862,6 +149471,27 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "An inherited campaign vow"
+      }
+    },
+    "ui:An irregular union costs 75 piety and 25 prestige, and brings public and political penalties.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An irregular union costs 75 piety and 25 prestige, and brings public and political penalties."
+      }
+    },
+    "ui:An irregular wedding costs {piety} piety and {prestige} prestige, lowers Common Voice by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety",
+        "prestige",
+        "standing",
+        "voice"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An irregular wedding costs {piety} piety and {prestige} prestige, lowers Common Voice by {voice} and liege Standing by {standing}, and gives both spouses Scandalous Union. It creates no dowry, royal compact, or alliance."
       }
     },
     "ui:An office replaces enterprise work and spends the day.": {
@@ -148122,6 +149752,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Ask for greater lands. Only the crown can raise you to duke."
+      }
+    },
+    "ui:Ask for the vows": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Ask for the vows"
       }
     },
     "ui:Ask the Pope to appoint {name} to the College of Cardinals.": {
@@ -149138,6 +150776,14 @@
         "text": "Both hands"
       }
     },
+    "ui:Both siblings must be at least sixteen.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Both siblings must be at least sixteen."
+      }
+    },
     "ui:Bound to the direct liege relationship with {grantor}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -149754,6 +151400,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Children in the protagonist line take culture, faith, and house from the recorded playable-line parent, preserving the line across succession."
+      }
+    },
+    "ui:Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Children of full siblings have a 20% close-kin health-risk roll; children of half siblings have 10%. Recorded close-kin ancestry raises later risk, to a 35% cap."
+      }
+    },
+    "ui:Children of full siblings receive a 20% close-kin health-risk roll; children of half siblings receive 10%. Each parent already born of close kin adds five percentage points, to a maximum of 35%. The roll may add Frail, add Sickly, or reduce health by one.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Children of full siblings receive a 20% close-kin health-risk roll; children of half siblings receive 10%. Each parent already born of close kin adds five percentage points, to a maximum of 35%. The roll may add Frail, add Sickly, or reduce health by one."
       }
     },
     "ui:Choose Your Beginning — Anno Domini {year}": {
@@ -150522,6 +152184,27 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Costs {money:gold} and {piety} piety; the church decides after you spend the day."
+      }
+    },
+    "ui:Costs {piety} piety and spends the day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Costs {piety} piety and spends the day."
+      }
+    },
+    "ui:Costs {piety} piety and {prestige} prestige, and spends the day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety",
+        "prestige"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Costs {piety} piety and {prestige} prestige, and spends the day."
       }
     },
     "ui:Costs {prestige} prestige and spends the day.": {
@@ -152120,6 +153803,14 @@
         "text": "End your current courtship before cultivating someone else."
       }
     },
+    "ui:End your current courtship before making this approach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "End your current courtship before making this approach."
+      }
+    },
     "ui:End your obedience and continue as a retired former Cardinal.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -152466,6 +154157,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Exact upfront cost: {money:cost}."
+      }
+    },
+    "ui:Exceptional sibling courtship": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Exceptional sibling courtship"
       }
     },
     "ui:Exclusive {profession} practice; +{enterprise}% matching enterprise profit and +{tax}% issuer tax under the surviving contract.": {
@@ -155196,6 +156895,14 @@
         "text": "Maintained household standards are dormant at landed rank."
       }
     },
+    "ui:Make an exceptional approach…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Make an exceptional approach…"
+      }
+    },
     "ui:Make appointments": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -155210,6 +156917,24 @@
       "location": "js/main.js",
       "source": {
         "text": "Make peace before retiring; a war cannot be handed over."
+      }
+    },
+    "ui:Make the approach": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Make the approach"
+      }
+    },
+    "ui:Make the one approach to {name}? Refusal is permanent.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Make the one approach to {name}? Refusal is permanent."
       }
     },
     "ui:Make {destination} our permanent home": {
@@ -156044,6 +157769,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Neighboring vassal realm"
+      }
+    },
+    "ui:Neither sibling may be pledged to another.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Neither sibling may be pledged to another."
       }
     },
     "ui:Neutral": {
@@ -157189,6 +158922,14 @@
         "text": "No trade, guild, enterprise, or office tie is recorded."
       }
     },
+    "ui:No trait modifier": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No trait modifier"
+      }
+    },
     "ui:No travel purpose is available.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -157785,6 +159526,14 @@
         "text": "Only a baron or higher ruler may grant a monopoly."
       }
     },
+    "ui:Only a brother or sister can receive this exceptional approach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Only a brother or sister can receive this exceptional approach."
+      }
+    },
     "ui:Only a guildmaster of the Craft or Trade profession may petition.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158249,6 +159998,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Or paste mod JSON here, e.g. {example}"
+      }
+    },
+    "ui:Ordinary courtship, arranged matches, AI marriages, and royal offers still forbid siblings and every closer lineal or avuncular relation. Only the current player may approach an adult opposite-sex full or half sibling who is free to marry, in the same county, at +40 Standing, and only while no other courtship is active.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Ordinary courtship, arranged matches, AI marriages, and royal offers still forbid siblings and every closer lineal or avuncular relation. Only the current player may approach an adult opposite-sex full or half sibling who is free to marry, in the same county, at +40 Standing, and only while no other courtship is active."
       }
     },
     "ui:Organization level {level}/5 · cause: {privilege}": {
@@ -159394,6 +161151,16 @@
         "text": "Propose marriage"
       }
     },
+    "ui:Propose marriage to {name}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Propose marriage to {name}?"
+      }
+    },
     "ui:Propose: {policy} ({money:cost})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -159971,6 +161738,14 @@
         "text": "Reduce {standard}?"
       }
     },
+    "ui:Refusal is permanent; acceptance begins a courtship and spends the day.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Refusal is permanent; acceptance begins a courtship and spends the day."
+      }
+    },
     "ui:Refuse": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -160071,6 +161846,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Religious standing: {rank}"
+      }
+    },
+    "ui:Religious vows forbid this marriage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Religious vows forbid this marriage."
       }
     },
     "ui:Remain in guest residence for {days} more days before returning home.": {
@@ -160315,6 +162098,27 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Required for legitimacy"
+      }
+    },
+    "ui:Requires +40 Standing and a net player trait score of +1. Current score: {score}. Their response chance is {chance}%.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "score"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Requires +40 Standing and a net player trait score of +1. Current score: {score}. Their response chance is {chance}%."
+      }
+    },
+    "ui:Requires +40 Standing; currently {standing}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standing"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Requires +40 Standing; currently {standing}."
       }
     },
     "ui:Requires +{threshold} Standing and a remembered personal contact; naming a friend spends the day.": {
@@ -161551,6 +163355,14 @@
         "text": "Ruler within another realm"
       }
     },
+    "ui:Rulers of your faith also lose 8 Standing.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Rulers of your faith also lose 8 Standing."
+      }
+    },
     "ui:Ruler’s Martial": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -162536,6 +164348,14 @@
         "text": "Standing barony household"
       }
     },
+    "ui:Standing contribution": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Standing contribution"
+      }
+    },
     "ui:Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Common Voice is popular support. Guild Standing belongs to an active vocational guild record.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -163259,6 +165079,14 @@
       "location": "js/events.js",
       "source": {
         "text": "That person is not available for courtship."
+      }
+    },
+    "ui:That person is not available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "That person is not available."
       }
     },
     "ui:That policy cannot be brought before the Estates now.": {
@@ -164226,6 +166054,14 @@
         "text": "The player crown"
       }
     },
+    "ui:The player needs a net trait score of +1: Lustful +2; Cynical or Deceitful +1; Chaste −2; Honest −1; Ambitious +1 only when succession or title interests make the match dynastically relevant; Zealous +1 under an authorizing rite but −2 otherwise; Lettered +1 under that rite.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The player needs a net trait score of +1: Lustful +2; Cynical or Deceitful +1; Chaste −2; Honest −1; Ambitious +1 only when succession or title interests make the match dynastically relevant; Zealous +1 under an authorizing rite but −2 otherwise; Lettered +1 under that rite."
+      }
+    },
     "ui:The post-marriage residence decision is unavailable.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164362,6 +166198,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The settlement council awaits a decision."
+      }
+    },
+    "ui:The sibling then makes an independent response roll. Their Standing contributes up to +30 percentage points. Lustful, Ambitious, Cynical, Deceitful, Zealous, Chaste, Content, and Honest alter consent according to the route and dynastic stakes. Without any receptive target trait, an illicit response chance cannot exceed 10%. A refusal is permanent.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The sibling then makes an independent response roll. Their Standing contributes up to +30 percentage points. Lustful, Ambitious, Cynical, Deceitful, Zealous, Chaste, Content, and Honest alter consent according to the route and dynastic stakes. Without any receptive target trait, an illicit response chance cannot exceed 10%. A refusal is permanent."
       }
     },
     "ui:The sitting Caliph cannot be contested from this world state.": {
@@ -164558,12 +166402,28 @@
         "text": "Their house will provide {money:gold}."
       }
     },
+    "ui:Their modifiers": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Their modifiers"
+      }
+    },
     "ui:Their residence cannot be reached by road.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/travel.js",
       "source": {
         "text": "Their residence cannot be reached by road."
+      }
+    },
+    "ui:Their response chance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Their response chance"
       }
     },
     "ui:There are no staffing changes to apply.": {
@@ -164668,6 +166528,22 @@
       "location": "js/events.js",
       "source": {
         "text": "They are wed to another."
+      }
+    },
+    "ui:They have already accepted the courtship.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "They have already accepted the courtship."
+      }
+    },
+    "ui:They have already refused this approach, and will not hear it again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "They have already refused this approach, and will not hear it again."
       }
     },
     "ui:They stand too far above your station.": {
@@ -164812,6 +166688,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "This enterprise’s staffing lock will be cleared."
+      }
+    },
+    "ui:This exceptional courtship has not been accepted.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "This exceptional courtship has not been accepted."
       }
     },
     "ui:This household office is already filled.": {
@@ -165130,6 +167014,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared."
+      }
+    },
+    "ui:This union has already been made.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "This union has already been made."
       }
     },
     "ui:This war has no recognized right.": {
@@ -166434,6 +168326,14 @@
         "text": "You"
       }
     },
+    "ui:You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you."
+      }
+    },
     "ui:You are already at war with this realm.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166482,6 +168382,14 @@
         "text": "You are not yet of age."
       }
     },
+    "ui:You are pledged to another.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "You are pledged to another."
+      }
+    },
     "ui:You are sovereign over a kingdom and its national institutions.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166496,6 +168404,16 @@
       "location": "js/events.js",
       "source": {
         "text": "You are too close in blood."
+      }
+    },
+    "ui:You broke off this suit. It cannot be renewed for {days} days.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "You broke off this suit. It cannot be renewed for {days} days."
       }
     },
     "ui:You cannot form a trade venture while personally at war.": {
@@ -166590,6 +168508,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "You may submit and continue as a retired former Cardinal, or resist while Rome or a sovereign patron sustains your claim."
+      }
+    },
+    "ui:You must be in the same county to make so dangerous an approach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "You must be in the same county to make so dangerous an approach."
       }
     },
     "ui:You must first bleed in your liege’s wars (service {needed}+, now {current}).": {
@@ -166938,6 +168864,14 @@
         "text": "Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again."
       }
     },
+    "ui:Your faith does not recognize this union. While the courtship continues, it may be exposed once each season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your faith does not recognize this union. While the courtship continues, it may be exposed once each season."
+      }
+    },
     "ui:Your family tie by marriage forbids this match.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167148,6 +169082,14 @@
         "text": "Your lord"
       }
     },
+    "ui:Your modifiers": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your modifiers"
+      }
+    },
     "ui:Your mother": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167286,6 +169228,14 @@
         "text": "Your rival · connected to {connection}"
       }
     },
+    "ui:Your shared faith recognizes xwēdōdah, so discovery does not create the illicit-courtship exposure risk.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your shared faith recognizes xwēdōdah, so discovery does not create the illicit-courtship exposure risk."
+      }
+    },
     "ui:Your sibling": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167334,6 +169284,24 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Your tax +{tax}%"
+      }
+    },
+    "ui:Your trait score": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your trait score"
+      }
+    },
+    "ui:Your traits do not overcome the restraint needed to keep silent. Net score {score}; requires +1.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "score"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Your traits do not overcome the restraint needed to keep silent. Net score {score}; requires +1."
       }
     },
     "ui:Your venture to {destination}": {

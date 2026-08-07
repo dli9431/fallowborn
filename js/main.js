@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.113.0';
+  FB.VERSION = '1.113.1';
   FB.CHANGELOG = [
+    { v: '1.113.1', date: '2026-08-06', changes: [
+      'Faith relationships now shape Standing: shared and related faiths begin warmer, foreign faiths guarded, and explicitly hostile faiths sharply opposed.'
+    ] },
     { v: '1.113.0', date: '2026-08-06', changes: [
       'Guild officers and guildmasters now win fixed-term elections, while charters can require confirmation of great Council offices and organized groups can demand durable privileges.'
     ] },
@@ -1372,6 +1375,7 @@ window.FB = window.FB || {};
         tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
         provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         traitProgress: {},
@@ -1519,6 +1523,9 @@ window.FB = window.FB || {};
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
       state.player.liegeOp = 10;
     }
+    if (FB.ensureFaithStandingBaselines) {
+      FB.ensureFaithStandingBaselines(state);
+    }
     if (FB.ensureAgency) FB.ensureAgency(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
@@ -1611,6 +1618,7 @@ window.FB = window.FB || {};
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
         gold: 0, prestige: 0, piety: 0,
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
@@ -1647,6 +1655,9 @@ window.FB = window.FB || {};
     });
     state.player.charId = me.id;
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensureFaithStandingBaselines) {
+      FB.ensureFaithStandingBaselines(state);
+    }
 
     G.observe = true;
     G.paused = false;

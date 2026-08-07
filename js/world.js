@@ -2553,22 +2553,29 @@ window.FB = window.FB || {};
   }
 
   FB.realmRulerStandingSnapshot = function (state, rid) {
-    return reconciledRealmRulerStanding(state, rid,
+    const stored = reconciledRealmRulerStanding(state, rid,
       FB.realmRulerCharacterSnapshot(state, rid));
+    return FB.faithAdjustedRealmStanding
+      ? FB.faithAdjustedRealmStanding(state, rid, stored) : stored;
   };
 
   FB.syncRealmRulerStanding = function (state, rid) {
     const c = FB.realmRulerCharacter(state, rid);
     let value = reconciledRealmRulerStanding(state, rid, c);
     value = writeStoredRealmStanding(state, rid, value);
-    if (!c) return value;
-    c.opinion = value;
-    c.realmStanding = value;
-    return value;
+    if (c) {
+      c.opinion = value;
+      c.realmStanding = value;
+    }
+    return FB.faithAdjustedRealmStanding
+      ? FB.faithAdjustedRealmStanding(state, rid, value) : value;
   };
 
   FB.setRealmRulerStanding = function (state, rid, value) {
     value = writeStoredRealmStanding(state, rid, value);
+    if (FB.markRealmStandingFaithBaseline) {
+      FB.markRealmStandingFaithBaseline(state, rid);
+    }
     const c = FB.realmRulerCharacter(state, rid);
     if (c) {
       c.opinion = value;
@@ -2824,6 +2831,9 @@ window.FB = window.FB || {};
     s.rulerGeneration = r.ruler.generation;
     c.realmStanding = writeStoredRealmStanding(state, rid, heirStanding);
     c.opinion = c.realmStanding;
+    if (FB.markRealmStandingFaithBaseline) {
+      FB.markRealmStandingFaithBaseline(state, rid);
+    }
     indexRuler(c.id, rid);
     /* Continuity of person. The heir's own record takes the throne rather
        than a fresh stub with a newly rolled martial score and temper, so the

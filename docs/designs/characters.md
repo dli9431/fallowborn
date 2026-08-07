@@ -300,7 +300,11 @@ toward the current protagonist (−100…100). Ordinary characters retain the co
 field `character.opinion`; new code reads and writes it through
 `FB.standingOf(state, {kind:'character',id})` and `FB.adjustStanding`. It gates deeds and
 events (courtship, petitions, `roleOpinionAbove/Below` compatibility triggers), and
-three multipliers make it felt everywhere: the dead `traitAgg(me).opinion` aggregate now
+its starting point includes the counterpart's directional faith baseline
+(`same` +15, in-fold +10, schismatic +5, foreign −10, hostile −25). The saved
+`faithStandingBase` marker lets a changed faith relation rebase that prior without
+discarding Standing earned from personal history. Three multipliers make it felt
+everywhere: the dead `traitAgg(me).opinion` aggregate now
 scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk faster),
 and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
 add the target's `opinion/500` to success — a trusting victim is easier to undo.

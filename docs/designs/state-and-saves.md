@@ -361,10 +361,21 @@ valid. Direct-liege changes use `FB.changePlayerLiege`, which moves the dedicate
 score. No canonical `standings` object or save migration is introduced merely to rename
 the player-facing system.
 
-On protagonist succession, every character and realm score resets to neutral because
+Faith relations add a dynamic baseline without replacing those totals.
+`character.faithStandingBase` and
+`player.realmStandingFaithBases[realmId]` remember the directional faith baseline
+already included in each compatibility score. Reads subtract that marker and add the
+current `FB.faithRelationBaseline`, so a reconciliation or new schism changes only the
+religious prior while preserving service, gifts, rivalry, and other earned history.
+`player.faithStandingMigration:1` marks the one-time additive repair for older
+version-3 saves: their existing totals receive the current baseline once, then round
+trip unchanged. Newly created neutral characters and realms begin with the baseline;
+an explicit authored `opinion` remains an exact initial total.
+
+On protagonist succession, every earned character and realm score resets because
 the save stores only relationships with the outgoing protagonist, not an heir/counterpart
-matrix. Explicit inherited commitments may then apply a bounded new modifier (retainers
-renew at −15). On AI ruler succession, a displayed heir preserves the score already
+matrix. The new protagonist's current faith baselines remain, and explicit inherited
+commitments may then apply a bounded new modifier (retainers renew at −15). On AI ruler succession, a displayed heir preserves the score already
 tracked with that exact person. A compact collateral is first materialized on its scoped
 court stream and starts neutral before that same record takes the throne.
 

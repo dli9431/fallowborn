@@ -97,6 +97,14 @@ test('faith definitions inherit doctrines and support directional relations',
         parentView:FB.faithRelation(s, 'catholic', id),
         childMarriage:FB.faithAllowsMarriage(s, id, 'catholic'),
         parentMarriage:FB.faithAllowsMarriage(s, 'catholic', id),
+        baselines:{
+          same:FB.faithRelationBaseline(s, 'catholic', 'catholic'),
+          inFold:FB.faithRelationBaseline(s, 'ashari', 'sunni'),
+          schismatic:FB.faithRelationBaseline(s, 'catholic', 'orthodox'),
+          foreign:FB.faithRelationBaseline(s, 'catholic', 'sunni'),
+          childView:FB.faithRelationBaseline(s, id, 'catholic'),
+          parentView:FB.faithRelationBaseline(s, 'catholic', id)
+        },
         ancestorBranch:FB.faithBranch(s, id, {
           catholic:'parent', christian:'family', default:'default'
         }),
@@ -140,6 +148,14 @@ test('faith definitions inherit doctrines and support directional relations',
     expect(result.parentView).toBe('schismatic');
     expect(result.childMarriage).toBe(true);
     expect(result.parentMarriage).toBe(false);
+    expect(result.baselines).toEqual({
+      same:15,
+      inFold:10,
+      schismatic:5,
+      foreign:-10,
+      childView:10,
+      parentView:5
+    });
     expect(result.ancestorBranch).toEqual({ branch:'catholic', value:'parent' });
     expect(result.christianTrigger).toBe(true);
     expect(result.catholicTrigger).toBe(true);

@@ -2614,6 +2614,116 @@ window.FB = window.FB || {};
      counterpart currently lives in character.opinion, player.liegeOp, or
      player.liegeOps. A materialized reigning ruler always resolves through
      the realm store, so the character and realm sheets cannot diverge. */
+  FB.standingFaithBaseline = function (state, target) {
+    if (!state || !state.player || !target || !FB.faithRelationBaseline) {
+      return 0;
+    }
+    const playerCharacter = state.chars && state.chars[state.player.charId];
+    if (!playerCharacter || !playerCharacter.religion) return 0;
+    let observerReligion = null;
+    if (target.kind === 'character') {
+      const c = state.chars && state.chars[target.id];
+      observerReligion = c && c.religion;
+    } else if (target.kind === 'realm' && FB.realmReligionId) {
+      observerReligion = FB.realmReligionId(state, target.id);
+    }
+    return observerReligion
+      ? FB.faithRelationBaseline(
+        state, observerReligion, playerCharacter.religion) : 0;
+  };
+
+  function standingFaithMarker(state, target) {
+    if (target.kind === 'character') {
+      const c = state.chars && state.chars[target.id];
+      return c && isFinite(Number(c.faithStandingBase))
+        ? Number(c.faithStandingBase) : 0;
+    }
+    const bases = state.player && state.player.realmStandingFaithBases;
+    return bases && Object.prototype.hasOwnProperty.call(bases, target.id) &&
+      isFinite(Number(bases[target.id])) ? Number(bases[target.id]) : 0;
+  }
+
+  function faithAdjustedStanding(state, target, stored) {
+    const currentBase = FB.standingFaithBaseline(state, target);
+    const storedBase = standingFaithMarker(state, target);
+    return FB.clamp((Number(stored) || 0) - storedBase + currentBase,
+      -100, 100);
+  }
+
+  FB.faithAdjustedRealmStanding = function (state, rid, stored) {
+    return faithAdjustedStanding(state, { kind:'realm', id:rid }, stored);
+  };
+
+  FB.markRealmStandingFaithBaseline = function (state, rid) {
+    if (!state || !state.player || !rid || rid === 'player') return 0;
+    const p = state.player;
+    if (!p.realmStandingFaithBases ||
+        typeof p.realmStandingFaithBases !== 'object' ||
+        Array.isArray(p.realmStandingFaithBases)) {
+      p.realmStandingFaithBases = {};
+    }
+    const baseline = FB.standingFaithBaseline(
+      state, { kind:'realm', id:rid });
+    p.realmStandingFaithBases[rid] = baseline;
+    return baseline;
+  };
+
+  /* Version-3 saves written before faith baselines keep their earned totals.
+     Add the current religious prior once, then remember it separately so a
+     later schism changes only the prior rather than gifts or grievances. */
+  FB.ensureFaithStandingBaselines = function (state) {
+    if (!state || !state.player || Number(state.player.faithStandingMigration) >= 1) {
+      return false;
+    }
+    const p = state.player;
+    const playerCharacter = state.chars && state.chars[p.charId];
+    if (!playerCharacter) return false;
+    const chars = state.chars || {};
+    for (const id in chars) {
+      const c = chars[id];
+      if (!c || c.dead || c.id === playerCharacter.id) continue;
+      const target = { kind:'character', id:c.id };
+      const currentBase = FB.standingFaithBaseline(state, target);
+      const oldBase = isFinite(Number(c.faithStandingBase))
+        ? Number(c.faithStandingBase) : 0;
+      c.opinion = FB.clamp((Number(c.opinion) || 0) - oldBase + currentBase,
+        -100, 100);
+      c.faithStandingBase = currentBase;
+    }
+    const oldBases = p.realmStandingFaithBases &&
+      typeof p.realmStandingFaithBases === 'object' &&
+      !Array.isArray(p.realmStandingFaithBases)
+      ? p.realmStandingFaithBases : {};
+    const newBases = {};
+    const realms = state.realms || {};
+    for (const rid in realms) {
+      if (rid === 'player' || !realms[rid] || !realms[rid].alive) continue;
+      const currentBase = FB.standingFaithBaseline(
+        state, { kind:'realm', id:rid });
+      const oldBase = Object.prototype.hasOwnProperty.call(oldBases, rid) &&
+        isFinite(Number(oldBases[rid])) ? Number(oldBases[rid]) : 0;
+      const stored = rid === p.liege ? p.liegeOp :
+        (p.liegeOps && p.liegeOps[rid]);
+      const value = FB.clamp((Number(stored) || 0) - oldBase + currentBase,
+        -100, 100);
+      if (rid === p.liege) p.liegeOp = value;
+      else {
+        p.liegeOps = p.liegeOps || {};
+        p.liegeOps[rid] = value;
+      }
+      const ruler = FB.realmRulerCharacterSnapshot &&
+        FB.realmRulerCharacterSnapshot(state, rid);
+      if (ruler) {
+        ruler.opinion = value;
+        ruler.realmStanding = value;
+      }
+      newBases[rid] = currentBase;
+    }
+    p.realmStandingFaithBases = newBases;
+    p.faithStandingMigration = 1;
+    return true;
+  };
+
   FB.standingOf = function (state, target) {
     if (!state || !state.player || !target || !target.kind || !target.id) {
       return 0;
@@ -2624,7 +2734,7 @@ window.FB = window.FB || {};
       const rid = FB.realmIdForRulerCharacter &&
         FB.realmIdForRulerCharacter(state, c);
       if (rid) return FB.standingOf(state, { kind:'realm', id:rid });
-      return FB.clamp(Number(c.opinion) || 0, -100, 100);
+      return faithAdjustedStanding(state, target, c.opinion);
     }
     if (target.kind === 'realm') {
       if (target.id === 'player') return 0;
@@ -2632,8 +2742,9 @@ window.FB = window.FB || {};
         return FB.realmRulerStandingSnapshot(state, target.id);
       }
       const p = state.player;
-      if (target.id === p.liege) return p.liegeOp || 0;
-      return (p.liegeOps && p.liegeOps[target.id]) || 0;
+      const stored = target.id === p.liege ? p.liegeOp :
+        (p.liegeOps && p.liegeOps[target.id]);
+      return faithAdjustedStanding(state, target, stored);
     }
     return 0;
   };
@@ -2656,6 +2767,7 @@ window.FB = window.FB || {};
           source);
       }
       c.opinion = FB.clamp(FB.standingOf(state, target) + amount, -100, 100);
+      c.faithStandingBase = FB.standingFaithBaseline(state, target);
       return c.opinion;
     }
     if (target.kind === 'realm') {
@@ -2666,6 +2778,7 @@ window.FB = window.FB || {};
         return FB.setRealmRulerStanding(state, target.id, value);
       }
       const p = state.player;
+      FB.markRealmStandingFaithBaseline(state, target.id);
       if (target.id === p.liege) p.liegeOp = value;
       else {
         p.liegeOps = p.liegeOps || {};
@@ -2718,19 +2831,46 @@ window.FB = window.FB || {};
 
   /* The current save shape records only counterpart-to-current-protagonist
      scores, not pairwise relationships. On succession every personal and
-     political score therefore starts neutral; copying a predecessor's score
-     would invent a relationship the game never tracked. */
+     political score therefore returns to its current faith baseline; copying
+     a predecessor's earned score would invent a relationship the game never
+     tracked. */
   FB.resetStandingsForSuccession = function (state) {
     if (!state || !state.player) return;
     const chars = state.chars || {};
     for (const id in chars) {
       const c = chars[id];
       if (!c) continue;
-      c.opinion = 0;
+      if (c.id === state.player.charId) {
+        c.opinion = 0;
+        c.faithStandingBase = 0;
+        continue;
+      }
+      const baseline = FB.standingFaithBaseline(state, {
+        kind:'character', id:c.id
+      });
+      c.opinion = baseline;
+      c.faithStandingBase = baseline;
       if (c.realmStanding !== undefined) c.realmStanding = 0;
     }
     state.player.liegeOp = 0;
     state.player.liegeOps = {};
+    state.player.realmStandingFaithBases = {};
+    const realms = state.realms || {};
+    for (const rid in realms) {
+      if (rid === 'player' || !realms[rid] || !realms[rid].alive) continue;
+      const baseline = FB.standingFaithBaseline(state, {
+        kind:'realm', id:rid
+      });
+      if (rid === state.player.liege) state.player.liegeOp = baseline;
+      else state.player.liegeOps[rid] = baseline;
+      state.player.realmStandingFaithBases[rid] = baseline;
+      const ruler = FB.realmRulerCharacterSnapshot &&
+        FB.realmRulerCharacterSnapshot(state, rid);
+      if (ruler) {
+        ruler.opinion = baseline;
+        ruler.realmStanding = baseline;
+      }
+    }
   };
 
   /* Historical names remain compatibility adapters for saves, events, and

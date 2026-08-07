@@ -169,8 +169,11 @@ only structural contacts cultivated by the yearly pass: liege/vassal ties,
 neighboring sovereigns, and one peer per house in the protagonist's already
 bounded political court. A vassal's regard for their liege continues to use
 `realm.favor`, and either direction involving the protagonist continues to use
-typed realm Standing. An absent sparse edge derives a neutral baseline from
-culture, faith, alliance, and war. Stale edges expire after eight years. There
+typed realm Standing. An absent sparse edge derives a baseline from
+culture, directional faith relation, alliance, and war. Faith contributes the shared
+historical prior from `FB.faithRelationBaseline`: exact +15, in-fold +10,
+schismatic +5, foreign −10, or explicitly hostile −25. Stale edges expire after
+eight years. There
 is no all-ruler pairwise matrix and no all-character social graph. Both ruler
 generations are stamped on a stored edge, so either succession returns that
 pair to its derived baseline instead of inheriting a predecessor's friendship.
@@ -184,9 +187,10 @@ annual allegiance are durable.
 AI approaches to the protagonist are globally capped at one per year and must
 pass `FB.rulerPlayerRelevance`. The check performs one cached county-distance
 walk from the household home. A foreign court may reach farther when it shares
-the protagonist's culture and faith group, less far when it shares only one,
-and only a few county steps when it shares neither. Exact faith improves its
-priority, while a four-year per-ruler cooldown prevents one favored court from
+the protagonist's culture and a non-hostile branch of the faith graph, less far
+when it shares only one, and only a few county steps when it shares neither.
+Exact faith improves its priority through the same directional baseline, while
+a four-year per-ruler cooldown prevents one favored court from
 monopolizing the annual slot. Rulers in the same sovereign hierarchy and
 already-committed war, pact, alliance, or royal-marriage relationships remain
 relevant. Thus an
