@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 async function startListGame(page, testInfo) {
@@ -12,7 +13,7 @@ async function startListGame(page, testInfo) {
 }
 
 async function makeLargeListFixture(page) {
-  return page.evaluate(function () {
+  var fixture = await page.evaluate(function () {
     var s = FB.state;
     var p = s.player;
     var me = s.chars[p.charId];
@@ -163,6 +164,8 @@ async function makeLargeListFixture(page) {
       unlockedUid:'large_list_enterprise_4'
     };
   });
+  await waitForUiRefresh(page);
+  return fixture;
 }
 
 test('small Work roster keeps all ordinary rows visible without search',

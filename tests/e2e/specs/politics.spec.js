@@ -69,7 +69,7 @@ async function configurePolitics(page) {
     p.gold = 500;
     p.prestige = 500;
     p.liege = polityId;
-    p.liegeOp = -60;
+    p.liegeOp = 0;
     p.liegeOps = {};
     p.provs = countyIds.slice(2, 4);
     p.provinceId = countyIds[2];
@@ -154,6 +154,17 @@ async function configurePolitics(page) {
     s.economy.investments = [];
     FB.enterpriseList(s);
     FB.invalidateRealmCache();
+    /* This fixture exercises the base bloc and lobbying rules. Hold the new
+       ruler-agency inputs neutral so an inherited grievance or aim cannot
+       turn every bloc into committed support or opposition. */
+    [polityId, alphaId, betaId, gammaId, clientId, unrelatedId].forEach(
+      function (id) {
+        s.agency.rulerAims[id] = {
+          id:'secure_dynasty',
+          generation:s.realms[id].ruler.generation,
+          sinceYear:s.date.year
+        };
+      });
     s.politics = null;
     FB.ensurePolitics(s);
     p.roleOrientationsSeen = p.roleOrientationsSeen || {};
@@ -210,10 +221,25 @@ test('direct-court scope, affiliation interests, and influence are authoritative
       }
 
       var gamma = s.realms[setup.gammaId];
+      var gammaCharacter = FB.realmRulerCharacterSnapshot(
+        s, setup.gammaId);
       var gammaCulture = gamma.ruler.culture;
       var gammaReligion = gamma.religion;
-      gamma.ruler.culture = 'politics_unique_culture';
-      gamma.religion = 'politics_unique_faith';
+      var gammaCharacterCulture = gammaCharacter && gammaCharacter.culture;
+      var gammaCharacterReligion = gammaCharacter && gammaCharacter.religion;
+      var independentCulture = Object.keys(FBDATA.cultures).filter(
+        function (id) { return id !== gammaCulture; })[0];
+      var gammaFaithGroup = FB.faithGroup(gammaReligion, s);
+      var independentReligion = FB.religionIds(s, true).filter(
+        function (id) {
+          return FB.faithGroup(id, s) !== gammaFaithGroup;
+        })[0];
+      gamma.ruler.culture = independentCulture;
+      gamma.religion = independentReligion;
+      if (gammaCharacter) {
+        gammaCharacter.culture = independentCulture;
+        gammaCharacter.religion = independentReligion;
+      }
       s.politics = null;
       FB.ensurePolitics(s);
       var independentSummary = FB.politicalSummary(s);
@@ -225,6 +251,10 @@ test('direct-court scope, affiliation interests, and influence are authoritative
       }
       gamma.ruler.culture = gammaCulture;
       gamma.religion = gammaReligion;
+      if (gammaCharacter) {
+        gammaCharacter.culture = gammaCharacterCulture;
+        gammaCharacter.religion = gammaCharacterReligion;
+      }
       s.politics = null;
       FB.ensurePolitics(s);
 
@@ -577,6 +607,9 @@ test('a motion spends once, lobbies once, and tallies one roll per undecided blo
     var result = await page.evaluate(function () {
       var s = FB.state;
       var p = s.player;
+      /* Keep the ordinary vote below its 85% cap so the evidence bonus is
+         observable instead of both totals clamping to the same value. */
+      p.prestige = 100;
       var liege = s.realms[p.liege];
       p.flags.plot_obligation_evidence = {
         realmId:p.liege,

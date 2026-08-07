@@ -1450,15 +1450,17 @@ window.FB = window.FB || {};
     return familyIndexOf(state).spouses[cid] || [];
   };
 
-  /* Death cleanup needs both reverse relationship maps. Expose a read-only
-     same-tick snapshot so a yearly mortality sweep can keep using the one
-     indexed pass even though each death invalidates the live cache. */
+  /* Death cleanup and yearly family systems need the reverse relationship
+     maps and grouped kin. Expose a read-only same-tick snapshot so the sweep
+     can keep using one indexed pass even though each death invalidates the
+     live cache. */
   FB.familyLinksSnapshot = function (state) {
     const index = familyIndexOf(state);
     const kin = FB.kinOf(state);
     return {
       spouses:index.spouses,
       betrotheds:index.betrotheds,
+      kin:kin,
       kinById:kin.byId
     };
   };
@@ -2015,9 +2017,11 @@ window.FB = window.FB || {};
     const headed = FB.religionsHeadedBy(state, realm.id);
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
     const pr = FB.world && FB.world.byId[realm.capital];
-    const religionId = FB.realmReligionId
-      ? (FB.realmReligionId(state, realm.id) || 'catholic')
-      : (pr ? pr.religion : 'catholic');
+    const stored = state && state.realms && state.realms[realm.id];
+    const religionId = realm.religion ||
+      (stored && FB.realmReligionId
+        ? FB.realmReligionId(state, realm.id) : null) ||
+      (pr ? pr.religion : 'catholic');
     const sex = realm.ruler && realm.ruler.sex === 'f' ? 'f' : 'm';
     return renderRankTitle(rankTitleRecord(state, religionId, sex,
       FB.clamp((realm.rank || 3) + 3, 4, 7)));

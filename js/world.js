@@ -4061,7 +4061,7 @@ window.FB = window.FB || {};
       }
     }
 
-    if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state);
+    if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
 
     // development drift (tech can lift the ceiling for the player's lands)
     for (const pid in state.dev) {

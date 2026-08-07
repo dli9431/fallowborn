@@ -440,7 +440,7 @@ test.describe('starting-family presets', function () {
     await expect(page.getByRole('heading', { name:'New Game', exact:true }))
       .toBeVisible();
     await page.locator('#ng-seed').fill(code);
-    await page.getByRole('button', { name:/Use this seed/ }).click();
+    await page.locator('#ng-seed').press('Enter');
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await expect(page.locator('#cg-name')).toHaveValue(name);
     await page.getByRole('button', {
@@ -506,7 +506,7 @@ test.describe('starting-family presets', function () {
       await expect(page.getByRole('heading', { name:'New Game', exact:true }))
         .toBeVisible();
       await page.locator('#ng-seed').fill('CADENCE-867-farmer-london-f-Ada-nope');
-      await page.getByRole('button', { name:/Use this seed/ }).click();
+      await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#ng-seed-err'))
         .toContainText('doesn’t parse');
 
@@ -516,7 +516,7 @@ test.describe('starting-family presets', function () {
         await page.getByRole('button', { name:'New Game', exact:true }).click();
         await page.locator('#ng-seed')
           .fill('CADENCE-867-farmer-london-f-Ada-' + preset);
-        await page.getByRole('button', { name:/Use this seed/ }).click();
+        await page.locator('#ng-seed').press('Enter');
         await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
         await expect(page.locator(
           'input[name=cg-family][value="' + preset + '"]')).toBeChecked();
@@ -526,7 +526,7 @@ test.describe('starting-family presets', function () {
       await openGame(page, testInfo);
       await page.getByRole('button', { name:'New Game', exact:true }).click();
       await page.locator('#ng-seed').fill(START_CODE);
-      await page.getByRole('button', { name:/Use this seed/ }).click();
+      await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
       await expect(page.locator('input[name=cg-family][value="standard"]'))
         .toBeChecked();
@@ -536,7 +536,7 @@ test.describe('starting-family presets', function () {
     async function ({ page }) {
       await page.getByRole('button', { name:'New Game', exact:true }).click();
       await page.locator('#ng-seed').fill(START_CODE);
-      await page.getByRole('button', { name:/Use this seed/ }).click();
+      await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
       await expect(page.locator('#cg-summary')).toContainText('aged 16');
 

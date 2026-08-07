@@ -79,7 +79,7 @@ window.FB = window.FB || {};
     return realm && realm.liege ? 'win_independence' : 'strengthen_crown';
   }
 
-  FB.agencyFamilyMembers = function (state) {
+  FB.agencyFamilyMembers = function (state, kinSnapshot) {
     var out = [], seen = {};
     var me = state && state.player && state.chars[state.player.charId];
     function add(c) {
@@ -92,7 +92,7 @@ window.FB = window.FB || {};
       for (var i = 0; i < household.length; i++) add(household[i]);
     }
     if (FB.manageableKinKind) {
-      var kin = FB.kinOf && FB.kinOf(state);
+      var kin = kinSnapshot || (FB.kinOf && FB.kinOf(state));
       var siblings = kin && kin.siblings;
       if (siblings) {
         for (i = 0; i < siblings.length; i++) {
@@ -111,8 +111,8 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.isAgencyFamilyMember = function (state, cid) {
-    var family = FB.agencyFamilyMembers(state);
+  FB.isAgencyFamilyMember = function (state, cid, familySnapshot) {
+    var family = familySnapshot || FB.agencyFamilyMembers(state);
     for (var i = 0; i < family.length; i++) {
       if (String(family[i].id) === String(cid)) return true;
     }
@@ -142,7 +142,7 @@ window.FB = window.FB || {};
     return 'build_household';
   }
 
-  FB.ensureAgency = function (state) {
+  FB.ensureAgency = function (state, familySnapshot) {
     if (!state || !state.player || !state.realms || !state.chars) return null;
     var agency = state.agency;
     if (!agency || typeof agency !== 'object' || Array.isArray(agency)) {
@@ -183,7 +183,7 @@ window.FB = window.FB || {};
     }
 
     var managed = {};
-    var family = FB.agencyFamilyMembers(state);
+    var family = familySnapshot || FB.agencyFamilyMembers(state);
     for (var i = 0; i < family.length; i++) {
       var c = family[i];
       managed[c.id] = 1;
@@ -202,7 +202,7 @@ window.FB = window.FB || {};
     for (var cid in agency.familyAmbitions) {
       if (!managed[cid]) delete agency.familyAmbitions[cid];
     }
-    FB.familyOfficeRecords(state);
+    FB.familyOfficeRecords(state, family);
     return agency;
   };
 
@@ -229,17 +229,18 @@ window.FB = window.FB || {};
     return aim ? FB.T(labels[aim.id] || aim.id) : FB.T('Unknown');
   };
 
-  FB.familyAmbitionSnapshot = function (state, cid) {
+  FB.familyAmbitionSnapshot = function (state, cid, familySnapshot) {
     var c = state && state.chars && state.chars[cid];
-    if (!c || c.dead || !FB.isAgencyFamilyMember(state, cid)) return null;
+    if (!c || c.dead ||
+        !FB.isAgencyFamilyMember(state, cid, familySnapshot)) return null;
     var stored = state.agency && state.agency.familyAmbitions &&
       state.agency.familyAmbitions[cid];
     return stored || { id:familyAimFor(state, c), sinceYear:state.date.year,
       guidance:'neutral', progress:0, lastRequestYear:null };
   };
 
-  FB.familyAmbitionLabel = function (state, cid) {
-    var ambition = FB.familyAmbitionSnapshot(state, cid);
+  FB.familyAmbitionLabel = function (state, cid, familySnapshot) {
+    var ambition = FB.familyAmbitionSnapshot(state, cid, familySnapshot);
     var labels = {
       learn:'Master an art', marry_well:'Make a worthy marriage',
       prosper:'Build a fortune', serve_house:'Win a place in family service',
@@ -460,7 +461,7 @@ window.FB = window.FB || {};
 
   /* A family member may fill the same office slot as a retainer. These are
      unpaid household duties and therefore do not consume retainer capacity. */
-  FB.familyOfficeRecords = function (state) {
+  FB.familyOfficeRecords = function (state, familySnapshot) {
     var p = state.player;
     if (!p.familyOffices || typeof p.familyOffices !== 'object' ||
         Array.isArray(p.familyOffices)) p.familyOffices = {};
@@ -471,7 +472,7 @@ window.FB = window.FB || {};
       var def = FB.positionDef && FB.positionDef(office);
       var career = c && FB.careerOf ? FB.careerOf(state, c) : null;
       if (!c || c.dead || !def || def.kind !== 'retainer' || seen[cid] ||
-          !FB.isAgencyFamilyMember(state, cid) ||
+          !FB.isAgencyFamilyMember(state, cid, familySnapshot) ||
           FB.ageOf(c, state.date.year) < 16 ||
           !career || career.profession !== def.profession ||
           (def.maleOnly && c.sex !== 'm') ||
@@ -548,18 +549,21 @@ window.FB = window.FB || {};
     return false;
   }
 
-  function marriagePair(state, rid) {
+  function marriagePair(state, rid, familySnapshot) {
     var relevance = FB.rulerPlayerRelevance(state, rid);
     if (!relevance.eligible) return null;
     var rulerAim = FB.rulerAimSnapshot(state, rid);
     if (!rulerAim || ['secure_dynasty', 'keep_peace', 'strengthen_crown']
         .indexOf(rulerAim.id) < 0) return null;
-    var family = FB.agencyFamilyMembers(state).filter(function (c) {
-      var age = FB.ageOf(c, state.date.year);
-      return age >= 12 && !charCommitted(state, c) &&
-        !(FB.papacyCelibateSnapshot && FB.papacyCelibateSnapshot(state, c)) &&
-        !(FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c));
-    });
+    var family = (familySnapshot || FB.agencyFamilyMembers(state))
+      .filter(function (c) {
+        var age = FB.ageOf(c, state.date.year);
+        return age >= 12 && !charCommitted(state, c) &&
+          !(FB.papacyCelibateSnapshot &&
+            FB.papacyCelibateSnapshot(state, c)) &&
+          !(FB.isReigningRealmRuler &&
+            FB.isReigningRealmRuler(state, c));
+      });
     var members = FB.realmFamilySnapshot ? FB.realmFamilySnapshot(state, rid) : [];
     var partners = [];
     for (var i = 0; i < members.length; i++) {
@@ -667,9 +671,9 @@ window.FB = window.FB || {};
     }
   }
 
-  function maintainFamilyAmbitions(state) {
+  function maintainFamilyAmbitions(state, familySnapshot) {
     var agency = state.agency;
-    var family = FB.agencyFamilyMembers(state);
+    var family = familySnapshot || FB.agencyFamilyMembers(state);
     for (var i = 0; i < family.length; i++) {
       var c = family[i];
       var record = agency.familyAmbitions[c.id];
@@ -687,21 +691,23 @@ window.FB = window.FB || {};
       state.player.prestige += 3;
       FB.news(state, FB.msg('news.family.ambition_progress',
         '🌟 {name} makes good on the ambition to {ambition}.', {
-          name:c.name, ambition:FB.familyAmbitionLabel(state, c.id)
+          name:c.name,
+          ambition:FB.familyAmbitionLabel(state, c.id, family)
         }));
     }
   }
 
-  function maybeQueueFamilyRequest(state) {
+  function maybeQueueFamilyRequest(state, familySnapshot) {
     var agency = state.agency;
     if (FB.game && FB.game.observe ||
         Number(agency.lastFamilyRequestYear) === state.date.year ||
         !FB.chance(0.35)) return;
-    var family = FB.agencyFamilyMembers(state).filter(function (c) {
-      var record = agency.familyAmbitions[c.id];
-      return record && Number(record.lastRequestYear) !== state.date.year &&
-        FB.ageOf(c, state.date.year) >= 10;
-    });
+    var family = (familySnapshot || FB.agencyFamilyMembers(state))
+      .filter(function (c) {
+        var record = agency.familyAmbitions[c.id];
+        return record && Number(record.lastRequestYear) !== state.date.year &&
+          FB.ageOf(c, state.date.year) >= 10;
+      });
     if (!family.length) return;
     family.sort(function (a, b) {
       var standingOrder =
@@ -788,7 +794,7 @@ window.FB = window.FB || {};
     }
   }
 
-  function maybeApproachPlayer(state) {
+  function maybeApproachPlayer(state, familySnapshot) {
     var agency = state.agency;
     if (FB.game && FB.game.observe || queuedAgencyEvent(state) ||
         Number(agency.lastPlayerApproachYear) === state.date.year ||
@@ -803,7 +809,7 @@ window.FB = window.FB || {};
       var relevance = FB.rulerPlayerRelevance(state, rid);
       if (!relevance.eligible) continue;
       candidates.push({ rid:rid, relevance:relevance,
-        marriage:marriagePair(state, rid) });
+        marriage:marriagePair(state, rid, familySnapshot) });
     }
     if (!candidates.length) return;
     candidates.sort(function (a, b) {
@@ -843,14 +849,16 @@ window.FB = window.FB || {};
     return Math.max(1, Number(support.multiplier) || 1);
   };
 
-  FB.rulerAgencyYearly = function (state) {
-    if (!FB.ensureAgency(state)) return;
+  FB.rulerAgencyYearly = function (state, familyLinks) {
+    var family = FB.agencyFamilyMembers(state,
+      familyLinks && familyLinks.kin);
+    if (!FB.ensureAgency(state, family)) return;
     var neighbors = sovereignNeighbors(state);
     cultivateRulers(state, neighbors);
-    maintainFamilyAmbitions(state);
+    maintainFamilyAmbitions(state, family);
     maybeSponsorRebels(state, neighbors);
-    maybeApproachPlayer(state);
-    maybeQueueFamilyRequest(state);
+    maybeApproachPlayer(state, family);
+    maybeQueueFamilyRequest(state, family);
   };
 
   FB.fns = FB.fns || {};
