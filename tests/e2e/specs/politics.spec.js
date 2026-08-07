@@ -227,12 +227,21 @@ test('direct-court scope, affiliation interests, and influence are authoritative
       var gammaReligion = gamma.religion;
       var gammaCharacterCulture = gammaCharacter && gammaCharacter.culture;
       var gammaCharacterReligion = gammaCharacter && gammaCharacter.religion;
+      var betaCharacter = FB.realmRulerCharacterSnapshot(
+        s, setup.betaId);
+      var betaCulture = betaCharacter && betaCharacter.culture ||
+        s.realms[setup.betaId].ruler.culture;
+      var betaReligion = FB.realmReligionId(s, setup.betaId);
       var independentCulture = Object.keys(FBDATA.cultures).filter(
-        function (id) { return id !== gammaCulture; })[0];
+        function (id) {
+          return id !== gammaCulture && id !== betaCulture;
+        })[0];
       var gammaFaithGroup = FB.faithGroup(gammaReligion, s);
+      var betaFaithGroup = FB.faithGroup(betaReligion, s);
       var independentReligion = FB.religionIds(s, true).filter(
         function (id) {
-          return FB.faithGroup(id, s) !== gammaFaithGroup;
+          var group = FB.faithGroup(id, s);
+          return group !== gammaFaithGroup && group !== betaFaithGroup;
         })[0];
       gamma.ruler.culture = independentCulture;
       gamma.religion = independentReligion;
