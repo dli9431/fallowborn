@@ -386,8 +386,10 @@ test('direct-court scope, affiliation interests, and influence are authoritative
       posture:'support',
       chance:0.8
     });
+    /* Shared-faith ruler regard now contributes the historical relationship
+       prior to this mixed magnate bloc's motion score. */
     expect(result.redressPostures['magnate:' + ids.alphaId].score)
-      .toBe(20);
+      .toBe(23);
     expect(result.independentAffiliation).toBe(
       'independent:' + ids.gammaId);
     expect(result.commercialAffiliation).toBe('mercantile');

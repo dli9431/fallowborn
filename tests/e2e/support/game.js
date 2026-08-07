@@ -39,8 +39,10 @@ async function startDeterministicGame(page) {
     await seedInput.fill(START_CODE);
   }
   await expect(seedInput).toHaveValue(START_CODE);
-  await page.getByRole('button', { name: /Use this seed/ })
-    .click({ timeout:30 * 1000 });
+  // The input's Enter handler is the same player path as the button. It also
+  // avoids WebKit occasionally waiting forever for the modal button to become
+  // geometrically stable while the title screen finishes its first paint.
+  await seedInput.press('Enter');
 
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
   await expect(page.locator('#cg-name')).toHaveValue('Ada');
