@@ -1,5 +1,16 @@
 # Events are data
 
+Exceptional sibling courtship uses three queued, context-validated events:
+the one-time approach, illicit exposure, and the final proposal. Pair status,
+target id, route, and resource checks are revalidated when the event reaches
+the front of the queue. Dynamic consent and proposal odds use seeded game
+RNG; custom effects write only stable ids and enum-like outcomes, while all
+displayed prose remains in event data or localization-aware UI calls. The
+approach queues its reviewed route and response chance, then rejects the event
+if the live route or hard gates change before resolution. Autoresolution takes
+the first authored option: make an already-reviewed approach, end an exposed
+relationship, or make an already-reviewed proposal.
+
 Plot definitions may add a `target` selector. Beginning such a plot presents the
 selector first and stores its JSON-safe choice in `player.plot.context`; that same
 context is supplied to discovery and resolution events. The built-in

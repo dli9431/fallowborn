@@ -1,5 +1,15 @@
 # Characters: skills & growing up
 
+Children always keep their ordinary recorded father and mother. After a
+biological birth, `FB.applyCloseKinBirthRisk` classifies those parents through
+the marriage kinship snapshot. Full siblings give the child a 20% risk roll;
+half siblings give 10%, and close-kin parentage on either parent adds five
+percentage points to a 35% ceiling. A hit uses seeded game RNG to add Frail,
+add Sickly, or reduce starting health by one. The neutral
+`closeKinParentage` record persists even when the roll misses so later
+generations can calculate ancestry without inferring it from current family
+views.
+
 **Royal courts are eager for the living and compact for the dead.** Every reigning
 realm's ruler, adult consort, and displayed heirs exist as full
 `state.chars` records from world creation, so opening a realm shows a face and a

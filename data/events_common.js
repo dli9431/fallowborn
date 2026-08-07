@@ -31,6 +31,31 @@ FBDATA.events.push(
       success:{ text:'It is agreed! Before {holy} and kin, you are wed to {suitor}.', effects:{ marry:true, prestige:15, log:'Married {spouse}.' } },
       failure:{ text:'The family refuses — politely, but firmly. Perhaps with more standing, or more silver…', effects:{ clearFlag:'courting', clearSuitor:true, prestige:-5 } } }
   ]},
+{ id:'sibling_courtship_approach', title:'A Word That Cannot Be Recalled',
+  trigger:{ never:true }, contextValidator:'sibling_courtship_approach_valid',
+  text:'Trust, appetite, ambition, and taboo have narrowed to one dangerous question. You can speak to your sibling now, but a refusal will end the matter forever.',
+  options:[
+    { label:'Speak plainly.', desc:'Their own traits and Standing decide the answer; refusal is permanent.', effects:{ custom:'sibling_courtship_approach' } },
+    { label:'Keep silence.', desc:'Withdraw before the question is asked; the day is still spent.', effects:{} }
+  ]},
+{ id:'sibling_courtship_exposed', title:'The Household Whispers',
+  trigger:{ never:true }, contextValidator:'sibling_exposure_context_valid',
+  text:'A servant saw a hand linger; a cousin heard a door close. What passed for private devotion is becoming a public scandal.',
+  options:[
+    { label:'End it before worse follows.', desc:'Break off the courtship and accept the lasting five-year separation.', effects:{ custom:'sibling_exposure_end', piety:-5 } },
+    { label:'Deny everything.', desc:'Intrigue may quiet the story; discovery will deepen the scandal.', chance:'sibling_exposure_denial',
+      success:{ text:'Contradictory stories and careful pressure leave the gossips uncertain.', effects:{ prestige:-5, piety:-5 } },
+      failure:{ text:'The denial collapses. Now the secret and the lie are both common knowledge.', effects:{ prestige:-20, piety:-20, popularOpinion:-10, opinionLiege:-15 } } },
+    { label:'Persist openly.', desc:'Keep the courtship and bear the immediate public cost.', effects:{ prestige:-15, piety:-20, popularOpinion:-8, opinionLiege:-10 } }
+  ]},
+{ id:'sibling_proposal_made', title:'Vows Against the World', charCard:'suitor',
+  trigger:{ never:true }, contextValidator:'sibling_proposal_context_valid',
+  text:'The courtship has survived its first impossible question. You ask {suitor} for vows that may be sanctified by a rare rite — or condemned as an irregular union.',
+  options:[
+    { label:'Ask for the vows.', desc:'Standing and their traits decide the answer. The reviewed rite or scandal costs apply only if they accept.', chance:'sibling_proposal',
+      success:{ text:'{suitor} accepts. Whatever the world calls it, the two of you will make a household.', effects:{ custom:'sibling_marriage_success' } },
+      failure:{ text:'At the final threshold, {suitor} refuses. The courtship is over and will never be renewed.', effects:{ custom:'sibling_proposal_refused' } } }
+  ]},
 { id:'courting_above', title:'A Door Half-Shut', charCard:'suitor',
   trigger:{ flags:['courting'], custom:'suitor_above_station', chance:0.5 }, weight:12, cooldown:2,
   text:'The kin of {suitor} have taken your measure, and their looks are cold. Fine words at the gate, and behind them the plain question: what business has a {title} with their house?',

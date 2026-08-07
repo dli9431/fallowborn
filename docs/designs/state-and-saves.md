@@ -1,5 +1,17 @@
 # Game state & saves
 
+Exceptional sibling courtship is additive and retains strict save format 3.
+`state.siblingCourtships` is a pair-keyed map (`lowerId|higherId`) whose compact
+records keep initiator/target ids, accepted/refused/cooldown/married status,
+illicit or xwēdōdah route, approach/acceptance/cooldown turns, seasonal
+exposure clock, and public-exposure flag. Restore supplies an empty map to old
+saves, removes malformed or missing-character records, normalizes route and
+exposure fields, reconciles a current-player accepted record with the live
+courtship, and expires completed cooldowns without RNG. A child born to
+sibling parents may carry locale-neutral `closeKinParentage` provenance with
+degree, parent ids, risk, and a neutral `none` or rolled outcome; older
+children simply lack the field.
+
 Eager royal courts are additive and keep save version 3, and the bump would be actively
 harmful rather than merely unnecessary: both `S.read` and `S.parseExport` gate on
 `d.v === 3` by strict equality, so raising it to 4 would make every save written after

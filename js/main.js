@@ -1365,6 +1365,7 @@ window.FB = window.FB || {};
       greatHolyWar: null,
       greatHolyWarHistory: {},
       modifiers: { county:{} },
+      siblingCourtships: {},
       politics: null,
       player: {
         charId: null, houseFounderId:null,
@@ -1604,6 +1605,7 @@ window.FB = window.FB || {};
       greatHolyWar: null,
       greatHolyWarHistory: {},
       modifiers: { county:{} },
+      siblingCourtships: {},
       politics: null,
       player: {
         charId: null, tier: 0, profession: 'farmer', professionBack: null,
@@ -2491,6 +2493,9 @@ window.FB = window.FB || {};
           dyn: k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null
         });
         baby.health = 7;
+        if (FB.applyCloseKinBirthRisk) {
+          FB.applyCloseKinBirthRisk(s, baby, father, mother);
+        }
         k.childrenIds.push(baby.id); sp.childrenIds.push(baby.id);
         FB.touchFamily();
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
@@ -2545,6 +2550,9 @@ window.FB = window.FB || {};
           dyn: lineParent.dyn
         });
         baby.health = 7;
+        if (FB.applyCloseKinBirthRisk) {
+          FB.applyCloseKinBirthRisk(s, baby, father, mother);
+        }
         const parents = [father, mother];
         for (const parent of parents) {
           if (parent && parent.childrenIds.indexOf(baby.id) < 0) {

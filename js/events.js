@@ -14,6 +14,18 @@ window.FB = window.FB || {};
     return b.friendOpinionThreshold === undefined ? 40 : b.friendOpinionThreshold;
   };
 
+  FB.courtshipStandingThreshold = function (state, target) {
+    const me = state && state.player && state.chars[state.player.charId];
+    if (me && target && FB.kinshipDegreeSnapshot &&
+        FB.siblingCourtshipRecord) {
+      const degree = FB.kinshipDegreeSnapshot(state, me, target);
+      const record = (degree === 'full_sibling' || degree === 'half_sibling')
+        ? FB.siblingCourtshipRecord(state, me, target) : null;
+      if (record && record.status === 'accepted') return 80;
+    }
+    return FB.relationshipOpinionThreshold();
+  };
+
   function characterStanding(state, c) {
     return c ? FB.standingOf(state, { kind:'character', id:c.id }) : 0;
   }
@@ -228,7 +240,8 @@ window.FB = window.FB || {};
 
   FB.socialAttentionDaysToThreshold = function (state, c) {
     const rate = FB.socialAttentionDailyOpinion();
-    const need = FB.relationshipOpinionThreshold() - characterStanding(state, c);
+    const need = FB.courtshipStandingThreshold(state, c) -
+      characterStanding(state, c);
     if (need <= 0) return 0;
     if (rate <= 0) return null;
     return Math.max(0, Math.ceil(need / rate - 0.000000001));
@@ -236,14 +249,18 @@ window.FB = window.FB || {};
 
   FB.tickSocialAttention = function (state) {
     const rate = FB.socialAttentionDailyOpinion();
-    if (rate === 0) return;
-    const ids = FB.socialAttentionIds(state);
-    for (let i = 0; i < ids.length; i++) {
-      const c = state.chars[ids[i]];
-      if (!c || c.dead) continue;
-      if (FB.socialAttentionPresence(state, c).status !== 'active') continue;
-      adjustCharacterStanding(state, c, rate, 'social_attention');
-      state.player.socialAttention[c.id].lastTurn = state.turn;
+    if (rate !== 0) {
+      const ids = FB.socialAttentionIds(state);
+      for (let i = 0; i < ids.length; i++) {
+        const c = state.chars[ids[i]];
+        if (!c || c.dead) continue;
+        if (FB.socialAttentionPresence(state, c).status !== 'active') continue;
+        adjustCharacterStanding(state, c, rate, 'social_attention');
+        state.player.socialAttention[c.id].lastTurn = state.turn;
+      }
+    }
+    if (FB.tickSiblingCourtshipExposure) {
+      FB.tickSiblingCourtshipExposure(state);
     }
   };
 
@@ -843,10 +860,379 @@ window.FB = window.FB || {};
     if (FB.touchFamily) FB.touchFamily();
   };
 
+  function siblingPairKey(a, b) {
+    if (!a || !b) return null;
+    return String(a.id) < String(b.id)
+      ? String(a.id) + '|' + String(b.id)
+      : String(b.id) + '|' + String(a.id);
+  }
+
+  FB.ensureSiblingCourtships = function (state) {
+    if (!state) return {};
+    if (!state.siblingCourtships ||
+        typeof state.siblingCourtships !== 'object' ||
+        Array.isArray(state.siblingCourtships)) state.siblingCourtships = {};
+    const allowed = ['accepted','refused','cooldown','married'];
+    for (const key in state.siblingCourtships) {
+      const record = state.siblingCourtships[key];
+      if (!record || typeof record !== 'object' ||
+          !state.chars[record.initiatorId] || !state.chars[record.targetId] ||
+          siblingPairKey(state.chars[record.initiatorId],
+            state.chars[record.targetId]) !== key ||
+          allowed.indexOf(record.status) < 0) {
+        delete state.siblingCourtships[key];
+        continue;
+      }
+      record.route = record.route === 'xwedodah' ? 'xwedodah' : 'illicit';
+      record.exposed = !!record.exposed;
+      const currentId = state.player && state.player.charId;
+      const activeTargetId = state.player && state.player.courtingId;
+      if (record.status === 'accepted' && currentId &&
+          (record.initiatorId === currentId || record.targetId === currentId)) {
+        const otherId = record.initiatorId === currentId
+          ? record.targetId : record.initiatorId;
+        if (activeTargetId !== otherId) {
+          record.status = 'cooldown';
+          record.cooldownUntil = state.turn + 1800;
+        }
+      }
+      if (record.status === 'cooldown' &&
+          (!isFinite(record.cooldownUntil) || record.cooldownUntil <= state.turn)) {
+        delete state.siblingCourtships[key];
+      }
+    }
+    return state.siblingCourtships;
+  };
+
+  FB.siblingCourtshipRecord = function (state, a, b) {
+    const key = siblingPairKey(a, b);
+    const table = state && state.siblingCourtships;
+    const record = key && table && typeof table === 'object' &&
+      !Array.isArray(table) ? table[key] : null;
+    if (record && record.status === 'cooldown' &&
+        isFinite(record.cooldownUntil) && record.cooldownUntil <= state.turn) {
+      return null;
+    }
+    return record || null;
+  };
+
+  function siblingCourtshipRoute(state, a, b) {
+    if (!a || !b || a.religion !== b.religion) return 'illicit';
+    const first = FB.marriageDoctrine(a.religion, state).kinship || {};
+    const second = FB.marriageDoctrine(b.religion, state).kinship || {};
+    return first.siblingRite === 'xwedodah' &&
+      second.siblingRite === 'xwedodah' ? 'xwedodah' : 'illicit';
+  }
+  FB.siblingCourtshipRoute = siblingCourtshipRoute;
+
+  function siblingDynasticRelevance(state, a, b) {
+    if (!state || !a || !b) return false;
+    if (a.royalLine || b.royalLine ||
+        (FB.isReigningRealmRuler &&
+          (FB.isReigningRealmRuler(state, a) ||
+            FB.isReigningRealmRuler(state, b)))) return true;
+    if (state.player.tier < 3 || !FB.kinOf) return false;
+    const children = FB.kinOf(state).children || [];
+    for (let i = 0; i < children.length; i++) {
+      if (!children[i].c.dead && children[i].c.dyn === a.dyn) return false;
+    }
+    return !!(a.dyn && b.dyn === a.dyn);
+  }
+
+  function siblingTraitScore(c, route, dynastic) {
+    let score = FB.traitBonus(c, 'courtship', 'siblingInitiate');
+    if (dynastic) {
+      score += FB.traitBonus(c, 'courtship', 'siblingDynasticInitiate');
+    }
+    score += FB.traitBonus(c, 'courtship', route === 'xwedodah'
+      ? 'siblingRiteInitiate' : 'siblingTabooInitiate');
+    return score;
+  }
+
+  function siblingTraitBreakdown(c, keys) {
+    const out = [];
+    if (!c || !Array.isArray(c.traits)) return out;
+    for (let i = 0; i < c.traits.length; i++) {
+      const id = c.traits[i];
+      const group = FBDATA.traits[id] && FBDATA.traits[id].courtship;
+      if (!group) continue;
+      let value = 0;
+      for (let j = 0; j < keys.length; j++) {
+        const number = Number(group[keys[j]]);
+        if (isFinite(number)) value += number;
+      }
+      if (value) out.push({ id:id, value:value });
+    }
+    return out;
+  }
+
+  function siblingAcceptance(state, initiator, target, route, dynastic) {
+    const standing = characterStanding(state, target);
+    const standingBonus = FB.clamp((standing - 40) / 200, 0, 0.30);
+    let trait = FB.traitBonus(target, 'courtship', 'siblingAccept');
+    let receptive = trait > 0;
+    if (route === 'xwedodah') {
+      const rite = FB.traitBonus(target, 'courtship', 'siblingRiteAccept');
+      trait += rite;
+      if (rite > 0) receptive = true;
+    } else {
+      const illicit = FB.traitBonus(target, 'courtship', 'siblingIllicitAccept') +
+        FB.traitBonus(target, 'courtship', 'siblingTabooAccept');
+      trait += illicit;
+      if (illicit > 0) receptive = true;
+    }
+    if (dynastic) {
+      const ambition = FB.traitBonus(target, 'courtship',
+        'siblingDynasticAccept');
+      trait += ambition;
+      if (ambition > 0) receptive = true;
+    }
+    let chance = FB.clamp(0.05 + standingBonus + trait, 0.02,
+      route === 'xwedodah' ? 0.85 : 0.70);
+    if (!receptive && route !== 'xwedodah') chance = Math.min(chance, 0.10);
+    return {
+      chance:chance,
+      standingBonus:standingBonus,
+      traitBonus:trait,
+      receptive:receptive
+    };
+  }
+
+  function siblingVowed(state, c, player) {
+    if (!c) return true;
+    const doctrine = FB.religionOf(c.religion, state);
+    const profession = player ? state.player.profession :
+      (c.career && c.career.profession);
+    return (profession === 'monk' || profession === 'priest') &&
+      !doctrine.clergyMarriage;
+  }
+
+  FB.siblingCourtshipStatus = function (state, target) {
+    const player = state && state.player;
+    const me = player && state.chars[player.charId];
+    const degree = me && target
+      ? FB.kinshipDegreeSnapshot(state, me, target) : 'unrelated';
+    const route = siblingCourtshipRoute(state, me, target);
+    const dynastic = siblingDynasticRelevance(state, me, target);
+    const record = me && target
+      ? FB.siblingCourtshipRecord(state, me, target) : null;
+    const score = siblingTraitScore(me, route, dynastic);
+    const acceptance = me && target
+      ? siblingAcceptance(state, me, target, route, dynastic)
+      : { chance:0, standingBonus:0, traitBonus:0, receptive:false };
+    const playerKeys = ['siblingInitiate', route === 'xwedodah'
+      ? 'siblingRiteInitiate' : 'siblingTabooInitiate'];
+    const targetKeys = ['siblingAccept', route === 'xwedodah'
+      ? 'siblingRiteAccept' : 'siblingIllicitAccept'];
+    if (route !== 'xwedodah') targetKeys.push('siblingTabooAccept');
+    if (dynastic) {
+      playerKeys.push('siblingDynasticInitiate');
+      targetKeys.push('siblingDynasticAccept');
+    }
+    const status = {
+      relevant:degree === 'full_sibling' || degree === 'half_sibling',
+      ready:false,
+      code:'unavailable',
+      reason:'',
+      characterId:target && target.id || null,
+      degree:degree,
+      route:route,
+      dynastic:dynastic,
+      traitScore:score,
+      requiredTraitScore:1,
+      acceptance:acceptance,
+      playerModifiers:siblingTraitBreakdown(me, playerKeys),
+      targetModifiers:siblingTraitBreakdown(target, targetKeys),
+      record:record
+    };
+    function blocked(code, reason) {
+      status.code = code;
+      status.reason = reason;
+      return status;
+    }
+    if (!status.relevant) return blocked('not_sibling',
+      FB.T('Only a brother or sister can receive this exceptional approach.'));
+    if (!me || !target || me.dead || target.dead) return blocked('invalid',
+      FB.T('That person is not available.'));
+    if (record && record.status === 'married') return blocked('married',
+      FB.T('This union has already been made.'));
+    if (record && record.status === 'refused') return blocked('refused',
+      FB.T('They have already refused this approach, and will not hear it again.'));
+    if (record && record.status === 'cooldown') return blocked('cooldown',
+      FB.T('You broke off this suit. It cannot be renewed for {days} days.', {
+        days:Math.max(0, record.cooldownUntil - state.turn)
+      }));
+    if (record && record.status === 'accepted') return blocked('accepted',
+      FB.T('They have already accepted the courtship.'));
+    if (FB.ageOf(me, state.date.year) < 16 ||
+        FB.ageOf(target, state.date.year) < 16) return blocked('minor',
+      FB.T('Both siblings must be at least sixteen.'));
+    if (me.sex === target.sex) return blocked('same_sex',
+      FB.T('The marriage doctrine of this era does not recognize this match.'));
+    if (!FB.canWedSnapshot(state)) return blocked('player_married',
+      FB.T('Your current marriages leave no spouse place available.'));
+    if (FB.spousesSnapshot(state, target).length) return blocked('target_married',
+      FB.T('They are wed to another.'));
+    if (me.betrothedId || target.betrothedId) return blocked('betrothed',
+      FB.T('Neither sibling may be pledged to another.'));
+    if (FB.papacyCelibateSnapshot &&
+        (FB.papacyCelibateSnapshot(state, me) ||
+          FB.papacyCelibateSnapshot(state, target))) return blocked('celibate',
+      FB.T('A sacred office forbids this marriage.'));
+    if (siblingVowed(state, me, true) || siblingVowed(state, target, false)) {
+      return blocked('vocation_vow', FB.T('Religious vows forbid this marriage.'));
+    }
+    if (player.courtingId) return blocked('other_courtship',
+      FB.T('End your current courtship before making this approach.'));
+    if (!FB.socialAttentionCapacity()) return blocked('attention',
+      FB.T('No personal-attention assignment is available.'));
+    if (FB.socialAttentionPresence(state, target).status !== 'active') {
+      return blocked('remote',
+        FB.T('You must be in the same county to make so dangerous an approach.'));
+    }
+    const standing = characterStanding(state, target);
+    if (standing < 40) return blocked('standing',
+      FB.T('Requires +40 Standing; currently {standing}.', {
+        standing:Math.round(standing * 10) / 10
+      }));
+    if (score < 1) return blocked('traits',
+      FB.T('Your traits do not overcome the restraint needed to keep silent. Net score {score}; requires +1.', {
+        score:score
+      }));
+    status.ready = true;
+    status.code = 'ready';
+    return status;
+  };
+
+  FB.siblingProposalStatus = function (state, target) {
+    const ordinary = FB.proposalStatus(state, target);
+    const me = state.chars[state.player.charId];
+    const degree = FB.kinshipDegreeSnapshot(state, me, target);
+    const record = FB.siblingCourtshipRecord(state, me, target);
+    const route = siblingCourtshipRoute(state, me, target);
+    const status = {
+      ready:false,
+      reason:ordinary.reason,
+      characterId:target && target.id || null,
+      threshold:ordinary.threshold,
+      standing:ordinary.standing,
+      terms:{ amount:0, subjectPays:false, playerPays:false, playerDelta:0 },
+      route:route,
+      gold:route === 'xwedodah' ? 25 : 0,
+      piety:75,
+      prestige:route === 'xwedodah' ? 0 : 25,
+      commonVoice:route === 'xwedodah' ? 0 : 15,
+      liegeStanding:route === 'xwedodah' ? 0 : 20
+    };
+    if ((degree !== 'full_sibling' && degree !== 'half_sibling') ||
+        !record || record.status !== 'accepted') {
+      status.reason = FB.T('This exceptional courtship has not been accepted.');
+      return status;
+    }
+    if (!ordinary.ready) return status;
+    if (state.player.piety < status.piety) {
+      status.reason = FB.T('Requires {piety} piety; you have {current}.', {
+        piety:status.piety, current:Math.floor(state.player.piety)
+      });
+    } else if (state.player.gold < status.gold) {
+      status.reason = FB.T('Requires {money:cost}; you have {money:current}.', {
+        cost:status.gold, current:Math.floor(state.player.gold)
+      });
+    } else if (state.player.prestige < status.prestige) {
+      status.reason = FB.T('Requires {prestige} prestige; you have {current}.', {
+        prestige:status.prestige, current:Math.floor(state.player.prestige)
+      });
+    } else {
+      status.ready = true;
+      status.reason = '';
+    }
+    return status;
+  };
+
+  FB.siblingExposureChance = function (state, target) {
+    const me = state.chars[state.player.charId];
+    let chance = 0.12 + FB.traitBonus(me, 'courtship', 'siblingExposure') +
+      FB.traitBonus(target, 'courtship', 'siblingExposure');
+    const intrigue = Math.max(FB.skillOf(me, 'int'), FB.skillOf(target, 'int'));
+    chance -= Math.min(0.04, intrigue / 500);
+    return FB.clamp(chance, 0.04, 0.18);
+  };
+
+  FB.siblingProposalChance = function (state, target) {
+    const me = state.chars[state.player.charId];
+    if (!me || !target) return 0.05;
+    const route = siblingCourtshipRoute(state, me, target);
+    const dynastic = siblingDynasticRelevance(state, me, target);
+    let traits = FB.traitBonus(target, 'courtship', 'siblingProposal');
+    traits += FB.traitBonus(target, 'courtship', route === 'xwedodah'
+      ? 'siblingRiteProposal' : 'siblingTabooProposal');
+    if (dynastic) {
+      traits += FB.traitBonus(target, 'courtship',
+        'siblingDynasticProposal');
+    }
+    const chance = 0.15 + characterStanding(state, target) / 200 +
+      state.player.prestige / 1200 + traits;
+    return FB.clamp(chance, 0.05, 0.60);
+  };
+
+  FB.tickSiblingCourtshipExposure = function (state) {
+    const me = state.chars[state.player.charId];
+    const target = state.player.courtingId &&
+      state.chars[state.player.courtingId];
+    if (!me || !target || target.dead ||
+        siblingCourtshipRoute(state, me, target) !== 'illicit') return false;
+    const record = FB.siblingCourtshipRecord(state, me, target);
+    if (!record || record.status !== 'accepted' || record.exposed) return false;
+    const season = state.date.year * 4 + state.date.season;
+    if (record.lastExposureSeason === season) return false;
+    record.lastExposureSeason = season;
+    if (!FB.chance(FB.siblingExposureChance(state, target))) return false;
+    record.exposed = true;
+    FB.queueEvent(state, 'sibling_courtship_exposed', {
+      siblingTargetId:target.id
+    });
+    return true;
+  };
+
+  FB.applyCloseKinBirthRisk = function (state, baby, father, mother) {
+    if (!state || !baby || !father || !mother) return null;
+    let degree = FB.kinshipDegreeSnapshot(state, father, mother);
+    const record = FB.siblingCourtshipRecord(state, father, mother);
+    if (degree === 'unrelated' && record && record.status === 'married') {
+      degree = 'full_sibling';
+    }
+    if (degree !== 'full_sibling' && degree !== 'half_sibling') return null;
+    let risk = degree === 'full_sibling' ? 0.20 : 0.10;
+    if (father.closeKinParentage) risk += 0.05;
+    if (mother.closeKinParentage) risk += 0.05;
+    risk = Math.min(0.35, risk);
+    baby.closeKinParentage = {
+      degree:degree,
+      fatherId:father.id,
+      motherId:mother.id,
+      risk:risk,
+      outcome:'none'
+    };
+    if (!FB.chance(risk)) return baby.closeKinParentage;
+    const outcome = FB.ri(0, 2);
+    if (outcome === 0) FB.addTrait(baby, 'frail');
+    else if (outcome === 1) FB.addTrait(baby, 'sickly');
+    else baby.health = Math.max(1, (Number(baby.health) || 7) - 1);
+    baby.closeKinParentage.outcome = outcome === 0 ? 'frail' :
+      (outcome === 1 ? 'sickly' : 'health');
+    return baby.closeKinParentage;
+  };
+
   /* A marriage transfer is defined from the managed house's point of view.
      The bride's house pays; caller-supplied amounts preserve negotiated
      descendant matches while protagonist courtships use the stable base. */
   FB.marriageTerms = function (state, subject, partner, amount) {
+    if (subject && partner && FB.kinshipDegreeSnapshot) {
+      const degree = FB.kinshipDegreeSnapshot(state, subject, partner);
+      if (degree === 'full_sibling' || degree === 'half_sibling') {
+        return { amount:0, subjectPays:false, playerPays:false, playerDelta:0 };
+      }
+    }
     const bride = subject && subject.sex === 'f' ? subject :
       (partner && partner.sex === 'f' ? partner : null);
     const value = amount === undefined
@@ -902,6 +1288,9 @@ window.FB = window.FB || {};
     opts = opts || {};
     const p = state.player;
     const c = p.courtingId ? state.chars[p.courtingId] : null;
+    const me = state.chars[p.charId];
+    const siblingRecord = c && me
+      ? FB.siblingCourtshipRecord(state, me, c) : null;
     if (c) FB.socialAttentionWithdraw(state, c.id, true);
     p.courtingId = null;
     p.courtshipTerms = null;
@@ -909,6 +1298,11 @@ window.FB = window.FB || {};
     if (c && !c.dead && opts.penalty) {
       adjustCharacterStanding(state, c, -20, 'relationship:broken_courtship');
       FB.noteRivalContact(state, c, 1, 'broken_courtship');
+    }
+    if (c && !c.dead && siblingRecord &&
+        siblingRecord.status === 'accepted' && opts.siblingFinal !== true) {
+      siblingRecord.status = 'cooldown';
+      siblingRecord.cooldownUntil = state.turn + 1800;
     }
     if (c && opts.news) {
       FB.news(state, FB.msg('news.social.courtship_ended',
@@ -954,7 +1348,7 @@ window.FB = window.FB || {};
 
   FB.proposalStatus = function (state, c) {
     const p = state.player;
-    const threshold = FB.relationshipOpinionThreshold();
+    const threshold = FB.courtshipStandingThreshold(state, c);
     const standing = c ? characterStanding(state, c) : 0;
     const status = {
       ready:false,
@@ -1169,8 +1563,17 @@ window.FB = window.FB || {};
       return blocked('royal_compact',
         FB.T('Your house already has an active royal marriage compact.'));
     }
-    if (FB.royalCloseKinSnapshot &&
-        FB.royalCloseKinSnapshot(state, me, c)) {
+    const kinship = FB.kinshipDegreeSnapshot
+      ? FB.kinshipDegreeSnapshot(state, me, c) : 'unrelated';
+    const siblings = kinship === 'full_sibling' || kinship === 'half_sibling';
+    const siblingRecord = siblings
+      ? FB.siblingCourtshipRecord(state, me, c) : null;
+    if (siblings && (!siblingRecord || siblingRecord.status !== 'accepted')) {
+      return blocked('sibling_consent',
+        FB.T('A sibling must first accept the exceptional approach.'), false);
+    }
+    if (!siblings && FB.closeMarriageKinSnapshot &&
+        FB.closeMarriageKinSnapshot(state, me, c)) {
       return blocked('close_kin', FB.T('You are too close in blood.'), false);
     }
     if ((Array.isArray(c.stepParentIds) &&
@@ -1203,16 +1606,14 @@ window.FB = window.FB || {};
       return blocked('target_betrothed',
         FB.T('They are pledged to another.'));
     }
-    if (FB.playerDescendantKind(state, c.id) ||
-        (c.childrenIds && c.childrenIds.indexOf(me.id) >= 0) ||
-        (me.fatherId && me.fatherId === c.fatherId) ||
-        (me.motherId && me.motherId === c.motherId) ||
-        (c.role === 'sibling' && c.dyn === me.dyn)) {
-      return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    if (siblings && me.betrothedId) {
+      return blocked('player_betrothed',
+        FB.T('You are pledged to another.'));
     }
-    const krel = FB.kinOf(state).byId[c.id];
-    if (krel && krel !== 'Cousin') {
-      return blocked('close_kin', FB.T('You are too close in blood.'), false);
+    if (siblings &&
+        (siblingVowed(state, me, true) || siblingVowed(state, c, false))) {
+      return blocked('vocation_vow',
+        FB.T('Religious vows forbid this marriage.'));
     }
     if (state.player.profession === 'monk' &&
         !FB.religionOf(me.religion, state).clergyMarriage) {
@@ -1501,43 +1902,13 @@ window.FB = window.FB || {};
     return FB.playerDescendantKind(state, descendant.id);
   }
 
-  function parentIds(c) {
-    const out = [];
-    if (c && c.fatherId) out.push(c.fatherId);
-    if (c && c.motherId && c.motherId !== c.fatherId) out.push(c.motherId);
-    return out;
-  }
-
-  function ancestorDepths(state, c) {
-    const out = {};
-    let frontier = parentIds(c);
-    for (let depth = 1; depth <= 2; depth++) {
-      const next = [];
-      for (const id of frontier) {
-        if (out[id] !== undefined && out[id] <= depth) continue;
-        out[id] = depth;
-        const parent = state.chars[id];
-        if (parent) next.push.apply(next, parentIds(parent));
-      }
-      frontier = next;
-    }
-    return out;
-  }
-
   /* Ordinary full characters use recorded parentage. Parent/child,
      grandparent/grandchild, siblings, and aunt-or-uncle/niece-or-nephew are
      barred; cousins remain eligible, matching FB.canCourt. Compact royal
      characters layer their lightweight-tree check on top. */
   function closeMatchKin(state, a, b) {
-    if (!a || !b || a.id === b.id) return true;
-    if (FB.royalCloseKin && FB.royalCloseKin(state, a, b)) return true;
-    const aa = ancestorDepths(state, a);
-    const ba = ancestorDepths(state, b);
-    if (aa[b.id] !== undefined || ba[a.id] !== undefined) return true;
-    for (const id in aa) {
-      if (ba[id] !== undefined && aa[id] + ba[id] < 4) return true;
-    }
-    return false;
+    return !a || !b || !FB.closeMarriageKinSnapshot ||
+      FB.closeMarriageKinSnapshot(state, a, b);
   }
 
   /* Shared authoritative terms for the picker, assistant, and final pledge.
@@ -2496,6 +2867,17 @@ window.FB = window.FB || {};
           return FB.clamp(c, 0.05, 0.9);
         }
         return FB.clamp(c, 0.05, 0.95);
+      }
+      case 'sibling_proposal': {
+        const sibling = p.courtingId && state.chars[p.courtingId];
+        return sibling ? FB.siblingProposalChance(state, sibling) : 0.05;
+      }
+      case 'sibling_exposure_denial': {
+        const sibling = p.courtingId && state.chars[p.courtingId];
+        let c = 0.25 + FB.skillOf(me, 'int') * 0.025;
+        c += FB.traitBonus(me, 'courtship', 'siblingIllicitAccept') || 0;
+        if (sibling) c += FB.skillOf(sibling, 'int') * 0.005;
+        return FB.clamp(c, 0.10, 0.80);
       }
       case 'fabricate_claim': {
         const c = 0.30 + FB.skillOf(me, 'int') * 0.03 +
@@ -3668,7 +4050,7 @@ window.FB = window.FB || {};
     p.courtshipTerms = null;
     delete p.flags.courting;
     p.marriedAt = state.turn;
-    if (s.royalLine) {
+    if (s.royalLine && !options.suppressRoyalCompact) {
       const rs = FB.ensureRealmSuccession(state, s.royalLine.realmId);
       const reigningRoyal = FB.isReigningRealmRuler &&
         FB.isReigningRealmRuler(state, s);
@@ -3707,11 +4089,11 @@ window.FB = window.FB || {};
           '💰 The kin of {name} settle a dowry of {money:gold} on the match.',
           { name:s.name, gold:marriageTerms.amount }));
     }
-    if (gap > 0) {
+    if (gap > 0 && !options.suppressStationPrestige) {
       p.prestige += gap * B.marryUpPrestige;
       FB.news(state, FB.msg('news.event.married_above',
         '👑 You have wed above your station — your name rises with the match.', {}));
-    } else if (gap < 0) {
+    } else if (gap < 0 && !options.suppressStationPrestige) {
       p.prestige = Math.max(0, p.prestige + gap * B.marryDownPrestigeLoss);
       FB.news(state, FB.msg('news.event.married_below',
         '🗣 You have wed beneath your station, and folk mark it.', {}));
@@ -3740,6 +4122,146 @@ window.FB = window.FB || {};
      The wed_* pair only fires for spouses that carry an explicit station —
      spouses from older saves stay silent rather than guessing. */
   FB.fns = FB.fns || {};
+  FB.fns.sibling_courtship_approach_valid = function (state, ctx) {
+    const target = ctx && ctx.siblingTargetId &&
+      state.chars[ctx.siblingTargetId];
+    const status = target && FB.siblingCourtshipStatus(state, target);
+    if (!status || !status.ready) return false;
+    if (ctx.siblingRoute && ctx.siblingRoute !== status.route) return false;
+    if (ctx.siblingResponseChance !== undefined &&
+        !isFinite(Number(ctx.siblingResponseChance))) return false;
+    return true;
+  };
+  FB.fns.sibling_courtship_approach = function (state, ctx) {
+    const target = ctx && ctx.siblingTargetId &&
+      state.chars[ctx.siblingTargetId];
+    const status = target && FB.siblingCourtshipStatus(state, target);
+    if (!status || !status.ready) return false;
+    const me = state.chars[state.player.charId];
+    const key = siblingPairKey(me, target);
+    const reviewedChance = ctx.siblingResponseChance === undefined
+      ? status.acceptance.chance
+      : FB.clamp(Number(ctx.siblingResponseChance), 0.02,
+        status.route === 'xwedodah' ? 0.85 : 0.70);
+    const accepted = FB.chance(reviewedChance);
+    const record = {
+      initiatorId:me.id,
+      targetId:target.id,
+      status:accepted ? 'accepted' : 'refused',
+      route:status.route,
+      approachedTurn:state.turn,
+      acceptedTurn:accepted ? state.turn : null,
+      cooldownUntil:null,
+      exposed:false
+    };
+    FB.ensureSiblingCourtships(state)[key] = record;
+    if (accepted && FB.beginCourtship(state, target)) {
+      FB.news(state, FB.msg('news.social.sibling_courtship_accepted',
+        '🕯 {name} answers yes. The dangerous courtship begins.', {
+          name:FB.fullName(target)
+        }));
+      return true;
+    }
+    if (accepted) record.status = 'refused';
+    FB.news(state, FB.msg('news.social.sibling_courtship_refused',
+      '🚪 {name} refuses the forbidden approach, once and for all.', {
+        name:FB.fullName(target)
+      }));
+    return false;
+  };
+  FB.fns.sibling_exposure_context_valid = function (state, ctx) {
+    const me = state.chars[state.player.charId];
+    const target = ctx && ctx.siblingTargetId &&
+      state.chars[ctx.siblingTargetId];
+    const record = me && target
+      ? FB.siblingCourtshipRecord(state, me, target) : null;
+    return !!(target && state.player.courtingId === target.id &&
+      record && record.status === 'accepted' && record.exposed);
+  };
+  FB.fns.sibling_proposal_context_valid = function (state, ctx) {
+    const target = state.player.courtingId &&
+      state.chars[state.player.courtingId];
+    return !!(target && (!ctx || !ctx.siblingTargetId ||
+      ctx.siblingTargetId === target.id) &&
+      FB.siblingProposalStatus(state, target).ready);
+  };
+  FB.fns.sibling_exposure_end = function (state) {
+    const target = state.player.courtingId &&
+      state.chars[state.player.courtingId];
+    if (!target) return false;
+    FB.clearCourtship(state, { penalty:true, news:true });
+    return true;
+  };
+  FB.fns.sibling_marriage_success = function (state) {
+    const me = state.chars[state.player.charId];
+    const target = state.player.courtingId &&
+      state.chars[state.player.courtingId];
+    const status = target && FB.siblingProposalStatus(state, target);
+    if (!status || !status.ready) return false;
+    const record = FB.siblingCourtshipRecord(state, me, target);
+    if (!FB.doMarry(state, {
+      settleDowry:false,
+      suppressRoyalCompact:true,
+      suppressStationPrestige:true
+    })) return false;
+    state.player.piety = Math.max(0, state.player.piety - status.piety);
+    state.player.gold = Math.max(0, state.player.gold - status.gold);
+    state.player.prestige = Math.max(0,
+      state.player.prestige - status.prestige);
+    if (status.route === 'xwedodah') {
+      FB.news(state, FB.msg('news.social.xwedodah_marriage',
+        '🔥 Before the sacred fire, you and {name} enter xwēdōdah. No dowry or alliance follows.', {
+          name:FB.fullName(target)
+        }));
+    } else {
+      state.player.pop = FB.clamp(state.player.pop - status.commonVoice,
+        -100, 100);
+      if (state.player.liege) {
+        adjustRealmStanding(state, state.player.liege,
+          -status.liegeStanding, 'marriage:scandalous_union');
+      }
+      FB.addTrait(me, 'scandalous_union');
+      FB.addTrait(target, 'scandalous_union');
+      if (FB.faithHasSystem(me.religion, 'papacy', state)) {
+        const obedience = FB.papalObedienceForCharacter &&
+          FB.papalObedienceForCharacter(state, me);
+        if (FB.adjustPapalOpinionOfCandidate) {
+          FB.adjustPapalOpinionOfCandidate(state, me, -20, obedience);
+        }
+        if (FB.addPapalGround) {
+          FB.addPapalGround(state, me, 'scandalous_union', obedience);
+        }
+        if (obedience && FB.adjustPapalAuthority) {
+          FB.adjustPapalAuthority(state, obedience, -8,
+            'scandalous sibling union');
+        }
+      } else if (FB.adjustReligionRealmOpinions) {
+        FB.adjustReligionRealmOpinions(state, me.religion, -8);
+      }
+      FB.news(state, FB.msg('news.social.scandalous_sibling_marriage',
+        '🕯 You and {name} persist in an irregular union. Kin, neighbors, and rulers recoil; no dowry or alliance follows.', {
+          name:FB.fullName(target)
+        }));
+    }
+    record.status = 'married';
+    record.route = status.route;
+    record.marriedTurn = state.turn;
+    return true;
+  };
+  FB.fns.sibling_proposal_refused = function (state) {
+    const me = state.chars[state.player.charId];
+    const target = state.player.courtingId &&
+      state.chars[state.player.courtingId];
+    const record = target && FB.siblingCourtshipRecord(state, me, target);
+    if (!target || !record) return false;
+    record.status = 'refused';
+    FB.clearCourtship(state, { siblingFinal:true });
+    FB.news(state, FB.msg('news.social.sibling_proposal_refused',
+      '💔 {name} refuses to make the dangerous courtship a marriage.', {
+        name:FB.fullName(target)
+      }));
+    return true;
+  };
   FB.fns.begin_courtship = function (state) {
     const su = FB.getRole(state, 'suitor', false);
     return !!su && FB.beginCourtship(state, su);

@@ -509,7 +509,7 @@ const COUNTIES = [
 ['tabriz','Tabriz',46.29,38.08,'d_azerbaijan','persian','sunni','mountains',4,'abbasid'],
 ['ardabil','Ardabil',48.3,38.25,'d_azerbaijan','persian','sunni','mountains',2,'abbasid'],
 ['shiraz','Shiraz',52.54,29.59,'d_fars','persian','sunni','hills',5,'saffarids'],
-['istakhr','Istakhr',52.98,29.98,'d_fars','persian','sunni','farmland',4,'saffarids'],
+['istakhr','Istakhr',52.98,29.98,'d_fars','persian','zoroastrian','farmland',4,'saffarids'],
 ['kerman','Kerman',57.08,30.29,'d_kerman','persian','sunni','desert',3,'saffarids'],
 ['bam','Bam',58.36,29.11,'d_kerman','persian','sunni','desert',2,'saffarids'],
 ['hormuz','Hormuz',56.45,27.09,'d_kerman','persian','sunni','farmland',2,'saffarids'],

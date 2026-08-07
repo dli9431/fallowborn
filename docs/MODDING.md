@@ -653,6 +653,12 @@ from within a step of the player's own station, and the wedding settles a dowry
 (`balance.dowryByStation`, indexed by the spouse's station) plus a prestige swing
 (`balance.marryUpPrestige` / `marryDownPrestigeLoss` per step).
 
+`sibling_proposal` is the exceptional player-only counterpart: it uses the
+active accepted sibling pair, +80 Standing gate, target courtship-trait
+modifiers, dynastic relevance, and current faith route, then caps at 60%.
+`sibling_exposure_denial` weighs the protagonist's Intrigue and deceitful or
+honest courtship effects, with a small contribution from the active sibling.
+
 Marrying up also pays out at the end: when a spouse of higher station dies, `FB.spouseDied`
 queues `widow_settlement` (no living child of that blood) or `house_claim` (there is one —
 pressing it uses the `house_claim` named chance; success can raise a tier-0/1 widow(er) of
@@ -664,7 +670,10 @@ Faith sets the rest of the rules (`FB.marriageDoctrine` in js/model.js).
 `properties.marriage.spouseLimit` controls spouse capacity;
 `properties.marriage.divorce` controls direct or petitioned separation, cost, and
 cooldown; and `acceptedRelations` filters cross-faith matches through the directional
-faith graph. `balance.wivesByGroup` remains only a fallback for legacy definitions with
+faith graph. Optional `properties.marriage.kinship.siblingRite:'xwedodah'` recognizes
+the exceptional player sibling-marriage route when both characters share the exact
+faith; other values currently have no core consumer. `balance.wivesByGroup` remains
+only a fallback for legacy definitions with
 no marriage property. Every eligible spouse pairing can bear children, the first is the
 one `{spouse}` and the spouse-role address, and the next in line is promoted when the
 first dies or is set aside
@@ -1986,6 +1995,13 @@ The first grouped effect consumers are:
   receives its own income-ledger line.
 - `household.regard`: an additive rate on positive event Standing toward the protagonist's
   spouse or blood relatives. Losses and unrelated characters are unchanged.
+- `courtship.siblingInitiate`, `siblingDynasticInitiate`,
+  `siblingRiteInitiate`, and `siblingTabooInitiate` build the player's exceptional
+  sibling-approach score. `siblingAccept`, route-specific `siblingRiteAccept`,
+  `siblingIllicitAccept`, `siblingTabooAccept`, and conditional
+  `siblingDynasticAccept` alter the target's one-time response probability. The
+  matching `*Proposal` keys alter the final proposal, while `siblingExposure`
+  changes seasonal illicit-exposure probability. All probabilities are fractional.
 
 All grouped values are numeric; absent groups and keys contribute zero. The catalog has
 no trait cap. Named wounds and sicknesses in `FBDATA.ailments` remain timed conditions
