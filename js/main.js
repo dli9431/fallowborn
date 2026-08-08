@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.115.1';
+  FB.VERSION = '1.116.0';
   FB.CHANGELOG = [
+    { v: '1.116.0', date: '2026-08-08', changes: [
+      'Added dedicated Muslim and pagan folk, court, and war soundtrack banks, with a tighter Christian track selection.'
+    ] },
     { v: '1.115.1', date: '2026-08-07', changes: [
       'The Land tab now groups realm, county, and development details into responsive cards, with long explanations stacked for easier reading on desktop and mobile.'
     ] },

@@ -60,6 +60,27 @@ function readCatalog(filename) {
   return JSON.parse(JSON.stringify(sandbox.FBDATA.musicCatalog));
 }
 
+test('committed soundtrack provides complete contextual faith banks', function () {
+  runTool(gameRoot, ['check', '--root', gameRoot]);
+  const catalog = readCatalog(path.join(gameRoot, 'data', 'music_catalog.js'));
+  const expected = [
+    'christian/all/court',
+    'christian/all/folk',
+    'christian/all/war',
+    'muslim/all/court',
+    'muslim/all/folk',
+    'muslim/all/war',
+    'pagan/all/court',
+    'pagan/all/folk',
+    'pagan/all/war'
+  ];
+
+  assert.deepEqual(catalog.banks.map(function (bank) { return bank.id; }), expected);
+  catalog.banks.forEach(function (bank) {
+    assert.ok(bank.trackIds.length >= 9, bank.id + ' has fewer than nine tracks');
+  });
+});
+
 test('catalog generation validates Opus metadata and balances the itch subset', function () {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fallowborn-music-catalog-'));
   try {
