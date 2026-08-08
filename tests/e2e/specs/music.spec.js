@@ -405,17 +405,20 @@ test('context banks, playback controls, and listening history stay consistent',
     });
     expect(navigation.second).not.toBe(navigation.first);
     expect(navigation.previous).toBe(navigation.first);
-    await expect(page.getByRole('button', { name:'⏮ Previous', exact:true })).toBeEnabled();
-    await expect(page.getByRole('button', { name:'⏸ Pause', exact:true })).toBeVisible();
-    await expect(page.getByRole('button', { name:'Next ⏭', exact:true })).toBeVisible();
+    const musicPrevious = page.locator('#music-previous');
+    const musicPlayback = page.locator('#music-playback');
+    const musicNext = page.locator('#music-next');
+    await expect(musicPrevious).toBeEnabled();
+    await expect(musicPlayback).toHaveText('⏸ Pause');
+    await expect(musicNext).toBeVisible();
     await expect(page.locator('#music-up')).toHaveCount(0);
 
     expect(await page.locator('.music-track-navigation > button').evaluateAll(function (buttons) {
       return buttons.map(function (button) { return button.id; });
     })).toEqual(['music-previous', 'music-playback', 'music-next']);
 
-    await page.getByRole('button', { name:'⏸ Pause', exact:true }).click();
-    await expect(page.getByRole('button', { name:'▶ Play', exact:true })).toBeVisible();
+    await musicPlayback.click();
+    await expect(musicPlayback).toHaveText('▶ Play');
     expect(await page.evaluate(function () {
       return {
         paused:FB.music.isPaused(),
@@ -426,8 +429,8 @@ test('context banks, playback controls, and listening history stay consistent',
       };
     })).toEqual({ paused:true, anyPlaying:false, choice:'on' });
 
-    await page.getByRole('button', { name:'▶ Play', exact:true }).click();
-    await expect(page.getByRole('button', { name:'⏸ Pause', exact:true })).toBeVisible();
+    await musicPlayback.click();
+    await expect(musicPlayback).toHaveText('⏸ Pause');
     expect(await page.evaluate(function () {
       return {
         paused:FB.music.isPaused(),
@@ -437,8 +440,8 @@ test('context banks, playback controls, and listening history stay consistent',
       };
     })).toEqual({ paused:false, anyPlaying:true });
 
-    await page.getByRole('button', { name:'Next ⏭', exact:true }).click();
-    await expect(page.getByRole('button', { name:'⏮ Previous', exact:true })).toBeEnabled();
+    await musicNext.click();
+    await expect(musicPrevious).toBeEnabled();
     expect(await page.evaluate(function () { return FB.music.current().id; }))
       .toBe(navigation.second);
 
