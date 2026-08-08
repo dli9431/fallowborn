@@ -44,6 +44,11 @@ served from exactly `https://play.fallowborn.com`. The event dispatcher repeats 
 protocol-and-host check before accepting an event. It therefore sends no pageviews or gameplay
 events from itch's iframe origin, `file://`, localhost, staging hosts, forks, or mirrors.
 
+The Coolify Umami service sets `TRACKER_SCRIPT_NAME=fb-client.js` and
+`COLLECT_API_ENDPOINT=/api/fb-event`. The committed loader requests the renamed tracker at
+`https://stats.fallowborn.com/fb-client.js`; that generated tracker selects the renamed
+collection endpoint itself, so game code does not hardcode the collection route.
+
 The hosted game records a small anonymous vocabulary. Schema 2 uses event names that describe the
 player action or campaign transition directly:
 

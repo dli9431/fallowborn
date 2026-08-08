@@ -37,7 +37,7 @@ test('telemetry accepts only the exact official play origin and stays silent loc
         }),
         enabledHere:FB.telemetry.enabled(),
         trackerScripts:document.querySelectorAll(
-          'script[src="https://stats.fallowborn.com/script.js"]').length
+          'script[src="https://stats.fallowborn.com/fb-client.js"]').length
       };
     })).toEqual({
       official:true,
