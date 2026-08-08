@@ -8,5 +8,6 @@ CONTRIBUTING.md
 Dockerfile
 i18n
 tests
-tools
+tools/*
+!tools/music_catalog.py
 *.zip
