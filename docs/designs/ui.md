@@ -134,7 +134,9 @@ complete rounded frame. Only deliberate full-screen sheets and the Self/Kin draw
 bottom edge.
 Desktop scroll containers share narrow, rounded bronze thumbs over transparent tracks so
 panels, sheets, lists, and modals retain the parchment styling without prominent scrollbars.
-Touch devices keep their platform-native overlay scrolling.
+Modal-owned scroll bodies keep a small content gutter before that track so prose, sliders,
+and buttons do not press against the thumb. Touch devices keep their platform-native
+overlay scrolling.
 The title screen scales its crest, heading, button height, gaps, and footer spacing against
 viewport height so the full menu fits common standalone and itch iframe heights; genuinely
 short viewports retain `.screen` scrolling as the fallback.
@@ -311,9 +313,10 @@ persistent topbar already names the character. On desktop, a subtle divider sepa
 Traits from the rank, age, culture, faith, and health details below.
 The rank value is a native link-styled button. It opens a compact realm-and-demesne
 sheet showing the current seat, direct holdings and capacity, realm-wide territory,
-vassals, landed tax and levy, and the directly held county names. The same sheet owns
-the browser-local map-highlight color control and states that it changes focus emphasis,
-not political ownership colors.
+vassals, landed tax and levy, and the directly held county names. Settings owns a dedicated
+Map section with the browser-local realm-map color and fill-opacity controls. They set the
+focus outline and the independent player realm's displayed political fill without mutating
+saved political state; lowering opacity reveals terrain while keeping the outline clear.
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
 navigation, and opens a numbered compatible-armory list over the still-visible equipment
 sheet; no drag-and-drop path is required.

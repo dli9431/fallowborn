@@ -15850,6 +15850,9 @@ window.FB = window.FB || {};
     const G = FB.game;
     const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
     const desktopKeyboard = !FB.isTouch && !FB.isSmallScreen();
+    const realmHighlightColor = FB.map.focusColor();
+    const realmHighlightOpacity = Math.round((FB.map.focusOpacity
+      ? FB.map.focusOpacity() : 1) * 100);
     let h = '<div class="gm-body-text"><p>' + (desktopKeyboard
       ? esc(FB.T('How quickly the days flow while time runs — on a keyboard, −/+ change it at any time.'))
       : esc(FB.T('How quickly the days flow while time runs.'))) +
@@ -15858,6 +15861,31 @@ window.FB = window.FB || {};
       (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="' +
       esc(FB.T('Speed of days')) + '">' +
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+      esc(FB.T('Map')) + '</p></div>' +
+      '<div class="realm-highlight-summary"><span id="set-realm-highlight-swatch" ' +
+      'class="realm-highlight-swatch" style="background-color:' +
+      esc(realmHighlightColor) + '" aria-hidden="true"></span><p class="adesc">' +
+      esc(FB.T(
+        'Choose the focus outline and, when you are independent, your realm’s map color.')) +
+      '</p></div><div class="realm-highlight-opacity">' +
+      '<label class="realm-highlight-opacity-label" for="set-realm-highlight-opacity">' +
+      '<span>' + esc(FB.T('Realm fill opacity')) + '</span>' +
+      '<output id="set-realm-highlight-opacity-value" for="set-realm-highlight-opacity">' +
+      esc(FB.T('{percent}%', { percent:realmHighlightOpacity })) + '</output></label>' +
+      '<input id="set-realm-highlight-opacity" type="range" min="0" max="100" ' +
+      'step="5" value="' + realmHighlightOpacity +
+      '" aria-describedby="set-realm-highlight-opacity-help">' +
+      '<p class="adesc" id="set-realm-highlight-opacity-help">' + esc(FB.T(
+        'Lower opacity lets the terrain show through while the focus outline stays clear.')) +
+      '</p></div><div class="modal-actions realm-highlight-actions">' +
+      '<label class="btn realm-highlight-change" id="set-realm-highlight-change">' +
+      '<span>' + esc(FB.T('Change realm highlight color…')) + '</span>' +
+      '<input id="set-realm-highlight-color" class="realm-highlight-input" ' +
+      'type="color" aria-label="' + esc(FB.T('Realm highlight color')) +
+      '" value="' + esc(realmHighlightColor) + '"></label>' +
+      '<button type="button" class="btn" id="set-realm-highlight-reset">' +
+      esc(FB.T('Use default ivory')) + '</button></div>';
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Music')) + '</p></div>';
     if (!FB.music || !FB.music.hasCatalog()) {
@@ -15920,6 +15948,53 @@ window.FB = window.FB || {};
     });
     slider.addEventListener('change', function () { // commit once, on release
       G.setSpeed(parseInt(slider.value, 10) - G.speedIdx);
+    });
+    const realmColorInput = $('set-realm-highlight-color');
+    const realmColorSwatch = $('set-realm-highlight-swatch');
+    const realmOpacityInput = $('set-realm-highlight-opacity');
+    const realmOpacityOutput = $('set-realm-highlight-opacity-value');
+    function repaintRealmMap() {
+      if (UI.mapDirty) UI.mapDirty();
+      else FB.map.request();
+    }
+    function setRealmColor(color) {
+      if (!/^#[0-9a-fA-F]{6}$/.test(color)) return;
+      color = color.toLowerCase();
+      G.uiPrefs.realmHighlightColor = color;
+      G.saveUiPrefs();
+      realmColorInput.value = color;
+      realmColorSwatch.style.backgroundColor = color;
+      repaintRealmMap();
+    }
+    function realmOpacityPercent(value) {
+      return Math.round(FB.clamp(Number(value) || 0, 0, 100));
+    }
+    function showRealmOpacity(value) {
+      const percent = realmOpacityPercent(value);
+      realmOpacityInput.value = percent;
+      realmOpacityOutput.textContent = FB.T('{percent}%', { percent:percent });
+      return percent;
+    }
+    function setRealmOpacity(value) {
+      const percent = showRealmOpacity(value);
+      G.uiPrefs.realmHighlightOpacity = percent / 100;
+      G.saveUiPrefs();
+      repaintRealmMap();
+    }
+    realmColorInput.addEventListener('input', function () {
+      setRealmColor(realmColorInput.value);
+    });
+    realmColorInput.addEventListener('change', function () {
+      setRealmColor(realmColorInput.value);
+    });
+    realmOpacityInput.addEventListener('input', function () {
+      showRealmOpacity(realmOpacityInput.value);
+    });
+    realmOpacityInput.addEventListener('change', function () {
+      setRealmOpacity(realmOpacityInput.value);
+    });
+    $('set-realm-highlight-reset').addEventListener('click', function () {
+      setRealmColor('#e8dec4');
     });
     if ($('set-music-enabled')) {
       $('set-music-enabled').addEventListener('change', function () {

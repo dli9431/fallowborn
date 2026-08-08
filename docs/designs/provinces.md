@@ -60,9 +60,12 @@ pan clamp; dragging therefore remains stable while the other axis can still move
 the political and terrain colors of every province sharing the clicked one's group key,
 places a cool shade over other land, mutes outside labels, and traces both the group's
 perimeter and the exact selected county with zoom-independent two-tone lines. The accent
-is a browser-local preference; the dark/light keyline keeps arbitrary chosen colors
-legible without changing realm ownership colors. `groupOf` comes from `mapGroupOf` in
-`ui_panels.js` and follows the map filter (`R` key / 🗺 HUD button): **Realm** (default —
+is a browser-local preference. It also supplies the independent player realm's displayed
+political color without changing the saved realm color; other realms retain their authored
+colors. A second browser-local opacity preference scales that color's contribution from
+terrain-only to the full political mix, while leaving the outline clear. The dark/light
+keyline keeps arbitrary chosen colors legible. `groupOf` comes from
+`mapGroupOf` in `ui_panels.js` and follows the map filter (`R` key / 🗺 HUD button): **Realm** (default —
 your own province focuses your realm, demesne + vassals; a foreign one focuses its
 sovereign's), **Mine** (only your realm), **Liege** (your liege's whole sub-realm),
 **De jure duchies**, and **De jure kingdoms** (the historical de jure groupings).

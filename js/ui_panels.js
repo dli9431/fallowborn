@@ -1429,7 +1429,6 @@ window.FB = window.FB || {};
     });
     const vassals = FB.playerVassals(s);
     const landed = s.player.tier >= 3;
-    const focusColor = FB.map.focusColor();
     let h = kv('Rank', esc(FB.styledTitle(s))) +
       kv('Seat', esc(seat ? FB.L(seat.name) : FB.T('None'))) +
       kv('Held directly', esc(FB.T('{held} of {cap} counties', {
@@ -1455,46 +1454,9 @@ window.FB = window.FB || {};
           count:direct.length - cap
         })) + '</div>';
     }
-    h += '<div class="panelh">' + esc(FB.T('Map highlight')) + '</div>' +
-      '<div class="realm-highlight-summary"><span id="realm-highlight-swatch" ' +
-      'class="realm-highlight-swatch" style="background-color:' +
-      esc(focusColor) + '" aria-hidden="true"></span><p class="adesc">' +
-      esc(FB.T(
-        'This color marks the focused realm or map-filter group. Political ownership colors are unchanged.')) +
-      '</p></div><div class="modal-actions realm-highlight-actions">' +
-      '<button type="button" class="btn" id="realm-highlight-change">' +
-      esc(FB.T('Change realm highlight color…')) + '</button>' +
-      '<button type="button" class="btn" id="realm-highlight-reset">' +
-      esc(FB.T('Use default ivory')) + '</button>' +
-      '<input id="realm-highlight-color" class="realm-highlight-input" ' +
-      'type="color" tabindex="-1" aria-label="' +
-      esc(FB.T('Realm highlight color')) + '" value="' + esc(focusColor) + '">' +
-      '</div><div class="gm-footer"><button class="btn" id="rank-details-close">' +
+    h += '<div class="gm-footer"><button class="btn" id="rank-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Realm & demesne'), h);
-    const input = $('realm-highlight-color');
-    const swatch = $('realm-highlight-swatch');
-    function setFocusColor(color) {
-      if (!/^#[0-9a-fA-F]{6}$/.test(color)) return;
-      color = color.toLowerCase();
-      FB.game.uiPrefs.realmHighlightColor = color;
-      FB.game.saveUiPrefs();
-      input.value = color;
-      swatch.style.backgroundColor = color;
-      FB.map.request();
-    }
-    $('realm-highlight-change').addEventListener('click', function () {
-      input.click();
-    });
-    input.addEventListener('input', function () {
-      setFocusColor(input.value);
-    });
-    input.addEventListener('change', function () {
-      setFocusColor(input.value);
-    });
-    $('realm-highlight-reset').addEventListener('click', function () {
-      setFocusColor('#e8dec4');
-    });
     $('rank-details-close').addEventListener('click', UI.closeModal);
   };
 

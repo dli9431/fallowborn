@@ -50931,7 +50931,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Change realm highlight color…"
@@ -58957,16 +58957,6 @@
       ],
       "source": {
         "text": "Fund his work. ({money:10})"
-      }
-    },
-    "src.258e0369": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Map highlight"
       }
     },
     "src.259ba5ba": {
@@ -70897,6 +70887,16 @@
       ],
       "source": {
         "text": "Merchant’s clerk"
+      }
+    },
+    "src.44a7f051": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Map"
       }
     },
     "src.44a81135": {
@@ -96914,6 +96914,16 @@
         "text": "Choose a destination"
       }
     },
+    "src.864b7fdc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the focus outline and, when you are independent, your realm’s map color."
+      }
+    },
     "src.865735ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101324,7 +101334,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Realm highlight color"
@@ -106836,6 +106846,16 @@
         "text": "Culture"
       }
     },
+    "src.9f5abc5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Lower opacity lets the terrain show through while the focus outline stays clear."
+      }
+    },
     "src.9f5e6862": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109633,7 +109653,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_panels.js"
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Use default ivory"
@@ -129573,6 +129593,16 @@
         "text": "See their sheet and your dealings with them"
       }
     },
+    "src.d9e95d18": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Realm fill opacity"
+      }
+    },
     "src.d9f7d834": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -144234,16 +144264,6 @@
         "text": "Keeps accounts, directs servants, and makes the household’s work run more cleanly."
       }
     },
-    "src.ffced139": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "This color marks the focused realm or map-filter group. Political ownership colors are unchanged."
-      }
-    },
     "src.ffd691b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152805,7 +152825,7 @@
     "ui:Change realm highlight color…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Change realm highlight color…"
       }
@@ -153167,6 +153187,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the exact land named in the vow."
+      }
+    },
+    "ui:Choose the focus outline and, when you are independent, your realm’s map color.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the focus outline and, when you are independent, your realm’s map color."
       }
     },
     "ui:Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.": {
@@ -158639,6 +158667,14 @@
         "text": "Lost — the successful rival or vacancy holds until the next opening."
       }
     },
+    "ui:Lower opacity lets the terrain show through while the focus outline stays clear.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Lower opacity lets the terrain show through while the focus outline stays clear."
+      }
+    },
     "ui:Lower rank": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158967,6 +159003,14 @@
         "text": "Manual selection"
       }
     },
+    "ui:Map": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Map"
+      }
+    },
     "ui:Map filter: {mode} (R)": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -158975,14 +159019,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Map filter: {mode} (R)"
-      }
-    },
-    "ui:Map highlight": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Map highlight"
       }
     },
     "ui:Marriage previews show which parent supplies each identity.": {
@@ -163451,10 +163487,18 @@
         "text": "Realm and court…"
       }
     },
+    "ui:Realm fill opacity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Realm fill opacity"
+      }
+    },
     "ui:Realm highlight color": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Realm highlight color"
       }
@@ -168742,14 +168786,6 @@
         "text": "This charter cannot be revoked unilaterally through this authority."
       }
     },
-    "ui:This color marks the focused realm or map-filter group. Political ownership colors are unchanged.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "This color marks the focused realm or map-filter group. Political ownership colors are unchanged."
-      }
-    },
     "ui:This conquest is sacrilege.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169734,7 +169770,7 @@
     "ui:Use default ivory": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_panels.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Use default ivory"
       }

@@ -1653,9 +1653,16 @@ window.FB = window.FB || {};
     }
     FB.map.setOwnerFns(
       function (pid) { return s.owner[pid]; },
-      function (rid) { return s.realms[rid] ? s.realms[rid].color : '#777777'; },
+      function (rid) {
+        if (rid === 'player' && FB.map.focusColor) return FB.map.focusColor();
+        return s.realms[rid] ? s.realms[rid].color : '#777777';
+      },
       caps,
-      function (pid) { return s.holder ? s.holder[pid] : s.owner[pid]; }
+      function (pid) { return s.holder ? s.holder[pid] : s.owner[pid]; },
+      function (rid) {
+        return rid === 'player' && FB.map.focusOpacity
+          ? FB.map.focusOpacity() : 1;
+      }
     );
     FB.map.buildBase();
     FB.map.select(FB.map.selected, SH.mapGroupOf); // realm highlight tracks conquests

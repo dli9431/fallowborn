@@ -1,7 +1,11 @@
 'use strict';
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const {
+  openGame,
+  startDeterministicGame,
+  waitForUiRefresh
+} = require('../support/game');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -66,7 +70,7 @@ test('map focus preserves member colors and shades only land outside the group',
     expect(result.outsideChannels[1]).toBeLessThan(result.outsideChannels[2]);
   });
 
-test('Self rank opens demesne details and changes the persistent focus color',
+test('Self rank shows demesne details and Settings changes map presentation',
   async function ({ page }) {
     const homeName = await page.evaluate(function () {
       const s = FB.state;
@@ -90,28 +94,106 @@ test('Self rank opens demesne details and changes the persistent focus color',
     await expect(page.locator('#gm-body .kv:has(span:text-is("Held directly")) b'))
       .toContainText('1 of');
     await expect(page.locator('#gm-body')).toContainText(homeName);
-    await expect(page.locator('#realm-highlight-change')).toBeVisible();
+    await expect(page.locator('#set-realm-highlight-change')).toHaveCount(0);
+    await page.locator('#rank-details-close').click();
 
-    await page.locator('#realm-highlight-color').evaluate(function (input) {
+    await page.locator('#btn-menu').click();
+    await page.locator('#m-settings').click();
+    await expect(page.getByRole('heading', { name:'Settings', exact:true }))
+      .toBeVisible();
+    await expect(page.locator('#set-realm-highlight-change')).toBeVisible();
+    await expect(page.locator('#gm-body')).toHaveCSS('padding-right', '10px');
+    await page.locator('#set-realm-highlight-change').scrollIntoViewIfNeeded();
+
+    const pickerTarget = await page.evaluate(function () {
+      const control = document.getElementById('set-realm-highlight-change');
+      const rect = control.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        rect.left + rect.width / 2, rect.top + rect.height / 2);
+      return hit && hit.id;
+    });
+    expect(pickerTarget).toBe('set-realm-highlight-color');
+    await page.locator('#set-realm-highlight-color').focus();
+    await expect(page.locator('#set-realm-highlight-color')).toBeFocused();
+    await expect(page.locator('#set-realm-highlight-opacity')).toHaveValue('100');
+    await expect(page.locator('#set-realm-highlight-opacity-value')).toHaveText('100%');
+
+    await waitForUiRefresh(page);
+    const baseBefore = await page.evaluate(function () {
+      const provinceIndex = FB.world.byId[FB.state.player.provinceId].idx;
+      const target = provinceIndex + 1;
+      for (let k = 0; k < FB.world.grid.length; k++) {
+        if (FB.world.grid[k] !== target) continue;
+        const x = k % FB.world.W;
+        const y = Math.floor(k / FB.world.W);
+        return {
+          x:x,
+          y:y,
+          rgb:Array.prototype.slice.call(
+            FB.map.baseCtx.getImageData(x, y, 1, 1).data, 0, 3)
+        };
+      }
+      return null;
+    });
+    expect(baseBefore).not.toBeNull();
+
+    await page.locator('#set-realm-highlight-color').evaluate(function (input) {
       input.value = '#4f8fa8';
       input.dispatchEvent(new Event('input', { bubbles:true }));
     });
-    const changed = await page.evaluate(function () {
+    await waitForUiRefresh(page);
+    const changed = await page.evaluate(function (sample) {
       return {
         preference:FB.game.uiPrefs.realmHighlightColor,
         map:FB.map.focusColor(),
+        realmMapColor:FB.map.colorOf('player'),
         stored:JSON.parse(localStorage.getItem('fb_ui')).realmHighlightColor,
-        swatch:document.getElementById('realm-highlight-swatch').style.backgroundColor
+        swatch:document.getElementById('set-realm-highlight-swatch').style.backgroundColor,
+        baseBefore:sample.rgb,
+        baseAfter:Array.prototype.slice.call(
+          FB.map.baseCtx.getImageData(sample.x, sample.y, 1, 1).data, 0, 3)
       };
-    });
-    expect(changed).toEqual({
+    }, baseBefore);
+    expect(changed).toMatchObject({
       preference:'#4f8fa8',
       map:'#4f8fa8',
+      realmMapColor:'#4f8fa8',
       stored:'#4f8fa8',
       swatch:'rgb(79, 143, 168)'
     });
+    expect(changed.baseAfter[0]).toBeLessThan(changed.baseBefore[0]);
+    expect(changed.baseAfter[2] - changed.baseAfter[0])
+      .toBeGreaterThan(changed.baseBefore[2] - changed.baseBefore[0]);
 
-    await page.locator('#realm-highlight-reset').click();
+    await page.locator('#set-realm-highlight-opacity').evaluate(function (input) {
+      input.value = '35';
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+      input.dispatchEvent(new Event('change', { bubbles:true }));
+    });
+    await waitForUiRefresh(page);
+    const softened = await page.evaluate(function (sample) {
+      return {
+        preference:FB.game.uiPrefs.realmHighlightOpacity,
+        map:FB.map.focusOpacity(),
+        realmMapOpacity:FB.map.colorOpacityOf('player'),
+        stored:JSON.parse(localStorage.getItem('fb_ui')).realmHighlightOpacity,
+        output:document.getElementById('set-realm-highlight-opacity-value').textContent,
+        value:document.getElementById('set-realm-highlight-opacity').value,
+        base:Array.prototype.slice.call(
+          FB.map.baseCtx.getImageData(sample.x, sample.y, 1, 1).data, 0, 3)
+      };
+    }, baseBefore);
+    expect(softened).toMatchObject({
+      preference:0.35,
+      map:0.35,
+      realmMapOpacity:0.35,
+      stored:0.35,
+      output:'35%',
+      value:'35'
+    });
+    expect(softened.base[0]).toBeGreaterThan(changed.baseAfter[0]);
+
+    await page.locator('#set-realm-highlight-reset').click();
     await expect.poll(function () {
       return page.evaluate(function () {
         return FB.game.uiPrefs.realmHighlightColor;

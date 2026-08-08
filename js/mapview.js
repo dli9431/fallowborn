@@ -11,6 +11,7 @@ window.FB = window.FB || {};
   };
   const SEA_TOP = [58, 108, 158], SEA_BOT = [36, 76, 122];
   const DEFAULT_FOCUS_COLOR = '#e8dec4';
+  const POLITICAL_COLOR_STRENGTH = 0.58;
   const FOCUS_SHADE = [18, 28, 38];
 
   const M = {
@@ -18,7 +19,7 @@ window.FB = window.FB || {};
     base: null, baseCtx: null,
     hilite: null, hiliteCtx: null,
     viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 20,
-    ownerOf: null, colorOf: null,
+    ownerOf: null, colorOf: null, colorOpacityOf: null,
     selected: null, playerProv: null, capitals: [],
     focusMembers: null, focusGroupActive: false,
     groupOutline: null, selectedOutline: null,
@@ -60,6 +61,7 @@ window.FB = window.FB || {};
     M.capitals = [];
     M.ownerOf = null;
     M.colorOf = null;
+    M.colorOpacityOf = null;
     M.holderOf = null;
     M.focusMembers = null;
     M.focusGroupActive = false;
@@ -97,9 +99,10 @@ window.FB = window.FB || {};
   };
 
   /* ---------- base image ---------- */
-  M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf) {
+  M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf, colorOpacityOf) {
     M.ownerOf = ownerOf; M.colorOf = colorOf; M.capitals = capitals || [];
     M.holderOf = holderOf || null;
+    M.colorOpacityOf = colorOpacityOf || null;
   };
 
   M.buildBase = function () {
@@ -121,7 +124,10 @@ window.FB = window.FB || {};
         owners.push(own || '~none');
         holders.push(M.holderOf ? (M.holderOf(pr.id) || own || '~none') : (own || '~none'));
         const rc = M.colorOf && own ? M.colorOf(own) : '#888888';
-        col = FB.mix(FB.hexToRgb(rc), tint, 0.42);
+        const opacity = M.colorOpacityOf && own
+          ? FB.clamp(M.colorOpacityOf(own), 0, 1) : 1;
+        col = FB.mix(FB.hexToRgb(rc), tint,
+          1 - POLITICAL_COLOR_STRENGTH * opacity);
       }
       colors.push(col);
     }
@@ -187,6 +193,13 @@ window.FB = window.FB || {};
     const color = prefs && prefs.realmHighlightColor;
     return typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)
       ? color.toLowerCase() : DEFAULT_FOCUS_COLOR;
+  };
+
+  M.focusOpacity = function () {
+    const prefs = FB.game && FB.game.uiPrefs;
+    const opacity = prefs && prefs.realmHighlightOpacity;
+    return typeof opacity === 'number' && isFinite(opacity)
+      ? FB.clamp(opacity, 0, 1) : 1;
   };
 
   function outlineUnderColor(color) {

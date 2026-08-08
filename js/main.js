@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.116.3';
+  FB.VERSION = '1.116.4';
   FB.CHANGELOG = [
+    { v: '1.116.4', date: '2026-08-08', changes: [
+      'Realm map color and fill opacity now live in Settings, and modal content keeps clear of its scrollbars.'
+    ] },
     { v: '1.116.3', date: '2026-08-08', changes: [
       'Realm and map-filter selections now preserve political colors, with customizable outlines and a realm-and-demesne summary on the Self tab.'
     ] },
@@ -1905,6 +1908,7 @@ window.FB = window.FB || {};
     commitmentsCollapsed:false,
     hideBeginnerHints:false,
     realmHighlightColor:'#e8dec4',
+    realmHighlightOpacity:1,
     musicChoice:null,
     musicVolume:0.55,
     musicPreferred:{},
@@ -1927,6 +1931,11 @@ window.FB = window.FB || {};
           /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.realmHighlightColor)) {
         G.uiPrefs.realmHighlightColor =
           storedUiPrefs.realmHighlightColor.toLowerCase();
+      }
+      if (typeof storedUiPrefs.realmHighlightOpacity === 'number' &&
+          isFinite(storedUiPrefs.realmHighlightOpacity)) {
+        G.uiPrefs.realmHighlightOpacity =
+          FB.clamp(storedUiPrefs.realmHighlightOpacity, 0, 1);
       }
       G.uiPrefs.musicChoice = storedUiPrefs.musicChoice === 'on' ||
         storedUiPrefs.musicChoice === 'off' ? storedUiPrefs.musicChoice : null;
