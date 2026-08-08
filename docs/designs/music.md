@@ -32,8 +32,9 @@ broad faith fallback. Jewish and Zoroastrian starts currently fall back to the M
 the final general fallback is the Christian collection. Adding a more precise folder and
 regenerating the catalog makes it available without changing runtime code.
 
-itch.io deliberately ignores campaign context and weighted bank selection. If the player enables
-music, it shuffles every track included in the itch artifact for maximum variety.
+The hosted and itch builds use the same contextual bank selection and weighted shuffle. The itch
+artifact includes the complete current soundtrack, so faith, culture, and role resolution behave
+the same on both release surfaces. Observer mode continues to shuffle the whole catalog.
 
 ## Playback and controls
 
@@ -84,6 +85,6 @@ The service worker's app shell includes the intro but excludes gameplay tracks. 
 ## Distribution
 
 The play.fallowborn.com Docker build validates and ships the full catalog. The private itch deploy
-uses `stage-itch` to choose tracks round-robin across banks up to 200,000,000 gameplay-audio bytes,
-with the intro outside the cap, and regenerates a catalog that describes only those staged files.
-This keeps the itch artifact bounded while preserving representation across available banks.
+uses `stage-itch` to require and stage the same complete catalog beneath a 200,000,000-byte
+gameplay-audio cap, with the intro outside the cap. If the complete catalog exceeds that boundary,
+deployment fails instead of silently dropping tracks or leaving contextual banks incomplete.

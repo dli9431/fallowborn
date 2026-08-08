@@ -267,7 +267,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   `data/economy.js` holds careers, enterprises, and finance-contract terms.
 - `music/` - self-hosted Opus tracks arranged by intro or faith/culture/role selector folders.
 - `tools/music_catalog.py` - validates soundtrack files, generates `data/music_catalog.js`, and
-  selects the balanced 200 MB itch soundtrack.
+  requires the complete itch soundtrack to fit beneath its 200 MB gameplay-audio cap.
 
 ## Reference docs
 

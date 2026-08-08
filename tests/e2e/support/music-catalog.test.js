@@ -53,6 +53,15 @@ function runTool(root, args) {
   assert.equal(result.status, 0, result.stderr || result.stdout);
 }
 
+function runToolFailure(root, args) {
+  const result = childProcess.spawnSync(process.env.PYTHON || 'python', [tool].concat(args), {
+    cwd:root,
+    encoding:'utf8'
+  });
+  assert.notEqual(result.status, 0, result.stdout);
+  return result;
+}
+
 function readCatalog(filename) {
   const sandbox = { window:{}, FBDATA:{} };
   sandbox.window.FBDATA = sandbox.FBDATA;
@@ -60,7 +69,7 @@ function readCatalog(filename) {
   return JSON.parse(JSON.stringify(sandbox.FBDATA.musicCatalog));
 }
 
-test('committed soundtrack provides complete contextual faith banks', function () {
+test('committed soundtrack provides complete contextual faith banks within itch budget', function () {
   runTool(gameRoot, ['check', '--root', gameRoot]);
   const catalog = readCatalog(path.join(gameRoot, 'data', 'music_catalog.js'));
   const expected = [
@@ -79,9 +88,12 @@ test('committed soundtrack provides complete contextual faith banks', function (
   catalog.banks.forEach(function (bank) {
     assert.ok(bank.trackIds.length >= 9, bank.id + ' has fewer than nine tracks');
   });
+  assert.ok(catalog.tracks.reduce(function (sum, track) {
+    return sum + track.bytes;
+  }, 0) <= 200000000, 'complete gameplay soundtrack exceeds the itch budget');
 });
 
-test('catalog generation validates Opus metadata and balances the itch subset', function () {
+test('catalog generation requires the complete itch soundtrack to fit its budget', function () {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fallowborn-music-catalog-'));
   try {
     writeTrack(root, 'music/intro/000-fallowborn.opus', 60, 20);
@@ -89,7 +101,8 @@ test('catalog generation validates Opus metadata and balances the itch subset', 
       root, 'music/christian/all/folk/001-hammer-and-lute.opus', 180, 70);
     const pagan = writeTrack(
       root, 'music/pagan/all/war/001-oaken-shields.opus', 180, 90);
-    writeTrack(root, 'music/muslim/all/court/001-garden-of-stars.opus', 180, 110);
+    const muslim = writeTrack(
+      root, 'music/muslim/all/court/001-garden-of-stars.opus', 180, 110);
 
     runTool(root, ['build', '--root', root]);
     runTool(root, ['check', '--root', root]);
@@ -107,7 +120,7 @@ test('catalog generation validates Opus metadata and balances the itch subset', 
     fs.writeFileSync(path.join(stage, 'index.html'), '<!doctype html>', 'utf8');
     fs.copyFileSync(path.join(root, 'data', 'music_catalog.js'),
       path.join(stage, 'data', 'music_catalog.js'));
-    const budget = christian + pagan;
+    const budget = christian + pagan + muslim;
     runTool(root, [
       'stage-itch', '--root', root, '--stage', stage, '--budget', String(budget)
     ]);
@@ -118,12 +131,23 @@ test('catalog generation validates Opus metadata and balances the itch subset', 
     }, 0), budget);
     assert.deepEqual(staged.tracks.map(function (track) { return track.bankId; }), [
       'christian/all/folk',
+      'muslim/all/court',
       'pagan/all/war'
     ]);
     assert.equal(fs.existsSync(path.join(stage, staged.intro.src)), true);
     staged.tracks.forEach(function (track) {
       assert.equal(fs.existsSync(path.join(stage, track.src)), true);
     });
+
+    const tooSmallStage = path.join(root, 'too-small-stage');
+    fs.mkdirSync(path.join(tooSmallStage, 'data'), { recursive:true });
+    fs.writeFileSync(path.join(tooSmallStage, 'index.html'), '<!doctype html>', 'utf8');
+    const failure = runToolFailure(root, [
+      'stage-itch', '--root', root, '--stage', tooSmallStage,
+      '--budget', String(budget - 1)
+    ]);
+    assert.match(failure.stderr, /complete gameplay soundtrack is .* exceeding the itch budget/);
+    assert.equal(fs.existsSync(path.join(tooSmallStage, 'music')), false);
   } finally {
     fs.rmSync(root, { recursive:true, force:true });
   }

@@ -299,9 +299,19 @@ test('context banks, playback controls, and listening history stay consistent',
       const court = FB.music.resolveBank(state).id;
       state.player.tier = 1;
       FB.state = state;
+      FB.platform.isItch = true;
+      FB.music.sync(state, true);
+      const itchFolkBank = FB.music.currentBank();
+      state.realms.lord.war = { enemy:'foe' };
+      FB.music.sync(state, true);
+      const itchWarBank = FB.music.currentBank();
+      FB.platform.isItch = false;
+      state.realms.lord.war = null;
       FB.music.sync(state, true);
       return {
         folk:folk, realmWar:realmWar, war:war, court:court,
+        itchFolk:itchFolkBank ? itchFolkBank.id : null,
+        itchWar:itchWarBank ? itchWarBank.id : null,
         first:FB.music.current().id
       };
     });
@@ -309,7 +319,9 @@ test('context banks, playback controls, and listening history stay consistent',
       folk:'christian/anglo_saxon/folk',
       realmWar:'christian/anglo_saxon/war',
       war:'christian/anglo_saxon/war',
-      court:'christian/anglo_saxon/court'
+      court:'christian/anglo_saxon/court',
+      itchFolk:'christian/anglo_saxon/folk',
+      itchWar:'christian/anglo_saxon/war'
     }));
 
     const quickToggle = page.locator('#music-now-playing-toggle');

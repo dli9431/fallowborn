@@ -195,32 +195,6 @@ def write_catalog(path: Path, catalog: dict) -> None:
     path.write_text(render(catalog), encoding="utf-8", newline="\n")
 
 
-def balanced_subset(tracks: list[dict], budget: int) -> list[dict]:
-    grouped = defaultdict(list)
-    for track in tracks:
-        grouped[track["bankId"]].append(track)
-    bank_ids = sorted(grouped)
-    selected = []
-    used = 0
-    index = 0
-    while True:
-        found = False
-        for bank_id in bank_ids:
-            bank = grouped[bank_id]
-            if index >= len(bank):
-                continue
-            found = True
-            track = bank[index]
-            if used + track["bytes"] <= budget:
-                selected.append(track)
-                used += track["bytes"]
-        if not found:
-            break
-        index += 1
-    selected.sort(key=lambda item: (item["bankId"], item["order"], item["id"]))
-    return selected
-
-
 def copy_stage(root: Path, stage: Path, intro: dict | None, tracks: list[dict]) -> None:
     if not (stage / "index.html").is_file() or not (stage / "data").is_dir():
         raise CatalogError(f"{stage}: expected an existing Fallowborn staging root")
@@ -267,12 +241,17 @@ def main() -> int:
         else:
             if not args.stage:
                 raise CatalogError("stage-itch requires --stage <directory>")
-            selected = balanced_subset(tracks, args.budget)
-            copy_stage(root, args.stage.resolve(), intro, selected)
-            selected_bytes = sum(track["bytes"] for track in selected)
+            gameplay_bytes = sum(track["bytes"] for track in tracks)
+            if gameplay_bytes > args.budget:
+                raise CatalogError(
+                    "complete gameplay soundtrack is "
+                    f"{gameplay_bytes} bytes, exceeding the itch budget of "
+                    f"{args.budget} bytes"
+                )
+            copy_stage(root, args.stage.resolve(), intro, tracks)
             print(
-                f"Staged {len(selected)}/{len(tracks)} gameplay tracks "
-                f"({selected_bytes}/{args.budget} bytes)."
+                f"Staged the complete soundtrack: {len(tracks)} gameplay tracks "
+                f"({gameplay_bytes}/{args.budget} bytes)."
             )
     except (CatalogError, OSError, ValueError) as error:
         print(f"Music catalog error: {error}", file=sys.stderr)

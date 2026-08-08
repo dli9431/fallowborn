@@ -14,17 +14,19 @@ Zip the folder contents with `index.html` at the zip root, upload to itch.io as 
 `data/`, and `mods/` URL in the **staged** `index.html` before the push. That makes the version
 the cache key for the itch build, so browsers and the itch CDN fetch fresh files on each release.
 The script stages only `index.html`, `LICENSE`, `css/`, `data/`, `docs/`, `js/`, `mods/`, and
-`static/`, then uses `tools/music_catalog.py` to add a validated, balanced soundtrack subset.
-Gameplay music is capped at 200,000,000 bytes; the intro is required and sits outside that cap.
-The staged generated catalog contains only the copied tracks. That fail-closed process is the
-artifact boundary. Test files, Node packages, reports, and repository metadata must not be added
-to it.
+`static/`, then uses `tools/music_catalog.py` to validate and add the complete soundtrack.
+Gameplay music must fit beneath 200,000,000 bytes; the intro is required and sits outside that
+cap. Deployment fails if the complete catalog no longer fits, so itch never receives partial
+contextual banks. The staged generated catalog describes the complete copied soundtrack. That
+fail-closed process is the artifact boundary. Test files, Node packages, reports, and repository
+metadata must not be added to it.
 
 The itch page does not register a service worker or advertise the hosted web-app manifest.
 `FB.platform.isPlay` is false inside the itch-owned iframe, so the root-scoped offline shell
 cannot compete with itch's CDN or depend on third-party iframe storage.
-When music is enabled on itch, the player shuffles every track in the staged catalog rather than
-selecting by character context.
+When music is enabled on itch, the player uses the same faith, culture, and folk/court/war context
+selection as play.fallowborn.com. Play-only ratings and explicit offline-bank downloads remain
+hosted features because they depend on the first-party play origin and its service worker.
 
 ## play.fallowborn.com
 

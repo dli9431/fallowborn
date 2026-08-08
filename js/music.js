@@ -787,7 +787,7 @@ window.FB = window.FB || {};
     const enteringGame = mode !== 'game';
     mode = 'game';
     let bank;
-    if (FB.platform.isItch || (FB.game && FB.game.observe)) {
+    if (FB.game && FB.game.observe) {
       bank = { id:'__all__' };
     } else {
       bank = M.resolveBank(state);

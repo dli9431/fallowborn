@@ -22,8 +22,8 @@ music/muslim/all/court/001-court-of-brass.opus
 ```
 
 Use lowercase ASCII names and three-digit ordering. The order controls catalog
-and itch-subset priority; playback is shuffled. Refresh the tracked catalog
-after adding, replacing, or removing audio:
+ordering; playback is shuffled within the selected contextual bank. Refresh the
+tracked catalog after adding, replacing, or removing audio:
 
 Commit the organized `.opus` files. They are shipped game assets and must be
 available to the hosted and itch builds. Uncompressed and intermediate source
@@ -35,6 +35,6 @@ python tools/music_catalog.py build
 python tools/music_catalog.py check
 ```
 
-Hosted releases regenerate or validate the same catalog. The itch release
-selects a balanced subset capped at 200,000,000 bytes of gameplay music; its
-intro is staged outside that budget.
+Hosted releases regenerate or validate the same complete catalog. The itch
+release requires that complete catalog to fit beneath 200,000,000 bytes of
+gameplay music and fails otherwise; its intro is staged outside that budget.
