@@ -107933,6 +107933,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_panels.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -153612,7 +153613,7 @@
     "ui:County": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "County"
       }
@@ -154437,6 +154438,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Develop the demesne."
+      }
+    },
+    "ui:Development": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Development"
       }
     },
     "ui:Development {development}: every current settlement-growth threshold has been reached.": {

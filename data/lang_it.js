@@ -26434,6 +26434,7 @@ FBDATA.lang = FBDATA.lang || {};
       "ui:Desertion": R["d699ee58"],
       "ui:Develop and defend the holding while meeting feudal and institutional obligations.": R["eec11d06"],
       "ui:Develop the demesne.": R["6e0a364f"],
+      "ui:Development": R["9fa3ef16"],
       "ui:Development {development}: every current settlement-growth threshold has been reached.": R["30481583"],
       "ui:Diplomacy": R["a0cd157b"],
       "ui:Diplomacy wins trust and makes other people easier to persuade.": R["69fc2a0f"],

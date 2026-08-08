@@ -100,6 +100,12 @@ leftmost figures on narrow screens, and the date is hidden in the tighter landsc
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
 
+The Land tab groups realm, county, and development facts into compact cards. Short facts
+use aligned label and value columns on desktop, while explanatory values such as alliances,
+de jure paths, and development history use a full-width stacked row. Narrow and short
+layouts stack every Land fact with its label above the value, keeping long translations and
+proper names readable without horizontal overflow.
+
 Mobile-layout UI states mirror their navigation in the browser's same-document history:
 switches among Deeds/Land/Network/Chronicle, the Self/Kin drawer, generic dialogs, selected
 nested dialog views, the travel picker, and the equipment-slot overlay each add a same-URL

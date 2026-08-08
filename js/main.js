@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.115.0';
+  FB.VERSION = '1.115.1';
   FB.CHANGELOG = [
+    { v: '1.115.1', date: '2026-08-07', changes: [
+      'The Land tab now groups realm, county, and development details into responsive cards, with long explanations stacked for easier reading on desktop and mobile.'
+    ] },
     { v: '1.115.0', date: '2026-08-07', changes: [
       'The soundtrack now includes dedicated court and war music, follows wars involving the player’s realm without interrupting the current song, and pauses while the game is unfocused. Quick playback controls are available beside the song title and inside its details.',
       'Main-menu actions now have distinct icons.'

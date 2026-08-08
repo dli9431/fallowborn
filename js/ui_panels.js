@@ -3668,6 +3668,11 @@ window.FB = window.FB || {};
     $('capital-relocation-cancel').addEventListener('click', UI.closeModal);
   };
 
+  function landKv(label, value, detail) {
+    return '<div class="kv land-kv' + (detail ? ' land-kv-detail' : '') +
+      '"><span>' + esc(FB.T(label)) + '</span><b>' + value + '</b></div>';
+  }
+
   function renderProv() {
     const s = FB.state;
     const pid = selectedProv || s.player.provinceId;
@@ -3772,10 +3777,12 @@ window.FB = window.FB || {};
       let chain;
       if (holdId === 'player') chain = ['player'].concat(s.player.liege ? FB.liegeChain(s, s.player.liege) : []);
       else chain = FB.liegeChain(s, holdId);
-      h += kv('County', esc(pr.name));
+      h += '<section class="land-section"><h3 class="land-section-title">' +
+        esc(FB.T('Realm')) + '</h3>';
+      h += landKv('County', esc(pr.name));
       for (const cid of chain) {
         if (cid === 'player') {
-          h += '<div class="kv"><span>' + esc(FB.styledTitle(s)) + '</span><b>' +
+          h += '<div class="kv land-kv"><span>' + esc(FB.styledTitle(s)) + '</span><b>' +
             esc(FB.T('You — held in your own hand')) + '</b></div>';
           continue;
         }
@@ -3784,7 +3791,7 @@ window.FB = window.FB || {};
         let mark = '';
         if (cid === s.player.liege) mark = FB.T(' — your liege');
         else if (cr.liege === 'player') mark = FB.T(' — your vassal');
-        h += '<div class="kv"><span>' + esc(FB.T('{title} {name}', {
+        h += '<div class="kv land-kv"><span>' + esc(FB.T('{title} {name}', {
           title: FB.realmRankTitle(s, cr), name: cr.ruler.name
         })) +
           '</span><b><button class="linklike" data-liege="' + esc(cid) + '">' +
@@ -3795,32 +3802,66 @@ window.FB = window.FB || {};
         const parts = [FBDATA.duchies[dj.duchy].name];
         if (dj.kingdom) parts.push(FBDATA.kingdoms[dj.kingdom].name);
         if (dj.empire) parts.push(FBDATA.empires[dj.empire].name);
-        h += kv('De jure (rightful liege)', esc(parts.join(' › ')));
+        h += landKv('De jure (rightful liege)', esc(parts.join(' › ')), true);
         if (s.player.provs && s.player.provs.length) h += dejureNotes(s, dj);
       } else {
         // a colony settled on empty land: owned, but tied to no title
-        h += kv('De jure (rightful liege)', esc(FB.T('None — this land feeds no duchy or crown.')));
+        h += landKv('De jure (rightful liege)',
+          esc(FB.T('None — this land feeds no duchy or crown.')), true);
       }
       const sovereignHtml = realm
         ? '<button class="linklike" data-liege="' + esc(rid) + '" title="' +
           esc(FB.T('See this realm’s ruler')) + '">' + esc(realm.name) + '</button>'
         : '';
       h +=
-        (realm ? kv('Sovereign', sovereignHtml) : '') +
-        (realm ? kv('Realm size', esc(countyCountText(s, FB.realmProvinces(s, rid).length))) : '') +
-        (realm ? kv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
-        (realm ? kv('Defensive alliance', esc(allianceText(s, rid))) : '') +
-        kv('Culture', esc(cultureName(s, pr.culture))) +
-        kv('Faith', faithDetailsLink(s, pr.religion)) +
-        kv('Terrain', esc(terrainName(pr.terrain)) + (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
-        kv('Economic development', (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
-        kv('Settlement growth', esc(settlementDevelopmentText(s, pid))) +
-        kv('Historical starting point', esc(bookmarkDevelopmentText(s, pid))) +
-        (realm && FB.techUiRelevant(s) ? kv('Technological development',
-          techDevelopmentScore(s, rid) + ' / 10') : '') +
-        kv('Province levy', '~' + esc(menText(s,
+        (realm ? landKv('Sovereign', sovereignHtml) : '') +
+        (realm ? landKv('Realm size',
+          esc(countyCountText(s, FB.realmProvinces(s, rid).length))) : '') +
+        (realm ? landKv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
+        (realm ? landKv('Defensive alliance', esc(allianceText(s, rid)), true) : '');
+      if (realm && !myRealm && FB.isPlayerSovereign(s)) {
+        const realmStanding = FB.standingOf(s, { kind:'realm', id:rid });
+        h += landKv('Standing with this ruler', standingSpan(realmStanding));
+        h += landKv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
+          ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')), true);
+      }
+      h += '</section><section class="land-section"><h3 class="land-section-title">' +
+        esc(FB.T('County')) + '</h3>' +
+        landKv('Culture', esc(cultureName(s, pr.culture))) +
+        landKv('Faith', faithDetailsLink(s, pr.religion)) +
+        landKv('Terrain', esc(terrainName(pr.terrain)) +
+          (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
+        landKv('Province levy', '~' + esc(menText(s,
           (s.dev[pid] || 1) * B.levyPerDev *
           (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1))));
+      const setts = FB.settlementsOf(s, pid);
+      if (setts.length) {
+        // in your own demesne a settlement is a button: it opens the buildings
+        // standing in THAT settlement and what each provides (UI.showSettlement)
+        const own = FB.demesne(s).indexOf(pid) >= 0;
+        h += '<div class="settblock land-settlements"><span>' +
+          esc(FB.T('Settlements')) + '</span>' +
+          '<div class="settlist">' + setts.map(function (st, si) {
+            const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
+            return own
+              ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
+                esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>'
+              : '<span>' + label + '</span>';
+          }).join('') + '</div></div>';
+        if (own) {
+          h += '<div class="hint">' + esc(FB.T('Each settlement keeps its own buildings — tap one to see them and raise more.')) + '</div>';
+        }
+      }
+      h += '</section><section class="land-section"><h3 class="land-section-title">' +
+        esc(FB.T('Development')) + '</h3>' +
+        landKv('Economic development',
+          (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
+        landKv('Settlement growth', esc(settlementDevelopmentText(s, pid)), true) +
+        landKv('Historical starting point',
+          esc(bookmarkDevelopmentText(s, pid)), true) +
+        (realm && FB.techUiRelevant(s) ? landKv('Technological development',
+          techDevelopmentScore(s, rid) + ' / 10') : '') +
+        '</section>';
       const countyModifiers = FB.countyModifierRecords
         ? FB.countyModifierRecords(s, pid) : [];
       if (countyModifiers.length) {
@@ -3849,29 +3890,6 @@ window.FB = window.FB || {};
           '📯 Great holy-war objective · {status}', {
             status:objectiveStatus
           })) + '</div>';
-      }
-      if (realm && !myRealm && FB.isPlayerSovereign(s)) {
-        const realmStanding = FB.standingOf(s, { kind:'realm', id:rid });
-        h += kv('Standing with this ruler', standingSpan(realmStanding));
-        h += kv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
-          ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')));
-      }
-      const setts = FB.settlementsOf(s, pid);
-      if (setts.length) {
-        // in your own demesne a settlement is a button: it opens the buildings
-        // standing in THAT settlement and what each provides (UI.showSettlement)
-        const own = FB.demesne(s).indexOf(pid) >= 0;
-        h += '<div class="settblock"><span>' + esc(FB.T('Settlements')) + '</span>' +
-          '<div class="settlist">' + setts.map(function (st, si) {
-            const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
-            return own
-              ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
-                esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>'
-              : '<span>' + label + '</span>';
-          }).join('') + '</div></div>';
-        if (own) {
-          h += '<div class="hint">' + esc(FB.T('Each settlement keeps its own buildings — tap one to see them and raise more.')) + '</div>';
-        }
       }
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
         h += '<div class="progressnote">' + esc(FB.T('🏰 You hold this province.')) + '</div>';
