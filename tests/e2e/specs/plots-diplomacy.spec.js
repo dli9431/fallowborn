@@ -530,10 +530,13 @@ test('diplomatic data covers all four families and writes locale-neutral results
       const other = FB.foreignPolicyTargets(s).filter(function (id) {
         return id !== rid;
       })[0];
+      const targetBefore = FB.standingOf(s, { kind:'realm', id:rid });
+      const untouchedBefore = FB.standingOf(s, { kind:'realm', id:other });
       FB.applyEffects(s, { standingRealm:11 }, { realmId:rid }, {
         id:'test_diplomatic_effect'
       });
-      const untouched = FB.standingOf(s, { kind:'realm', id:other });
+      const targetAfter = FB.standingOf(s, { kind:'realm', id:rid });
+      const untouchedAfter = FB.standingOf(s, { kind:'realm', id:other });
       FB.fns.diplomacy_make_pact(s, { realmId:rid });
       const last = s.log[s.log.length - 1];
       const ids = [
@@ -560,8 +563,8 @@ test('diplomatic data covers all four families and writes locale-neutral results
             cooldown:ev && ev.cooldown || null
           };
         }),
-        targetStanding:FB.standingOf(s, { kind:'realm', id:rid }),
-        untouched:untouched,
+        targetStandingChange:targetAfter - targetBefore,
+        untouchedStandingChange:untouchedAfter - untouchedBefore,
         pactEnd:s.pacts[rid],
         logKey:last && last.msg && last.msg.key,
         legacyText:last && Object.prototype.hasOwnProperty.call(last, 't')
@@ -575,8 +578,8 @@ test('diplomatic data covers all four families and writes locale-neutral results
     expect(result.definitions.slice(10).every(function (row) {
       return row.validator === 'diplomacy_succession_valid';
     })).toBe(true);
-    expect(result.targetStanding).toBe(11);
-    expect(result.untouched).toBe(0);
+    expect(result.targetStandingChange).toBe(11);
+    expect(result.untouchedStandingChange).toBe(0);
     expect(result.pactEnd).toBeGreaterThan(0);
     expect(result.logKey).toBe('news.diplomacy.pact_made');
     expect(result.legacyText).toBe(false);

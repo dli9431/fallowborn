@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.116.1';
+  FB.VERSION = '1.116.2';
   FB.CHANGELOG = [
+    { v: '1.116.2', date: '2026-08-08', changes: [
+      'Trade guild officers once again require Lettered and Learning 6.'
+    ] },
     { v: '1.116.1', date: '2026-08-08', changes: [
       'The itch build now ships the complete soundtrack and follows the same contextual folk, court, and war selection as hosted play.'
     ] },

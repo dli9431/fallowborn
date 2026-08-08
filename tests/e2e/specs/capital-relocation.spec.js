@@ -74,6 +74,10 @@ async function startCapitalRealm(page, testInfo, options) {
       test_vassal_a:20,
       test_vassal_b:-10
     };
+    // Use the canonical writer so the synthetic values carry the current
+    // faith baseline just like values created through ordinary play.
+    FB.setRealmRulerStanding(s, 'test_vassal_a', 20);
+    FB.setRealmRulerStanding(s, 'test_vassal_b', -10);
 
     s.buildings.london = [{ s:0, id:'fields' }];
     s.buildings.canterbury = [{ s:0, id:'market' }];

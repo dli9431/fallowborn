@@ -193,6 +193,7 @@ test('first soundtrack boot explains bandwidth and title pause preserves positio
     })).toEqual({ choice:'off', stored:'off', playing:false });
 
     await page.locator('#btn-newgame').click();
+    await page.locator('#ng-fresh').click();
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
     await expect(titleMusic).toBeVisible();
     await page.locator('#btn-bm-back').click();
@@ -276,7 +277,7 @@ test('context banks, playback controls, and listening history stay consistent',
     });
     await routeSyntheticSoundtrack(page);
     await openGame(page, testInfo);
-    await expect(page.locator('#btn-title-music')).toBeHidden();
+    await expect(page.locator('#btn-title-music')).toBeVisible();
 
     const context = await page.evaluate(function () {
       const state = {
@@ -299,6 +300,7 @@ test('context banks, playback controls, and listening history stay consistent',
       const court = FB.music.resolveBank(state).id;
       state.player.tier = 1;
       FB.state = state;
+      FB.ui.showScreen(null);
       FB.platform.isItch = true;
       FB.music.sync(state, true);
       const itchFolkBank = FB.music.currentBank();
@@ -323,6 +325,7 @@ test('context banks, playback controls, and listening history stay consistent',
       itchFolk:'christian/anglo_saxon/folk',
       itchWar:'christian/anglo_saxon/war'
     }));
+    await expect(page.locator('#btn-title-music')).toBeHidden();
 
     const quickToggle = page.locator('#music-now-playing-toggle');
     await expect(quickToggle).toBeVisible();
@@ -402,7 +405,7 @@ test('context banks, playback controls, and listening history stay consistent',
     });
     expect(navigation.second).not.toBe(navigation.first);
     expect(navigation.previous).toBe(navigation.first);
-    await expect(page.getByRole('button', { name:'⏮ Previous', exact:true })).toBeDisabled();
+    await expect(page.getByRole('button', { name:'⏮ Previous', exact:true })).toBeEnabled();
     await expect(page.getByRole('button', { name:'⏸ Pause', exact:true })).toBeVisible();
     await expect(page.getByRole('button', { name:'Next ⏭', exact:true })).toBeVisible();
     await expect(page.locator('#music-up')).toHaveCount(0);

@@ -68,6 +68,9 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
           return true;
         }
       };
+      window.__telemetryRealNow = Date.now;
+      window.__telemetryNow = Date.now();
+      Date.now = function () { return window.__telemetryNow; };
     });
 
     await startDeterministicGame(page);
@@ -93,15 +96,14 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     })).toEqual([]);
 
     await page.evaluate(function () {
-      const realNow = Date.now;
-      let simulatedNow = realNow();
-      Date.now = function () { return simulatedNow; };
       for (let i = 0; i < 120; i++) {
-        simulatedNow += 15000;
+        window.__telemetryNow += 15000;
         document.dispatchEvent(new Event('visibilitychange'));
       }
       window.dispatchEvent(new Event('pagehide'));
-      Date.now = realNow;
+      Date.now = window.__telemetryRealNow;
+      delete window.__telemetryRealNow;
+      delete window.__telemetryNow;
     });
     events = await page.evaluate(function () {
       return window.__telemetryEvents;

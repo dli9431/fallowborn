@@ -59,10 +59,15 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.musicOrder).toBe(true);
     expect(contract.musicCatalog).toEqual(expect.objectContaining({
       schema:1,
-      intro:null,
-      tracks:[],
-      banks:[]
+      intro:expect.objectContaining({
+        id:'intro-fallowborn',
+        kind:'intro'
+      }),
+      tracks:expect.any(Array),
+      banks:expect.any(Array)
     }));
+    expect(contract.musicCatalog.tracks.length).toBeGreaterThan(0);
+    expect(contract.musicCatalog.banks.length).toBeGreaterThan(0);
     expect(contract.musicChoiceHidden).toBe(true);
     expect(contract.manifests).toBe(0);
     expect(contract.themeColors).toBe(0);
@@ -90,6 +95,11 @@ test('title menu gives every action a decorative icon and a clean accessible nam
     });
     expect(iconLabels.every(function (icon) { return icon.length > 0; })).toBe(true);
     expect(new Set(iconLabels).size).toBe(expected.length);
+    // A display:none control is correctly absent from the accessibility tree.
+    // Expose Continue so its eventual player-facing name can be inspected too.
+    await page.locator('#btn-continue').evaluate(function (button) {
+      button.classList.remove('hidden');
+    });
     for (const item of expected) {
       const button = page.locator('#' + item[0]);
       await expect(button.locator('.title-menu-icon')).toHaveAttribute('aria-hidden', 'true');

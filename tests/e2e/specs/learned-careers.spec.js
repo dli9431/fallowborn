@@ -338,6 +338,7 @@ test('learned specialties pay their formulas and Trade leadership needs literacy
       const me = state.chars[state.player.charId];
       state.player.tier = 1;
       state.player.prestige = 200;
+      state.player.gold = 500;
       me.born = state.date.year - 28;
       me.traits = ['literate'];
       me.skills = { dip:0, mar:0, ste:9, int:0, lea:8 };
@@ -411,6 +412,19 @@ test('learned specialties pay their formulas and Trade leadership needs literacy
       me.career.guildRank = 'officer';
       me.skills.ste = 11;
       me.skills.lea = 6;
+      FB.ensureInstitutions(state, { silent:true });
+      const merchantScope = 'merchant@' + state.player.provinceId;
+      state.elections.guildScopes[merchantScope] = {
+        profession:'merchant',
+        provinceId:state.player.provinceId,
+        offices:{
+          officer:{
+            holderKind:'character', holderId:me.id,
+            startTurn:state.turn - 360, endTurn:state.turn + 1080,
+            electionId:'test_officer_term'
+          }
+        }
+      };
       const letteredGuildmaster = FB.guildAdvance(state, me);
       me.traits = [];
       me.skills.ste = 10;

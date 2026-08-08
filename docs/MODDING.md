@@ -1064,6 +1064,7 @@ rivals, and one-choice campaign tactics:
       "stewardship": 10,
       "prestige": 60,
       "guildStanding": 45,
+      "merchantLearning": 6,
       "electorates": [
         { "id": "masters", "name": "Masters' bench", "weight": 3,
           "base": 0.42, "standingRate": 0.004,
@@ -1085,8 +1086,10 @@ and `kind:"council"` for the `treasurer` and `constable` confirmation ids. Elect
 `id` values must be unique within the definition; tactic `support` keys refer to those
 ids. `base` and the optional standing, Stewardship, Diplomacy, Martial, prestige, and rank
 rates build a clamped support chance. Council tactics may spend Crown Authority; guild
-tactics may spend Guild Standing. Adding another kind or office requires matching engine
-code even though replacing the four core definitions is data-only.
+tactics may spend Guild Standing. On guild elections, `merchantLearning` adds both the
+listed Learning minimum and the core Lettered requirement for Trade candidates; it does
+not affect Craft candidates. Adding another kind or office requires matching engine code
+even though replacing the four core definitions is data-only.
 
 A privilege is a legal wrapper around one authoritative effect ledger:
 

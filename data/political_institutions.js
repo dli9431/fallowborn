@@ -10,7 +10,7 @@ FBDATA.elections = {
     desc:'The masters choose who will sit among the guild’s officers for a fixed term.',
     order:0, termDays:1440, campaignDays:90, nominationCost:25,
     defeatCooldownDays:720, requiredRank:'master', stewardship:10,
-    prestige:60, guildStanding:45,
+    prestige:60, guildStanding:45, merchantLearning:6,
     electorates:[
       { id:'masters', name:'Masters’ bench', weight:3, base:0.42,
         standingRate:0.004, stewardshipRate:0.025 },
