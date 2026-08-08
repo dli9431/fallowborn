@@ -911,6 +911,25 @@ button.modifierchip:hover, button.modifierchip:focus-visible {
    repeats here so it beats the `.kv b` value styling (equal specificity,
    later rule wins) */
 button.linklike { background: none; border: 0; padding: 0; font: inherit; color: #d8b24a; }
+.realm-highlight-summary {
+  display: flex; align-items: center; gap: 11px; margin: 4px 0 10px;
+  padding: 9px 10px; border: 1px solid #493c27; border-radius: 7px;
+  background: #211a13;
+}
+.realm-highlight-summary .adesc { margin: 0; }
+.realm-highlight-swatch {
+  flex: 0 0 42px; width: 42px; height: 42px; border-radius: 50%;
+  border: 2px solid #f8f2e0; box-shadow: 0 0 0 2px #17120d;
+}
+.realm-highlight-actions {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-bottom: 4px;
+}
+.realm-highlight-actions .btn { flex: 1 1 190px; min-height: 44px; }
+.realm-highlight-input {
+  position: fixed; left: -10000px; top: 0; width: 1px; height: 1px;
+  opacity: 0; pointer-events: none;
+}
 /* a building's flavor line under its kv row in the settlement view */
 .settdesc { margin: 0 0 8px; }
 .sett-demolish { display: block; margin: 0 0 12px auto; min-height: 36px; padding: 6px 10px; }

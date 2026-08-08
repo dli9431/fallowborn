@@ -10,6 +10,8 @@ window.FB = window.FB || {};
     marsh: [127, 160, 143], tundra: [184, 191, 184]
   };
   const SEA_TOP = [58, 108, 158], SEA_BOT = [36, 76, 122];
+  const DEFAULT_FOCUS_COLOR = '#e8dec4';
+  const FOCUS_SHADE = [18, 28, 38];
 
   const M = {
     canvas: null, ctx: null,
@@ -18,6 +20,8 @@ window.FB = window.FB || {};
     viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 20,
     ownerOf: null, colorOf: null,
     selected: null, playerProv: null, capitals: [],
+    focusMembers: null, focusGroupActive: false,
+    groupOutline: null, selectedOutline: null,
     onTap: null, dirty: true,
     pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1
   };
@@ -57,6 +61,10 @@ window.FB = window.FB || {};
     M.ownerOf = null;
     M.colorOf = null;
     M.holderOf = null;
+    M.focusMembers = null;
+    M.focusGroupActive = false;
+    M.groupOutline = null;
+    M.selectedOutline = null;
     M.dirty = true;
     M.resize();
     M.fitView();
@@ -168,17 +176,55 @@ window.FB = window.FB || {};
   };
 
   /* ---------- selection highlight ----------
-     Selecting a province lights up its WHOLE realm: a strong tint on the
-     province itself, a faint tint over the rest of the realm, and a golden
-     outline along the realm's outer border, so its full extent reads at a
-     glance. */
+     Selection preserves the political and terrain colors which already carry
+     map meaning. Land outside the active group receives a cool focus shade;
+     the group's perimeter and the exact selected county are drawn later as
+     zoom-independent, two-tone lines. */
   /* groupOf: optional (pid) => groupKey|null deciding what counts as "the
      realm" for the highlight (map filters); defaults to sovereign ownership */
+  M.focusColor = function () {
+    const prefs = FB.game && FB.game.uiPrefs;
+    const color = prefs && prefs.realmHighlightColor;
+    return typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)
+      ? color.toLowerCase() : DEFAULT_FOCUS_COLOR;
+  };
+
+  function outlineUnderColor(color) {
+    const rgb = FB.hexToRgb(color);
+    const light = rgb[0] * 0.2126 + rgb[1] * 0.7152 + rgb[2] * 0.0722;
+    return light < 125 ? 'rgba(248,242,224,0.82)' : 'rgba(10,15,20,0.78)';
+  }
+
+  function lighterFocusColor(color) {
+    const rgb = FB.mix(FB.hexToRgb(color), [255, 252, 240], 0.32);
+    function channel(value) {
+      const hex = Math.round(value).toString(16);
+      return hex.length < 2 ? '0' + hex : hex;
+    }
+    return '#' + channel(rgb[0]) + channel(rgb[1]) + channel(rgb[2]);
+  }
+
+  function strokeFocusPath(ctx, path, color, width, z) {
+    if (!path) return;
+    ctx.lineCap = 'square';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = outlineUnderColor(color);
+    ctx.lineWidth = (width + 2.2) * M.dpr / z;
+    ctx.stroke(path);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width * M.dpr / z;
+    ctx.stroke(path);
+  }
+
   M.select = function (provId, groupOf) {
     M.selected = provId;
     if (!groupOf) groupOf = M.ownerOf;
     const hc = M.hiliteCtx;
     hc.clearRect(0, 0, M.hilite.width, M.hilite.height);
+    M.focusMembers = null;
+    M.focusGroupActive = false;
+    M.groupOutline = null;
+    M.selectedOutline = null;
     if (provId) {
       const w = FB.world, pr = w.byId[provId];
       if (pr) {
@@ -189,6 +235,10 @@ window.FB = window.FB || {};
           const p2 = w.provs[i];
           inRealm.push(own != null && !p2.wasteland && groupOf(p2.id) === own);
         }
+        M.focusMembers = inRealm;
+        M.focusGroupActive = own != null;
+        const groupOutline = new Path2D();
+        const selectedOutline = new Path2D();
         const img = hc.createImageData(w.W, w.H);
         const d = img.data;
         for (let y = 0; y < w.H; y++) {
@@ -197,29 +247,51 @@ window.FB = window.FB || {};
             if (!v) continue;
             const sel = v === pr.idx + 1;
             const realm = inRealm[v - 1];
-            if (!sel && !realm) continue;
             const o = k * 4;
+            if (M.focusGroupActive && !realm) {
+              d[o] = FOCUS_SHADE[0]; d[o + 1] = FOCUS_SHADE[1];
+              d[o + 2] = FOCUS_SHADE[2]; d[o + 3] = 56;
+            }
+            const l = x > 0 ? w.grid[k - 1] : 0;
+            const r = x + 1 < w.W ? w.grid[k + 1] : 0;
+            const u = y > 0 ? w.grid[k - w.W] : 0;
+            const dn = y + 1 < w.H ? w.grid[k + w.W] : 0;
             if (realm) {
-              // 2px border where a neighbour lies outside the realm (or at sea)
-              let edge = false;
-              for (let t = 1; t <= 2 && !edge; t++) {
-                const l = x - t >= 0 ? w.grid[k - t] : 0;
-                const r = x + t < w.W ? w.grid[k + t] : 0;
-                const u = y - t >= 0 ? w.grid[k - t * w.W] : 0;
-                const dn = y + t < w.H ? w.grid[k + t * w.W] : 0;
-                if (!(l && inRealm[l - 1]) || !(r && inRealm[r - 1]) ||
-                    !(u && inRealm[u - 1]) || !(dn && inRealm[dn - 1])) edge = true;
+              if (!(l && inRealm[l - 1])) {
+                groupOutline.moveTo(x, y); groupOutline.lineTo(x, y + 1);
               }
-              if (edge) {
-                d[o] = 255; d[o + 1] = 236; d[o + 2] = 120; d[o + 3] = 220;
-                continue;
+              if (!(r && inRealm[r - 1])) {
+                groupOutline.moveTo(x + 1, y); groupOutline.lineTo(x + 1, y + 1);
+              }
+              if (!(u && inRealm[u - 1])) {
+                groupOutline.moveTo(x, y); groupOutline.lineTo(x + 1, y);
+              }
+              if (!(dn && inRealm[dn - 1])) {
+                groupOutline.moveTo(x, y + 1); groupOutline.lineTo(x + 1, y + 1);
               }
             }
-            if (sel) { d[o] = 255; d[o + 1] = 255; d[o + 2] = 230; d[o + 3] = 60; }
-            else { d[o] = 255; d[o + 1] = 246; d[o + 2] = 190; d[o + 3] = 22; }
+            if (sel) {
+              const selectedIndex = pr.idx + 1;
+              if (l !== selectedIndex) {
+                selectedOutline.moveTo(x, y); selectedOutline.lineTo(x, y + 1);
+              }
+              if (r !== selectedIndex) {
+                selectedOutline.moveTo(x + 1, y);
+                selectedOutline.lineTo(x + 1, y + 1);
+              }
+              if (u !== selectedIndex) {
+                selectedOutline.moveTo(x, y); selectedOutline.lineTo(x + 1, y);
+              }
+              if (dn !== selectedIndex) {
+                selectedOutline.moveTo(x, y + 1);
+                selectedOutline.lineTo(x + 1, y + 1);
+              }
+            }
           }
         }
         hc.putImageData(img, 0, 0);
+        M.groupOutline = M.focusGroupActive ? groupOutline : null;
+        M.selectedOutline = selectedOutline;
       }
     }
     M.request();
@@ -261,7 +333,13 @@ window.FB = window.FB || {};
     ctx.drawImage(M.base, 0, 0);
     // the hilite canvas is fully transparent with nothing selected — skip
     // the world-sized blit on the common (pan/march) frames
-    if (M.selected) ctx.drawImage(M.hilite, 0, 0);
+    if (M.selected) {
+      ctx.drawImage(M.hilite, 0, 0);
+      const focusColor = M.focusColor();
+      strokeFocusPath(ctx, M.groupOutline, focusColor, 1.35, M.zoom);
+      strokeFocusPath(ctx, M.selectedOutline,
+        lighterFocusColor(focusColor), 2, M.zoom);
+    }
     ctx.restore();
 
     // labels & markers in screen space
@@ -276,8 +354,13 @@ window.FB = window.FB || {};
         if (s[0] < -80 || s[1] < -20 || s[0] > el.width + 80 || s[1] > el.height + 20) continue;
         const fs = Math.round(10 * M.dpr + Math.min(4, z));
         ctx.font = (pr.wasteland ? 'italic ' : '') + fs + 'px Georgia';
-        ctx.lineWidth = 3 * M.dpr; ctx.strokeStyle = 'rgba(20,16,10,0.7)';
-        ctx.fillStyle = pr.wasteland ? 'rgba(230,225,210,0.55)' : 'rgba(255,250,235,0.92)';
+        const focused = !M.focusGroupActive ||
+          (M.focusMembers && M.focusMembers[pr.idx]);
+        ctx.lineWidth = 3 * M.dpr;
+        ctx.strokeStyle = focused ? 'rgba(20,16,10,0.7)' : 'rgba(20,16,10,0.38)';
+        ctx.fillStyle = pr.wasteland
+          ? (focused ? 'rgba(230,225,210,0.55)' : 'rgba(230,225,210,0.30)')
+          : (focused ? 'rgba(255,250,235,0.92)' : 'rgba(255,250,235,0.48)');
         const provinceName = FB.L(pr.name);
         ctx.strokeText(provinceName, s[0], s[1]);
         ctx.fillText(provinceName, s[0], s[1]);
@@ -288,7 +371,9 @@ window.FB = window.FB || {};
         const pr = FB.world.byId[cap];
         if (!pr) continue;
         const s = toScreen(pr.cx, pr.cy - 8);
-        ctx.fillStyle = '#ffe28a';
+        const focused = !M.focusGroupActive ||
+          (M.focusMembers && M.focusMembers[pr.idx]);
+        ctx.fillStyle = focused ? '#ffe28a' : 'rgba(255,226,138,0.42)';
         ctx.fillText('★', s[0], s[1]);
       }
     }

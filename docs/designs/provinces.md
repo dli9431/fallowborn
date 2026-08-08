@@ -56,10 +56,14 @@ At minimum zoom, a mobile viewport can be larger than the permitted map span on 
 axis. `mapview.js` centers that surplus axis instead of passing reversed bounds to the
 pan clamp; dragging therefore remains stable while the other axis can still move.
 
-**Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) lights
-up every province sharing the clicked one's group key (strong tint + golden outer border).
-`groupOf` comes from `mapGroupOf` in ui.js and follows the map filter (`R` key / 🗺 HUD
-button): **Realm** (default — your own province lights your own realm, demesne + vassals;
-a foreign one lights its sovereign's), **Mine** (only your realm), **Liege** (your liege's
-whole sub-realm), **De jure duchies**, and **De jure kingdoms** (the historical de jure
-groupings). Membership walks `FB.liegeChain` over `state.holder` for the realm-based modes.
+**Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) keeps
+the political and terrain colors of every province sharing the clicked one's group key,
+places a cool shade over other land, mutes outside labels, and traces both the group's
+perimeter and the exact selected county with zoom-independent two-tone lines. The accent
+is a browser-local preference; the dark/light keyline keeps arbitrary chosen colors
+legible without changing realm ownership colors. `groupOf` comes from `mapGroupOf` in
+`ui_panels.js` and follows the map filter (`R` key / 🗺 HUD button): **Realm** (default —
+your own province focuses your realm, demesne + vassals; a foreign one focuses its
+sovereign's), **Mine** (only your realm), **Liege** (your liege's whole sub-realm),
+**De jure duchies**, and **De jure kingdoms** (the historical de jure groupings).
+Membership walks `FB.liegeChain` over `state.holder` for the realm-based modes.

@@ -44129,7 +44129,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Realm-wide territory"
@@ -50926,6 +50927,16 @@
         "text": "Manage household occupations, apprenticeships, workers, and family businesses."
       }
     },
+    "src.124593cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Change realm highlight color…"
+      }
+    },
     "src.124596b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52428,6 +52439,16 @@
       ],
       "source": {
         "text": "Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat."
+      }
+    },
+    "src.1579f98c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "about {men}"
       }
     },
     "src.15827bd7": {
@@ -58936,6 +58957,16 @@
       ],
       "source": {
         "text": "Fund his work. ({money:10})"
+      }
+    },
+    "src.258e0369": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Map highlight"
       }
     },
     "src.259ba5ba": {
@@ -83392,6 +83423,16 @@
         "text": "Buy low here, sell high there."
       }
     },
+    "src.64b83b8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Direct demesne"
+      }
+    },
     "src.64bd8012": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83506,7 +83547,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Held directly"
@@ -85440,6 +85482,16 @@
       ],
       "source": {
         "text": "Personal learned master"
+      }
+    },
+    "src.6a2c9845": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Open realm and demesne details for {rank}"
       }
     },
     "src.6a3337d6": {
@@ -98901,6 +98953,16 @@
         "text": "Take a good fighting knife from the cart."
       }
     },
+    "src.8b3407f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Over the domain limit by {count}; direct tax and levy are reduced."
+      }
+    },
     "src.8b341b58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101256,6 +101318,16 @@
       ],
       "source": {
         "text": "Her simples do their work. The fever breaks; the child will live."
+      }
+    },
+    "src.90dbb817": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Realm highlight color"
       }
     },
     "src.90dcff40": {
@@ -105269,6 +105341,16 @@
       ],
       "source": {
         "text": "research national tech unlock prerequisite all any press house lever oil"
+      }
+    },
+    "src.9bacfe88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Seasonal tax"
       }
     },
     "src.9bae77da": {
@@ -109547,6 +109629,16 @@
         "text": "Automation protections"
       }
     },
+    "src.a6522014": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Use default ivory"
+      }
+    },
     "src.a653c2a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111215,6 +111307,16 @@
         "text": "Disorder lowers abstract condition; live troop totals do not change yet."
       }
     },
+    "src.aae2b419": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No counties are held directly."
+      }
+    },
     "src.aaef38a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111273,6 +111375,16 @@
       ],
       "source": {
         "text": "The Go-Between"
+      }
+    },
+    "src.ab31d405": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Realm & demesne"
       }
     },
     "src.ab3e50ee": {
@@ -114964,7 +115076,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "{held} of {cap} counties"
@@ -116201,6 +116314,16 @@
       ],
       "source": {
         "text": "Repent and tell the court about the bribe."
+      }
+    },
+    "src.b73e27fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Available levy"
       }
     },
     "src.b7494aa4": {
@@ -126132,6 +126255,16 @@
       ],
       "source": {
         "text": "Money belongs to the playable household and pays costs, upkeep, wages, gifts, and contracts. Prestige supports social and political advancement. Piety supports religious acts and offices."
+      }
+    },
+    "src.d16b5f36": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "about {money:gold}"
       }
     },
     "src.d173b4cb": {
@@ -138370,6 +138503,16 @@
         "text": "Choose equipment from the shared family armory."
       }
     },
+    "src.f07cc888": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Seat"
+      }
+    },
     "src.f0846cb8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139865,7 +140008,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Direct vassals"
@@ -144088,6 +144232,16 @@
       ],
       "source": {
         "text": "Keeps accounts, directs servants, and makes the household’s work run more cleanly."
+      }
+    },
+    "src.ffced139": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "This color marks the focused realm or map-filter group. Political ownership colors are unchanged."
       }
     },
     "src.ffd691b6": {
@@ -152648,6 +152802,14 @@
         "text": "Change occupation or training…"
       }
     },
+    "ui:Change realm highlight color…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Change realm highlight color…"
+      }
+    },
     "ui:Changes the household conception preference immediately.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -154480,6 +154642,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Diplomatic reach"
+      }
+    },
+    "ui:Direct demesne": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Direct demesne"
       }
     },
     "ui:Direct liege": {
@@ -158807,6 +158977,14 @@
         "text": "Map filter: {mode} (R)"
       }
     },
+    "ui:Map highlight": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Map highlight"
+      }
+    },
     "ui:Marriage previews show which parent supplies each identity.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -159722,6 +159900,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No council office"
+      }
+    },
+    "ui:No counties are held directly.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No counties are held directly."
       }
     },
     "ui:No current benefit": {
@@ -161538,6 +161724,16 @@
         "text": "Open political office, capital, diplomacy, war, succession, and ruler gifts."
       }
     },
+    "ui:Open realm and demesne details for {rank}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Open realm and demesne details for {rank}"
+      }
+    },
     "ui:Open slot": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161815,6 +162011,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Outside the household"
+      }
+    },
+    "ui:Over the domain limit by {count}; direct tax and levy are reduced.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Over the domain limit by {count}; direct tax and levy are reduced."
       }
     },
     "ui:Over your limit — your own income and levy are cut until you grant land away.": {
@@ -163221,6 +163427,14 @@
         "text": "Realm"
       }
     },
+    "ui:Realm & demesne": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Realm & demesne"
+      }
+    },
     "ui:Realm Ruler": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -163235,6 +163449,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Realm and court…"
+      }
+    },
+    "ui:Realm highlight color": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Realm highlight color"
       }
     },
     "ui:Realm name": {
@@ -168520,6 +168742,14 @@
         "text": "This charter cannot be revoked unilaterally through this authority."
       }
     },
+    "ui:This color marks the focused realm or map-filter group. Political ownership colors are unchanged.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "This color marks the focused realm or map-filter group. Political ownership colors are unchanged."
+      }
+    },
     "ui:This conquest is sacrilege.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169499,6 +169729,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Use appointments and diplomacy before coercive powers."
+      }
+    },
+    "ui:Use default ivory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Use default ivory"
       }
     },
     "ui:Use local service, guilds, or faith to establish the family.": {
@@ -171388,6 +171626,26 @@
       "location": "js/events.js",
       "source": {
         "text": "a stranger"
+      }
+    },
+    "ui:about {men}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "about {men}"
+      }
+    },
+    "ui:about {money:gold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "about {money:gold}"
       }
     },
     "ui:accompanied venture cancelled": {
@@ -174501,7 +174759,7 @@
         "cap",
         "held"
       ],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "{held} of {cap} counties"
       }

@@ -1248,6 +1248,14 @@ window.FB = window.FB || {};
       '</button>';
   }
 
+  function rankDetailsLink(s) {
+    const rank = FB.styledTitle(s);
+    return '<button type="button" class="linklike" id="self-rank-details" ' +
+      'aria-label="' + esc(FB.T('Open realm and demesne details for {rank}', {
+        rank:rank
+      })) + '">' + esc(rank) + '</button>';
+  }
+
   function faithRelationText(status) {
     if (status === 'same') return FB.T('The same faith');
     if (status === 'in_fold') return FB.T('In communion');
@@ -1404,6 +1412,92 @@ window.FB = window.FB || {};
     $('faith-details-close').addEventListener('click', UI.closeModal);
   };
 
+  UI.showRankDetails = function () {
+    const s = FB.state;
+    if (!s || !s.player) return;
+    const direct = (s.player.provs || []).slice();
+    const playerRealm = s.realms.player && s.realms.player.alive
+      ? s.realms.player : null;
+    const realm = playerRealm ? FB.realmTerritory(s, 'player').slice() : [];
+    const cap = FB.domainCap(s);
+    const seatId = playerRealm && playerRealm.capital
+      ? playerRealm.capital : s.player.provinceId;
+    const seat = seatId && FB.world.byId[seatId];
+    const countyNames = direct.map(function (pid) {
+      const province = FB.world.byId[pid];
+      return province ? FB.L(province.name) : pid;
+    });
+    const vassals = FB.playerVassals(s);
+    const landed = s.player.tier >= 3;
+    const focusColor = FB.map.focusColor();
+    let h = kv('Rank', esc(FB.styledTitle(s))) +
+      kv('Seat', esc(seat ? FB.L(seat.name) : FB.T('None'))) +
+      kv('Held directly', esc(FB.T('{held} of {cap} counties', {
+        held:direct.length, cap:cap
+      }))) +
+      kv('Realm-wide territory', esc(countyCountText(s, realm.length))) +
+      kv('Direct vassals', esc(String(vassals.length)));
+    if (landed) {
+      h += kv('Seasonal tax', esc(FB.T('about {money:gold}', {
+        gold:FB.playerTax(s)
+      }))) +
+        kv('Available levy', esc(FB.T('about {men}', {
+          men:menText(s, FB.playerLevy(s))
+        })));
+    }
+    h += '<div class="panelh">' + esc(FB.T('Direct demesne')) + '</div>' +
+      '<p class="adesc">' + esc(countyNames.length
+        ? countyNames.join(' · ')
+        : FB.T('No counties are held directly.')) + '</p>';
+    if (direct.length > cap) {
+      h += '<div class="progressnote warnote">' + esc(FB.T(
+        'Over the domain limit by {count}; direct tax and levy are reduced.', {
+          count:direct.length - cap
+        })) + '</div>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('Map highlight')) + '</div>' +
+      '<div class="realm-highlight-summary"><span id="realm-highlight-swatch" ' +
+      'class="realm-highlight-swatch" style="background-color:' +
+      esc(focusColor) + '" aria-hidden="true"></span><p class="adesc">' +
+      esc(FB.T(
+        'This color marks the focused realm or map-filter group. Political ownership colors are unchanged.')) +
+      '</p></div><div class="modal-actions realm-highlight-actions">' +
+      '<button type="button" class="btn" id="realm-highlight-change">' +
+      esc(FB.T('Change realm highlight color…')) + '</button>' +
+      '<button type="button" class="btn" id="realm-highlight-reset">' +
+      esc(FB.T('Use default ivory')) + '</button>' +
+      '<input id="realm-highlight-color" class="realm-highlight-input" ' +
+      'type="color" tabindex="-1" aria-label="' +
+      esc(FB.T('Realm highlight color')) + '" value="' + esc(focusColor) + '">' +
+      '</div><div class="gm-footer"><button class="btn" id="rank-details-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Realm & demesne'), h);
+    const input = $('realm-highlight-color');
+    const swatch = $('realm-highlight-swatch');
+    function setFocusColor(color) {
+      if (!/^#[0-9a-fA-F]{6}$/.test(color)) return;
+      color = color.toLowerCase();
+      FB.game.uiPrefs.realmHighlightColor = color;
+      FB.game.saveUiPrefs();
+      input.value = color;
+      swatch.style.backgroundColor = color;
+      FB.map.request();
+    }
+    $('realm-highlight-change').addEventListener('click', function () {
+      input.click();
+    });
+    input.addEventListener('input', function () {
+      setFocusColor(input.value);
+    });
+    input.addEventListener('change', function () {
+      setFocusColor(input.value);
+    });
+    $('realm-highlight-reset').addEventListener('click', function () {
+      setFocusColor('#e8dec4');
+    });
+    $('rank-details-close').addEventListener('click', UI.closeModal);
+  };
+
   function renderChar() {
     const s = FB.state, me = s.chars[s.player.charId];
     const rel = FB.religionOf(me.religion, s), cul = FB.cultureOf(me.culture);
@@ -1426,7 +1520,7 @@ window.FB = window.FB || {};
       '</div></div>' +
       panelh('Traits') + traitChips(s, me, true) +
       '<div class="self-details-divider" aria-hidden="true"></div>' +
-      kv('Rank', esc(FB.styledTitle(s))) +
+      kv('Rank', rankDetailsLink(s)) +
       papalOfficeHtml(s, me) +
       kv('Age', FB.ageOf(me, s.date.year)) +
       kv('Culture', esc(cultureName(s, me.culture))) +
@@ -1488,6 +1582,8 @@ window.FB = window.FB || {};
     FB.localizeTree(box);
     FB.paintFaces(box, s);
     bindFaithDetails(box);
+    const rankDetails = $('self-rank-details');
+    if (rankDetails) rankDetails.addEventListener('click', UI.showRankDetails);
     const equipmentTriggers = box.querySelectorAll(
       '#self-equipment-portrait, #self-equipment');
     for (let i = 0; i < equipmentTriggers.length; i++) {

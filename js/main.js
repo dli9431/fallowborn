@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.116.2';
+  FB.VERSION = '1.116.3';
   FB.CHANGELOG = [
+    { v: '1.116.3', date: '2026-08-08', changes: [
+      'Realm and map-filter selections now preserve political colors, with customizable outlines and a realm-and-demesne summary on the Self tab.'
+    ] },
     { v: '1.116.2', date: '2026-08-08', changes: [
       'Trade guild officers once again require Lettered and Learning 6.'
     ] },
@@ -1901,6 +1904,7 @@ window.FB = window.FB || {};
   G.uiPrefs = {
     commitmentsCollapsed:false,
     hideBeginnerHints:false,
+    realmHighlightColor:'#e8dec4',
     musicChoice:null,
     musicVolume:0.55,
     musicPreferred:{},
@@ -1919,6 +1923,11 @@ window.FB = window.FB || {};
           ? !!storedUiPrefs.commitmentsCollapsed
           : !!storedUiPrefs.hideOngoingCommitments;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
+      if (typeof storedUiPrefs.realmHighlightColor === 'string' &&
+          /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.realmHighlightColor)) {
+        G.uiPrefs.realmHighlightColor =
+          storedUiPrefs.realmHighlightColor.toLowerCase();
+      }
       G.uiPrefs.musicChoice = storedUiPrefs.musicChoice === 'on' ||
         storedUiPrefs.musicChoice === 'off' ? storedUiPrefs.musicChoice : null;
       if (typeof storedUiPrefs.musicVolume === 'number') {

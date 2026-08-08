@@ -309,6 +309,11 @@ The full-name heading leads the mobile/short-screen drawer,
 where that drawer covers the topbar, and is hidden in the desktop panel because the
 persistent topbar already names the character. On desktop, a subtle divider separates
 Traits from the rank, age, culture, faith, and health details below.
+The rank value is a native link-styled button. It opens a compact realm-and-demesne
+sheet showing the current seat, direct holdings and capacity, realm-wide territory,
+vassals, landed tax and levy, and the directly held county names. The same sheet owns
+the browser-local map-highlight color control and states that it changes focus emphasis,
+not political ownership colors.
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
 navigation, and opens a numbered compatible-armory list over the still-visible equipment
 sheet; no drag-and-drop path is required.
