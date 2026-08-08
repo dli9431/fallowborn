@@ -253,8 +253,6 @@ test('context banks, playback controls, and listening history stay consistent',
       FakeAudio.prototype.pause = function () { this.paused = true; };
       FakeAudio.prototype.play = function () {
         this.paused = false;
-        window.__gameMusicPlayOrder = (window.__gameMusicPlayOrder || 0) + 1;
-        this.playOrder = window.__gameMusicPlayOrder;
         return Promise.resolve();
       };
       FakeAudio.prototype.removeAttribute = function (name) {
@@ -267,11 +265,9 @@ test('context banks, playback controls, and listening history stay consistent',
       window.__finishGameMusic = function () {
         const playing = window.__gameMusicAudio.filter(function (item) {
           return item.src && !item.paused;
-        }).sort(function (a, b) {
-          return (b.playOrder || 0) - (a.playOrder || 0);
-        })[0];
-        if (!playing) throw new Error('No playing soundtrack element');
-        playing.finish();
+        });
+        if (!playing.length) throw new Error('No playing soundtrack element');
+        playing.forEach(function (item) { item.finish(); });
       };
       window.Audio = FakeAudio;
     });
