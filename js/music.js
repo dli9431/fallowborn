@@ -17,6 +17,7 @@ window.FB = window.FB || {};
   let signature = '';
   let currentTrack = null;
   let currentBankId = null;
+  let pendingBankId = null;
   let deck = [];
   let deckAt = 0;
   let deckCycle = 0;
@@ -30,6 +31,10 @@ window.FB = window.FB || {};
   let downloadToken = 0;
   let gestureArmed = false;
   let titlePaused = false;
+  let playbackPaused = false;
+  let backgroundPaused = false;
+  let resumeAfterBackground = false;
+  let windowFocused = true;
   let networkUnavailable = false;
   let warnedUnavailable = false;
   const failedTracks = {};
@@ -128,9 +133,10 @@ window.FB = window.FB || {};
         if (activeAudio !== i || !currentTrack) return;
         if (repeatTrack || currentTrack.kind === 'intro') {
           element.currentTime = 0;
-          resumeElement(element);
+          if (backgroundPaused) resumeAfterBackground = true;
+          else resumeElement(element);
         } else {
-          M.next();
+          advanceAfterTrack();
         }
       });
       element.addEventListener('error', function () {
@@ -142,7 +148,7 @@ window.FB = window.FB || {};
         activeAudio = -1;
         currentTrack = null;
         updateNowPlaying();
-        M.next();
+        advanceAfterTrack();
       });
       audio.push(element);
       audioObjectUrls.push(null);
@@ -198,10 +204,28 @@ window.FB = window.FB || {};
       if (FB.state) M.sync(FB.state, true);
       else M.showTitle(true);
     });
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) pauseForBackground();
+      else resumeAfterFocus();
+    });
+    window.addEventListener('blur', function () {
+      windowFocused = false;
+      pauseForBackground();
+    });
+    window.addEventListener('focus', function () {
+      windowFocused = true;
+      resumeAfterFocus();
+    });
     const nowPlaying = document.getElementById('music-now-playing');
     if (nowPlaying) {
       nowPlaying.addEventListener('click', function () {
         if (FB.ui && FB.ui.showMusicTrack) FB.ui.showMusicTrack();
+      });
+    }
+    const playbackToggle = document.getElementById('music-now-playing-toggle');
+    if (playbackToggle) {
+      playbackToggle.addEventListener('click', function () {
+        M.togglePlayback();
       });
     }
     const titleToggle = document.getElementById('btn-title-music');
@@ -233,6 +257,7 @@ window.FB = window.FB || {};
   M.current = function () { return currentTrack; };
   M.currentBank = function () { return currentBankId ? banksById[currentBankId] || null : null; };
   M.isRepeating = function () { return repeatTrack; };
+  M.isPaused = function () { return mode === 'game' && playbackPaused; };
   M.canPrevious = function () { return historyAt > 0; };
 
   M.bandwidthText = function () {
@@ -285,15 +310,25 @@ window.FB = window.FB || {};
 
   function updateNowPlaying() {
     const button = document.getElementById('music-now-playing');
+    const toggle = document.getElementById('music-now-playing-toggle');
     const title = document.getElementById('music-now-playing-title');
     if (!button || !title) return;
     const gameplayTrack = currentTrack && currentTrack.kind !== 'intro' && mode === 'game';
-    button.classList.toggle('hidden', !gameplayTrack || !enabled());
+    const hidden = !gameplayTrack || !enabled();
+    button.classList.toggle('hidden', hidden);
+    if (toggle) toggle.classList.toggle('hidden', hidden);
     if (gameplayTrack) {
       title.textContent = currentTrack.title;
       button.setAttribute('aria-label', FB.T('Now playing: {song}. Open music controls.', {
         song:currentTrack.title
       }));
+      if (toggle) {
+        const label = FB.T(playbackPaused ? 'Play music' : 'Pause music');
+        toggle.textContent = playbackPaused ? '▶' : '⏸';
+        toggle.setAttribute('aria-label', label);
+        toggle.setAttribute('aria-pressed', playbackPaused ? 'false' : 'true');
+        toggle.title = label;
+      }
     }
   }
 
@@ -327,6 +362,36 @@ window.FB = window.FB || {};
     }
   }
 
+  function pauseForBackground() {
+    if (backgroundPaused) return;
+    backgroundPaused = true;
+    resumeAfterBackground = !!(enabled() && currentTrack &&
+      ((mode === 'title' && !titlePaused) ||
+       (mode === 'game' && !playbackPaused)));
+    if (!resumeAfterBackground) return;
+    for (let i = 0; i < audio.length; i++) {
+      if (audio[i].src) audio[i].pause();
+    }
+  }
+
+  function resumeAfterFocus() {
+    if (document.hidden || !windowFocused || !backgroundPaused) return;
+    backgroundPaused = false;
+    const resume = resumeAfterBackground;
+    resumeAfterBackground = false;
+    if (!resume || !enabled()) return;
+    if ((mode === 'title' && titlePaused) ||
+        (mode === 'game' && playbackPaused)) return;
+    if (activeAudio >= 0 && audio[activeAudio].src) {
+      resumeElement(audio[activeAudio]);
+    } else if (mode === 'title') {
+      M.showTitle(true);
+    } else if (FB.state) {
+      signature = '';
+      M.sync(FB.state, true);
+    }
+  }
+
   function stopAudio() {
     playToken++;
     for (let i = 0; i < audio.length; i++) {
@@ -338,8 +403,11 @@ window.FB = window.FB || {};
     activeAudio = -1;
     currentTrack = null;
     currentBankId = null;
+    pendingBankId = null;
     signature = '';
     repeatTrack = false;
+    playbackPaused = false;
+    resumeAfterBackground = false;
     updateNowPlaying();
   }
 
@@ -372,7 +440,8 @@ window.FB = window.FB || {};
           currentTrack.kind === 'intro') {
         titlePaused = false;
         updateTitleToggle();
-        resumeElement(audio[activeAudio]);
+        if (backgroundPaused) resumeAfterBackground = true;
+        else resumeElement(audio[activeAudio]);
       } else {
         titlePaused = false;
         updateTitleToggle();
@@ -386,6 +455,23 @@ window.FB = window.FB || {};
     savePrefs();
     if (activeAudio >= 0) audio[activeAudio].pause();
     updateTitleToggle();
+    return true;
+  };
+
+  M.togglePlayback = function () {
+    if (!initialized) M.init();
+    if (mode !== 'game' || !enabled() || !currentTrack) return false;
+    playbackPaused = !playbackPaused;
+    if (playbackPaused) {
+      for (let i = 0; i < audio.length; i++) {
+        if (audio[i].src) audio[i].pause();
+      }
+    } else if (backgroundPaused) {
+      resumeAfterBackground = true;
+    } else if (activeAudio >= 0 && audio[activeAudio].src) {
+      resumeElement(audio[activeAudio]);
+    }
+    updateNowPlaying();
     return true;
   };
 
@@ -489,7 +575,7 @@ window.FB = window.FB || {};
           signature = '';
           M.sync(FB.state, true);
         } else {
-          M.next();
+          advanceAfterTrack();
         }
         return;
       }
@@ -506,6 +592,25 @@ window.FB = window.FB || {};
       activeAudio = nextIndex;
       if (mode === 'title' && titlePaused && track.kind === 'intro') {
         updateTitleToggle();
+        return;
+      }
+      if (mode === 'game' && playbackPaused) {
+        if (oldIndex >= 0) {
+          audio[oldIndex].pause();
+          audio[oldIndex].removeAttribute('src');
+          releaseAudioUrl(oldIndex);
+        }
+        updateNowPlaying();
+        return;
+      }
+      if (backgroundPaused) {
+        resumeAfterBackground = true;
+        if (oldIndex >= 0) {
+          audio[oldIndex].pause();
+          audio[oldIndex].removeAttribute('src');
+          releaseAudioUrl(oldIndex);
+        }
+        updateNowPlaying();
         return;
       }
       const result = next.play();
@@ -527,7 +632,9 @@ window.FB = window.FB || {};
 
   function roleFor(state) {
     const player = state.player;
-    if (player.war || player.greatHolyWar || player.profession === 'soldier' ||
+    const realmAtWar = FB.playerRealmAtWar && state.realms &&
+      FB.playerRealmAtWar(state);
+    if (realmAtWar || player.war || player.greatHolyWar || player.profession === 'soldier' ||
         (player.flags && player.flags.on_campaign)) return 'war';
     if (player.tier >= 3) return 'court';
     return 'folk';
@@ -656,6 +763,19 @@ window.FB = window.FB || {};
     return null;
   }
 
+  function playFromBank(bankId) {
+    currentBankId = bankId;
+    pendingBankId = null;
+    rebuildDeck(currentBankId);
+    const next = nextDeckTrack();
+    return next ? playTrack(next) : false;
+  }
+
+  function advanceAfterTrack() {
+    if (pendingBankId) return playFromBank(pendingBankId);
+    return M.next();
+  }
+
   M.sync = function (state, force) {
     if (!initialized) M.init();
     if (state && titlePaused) {
@@ -664,6 +784,7 @@ window.FB = window.FB || {};
     }
     updateTitleToggle();
     if (!enabled() || !supported || !M.hasCatalog() || !state) return;
+    const enteringGame = mode !== 'game';
     mode = 'game';
     let bank;
     if (FB.platform.isItch || (FB.game && FB.game.observe)) {
@@ -682,18 +803,21 @@ window.FB = window.FB || {};
       me ? me.religion : '', me ? me.culture : ''].join('|');
     if (!force && signature === nextSignature && currentTrack) return;
     signature = nextSignature;
-    currentBankId = bank.id;
-    rebuildDeck(currentBankId);
-    const next = nextDeckTrack();
-    if (next) playTrack(next);
+    if (!force && !enteringGame && currentTrack) {
+      pendingBankId = bank.id === currentBankId ? null : bank.id;
+      return;
+    }
+    playFromBank(bank.id);
   };
 
   M.showTitle = function (force) {
     if (!initialized) M.init();
     updateTitleToggle();
     mode = 'title';
+    playbackPaused = false;
     signature = 'title';
     currentBankId = null;
+    pendingBankId = null;
     repeatTrack = false;
     history = [];
     historyAt = -1;
@@ -706,6 +830,7 @@ window.FB = window.FB || {};
   M.next = function () {
     if (!enabled() || mode !== 'game') return false;
     repeatTrack = false;
+    if (pendingBankId) return playFromBank(pendingBankId);
     if (historyAt >= 0 && historyAt < history.length - 1) {
       historyAt++;
       return playTrack(tracksById[history[historyAt]], { fromHistory:true });
@@ -757,8 +882,12 @@ window.FB = window.FB || {};
     savePrefs();
     const track = tracksById[id];
     if (FB.trackTelemetry) {
-      FB.trackTelemetry('event-' + id + (value > 0 ? '-thumbsup' : '-thumbsdown'), {
-        track_id:id, music_bank:track.bankId, music_role:track.role
+      FB.trackTelemetry('music-rating', {
+        track_id:id,
+        track_title:track.title,
+        rating:value > 0 ? 'up' : 'down',
+        music_bank:track.bankId,
+        music_role:track.role
       });
     }
     return true;

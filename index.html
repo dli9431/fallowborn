@@ -127,24 +127,35 @@
         </p>
         <p id="title-mods" class="modnote hidden"></p>
         <div class="menubtns">
-          <button id="btn-continue" class="bigbtn hidden" data-i18n="Continue">
-            Continue
+          <button id="btn-continue" class="bigbtn hidden">
+            <span class="title-menu-icon" aria-hidden="true"
+              >&#9654;&#65039;</span
+            ><span data-i18n="Continue">Continue</span>
           </button>
-          <button id="btn-newgame" class="bigbtn" data-i18n="New Game">
-            New Game
+          <button id="btn-newgame" class="bigbtn">
+            <span class="title-menu-icon" aria-hidden="true">&#127793;</span
+            ><span data-i18n="New Game">New Game</span>
           </button>
-          <button id="btn-load" class="bigbtn" data-i18n="Load Game">
-            Load Game
+          <button id="btn-load" class="bigbtn">
+            <span class="title-menu-icon" aria-hidden="true">&#128194;</span
+            ><span data-i18n="Load Game">Load Game</span>
           </button>
-          <button id="btn-mods" class="bigbtn" data-i18n="Mods">Mods</button>
-          <button id="btn-settings" class="bigbtn" data-i18n="⚙ Settings">
-            &#9881; Settings
+          <button id="btn-mods" class="bigbtn">
+            <span class="title-menu-icon" aria-hidden="true">&#129513;</span
+            ><span data-i18n="Mods">Mods</span>
           </button>
-          <button id="btn-help" class="bigbtn" data-i18n="How to Play">
-            How to Play
+          <button id="btn-settings" class="bigbtn">
+            <span class="title-menu-icon" aria-hidden="true"
+              >&#9881;&#65039;</span
+            ><span data-i18n="Settings">Settings</span>
           </button>
-          <button id="btn-changelog" class="bigbtn" data-i18n="Changelog">
-            Changelog
+          <button id="btn-help" class="bigbtn">
+            <span class="title-menu-icon" aria-hidden="true">&#128214;</span
+            ><span data-i18n="How to Play">How to Play</span>
+          </button>
+          <button id="btn-changelog" class="bigbtn">
+            <span class="title-menu-icon" aria-hidden="true">&#128220;</span
+            ><span data-i18n="Changelog">Changelog</span>
           </button>
         </div>
         <p class="credits">
@@ -403,16 +414,28 @@
                 </button>
               </div>
             </div>
-            <button
-              id="music-now-playing"
-              class="music-now-playing hidden"
-              type="button"
-              aria-label="Open music controls"
-              data-i18n-aria-label="Open music controls"
-            >
-              <span aria-hidden="true">&#9835;</span>
-              <span id="music-now-playing-title"></span>
-            </button>
+            <div class="music-now-playing-controls">
+              <button
+                id="music-now-playing"
+                class="music-now-playing hidden"
+                type="button"
+                aria-label="Open music controls"
+                data-i18n-aria-label="Open music controls"
+              >
+                <span aria-hidden="true">&#9835;</span>
+                <span id="music-now-playing-title"></span>
+              </button>
+              <button
+                id="music-now-playing-toggle"
+                class="music-now-playing-toggle hidden"
+                type="button"
+                aria-label="Pause music"
+                aria-pressed="true"
+                title="Pause music"
+              >
+                &#9208;
+              </button>
+            </div>
             <div id="toasts"></div>
           </div>
           <!-- #panels is invisible on desktop (display:contents) and becomes a

@@ -126,6 +126,9 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   padding: clamp(6px, 1.2vh, 13px) 22px;
   font-size: clamp(15px, 2.1vh, 17px);
 }
+#title .title-menu-icon {
+  display: inline-block; width: 1.5em; margin-right: .4em; text-align: center;
+}
 #title .credits { margin-top: clamp(10px, 3vh, 30px); }
 #title .offline-status { margin-top: clamp(4px, 1vh, 7px); }
 .title-music-toggle {
@@ -293,9 +296,13 @@ body.travel-picking #timebtns { visibility: hidden; }
 #maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; }
 .hudbtn.on { opacity: 1; box-shadow: 0 0 0 2px #ffd24a inset; }
-.music-now-playing {
+.music-now-playing-controls {
   position: absolute; z-index: 31; left: 50%; bottom: 10px;
-  transform: translateX(-50%); max-width: min(62%, 430px); min-height: 34px;
+  transform: translateX(-50%); max-width: min(70%, 480px);
+  display: flex; align-items: center; gap: 6px;
+}
+.music-now-playing {
+  min-width: 0; max-width: 430px; min-height: 34px;
   display: flex; align-items: center; gap: 7px; padding: 6px 12px;
   color: #eadcb8; background: rgba(30,24,16,.92);
   border: 1px solid #806936; border-radius: 999px;
@@ -306,11 +313,26 @@ body.travel-picking #timebtns { visibility: hidden; }
 .music-now-playing span:last-child {
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
+.music-now-playing-toggle {
+  flex: 0 0 34px; width: 34px; height: 34px; padding: 0;
+  color: #eadcb8; background: rgba(30,24,16,.92);
+  border: 1px solid #806936; border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0,0,0,.38); cursor: pointer;
+  font-family: inherit; font-size: 14px;
+}
+.music-now-playing-toggle:hover { border-color: #d0ad50; filter: brightness(1.12); }
 .music-track-actions {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
   margin: 12px 0;
 }
 .music-track-actions .btn { width: 100%; }
+.music-track-navigation {
+  grid-column: 1 / -1; display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;
+}
+.music-track-navigation .btn {
+  min-width: 0; padding-inline: 6px; white-space: nowrap;
+}
 .music-bank-row {
   margin: 8px 0; padding: 10px; background: #241d15;
   border: 1px solid #55452a; border-radius: 8px;
@@ -2005,9 +2027,12 @@ textarea.modjson, textarea.savetext {
   .building-county-picker select { min-height: 48px; }
   .hudbtn { width: 46px; height: 46px; font-size: 22px; }
   #maphud { right: max(10px, env(safe-area-inset-right)); }
-  .music-now-playing {
+  .music-now-playing-controls {
     bottom: max(8px, env(safe-area-inset-bottom)); max-width: calc(100% - 90px);
-    min-height: 40px; padding-inline: 11px;
+  }
+  .music-now-playing { min-height: 44px; padding-inline: 11px; }
+  .music-now-playing-toggle {
+    flex-basis: 44px; width: 44px; height: 44px; font-size: 16px;
   }
   .music-track-actions { grid-template-columns: 1fr; }
   .kv { font-size: 14px; padding: 4px 0; }

@@ -44469,7 +44469,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "index.html",
         "js/ui_modals.js"
       ],
       "source": {
@@ -72474,6 +72473,7 @@
       "glossary": [],
       "location": [
         "index.html",
+        "js/ui_modals.js",
         "js/ui_topbar.js"
       ],
       "source": {
@@ -73248,6 +73248,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "index.html",
         "js/ui_modals.js"
       ],
       "source": {
@@ -79365,6 +79366,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "index.html",
         "js/music.js"
       ],
       "source": {
@@ -100089,6 +100091,16 @@
       ],
       "source": {
         "text": "Royal branch: the designated crown successor’s branch. A marriage tie alone does not redirect a crown into the playable line."
+      }
+    },
+    "src.8e177c0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "⏸ Pause"
       }
     },
     "src.8e1c3326": {

@@ -22,7 +22,8 @@ The first boot with a non-empty catalog asks whether to play music and shows the
 size. The answer is remembered, and Settings can change it later. The title theme may play before
 a campaign. In a campaign the context resolver selects:
 
-- `war` during the player's active war or a soldier/campaign context;
+- `war` while the player's sovereign realm is at war, during a pledged great holy war, or in a
+  soldier/campaign context;
 - `court` for ruler tier 3 or greater;
 - `folk` otherwise.
 
@@ -36,10 +37,13 @@ music, it shuffles every track included in the itch artifact for maximum variety
 
 ## Playback and controls
 
-The player keeps two audio elements and crossfades between fully loaded tracks. A seeded weighted
-shuffle avoids immediate repeats where possible. **Hear this more** gives a persistent weight to
-the current track. The bounded listening history powers both **Previous** and **Next**, while
-**Repeat** replays the current track without changing that history.
+The player keeps two audio elements and crossfades between fully loaded tracks. In-game context
+changes never interrupt the current song. The resolver queues the latest matching bank and starts
+it when the song ends or the player chooses **Next**, so a quick war-to-peace reversal does not
+skip back and forth. A seeded weighted shuffle avoids immediate repeats where possible. **Hear
+this more** gives a persistent weight to the current track. The bounded listening history powers
+both **Previous** and **Next**,
+while **Repeat** replays the current track without changing that history.
 
 The pregame screens share one compact bottom-corner music control. It displays a pause icon while
 music plays and a music icon while silent. Pausing retains the intro element and playback position
@@ -50,10 +54,16 @@ a newly loaded silent preference starts the intro normally. Entering gameplay re
 title element. The control stays hidden during loading, gameplay, or when the soundtrack cannot
 play.
 
-The now-playing title sits at the bottom of the map and opens the track modal. Like and dislike
+The now-playing title sits at the bottom of the map and opens the track modal. A compact adjacent
+button pauses or resumes the current track without opening that modal. Leaving the game window or
+tab pauses playback, and returning resumes only music that was playing before focus was lost. This
+automatic pause never changes the saved preference or overrides a manual pause. Like and dislike
 are available only on play.fallowborn.com. Each changed rating persists locally and emits the
-first-party event `event-<track-id>-thumbsup` or `event-<track-id>-thumbsdown` through the existing
-telemetry boundary. Ratings do not affect shuffle weight.
+first-party event `music-rating` through the existing telemetry boundary. Its `track_id`,
+`track_title`, `rating`, `music_bank`, and `music_role` properties support per-song breakdowns in
+analytics without creating a separate event name for every song. Ratings do not affect shuffle
+weight. The modal's center Play/Pause control retains the current track position without changing
+the saved **Play music** preference.
 
 ## Caching and offline play
 

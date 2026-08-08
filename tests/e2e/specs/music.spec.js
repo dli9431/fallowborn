@@ -221,7 +221,7 @@ test('first soundtrack boot explains bandwidth and title pause preserves positio
     await expect(page.locator('#set-shortcuts')).toHaveCount(0);
   });
 
-test('context banks and modal Previous/Next follow listening history',
+test('context banks, playback controls, and listening history stay consistent',
   async function ({ page }, testInfo) {
     test.skip(!testInfo.project.name.endsWith('-served'),
       'Synthetic soundtrack responses require the served-origin project.');
@@ -237,16 +237,40 @@ test('context banks and modal Previous/Next follow listening history',
       HTMLMediaElement.prototype.canPlayType = function () { return 'probably'; };
       function FakeAudio() {
         this.currentTime = 0;
+        this.listeners = {};
         this.loop = false;
+        this.paused = true;
         this.src = '';
         this.volume = 0;
+        window.__gameMusicAudio = window.__gameMusicAudio || [];
+        window.__gameMusicAudio.push(this);
       }
-      FakeAudio.prototype.addEventListener = function () {};
+      FakeAudio.prototype.addEventListener = function (name, callback) {
+        this.listeners[name] = callback;
+      };
       FakeAudio.prototype.load = function () {};
-      FakeAudio.prototype.pause = function () {};
-      FakeAudio.prototype.play = function () { return Promise.resolve(); };
+      FakeAudio.prototype.pause = function () { this.paused = true; };
+      FakeAudio.prototype.play = function () {
+        this.paused = false;
+        window.__gameMusicPlayOrder = (window.__gameMusicPlayOrder || 0) + 1;
+        this.playOrder = window.__gameMusicPlayOrder;
+        return Promise.resolve();
+      };
       FakeAudio.prototype.removeAttribute = function (name) {
         if (name === 'src') this.src = '';
+      };
+      FakeAudio.prototype.finish = function () {
+        this.paused = true;
+        if (this.listeners.ended) this.listeners.ended();
+      };
+      window.__finishGameMusic = function () {
+        const playing = window.__gameMusicAudio.filter(function (item) {
+          return item.src && !item.paused;
+        }).sort(function (a, b) {
+          return (b.playOrder || 0) - (a.playOrder || 0);
+        })[0];
+        if (!playing) throw new Error('No playing soundtrack element');
+        playing.finish();
       };
       window.Audio = FakeAudio;
     });
@@ -257,10 +281,17 @@ test('context banks and modal Previous/Next follow listening history',
     const context = await page.evaluate(function () {
       const state = {
         seed:'music-test',
-        player:{ charId:'me', tier:1, profession:'farmer', flags:{} },
-        chars:{ me:{ id:'me', religion:'christian', culture:'anglo_saxon' } }
+        player:{ charId:'me', tier:1, profession:'farmer', flags:{}, liege:'lord' },
+        chars:{ me:{ id:'me', religion:'christian', culture:'anglo_saxon' } },
+        realms:{
+          lord:{ id:'lord', alive:true, liege:null, war:null },
+          foe:{ id:'foe', alive:true, liege:null, war:null }
+        }
       };
       const folk = FB.music.resolveBank(state).id;
+      state.realms.lord.war = { enemy:'foe' };
+      const realmWar = FB.music.resolveBank(state).id;
+      state.realms.lord.war = null;
       state.player.profession = 'soldier';
       const war = FB.music.resolveBank(state).id;
       state.player.profession = 'farmer';
@@ -269,13 +300,84 @@ test('context banks and modal Previous/Next follow listening history',
       state.player.tier = 1;
       FB.state = state;
       FB.music.sync(state, true);
-      return { folk:folk, war:war, court:court, first:FB.music.current().id };
+      return {
+        folk:folk, realmWar:realmWar, war:war, court:court,
+        first:FB.music.current().id
+      };
     });
     expect(context).toEqual(expect.objectContaining({
       folk:'christian/anglo_saxon/folk',
+      realmWar:'christian/anglo_saxon/war',
       war:'christian/anglo_saxon/war',
       court:'christian/anglo_saxon/court'
     }));
+
+    const quickToggle = page.locator('#music-now-playing-toggle');
+    await expect(quickToggle).toBeVisible();
+    await expect(quickToggle).toHaveAttribute('aria-label', 'Pause music');
+    await expect(quickToggle).toHaveAttribute('aria-pressed', 'true');
+    expect(await page.locator('.music-now-playing-controls').evaluate(function (controls) {
+      const title = controls.querySelector('#music-now-playing').getBoundingClientRect();
+      const toggle = controls.querySelector('#music-now-playing-toggle').getBoundingClientRect();
+      return {
+        toggleToRight:toggle.left >= title.right,
+        toggleWidth:toggle.width,
+        toggleHeight:toggle.height
+      };
+    })).toEqual({ toggleToRight:true, toggleWidth:34, toggleHeight:34 });
+
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        });
+      });
+    }).toBe(true);
+
+    await quickToggle.click();
+    await expect(quickToggle).toHaveAttribute('aria-label', 'Play music');
+    await expect(quickToggle).toHaveAttribute('aria-pressed', 'false');
+    expect(await page.evaluate(function () {
+      return {
+        paused:FB.music.isPaused(),
+        anyPlaying:window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        }),
+        choice:FB.game.uiPrefs.musicChoice
+      };
+    })).toEqual({ paused:true, anyPlaying:false, choice:'on' });
+
+    await quickToggle.click();
+    await expect(quickToggle).toHaveAttribute('aria-label', 'Pause music');
+    expect(await page.evaluate(function () {
+      window.dispatchEvent(new Event('blur'));
+      return {
+        paused:FB.music.isPaused(),
+        anyPlaying:window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        }),
+        choice:FB.game.uiPrefs.musicChoice
+      };
+    })).toEqual({ paused:false, anyPlaying:false, choice:'on' });
+    expect(await page.evaluate(function () {
+      window.dispatchEvent(new Event('focus'));
+      return window.__gameMusicAudio.some(function (item) {
+        return item.src && !item.paused;
+      });
+    })).toBe(true);
+
+    await quickToggle.click();
+    expect(await page.evaluate(function () {
+      window.dispatchEvent(new Event('blur'));
+      window.dispatchEvent(new Event('focus'));
+      return {
+        paused:FB.music.isPaused(),
+        anyPlaying:window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        })
+      };
+    })).toEqual({ paused:true, anyPlaying:false });
+    await quickToggle.click();
 
     const navigation = await page.evaluate(function () {
       const first = FB.music.current().id;
@@ -289,8 +391,36 @@ test('context banks and modal Previous/Next follow listening history',
     expect(navigation.second).not.toBe(navigation.first);
     expect(navigation.previous).toBe(navigation.first);
     await expect(page.getByRole('button', { name:'⏮ Previous', exact:true })).toBeDisabled();
+    await expect(page.getByRole('button', { name:'⏸ Pause', exact:true })).toBeVisible();
     await expect(page.getByRole('button', { name:'Next ⏭', exact:true })).toBeVisible();
     await expect(page.locator('#music-up')).toHaveCount(0);
+
+    expect(await page.locator('.music-track-navigation > button').evaluateAll(function (buttons) {
+      return buttons.map(function (button) { return button.id; });
+    })).toEqual(['music-previous', 'music-playback', 'music-next']);
+
+    await page.getByRole('button', { name:'⏸ Pause', exact:true }).click();
+    await expect(page.getByRole('button', { name:'▶ Play', exact:true })).toBeVisible();
+    expect(await page.evaluate(function () {
+      return {
+        paused:FB.music.isPaused(),
+        anyPlaying:window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        }),
+        choice:FB.game.uiPrefs.musicChoice
+      };
+    })).toEqual({ paused:true, anyPlaying:false, choice:'on' });
+
+    await page.getByRole('button', { name:'▶ Play', exact:true }).click();
+    await expect(page.getByRole('button', { name:'⏸ Pause', exact:true })).toBeVisible();
+    expect(await page.evaluate(function () {
+      return {
+        paused:FB.music.isPaused(),
+        anyPlaying:window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        })
+      };
+    })).toEqual({ paused:false, anyPlaying:true });
 
     await page.getByRole('button', { name:'Next ⏭', exact:true }).click();
     await expect(page.getByRole('button', { name:'⏮ Previous', exact:true })).toBeEnabled();
@@ -309,7 +439,85 @@ test('context banks and modal Previous/Next follow listening history',
     });
     await page.getByRole('button', { name:'👍 Like', exact:true }).click();
     expect(await page.evaluate(function () { return window.__musicTelemetry; })).toEqual([{
-      name:'event-' + ratedTrack + '-thumbsup',
-      data:expect.objectContaining({ track_id:ratedTrack, music_role:'folk' })
+      name:'music-rating',
+      data:expect.objectContaining({
+        track_id:ratedTrack,
+        track_title:expect.any(String),
+        rating:'up',
+        music_role:'folk'
+      })
     }]);
+
+    await page.getByRole('button', { name:'👎 Dislike', exact:true }).click();
+    expect(await page.evaluate(function () { return window.__musicTelemetry; })).toEqual([
+      expect.objectContaining({
+        name:'music-rating',
+        data:expect.objectContaining({ track_id:ratedTrack, rating:'up' })
+      }),
+      expect.objectContaining({
+        name:'music-rating',
+        data:expect.objectContaining({ track_id:ratedTrack, rating:'down' })
+      })
+    ]);
+
+    const queuedContext = await page.evaluate(function () {
+      const first = FB.music.current().id;
+      FB.state.realms.lord.war = { enemy:'foe' };
+      FB.music.sync(FB.state);
+      const atWar = FB.music.current().id;
+      FB.state.realms.lord.war = null;
+      FB.music.sync(FB.state);
+      const atPeaceAgain = FB.music.current().id;
+      FB.state.realms.lord.war = { enemy:'foe' };
+      FB.music.sync(FB.state);
+      window.__finishGameMusic();
+      return {
+        first:first,
+        atWar:atWar,
+        atPeaceAgain:atPeaceAgain,
+        afterEndRole:FB.music.current().role,
+        afterEndBank:FB.music.currentBank().id
+      };
+    });
+    expect(queuedContext).toEqual({
+      first:queuedContext.first,
+      atWar:queuedContext.first,
+      atPeaceAgain:queuedContext.first,
+      afterEndRole:'war',
+      afterEndBank:'christian/anglo_saxon/war'
+    });
+
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        });
+      });
+    }).toBe(true);
+
+    const peaceContext = await page.evaluate(function () {
+      const warTrack = FB.music.current().id;
+      FB.state.realms.lord.war = null;
+      FB.music.sync(FB.state);
+      const beforeEnd = FB.music.current().id;
+      window.__finishGameMusic();
+      return {
+        warTrack:warTrack,
+        beforeEnd:beforeEnd,
+        afterEndRole:FB.music.current().role,
+        afterEndBank:FB.music.currentBank().id
+      };
+    });
+    expect(peaceContext).toEqual({
+      warTrack:peaceContext.warTrack,
+      beforeEnd:peaceContext.warTrack,
+      afterEndRole:'folk',
+      afterEndBank:'christian/anglo_saxon/folk'
+    });
+
+    await page.setViewportSize({ width:390, height:740 });
+    expect(await quickToggle.evaluate(function (button) {
+      const box = button.getBoundingClientRect();
+      return { width:box.width, height:box.height };
+    })).toEqual({ width:44, height:44 });
   });

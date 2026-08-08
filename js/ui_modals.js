@@ -15658,6 +15658,7 @@ window.FB = window.FB || {};
     })[0] || null);
     const preferred = music.isPreferred(track.id);
     const rating = music.rating(track.id);
+    const paused = music.isPaused();
     let h = '<div class="gm-body-text"><p><b>' + esc(track.title) + '</b></p>' +
       '<p>' + esc(music.bankLabel(bank)) + '</p></div>' +
       '<div class="kv"><span>' + esc(FB.T('Length')) + '</span><b>' +
@@ -15669,9 +15670,13 @@ window.FB = window.FB || {};
       '<div class="kv"><span>' + esc(FB.T('Offline copy')) + '</span><b id="music-cache-status">' +
       esc(FB.T('Checking…')) + '</b></div>' +
       '<div class="music-track-actions">' +
+      '<div class="music-track-navigation">' +
       '<button class="btn" id="music-previous"' +
       (music.canPrevious() ? '' : ' disabled') + '>' + esc(FB.T('⏮ Previous')) + '</button>' +
+      '<button class="btn" id="music-playback" aria-pressed="' + (!paused ? 'true' : 'false') + '">' +
+      esc(FB.T(paused ? '▶ Play' : '⏸ Pause')) + '</button>' +
       '<button class="btn" id="music-next">' + esc(FB.T('Next ⏭')) + '</button>' +
+      '</div>' +
       '<button class="btn' + (preferred ? ' primary' : '') + '" id="music-prefer">' +
       esc(FB.T(preferred ? '✓ Hear this more' : 'Hear this more')) + '</button>' +
       '<button class="btn' + (music.isRepeating() ? ' primary' : '') + '" id="music-repeat">' +
@@ -15697,6 +15702,9 @@ window.FB = window.FB || {};
     });
     $('music-previous').addEventListener('click', function () {
       if (music.previous()) UI.showMusicTrack(true);
+    });
+    $('music-playback').addEventListener('click', function () {
+      if (music.togglePlayback()) UI.showMusicTrack(true);
     });
     $('music-next').addEventListener('click', function () {
       if (music.next()) UI.showMusicTrack(true);

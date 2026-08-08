@@ -69,3 +69,30 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.offlineStatusHidden).toBe(true);
     expect([null, -1, 0]).toContain(contract.registrations);
   });
+
+test('title menu gives every action a decorative icon and a clean accessible name',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const expected = [
+      ['btn-continue', 'Continue'],
+      ['btn-newgame', 'New Game'],
+      ['btn-load', 'Load Game'],
+      ['btn-mods', 'Mods'],
+      ['btn-settings', 'Settings'],
+      ['btn-help', 'How to Play'],
+      ['btn-changelog', 'Changelog']
+    ];
+    const icons = page.locator('#title .menubtns .title-menu-icon');
+    await expect(icons).toHaveCount(expected.length);
+    const iconLabels = (await icons.allTextContents()).map(function (icon) {
+      return icon.trim();
+    });
+    expect(iconLabels.every(function (icon) { return icon.length > 0; })).toBe(true);
+    expect(new Set(iconLabels).size).toBe(expected.length);
+    for (const item of expected) {
+      const button = page.locator('#' + item[0]);
+      await expect(button.locator('.title-menu-icon')).toHaveAttribute('aria-hidden', 'true');
+      await expect(button).toHaveAccessibleName(item[1]);
+    }
+  });

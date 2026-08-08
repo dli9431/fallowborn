@@ -132,11 +132,17 @@ Touch devices keep their platform-native overlay scrolling.
 The title screen scales its crest, heading, button height, gaps, and footer spacing against
 viewport height so the full menu fits common standalone and itch iframe heights; genuinely
 short viewports retain `.screen` scrolling as the fallback.
+Each main-menu action has a distinct leading system icon in a fixed-width slot. The icons are
+decorative and hidden from assistive technology, leaving the localized text as the accessible
+button name.
 The title and its pregame flow share a compact bottom-corner music button. Its pause or music icon
 reflects whether the title theme is currently playing. Pausing retains the current title-track
 position for an in-session resume and remembers silent title playback for the next visit. Resuming
 stores title autoplay again. The button remains hidden while loading, during gameplay, or when the
 soundtrack cannot play.
+During gameplay, the bottom-center song title opens the full music controls and a separate compact
+button immediately to its right pauses or resumes playback. Both controls are native buttons, and
+the compact control keeps the 44-pixel minimum touch target on mobile.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
 `js/util.js` before boot. Its current `isPlay` flag is true only for the HTTPS
