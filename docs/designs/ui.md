@@ -201,8 +201,9 @@ retain the modal's 1–9 keyboard hints, show the exact live price, and explicit
 repeat copies in one county become 50% dearer each time. A sticky native county selector stays
 in reach above the scrolling ledger, including on narrow touch layouts, and switches directly
 among all held counties. Exact settlement placement and permanent demolition remain available
-from the Land-tab settlement view. Province settlement lists wrap between places, never inside
-a settlement name, so each link stays readable.
+from the Land-tab settlement view. Every settlement name there links to that settlement's
+sheet and centers the map on its parent county. Province settlement lists wrap between
+places, never inside a settlement name, so each link stays readable.
 The Land tab's **Notable folk** list is ruler-first: it shows the county holder, all of
 that holder's direct vassal realms, then every liege through the sovereign, without a
 row cap or duplicates. Every entry is a native focusable row with the reigning
@@ -634,7 +635,11 @@ completed/exposed totals and active projects read-only.
 
 Help opens the offline **Guide**, a single `fullsheet-modal` whose native search field,
 category selector, inline expandable entries, sticky footer, and normal modal history
-remain usable by keyboard, touch, and `file://`. Expanding an entry reveals its complete
+remain usable by keyboard, touch, and `file://`. Opened from another dialog — a context
+sheet or the menu — the guide also gains a **Back** button that restores that dialog
+with its listeners intact (its live nodes move aside and return), while **Close**
+always dismisses the guide outright rather than dropping to the menu. Expanding an
+entry reveals its complete
 guidance in place without replacing the search and result screen. Entries cover basics,
 skills, resources,
 roles, careers, family and inheritance scope, settlements, technology, travel, and
@@ -926,17 +931,31 @@ rules, and the existing mobile bottom-sheet layout.
 ## Settlement markers and the settlement sheet
 
 The canvas adds a settlement layer in screen space between the selection overlay and
-the army/objective/traveler passes. Strategic zoom is unchanged: county labels,
-capitals, armies, and travel only. Intermediate zoom (1.3) draws county heads and
-authored cities; detailed zoom (2.4) draws every currently visible settlement of a
-county and subordinates colliding county labels. Kind is shown by marker shape —
-circle village, square town, diamond city — never by color alone, with a ring marking
-the county head. Labels reject deterministically on rectangle overlap in priority
-order (kind, head status, authored status, province/index); a rejected label keeps
-its marker and tap target. Only markers drawn on the last frame are hit targets, in
-a reused `FB.map.visibleSites` list cleared on bookmark switches; hit radii are named
-screen-pixel constants (7 mouse, 15 touch/pen) with overlap resolved by nearest
-center, then that same priority.
+the army/objective/traveler passes. The layer is reserved for close inspection: below
+zoom 6 there is no settlement rendering at all, so ordinary panning and zooming never
+pays for it. From zoom 6, county heads and authored cities show as shape-coded
+markers — circle village, square town, diamond city — never by color alone. From zoom
+12, every currently visible settlement of a county draws as its procedural emblem
+(`js/siteart.js`: a deterministic cottage cluster, towered town, or walled city
+generated from the physical site slug, one fixed canvas cached per rank/site and
+scaled to the zoom at draw), sized in css pixels and growing with zoom up to a cap,
+with a heavier ring spaced clear of the emblem marking the county head (the county
+seat); the map zooms to 80x so dense historical
+clusters separate. Settlement name labels live only in this emblem band, so the
+intermediate band stays bare markers. From zoom 6 the backdrop cross-fades from the
+noisy base raster into a flat sibling — one solid tone per county, no baked
+borders — and county boundaries draw as an anti-aliased vector pass that cuts the
+raster staircase into smooth diagonals with the same demesne/realm/sovereign
+strength graduation, so the close-up reads crisp rather than blocky or blurred.
+Labels reject
+deterministically on rectangle overlap in priority order (kind, head status,
+authored status, province/index), each name label sits below its emblem and moves
+above only under collision pressure, drawn emblems
+count as obstacles for later settlement and county labels, and a rejected label
+keeps its marker and tap target. Only markers drawn on the last frame are hit targets, in a
+reused `FB.map.visibleSites` list cleared on bookmark switches; the named hit radii
+(7 mouse, 15 touch/pen screen px) are a floor that widens to the drawn emblem's
+half-size, with overlap resolved by nearest center, then that same priority.
 
 An ordinary marker tap selects the parent county and opens the settlement sheet for
 the exact slot. Every explicit county-targeting mode — new-game province picking, the

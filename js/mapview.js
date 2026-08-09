@@ -17,12 +17,14 @@ window.FB = window.FB || {};
   const M = {
     canvas: null, ctx: null,
     base: null, baseCtx: null,
+    baseFlat: null, baseFlatCtx: null,
     hilite: null, hiliteCtx: null,
-    viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 20,
+    viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 80,
     ownerOf: null, colorOf: null, colorOpacityOf: null,
     selected: null, playerProv: null, capitals: [],
     focusMembers: null, focusGroupActive: false,
     groupOutline: null, selectedOutline: null,
+    groupOutlineSmooth: null, selectedOutlineSmooth: null,
     onTap: null, dirty: true,
     visibleSites: [], _sitePool: [], _labelRects: [], _rectCount: 0,
     pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1
@@ -30,11 +32,16 @@ window.FB = window.FB || {};
   FB.map = M;
 
   /* Settlement marker detail thresholds (screen zoom) and tap hit radii in
-     screen pixels (scaled by dpr at use). Below SITE_Z_MID the map stays
-     strategic and draws no settlement layer; at SITE_Z_DETAIL every
-     currently visible settlement appears. */
-  const SITE_Z_MID = 1.3;
-  const SITE_Z_DETAIL = 2.4;
+     screen pixels (scaled by dpr at use). Below SITE_Z_MID the map draws no
+     settlement layer at all — the layer is reserved for close inspection so
+     ordinary pan/zoom never pays for it; between the two, county heads and
+     authored cities show as bare shape-coded markers, and at SITE_Z_DETAIL
+     every currently visible settlement appears as its procedural emblem
+     (js/siteart.js) with its name label — labels live only in the emblem
+     band, so intermediate zoom stays uncluttered. The named hit radii are a
+     floor: a drawn emblem widens its own target to its half-size. */
+  const SITE_Z_MID = 6;
+  const SITE_Z_DETAIL = 12;
   const SITE_HIT_MOUSE = 7;
   const SITE_HIT_TOUCH = 15;
 
@@ -47,6 +54,8 @@ window.FB = window.FB || {};
     M.ctx = canvas.getContext('2d');
     M.base = document.createElement('canvas');
     M.baseCtx = M.base.getContext('2d');
+    M.baseFlat = document.createElement('canvas');
+    M.baseFlatCtx = M.baseFlat.getContext('2d');
     M.hilite = document.createElement('canvas');
     M.hiliteCtx = M.hilite.getContext('2d');
 
@@ -65,6 +74,8 @@ window.FB = window.FB || {};
   M.useWorld = function () {
     if (!M.canvas || !FB.world) return;
     M.base.width = FB.world.W; M.base.height = FB.world.H;
+    /* flat close-zoom backdrop, same 1:1 raster geometry as the base */
+    M.baseFlat.width = FB.world.W; M.baseFlat.height = FB.world.H;
     M.hilite.width = FB.world.W; M.hilite.height = FB.world.H;
     M.selected = null;
     M.playerProv = null;
@@ -77,6 +88,8 @@ window.FB = window.FB || {};
     M.focusGroupActive = false;
     M.groupOutline = null;
     M.selectedOutline = null;
+    M.groupOutlineSmooth = null;
+    M.selectedOutlineSmooth = null;
     M.visibleSites.length = 0; // no stale settlement hit targets from the old world
     M._sitePool.length = 0;
     M._rectCount = 0;
@@ -118,24 +131,45 @@ window.FB = window.FB || {};
     M.colorOpacityOf = colorOpacityOf || null;
   };
 
-  M.buildBase = function () {
-    const w = FB.world, W = w.W, H = w.H;
-    const img = M.baseCtx.createImageData(W, H);
-    const d = img.data;
-    // precompute per-province color
-    const colors = [], owners = [], holders = [];
-    for (let i = 0; i < w.provs.length; i++) {
-      const pr = w.provs[i];
-      const tint = TERRAIN_TINT[pr.terrain] || TERRAIN_TINT.farmland;
-      let col;
+  /* Owner/holder keys per province, shared by the baked base borders and the
+     close-zoom vector border pass so both graduate border strength the same
+     way. */
+  function ownerHolderKeys() {
+    const owners = [], holders = [];
+    for (let i = 0; i < FB.world.provs.length; i++) {
+      const pr = FB.world.provs[i];
       if (pr.wasteland) {
-        col = FB.mix(tint, [150, 142, 128], 0.35);
         owners.push('~waste');
         holders.push('~waste');
       } else {
         const own = M.ownerOf ? M.ownerOf(pr.id) : pr.realm0;
         owners.push(own || '~none');
         holders.push(M.holderOf ? (M.holderOf(pr.id) || own || '~none') : (own || '~none'));
+      }
+    }
+    return [owners, holders];
+  }
+
+  M.buildBase = function () {
+    const w = FB.world, W = w.W, H = w.H;
+    const img = M.baseCtx.createImageData(W, H);
+    const d = img.data;
+    /* flat sibling blitted in the close-zoom band instead: identical county
+       and sea colors with no per-pixel noise and no baked borders, so the
+       magnified backdrop reads as a clean flat wash under the crisp vector
+       border pass (drawCloseBorders), never as blurred raster blocks */
+    const flatImg = M.baseFlatCtx.createImageData(W, H);
+    const fd = flatImg.data;
+    // precompute per-province color
+    const colors = [], keys = ownerHolderKeys(), owners = keys[0], holders = keys[1];
+    for (let i = 0; i < w.provs.length; i++) {
+      const pr = w.provs[i];
+      const tint = TERRAIN_TINT[pr.terrain] || TERRAIN_TINT.farmland;
+      let col;
+      if (pr.wasteland) {
+        col = FB.mix(tint, [150, 142, 128], 0.35);
+      } else {
+        const own = owners[i] !== '~none' ? owners[i] : null;
         const rc = M.colorOf && own ? M.colorOf(own) : '#888888';
         const opacity = M.colorOpacityOf && own
           ? FB.clamp(M.colorOpacityOf(own), 0, 1) : 1;
@@ -154,10 +188,12 @@ window.FB = window.FB || {};
           r = SEA_TOP[0] + (SEA_BOT[0] - SEA_TOP[0]) * seaT;
           g = SEA_TOP[1] + (SEA_BOT[1] - SEA_TOP[1]) * seaT;
           b = SEA_TOP[2] + (SEA_BOT[2] - SEA_TOP[2]) * seaT;
+          fd[o] = r; fd[o + 1] = g; fd[o + 2] = b; fd[o + 3] = 255;
           const n = FB.noise2(x >> 2, y >> 2) * 10 - 5;
           r += n; g += n; b += n;
         } else {
           const c = colors[v - 1];
+          fd[o] = c[0]; fd[o + 1] = c[1]; fd[o + 2] = c[2]; fd[o + 3] = 255;
           const n = 0.92 + FB.noise2(x, y) * 0.16;
           r = c[0] * n; g = c[1] * n; b = c[2] * n;
           // borders
@@ -179,20 +215,104 @@ window.FB = window.FB || {};
       }
     }
     M.baseCtx.putImageData(img, 0, 0);
-    // rivers
-    M.baseCtx.strokeStyle = 'rgba(60,110,160,0.75)';
-    M.baseCtx.lineWidth = 1.2;
-    M.baseCtx.lineJoin = 'round';
-    for (const rv of (FBDATA.rivers || [])) {
-      M.baseCtx.beginPath();
-      for (let i = 0; i < rv.length; i += 2) {
-        const x = FB.lonToX(rv[i]), y = FB.latToY(rv[i + 1]);
-        if (i === 0) M.baseCtx.moveTo(x, y); else M.baseCtx.lineTo(x, y);
+    M.baseFlatCtx.putImageData(flatImg, 0, 0);
+    // rivers on both copies
+    for (const target of [M.baseCtx, M.baseFlatCtx]) {
+      target.strokeStyle = 'rgba(60,110,160,0.75)';
+      target.lineWidth = 1.2;
+      target.lineJoin = 'round';
+      for (const rv of (FBDATA.rivers || [])) {
+        target.beginPath();
+        for (let i = 0; i < rv.length; i += 2) {
+          const x = FB.lonToX(rv[i]), y = FB.latToY(rv[i + 1]);
+          if (i === 0) target.moveTo(x, y); else target.lineTo(x, y);
+        }
+        target.stroke();
       }
-      M.baseCtx.stroke();
     }
     M.dirty = true;
   };
+
+  /* Close-zoom borders (zoom >= SITE_Z_MID): the flat backdrop bakes no
+     border pixels, so county boundaries are stroked as anti-aliased vectors
+     instead. Each 2x2 block of raster cells contributes straight segments
+     between the midpoints of its crossed edges, which cuts the raster
+     staircase into smooth diagonals; strength follows the same
+     demesne / realm / sovereign graduation as the baked borders, and alpha
+     ramps the pass in with the flat backdrop cross-fade. */
+  const BORDER_STYLE = [
+    'rgba(20,16,10,0.30)', 'rgba(20,16,10,0.55)', 'rgba(20,16,10,0.85)'
+  ];
+  const borderCross = new Float32Array(8);
+
+  function drawCloseBorders(ctx, sx, sy, z, alpha) {
+    const el = M.canvas, w = FB.world, W = w.W, H = w.H, grid = w.grid;
+    const x0 = Math.max(1, Math.floor(sx) - 1);
+    const y0 = Math.max(1, Math.floor(sy) - 1);
+    const x1 = Math.min(W - 1, Math.ceil(sx + el.width / z) + 1);
+    const y1 = Math.min(H - 1, Math.ceil(sy + el.height / z) + 1);
+    if (x1 <= x0 || y1 <= y0) return;
+    const keys = ownerHolderKeys(), owners = keys[0], holders = keys[1];
+    function strength(u, v) {
+      if (!u || !v) return 2; // coastline
+      if (holders[u - 1] === holders[v - 1]) return 0;
+      if (owners[u - 1] === owners[v - 1]) return 1;
+      return 2;
+    }
+    ctx.save();
+    ctx.scale(z, z);
+    ctx.translate(-sx, -sy);
+    ctx.lineWidth = 1.2 / z;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    for (let cls = 0; cls <= 2; cls++) {
+      ctx.beginPath();
+      let any = false;
+      for (let gy = y0; gy <= y1; gy++) {
+        const rowUp = (gy - 1) * W, rowDn = gy * W;
+        for (let gx = x0; gx <= x1; gx++) {
+          const a = grid[rowUp + gx - 1], b = grid[rowUp + gx];
+          const c = grid[rowDn + gx - 1], d = grid[rowDn + gx];
+          if (a === b && b === c && c === d) continue;
+          let n = 0, blockCls = -1;
+          if (a !== b) {
+            borderCross[0] = gx; borderCross[1] = gy - 0.5; n = 1;
+            blockCls = strength(a, b);
+          }
+          if (c !== d) {
+            borderCross[n * 2] = gx; borderCross[n * 2 + 1] = gy + 0.5; n++;
+            const s = strength(c, d); if (s > blockCls) blockCls = s;
+          }
+          if (a !== c) {
+            borderCross[n * 2] = gx - 0.5; borderCross[n * 2 + 1] = gy; n++;
+            const s = strength(a, c); if (s > blockCls) blockCls = s;
+          }
+          if (b !== d) {
+            borderCross[n * 2] = gx + 0.5; borderCross[n * 2 + 1] = gy; n++;
+            const s = strength(b, d); if (s > blockCls) blockCls = s;
+          }
+          if (blockCls !== cls || n < 2) continue;
+          if (n === 2) {
+            ctx.moveTo(borderCross[0], borderCross[1]);
+            ctx.lineTo(borderCross[2], borderCross[3]);
+          } else {
+            for (let i = 0; i < n; i++) {
+              ctx.moveTo(gx, gy);
+              ctx.lineTo(borderCross[i * 2], borderCross[i * 2 + 1]);
+            }
+          }
+          any = true;
+        }
+      }
+      if (any) {
+        ctx.globalAlpha = alpha;
+        ctx.strokeStyle = BORDER_STYLE[cls];
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+  }
 
   /* ---------- selection highlight ----------
      Selection preserves the political and terrain colors which already carry
@@ -242,6 +362,48 @@ window.FB = window.FB || {};
     ctx.stroke(path);
   }
 
+  /* Smooth variant of the selection outlines for the close-zoom band: the
+     same marching-squares midpoint contour the vector border pass draws
+     (drawCloseBorders), so the two-tone highlight lies exactly on the crisp
+     border line instead of clashing with it as a raster staircase. inside
+     maps a grid cell value to membership; out-of-grid cells count as
+     outside, so world-edge coastlines still close. Built once per selection,
+     not per frame. */
+  function traceSmoothOutline(inside, bx0, by0, bx1, by1) {
+    const w = FB.world, W = w.W, H = w.H, grid = w.grid;
+    const cross = [0, 0, 0, 0, 0, 0, 0, 0];
+    function cellIn(x, y) {
+      return x >= 0 && y >= 0 && x < W && y < H && !!inside(grid[y * W + x]);
+    }
+    /* boundary segments only occur in blocks around the member cells, so the
+       scan confines itself to their bounding box (a county's box is tiny) */
+    const gx0 = Math.max(0, bx0), gx1 = Math.min(W, bx1 + 1);
+    const gy0 = Math.max(0, by0), gy1 = Math.min(H, by1 + 1);
+    const path = new Path2D();
+    for (let gy = gy0; gy <= gy1; gy++) {
+      for (let gx = gx0; gx <= gx1; gx++) {
+        const a = cellIn(gx - 1, gy - 1), b = cellIn(gx, gy - 1);
+        const c = cellIn(gx - 1, gy), d = cellIn(gx, gy);
+        if (a === b && b === c && c === d) continue;
+        let n = 0;
+        if (a !== b) { cross[0] = gx; cross[1] = gy - 0.5; n = 1; }
+        if (c !== d) { cross[n * 2] = gx; cross[n * 2 + 1] = gy + 0.5; n++; }
+        if (a !== c) { cross[n * 2] = gx - 0.5; cross[n * 2 + 1] = gy; n++; }
+        if (b !== d) { cross[n * 2] = gx + 0.5; cross[n * 2 + 1] = gy; n++; }
+        if (n === 2) {
+          path.moveTo(cross[0], cross[1]);
+          path.lineTo(cross[2], cross[3]);
+        } else if (n >= 3) {
+          for (let i = 0; i < n; i++) {
+            path.moveTo(gx, gy);
+            path.lineTo(cross[i * 2], cross[i * 2 + 1]);
+          }
+        }
+      }
+    }
+    return path;
+  }
+
   M.select = function (provId, groupOf) {
     M.selected = provId;
     if (!groupOf) groupOf = M.ownerOf;
@@ -251,6 +413,8 @@ window.FB = window.FB || {};
     M.focusGroupActive = false;
     M.groupOutline = null;
     M.selectedOutline = null;
+    M.groupOutlineSmooth = null;
+    M.selectedOutlineSmooth = null;
     if (provId) {
       const w = FB.world, pr = w.byId[provId];
       if (pr) {
@@ -265,6 +429,9 @@ window.FB = window.FB || {};
         M.focusGroupActive = own != null;
         const groupOutline = new Path2D();
         const selectedOutline = new Path2D();
+        /* bounding boxes confine the smoothed-contour scans below */
+        let selMinX = w.W, selMinY = w.H, selMaxX = -1, selMaxY = -1;
+        let grpMinX = w.W, grpMinY = w.H, grpMaxX = -1, grpMaxY = -1;
         const img = hc.createImageData(w.W, w.H);
         const d = img.data;
         for (let y = 0; y < w.H; y++) {
@@ -283,6 +450,10 @@ window.FB = window.FB || {};
             const u = y > 0 ? w.grid[k - w.W] : 0;
             const dn = y + 1 < w.H ? w.grid[k + w.W] : 0;
             if (realm) {
+              if (x < grpMinX) grpMinX = x;
+              if (x > grpMaxX) grpMaxX = x;
+              if (y < grpMinY) grpMinY = y;
+              if (y > grpMaxY) grpMaxY = y;
               if (!(l && inRealm[l - 1])) {
                 groupOutline.moveTo(x, y); groupOutline.lineTo(x, y + 1);
               }
@@ -297,6 +468,10 @@ window.FB = window.FB || {};
               }
             }
             if (sel) {
+              if (x < selMinX) selMinX = x;
+              if (x > selMaxX) selMaxX = x;
+              if (y < selMinY) selMinY = y;
+              if (y > selMaxY) selMaxY = y;
               const selectedIndex = pr.idx + 1;
               if (l !== selectedIndex) {
                 selectedOutline.moveTo(x, y); selectedOutline.lineTo(x, y + 1);
@@ -318,6 +493,15 @@ window.FB = window.FB || {};
         hc.putImageData(img, 0, 0);
         M.groupOutline = M.focusGroupActive ? groupOutline : null;
         M.selectedOutline = selectedOutline;
+        // the close-zoom band strokes these smoothed contours instead
+        const selectedIndex = pr.idx + 1;
+        M.selectedOutlineSmooth = traceSmoothOutline(function (v) {
+          return v === selectedIndex;
+        }, selMinX, selMinY, selMaxX, selMaxY);
+        M.groupOutlineSmooth = M.focusGroupActive
+          ? traceSmoothOutline(function (v) { return !!(v && inRealm[v - 1]); },
+              grpMinX, grpMinY, grpMaxX, grpMaxY)
+          : null;
       }
     }
     M.request();
@@ -329,9 +513,11 @@ window.FB = window.FB || {};
      world.sitesRender list (head/authored/province/index order) once per
      kind rank so label priority is city > town > village without any
      per-frame allocation; a rejected label keeps its marker and hit target.
-     Only markers actually drawn land in the reused M.visibleSites list. */
+     Name labels draw only in the emblem band (zoom >= SITE_Z_DETAIL) — the
+     intermediate band shows bare shape markers. Only markers actually drawn
+     land in the reused M.visibleSites list. */
   function settlementHitRecord(n) {
-    if (M._sitePool.length <= n) M._sitePool.push({ pid:'', index:0, x:0, y:0 });
+    if (M._sitePool.length <= n) M._sitePool.push({ pid:'', index:0, x:0, y:0, hs:0 });
     return M._sitePool[n];
   }
 
@@ -339,6 +525,8 @@ window.FB = window.FB || {};
     const el = M.canvas, dpr = M.dpr, sites = FB.world.sitesRender;
     const detail = z >= SITE_Z_DETAIL;
     const m = -40 * dpr, mw = el.width + 80 * dpr, mh = el.height + 48 * dpr;
+    /* the frame-level smoothing rule already applies at these zooms,
+       including to the scaled emblem blits */
     ctx.textAlign = 'center';
     for (let sweep = 2; sweep >= 0; sweep--) {
       for (const site of sites) {
@@ -352,56 +540,90 @@ window.FB = window.FB || {};
         const focused = !M.focusGroupActive ||
           (M.focusMembers && M.focusMembers[site.pidx]);
         const u = dpr;
-        // shape distinguishes the kind (never color alone); a ring marks
-        // the county head
-        ctx.beginPath();
-        if (rank === 2) {
-          ctx.moveTo(scrX, scrY - 3.8 * u); ctx.lineTo(scrX + 3.8 * u, scrY);
-          ctx.lineTo(scrX, scrY + 3.8 * u); ctx.lineTo(scrX - 3.8 * u, scrY);
-          ctx.closePath();
-        } else if (rank === 1) {
-          ctx.rect(scrX - 2.7 * u, scrY - 2.7 * u, 5.4 * u, 5.4 * u);
-        } else {
-          ctx.arc(scrX, scrY, 2.3 * u, 0, 6.2832);
+        /* detailed zoom: the site's cached emblem, scaled from its one fixed
+           canvas to the current css-pixel size — zooming changes only the
+           blit, never the art; below that a shape marker. */
+        let half = 0;
+        if (detail && FB.siteArt) {
+          const scale = rank === 2 ? 1 : (rank === 1 ? 0.9 : 0.8);
+          half = Math.round(FB.clamp(z * 1.1, 12, 24) * scale * u);
+          const img = FB.siteArt(rank, site.site);
+          ctx.globalAlpha = focused ? 1 : 0.45;
+          ctx.drawImage(img, scrX - half, scrY - half, half * 2, half * 2);
+          ctx.globalAlpha = 1;
         }
-        ctx.fillStyle = focused ? '#f2e8cf' : 'rgba(242,232,207,0.45)';
-        ctx.fill();
-        ctx.lineWidth = 1.1 * u;
-        ctx.strokeStyle = focused ? 'rgba(24,18,10,0.9)' : 'rgba(24,18,10,0.45)';
-        ctx.stroke();
-        if (site.index === 0) {
+        if (!half) {
+          // shape distinguishes the kind (never color alone)
           ctx.beginPath();
-          ctx.arc(scrX, scrY, (rank === 2 ? 5.6 : 4.6) * u, 0, 6.2832);
-          ctx.lineWidth = u;
+          if (rank === 2) {
+            ctx.moveTo(scrX, scrY - 3.8 * u); ctx.lineTo(scrX + 3.8 * u, scrY);
+            ctx.lineTo(scrX, scrY + 3.8 * u); ctx.lineTo(scrX - 3.8 * u, scrY);
+            ctx.closePath();
+          } else if (rank === 1) {
+            ctx.rect(scrX - 2.7 * u, scrY - 2.7 * u, 5.4 * u, 5.4 * u);
+          } else {
+            ctx.arc(scrX, scrY, 2.3 * u, 0, 6.2832);
+          }
+          ctx.fillStyle = focused ? '#f2e8cf' : 'rgba(242,232,207,0.45)';
+          ctx.fill();
+          ctx.lineWidth = 1.1 * u;
+          ctx.strokeStyle = focused ? 'rgba(24,18,10,0.9)' : 'rgba(24,18,10,0.45)';
           ctx.stroke();
         }
-        // label: deterministic rectangle rejection in priority order
-        const fs = Math.round((rank === 2 ? 10.5 : 9.5) * dpr);
-        ctx.font = fs + 'px Georgia';
-        const tw = ctx.measureText(site.name).width;
-        const lx = scrX, ly = scrY + (rank === 2 ? 8.5 : 7.5) * dpr + fs * 0.72;
-        const pad = 2 * dpr;
-        const rx0 = lx - tw / 2 - pad, ry0 = ly - fs - pad;
-        const rx1 = lx + tw / 2 + pad, ry1 = ly + pad;
-        let blocked = false;
-        for (let ri = 0; ri < M._rectCount; ri++) {
-          const r = M._labelRects[ri];
-          if (!(rx1 < r[0] || rx0 > r[2] || ry1 < r[1] || ry0 > r[3])) {
-            blocked = true; break;
+        // a ring marks the county head (the county seat): spaced clear of the
+        // emblem and drawn heavier so it reads as a frame, not a constraint
+        if (site.index === 0) {
+          ctx.beginPath();
+          ctx.arc(scrX, scrY, half ? half + 4.5 * u : (rank === 2 ? 6.5 : 5.5) * u,
+            0, 6.2832);
+          ctx.lineWidth = (half ? 1.8 : 1.3) * u;
+          ctx.strokeStyle = focused ? 'rgba(24,18,10,0.9)' : 'rgba(24,18,10,0.45)';
+          ctx.stroke();
+        }
+        const pad = 3.5 * dpr;
+        // label, emblem band only: deterministic rectangle rejection in
+        // priority order, below the emblem first, above only under pressure
+        if (detail) {
+          const fs = Math.round((rank === 2 ? 10.5 : 9.5) * dpr);
+          ctx.font = fs + 'px Georgia';
+          const tw = ctx.measureText(site.name).width;
+          const lx = scrX;
+          const gap = half ? half + 5 * u : (rank === 2 ? 9.5 : 8.5) * dpr;
+          for (let pos = 0; pos < 2; pos++) {
+            const above = pos === 1;
+            const ly = above ? scrY - gap - fs * 0.28 : scrY + gap + fs * 0.72;
+            const rx0 = lx - tw / 2 - pad, ry0 = ly - fs - pad;
+            const rx1 = lx + tw / 2 + pad, ry1 = ly + pad;
+            let blocked = false;
+            for (let ri = 0; ri < M._rectCount; ri++) {
+              const r = M._labelRects[ri];
+              if (!(rx1 < r[0] || rx0 > r[2] || ry1 < r[1] || ry0 > r[3])) {
+                blocked = true; break;
+              }
+            }
+            if (blocked) continue;
+            if (M._labelRects.length <= M._rectCount) M._labelRects.push([0, 0, 0, 0]);
+            const rr = M._labelRects[M._rectCount++];
+            rr[0] = rx0; rr[1] = ry0; rr[2] = rx1; rr[3] = ry1;
+            ctx.lineWidth = 2.5 * dpr;
+            ctx.strokeStyle = focused ? 'rgba(20,16,10,0.72)' : 'rgba(20,16,10,0.4)';
+            ctx.fillStyle = focused ? 'rgba(255,250,235,0.95)' : 'rgba(255,250,235,0.5)';
+            ctx.strokeText(site.name, lx, ly);
+            ctx.fillText(site.name, lx, ly);
+            break;
           }
         }
-        if (!blocked) {
+        /* a drawn emblem itself blocks later settlement and county labels, so
+           a dense cluster stays legible instead of stacking text over art */
+        if (half) {
           if (M._labelRects.length <= M._rectCount) M._labelRects.push([0, 0, 0, 0]);
-          const rr = M._labelRects[M._rectCount++];
-          rr[0] = rx0; rr[1] = ry0; rr[2] = rx1; rr[3] = ry1;
-          ctx.lineWidth = 2.5 * dpr;
-          ctx.strokeStyle = focused ? 'rgba(20,16,10,0.72)' : 'rgba(20,16,10,0.4)';
-          ctx.fillStyle = focused ? 'rgba(255,250,235,0.95)' : 'rgba(255,250,235,0.5)';
-          ctx.strokeText(site.name, lx, ly);
-          ctx.fillText(site.name, lx, ly);
+          const ir = M._labelRects[M._rectCount++];
+          ir[0] = scrX - half - pad; ir[1] = scrY - half - pad;
+          ir[2] = scrX + half + pad; ir[3] = scrY + half + pad;
         }
         const hit = settlementHitRecord(M.visibleSites.length);
         hit.pid = site.pid; hit.index = site.index; hit.x = scrX; hit.y = scrY;
+        hit.hs = half;
         M.visibleSites.push(hit);
       }
     }
@@ -435,25 +657,52 @@ window.FB = window.FB || {};
     if (!el.width) return;
     ctx.fillStyle = '#1c3550';
     ctx.fillRect(0, 0, el.width, el.height);
-    ctx.imageSmoothingEnabled = M.zoom < 2;
+    /* close zoom cross-fades the noisy base raster into its flat sibling —
+       one solid tone per county with no baked borders — so emblems and
+       labels sit on a clean wash, and the crisp county structure comes from
+       the anti-aliased vector border pass rather than blurred raster
+       blocks; ordinary zooms keep the crisp pixel raster */
+    const z = M.zoom;
     const sx = M.viewX, sy = M.viewY;
+    const flatA = z >= SITE_Z_MID ? FB.clamp((z - SITE_Z_MID) / 2, 0, 1) : 0;
+    ctx.imageSmoothingEnabled = flatA > 0 ? true : z < 2;
     ctx.save();
-    ctx.scale(M.zoom, M.zoom);
+    ctx.scale(z, z);
     ctx.translate(-sx, -sy);
-    ctx.drawImage(M.base, 0, 0);
+    if (flatA >= 1) {
+      ctx.drawImage(M.baseFlat, 0, 0);
+    } else {
+      ctx.drawImage(M.base, 0, 0);
+      if (flatA > 0) {
+        ctx.globalAlpha = flatA;
+        ctx.drawImage(M.baseFlat, 0, 0);
+        ctx.globalAlpha = 1;
+      }
+    }
+    ctx.restore();
+    if (flatA > 0) drawCloseBorders(ctx, sx, sy, z, flatA);
     // the hilite canvas is fully transparent with nothing selected — skip
     // the world-sized blit on the common (pan/march) frames
     if (M.selected) {
+      ctx.save();
+      ctx.scale(M.zoom, M.zoom);
+      ctx.translate(-sx, -sy);
       ctx.drawImage(M.hilite, 0, 0);
       const focusColor = M.focusColor();
-      strokeFocusPath(ctx, M.groupOutline, focusColor, 1.35, M.zoom);
-      strokeFocusPath(ctx, M.selectedOutline,
+      /* close zoom strokes the smoothed contours so the highlight lies
+         exactly on the vector border lines; lower zooms keep the crisp
+         pixel-edge outlines that match the unsmoothed raster */
+      const smooth = flatA > 0;
+      strokeFocusPath(ctx,
+        smooth ? (M.groupOutlineSmooth || M.groupOutline) : M.groupOutline,
+        focusColor, 1.35, M.zoom);
+      strokeFocusPath(ctx,
+        smooth ? (M.selectedOutlineSmooth || M.selectedOutline) : M.selectedOutline,
         lighterFocusColor(focusColor), 2, M.zoom);
+      ctx.restore();
     }
-    ctx.restore();
 
     // labels & markers in screen space
-    const z = M.zoom;
     function toScreen(wx, wy) { return [(wx - sx) * z, (wy - sy) * z]; }
 
     // settlement markers & labels run ahead of county labels so a
@@ -573,14 +822,17 @@ window.FB = window.FB || {};
   }
   /* Settlement hit-testing scans only the markers drawn on the last frame,
      in screen space, on pointer release. Overlaps resolve by nearest center,
-     then render priority (list order: kind, head, authored, province/index). */
+     then render priority (list order: kind, head, authored, province/index).
+     The named radii are a floor: a detailed-zoom emblem covers its own
+     half-size, so tapping the visible art always hits. */
   function hitSite(px, py, pointerType) {
-    const radius = (pointerType === 'mouse' ? SITE_HIT_MOUSE : SITE_HIT_TOUCH) * M.dpr;
-    let best = null, bd = radius * radius;
+    const base = (pointerType === 'mouse' ? SITE_HIT_MOUSE : SITE_HIT_TOUCH) * M.dpr;
+    let best = null, bd = Infinity;
     for (const s of M.visibleSites) {
+      const r = Math.max(base, (s.hs || 0) + 2 * M.dpr);
       const dx = s.x - px, dy = s.y - py;
       const d = dx * dx + dy * dy;
-      if (d < bd) { bd = d; best = s; }
+      if (d <= r * r && d < bd) { bd = d; best = s; }
     }
     return best;
   }

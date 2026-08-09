@@ -131,6 +131,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 #title .credits { margin-top: clamp(10px, 3vh, 30px); }
 #title .offline-status { margin-top: clamp(4px, 1vh, 7px); }
+/* floating music-download progress: shown while a bank downloads and the
+   downloads dialog is not on screen, so progress started from the title menu
+   stays visible inside the game */
+.music-dl-chip {
+  position: fixed; right: 12px; bottom: 64px; z-index: 46;
+  right: calc(12px + env(safe-area-inset-right));
+  bottom: calc(64px + env(safe-area-inset-bottom));
+  max-width: min(70vw, 340px); padding: 7px 12px;
+  border: 1px solid #7a6234; border-radius: 12px;
+  background: rgba(36,29,21,.94); color: #e8dcc0;
+  box-shadow: 0 3px 12px rgba(0,0,0,.45);
+  font: 13px/1.35 Georgia, serif; pointer-events: none;
+}
 .title-music-toggle {
   position: fixed; right: 12px; bottom: 12px; z-index: 45;
   right: calc(12px + env(safe-area-inset-right));

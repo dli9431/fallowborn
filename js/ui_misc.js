@@ -94,7 +94,7 @@ window.FB = window.FB || {};
     if (!status) return '';
     if (status.next === null) {
       return FB.T(
-        'Development {development}: every current settlement-growth threshold has been reached.', {
+        'Development {development} — the settlements have grown as far as the land allows.', {
           development:status.development
         });
     }
@@ -113,18 +113,18 @@ window.FB = window.FB || {};
     const status = FB.settlementDevelopment(s, pid);
     if (!status) return '';
     if (status.development === status.bookmark) {
-      return FB.T('Bookmark start: {development}; no net growth during play yet.', {
+      return FB.T('The county stood at development {development} when the chronicle began, and stands there still.', {
         development:status.bookmark
       });
     }
     return status.development > status.bookmark
-      ? FB.T('Bookmark start: {start}; growth during play: +{amount}.', {
+      ? FB.T('The county stood at development {start} when the chronicle began; it has flourished since, reaching {development}.', {
         start:status.bookmark,
-        amount:status.development - status.bookmark
+        development:status.development
       })
-      : FB.T('Bookmark start: {start}; change during play: {amount}.', {
+      : FB.T('The county stood at development {start} when the chronicle began; hard times have since brought it to {development}.', {
         start:status.bookmark,
-        amount:status.development - status.bookmark
+        development:status.development
       });
   }
   function childIdentityPreviewText(s, familyParent, spouse, playableLine) {
@@ -2337,6 +2337,7 @@ window.FB = window.FB || {};
   SH.foreignPolicyStatusText = foreignPolicyStatusText;
   SH.heirEligibilityText = heirEligibilityText;
   SH.hintFor = hintFor;
+  SH.captureModalView = captureModalView;
   SH.householdStandardLevelDesc = householdStandardLevelDesc;
   SH.householdStandardLevelName = householdStandardLevelName;
   SH.householdStandardName = householdStandardName;
@@ -2352,6 +2353,7 @@ window.FB = window.FB || {};
   SH.mobileLayoutNow = mobileLayoutNow;
   SH.mobileNavClosed = mobileNavClosed;
   SH.mobileNavClosedAll = mobileNavClosedAll;
+  SH.mobileNavEnsure = mobileNavEnsure;
   SH.mobileNavPush = mobileNavPush;
   SH.mobileNavRequestBack = mobileNavRequestBack;
   SH.modalHistoryBack = modalHistoryBack;
@@ -2374,6 +2376,7 @@ window.FB = window.FB || {};
   SH.replacePanelMarkup = replacePanelMarkup;
   SH.researchNumber = researchNumber;
   SH.resetPanelMarkup = resetPanelMarkup;
+  SH.restoreModalView = restoreModalView;
   SH.rivalryHeatName = rivalryHeatName;
   SH.roleName = roleName;
   SH.settlementDevelopmentText = settlementDevelopmentText;

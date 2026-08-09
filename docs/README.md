@@ -26,8 +26,9 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   the bank marked as the fallback. With only one bank downloaded, that bank simply loops. itch.io
   does not offer offline music downloads and shuffles all music included in its upload for variety.
 - **Desktop (mouse):** drag to pan the map, scroll to zoom (county names appear as you zoom
-  in — small counties name themselves only close up; closer still, settlement markers appear —
-  towns, cities, and villages you can click for their sheet), click provinces for details.
+  in — small counties name themselves only close up; closer still, settlements appear as
+  generated emblems — towns, cities, and villages you can click for their sheet), click
+  provinces for details.
 - **Desktop (keyboard only):** fully playable without a mouse —
   arrows pan · Shift+arrows hop between neighboring provinces · `PgUp`/`PgDn` zoom · `H` center
   home · `Enter` selects the province at screen center · `D` `S` `K` `L` `N` `C` open the

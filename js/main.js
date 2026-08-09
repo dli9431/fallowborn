@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.0';
+  FB.VERSION = '1.117.1';
   FB.CHANGELOG = [
+    { v: '1.117.1', date: '2026-08-09', changes: [
+      'Settlements are easier to read on the map: names sit beneath clearer house, town, and city emblems at close zoom, county land and borders render smoothly, and the map zooms much further in. Settlement names in the Land tab now open that settlement and center the map on its county.',
+      'The Guide gains a Back button when opened from another dialog, and Close simply dismisses it.',
+      'Music downloads now show their progress anywhere, and a finished download posts a toast instead of reopening the downloads window over the game.'
+    ] },
     { v: '1.117.0', date: '2026-08-08', changes: [
       'Towns, castles, abbeys, and other settlements now appear as shape-coded markers on the map at close zoom — tap one to inspect the site and its holders. Around 140 historical settlements are authored across the 867 and 1066 starts.'
     ] },

@@ -47,11 +47,13 @@ window.FB = window.FB || {};
   const kv = SH.kv;
   const largeListRowAttrs = SH.largeListRowAttrs;
   const largeListStateLabel = SH.largeListStateLabel;
+  const captureModalView = SH.captureModalView;
   const largeListSurfaceHtml = SH.largeListSurfaceHtml;
   const largeListViews = SH.largeListViews;
   const livelihoodNote = SH.livelihoodNote;
   const menText = SH.menText;
   const mobileLayoutNow = SH.mobileLayoutNow;
+  const mobileNavEnsure = SH.mobileNavEnsure;
   const mobileNavClosed = SH.mobileNavClosed;
   const mobileNavClosedAll = SH.mobileNavClosedAll;
   const mobileNavPush = SH.mobileNavPush;
@@ -69,6 +71,7 @@ window.FB = window.FB || {};
   const positionDesc = SH.positionDesc;
   const positionEffectText = SH.positionEffectText;
   const positionName = SH.positionName;
+  const restoreModalView = SH.restoreModalView;
   const rarityName = SH.rarityName;
   const realmStandingContext = SH.realmStandingContext;
   const refreshLargeListKeyhints = SH.refreshLargeListKeyhints;
@@ -15832,20 +15835,42 @@ window.FB = window.FB || {};
         : FB.T('The browser did not report its available storage.');
     });
 
+    /* while the downloads dialog is not on screen, a small fixed chip over
+       the page carries the same progress — a download started from the
+       title menu stays visible after the player enters the game */
+    function dlChip() {
+      let el = $('music-dl-chip');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'music-dl-chip';
+        el.className = 'music-dl-chip hidden';
+        document.body.appendChild(el);
+      }
+      return el;
+    }
     function progress(done, total, bytes, totalBytes) {
-      const note = $('music-download-progress');
-      if (!note) return;
-      note.classList.remove('hidden');
-      note.textContent = FB.T('Downloading {done}/{total} · {bytes}/{size}', {
+      const text = FB.T('Downloading {done}/{total} · {bytes}/{size}', {
         done:done, total:total,
         bytes:music.formatBytes(bytes), size:music.formatBytes(totalBytes)
       });
-      $('music-cancel-download').classList.remove('hidden');
+      const note = $('music-download-progress');
+      if (note) {
+        note.classList.remove('hidden');
+        note.textContent = text;
+        $('music-cancel-download').classList.remove('hidden');
+      }
+      const chip = dlChip();
+      chip.textContent = '🎵 ' + text;
+      chip.classList.toggle('hidden', !!note);
     }
     function finished(error) {
+      const chip = $('music-dl-chip');
+      if (chip) chip.classList.add('hidden');
       if (error && error.message !== 'Download cancelled') UI.toast('Music download failed.');
       else if (!error) UI.toast('Music is ready for offline play.');
-      UI.showMusicDownloads(true);
+      /* refresh the dialog only when it is open — a finishing download must
+         never pop it over the game */
+      if ($('music-download-progress')) UI.showMusicDownloads(true);
     }
     document.querySelectorAll('[data-music-download]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -16820,10 +16845,22 @@ window.FB = window.FB || {};
       }
       h += '</div></div>';
     }
+    /* entered from another dialog (a context modal or the menu): offer a
+       Back button that returns to it; Close always dismisses the guide */
+    const fromModal = !$('genmodal').classList.contains('hidden');
+    let backView = null;
     h += '</div><div class="tech-empty hidden" id="guide-empty">' +
       esc(FB.T('No guide entries match this search.')) +
-      '</div><div class="gm-footer"><button class="btn" id="guide-close">' +
+      '</div><div class="gm-footer">' +
+      (fromModal ? '<button class="btn" id="guide-back">' + esc(FB.T('Back')) + '</button>' : '') +
+      '<button class="btn" id="guide-close">' +
       esc(FB.T('Close')) + '</button></div>';
+    if (fromModal && !mobileNavEnsure()) {
+      /* no mobile history layer will capture the context dialog, so its
+         live nodes (listeners and all) move aside; Back restores them */
+      backView = {};
+      captureModalView(backView);
+    }
     openModal(FB.T('Guide'), h, {
       modalClass:'fullsheet-modal guide-modal', historyView:true
     });
@@ -16870,8 +16907,14 @@ window.FB = window.FB || {};
         UI.showTechDetail(button.dataset.guideTech);
       });
     });
+    if (fromModal) {
+      $('guide-back').addEventListener('click', function () {
+        if (backView) restoreModalView(backView);
+        else modalHistoryBack(function () { UI.closeModal(); });
+      });
+    }
     $('guide-close').addEventListener('click', function () {
-      if (options.closeToGame) {
+      if (options.closeToGame || fromModal) {
         UI.closeModal();
         return;
       }

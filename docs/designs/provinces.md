@@ -40,10 +40,16 @@ threshold that will actually change something, skipping thresholds an authored b
 already satisfies. `FB.siteVisible`/`FB.siteKindRank` give the map renderer an
 allocation-free visibility/kind read per compiled record.
 
-Close zoom adds a settlement marker layer (`js/mapview.js`): county heads and authored
-cities from intermediate zoom, every visible settlement at detailed zoom, with
-shape-coded kind markers (never color alone), deterministic label-collision rejection,
-and county labels stepping aside where they collide. Tapping a marker in ordinary
+Close zoom adds a settlement marker layer (`js/mapview.js`), gated so ordinary map
+movement never pays for it: nothing below zoom 6, county heads and authored cities as
+bare shape-coded markers (never color alone) from zoom 6, every visible settlement as
+a procedural emblem generated from the site slug (`js/siteart.js` — cottages, a
+towered town, or a walled city per live kind) from zoom 12 with its name label,
+deterministic label-collision rejection that treats drawn emblems as obstacles,
+county labels stepping aside where they collide, a flat per-county backdrop with
+anti-aliased vector county borders from zoom 6, and an 80x maximum zoom for dense
+clusters.
+Tapping a marker in ordinary
 browsing selects its parent county and opens the universal settlement sheet
 (`UI.showSettlement`), which is read-only abroad and keeps its construction/demolition
 authorization inside the sheet; every explicit county-targeting mode (new-game pick,
@@ -98,7 +104,9 @@ pan clamp; dragging therefore remains stable while the other axis can still move
 **Selection highlights are group-aware.** `FB.map.select(pid, groupOf)` (mapview.js) keeps
 the political and terrain colors of every province sharing the clicked one's group key,
 places a cool shade over other land, mutes outside labels, and traces both the group's
-perimeter and the exact selected county with zoom-independent two-tone lines. The accent
+perimeter and the exact selected county with zoom-independent two-tone lines — crisp
+pixel-edge outlines at ordinary zooms, swapped in the close-zoom band for smoothed
+marching-squares contours that coincide with the vector county borders. The accent
 is a browser-local preference. It also supplies the independent player realm's displayed
 political color without changing the saved realm color; other realms retain their authored
 colors. A second browser-local opacity preference scales that color's contribution from

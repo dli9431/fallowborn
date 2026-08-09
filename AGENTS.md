@@ -155,7 +155,7 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `data/traits.js`, `data/economy.js`, the generated `data/music_catalog.js`, then ten event packs
   (`events_common/peasant/paths/noble/world/war/council/parliament/travel/tournament.js`).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
-  model → music → portrait → world → economy → armies → mapview → events → actions → council →
+  model → music → portrait → siteart → world → economy → armies → mapview → events → actions → council →
   parliament → ui (ui_misc → ui_panels → ui_topbar → ui_modals) → keys → save → mods →
   main`. The four `ui_*.js` files are one system split for size: `ui_misc.js` loads first
   and owns the shared internals (`FB.ui._shared`) the other three bind at load, so their
@@ -259,6 +259,8 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/model.js` — characters, dynasties, traits, titles.
 - `js/music.js` - Opus playback, contextual banks, shuffle history, preferences, and offline downloads.
 - `js/portrait.js` — procedural portraits/heraldry.
+- `js/siteart.js` — procedural settlement emblems for the detailed map (deterministic per
+  site slug and kind; one fixed canvas cached per site, scaled at draw).
 - `js/util.js` — RNG, projection, helpers.
 - `js/keys.js`, `js/save.js`, `js/mods.js` — keyboard, persistence, runtime mods.
 - `js/messages.js`, `js/i18n.js` — durable saved-message descriptors; localization catalog lookup and locale lifecycle.

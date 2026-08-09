@@ -233,7 +233,7 @@ test('bookmark switching restores exact compiled sites and clears stale markers'
     });
 
     /* detailed zoom produces hit targets, then the switch must drop them */
-    await page.evaluate(function () { FB.map.centerOn('roma', 3); });
+    await page.evaluate(function () { FB.map.centerOn('roma', 13); });
     await waitForUiRefresh(page);
     const beforeSwitch = await page.evaluate(function () {
       return FB.map.visibleSites.length;
@@ -378,55 +378,189 @@ test('zoom tiers control settlement hit targets and visibility',
     await startGame(page, testInfo);
     await page.evaluate(function () { FB.game.setPaused(true); });
 
-    /* strategic zoom: no settlement hit targets at all */
+    /* strategic zoom: no settlement hit targets at all — the layer only
+       exists at close zoom */
     await page.evaluate(function () { FB.map.fitView(); FB.map.request(); });
     await waitForUiRefresh(page);
     const strategic = await page.evaluate(function () {
       return { zoom:FB.map.zoom, targets:FB.map.visibleSites.length };
     });
-    expect(strategic.zoom).toBeLessThan(1.3);
+    expect(strategic.zoom).toBeLessThan(6);
     expect(strategic.targets).toBe(0);
 
-    /* detailed zoom: every hit target is a currently visible site */
-    await page.evaluate(function () { FB.map.centerOn('roma', 3); });
+    /* detailed zoom (>= 12): every hit target is a currently visible site
+       drawn as a procedural emblem (hs > 0) that registers its own obstacle
+       rect */
+    await page.evaluate(function () { FB.map.centerOn('roma', 13); });
     await waitForUiRefresh(page);
     const detailed = await page.evaluate(function () {
       const s = FB.state;
-      let allVisible = true, romaHead = null;
+      let allVisible = true, allEmblems = true, romaHead = null;
       for (const hit of FB.map.visibleSites) {
         if (!FB.siteVisible(s, hit)) allVisible = false;
+        if (!(hit.hs > 0)) allEmblems = false;
         if (hit.pid === 'roma' && hit.index === 0) romaHead = hit;
       }
       return {
         targets:FB.map.visibleSites.length,
         allVisible:allVisible,
+        allEmblems:allEmblems,
         romaHead:!!romaHead,
-        labels:FB.map._rectCount
+        blockedRects:FB.map._rectCount,
+        smoothing:FB.map.ctx.imageSmoothingEnabled,
+        flatBase:!!FB.map.baseFlat && FB.map.baseFlat.width === FB.world.W
       };
     });
     expect(detailed.targets).toBeGreaterThan(0);
     expect(detailed.allVisible).toBe(true);
+    expect(detailed.allEmblems).toBe(true);
     expect(detailed.romaHead).toBe(true);
-    /* label collision may reject labels but never removes markers */
-    expect(detailed.labels).toBeLessThanOrEqual(detailed.targets);
+    /* label collision may reject labels but never removes markers, and every
+       drawn emblem blocks later labels with its own rect */
+    expect(detailed.blockedRects).toBeGreaterThanOrEqual(detailed.targets);
+    /* the settlement close-up band blits a flat per-county backdrop with
+       smoothing on behind the emblems and the vector border pass */
+    expect(detailed.smoothing).toBe(true);
+    expect(detailed.flatBase).toBe(true);
 
-    /* intermediate zoom: county heads and authored cities only */
-    await page.evaluate(function () { FB.map.centerOn('roma', 2.0); });
+    /* a selection keeps both outline variants: the pixel-edge staircase for
+       ordinary zooms and the smoothed contour that coincides with the vector
+       borders in the close-zoom band */
+    const outlines = await page.evaluate(function () {
+      FB.map.select('roma');
+      return {
+        stair:!!FB.map.selectedOutline,
+        smooth:!!FB.map.selectedOutlineSmooth,
+        groupStair:!!FB.map.groupOutline,
+        groupSmooth:!!FB.map.groupOutlineSmooth
+      };
+    });
+    expect(outlines.stair).toBe(true);
+    expect(outlines.smooth).toBe(true);
+    expect(outlines.groupStair).toBe(true);
+    expect(outlines.groupSmooth).toBe(true);
+
+    /* intermediate zoom (>= 6): county heads and authored cities only, shape
+       markers with no emblem hit sizing and no name labels (labels live only
+       in the emblem band); zoom is set directly because centerOn's zoomTo
+       only ever raises the level */
+    await page.evaluate(function () {
+      FB.map.zoom = 7;
+      FB.map.centerOn('roma');
+    });
     await waitForUiRefresh(page);
     const intermediate = await page.evaluate(function () {
       const s = FB.state;
-      let rule = true;
+      let rule = true, shapes = true;
       for (const hit of FB.map.visibleSites) {
+        if (hit.hs !== 0) shapes = false;
         const info = FB.world.sitesByProv[hit.pid];
         const rec = info && info.list[hit.index];
         if (!rec) { rule = false; continue; }
         const rank = FB.siteKindRank(s, rec);
         if (!(rec.index === 0 || (rec.authored && rank === 2))) rule = false;
       }
-      return { targets:FB.map.visibleSites.length, rule:rule };
+      return {
+        targets:FB.map.visibleSites.length, rule:rule, shapes:shapes,
+        rects:FB.map._rectCount
+      };
     });
     expect(intermediate.targets).toBeGreaterThan(0);
     expect(intermediate.rule).toBe(true);
+    expect(intermediate.shapes).toBe(true);
+    /* bare markers register no label or emblem obstacle rects at all */
+    expect(intermediate.rects).toBe(0);
+
+    /* mid zoom (2..6) has no settlement layer and keeps the crisp pixel
+       raster */
+    await page.evaluate(function () {
+      FB.map.zoom = 3;
+      FB.map.centerOn('roma');
+    });
+    await waitForUiRefresh(page);
+    const midBand = await page.evaluate(function () {
+      return {
+        targets:FB.map.visibleSites.length,
+        smoothing:FB.map.ctx.imageSmoothingEnabled
+      };
+    });
+    expect(midBand.targets).toBe(0);
+    expect(midBand.smoothing).toBe(false);
+  });
+
+test('settlement emblems are deterministic per site and distinct per kind',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function pixels(cv) {
+        const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+        let out = '';
+        for (let i = 0; i < d.length; i += 61) out += d[i] + ',';
+        return out;
+      }
+      const city = FB.siteArt(2, 'paris');
+      const cached = FB.siteArt(2, 'paris');
+      const freshPixels = pixels(FB.siteArt(2, 'paris'));
+      const distinct = {};
+      let distinctCities = 0;
+      for (const slug of ['paris', 'london', 'roma', 'cordoba', 'aachen', 'venezia']) {
+        distinct[pixels(FB.siteArt(2, slug))] = 1;
+      }
+      for (const key in distinct) distinctCities++;
+      const corner = city.getContext('2d').getImageData(0, 0, 1, 1).data;
+      return {
+        cachedInstance:city === cached,
+        stablePixels:pixels(city) === freshPixels,
+        size:[city.width, city.height],
+        kindDistinct:pixels(city) !== pixels(FB.siteArt(1, 'paris')) &&
+          pixels(city) !== pixels(FB.siteArt(0, 'paris')) &&
+          pixels(FB.siteArt(1, 'paris')) !== pixels(FB.siteArt(0, 'paris')),
+        distinctCities:distinctCities,
+        transparentCorner:corner[3] === 0
+      };
+    });
+
+    expect(result.cachedInstance).toBe(true);
+    expect(result.stablePixels).toBe(true);
+    expect(result.size[0]).toBe(result.size[1]);
+    expect(result.size[0]).toBeGreaterThanOrEqual(64);
+    expect(result.kindDistinct).toBe(true);
+    expect(result.distinctCities).toBeGreaterThan(1);
+    expect(result.transparentCorner).toBe(true);
+  });
+
+test('the map zooms past the old ceiling into dense settlement clusters',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      FB.game.setPaused(true);
+      const rec = FB.world.sitesByProv.paris.list[0];
+      FB.map.centerOn('paris', 3);
+      /* keep the head site pinned at the canvas center while zooming in */
+      FB.map.viewX = rec.x - FB.map.canvas.width / FB.map.zoom / 2;
+      FB.map.viewY = rec.y - FB.map.canvas.height / FB.map.zoom / 2;
+      for (let i = 0; i < 80; i++) FB.map.zoomIn();
+      FB.map.request();
+      return { zoom:FB.map.zoom, max:FB.map.maxZoom, site:rec.site };
+    });
+    await waitForUiRefresh(page);
+
+    expect(result.max).toBeGreaterThanOrEqual(80);
+    expect(result.zoom).toBe(result.max);
+
+    /* at maximum zoom the pinned site resolves to exactly one emblem target */
+    const emblem = await page.evaluate(function (slug) {
+      const out = [];
+      for (const hit of FB.map.visibleSites) {
+        const rec = FB.world.sitesByProv[hit.pid].list[hit.index];
+        if (rec.site === slug) out.push(hit.hs);
+      }
+      return out;
+    }, result.site);
+    expect(emblem.length).toBe(1);
+    expect(emblem[0]).toBeGreaterThan(0);
   });
 
 test('mouse and touch taps open the exact settlement with kind-shaped precedence',
@@ -436,7 +570,7 @@ test('mouse and touch taps open the exact settlement with kind-shaped precedence
     const marker = await page.evaluate(function () {
       FB.game.setPaused(true);
       const pid = FB.state.player.provinceId; // london: authored county head
-      FB.map.centerOn(pid, 2.0);
+      FB.map.centerOn(pid, 7.0);
       FB.map.request();
       return pid;
     });
@@ -486,6 +620,88 @@ test('mouse and touch taps open the exact settlement with kind-shaped precedence
     await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
     await expect(page.locator('#gm-title')).toContainText(point.name);
     await page.keyboard.press('Escape');
+  });
+
+test('Land tab settlement names open the exact sheet and center the map county',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    /* an interior foreign county: every settlement name is a link, not just
+       demesne ones */
+    const pid = await page.evaluate(function () {
+      const s = FB.state;
+      let foreign = null;
+      for (const pr of FB.world.provs) {
+        if (pr.wasteland) continue;
+        if (pr.cx < 120 || pr.cy < 120 ||
+            pr.cx > FB.world.W - 120 || pr.cy > FB.world.H - 120) continue;
+        const holder = (s.holder && s.holder[pr.id]) || s.owner[pr.id];
+        if (holder && holder !== 'player') { foreign = pr.id; break; }
+      }
+      FB.map.zoom = 4;
+      FB.map.select(foreign);
+      FB.ui.showTab('prov', { history:false });
+      return foreign;
+    });
+    await waitForUiRefresh(page);
+
+    const names = await page.evaluate(function (id) {
+      return FB.settlementsOf(FB.state, id).map(function (rec) { return rec.name; });
+    }, pid);
+    const links = page.locator('#tab-prov .settlink');
+    expect(await links.count()).toBe(names.length);
+    expect(names.length).toBeGreaterThan(0);
+
+    /* clicking the head settlement opens its sheet and centers the map on
+       the parent county */
+    await links.nth(0).click();
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#gm-title')).toContainText(names[0]);
+    const centered = await page.evaluate(function (id) {
+      const pr = FB.world.byId[id];
+      return {
+        dx:Math.abs(FB.map.viewX + FB.map.canvas.width / FB.map.zoom / 2 - pr.cx),
+        dy:Math.abs(FB.map.viewY + FB.map.canvas.height / FB.map.zoom / 2 - pr.cy)
+      };
+    }, pid);
+    expect(centered.dx).toBeLessThan(1);
+    expect(centered.dy).toBeLessThan(1);
+    await page.keyboard.press('Escape');
+  });
+
+test('the guide returns to the context modal on Back and dismisses on Close',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const pid = await page.evaluate(function () {
+      const id = FB.state.player.provinceId;
+      FB.ui.showSettlement(id, 0);
+      return id;
+    });
+    const name = await page.evaluate(function (id) {
+      return FB.settlementsOf(FB.state, id)[0].name;
+    }, pid);
+    await expect(page.locator('#gm-title')).toContainText(name);
+
+    /* entering the guide from the sheet offers a Back button that restores
+       the sheet — live nodes, listeners and all */
+    await page.locator('#settlement-guide').click();
+    await expect(page.locator('#gm-title')).toContainText('Guide');
+    await expect(page.locator('#guide-back')).toHaveCount(1);
+    await page.locator('#guide-back').click();
+    await expect(page.locator('#gm-title')).toContainText(name);
+    /* the restored sheet's own buttons still work */
+    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    /* Close dismisses the guide outright — it never reopens the menu */
+    await page.evaluate(function (id) { FB.ui.showSettlement(id, 0); }, pid);
+    await page.locator('#settlement-guide').click();
+    await expect(page.locator('#gm-title')).toContainText('Guide');
+    await page.locator('#guide-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
 test('targeting modes keep the parent county before any settlement sheet',

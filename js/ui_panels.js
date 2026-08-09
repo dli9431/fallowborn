@@ -3894,17 +3894,15 @@ window.FB = window.FB || {};
           (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1))));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
-        // in your own demesne a settlement is a button: it opens the buildings
-        // standing in THAT settlement and what each provides (UI.showSettlement)
+        // every settlement is a button: it opens that settlement's sheet
+        // (UI.showSettlement) and centers the map on its parent county
         const own = FB.demesne(s).indexOf(pid) >= 0;
         h += '<div class="settblock land-settlements"><span>' +
           esc(FB.T('Settlements')) + '</span>' +
           '<div class="settlist">' + setts.map(function (st, si) {
             const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
-            return own
-              ? '<button class="linklike settlink" data-sett="' + si + '" title="' +
-                esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>'
-              : '<span>' + label + '</span>';
+            return '<button class="linklike settlink" data-sett="' + si + '" title="' +
+              esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>';
           }).join('') + '</div></div>';
         if (own) {
           h += '<div class="hint">' + esc(FB.T('Each settlement keeps its own buildings — tap one to see them and raise more.')) + '</div>';
@@ -3915,7 +3913,7 @@ window.FB = window.FB || {};
         landKv('Economic development',
           (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         landKv('Settlement growth', esc(settlementDevelopmentText(s, pid)), true) +
-        landKv('Historical starting point',
+        landKv('Chronicle growth',
           esc(bookmarkDevelopmentText(s, pid)), true) +
         (realm && FB.techUiRelevant(s) ? landKv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
@@ -4031,7 +4029,7 @@ window.FB = window.FB || {};
       UI.showCapitalRelocation(pid);
     });
     document.querySelectorAll('#tab-prov .settlink').forEach(function (btn) {
-      btn.addEventListener('click', function () { UI.showSettlement(pid, +btn.dataset.sett); });
+      btn.addEventListener('click', function () { FB.map.centerOn(pid); UI.showSettlement(pid, +btn.dataset.sett); });
     });
   }
 

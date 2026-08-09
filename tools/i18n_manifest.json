@@ -47065,6 +47065,16 @@
         "text": "The venture in {destination} barely returned a coin."
       }
     },
+    "src.0886abbb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "The county stood at development {development} when the chronicle began, and stands there still."
+      }
+    },
     "src.088c1531": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54511,16 +54521,6 @@
       ],
       "source": {
         "text": "Coin spent now buys quiet favor later."
-      }
-    },
-    "src.1a047c61": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Historical starting point"
       }
     },
     "src.1a05f182": {
@@ -85179,6 +85179,16 @@
         "text": "Specialized gearing applies water and wind power beyond grain grinding."
       }
     },
+    "src.695a4c7d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "The county stood at development {start} when the chronicle began; it has flourished since, reaching {development}."
+      }
+    },
     "src.695b61f5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91998,6 +92008,16 @@
         "text": "A clear wrong order can be better than two right ones."
       }
     },
+    "src.7a766df4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "music-dl-chip hidden"
+      }
+    },
     "src.7a7a9dad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95931,16 +95951,6 @@
         "text": "The captain wants men for a night raid on the enemy pickets — quiet feet, quick knives, and no promises about the morning."
       }
     },
-    "src.83e8e273": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Bookmark start: {start}; change during play: {amount}."
-      }
-    },
     "src.83ec3fd5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96972,16 +96982,6 @@
       ],
       "source": {
         "text": "Standing contribution"
-      }
-    },
-    "src.861b7035": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Development {development}: every current settlement-growth threshold has been reached."
       }
     },
     "src.8627072f": {
@@ -111315,6 +111315,16 @@
         "text": "camp"
       }
     },
+    "src.aa0fca32": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Development {development} — the settlements have grown as far as the land allows."
+      }
+    },
     "src.aa23b380": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118500,16 +118510,6 @@
       ],
       "source": {
         "text": "Bari"
-      }
-    },
-    "src.bcbed629": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Bookmark start: {development}; no net growth during play yet."
       }
     },
     "src.bcbfb29e": {
@@ -131599,16 +131599,6 @@
         "text": "The authorization carries, and your name leads it. The liege’s gratitude is real, and publicly given."
       }
     },
-    "src.de860909": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Bookmark start: {start}; growth during play: +{amount}."
-      }
-    },
     "src.de87fc01": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135133,6 +135123,16 @@
         "text": "A cracked pate"
       }
     },
+    "src.e727860d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Chronicle growth"
+      }
+    },
     "src.e728fc5d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136333,6 +136333,16 @@
       ],
       "source": {
         "text": "Find shelter and wait it out."
+      }
+    },
+    "src.ea28a0d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "The county stood at development {start} when the chronicle began; hard times have since brought it to {development}."
       }
     },
     "src.ea295e25": {
@@ -152487,38 +152497,6 @@
         "text": "Bold venture to {destination}"
       }
     },
-    "ui:Bookmark start: {development}; no net growth during play yet.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "development"
-      ],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Bookmark start: {development}; no net growth during play yet."
-      }
-    },
-    "ui:Bookmark start: {start}; change during play: {amount}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "amount",
-        "start"
-      ],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Bookmark start: {start}; change during play: {amount}."
-      }
-    },
-    "ui:Bookmark start: {start}; growth during play: +{amount}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "amount",
-        "start"
-      ],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "Bookmark start: {start}; growth during play: +{amount}."
-      }
-    },
     "ui:Border targets": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -154898,14 +154876,14 @@
         "text": "Development"
       }
     },
-    "ui:Development {development}: every current settlement-growth threshold has been reached.": {
+    "ui:Development {development} — the settlements have grown as far as the land allows.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "development"
       ],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Development {development}: every current settlement-growth threshold has been reached."
+        "text": "Development {development} — the settlements have grown as far as the land allows."
       }
     },
     "ui:Diplomacy": {
@@ -167981,6 +167959,38 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The county screen separates its authored bookmark start from later growth."
+      }
+    },
+    "ui:The county stood at development {development} when the chronicle began, and stands there still.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "development"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "The county stood at development {development} when the chronicle began, and stands there still."
+      }
+    },
+    "ui:The county stood at development {start} when the chronicle began; hard times have since brought it to {development}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "development",
+        "start"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "The county stood at development {start} when the chronicle began; hard times have since brought it to {development}."
+      }
+    },
+    "ui:The county stood at development {start} when the chronicle began; it has flourished since, reaching {development}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "development",
+        "start"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "The county stood at development {start} when the chronicle began; it has flourished since, reaching {development}."
       }
     },
     "ui:The county’s current development derives how many places appear and whether the leading ones are villages, towns, or a city, never below a historical place’s authored standing.": {

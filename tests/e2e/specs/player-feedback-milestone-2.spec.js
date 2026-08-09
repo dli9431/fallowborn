@@ -108,8 +108,7 @@ test('the role orientation is a focused sheet with a Guide deep link',
     await expect(page.locator('#guide-entry-detail-role-tier-1'))
       .toContainText('Good first actions');
     await page.getByRole('button', { name:'Close', exact:true }).click();
-    // desktop Guide close falls back to the menu; Resume clears the modal
-    await page.getByRole('button', { name:/Resume$/ }).click();
+    // Guide close dismisses the guide outright — no menu detour
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
     await page.evaluate(function () {
@@ -244,7 +243,7 @@ test('settlement growth reports every derived threshold and the bookmark baselin
     await expect(page.locator('.settlement-development-summary'))
       .toContainText('County development');
     await expect(page.locator('.settlement-development-summary'))
-      .toContainText('Bookmark start');
+      .toContainText('chronicle began');
     await expect(page.getByRole('button', {
       name:'Guide: settlements and development', exact:true
     })).toBeVisible();

@@ -77,7 +77,11 @@ Only play.fallowborn.com exposes offline downloads. A player can download any co
 entire soundtrack. A bank is marked complete only after all its tracks are cached. Offline
 selection uses the best matching complete bank; if there is no match, it uses the most recently
 chosen fallback bank. One downloaded bank therefore loops by itself. Browser storage is evictable,
-so the engine checks the actual cache rather than trusting completion markers alone.
+so the engine checks the actual cache rather than trusting completion markers alone. Download
+progress shows inside the downloads dialog while it is open and on a small floating chip when it
+is not, so a download started from the title menu stays visible inside the game. Finishing toasts
+the result and refreshes the dialog only when it is already open — it never pops the dialog over
+the game.
 
 The service worker's app shell includes the intro but excludes gameplay tracks. The title's
 **Game available offline** message refers to the core game, not to every music bank.
