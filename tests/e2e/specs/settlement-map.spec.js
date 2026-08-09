@@ -179,24 +179,28 @@ test('authored and generated settlement data is deterministic and read-only',
       };
       const roma867 = FB.settlementsOf(s, 'roma');
       const romaAgain = FB.settlementsOf(s, 'roma');
-      /* an entirely un-authored county keeps fully generated slots */
-      let generatedPid = null;
+      /* a county the real-world fill only partly covers keeps deterministic
+         generated slots behind its real presentations */
+      let generatedPid = null, generatedRecs = null;
       for (const pr of FB.world.provs) {
-        if (!pr.wasteland && pr.dev0 <= 3 && pr.area >= 500 && FB.world.sitesByProv[pr.id] &&
-            !FB.world.sitesByProv[pr.id].authored) {
+        const info = FB.world.sitesByProv[pr.id];
+        if (pr.wasteland || !info) continue;
+        const gen = info.list.filter(function (rec) { return !rec.authored; });
+        if (gen.length >= 2) {
           generatedPid = pr.id;
+          generatedRecs = gen;
           break;
         }
       }
-      const generated = FB.settlementsOf(s, generatedPid);
-      const generatedAgain = FB.settlementsOf(s, generatedPid);
+      const generated = generatedPid ? FB.settlementsOf(s, generatedPid) : [];
+      const generatedAgain = generatedPid ? FB.settlementsOf(s, generatedPid) : [];
       /* generated slots spread across a county with room instead of
          stacking on its centroid */
       let minGap = Infinity;
-      for (let i = 0; i < generated.length; i++) {
-        for (let j = i + 1; j < generated.length; j++) {
-          const dx = generated[i].x - generated[j].x;
-          const dy = generated[i].y - generated[j].y;
+      for (let i = 0; generatedRecs && i < generatedRecs.length; i++) {
+        for (let j = i + 1; j < generatedRecs.length; j++) {
+          const dx = generatedRecs[i].x - generatedRecs[j].x;
+          const dy = generatedRecs[i].y - generatedRecs[j].y;
           const d = Math.sqrt(dx * dx + dy * dy);
           if (d < minGap) minGap = d;
         }
@@ -205,7 +209,7 @@ test('authored and generated settlement data is deterministic and read-only',
         roma:roma867,
         romaStable:JSON.stringify(roma867) === JSON.stringify(romaAgain),
         generatedPid:generatedPid,
-        generated:generated,
+        generatedRecs:generatedRecs,
         generatedStable:JSON.stringify(generated) === JSON.stringify(generatedAgain),
         minGap:minGap,
         rngUnchanged:JSON.stringify(FB.getRngState()) === JSON.stringify(before.rng),
@@ -222,9 +226,12 @@ test('authored and generated settlement data is deterministic and read-only',
     expect(typeof result.roma[0].x).toBe('number');
     expect(typeof result.roma[0].y).toBe('number');
     expect(result.romaStable).toBe(true);
-    expect(result.generated.length).toBeGreaterThanOrEqual(2);
-    expect(result.generated[0]).toMatchObject({ kind:'village', authored:false });
-    expect(result.generated[0].site).toBe('generated__' + result.generatedPid + '__0');
+    expect(result.generatedPid).toBeTruthy();
+    expect(result.generatedRecs.length).toBeGreaterThanOrEqual(2);
+    for (const rec of result.generatedRecs) {
+      expect(rec).toMatchObject({ kind:'village', authored:false });
+      expect(rec.site).toMatch(new RegExp('^generated__' + result.generatedPid + '__\\d+$'));
+    }
     expect(result.generatedStable).toBe(true);
     /* generated slots spread across a county with room instead of stacking
        on its centroid */

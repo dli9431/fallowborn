@@ -404,5 +404,10 @@ All art is procedural (canvas-drawn map, generated heraldry) or standard system 
 no external assets are used, so the game folder is fully self-contained.
 Written in dependency-free vanilla JavaScript.
 
+Settlement names and locations in `data/settlements_real.js` are derived from the
+[GeoNames](https://www.geonames.org/) geographical database (CC BY 4.0), with optional
+top-up data from OpenStreetMap (© OpenStreetMap contributors, ODbL);
+the curated historical layer in `data/settlements.js` is original work.
+
 Source available under the [PolyForm Noncommercial License 1.0.0](../LICENSE) — free to
 play, mod, and share noncommercially.

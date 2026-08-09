@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.2';
+  FB.VERSION = '1.117.3';
   FB.CHANGELOG = [
+    { v: '1.117.3', date: '2026-08-09', changes: [
+      'Settlements now use real place names and locations — nearly three thousand towns and villages from the GeoNames database fill every county, alongside the curated historical sites.'
+    ] },
     { v: '1.117.2', date: '2026-08-09', changes: [
       'Counties grow more settlements as they develop — six or seven in the most developed lands — and generated villages now spread across the county instead of clustering around its head.'
     ] },

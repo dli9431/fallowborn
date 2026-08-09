@@ -26,6 +26,11 @@ blob-report/
 __pycache__/
 *.pyc
 
+# Overpass response cache and GeoNames dumps for tools/settlement_import.py
+# (re-fetchable, large)
+tools/osm_overpass_cache.json
+tools/geonames_cache/
+
 # Secrets
 .env
 .env.*

@@ -331,7 +331,7 @@ province objects; mods merge full objects as before:
   initialize fresh games only; an existing save's `state.dev` values remain
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
-- `settlements` — optional ordered list of up to four historical settlement
+- `settlements` — optional ordered list of up to eight historical settlement
   presentations for this county, e.g.
   `"settlements": [{ "site": "praha", "name": "Prague", "kind": "town" }]`.
   Index 0 is the county head. `site` references the shared physical-site table
@@ -340,6 +340,10 @@ province objects; mods merge full objects as before:
   a complete replacement of the authored slots, never a patch: array position is a
   saved-property reference, so appending is safe but reordering or inserting ahead
   of an existing slot moves saved buildings and plots between named places.
+  An entry may add `"fill": true`: the presentation still replaces the slot's
+  generated name/location, but it does not force early visibility — development
+  reveals it on the normal thresholds (the shipped
+  `data/settlements_real.js` uses this for its OpenStreetMap-derived fill).
 - Adjacency is computed automatically from the generated shapes. For connections across
   water, add a `straits` pair. Field armies treat an unclassified pair as a `narrow`
   crossing. To opt into a slower passage, add the same lexicographically sorted county
@@ -1733,7 +1737,8 @@ reference for buildings, land plots, manors, and enterprises) and the physical *
 enters a save). `FB.settlementsOf` returns the currently visible records as
 `{site, name, kind, x, y, authored}`; the visible count follows the legacy rule
 (2 + a plain hash bit of the province id, never the seeded RNG, +1 at dev 3/5/7/9) raised to
-the authored count, and generated names still come from culture-flavored parts in
+the curated (non-`fill`) authored count, and generated names still come from
+culture-flavored parts in
 `FBDATA.settlementNames` (in `data/cultures.js`; the `settlementNames` mod key merges
 per-culture sets, `default` covers the rest). Size follows current development — the
 head grows village → town → city at dev 4/7, the second place becomes a town at 6 —
@@ -1741,6 +1746,17 @@ never below an authored baseline kind. The "Go into town…" deed lists them and
 `visit_village` / `visit_town` / `visit_city` — ordinary event data whose options are
 `require`-gated by tier, profession, and faith, with the chosen settlement's name in
 `{settlement}`. Replace those events to change what a day in town offers.
+
+**Real-world fill.** The shipped `data/settlements_real.js` is a generated file
+(`tools/settlement_import.py`, run manually — never at build or runtime) that appends
+GeoNames-derived presentations after the curated lists of `data/settlements.js`
+with `fill: true`: real names and locations for every slot the curated data does not
+cover, including a county-head entry named after the county itself, without forcing
+early visibility. Curated entries always win; where the geodata has too few named
+places (steppe, desert, tundra), the remaining slots keep generated names.
+An optional `--topup` pass adds places from OpenStreetMap.
+Settlement data: GeoNames geographical database (CC BY 4.0);
+top-up data © OpenStreetMap contributors, ODbL.
 
 **Physical sites.** The optional top-level `settlementSites` object merges by site id
 into `FBDATA.settlementSites`:
@@ -1757,7 +1773,7 @@ and latitude `y`. One slug denotes one physical place across every bookmark.
 may carry the ordered `settlements` list shown in *Adding a province*. Every entry's
 `site` must exist in the merged physical table. Bookmark validation reports invalid
 slugs, coordinates, kinds, missing sites, repeats within a county, a site assigned to
-two counties in one bookmark, wasteland lists, and lists over four entries; world
+two counties in one bookmark, wasteland lists, and lists over eight entries; world
 compilation additionally rejects a coordinate that lands implausibly far outside the
 declared county's raster. Reordering a published mod's settlement list can move saved
 property between named places even though the numeric save remains valid — append new

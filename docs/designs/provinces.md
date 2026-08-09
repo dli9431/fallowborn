@@ -16,12 +16,19 @@ the zero-based index inside one county — remains the canonical saved reference
 buildings, plots, manors, and enterprises. The physical *site* is a stable snake-case
 slug with one longitude/latitude in the shared `FBDATA.settlementSites` table
 (`data/settlements.js`); it is derived world data and never enters a save. A bookmark
-county may author a complete ordered `settlements` list of up to four `{site, name,
+county may author a complete ordered `settlements` list of up to eight `{site, name,
 kind}` presentations (index 0 is the county head; the name is a historical proper name,
 never localized; the kind is the bookmark baseline that live development may promote
 but never undercut). `data/settlements.js` authors both core bookmarks — every realm
 capital, faith seat, major port, high-development city, and place named by existing
 game content — and clones the lists onto the already-built bookmark province objects.
+The generated companion `data/settlements_real.js` (built by
+`tools/settlement_import.py` from the GeoNames database, CC BY 4.0)
+appends real-world presentations after the curated lists with `fill: true`: a fill
+entry replaces a slot's generated name/location but does not force early visibility —
+development reveals it on the normal thresholds. Counties with no curated list also
+gain a county-head entry named after the county itself; where the geodata offers
+too few named places, the remaining slots keep generated names.
 
 At world compilation (`compileSites` in `js/world.js`) every settled county receives an
 ordered record list: authored slots first (never renumbered), then deterministic
@@ -35,7 +42,7 @@ draws its own hash-derived angle and radius band scaled to the county, keeping a
 cells clear of the other sites where the county allows it instead of stacking on the
 centroid. `FB.settlementsOf(state, pid)` is the unchanged
 public projection: the visible count follows the legacy rule (2 + a hash bit, +1 at
-development 3, 5, 7, and 9) raised to the authored count, and each record carries `{site, name, kind, x, y,
+development 3, 5, 7, and 9) raised to the curated (non-`fill`) authored count, and each record carries `{site, name, kind, x, y,
 authored}` — callers reading only `name`/`kind` are unaffected. Kind thresholds: the
 head becomes at least a town at dev 4 and a city at 7, the second slot at least a town
 at 6, never below the authored baseline. `FB.settlementDevelopment` reports the next
@@ -81,7 +88,7 @@ site keeps one slug and one coordinate in the shared `FBDATA.settlementSites` ta
 across bookmarks while its displayed name and baseline kind stay per-bookmark. The two
 core bookmarks hold independently cloned arrays, so replacing one never mutates the
 other. Activation validates the table and every list (slug form, coordinate ranges,
-existing site references, at most four entries, no repeated site or name within a
+existing site references, at most eight entries, no repeated site or name within a
 county, no site assigned to two counties in one bookmark, none on a wasteland) before
 raster compilation checks county membership.
 

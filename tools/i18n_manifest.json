@@ -59411,6 +59411,16 @@
         "text": "Dismiss"
       }
     },
+    "src.265fdaf2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "settlements must be an array of 1–8 records."
+      }
+    },
     "src.26601501": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93582,16 +93592,6 @@
       ],
       "source": {
         "text": "Mechanical Escapement"
-      }
-    },
-    "src.7e60e766": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "settlements must be an array of 1–4 records."
       }
     },
     "src.7e636c0a": {

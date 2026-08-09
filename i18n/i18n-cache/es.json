@@ -1724,6 +1724,7 @@
   "264f8ac2": "Requiere Autoridad de la Corona {authority}; actualmente {current}.",
   "26526ae0": "Los señores del reino se reúnen ante la convocatoria de {liege}: pequeños negocios en su mayoría (una disputa de límites, una dote de viuda, una lectura de antiguos estatutos), pero cada banco es un par de orejas y cada receso un mercado de favores.",
   "265915f3": "Descartar",
+  "265fdaf2": "los asentamientos deben ser una matriz de 1 a 8 registros.",
   "26601501": "marcial",
   "26655334": "La manta resulta lo suficientemente común como para comprarla en tres mercados.",
   "267313fc": "Permanezca en la visita {days} días más antes de regresar a casa.",

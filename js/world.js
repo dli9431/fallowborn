@@ -216,8 +216,8 @@ window.FB = window.FB || {};
         continue;
       }
       var svList = sv.settlements;
-      if (!Array.isArray(svList) || !svList.length || svList.length > 4) {
-        fault('province ' + sv.id + ' settlements must be an array of 1–4 records.');
+      if (!Array.isArray(svList) || !svList.length || svList.length > 8) {
+        fault('province ' + sv.id + ' settlements must be an array of 1–8 records.');
         continue;
       }
       var svSites = {}, svNames = {};
@@ -841,9 +841,14 @@ window.FB = window.FB || {};
       if (pr.wasteland) continue;
       var authored = pr.settlements || [];
       var records = [];
-      var placed = [], seenNames = {};
+      var placed = [], seenNames = {}, forcedCount = 0;
       for (var ai = 0; ai < authored.length; ai++) {
         var entry = authored[ai];
+        /* fill: true presentations (data/settlements_real.js) replace a
+           slot's generated name/location with a real place but, unlike a
+           curated entry, do not force early visibility — development reveals
+           them on the normal thresholds. */
+        if (!entry.fill) forcedCount++;
         var geo = siteTable[entry.site];
         if (!geo) continue; // impossible after bookmark validation; defensive
         var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);
@@ -887,7 +892,7 @@ window.FB = window.FB || {};
       }
       world.sitesByProv[pr.id] = {
         list: records,
-        authored: authored.length,
+        authored: forcedCount,
         legacyBase: 2 + (strHash(pr.id) % 2)
       };
       for (var ri = 0; ri < records.length; ri++) world.sites.push(records[ri]);
