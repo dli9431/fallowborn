@@ -234,6 +234,10 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.cultures) for (const k in mod.cultures) FBDATA.cultures[k] = mod.cultures[k];
     if (mod.settlementNames) for (const k in mod.settlementNames) FBDATA.settlementNames[k] = mod.settlementNames[k];
+    /* Physical settlement sites merge by site id into the shared table.
+       Per-county `settlements` presentations ride inside complete bookmark or
+       legacy province replacements, never as a standalone patch. */
+    if (mod.settlementSites) mergeTable(FBDATA.settlementSites, mod.settlementSites);
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];

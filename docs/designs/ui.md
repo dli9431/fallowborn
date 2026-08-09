@@ -923,6 +923,31 @@ so the information remains accessible without relying on canvas color. All dialo
 use ordinary action buttons, number-key ordering, focus management, Escape/history
 rules, and the existing mobile bottom-sheet layout.
 
+## Settlement markers and the settlement sheet
+
+The canvas adds a settlement layer in screen space between the selection overlay and
+the army/objective/traveler passes. Strategic zoom is unchanged: county labels,
+capitals, armies, and travel only. Intermediate zoom (1.3) draws county heads and
+authored cities; detailed zoom (2.4) draws every currently visible settlement of a
+county and subordinates colliding county labels. Kind is shown by marker shape —
+circle village, square town, diamond city — never by color alone, with a ring marking
+the county head. Labels reject deterministically on rectangle overlap in priority
+order (kind, head status, authored status, province/index); a rejected label keeps
+its marker and tap target. Only markers drawn on the last frame are hit targets, in
+a reused `FB.map.visibleSites` list cleared on bookmark switches; hit radii are named
+screen-pixel constants (7 mouse, 15 touch/pen) with overlap resolved by nearest
+center, then that same priority.
+
+An ordinary marker tap selects the parent county and opens the settlement sheet for
+the exact slot. Every explicit county-targeting mode — new-game province picking, the
+travel picker, army selection and march orders — keeps receiving the parent county, so
+a marker never blocks the county beneath it; keyboard province navigation stays
+province-based. `UI.showSettlement(pid, index)` is universal: it names the county,
+holder, localized kind, and development explanation, lists the buildings and ruins of
+the exact slot, and shows matching household plots, manor, and enterprises when
+present. Authorization lives inside the sheet, so foreign and non-demesne settlements
+are read-only while a valid demesne settlement keeps construction and demolition.
+
 ## Localization
 
 Settings exposes English plus French, German, Italian, and Spanish as AI-translated Preview

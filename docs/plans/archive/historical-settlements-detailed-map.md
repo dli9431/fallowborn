@@ -2,7 +2,7 @@
 
 Date: 2026-08-06
 
-Status: **proposed**. This is the complete implementation plan for the current
+Status: **implemented**. This is the complete implementation plan for the current
 867 and 1066 game. An implementer should not need any document outside this
 repository to build the feature.
 

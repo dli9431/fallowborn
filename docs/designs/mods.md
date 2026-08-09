@@ -39,6 +39,15 @@ removing or replacing crossings requires an atomic bookmark definition.
 present after the mod stack merges and controls the title-map/fallback world activated at
 boot. An invalid id is a boot error rather than a request to fall back silently to 867.
 
+Physical settlement sites are the shared coordinate table, not a bookmark world field:
+an optional top-level `settlementSites` object merges by site id into
+`FBDATA.settlementSites` before validation. The per-county ordered `settlements`
+presentation lists ride inside the atomic bookmark provinces (or a legacy 867
+`provinces` replacement, which already replaces the whole same-id record). Missing
+physical data or invalid presentation data fails bookmark validation; a mod supplying
+neither field receives deterministic generated sites and keeps its current names and
+indices. See the Settlements section of `docs/MODDING.md`.
+
 **Bundled mods** (`mods/*.js`) register
 `{id, name, desc, data}` into `window.FBMODS` via a script tag after the data files; the
 Mods dialog toggles them, and enabled ids persist in localStorage (`fb_mods_bundled`) and

@@ -24,9 +24,19 @@ window.FB = window.FB || {};
     focusMembers: null, focusGroupActive: false,
     groupOutline: null, selectedOutline: null,
     onTap: null, dirty: true,
+    visibleSites: [], _sitePool: [], _labelRects: [], _rectCount: 0,
     pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1
   };
   FB.map = M;
+
+  /* Settlement marker detail thresholds (screen zoom) and tap hit radii in
+     screen pixels (scaled by dpr at use). Below SITE_Z_MID the map stays
+     strategic and draws no settlement layer; at SITE_Z_DETAIL every
+     currently visible settlement appears. */
+  const SITE_Z_MID = 1.3;
+  const SITE_Z_DETAIL = 2.4;
+  const SITE_HIT_MOUSE = 7;
+  const SITE_HIT_TOUCH = 15;
 
   M.init = function (canvas) {
     if (M.canvas) {
@@ -67,6 +77,9 @@ window.FB = window.FB || {};
     M.focusGroupActive = false;
     M.groupOutline = null;
     M.selectedOutline = null;
+    M.visibleSites.length = 0; // no stale settlement hit targets from the old world
+    M._sitePool.length = 0;
+    M._rectCount = 0;
     M.dirty = true;
     M.resize();
     M.fitView();
@@ -310,6 +323,90 @@ window.FB = window.FB || {};
     M.request();
   };
 
+  /* ---------- settlement markers (screen space) ----------
+     Runs after the base raster and selection overlay, before county labels,
+     armies, campaign objectives, and travelers. Iterates the compiled
+     world.sitesRender list (head/authored/province/index order) once per
+     kind rank so label priority is city > town > village without any
+     per-frame allocation; a rejected label keeps its marker and hit target.
+     Only markers actually drawn land in the reused M.visibleSites list. */
+  function settlementHitRecord(n) {
+    if (M._sitePool.length <= n) M._sitePool.push({ pid:'', index:0, x:0, y:0 });
+    return M._sitePool[n];
+  }
+
+  function drawSettlements(ctx, z) {
+    const el = M.canvas, dpr = M.dpr, sites = FB.world.sitesRender;
+    const detail = z >= SITE_Z_DETAIL;
+    const m = -40 * dpr, mw = el.width + 80 * dpr, mh = el.height + 48 * dpr;
+    ctx.textAlign = 'center';
+    for (let sweep = 2; sweep >= 0; sweep--) {
+      for (const site of sites) {
+        const scrX = (site.x - M.viewX) * z, scrY = (site.y - M.viewY) * z;
+        if (scrX < m || scrY < m || scrX > mw || scrY > mh) continue;
+        if (!FB.siteVisible(FB.state, site)) continue;
+        const rank = FB.siteKindRank(FB.state, site);
+        if (rank !== sweep) continue;
+        // intermediate zoom: county heads and authored cities only
+        if (!detail && !(site.index === 0 || (site.authored && rank === 2))) continue;
+        const focused = !M.focusGroupActive ||
+          (M.focusMembers && M.focusMembers[site.pidx]);
+        const u = dpr;
+        // shape distinguishes the kind (never color alone); a ring marks
+        // the county head
+        ctx.beginPath();
+        if (rank === 2) {
+          ctx.moveTo(scrX, scrY - 3.8 * u); ctx.lineTo(scrX + 3.8 * u, scrY);
+          ctx.lineTo(scrX, scrY + 3.8 * u); ctx.lineTo(scrX - 3.8 * u, scrY);
+          ctx.closePath();
+        } else if (rank === 1) {
+          ctx.rect(scrX - 2.7 * u, scrY - 2.7 * u, 5.4 * u, 5.4 * u);
+        } else {
+          ctx.arc(scrX, scrY, 2.3 * u, 0, 6.2832);
+        }
+        ctx.fillStyle = focused ? '#f2e8cf' : 'rgba(242,232,207,0.45)';
+        ctx.fill();
+        ctx.lineWidth = 1.1 * u;
+        ctx.strokeStyle = focused ? 'rgba(24,18,10,0.9)' : 'rgba(24,18,10,0.45)';
+        ctx.stroke();
+        if (site.index === 0) {
+          ctx.beginPath();
+          ctx.arc(scrX, scrY, (rank === 2 ? 5.6 : 4.6) * u, 0, 6.2832);
+          ctx.lineWidth = u;
+          ctx.stroke();
+        }
+        // label: deterministic rectangle rejection in priority order
+        const fs = Math.round((rank === 2 ? 10.5 : 9.5) * dpr);
+        ctx.font = fs + 'px Georgia';
+        const tw = ctx.measureText(site.name).width;
+        const lx = scrX, ly = scrY + (rank === 2 ? 8.5 : 7.5) * dpr + fs * 0.72;
+        const pad = 2 * dpr;
+        const rx0 = lx - tw / 2 - pad, ry0 = ly - fs - pad;
+        const rx1 = lx + tw / 2 + pad, ry1 = ly + pad;
+        let blocked = false;
+        for (let ri = 0; ri < M._rectCount; ri++) {
+          const r = M._labelRects[ri];
+          if (!(rx1 < r[0] || rx0 > r[2] || ry1 < r[1] || ry0 > r[3])) {
+            blocked = true; break;
+          }
+        }
+        if (!blocked) {
+          if (M._labelRects.length <= M._rectCount) M._labelRects.push([0, 0, 0, 0]);
+          const rr = M._labelRects[M._rectCount++];
+          rr[0] = rx0; rr[1] = ry0; rr[2] = rx1; rr[3] = ry1;
+          ctx.lineWidth = 2.5 * dpr;
+          ctx.strokeStyle = focused ? 'rgba(20,16,10,0.72)' : 'rgba(20,16,10,0.4)';
+          ctx.fillStyle = focused ? 'rgba(255,250,235,0.95)' : 'rgba(255,250,235,0.5)';
+          ctx.strokeText(site.name, lx, ly);
+          ctx.fillText(site.name, lx, ly);
+        }
+        const hit = settlementHitRecord(M.visibleSites.length);
+        hit.pid = site.pid; hit.index = site.index; hit.x = scrX; hit.y = scrY;
+        M.visibleSites.push(hit);
+      }
+    }
+  }
+
   /* ---------- render loop ---------- */
   M.request = function () {
     if (M._raf) return;
@@ -359,6 +456,12 @@ window.FB = window.FB || {};
     const z = M.zoom;
     function toScreen(wx, wy) { return [(wx - sx) * z, (wy - sy) * z]; }
 
+    // settlement markers & labels run ahead of county labels so a
+    // detailed-zoom county label yields to a placed settlement label
+    M.visibleSites.length = 0;
+    M._rectCount = 0;
+    if (FB.world.sitesRender && z >= SITE_Z_MID) drawSettlements(ctx, z);
+
     if (z >= 1.1 * 0.75) {
       ctx.textAlign = 'center';
       for (const pr of FB.world.provs) {
@@ -375,6 +478,19 @@ window.FB = window.FB || {};
           ? (focused ? 'rgba(230,225,210,0.55)' : 'rgba(230,225,210,0.30)')
           : (focused ? 'rgba(255,250,235,0.92)' : 'rgba(255,250,235,0.48)');
         const provinceName = FB.L(pr.name);
+        if (z >= SITE_Z_DETAIL && M._rectCount) {
+          // a county label covered by a placed settlement label steps aside
+          const cw = ctx.measureText(provinceName).width, pad = 2 * M.dpr;
+          let covered = false;
+          for (let ri = 0; ri < M._rectCount; ri++) {
+            const r = M._labelRects[ri];
+            if (!(s[0] + cw / 2 + pad < r[0] || s[0] - cw / 2 - pad > r[2] ||
+                  s[1] + pad < r[1] || s[1] - fs - pad > r[3])) {
+              covered = true; break;
+            }
+          }
+          if (covered) continue;
+        }
         ctx.strokeText(provinceName, s[0], s[1]);
         ctx.fillText(provinceName, s[0], s[1]);
       }
@@ -455,6 +571,19 @@ window.FB = window.FB || {};
     M.pointers[e.pointerId] = p;
     e.preventDefault();
   }
+  /* Settlement hit-testing scans only the markers drawn on the last frame,
+     in screen space, on pointer release. Overlaps resolve by nearest center,
+     then render priority (list order: kind, head, authored, province/index). */
+  function hitSite(px, py, pointerType) {
+    const radius = (pointerType === 'mouse' ? SITE_HIT_MOUSE : SITE_HIT_TOUCH) * M.dpr;
+    let best = null, bd = radius * radius;
+    for (const s of M.visibleSites) {
+      const dx = s.x - px, dy = s.y - py;
+      const d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = s; }
+    }
+    return best;
+  }
   function onUp(e) {
     const wasSingle = Object.keys(M.pointers).length === 1;
     delete M.pointers[e.pointerId];
@@ -465,7 +594,8 @@ window.FB = window.FB || {};
       const p = ptr(e);
       const wx = M.viewX + p[0] / M.zoom, wy = M.viewY + p[1] / M.zoom;
       const pr = FB.provinceAtGrid(wx, wy);
-      if (M.onTap) M.onTap(pr, wx, wy);
+      const site = hitSite(p[0], p[1], e.pointerType);
+      if (M.onTap) M.onTap(pr, wx, wy, site);
     }
   }
   function onWheel(e) {

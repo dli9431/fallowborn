@@ -149,7 +149,9 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
 - Data files first, all writing to `window.FBDATA`: `data/map_data.js` (land polygons, de
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
-  `data/cultures.js`,
+  `data/cultures.js`, `data/technology.js`, `data/bookmarks.js` (the atomic 867/1066 world
+  definitions), `data/settlements.js` (the shared physical-site table plus the per-bookmark
+  county settlement layouts it clones onto those bookmark provinces),
   `data/traits.js`, `data/economy.js`, the generated `data/music_catalog.js`, then ten event packs
   (`events_common/peasant/paths/noble/world/war/council/parliament/travel/tournament.js`).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →

@@ -3222,24 +3222,67 @@ window.FB = window.FB || {};
   };
 
   /* ================= settlement view =================
-     Tapping a settlement in your own demesne (Land tab) opens what stands
-     THERE: buildings are per-settlement ({ s: idx, id } entries), so the
-     list filters to this settlement, and the "raise" button opens the
-     building picker straight at this settlement's list. */
+     One sheet for every settled county, reached from the Land tab or a map
+     marker. It shows what stands THERE: buildings are per-settlement
+     ({ s: idx, id } entries), so the list filters to this settlement, and
+     any household property in the exact slot — plots, a manor, enterprises —
+     is listed with it. Authorization lives INSIDE the sheet, so a foreign or
+     non-demesne settlement is read-only: demolition buttons render only for
+     a county the player holds, and the raise button keeps the existing
+     demesne/tier/buildable gates. */
   UI.showSettlement = function (pid, idx) {
     const s = FB.state;
     const pr = FB.world.byId[pid];
     if (!s || !pr) return;
     const st = FB.settlementsOf(s, pid)[idx];
     if (!st) return;
+    const own = FB.demesne(s).indexOf(pid) >= 0;
+    const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
+    const holderText = holdId === 'player'
+      ? FB.T('your household')
+      : (s.realms[holdId] ? s.realms[holdId].name : FB.T('no one'));
+    let h = '<div class="gm-body-text settlement-context"><p>' +
+      esc(FB.T('{kind} in {county} county · held by {holder}', {
+        kind:settlementKindName(st.kind), county:FB.L(pr.name), holder:holderText
+      })) + '</p></div>';
     const done = [];
     for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
-    let h = '<div class="gm-body-text settlement-development-summary">' +
+    h += '<div class="gm-body-text settlement-development-summary">' +
       '<p><b>' + esc(FB.T('County development: {current} / {cap}', {
         current:(s.dev[pid] || 1), cap:FB.devCap(s, pid)
       })) + '</b></p><p>' + esc(settlementDevelopmentText(s, pid)) +
       '</p><p class="hint">' + esc(bookmarkDevelopmentText(s, pid)) +
       '</p></div>';
+    /* household property in the exact slot — read directly so opening a
+       sheet never migrates or rewrites saved property */
+    const property = [];
+    let plotCount = 0;
+    for (const plot of (s.player.landPlots || [])) {
+      if (plot.provinceId === pid && plot.settlement === idx) plotCount++;
+    }
+    if (plotCount) {
+      property.push(esc(FB.T('🌾 Your household farms {count} plots here.', {
+        count:plotCount
+      })));
+    }
+    if (s.player.manor && s.player.manor.provinceId === pid &&
+        s.player.manor.settlement === idx) {
+      property.push(esc(FB.T('🏡 Your manor stands here.')));
+    }
+    for (const enterprise of (s.player.enterprises || [])) {
+      if (enterprise.provinceId !== pid || enterprise.settlement !== idx) continue;
+      const enterpriseDef = FBDATA.enterprises[enterprise.type];
+      property.push(esc(FB.T('{icon} Your {name} operates here.', {
+        icon:enterpriseDef ? enterpriseDef.icon : '🛠',
+        name:enterpriseDef
+          ? dt(s, 'enterprise', enterprise.type, enterpriseDef, 'name')
+          : enterprise.type
+      })));
+    }
+    if (property.length) {
+      h += '<div class="gm-body-text settlement-property"><p>' +
+        property.join('<br>') + '</p></div>';
+    }
     if (done.length) {
       for (const e of done) {
         const id = e.id;
@@ -3273,15 +3316,17 @@ window.FB = window.FB || {};
               expiry:buildingExpiryRule()
             }) + '</div>' +
             '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>' +
-            '<button class="btn sett-demolish" data-demolish="' + esc(id) + '">' +
-            esc(FB.T('Demolish…')) + '</button>';
+            (own
+              ? '<button class="btn sett-demolish" data-demolish="' + esc(id) + '">' +
+                esc(FB.T('Demolish…')) + '</button>'
+              : '');
         }
       }
     } else {
       h += '<p class="hint">' + esc(FB.T('No buildings stand in {settlement} yet.',
         { settlement: st.name })) + '</p>';
     }
-    const canRaise = FB.demesne(s).indexOf(pid) >= 0 && s.player.tier >= 3 &&
+    const canRaise = own && s.player.tier >= 3 &&
       FB.buildable(s, pid, idx).length > 0;
     if (canRaise) {
       h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
@@ -16637,15 +16682,17 @@ window.FB = window.FB || {};
     const provinceId = s && s.player && s.player.provinceId;
     add('settlements-development', 'settlements',
       FB.T('Settlements and development'),
-      FB.T('Settlement composition is derived from county development.'),
+      FB.T('Historical places and growth derived from county development.'),
       guideBody([
-        FB.T('Settlements are not founded manually. The county’s current development derives how many appear and whether the leading places are villages, towns, or a city.'),
+        FB.T('Settlements are not founded manually. Significant counties show researched historical places — every realm capital, faith seat, and great city of the start date — while generated local names fill the remaining slots. The same place keeps one identity in both start dates, with a name and standing appropriate to the year.'),
+        FB.T('The county’s current development derives how many places appear and whether the leading ones are villages, towns, or a city, never below a historical place’s authored standing.'),
         provinceId ? settlementDevelopmentText(s, provinceId) :
           FB.T('Start a life to see the next threshold for the current county.'),
         provinceId ? bookmarkDevelopmentText(s, provinceId) :
           FB.T('The county screen separates its authored bookmark start from later growth.'),
+        FB.T('Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne.'),
         FB.T('Buildings that grant development identify the immediate amount when raised. National technologies can raise every county’s development ceiling in that nation above its base of 10.')
-      ]), 'county village town city threshold growth bookmark historical buildings development ceiling');
+      ]), 'county village town city threshold growth bookmark historical buildings development ceiling map markers');
 
     if (s && FB.techUiRelevant(s)) {
       add('technology', 'technology', FB.T('Technology and research'),

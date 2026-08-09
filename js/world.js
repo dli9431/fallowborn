@@ -183,6 +183,77 @@ window.FB = window.FB || {};
       }
     }
 
+    /* Historical settlement sites. The shared physical table is validated
+       here; county membership of each coordinate is a compilation concern
+       because the simplified county boundary does not exist until the raster
+       is built. A province without a `settlements` list is valid — it keeps
+       deterministic generated settlements. */
+    var siteSlug = /^[a-z0-9]+(_[a-z0-9]+)*$/;
+    var siteTable = FBDATA.settlementSites;
+    if (siteTable !== undefined) {
+      if (!siteTable || typeof siteTable !== 'object' || Array.isArray(siteTable)) {
+        fault('FBDATA.settlementSites must be an object keyed by site id.');
+        siteTable = null;
+      } else {
+        for (var siteId in siteTable) {
+          if (!Object.prototype.hasOwnProperty.call(siteTable, siteId)) continue;
+          if (!siteSlug.test(siteId)) fault('invalid settlement site id ' + siteId + '.');
+          var siteRec = siteTable[siteId] || {};
+          if (!isFinite(siteRec.x) || siteRec.x < -180 || siteRec.x > 180 ||
+              !isFinite(siteRec.y) || siteRec.y < -90 || siteRec.y > 90) {
+            fault('settlement site ' + siteId + ' has invalid coordinates.');
+          }
+        }
+      }
+    }
+    var supportedKinds = { village:1, town:1, city:1 };
+    var siteCounty = {};
+    for (var svi = 0; svi < provinces.length; svi++) {
+      var sv = provinces[svi];
+      if (!sv || !sv.id || sv.settlements === undefined || sv.settlements === null) continue;
+      if (sv.wasteland) {
+        fault('wasteland ' + sv.id + ' declares settlements.');
+        continue;
+      }
+      var svList = sv.settlements;
+      if (!Array.isArray(svList) || !svList.length || svList.length > 4) {
+        fault('province ' + sv.id + ' settlements must be an array of 1–4 records.');
+        continue;
+      }
+      var svSites = {}, svNames = {};
+      for (var svi2 = 0; svi2 < svList.length; svi2++) {
+        var svEntry = svList[svi2] || {};
+        var svWhere = 'province ' + sv.id + ' settlement ' + svi2;
+        if (typeof svEntry.site !== 'string' || !siteSlug.test(svEntry.site)) {
+          fault(svWhere + ' has an invalid site id.');
+        } else {
+          if (siteTable && !siteTable[svEntry.site]) {
+            fault(svWhere + ' references missing site ' + svEntry.site + '.');
+          }
+          if (svSites[svEntry.site]) {
+            fault('province ' + sv.id + ' repeats site ' + svEntry.site + '.');
+          }
+          svSites[svEntry.site] = 1;
+          if (siteCounty[svEntry.site] && siteCounty[svEntry.site] !== sv.id) {
+            fault('site ' + svEntry.site + ' is assigned to both ' +
+              siteCounty[svEntry.site] + ' and ' + sv.id + '.');
+          }
+          siteCounty[svEntry.site] = sv.id;
+        }
+        if (typeof svEntry.name !== 'string' || !svEntry.name) {
+          fault(svWhere + ' has no name.');
+        } else {
+          if (svNames[svEntry.name]) {
+            fault('province ' + sv.id + ' repeats settlement name ' + svEntry.name + '.');
+          }
+          svNames[svEntry.name] = 1;
+        }
+        if (!supportedKinds[svEntry.kind]) {
+          fault(svWhere + ' has invalid kind ' + svEntry.kind + '.');
+        }
+      }
+    }
+
     /* Great holy wars are optional head metadata. Their ids must resolve
        against this exact bookmark so a mod cannot install a campaign whose
        sacred counties or target kingdoms disappear at activation. */
@@ -434,10 +505,12 @@ window.FB = window.FB || {};
         idx: i, id: p.id, name: p.name, wasteland: !!p.wasteland,
         terrain: p.terrain || 'farmland', culture: p.culture, religion: p.religion,
         realm0: p.realm || null, dev0: p.dev || 1, duchy: p.duchy || null,
+        settlements: p.settlements || null,
         sx: Math.round(FB.lonToX(p.x)), sy: Math.round(FB.latToY(p.y)),
         cx: 0, cy: 0, area: 0, coastal: false
       };
     });
+    let siteFaults = [];
 
     const steps = [];
 
@@ -579,6 +652,8 @@ window.FB = window.FB || {};
         W: W, H: H, grid: grid, land: land, provs: provs, byId: byId,
         adj: adj, waterAdj: waterAdj
       };
+      progress(0.97, 'Surveying settlements…');
+      siteFaults = compileSites(FB.world);
     });
 
     let si = 0;
@@ -592,7 +667,11 @@ window.FB = window.FB || {};
         if (si < steps.length) { setTimeout(step, 0); return; }
       }
       progress(1, 'The world is made.');
-       done(FB.world);
+      if (siteFaults.length) {
+        done(new Error(siteFaults.join('\n')));
+      } else {
+        done(null, FB.world);
+      }
      }
      setTimeout(step, 0);
   }
@@ -622,7 +701,8 @@ window.FB = window.FB || {};
       setTimeout(function () { done(null, definition); }, 0);
       return;
     }
-    buildWorld(progress, function (world) {
+    buildWorld(progress, function (error, world) {
+      if (error) { done(error); return; }
       worldCache[definition.id] = world;
       bindWorld(world);
       done(null, definition);
@@ -649,6 +729,166 @@ window.FB = window.FB || {};
     var water = FB.world && FB.world.waterAdj;
     return water && water[fromPid] && water[fromPid][toPid] || null;
   };
+
+  /* ================= settlement site compilation =================
+     Compiled once per bookmark world, after province assignment and
+     centroids exist. Every settled county owns an ordered list of site
+     records up to SETTLEMENT_MAX_SLOTS: authored presentations first (array
+     position is the saved compatibility contract — never renumbered), then
+     deterministic generated records covering the remaining slots, so a
+     development reveal never projects or searches during play. The compiled
+     records are derived world data and are never written into a save. */
+  var SETTLEMENT_MAX_SLOTS = 4;
+  /* World-pixel snap ceiling for an authored coordinate. The 1100px raster
+     spans roughly 12 px per degree of longitude, so 45 px is about 3–4
+     degrees: a larger displacement means a wrong site-to-county assignment,
+     not ordinary raster simplification. */
+  var SETTLEMENT_SNAP_MAX = 45;
+
+  function siteGridIndex(world, x, y) {
+    var gx = Math.floor(x), gy = Math.floor(y);
+    if (gx < 0 || gy < 0 || gx >= world.W || gy >= world.H) return -1;
+    return gy * world.W + gx;
+  }
+
+  /* First non-empty expanding ring around (x, y); within that ring pick the
+     nearest cell belonging to the province, ties broken by (dy, dx) so the
+     result is fully deterministic. Mirrors the seed land-snap above. */
+  function nearestCountyCell(world, pr, x, y) {
+    var W = world.W, H = world.H, grid = world.grid;
+    var cx = Math.round(x), cy = Math.round(y);
+    for (var r = 1; r <= SETTLEMENT_SNAP_MAX; r++) {
+      var found = false, bd = Infinity, bx = 0, by = 0;
+      for (var dy = -r; dy <= r; dy++) {
+        for (var dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          var nx = cx + dx, ny = cy + dy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          if (grid[ny * W + nx] !== pr.idx + 1) continue;
+          var d = dx * dx + dy * dy;
+          if (d < bd || (d === bd && (dy < by || (dy === by && dx < bx)))) {
+            bd = d; found = true; bx = dx; by = dy;
+          }
+        }
+      }
+      if (found) return { x: cx + bx, y: cy + by };
+    }
+    return null;
+  }
+
+  /* Deterministic in-county point for a generated slot: hash-derived ring
+     candidates around the centroid first (distinct where the county allows
+     it), then the nearest free in-county cell, with the guaranteed
+     in-county centroid as the last resort for a tiny or concave county. */
+  function generatedSitePoint(world, pr, slot, used) {
+    var W = world.W, H = world.H, grid = world.grid;
+    var h = strHash(pr.id + '@site@' + slot);
+    var baseAngle = (h % 628) / 100;
+    for (var ring = 0; ring < 6; ring++) {
+      var radius = 2 + ring * 3;
+      for (var k = 0; k < 8; k++) {
+        var ang = baseAngle + k * Math.PI / 4;
+        var x = Math.round(pr.cx + Math.cos(ang) * radius);
+        var y = Math.round(pr.cy + Math.sin(ang) * radius);
+        if (x < 0 || y < 0 || x >= W || y >= H) continue;
+        if (grid[y * W + x] !== pr.idx + 1) continue;
+        var key = x + ',' + y;
+        if (used[key]) continue;
+        used[key] = 1;
+        return { x: x, y: y };
+      }
+    }
+    for (var r = 1; r <= SETTLEMENT_SNAP_MAX; r++) {
+      for (var dy = -r; dy <= r; dy++) {
+        for (var dx = -r; dx <= r; dx++) {
+          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+          var nx = pr.cx + dx, ny = pr.cy + dy;
+          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+          if (grid[ny * W + nx] !== pr.idx + 1) continue;
+          var key2 = nx + ',' + ny;
+          if (used[key2]) continue;
+          used[key2] = 1;
+          return { x: nx, y: ny };
+        }
+      }
+    }
+    return { x: pr.cx, y: pr.cy };
+  }
+
+  function compileSites(world) {
+    var faults = [];
+    var siteTable = FBDATA.settlementSites || {};
+    world.sites = [];
+    world.sitesByProv = {};
+    for (var pi = 0; pi < world.provs.length; pi++) {
+      var pr = world.provs[pi];
+      if (pr.wasteland) continue;
+      var authored = pr.settlements || [];
+      var records = [];
+      var used = {}, seenNames = {};
+      for (var ai = 0; ai < authored.length; ai++) {
+        var entry = authored[ai];
+        var geo = siteTable[entry.site];
+        if (!geo) continue; // impossible after bookmark validation; defensive
+        var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);
+        var sx = Math.round(wx), sy = Math.round(wy), snap = 0;
+        var cell = siteGridIndex(world, sx, sy);
+        if (cell < 0 || world.grid[cell] !== pr.idx + 1) {
+          var snapped = nearestCountyCell(world, pr, wx, wy);
+          if (!snapped) {
+            faults.push('Bookmark ' + (FB.activeBookmarkId || '?') +
+              ': settlement site ' + entry.site + ' is assigned to ' + pr.id +
+              ' but lies more than ' + SETTLEMENT_SNAP_MAX +
+              ' map units outside that county — fix its coordinates or its county assignment.');
+            continue;
+          }
+          sx = snapped.x; sy = snapped.y;
+          snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
+        }
+        used[sx + ',' + sy] = 1;
+        seenNames[entry.name] = 1;
+        records.push({
+          pid: pr.id, pidx: pr.idx, index: ai, site: entry.site,
+          name: entry.name, kind: entry.kind,
+          x: sx, y: sy, authored: true, snap: snap
+        });
+      }
+      for (var gi = authored.length; gi < SETTLEMENT_MAX_SLOTS; gi++) {
+        var h = strHash(pr.id + ':' + gi);
+        var name = FB.settlementName(pr.culture, h);
+        while (seenNames[name]) {
+          h = (h * 31 + 7) >>> 0;
+          name = FB.settlementName(pr.culture, h);
+        }
+        seenNames[name] = 1;
+        var pt = generatedSitePoint(world, pr, gi, used);
+        records.push({
+          pid: pr.id, pidx: pr.idx, index: gi,
+          site: 'generated__' + pr.id + '__' + gi,
+          name: name, kind: 'village',
+          x: pt.x, y: pt.y, authored: false, snap: 0
+        });
+      }
+      world.sitesByProv[pr.id] = {
+        list: records,
+        authored: authored.length,
+        legacyBase: 2 + (strHash(pr.id) % 2)
+      };
+      for (var ri = 0; ri < records.length; ri++) world.sites.push(records[ri]);
+    }
+    /* Render/hit priority: head settlements first, then authored before
+       generated, then stable province/index order. The renderer sweeps this
+       list per live kind rank, so the effective priority is kind, then head
+       status, then authored status, then province/index — one deterministic
+       order shared by label collision and hit ties. */
+    world.sitesRender = world.sites.slice().sort(function (a, b) {
+      if ((a.index === 0) !== (b.index === 0)) return a.index === 0 ? -1 : 1;
+      if (a.authored !== b.authored) return a.authored ? -1 : 1;
+      if (a.pid !== b.pid) return a.pid < b.pid ? -1 : 1;
+      return a.index - b.index;
+    });
+    return faults;
+  }
 
   /* ================= POLITICAL STATE ================= */
 
@@ -2985,10 +3225,15 @@ window.FB = window.FB || {};
   };
 
   /* ================= settlements =================
-     Each province holds 2-4 named settlements, generated deterministically
-     from the province id (a plain hash — never the seeded RNG, so saves stay
-     stable). Size follows CURRENT development: the head settlement grows
-     village → town → city as the province flourishes. */
+     Each settled county exposes 2-4 settlement slots through the compiled
+     site records (see compilation above): authored presentations first, then
+     deterministic generated records. The visible count still follows the
+     legacy rule — 2 + a hash bit of the province id, plus one at development
+     5 — raised to the authored count when more slots are authored. Names of
+     generated slots come from a plain string hash (never the seeded RNG, so
+     saves stay stable). Size follows CURRENT development, with an authored
+     baseline kind as the floor: the head settlement grows village → town →
+     city as the province flourishes, never below its authored baseline. */
   function strHash(str) {
     let h = 5381;
     for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
@@ -3002,46 +3247,111 @@ window.FB = window.FB || {};
     return s.pre[h % s.pre.length] + s.suf[(h >>> 4) % s.suf.length];
   };
 
+  /* One rank helper so UI, marker priority, and projection cannot disagree
+     about village < town < city. */
+  var SETTLEMENT_KIND_BY_RANK = ['village', 'town', 'city'];
+
+  FB.settlementKindRank = function (kind) {
+    return kind === 'city' ? 2 : (kind === 'town' ? 1 : 0);
+  };
+
+  /* Live promotions by slot, floored at the authored baseline: the head
+     becomes at least a town at development 4 and a city at 7; the second
+     slot becomes at least a town at 6. */
+  function liveSettlementRank(baseRank, index, dev) {
+    if (index === 0) {
+      if (dev >= 7) return Math.max(baseRank, 2);
+      if (dev >= 4) return Math.max(baseRank, 1);
+    } else if (index === 1 && dev >= 6) {
+      return Math.max(baseRank, 1);
+    }
+    return baseRank;
+  }
+
+  function settlementDev(state, pid) {
+    const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
+    return (state && state.dev && state.dev[pid]) || (pr ? pr.dev0 : 0) || 1;
+  }
+
+  FB.settlementVisibleCount = function (state, pid) {
+    const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
+    if (!info) return 0;
+    const dev = settlementDev(state, pid);
+    return Math.min(SETTLEMENT_MAX_SLOTS,
+      Math.max(info.authored, info.legacyBase + (dev >= 5 ? 1 : 0)));
+  };
+
+  /* Allocation-free seam for the map renderer: whether one compiled site is
+     currently visible, and its live kind rank, without building arrays. */
+  FB.siteVisible = function (state, site) {
+    return site.index < FB.settlementVisibleCount(state, site.pid);
+  };
+
+  FB.siteKindRank = function (state, site) {
+    return liveSettlementRank(FB.settlementKindRank(site.kind), site.index,
+      settlementDev(state, site.pid));
+  };
+
+  /* The next settlement-growth threshold that will actually change something
+     for this county: an authored baseline or list can satisfy a normal
+     threshold ahead of time, and then that threshold is skipped rather than
+     promised. */
   FB.settlementDevelopment = function (state, pid) {
     const pr = FB.world.byId[pid];
     if (!pr || pr.wasteland) return null;
-    const development = (state && state.dev && state.dev[pid]) || pr.dev || 1;
+    const development = settlementDev(state, pid);
+    const info = FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
+    const authored = info ? info.authored : 0;
+    const legacyBase = info ? info.legacyBase : 2 + (strHash(pid) % 2);
+    const headBase = info && info.list[0]
+      ? FB.settlementKindRank(info.list[0].kind) : 0;
+    const secondBase = info && info.list[1]
+      ? FB.settlementKindRank(info.list[1].kind) : 0;
+    function visibleAt(d) {
+      return Math.min(SETTLEMENT_MAX_SLOTS,
+        Math.max(authored, legacyBase + (d >= 5 ? 1 : 0)));
+    }
+    const candidates = [];
+    if (headBase < 1) candidates.push({ t: 4, change: 'head_town' });
+    if (visibleAt(5) > visibleAt(4)) candidates.push({ t: 5, change: 'new_village' });
+    if (secondBase < 1) candidates.push({ t: 6, change: 'second_town' });
+    if (headBase < 2) candidates.push({ t: 7, change: 'head_city' });
     let next = null, change = null;
-    if (development < 4) {
-      next = 4; change = 'head_town';
-    } else if (development < 5) {
-      next = 5; change = 'new_village';
-    } else if (development < 6) {
-      next = 6; change = 'second_town';
-    } else if (development < 7) {
-      next = 7; change = 'head_city';
+    for (const candidate of candidates) {
+      if (candidate.t > development) {
+        next = candidate.t; change = candidate.change;
+        break;
+      }
     }
     return {
       development:development,
-      bookmark:pr.dev || 1,
+      bookmark:pr.dev0 || 1,
       next:next,
       change:change,
       remaining:next === null ? 0 : next - development
     };
   };
 
+  /* Read-only projection for ordinary game systems. Records carry the stable
+     site slug, bookmark name, live kind, compiled world point, and authored
+     flag; callers reading only name and kind keep working unchanged. */
   FB.settlementsOf = function (state, pid) {
-    const pr = FB.world.byId[pid];
-    if (!pr || pr.wasteland) return [];
-    const dev = (state && state.dev && state.dev[pid]) || pr.dev || 1;
-    const n = 2 + (strHash(pid) % 2) + (dev >= 5 ? 1 : 0); // 2-4 places
+    const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
+    if (!info) return [];
+    const dev = settlementDev(state, pid);
+    const n = FB.settlementVisibleCount(state, pid);
     const out = [];
-    const seen = {};
     for (let i = 0; i < n; i++) {
-      let h = strHash(pid + ':' + i);
-      let name = FB.settlementName(pr.culture, h);
-      while (seen[name]) { h = (h * 31 + 7) >>> 0; name = FB.settlementName(pr.culture, h); }
-      seen[name] = 1;
-      let kind = 'village';
-      if (i === 0 && dev >= 7) kind = 'city';
-      else if (i === 0 && dev >= 4) kind = 'town';
-      else if (i === 1 && dev >= 6) kind = 'town';
-      out.push({ name: name, kind: kind });
+      const rec = info.list[i];
+      out.push({
+        site:rec.site,
+        name:rec.name,
+        kind:SETTLEMENT_KIND_BY_RANK[liveSettlementRank(
+          FB.settlementKindRank(rec.kind), rec.index, dev)],
+        x:rec.x,
+        y:rec.y,
+        authored:rec.authored
+      });
     }
     return out;
   };

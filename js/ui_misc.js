@@ -2063,7 +2063,15 @@ window.FB = window.FB || {};
       UI.cancelTravelPicker(false);
     });
     $('travel-picker-continue').addEventListener('click', SH.reviewTravelChoice);
-    FB.map.onTap = function (pr, wx, wy) {
+    /* Map tap precedence. A settlement marker hit carries its parent county
+       into every targeting mode, so a marker never blocks the county beneath
+       it; only ordinary browsing additionally opens the settlement sheet. */
+    FB.map.onTap = function (pr, wx, wy, site) {
+      // a marker hit resolves to its parent county for every targeting mode
+      if (site && FB.world && FB.world.byId) {
+        const parent = FB.world.byId[site.pid];
+        if (parent) pr = parent;
+      }
       if (FB.game.pickMode) { FB.game.pickProvince(pr); return; }
       if (UI.travelPickerOpen()) {
         if (pr) UI.travelPickProvince(pr.id, false);
@@ -2073,6 +2081,11 @@ window.FB = window.FB || {};
       // armies first: select your host, or march the selected host somewhere
       if (s && FB.armyTap && FB.armyTap(s, pr, wx, wy)) return;
       if (pr) UI.selectProvince(pr.id);
+      // ordinary browsing: the parent county is selected above, so the map
+      // highlight and sheet context agree — open the exact settlement
+      if (site && pr && s && s.player && !FB.game.observe && !UI.eventsBusy()) {
+        UI.showSettlement(site.pid, site.index);
+      }
     };
     // click any character row → their sheet; any trait chip → its meaning;
     // item chips open the item card (a toast while an event holds the stage);
