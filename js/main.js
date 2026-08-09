@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.116.4';
+  FB.VERSION = '1.117.0';
   FB.CHANGELOG = [
+    { v: '1.117.0', date: '2026-08-08', changes: [
+      'Towns, castles, abbeys, and other settlements now appear as shape-coded markers on the map at close zoom — tap one to inspect the site and its holders. Around 140 historical settlements are authored across the 867 and 1066 starts.'
+    ] },
     { v: '1.116.4', date: '2026-08-08', changes: [
       'Realm map color and fill opacity now live in Settings, and modal content keeps clear of its scrollbars.'
     ] },

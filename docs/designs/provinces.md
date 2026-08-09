@@ -11,16 +11,45 @@ the denser map costs no extra boot time. Adjacency, coastal flags, and centroids
 derived from that raster. Changing `FBDATA.provinces` (authored as compact rows in
 `data/counties.js`) reshapes the map automatically.
 
-**Settlements are derived, not stored.** `FB.settlementsOf(state, pid)` (world.js)
-generates 2–4 named places per province from a plain string hash (never the seeded RNG)
-and `FBDATA.settlementNames` (cultures.js); size tracks current dev (village→town→city).
-The deterministic count and kind thresholds are exposed through
-`FB.settlementDevelopment`: the head becomes a town at development 4, a further
-settlement appears at 5, the second place becomes a town at 6, and the head becomes
-a city at 7. Province and settlement sheets render the next threshold and the active
-bookmark baseline; no separate settlement state or founding action is introduced.
-The go-into-town deed queues `visit_*` events (events_common.js) with the name in
-`ctx.settlement` (`{settlement}` token); options are require-gated by station.
+**Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
+the zero-based index inside one county — remains the canonical saved reference for
+buildings, plots, manors, and enterprises. The physical *site* is a stable snake-case
+slug with one longitude/latitude in the shared `FBDATA.settlementSites` table
+(`data/settlements.js`); it is derived world data and never enters a save. A bookmark
+county may author a complete ordered `settlements` list of up to four `{site, name,
+kind}` presentations (index 0 is the county head; the name is a historical proper name,
+never localized; the kind is the bookmark baseline that live development may promote
+but never undercut). `data/settlements.js` authors both core bookmarks — every realm
+capital, faith seat, major port, high-development city, and place named by existing
+game content — and clones the lists onto the already-built bookmark province objects.
+
+At world compilation (`compileSites` in `js/world.js`) every settled county receives an
+ordered record list: authored slots first (never renumbered), then deterministic
+generated slots filling to the maximum four so a development reveal never projects
+during play. Authored coordinates project into the declared county's raster, snapping
+to the nearest in-county cell when the simplified boundary requires it (displacement
+beyond 45 world px is an activation error). Generated slots keep the legacy plain-hash
+culture naming exactly (`FB.settlementName`, `FBDATA.settlementNames` in cultures.js)
+and take deterministic in-county points. `FB.settlementsOf(state, pid)` is the unchanged
+public projection: the visible count follows the legacy rule (2 + a hash bit, +1 at
+dev 5) raised to the authored count, and each record carries `{site, name, kind, x, y,
+authored}` — callers reading only `name`/`kind` are unaffected. Kind thresholds: the
+head becomes at least a town at dev 4 and a city at 7, the second slot at least a town
+at 6, never below the authored baseline. `FB.settlementDevelopment` reports the next
+threshold that will actually change something, skipping thresholds an authored baseline
+already satisfies. `FB.siteVisible`/`FB.siteKindRank` give the map renderer an
+allocation-free visibility/kind read per compiled record.
+
+Close zoom adds a settlement marker layer (`js/mapview.js`): county heads and authored
+cities from intermediate zoom, every visible settlement at detailed zoom, with
+shape-coded kind markers (never color alone), deterministic label-collision rejection,
+and county labels stepping aside where they collide. Tapping a marker in ordinary
+browsing selects its parent county and opens the universal settlement sheet
+(`UI.showSettlement`), which is read-only abroad and keeps its construction/demolition
+authorization inside the sheet; every explicit county-targeting mode (new-game pick,
+travel, armies) still receives the parent county. The go-into-town deed queues
+`visit_*` events (events_common.js) with the name in `ctx.settlement` (`{settlement}`
+token); options are require-gated by station.
 
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
@@ -36,6 +65,16 @@ duchy, owner, straits, crossing classes, realms, hierarchy, and scripted history
 It may also map exact centralized faith offices to bookmark-local realm ids through
 `religiousHeads`; activation validates those ids against both the religion table and
 the bookmark's authored realms.
+
+A bookmark province may additionally carry an ordered `settlements` presentation list
+authored in `data/settlements.js` (or supplied complete by a mod): the same physical
+site keeps one slug and one coordinate in the shared `FBDATA.settlementSites` table
+across bookmarks while its displayed name and baseline kind stay per-bookmark. The two
+core bookmarks hold independently cloned arrays, so replacing one never mutates the
+other. Activation validates the table and every list (slug form, coordinate ranges,
+existing site references, at most four entries, no repeated site or name within a
+county, no site assigned to two counties in one bookmark, none on a wasteland) before
+raster compilation checks county membership.
 
 `straits` remain exact two-county adjacency pairs used by every reachability consumer.
 The optional `crossingClasses` bookmark object annotates canonical `countyA|countyB`

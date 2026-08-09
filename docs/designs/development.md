@@ -16,11 +16,14 @@ development or change development-driven calculations.
 
 `FB.settlementDevelopment(state, pid)` is the read-only growth explanation shared by
 province, settlement, and Guide UI. It returns current and bookmark development plus
-the next derived settlement threshold: 4 promotes the head village to a town, 5 adds
-one settlement, 6 promotes the second settlement to a town, and 7 promotes the head
-settlement to a city. The UI displays the next threshold and explicitly compares current
-state with the bookmark value so historical starting advantage is not described as
-growth achieved during play.
+the next settlement-growth threshold that will actually change something: 4 promotes
+the head village to a town, 5 adds one settlement, 6 promotes the second settlement to
+a town, and 7 promotes the head settlement to a city. Authored settlement baselines
+(`data/settlements.js`) floor a slot's kind and an authored list can make a slot
+visible early; thresholds already satisfied that way are skipped rather than promised.
+The UI displays the next threshold and explicitly compares current state with the
+bookmark value so historical starting advantage is not described as growth achieved
+during play.
 
 **Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.
@@ -44,16 +47,19 @@ An authored `d.dev` is labeled as immediate county development when raised.
 Technology `fx.devCap` is labeled as the development ceiling above the base of 10
 for every county in the nation that owns it, not as current development.
 
-Buildings are **per-settlement**: each of a province's 2–4 derived settlements
-(`FB.settlementsOf` — stable indices that only grow with development) may hold one copy of
+Buildings are **per-settlement**: each of a province's 2–4 settlement slots
+(`FB.settlementsOf` — stable indices that only grow with development, presented from
+the compiled authored/generated site records) may hold one copy of
 each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries.
 `FB.builtIn` is a read-only projection: it neither creates empty county arrays nor
 rewrites old saves while a UI or derived calculation reads them. Bare ids from old saves
 project into the head settlement (`s: 0`) and are persisted in canonical form on the next
 construction or demolition in that county. Tapping a settlement in your own demesne
-(Land tab) opens `UI.showSettlement`:
-only the buildings standing in THAT settlement, with what each provides, plus a raise
-button.
+(Land tab) or any settlement marker on the detailed map opens `UI.showSettlement`:
+only the buildings standing in THAT settlement, with what each provides, plus any
+household plots, manor, or enterprises in the same slot. Authorization lives inside the
+sheet — a foreign or non-demesne settlement is read-only, and the raise button keeps
+the demesne/tier/buildable gates.
 
 **Bonuses stay demesne-wide; prices climb per county.** Ongoing bonuses flow through
 `FB.buildingBonus` (tax, levy, piety, research, upkeep, and the war keys `retinue`/`archers`

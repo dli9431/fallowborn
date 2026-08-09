@@ -173,6 +173,7 @@ A JSON mod is one object with any of these keys:
   "collectiveDemands": { "commons_custom": { ...complete demand... } },
   "modifiers": { "id": { "name": "...", "scope": "county", "fx": { ... } } },
   "settlementNames": { "cultureId": { "pre": [...], "suf": [...] } },
+  "settlementSites": { "site_slug": { "x": 12.5, "y": 41.9 } },
   "titles":    { "christian": ["Serf", "..."], "christian_f": ["Serf", "..."] },
   "papacy":    { ...complete Catholic Papacy definition... },
   "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
@@ -330,6 +331,15 @@ province objects; mods merge full objects as before:
   initialize fresh games only; an existing save's `state.dev` values remain
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
+- `settlements` — optional ordered list of up to four historical settlement
+  presentations for this county, e.g.
+  `"settlements": [{ "site": "praha", "name": "Prague", "kind": "town" }]`.
+  Index 0 is the county head. `site` references the shared physical-site table
+  (see [Settlements](#settlements)); `name` is a historical proper name (never
+  localized); `kind` is `village`/`town`/`city` as the baseline kind. The list is
+  a complete replacement of the authored slots, never a patch: array position is a
+  saved-property reference, so appending is safe but reordering or inserting ahead
+  of an existing slot moves saved buildings and plots between named places.
 - Adjacency is computed automatically from the generated shapes. For connections across
   water, add a `straits` pair. Field armies treat an unclassified pair as a `narrow`
   crossing. To opt into a slower passage, add the same lexicographically sorted county
@@ -1716,15 +1726,44 @@ player-originated loan families, passive trade partnerships, and self-founded ve
 
 ## Settlements
 
-Each province holds 2–4 named settlements, generated **deterministically** from the
-province id (`FB.settlementsOf` — a plain hash, never the seeded RNG) with culture-flavored
-name parts from `FBDATA.settlementNames` (in `data/cultures.js`; the `settlementNames` mod
-key merges per-culture sets, `default` covers the rest). Size follows current development:
-the head settlement grows village → town → city as dev rises. The "Go into town…" deed
-lists them and queues `visit_village` / `visit_town` / `visit_city` — ordinary event data
-whose options are `require`-gated by tier, profession, and faith, with the chosen
-settlement's name in `{settlement}`. Replace those events to change what a day in town
-offers.
+Each settled county exposes 2–4 settlement slots through **authored presentations plus
+deterministic generated fallback**. Two identities exist: the numeric slot (the saved
+reference for buildings, land plots, manors, and enterprises) and the physical *site*
+(a globally stable slug with one longitude/latitude, derived world data that never
+enters a save). `FB.settlementsOf` returns the currently visible records as
+`{site, name, kind, x, y, authored}`; the visible count follows the legacy rule
+(2 + a plain hash bit of the province id, never the seeded RNG, +1 at dev 5) raised to
+the authored count, and generated names still come from culture-flavored parts in
+`FBDATA.settlementNames` (in `data/cultures.js`; the `settlementNames` mod key merges
+per-culture sets, `default` covers the rest). Size follows current development — the
+head grows village → town → city at dev 4/7, the second place becomes a town at 6 —
+never below an authored baseline kind. The "Go into town…" deed lists them and queues
+`visit_village` / `visit_town` / `visit_city` — ordinary event data whose options are
+`require`-gated by tier, profession, and faith, with the chosen settlement's name in
+`{settlement}`. Replace those events to change what a day in town offers.
+
+**Physical sites.** The optional top-level `settlementSites` object merges by site id
+into `FBDATA.settlementSites`:
+
+```json
+{ "settlementSites": { "praha": { "x": 14.42, "y": 50.09 } } }
+```
+
+A site id is a lowercase snake_case slug (`a–z`, `0–9`, `_`) with finite longitude `x`
+and latitude `y`. One slug denotes one physical place across every bookmark.
+
+**County presentations.** A province inside a complete atomic bookmark — or a legacy
+867 `provinces` replacement, which already replaces the whole same-id province record —
+may carry the ordered `settlements` list shown in *Adding a province*. Every entry's
+`site` must exist in the merged physical table. Bookmark validation reports invalid
+slugs, coordinates, kinds, missing sites, repeats within a county, a site assigned to
+two counties in one bookmark, wasteland lists, and lists over four entries; world
+compilation additionally rejects a coordinate that lands implausibly far outside the
+declared county's raster. Reordering a published mod's settlement list can move saved
+property between named places even though the numeric save remains valid — append new
+slots or deliberately replace the presentation of an existing index. A mod that
+supplies neither `settlementSites` nor `settlements` gets deterministic generated sites
+and keeps its current settlement names and indices.
 
 ## Items
 

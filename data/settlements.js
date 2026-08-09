@@ -1,0 +1,830 @@
+/* =========================================================================
+   Fallowborn — HISTORICAL SETTLEMENT SITES (867 & 1066)
+   =========================================================================
+   Two identities exist for a settlement:
+
+   1. the settlement SLOT — the zero-based index inside one county. It stays
+      the canonical saved reference for buildings, land plots, manors, and
+      enterprises and is never renumbered by this file.
+   2. the physical SITE — a globally stable snake-case slug with one real
+      longitude/latitude, shared by every bookmark. It is derived world data
+      and never enters a save.
+
+   A bookmark county may declare a complete ordered `settlements` list of up
+   to four presentations ({site, name, kind}); index 0 is the county head and
+   the list replaces the generated presentation of exactly those slots — it
+   never inserts ahead of existing ones. `name` is a historical proper name
+   (never localized); `kind` is village|town|city as the bookmark baseline —
+   live development may promote it but never below the baseline. Counties
+   without a list keep fully deterministic generated settlements.
+
+   This file defines the shared physical table, keeps the base 867 and 1066
+   layouts in file-local tables, and attaches freshly cloned arrays to the
+   already-built bookmark province objects (data/bookmarks.js loads first).
+   ========================================================================= */
+window.FBDATA = window.FBDATA || {};
+
+(function () {
+  'use strict';
+
+  /* ---- physical sites ----------------------------------------------------
+     slug -> { x: longitude, y: latitude }. Coordinates are defensible
+     historical locations, not modern administrative centroids. The compiler
+     snaps a point into its declared gameplay county when the simplified
+     raster requires it and rejects grossly wrong assignments at activation. */
+  var SITES = {
+    roma: { x: 12.4964, y: 41.9028 },
+    ostia: { x: 12.2908, y: 41.7542 },
+    venezia: { x: 12.3155, y: 45.4408 },
+    paris: { x: 2.3522, y: 48.8566 },
+    aachen: { x: 6.0839, y: 50.7753 },
+    london: { x: -0.1276, y: 51.5072 },
+    cordoba: { x: -4.7794, y: 37.8882 },
+    constantinople: { x: 28.9784, y: 41.0082 },
+    baghdad: { x: 44.3610, y: 33.3150 },
+
+    /* Iberia */
+    sevilla: { x: -5.98, y: 37.39 },
+    toledo: { x: -4.03, y: 39.86 },
+    barcelona: { x: 2.17, y: 41.39 },
+    granada: { x: -3.6, y: 37.18 },
+    valencia: { x: -0.38, y: 39.47 },
+    zaragoza: { x: -0.89, y: 41.65 },
+    badajoz: { x: -6.97, y: 38.88 },
+    burgos: { x: -3.7, y: 42.34 },
+    leon: { x: -5.57, y: 42.6 },
+    oviedo: { x: -5.85, y: 43.36 },
+    pamplona: { x: -1.65, y: 42.81 },
+    santiago_de_compostela: { x: -8.54, y: 42.88 },
+    jaca: { x: -0.55, y: 42.57 },
+
+    /* Francia and the Empire */
+    bordeaux: { x: -0.58, y: 44.84 },
+    metz: { x: 6.18, y: 49.12 },
+    rouen: { x: 1.1, y: 49.44 },
+    rennes: { x: -1.68, y: 48.11 },
+    vienne: { x: 4.87, y: 45.52 },
+
+    /* Central and eastern Europe */
+    regensburg: { x: 12.1, y: 49.02 },
+    frankfurt: { x: 8.68, y: 50.11 },
+    munich: { x: 11.58, y: 48.14 },
+    prague: { x: 14.42, y: 50.09 },
+    veligrad: { x: 16.95, y: 48.81 },
+    gdansk: { x: 18.65, y: 54.35 },
+    gniezno: { x: 17.58, y: 52.53 },
+    krakow: { x: 19.94, y: 50.06 },
+    magdeburg: { x: 11.63, y: 52.13 },
+    mecklenburg: { x: 11.47, y: 53.72 },
+    szekesfehervar: { x: 18.41, y: 47.19 },
+    plock: { x: 19.71, y: 52.55 },
+
+    /* Italy and the Adriatic */
+    milan: { x: 9.19, y: 45.46 },
+    palermo: { x: 13.36, y: 38.12 },
+    bari: { x: 16.87, y: 41.12 },
+    benevento: { x: 14.78, y: 41.13 },
+    pavia: { x: 9.16, y: 45.18 },
+    cagliari: { x: 9.11, y: 39.22 },
+    florence: { x: 11.25, y: 43.77 },
+    foggia: { x: 15.56, y: 41.46 },
+    civitate: { x: 15.26, y: 41.3 },
+
+    /* Britain and Ireland */
+    winchester: { x: -1.31, y: 51.06 },
+    york: { x: -1.08, y: 53.96 },
+    dublin: { x: -6.26, y: 53.35 },
+    norwich: { x: 1.3, y: 52.63 },
+    tamworth: { x: -1.69, y: 52.63 },
+    bamburgh: { x: -1.71, y: 55.61 },
+    cardiff: { x: -3.18, y: 51.48 },
+    carmarthen: { x: -4.31, y: 51.86 },
+    dinefwr: { x: -3.99, y: 51.88 },
+    cashel: { x: -7.89, y: 52.52 },
+    dumbarton: { x: -4.57, y: 55.94 },
+    rathcroghan: { x: -8.3, y: 53.8 },
+    aberffraw: { x: -4.46, y: 53.19 },
+    kilkenny: { x: -7.25, y: 52.65 },
+    scone: { x: -3.4, y: 56.42 },
+    downpatrick: { x: -5.72, y: 54.33 },
+    peel: { x: -4.69, y: 54.22 },
+
+    /* Scandinavia and the Baltic */
+    hedeby: { x: 9.57, y: 54.49 },
+    roskilde: { x: 12.08, y: 55.64 },
+    uppsala: { x: 17.63, y: 59.9 },
+    skara: { x: 13.44, y: 58.39 },
+    tonsberg: { x: 10.41, y: 59.27 },
+    kaupang: { x: 10, y: 59.03 },
+    trondheim: { x: 10.4, y: 63.43 },
+    kexholm: { x: 30.13, y: 61.04 },
+    turku: { x: 22.27, y: 60.45 },
+
+    /* Rus, the steppe, and the east Baltic */
+    atil: { x: 48.04, y: 46.35 },
+    bolghar: { x: 49.03, y: 54.97 },
+    chernigov: { x: 31.28, y: 51.49 },
+    kiev: { x: 30.52, y: 50.45 },
+    novgorod: { x: 31.28, y: 58.52 },
+    pereyaslavl: { x: 31.45, y: 50.07 },
+    polotsk: { x: 28.79, y: 55.49 },
+    riga: { x: 24.11, y: 56.95 },
+    sarkel: { x: 42.75, y: 48.45 },
+    volodymyr: { x: 24.32, y: 50.85 },
+    etelkoz: { x: 29.5, y: 47.6 },
+    wiskiauten: { x: 20.95, y: 54.73 },
+    turov: { x: 27.73, y: 52.07 },
+    vilnius: { x: 25.28, y: 54.69 },
+    kernave: { x: 24.85, y: 54.89 },
+
+    /* Byzantium, the Balkans, and the Caucasus */
+    thessalonica: { x: 22.94, y: 40.64 },
+    pliska: { x: 27.14, y: 43.39 },
+    preslav: { x: 26.81, y: 43.16 },
+    chandax: { x: 25.14, y: 35.34 },
+    dvin: { x: 44.58, y: 40 },
+    kutaisi: { x: 42.7, y: 42.25 },
+    split: { x: 16.44, y: 43.51 },
+    kotor: { x: 18.77, y: 42.42 },
+    magas: { x: 44.65, y: 43.17 },
+    ras: { x: 20.52, y: 43.14 },
+
+    /* the Maghreb and Africa */
+    kairouan: { x: 10.1, y: 35.68 },
+    mahdia: { x: 11.06, y: 35.5 },
+    fes: { x: -5, y: 34.03 },
+    sijilmasa: { x: -4.27, y: 31.29 },
+    tunis: { x: 10.18, y: 36.81 },
+    axum: { x: 38.72, y: 14.13 },
+    constantine: { x: 6.61, y: 36.37 },
+    dongola: { x: 30.48, y: 19.17 },
+    tahert: { x: 1.32, y: 35.37 },
+    aghmat: { x: -7.98, y: 31.09 },
+    sale: { x: -6.8, y: 34.03 },
+
+    /* the Islamic east */
+    samarra: { x: 43.87, y: 34.2 },
+    fustat: { x: 31.23, y: 30 },
+    cairo: { x: 31.24, y: 30.04 },
+    alexandria: { x: 29.92, y: 31.2 },
+    basra: { x: 47.82, y: 30.51 },
+    damascus: { x: 36.29, y: 33.51 },
+    isfahan: { x: 51.68, y: 32.65 },
+    kufa: { x: 44.4, y: 32.03 },
+    najaf: { x: 44.33, y: 32 },
+    wasit: { x: 46.3, y: 32.19 },
+    aleppo: { x: 37.16, y: 36.2 },
+    antioch: { x: 36.16, y: 36.2 },
+    jerusalem: { x: 35.23, y: 31.78 },
+    mecca: { x: 39.83, y: 21.42 },
+    merv: { x: 62.19, y: 37.66 },
+    mosul: { x: 43.13, y: 36.34 },
+    nishapur: { x: 58.8, y: 36.21 },
+    rayy: { x: 51.44, y: 35.6 },
+    samarkand: { x: 66.96, y: 39.65 },
+    shiraz: { x: 52.54, y: 29.59 },
+    bukhara: { x: 64.43, y: 39.77 },
+    mansura: { x: 68.78, y: 25.88 },
+    medina: { x: 39.61, y: 24.47 },
+    sanaa: { x: 44.21, y: 15.35 },
+    zabid: { x: 43.31, y: 14.2 },
+    amol: { x: 52.35, y: 36.47 },
+    kabul: { x: 69.18, y: 34.53 },
+    muscat: { x: 58.41, y: 23.61 },
+    nizwa: { x: 57.53, y: 22.93 },
+    zaranj: { x: 61.86, y: 30.96 },
+    ghazni: { x: 68.42, y: 33.55 },
+    tiz: { x: 60.64, y: 25.29 }
+  };
+
+  /* ---- bookmark layouts --------------------------------------------------
+     LAYOUTS[bookmarkId][provinceId] = ordered [[site, name, kind], ...].
+     Built through the helpers below so the two bookmarks never share one
+     mutable array; attachment clones once more onto the province objects. */
+  var LAYOUTS = { '867': {}, '1066': {} };
+
+  function layout(bookmarkId, pid, list) {
+    var target = LAYOUTS[bookmarkId];
+    if (!target) throw new Error('data/settlements.js: unknown layout bookmark ' + bookmarkId);
+    if (target[pid]) {
+      throw new Error('data/settlements.js: duplicate layout for ' + pid + ' in ' + bookmarkId);
+    }
+    target[pid] = list.map(function (e) {
+      return { site: e[0], name: e[1], kind: e[2] };
+    });
+  }
+
+  /* The same ordered presentation in both bookmarks (independent records). */
+  function both(pid, list) {
+    layout('867', pid, list);
+    layout('1066', pid, list);
+  }
+
+  /* Faith seats and the greatest cities of both dates. Generated sites
+     deterministically cover every remaining slot of these counties. */
+  layout('867', 'roma', [['roma', 'Rome', 'town'], ['ostia', 'Ostia', 'town']]);
+  layout('1066', 'roma', [['roma', 'Rome', 'city'], ['ostia', 'Ostia', 'town']]);
+  both('constantinople', [['constantinople', 'Constantinople', 'city']]);
+  both('baghdad', [['baghdad', 'Baghdad', 'city']]);
+  both('venezia', [['venezia', 'Venice', 'city']]);
+  both('cordoba', [['cordoba', 'Córdoba', 'city']]);
+  layout('867', 'paris', [['paris', 'Paris', 'town']]);
+  layout('1066', 'paris', [['paris', 'Paris', 'city']]);
+  both('london', [['london', 'London', 'town']]);
+  both('aachen', [['aachen', 'Aachen', 'town']]);
+
+  /* ---- Iberia ---- */
+  layout('867', 'sevilla', [
+      ['sevilla', 'Sevilla', 'town']
+    ]);
+  layout('1066', 'sevilla', [
+      ['sevilla', 'Sevilla', 'city']
+    ]);
+  layout('867', 'toledo', [
+      ['toledo', 'Toledo', 'town']
+    ]);
+  layout('1066', 'toledo', [
+      ['toledo', 'Toledo', 'city']
+    ]);
+  both('barcelona', [
+      ['barcelona', 'Barcelona', 'town']
+    ]);
+  layout('867', 'granada', [
+      ['granada', 'Granada', 'town']
+    ]);
+  layout('1066', 'granada', [
+      ['granada', 'Granada', 'city']
+    ]);
+  both('valencia', [
+      ['valencia', 'Valencia', 'town']
+    ]);
+  both('zaragoza', [
+      ['zaragoza', 'Zaragoza', 'town']
+    ]);
+  layout('867', 'badajoz', [
+      ['badajoz', 'Badajoz', 'village']
+    ]);
+  layout('1066', 'badajoz', [
+      ['badajoz', 'Badajoz', 'town']
+    ]);
+  layout('867', 'burgos', [
+      ['burgos', 'Burgos', 'village']
+    ]);
+  layout('1066', 'burgos', [
+      ['burgos', 'Burgos', 'town']
+    ]);
+  layout('867', 'leon', [
+      ['leon', 'León', 'village']
+    ]);
+  layout('1066', 'leon', [
+      ['leon', 'León', 'town']
+    ]);
+  both('oviedo', [
+      ['oviedo', 'Oviedo', 'town']
+    ]);
+  both('pamplona', [
+      ['pamplona', 'Pamplona', 'town']
+    ]);
+  layout('867', 'santiago', [
+      ['santiago_de_compostela', 'Santiago de Compostela', 'village']
+    ]);
+  layout('1066', 'santiago', [
+      ['santiago_de_compostela', 'Santiago de Compostela', 'town']
+    ]);
+  layout('867', 'aragon', [
+      ['jaca', 'Jaca', 'village']
+    ]);
+  layout('1066', 'aragon', [
+      ['jaca', 'Jaca', 'town']
+    ]);
+
+  /* ---- Francia and the Empire ---- */
+  both('bordeaux', [
+      ['bordeaux', 'Bordeaux', 'city']
+    ]);
+  both('metz', [
+      ['metz', 'Metz', 'city']
+    ]);
+  layout('867', 'rouen', [
+      ['rouen', 'Rouen', 'town']
+    ]);
+  layout('1066', 'rouen', [
+      ['rouen', 'Rouen', 'city']
+    ]);
+  both('rennes', [
+      ['rennes', 'Rennes', 'town']
+    ]);
+  both('vienne', [
+      ['vienne', 'Vienne', 'town']
+    ]);
+
+  /* ---- Central and eastern Europe ---- */
+  both('regensburg', [
+      ['regensburg', 'Regensburg', 'city']
+    ]);
+  layout('867', 'frankfurt', [
+      ['frankfurt', 'Frankfurt', 'village']
+    ]);
+  layout('1066', 'frankfurt', [
+      ['frankfurt', 'Frankfurt', 'town']
+    ]);
+  both('munich', [
+      ['munich', 'Munich', 'village']
+    ]);
+  layout('867', 'praha', [
+      ['prague', 'Prague', 'town']
+    ]);
+  layout('1066', 'praha', [
+      ['prague', 'Prague', 'city']
+    ]);
+  layout('867', 'veligrad', [
+      ['veligrad', 'Veligrad', 'town']
+    ]);
+  layout('1066', 'veligrad', [
+      ['veligrad', 'Veligrad', 'village']
+    ]);
+  layout('867', 'gdansk', [
+      ['gdansk', 'Gdańsk', 'village']
+    ]);
+  layout('1066', 'gdansk', [
+      ['gdansk', 'Gdańsk', 'town']
+    ]);
+  both('gniezno', [
+      ['gniezno', 'Gniezno', 'town']
+    ]);
+  both('krakow', [
+      ['krakow', 'Kraków', 'town']
+    ]);
+  layout('867', 'magdeburg', [
+      ['magdeburg', 'Magdeburg', 'village']
+    ]);
+  layout('1066', 'magdeburg', [
+      ['magdeburg', 'Magdeburg', 'town']
+    ]);
+  both('mecklenburg', [
+      ['mecklenburg', 'Mecklenburg', 'town']
+    ]);
+  layout('867', 'szekesfehervar', [
+      ['szekesfehervar', 'Székesfehérvár', 'village']
+    ]);
+  layout('1066', 'szekesfehervar', [
+      ['szekesfehervar', 'Székesfehérvár', 'town']
+    ]);
+  both('plock', [
+      ['plock', 'Płock', 'village']
+    ]);
+
+  /* ---- Italy and the Adriatic ---- */
+  both('milano', [
+      ['milan', 'Milan', 'city']
+    ]);
+  both('palermo', [
+      ['palermo', 'Palermo', 'city']
+    ]);
+  both('bari', [
+      ['bari', 'Bari', 'city']
+    ]);
+  layout('867', 'benevento', [
+      ['benevento', 'Benevento', 'city']
+    ]);
+  layout('1066', 'benevento', [
+      ['benevento', 'Benevento', 'town']
+    ]);
+  layout('867', 'pavia', [
+      ['pavia', 'Pavia', 'city']
+    ]);
+  layout('1066', 'pavia', [
+      ['pavia', 'Pavia', 'town']
+    ]);
+  both('cagliari', [
+      ['cagliari', 'Cagliari', 'town']
+    ]);
+  layout('867', 'firenze', [
+      ['florence', 'Florence', 'village']
+    ]);
+  layout('1066', 'firenze', [
+      ['florence', 'Florence', 'town']
+    ]);
+  both('foggia', [
+      ['foggia', 'Foggia', 'village'],
+      ['civitate', 'Civitate', 'village']
+    ]);
+
+  /* ---- Britain and Ireland ---- */
+  both('winchester', [
+      ['winchester', 'Winchester', 'city']
+    ]);
+  both('york', [
+      ['york', 'York', 'city']
+    ]);
+  layout('867', 'dublin', [
+      ['dublin', 'Dublin', 'town']
+    ]);
+  layout('1066', 'dublin', [
+      ['dublin', 'Dublin', 'city']
+    ]);
+  layout('867', 'norwich', [
+      ['norwich', 'Norwich', 'village']
+    ]);
+  layout('1066', 'norwich', [
+      ['norwich', 'Norwich', 'city']
+    ]);
+  both('tamworth', [
+      ['tamworth', 'Tamworth', 'town']
+    ]);
+  layout('867', 'bamburgh', [
+      ['bamburgh', 'Bamburgh', 'town']
+    ]);
+  layout('1066', 'bamburgh', [
+      ['bamburgh', 'Bamburgh', 'village']
+    ]);
+  both('cardiff', [
+      ['cardiff', 'Cardiff', 'village']
+    ]);
+  layout('867', 'carmarthen', [
+      ['carmarthen', 'Carmarthen', 'village'],
+      ['dinefwr', 'Dinefwr', 'village']
+    ]);
+  layout('1066', 'carmarthen', [
+      ['carmarthen', 'Carmarthen', 'village'],
+      ['dinefwr', 'Dinefwr', 'town']
+    ]);
+  both('cashel', [
+      ['cashel', 'Cashel', 'town']
+    ]);
+  layout('867', 'dumbarton', [
+      ['dumbarton', 'Dumbarton', 'town']
+    ]);
+  layout('1066', 'dumbarton', [
+      ['dumbarton', 'Dumbarton', 'village']
+    ]);
+  both('galway', [
+      ['rathcroghan', 'Rathcroghan', 'town']
+    ]);
+  both('gwynedd', [
+      ['aberffraw', 'Aberffraw', 'town']
+    ]);
+  both('kilkenny', [
+      ['kilkenny', 'Kilkenny', 'village']
+    ]);
+  both('scone', [
+      ['scone', 'Scone', 'town']
+    ]);
+  both('ulaid', [
+      ['downpatrick', 'Downpatrick', 'town']
+    ]);
+  layout('867', 'man', [
+      ['peel', 'Peel', 'village']
+    ]);
+  layout('1066', 'man', [
+      ['peel', 'Peel', 'town']
+    ]);
+
+  /* ---- Scandinavia and the Baltic ---- */
+  both('hedeby', [
+      ['hedeby', 'Hedeby', 'town']
+    ]);
+  layout('867', 'roskilde', [
+      ['roskilde', 'Roskilde', 'village']
+    ]);
+  layout('1066', 'roskilde', [
+      ['roskilde', 'Roskilde', 'town']
+    ]);
+  both('uppsala', [
+      ['uppsala', 'Uppsala', 'town']
+    ]);
+  layout('867', 'skara', [
+      ['skara', 'Skara', 'village']
+    ]);
+  layout('1066', 'skara', [
+      ['skara', 'Skara', 'town']
+    ]);
+  layout('867', 'tonsberg', [
+      ['tonsberg', 'Tønsberg', 'village'],
+      ['kaupang', 'Kaupang', 'town']
+    ]);
+  layout('1066', 'tonsberg', [
+      ['tonsberg', 'Tønsberg', 'town'],
+      ['kaupang', 'Kaupang', 'village']
+    ]);
+  layout('867', 'trondheim', [
+      ['trondheim', 'Lade', 'village']
+    ]);
+  layout('1066', 'trondheim', [
+      ['trondheim', 'Nidaros', 'town']
+    ]);
+  both('kexholm', [
+      ['kexholm', 'Käkisalmi', 'village']
+    ]);
+  both('turku', [
+      ['turku', 'Turku', 'village']
+    ]);
+
+  /* ---- Rus, the steppe, and the east Baltic ---- */
+  layout('867', 'atil', [
+      ['atil', 'Atil', 'city']
+    ]);
+  layout('1066', 'atil', [
+      ['atil', 'Atil', 'village']
+    ]);
+  both('bolghar', [
+      ['bolghar', 'Bolghar', 'town']
+    ]);
+  layout('867', 'chernigov', [
+      ['chernigov', 'Chernigov', 'village']
+    ]);
+  layout('1066', 'chernigov', [
+      ['chernigov', 'Chernigov', 'town']
+    ]);
+  layout('867', 'kiev', [
+      ['kiev', 'Kiev', 'town']
+    ]);
+  layout('1066', 'kiev', [
+      ['kiev', 'Kiev', 'city']
+    ]);
+  layout('867', 'novgorod', [
+      ['novgorod', 'Gorodishche', 'village']
+    ]);
+  layout('1066', 'novgorod', [
+      ['novgorod', 'Novgorod', 'city']
+    ]);
+  layout('867', 'pereyaslavl', [
+      ['pereyaslavl', 'Pereyaslavl', 'village']
+    ]);
+  layout('1066', 'pereyaslavl', [
+      ['pereyaslavl', 'Pereyaslavl', 'town']
+    ]);
+  both('polotsk', [
+      ['polotsk', 'Polotsk', 'town']
+    ]);
+  both('riga', [
+      ['riga', 'Riga', 'village']
+    ]);
+  layout('867', 'sarkel', [
+      ['sarkel', 'Sarkel', 'town']
+    ]);
+  layout('1066', 'sarkel', [
+      ['sarkel', 'Sarkel', 'village']
+    ]);
+  layout('867', 'volodymyr', [
+      ['volodymyr', 'Volodymyr', 'village']
+    ]);
+  layout('1066', 'volodymyr', [
+      ['volodymyr', 'Volodymyr', 'town']
+    ]);
+  both('etelkoz', [
+      ['etelkoz', 'Etelköz', 'village']
+    ]);
+  layout('867', 'sambia', [
+      ['wiskiauten', 'Wiskiauten', 'town']
+    ]);
+  layout('1066', 'sambia', [
+      ['wiskiauten', 'Wiskiauten', 'village']
+    ]);
+  layout('867', 'turov', [
+      ['turov', 'Turov', 'village']
+    ]);
+  layout('1066', 'turov', [
+      ['turov', 'Turov', 'town']
+    ]);
+  both('vilnius', [
+      ['vilnius', 'Vilnius', 'village'],
+      ['kernave', 'Kernavė', 'village']
+    ]);
+
+  /* ---- Byzantium, the Balkans, and the Caucasus ---- */
+  both('thessaloniki', [
+      ['thessalonica', 'Thessalonica', 'city']
+    ]);
+  layout('867', 'pliska', [
+      ['pliska', 'Pliska', 'city'],
+      ['preslav', 'Preslav', 'town']
+    ]);
+  layout('1066', 'pliska', [
+      ['pliska', 'Pliska', 'town'],
+      ['preslav', 'Preslav', 'town']
+    ]);
+  both('candia', [
+      ['chandax', 'Chandax', 'town']
+    ]);
+  both('dvin', [
+      ['dvin', 'Dvin', 'town']
+    ]);
+  both('kutaisi', [
+      ['kutaisi', 'Kutaisi', 'town']
+    ]);
+  both('split', [
+      ['split', 'Split', 'town']
+    ]);
+  layout('867', 'kotor', [
+      ['kotor', 'Kotor', 'village']
+    ]);
+  layout('1066', 'kotor', [
+      ['kotor', 'Kotor', 'town']
+    ]);
+  layout('867', 'magas', [
+      ['magas', 'Magas', 'village']
+    ]);
+  layout('1066', 'magas', [
+      ['magas', 'Magas', 'town']
+    ]);
+  both('ras', [
+      ['ras', 'Ras', 'town']
+    ]);
+
+  /* ---- the Maghreb and Africa ---- */
+  layout('867', 'kairouan', [
+      ['kairouan', 'Kairouan', 'city'],
+      ['mahdia', 'Mahdia', 'village']
+    ]);
+  layout('1066', 'kairouan', [
+      ['kairouan', 'Kairouan', 'city'],
+      ['mahdia', 'Mahdia', 'city']
+    ]);
+  both('fes', [
+      ['fes', 'Fes', 'town']
+    ]);
+  layout('867', 'sijilmasa', [
+      ['sijilmasa', 'Sijilmasa', 'city']
+    ]);
+  layout('1066', 'sijilmasa', [
+      ['sijilmasa', 'Sijilmasa', 'town']
+    ]);
+  both('tunis', [
+      ['tunis', 'Tunis', 'town']
+    ]);
+  both('axum', [
+      ['axum', 'Axum', 'town']
+    ]);
+  layout('867', 'constantine', [
+      ['constantine', 'Constantine', 'village']
+    ]);
+  layout('1066', 'constantine', [
+      ['constantine', 'Constantine', 'town']
+    ]);
+  both('dongola', [
+      ['dongola', 'Dongola', 'town']
+    ]);
+  both('tahert', [
+      ['tahert', 'Tahert', 'town']
+    ]);
+  layout('867', 'aghmat', [
+      ['aghmat', 'Aghmat', 'village']
+    ]);
+  layout('1066', 'aghmat', [
+      ['aghmat', 'Aghmat', 'town']
+    ]);
+  both('sale', [
+      ['sale', 'Salé', 'village']
+    ]);
+
+  /* ---- the Islamic east ---- */
+  both('samarra', [
+      ['samarra', 'Samarra', 'city']
+    ]);
+  layout('867', 'fustat', [
+      ['fustat', 'Fustat', 'city'],
+      ['cairo', 'Al-Askar', 'town']
+    ]);
+  layout('1066', 'fustat', [
+      ['fustat', 'Fustat', 'city'],
+      ['cairo', 'Cairo', 'city']
+    ]);
+  both('alexandria', [
+      ['alexandria', 'Alexandria', 'city']
+    ]);
+  both('basra', [
+      ['basra', 'Basra', 'city']
+    ]);
+  both('damascus', [
+      ['damascus', 'Damascus', 'city']
+    ]);
+  layout('867', 'isfahan', [
+      ['isfahan', 'Isfahan', 'town']
+    ]);
+  layout('1066', 'isfahan', [
+      ['isfahan', 'Isfahan', 'city']
+    ]);
+  layout('867', 'kufa', [
+      ['kufa', 'Kufa', 'town'],
+      ['najaf', 'Najaf', 'village']
+    ]);
+  layout('1066', 'kufa', [
+      ['kufa', 'Kufa', 'city'],
+      ['najaf', 'Najaf', 'town']
+    ]);
+  layout('867', 'wasit', [
+      ['wasit', 'Wasit', 'town']
+    ]);
+  layout('1066', 'wasit', [
+      ['wasit', 'Wasit', 'city']
+    ]);
+  layout('867', 'aleppo', [
+      ['aleppo', 'Aleppo', 'town']
+    ]);
+  layout('1066', 'aleppo', [
+      ['aleppo', 'Aleppo', 'city']
+    ]);
+  layout('867', 'antioch', [
+      ['antioch', 'Antioch', 'town']
+    ]);
+  layout('1066', 'antioch', [
+      ['antioch', 'Antioch', 'city']
+    ]);
+  both('jerusalem', [
+      ['jerusalem', 'Jerusalem', 'city']
+    ]);
+  both('mecca', [
+      ['mecca', 'Mecca', 'city']
+    ]);
+  both('merv', [
+      ['merv', 'Merv', 'city']
+    ]);
+  layout('867', 'mosul', [
+      ['mosul', 'Mosul', 'town']
+    ]);
+  layout('1066', 'mosul', [
+      ['mosul', 'Mosul', 'city']
+    ]);
+  both('nishapur', [
+      ['nishapur', 'Nishapur', 'city']
+    ]);
+  both('rayy', [
+      ['rayy', 'Rayy', 'city']
+    ]);
+  both('samarkand', [
+      ['samarkand', 'Samarkand', 'city']
+    ]);
+  both('shiraz', [
+      ['shiraz', 'Shiraz', 'town']
+    ]);
+  both('bukhara', [
+      ['bukhara', 'Bukhara', 'city']
+    ]);
+  layout('867', 'mansura', [
+      ['mansura', 'Mansura', 'city']
+    ]);
+  layout('1066', 'mansura', [
+      ['mansura', 'Mansura', 'town']
+    ]);
+  both('medina', [
+      ['medina', 'Medina', 'city']
+    ]);
+  layout('867', 'sanaa', [
+      ['sanaa', 'Sanaa', 'town'],
+      ['zabid', 'Zabid', 'town']
+    ]);
+  layout('1066', 'sanaa', [
+      ['sanaa', 'Sanaa', 'city'],
+      ['zabid', 'Zabid', 'town']
+    ]);
+  both('amol', [
+      ['amol', 'Amol', 'town']
+    ]);
+  both('kabul', [
+      ['kabul', 'Kabul', 'town']
+    ]);
+  both('muscat', [
+      ['muscat', 'Muscat', 'town'],
+      ['nizwa', 'Nizwa', 'town']
+    ]);
+  both('zaranj', [
+      ['zaranj', 'Zaranj', 'town']
+    ]);
+  layout('867', 'ghazni', [
+      ['ghazni', 'Ghazni', 'village']
+    ]);
+  layout('1066', 'ghazni', [
+      ['ghazni', 'Ghazni', 'city']
+    ]);
+  both('tiz', [
+      ['tiz', 'Tiz', 'village']
+    ]);
+
+  /* ---- attach ------------------------------------------------------------
+     Clone each layout onto its bookmark province. Fail loudly during
+     development when a layout names a missing bookmark or province so a
+     rename in counties.js cannot silently drop authored data. */
+  FBDATA.settlementSites = SITES;
+  for (var bookmarkId in LAYOUTS) {
+    if (!Object.prototype.hasOwnProperty.call(LAYOUTS, bookmarkId)) continue;
+    var bookmark = FBDATA.bookmarks && FBDATA.bookmarks[bookmarkId];
+    if (!bookmark) throw new Error('data/settlements.js: missing bookmark ' + bookmarkId);
+    var byId = {};
+    for (var i = 0; i < bookmark.provinces.length; i++) {
+      byId[bookmark.provinces[i].id] = bookmark.provinces[i];
+    }
+    var layoutMap = LAYOUTS[bookmarkId];
+    for (var pid in layoutMap) {
+      if (!Object.prototype.hasOwnProperty.call(layoutMap, pid)) continue;
+      var province = byId[pid];
+      if (!province) {
+        throw new Error('data/settlements.js: layout names missing province ' +
+          pid + ' in bookmark ' + bookmarkId);
+      }
+      province.settlements = layoutMap[pid].map(function (e) {
+        return { site: e.site, name: e.name, kind: e.kind };
+      });
+    }
+  }
+})();

@@ -44626,6 +44626,16 @@
         "text": "Acquisition order"
       }
     },
+    "src.02482c5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has an invalid site id."
+      }
+    },
     "src.024fa913": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45236,6 +45246,16 @@
       ],
       "source": {
         "text": "Decide later"
+      }
+    },
+    "src.0432caff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has invalid coordinates."
       }
     },
     "src.0434fa79": {
@@ -46188,6 +46208,16 @@
       ],
       "source": {
         "text": "Patience teaches what confidence cannot."
+      }
+    },
+    "src.06856c46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "no one"
       }
     },
     "src.06895d5a": {
@@ -47453,6 +47483,16 @@
       ],
       "source": {
         "text": "Moderate in all things, including, at the last, breathing."
+      }
+    },
+    "src.09702e68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "county village town city threshold growth bookmark historical buildings development ceiling map markers"
       }
     },
     "src.0976ad48": {
@@ -56197,6 +56237,16 @@
         "text": "Dance, eat, laugh."
       }
     },
+    "src.1f04a05b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{icon} Your {name} operates here."
+      }
+    },
     "src.1f05c11f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56478,6 +56528,16 @@
       ],
       "source": {
         "text": "End the spectacle with unmistakable authority."
+      }
+    },
+    "src.1faea139": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "FBDATA.settlementSites must be an object keyed by site id."
       }
     },
     "src.1fb1c9e5": {
@@ -61204,6 +61264,16 @@
       ],
       "source": {
         "text": "A New Hand on the Seal"
+      }
+    },
+    "src.2b5945bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Settlements are not founded manually. Significant counties show researched historical places — every realm capital, faith seat, and great city of the start date — while generated local names fill the remaining slots. The same place keeps one identity in both start dates, with a name and standing appropriate to the year."
       }
     },
     "src.2b5c8a29": {
@@ -65974,6 +66044,16 @@
         "text": "Lateen Sail"
       }
     },
+    "src.38166898": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "declares settlements."
+      }
+    },
     "src.3817baf8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66697,6 +66777,16 @@
       ],
       "source": {
         "text": "Current title"
+      }
+    },
+    "src.39f13fbb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "is assigned to both"
       }
     },
     "src.39f3592f": {
@@ -70114,6 +70204,16 @@
       ],
       "source": {
         "text": "Tell him YOUR story."
+      }
+    },
+    "src.43034871": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "repeats settlement name"
       }
     },
     "src.4303cb10": {
@@ -88518,6 +88618,16 @@
         "text": "The sickness passes your door."
       }
     },
+    "src.72138268": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne."
+      }
+    },
     "src.721c5337": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91095,6 +91205,16 @@
         "text": "No match arranged"
       }
     },
+    "src.788a7499": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "🌾 Your household farms {count} plots here."
+      }
+    },
     "src.789953bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93444,6 +93564,16 @@
         "text": "Mechanical Escapement"
       }
     },
+    "src.7e60e766": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "settlements must be an array of 1–4 records."
+      }
+    },
     "src.7e636c0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94557,6 +94687,16 @@
         "text": "The sea pays no tithe, but the lord’s men keep accounts."
       }
     },
+    "src.80e3f9df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "your household"
+      }
+    },
     "src.80e926d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95489,16 +95629,6 @@
       ],
       "source": {
         "text": "{distance} county steps · {affinity}"
-      }
-    },
-    "src.834daab1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "county village town city threshold growth bookmark historical buildings development ceiling"
       }
     },
     "src.834fbc2b": {
@@ -97593,6 +97723,16 @@
       ],
       "source": {
         "text": "💰 The house of {house} settles {money:gold} on you."
+      }
+    },
+    "src.87f6df6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has no name."
       }
     },
     "src.87f75ecd": {
@@ -101383,6 +101523,16 @@
         "text": "Emir"
       }
     },
+    "src.90eaa737": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Historical places and growth derived from county development."
+      }
+    },
     "src.90eac8ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102833,6 +102983,16 @@
       ],
       "source": {
         "text": "Book of Laws"
+      }
+    },
+    "src.959e20c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "is assigned to"
       }
     },
     "src.95a4f7e2": {
@@ -104537,6 +104697,16 @@
       ],
       "source": {
         "text": "Response under a recognized rite"
+      }
+    },
+    "src.99eed8f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "has invalid kind"
       }
     },
     "src.99f031c4": {
@@ -106955,6 +107125,16 @@
       ],
       "source": {
         "text": "Fresh stakes stand across the waste where the households of {province} have grazed beasts, cut fuel, and drawn water since anyone remembers. The reeve says it is the lord’s land, and tomorrow it will be closed."
+      }
+    },
+    "src.9fa9f92a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The county’s current development derives how many places appear and whether the leading ones are villages, towns, or a city, never below a historical place’s authored standing."
       }
     },
     "src.9faa27af": {
@@ -113760,6 +113940,16 @@
         "text": "In {date}, {faith} took root in {place} as a new branch of {parent}."
       }
     },
+    "src.b0ed7229": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "🏡 Your manor stands here."
+      }
+    },
     "src.b0f0d9fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115572,6 +115762,16 @@
       ],
       "source": {
         "text": "He improves your story until it is no longer yours, then leaves."
+      }
+    },
+    "src.b556a9da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "repeats site"
       }
     },
     "src.b55867f8": {
@@ -119970,16 +120170,6 @@
         "text": "a man"
       }
     },
-    "src.c148b080": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Settlement composition is derived from county development."
-      }
-    },
     "src.c14aae48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124358,16 +124548,6 @@
         "text": "Learning, piety, religious Standing, and vocation experience support advancement."
       }
     },
-    "src.cc52a771": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Settlements are not founded manually. The county’s current development derives how many appear and whether the leading places are villages, towns, or a city."
-      }
-    },
     "src.cc57c5bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125232,6 +125412,16 @@
       ],
       "source": {
         "text": "Equipment cannot be changed while the household is traveling."
+      }
+    },
+    "src.ce66bc50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "map units outside that county — fix its coordinates or its county assignment."
       }
     },
     "src.ce68ed2b": {
@@ -126163,6 +126353,16 @@
       ],
       "source": {
         "text": "Technology caps are invalid."
+      }
+    },
+    "src.d13e8c4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "but lies more than"
       }
     },
     "src.d13eeeb7": {
@@ -132110,6 +132310,16 @@
         "text": "Buy the tools and obligations together. ({money:12})"
       }
     },
+    "src.e04e37f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "Surveying settlements…"
+      }
+    },
     "src.e0507573": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133667,6 +133877,16 @@
       ],
       "source": {
         "text": "📕 The school fee for {name} cannot be met; their lessons pause for the season."
+      }
+    },
+    "src.e4226477": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": ": settlement site"
       }
     },
     "src.e4264699": {
@@ -135855,6 +136075,16 @@
         "text": "Neutral"
       }
     },
+    "src.e9391237": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{kind} in {county} county · held by {holder}"
+      }
+    },
     "src.e93c48fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137227,6 +137457,16 @@
       ],
       "source": {
         "text": "Hunt the beast."
+      }
+    },
+    "src.ed40e5dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "settlement site"
       }
     },
     "src.ed510836": {
@@ -141834,6 +142074,16 @@
         "text": "Paid estate officers turn accounts, collection, and supervision into a career."
       }
     },
+    "src.f9311c82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "references missing site"
+      }
+    },
     "src.f9348375": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142003,6 +142253,16 @@
       ],
       "source": {
         "text": "You are {name}, gently born and poorly landed. The gentry’s door is open; the baron’s hall is the next to force."
+      }
+    },
+    "src.f9985d6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "invalid settlement site id"
       }
     },
     "src.f99f02d5": {
@@ -157155,6 +157415,14 @@
         "text": "Hiring still uses an office’s authoritative eligibility, entry pay, and confirmation."
       }
     },
+    "ui:Historical places and growth derived from county development.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Historical places and growth derived from county development."
+      }
+    },
     "ui:Hold a consistory": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166082,14 +166350,6 @@
         "text": "Settlement"
       }
     },
-    "ui:Settlement composition is derived from county development.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Settlement composition is derived from county development."
-      }
-    },
     "ui:Settlement council · {asset}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -166116,12 +166376,12 @@
         "text": "Settlements and development"
       }
     },
-    "ui:Settlements are not founded manually. The county’s current development derives how many appear and whether the leading places are villages, towns, or a city.": {
+    "ui:Settlements are not founded manually. Significant counties show researched historical places — every realm capital, faith seat, and great city of the start date — while generated local names fill the remaining slots. The same place keeps one identity in both start dates, with a name and standing appropriate to the year.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Settlements are not founded manually. The county’s current development derives how many appear and whether the leading places are villages, towns, or a city."
+        "text": "Settlements are not founded manually. Significant counties show researched historical places — every realm capital, faith seat, and great city of the start date — while generated local names fill the remaining slots. The same place keeps one identity in both start dates, with a name and standing appropriate to the year."
       }
     },
     "ui:Setup cost": {
@@ -167721,6 +167981,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The county screen separates its authored bookmark start from later growth."
+      }
+    },
+    "ui:The county’s current development derives how many places appear and whether the leading ones are villages, towns, or a city, never below a historical place’s authored standing.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The county’s current development derives how many places appear and whether the leading ones are villages, towns, or a city, never below a historical place’s authored standing."
       }
     },
     "ui:The court": {
@@ -171550,6 +171818,14 @@
         "text": "Your {cleric}"
       }
     },
+    "ui:Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne."
+      }
+    },
     "ui:a Bishop": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172475,6 +172751,14 @@
         "text": "no mechanical effect"
       }
     },
+    "ui:no one": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "no one"
+      }
+    },
     "ui:no one, watching": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173350,6 +173634,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "your house would provide exactly {money:gold}"
+      }
+    },
+    "ui:your household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "your household"
       }
     },
     "ui:your lands": {
@@ -174983,6 +175275,17 @@
         "text": "{house}’s relationship with {leader}: {regard}."
       }
     },
+    "ui:{icon} Your {name} operates here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "icon",
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{icon} Your {name} operates here."
+      }
+    },
     "ui:{icon} level {level}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -175148,6 +175451,18 @@
       "location": "js/economy.js",
       "source": {
         "text": "{kind} charter · {days} days remain"
+      }
+    },
+    "ui:{kind} in {county} county · held by {holder}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "holder",
+        "kind"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{kind} in {county} county · held by {holder}"
       }
     },
     "ui:{kind} · a day’s outing": {
@@ -177580,6 +177895,16 @@
         "text": "🌾 Complete the holding at {settlement}?"
       }
     },
+    "ui:🌾 Your household farms {count} plots here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "🌾 Your household farms {count} plots here."
+      }
+    },
     "ui:🌾 {plots} land plots · largest holding {cluster}/{needed} at {settlement} · +{money:gold}/season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -177672,6 +177997,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "🏠 Household standards & property"
+      }
+    },
+    "ui:🏡 Your manor stands here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "🏡 Your manor stands here."
       }
     },
     "ui:🏰 Domain {held}/{cap} held directly": {
