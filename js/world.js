@@ -738,7 +738,7 @@ window.FB = window.FB || {};
      deterministic generated records covering the remaining slots, so a
      development reveal never projects or searches during play. The compiled
      records are derived world data and are never written into a save. */
-  var SETTLEMENT_MAX_SLOTS = 4;
+  var SETTLEMENT_MAX_SLOTS = 8;
   /* World-pixel snap ceiling for an authored coordinate. The 1100px raster
      spans roughly 12 px per degree of longitude, so 45 px is about 3–4
      degrees: a larger displacement means a wrong site-to-county assignment,
@@ -776,43 +776,59 @@ window.FB = window.FB || {};
     return null;
   }
 
-  /* Deterministic in-county point for a generated slot: hash-derived ring
-     candidates around the centroid first (distinct where the county allows
-     it), then the nearest free in-county cell, with the guaranteed
-     in-county centroid as the last resort for a tiny or concave county. */
-  function generatedSitePoint(world, pr, slot, used) {
+  /* Deterministic in-county point for a generated slot: the hash gives each
+     slot its own angle and radius band scaled to the county, so slots spread
+     across the county instead of stacking on its centroid. Candidates keep a
+     few cells clear of every already-placed site where the county allows it,
+     relaxing the clearance as the search widens; the guaranteed in-county
+     centroid remains the last resort for a tiny or concave county. */
+  function generatedSitePoint(world, pr, slot, placed) {
     var W = world.W, H = world.H, grid = world.grid;
     var h = strHash(pr.id + '@site@' + slot);
     var baseAngle = (h % 628) / 100;
-    for (var ring = 0; ring < 6; ring++) {
-      var radius = 2 + ring * 3;
-      for (var k = 0; k < 8; k++) {
-        var ang = baseAngle + k * Math.PI / 4;
-        var x = Math.round(pr.cx + Math.cos(ang) * radius);
-        var y = Math.round(pr.cy + Math.sin(ang) * radius);
-        if (x < 0 || y < 0 || x >= W || y >= H) continue;
-        if (grid[y * W + x] !== pr.idx + 1) continue;
-        var key = x + ',' + y;
-        if (used[key]) continue;
-        used[key] = 1;
-        return { x: x, y: y };
+    /* effective county radius from its raster area, floored so a small
+       county still has room to spread */
+    var estR = Math.max(6, Math.round(Math.sqrt((pr.area || 36) / 3.2)));
+    function clearOf(x, y, minD2) {
+      if (x < 0 || y < 0 || x >= W || y >= H) return false;
+      if (grid[y * W + x] !== pr.idx + 1) return false;
+      for (var i = 0; i < placed.length; i++) {
+        var ddx = x - placed[i].x, ddy = y - placed[i].y;
+        if (ddx * ddx + ddy * ddy < minD2) return false;
       }
+      return true;
     }
-    for (var r = 1; r <= SETTLEMENT_SNAP_MAX; r++) {
-      for (var dy = -r; dy <= r; dy++) {
-        for (var dx = -r; dx <= r; dx++) {
-          if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
-          var nx = pr.cx + dx, ny = pr.cy + dy;
-          if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
-          if (grid[ny * W + nx] !== pr.idx + 1) continue;
-          var key2 = nx + ',' + ny;
-          if (used[key2]) continue;
-          used[key2] = 1;
-          return { x: nx, y: ny };
+    var clearances = [16, 9, 1];
+    for (var pass = 0; pass < clearances.length; pass++) {
+      var minD2 = clearances[pass];
+      var baseR = Math.max(2, Math.round(estR * (0.3 + 0.1 * (h % 5))));
+      for (var ring = 0; ring < 6; ring++) {
+        var radius = Math.min(estR + 2, baseR + ring * 2);
+        for (var k = 0; k < 8; k++) {
+          var ang = baseAngle + k * Math.PI / 4;
+          var x = Math.round(pr.cx + Math.cos(ang) * radius);
+          var y = Math.round(pr.cy + Math.sin(ang) * radius);
+          if (clearOf(x, y, minD2)) {
+            placed.push({ x:x, y:y });
+            return { x:x, y:y };
+          }
+        }
+      }
+      for (var r = 1; r <= SETTLEMENT_SNAP_MAX; r++) {
+        for (var dy = -r; dy <= r; dy++) {
+          for (var dx = -r; dx <= r; dx++) {
+            if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;
+            var nx = pr.cx + dx, ny = pr.cy + dy;
+            if (clearOf(nx, ny, minD2)) {
+              placed.push({ x:nx, y:ny });
+              return { x:nx, y:ny };
+            }
+          }
         }
       }
     }
-    return { x: pr.cx, y: pr.cy };
+    placed.push({ x:pr.cx, y:pr.cy });
+    return { x:pr.cx, y:pr.cy };
   }
 
   function compileSites(world) {
@@ -825,7 +841,7 @@ window.FB = window.FB || {};
       if (pr.wasteland) continue;
       var authored = pr.settlements || [];
       var records = [];
-      var used = {}, seenNames = {};
+      var placed = [], seenNames = {};
       for (var ai = 0; ai < authored.length; ai++) {
         var entry = authored[ai];
         var geo = siteTable[entry.site];
@@ -845,7 +861,7 @@ window.FB = window.FB || {};
           sx = snapped.x; sy = snapped.y;
           snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
         }
-        used[sx + ',' + sy] = 1;
+        placed.push({ x: sx, y: sy });
         seenNames[entry.name] = 1;
         records.push({
           pid: pr.id, pidx: pr.idx, index: ai, site: entry.site,
@@ -861,7 +877,7 @@ window.FB = window.FB || {};
           name = FB.settlementName(pr.culture, h);
         }
         seenNames[name] = 1;
-        var pt = generatedSitePoint(world, pr, gi, used);
+        var pt = generatedSitePoint(world, pr, gi, placed);
         records.push({
           pid: pr.id, pidx: pr.idx, index: gi,
           site: 'generated__' + pr.id + '__' + gi,
@@ -3273,12 +3289,18 @@ window.FB = window.FB || {};
     return (state && state.dev && state.dev[pid]) || (pr ? pr.dev0 : 0) || 1;
   }
 
+  /* Development-scaled village reveals: one additional settlement becomes
+     visible at development 3, 5, 7, and 9. */
+  function villageBonus(dev) {
+    return (dev >= 3) + (dev >= 5) + (dev >= 7) + (dev >= 9);
+  }
+
   FB.settlementVisibleCount = function (state, pid) {
     const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
     if (!info) return 0;
     const dev = settlementDev(state, pid);
     return Math.min(SETTLEMENT_MAX_SLOTS,
-      Math.max(info.authored, info.legacyBase + (dev >= 5 ? 1 : 0)));
+      Math.max(info.authored, info.legacyBase + villageBonus(dev)));
   };
 
   /* Allocation-free seam for the map renderer: whether one compiled site is
@@ -3309,13 +3331,16 @@ window.FB = window.FB || {};
       ? FB.settlementKindRank(info.list[1].kind) : 0;
     function visibleAt(d) {
       return Math.min(SETTLEMENT_MAX_SLOTS,
-        Math.max(authored, legacyBase + (d >= 5 ? 1 : 0)));
+        Math.max(authored, legacyBase + villageBonus(d)));
     }
     const candidates = [];
+    if (visibleAt(3) > visibleAt(2)) candidates.push({ t: 3, change: 'new_village' });
     if (headBase < 1) candidates.push({ t: 4, change: 'head_town' });
     if (visibleAt(5) > visibleAt(4)) candidates.push({ t: 5, change: 'new_village' });
     if (secondBase < 1) candidates.push({ t: 6, change: 'second_town' });
     if (headBase < 2) candidates.push({ t: 7, change: 'head_city' });
+    if (visibleAt(7) > visibleAt(6)) candidates.push({ t: 7, change: 'new_village' });
+    if (visibleAt(9) > visibleAt(8)) candidates.push({ t: 9, change: 'new_village' });
     let next = null, change = null;
     for (const candidate of candidates) {
       if (candidate.t > development) {

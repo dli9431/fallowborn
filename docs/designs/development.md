@@ -16,9 +16,9 @@ development or change development-driven calculations.
 
 `FB.settlementDevelopment(state, pid)` is the read-only growth explanation shared by
 province, settlement, and Guide UI. It returns current and bookmark development plus
-the next settlement-growth threshold that will actually change something: 4 promotes
-the head village to a town, 5 adds one settlement, 6 promotes the second settlement to
-a town, and 7 promotes the head settlement to a city. Authored settlement baselines
+the next settlement-growth threshold that will actually change something: 3, 5, 7, and 9
+each add one settlement, 4 promotes the head village to a town, 6 promotes the second
+settlement to a town, and 7 promotes the head settlement to a city. Authored settlement baselines
 (`data/settlements.js`) floor a slot's kind and an authored list can make a slot
 visible early; thresholds already satisfied that way are skipped rather than promised.
 The UI displays the next threshold and explicitly compares current state with the
@@ -47,7 +47,7 @@ An authored `d.dev` is labeled as immediate county development when raised.
 Technology `fx.devCap` is labeled as the development ceiling above the base of 10
 for every county in the nation that owns it, not as current development.
 
-Buildings are **per-settlement**: each of a province's 2–4 settlement slots
+Buildings are **per-settlement**: each of a province's 2–8 settlement slots
 (`FB.settlementsOf` — stable indices that only grow with development, presented from
 the compiled authored/generated site records) may hold one copy of
 each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries.

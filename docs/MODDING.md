@@ -1726,13 +1726,13 @@ player-originated loan families, passive trade partnerships, and self-founded ve
 
 ## Settlements
 
-Each settled county exposes 2–4 settlement slots through **authored presentations plus
+Each settled county exposes 2–8 settlement slots through **authored presentations plus
 deterministic generated fallback**. Two identities exist: the numeric slot (the saved
 reference for buildings, land plots, manors, and enterprises) and the physical *site*
 (a globally stable slug with one longitude/latitude, derived world data that never
 enters a save). `FB.settlementsOf` returns the currently visible records as
 `{site, name, kind, x, y, authored}`; the visible count follows the legacy rule
-(2 + a plain hash bit of the province id, never the seeded RNG, +1 at dev 5) raised to
+(2 + a plain hash bit of the province id, never the seeded RNG, +1 at dev 3/5/7/9) raised to
 the authored count, and generated names still come from culture-flavored parts in
 `FBDATA.settlementNames` (in `data/cultures.js`; the `settlementNames` mod key merges
 per-culture sets, `default` covers the rest). Size follows current development — the

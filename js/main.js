@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.1';
+  FB.VERSION = '1.117.2';
   FB.CHANGELOG = [
+    { v: '1.117.2', date: '2026-08-09', changes: [
+      'Counties grow more settlements as they develop — six or seven in the most developed lands — and generated villages now spread across the county instead of clustering around its head.'
+    ] },
     { v: '1.117.1', date: '2026-08-09', changes: [
       'Settlements are easier to read on the map: names sit beneath clearer house, town, and city emblems at close zoom, county land and borders render smoothly, and the map zooms much further in. Settlement names in the Land tab now open that settlement and center the map on its county.',
       'The Guide gains a Back button when opened from another dialog, and Close simply dismisses it.',

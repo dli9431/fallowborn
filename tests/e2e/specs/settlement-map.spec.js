@@ -182,7 +182,7 @@ test('authored and generated settlement data is deterministic and read-only',
       /* an entirely un-authored county keeps fully generated slots */
       let generatedPid = null;
       for (const pr of FB.world.provs) {
-        if (!pr.wasteland && pr.dev0 <= 3 && FB.world.sitesByProv[pr.id] &&
+        if (!pr.wasteland && pr.dev0 <= 3 && pr.area >= 500 && FB.world.sitesByProv[pr.id] &&
             !FB.world.sitesByProv[pr.id].authored) {
           generatedPid = pr.id;
           break;
@@ -190,12 +190,24 @@ test('authored and generated settlement data is deterministic and read-only',
       }
       const generated = FB.settlementsOf(s, generatedPid);
       const generatedAgain = FB.settlementsOf(s, generatedPid);
+      /* generated slots spread across a county with room instead of
+         stacking on its centroid */
+      let minGap = Infinity;
+      for (let i = 0; i < generated.length; i++) {
+        for (let j = i + 1; j < generated.length; j++) {
+          const dx = generated[i].x - generated[j].x;
+          const dy = generated[i].y - generated[j].y;
+          const d = Math.sqrt(dx * dx + dy * dy);
+          if (d < minGap) minGap = d;
+        }
+      }
       return {
         roma:roma867,
         romaStable:JSON.stringify(roma867) === JSON.stringify(romaAgain),
         generatedPid:generatedPid,
         generated:generated,
         generatedStable:JSON.stringify(generated) === JSON.stringify(generatedAgain),
+        minGap:minGap,
         rngUnchanged:JSON.stringify(FB.getRngState()) === JSON.stringify(before.rng),
         stateUnchanged:JSON.stringify(s) === before.serialized,
         noSiteFieldsInState:before.serialized.indexOf('generated__') < 0 &&
@@ -214,6 +226,9 @@ test('authored and generated settlement data is deterministic and read-only',
     expect(result.generated[0]).toMatchObject({ kind:'village', authored:false });
     expect(result.generated[0].site).toBe('generated__' + result.generatedPid + '__0');
     expect(result.generatedStable).toBe(true);
+    /* generated slots spread across a county with room instead of stacking
+       on its centroid */
+    expect(result.minGap).toBeGreaterThanOrEqual(3);
     expect(result.rngUnchanged).toBe(true);
     expect(result.stateUnchanged).toBe(true);
     expect(result.noSiteFieldsInState).toBe(true);

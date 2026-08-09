@@ -25,14 +25,17 @@ game content — and clones the lists onto the already-built bookmark province o
 
 At world compilation (`compileSites` in `js/world.js`) every settled county receives an
 ordered record list: authored slots first (never renumbered), then deterministic
-generated slots filling to the maximum four so a development reveal never projects
+generated slots filling to the maximum eight so a development reveal never projects
 during play. Authored coordinates project into the declared county's raster, snapping
 to the nearest in-county cell when the simplified boundary requires it (displacement
 beyond 45 world px is an activation error). Generated slots keep the legacy plain-hash
 culture naming exactly (`FB.settlementName`, `FBDATA.settlementNames` in cultures.js)
-and take deterministic in-county points. `FB.settlementsOf(state, pid)` is the unchanged
+and take deterministic in-county points that spread across the county — each slot
+draws its own hash-derived angle and radius band scaled to the county, keeping a few
+cells clear of the other sites where the county allows it instead of stacking on the
+centroid. `FB.settlementsOf(state, pid)` is the unchanged
 public projection: the visible count follows the legacy rule (2 + a hash bit, +1 at
-dev 5) raised to the authored count, and each record carries `{site, name, kind, x, y,
+development 3, 5, 7, and 9) raised to the authored count, and each record carries `{site, name, kind, x, y,
 authored}` — callers reading only `name`/`kind` are unaffected. Kind thresholds: the
 head becomes at least a town at dev 4 and a city at 7, the second slot at least a town
 at 6, never below the authored baseline. `FB.settlementDevelopment` reports the next
