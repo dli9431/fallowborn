@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.6';
+  FB.VERSION = '1.117.7';
   FB.CHANGELOG = [
+    { v: '1.117.7', date: '2026-08-10', changes: [
+      'The Papacy & College deed now appears only for those who deal with the Church — landed rulers, monks and priests, bishops, and cardinals — instead of every Catholic serf.'
+    ] },
     { v: '1.117.6', date: '2026-08-10', changes: [
       'New games let you choose the exact settlement you were born in: pick a county and the map zooms in so you can tap a town or village — or take the county seat. Shared start codes remember the choice.'
     ] },

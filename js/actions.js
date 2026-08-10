@@ -723,7 +723,14 @@ window.FB = window.FB || {};
     show: function (s) {
       const c = me(s);
       return adult(s) && c && FB.faithHasSystem(c.religion, 'papacy', s) &&
-        !!FB.ensurePapacy;
+        !!FB.ensurePapacy &&
+        // Only roles that actually deal with the Church: landed rulers
+        // (investiture, sanctions), the ordained (monks/priests), and
+        // office-holding clergy (bishops, cardinals, popes).
+        (s.player.tier >= 3 ||
+          s.player.profession === 'monk' || s.player.profession === 'priest' ||
+          !!(FB.hasBishopric && FB.hasBishopric(s, c)) ||
+          !!(FB.papalOfficeOf && FB.papalOfficeOf(s, c)));
     },
     run: function () {
       if (FB.ui && FB.ui.showPapacy) FB.ui.showPapacy();

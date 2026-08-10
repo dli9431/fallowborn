@@ -70,3 +70,47 @@ test('reserves Rome from personal bishopric appointments', async function ({ pag
   expect(result.installed).toBe(false);
   expect(result.elsewhereReady).toBe(true);
 });
+
+test('gates the Papacy & College deed to church-facing roles', async function ({ page }) {
+  const result = await page.evaluate(function () {
+    const state = FB.state;
+    const player = state.player;
+    const me = state.chars[player.charId];
+    me.religion = 'catholic';
+    me.born = state.date.year - 35;
+    delete me.bishopric;
+    function shown() {
+      return FB.instantStatus(state, 'papacy').shown;
+    }
+
+    player.tier = 0;
+    player.provs = [];
+    player.profession = 'laborer';
+    const serf = shown();
+
+    player.profession = 'priest';
+    const priest = shown();
+
+    player.profession = 'monk';
+    const monk = shown();
+
+    player.profession = 'laborer';
+    player.tier = 3;
+    player.provs = ['london'];
+    const baron = shown();
+
+    player.tier = 0;
+    player.provs = [];
+    me.bishopric = { seeProvinceId:'london' };
+    const bishop = shown();
+    delete me.bishopric;
+
+    return { serf:serf, priest:priest, monk:monk, baron:baron, bishop:bishop };
+  });
+
+  expect(result.serf).toBe(false);
+  expect(result.priest).toBe(true);
+  expect(result.monk).toBe(true);
+  expect(result.baron).toBe(true);
+  expect(result.bishop).toBe(true);
+});
