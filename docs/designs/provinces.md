@@ -35,12 +35,15 @@ ordered record list: authored slots first (never renumbered), then deterministic
 generated slots filling to the maximum eight so a development reveal never projects
 during play. Authored coordinates project into the declared county's raster, snapping
 to the nearest in-county cell when the simplified boundary requires it (displacement
-beyond 45 world px is an activation error). Generated slots keep the legacy plain-hash
+beyond 45 world px is an activation error), then keeps a two-cell land margin from
+the sea: a coastal-edge cell leaves the emblem hanging over the smoothed coastline,
+so the point walks toward the county centroid to the first in-county cell with clear
+land around it (the original cell stands for islets and one-cell coastal strips). Generated slots keep the legacy plain-hash
 culture naming exactly (`FB.settlementName`, `FBDATA.settlementNames` in cultures.js)
 and take deterministic in-county points that spread across the county — each slot
 draws its own hash-derived angle and radius band scaled to the county, keeping a few
 cells clear of the other sites where the county allows it instead of stacking on the
-centroid. `FB.settlementsOf(state, pid)` is the unchanged
+centroid, then take the same inland nudge off coastal-edge cells. `FB.settlementsOf(state, pid)` is the unchanged
 public projection: the visible count follows the legacy rule (2 + a hash bit, +1 at
 development 3, 5, 7, and 9) raised to the curated (non-`fill`) authored count, and each record carries `{site, name, kind, x, y,
 authored}` — callers reading only `name`/`kind` are unaffected. Kind thresholds: the
@@ -102,7 +105,14 @@ through `FB.waterCrossing`. Personal travel, political adjacency, and other plai
 callers therefore retain their old behavior.
 
 The authored coastline, inland seas, rivers, and projection bounds are shared because
-the physical map window is the same. `FB.activateBookmark` validates the complete
+the physical map window is the same. One land polygon is a deliberate geographic
+exception to the simplified coastline: Venice's lagoon barrier islands sit just off
+the lagoon-mouth coast vertex as their own tiny landmass. They carry no county seed,
+so the unseeded-landmass fallback assigns every island pixel to the nearest seed —
+Venezia's — and the county keeps its mainland strip while gaining the island; the
+curated Venice site (its one deliberately non-real coordinate) sits on the island,
+and the settlement sea-margin walk never crosses water to drag it back ashore.
+`FB.activateBookmark` validates the complete
 definition, installs it in the legacy top-level fields, and lazily caches one raster per
 bookmark id. Switching dates replaces `FB.world` and the map's backing canvases but
 does not install a second set of pointer or keyboard listeners.

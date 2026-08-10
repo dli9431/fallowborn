@@ -338,6 +338,7 @@ window.FBDATA = window.FBDATA || {};
     geo_athlone_3313472: { x: -7.93722, y: 53.42278 },
     geo_athy_2966837: { x: -6.98028, y: 52.99139 },
     geo_atyrau_610529: { x: 51.88427, y: 47.1048 },
+    geo_aubagne_3036433: { x: 5.57067, y: 43.29276 },
     geo_aubange_2802990: { x: 5.80492, y: 49.56652 },
     geo_aubenas_3036418: { x: 4.39033, y: 44.61975 },
     geo_auchterarder_2656803: { x: -3.70692, y: 56.29612 },
@@ -512,6 +513,7 @@ window.FBDATA = window.FBDATA || {};
     geo_bradford_2654993: { x: -1.75206, y: 53.79391 },
     geo_braga_2742032: { x: -8.42311, y: 41.5514 },
     geo_braganca_2742027: { x: -6.75898, y: 41.80716 },
+    geo_braila_683902: { x: 27.97429, y: 45.27152 },
     geo_braintree_2654938: { x: 0.55292, y: 51.87819 },
     geo_braslav_629640: { x: 27.05715, y: 55.64387 },
     geo_brasov_683844: { x: 25.60613, y: 45.64861 },
@@ -533,6 +535,7 @@ window.FBDATA = window.FBDATA || {};
     geo_brive_la_gaillarde_3029974: { x: 1.53326, y: 45.1589 },
     geo_briviesca_3127611: { x: -3.32315, y: 42.54993 },
     geo_brno_stred_6694367: { x: 16.60712, y: 49.19343 },
+    geo_bron_3029931: { x: 4.91303, y: 45.73865 },
     geo_bronte_2525498: { x: 14.83377, y: 37.78863 },
     geo_brugge_2800931: { x: 3.22424, y: 51.20892 },
     geo_brussels_2800866: { x: 4.34878, y: 50.85045 },
@@ -569,6 +572,7 @@ window.FBDATA = window.FBDATA || {};
     geo_calatayud_3127047: { x: -1.64318, y: 41.35353 },
     geo_caldas_da_rainha_2270437: { x: -9.13839, y: 39.40326 },
     geo_caltanissetta_2525448: { x: 14.06216, y: 37.49025 },
+    geo_caluire_et_cuire_3029096: { x: 4.8464, y: 45.79462 },
     geo_calvi_3029090: { x: 8.75713, y: 42.56604 },
     geo_calvia_2520493: { x: 2.50621, y: 39.5657 },
     geo_camaiore_3181125: { x: 10.29754, y: 43.94265 },
@@ -956,6 +960,7 @@ window.FBDATA = window.FBDATA || {};
     geo_gabes_2468369: { x: 10.0982, y: 33.88146 },
     geo_gaillac_3016824: { x: 1.89686, y: 43.9016 },
     geo_galapagar_3121766: { x: -4.00426, y: 40.5783 },
+    geo_galati_677697: { x: 28.05028, y: 45.43687 },
     geo_galatina_3176407: { x: 18.17032, y: 40.17416 },
     geo_galmurti_7102155: { x: 59.44656, y: 27.48232 },
     geo_gamleby_2712988: { x: 16.40508, y: 57.89485 },
@@ -1122,6 +1127,7 @@ window.FBDATA = window.FBDATA || {};
     geo_hurghada_361291: { x: 33.81291, y: 27.25738 },
     geo_hvidovre_2619528: { x: 12.47708, y: 55.64297 },
     geo_hyderabad_1176734: { x: 68.37718, y: 25.39689 },
+    geo_hyeres_3012937: { x: 6.12857, y: 43.12038 },
     geo_i_zaz_172082: { x: 37.04628, y: 36.58662 },
     geo_iasi_675810: { x: 27.6, y: 47.16667 },
     geo_ibb_74477: { x: 44.18333, y: 13.96667 },
@@ -1369,6 +1375,7 @@ window.FBDATA = window.FBDATA || {};
     geo_la_rochelle_3006787: { x: -1.15222, y: 46.16308 },
     geo_la_roda_2515555: { x: -2.15723, y: 39.20735 },
     geo_la_seu_d_urgell_3109143: { x: 1.46144, y: 42.35877 },
+    geo_la_seyne_sur_mer_3006414: { x: 5.87816, y: 43.10322 },
     geo_la_spezia_3175081: { x: 9.82375, y: 44.103 },
     geo_la_teste_de_buch_3006283: { x: -1.14513, y: 44.63278 },
     geo_laghouat_2491191: { x: 2.86514, y: 33.8 },
@@ -1503,10 +1510,6 @@ window.FBDATA = window.FBDATA || {};
     geo_lviv_702550: { x: 24.02324, y: 49.83826 },
     geo_lyepyel_625743: { x: 28.699, y: 54.8814 },
     geo_lynemouth_3210207: { x: -1.5425, y: 55.21306 },
-    geo_lyon_03_6543969: { x: 4.85184, y: 45.76124 },
-    geo_lyon_06_6543972: { x: 4.85064, y: 45.76788 },
-    geo_lyon_07_6543973: { x: 4.84197, y: 45.74525 },
-    geo_lyon_08_6543974: { x: 4.86866, y: 45.73626 },
     geo_m_sila_2486690: { x: 4.53722, y: 35.70889 },
     geo_maastricht_2751283: { x: 5.68889, y: 50.84833 },
     geo_madinat_an_nasr_353225: { x: 31.3, y: 30.06667 },
@@ -1564,12 +1567,9 @@ window.FBDATA = window.FBDATA || {};
     geo_marratxi_2514097: { x: 2.7253, y: 39.62142 },
     geo_marsa_matruh_352733: { x: 27.23725, y: 31.3529 },
     geo_marsala_2524245: { x: 12.4367, y: 37.7992 },
-    geo_marseille_08_7284889: { x: 5.3821, y: 43.27083 },
-    geo_marseille_09_7284891: { x: 5.4057, y: 43.25433 },
-    geo_marseille_13_7284894: { x: 5.40836, y: 43.31856 },
-    geo_marseille_15_7284896: { x: 5.35386, y: 43.37224 },
     geo_marsta_2692475: { x: 17.85476, y: 59.62157 },
     geo_martigny_ville_2659748: { x: 7.07245, y: 46.10276 },
+    geo_martigues_2995387: { x: 5.05526, y: 43.40735 },
     geo_martin_3058780: { x: 18.92399, y: 49.06651 },
     geo_martina_franca_3173841: { x: 17.33814, y: 40.70355 },
     geo_martos_2514073: { x: -3.97264, y: 37.72107 },
@@ -1862,14 +1862,13 @@ window.FBDATA = window.FBDATA || {};
     geo_paphos_146214: { x: 32.42451, y: 34.77679 },
     geo_parachinar_1168394: { x: 70.10012, y: 33.89968 },
     geo_pardubice_3068582: { x: 15.77659, y: 50.04075 },
-    geo_paris_15_vaugirard_2970479: { x: 2.3003, y: 48.8412 },
-    geo_paris_16_passy_2988394: { x: 2.2769, y: 48.8637 },
     geo_parsabad_121380: { x: 47.9174, y: 39.6482 },
     geo_parthenay_2988447: { x: -0.24672, y: 46.64832 },
     geo_pasing_2855334: { x: 11.45599, y: 48.14146 },
     geo_pasinler_302824: { x: 41.66997, y: 39.97975 },
     geo_pasni_1168312: { x: 63.46921, y: 25.26302 },
     geo_passy_2988393: { x: 6.69562, y: 45.92341 },
+    geo_passy_2988394: { x: 2.2769, y: 48.8637 },
     geo_paterna_2512862: { x: -0.44079, y: 39.50263 },
     geo_patnos_302819: { x: 42.85693, y: 39.22493 },
     geo_patra_255683: { x: 21.73508, y: 38.2462 },
@@ -1918,6 +1917,7 @@ window.FBDATA = window.FBDATA || {};
     geo_plerin_2986795: { x: -2.76975, y: 48.53451 },
     geo_pleven_728203: { x: 24.61666, y: 43.41791 },
     geo_ploemeur_2986732: { x: -3.42952, y: 47.73512 },
+    geo_ploiesti_670474: { x: 26.01667, y: 44.95 },
     geo_ploufragan_2986678: { x: -2.79605, y: 48.49005 },
     geo_plovdiv_728193: { x: 24.75001, y: 42.15387 },
     geo_plymouth_2640194: { x: -4.14305, y: 50.37153 },
@@ -1996,6 +1996,7 @@ window.FBDATA = window.FBDATA || {};
     geo_ramsgate_2639660: { x: 1.41797, y: 51.33568 },
     geo_randers_2615006: { x: 10.03639, y: 56.4607 },
     geo_rapallo_3169602: { x: 9.22796, y: 44.3496 },
+    geo_rapperswil_2659099: { x: 8.82228, y: 47.22557 },
     geo_raseborg_639853: { x: 23.43967, y: 59.97735 },
     geo_rauma_639734: { x: 21.51127, y: 61.12724 },
     geo_ravar_118704: { x: 56.80545, y: 31.26562 },
@@ -2123,6 +2124,7 @@ window.FBDATA = window.FBDATA || {};
     geo_saint_petersburg_498817: { x: 30.31413, y: 59.93863 },
     geo_saint_pierre_des_corps_2977491: { x: 0.74849, y: 47.38623 },
     geo_saint_pol_sur_mer_2977388: { x: 2.33983, y: 51.03116 },
+    geo_saint_priest_2977356: { x: 4.94385, y: 45.69651 },
     geo_saint_quentin_en_yvelines_8533870: { x: 2.01891, y: 48.77186 },
     geo_saint_sebastien_sur_loire_2976984: { x: -1.50332, y: 47.20768 },
     geo_saint_yrieix_la_perche_2976546: { x: 1.20329, y: 45.5145 },
@@ -2203,6 +2205,7 @@ window.FBDATA = window.FBDATA || {};
     geo_scandiano_3166989: { x: 10.69558, y: 44.5983 },
     geo_scandicci_3166988: { x: 11.18794, y: 43.75423 },
     geo_schaerbeek_2787149: { x: 4.37737, y: 50.86935 },
+    geo_schaffhausen_2658761: { x: 8.63493, y: 47.69732 },
     geo_schio_3166917: { x: 11.35671, y: 45.71262 },
     geo_schoneberg_2836788: { x: 13.3443, y: 52.49801 },
     geo_schwabach_2835537: { x: 11.02346, y: 49.33047 },
@@ -2211,9 +2214,6 @@ window.FBDATA = window.FBDATA || {};
     geo_schweinfurt_2834498: { x: 10.22175, y: 50.04937 },
     geo_schwerin_2834282: { x: 11.41316, y: 53.62937 },
     geo_scunthorpe_2638324: { x: -0.65437, y: 53.57905 },
-    geo_sector_2_11048318: { x: 26.13321, y: 44.4528 },
-    geo_sector_3_11048319: { x: 26.16874, y: 44.4234 },
-    geo_sector_6_11048323: { x: 26.01649, y: 44.43579 },
     geo_sedan_2975349: { x: 4.94028, y: 49.70187 },
     geo_seeb_288967: { x: 58.18911, y: 23.67027 },
     geo_segovia_3109256: { x: -4.11839, y: 40.94808 },
@@ -2528,6 +2528,7 @@ window.FBDATA = window.FBDATA || {};
     geo_unaizah_101732: { x: 44, y: 26.1 },
     geo_urgut_shahri_1215839: { x: 67.26118, y: 39.41902 },
     geo_usak_298299: { x: 29.4058, y: 38.67351 },
+    geo_uster_2658216: { x: 8.72091, y: 47.34713 },
     geo_usti_nad_labem_3063548: { x: 14.03227, y: 50.6607 },
     geo_utebo_3107139: { x: -0.99916, y: 41.70826 },
     geo_utena_593672: { x: 25.60462, y: 55.4978 },
@@ -2554,6 +2555,8 @@ window.FBDATA = window.FBDATA || {};
     geo_vastervik_2664203: { x: 16.63733, y: 57.7584 },
     geo_vasto_3164672: { x: 14.70649, y: 42.1115 },
     geo_vasyl_evsky_ostrov_8504949: { x: 30.25377, y: 59.94091 },
+    geo_vaugirard_2970479: { x: 2.3003, y: 48.8412 },
+    geo_vaulx_en_velin_2970456: { x: 4.9251, y: 45.78693 },
     geo_vejle_2610613: { x: 9.5357, y: 55.70927 },
     geo_vel_sk_475938: { x: 42.0992, y: 61.06919 },
     geo_veles_785058: { x: 21.77196, y: 41.71719 },
@@ -2735,9 +2738,6 @@ window.FBDATA = window.FBDATA || {};
     geo_zrenjanin_783814: { x: 20.38194, y: 45.38361 },
     geo_zuera_3104226: { x: -0.78984, y: 41.86775 },
     geo_zuglo_3042430: { x: 19.10549, y: 47.51758 },
-    geo_zurich_kreis_11_6295533: { x: 8.52166, y: 47.42326 },
-    geo_zurich_kreis_3_6295532: { x: 8.50296, y: 47.35785 },
-    geo_zurich_kreis_9_6295534: { x: 8.47993, y: 47.38245 },
     geo_zvyahel_699553: { x: 27.60884, y: 50.59141 },
     geo_zweibrucken_2803620: { x: 7.36977, y: 49.24686 },
     geo_zwickau_2803560: { x: 12.48839, y: 50.72724 },
@@ -5001,11 +5001,11 @@ window.FBDATA = window.FBDATA || {};
   both('lyon', [
       ['lyon_head', 'Lyon', 'village'],
       ['geo_villeurbanne_2968254', 'Villeurbanne', 'village'],
-      ['geo_lyon_03_6543969', 'Lyon 03', 'village'],
-      ['geo_lyon_08_6543974', 'Lyon 08', 'village'],
-      ['geo_lyon_07_6543973', 'Lyon 07', 'village'],
       ['geo_venissieux_2970072', 'Vénissieux', 'village'],
-      ['geo_lyon_06_6543972', 'Lyon 06', 'village']
+      ['geo_caluire_et_cuire_3029096', 'Caluire-et-Cuire', 'village'],
+      ['geo_saint_priest_2977356', 'Saint-Priest', 'village'],
+      ['geo_bron_3029931', 'Bron', 'village'],
+      ['geo_vaulx_en_velin_2970456', 'Vaulx-en-Velin', 'village']
     ]);
   both('macon', [
       ['macon_head', 'Mâcon', 'village'],
@@ -5082,10 +5082,10 @@ window.FBDATA = window.FBDATA || {};
       ['marseille_head', 'Marseille', 'village'],
       ['geo_toulon_2972328', 'Toulon', 'village'],
       ['geo_aix_en_provence_3038354', 'Aix-en-Provence', 'village'],
-      ['geo_marseille_13_7284894', 'Marseille 13', 'village'],
-      ['geo_marseille_08_7284889', 'Marseille 08', 'village'],
-      ['geo_marseille_15_7284896', 'Marseille 15', 'village'],
-      ['geo_marseille_09_7284891', 'Marseille 09', 'village']
+      ['geo_la_seyne_sur_mer_3006414', 'La Seyne-sur-Mer', 'village'],
+      ['geo_hyeres_3012937', 'Hyères', 'village'],
+      ['geo_martigues_2995387', 'Martigues', 'village'],
+      ['geo_aubagne_3036433', 'Aubagne', 'village']
     ]);
   both('mecca', [
       ['geo_jeddah_105343', 'Jeddah', 'village'],
@@ -5459,9 +5459,9 @@ window.FBDATA = window.FBDATA || {};
     ]);
   both('paris', [
       ['geo_marne_la_vallee_12278193', 'Marne La Vallée', 'village'],
-      ['geo_paris_15_vaugirard_2970479', 'Paris 15 Vaugirard', 'village'],
+      ['geo_vaugirard_2970479', 'Vaugirard', 'village'],
       ['geo_cergy_pontoise_8555643', 'Cergy-Pontoise', 'village'],
-      ['geo_paris_16_passy_2988394', 'Paris 16 Passy', 'village'],
+      ['geo_passy_2988394', 'Passy', 'village'],
       ['geo_saint_quentin_en_yvelines_8533870', 'Saint-Quentin-en-Yvelines', 'village']
     ]);
   both('parma', [
@@ -6041,10 +6041,10 @@ window.FBDATA = window.FBDATA || {};
   both('silistra', [
       ['silistra_head', 'Silistra', 'village'],
       ['geo_bucharest_683506', 'Bucharest', 'village'],
-      ['geo_sector_3_11048319', 'Sector 3', 'village'],
-      ['geo_sector_6_11048323', 'Sector 6', 'village'],
       ['geo_constanta_680963', 'Constanţa', 'village'],
-      ['geo_sector_2_11048318', 'Sector 2', 'village']
+      ['geo_galati_677697', 'Galaţi', 'village'],
+      ['geo_ploiesti_670474', 'Ploieşti', 'village'],
+      ['geo_braila_683902', 'Brăila', 'village']
     ]);
   both('silves', [
       ['silves_head', 'Silves', 'village'],
@@ -6878,9 +6878,9 @@ window.FBDATA = window.FBDATA || {};
       ['zurich_head', 'Zürich', 'village'],
       ['geo_winterthur_2657970', 'Winterthur', 'village'],
       ['geo_luzern_2659811', 'Luzern', 'village'],
-      ['geo_zurich_kreis_11_6295533', 'Zürich (Kreis 11)', 'village'],
-      ['geo_zurich_kreis_3_6295532', 'Zürich (Kreis 3)', 'village'],
-      ['geo_zurich_kreis_9_6295534', 'Zürich (Kreis 9)', 'village']
+      ['geo_schaffhausen_2658761', 'Schaffhausen', 'village'],
+      ['geo_rapperswil_2659099', 'Rapperswil', 'village'],
+      ['geo_uster_2658216', 'Uster', 'village']
     ]);
 
   /* Append after the curated layouts; never replace them. */

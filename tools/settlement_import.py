@@ -459,6 +459,24 @@ def norm_name(name):
     return ''.join(c for c in base if not unicodedata.combining(c)).lower().strip()
 
 
+NUMBERED_ADMIN = re.compile(r'^(.*?)\s+\d{1,2}(?:er|eme|ème|e)?\s+(\S.*)$')
+
+
+def clean_numbered_name(name):
+    """GeoNames catalogs city sections under modern administrative labels
+    like 'Paris 16 Passy' or 'Paris 15 Vaugirard'; the medieval world wants
+    the historical place name the label embeds ('Passy', 'Vaugirard').
+    A bare numbered label ('Lyon 01') or an '… Arrondissement' suffix has
+    no historical reading, and any name still carrying digits after the
+    strip is a modern artifact — drop the candidate."""
+    m = NUMBERED_ADMIN.match(name)
+    if m and not m.group(2).lower().startswith('arrondissement'):
+        name = m.group(2)
+    if any(c.isdigit() for c in name):
+        return ''
+    return name.strip()
+
+
 def slugify(name, node):
     base = unicodedata.normalize('NFKD', name)
     ascii_name = ''.join(c for c in base if not unicodedata.combining(c))
@@ -630,6 +648,7 @@ def main():
     # -- phase 4: select per county ----------------------------------------
     selected = {}  # pid -> [node, ...]
     dropped_water = 0
+    dropped_numbered = 0
     for seed in targets:
         pid = seed['id']
         cand = by_winner.get(pid, [])
@@ -648,7 +667,12 @@ def main():
                 -PLACE_RANK.get(n2['place'], 0),
                 -int(re.sub(r'\D', '', n2['population']) or 0),
                 n2['win_dist'], n2['id'])):
-            nn = norm_name(n['name'])
+            cleaned = clean_numbered_name(n['name'])
+            if not cleaned:
+                dropped_numbered += 1
+                continue
+            n['name'] = cleaned
+            nn = norm_name(cleaned)
             if nn in seen or nn == head_name:
                 continue
             seen.add(nn)
@@ -659,8 +683,8 @@ def main():
         selected[pid] = uniq
 
     total = sum(len(v) for v in selected.values())
-    print('selected %d real settlements (%d dropped offshore)'
-          % (total, dropped_water))
+    print('selected %d real settlements (%d dropped offshore, %d numbered '
+          'labels cleaned or dropped)' % (total, dropped_water, dropped_numbered))
 
     # -- phase 5: emit data/settlements_real.js ----------------------------
     def county_entries(seed):

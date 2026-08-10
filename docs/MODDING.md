@@ -1754,6 +1754,9 @@ with `fill: true`: real names and locations for every slot the curated data does
 cover, including a county-head entry named after the county itself, without forcing
 early visibility. Curated entries always win; where the geodata has too few named
 places (steppe, desert, tundra), the remaining slots keep generated names.
+Modern numbered administrative labels ('Paris 16 Passy') are cleaned to the
+historical name they embed ('Passy'); labels with no historical reading are
+dropped for the next real place.
 An optional `--topup` pass adds places from OpenStreetMap.
 Settlement data: GeoNames geographical database (CC BY 4.0);
 top-up data © OpenStreetMap contributors, ODbL.
@@ -1775,7 +1778,10 @@ may carry the ordered `settlements` list shown in *Adding a province*. Every ent
 slugs, coordinates, kinds, missing sites, repeats within a county, a site assigned to
 two counties in one bookmark, wasteland lists, and lists over eight entries; world
 compilation additionally rejects a coordinate that lands implausibly far outside the
-declared county's raster. Reordering a published mod's settlement list can move saved
+declared county's raster. A coordinate that survives the snap but sits on a
+coastal-edge cell is nudged inland at compile time (a two-cell land margin, walking
+toward the county centroid), so a seaside town renders against land, not the
+smoothed waterline. Reordering a published mod's settlement list can move saved
 property between named places even though the numeric save remains valid — append new
 slots or deliberately replace the presentation of an existing index. A mod that
 supplies neither `settlementSites` nor `settlements` gets deterministic generated sites

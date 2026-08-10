@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.3';
+  FB.VERSION = '1.117.4';
   FB.CHANGELOG = [
+    { v: '1.117.4', date: '2026-08-10', changes: [
+      'Coastal settlements no longer hang over the waterline at close zoom, and Venice now sits on its own lagoon island.',
+      'Sovereign capitals stand out: a gold star rides beside the capital county’s name on the map, and the Land tab tells you when a county is its realm’s capital.',
+      'Real settlement names that carried modern district numbers now use their historical names instead.'
+    ] },
     { v: '1.117.3', date: '2026-08-09', changes: [
       'Settlements now use real place names and locations — nearly three thousand towns and villages from the GeoNames database fill every county, alongside the curated historical sites.'
     ] },

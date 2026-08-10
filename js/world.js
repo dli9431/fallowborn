@@ -776,6 +776,53 @@ window.FB = window.FB || {};
     return null;
   }
 
+  /* Land margin (in raster cells) a site keeps from the sea. A site snapped
+     onto a coastal-edge cell is legally inside its county, but the emblem is
+     centered on that cell while the close-zoom backdrop smooths the
+     coastline, so the art reads as floating offshore. */
+  var SITE_SEA_MARGIN = 2;
+
+  /* True when every cell within the emblem's visual radius is land. Cells
+     outside the raster or painted as sea count as water; a neighboring
+     county's land is fine — the backdrop paints it as land too. */
+  function seaClearCell(world, x, y) {
+    var W = world.W, H = world.H, grid = world.grid;
+    for (var dy = -SITE_SEA_MARGIN; dy <= SITE_SEA_MARGIN; dy++) {
+      for (var dx = -SITE_SEA_MARGIN; dx <= SITE_SEA_MARGIN; dx++) {
+        var nx = x + dx, ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) return false;
+        if (!grid[ny * W + nx]) return false;
+      }
+    }
+    return true;
+  }
+
+  /* Pull a coastal-edge point inland: walk toward the county centroid and
+     stop at the first in-county cell with a full land margin that does not
+     crowd an already-placed site. The original cell stands when the walk
+     finds nothing (islets, fjords, a one-cell coastal strip), and the walk
+     never crosses open water — a centroid across a bay means the site lives
+     on a separate fragment of its county (Venice's island), where it
+     belongs. */
+  function seaMarginSnap(world, pr, x, y, placed) {
+    if (seaClearCell(world, x, y)) return { x: x, y: y };
+    for (var i = 1; i <= 14; i++) {
+      var nx = Math.round(x + (pr.cx - x) * i / 14);
+      var ny = Math.round(y + (pr.cy - y) * i / 14);
+      if (nx < 0 || ny < 0 || nx >= world.W || ny >= world.H) continue;
+      if (!world.grid[ny * world.W + nx]) break;
+      if (world.grid[ny * world.W + nx] !== pr.idx + 1) continue;
+      if (!seaClearCell(world, nx, ny)) continue;
+      var clash = false;
+      for (var p = 0; p < placed.length; p++) {
+        var ddx = nx - placed[p].x, ddy = ny - placed[p].y;
+        if (ddx * ddx + ddy * ddy < 9) { clash = true; break; }
+      }
+      if (!clash) return { x: nx, y: ny };
+    }
+    return { x: x, y: y };
+  }
+
   /* Deterministic in-county point for a generated slot: the hash gives each
      slot its own angle and radius band scaled to the county, so slots spread
      across the county instead of stacking on its centroid. Candidates keep a
@@ -866,6 +913,8 @@ window.FB = window.FB || {};
           sx = snapped.x; sy = snapped.y;
           snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
         }
+        var adjusted = seaMarginSnap(world, pr, sx, sy, placed);
+        sx = adjusted.x; sy = adjusted.y;
         placed.push({ x: sx, y: sy });
         seenNames[entry.name] = 1;
         records.push({
@@ -883,6 +932,11 @@ window.FB = window.FB || {};
         }
         seenNames[name] = 1;
         var pt = generatedSitePoint(world, pr, gi, placed);
+        /* generatedSitePoint already pushed its pick; swap it for the
+           inland-adjusted point so coastal slots keep the same sea margin */
+        placed.pop();
+        pt = seaMarginSnap(world, pr, pt.x, pt.y, placed);
+        placed.push(pt);
         records.push({
           pid: pr.id, pidx: pr.idx, index: gi,
           site: 'generated__' + pr.id + '__' + gi,

@@ -63,6 +63,28 @@ test('real fill appends valid presentations after the curated layouts in both bo
     expect(result.fillEntries).toBeGreaterThan(1500);
   });
 
+test('no settlement name carries a modern numbered administrative label',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      /* 'Paris 16 Passy'-style GeoNames labels are cleaned to their
+         historical reading ('Passy') at import; bare numeric labels are
+         dropped. Neither the data nor the compiled world may keep one. */
+      const numbered = [];
+      for (const bm of ['867', '1066']) {
+        for (const pr of FB.bookmark(bm).provinces) {
+          for (const e of (pr.settlements || [])) {
+            if (/\d/.test(e.name)) numbered.push(bm + ':' + pr.id + ':' + e.name);
+          }
+        }
+      }
+      return { numbered:numbered };
+    });
+
+    expect(result.numbered).toEqual([]);
+  });
+
 test('fill presentations do not force early settlement visibility', async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The visibility contract runs once against the primary file target.');

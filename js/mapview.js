@@ -21,7 +21,7 @@ window.FB = window.FB || {};
     hilite: null, hiliteCtx: null,
     viewX: 0, viewY: 0, zoom: 1, minZoom: 0.5, maxZoom: 80,
     ownerOf: null, colorOf: null, colorOpacityOf: null,
-    selected: null, playerProv: null, capitals: [],
+    selected: null, playerProv: null, capitals: [], capitalSet: {},
     focusMembers: null, focusGroupActive: false,
     groupOutline: null, selectedOutline: null,
     groupOutlineSmooth: null, selectedOutlineSmooth: null,
@@ -127,6 +127,9 @@ window.FB = window.FB || {};
   /* ---------- base image ---------- */
   M.setOwnerFns = function (ownerOf, colorOf, capitals, holderOf, colorOpacityOf) {
     M.ownerOf = ownerOf; M.colorOf = colorOf; M.capitals = capitals || [];
+    /* lookup for the per-label capital star; rebuilt with the capitals list */
+    M.capitalSet = {};
+    for (const cap of M.capitals) M.capitalSet[cap] = 1;
     M.holderOf = holderOf || null;
     M.colorOpacityOf = colorOpacityOf || null;
   };
@@ -742,17 +745,16 @@ window.FB = window.FB || {};
         }
         ctx.strokeText(provinceName, s[0], s[1]);
         ctx.fillText(provinceName, s[0], s[1]);
-      }
-      // capital stars
-      ctx.font = Math.round(9 * M.dpr) + 'px Georgia';
-      for (const cap of M.capitals) {
-        const pr = FB.world.byId[cap];
-        if (!pr) continue;
-        const s = toScreen(pr.cx, pr.cy - 8);
-        const focused = !M.focusGroupActive ||
-          (M.focusMembers && M.focusMembers[pr.idx]);
-        ctx.fillStyle = focused ? '#ffe28a' : 'rgba(255,226,138,0.42)';
-        ctx.fillText('★', s[0], s[1]);
+        /* a sovereign capital's ★ rides just left of its county label, so
+           the marker always sits exactly where the name is, at any zoom */
+        if (M.capitalSet[pr.id]) {
+          const starX = s[0] - ctx.measureText(provinceName).width / 2 - 7 * M.dpr;
+          ctx.lineWidth = 2.5 * M.dpr;
+          ctx.strokeStyle = focused ? 'rgba(20,16,10,0.8)' : 'rgba(20,16,10,0.4)';
+          ctx.fillStyle = focused ? '#ffe28a' : 'rgba(255,226,138,0.55)';
+          ctx.strokeText('★', starX, s[1]);
+          ctx.fillText('★', starX, s[1]);
+        }
       }
     }
     // great holy-war objectives and temporary occupations sit beneath hosts

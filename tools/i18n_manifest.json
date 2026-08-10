@@ -64336,6 +64336,16 @@
         "text": "Samarkand"
       }
     },
+    "src.3335bf63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "★ {realm}"
+      }
+    },
     "src.33437dda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103430,6 +103440,16 @@
       ],
       "source": {
         "text": "Household Shrine"
+      }
+    },
+    "src.96c5d1d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Realm capital"
       }
     },
     "src.96c95d05": {
@@ -177662,6 +177682,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "⏮ Previous"
+      }
+    },
+    "ui:★ {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "★ {realm}"
       }
     },
     "ui:☠ {name} is Dead": {

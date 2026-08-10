@@ -3883,8 +3883,21 @@ window.FB = window.FB || {};
         h += landKv('Foreign policy', esc(FB.isForeignPolicyTarget(s, rid)
           ? foreignPolicyStanceText(s, rid) : FB.T('Out of reach')), true);
       }
+      let capitalOfRealm = null;
+      for (const capRid in s.realms) {
+        const capRealm = s.realms[capRid];
+        // sovereign capitals only — matches the map's ★ marker; a vassal
+        // single-county realm's capital is trivially itself
+        if (capRealm.alive && !capRealm.liege && capRealm.capital === pid) {
+          capitalOfRealm = capRealm;
+          break;
+        }
+      }
       h += '</section><section class="land-section"><h3 class="land-section-title">' +
         esc(FB.T('County')) + '</h3>' +
+        (capitalOfRealm ? landKv('Realm capital', esc(FB.T('★ {realm}', {
+          realm: capitalOfRealm.name
+        })), true) : '') +
         landKv('Culture', esc(cultureName(s, pr.culture))) +
         landKv('Faith', faithDetailsLink(s, pr.religion)) +
         landKv('Terrain', esc(terrainName(pr.terrain)) +

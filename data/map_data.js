@@ -127,7 +127,13 @@ FBDATA.land = [
 /* ---- Gotland ---- */
 [ 18.1,57.1, 18.35,57.45, 19.0,57.9, 18.8,57.4, 18.3,56.9 ],
 /* ---- Mallorca ---- */
-[ 2.35,39.55, 3.2,39.85, 3.45,39.7, 3.0,39.3, 2.4,39.45 ]
+[ 2.35,39.55, 3.2,39.85, 3.45,39.7, 3.0,39.3, 2.4,39.45 ],
+/* ---- Venice's lagoon barrier islands. One raster-thin landmass just off
+        the lagoon-mouth coast vertex (12.5,45.45); it carries no county
+        seed, so every pixel falls back to the nearest seed overall —
+        Venezia's — and the county gains its island. The curated Venice
+        site (data/settlements.js) sits on it. ---- */
+[ 12.64,45.44, 12.74,45.40, 12.64,44.92, 12.54,44.96 ]
 ];
 
 /* Inland seas carved OUT of land polygons */

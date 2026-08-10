@@ -794,6 +794,176 @@ test('targeting modes keep the parent county before any settlement sheet',
     expect(result.browseSelected).toBe(result.pickCounty);
   });
 
+test('the Land tab flags a sovereign realm capital and spares other counties',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const pids = await page.evaluate(function () {
+      const s = FB.state;
+      let capital = null, ordinary = null, realmName = null;
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        if (!r.alive || r.liege) continue;
+        const pr = FB.world.byId[r.capital];
+        if (!pr || pr.wasteland) continue;
+        capital = r.capital;
+        realmName = r.name;
+        break;
+      }
+      for (const pr of FB.world.provs) {
+        if (pr.wasteland || pr.id === capital) continue;
+        let isCap = false;
+        for (const id in s.realms) {
+          const r = s.realms[id];
+          if (r.alive && !r.liege && r.capital === pr.id) isCap = true;
+        }
+        if (!isCap) { ordinary = pr.id; break; }
+      }
+      return { capital:capital, ordinary:ordinary, realmName:realmName };
+    });
+
+    /* the capital county names its realm beside the ★ row */
+    await page.evaluate(function (id) {
+      FB.map.select(id);
+      FB.ui.showTab('prov', { history:false });
+    }, pids.capital);
+    await waitForUiRefresh(page);
+    await expect(page.locator('#tab-prov')).toContainText('Realm capital');
+    await expect(page.locator('#tab-prov')).toContainText(pids.realmName);
+
+    /* an ordinary county shows no such row */
+    await page.evaluate(function (id) {
+      FB.map.select(id);
+      FB.ui.showTab('prov', { history:false });
+    }, pids.ordinary);
+    await waitForUiRefresh(page);
+    await expect(page.locator('#tab-prov')).not.toContainText('Realm capital');
+  });
+
+test('Venice sits on its lagoon island while its county keeps the mainland',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      const w = FB.world, grid = w.grid;
+      const pr = w.byId.venezia;
+      const info = w.sitesByProv.venezia;
+      const head = info.list[0];
+      function seaOnPath(x0, y0, x1, y1) {
+        for (let i = 1; i < 60; i++) {
+          const x = Math.round(x0 + (x1 - x0) * i / 60);
+          const y = Math.round(y0 + (y1 - y0) * i / 60);
+          if (!grid[y * w.W + x]) return true;
+        }
+        return false;
+      }
+      /* Venice (the county head) is on a land fragment cut off from the
+         county centroid by open water — the lagoon island */
+      const headInCounty = grid[head.y * w.W + head.x] === pr.idx + 1;
+      const island = seaOnPath(head.x, head.y, pr.cx, pr.cy);
+      /* the county still holds its mainland strip, so a mainland settlement
+         reaches the centroid over land */
+      const mainland = info.list.filter(function (rec) {
+        return !seaOnPath(rec.x, rec.y, pr.cx, pr.cy);
+      });
+      return {
+        headName:head.name, headInCounty:headInCounty, island:island,
+        mainlandNames:mainland.map(function (rec) { return rec.name; }),
+        area:pr.area
+      };
+    });
+
+    expect(result.headName).toBe('Venice');
+    expect(result.headInCounty).toBe(true);
+    expect(result.island).toBe(true);
+    expect(result.mainlandNames.length).toBeGreaterThan(0);
+    /* far more than the island's handful of cells — the strip survives */
+    expect(result.area).toBeGreaterThan(30);
+  });
+
+/* ---------- coastal placement ---------- */
+
+test('compiled sites stay in-county and keep a land margin from the sea',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      const w = FB.world, W = w.W, H = w.H, grid = w.grid;
+      function seaAdjacent(x, y) {
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const nx = x + dx, ny = y + dy;
+            if (nx < 0 || ny < 0 || nx >= W || ny >= H) return true;
+            if (!grid[ny * W + nx]) return true;
+          }
+        }
+        return false;
+      }
+      let total = 0, inCounty = true, offshore = 0;
+      const coastal = { oviedo:[], santander:[] };
+      for (const rec of w.sites) {
+        total++;
+        if (grid[rec.y * W + rec.x] !== rec.pidx + 1) inCounty = false;
+        const adjacent = seaAdjacent(rec.x, rec.y);
+        if (adjacent) offshore++;
+        if (rec.pid in coastal) {
+          coastal[rec.pid].push({ name:rec.name, offshore:adjacent });
+        }
+      }
+      return {
+        total:total, inCounty:inCounty, offshore:offshore, coastal:coastal
+      };
+    });
+
+    /* every site — curated, real-world fill, or generated — still sits on
+       one of its own county's cells after the inland nudge */
+    expect(result.inCounty).toBe(true);
+    /* islet/fjord fallbacks are rare: essentially every site keeps a full
+       land margin so its emblem cannot read as floating offshore */
+    expect(result.offshore).toBeLessThan(result.total * 0.02);
+    /* the reported Bay of Biscay counties: their real coastal towns no
+       longer hang over the painted water */
+    for (const pid of ['oviedo', 'santander']) {
+      expect(result.coastal[pid].length).toBeGreaterThan(0);
+      for (const rec of result.coastal[pid]) {
+        expect(rec.offshore).toBe(false);
+      }
+    }
+  });
+
+test('the capital-star lookup tracks exactly the sovereign realm capitals',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const expected = {};
+      for (const id in s.realms) {
+        const r = s.realms[id];
+        if (r.alive && !r.liege && FB.world.byId[r.capital]) {
+          expected[r.capital] = 1;
+        }
+      }
+      let sovereign = 0, extras = 0, missing = 0;
+      for (const pid in expected) {
+        sovereign++;
+        if (!FB.map.capitalSet[pid]) missing++;
+      }
+      for (const pid in FB.map.capitalSet) {
+        if (!expected[pid]) extras++;
+      }
+      return { sovereign:sovereign, missing:missing, extras:extras };
+    });
+
+    /* the renderer stars a county label iff it is a living sovereign's
+       capital — no vassal seats, no dead realms, none dropped */
+    expect(result.sovereign).toBeGreaterThan(20);
+    expect(result.missing).toBe(0);
+    expect(result.extras).toBe(0);
+  });
+
 /* ---------- mod compatibility ---------- */
 
 test('mods merge physical sites and compile complete province presentations',

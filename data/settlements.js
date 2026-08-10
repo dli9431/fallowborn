@@ -42,7 +42,10 @@ window.FBDATA = window.FBDATA || {};
   var SITES = {
     roma: { x: 12.4964, y: 41.9028 },
     ostia: { x: 12.2908, y: 41.7542 },
-    venezia: { x: 12.3155, y: 45.4408 },
+    /* Venice sits on the lagoon barrier-island landmass appended to
+       FBDATA.land (data/map_data.js) — the one site deliberately moved off
+       its real coordinate so it renders as an island city */
+    venezia: { x: 12.66, y: 45.32 },
     paris: { x: 2.3522, y: 48.8566 },
     aachen: { x: 6.0839, y: 50.7753 },
     london: { x: -0.1276, y: 51.5072 },
