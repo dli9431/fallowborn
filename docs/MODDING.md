@@ -301,7 +301,12 @@ and rasterizes provinces automatically: every land pixel joins its nearest provi
 on the same polygon in `land`. Separate islands and mainlands must therefore be separate
 land polygons; this keeps an island seed from claiming a disconnected shore across water.
 A land polygon without a seed falls back to unrestricted assignment so scenery-only
-polygons remain visible. **You never draw province borders** — you place a seed point
+polygons remain visible. Within a single polygon a carved sea (`seas`) can still strand
+a far-shore fragment on the wrong county, so after assignment any same-polygon fragment
+disconnected from its seed passes to the neighboring county it actually borders — no
+county spans a carved sea (Tangier holds no Spanish shore); fragments reached through
+the unseeded-polygon fallback (islands) are left alone.
+**You never draw province borders** — you place a seed point
 where the province's heart is.
 
 ### Adding a province (a county)

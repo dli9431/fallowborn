@@ -4,8 +4,9 @@ OpenStreetMap top-up) and emit data/settlements_real.js.
 
 One-time build-time tool (never shipped logic): for every gameplay county in
 data/counties.js it takes the populated places of the GeoNames country dumps,
-assigns each place to its nearest county seed in the game's own Mercator
-projection (mirroring the raster's nearest-seed rule), and writes the winners
+assigns each place to the county the game's own raster gives it (the exact
+nearest-seed pipeline of js/world.js, including the shore rule that keeps
+counties from spanning a carved sea), and writes the winners
 as `fill: true` presentations that replace the generated settlement
 names/locations without forcing early visibility. An optional `--topup` pass
 queries the Overpass API around short counties' seeds.
@@ -15,9 +16,10 @@ appended after them, and counties with a curated county head keep it.
 
 Safety rules that keep the emitted data inside the engine's snap gate
 (js/world.js SETTLEMENT_SNAP_MAX = 45 world px):
-  - a candidate on land whose nearest same-landmass seed is the county's seed
-    rasterizes into that county by the same nearest-seed rule the engine
-    uses, so it is accepted at any distance;
+  - a candidate on land belongs to the county its raster cell belongs to —
+    the Raster class below replicates the engine's scanline fill, seed
+    snapping, landmass-restricted nearest-seed assignment, and
+    orphan-fragment reassignment exactly — so it is accepted at any distance;
   - a candidate in water (off the simplified coastline) is accepted only
     within SNAP_SAFE_PX of its winning seed, because the seed's own pixel
     always belongs to the county and is therefore inside the snap ring.
@@ -275,6 +277,200 @@ class Landmass(object):
                 break
         self.memo[key] = mass
         return mass
+
+
+def js_round(v):
+    """JavaScript Math.round: half toward positive infinity (Python's round
+    is banker's rounding)."""
+    return math.floor(v + 0.5)
+
+
+class Raster(object):
+    """The engine's county raster, replicated exactly (js/world.js): land
+    polygons scanline-filled in order, sea polygons carved out, seeds
+    snapped to land, landmass-restricted nearest-seed assignment, then the
+    shore rule — a fragment cut off from its seed on the same landmass
+    passes to the neighboring county it actually borders, so no county
+    spans a carved sea (Tangier no longer holds the Gibraltar shore).
+    at(x, y) returns the province index + 1 at a projected point, 0 at sea.
+    """
+
+    def __init__(self, bounds, land, seas, seeds):
+        proj = Projection(bounds)
+        self.W = GRID_W
+        self.H = int(round((proj.merc_top - merc_y(bounds[2])) * proj.scale))
+        W, H = self.W, self.H
+
+        def fill(mask, pts, value):
+            """Even-odd scanline fill, identical to fillPolyScanline in
+            js/world.js; works on any indexable mutable sequence."""
+            ys = [p[1] for p in pts]
+            y0 = max(0, int(math.floor(min(ys))))
+            y1 = min(H - 1, int(math.ceil(max(ys))))
+            n = len(pts)
+            for y in range(y0, y1 + 1):
+                yc = y + 0.5
+                xs = []
+                for i in range(n):
+                    a, b = pts[i], pts[(i + 1) % n]
+                    if (a[1] <= yc < b[1]) or (b[1] <= yc < a[1]):
+                        xs.append(a[0] + (yc - a[1]) / (b[1] - a[1]) * (b[0] - a[0]))
+                xs.sort()
+                for k in range(0, len(xs) - 1, 2):
+                    xa = max(0, js_round(xs[k]))
+                    xb = min(W - 1, js_round(xs[k + 1]) - 1)
+                    for x in range(xa, xb + 1):
+                        mask[y * W + x] = value
+
+        land_mask = bytearray(W * H)
+        landmass = [0] * (W * H)
+
+        def project(poly):
+            return [(proj.x(poly[i]), proj.y(poly[i + 1]))
+                    for i in range(0, len(poly), 2)]
+
+        for li, poly in enumerate(land):
+            pts = project(poly)
+            fill(land_mask, pts, 1)
+            fill(landmass, pts, li + 1)
+        for poly in seas:
+            pts = project(poly)
+            fill(land_mask, pts, 0)
+            fill(landmass, pts, 0)
+
+        # snap seeds that fell in water to the nearest land pixel (engine order)
+        for s in seeds:
+            sx = min(max(js_round(s['x']), 0), W - 1)
+            sy = min(max(js_round(s['y']), 0), H - 1)
+            if not land_mask[sy * W + sx]:
+                found = False
+                for r in range(1, 50):
+                    for dy in range(-r, r + 1):
+                        if found:
+                            break
+                        for dx in range(-r, r + 1):
+                            if max(abs(dx), abs(dy)) != r:
+                                continue
+                            nx, ny = sx + dx, sy + dy
+                            if 0 <= nx < W and 0 <= ny < H and land_mask[ny * W + nx]:
+                                sx, sy = nx, ny
+                                found = True
+                                break
+                    if found:
+                        break
+            s['sx'], s['sy'] = sx, sy
+            s['rlm'] = landmass[sy * W + sx]
+
+        landmass_seeds = {}
+        for s in seeds:
+            if s['rlm']:
+                landmass_seeds[s['rlm']] = landmass_seeds.get(s['rlm'], 0) + 1
+        ordered = sorted(seeds, key=lambda s: s['sx'])
+        sx_arr = [s['sx'] for s in ordered]
+        n_seeds = len(ordered)
+        grid = [0] * (W * H)
+        for y in range(H):
+            row = y * W
+            for x in range(W):
+                if not land_mask[row + x]:
+                    continue
+                restrict = landmass_seeds.get(landmass[row + x]) and landmass[row + x] or 0
+                lo = bisect.bisect_left(sx_arr, x)
+                best, bd, bidx = -1, float('inf'), float('inf')
+                i = lo
+                while i < n_seeds:  # walk right
+                    dx = sx_arr[i] - x
+                    if dx * dx > bd:
+                        break
+                    s = ordered[i]
+                    if not restrict or s['rlm'] == restrict:
+                        dy = s['sy'] - y
+                        d = dx * dx + dy * dy
+                        if d < bd or (d == bd and s['idx'] < bidx):
+                            bd, best, bidx = d, i, s['idx']
+                    i += 1
+                i = lo - 1
+                while i >= 0:  # walk left
+                    dx = x - sx_arr[i]
+                    if dx * dx > bd:
+                        break
+                    s = ordered[i]
+                    if not restrict or s['rlm'] == restrict:
+                        dy = s['sy'] - y
+                        d = dx * dx + dy * dy
+                        if d < bd or (d == bd and s['idx'] < bidx):
+                            bd, best, bidx = d, i, s['idx']
+                    i -= 1
+                grid[row + x] = ordered[best]['idx'] + 1
+
+        # shore rule: same-landmass fragments cut off from their seed pass to
+        # the keeper county they border; cross-polygon island gains stay
+        seed_at = {s['idx']: s['sy'] * W + s['sx'] for s in seeds}
+        seen = bytearray(W * H)
+        orphan = bytearray(W * H)
+        for i in range(W * H):
+            v = grid[i]
+            if not v or seen[i]:
+                continue
+            pidx = v - 1
+            has_seed = False
+            comp = []
+            stack = [i]
+            seen[i] = 1
+            while stack:
+                c = stack.pop()
+                comp.append(c)
+                if c == seed_at[pidx]:
+                    has_seed = True
+                cx, cy = c % W, c // W
+                for q in (c - 1 if cx > 0 else -1,
+                          c + 1 if cx < W - 1 else -1,
+                          c - W if cy > 0 else -1,
+                          c + W if cy < H - 1 else -1):
+                    if q >= 0 and grid[q] == v and not seen[q]:
+                        seen[q] = 1
+                        stack.append(q)
+            if has_seed:
+                continue
+            seed_lm = seeds[pidx]['rlm']
+            for c in comp:
+                if landmass[c] == seed_lm:
+                    orphan[c] = 1
+        queue = []
+        for i in range(W * H):
+            if not orphan[i]:
+                continue
+            cx, cy = i % W, i // W
+            for q in (i - 1 if cx > 0 else -1,
+                      i + 1 if cx < W - 1 else -1,
+                      i - W if cy > 0 else -1,
+                      i + W if cy < H - 1 else -1):
+                if q >= 0 and grid[q] and not orphan[q] and grid[q] != grid[i]:
+                    orphan[i] = 0
+                    grid[i] = grid[q]
+                    queue.append(i)
+                    break
+        qh = 0
+        while qh < len(queue):
+            c = queue[qh]
+            qh += 1
+            owner = grid[c]
+            cx, cy = c % W, c // W
+            for q in (c - 1 if cx > 0 else -1,
+                      c + 1 if cx < W - 1 else -1,
+                      c - W if cy > 0 else -1,
+                      c + W if cy < H - 1 else -1):
+                if q >= 0 and orphan[q]:
+                    orphan[q] = 0
+                    grid[q] = owner
+                    queue.append(q)
+        self.grid = grid
+
+    def at(self, x, y):
+        gx, gy = int(x), int(y)
+        if gx < 0 or gy < 0 or gx >= self.W or gy >= self.H:
+            return 0
+        return self.grid[gy * self.W + gx]
 
 
 # --------------------------------------------------------------------------
@@ -690,25 +886,37 @@ def main():
 
     overpass = Overpass(CACHE_JSON, args.offline, args.sleep)
 
+    raster = Raster(bounds, land, seas, seeds)
+    print('county raster built: %dx%d' % (raster.W, raster.H), flush=True)
+
     def winner(node):
-        """Nearest seed under the raster's rule: same-landmass seeds compete
-        for land points; any seed competes for water points. Ties go to the
-        lower province index (seeds are in counties.js order)."""
+        """County under the engine's own raster, shore rule included: a land
+        point belongs to the county its raster cell belongs to. Water points
+        (coastal places past the simplified coastline) fall back to the
+        nearest seed — the engine snaps them into that seed's county within
+        SETTLEMENT_SNAP_MAX."""
         nmass = landmass.at(node['lon'], node['lat'])
         node['landmass'] = nmass
         nx, ny = proj.x(node['lon']), proj.y(node['lat'])
         node['wx'], node['wy'] = nx, ny
-        best, bd = None, float('inf')
-        for s in seeds:
-            dx = s['x'] - nx
-            if dx * dx >= bd:
-                continue
-            if nmass and s['landmass'] != nmass:
-                continue
-            dy = s['y'] - ny
-            d = dx * dx + dy * dy
-            if d < bd:
-                best, bd = s, d
+        owner = raster.at(nx, ny)
+        node['in_raster'] = bool(owner)
+        if owner:
+            best = seeds[owner - 1]
+            dx, dy = best['x'] - nx, best['y'] - ny
+            bd = dx * dx + dy * dy
+        else:
+            best, bd = None, float('inf')
+            for s in seeds:
+                dx = s['x'] - nx
+                if dx * dx >= bd:
+                    continue
+                if nmass and s['landmass'] != nmass:
+                    continue
+                dy = s['y'] - ny
+                d = dx * dx + dy * dy
+                if d < bd:
+                    best, bd = s, d
         node['win_dist'] = math.sqrt(bd) if best else float('inf')
         node['winner'] = best['id'] if best else None
 
@@ -791,8 +999,8 @@ def main():
         cand = by_winner.get(pid, [])
         safe = []
         for n in cand:
-            if n['landmass']:
-                safe.append(n)  # in-county by the raster's own rule
+            if n.get('in_raster') or n['landmass']:
+                safe.append(n)  # the raster itself puts this point in-county
             elif n['win_dist'] <= SNAP_SAFE_PX:
                 safe.append(n)  # coastal: seed pixel is inside the snap ring
             else:

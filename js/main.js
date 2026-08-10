@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.7';
+  FB.VERSION = '1.117.8';
   FB.CHANGELOG = [
+    { v: '1.117.8', date: '2026-08-10', changes: [
+      'County borders no longer stretch across straits and seas — Tangier keeps no Spanish shore, Mecca no Nubian coast, and counties everywhere hold to their own side of the water. A few settlements moved to the county they really belong to.'
+    ] },
     { v: '1.117.7', date: '2026-08-10', changes: [
       'The Papacy & College deed now appears only for those who deal with the Church — landed rulers, monks and priests, bishops, and cardinals — instead of every Catholic serf.'
     ] },

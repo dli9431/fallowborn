@@ -612,6 +612,74 @@ window.FB = window.FB || {};
 
     steps.push(function () {
       progress(0.9, 'Drawing borders…');
+      /* Nearest-seed assignment on the single Afro-Eurasian land polygon lets
+         a county win land across a carved sea wherever the far shore has no
+         nearer seed (Tangier held the Gibraltar shore, Mecca the Nubian
+         coast). No 867 county spanned such waters, so a fragment cut off
+         from its seed on the same landmass passes to the neighboring county
+         it actually borders. Fragments on another authored land polygon
+         stay: that is the unseeded-polygon fallback that hands islands to
+         their nearest county (Venice's lagoon islands). */
+      const seedAt = {};
+      for (const pr of provs) seedAt[pr.idx] = pr.sy * W + pr.sx;
+      const seen = new Uint8Array(W * H);
+      const orphan = new Uint8Array(W * H);
+      const stack = [];
+      for (let i = 0; i < W * H; i++) {
+        const v = grid[i];
+        if (!v || seen[i]) continue;
+        const pidx = v - 1;
+        let hasSeed = false;
+        const comp = [];
+        seen[i] = 1; stack.push(i);
+        while (stack.length) {
+          const c = stack.pop(); comp.push(c);
+          if (c === seedAt[pidx]) hasSeed = true;
+          const cx = c % W, cy = (c / W) | 0;
+          if (cx > 0 && grid[c - 1] === v && !seen[c - 1]) { seen[c - 1] = 1; stack.push(c - 1); }
+          if (cx < W - 1 && grid[c + 1] === v && !seen[c + 1]) { seen[c + 1] = 1; stack.push(c + 1); }
+          if (cy > 0 && grid[c - W] === v && !seen[c - W]) { seen[c - W] = 1; stack.push(c - W); }
+          if (cy < H - 1 && grid[c + W] === v && !seen[c + W]) { seen[c + W] = 1; stack.push(c + W); }
+        }
+        if (hasSeed) continue;
+        const seedLm = provs[pidx].landmass;
+        for (const c of comp) {
+          if (landmass[c] === seedLm) orphan[c] = 1;
+        }
+      }
+      /* Multi-source flood: an orphan cell adopts the keeper county it
+         borders; the flood carries that county into the fragment's interior.
+         Orphans ringed only by water or other orphans (an unseeded island)
+         are unreachable and keep their assigned county. */
+      const queue = [], qOwner = [];
+      function adopt(c, owner) {
+        const old = provs[grid[c] - 1], nw = provs[owner - 1];
+        const x = c % W, y = (c / W) | 0;
+        old.cx -= x; old.cy -= y; old.area--;
+        nw.cx += x; nw.cy += y; nw.area++;
+        orphan[c] = 0; grid[c] = owner;
+        queue.push(c); qOwner.push(owner);
+      }
+      for (let i = 0; i < W * H; i++) {
+        if (!orphan[i]) continue;
+        const cx = i % W, cy = (i / W) | 0;
+        const nb = [];
+        if (cx > 0) nb.push(i - 1);
+        if (cx < W - 1) nb.push(i + 1);
+        if (cy > 0) nb.push(i - W);
+        if (cy < H - 1) nb.push(i + W);
+        for (const q of nb) {
+          if (grid[q] && !orphan[q] && grid[q] !== grid[i]) { adopt(i, grid[q]); break; }
+        }
+      }
+      for (let qh = 0; qh < queue.length; qh++) {
+        const c = queue[qh], owner = qOwner[qh];
+        const cx = c % W, cy = (c / W) | 0;
+        if (cx > 0 && orphan[c - 1]) adopt(c - 1, owner);
+        if (cx < W - 1 && orphan[c + 1]) adopt(c + 1, owner);
+        if (cy > 0 && orphan[c - W]) adopt(c - W, owner);
+        if (cy < H - 1 && orphan[c + W]) adopt(c + W, owner);
+      }
       // centroids
       for (const pr of provs) {
         if (pr.area > 0) { pr.cx = Math.round(pr.cx / pr.area); pr.cy = Math.round(pr.cy / pr.area); }
@@ -649,7 +717,7 @@ window.FB = window.FB || {};
       const byId = {};
       for (const pr of provs) byId[pr.id] = pr;
       FB.world = {
-        W: W, H: H, grid: grid, land: land, provs: provs, byId: byId,
+        W: W, H: H, grid: grid, land: land, landmass: landmass, provs: provs, byId: byId,
         adj: adj, waterAdj: waterAdj
       };
       progress(0.97, 'Surveying settlements…');

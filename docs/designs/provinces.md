@@ -7,8 +7,15 @@ polygon (~500 seeds — counties plus a handful of wastelands). Keeping seed com
 within a land polygon prevents island counties from acquiring disconnected mainland
 fragments across water. A polygon without a seed falls back to unrestricted assignment
 so mod-added scenery remains visible. The assignment scans an x-sorted seed window, so
-the denser map costs no extra boot time. Adjacency, coastal flags, and centroids are
-derived from that raster. Changing `FBDATA.provinces` (authored as compact rows in
+the denser map costs no extra boot time. One polygon (Afro-Eurasia) spans every carved
+sea, though, and nearest-seed ignores water: without correction a county wins the far
+shore wherever it has no closer seed (Tangier held the Gibraltar shore, Mecca the
+Nubian coast). So after assignment a shore pass hands every same-landmass fragment
+disconnected from its seed to the neighboring county it actually borders — no 867
+county spanned the Strait of Gibraltar, the Red Sea, or the Gulf of Bothnia — while
+fragments on another authored polygon stay, preserving island gains through the
+fallback (Venice's lagoon islands). Adjacency, coastal flags, and centroids are
+derived from the corrected raster. Changing `FBDATA.provinces` (authored as compact rows in
 `data/counties.js`) reshapes the map automatically.
 
 **Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
