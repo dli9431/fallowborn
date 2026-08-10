@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.5';
+  FB.VERSION = '1.117.6';
   FB.CHANGELOG = [
+    { v: '1.117.6', date: '2026-08-10', changes: [
+      'New games let you choose the exact settlement you were born in: pick a county and the map zooms in so you can tap a town or village — or take the county seat. Shared start codes remember the choice.'
+    ] },
     { v: '1.117.5', date: '2026-08-10', changes: [
       'Settlements whose real-world names are modern now go by their older names instead — Jaffa for Tel Aviv, Constantinople-era names across Anatolia, Königsberg and Memel on the Baltic, and over a hundred more.'
     ] },
@@ -963,7 +966,9 @@ window.FB = window.FB || {};
      string before initPolitics and character generation draw on it — see
      docs/designs/seeds.md. Two shareable forms:
      - world seed: any text normalized to A-Z0-9 (fresh ones are base36)
-     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET]
+     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET[-SETTLEMENT]]
+       (a birthplace settlement slot rides as an eighth part, always behind an
+       explicit preset part)
        (legacy five-part codes imply bookmark 867; the family preset part is
        omitted for the standard start) */
 
@@ -972,16 +977,23 @@ window.FB = window.FB || {};
     return ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0).toString(36).toUpperCase();
   }
 
-  function seedCode(seed, bookmarkId, scenId, provId, sex, name, presetId) {
+  function seedCode(seed, bookmarkId, scenId, provId, sex, name, presetId, settlementIdx) {
     const n = (name || '').replace(/-/g, '').replace(/\s+/g, '_');
     const code = seed + '-' + bookmarkId + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
-    /* the standard family start takes no seventh part, so old five/six-part
-       codes keep spelling — and reproducing — the exact same start */
+    /* a chosen birthplace beyond the county seat adds an eighth part — the
+       settlement slot — and always spells the preset part before it so the
+       split stays aligned. The standard family start at the county seat takes
+       no extra parts, so old five/six/seven-part codes keep spelling — and
+       reproducing — the exact same start */
+    if (settlementIdx > 0) {
+      return code + '-' + (presetId && presetId !== 'standard' ? presetId : 'standard') +
+        '-' + settlementIdx;
+    }
     return presetId && presetId !== 'standard' ? code + '-' + presetId : code;
   }
 
   /* parse what a player pasted: a full start code, a bare world seed, or an
-     error to show inline. Five-, six-, and seven-part shapes must validate as
+     error to show inline. Five- through eight-part shapes must validate as
      codes — silently falling back to a bare seed would hand them another
      world. */
   function parseSeedInput(raw) {
@@ -990,7 +1002,7 @@ window.FB = window.FB || {};
     const parts = txt.split('-');
     if (parts.length >= 5) {
       const bad = 'That start code doesn’t parse — check it was copied whole.';
-      if (parts.length < 5 || parts.length > 7) return { error: bad };
+      if (parts.length < 5 || parts.length > 8) return { error: bad };
       const seed = parts[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
       const legacy = parts.length === 5;
       const bookmarkId = legacy ? '867' : parts[1].toLowerCase();
@@ -1016,15 +1028,24 @@ window.FB = window.FB || {};
       if (scen.sex && sex !== scen.sex) {
         return { error: 'That start code pairs a scenario and a sex that don’t go together.' };
       }
-      /* an optional seventh part names a starting-family preset */
+      /* an optional seventh part names a starting-family preset; an eighth
+         (which always carries an explicit preset part before it) is the
+         birthplace settlement slot — validated as a number here and clamped
+         to the county's visible settlements once the bookmark is active */
       let familyPreset = 'standard';
-      if (!legacy && parts.length === 7) {
+      if (!legacy && parts.length >= 7) {
         familyPreset = parts[6].toLowerCase();
         if (!familyPresetById(familyPreset)) return { error: bad };
       }
+      let settlementIdx = 0;
+      if (!legacy && parts.length === 8) {
+        if (!/^\d+$/.test(parts[7])) return { error: bad };
+        settlementIdx = parseInt(parts[7], 10);
+      }
       return {
         seed:seed, bookmarkId:bookmarkId, scenario:scen,
-        provinceId:prov.id, sex:sex, name:name, familyPreset:familyPreset
+        provinceId:prov.id, sex:sex, name:name, familyPreset:familyPreset,
+        settlementIdx:settlementIdx
       };
     }
     const bare = txt.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -1106,11 +1127,27 @@ window.FB = window.FB || {};
     $('btn-bm-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
     $('btn-ng-back').addEventListener('click', function () { showBookmarks(); });
     $('btn-pick-back').addEventListener('click', function () {
+      /* with a county chosen, Back steps from the settlement stage to the
+         province stage instead of leaving the picker */
+      if (G.pickStage === 'settlement' && G.pending && G.pending.provinceId) {
+        G.pending.provinceId = null;
+        G.pending.settlementIdx = 0;
+        G.pickStage = 'province';
+        FB.map.select(null);
+        FB.map.fitView();
+        updatePickInfo();
+        return;
+      }
       G.pickMode = false;
       document.body.classList.remove('picking');
       FB.ui.showScreen('newgame');
     });
     $('btn-pick-random').addEventListener('click', function () {
+      /* settlement stage: the primary button settles for the county seat */
+      if (G.pickStage === 'settlement' && G.pending && G.pending.provinceId) {
+        G.pickSettlement({ pid: G.pending.provinceId, index: 0 });
+        return;
+      }
       const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
       G.pickProvince(FB.pick(cands));
     });
@@ -1157,12 +1194,13 @@ window.FB = window.FB || {};
         G.pending = {
           seed:r.seed, bookmarkId:r.bookmarkId, scenario:r.scenario,
           provinceId:r.provinceId, sex:r.sex, name:r.name,
-          familyPreset:r.familyPreset
+          familyPreset:r.familyPreset, settlementIdx:r.settlementIdx
         };
         activatePendingBookmark(r.bookmarkId, function () {
           const pr = FB.world.byId[r.provinceId];
           G.pending.culture = pr.culture;
           G.pending.religion = pr.religion;
+          G.pending.settlementIdx = clampSettlementIdx(r.provinceId, r.settlementIdx);
           showChargen();
         });
       } else {
@@ -1267,6 +1305,16 @@ window.FB = window.FB || {};
     FB.ui.showScreen('newgame');
   }
 
+  /* birthplace picking is two stages on the same map screen: first a county,
+     then — zoomed close enough that its settlements draw with emblems and
+     name labels (SITE_Z_DETAIL in js/mapview.js is 12) — the settlement
+     itself. Markers render from the compiled bookmark data, so no game state
+     is needed for either stage. */
+  const PICK_SETTLEMENT_ZOOM = 14;
+  /* explicit stage: G.pending.provinceId survives into a started game, so it
+     cannot speak for the picker on its own */
+  G.pickStage = 'province';
+
   function showPickProv() {
     FB.ui.showScreen('pickprov');
     $('pickprov').classList.add('asbar');
@@ -1288,9 +1336,19 @@ window.FB = window.FB || {};
     );
     FB.map.resize();
     FB.map.buildBase();
-    FB.map.fitView();
     FB.map.playerProv = null;
-    FB.map.select(null);
+    /* returning via Back from character creation keeps the chosen county and
+       resumes on the settlement stage, zoomed in on it */
+    const chosen = G.pending && G.pending.provinceId
+      ? FB.world.byId[G.pending.provinceId] : null;
+    G.pickStage = chosen ? 'settlement' : 'province';
+    if (chosen) {
+      FB.map.select(chosen.id);
+      FB.map.centerOn(chosen.id, PICK_SETTLEMENT_ZOOM);
+    } else {
+      FB.map.fitView();
+      FB.map.select(null);
+    }
     updatePickInfo();
   }
 
@@ -1303,18 +1361,44 @@ window.FB = window.FB || {};
     G.pending.provinceId = pr.id;
     G.pending.culture = pr.culture;
     G.pending.religion = pr.religion;
+    G.pending.settlementIdx = 0; // a new county restarts the birthplace pick
+    G.pickStage = 'settlement';
     FB.map.select(pr.id);
+    FB.map.centerOn(pr.id, PICK_SETTLEMENT_ZOOM);
     updatePickInfo();
+    return true;
+  };
+
+  /* A settlement tap settles the birthplace only once its county is the chosen
+     one; anything else falls through to pickProvince (so tapping a marker in
+     another county just switches counties). Also the click target of the
+     fallback settlement buttons in the pick info bar. */
+  G.pickSettlement = function (site) {
+    if (!G.pickMode || G.pickStage !== 'settlement') return false;
+    if (!G.pending || !G.pending.provinceId) return false;
+    if (!site || site.pid !== G.pending.provinceId) return false;
+    G.pending.settlementIdx = site.index;
     G.pickMode = false;
+    G.pickStage = 'province';
     document.body.classList.remove('picking');
     showChargen();
     return true;
   };
 
+  /* Settlement slots never renumber, but a hand-typed start code can still
+     overshoot what a county shows at its starting development — clamp rather
+     than reject, so a generous code never becomes a different world. */
+  function clampSettlementIdx(pid, idx) {
+    const n = FB.settlementVisibleCount(null, pid);
+    idx = idx | 0;
+    return n > 0 ? FB.clamp(idx, 0, n - 1) : 0;
+  }
+
   function updatePickInfo() {
     const el = $('pickinfo');
     if (!G.pending || !G.pending.provinceId) {
       el.textContent = FB.T('No province chosen yet. Tap the map or use Random Province.');
+      $('btn-pick-random').textContent = FB.T('Random Province');
       return;
     }
     const pr = FB.world.byId[G.pending.provinceId];
@@ -1326,7 +1410,28 @@ window.FB = window.FB || {};
       FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
         { text: culture.name }, {})) + ' · ' +
       FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
-        { text: religion.name }, {})) + ' · ' + FB.esc(FB.terrainName(pr.terrain));
+        { text: religion.name }, {})) + ' · ' + FB.esc(FB.terrainName(pr.terrain)) +
+      '<br>' + FB.esc(FB.T(
+        'Now tap the settlement you were born in — or begin in the county seat.'));
+    /* the same settlements as focusable buttons: keyboard access, and a
+       reliable target where markers crowd together on a small screen */
+    const kindName = FB.ui._shared.settlementKindName;
+    const setts = FB.settlementsOf(null, pr.id);
+    const row = document.createElement('div');
+    row.className = 'row gap wrap';
+    setts.forEach(function (st, i) {
+      const b = document.createElement('button');
+      b.className = 'btn small picksett';
+      b.type = 'button';
+      b.textContent = st.name + ' (' + kindName(st.kind) + ')';
+      b.addEventListener('click', function () {
+        G.pickSettlement({ pid: pr.id, index: i });
+      });
+      row.appendChild(b);
+    });
+    el.appendChild(row);
+    $('btn-pick-random').textContent =
+      FB.T('Begin in {settlement}', { settlement: setts.length ? setts[0].name : FB.L(pr.name) });
   }
 
   function showChargen() {
@@ -1382,9 +1487,18 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[G.pending.provinceId];
     const culture = FB.cultureOf(pr.culture);
     const religion = FB.religionOf(pr.religion);
-    $('cg-summary').innerHTML = '<b>' + FB.esc(FB.T('{scenario} in {province}', {
-      scenario: FB.L(G.pending.scenario.name), province: FB.L(pr.name)
-    })) + '</b><br>' +
+    /* a birthplace beyond the county seat is named in the summary; the seat
+       itself keeps the long-standing one-line form */
+    const settIdx = G.pending.settlementIdx | 0;
+    const sett = settIdx > 0 ? FB.settlementsOf(null, pr.id)[settIdx] : null;
+    $('cg-summary').innerHTML = '<b>' + FB.esc(sett
+      ? FB.T('{scenario} in {settlement}, {province}', {
+          scenario: FB.L(G.pending.scenario.name), settlement: sett.name,
+          province: FB.L(pr.name)
+        })
+      : FB.T('{scenario} in {province}', {
+          scenario: FB.L(G.pending.scenario.name), province: FB.L(pr.name)
+        })) + '</b><br>' +
       FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
         { text: culture.name }, {})) + ' · ' +
       FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
@@ -1414,15 +1528,17 @@ window.FB = window.FB || {};
     const sc = G.pending.scenario;
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
+    const settIdx = clampSettlementIdx(provId, G.pending.settlementIdx);
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     const name = ($('cg-name').value || '').trim() || FB.randomName(pr.culture, sex);
     const preset = selectedFamilyPreset();
     G.pending.name = null; G.pending.sex = null; // a shared code's pre-fill is spent
     G.pending.familyPreset = null;
+    G.pending.settlementIdx = null;
 
     const state = {
       v: 2,
-      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name, preset.id),
+      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name, preset.id, settIdx),
       start: start,
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
@@ -1444,7 +1560,7 @@ window.FB = window.FB || {};
         charId: null, houseFounderId:null,
         tier: sc.tier, profession: sc.profession, professionBack: null,
         gold: sc.gold, prestige: sc.prestige, piety: sc.piety,
-        provinceId: provId, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
+        provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
@@ -1467,7 +1583,7 @@ window.FB = window.FB || {};
         },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
-        landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:0 }] : [],
+        landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:settIdx }] : [],
         landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,

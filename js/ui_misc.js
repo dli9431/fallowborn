@@ -2065,14 +2065,22 @@ window.FB = window.FB || {};
     $('travel-picker-continue').addEventListener('click', SH.reviewTravelChoice);
     /* Map tap precedence. A settlement marker hit carries its parent county
        into every targeting mode, so a marker never blocks the county beneath
-       it; only ordinary browsing additionally opens the settlement sheet. */
+       it; only ordinary browsing additionally opens the settlement sheet. The
+       birthplace picker's settlement stage is the one exception — it consumes
+       the marker itself. */
     FB.map.onTap = function (pr, wx, wy, site) {
       // a marker hit resolves to its parent county for every targeting mode
       if (site && FB.world && FB.world.byId) {
         const parent = FB.world.byId[site.pid];
         if (parent) pr = parent;
       }
-      if (FB.game.pickMode) { FB.game.pickProvince(pr); return; }
+      if (FB.game.pickMode) {
+        /* settlement stage: a marker in the chosen county is the birthplace
+           (the collapse above rewrites only pr, never site) */
+        if (site && FB.game.pickSettlement && FB.game.pickSettlement(site)) return;
+        FB.game.pickProvince(pr);
+        return;
+      }
       if (UI.travelPickerOpen()) {
         if (pr) UI.travelPickProvince(pr.id, false);
         return;

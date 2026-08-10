@@ -61617,6 +61617,16 @@
         "text": "👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown."
       }
     },
+    "src.2c244d1d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "btn small picksett"
+      }
+    },
     "src.2c270952": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63598,6 +63608,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/main.js",
         "index.html"
       ],
       "source": {
@@ -114050,6 +114061,16 @@
         "text": "Petition at the great houses."
       }
     },
+    "src.b10e75e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "row gap wrap"
+      }
+    },
     "src.b116e272": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120667,6 +120688,16 @@
       ],
       "source": {
         "text": "🎒 Plunder: {item}."
+      }
+    },
+    "src.c24a1e67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "{scenario} in {settlement}, {province}"
       }
     },
     "src.c2552e33": {
@@ -135123,6 +135154,16 @@
         "text": "🎓 You will be schooled in learning."
       }
     },
+    "src.e718bf29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Now tap the settlement you were born in — or begin in the county seat."
+      }
+    },
     "src.e71a1bc9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143599,6 +143640,16 @@
       ],
       "source": {
         "text": "Take a fief back from a vassal — by law if he bends, by force if he rises."
+      }
+    },
+    "src.fd2438ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Begin in {settlement}"
       }
     },
     "src.fd2b4172": {
@@ -152291,6 +152342,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Begin courtship"
+      }
+    },
+    "ui:Begin in {settlement}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "settlement"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "Begin in {settlement}"
       }
     },
     "ui:Begin research": {
@@ -161482,6 +161543,14 @@
         "text": "Now playing: {song}. Open music controls."
       }
     },
+    "ui:Now tap the settlement you were born in — or begin in the county seat.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Now tap the settlement you were born in — or begin in the county seat."
+      }
+    },
     "ui:Object · spend 1 settlement standing · {odds}% chance for the runner-up · {leader} loses 10 Standing": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -163610,6 +163679,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Raised-host base logistics"
+      }
+    },
+    "ui:Random Province": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Random Province"
       }
     },
     "ui:Random name": {
@@ -176917,6 +176994,18 @@
       "location": "js/main.js",
       "source": {
         "text": "{scenario} in {province}"
+      }
+    },
+    "ui:{scenario} in {settlement}, {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province",
+        "scenario",
+        "settlement"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "{scenario} in {settlement}, {province}"
       }
     },
     "ui:{school} · {tutor}": {

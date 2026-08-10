@@ -69,8 +69,15 @@ clusters.
 Tapping a marker in ordinary
 browsing selects its parent county and opens the universal settlement sheet
 (`UI.showSettlement`), which is read-only abroad and keeps its construction/demolition
-authorization inside the sheet; every explicit county-targeting mode (new-game pick,
-travel, armies) still receives the parent county. The go-into-town deed queues
+authorization inside the sheet; the explicit county-targeting modes (travel,
+armies) still receive the parent county. The new-game pick is the one
+exception: it is two stages — a county tap zooms into the county (zoom 14, so
+its settlements draw with emblems and labels straight from the compiled
+bookmark data), and a second tap on a marker in the chosen county, or the
+matching button in the pick bar, settles the birthplace slot. The slot is
+stored as `player.homeSettlement` (0, the county head, is the default and the
+only value older saves know), steers the farmer start's plot, and spells the
+optional eighth start-code part ([seeds.md](seeds.md)). The go-into-town deed queues
 `visit_*` events (events_common.js) with the name in `ctx.settlement` (`{settlement}`
 token); options are require-gated by station.
 
