@@ -7,12 +7,12 @@ FBDATA.musicCatalog = {
     "title": "Fallowborn",
     "src": "music/intro/000-fallowborn.opus",
     "order": 0,
-    "bytes": 2225840,
-    "duration": 170.976,
+    "bytes": 2409264,
+    "duration": 178.208,
     "channels": 2,
     "inputRate": 48000,
-    "bitrate": 104147,
-    "rev": "5a0088ce146c7152",
+    "bitrate": 108155,
+    "rev": "24359f792edda0cb",
     "kind": "intro"
   },
   "tracks": [
@@ -1503,6 +1503,6 @@ FBDATA.musicCatalog = {
       "duration": 1734.42
     }
   ],
-  "totalBytes": 191154102,
-  "totalDuration": 14127.275
+  "totalBytes": 191337526,
+  "totalDuration": 14134.507
 };
