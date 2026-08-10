@@ -150,7 +150,9 @@ stores title autoplay again. The button remains hidden while loading, during gam
 soundtrack cannot play.
 During gameplay, the bottom-center song title opens the full music controls and a separate compact
 button immediately to its right pauses or resumes playback. Both controls are native buttons, and
-the compact control keeps the 44-pixel minimum touch target on mobile.
+the compact control keeps the 44-pixel minimum touch target on mobile. Settings keeps focus-loss
+pausing as the default and offers an opt-in background-playback checkbox for inactive tabs, windows,
+and locked screens.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
 `js/util.js` before boot. Its current `isPlay` flag is true only for the HTTPS

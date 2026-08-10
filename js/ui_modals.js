@@ -15972,6 +15972,11 @@ window.FB = window.FB || {};
       h += '<label class="autorow"><input type="checkbox" id="set-music-enabled"' +
         (FB.music.enabled() ? ' checked' : '') + '> <b>' + esc(FB.T('Play music')) +
         '</b><span class="adesc">' + esc(FB.music.bandwidthText()) + '</span></label>' +
+        '<label class="autorow"><input type="checkbox" id="set-music-background"' +
+        (FB.music.backgroundPlaybackEnabled() ? ' checked' : '') + '> <b>' +
+        esc(FB.T('Keep music playing in background')) + '</b><span class="adesc">' +
+        esc(FB.T('Continue the title theme and gameplay soundtrack when this tab or window is inactive or the screen locks.')) +
+        '</span></label>' +
         '<div class="speedrow"><input type="range" id="set-music-volume" min="0" max="100" step="1" value="' +
         Math.round(G.uiPrefs.musicVolume * 100) + '" aria-label="' + esc(FB.T('Music volume')) + '">' +
         '<div class="adesc" id="set-music-volume-label">' +
@@ -16075,6 +16080,9 @@ window.FB = window.FB || {};
     if ($('set-music-enabled')) {
       $('set-music-enabled').addEventListener('change', function () {
         FB.music.setEnabled($('set-music-enabled').checked);
+      });
+      $('set-music-background').addEventListener('change', function () {
+        FB.music.setBackgroundPlayback($('set-music-background').checked);
       });
       const musicVolume = $('set-music-volume');
       musicVolume.addEventListener('input', function () {

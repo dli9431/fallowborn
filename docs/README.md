@@ -17,7 +17,9 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   storage under pressure, so export important lives as text.
 - On first load, choose whether to play music. The intro theme is bundled with the core game;
   other Opus tracks stream only when needed and remain cached after a complete download. The
-  initial choice, volume, preferred tracks, and ratings can be changed later under **Settings**.
+  initial choice, volume, background playback, preferred tracks, and ratings can be changed later
+  under **Settings**. Background playback is off by default; turn it on to keep the soundtrack
+  playing from the title screen onward when the game loses focus or the screen locks.
   The now-playing title at the bottom of the map opens track controls with **Previous**, **Next**,
   **Hear this more**, and **Repeat**. Ratings are available only on play.fallowborn.com.
 - Music needs its own preparation for offline play. On play.fallowborn.com, open

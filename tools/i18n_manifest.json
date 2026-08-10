@@ -81205,6 +81205,16 @@
         "text": "merchant and craft income"
       }
     },
+    "src.5ec17154": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Keep music playing in background"
+      }
+    },
     "src.5ed42ea6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133011,6 +133021,16 @@
         "text": "March on their army in the field — battle joins when you catch it."
       }
     },
+    "src.e1dddd3e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Continue the title theme and gameplay soundtrack when this tab or window is inactive or the screen locks."
+      }
+    },
     "src.e1e25f5e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153970,6 +153990,14 @@
         "text": "Continue cultivating this ruler"
       }
     },
+    "ui:Continue the title theme and gameplay soundtrack when this tab or window is inactive or the screen locks.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Continue the title theme and gameplay soundtrack when this tab or window is inactive or the screen locks."
+      }
+    },
     "ui:Continue the vocation’s yearly work and meet the faith-specific rank requirements.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158356,6 +158384,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Keep it"
+      }
+    },
+    "ui:Keep music playing in background": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Keep music playing in background"
       }
     },
     "ui:Keep regional lords useful and contain overextension or factional pressure.": {

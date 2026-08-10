@@ -60,7 +60,7 @@ async function routeSyntheticSoundtrack(page) {
   });
 }
 
-test('first soundtrack boot explains bandwidth and title pause preserves position',
+test('first soundtrack boot, title pause, and background playback preserve state',
   async function ({ page }, testInfo) {
     test.skip(!testInfo.project.name.endsWith('-served'),
       'Synthetic soundtrack responses require the served-origin project.');
@@ -173,6 +173,27 @@ test('first soundtrack boot explains bandwidth and title pause preserves positio
     })).toEqual({
       sameElement:true, src:playingSrc, paused:false, currentTime:47,
       choice:'on', stored:'on'
+    });
+
+    expect(await page.evaluate(function () {
+      FB.music.setBackgroundPlayback(true);
+      window.dispatchEvent(new Event('blur'));
+      return {
+        paused:window.__titleAudio.paused,
+        choice:FB.game.uiPrefs.musicChoice,
+        background:FB.music.backgroundPlaybackEnabled()
+      };
+    })).toEqual({ paused:false, choice:'on', background:true });
+    await page.evaluate(function () { window.dispatchEvent(new Event('focus')); });
+    expect(await page.evaluate(function () {
+      Object.defineProperty(document, 'hidden', { configurable:true, value:true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      return window.__titleAudio.paused;
+    })).toBe(false);
+    await page.evaluate(function () {
+      Object.defineProperty(document, 'hidden', { configurable:true, value:false });
+      document.dispatchEvent(new Event('visibilitychange'));
+      FB.music.setBackgroundPlayback(false);
     });
 
     await titleMusic.click();
@@ -376,6 +397,48 @@ test('context banks, playback controls, and listening history stay consistent',
         return item.src && !item.paused;
       });
     })).toBe(true);
+
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    const backgroundPlayback = page.locator('#set-music-background');
+    await expect(backgroundPlayback).toBeVisible();
+    await expect(backgroundPlayback).not.toBeChecked();
+    await backgroundPlayback.check();
+    expect(await page.evaluate(function () {
+      return {
+        preference:FB.music.backgroundPlaybackEnabled(),
+        stored:JSON.parse(localStorage.getItem('fb_ui')).musicBackgroundPlayback
+      };
+    })).toEqual({ preference:true, stored:true });
+    await page.evaluate(function () { FB.ui.closeModal(); });
+    expect(await page.evaluate(function () {
+      window.dispatchEvent(new Event('blur'));
+      return {
+        paused:FB.music.isPaused(),
+        anyPlaying:window.__gameMusicAudio.some(function (item) {
+          return item.src && !item.paused;
+        })
+      };
+    })).toEqual({ paused:false, anyPlaying:true });
+    await page.evaluate(function () { window.dispatchEvent(new Event('focus')); });
+    expect(await page.evaluate(function () {
+      Object.defineProperty(document, 'hidden', { configurable:true, value:true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      return window.__gameMusicAudio.some(function (item) {
+        return item.src && !item.paused;
+      });
+    })).toBe(true);
+    await page.evaluate(function () {
+      Object.defineProperty(document, 'hidden', { configurable:true, value:false });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(backgroundPlayback).toBeChecked();
+    await backgroundPlayback.uncheck();
+    expect(await page.evaluate(function () {
+      return JSON.parse(localStorage.getItem('fb_ui')).musicBackgroundPlayback;
+    })).toBe(false);
+    await page.evaluate(function () { FB.ui.closeModal(); });
 
     await quickToggle.click();
     expect(await page.evaluate(function () {

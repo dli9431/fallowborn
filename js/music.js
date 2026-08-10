@@ -52,6 +52,11 @@ window.FB = window.FB || {};
     return !!(p && p.musicChoice === 'on');
   }
 
+  function backgroundPlaybackEnabled() {
+    const p = prefs();
+    return !!(p && p.musicBackgroundPlayback);
+  }
+
   function updateTitleToggle() {
     const button = document.getElementById('btn-title-music');
     if (!button) return;
@@ -252,6 +257,7 @@ window.FB = window.FB || {};
   M.supported = function () { return supported; };
   M.refreshTitleToggle = updateTitleToggle;
   M.enabled = enabled;
+  M.backgroundPlaybackEnabled = backgroundPlaybackEnabled;
   M.catalog = function () { return catalog; };
   M.banks = function () { return catalog ? (catalog.banks || []).slice() : []; };
   M.current = function () { return currentTrack; };
@@ -363,6 +369,7 @@ window.FB = window.FB || {};
   }
 
   function pauseForBackground() {
+    if (backgroundPlaybackEnabled()) return;
     if (backgroundPaused) return;
     backgroundPaused = true;
     resumeAfterBackground = !!(enabled() && currentTrack &&
@@ -374,8 +381,8 @@ window.FB = window.FB || {};
     }
   }
 
-  function resumeAfterFocus() {
-    if (document.hidden || !windowFocused || !backgroundPaused) return;
+  function resumeAfterFocus(ignoreFocus) {
+    if ((!ignoreFocus && (document.hidden || !windowFocused)) || !backgroundPaused) return;
     backgroundPaused = false;
     const resume = resumeAfterBackground;
     resumeAfterBackground = false;
@@ -473,6 +480,19 @@ window.FB = window.FB || {};
     }
     updateNowPlaying();
     return true;
+  };
+
+  M.setBackgroundPlayback = function (value) {
+    const p = prefs();
+    if (!p) return false;
+    p.musicBackgroundPlayback = !!value;
+    savePrefs();
+    if (p.musicBackgroundPlayback) {
+      resumeAfterFocus(true);
+    } else if (document.hidden || !windowFocused) {
+      pauseForBackground();
+    }
+    return p.musicBackgroundPlayback;
   };
 
   M.setVolume = function (value) {

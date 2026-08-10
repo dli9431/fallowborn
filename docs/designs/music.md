@@ -56,10 +56,12 @@ title element. The control stays hidden during loading, gameplay, or when the so
 play.
 
 The now-playing title sits at the bottom of the map and opens the track modal. A compact adjacent
-button pauses or resumes the current track without opening that modal. Leaving the game window or
-tab pauses playback, and returning resumes only music that was playing before focus was lost. This
-automatic pause never changes the saved preference or overrides a manual pause. Like and dislike
-are available only on play.fallowborn.com. Each changed rating persists locally and emits the
+button pauses or resumes the current track without opening that modal. By default, leaving the game
+window or tab pauses playback, and returning resumes only music that was playing before focus was
+lost. Settings can instead keep both the title theme and gameplay soundtrack playing while the tab,
+window, or screen is inactive. This preference bypasses only the automatic focus-loss pause; it
+never changes the saved **Play music** choice or overrides a manual pause. Like and dislike are
+available only on play.fallowborn.com. Each changed rating persists locally and emits the
 first-party event `music-rating` through the existing telemetry boundary. Its `track_id`,
 `track_title`, `rating`, `music_bank`, and `music_role` properties support per-song breakdowns in
 analytics without creating a separate event name for every song. Ratings do not affect shuffle

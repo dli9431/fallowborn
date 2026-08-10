@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.8';
+  FB.VERSION = '1.117.9';
   FB.CHANGELOG = [
+    { v: '1.117.9', date: '2026-08-10', changes: [
+      'A new Music setting can keep the soundtrack, including the title theme, playing when the game loses focus instead of pausing it.'
+    ] },
     { v: '1.117.8', date: '2026-08-10', changes: [
       'County borders no longer stretch across straits and seas — Tangier keeps no Spanish shore, Mecca no Nubian coast, and counties everywhere hold to their own side of the water. A few settlements moved to the county they really belong to.'
     ] },
@@ -2055,6 +2058,7 @@ window.FB = window.FB || {};
     realmHighlightOpacity:1,
     musicChoice:null,
     musicVolume:0.55,
+    musicBackgroundPlayback:false,
     musicPreferred:{},
     musicRatings:{},
     musicOfflineBanks:{},
@@ -2086,6 +2090,8 @@ window.FB = window.FB || {};
       if (typeof storedUiPrefs.musicVolume === 'number') {
         G.uiPrefs.musicVolume = FB.clamp(storedUiPrefs.musicVolume, 0, 1);
       }
+      G.uiPrefs.musicBackgroundPlayback =
+        !!storedUiPrefs.musicBackgroundPlayback;
       if (storedUiPrefs.musicPreferred &&
           typeof storedUiPrefs.musicPreferred === 'object') {
         G.uiPrefs.musicPreferred = storedUiPrefs.musicPreferred;
