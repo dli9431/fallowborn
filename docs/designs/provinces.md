@@ -28,7 +28,11 @@ appends real-world presentations after the curated lists with `fill: true`: a fi
 entry replaces a slot's generated name/location but does not force early visibility —
 development reveals it on the normal thresholds. Counties with no curated list also
 gain a county-head entry named after the county itself; where the geodata offers
-too few named places, the remaining slots keep generated names.
+too few named places, the remaining slots keep generated names. Because the
+geodata is modern, the import's `HISTORICAL_NAMES` table swaps post-medieval
+foundation/renaming names for the settlement's well-attested period name
+('Tel Aviv' → 'Jaffa') — the county-head entry is exempt and keeps the
+county's name.
 
 At world compilation (`compileSites` in `js/world.js`) every settled county receives an
 ordered record list: authored slots first (never renumbered), then deterministic

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.4';
+  FB.VERSION = '1.117.5';
   FB.CHANGELOG = [
+    { v: '1.117.5', date: '2026-08-10', changes: [
+      'Settlements whose real-world names are modern now go by their older names instead — Jaffa for Tel Aviv, Constantinople-era names across Anatolia, Königsberg and Memel on the Baltic, and over a hundred more.'
+    ] },
     { v: '1.117.4', date: '2026-08-10', changes: [
       'Coastal settlements no longer hang over the waterline at close zoom, and Venice now sits on its own lagoon island.',
       'Sovereign capitals stand out: a gold star rides beside the capital county’s name on the map, and the Land tab tells you when a county is its realm’s capital.',

@@ -1756,7 +1756,11 @@ early visibility. Curated entries always win; where the geodata has too few name
 places (steppe, desert, tundra), the remaining slots keep generated names.
 Modern numbered administrative labels ('Paris 16 Passy') are cleaned to the
 historical name they embed ('Passy'); labels with no historical reading are
-dropped for the next real place.
+dropped for the next real place. Where a place is itself a post-medieval
+foundation or renaming, the tool's `HISTORICAL_NAMES` table emits the
+settlement's well-attested older name instead ('Tel Aviv' → 'Jaffa',
+'Ankara' → 'Ancyra'); county-head entries are exempt and keep the county's
+name.
 An optional `--topup` pass adds places from OpenStreetMap.
 Settlement data: GeoNames geographical database (CC BY 4.0);
 top-up data © OpenStreetMap contributors, ODbL.

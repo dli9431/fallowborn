@@ -276,8 +276,10 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   requires the complete itch soundtrack to fit beneath its 200 MB gameplay-audio cap.
 - `tools/settlement_import.py` - one-time build-time tool that extracts real-world
   settlement names/locations from GeoNames country dumps (with an optional OpenStreetMap
-  `--topup` pass) and regenerates `data/settlements_real.js`; run manually, never at
-  build or runtime. Responses cache in the gitignored `tools/geonames_cache/` and
+  `--topup` pass), swaps post-medieval place names for their attested period names via
+  its `HISTORICAL_NAMES` table, and regenerates `data/settlements_real.js`; run
+  manually, never at build or runtime. Responses cache in the gitignored
+  `tools/geonames_cache/` and
   `tools/osm_overpass_cache.json`.
 
 ## Reference docs

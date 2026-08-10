@@ -85,6 +85,46 @@ test('no settlement name carries a modern numbered administrative label',
     expect(result.numbered).toEqual([]);
   });
 
+test('fill names use the attested period name, not the modern one',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      /* tools/settlement_import.py HISTORICAL_NAMES: post-medieval
+         foundation/renaming names are emitted under the settlement's older
+         name instead. Spot-check the canonical cases across the map. */
+      const modern = ['Tel Aviv', 'Ankara', 'İzmir', 'Clermont-Ferrand',
+        'Casablanca', 'Kaliningrad', 'Trabzon', 'Şanlıurfa'];
+      const period = ['Jaffa', 'Ancyra', 'Smyrna', 'Clermont', 'Anfa',
+        'Königsberg', 'Trebizond', 'Edessa'];
+      const seenModern = [], seenPeriod = {}, heads = {};
+      for (const bm of ['867', '1066']) {
+        for (const pr of FB.bookmark(bm).provinces) {
+          for (let i = 0; i < (pr.settlements || []).length; i++) {
+            const name = pr.settlements[i].name;
+            if (modern.indexOf(name) >= 0) seenModern.push(bm + ':' + pr.id + ':' + name);
+            if (period.indexOf(name) >= 0) seenPeriod[name] = 1;
+            if (i === 0 && !pr.settlements[i].fill) heads[name] = 1;
+          }
+        }
+      }
+      /* a period name the curated county head already carries never appears
+         as a fill entry (the import dedups it), so only require the ones
+         with no curated head; the head check keeps the exemption honest */
+      return { seenModern: seenModern,
+        jaffa: !!seenPeriod['Jaffa'], smyrna: !!seenPeriod['Smyrna'],
+        clermont: !!seenPeriod['Clermont'], anfa: !!seenPeriod['Anfa'],
+        konigsberg: !!seenPeriod['Königsberg'] };
+    });
+
+    expect(result.seenModern).toEqual([]);
+    expect(result.jaffa).toBe(true);
+    expect(result.smyrna).toBe(true);
+    expect(result.clermont).toBe(true);
+    expect(result.anfa).toBe(true);
+    expect(result.konigsberg).toBe(true);
+  });
+
 test('fill presentations do not force early settlement visibility', async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',
       'The visibility contract runs once against the primary file target.');
