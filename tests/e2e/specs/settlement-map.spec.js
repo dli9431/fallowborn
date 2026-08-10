@@ -77,9 +77,9 @@ test('settlement data faults each produce an actionable validation error',
         return p.wasteland;
       }).id;
       const cases = {
-        missingSite:defWith({ london:[[['no_such_place', 'Nowhere', 'town']].map(function (e) {
-          return { site:e[0], name:e[1], kind:e[2] };
-        })] }),
+        missingSite:defWith({ london:[
+          { site:'no_such_place', name:'Nowhere', kind:'town' }
+        ] }),
         badKind:defWith({ london:[{ site:'london', name:'London', kind:'metropolis' }] }),
         dupSite:defWith({ london:[
           { site:'london', name:'London', kind:'town' },
@@ -99,7 +99,11 @@ test('settlement data faults each produce an actionable validation error',
           { site:'roma', name:'B', kind:'town' },
           { site:'ostia', name:'C', kind:'village' },
           { site:'paris', name:'D', kind:'village' },
-          { site:'aachen', name:'E', kind:'village' }
+          { site:'aachen', name:'E', kind:'village' },
+          { site:'winchester', name:'F', kind:'village' },
+          { site:'york', name:'G', kind:'village' },
+          { site:'norwich', name:'H', kind:'village' },
+          { site:'oxford', name:'I', kind:'village' }
         ] }),
         notAList:defWith({ london:{ site:'london' } })
       };
@@ -132,8 +136,8 @@ test('settlement data faults each produce an actionable validation error',
     expect(result.twoCounties).toContain('site london is assigned to both');
     expect(result.twoCounties).toContain('winchester');
     expect(result.wasteland).toContain('declares settlements');
-    expect(result.tooMany).toContain('must be an array of 1–4 records');
-    expect(result.notAList).toContain('must be an array of 1–4 records');
+    expect(result.tooMany).toContain('must be an array of 1–8 records');
+    expect(result.notAList).toContain('must be an array of 1–8 records');
     expect(result.badCoords).toContain('bad_coords has invalid coordinates');
     expect(result.badCoords).toContain('invalid settlement site id BAD SLUG');
     expect(result.notObject).toContain('settlementSites must be an object keyed by site id');
@@ -277,8 +281,8 @@ test('bookmark switching restores exact compiled sites and clears stale markers'
     expect(second.error).toBeNull();
     expect(second.staleMarkers).toBe(0);
     /* the same physical slug compiles to the same point in both dates */
-    expect(second.roma.x).toBe(first.roma.x);
-    expect(second.roma.y).toBe(first.roma.y);
+    expect(second.roma.x).toBe(first.x);
+    expect(second.roma.y).toBe(first.y);
     expect(second.roma.site).toBe('roma');
     expect(second.roma.name).toBe('Rome');
     expect(second.roma.kind).toBe('city'); // 1066 baseline is a city
@@ -653,6 +657,9 @@ test('Land tab settlement names open the exact sheet and center the map county',
        demesne ones */
     const pid = await page.evaluate(function () {
       const s = FB.state;
+      /* keep the first-visit Land tab intro sheet from covering the panel */
+      s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};
+      s.player.panelIntrosSeen.prov = 1;
       let foreign = null;
       for (const pr of FB.world.provs) {
         if (pr.wasteland) continue;
@@ -662,7 +669,10 @@ test('Land tab settlement names open the exact sheet and center the map county',
         if (holder && holder !== 'player') { foreign = pr.id; break; }
       }
       FB.map.zoom = 4;
-      FB.map.select(foreign);
+      /* the Land tab renders selectedProv, which only the production
+         selection path sets — a bare FB.map.select leaves it on the
+         player's home county */
+      FB.ui.selectProvince(foreign);
       FB.ui.showTab('prov', { history:false });
       return foreign;
     });

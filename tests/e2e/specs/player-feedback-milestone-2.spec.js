@@ -226,11 +226,13 @@ test('settlement growth reports every derived threshold and the bookmark baselin
       return out;
     });
 
+    /* London's head settlement is authored as a town, so the dev-4 head-town
+       threshold is already satisfied at the baseline and is never promised. */
     expect(rows.map(function (row) {
       return [row.development, row.next, row.change];
     })).toEqual([
       [2, 3, 'new_village'],
-      [3, 4, 'head_town'],
+      [3, 5, 'new_village'],
       [4, 5, 'new_village'],
       [5, 6, 'second_town'],
       [6, 7, 'head_city'],

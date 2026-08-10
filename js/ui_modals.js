@@ -15848,12 +15848,18 @@ window.FB = window.FB || {};
       }
       return el;
     }
+    /* the dialog's nodes linger in the reused gm-body after the modal closes,
+       so "is the dialog on screen" must also test the modal's hidden class */
+    function dialogOpen() {
+      return !!$('music-download-progress') &&
+        !$('genmodal').classList.contains('hidden');
+    }
     function progress(done, total, bytes, totalBytes) {
       const text = FB.T('Downloading {done}/{total} · {bytes}/{size}', {
         done:done, total:total,
         bytes:music.formatBytes(bytes), size:music.formatBytes(totalBytes)
       });
-      const note = $('music-download-progress');
+      const note = dialogOpen() ? $('music-download-progress') : null;
       if (note) {
         note.classList.remove('hidden');
         note.textContent = text;
@@ -15870,7 +15876,7 @@ window.FB = window.FB || {};
       else if (!error) UI.toast('Music is ready for offline play.');
       /* refresh the dialog only when it is open — a finishing download must
          never pop it over the game */
-      if ($('music-download-progress')) UI.showMusicDownloads(true);
+      if (dialogOpen()) UI.showMusicDownloads(true);
     }
     document.querySelectorAll('[data-music-download]').forEach(function (button) {
       button.addEventListener('click', function () {
