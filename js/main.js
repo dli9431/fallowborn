@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.11';
+  FB.VERSION = '1.117.12';
   FB.CHANGELOG = [
+    { v: '1.117.12', date: '2026-08-10', changes: [
+      'The title screen plays its new intro theme again — the soundtrack catalog still pointed at the retired file.'
+    ] },
     { v: '1.117.11', date: '2026-08-10', changes: [
       'Background soundtrack now prepares the next song before the current one ends, so locked Android sessions continue across tracks.'
     ] },

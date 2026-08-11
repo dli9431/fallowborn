@@ -5,8 +5,8 @@ FBDATA.musicCatalog = {
   "intro": {
     "id": "intro-fallowborn",
     "title": "Fallowborn",
-    "src": "music/intro/000-fallowborn.opus",
-    "order": 0,
+    "src": "music/intro/001-fallowborn.opus",
+    "order": 1,
     "bytes": 2409264,
     "duration": 178.208,
     "channels": 2,
