@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.9';
+  FB.VERSION = '1.117.10';
   FB.CHANGELOG = [
+    { v: '1.117.10', date: '2026-08-10', changes: [
+      'Background music now stays active through Android screen locks and loop boundaries, with lock-screen controls and playback recovery.'
+    ] },
     { v: '1.117.9', date: '2026-08-10', changes: [
       'A new Music setting can keep the soundtrack, including the title theme, playing when the game loses focus instead of pausing it.'
     ] },

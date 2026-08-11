@@ -60,13 +60,23 @@ button pauses or resumes the current track without opening that modal. By defaul
 window or tab pauses playback, and returning resumes only music that was playing before focus was
 lost. Settings can instead keep both the title theme and gameplay soundtrack playing while the tab,
 window, or screen is inactive. This preference bypasses only the automatic focus-loss pause; it
-never changes the saved **Play music** choice or overrides a manual pause. Like and dislike are
-available only on play.fallowborn.com. Each changed rating persists locally and emits the
-first-party event `music-rating` through the existing telemetry boundary. Its `track_id`,
-`track_title`, `rating`, `music_bank`, and `music_role` properties support per-song breakdowns in
-analytics without creating a separate event name for every song. Ratings do not affect shuffle
-weight. The modal's center Play/Pause control retains the current track position without changing
-the saved **Play music** preference.
+never changes the saved **Play music** choice or overrides a manual pause.
+
+The title theme and a player-repeated gameplay track use the audio element's native loop mode. This
+keeps Android browsers from seeing a seek-and-restart gap at the loop boundary. The player also
+publishes each track and its intended playing or paused state through the Media Session API, with
+notification actions for play, pause, previous, and next. While background playback is enabled, an
+unexpected pause on a hidden page receives one guarded resume attempt. Focus, page-resume, and user
+interaction reconcile playback again after a browser freezes and restores the page. A bounded
+in-memory diagnostic trail records media errors and lifecycle recovery events without sending them
+off the device.
+
+Like and dislike are available only on play.fallowborn.com. Each changed rating persists locally
+and emits the first-party event `music-rating` through the existing telemetry boundary. Its
+`track_id`, `track_title`, `rating`, `music_bank`, and `music_role` properties support per-song
+breakdowns in analytics without creating a separate event name for every song. Ratings do not
+affect shuffle weight. The modal's center Play/Pause control retains the current track position
+without changing the saved **Play music** preference.
 
 ## Caching and offline play
 

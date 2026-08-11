@@ -66,20 +66,44 @@ test('first soundtrack boot, title pause, and background playback preserve state
       'Synthetic soundtrack responses require the served-origin project.');
     await page.addInitScript(function () {
       HTMLMediaElement.prototype.canPlayType = function () { return 'probably'; };
+      window.__musicMediaSession = {
+        playbackState:'none', metadata:null, handlers:{},
+        setActionHandler:function (name, callback) { this.handlers[name] = callback; }
+      };
+      Object.defineProperty(navigator, 'mediaSession', {
+        configurable:true, value:window.__musicMediaSession
+      });
+      window.MediaMetadata = function (data) {
+        for (const key in data) this[key] = data[key];
+      };
       window.__musicAudio = [];
       function FakeAudio() {
         this.currentTime = 0;
+        this.error = null;
+        this.listeners = {};
         this.loop = false;
+        this.networkState = 1;
         this.paused = true;
+        this.readyState = 4;
         this.src = '';
         this.volume = 0;
         window.__musicAudio.push(this);
       }
-      FakeAudio.prototype.addEventListener = function () {};
+      FakeAudio.prototype.addEventListener = function (name, callback) {
+        this.listeners[name] = this.listeners[name] || [];
+        this.listeners[name].push(callback);
+      };
+      FakeAudio.prototype.dispatch = function (name) {
+        (this.listeners[name] || []).forEach(function (callback) { callback(); });
+      };
       FakeAudio.prototype.load = function () {};
-      FakeAudio.prototype.pause = function () { this.paused = true; };
+      FakeAudio.prototype.pause = function () {
+        this.paused = true;
+        this.dispatch('pause');
+      };
       FakeAudio.prototype.play = function () {
         this.paused = false;
+        this.dispatch('playing');
         return Promise.resolve();
       };
       FakeAudio.prototype.removeAttribute = function (name) {
@@ -142,6 +166,19 @@ test('first soundtrack boot, title pause, and background playback preserve state
       window.__titleAudio.currentTime = 47;
       return window.__titleAudio.src;
     });
+    expect(await page.evaluate(function () {
+      return {
+        nativeLoop:window.__titleAudio.loop,
+        mediaTitle:window.__musicMediaSession.metadata.title,
+        playbackState:window.__musicMediaSession.playbackState,
+        actions:Object.keys(window.__musicMediaSession.handlers).sort()
+      };
+    })).toEqual({
+      nativeLoop:true,
+      mediaTitle:'Fallowborn',
+      playbackState:'playing',
+      actions:['nexttrack', 'pause', 'play', 'previoustrack']
+    });
 
     await titleMusic.click();
     await expect(titleMusic).toHaveText('♫');
@@ -190,6 +227,18 @@ test('first soundtrack boot, title pause, and background playback preserve state
       document.dispatchEvent(new Event('visibilitychange'));
       return window.__titleAudio.paused;
     })).toBe(false);
+    await page.evaluate(function () { window.__titleAudio.pause(); });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return {
+          playing:!window.__titleAudio.paused,
+          playbackState:window.__musicMediaSession.playbackState,
+          recovered:FB.music.playbackDiagnostics().some(function (entry) {
+            return entry.type === 'recover-pause';
+          })
+        };
+      });
+    }).toEqual({ playing:true, playbackState:'playing', recovered:true });
     await page.evaluate(function () {
       Object.defineProperty(document, 'hidden', { configurable:true, value:false });
       document.dispatchEvent(new Event('visibilitychange'));
@@ -257,31 +306,58 @@ test('context banks, playback controls, and listening history stay consistent',
         musicOfflineBanks:{}
       }));
       HTMLMediaElement.prototype.canPlayType = function () { return 'probably'; };
+      window.__gameMusicMediaSession = {
+        playbackState:'none', metadata:null, handlers:{},
+        setActionHandler:function (name, callback) { this.handlers[name] = callback; }
+      };
+      Object.defineProperty(navigator, 'mediaSession', {
+        configurable:true, value:window.__gameMusicMediaSession
+      });
+      window.MediaMetadata = function (data) {
+        for (const key in data) this[key] = data[key];
+      };
       function FakeAudio() {
         this.currentTime = 0;
+        this.error = null;
         this.listeners = {};
         this.loop = false;
+        this.networkState = 1;
         this.paused = true;
+        this.readyState = 4;
         this.src = '';
         this.volume = 0;
         window.__gameMusicAudio = window.__gameMusicAudio || [];
         window.__gameMusicAudio.push(this);
       }
       FakeAudio.prototype.addEventListener = function (name, callback) {
-        this.listeners[name] = callback;
+        this.listeners[name] = this.listeners[name] || [];
+        this.listeners[name].push(callback);
+      };
+      FakeAudio.prototype.dispatch = function (name) {
+        (this.listeners[name] || []).forEach(function (callback) { callback(); });
       };
       FakeAudio.prototype.load = function () {};
-      FakeAudio.prototype.pause = function () { this.paused = true; };
+      FakeAudio.prototype.pause = function () {
+        this.paused = true;
+        this.dispatch('pause');
+      };
       FakeAudio.prototype.play = function () {
         this.paused = false;
+        window.__lastGameMusicAudio = this;
+        this.dispatch('playing');
         return Promise.resolve();
       };
       FakeAudio.prototype.removeAttribute = function (name) {
         if (name === 'src') this.src = '';
       };
       FakeAudio.prototype.finish = function () {
+        if (this.loop) {
+          this.currentTime = 0;
+          this.paused = false;
+          return;
+        }
         this.paused = true;
-        if (this.listeners.ended) this.listeners.ended();
+        this.dispatch('ended');
       };
       window.__finishGameMusic = function () {
         const playing = window.__gameMusicAudio.filter(function (item) {
@@ -365,6 +441,24 @@ test('context banks, playback controls, and listening history stay consistent',
         });
       });
     }).toBe(true);
+
+    expect(await page.evaluate(function () {
+      const active = window.__lastGameMusicAudio;
+      FB.music.setRepeat(true);
+      const repeating = active.loop;
+      FB.music.setRepeat(false);
+      return {
+        repeating:repeating,
+        stoppedRepeating:!active.loop,
+        playbackState:window.__gameMusicMediaSession.playbackState,
+        mediaTitle:window.__gameMusicMediaSession.metadata.title
+      };
+    })).toEqual({
+      repeating:true,
+      stoppedRepeating:true,
+      playbackState:'playing',
+      mediaTitle:expect.any(String)
+    });
 
     await quickToggle.click();
     await expect(quickToggle).toHaveAttribute('aria-label', 'Play music');
