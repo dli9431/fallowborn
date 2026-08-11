@@ -22,6 +22,9 @@ window.FB = window.FB || {};
   let deck = [];
   let deckAt = 0;
   let deckCycle = 0;
+  let queuedTrack = null;
+  let preparedTrack = null;
+  let prepareToken = 0;
   let history = [];
   let historyAt = -1;
   let repeatTrack = false;
@@ -229,7 +232,7 @@ window.FB = window.FB || {};
           else resumeElement(element);
         } else {
           setMediaSessionState('playing');
-          if (!advanceAfterTrack()) setMediaSessionState('paused');
+          if (!advanceAfterTrack({ noCrossfade:true })) setMediaSessionState('paused');
         }
       });
       element.addEventListener('error', function () {
@@ -285,6 +288,53 @@ window.FB = window.FB || {};
     if (!url) return;
     try { URL.revokeObjectURL(url); } catch (error) {}
     audioObjectUrls[index] = null;
+  }
+
+  function releasePreparedUrl(url) {
+    if (!/^blob:/.test(url || '')) return;
+    try { URL.revokeObjectURL(url); } catch (error) {}
+  }
+
+  function clearPreparedTrack(clearQueue) {
+    prepareToken++;
+    if (preparedTrack) releasePreparedUrl(preparedTrack.url);
+    preparedTrack = null;
+    if (clearQueue) queuedTrack = null;
+  }
+
+  function takePreparedUrl(track) {
+    if (!preparedTrack || !track || preparedTrack.trackId !== track.id) return null;
+    const url = preparedTrack.url;
+    preparedTrack = null;
+    prepareToken++;
+    return url;
+  }
+
+  function upcomingTrack() {
+    if (mode !== 'game' || pendingBankId) return null;
+    if (historyAt >= 0 && historyAt < history.length - 1) {
+      return tracksById[history[historyAt + 1]] || null;
+    }
+    if (!queuedTrack) queuedTrack = nextDeckTrack();
+    return queuedTrack;
+  }
+
+  function prepareUpcomingTrack() {
+    if (!enabled() || mode !== 'game' || repeatTrack) return;
+    const track = upcomingTrack();
+    if (!track || track === currentTrack) return;
+    if (preparedTrack && preparedTrack.trackId === track.id) return;
+    clearPreparedTrack(false);
+    const token = ++prepareToken;
+    loadTrack(track, function (error, url) {
+      const wanted = upcomingTrack();
+      if (token !== prepareToken || error || !wanted || wanted.id !== track.id) {
+        if (!error) releasePreparedUrl(url);
+        return;
+      }
+      preparedTrack = { trackId:track.id, url:url };
+      recordPlaybackEvent('prepared-next', null);
+    });
   }
 
   function reconcileCache() {
@@ -595,6 +645,7 @@ window.FB = window.FB || {};
 
   function stopAudio() {
     playToken++;
+    clearPreparedTrack(true);
     for (let i = 0; i < audio.length; i++) {
       audio[i].pause();
       audio[i].removeAttribute('src');
@@ -771,17 +822,17 @@ window.FB = window.FB || {};
     options = options || {};
     if (!track || failedTracks[track.id] || !enabled()) return false;
     const token = ++playToken;
+    const readyUrl = takePreparedUrl(track);
+    if (!readyUrl) clearPreparedTrack(false);
     currentTrack = track;
     repeatTrack = options.keepRepeat ? repeatTrack : false;
     recordHistory(track, !!options.fromHistory);
     updateNowPlaying();
     updateMediaSession(track);
     if (playbackIntended()) setMediaSessionState('playing');
-    loadTrack(track, function (error, url) {
+    const loaded = function (error, url) {
       if (token !== playToken) {
-        if (!error && /^blob:/.test(url || '')) {
-          try { URL.revokeObjectURL(url); } catch (revokeError) {}
-        }
+        if (!error) releasePreparedUrl(url);
         return;
       }
       if (error) {
@@ -806,13 +857,15 @@ window.FB = window.FB || {};
       const nextIndex = activeAudio === 0 ? 1 : 0;
       const oldIndex = activeAudio;
       const next = audio[nextIndex];
+      const crossfade = oldIndex >= 0 && !options.noCrossfade && !document.hidden &&
+        !audio[oldIndex].ended;
       next.pause();
       releaseAudioUrl(nextIndex);
       next.src = url;
       if (/^blob:/.test(url || '')) audioObjectUrls[nextIndex] = url;
       next.currentTime = 0;
       next.loop = nativeLoopEnabled(track);
-      next.volume = oldIndex < 0 ? (prefs() ? prefs().musicVolume : 0.55) : 0;
+      next.volume = crossfade ? 0 : (prefs() ? prefs().musicVolume : 0.55);
       activeAudio = nextIndex;
       if (mode === 'title' && titlePaused && track.kind === 'intro') {
         setMediaSessionState('paused');
@@ -842,22 +895,35 @@ window.FB = window.FB || {};
       }
       setMediaSessionState('playing');
       const result = next.play();
+      prepareUpcomingTrack();
+      const finishTransition = function () {
+        if (oldIndex < 0) return;
+        if (crossfade) {
+          fadeTo(nextIndex, oldIndex, token);
+          return;
+        }
+        audio[oldIndex].pause();
+        audio[oldIndex].removeAttribute('src');
+        releaseAudioUrl(oldIndex);
+      };
       if (result && typeof result.then === 'function') {
         result.then(function () {
           if (token !== playToken) return;
           lifecycleRecoveryPending = false;
           setMediaSessionState('playing');
-          if (oldIndex >= 0) fadeTo(nextIndex, oldIndex, token);
+          finishTransition();
         }, function () {
           recordPlaybackEvent('play-rejected', next);
           lifecycleRecoveryPending = true;
           setMediaSessionState('paused');
           armGesture();
         });
-      } else if (oldIndex >= 0) {
-        fadeTo(nextIndex, oldIndex, token);
+      } else {
+        finishTransition();
       }
-    });
+    };
+    if (readyUrl) loaded(null, readyUrl);
+    else loadTrack(track, loaded);
     return true;
   }
 
@@ -998,17 +1064,18 @@ window.FB = window.FB || {};
     return null;
   }
 
-  function playFromBank(bankId) {
+  function playFromBank(bankId, options) {
+    clearPreparedTrack(true);
     currentBankId = bankId;
     pendingBankId = null;
     rebuildDeck(currentBankId);
     const next = nextDeckTrack();
-    return next ? playTrack(next) : false;
+    return next ? playTrack(next, options) : false;
   }
 
-  function advanceAfterTrack() {
-    if (pendingBankId) return playFromBank(pendingBankId);
-    return M.next();
+  function advanceAfterTrack(options) {
+    if (pendingBankId) return playFromBank(pendingBankId, options);
+    return M.next(options);
   }
 
   M.sync = function (state, force) {
@@ -1047,6 +1114,7 @@ window.FB = window.FB || {};
 
   M.showTitle = function (force) {
     if (!initialized) M.init();
+    clearPreparedTrack(true);
     updateTitleToggle();
     mode = 'title';
     playbackPaused = false;
@@ -1062,16 +1130,19 @@ window.FB = window.FB || {};
     playTrack(catalog.intro);
   };
 
-  M.next = function () {
+  M.next = function (options) {
     if (!enabled() || mode !== 'game') return false;
     repeatTrack = false;
-    if (pendingBankId) return playFromBank(pendingBankId);
+    if (pendingBankId) return playFromBank(pendingBankId, options);
     if (historyAt >= 0 && historyAt < history.length - 1) {
       historyAt++;
-      return playTrack(tracksById[history[historyAt]], { fromHistory:true });
+      options = options || {};
+      options.fromHistory = true;
+      return playTrack(tracksById[history[historyAt]], options);
     }
-    const next = nextDeckTrack();
-    return next ? playTrack(next) : false;
+    const next = queuedTrack || nextDeckTrack();
+    queuedTrack = null;
+    return next ? playTrack(next, options) : false;
   };
 
   M.previous = function () {
@@ -1086,6 +1157,7 @@ window.FB = window.FB || {};
     if (activeAudio >= 0 && currentTrack) {
       audio[activeAudio].loop = nativeLoopEnabled(currentTrack);
     }
+    if (!repeatTrack) prepareUpcomingTrack();
     return repeatTrack;
   };
 
@@ -1101,7 +1173,9 @@ window.FB = window.FB || {};
     if (p.musicPreferred[id]) delete p.musicPreferred[id];
     else p.musicPreferred[id] = true;
     savePrefs();
+    clearPreparedTrack(true);
     rebuildDeck(currentBankId || '__all__');
+    prepareUpcomingTrack();
     return !!p.musicPreferred[id];
   };
 

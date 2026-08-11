@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.10';
+  FB.VERSION = '1.117.11';
   FB.CHANGELOG = [
+    { v: '1.117.11', date: '2026-08-10', changes: [
+      'Background soundtrack now prepares the next song before the current one ends, so locked Android sessions continue across tracks.'
+    ] },
     { v: '1.117.10', date: '2026-08-10', changes: [
       'Background music now stays active through Android screen locks and loop boundaries, with lock-screen controls and playback recovery.'
     ] },

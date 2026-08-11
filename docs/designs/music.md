@@ -46,6 +46,12 @@ this more** gives a persistent weight to the current track. The bounded listenin
 both **Previous** and **Next**,
 while **Repeat** replays the current track without changing that history.
 
+During gameplay the shuffled next track is reserved and fully loaded while the current track is
+still playing. A natural transition can therefore start it synchronously without depending on a
+new background fetch after Android has ended the old media session. Visible-page transitions keep
+the crossfade; hidden-page and already-ended transitions switch at the saved volume because
+animation frames may be suspended while the screen is locked.
+
 The pregame screens share one compact bottom-corner music control. It displays a pause icon while
 music plays and a music icon while silent. Pausing retains the intro element and playback position
 for an in-session resume, while also saving the persistent **Play music** choice as off. The next
@@ -82,8 +88,9 @@ without changing the saved **Play music** preference.
 
 Online playback fetches a complete track, verifies the response, stores it in the stable
 `fallowborn-music-v1` Cache Storage cache, and then plays a blob URL. Replaying it uses the cached
-response. The service worker also treats full music requests as cache-first and bypasses Range
-requests. Old revisions are cleaned without deleting still-current music.
+response. Gameplay reserves one additional shuffled track ahead, so at most the current and next
+song need live blob URLs. The service worker also treats full music requests as cache-first and
+bypasses Range requests. Old revisions are cleaned without deleting still-current music.
 
 Only play.fallowborn.com exposes offline downloads. A player can download any complete bank or the
 entire soundtrack. A bank is marked complete only after all its tracks are cached. Offline

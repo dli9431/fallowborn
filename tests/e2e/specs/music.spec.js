@@ -514,13 +514,31 @@ test('context banks, playback controls, and listening history stay consistent',
       };
     })).toEqual({ paused:false, anyPlaying:true });
     await page.evaluate(function () { window.dispatchEvent(new Event('focus')); });
-    expect(await page.evaluate(function () {
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.music.playbackDiagnostics().some(function (entry) {
+          return entry.type === 'prepared-next';
+        });
+      });
+    }).toBe(true);
+    const backgroundTransition = await page.evaluate(function () {
       Object.defineProperty(document, 'hidden', { configurable:true, value:true });
       document.dispatchEvent(new Event('visibilitychange'));
-      return window.__gameMusicAudio.some(function (item) {
-        return item.src && !item.paused;
-      });
-    })).toBe(true);
+      const before = FB.music.current().id;
+      window.__lastGameMusicAudio.finish();
+      return {
+        changed:FB.music.current().id !== before,
+        playing:!window.__lastGameMusicAudio.paused,
+        volume:window.__lastGameMusicAudio.volume,
+        playbackState:window.__gameMusicMediaSession.playbackState
+      };
+    });
+    expect(backgroundTransition).toEqual({
+      changed:true,
+      playing:true,
+      volume:0.55,
+      playbackState:'playing'
+    });
     await page.evaluate(function () {
       Object.defineProperty(document, 'hidden', { configurable:true, value:false });
       document.dispatchEvent(new Event('visibilitychange'));
