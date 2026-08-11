@@ -199,7 +199,14 @@ several-fold so autosave plus every slot fits even the WebKit quota. `S.serializ
 still returns plain JSON — compression happens only at the storage and export
 boundaries, each write verifies its own round trip and falls back to plain JSON rather
 than store an unproven encoding, and `S.read` accepts legacy uncompressed slots
-forever. If a save still hits the quota, `S.toSlot` recognizes the quota-shaped error
+forever. The season-boundary autosave splits that work so it does not stall the
+day loop: `S.serialize` still snapshots synchronously (the state to capture is
+the live one, before any mortality roll), but the codec pass and the storage
+write run on a later task; a newer autosave supersedes a still-pending one, and
+`S.flushPending` (pagehide, background pause) lands the pending write
+synchronously when the page may never run another timer. Manual slot saves
+stay fully synchronous. If a save still hits the quota, `S.toSlot` recognizes
+the quota-shaped error
 and points the player at 📤 Export, which preserves the life as text when storage no
 longer can.
 

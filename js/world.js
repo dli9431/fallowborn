@@ -1648,7 +1648,12 @@ window.FB = window.FB || {};
       const religionId = religionIds[religionIndex];
       const source = FB.faithValue(state, religionId, 'head.officeId').sourceId;
       if (source && source !== religionId) continue;
-      const vacancy = FB.religiousHeadVacancy(state, religionId);
+      /* read the vacancy straight from the heads map: ensureReligiousHeads
+         already ran above, and FB.religiousHeadVacancy would re-run the whole
+         office-table repair once per religion per day */
+      const officeId = FB.faithOfficeId(religionId, state);
+      const vacancy = officeId && state.religiousHeads[officeId] === null
+        ? (state.religiousHeadVacancies[officeId] || null) : null;
       const rel = FB.religionOf(religionId, state);
       const meta = rel && rel.head;
       if (!vacancy || !meta || state.turn - vacancy.turn < wait) continue;
@@ -3258,6 +3263,20 @@ window.FB = window.FB || {};
 
   FB.repairAlliances = function (state) {
     state.alliances = state.alliances || [];
+    /* validate first without allocating: the common case is a clean list,
+       which keeps its array identity (callers read state.alliances or the
+       return value — the content is what matters, and it is unchanged) */
+    const seen = {};
+    let clean = true;
+    for (const a of state.alliances) {
+      if (!a || !a.a || !a.b || a.a === a.b || seen[a.a] || seen[a.b]) { clean = false; break; }
+      const ra = state.realms[a.a], rb = state.realms[a.b];
+      if (!ra || !rb || !ra.alive || !rb.alive) { clean = false; break; }
+      if (a.aGen !== FB.realmRulerGeneration(state, a.a) ||
+          a.bGen !== FB.realmRulerGeneration(state, a.b)) { clean = false; break; }
+      seen[a.a] = seen[a.b] = 1;
+    }
+    if (clean) return state.alliances;
     const out = [], occupied = {};
     for (const a of state.alliances) {
       if (!a || !a.a || !a.b || a.a === a.b || occupied[a.a] || occupied[a.b]) continue;
@@ -4449,26 +4468,31 @@ window.FB = window.FB || {};
           }
         }
       }
-      // AI may attack an independent player realm
-      const relationMult = FB.clamp(
-        1 - FB.standingOf(state, { kind:'realm', id:id }) / 100,
-        B.foreignOpinionAttackMin,
-        B.foreignOpinionAttackMax
-      );
-      const deterrence = FB.clamp(FB.aiBaseHost(state, id) /
-        Math.max(1, FB.realmDefensiveStrength(state, 'player')), 0.25, 1.25);
-      if (!FB.isRealmAtWar(state, id) && FB.isPlayerSovereign(state) && !state.player.war &&
+      // AI may attack an independent player realm — the cheap guards run
+      // first: relationMult and deterrence (the player's full levy breakdown)
+      // are only computed when a declaration is actually possible, and the
+      // FB.chance roll still fires under exactly the same conditions
+      if (FB.isPlayerSovereign(state) && !state.player.war &&
+        !FB.isRealmAtWar(state, id) &&
         !(state.pacts && state.pacts[id] > state.turn) &&
         !FB.areAllied(state, id, 'player') &&
-        !FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, id), 'player', null) &&
-        FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
-        FB.realmsAdjacent(state, id, 'player')) {
-        state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
-          defending: true, casus: { type: 'border', label: 'Border war' } };
-        FB.news(state, FB.msg('news.world.war_declared_on_player',
-          '🔥 {realm} declares war upon YOU!', { realm: r.name }));
-        FB.warFooting(state);
-        FB.queueEvent(state, 'war_defense_muster', {});
+        !FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, id), 'player', null)) {
+        const relationMult = FB.clamp(
+          1 - FB.standingOf(state, { kind:'realm', id:id }) / 100,
+          B.foreignOpinionAttackMin,
+          B.foreignOpinionAttackMax
+        );
+        const deterrence = FB.clamp(FB.aiBaseHost(state, id) /
+          Math.max(1, FB.realmDefensiveStrength(state, 'player')), 0.25, 1.25);
+        if (FB.chance(0.04 * r.aggression * relationMult * deterrence) &&
+          FB.realmsAdjacent(state, id, 'player')) {
+          state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
+            defending: true, casus: { type: 'border', label: 'Border war' } };
+          FB.news(state, FB.msg('news.world.war_declared_on_player',
+            '🔥 {realm} declares war upon YOU!', { realm: r.name }));
+          FB.warFooting(state);
+          FB.queueEvent(state, 'war_defense_muster', {});
+        }
       }
     }
 

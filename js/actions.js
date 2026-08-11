@@ -5249,6 +5249,17 @@ window.FB = window.FB || {};
     return shown.length ? shown[0].id : null;
   };
 
+  /* id → focus def, lazily built (and rebuilt if the list ever changes size):
+     the daily validate/tick path looked defs up by linear scan */
+  let focusById = null;
+  function focusDef(id) {
+    if (!focusById || focusById._n !== FB.focuses.length) {
+      focusById = { _n: FB.focuses.length };
+      for (const f of FB.focuses) focusById[f.id] = f;
+    }
+    return focusById[id] || null;
+  }
+
   FB.validateFocus = function (state) {
     if (state.player.travel) return;
     if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(state);
@@ -5258,9 +5269,8 @@ window.FB = window.FB || {};
     // menu is pared to a whitelist that show() alone can't see, so take the
     // full sweep and let a now-irrelevant home focus fall through to a soldier's.
     if (cur && !afield(state)) {
-      for (const f of FB.focuses) {
-        if (f.id === cur) { if (f.show(state)) return; break; }
-      }
+      const f = focusDef(cur);
+      if (f && f.show(state)) return;
     }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === cur) return;
@@ -5276,22 +5286,19 @@ window.FB = window.FB || {};
   FB.tickFocus = function (state) {
     if (state.player.travel) return;
     FB.validateFocus(state);
-    for (const f of FB.focuses) {
-      if (f.id === state.player.focus) {
-        const mult = vocationalMultiplier(state, f);
-        const before = {
-          gold:state.player.gold,
-          prestige:state.player.prestige,
-          piety:state.player.piety
-        };
-        f.tick(state);
-        if (mult > 1) {
-          for (const key of ['gold', 'prestige', 'piety']) {
-            const gained = state.player[key] - before[key];
-            if (gained > 0) state.player[key] += gained * (mult - 1);
-          }
-        }
-        return;
+    const f = focusDef(state.player.focus);
+    if (!f) return;
+    const mult = vocationalMultiplier(state, f);
+    const before = {
+      gold:state.player.gold,
+      prestige:state.player.prestige,
+      piety:state.player.piety
+    };
+    f.tick(state);
+    if (mult > 1) {
+      for (const key of ['gold', 'prestige', 'piety']) {
+        const gained = state.player[key] - before[key];
+        if (gained > 0) state.player[key] += gained * (mult - 1);
       }
     }
   };

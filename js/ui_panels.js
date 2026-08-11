@@ -4047,27 +4047,54 @@ window.FB = window.FB || {};
   }
 
   SH.logRenderedTail = null; SH.logRenderedLen = -1; // skip identical rebuilds on quiet ticks
+  SH.logRenderedHeader = ''; SH.logRenderedLocale = ''; // append-path validity keys
+  function logEntryHtml(s, e) {
+    const logDate = e.d
+      ? FB.T('{season} {day}, {year}', {
+        season: FB.seasonName(e.s), day: e.d, year: e.y
+      })
+      : FB.T('{season}, {year}', { season: FB.seasonName(e.s), year: e.y });
+    return '<div class="logentry"><span class="ldate">' + esc(logDate) + '</span><br>' +
+      esc(FB.newsText(e, s, s.player.charId)) + '</div>';
+  }
   function renderLog() {
     const s = FB.state;
     const tail = s.log.length ? s.log[s.log.length - 1] : null;
     if (tail === SH.logRenderedTail && s.log.length === SH.logRenderedLen) return;
-    SH.logRenderedTail = tail; SH.logRenderedLen = s.log.length;
-    let h = '<div class="panelh">' + esc(FB.game && FB.game.observe
+    const header = '<div class="panelh">' + esc(FB.game && FB.game.observe
       ? FB.T('Chronicle of the realms')
       : FB.T('Chronicle of {dynasty}', { dynasty: s.chars[s.player.charId].dyn || FB.T('your line') })) +
       '</div>';
-    for (let i = s.log.length - 1; i >= 0 && i >= s.log.length - 80; i--) {
-      const e = s.log[i];
-      const logDate = e.d
-        ? FB.T('{season} {day}, {year}', {
-          season: FB.seasonName(e.s), day: e.d, year: e.y
-        })
-        : FB.T('{season}, {year}', { season: FB.seasonName(e.s), year: e.y });
-      h += '<div class="logentry"><span class="ldate">' + esc(logDate) + '</span><br>' +
-        esc(FB.newsText(e, s, s.player.charId)) + '</div>';
+    const box = $('tab-log');
+    /* The log grows by appends (truncation only bites far above the visible
+       window), so fresh entries are prepended and the overflow trimmed — the
+       DOM ends identical to a full rebuild without reparsing 80 nodes. Any
+       other shape (a load, a dynasty rename, a locale switch, truncation
+       reaching the window) falls back to the rebuild. */
+    const canAppend = tail !== SH.logRenderedTail &&
+      SH.logRenderedTail && s.log.length > SH.logRenderedLen &&
+      header === SH.logRenderedHeader && FB.locale === SH.logRenderedLocale &&
+      s.log[SH.logRenderedLen - 1] === SH.logRenderedTail &&
+      box.firstElementChild;
+    if (canAppend) {
+      const from = SH.logRenderedLen, to = s.log.length;
+      let add = '';
+      for (let i = to - 1; i >= from; i--) add += logEntryHtml(s, s.log[i]);
+      box.firstElementChild.insertAdjacentHTML('afterend', add);
+      let visible = Math.min(from, 80) + (to - from);
+      while (visible-- > 80) box.removeChild(box.lastElementChild);
+      SH.logRenderedTail = tail; SH.logRenderedLen = to;
+      FB.localizeTree(box);
+      return;
     }
-    $('tab-log').innerHTML = h;
-    FB.localizeTree($('tab-log'));
+    SH.logRenderedTail = tail; SH.logRenderedLen = s.log.length;
+    SH.logRenderedHeader = header; SH.logRenderedLocale = FB.locale;
+    let h = header;
+    for (let i = s.log.length - 1; i >= 0 && i >= s.log.length - 80; i--) {
+      h += logEntryHtml(s, s.log[i]);
+    }
+    box.innerHTML = h;
+    FB.localizeTree(box);
   }
 
   function selfDrawerOpen() {

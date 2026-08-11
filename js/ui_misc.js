@@ -1574,6 +1574,7 @@ window.FB = window.FB || {};
     resetPanelMarkup();
     if (FB.clearPortraitCache) FB.clearPortraitCache();
     SH.logRenderedTail = null; SH.logRenderedLen = -1;
+    SH.logRenderedHeader = ''; SH.logRenderedLocale = '';
     FB.map.resize();
     FB.map.request();
   };

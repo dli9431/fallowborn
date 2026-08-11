@@ -160,14 +160,16 @@ window.FB = window.FB || {};
     );
   }
 
-  function syncObedienceSupporters(state, papacy) {
+  function syncObedienceSupporters(state, papacy, knownSovereigns) {
     var ids = Object.keys(papacy.obediences);
     var i;
     for (i = 0; i < ids.length; i++) {
       papacy.obediences[ids[i]].supporters = [];
       papacy.obediences[ids[i]].strongestPatron = null;
     }
-    var sovereigns = livingCatholicSovereigns(state);
+    /* ensurePapacy already computed this list moments ago on the same
+       untouched world — take it over when handed in */
+    var sovereigns = knownSovereigns || livingCatholicSovereigns(state);
     for (i = 0; i < sovereigns.length; i++) {
       var rid = sovereigns[i];
       var oid = papacy.realmObedience[rid];
@@ -577,7 +579,7 @@ window.FB = window.FB || {};
         papacy.realmObedience[sovereigns[i]] = papacy.romanObedience;
       }
     }
-    syncObedienceSupporters(state, papacy);
+    syncObedienceSupporters(state, papacy, sovereigns);
     return papacy;
   };
 

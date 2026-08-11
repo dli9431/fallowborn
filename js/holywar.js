@@ -852,6 +852,22 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* The first valid enemy realm of a camp — the daily warringMap only ever
+     reads greatHolyWarEnemies(...)[0], so it asks once per camp instead of
+     building the full validated list per participant per day. */
+  FB.greatHolyWarFirstEnemy = function (state, camp) {
+    var campaign = state && state.greatHolyWar;
+    if (!campaign || !camp) return null;
+    var enemyCamp = camp === 'attackers' ? 'defenders' : 'attackers';
+    var list = campaign.participants[enemyCamp] || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].sovereign && participantRealmValid(state, list[i])) {
+        return list[i].realm;
+      }
+    }
+    return null;
+  };
+
   FB.playerGreatHolyWarHostActive = function (state) {
     var campaign = state && state.greatHolyWar;
     var pledge = state && state.player.greatHolyWar;
@@ -2595,6 +2611,9 @@ window.FB = window.FB || {};
 
   function trackSacredLosses(state) {
     var history = ensureHistory(state);
+    /* one office-table repair for the whole pass: religiousHeadOf would
+       re-run it per religion, and nothing below mutates the heads map */
+    FB.ensureReligiousHeads(state);
     var religionIds = FB.religionIds(state, false);
     for (var religionIndex = 0; religionIndex < religionIds.length; religionIndex++) {
       var religionId = religionIds[religionIndex];
@@ -2619,7 +2638,15 @@ window.FB = window.FB || {};
           }
         }
       }
-      var head = FB.religiousHeadOf(state, religionId);
+      /* the head read inlined: same value religiousHeadOf would return after
+         the ensure above — the live realm holding the office, or null */
+      var headOfficeId = FB.faithOfficeId(religionId, state);
+      var headRid = headOfficeId &&
+        Object.prototype.hasOwnProperty.call(state.religiousHeads, headOfficeId)
+        ? state.religiousHeads[headOfficeId] : null;
+      var headRealm = headRid !== null && state.realms
+        ? state.realms[headRid] : null;
+      var head = headRealm && headRealm.alive ? headRealm : null;
       var headState = history.headState[religionId];
       if (!headState || typeof headState !== 'object') {
         history.headState[religionId] = { initialized:true, vacant:!head, restoredTurn:null };
@@ -2808,16 +2835,26 @@ window.FB = window.FB || {};
     var campaign = state.greatHolyWar;
     if (!campaign) {
       var history = ensureHistory(state);
-      var unlockIds = FB.religionIds(state, false).filter(function (religionId) {
-        var source = FB.faithValue(state, religionId, 'head.greatHolyWar').sourceId;
-        return !source || source === religionId;
-      }).sort();
+      /* a checked religion is retired forever (unlockChecked is only ever
+         set, never cleared), so the own-head source test — and its per-day
+         faithValue allocations — only runs for religions still waiting; the
+         candidates keep the same sorted evaluation order as before */
+      var allReligionIds = FB.religionIds(state, false);
+      var unlockIds = [];
+      for (var candidateIndex = 0; candidateIndex < allReligionIds.length; candidateIndex++) {
+        var candidateId = allReligionIds[candidateIndex];
+        if (history.unlockChecked[candidateId]) continue;
+        var candidateConf = config(state, candidateId);
+        if (!candidateConf || !dateReached(state, candidateConf.minDate)) continue;
+        var candidateSource = FB.faithValue(state, candidateId, 'head.greatHolyWar').sourceId;
+        if (candidateSource && candidateSource !== candidateId) continue;
+        unlockIds.push(candidateId);
+      }
+      unlockIds.sort();
       for (var unlockIndex = 0; unlockIndex < unlockIds.length; unlockIndex++) {
         var unlockReligionId = unlockIds[unlockIndex];
-        var unlockConf = config(state, unlockReligionId);
-        if (!unlockConf || history.unlockChecked[unlockReligionId] ||
-            !dateReached(state, unlockConf.minDate)) continue;
         history.unlockChecked[unlockReligionId] = true;
+        var unlockConf = config(state, unlockReligionId);
         var unlockHead = FB.religiousHeadOf(state, unlockReligionId);
         var unlockTargets = FB.greatHolyWarTargets(state, unlockReligionId);
         var unlockForced = (!history.firstLaunched[unlockReligionId] &&

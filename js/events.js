@@ -3196,8 +3196,12 @@ window.FB = window.FB || {};
     }
     if (tg.rivalHeatMin !== undefined && FB.rivalHeat(state) < tg.rivalHeatMin) return false;
     if (tg.rivalHeatMax !== undefined && FB.rivalHeat(state) > tg.rivalHeatMax) return false;
-    const popularOpinion = FB.popEffective ? FB.popEffective(state) : p.pop;
-    if (tg.popularOpinionBelow !== undefined && popularOpinion > tg.popularOpinionBelow) return false;
+    /* computed only when a def actually asks for it: popEffective walks the
+       county modifier records, and nearly every def lacks this trigger */
+    if (tg.popularOpinionBelow !== undefined) {
+      const popularOpinion = FB.popEffective ? FB.popEffective(state) : p.pop;
+      if (popularOpinion > tg.popularOpinionBelow) return false;
+    }
     if (tg.custom && FB.fns[tg.custom] &&
         !FB.fns[tg.custom](state, ctx || {})) return false;
     return true;
@@ -3403,7 +3407,14 @@ window.FB = window.FB || {};
     FB.queueStationFarewellIfReady(state);
     while (state.eventQueue.length && out.length < 3) {
       const qev = state.eventQueue.shift();
-      qev.ctx = FB.eventContext(state, qev.ctx);
+      /* queueEvent already stamps all five context defaults — only a queued
+         item from a legacy save needs the repair copy */
+      const qctx = qev.ctx || {};
+      if (qctx.societalRole === undefined || qctx.profession === undefined ||
+          qctx.formerProfession === undefined || qctx.protagonistId === undefined ||
+          qctx.locationId === undefined) {
+        qev.ctx = FB.eventContext(state, qev.ctx);
+      }
       const queuedDef = FB.eventById(qev.id);
       if (queuedDef &&
           queuedDef.contextValidator === 'plot_event_context_valid' &&

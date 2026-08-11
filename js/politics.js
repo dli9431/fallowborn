@@ -262,7 +262,7 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function crownInterest(state, court, house) {
+  function crownInterest(state, court, house, rulerHouse) {
     var reasons = [];
     if (house.isRuler) {
       reasons.push(reason('ruler_house', 100));
@@ -283,7 +283,8 @@ window.FB = window.FB || {};
         councilSeatId:house.councilSeatId
       }));
     }
-    var ruler = courtHouseMap(court)[court.rulerHouseId];
+    var ruler = rulerHouse !== undefined ? rulerHouse :
+      courtHouseMap(court)[court.rulerHouseId];
     if (ruler && ruler.religion &&
         FB.faithInFold(state, house.religion, ruler.religion)) {
       score += 12;
@@ -496,14 +497,17 @@ window.FB = window.FB || {};
     var crown = {};
     var mercantile = {};
     var i;
+    /* one house map for the whole evaluation: crownInterest used to rebuild
+       it per house */
+    var byId = courtHouseMap(court);
+    var rulerHouse = byId[court.rulerHouseId];
     for (i = 0; i < court.houses.length; i++) {
       var house = court.houses[i];
-      crown[house.id] = crownInterest(state, court, house);
+      crown[house.id] = crownInterest(state, court, house, rulerHouse);
       mercantile[house.id] = mercantileInterest(state, house);
     }
     var leaderIds = chooseMagnateLeaders(
       court, crown, mercantile, stored || {});
-    var byId = courtHouseMap(court);
     var interests = {};
     for (i = 0; i < court.houses.length; i++) {
       var member = court.houses[i];
@@ -603,9 +607,11 @@ window.FB = window.FB || {};
     return out;
   }
 
-  function reconcileAllegiances(state, politics, court, annualReview) {
+  function reconcileAllegiances(state, politics, court, annualReview, evaluation) {
     var old = politics.allegiances || {};
-    var evaluation = evaluateCourt(state, court, old);
+    /* repairPolitics already evaluated the court with these same stored
+       allegiances — take it over instead of scoring every house twice */
+    evaluation = evaluation || evaluateCourt(state, court, old);
     var next = {};
     var pending = !!politics.pendingMotion;
     for (var i = 0; i < court.houses.length; i++) {
@@ -731,7 +737,7 @@ window.FB = window.FB || {};
       politics.allegiances = initialAllegiances(
         court, evaluation, state.date.year);
     } else {
-      reconcileAllegiances(state, politics, court, annual);
+      reconcileAllegiances(state, politics, court, annual, evaluation);
     }
     return politics;
   };

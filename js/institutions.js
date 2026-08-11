@@ -203,6 +203,22 @@ window.FB = window.FB || {};
 
   function grandfatherGuildTerms(state, store) {
     if (!FB.householdWorkers || !FB.careerOf) return;
+    /* Cheap probe before the household-wide character scans: an officer rank
+       only ever exists on an already-created career record (elections set it
+       together with the term record, repairs never invent one), so a raw
+       peek at career.guildRank finds every day the full pass could act on.
+       The pass itself is unchanged and idempotent when nothing needs
+       backfilling. */
+    var anyOfficer = false;
+    for (var probeId in state.chars) {
+      var probeChar = state.chars[probeId];
+      var probeCareer = probeChar && probeChar.career;
+      if (probeCareer && GUILD_ORDER[probeCareer.guildRank] >= GUILD_ORDER.officer) {
+        anyOfficer = true;
+        break;
+      }
+    }
+    if (!anyOfficer) return;
     var workers = FB.householdWorkers(state);
     for (var i = 0; i < workers.length; i++) {
       var c = workers[i];

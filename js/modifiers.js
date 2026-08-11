@@ -24,6 +24,32 @@ window.FB = window.FB || {};
 
   function repairList(list, scope) {
     if (!Array.isArray(list)) return [];
+    /* fast path: a list whose records are all already valid, dedup-free and
+       normalized (only the canonical keys, a usable sourceEventId) survives
+       untouched — the daily repair passes then validate instead of
+       reallocating every record */
+    const seenIds = Object.create(null);
+    let canonical = true;
+    for (let i = 0; i < list.length; i++) {
+      const raw = list[i];
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw) ||
+          typeof raw.id !== 'string' || !definition(raw.id, scope) ||
+          !validEnd(raw) || seenIds[raw.id]) { canonical = false; break; }
+      seenIds[raw.id] = true;
+      for (const key in raw) {
+        if (key !== 'id' && key !== 'endTurn' && key !== 'sourceEventId') {
+          canonical = false;
+          break;
+        }
+      }
+      if (!canonical) break;
+      if (own(raw, 'sourceEventId') &&
+          (typeof raw.sourceEventId !== 'string' || !raw.sourceEventId)) {
+        canonical = false;
+        break;
+      }
+    }
+    if (canonical) return list;
     const byId = Object.create(null), order = [];
     for (let i = 0; i < list.length; i++) {
       const raw = list[i];

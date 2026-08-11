@@ -375,23 +375,55 @@ window.FB = window.FB || {};
       e.code === 22 || e.code === 1014);
   }
 
+  function reportSaveError(e) {
+    if (!FB.ui) return;
+    if (isQuotaError(e)) FB.ui.toast('⚠ This life’s records have outgrown the browser’s save storage — 📤 Export (Menu → 💾 Save game) still keeps the life as text.');
+    else if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
+    else FB.ui.toast('⚠ This browser is blocking save storage — use 📤 Export (Menu → 💾 Save game) to keep your life as text.');
+  }
+
   S.toSlot = function (slot) {
     try {
       localStorage.setItem(key(slot), encodeStored(S.serialize()));
       return true;
     } catch (e) {
-      if (FB.ui) {
-        if (isQuotaError(e)) FB.ui.toast('⚠ This life’s records have outgrown the browser’s save storage — 📤 Export (Menu → 💾 Save game) still keeps the life as text.');
-        else if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
-        else FB.ui.toast('⚠ This browser is blocking save storage — use 📤 Export (Menu → 💾 Save game) to keep your life as text.');
-      }
+      reportSaveError(e);
       return false;
     }
   };
 
+  /* Autosaving splits so a season boundary does not stall the day loop: the
+     snapshot is still taken synchronously (the state to capture is the live
+     one, before any mortality roll), but the codec pass and the storage
+     write run after a frame can paint. A newer autosave supersedes a
+     still-pending one; only the autosave slot is written this way — manual
+     saves stay fully synchronous. */
+  let pendingAuto = null;
+  function flushAutosave() {
+    const job = pendingAuto;
+    pendingAuto = null;
+    if (!job) return;
+    try {
+      localStorage.setItem(key('auto'), encodeStored(job.json));
+    } catch (e) {
+      reportSaveError(e);
+    }
+  }
+  /* a hidden or closing page may never run another timer — land the pending
+     write instead of losing it */
+  S.flushPending = function () { if (pendingAuto) flushAutosave(); };
+  window.addEventListener('pagehide', S.flushPending);
+
   /* an observe session is never saved — it must not bury a real life */
   S.autosave = function () {
-    if (FB.state && !FB.state.player.dead && !(FB.game && FB.game.observe)) S.toSlot('auto');
+    if (!FB.state || FB.state.player.dead || (FB.game && FB.game.observe)) return;
+    try {
+      pendingAuto = { json: S.serialize() };
+    } catch (e) {
+      reportSaveError(e);
+      return;
+    }
+    setTimeout(flushAutosave, 0);
   };
 
   /* export/import — a life as portable text. localStorage is a hostage on

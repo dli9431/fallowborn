@@ -427,17 +427,28 @@ window.FB = window.FB || {};
     }
     if (state.greatHolyWar && state.greatHolyWar.phase === 'active' &&
         FB.greatHolyWarEnemies) {
+      /* every participant of a camp shares the same first enemy — compute it
+         once per camp instead of a full validated enemy list per realm */
+      const firstEnemy = {};
+      const enemyOf = function (camp) {
+        if (!camp) return null;
+        if (firstEnemy[camp] === undefined) {
+          firstEnemy[camp] = FB.greatHolyWarFirstEnemy
+            ? FB.greatHolyWarFirstEnemy(state, camp) : null;
+        }
+        return firstEnemy[camp];
+      };
       for (const campName of ['attackers', 'defenders']) {
         const participants = state.greatHolyWar.participants[campName] || [];
         for (const participant of participants) {
           if (!participant.sovereign) continue;
-          const enemies = FB.greatHolyWarEnemies(state, participant.realm);
-          m[participant.realm] = enemies.length ? enemies[0] : '__great_holy_war__';
+          const enemy = enemyOf(FB.greatHolyWarCamp(state, participant.realm));
+          m[participant.realm] = enemy || '__great_holy_war__';
         }
       }
       if (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(state)) {
-        const playerEnemies = FB.greatHolyWarEnemies(state, 'player');
-        m.player = playerEnemies.length ? playerEnemies[0] : '__great_holy_war__';
+        const playerEnemy = enemyOf(FB.greatHolyWarCamp(state, 'player'));
+        m.player = playerEnemy || '__great_holy_war__';
       }
     }
     return m;
@@ -705,50 +716,63 @@ window.FB = window.FB || {};
       : Math.max(1, Math.round(Number(B().armySeaTransportBase) || 250));
   };
 
-  FB.armyLegQuote = function (state, army, fromPid, toPid) {
+  /* Leg-quote constants that stay fixed for a whole route search: march
+     days, transport capacity and the sea/campaign speeds depend only on the
+     realm's technology and modifiers, and the host's headcount cannot change
+     mid-search either. A pathfind quotes thousands of edges, so these are
+     computed once per search instead of once per edge (the fromPid/toPid
+     seam of FB.armySeaTransportCapacity stays national — constant per
+     route — until future fleets need it otherwise). */
+  function legQuoteMemo(state, army) {
+    return {
+      crossings: B().armySeaCrossings || {},
+      hostMen: Math.max(0, Math.round(Number(army && army.men) || 0)),
+      landDays: FB.armyMarchDays(state, army.realm),
+      nationalCapacity: Math.max(1, Math.round(Number(
+        FB.armySeaTransportCapacity(state, army.realm, null, null)) || 1)),
+      seaSpeed: FB.techBonus ? FB.techBonus(state, 'seaMovement', army.realm) : 0,
+      campaignSpeed: campaignMarchSpeed(state, army.realm)
+    };
+  }
+
+  function quoteFromMemo(memo, fromPid, toPid) {
     const crossingClass = FB.waterCrossing
       ? FB.waterCrossing(fromPid, toPid) : null;
-    const hostMen = Math.max(0, Math.round(Number(army && army.men) || 0));
     if (!crossingClass) {
-      const landDays = FB.armyMarchDays(state, army.realm);
       return {
         water:false,
         crossingClass:null,
-        hostMen:hostMen,
+        hostMen:memo.hostMen,
         nationalCapacity:null,
         effectiveCapacity:null,
         cycles:1,
-        cycleDays:landDays,
-        totalDays:landDays
+        cycleDays:memo.landDays,
+        totalDays:memo.landDays
       };
     }
-
-    const crossings = B().armySeaCrossings || {};
-    const crossing = crossings[crossingClass] || crossings.narrow ||
+    const crossing = memo.crossings[crossingClass] || memo.crossings.narrow ||
       { cycleDays:2, capacityMult:2 };
-    const nationalCapacity = Math.max(1, Math.round(Number(
-      FB.armySeaTransportCapacity(
-        state, army.realm, fromPid, toPid)) || 1));
-    const effectiveCapacity = Math.max(1, Math.round(nationalCapacity *
+    const effectiveCapacity = Math.max(1, Math.round(memo.nationalCapacity *
       Math.max(0.01, Number(crossing.capacityMult) || 1)));
-    const cycles = Math.max(1, Math.ceil(hostMen / effectiveCapacity));
-    const seaSpeed = FB.techBonus
-      ? FB.techBonus(state, 'seaMovement', army.realm) : 0;
-    const campaignSpeed = campaignMarchSpeed(state, army.realm);
+    const cycles = Math.max(1, Math.ceil(memo.hostMen / effectiveCapacity));
     const cycleDays = Math.max(1, Math.round(
       Math.max(1, Number(crossing.cycleDays) || 1) *
-      Math.max(0.05, 1 - seaSpeed) /
-      Math.max(0.05, 1 + campaignSpeed)));
+      Math.max(0.05, 1 - memo.seaSpeed) /
+      Math.max(0.05, 1 + memo.campaignSpeed)));
     return {
       water:true,
       crossingClass:crossingClass,
-      hostMen:hostMen,
-      nationalCapacity:nationalCapacity,
+      hostMen:memo.hostMen,
+      nationalCapacity:memo.nationalCapacity,
       effectiveCapacity:effectiveCapacity,
       cycles:cycles,
       cycleDays:cycleDays,
       totalDays:cycles * cycleDays
     };
+  }
+
+  FB.armyLegQuote = function (state, army, fromPid, toPid) {
+    return quoteFromMemo(legQuoteMemo(state, army), fromPid, toPid);
   };
 
   function pathCompare(a, b) {
@@ -798,10 +822,66 @@ window.FB = window.FB || {};
     return first;
   }
 
-  function findArmyPathFrom(state, army, fromPid, toPid) {
+  /* Per-world path caches: the adjacency graph never changes after world
+     build, so the sorted neighbor lists the search walks and the
+     reachability components that short-circuit impossible routes are built
+     once and keyed on the world object itself (a new game replaces
+     FB.world, which rebuilds both). */
+  let pathCacheWorld = null;
+  const pathCacheSorted = {};
+  let pathCacheComp = null;
+  function sortedNeighbors(adj, pid) {
+    let list = pathCacheSorted[pid];
+    if (!list) {
+      list = Object.keys(adj[pid] || {}).sort();
+      pathCacheSorted[pid] = list;
+    }
+    return list;
+  }
+  function pathComponents() {
+    if (pathCacheWorld === FB.world && pathCacheComp) return pathCacheComp;
+    pathCacheWorld = FB.world;
+    for (const pid in pathCacheSorted) delete pathCacheSorted[pid];
+    const adj = (FB.world && FB.world.adj) || {};
+    /* Components over the symmetrized graph: no leg is ever blocked, so
+       provinces in different components can never reach each other and the
+       search below can be skipped outright (a same-component pair still
+       runs the full search — the component map only ever vetoes). */
+    const undirected = {};
+    for (const pid in adj) {
+      for (const nb in adj[pid]) {
+        (undirected[pid] = undirected[pid] || {})[nb] = 1;
+        (undirected[nb] = undirected[nb] || {})[pid] = 1;
+      }
+    }
+    const comp = {};
+    let label = 0;
+    for (const pid in undirected) {
+      if (comp[pid] !== undefined) continue;
+      const stack = [pid];
+      comp[pid] = label;
+      while (stack.length) {
+        const cur = stack.pop();
+        for (const nb in undirected[cur]) {
+          if (comp[nb] !== undefined) continue;
+          comp[nb] = label;
+          stack.push(nb);
+        }
+      }
+      label++;
+    }
+    pathCacheComp = comp;
+    return comp;
+  }
+
+  function findArmyPathFrom(state, army, fromPid, toPid, memo) {
     if (!FB.world || !FB.world.adj || !FB.world.adj[fromPid] ||
         !FB.world.adj[toPid]) return null;
     if (fromPid === toPid) return { path:[], totalDays:0, waterLegs:0 };
+    const comp = pathComponents();
+    if (comp[fromPid] !== comp[toPid]) return null;
+    memo = memo || legQuoteMemo(state, army);
+    const adj = FB.world.adj;
     const start = {
       pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0
     };
@@ -818,10 +898,10 @@ window.FB = window.FB || {};
           waterLegs:current.waterLegs
         };
       }
-      const neighbors = Object.keys(FB.world.adj[current.pid] || {}).sort();
+      const neighbors = sortedNeighbors(adj, current.pid);
       for (let i = 0; i < neighbors.length; i++) {
         const neighbor = neighbors[i];
-        const quote = FB.armyLegQuote(state, army, current.pid, neighbor);
+        const quote = quoteFromMemo(memo, current.pid, neighbor);
         const candidate = {
           pid:neighbor,
           path:current.path.concat([neighbor]),
@@ -843,11 +923,12 @@ window.FB = window.FB || {};
     return findArmyPathFrom(state, army, army.at, toPid);
   };
 
-  function routeCrossings(state, army, fromPid, path) {
+  function routeCrossings(state, army, fromPid, path, memo) {
     const out = [];
+    memo = memo || legQuoteMemo(state, army);
     let from = fromPid;
     for (let i = 0; i < path.length; i++) {
-      const quote = FB.armyLegQuote(state, army, from, path[i]);
+      const quote = quoteFromMemo(memo, from, path[i]);
       if (quote.water) {
         out.push({ from:from, to:path[i], routeIndex:i, quote:quote });
       }
@@ -864,17 +945,20 @@ window.FB = window.FB || {};
         waterLegs:0, crossings:[]
       };
     }
+    /* one quote memo for the whole plan: the search, the fallback plan and
+       the crossing report all describe the same unchanging host */
+    const memo = legQuoteMemo(state, army);
     const active = army.moveLeft > 0 && army.path && army.path.length;
     let route;
     if (active) {
       const next = army.path[0];
-      const remainder = findArmyPathFrom(state, army, next, destPid);
+      const remainder = findArmyPathFrom(state, army, next, destPid, memo);
       if (!remainder) {
         return {
           ok:false, active:true, path:[next], goal:next,
           totalDays:army.moveLeft,
           waterLegs:FB.waterCrossing(army.at, next) ? 1 : 0,
-          crossings:routeCrossings(state, army, army.at, [next])
+          crossings:routeCrossings(state, army, army.at, [next], memo)
         };
       }
       route = {
@@ -884,7 +968,7 @@ window.FB = window.FB || {};
           remainder.waterLegs
       };
     } else {
-      route = findArmyPathFrom(state, army, army.at, destPid);
+      route = findArmyPathFrom(state, army, army.at, destPid, memo);
       if (!route) return { ok:false, active:false, path:[] };
     }
     return {
@@ -895,7 +979,7 @@ window.FB = window.FB || {};
       goal:destPid,
       totalDays:route.totalDays,
       waterLegs:route.waterLegs,
-      crossings:routeCrossings(state, army, army.at, route.path)
+      crossings:routeCrossings(state, army, army.at, route.path, memo)
     };
   }
 
@@ -1112,6 +1196,10 @@ window.FB = window.FB || {};
     FB.armiesEnsure(state);
     const p = state.player;
     const warring = warringMap(state);
+    /* read once per tick: nothing in the raise/disband/order steps below
+       mutates the pledge, the campaign, or the player's sovereignty */
+    const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
+      FB.playerGreatHolyWarHostActive(state));
     const hostByRealm = {};
     for (const a of state.armies) {
       hostByRealm[a.realm] = a;
@@ -1144,8 +1232,7 @@ window.FB = window.FB || {};
     for (let i = state.armies.length - 1; i >= 0; i--) {
       const a = state.armies[i];
       if (a.realm === 'player') {
-        if (!p.war && !(FB.playerGreatHolyWarHostActive &&
-            FB.playerGreatHolyWarHostActive(state))) {
+        if (!p.war && !playerGhwHost) {
           disband(state, a);
           FB.news(state, FB.msg('news.army.disbands',
             '🏳 The war is done — the host disbands to hearth and field.', {}));
@@ -1160,8 +1247,7 @@ window.FB = window.FB || {};
     const autoHosts = FB.game.auto && FB.game.auto.hosts;
     // automated command re-raises a destroyed host once the rearm window passes
     if (autoHosts && autoHosts !== 'manual' &&
-        (p.war || (FB.playerGreatHolyWarHostActive &&
-          FB.playerGreatHolyWarHostActive(state))) && !hostByRealm['player']) {
+        (p.war || playerGhwHost) && !hostByRealm['player']) {
       FB.raisePlayerHost(state);
     }
     for (const a of state.armies) {

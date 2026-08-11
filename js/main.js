@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.13';
+  FB.VERSION = '1.117.14';
   FB.CHANGELOG = [
+    { v: '1.117.14', date: '2026-08-11', changes: [
+      'Long-running lives now spend less time on daily simulation, army route planning, autosaves, and Chronicle refreshes.'
+    ] },
     { v: '1.117.13', date: '2026-08-11', changes: [
       'A newly gentle house must pass to a true next-generation heir — a child, nephew, or adopted heir — before it can petition for a barony; a sibling who inherits no longer counts.'
     ] },
@@ -2327,7 +2330,10 @@ window.FB = window.FB || {};
   function pauseForBackground() {
     G.setPaused(true); // setPaused, not a bare flag: the button must flip to ▶ Play
     // a backgrounded mobile tab may never come back — keep what was played
+    // (flush: autosave's storage write is deferred now, and this page may
+    // never run another timer)
     FB.save.autosave();
+    if (FB.save.flushPending) FB.save.flushPending();
   }
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) pauseForBackground();

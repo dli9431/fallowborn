@@ -316,7 +316,7 @@ test('quotes land and every crossing class at capacity boundaries and campaign s
     expect(result.campaignOpen.totalDays).toBe(10);
   });
 
-test('weighted army routing changes with capacity, breaks ties stably, and consumes no RNG',
+test('weighted routing changes with capacity, invalidates per-world caches, and stays stable',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
 
@@ -357,10 +357,20 @@ test('weighted army routing changes with capacity, breaks ties stably, and consu
 
       army.at = 't';
       const tie = FB.findArmyPath(state, army, 'z');
+
+      /* Reuse the same endpoint ids in a replacement world. Cached neighbors
+         from the first graph would miss this new direct edge unless the
+         per-world route caches invalidate by world identity. */
+      FB.world = {
+        adj:{ t:{ z:1 }, z:{ t:1 } },
+        waterAdj:{ t:{}, z:{} },
+        byId:{ t:{ id:'t' }, z:{ id:'z' } }
+      };
+      const replaced = FB.findArmyPath(state, army, 'z');
       const after = FB.getRngState();
       FB.world = originalWorld;
       return {
-        low:low, high:high, tie:tie, plain:plain,
+        low:low, high:high, tie:tie, replaced:replaced, plain:plain,
         before:before, after:after
       };
     });
@@ -373,6 +383,9 @@ test('weighted army routing changes with capacity, breaks ties stably, and consu
     });
     expect(result.tie).toEqual({
       path:['b2','z'], totalDays:12, waterLegs:0
+    });
+    expect(result.replaced).toEqual({
+      path:['z'], totalDays:6, waterLegs:0
     });
     expect(result.plain).toEqual(['d']);
     expect(result.after).toBe(result.before);

@@ -1318,6 +1318,15 @@ window.FB = window.FB || {};
       mortality:0, education:0, retainers:0, prestige:0,
       travelCost:1, travelLegDays:null, work:{}
     };
+    const standards = FB.ensureHouseholdStandards(state);
+    /* every standard is inert for landed rulers and when nothing is
+       maintained at all — the per-id active checks (each re-ensuring the
+       table, and the work scan walking the whole household) are then pure
+       waste, so the daily focus tick takes this cheap exit */
+    if (state.player.tier > 2) return out;
+    let any = false;
+    for (const id in standards) { any = true; break; }
+    if (!any) return out;
     const table = FBDATA.householdStandards || {};
     for (const id in table) {
       if (!FB.householdStandardActive(state, id)) continue;
@@ -5096,6 +5105,8 @@ window.FB = window.FB || {};
   };
 
   FB.financeDay = function (state) {
+    const e = FB.ensureEconomy(state);
+    if (!e.investments.length) return; // nothing to build, nothing falls due
     const ventures = FB.financeActiveTradeVentures(state);
     for (let i = 0; i < ventures.length; i++) {
       if (ventures[i].dueTurn <= state.turn) FB.resolveTradeVenture(state, ventures[i]);

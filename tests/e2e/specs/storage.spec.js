@@ -303,3 +303,59 @@ test('a quota-shaped storage failure advises export, not a generic error',
       return t.indexOf('outgrown') >= 0 && t.indexOf('Export') >= 0;
     })).toBe(true);
   });
+
+test('autosave snapshots synchronously, writes on a later task, and flushes safely',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    /* The season-boundary autosave keeps its synchronous snapshot but defers
+       the codec+write: the slot must not hold the new snapshot in the same
+       task, must hold it a task later, and flushPending must land it
+       synchronously (the background-pause path depends on that). A second
+       autosave before the write supersedes the first. */
+    expect(await page.evaluate(async function (startCode) {
+      FB.state.player.gold += 777;
+      FB.save.autosave();
+      const sync = FB.save.read('auto');
+      const deferred = !sync ||
+        sync.state.player.gold !== FB.state.player.gold;
+
+      await new Promise(function (resolve) { setTimeout(resolve, 0); });
+      const landed = FB.save.read('auto');
+
+      const goldAfter = FB.state.player.gold;
+      FB.state.player.gold += 1;
+      FB.save.autosave();
+      FB.state.player.gold += 1000;
+      FB.save.autosave(); // supersedes the still-pending snapshot
+      await new Promise(function (resolve) { setTimeout(resolve, 0); });
+      const latest = FB.save.read('auto');
+
+      const pagehideGold = FB.state.player.gold += 10;
+      FB.save.autosave();
+      window.dispatchEvent(new Event('pagehide'));
+      const pagehideFlush = FB.save.read('auto');
+
+      const directGold = FB.state.player.gold += 100;
+      FB.save.autosave();
+      FB.save.flushPending();
+      const flushed = FB.save.read('auto');
+      return {
+        deferred:deferred,
+        landedVersion:landed && landed.v,
+        landedSeed:landed && landed.state.seed,
+        superseded:!!latest && latest.state.player.gold === goldAfter + 1001,
+        pagehideFlush:!!pagehideFlush &&
+          pagehideFlush.state.player.gold === pagehideGold,
+        flushedNow:!!flushed && flushed.state.player.gold === directGold
+      };
+    }, START_CODE)).toEqual({
+      deferred:true,
+      landedVersion:3,
+      landedSeed:START_CODE,
+      superseded:true,
+      pagehideFlush:true,
+      flushedNow:true
+    });
+  });

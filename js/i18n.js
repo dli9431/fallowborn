@@ -537,6 +537,9 @@ window.FBDATA = window.FBDATA || {};
   }
   function lookup(key, source) {
     const record = plainRecord(source);
+    /* English: both translatedEntry calls and the missing-note are provably
+       dead for this locale — skip the source-alias hash work entirely */
+    if (FB.locale === 'en') { lastKey = key; return record; }
     const translated = translatedEntry(key, record);
     if (translated) return translated;
     /* Generated source aliases let repeated display text share one translation

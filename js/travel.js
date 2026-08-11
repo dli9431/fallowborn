@@ -689,7 +689,9 @@ window.FB = window.FB || {};
   }
 
   FB.giftDeliveryTick = function (state) {
-    const deliveries = FB.giftDeliveryEnsure(state).slice();
+    const list = FB.giftDeliveryEnsure(state);
+    if (!list.length) return; // no copy, no loop — the ensure above still repairs
+    const deliveries = list.slice();
     for (let i = 0; i < deliveries.length; i++) {
       const d = deliveries[i];
       if (FB.giftDeliveryEnsure(state).indexOf(d) < 0) continue;

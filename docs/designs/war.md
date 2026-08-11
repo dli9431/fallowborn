@@ -226,7 +226,11 @@ crossing class. The effective sovereign's best completed `fx.seaTransport` value
 national transport capacity (250 men without such knowledge), modified by the crossing
 class. A host above effective capacity waits through `ceil(men / capacity)` complete
 crossing cycles; `fx.seaMovement` and a valid great-holy-war campaign-speed adjustment
-shorten each cycle.
+shorten each cycle. Within one route search the leg-quote inputs that depend only on
+the realm and the host (march days, national capacity, sea and campaign speeds,
+headcount) are computed once and shared by every edge, and the sorted adjacency lists
+and the reachability components that veto impossible routes are cached per world —
+neither changes the quoted route.
 
 Each leg is quoted only when it begins. The whole indivisible host and its marker remain
 on the departure county while the clock represents gathering boats, loading successive
