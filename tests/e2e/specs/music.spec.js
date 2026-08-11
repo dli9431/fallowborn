@@ -392,7 +392,10 @@ test('context banks, playback controls, and listening history stay consistent',
       state.player.tier = 3;
       const court = FB.music.resolveBank(state).id;
       state.player.tier = 1;
-      FB.state = state;
+      // Never install this stub as FB.state: the real UI (topbar refresh,
+      // role orientations, autosave) dereferences a full game state and
+      // throws against this partial one. Every sync takes the stub explicitly.
+      window.__musicContextState = state;
       FB.ui.showScreen(null);
       FB.platform.isItch = true;
       FB.music.sync(state, true);
@@ -650,15 +653,16 @@ test('context banks, playback controls, and listening history stay consistent',
     ]);
 
     const queuedContext = await page.evaluate(function () {
+      const state = window.__musicContextState;
       const first = FB.music.current().id;
-      FB.state.realms.lord.war = { enemy:'foe' };
-      FB.music.sync(FB.state);
+      state.realms.lord.war = { enemy:'foe' };
+      FB.music.sync(state);
       const atWar = FB.music.current().id;
-      FB.state.realms.lord.war = null;
-      FB.music.sync(FB.state);
+      state.realms.lord.war = null;
+      FB.music.sync(state);
       const atPeaceAgain = FB.music.current().id;
-      FB.state.realms.lord.war = { enemy:'foe' };
-      FB.music.sync(FB.state);
+      state.realms.lord.war = { enemy:'foe' };
+      FB.music.sync(state);
       window.__finishGameMusic();
       return {
         first:first,
@@ -685,9 +689,10 @@ test('context banks, playback controls, and listening history stay consistent',
     }).toBe(true);
 
     const peaceContext = await page.evaluate(function () {
+      const state = window.__musicContextState;
       const warTrack = FB.music.current().id;
-      FB.state.realms.lord.war = null;
-      FB.music.sync(FB.state);
+      state.realms.lord.war = null;
+      FB.music.sync(state);
       const beforeEnd = FB.music.current().id;
       window.__finishGameMusic();
       return {
