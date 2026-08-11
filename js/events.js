@@ -3227,19 +3227,24 @@ window.FB = window.FB || {};
   };
 
   /* Ordinary feudal elevation rests on a house, not one remarkable career.
-     New games record the generation that first reaches gentry; an heir must
-     inherit that standing before the house may petition for a barony. Saves
-     from before this field existed are treated as already established. */
+     New games record the line depth that first reaches gentry; an heir of a
+     genuinely later generation must inherit that standing before the house
+     may petition for a barony — a sibling or cousin of the founder's own
+     generation does not count. Saves from before these fields existed are
+     treated as already established, and saves holding only a saga-generation
+     number keep the original counter comparison. */
   FB.gentryEstablished = function (state) {
     const p = state.player;
     if (!p || p.tier < 2) return false;
     if (p.gentryGeneration === undefined) return true;
-    return p.gentryGeneration !== null && p.gentryGeneration < state.generation;
+    if (p.gentryGeneration === null) return false;
+    if (p.lineDepth !== undefined) return p.gentryGeneration < p.lineDepth;
+    return p.gentryGeneration < state.generation;
   };
   FB.markGentryRise = function (state) {
     const p = state.player;
     if (p.gentryGeneration === undefined || p.gentryGeneration === null) {
-      p.gentryGeneration = state.generation;
+      p.gentryGeneration = p.lineDepth !== undefined ? p.lineDepth : state.generation;
     }
   };
 

@@ -348,9 +348,15 @@ arrays, inheritance, and explicit grants keep their existing save shape.
 
 `player.gentryGeneration` is additive dynasty standing: it records the generation in
 which the house first reached tier 2 and persists through succession. Ordinary barony
-patronage requires that value to be lower than `state.generation`. Tier-2+ scenarios
-start established (`0`); older saves without the field are also treated as established,
-so the balance gate never retroactively strands an existing gentle house.
+patronage requires the current head to be of a genuinely later generation. New games
+track `player.lineDepth` — the current head's genealogical depth in the recorded tree,
+advanced at succession by the depth difference between predecessor and heir (an adopted
+child of the predecessor counts as one deeper) — and `gentryGeneration` is recorded and
+compared on that scale, so a sibling or cousin of the founder's own generation does not
+establish the house. Tier-2+ scenarios start established (`0`); older saves without the
+field are also treated as established, and saves holding only a saga-generation number
+keep the original `state.generation` comparison, so the balance gate never retroactively
+strands an existing gentle house.
 
 Standing deliberately keeps the version-3 compatibility stores:
 `character.opinion`, `player.liegeOp`, and `player.liegeOps`. The typed

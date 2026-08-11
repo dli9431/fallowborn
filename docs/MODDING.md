@@ -2513,7 +2513,7 @@ Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,
 `itemSellRatio` is the fraction of an item's `value` a buyer pays when the player sells it.
 Ordinary elevation from gentry to baron uses `baronyPrestige` and `baronyOpinion`;
 both the petition deed and unsolicited offer require those thresholds, as well as a
-gentle house established before the current generation.
+gentle house established by an earlier generation of the line.
 `liegeGrantRepeatMult` is the multiplier applied to grant odds for each successful barony,
 title, neighboring fief, or court-awarded escheat already received in the current lifetime.
 Skills are uncapped but grow on a diminishing-return curve: below `skillSoftCap`

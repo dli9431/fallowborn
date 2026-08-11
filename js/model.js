@@ -1632,6 +1632,26 @@ window.FB = window.FB || {};
   FB.childrenOf = childrenOf;
   FB.siblingsOf = siblingsOf;
 
+  /* Generational depth of a character inside the recorded tree: 1 with no
+     recorded parents, +1 per ancestor link (father preferred). Only relative
+     differences matter — succession uses them to tell a child's inheritance
+     from a sibling's. The seen set ends the walk on any cycle in a corrupt
+     save. */
+  FB.lineDepthOf = function (state, c) {
+    let depth = 1, cur = c;
+    const seen = {};
+    while (cur) {
+      if (seen[cur.id]) break;
+      seen[cur.id] = true;
+      const parent = (cur.fatherId && state.chars[cur.fatherId]) ||
+        (cur.motherId && state.chars[cur.motherId]);
+      if (!parent) break;
+      depth++;
+      cur = parent;
+    }
+    return depth;
+  };
+
   FB.stepchildrenOf = function (state, c) {
     const out = [];
     if (!state || !state.chars || !c) return out;

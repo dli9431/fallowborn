@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.12';
+  FB.VERSION = '1.117.13';
   FB.CHANGELOG = [
+    { v: '1.117.13', date: '2026-08-11', changes: [
+      'A newly gentle house must pass to a true next-generation heir — a child, nephew, or adopted heir — before it can petition for a barony; a sibling who inherits no longer counts.'
+    ] },
     { v: '1.117.12', date: '2026-08-10', changes: [
       'The title screen plays its new intro theme again — the soundtrack catalog still pointed at the retired file.'
     ] },
@@ -1582,6 +1585,7 @@ window.FB = window.FB || {};
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        lineDepth: 1,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
         courtshipTerms: null, suitorIds: null,
@@ -1824,6 +1828,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
+        lineDepth: 1,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
         courtshipTerms: null, suitorIds: null,
@@ -3164,6 +3169,26 @@ window.FB = window.FB || {};
     }
 
     s.generation++;
+    /* The saga counter advances on every succession, but the house's line
+       depth only advances when the heir is a genuinely later generation.
+       Gentry establishment compares against this, so a sibling or cousin of
+       the founder's own generation inheriting a newly gentle house does not
+       count as its heir generation. Legacy saves holding a saga-generation
+       gentry number keep the old rule and never mix the two scales. */
+    if (p.lineDepth !== undefined ||
+        p.gentryGeneration === null || p.gentryGeneration === undefined) {
+      const oldDepth = FB.lineDepthOf ? FB.lineDepthOf(s, old) : 1;
+      let heirDepth;
+      if (!heir.fatherId && !heir.motherId &&
+          (old.childrenIds || []).indexOf(heir.id) >= 0) {
+        // an adopted child has no blood links, but is still the next generation
+        heirDepth = oldDepth + 1;
+      } else {
+        heirDepth = FB.lineDepthOf ? FB.lineDepthOf(s, heir) : oldDepth;
+      }
+      p.lineDepth = p.lineDepth === undefined ?
+        heirDepth : p.lineDepth + (heirDepth - oldDepth);
+    }
     heir.dyn = old.dyn;
     heir.role = null;
     if (heir.health === undefined) heir.health = 8;
