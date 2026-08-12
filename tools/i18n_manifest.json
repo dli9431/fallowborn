@@ -434,6 +434,14 @@
         "text": "🕊 Seek a blessing"
       }
     },
+    "action.seek_field_command.label.default": {
+      "context": "action seek_field_command, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🚩 Take a field command"
+      }
+    },
     "action.seek_match.label.default": {
       "context": "action seek_match, visible label.",
       "glossary": [],
@@ -15093,6 +15101,89 @@
       "location": "data/events_paths.js",
       "source": {
         "text": "The War-Games"
+      }
+    },
+    "event.military_barony_victory.options.0.desc.default": {
+      "context": "Event military_barony_victory, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "The founder of a gentle house becomes its first landed lord."
+      }
+    },
+    "event.military_barony_victory.options.0.effects.log.default": {
+      "context": "Durable event log for military_barony_victory, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Won a barony by leading the ruler’s host to victory."
+      }
+    },
+    "event.military_barony_victory.options.0.label.default": {
+      "context": "Event military_barony_victory, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Kneel, and rise a baron."
+      }
+    },
+    "event.military_barony_victory.options.1.desc.default": {
+      "context": "Event military_barony_victory, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Take wealth and renown, but remain gentry."
+      }
+    },
+    "event.military_barony_victory.options.1.effects.log.default": {
+      "context": "Durable event log for military_barony_victory, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Refused a battlefield barony for the victor’s purse."
+      }
+    },
+    "event.military_barony_victory.options.1.label.default": {
+      "context": "Event military_barony_victory, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Ask for the victor’s purse instead."
+      }
+    },
+    "event.military_barony_victory.options.2.desc.default": {
+      "context": "Event military_barony_victory, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Let the victory stand without changing your station."
+      }
+    },
+    "event.military_barony_victory.options.2.label.default": {
+      "context": "Event military_barony_victory, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "Decline the reward."
+      }
+    },
+    "event.military_barony_victory.text.default": {
+      "context": "Event military_barony_victory, text, faith branch default.",
+      "glossary": [
+        "cname",
+        "rulername"
+      ],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "At {cname}, the contingent held to your command while the enemy host broke. Before the surviving banners, {rulername} calls the victory proof no pedigree can gainsay: a tower, land, and a banner of your own are offered to you."
+      }
+    },
+    "event.military_barony_victory.title.default": {
+      "context": "Event military_barony_victory, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_war.js",
+      "source": {
+        "text": "A Banner Won in Blood"
       }
     },
     "event.mill_reckoning.options.0.desc.default": {
@@ -32380,6 +32471,16 @@
         "text": "🤝 Your judgment mends a feud; both houses owe you thanks."
       }
     },
+    "news.action.military_command_begins": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "ruler"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "🚩 {ruler} entrusts you with a contingent of the field host. One true victory could win a banner of your own."
+      }
+    },
     "news.action.plot_begins": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -35905,6 +36006,14 @@
       "location": "js/world.js",
       "source": {
         "text": "⚔ A mercenary company takes your coin — ~{men} spears join the host."
+      }
+    },
+    "news.war.military_command_ends": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "🏳 The field command ends without the victory that might have won you a barony."
       }
     },
     "news.war.negotiated_withdrawal": {
@@ -48169,6 +48278,16 @@
         "text": "honor rather than land"
       }
     },
+    "src.09b9d8cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Let the victory stand without changing your station."
+      }
+    },
     "src.09c21925": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51629,6 +51748,16 @@
       ],
       "source": {
         "text": "Path: petition your liege for a county — or declare independence and take one."
+      }
+    },
+    "src.1253d6b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Kneel, and rise a baron."
       }
     },
     "src.125f83a8": {
@@ -73750,6 +73879,16 @@
         "text": "= 0xD800 && code"
       }
     },
+    "src.4814ed42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "You need at least {needed} prestige to be entrusted with an army (now {current})."
+      }
+    },
     "src.4816b4b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81508,6 +81647,16 @@
         "text": "Broken oaths are answered at sword-point."
       }
     },
+    "src.5bcb0dee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Path: establish your gentle house. An heir may petition for a barony. In this first life, a battle-proven favorite with Martial {martial}+ and {prestige}+ prestige may instead command a count-or-greater ruler’s field host; one real victory earns a barony. Church office remains another exceptional road."
+      }
+    },
     "src.5bcfed7d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81809,6 +81958,16 @@
         "text": "Held directly: {held} of {cap}."
       }
     },
+    "src.5c7e8a7a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Only the first head of a newly gentle house who has fought in battle and saved the lord may seek this command."
+      }
+    },
     "src.5c9085c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81957,6 +82116,16 @@
       ],
       "source": {
         "text": "⛓ A captive is released after ransom is paid."
+      }
+    },
+    "src.5cd89a59": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "A Banner Won in Blood"
       }
     },
     "src.5ce4c937": {
@@ -86181,6 +86350,16 @@
         "text": "The council has not yet assembled. Appointing an officer will convene it."
       }
     },
+    "src.676c5117": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Your ruler has no host in the field."
+      }
+    },
     "src.676cbd5c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86661,6 +86840,16 @@
         "text": "Response to an illicit approach"
       }
     },
+    "src.68ba69f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🚩 Take a field command"
+      }
+    },
     "src.68c3e96d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86739,6 +86928,16 @@
       ],
       "source": {
         "text": "Projected purse after one season"
+      }
+    },
+    "src.68fac07b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Take wealth and renown, but remain gentry."
       }
     },
     "src.68fdd27c": {
@@ -96110,6 +96309,16 @@
         "text": "Hearth-Steady"
       }
     },
+    "src.7f7a608f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Lead a contingent for {ruler}. Win a real field battle before the host disperses and earn a barony in your own lifetime."
+      }
+    },
     "src.7f84f770": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100170,6 +100379,16 @@
         "text": "Bow, horse, and armored foot coordinate their different strengths."
       }
     },
+    "src.88d93900": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 {ruler} entrusts you with a contingent of the field host. One true victory could win a banner of your own."
+      }
+    },
     "src.88dcaeda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101326,6 +101545,16 @@
       ],
       "source": {
         "text": "Counties of the realm"
+      }
+    },
+    "src.8b69a638": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Only a count or greater ruler can entrust you with a field command."
       }
     },
     "src.8b6ec367": {
@@ -102528,6 +102757,16 @@
       ],
       "source": {
         "text": "Rename house…"
+      }
+    },
+    "src.8e28a074": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "Your ruler is not at war."
       }
     },
     "src.8e2b4639": {
@@ -105856,6 +106095,16 @@
       ],
       "source": {
         "text": "Maritime Loans"
+      }
+    },
+    "src.9716e909": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "The founder of a gentle house becomes its first landed lord."
       }
     },
     "src.971d1bbe": {
@@ -113800,6 +114049,16 @@
         "text": "📈 Your intrigue improves ({value})."
       }
     },
+    "src.a9e3ea01": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "You are leading your ruler’s contingent in the field. Win a battle before the host disperses."
+      }
+    },
     "src.a9e67252": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115660,6 +115919,16 @@
       ],
       "source": {
         "text": "A public religious vocation combines worship, teaching, law, and care of souls."
+      }
+    },
+    "src.af15a50e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "your ruler"
       }
     },
     "src.af168ecd": {
@@ -118097,6 +118366,16 @@
       ],
       "source": {
         "text": "Asturias"
+      }
+    },
+    "src.b44b3530": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Lead your ruler’s contingent. A field victory may win a barony. (+Martial, +ruler Standing)"
       }
     },
     "src.b450d31b": {
@@ -124648,6 +124927,16 @@
         "text": "Held by another realm"
       }
     },
+    "src.c4fcdcf1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Decline the reward."
+      }
+    },
     "src.c5060aae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129783,6 +130072,16 @@
       ],
       "source": {
         "text": "Rivalry heat {change}"
+      }
+    },
+    "src.d21fe7bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Refused a battlefield barony for the victor’s purse."
       }
     },
     "src.d2250665": {
@@ -135349,6 +135648,16 @@
         "text": "🎒 Yours now: {item}."
       }
     },
+    "src.e0039222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🏳 The field command ends without the victory that might have won you a barony."
+      }
+    },
     "src.e0060376": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135878,16 +136187,6 @@
       ],
       "source": {
         "text": "capital"
-      }
-    },
-    "src.e1259ff8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads."
       }
     },
     "src.e12972dd": {
@@ -140208,6 +140507,16 @@
         "text": "Bark liquors turn hides into durable leather."
       }
     },
+    "src.ebbb50ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Won a barony by leading the ruler’s host to victory."
+      }
+    },
     "src.ebd8402e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140346,6 +140655,16 @@
       ],
       "source": {
         "text": "Stavanger"
+      }
+    },
+    "src.ec481976": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "At {cname}, the contingent held to your command while the enemy host broke. Before the surviving banners, {rulername} calls the victory proof no pedigree can gainsay: a tower, land, and a banner of your own are offered to you."
       }
     },
     "src.ec4c70a8": {
@@ -144054,6 +144373,16 @@
         "text": "A private teacher whose own skill sets the pace of study."
       }
     },
+    "src.f545c16e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Ask for the victor’s purse instead."
+      }
+    },
     "src.f54a8908": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146954,6 +147283,16 @@
       ],
       "source": {
         "text": "Set a trap for their agent."
+      }
+    },
+    "src.fc9c511f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "You need Martial {needed} to be entrusted with an army (now {current})."
       }
     },
     "src.fca156e8": {
@@ -162757,6 +163096,16 @@
         "text": "Last lines of the chronicle"
       }
     },
+    "ui:Lead a contingent for {ruler}. Win a real field battle before the host disperses and earn a barony in your own lifetime.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "ruler"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Lead a contingent for {ruler}. Win a real field battle before the host disperses and earn a barony in your own lifetime."
+      }
+    },
     "ui:Leans: {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -166261,6 +166610,14 @@
         "text": "Only a brother or sister can receive this exceptional approach."
       }
     },
+    "ui:Only a count or greater ruler can entrust you with a field command.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "Only a count or greater ruler can entrust you with a field command."
+      }
+    },
     "ui:Only a guildmaster of the Craft or Trade profession may petition.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166387,6 +166744,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Only one guild favor may be called each year."
+      }
+    },
+    "ui:Only the first head of a newly gentle house who has fought in battle and saved the lord may seek this command.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "Only the first head of a newly gentle house who has fought in battle and saved the lord may seek this command."
       }
     },
     "ui:Only your home county can raise this.": {
@@ -167006,12 +167371,15 @@
         "text": "Path: assemble {needed} plots in one settlement ({cluster}/{needed}), then reach {prestige} prestige and declare a manor. Soldiering and the church offer other roads."
       }
     },
-    "ui:Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads.": {
+    "ui:Path: establish your gentle house. An heir may petition for a barony. In this first life, a battle-proven favorite with Martial {martial}+ and {prestige}+ prestige may instead command a count-or-greater ruler’s field host; one real victory earns a barony. Church office remains another exceptional road.": {
       "context": "Explicit UI localization call.",
-      "glossary": [],
+      "glossary": [
+        "martial",
+        "prestige"
+      ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads."
+        "text": "Path: establish your gentle house. An heir may petition for a barony. In this first life, a battle-proven favorite with Martial {martial}+ and {prestige}+ prestige may instead command a count-or-greater ruler’s field host; one real victory earns a barony. Church office remains another exceptional road."
       }
     },
     "ui:Path: save {money:gold} (or build Standing with your lord) to buy freedom.": {
@@ -175973,6 +176341,14 @@
         "text": "You are committed to a great holy war."
       }
     },
+    "ui:You are leading your ruler’s contingent in the field. Win a battle before the host disperses.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "You are leading your ruler’s contingent in the field. Win a battle before the host disperses."
+      }
+    },
     "ui:You are not yet of age.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176152,6 +176528,17 @@
         "text": "You must hold Roma personally."
       }
     },
+    "ui:You need Martial {needed} to be entrusted with an army (now {current}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "You need Martial {needed} to be entrusted with an army (now {current})."
+      }
+    },
     "ui:You need another county before granting Roma away.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176211,6 +176598,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "You need at least {needed} prestige (now {current})."
+      }
+    },
+    "ui:You need at least {needed} prestige to be entrusted with an army (now {current}).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "You need at least {needed} prestige to be entrusted with an army (now {current})."
       }
     },
     "ui:You need {needed} piety (now {current}).": {
@@ -176857,6 +177255,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "Your rival · connected to {connection}"
+      }
+    },
+    "ui:Your ruler has no host in the field.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "Your ruler has no host in the field."
+      }
+    },
+    "ui:Your ruler is not at war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "Your ruler is not at war."
       }
     },
     "ui:Your shared faith recognizes xwēdōdah, so discovery does not create the illicit-courtship exposure risk.": {
@@ -179043,6 +179457,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "your rival"
+      }
+    },
+    "ui:your ruler": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "your ruler"
       }
     },
     "ui:your spouse": {

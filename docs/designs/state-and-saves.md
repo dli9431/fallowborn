@@ -143,6 +143,14 @@ Standing. The resulting county consequence uses the existing
 `state.modifiers.county[provinceId]` save contract and therefore needs no war-specific
 storage or migration.
 
+`player.militaryCommand` is an additive current-protagonist field and keeps save format
+3. While active it stores only `{charId,patronRealmId,sovereignRealmId,startedTurn}`;
+eligibility, host existence, war status, command bonuses, and presentation are derived.
+A missing field means no command. The army tick discards stale records without RNG, and
+protagonist succession clears the record with other lifetime war service. A winning
+field battle clears it before queuing the semantic barony event context, so save/load
+cannot award the same victory twice.
+
 Targeted plots persist their selection in `player.plot.context` (for claim fabrication,
 `{pid}`). Discovery and final resolution both receive this stored context, so
 save/export/import cannot silently retarget a plot in progress.

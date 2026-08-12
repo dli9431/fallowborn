@@ -1,14 +1,17 @@
 'use strict';
 
 /* Gentry establishment across succession (docs/designs/realms.md): a house
-   that has just reached the gentry may not petition for a barony until an
+   that has just reached the gentry may not ordinarily petition for a barony until an
    heir of a genuinely later generation inherits its standing. The saga
    counter advances on every succession, so the gate tracks the line's
    genealogical depth (`player.lineDepth`) instead — a sibling or cousin of
    the founder's own generation must not unlock the petition, while a child,
    a nephew, or an adopted heir must. Legacy saves holding only a
-   saga-generation number keep the original counter comparison. Exercised at
-   the engine level in a fresh deterministic context. */
+   saga-generation number keep the original counter comparison. The narrow
+   battlefield exception is separately covered below: only the founder who
+   rose from below may command a count-or-greater patron's live host, and only
+   a real field victory queues the barony. Exercised at the engine level in a
+   fresh deterministic context. */
 
 const { test, expect } = require('../support/fixture');
 const { openGame, startDeterministicGame } = require('../support/game');
@@ -192,5 +195,187 @@ test('legacy saves keep their original establishment rule',
       legacyLineDepthUntracked:true,
       // the pre-fix behavior is preserved for saves that predate lineDepth
       legacySiblingEstablished:true
+    });
+  });
+
+test('a serf marked for battlefield knighting can rise only during a live war',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      FB.setPlayerTier(s, 0);
+      p.profession = 'soldier';
+      p.flags.lords_favor = 1;
+      p.war = null;
+      Object.keys(s.realms).forEach(function (id) {
+        s.realms[id].war = null;
+      });
+      const event = FB.eventById('knighted');
+      const eligibleAtPeace = FB.checkTrigger(s, event.trigger);
+      const sovereignId = FB.topRealm(s, s.owner[p.provinceId]);
+      const enemyId = Object.keys(s.realms).filter(function (id) {
+        const realm = s.realms[id];
+        return realm && realm.alive && id !== 'player' && id !== sovereignId &&
+          FB.topRealm(s, id) === id;
+      })[0];
+      s.realms[sovereignId].war = {
+        enemy:enemyId,
+        target:s.realms[enemyId].capital,
+        started:s.turn,
+        fw:0,
+        fl:0
+      };
+      const eligibleAtWar = FB.checkTrigger(s, event.trigger);
+      FB.applyEffects(s, event.options[0].effects, {}, event);
+      return {
+        explicitWarGate:event.trigger.realmAtWar === true,
+        eligibleAtPeace:eligibleAtPeace,
+        eligibleAtWar:eligibleAtWar,
+        tierAfterAccept:p.tier,
+        professionAfterAccept:p.profession
+      };
+    });
+
+    expect(result).toEqual({
+      explicitWarGate:true,
+      eligibleAtPeace:false,
+      eligibleAtWar:true,
+      tierAfterAccept:2,
+      professionAfterAccept:'noble'
+    });
+  });
+
+test('a battle-proven founder can win a first-life barony by real field command',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const me = s.chars[p.charId];
+      FB.setPlayerTier(s, 0);
+      FB.setPlayerTier(s, 2);
+      p.profession = 'noble';
+      p.flags.seen_battle = 1;
+      p.flags.lords_favor = 1;
+      p.prestige = FBDATA.balance.militaryBaronyPrestige;
+      me.skills.mar = FBDATA.balance.militaryBaronyMartial + 5;
+
+      const patronId = (s.holder && s.holder[p.provinceId]) ||
+        s.owner[p.provinceId];
+      const patron = s.realms[patronId];
+      const sovereignId = FB.topRealm(s, patronId);
+      Object.keys(s.realms).forEach(function (id) {
+        s.realms[id].war = null;
+      });
+      const enemyId = Object.keys(s.realms).filter(function (id) {
+        const realm = s.realms[id];
+        return realm && realm.alive && id !== 'player' && id !== sovereignId &&
+          FB.topRealm(s, id) === id;
+      })[0];
+      s.realms[sovereignId].war = {
+        enemy:enemyId,
+        target:s.realms[enemyId].capital,
+        started:s.turn,
+        fw:0,
+        fl:0
+      };
+      s.armies = [{
+        id:'founder-command-host', realm:sovereignId, men:400, size:400,
+        units:{ levy:300, arch:40, cav:20, ret:40, mercs:0 },
+        at:s.realms[sovereignId].capital, path:[], moveLeft:0
+      }];
+
+      const ordinary = FB.instantStatus(s, 'petition_barony');
+      const savedRank = patron.rank;
+      patron.rank = 0;
+      const belowCount = FB.militaryCommandStatus(s);
+      patron.rank = savedRank;
+      const ready = FB.militaryCommandStatus(s);
+      const began = FB.beginMilitaryCommand(s);
+      const personallyAtWar = FB.atWarPersonally(s);
+      const wrongWinner = FB.noteMilitaryCommandVictory(s,
+        { realm:enemyId }, { realm:sovereignId }, p.provinceId);
+      const activeAfterWrongWinner = !!FB.activeMilitaryCommand(s);
+      s.armies.push({
+        id:'command-enemy-host', realm:enemyId, men:1, size:1,
+        units:{ levy:1, arch:0, cav:0, ret:0, mercs:0 },
+        at:s.realms[sovereignId].capital, path:[], moveLeft:0
+      });
+      FB.armyTick(s);
+      const queued = s.eventQueue.filter(function (item) {
+        return item.id === 'military_barony_victory';
+      })[0];
+      const event = FB.eventById('military_barony_victory');
+      FB.applyEffects(s, event.options[0].effects, queued.ctx, event);
+      return {
+        ordinaryLocked:!ordinary.can && ordinary.reason.indexOf('newly gentle') >= 0,
+        countGate:!belowCount.ready &&
+          belowCount.reason.indexOf('count or greater') >= 0,
+        ready:ready.ready,
+        patron:ready.patronRealmId === patronId,
+        began:began,
+        personallyAtWar:personallyAtWar,
+        wrongWinner:wrongWinner,
+        activeAfterWrongWinner:activeAfterWrongWinner,
+        won:!!queued,
+        queued:!!queued,
+        commandCleared:!p.militaryCommand,
+        tier:p.tier,
+        liegeMatchesPatron:p.liege === patronId,
+        grantCount:p.liegeGrants
+      };
+    });
+
+    expect(result).toEqual({
+      ordinaryLocked:true,
+      countGate:true,
+      ready:true,
+      patron:true,
+      began:true,
+      personallyAtWar:true,
+      wrongWinner:false,
+      activeAfterWrongWinner:true,
+      won:true,
+      queued:true,
+      commandCleared:true,
+      tier:3,
+      liegeMatchesPatron:true,
+      grantCount:1
+    });
+  });
+
+test('field command cannot bypass the founder-life boundary for an established heir',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const me = s.chars[p.charId];
+      FB.setPlayerTier(s, 2);
+      const child = FB.makeCharacter(s, {
+        name:'Osric', sex:'m', culture:me.culture, religion:me.religion,
+        born:s.date.year - 20, motherId:me.id, dyn:me.dyn, traitsN:0
+      });
+      me.childrenIds = [child.id];
+      FB.game.succeedTo(child.id);
+      p.flags.seen_battle = 1;
+      p.flags.lords_favor = 1;
+      p.prestige = FBDATA.balance.militaryBaronyPrestige;
+      child.skills.mar = FBDATA.balance.militaryBaronyMartial + 5;
+      const status = FB.militaryCommandStatus(s);
+      return {
+        established:FB.gentryEstablished(s),
+        visible:status.visible,
+        ready:status.ready,
+        began:FB.beginMilitaryCommand(s)
+      };
+    });
+
+    expect(result).toEqual({
+      established:true,
+      visible:false,
+      ready:false,
+      began:false
     });
   });

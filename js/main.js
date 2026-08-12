@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.120.1';
+  FB.VERSION = '1.121.0';
   FB.CHANGELOG = [
+    { v: '1.121.0', date: '2026-08-12', changes: [
+      'Battle-proven founders can now command a patron’s wartime host and earn their first barony through a field victory.'
+    ] },
     { v: '1.120.1', date: '2026-08-12', changes: [
       'Marriage searches can now sound out new families every 30 days for the protagonist and each eligible descendant.'
     ] },
@@ -1618,6 +1621,7 @@ window.FB = window.FB || {};
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
@@ -1862,6 +1866,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
+        militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
@@ -3312,7 +3317,7 @@ window.FB = window.FB || {};
     p.foreignPolicy = {};
     p.vassalLevyFavors = {};
     p.aggressiveWars = [];
-    p.warService = 0; p.liegeGrants = 0;
+    p.warService = 0; p.liegeGrants = 0; p.militaryCommand = null;
     p.professionBack = null;
     p.travelHistory = [];
     p.travelSettlement = null;

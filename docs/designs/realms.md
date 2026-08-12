@@ -563,7 +563,19 @@ of the founder's own generation does not qualify. Both paths use `balance.barony
 `balance.baronyOpinion`. Tier-2 scenarios begin with an established house, and older
 saves without the additive field are treated the same way. Battlefield knighting and
 the learned clerical paths remain exceptional personal careers: they may establish
-gentry or receive personal offices without this ordinary patronage gate. The household
+gentry or receive personal offices without this ordinary patronage gate. `knighted`
+requires the protagonist's realm still to be at war when the lord raises them; its
+top-level `wartime:true` category alone is not an eligibility gate. A founder who
+personally rose into the gentry may also cross the gate once by military command. The
+first playable head must already have fought in battle and saved the local lord, reach
+`balance.militaryBaronyMartial` Martial and `balance.militaryBaronyPrestige` prestige,
+then take command while a living count-or-greater local patron's sovereign host is in
+the field. The protagonist's Martial replaces a weaker AI commander value for that host;
+only its next actual map battle victory queues `military_barony_victory`. A shattered
+host or ended war closes the command without reward. An established heir or a tier-2
+scenario cannot use this founder-life exception. Accepting the battlefield grant is
+ordinary patronage for `player.liegeGrants` and creates the same territorial tier-3
+barony as `grant_of_barony`; declining it leaves the player gentry. The household
 religious ladder in `js/economy.js` raises abbot/qadi to tier 2 and chief qadi to tier 3.
 A Catholic Bishop's personal see supplies tier-3 compatibility without being a barony;
 dependent officeholders instead receive the corresponding marriage/social `station`

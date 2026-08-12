@@ -68,6 +68,7 @@ window.FB = window.FB || {};
     buy_freedom:'realm', buy_land:'realm', declare_manor:'realm',
     build:'realm', adopt_tech:'realm',
     squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
+    seek_field_command:'war',
     grant_monopoly:'realm',
     petition_liege:'realm', petition_county:'realm', buy_county:'realm',
     settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
@@ -850,13 +851,17 @@ window.FB = window.FB || {};
         })) + '</div>';
     }
     if (s.player.tier === 2) {
+      const command = FB.militaryCommandStatus && FB.militaryCommandStatus(s);
       const text = FB.gentryEstablished(s)
         ? FB.T('Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for a barony.',
           {
             prestige:FBDATA.balance.baronyPrestige,
             standing:FBDATA.balance.baronyOpinion
           })
-        : FB.T('Path: establish your gentle house. An heir who inherits its standing may petition for a barony; battlefield and church elevations remain exceptional roads.');
+        : FB.T('Path: establish your gentle house. An heir may petition for a barony. In this first life, a battle-proven favorite with Martial {martial}+ and {prestige}+ prestige may instead command a count-or-greater ruler’s field host; one real victory earns a barony. Church office remains another exceptional road.', {
+          martial:command ? command.martialNeeded : 12,
+          prestige:command ? command.prestigeNeeded : 120
+        });
       return '<div class="progressnote path-hint">🧭 ' + esc(text) + '</div>';
     }
     const tips = {

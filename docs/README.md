@@ -237,9 +237,12 @@ next rung by default; experienced players can hide beginner hints in Settings. W
 then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement can be declared a manor once the family has
 the standing to join the gentry. Standing with a lord then earns an established gentle house a
-banner, normally after the manor has passed to an heir; battlefield glory and the church
-can still raise an exceptional life more quickly, and marriage and scheming offer other
-shortcuts. Meanwhile ~65 sovereign realms fight their own wars — and their dukes and counts
+banner, normally after the manor has passed to an heir; battlefield glory during an active
+war and the church can still raise an exceptional life more quickly. A founder who rose into the gentry
+from below and has already fought and saved the lord may, with Martial 12 and 120 prestige, take command
+of a count-or-greater ruler's live field host; leading that host to a real map victory
+earns an immediate barony offer. Marriage and scheming offer other shortcuts. Meanwhile
+~65 sovereign realms fight their own wars — and their dukes and counts
 sometimes break away — so the map redraws itself decade by decade.
 
 #### The religious ladder

@@ -372,18 +372,23 @@ window.FB = window.FB || {};
       return s.player.war ? 'Command your men in the field. (better odds at the war council)'
         : (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))
           ? 'Command your host in the great holy war. (+martial over time)'
+        : (FB.activeMilitaryCommand && FB.activeMilitaryCommand(s))
+          ? 'Lead your ruler’s contingent. A field victory may win a barony. (+Martial, +ruler Standing)'
         : 'Serve in your liege’s host. (+liege Standing)';
     },
     show: function (s) {
       return !!s.player.war ||
         !!(FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s)) ||
+        !!(FB.activeMilitaryCommand && FB.activeMilitaryCommand(s)) ||
         !!(s.player.flags.with_liege_host && s.player.liege && FB.isRealmAtWar(s, s.player.liege));
     },
     tick: function (s) {
       if (s.player.war) s.player.war.led = (s.player.war.led || 0) + 1;
       else if (!(FB.playerGreatHolyWarHostActive &&
           FB.playerGreatHolyWarHostActive(s))) {
-        FB.adjustStanding(s, { kind:'realm', id:s.player.liege }, 4 / D,
+        const command = FB.activeMilitaryCommand && FB.activeMilitaryCommand(s);
+        const patronId = command ? command.patronRealmId : s.player.liege;
+        FB.adjustStanding(s, { kind:'realm', id:patronId }, 4 / D,
           'focus:lead_host');
       }
       if (skillDch(0.5)) skillUp(s, 'mar');
@@ -1184,6 +1189,24 @@ window.FB = window.FB || {};
           'deed:petition_barony');
       }
     } },
+
+  { id: 'seek_field_command', label: '🚩 Take a field command',
+    desc: function (s) {
+      const status = FB.militaryCommandStatus(s);
+      const patron = status.patronRealmId && s.realms[status.patronRealmId];
+      return FB.T('Lead a contingent for {ruler}. Win a real field battle before the host disperses and earn a barony in your own lifetime.', {
+        ruler:patron && patron.ruler ? patron.ruler.name : FB.T('your ruler')
+      });
+    },
+    show: function (s) {
+      const status = FB.militaryCommandStatus(s);
+      return status.visible && !status.active;
+    },
+    can: function (s) {
+      const status = FB.militaryCommandStatus(s);
+      return status.ready ? true : status.reason;
+    },
+    run: function (s) { FB.beginMilitaryCommand(s); } },
 
   { id: 'hold_court', label: '⚖ Hold court', cd: 90,
     desc: function () { return 'Hear petitions and render judgment.'; },

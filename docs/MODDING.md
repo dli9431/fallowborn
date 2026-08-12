@@ -2592,6 +2592,9 @@ Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,
 Ordinary elevation from gentry to baron uses `baronyPrestige` and `baronyOpinion`;
 both the petition deed and unsolicited offer require those thresholds, as well as a
 gentle house established by an earlier generation of the line.
+The exceptional founder-life military route uses `militaryBaronyMartial` and
+`militaryBaronyPrestige`; these gate taking command, while the barony itself still
+requires that exact patron's sovereign host to win a live field battle.
 `liegeGrantRepeatMult` is the multiplier applied to grant odds for each successful barony,
 title, neighboring fief, or court-awarded escheat already received in the current lifetime.
 Skills are uncapped but grow on a diminishing-return curve: below `skillSoftCap`

@@ -147,6 +147,134 @@ window.FB = window.FB || {};
   };
   FB.playerHost = function (state) { return FB.hostOf(state, 'player'); };
 
+  /* A newly gentle founder may earn one extraordinary personal elevation by
+     commanding the local count-or-greater patron's contingent in the live
+     sovereign host. The saved record contains only stable ids and the start
+     turn; readiness and continued validity are always derived from the live
+     hierarchy, war, host, and protagonist. */
+  function militaryCommandPatron(state) {
+    const p = state && state.player;
+    if (!p) return null;
+    const rid = (state.holder && state.holder[p.provinceId]) ||
+      (state.owner && state.owner[p.provinceId]);
+    const realm = rid && state.realms && state.realms[rid];
+    if (!realm || !realm.alive || rid === 'player' || realm.rank < 1) return null;
+    const sovereignId = FB.topRealm(state, rid);
+    const sovereign = sovereignId && state.realms[sovereignId];
+    if (!sovereign || !sovereign.alive || sovereignId === 'player') return null;
+    return { patronRealmId:rid, sovereignRealmId:sovereignId };
+  }
+
+  FB.activeMilitaryCommand = function (state) {
+    const p = state && state.player;
+    const record = p && p.militaryCommand;
+    if (!record || record.charId !== p.charId || p.tier !== 2) return null;
+    const patron = record.patronRealmId && state.realms[record.patronRealmId];
+    if (!patron || !patron.alive || patron.rank < 1 ||
+        FB.topRealm(state, record.patronRealmId) !== record.sovereignRealmId ||
+        !FB.isRealmAtWar(state, record.sovereignRealmId) ||
+        !FB.hostOf(state, record.sovereignRealmId)) return null;
+    return record;
+  };
+
+  FB.militaryCommandStatus = function (state) {
+    const p = state.player;
+    const me = state.chars[p.charId];
+    const active = FB.activeMilitaryCommand(state);
+    const firstHead = p.houseFounderId
+      ? p.charId === p.houseFounderId : state.generation === 1;
+    const newlyGentle = p.tier === 2 && p.gentryGeneration !== undefined &&
+      p.gentryGeneration !== null && FB.gentryEstablished &&
+      !FB.gentryEstablished(state);
+    const battlefieldRise = !!(p.flags && p.flags.seen_battle &&
+      p.flags.lords_favor);
+    const visible = firstHead && newlyGentle && battlefieldRise;
+    const patron = militaryCommandPatron(state);
+    const martial = me ? FB.skillOf(me, 'mar') : 0;
+    const martialNeeded = B().militaryBaronyMartial === undefined
+      ? 12 : B().militaryBaronyMartial;
+    const prestigeNeeded = B().militaryBaronyPrestige === undefined
+      ? 120 : B().militaryBaronyPrestige;
+    let reason = '';
+    if (active) {
+      reason = FB.T('You are leading your ruler’s contingent in the field. Win a battle before the host disperses.');
+    } else if (!visible) {
+      reason = FB.T('Only the first head of a newly gentle house who has fought in battle and saved the lord may seek this command.');
+    } else if (martial < martialNeeded) {
+      reason = FB.T('You need Martial {needed} to be entrusted with an army (now {current}).', {
+        needed:martialNeeded, current:Math.floor(martial)
+      });
+    } else if (p.prestige < prestigeNeeded) {
+      reason = FB.T('You need at least {needed} prestige to be entrusted with an army (now {current}).', {
+        needed:prestigeNeeded, current:Math.floor(p.prestige)
+      });
+    } else if (!patron) {
+      reason = FB.T('Only a count or greater ruler can entrust you with a field command.');
+    } else if (!FB.isRealmAtWar(state, patron.sovereignRealmId)) {
+      reason = FB.T('Your ruler is not at war.');
+    } else if (!FB.hostOf(state, patron.sovereignRealmId)) {
+      reason = FB.T('Your ruler has no host in the field.');
+    }
+    return {
+      visible:visible,
+      active:!!active,
+      ready:visible && !active && !reason,
+      reason:reason,
+      patronRealmId:patron && patron.patronRealmId,
+      sovereignRealmId:patron && patron.sovereignRealmId,
+      martial:martial,
+      martialNeeded:martialNeeded,
+      prestigeNeeded:prestigeNeeded
+    };
+  };
+
+  FB.beginMilitaryCommand = function (state) {
+    const status = FB.militaryCommandStatus(state);
+    if (!status.ready) return false;
+    const p = state.player;
+    p.militaryCommand = {
+      charId:p.charId,
+      patronRealmId:status.patronRealmId,
+      sovereignRealmId:status.sovereignRealmId,
+      startedTurn:state.turn
+    };
+    if (p.focus !== 'lead_host') {
+      p.focusBack = p.focus;
+      p.focus = 'lead_host';
+    }
+    const patron = state.realms[status.patronRealmId];
+    FB.news(state, FB.msg('news.action.military_command_begins',
+      '🚩 {ruler} entrusts you with a contingent of the field host. One true victory could win a banner of your own.', {
+        ruler:patron.ruler && patron.ruler.name || patron.name
+      }));
+    return true;
+  };
+
+  FB.endMilitaryCommand = function (state) {
+    if (!state.player.militaryCommand) return false;
+    delete state.player.militaryCommand;
+    if (FB.validateFocus) FB.validateFocus(state);
+    FB.news(state, FB.msg('news.war.military_command_ends',
+      '🏳 The field command ends without the victory that might have won you a barony.', {}));
+    return true;
+  };
+
+  FB.noteMilitaryCommandVictory = function (state, winner, loser, pid) {
+    const record = FB.activeMilitaryCommand(state);
+    if (!record || !winner || !loser ||
+        winner.realm !== record.sovereignRealmId ||
+        !FB.armiesHostile(state, winner, loser)) return false;
+    delete state.player.militaryCommand;
+    if (FB.validateFocus) FB.validateFocus(state);
+    FB.queueEvent(state, 'military_barony_victory', {
+      pid:pid,
+      realmId:record.patronRealmId,
+      sovereignRealmId:record.sovereignRealmId,
+      enemyId:loser && loser.realm || null
+    });
+    return true;
+  };
+
   function hostUpkeepParts(units, mercenaryCompanies) {
     const bal = B();
     const base = bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase;
@@ -1112,7 +1240,13 @@ window.FB = window.FB || {};
       }
     } else {
       const r = state.realms[army.realm];
-      pw = army.men * q * (1 + (r && r.ruler ? r.ruler.mar : 5) / (B().battleMarAI || 22));
+      let martial = r && r.ruler ? r.ruler.mar : 5;
+      const command = FB.activeMilitaryCommand(state);
+      if (command && command.sovereignRealmId === army.realm) {
+        const commander = state.chars[state.player.charId];
+        martial = Math.max(martial, commander ? FB.skillOf(commander, 'mar') : 0);
+      }
+      pw = army.men * q * (1 + martial / (B().battleMarAI || 22));
       pw *= 1 + (FB.techBonus ? FB.techBonus(state, 'battle', army.realm) : 0);
     }
     return pw;
@@ -1146,6 +1280,9 @@ window.FB = window.FB || {};
     } else {
       loser.broken = state.turn;
       FB.orderArmy(state, loser, loser.realm === 'player' ? playerHome(state) : state.realms[loser.realm].capital);
+    }
+    if (winner.realm !== 'player') {
+      FB.noteMilitaryCommandVictory(state, winner, loser, pid);
     }
     const greatBattle = FB.greatHolyWarBattle &&
       FB.greatHolyWarBattle(state, pid, winner, loser, winnerLoss, loserLoss);
@@ -1195,6 +1332,9 @@ window.FB = window.FB || {};
   FB.armyTick = function (state) {
     FB.armiesEnsure(state);
     const p = state.player;
+    if (p.militaryCommand && !FB.activeMilitaryCommand(state)) {
+      FB.endMilitaryCommand(state);
+    }
     const warring = warringMap(state);
     /* read once per tick: nothing in the raise/disband/order steps below
        mutates the pledge, the campaign, or the player's sovereignty */

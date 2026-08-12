@@ -3442,6 +3442,9 @@ window.FB = window.FB || {};
     const oldRole = FB.societalRole(oldTier);
     const newRole = FB.societalRole(tier);
     p.tier = tier;
+    if (oldTier === 2 && tier !== 2 && p.militaryCommand) {
+      delete p.militaryCommand;
+    }
     if (oldTier < 2 && tier >= 2) FB.markGentryRise(state);
 
     if (oldTier < 3 && tier >= 3 && opts.stationFarewell !== false) {
