@@ -587,13 +587,14 @@ before the choice; the receipt shows the resolved record exactly. Icons and colo
 carry a consequence alone. County transfer automatically removes
 the record from Governance while Land continues to show it on the selected county.
 
-Event choices use a two-control row. The Choice control retains the label and authored
-flavor description, followed by wrapped, text-labelled consequence chips. A visible
-Details control toggles the full Guaranteed / If successful / If failed breakdown inline.
-On pointer/focus desktop the same breakdown also uses the shared accessible tooltip; touch
-never depends on hover and keeps the Details target at least 44 pixels high. The event
-surface is an `aria-modal` dialog labelled by its title and description, and the expanded
-details remain inside the bottom sheet's scroll area.
+The Choice control retains only its label and authored flavor description; mechanical
+consequence chips do not repeat beneath that text. On pointer/focus desktop the full
+Guaranteed / If successful / If failed breakdown uses the shared accessible tooltip,
+positioned beside the choice and clamped within the viewport, and there is no separate
+Details button. Touch, tablet-width, and short layouts never depend on hover: a
+question-mark control with an accessible Details label toggles that breakdown inline and
+remains at least 44 pixels high. The event surface is an `aria-modal` dialog labelled by
+its title and description, and expanded details remain inside the modal's scroll area.
 
 The Institution section and Network's Trade & Guild summary also open the shared
 **Privileges & collective demands** sheet. Each contract names its holder, grantor,
@@ -872,7 +873,7 @@ input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui_modals.js`, to
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar
 must not pick an outcome by accident, while a deliberate next tap should feel immediate. The
 guard rearms for each queued event. Autoresolved events render no buttons, so they bypass
-the guard naturally; Details controls never resolve and need no guard. Chance choices no
+the guard naturally; question-mark detail controls never resolve and need no guard. Chance choices no
 longer create a blocking outcome screen: one receipt toast appears for six seconds above
 the event layer and the queue advances immediately. The toast replaces an older receipt
 instead of stacking; when no event blocks input, activating it opens the Chronicle's

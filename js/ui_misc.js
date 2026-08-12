@@ -31,6 +31,11 @@ window.FB = window.FB || {};
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return FB.esc(s); }
+  /* Event stakes use an explicit disclosure on touch and tablet-width layouts. */
+  function eventChoiceUsesDisclosure() {
+    return FB.isTouch || (typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 1100px), (max-height: 520px)').matches);
+  }
   function dt(s, kind, id, def, path, ctx) {
     return FB.dataText(s, s.player.charId, kind, id, def, path, ctx || {});
   }
@@ -2202,23 +2207,47 @@ window.FB = window.FB || {};
       tip.id = 'tooltip';
       tip.className = 'hidden';
       document.body.appendChild(tip);
+      function resetEventChoiceTipSize() {
+        tip.style.width = '';
+        tip.style.maxWidth = '';
+      }
       function showEventChoiceTip(control) {
+        if (eventChoiceUsesDisclosure()) return false;
         const row = control && control.closest
           ? control.closest('.event-choice') : null;
         const details = row && row.querySelector('.event-choice-details');
         if (!details) return false;
+        const edge = 8;
+        const gap = 10;
+        const width = Math.min(320, Math.max(180,
+          window.innerWidth - edge * 2));
+        tip.style.width = width + 'px';
+        tip.style.maxWidth = width + 'px';
         tip.innerHTML = details.innerHTML;
         tip.classList.remove('hidden');
         const r = control.getBoundingClientRect();
-        tip.style.left = Math.max(4,
-          Math.min(window.innerWidth - 310, r.left)) + 'px';
-        tip.style.top = Math.min(window.innerHeight - 180, r.bottom + 6) + 'px';
+        const tr = tip.getBoundingClientRect();
+        let left = r.right + gap;
+        if (left + tr.width > window.innerWidth - edge) {
+          left = r.left - gap - tr.width;
+        }
+        left = Math.max(edge, Math.min(
+          window.innerWidth - edge - tr.width, left));
+        const top = Math.max(edge, Math.min(r.top,
+          window.innerHeight - edge - tr.height));
+        tip.style.left = left + 'px';
+        tip.style.top = top + 'px';
         return true;
       }
       document.addEventListener('mouseover', function (e) {
         if (!e.target || !e.target.closest) { tip.classList.add('hidden'); return; }
         const eventChoice = e.target.closest('.event-choice .evopt');
-        if (eventChoice && showEventChoiceTip(eventChoice)) return;
+        if (eventChoice) {
+          if (showEventChoiceTip(eventChoice)) return;
+          tip.classList.add('hidden');
+          return;
+        }
+        resetEventChoiceTipSize();
         // hovering a topbar resource shows what feeds it, season by season
         const statEl = e.target.closest('#tb-stats .stat[data-stat]');
         if (statEl && FB.state && !FB.game.observe) {
@@ -2288,7 +2317,9 @@ window.FB = window.FB || {};
       document.addEventListener('focusin', function (e) {
         if (!e.target || !e.target.closest) return;
         const eventChoice = e.target.closest('.event-choice .evopt');
-        if (eventChoice) showEventChoiceTip(eventChoice);
+        if (eventChoice && !showEventChoiceTip(eventChoice)) {
+          tip.classList.add('hidden');
+        }
       });
       document.addEventListener('focusout', function (e) {
         if (!e.target || !e.target.closest ||
@@ -2418,6 +2449,7 @@ window.FB = window.FB || {};
   SH.dt = dt;
   SH.epithetText = epithetText;
   SH.esc = esc;
+  SH.eventChoiceUsesDisclosure = eventChoiceUsesDisclosure;
   SH.eventModifierPreview = eventModifierPreview;
   SH.firstMissingTech = firstMissingTech;
   SH.foreignPolicyStanceText = foreignPolicyStanceText;

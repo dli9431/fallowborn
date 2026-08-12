@@ -138310,6 +138310,16 @@
         "text": "🎓 You will be schooled in learning."
       }
     },
+    "src.e7168d63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "(max-width: 1100px), (max-height: 520px)"
+      }
+    },
     "src.e718bf29": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],

@@ -199,12 +199,14 @@ behavior and flag keys for every existing 867 entry.
 
 Authored option `desc` text remains narrative flavor. `FB.previewEventOption(state, event,
 option, ctx)` derives the mechanical layer from the live effect objects without writing
-state, creating roles, or consuming RNG. Compact chips appear on every choice; the complete
-view separates **Guaranteed**, **If successful**, and **If failed** effects. Guaranteed
-costs, penalties, property losses, upkeep/duration, permanent decisions, and lethal risks
-are exact. Favorable rewards remain qualitative until resolution. Numeric and named chance
-formulas render only as Very likely (80%+), Likely (60–79%), Even (40–59%), Risky
-(20–39%), or Long shot (under 20%); branch narrative is never shown early.
+state, creating roles, or consuming RNG. The choice row itself retains only authored label and
+description prose; its desktop contextual tooltip, or the question-mark disclosure on touch and
+tablet-width or short layouts, separates **Guaranteed**, **If successful**, and **If failed**
+effects. Guaranteed costs, penalties,
+property losses, upkeep/duration, permanent decisions, and lethal risks are exact. Favorable
+rewards remain qualitative until resolution. Numeric and named chance formulas render only as
+Very likely (80%+), Likely (60–79%), Even (40–59%), Risky (20–39%), or Long shot (under 20%);
+branch narrative is never shown early.
 
 `FB.resolveEventOption` is the single manual/autoresolve authority. It rolls once, consumes
 one-shot chance bonuses, applies the top-level effects and then the selected branch in the

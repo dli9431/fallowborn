@@ -222,7 +222,7 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
     expect(result.unknownFallback).toBe(true);
   });
 
-test('desktop choices separate resolution from accessible hover and focus details',
+test('desktop choices keep side tooltips visible and separate from resolution',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     await openChildFever(page);
@@ -232,48 +232,70 @@ test('desktop choices separate resolution from accessible hover and focus detail
     });
     var firstChoice = page.locator('#ev-options .event-choice').first();
     var resolveButton = firstChoice.locator('.evopt');
-    var detailsButton = firstChoice.locator('.event-details-button');
+    var details = firstChoice.locator('.event-choice-details');
     await expect(dialog).toHaveAttribute('aria-describedby', 'ev-text');
-    await expect(resolveButton).toContainText('Likely');
-    await expect(resolveButton).toContainText('Lethal risk to a child');
-    await expect(detailsButton).toHaveAttribute('aria-expanded', 'false');
+    await expect(resolveButton).not.toContainText('Likely');
+    await expect(resolveButton).not.toContainText('Lethal risk to a child');
+    await expect(firstChoice.locator('.event-impact-chips.compact')).toHaveCount(0);
+    await expect(firstChoice.locator('.event-details-button')).toHaveCount(0);
     await expect(resolveButton).toHaveAttribute('aria-describedby',
-      await detailsButton.getAttribute('aria-controls'));
+      await details.getAttribute('id'));
 
-    var beforeDetails = await page.evaluate(function () {
+    var beforeTooltip = await page.evaluate(function () {
       return {
         save:FB.save.serialize(),
         rng:FB.getRngState(),
         log:FB.state.log.length
       };
     });
-    await detailsButton.click();
-    await expect(detailsButton).toHaveAttribute('aria-expanded', 'true');
-    await expect(firstChoice.locator('.event-choice-details')).toContainText(
-      'Guaranteed');
-    await expect(firstChoice.locator('.event-choice-details')).toContainText(
-      'No direct mechanical change');
-    await expect(firstChoice.locator('.event-choice-details')).toContainText(
-      'If successful');
-    await expect(firstChoice.locator('.event-choice-details')).toContainText(
-      'If failed');
-    await expect(dialog).toBeVisible();
-    var afterDetails = await page.evaluate(function () {
-      return {
-        save:FB.save.serialize(),
-        rng:FB.getRngState(),
-        log:FB.state.log.length
-      };
-    });
-    expect(afterDetails).toEqual(beforeDetails);
 
     await resolveButton.hover();
     await expect(page.locator('#tooltip')).toBeVisible();
+    await expect(page.locator('#tooltip')).toContainText('Guaranteed');
+    await expect(page.locator('#tooltip')).toContainText(
+      'No direct mechanical change');
     await expect(page.locator('#tooltip')).toContainText('If failed');
-    await detailsButton.focus();
-    await page.keyboard.press('Shift+Tab');
+
+    var lowestChoice = page.locator('#ev-options .event-choice .evopt').last();
+    await lowestChoice.hover();
+    var tooltipPlacement = await page.evaluate(function () {
+      var choices = document.querySelectorAll('#ev-options .event-choice .evopt');
+      var choice = choices[choices.length - 1];
+      var tooltip = document.getElementById('tooltip');
+      var choiceRect = choice.getBoundingClientRect();
+      var tooltipRect = tooltip.getBoundingClientRect();
+      return {
+        choiceLeft:choiceRect.left,
+        choiceRight:choiceRect.right,
+        tipLeft:tooltipRect.left,
+        tipRight:tooltipRect.right,
+        tipBottom:tooltipRect.bottom,
+        viewportHeight:window.innerHeight,
+        roomOnRight:choiceRect.right + 10 + tooltipRect.width <=
+          window.innerWidth - 8
+      };
+    });
+    expect(tooltipPlacement.tipBottom).toBeLessThanOrEqual(
+      tooltipPlacement.viewportHeight - 7);
+    if (tooltipPlacement.roomOnRight) {
+      expect(tooltipPlacement.tipLeft).toBeGreaterThanOrEqual(
+        tooltipPlacement.choiceRight + 9);
+    } else {
+      expect(tooltipPlacement.tipRight).toBeLessThanOrEqual(
+        tooltipPlacement.choiceLeft - 9);
+    }
+
+    await resolveButton.focus();
     await expect(resolveButton).toBeFocused();
     await expect(page.locator('#tooltip')).toBeVisible();
+    var afterTooltip = await page.evaluate(function () {
+      return {
+        save:FB.save.serialize(),
+        rng:FB.getRngState(),
+        log:FB.state.log.length
+      };
+    });
+    expect(afterTooltip).toEqual(beforeTooltip);
 
     await resolveButton.click();
     await expect(dialog).toBeHidden();
@@ -291,7 +313,7 @@ test('desktop choices separate resolution from accessible hover and focus detail
       'Pay for a physician.');
   });
 
-test('touch choices keep compact stakes and a full-size independent Details control',
+test('touch choices use a full-size question-mark Details control without inline chips',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
     await startGame(page, testInfo);
@@ -300,8 +322,9 @@ test('touch choices keep compact stakes and a full-size independent Details cont
 
     var row = page.locator('#ev-options .event-choice').first();
     var details = row.locator('.event-details-button');
-    var compact = row.locator('.event-impact-chips.compact');
-    await expect(compact).toBeVisible();
+    await expect(row.locator('.event-impact-chips.compact')).toHaveCount(0);
+    await expect(details).toHaveText('?');
+    await expect(details).toHaveAttribute('aria-label', 'Details');
     var layout = await row.evaluate(function (element) {
       var button = element.querySelector('.event-details-button');
       var card = element.closest('.modalcard');
@@ -317,10 +340,35 @@ test('touch choices keep compact stakes and a full-size independent Details cont
 
     await details.click();
     await expect(details).toHaveAttribute('aria-expanded', 'true');
+    await expect(details).toHaveText('?');
+    await expect(details).toHaveAttribute('aria-label', 'Hide details');
     await expect(row.locator('.event-choice-details')).toBeVisible();
     await expect(page.getByRole('dialog', {
       name:'A Child Burns With Fever'
     })).toBeVisible();
+  });
+
+test('tablet-width choices use question-mark details and suppress event tooltips',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:900, height:700 });
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.isTouch = false; });
+    await openChildFever(page);
+
+    var row = page.locator('#ev-options .event-choice').first();
+    var choice = row.locator('.evopt');
+    var detailsButton = row.locator('.event-details-button');
+    await expect(detailsButton).toBeVisible();
+    await expect(detailsButton).toHaveText('?');
+
+    await choice.hover();
+    await expect(page.locator('#tooltip')).toBeHidden();
+    await choice.focus();
+    await expect(page.locator('#tooltip')).toBeHidden();
+
+    await detailsButton.click();
+    await expect(detailsButton).toHaveAttribute('aria-expanded', 'true');
+    await expect(row.locator('.event-choice-details')).toBeVisible();
   });
 
 test('Chronicle filters typed receipts, caps each view, and preserves metadata',

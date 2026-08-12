@@ -578,14 +578,20 @@ test('Land, Governance, detail, previews, and autoresolve share the same records
       }]);
     }, ids);
     var firstOption = page.locator('#ev-options .evopt').first();
-    await expect(firstOption).toContainText('Market Charter');
-    await expect(firstOption).toContainText('1440 days');
-    await expect(firstOption).toContainText(
+    await expect(firstOption).not.toContainText('Market Charter');
+    await expect(firstOption).not.toContainText('1440 days');
+    await expect(firstOption.locator('.event-impact-chips.compact')).toHaveCount(0);
+    await expect(page.locator('#ev-options .event-details-button')).toHaveCount(0);
+    await firstOption.hover();
+    var eventTooltip = page.locator('#tooltip');
+    await expect(eventTooltip).toContainText('Market Charter');
+    await expect(eventTooltip).toContainText('1440 days');
+    await expect(eventTooltip).toContainText(
       'Benefits: county tax, construction costs');
-    await expect(firstOption).not.toContainText('+8% county tax');
-    await expect(firstOption).not.toContainText('-8% construction cost');
-    await expect(firstOption).toContainText('each season');
-    await expect(firstOption).toContainText(
+    await expect(eventTooltip).not.toContainText('+8% county tax');
+    await expect(eventTooltip).not.toContainText('-8% construction cost');
+    await expect(eventTooltip).toContainText('each season');
+    await expect(eventTooltip).toContainText(
       'stays with the county after transfer');
     await firstOption.click();
     var visible = await page.evaluate(function (setup) {

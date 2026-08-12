@@ -636,11 +636,13 @@ liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
 vassal_comply county_petition parliament_vote parliament_redress_vote travel_trade`) with
 `success` / `failure`
 branches (`{text, effects}`), and `effects`.
-The engine appends compact consequence chips and a separate full Details breakdown. It shows
-exact costs, penalties, losses, duration/upkeep, permanent decisions, and lethal risks;
-favorable rewards stay qualitative until the result receipt. Chance values are never shown
-as percentages: they use Very likely / Likely / Even / Risky / Long shot bands. Success and
-failure `text` is outcome narrative and is not revealed before resolution.
+The engine supplies a full contextual consequence breakdown without adding mechanical text
+beneath the authored option prose. Desktop pointer and keyboard users receive it as a tooltip;
+touch, tablet-width, and short layouts open it with the adjacent question-mark control. It
+shows exact costs, penalties, losses, duration/upkeep, permanent decisions, and lethal risks;
+favorable rewards stay qualitative until the result receipt. Chance values are never shown as
+percentages: they use Very likely / Likely / Even / Risky / Long shot bands. Success and failure
+`text` is outcome narrative and is not revealed before resolution.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
 and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
 `skill_lea` benefits from Letters in the Family and the monk/priest professions.

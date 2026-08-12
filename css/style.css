@@ -1056,12 +1056,17 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .evopt:hover { border-color: #d8b24a; background: #3d3020; }
 .evopt .odesc { display: block; color: #a08d68; font-size: 12px; margin-top: 2px; }
 .event-choice {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  display: grid; grid-template-columns: minmax(0, 1fr);
   align-items: stretch; gap: 7px; margin-bottom: 8px;
 }
+.event-choice.has-details {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
 .event-choice .evopt { margin-bottom: 0; min-width: 0; }
-.event-details-button {
-  min-width: 82px; min-height: 46px; align-self: stretch; margin: 0;
+.btn.small.event-details-button {
+  width: 46px; min-width: 46px; height: 46px; min-height: 46px;
+  align-self: center; margin: 0; padding: 0; border-radius: 50%;
+  font-size: 20px; font-weight: bold; line-height: 1;
 }
 .event-choice-details {
   grid-column: 1 / -1; padding: 9px 10px; border: 1px solid #55452a;
@@ -1078,7 +1083,6 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .event-impact-chips {
   display: flex; flex-wrap: wrap; gap: 4px; min-width: 0;
 }
-.event-impact-chips.compact { margin-top: 7px; }
 .event-impact-chips.receipt { margin-top: 2px; }
 .event-impact-chips.chronicle { margin-top: 7px; }
 .event-impact-chip, .event-impact-more {

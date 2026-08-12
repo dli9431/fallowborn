@@ -29,6 +29,7 @@ window.FB = window.FB || {};
   const equipmentBlockedText = SH.equipmentBlockedText;
   const equipmentSheetHtml = SH.equipmentSheetHtml;
   const esc = SH.esc;
+  const eventChoiceUsesDisclosure = SH.eventChoiceUsesDisclosure;
   const firstMissingTech = SH.firstMissingTech;
   const fmtAmt = SH.fmtAmt;
   const focusShortcutTarget = SH.focusShortcutTarget;
@@ -555,14 +556,6 @@ window.FB = window.FB || {};
       '</div>';
   }
 
-  function compactConsequencesHtml(s, preview) {
-    let h = '<span class="event-impact-chips compact">';
-    for (let i = 0; i < preview.compact.length; i++) {
-      h += consequenceChipHtml(s, preview.compact[i], 'preview');
-    }
-    return h + '</span>';
-  }
-
   function showEvent(ev, ctx) {
     const s = FB.state;
     eventOpen = true;
@@ -632,6 +625,7 @@ window.FB = window.FB || {};
       return !o.require || FB.checkTrigger(s, o.require, ctx);
     });
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
+    const usesDetailsButton = eventChoiceUsesDisclosure();
     for (let i = 0; i < opts.length; i++) {
       const o = opts[i];
       /* original index (not the filtered position) keys the overlay stably */
@@ -639,36 +633,41 @@ window.FB = window.FB || {};
       const preview = FB.previewEventOption(s, ev, o, ctx);
       const row = document.createElement('div');
       const detailsId = 'event-choice-details-' + i;
-      row.className = 'event-choice';
+      row.className = 'event-choice' + (usesDetailsButton ? ' has-details' : '');
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'evopt';
       btn.setAttribute('aria-describedby', detailsId);
       btn.innerHTML = hintFor(i) +
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
-        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '') +
-        compactConsequencesHtml(s, preview);
+        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
       (function (opt) {
         btn.addEventListener('click', function () { if (eventInputGuarded()) return; chooseOption(ev, opt, ctx); });
       })(o);
-      const detailsButton = document.createElement('button');
-      detailsButton.type = 'button';
-      detailsButton.className = 'btn small event-details-button';
-      detailsButton.textContent = FB.T('Details');
-      detailsButton.setAttribute('aria-expanded', 'false');
-      detailsButton.setAttribute('aria-controls', detailsId);
       const details = document.createElement('div');
       details.id = detailsId;
       details.className = 'event-choice-details hidden';
       details.innerHTML = consequenceDetailsHtml(s, preview);
-      detailsButton.addEventListener('click', function () {
-        const opening = details.classList.contains('hidden');
-        details.classList.toggle('hidden', !opening);
-        detailsButton.setAttribute('aria-expanded', opening ? 'true' : 'false');
-        detailsButton.textContent = opening ? FB.T('Hide details') : FB.T('Details');
-      });
       row.appendChild(btn);
-      row.appendChild(detailsButton);
+      if (usesDetailsButton) {
+        const detailsButton = document.createElement('button');
+        detailsButton.type = 'button';
+        detailsButton.className = 'btn small event-details-button';
+        detailsButton.textContent = '?';
+        detailsButton.title = FB.T('Details');
+        detailsButton.setAttribute('aria-label', FB.T('Details'));
+        detailsButton.setAttribute('aria-expanded', 'false');
+        detailsButton.setAttribute('aria-controls', detailsId);
+        detailsButton.addEventListener('click', function () {
+          const opening = details.classList.contains('hidden');
+          details.classList.toggle('hidden', !opening);
+          detailsButton.setAttribute('aria-expanded', opening ? 'true' : 'false');
+          const label = opening ? FB.T('Hide details') : FB.T('Details');
+          detailsButton.title = label;
+          detailsButton.setAttribute('aria-label', label);
+        });
+        row.appendChild(detailsButton);
+      }
       row.appendChild(details);
       box.appendChild(row);
     }
