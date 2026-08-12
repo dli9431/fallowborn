@@ -153,6 +153,31 @@ Council, and Estates readers, is never saved, and performs no political mutation
 Kings and emperors are reported as crowned rulers; independent counts and dukes as
 sovereign rulers; sworn territorial rulers as vassals.
 
+## Crown recognition (AI kingdoms)
+
+An anointed crown is sticky, but it is not landless. An independent AI realm styled
+as a kingdom (`rank 3`, named `Kingdom of <de jure kingdom name>` — the claim is
+derived from the name by `FB.realmKingdomClaim`, so no data or save schema changes)
+keeps the royal style while it holds even one county inside its claimed de jure
+kingdom. This is the **rival phase**: when the player takes the de jure majority of
+England and is styled King, the old king remains a legitimate rival King of England
+while he holds any English county, and both realms may share the name on the map —
+that coexistence is intended, and driving him out of England entirely is the
+player's clear path to ending his crown.
+
+The moment the realm holds no county in its claimed kingdom,
+`FB.checkCrownRecognition` restyles it at its true dignity: duke of its best de jure
+duchy majority (most held counties, the capital's duchy preferred on ties, same
+`max(2, ceil(n/2))` threshold as the player dignity rules), else count of its
+capital county. Vassals of equal or greater rank are loosed to the fallen crown's
+own liege or to independence, mirroring the player hollow-crown lapse. The check
+runs from `FB.transferProvince` on the losing realms (so player conquest, AI wars,
+scripted history, and escheat all trigger it) and once per year from
+`FB.worldTick` as a sweep for non-transfer drift. Realm death at zero counties is
+unchanged and takes precedence — a realm with nothing dies rather than lapsing.
+Conquest still never grants or transfers the defeated crown itself; empires and
+vassal kings are out of scope.
+
 ## The relevant political court
 
 ### Bounded ruler agency
