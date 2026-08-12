@@ -517,11 +517,18 @@
       </div>
 
       <!-- ======== EVENT MODAL ======== -->
-      <div id="eventmodal" class="modal hidden">
+      <div
+        id="eventmodal"
+        class="modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ev-title"
+        aria-describedby="ev-text"
+      >
         <div class="modalcard">
           <h3 id="ev-title" data-i18n="Event">Event</h3>
           <div id="ev-text" class="evtext"></div>
-          <div id="ev-options"></div>
+          <div id="ev-options" aria-label="Choices" data-i18n-aria-label="Choices"></div>
         </div>
       </div>
 

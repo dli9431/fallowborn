@@ -580,8 +580,11 @@ test('Land, Governance, detail, previews, and autoresolve share the same records
     var firstOption = page.locator('#ev-options .evopt').first();
     await expect(firstOption).toContainText('Market Charter');
     await expect(firstOption).toContainText('1440 days');
-    await expect(firstOption).toContainText('+8% county tax');
-    await expect(firstOption).toContainText('-8% construction cost');
+    await expect(firstOption).toContainText(
+      'Benefits: county tax, construction costs');
+    await expect(firstOption).not.toContainText('+8% county tax');
+    await expect(firstOption).not.toContainText('-8% construction cost');
+    await expect(firstOption).toContainText('each season');
     await expect(firstOption).toContainText(
       'stays with the county after transfer');
     await firstOption.click();

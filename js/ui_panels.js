@@ -4075,19 +4075,82 @@ window.FB = window.FB || {};
 
   SH.logRenderedTail = null; SH.logRenderedLen = -1; // skip identical rebuilds on quiet ticks
   SH.logRenderedHeader = ''; SH.logRenderedLocale = ''; // append-path validity keys
+  SH.logFilter = SH.logFilter || 'all';
+  SH.logRenderedFilter = '';
+  function receiptImpactClass(record) {
+    if (record.lethal) return 'danger';
+    if (record.amount < 0 || record.action === 'remove' || record.action === 'lose') {
+      return 'cost';
+    }
+    if (record.amount > 0 || record.action === 'add') return 'gain';
+    return 'neutral';
+  }
+  function choiceReceiptHtml(s, receipt) {
+    if (!receipt || !receipt.title || !receipt.option) return '';
+    const context = { state:s, viewer:s.player.charId };
+    const title = FB.renderMessage(receipt.title, context);
+    const option = FB.renderMessage(receipt.option, context);
+    const outcome = receipt.outcome ? FB.renderMessage(receipt.outcome, context) : '';
+    let h = '<div class="choice-receipt-title">' + esc(title) + '</div>' +
+      '<div class="choice-receipt-option"><span>' + esc(FB.T('Choice')) +
+      '</span> ' + esc(option) + '</div>';
+    if (outcome) h += '<div class="choice-receipt-outcome">' + esc(outcome) + '</div>';
+    const impacts = receipt.impacts || [];
+    if (impacts.length) {
+      h += '<div class="event-impact-chips chronicle">';
+      for (let i = 0; i < impacts.length; i++) {
+        h += '<span class="event-impact-chip ' + receiptImpactClass(impacts[i]) + '">' +
+          esc(FB.eventImpactText(s, impacts[i], 'resolved')) + '</span>';
+      }
+      h += '</div>';
+    }
+    return h;
+  }
   function logEntryHtml(s, e) {
     const logDate = e.d
       ? FB.T('{season} {day}, {year}', {
         season: FB.seasonName(e.s), day: e.d, year: e.y
       })
       : FB.T('{season}, {year}', { season: FB.seasonName(e.s), year: e.y });
-    return '<div class="logentry"><span class="ldate">' + esc(logDate) + '</span><br>' +
-      esc(FB.newsText(e, s, s.player.charId)) + '</div>';
+    const receipt = e.kind === 'choice' && e.receipt
+      ? choiceReceiptHtml(s, e.receipt) : '';
+    return '<div class="logentry' + (receipt ? ' choice-entry' : '') + '">' +
+      '<span class="ldate">' + esc(logDate) + '</span><br>' +
+      (receipt || esc(FB.newsText(e, s, s.player.charId))) + '</div>';
+  }
+  function logMatches(e, filter) {
+    if (filter === 'choices') return !!(e && e.kind === 'choice');
+    if (filter === 'news') return !(e && e.kind === 'choice');
+    return true;
+  }
+  function logControlsHtml() {
+    const filters = [
+      { id:'all', label:FB.T('All') },
+      { id:'choices', label:FB.T('Choices') },
+      { id:'news', label:FB.T('News') }
+    ];
+    let h = '<div class="chronicle-filters" role="group" aria-label="' +
+      esc(FB.T('Chronicle filter')) + '">';
+    for (let i = 0; i < filters.length; i++) {
+      const active = filters[i].id === SH.logFilter;
+      h += '<button type="button" data-chronicle-filter="' + filters[i].id +
+        '" aria-pressed="' + (active ? 'true' : 'false') + '"' +
+        (active ? ' class="active"' : '') + '>' + esc(filters[i].label) + '</button>';
+    }
+    return h + '</div>';
+  }
+  function wireLogControls(box) {
+    box.querySelectorAll('[data-chronicle-filter]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.setChronicleFilter(button.getAttribute('data-chronicle-filter'));
+      });
+    });
   }
   function renderLog() {
     const s = FB.state;
     const tail = s.log.length ? s.log[s.log.length - 1] : null;
-    if (tail === SH.logRenderedTail && s.log.length === SH.logRenderedLen) return;
+    if (tail === SH.logRenderedTail && s.log.length === SH.logRenderedLen &&
+        SH.logFilter === SH.logRenderedFilter) return;
     const header = '<div class="panelh">' + esc(FB.game && FB.game.observe
       ? FB.T('Chronicle of the realms')
       : FB.T('Chronicle of {dynasty}', { dynasty: s.chars[s.player.charId].dyn || FB.T('your line') })) +
@@ -4101,28 +4164,48 @@ window.FB = window.FB || {};
     const canAppend = tail !== SH.logRenderedTail &&
       SH.logRenderedTail && s.log.length > SH.logRenderedLen &&
       header === SH.logRenderedHeader && FB.locale === SH.logRenderedLocale &&
+      SH.logFilter === SH.logRenderedFilter &&
       s.log[SH.logRenderedLen - 1] === SH.logRenderedTail &&
-      box.firstElementChild;
+      box.querySelector('.chronicle-entries');
     if (canAppend) {
       const from = SH.logRenderedLen, to = s.log.length;
       let add = '';
-      for (let i = to - 1; i >= from; i--) add += logEntryHtml(s, s.log[i]);
-      box.firstElementChild.insertAdjacentHTML('afterend', add);
-      let visible = Math.min(from, 80) + (to - from);
-      while (visible-- > 80) box.removeChild(box.lastElementChild);
+      for (let i = to - 1; i >= from; i--) {
+        if (logMatches(s.log[i], SH.logFilter)) add += logEntryHtml(s, s.log[i]);
+      }
+      const entries = box.querySelector('.chronicle-entries');
+      if (add) entries.insertAdjacentHTML('afterbegin', add);
+      while (entries.querySelectorAll('.logentry').length > 80) {
+        entries.removeChild(entries.lastElementChild);
+      }
       SH.logRenderedTail = tail; SH.logRenderedLen = to;
       FB.localizeTree(box);
       return;
     }
     SH.logRenderedTail = tail; SH.logRenderedLen = s.log.length;
     SH.logRenderedHeader = header; SH.logRenderedLocale = FB.locale;
-    let h = header;
-    for (let i = s.log.length - 1; i >= 0 && i >= s.log.length - 80; i--) {
+    SH.logRenderedFilter = SH.logFilter;
+    let h = header + logControlsHtml() + '<div class="chronicle-entries">';
+    let rendered = 0;
+    for (let i = s.log.length - 1; i >= 0 && rendered < 80; i--) {
+      if (!logMatches(s.log[i], SH.logFilter)) continue;
       h += logEntryHtml(s, s.log[i]);
+      rendered++;
     }
+    h += '</div>';
     box.innerHTML = h;
     FB.localizeTree(box);
+    wireLogControls(box);
   }
+
+  UI.setChronicleFilter = function (filter) {
+    if (filter !== 'choices' && filter !== 'news') filter = 'all';
+    if (SH.logFilter === filter && SH.logRenderedFilter === filter) return;
+    SH.logFilter = filter;
+    SH.logRenderedTail = null;
+    SH.logRenderedLen = -1;
+    if (FB.state) renderLog();
+  };
 
   function selfDrawerOpen() {
     return document.body.classList.contains('showself');

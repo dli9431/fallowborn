@@ -39,6 +39,12 @@ though the game still *runs*.
   plus semantic params re-render in the player's current language and keep old saves working with
   no migration.
 
+- **Event consequence UI:** do not duplicate mechanics in `desc`. Declarative effects are
+  previewed and receipted centrally. A custom option effect must register a pure
+  `FB.eventImpactAdapters[id].preview` and a post-resolution `report`; return semantic impact
+  records containing ids/numbers, and route their display labels through `FB.T`. Receipt
+  metadata lives beside a normal durable `msg`, never as rendered prose.
+
 Money is the one typed display placeholder: use `{money:amount}` with a numeric
 parameter, for example `FB.T('Costs {money:cost}.', { cost: 15 })`. Structured data
 may use a numeric literal such as `{money:2}`. Never add a currency symbol or the

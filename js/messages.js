@@ -9,6 +9,7 @@ window.FB = window.FB || {};
 
   const english = {};
   const listeners = [];
+  let toastSuppression = 0;
 
   function plainObject(value) {
     if (!value || Object.prototype.toString.call(value) !== '[object Object]') return false;
@@ -114,6 +115,7 @@ window.FB = window.FB || {};
 
   FB.fx = {
     push: function (intent) {
+      if (toastSuppression && intent && intent.kind === 'toast') return;
       const safe = FB.messageParams(intent);
       for (let i = 0; i < listeners.length; i++) listeners[i](safe);
     },
@@ -127,22 +129,41 @@ window.FB = window.FB || {};
     }
   };
 
+  /* Event resolution can produce several durable news entries (a modifier
+     notice, a wedding, a queued story, and so on) before its single receipt.
+     Keep those entries in the Chronicle while letting the caller replace the
+     burst of transient popups with one result toast. The counter makes nested
+     resolution safe and keeps the default FB.news behavior unchanged. */
+  FB.suppressNewsToasts = function (suppress) {
+    if (suppress) toastSuppression++;
+    else toastSuppression = Math.max(0, toastSuppression - 1);
+    return toastSuppression;
+  };
+  FB.newsToastsSuppressed = function () { return toastSuppression > 0; };
+
   /* New entries carry a descriptor and can be rendered in any locale. Legacy
-     strings remain supported so old saves need no migration. */
-  FB.news = function (state, value) {
+     strings remain supported so old saves need no migration. Optional entry
+     metadata is additive: old builds ignore it and still render msg/t. */
+  FB.news = function (state, value, options) {
+    options = options || {};
     const entry = { y: state.date.year, s: state.date.season, d: state.date.day };
     if (value && typeof value === 'object' && typeof value.key === 'string') {
       entry.msg = FB.message(value.key, value.params);
     } else {
       entry.t = String(value === undefined || value === null ? '' : value);
     }
+    const kind = options.kind || options.category;
+    if (typeof kind === 'string' && kind) entry.kind = kind;
+    if (options.receipt) entry.receipt = FB.messageParams(options.receipt);
     state.log.push(entry);
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
-    FB.fx.push({
-      kind: 'toast',
-      message: entry.msg || null,
-      legacyText: entry.msg ? null : entry.t
-    });
+    if (options.toast !== false && !toastSuppression) {
+      FB.fx.push({
+        kind: 'toast',
+        message: entry.msg || null,
+        legacyText: entry.msg ? null : entry.t
+      });
+    }
     return entry;
   };
 })();

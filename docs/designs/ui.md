@@ -48,7 +48,9 @@ modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyh
 `UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
 code in keys.js), and dialogs that must not be Esc-dismissed pass `{dismissable:false}`.
 Tab and Shift+Tab wrap between the first and last focusable controls of an open generic
-dialog, so keyboard focus cannot move into the obscured game until the dialog closes.
+dialog or mandatory event, so keyboard focus cannot move into the obscured game until the
+dialog closes. Event option number shortcuts target only the resolving Choice buttons;
+their separate Details buttons are ordinary Tab stops and cannot resolve an event.
 Dialogs whose first choice must be deliberate focus the dialog container on entry rather
 than preselecting a choice; the first Tab still enters the dialog's controls.
 Costed election tactics, full default settlement, family ambition and office changes,
@@ -580,9 +582,18 @@ Governance's Institution section also repeats every active modifier record from 
 player's directly held counties. These are the same native-button chips as Land—not a
 second inventory—and open the same accessible detail sheet with semantic source,
 remaining days, exact effects, upkeep, expiry, and transfer behavior. Event choices
-that grant or remove a modifier append the same information in text before the choice;
-icons and color never carry a consequence alone. County transfer automatically removes
+that grant or remove a modifier show exact adverse terms and qualitative favorable terms
+before the choice; the receipt shows the resolved record exactly. Icons and color never
+carry a consequence alone. County transfer automatically removes
 the record from Governance while Land continues to show it on the selected county.
+
+Event choices use a two-control row. The Choice control retains the label and authored
+flavor description, followed by wrapped, text-labelled consequence chips. A visible
+Details control toggles the full Guaranteed / If successful / If failed breakdown inline.
+On pointer/focus desktop the same breakdown also uses the shared accessible tooltip; touch
+never depends on hover and keeps the Details target at least 44 pixels high. The event
+surface is an `aria-modal` dialog labelled by its title and description, and the expanded
+details remain inside the bottom sheet's scroll area.
 
 The Institution section and Network's Trade & Guild summary also open the shared
 **Privileges & collective demands** sheet. Each contract names its holder, grantor,
@@ -860,9 +871,18 @@ Because the event modal opens as a bottom sheet under the thumb, its choice butt
 input for 350 ms after they render (`EVENT_INPUT_GUARD_MS` in `ui_modals.js`, touch only, via
 `armEventGuard`/`eventInputGuarded`): a tap already travelling down toward the fixed time bar
 must not pick an outcome by accident, while a deliberate next tap should feel immediate. The
-guard rearms for each queued event and each outcome screen. Autoresolved events render no
-buttons, so they bypass the guard naturally; exceptional choices that automation intentionally
-shows remain protected.
+guard rearms for each queued event. Autoresolved events render no buttons, so they bypass
+the guard naturally; Details controls never resolve and need no guard. Chance choices no
+longer create a blocking outcome screen: one receipt toast appears for six seconds above
+the event layer and the queue advances immediately. The toast replaces an older receipt
+instead of stacking; when no event blocks input, activating it opens the Chronicle's
+Choices filter. Exceptional choices that automation intentionally shows remain protected.
+
+The Chronicle has session-local **All / Choices / News** filters. Choices are typed event
+receipts with rich exact-change chips; News includes legacy untyped entries and ordinary
+notices. Each filter renders its newest 80 matches while saved history retains the existing
+300-entry cap. The incremental prepend cache includes the active filter, so switching views
+cannot reuse markup from another category.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 

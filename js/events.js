@@ -2865,7 +2865,7 @@ window.FB = window.FB || {};
         return FB.clamp(c, 0.1, 0.92);
       }
       case 'proposal': {
-        const s = FB.getRole(state, 'suitor');
+        const s = FB.getRole(state, 'suitor', false);
         let c = 0.3 + characterStanding(state, s) / 180 +
           p.prestige / 600 + p.tier * 0.05;
         const gap = s ? FB.stationOf(s) - FB.playerStation(state) : 0;
@@ -3091,7 +3091,7 @@ window.FB = window.FB || {};
         const trole = p.plot && (p.plot.id === 'ruin_rival' ? 'rival' : p.plot.id === 'widow_veil' ? 'spouse' : null);
         const targetId = p.plot && p.plot.context && p.plot.context.characterId;
         const tgt = targetId ? state.chars[targetId] :
-          (trole ? FB.getRole(state, trole) : null);
+          (trole ? FB.getRole(state, trole, false) : null);
         if (tgt) c += characterStanding(state, tgt) / 500;
         return FB.clamp(c, 0.15, 0.9);
       }
@@ -3627,6 +3627,1238 @@ window.FB = window.FB || {};
     if (ev.cooldown) state.player.cooldowns[ev.id] = state.turn;
   };
 
+  /* ---------- event consequence previews and impact receipts ----------
+     Preview records are semantic rather than prose. They are safe to build
+     repeatedly for hover, focus, and touch disclosure: no writer or RNG API
+     is called. Resolution ledgers use the same record vocabulary, but their
+     deltas come from before/after state so clamps and soft caps are reported
+     as they actually landed. */
+  const EVENT_EFFECT_KEYS = [
+    'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource',
+    'prestige','piety','warService','health','ailment','skills','addTrait',
+    'addTraitOnce','removeTrait','traitProgress','setFlag','setFlag2','clearFlag',
+    'clearFlag2','clearHarvestFlags','opinion','rivalContact','rivalHeat',
+    'endRivalry','opinionLiege','standingRealm','papalOpinion','popularOpinion',
+    'profession','focusSet','restoreProfession','tierSet','tierUp','devUp',
+    'research','addModifier','removeModifier','holding','loseHolding','giveItem',
+    'marry','clearSuitor','adoptChild','killChild','killRole','kinslayer',
+    'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
+    'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
+    'worldNews','log','custom','deathProvenance'
+  ];
+  FB.eventPreviewEffectKeys = {};
+  for (let effectKeyIndex = 0; effectKeyIndex < EVENT_EFFECT_KEYS.length;
+       effectKeyIndex++) {
+    FB.eventPreviewEffectKeys[EVENT_EFFECT_KEYS[effectKeyIndex]] = true;
+  }
+
+  function impact(type, fields) {
+    const out = { type:type };
+    fields = fields || {};
+    for (const key in fields) if (Object.prototype.hasOwnProperty.call(fields, key)) {
+      out[key] = fields[key];
+    }
+    return out;
+  }
+
+  function customSystem(id) {
+    if (/^(?:war_|ghw_)/.test(id)) return 'war';
+    if (/^(?:diplomacy_|vassal_|appeal_|county_petition)/.test(id)) return 'diplomacy';
+    if (/^(?:plot_|fabricate_claim)/.test(id)) return 'plot';
+    if (/^(?:council_|parliament_|collective_demand)/.test(id)) return 'politics';
+    if (/^(?:finance_|guild_|distraint_|bondage_|prison_)/.test(id)) return 'property';
+    if (/^(?:agency_|sibling_|begin_courtship|formalize_attention|dower_|claim_)/.test(id)) {
+      return 'relationship';
+    }
+    if (/^(?:academy_|travel_)/.test(id)) return 'development';
+    if (/^(?:papal_|bishop_|annul_)/.test(id)) return 'faith';
+    if (/^(?:intrigue_)/.test(id)) return 'intrigue';
+    if (/^(?:df_|attainder_|hc_|devastation_)/.test(id)) return 'property';
+    if (/^(?:offer_|buy_item|clear_item|find_artifact|loot_item)/.test(id)) return 'item';
+    return 'story';
+  }
+
+  function customPermanent(id) {
+    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|county_petition_grant|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted)$/.test(id);
+  }
+
+  /* Core ids are explicit so a newly authored custom option cannot silently
+     inherit the mod fallback. A coverage test compares event data with this
+     registry. Adapters may be replaced by an owning system with a more exact
+     pure preview/report pair before an event is shown. */
+  const CORE_CUSTOM_EFFECT_IDS = (
+    'academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw ' +
+    'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
+    'annul_granted appeal_lose appeal_win attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
+    'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
+    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend ' +
+    'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security ' +
+    'loot_item offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
+    'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
+    'sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_harry war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
+    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_no_enemy_host war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
+  ).split(' ');
+  FB.coreEventImpactCustomIds = CORE_CUSTOM_EFFECT_IDS.slice();
+  FB.eventImpactAdapters = FB.eventImpactAdapters || {};
+
+  function coreCustomPreview(id, state, ctx) {
+    const p = state.player;
+    if (id === 'finance_trade_20' || id === 'finance_trade_50') {
+      return [impact('gold', {
+        amount:id === 'finance_trade_20' ? -20 : -50
+      })];
+    }
+    if (id === 'buy_item' && p.itemOffer) {
+      const price = Math.max(0, Number(p.itemOffer.price) || 0);
+      if (price) return [impact('gold', { amount:-price })];
+    }
+    if (id === 'attainder_pay') {
+      const fines = FBDATA.balance.attainderFineByTier || [];
+      return [impact('gold', { amount:-(fines[p.tier] || 20) })];
+    }
+    if (id === 'prison_pay') {
+      const ransoms = FBDATA.balance.ransomByTier || [];
+      return [impact('gold', { amount:-(ransoms[p.tier] || 30) })];
+    }
+    if (id === 'intrigue_captive_ransom_pay' && FB.intrigueCaptivityOf) {
+      const captive = FB.intrigueCaptivityOf(state, p.charId);
+      const demand = captive && captive.demand
+        ? Math.max(0, Number(captive.demand.amount) || 0) : 0;
+      if (demand) return [impact('gold', { amount:-demand })];
+    }
+    if (id === 'distraint_settle' && FB.financeDefaultDue) {
+      const due = Math.max(0, Number(FB.financeDefaultDue(state)) || 0);
+      if (due) return [impact('gold', { amount:-due })];
+    }
+    if ((id === 'parliament_subsidy_pay' ||
+        id === 'parliament_emergency_subsidy_won')) {
+      return [impact('gold', {
+        amount:-(FBDATA.balance.parliamentSubsidyGold || 20)
+      })];
+    }
+    if (id === 'intrigue_hearing_pay' && FB.intrigueSentenceProjection) {
+      const hearing = state.intrigue && state.intrigue.hearing;
+      if (hearing && (!ctx.hearingId || hearing.id === ctx.hearingId)) {
+        const sentence = FB.intrigueSentenceProjection(state, hearing);
+        if (sentence && sentence.fine) {
+          return [impact('gold', { amount:-sentence.fine })];
+        }
+      }
+    }
+    if (id === 'intrigue_hearing_penance') {
+      const hearing = state.intrigue && state.intrigue.hearing;
+      const sentence = hearing && FB.intrigueSentenceProjection
+        ? FB.intrigueSentenceProjection(state, hearing) : null;
+      return [
+        impact('piety', { amount:sentence && sentence.sacred ? -40 : -20 }),
+        impact('prestige', { amount:-15 })
+      ];
+    }
+    if (id === 'war_pay_deserters' && FB.warDeserterPayment) {
+      return [impact('gold', { amount:-FB.warDeserterPayment(state) })];
+    }
+    if (id === 'war_terms' && p.war) {
+      if (p.war.defending) {
+        return [
+          impact('gold', { amount:-(15 + 5 * (p.war.losses || 0)) }),
+          impact('prestige', { amount:-10 }),
+          impact('system', { system:'war', permanent:true })
+        ];
+      }
+      return [
+        impact('prestige', { amount:-8 }),
+        impact('system', { system:'war', permanent:true })
+      ];
+    }
+    if (id === 'war_submission_tribute' && p.war) {
+      const enemy = state.realms && state.realms[p.war.enemy];
+      const price = (FBDATA.balance.submissionTributePerRank || 25) *
+        ((enemy && enemy.rank) || 1);
+      return [
+        impact('gold', { amount:-price }),
+        impact('system', { system:'war', permanent:true })
+      ];
+    }
+    if (id === 'war_submit') {
+      return [
+        impact('prestige', { amount:-15 }),
+        impact('rank', { action:'submission', permanent:true })
+      ];
+    }
+    if (id === 'distraint_yield_one') {
+      const holdings = p.holdings || [];
+      if (holdings.length) {
+        let cheapest = holdings[0];
+        let cheapestCost = Infinity;
+        for (let holdingIndex = 0; holdingIndex < holdings.length; holdingIndex++) {
+          const holdingId = holdings[holdingIndex];
+          const def = FBDATA.holdings && FBDATA.holdings[holdingId];
+          const cost = def && def.cost ? def.cost : 20;
+          if (cost < cheapestCost) {
+            cheapest = holdingId;
+            cheapestCost = cost;
+          }
+        }
+        return [impact('holding', { action:'remove', id:cheapest })];
+      }
+      if ((p.landPlots || []).length) {
+        return [impact('landPlot', { amount:-1 })];
+      }
+    }
+    if (id === 'distraint_seize') {
+      return [impact('system', {
+        system:'property', permanent:true, variable:true
+      }), impact('queue', { possible:true })];
+    }
+    if (id === 'devastation_lose_holding') {
+      if ((p.holdings || []).length) {
+        return [impact('holding', { action:'remove', variable:true })];
+      }
+      return [impact('gold', { amount:-5 })];
+    }
+    if (id === 'dower_take' || id === 'dower_take_full' ||
+        id === 'claim_won' || id === 'claim_sold') {
+      return [impact('gold', { reward:true, variable:true })];
+    }
+    if (id === 'find_artifact' || id === 'loot_item' || id === 'plot_loot') {
+      return [impact('item', { action:'add', reward:true, variable:true })];
+    }
+    if (id === 'polly_rout') return [impact('death', {
+      targetKind:'player', lethal:true, variable:true, customId:id
+    })];
+    if (id === 'prison_cede_land' || id === 'attainder_yield' ||
+        id === 'df_fall' || id === 'df_fall_flee' ||
+        id === 'intrigue_hearing_flee') {
+      return [impact('land', {
+        action:'lose', variable:true, permanent:true, customId:id
+      })];
+    }
+    return null;
+  }
+
+  function coreCustomAdapter(id) {
+    return {
+      preview:function (state, ctx) {
+        const specific = coreCustomPreview(id, state, ctx);
+        return specific || [impact('system', {
+          system:customSystem(id), customId:id,
+          permanent:customPermanent(id), preview:true
+        })];
+      },
+      report:function () {
+        if (id === 'war_terms' || id === 'war_submission_tribute' ||
+            id === 'war_submit' || id === 'war_accept_tribute') {
+          return [impact('system', {
+            system:'war', action:'ended', customId:id, resolved:true
+          })];
+        }
+        return [impact('system', {
+          system:customSystem(id), customId:id,
+          permanent:customPermanent(id), resolved:true
+        })];
+      }
+    };
+  }
+  for (let customIndex = 0; customIndex < CORE_CUSTOM_EFFECT_IDS.length;
+       customIndex++) {
+    const customId = CORE_CUSTOM_EFFECT_IDS[customIndex];
+    if (!FB.eventImpactAdapters[customId]) {
+      FB.eventImpactAdapters[customId] = coreCustomAdapter(customId);
+    }
+  }
+
+  function chanceBand(value) {
+    value = FB.clamp(Number(value) || 0, 0, 1);
+    if (value >= 0.8) return 'very_likely';
+    if (value >= 0.6) return 'likely';
+    if (value >= 0.4) return 'even';
+    if (value >= 0.2) return 'risky';
+    return 'long_shot';
+  }
+  FB.eventChanceBand = chanceBand;
+
+  function modifierSpec(raw) {
+    return typeof raw === 'string' ? { id:raw } : raw;
+  }
+
+  function previewNumeric(out, type, amount, extra) {
+    if (typeof amount !== 'number' || !amount) return;
+    extra = extra || {};
+    extra.amount = amount;
+    extra.reward = amount > 0;
+    out.push(impact(type, extra));
+  }
+
+  function previewEffects(state, source, ctx, ev) {
+    const out = [];
+    if (!source) return out;
+    const fx = FB.scaleEventEffects
+      ? FB.scaleEventEffects(state, source, ctx, ev) : source;
+    const p = state.player;
+    const me = state.chars[p.charId];
+
+    if (fx.marriageEnd) {
+      const doctrine = FB.marriageDoctrine(me.religion, state);
+      const ending = doctrine.end || {};
+      const failed = fx.marriageEnd === 'failure';
+      previewNumeric(out, 'gold', -Math.max(0, Number(
+        ctx.marriageGold !== undefined ? ctx.marriageGold : ending.gold) || 0));
+      previewNumeric(out, 'piety', -Math.max(0, Number(
+        failed && ctx.marriageFailurePiety !== undefined
+          ? ctx.marriageFailurePiety
+          : (ctx.marriagePiety !== undefined ? ctx.marriagePiety : ending.piety)) || 0));
+      previewNumeric(out, 'prestige', -Math.max(0, Number(
+        ctx.marriagePrestige !== undefined ? ctx.marriagePrestige : ending.prestige) || 0));
+      out.push(impact('relationship', { action:'marriage_end', permanent:true }));
+    }
+    if (typeof fx.gold === 'number') previewNumeric(out, 'gold', fx.gold);
+    else if (fx.gold === 'harvest_good') out.push(impact('gold', { reward:true, variable:true }));
+    previewNumeric(out, 'prestige', fx.prestige);
+    previewNumeric(out, 'piety', fx.piety);
+    previewNumeric(out, 'health', fx.health, {
+      lethal:typeof fx.health === 'number' &&
+        (me.health === undefined ? 8 : me.health) + fx.health <= 0
+    });
+    previewNumeric(out, 'warService', fx.warService);
+    previewNumeric(out, 'research', fx.research);
+    previewNumeric(out, 'commonVoice', fx.popularOpinion);
+    previewNumeric(out, 'standing', fx.opinionLiege, { targetKind:'liege' });
+    previewNumeric(out, 'standing', fx.standingRealm, {
+      targetKind:'realm', targetId:ctx.realmId || ctx.rid || null
+    });
+    previewNumeric(out, 'standing', fx.papalOpinion, {
+      targetKind:'papal', targetId:ctx.candidateId || p.charId
+    });
+    if (fx.opinion) previewNumeric(out, 'standing', fx.opinion.amt, {
+      targetKind:'role', role:fx.opinion.role
+    });
+    if (fx.skills) for (const skill in fx.skills) {
+      previewNumeric(out, 'skill', fx.skills[skill], { id:skill });
+    }
+    if (fx.pricePressure) out.push(impact('price', {
+      amount:fx.pricePressure, years:fx.pricePressureYears || 1,
+      reward:fx.pricePressure < 0
+    }));
+    if (fx.addTrait || fx.addTraitOnce) out.push(impact('trait', {
+      action:'add', id:fx.addTrait || fx.addTraitOnce,
+      reward:true
+    }));
+    if (fx.removeTrait) out.push(impact('trait', {
+      action:'remove', id:fx.removeTrait, reward:false
+    }));
+    if (fx.traitProgress) out.push(impact('traitProgress', {
+      id:fx.traitProgress.id,
+      amount:fx.traitProgress.amount === undefined ? 1 : fx.traitProgress.amount,
+      reward:true
+    }));
+    if (fx.ailment) out.push(impact('ailment', { action:'add', id:fx.ailment }));
+    if (fx.rivalContact || fx.rivalHeat || fx.endRivalry) {
+      out.push(impact('relationship', { action:'rivalry' }));
+    }
+    if (fx.profession) out.push(impact('profession', {
+      action:'set', id:fx.profession, permanent:true
+    }));
+    if (fx.restoreProfession) out.push(impact('profession', {
+      action:'restore', permanent:true
+    }));
+    if (fx.focusSet) out.push(impact('focus', { id:fx.focusSet }));
+    if (fx.tierSet !== undefined || fx.tierUp) out.push(impact('rank', {
+      action:fx.tierSet !== undefined ? 'set' : 'up',
+      tier:fx.tierSet, reward:true, permanent:true
+    }));
+    if (fx.devUp) out.push(impact('development', {
+      amount:fx.devUp, reward:fx.devUp > 0
+    }));
+    if (fx.addModifier) {
+      const addSpec = modifierSpec(fx.addModifier);
+      const modifierDef = addSpec && FBDATA.modifiers && FBDATA.modifiers[addSpec.id];
+      out.push(impact('modifier', {
+        action:'add', id:addSpec && addSpec.id,
+        pid:addSpec && addSpec.pid || ctx.locationId || p.provinceId,
+        reward:true,
+        cost:!!(modifierDef && modifierDef.upkeep && modifierDef.upkeep.gold)
+      }));
+    }
+    if (fx.removeModifier) {
+      const removeSpec = modifierSpec(fx.removeModifier);
+      out.push(impact('modifier', {
+        action:'remove', id:removeSpec && removeSpec.id,
+        pid:removeSpec && removeSpec.pid || ctx.locationId || p.provinceId
+      }));
+    }
+    if (fx.holding) out.push(impact('holding', {
+      action:'add', id:fx.holding, reward:true
+    }));
+    if (fx.loseHolding) out.push(impact('holding', {
+      action:'remove', id:fx.loseHolding
+    }));
+    if (fx.giveItem) out.push(impact('item', {
+      action:'add', defId:fx.giveItem, reward:true
+    }));
+    if (fx.marry) out.push(impact('relationship', {
+      action:'marry', reward:true, permanent:true
+    }));
+    if (fx.clearSuitor) out.push(impact('relationship', {
+      action:'courtship_end', permanent:true
+    }));
+    if (fx.adoptChild) out.push(impact('relationship', {
+      action:'adopt', reward:true, permanent:true
+    }));
+    if (fx.killChild) out.push(impact('death', {
+      targetKind:'child', lethal:true, permanent:true
+    }));
+    if (fx.killRole) out.push(impact('death', {
+      targetKind:'role', role:fx.killRole, lethal:true, permanent:true
+    }));
+    if (fx.educateChild) out.push(impact('skill', {
+      id:fx.educateChild, reward:true, variable:true, targetKind:'child'
+    }));
+    if (fx.moveRandom) out.push(impact('home', {
+      action:'forced_move', permanent:true
+    }));
+    if (fx.travelReturn) out.push(impact('travel', { action:'return' }));
+    if (fx.travelSettle) out.push(impact('home', {
+      action:'settle', reward:true, permanent:true
+    }));
+    if (fx.foundFaith) out.push(impact('faith', {
+      action:'found', permanent:true
+    }));
+    if (fx.faithRelation) out.push(impact('faith', {
+      action:'relation', status:fx.faithRelation.status, permanent:true
+    }));
+    if (fx.convertToProvince) out.push(impact('faith', {
+      action:'convert', permanent:true
+    }));
+    if (fx.declareIndependence) out.push(impact('rank', {
+      action:'independence', permanent:true
+    }));
+    if (fx.pickHeir) out.push(impact('relationship', {
+      action:'heir', permanent:true
+    }));
+    if (fx.queue) out.push(impact('queue', { eventId:fx.queue }));
+    if (fx.worldNews) out.push(impact('worldNews', {}));
+    if (fx.clearHarvestFlags) out.push(impact('system', { system:'harvest' }));
+    if (fx.setFlag || fx.setFlag2 || fx.clearFlag || fx.clearFlag2) {
+      out.push(impact('system', {
+        system:'decision', permanent:!!(fx.setFlag || fx.setFlag2)
+      }));
+    }
+    if (fx.custom) {
+      const adapter = FB.eventImpactAdapters[fx.custom];
+      const customImpacts = adapter && typeof adapter.preview === 'function'
+        ? adapter.preview(state, ctx, ev, fx) : [impact('system', {
+          system:'story', customId:fx.custom, unknown:true
+        })];
+      for (let customPreviewIndex = 0; customPreviewIndex < customImpacts.length;
+           customPreviewIndex++) out.push(customImpacts[customPreviewIndex]);
+    }
+    return out;
+  }
+
+  function previewImportance(record) {
+    if (record.type === 'chance') return 100;
+    if (record.lethal) return 95;
+    if (record.permanent) return 90;
+    if (record.amount < 0 || record.action === 'remove') return 80;
+    if (record.type === 'modifier') return 70;
+    if (record.type === 'system' && record.internal) return 5;
+    return 40;
+  }
+
+  FB.previewEventOption = function (state, ev, option, ctx) {
+    ctx = ctx || {};
+    option = option || {};
+    let chance = null;
+    if (option.chance !== undefined) {
+      const probability = typeof option.chance === 'string'
+        ? FB.namedChance(state, option.chance) : Number(option.chance);
+      chance = { band:chanceBand(probability) };
+    }
+    const sections = [];
+    const guaranteed = previewEffects(state, option.effects, ctx, ev);
+    const success = previewEffects(state,
+      option.success && option.success.effects, ctx, ev);
+    const failure = previewEffects(state,
+      option.failure && option.failure.effects, ctx, ev);
+    sections.push({
+      id:'guaranteed',
+      impacts:guaranteed.length ? guaranteed : [impact('none', { internal:true })]
+    });
+    if (option.chance !== undefined || success.length) {
+      sections.push({ id:'success', impacts:success.length ? success : [impact('system', {
+        system:'story', narrative:true
+      })] });
+    }
+    if (option.chance !== undefined || failure.length) {
+      sections.push({ id:'failure', impacts:failure.length ? failure : [impact('system', {
+        system:'story', narrative:true
+      })] });
+    }
+    const candidates = [];
+    if (chance) candidates.push(impact('chance', { band:chance.band }));
+    for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+      const records = sections[sectionIndex].impacts;
+      for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
+        candidates.push(records[recordIndex]);
+      }
+    }
+    candidates.sort(function (a, b) {
+      return previewImportance(b) - previewImportance(a);
+    });
+    const compact = [];
+    const seen = {};
+    for (let candidateIndex = 0; candidateIndex < candidates.length && compact.length < 4;
+         candidateIndex++) {
+      const record = candidates[candidateIndex];
+      if (record.internal) continue;
+      const key = record.type + '|' + (record.id || record.system || record.band || '') +
+        '|' + (record.action || '') + '|' + (record.amount || '');
+      if (seen[key]) continue;
+      seen[key] = true;
+      compact.push(record);
+    }
+    if (!compact.length) compact.push(impact('system', { system:'story' }));
+    return { chance:chance, compact:compact, sections:sections };
+  };
+
+  function copyNumberMap(source) {
+    const out = {};
+    source = source || {};
+    for (const key in source) if (typeof source[key] === 'number') out[key] = source[key];
+    return out;
+  }
+
+  function modifierImpactSnapshot(state) {
+    const out = [];
+    const county = state.modifiers && state.modifiers.county || {};
+    for (const pid in county) for (let i = 0; i < county[pid].length; i++) {
+      out.push('county|' + pid + '|' + county[pid][i].id + '|' +
+        (county[pid][i].endTurn === undefined ? '' : county[pid][i].endTurn));
+    }
+    const campaign = state.greatHolyWar && state.greatHolyWar.modifiers || [];
+    for (let j = 0; j < campaign.length; j++) {
+      out.push('campaign||' + campaign[j].id + '|' +
+        (campaign[j].endTurn === undefined ? '' : campaign[j].endTurn));
+    }
+    out.sort();
+    return out;
+  }
+
+  function impactSnapshot(state, ctx) {
+    const p = state.player;
+    const me = state.chars[p.charId];
+    const opinions = {};
+    const relevant = {};
+    relevant[p.charId] = true;
+    const stateRoles = state.roles || {};
+    for (const role in stateRoles) if (stateRoles[role]) relevant[stateRoles[role]] = true;
+    ctx = ctx || {};
+    for (const contextKey in ctx) {
+      const contextValue = ctx[contextKey];
+      if (typeof contextValue === 'string' && state.chars[contextValue]) {
+        relevant[contextValue] = true;
+      }
+    }
+    if (p.courtingId) relevant[p.courtingId] = true;
+    if (me.spouseId) relevant[me.spouseId] = true;
+    for (const charId in relevant) {
+      const c = state.chars[charId];
+      if (c) opinions[charId] = Number(c.opinion) || 0;
+    }
+    let host = null;
+    const armies = state.armies || [];
+    for (let armyIndex = 0; armyIndex < armies.length; armyIndex++) {
+      if (armies[armyIndex].realm === 'player') {
+        host = armies[armyIndex]; break;
+      }
+    }
+    const deadCharacters = {};
+    for (const snapshotCharId in state.chars) {
+      deadCharacters[snapshotCharId] = !!state.chars[snapshotCharId].dead;
+    }
+    const itemDefs = {};
+    const playerItems = p.items || [];
+    for (let snapshotItemIndex = 0; snapshotItemIndex < playerItems.length;
+         snapshotItemIndex++) {
+      const snapshotItem = FB.resolveItem
+        ? FB.resolveItem(state, playerItems[snapshotItemIndex]) : null;
+      itemDefs[playerItems[snapshotItemIndex]] = snapshotItem
+        ? snapshotItem.defId : playerItems[snapshotItemIndex];
+    }
+    return {
+      gold:Number(p.gold) || 0,
+      prestige:Number(p.prestige) || 0,
+      piety:Number(p.piety) || 0,
+      commonVoice:Number(p.pop) || 0,
+      warService:Number(p.warService) || 0,
+      health:me.health === undefined ? 8 : Number(me.health),
+      tier:p.tier,
+      profession:p.profession || null,
+      focus:p.focus || null,
+      provinceId:p.provinceId || null,
+      liege:p.liege || null,
+      religion:me.religion || null,
+      spouseId:me.spouseId || null,
+      courtingId:p.courtingId || null,
+      namedHeirId:p.namedHeirId || null,
+      rivalId:p.rivalry && p.rivalry.id || null,
+      rivalHeat:p.rivalry ? Number(p.rivalry.heat) || 0 : null,
+      skills:copyNumberMap(me.skills),
+      traits:(me.traits || []).slice(),
+      ailments:(me.ails || []).slice(),
+      traitProgress:copyNumberMap(p.traitProgress),
+      holdings:(p.holdings || []).slice(),
+      items:(p.items || []).slice(),
+      itemDefs:itemDefs,
+      provinces:(p.provs || []).slice(),
+      landPlots:(p.landPlots || []).length,
+      characters:Object.keys(state.chars),
+      deadCharacters:deadCharacters,
+      opinions:opinions,
+      realmStanding:copyNumberMap(p.liegeOps),
+      liegeStanding:Number(p.liegeOp) || 0,
+      modifiers:modifierImpactSnapshot(state),
+      queue:(state.eventQueue || []).map(function (queued) { return queued.id; }),
+      flags:Object.keys(p.flags || {}).sort(),
+      dev:copyNumberMap(state.dev),
+      pacts:JSON.stringify(state.pacts || {}),
+      alliances:JSON.stringify(state.alliances || []),
+      warStrength:p.war ? Number(p.war.strength) || 0 : null,
+      warSiege:p.war ? Number(p.war.siege) || 0 : null,
+      hostMen:host ? Number(host.men) || 0 : null,
+      hostSize:host ? Number(host.size) || 0 : null,
+      investments:state.economy && state.economy.investments
+        ? state.economy.investments.length : 0,
+      privileges:state.privileges ? state.privileges.length : 0
+    };
+  }
+
+  function listDifference(after, before) {
+    const counts = {};
+    for (let i = 0; i < before.length; i++) counts[before[i]] = (counts[before[i]] || 0) + 1;
+    const out = [];
+    for (let j = 0; j < after.length; j++) {
+      if (counts[after[j]]) counts[after[j]]--;
+      else out.push(after[j]);
+    }
+    return out;
+  }
+
+  function diffNumeric(out, type, before, after, fields) {
+    if (before === after || !isFinite(before) || !isFinite(after)) return;
+    fields = fields || {};
+    fields.before = before;
+    fields.after = after;
+    fields.amount = after - before;
+    out.push(impact(type, fields));
+  }
+
+  function diffImpactSnapshots(state, before, after) {
+    const out = [];
+    diffNumeric(out, 'gold', before.gold, after.gold);
+    diffNumeric(out, 'prestige', before.prestige, after.prestige);
+    diffNumeric(out, 'piety', before.piety, after.piety);
+    diffNumeric(out, 'commonVoice', before.commonVoice, after.commonVoice);
+    diffNumeric(out, 'warService', before.warService, after.warService);
+    diffNumeric(out, 'health', before.health, after.health, {
+      lethal:after.health <= 0
+    });
+    const skillIds = {};
+    for (const beforeSkill in before.skills) skillIds[beforeSkill] = true;
+    for (const afterSkill in after.skills) skillIds[afterSkill] = true;
+    for (const skillId in skillIds) diffNumeric(out, 'skill',
+      Number(before.skills[skillId]) || 0, Number(after.skills[skillId]) || 0,
+      { id:skillId });
+    const addedTraits = listDifference(after.traits, before.traits);
+    const removedTraits = listDifference(before.traits, after.traits);
+    for (let traitIndex = 0; traitIndex < addedTraits.length; traitIndex++) {
+      out.push(impact('trait', { action:'add', id:addedTraits[traitIndex] }));
+    }
+    for (let removedTraitIndex = 0; removedTraitIndex < removedTraits.length;
+         removedTraitIndex++) {
+      out.push(impact('trait', { action:'remove', id:removedTraits[removedTraitIndex] }));
+    }
+    const progressTraits = {};
+    for (const beforeProgressTrait in before.traitProgress) {
+      progressTraits[beforeProgressTrait] = true;
+    }
+    for (const afterProgressTrait in after.traitProgress) {
+      progressTraits[afterProgressTrait] = true;
+    }
+    for (const progressTrait in progressTraits) diffNumeric(out, 'traitProgress',
+      Number(before.traitProgress[progressTrait]) || 0,
+      Number(after.traitProgress[progressTrait]) || 0,
+      { id:progressTrait });
+    const addedAilments = listDifference(after.ailments, before.ailments);
+    const removedAilments = listDifference(before.ailments, after.ailments);
+    for (let ailmentIndex = 0; ailmentIndex < addedAilments.length; ailmentIndex++) {
+      out.push(impact('ailment', { action:'add', id:addedAilments[ailmentIndex] }));
+    }
+    for (let removedAilmentIndex = 0; removedAilmentIndex < removedAilments.length;
+         removedAilmentIndex++) {
+      out.push(impact('ailment', { action:'remove', id:removedAilments[removedAilmentIndex] }));
+    }
+    const addedHoldings = listDifference(after.holdings, before.holdings);
+    const removedHoldings = listDifference(before.holdings, after.holdings);
+    for (let holdingIndex = 0; holdingIndex < addedHoldings.length; holdingIndex++) {
+      out.push(impact('holding', { action:'add', id:addedHoldings[holdingIndex] }));
+    }
+    for (let lostHoldingIndex = 0; lostHoldingIndex < removedHoldings.length;
+         lostHoldingIndex++) {
+      out.push(impact('holding', { action:'remove', id:removedHoldings[lostHoldingIndex] }));
+    }
+    const addedItems = listDifference(after.items, before.items);
+    const removedItems = listDifference(before.items, after.items);
+    for (let itemIndex = 0; itemIndex < addedItems.length; itemIndex++) {
+      const resolved = FB.resolveItem ? FB.resolveItem(state, addedItems[itemIndex]) : null;
+      out.push(impact('item', {
+        action:'add', ref:addedItems[itemIndex],
+        defId:resolved ? resolved.defId : addedItems[itemIndex]
+      }));
+    }
+    for (let lostItemIndex = 0; lostItemIndex < removedItems.length; lostItemIndex++) {
+      out.push(impact('item', {
+        action:'remove', ref:removedItems[lostItemIndex],
+        defId:before.itemDefs[removedItems[lostItemIndex]]
+      }));
+    }
+    const addedProvinces = listDifference(after.provinces, before.provinces);
+    const removedProvinces = listDifference(before.provinces, after.provinces);
+    for (let provinceIndex = 0; provinceIndex < addedProvinces.length; provinceIndex++) {
+      out.push(impact('land', { action:'gain', pid:addedProvinces[provinceIndex] }));
+    }
+    for (let lostProvinceIndex = 0; lostProvinceIndex < removedProvinces.length;
+         lostProvinceIndex++) {
+      out.push(impact('land', { action:'lose', pid:removedProvinces[lostProvinceIndex] }));
+    }
+    diffNumeric(out, 'landPlot', before.landPlots, after.landPlots);
+    if (before.tier !== after.tier) out.push(impact('rank', {
+      action:'changed', before:before.tier, after:after.tier, permanent:true
+    }));
+    if (before.liege !== after.liege) out.push(impact('rank', {
+      action:'liege_changed', before:before.liege, after:after.liege,
+      permanent:true
+    }));
+    if (before.profession !== after.profession) out.push(impact('profession', {
+      action:'changed', before:before.profession, after:after.profession
+    }));
+    if (before.focus !== after.focus) out.push(impact('focus', {
+      before:before.focus, after:after.focus
+    }));
+    if (before.provinceId !== after.provinceId) out.push(impact('home', {
+      action:'changed', before:before.provinceId, after:after.provinceId,
+      permanent:true
+    }));
+    if (before.religion !== after.religion) out.push(impact('faith', {
+      action:'changed', before:before.religion, after:after.religion,
+      permanent:true
+    }));
+    if (before.spouseId !== after.spouseId) out.push(impact('relationship', {
+      action:'spouse_changed', before:before.spouseId, after:after.spouseId,
+      permanent:true
+    }));
+    if (before.courtingId !== after.courtingId) out.push(impact('relationship', {
+      action:'courtship_changed', before:before.courtingId, after:after.courtingId
+    }));
+    if (before.namedHeirId !== after.namedHeirId) out.push(impact('relationship', {
+      action:'heir', before:before.namedHeirId, after:after.namedHeirId,
+      permanent:true
+    }));
+    if (before.rivalId !== after.rivalId) out.push(impact('relationship', {
+      action:'rivalry', before:before.rivalId, after:after.rivalId
+    }));
+    if (before.rivalHeat !== null && after.rivalHeat !== null) {
+      diffNumeric(out, 'rivalHeat', before.rivalHeat, after.rivalHeat);
+    }
+    const opinionIds = {};
+    for (const beforeOpinionId in before.opinions) opinionIds[beforeOpinionId] = true;
+    for (const afterOpinionId in after.opinions) opinionIds[afterOpinionId] = true;
+    for (const opinionId in opinionIds) diffNumeric(out, 'standing',
+      Number(before.opinions[opinionId]) || 0,
+      Number(after.opinions[opinionId]) || 0,
+      { targetKind:'character', targetId:opinionId });
+    diffNumeric(out, 'standing', before.liegeStanding, after.liegeStanding,
+      { targetKind:'liege' });
+    const realmIds = {};
+    for (const beforeRealmId in before.realmStanding) realmIds[beforeRealmId] = true;
+    for (const afterRealmId in after.realmStanding) realmIds[afterRealmId] = true;
+    for (const realmId in realmIds) diffNumeric(out, 'standing',
+      Number(before.realmStanding[realmId]) || 0,
+      Number(after.realmStanding[realmId]) || 0,
+      { targetKind:'realm', targetId:realmId });
+    const addedModifiers = listDifference(after.modifiers, before.modifiers);
+    const removedModifiers = listDifference(before.modifiers, after.modifiers);
+    function modifierFromKey(value, action) {
+      const fields = value.split('|');
+      return impact('modifier', {
+        action:action, scope:fields[0], pid:fields[1] || null,
+        id:fields[2], endTurn:fields[3] === '' ? null : Number(fields[3])
+      });
+    }
+    for (let modifierIndex = 0; modifierIndex < addedModifiers.length; modifierIndex++) {
+      out.push(modifierFromKey(addedModifiers[modifierIndex], 'add'));
+    }
+    for (let removedModifierIndex = 0; removedModifierIndex < removedModifiers.length;
+         removedModifierIndex++) {
+      out.push(modifierFromKey(removedModifiers[removedModifierIndex], 'remove'));
+    }
+    const queued = after.queue.slice(before.queue.length);
+    for (let queueIndex = 0; queueIndex < queued.length; queueIndex++) {
+      out.push(impact('queue', { eventId:queued[queueIndex] }));
+    }
+    const newCharacters = listDifference(after.characters, before.characters);
+    for (let charIndex = 0; charIndex < newCharacters.length; charIndex++) {
+      out.push(impact('relationship', {
+        action:'character_added', targetId:newCharacters[charIndex]
+      }));
+    }
+    for (const deathCharId in after.deadCharacters) {
+      if (!before.deadCharacters[deathCharId] && after.deadCharacters[deathCharId]) {
+        out.push(impact('death', {
+          targetKind:'character', targetId:deathCharId,
+          lethal:true, permanent:true, resolved:true
+        }));
+      }
+    }
+    for (const devPid in after.dev) {
+      if (before.dev[devPid] !== after.dev[devPid]) diffNumeric(out, 'development',
+        Number(before.dev[devPid]) || 0, Number(after.dev[devPid]) || 0,
+        { pid:devPid });
+    }
+    if (before.pacts !== after.pacts || before.alliances !== after.alliances) {
+      out.push(impact('system', { system:'diplomacy', resolved:true }));
+    }
+    if (before.flags.join('|') !== after.flags.join('|')) {
+      out.push(impact('system', {
+        system:'decision', permanent:true, resolved:true
+      }));
+    }
+    if (before.warStrength !== after.warStrength) diffNumeric(out, 'warCondition',
+      Number(before.warStrength) || 0, Number(after.warStrength) || 0);
+    if (before.warSiege !== after.warSiege) diffNumeric(out, 'warSiege',
+      Number(before.warSiege) || 0, Number(after.warSiege) || 0);
+    if (before.hostMen !== after.hostMen && before.hostMen !== null && after.hostMen !== null) {
+      diffNumeric(out, 'hostMen', before.hostMen, after.hostMen);
+    }
+    if (before.hostSize !== after.hostSize && before.hostSize !== null && after.hostSize !== null) {
+      diffNumeric(out, 'hostSize', before.hostSize, after.hostSize);
+    }
+    diffNumeric(out, 'investment', before.investments, after.investments);
+    diffNumeric(out, 'privilege', before.privileges, after.privileges);
+    return out;
+  }
+
+  function impactIdentity(record) {
+    if (typeof record.amount !== 'number') return null;
+    return record.type + '|' + (record.id || '') + '|' +
+      (record.targetKind || '') + '|' + (record.targetId || '') + '|' +
+      (record.pid || '');
+  }
+
+  FB.mergeEventImpacts = function (ledgers) {
+    const out = [];
+    const positions = {};
+    ledgers = ledgers || [];
+    for (let ledgerIndex = 0; ledgerIndex < ledgers.length; ledgerIndex++) {
+      const ledger = ledgers[ledgerIndex] || [];
+      for (let recordIndex = 0; recordIndex < ledger.length; recordIndex++) {
+        const record = ledger[recordIndex];
+        if (record.internal) continue;
+        const identity = impactIdentity(record);
+        if (identity && positions[identity] !== undefined) {
+          const existing = out[positions[identity]];
+          existing.amount += record.amount;
+          existing.after = record.after;
+        } else {
+          const copy = {};
+          for (const key in record) copy[key] = record[key];
+          if (identity) positions[identity] = out.length;
+          out.push(copy);
+        }
+      }
+    }
+    return out.filter(function (record) {
+      return typeof record.amount !== 'number' || !!record.amount;
+    });
+  };
+
+  function numberText(value) {
+    const rounded = Math.round(Number(value) * 10) / 10;
+    return (rounded > 0 ? '+' : '') + String(rounded);
+  }
+
+  function impactTargetName(state, record) {
+    if (record.targetKind === 'liege') {
+      const liege = state.realms && state.realms[state.player.liege];
+      return liege ? liege.name : FB.T('your liege');
+    }
+    if (record.targetKind === 'realm') {
+      const realm = state.realms && state.realms[record.targetId];
+      return realm ? realm.name : FB.T('that realm');
+    }
+    if (record.targetKind === 'papal') return FB.T('the religious head');
+    if (record.targetKind === 'role') {
+      const c = FB.getRole(state, record.role, false);
+      return c ? c.name : FB.T('that person');
+    }
+    if (record.targetId && state.chars && state.chars[record.targetId]) {
+      return state.chars[record.targetId].name;
+    }
+    return FB.T('that person');
+  }
+
+  function dataName(state, kind, id, table) {
+    const def = table && table[id];
+    return def ? FB.dataText(state, state.player.charId, kind, id, def, 'name', {}) : id;
+  }
+
+  function eventSignedPercent(value) {
+    const rounded = Math.round(Number(value) * 100);
+    return (rounded > 0 ? '+' : '') + rounded;
+  }
+
+  /* Modifier sheets elsewhere show exact net bonuses. Before an event choice,
+     only adverse terms are numeric; favorable terms are named without giving
+     away their magnitude. Direction differs by field (lower construction cost
+     is good, for example), so sign alone is not sufficient. */
+  function eventModifierPreviewText(def) {
+    const fx = def && def.fx || {};
+    const benefits = [], costs = [];
+    function note(value, positiveIsCost, benefit, cost) {
+      if (!value) return;
+      const adverse = positiveIsCost ? value > 0 : value < 0;
+      if (adverse) costs.push(cost(value));
+      else benefits.push(benefit);
+    }
+    note(fx.tax, false, FB.T('county tax'), function (value) {
+      return FB.T('{amount}% county tax', { amount:eventSignedPercent(value) });
+    });
+    note(fx.levy, false, FB.T('county levy'), function (value) {
+      return FB.T('{amount}% county levy', { amount:eventSignedPercent(value) });
+    });
+    note(fx.buildingCost, true, FB.T('construction costs'), function (value) {
+      return FB.T('{amount}% construction cost', { amount:eventSignedPercent(value) });
+    });
+    note(fx.commonVoice, false, FB.T('Common Voice'), function (value) {
+      return FB.T('{amount} Common Voice', {
+        amount:(value > 0 ? '+' : '') + value
+      });
+    });
+    note(fx.famine, true, FB.T('famine resilience'), function (value) {
+      return FB.T('{amount}% famine harm', { amount:eventSignedPercent(value) });
+    });
+    note(fx.unrest, true, FB.T('unrest resilience'), function (value) {
+      return FB.T('{amount}% unrest harm', { amount:eventSignedPercent(value) });
+    });
+    note(fx.supplyUse, true, FB.T('campaign supply use'), function (value) {
+      return FB.T('{amount}% campaign supply use', { amount:eventSignedPercent(value) });
+    });
+    note(fx.contribution, false, FB.T('campaign contribution'), function (value) {
+      return FB.T('{amount}% campaign contribution', { amount:eventSignedPercent(value) });
+    });
+    note(fx.withdrawalPenalty, true, FB.T('withdrawal terms'), function (value) {
+      return FB.T('{amount}% withdrawal penalties', { amount:eventSignedPercent(value) });
+    });
+    note(fx.marchSpeed, false, FB.T('march speed'), function (value) {
+      return FB.T('{amount}% march speed', { amount:eventSignedPercent(value) });
+    });
+    note(fx.battleOdds, false, FB.T('battle power'), function (value) {
+      return FB.T('{amount}% battle power', { amount:eventSignedPercent(value) });
+    });
+    note(fx.desertion, true, FB.T('desertion control'), function (value) {
+      return FB.T('{amount}% desertion per season', {
+        amount:Math.round(value * 100)
+      });
+    });
+    const parts = [];
+    if (benefits.length) parts.push(FB.T('Benefits: {effects}', {
+      effects:benefits.join(', ')
+    }));
+    for (let i = 0; i < costs.length; i++) parts.push(costs[i]);
+    return parts.join(' · ');
+  }
+
+  FB.eventImpactText = function (state, record, mode) {
+    mode = mode || 'preview';
+    const resolved = mode === 'resolved';
+    const amount = Number(record.amount) || 0;
+    const concealedGain = !resolved && (record.reward || amount > 0);
+    if (record.type === 'chance') {
+      if (record.band === 'very_likely') return FB.T('Very likely');
+      if (record.band === 'likely') return FB.T('Likely');
+      if (record.band === 'even') return FB.T('Even');
+      if (record.band === 'risky') return FB.T('Risky');
+      return FB.T('Long shot');
+    }
+    if (record.type === 'none') return FB.T('No direct mechanical change');
+    if (record.type === 'gold') {
+      if (concealedGain) return FB.T('Money may increase');
+      const moneyChange = (amount > 0 ? '+' : '−') + FB.money(Math.abs(amount));
+      return FB.T('Money {change}', { change:moneyChange });
+    }
+    if (record.type === 'prestige') {
+      if (concealedGain) return FB.T('Prestige may increase');
+      return FB.T('Prestige {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'piety') {
+      if (concealedGain) return FB.T('Piety may increase');
+      return FB.T('Piety {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'health') {
+      if (record.lethal) return resolved
+        ? FB.T('Health {change} (lethal)', { change:numberText(amount) })
+        : FB.T('Lethal risk: Health {change}', { change:numberText(amount) });
+      if (concealedGain) return FB.T('Health may improve');
+      return FB.T('Health {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'commonVoice') {
+      if (concealedGain) return FB.T('Common Voice may improve');
+      return FB.T('Common Voice {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'warService') {
+      if (concealedGain) return FB.T('War service may increase');
+      return FB.T('War service {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'research') {
+      if (concealedGain) return FB.T('Research may advance');
+      return FB.T('Research {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'standing') {
+      const target = impactTargetName(state, record);
+      if (concealedGain) return FB.T('Standing with {target} may improve', { target:target });
+      return FB.T('Standing with {target} {change}', {
+        target:target, change:numberText(amount)
+      });
+    }
+    if (record.type === 'skill') {
+      const skill = FB.skillName(record.id);
+      if (record.targetKind === 'child' && !resolved) {
+        return FB.T('A child may improve {skill}', { skill:skill });
+      }
+      if (concealedGain) return FB.T('{skill} may improve', { skill:skill });
+      return FB.T('{skill} {change}', { skill:skill, change:numberText(amount) });
+    }
+    if (record.type === 'trait') {
+      const trait = dataName(state, 'trait', record.id, FBDATA.traits);
+      if (!resolved && record.action === 'add' && record.reward) return FB.T('May gain a trait');
+      return record.action === 'remove'
+        ? FB.T('Lose trait: {trait}', { trait:trait })
+        : FB.T('Gain trait: {trait}', { trait:trait });
+    }
+    if (record.type === 'traitProgress') {
+      if (resolved) return FB.T('{trait} progress {change}', {
+        trait:dataName(state, 'trait', record.id, FBDATA.traits),
+        change:numberText(amount)
+      });
+      return FB.T('Progress toward a trait');
+    }
+    if (record.type === 'ailment') {
+      const ailment = dataName(state, 'ailment', record.id, FBDATA.ailments);
+      return record.action === 'remove'
+        ? FB.T('Recover from {ailment}', { ailment:ailment })
+        : FB.T('Suffer {ailment}', { ailment:ailment });
+    }
+    if (record.type === 'holding') {
+      if (!resolved && record.variable && record.action === 'remove') {
+        return FB.T('Lose a household holding');
+      }
+      const holding = dataName(state, 'holding', record.id, FBDATA.holdings);
+      if (!resolved && record.action === 'add') return FB.T('May gain household property');
+      return record.action === 'remove'
+        ? FB.T('Lose holding: {holding}', { holding:holding })
+        : FB.T('Gain holding: {holding}', { holding:holding });
+    }
+    if (record.type === 'item') {
+      const item = dataName(state, 'item', record.defId || record.ref, FBDATA.items);
+      if (!resolved && record.action === 'add') return FB.T('May gain an item');
+      return record.action === 'remove'
+        ? FB.T('Lose item: {item}', { item:item })
+        : FB.T('Gain item: {item}', { item:item });
+    }
+    if (record.type === 'modifier') {
+      const def = FBDATA.modifiers && FBDATA.modifiers[record.id];
+      const name = def ? FB.dataText(state, state.player.charId,
+        'modifier', record.id, def, 'name', {}) : record.id;
+      const modifierProvince = record.pid && FB.world && FB.world.byId[record.pid];
+      if (record.action === 'remove') {
+        if (def && def.scope === 'county' && record.pid) {
+          return FB.T('End modifier: {modifier} in {province}', {
+            modifier:name,
+            province:modifierProvince ? modifierProvince.name : record.pid
+          });
+        }
+        return FB.T('End modifier: {modifier}', { modifier:name });
+      }
+      const duration = def && def.days !== undefined
+        ? FB.T('{days} days', { days:def.days }) : FB.T('No fixed end');
+      const upkeep = def && def.upkeep && def.upkeep.gold
+        ? FB.T('{money:amount} each season', { amount:def.upkeep.gold })
+        : FB.T('No seasonal upkeep');
+      const effectText = !resolved ? eventModifierPreviewText(def) :
+        (FB.ui && FB.ui._shared && FB.ui._shared.modifierEffectText
+          ? FB.ui._shared.modifierEffectText(state, record.id) : '');
+      const transfer = def && def.scope === 'county'
+        ? FB.T('stays with the county after transfer') : '';
+      const modifierParams = {
+        modifier:name, duration:duration, upkeep:upkeep,
+        effects:effectText ? ' · ' + effectText : '',
+        transfer:transfer ? '; ' + transfer : '',
+        province:modifierProvince ? modifierProvince.name : record.pid
+      };
+      return def && def.scope === 'county' && record.pid
+        ? FB.T('{modifier} in {province} — {duration}; {upkeep}{effects}{transfer}',
+          modifierParams)
+        : FB.T('{modifier} — {duration}; {upkeep}{effects}{transfer}', modifierParams);
+    }
+    if (record.type === 'rank') {
+      if (record.action === 'independence') return FB.T('Permanent: become independent');
+      if (record.action === 'submission') return FB.T('Permanent: submit to a new liege');
+      if (resolved && record.action === 'liege_changed') {
+        const liege = record.after && state.realms && state.realms[record.after];
+        return record.after
+          ? FB.T('Liege becomes {realm}', {
+            realm:liege ? liege.name : record.after
+          })
+          : FB.T('Become independent');
+      }
+      if (resolved && record.after !== undefined) return FB.T('Rank becomes {rank}', {
+        rank:FB.titleWordFor(state, record.after)
+      });
+      return FB.T('Permanent rank change');
+    }
+    if (record.type === 'profession') {
+      const professionId = resolved ? record.after : record.id;
+      const professionDef = professionId && FBDATA.careers &&
+        FBDATA.careers[professionId];
+      const profession = professionDef
+        ? FB.dataText(state, state.player.charId, 'career', professionId,
+          professionDef, 'name', {})
+        : professionId;
+      if (profession) return FB.T('Profession becomes {profession}', {
+        profession:profession
+      });
+      return FB.T('Permanent profession change');
+    }
+    if (record.type === 'focus') {
+      const focusId = resolved ? record.after : record.id;
+      let focus = null;
+      for (let focusIndex = 0; focusIndex < (FB.focuses || []).length; focusIndex++) {
+        if (FB.focuses[focusIndex].id === focusId) {
+          const focusDef = FB.focuses[focusIndex];
+          focus = FB.dataText(state, state.player.charId, 'focus', focusId,
+            focusDef, 'label', {});
+          break;
+        }
+      }
+      return focus ? FB.T('Daily focus becomes {focus}', { focus:focus })
+        : FB.T('Daily focus changes');
+    }
+    if (record.type === 'development') {
+      if (concealedGain) return FB.T('County development may rise');
+      return FB.T('County development {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'landPlot') {
+      return FB.T('Land plots {change}', { change:numberText(amount) });
+    }
+    if (record.type === 'land') {
+      if (!resolved && record.variable) return FB.T('Permanent: lose land');
+      const province = FB.world.byId[record.pid];
+      return record.action === 'lose'
+        ? FB.T('Lose county: {province}', { province:province ? province.name : record.pid })
+        : FB.T('Gain county: {province}', { province:province ? province.name : record.pid });
+    }
+    if (record.type === 'home') return record.action === 'settle'
+      ? FB.T('Permanent: settle the household here')
+      : FB.T('Permanent household move');
+    if (record.type === 'relationship') {
+      if (record.action === 'marry' || record.action === 'spouse_changed') {
+        return FB.T('Permanent: marriage');
+      }
+      if (record.action === 'adopt' || record.action === 'character_added') {
+        return FB.T('A child joins the family');
+      }
+      if (record.action === 'heir') return FB.T('Permanent: choose an heir');
+      if (record.action === 'marriage_end') return FB.T('Permanent: marriage ends');
+      if (record.action === 'courtship_end' || record.action === 'courtship_changed') {
+        return FB.T('Courtship changes');
+      }
+      if (record.action === 'rivalry') return FB.T('Rivalry changes');
+      return FB.T('Relationship changes');
+    }
+    if (record.type === 'death') {
+      if (!resolved && record.targetKind === 'child') return FB.T('Lethal risk to a child');
+      if (!resolved && record.targetKind === 'player') return FB.T('Lethal risk to you');
+      const target = impactTargetName(state, record);
+      if (resolved) return FB.T('{target} died', { target:target });
+      return FB.T('Lethal risk to {target}', { target:target });
+    }
+    if (record.type === 'queue') return record.possible
+      ? FB.T('A further consequence may follow')
+      : FB.T('A further consequence will follow');
+    if (record.type === 'travel') return FB.T('The journey home begins');
+    if (record.type === 'faith') {
+      if (record.action === 'found') return FB.T('Permanent: found a new faith');
+      if (record.action === 'convert' || record.action === 'changed') {
+        return FB.T('Permanent faith change');
+      }
+      return FB.T('Faith relations change');
+    }
+    if (record.type === 'price') {
+      if (!resolved && record.reward) return FB.T('Prices may ease');
+      return FB.T('Price pressure {change} for {years} years', {
+        change:numberText(amount), years:record.years
+      });
+    }
+    if (record.type === 'rivalHeat') return FB.T('Rivalry heat {change}', {
+      change:numberText(amount)
+    });
+    if (record.type === 'warCondition') return FB.T('Campaign condition {change}', {
+      change:numberText(amount)
+    });
+    if (record.type === 'warSiege') return FB.T('Siege progress {change}', {
+      change:numberText(amount)
+    });
+    if (record.type === 'hostMen') return FB.T('Live host {change} troops', {
+      change:numberText(amount)
+    });
+    if (record.type === 'hostSize') return FB.T('Reinforcement ceiling {change}', {
+      change:numberText(amount)
+    });
+    if (record.type === 'investment') return FB.T('Trade commitments {change}', {
+      change:numberText(amount)
+    });
+    if (record.type === 'privilege') return FB.T('Privileges {change}', {
+      change:numberText(amount)
+    });
+    if (record.type === 'worldNews') return FB.T('World news follows');
+    if (record.type === 'system') {
+      if (record.system === 'war') return record.action === 'ended'
+        ? FB.T('The current war ends')
+        : FB.T('Campaign or host conditions change');
+      if (record.system === 'diplomacy') return FB.T('A diplomatic relationship changes');
+      if (record.system === 'plot') return FB.T('The active plot changes');
+      if (record.system === 'politics') return FB.T('Political terms change');
+      if (record.system === 'property') return record.permanent
+        ? FB.T('Permanent land, property, or station change')
+        : FB.T('Property or contract terms change');
+      if (record.system === 'relationship') return record.permanent
+        ? FB.T('Permanent family or relationship change')
+        : FB.T('A relationship changes');
+      if (record.system === 'development') return FB.T('Training or travel progress changes');
+      if (record.system === 'faith') return FB.T('Religious standing or office changes');
+      if (record.system === 'intrigue') return FB.T('The scheme or sentence changes');
+      if (record.system === 'item') return FB.T('An item or market offer changes');
+      if (record.system === 'harvest') return FB.T('Harvest preparations end');
+      if (record.system === 'decision') return record.permanent
+        ? FB.T('Permanent story decision') : FB.T('Story state changes');
+      return record.unknown
+        ? FB.T('Story-specific consequence')
+        : FB.T('The story advances');
+    }
+    return FB.T('Story-specific consequence');
+  };
+
   /* ---------- effects ---------- */
   function realmWarEnemy(state, rid) {
     if (!rid || !state.realms) return null;
@@ -3667,9 +4899,16 @@ window.FB = window.FB || {};
   }
 
   FB.applyEffects = function (state, fx, ctx, ev) {
-    if (!fx) return;
+    if (!fx) return [];
+    ctx = ctx || {};
+    const beforeImpact = impactSnapshot(state, ctx);
     const sourceFx = fx;
     if (FB.scaleEventEffects) fx = FB.scaleEventEffects(state, fx, ctx, ev);
+    const customAdapter = fx.custom && FB.eventImpactAdapters[fx.custom];
+    const customBefore = customAdapter && typeof customAdapter.capture === 'function'
+      ? customAdapter.capture(state, ctx, ev, fx) : null;
+    let appliedResearch = 0;
+    let appliedPricePressure = false;
     const p = state.player;
     const me = state.chars[p.charId];
     /* Freeze semantic context before a custom outcome can end a war, move
@@ -3677,8 +4916,6 @@ window.FB = window.FB || {};
        It is committed below only when this resolution actually kills. */
     const lethalProvenance = fx.deathProvenance
       ? deathProvenance(state, fx.deathProvenance, ctx, ev) : null;
-    ctx = ctx || {};
-
     if (fx.marriageEnd) {
       const doctrine = FB.marriageDoctrine(me.religion, state);
       const ending = doctrine.end || {};
@@ -3712,7 +4949,8 @@ window.FB = window.FB || {};
       p.gold = Math.max(0, p.gold + g);
     }
     if (fx.pricePressure && FB.addPricePressure) {
-      FB.addPricePressure(state, fx.pricePressure, fx.pricePressureYears || 1,
+      appliedPricePressure = FB.addPricePressure(state, fx.pricePressure,
+        fx.pricePressureYears || 1,
         fx.pricePressureSource || 'event');
     }
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
@@ -3842,7 +5080,7 @@ window.FB = window.FB || {};
       const pid = (p.provs && p.provs[0]) || p.provinceId;
       state.dev[pid] = FB.clamp((state.dev[pid] || 1) + fx.devUp, 1, FB.devCap(state, pid));
     }
-    if (fx.research) FB.addResearch(state, fx.research);
+    if (fx.research) appliedResearch = FB.addResearch(state, fx.research) || 0;
     if (fx.addModifier && FB.addModifier) {
       const spec = typeof fx.addModifier === 'string'
         ? { id:fx.addModifier } : fx.addModifier;
@@ -3987,7 +5225,8 @@ window.FB = window.FB || {};
     if (fx.queue) FB.queueEvent(state, fx.queue, ctx);
     if (fx.worldNews) FB.randomWorldNews(state);
     if (fx.log) FB.news(state, FB.eventLogMessage(state, sourceFx, ctx));
-    if (fx.custom && FB.fns[fx.custom]) FB.fns[fx.custom](state, ctx, ev);
+    const customApplied = !!(fx.custom && FB.fns[fx.custom]);
+    if (customApplied) FB.fns[fx.custom](state, ctx, ev);
     if (FB.travelValidate) FB.travelValidate(state);
     /* Lethal effects may freeze where and against whom the blow fell. The
        marker is short-lived unless this exact resolution proves mortal. */
@@ -3997,7 +5236,130 @@ window.FB = window.FB || {};
       delete p.pendingDeathProvenance;
     }
 
+    const afterImpact = impactSnapshot(state, ctx);
+    const ledger = diffImpactSnapshots(state, beforeImpact, afterImpact);
+    if (appliedResearch) ledger.push(impact('research', {
+      amount:appliedResearch, resolved:true
+    }));
+    if (appliedPricePressure) ledger.push(impact('price', {
+      amount:fx.pricePressure,
+      years:fx.pricePressureYears || 1,
+      resolved:true
+    }));
+    if (fx.worldNews) ledger.push(impact('worldNews', { resolved:true }));
+    if (fx.travelReturn) ledger.push(impact('travel', {
+      action:'return', resolved:true
+    }));
+    if (fx.faithRelation) ledger.push(impact('faith', {
+      action:'relation', status:fx.faithRelation.status, resolved:true
+    }));
+    if (fx.foundFaith && ctx.faithId) ledger.push(impact('faith', {
+      action:'found', id:ctx.faithId, permanent:true, resolved:true
+    }));
+    if (customApplied) {
+      const semantic = customAdapter && typeof customAdapter.report === 'function'
+        ? customAdapter.report(state, customBefore, ctx, ev, fx)
+        : [impact('system', {
+          system:'story', customId:fx.custom, unknown:true, resolved:true
+        })];
+      for (let semanticIndex = 0; semanticIndex < semantic.length; semanticIndex++) {
+        ledger.push(semantic[semanticIndex]);
+      }
+    }
     if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+    return ledger;
+  };
+
+  /* One roll, one effect order, one durable receipt. Manual event buttons and
+     autoresolve both call this function; callers only decide how to present
+     the returned receipt and when to advance to the next queued dialog. */
+  FB.resolveEventOption = function (state, ev, option, ctx, meta) {
+    option = option || { label:'So it goes.', effects:{} };
+    ctx = ctx || {};
+    meta = meta || {};
+    const optionIndex = ev.options ? ev.options.indexOf(option) : -1;
+    const ledgers = [];
+    let succeeded = null;
+    let branch = null;
+    let branchName = null;
+    if (FB.suppressNewsToasts) FB.suppressNewsToasts(true);
+    const oldUiSuppression = FB.ui && FB.ui.suppressEventEffectToasts;
+    if (FB.ui) FB.ui.suppressEventEffectToasts = true;
+    try {
+      if (option.chance !== undefined) {
+        const probability = typeof option.chance === 'string'
+          ? FB.namedChance(state, option.chance) : Number(option.chance);
+        succeeded = FB.chance(probability);
+        branchName = succeeded ? 'success' : 'failure';
+        branch = succeeded ? option.success : option.failure;
+        if (option.chance === 'battle' || option.chance === 'war_battle') {
+          delete state.player.flags.blessed_war;
+        }
+      }
+      if (option.effects) ledgers.push(FB.applyEffects(state, option.effects, ctx, ev));
+      if (branch && branch.effects) {
+        ledgers.push(FB.applyEffects(state, branch.effects, ctx, ev));
+      }
+    } finally {
+      if (FB.ui) FB.ui.suppressEventEffectToasts = oldUiSuppression;
+      if (FB.suppressNewsToasts) FB.suppressNewsToasts(false);
+    }
+
+    let outcomeMessage = null;
+    if (branch) {
+      if (branch.text && optionIndex >= 0) {
+        const outcomePath = 'options.' + optionIndex + '.' + branchName + '.text';
+        FB.prepareEventPath(state, ev, outcomePath, ctx);
+        outcomeMessage = FB.eventMessage(state, state.player.charId,
+          ev, outcomePath, ctx);
+      } else if (branch.text) {
+        outcomeMessage = FB.msg(
+          succeeded ? 'fx.event.autoresolve.success' : 'fx.event.autoresolve.failure',
+          succeeded ? 'It goes well.' : 'It goes poorly.', {});
+      } else {
+        outcomeMessage = FB.msg(
+          succeeded ? 'fx.event.autoresolve.success' : 'fx.event.autoresolve.failure',
+          succeeded ? 'It goes well.' : 'It goes poorly.', {});
+      }
+    }
+    FB.prepareEventPath(state, ev, 'title', ctx);
+    const titleMessage = FB.eventMessage(state, state.player.charId, ev, 'title', ctx);
+    let optionMessage;
+    if (optionIndex >= 0) {
+      const optionPath = 'options.' + optionIndex + '.label';
+      FB.prepareEventPath(state, ev, optionPath, ctx);
+      optionMessage = FB.eventMessage(state, state.player.charId, ev, optionPath, ctx);
+    } else {
+      optionMessage = FB.msg('fx.event.autoresolve.default_choice', 'So it goes.', {});
+    }
+    const receipt = {
+      schema:1,
+      eventId:ev.id,
+      optionIndex:optionIndex,
+      result:succeeded === null ? 'none' : (succeeded ? 'success' : 'failure'),
+      automated:!!meta.automated,
+      title:titleMessage,
+      option:optionMessage,
+      outcome:outcomeMessage,
+      impacts:FB.mergeEventImpacts(ledgers)
+    };
+    /* Reuse the established autoresolve descriptor as the ordinary-message
+       fallback. Older builds know this key and ignore the additive metadata. */
+    const fallback = FB.msg('news.event.autoresolved', {
+      forms: {
+        select:'value', param:'result', cases: {
+          outcome:'⚙ {title}: {choice} — {outcome}',
+          other:'⚙ {title}: {choice}'
+        }
+      }
+    }, {
+      result:outcomeMessage ? 'outcome' : 'other',
+      title:FB.messageParam(titleMessage),
+      choice:FB.messageParam(optionMessage),
+      outcome:outcomeMessage ? FB.messageParam(outcomeMessage) : ''
+    });
+    FB.news(state, fallback, { kind:'choice', receipt:receipt, toast:false });
+    return receipt;
   };
 
   FB.doMarry = function (state, options) {

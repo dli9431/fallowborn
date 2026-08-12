@@ -628,8 +628,7 @@ alongside their normal triggers and serve both pools.
 
 `label`, optional `desc` (a short hint shown beneath the label in the event dialog —
 every option should carry one: vague flavor pointing at the thrust of the choice,
-normally not exact numbers; confirmations and contract offers such as a monopoly petition
-should disclose their exact costs, odds, and penalties), optional `require` (same syntax
+not a second copy of the mechanics), optional `require` (same syntax
 as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
@@ -637,6 +636,11 @@ liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
 vassal_comply county_petition parliament_vote parliament_redress_vote travel_trade`) with
 `success` / `failure`
 branches (`{text, effects}`), and `effects`.
+The engine appends compact consequence chips and a separate full Details breakdown. It shows
+exact costs, penalties, losses, duration/upkeep, permanent decisions, and lethal risks;
+favorable rewards stay qualitative until the result receipt. Chance values are never shown
+as percentages: they use Very likely / Likely / Even / Risky / Long shot bands. Success and
+failure `text` is outcome narrative and is not revealed before resolution.
 The four `skill_*` formulas start at 30%, add 4% per effective point in that skill,
 and clamp to 10–90%; `skill_ste` also benefits from Fine Tools or a Workshop, while
 `skill_lea` benefits from Letters in the Family and the monk/priest professions.
@@ -829,6 +833,27 @@ war's desertion interval. `war_desert` removes a seeded percentage from the live
 and `war_negotiated_withdrawal` ends the ordinary war. Live losses use the shared fixed
 class allocation and these handlers record whether they changed abstract strength,
 live troops, or both for the campaign-feedback UI.
+
+An option-level custom effect should also register an impact adapter:
+
+```js
+FB.eventImpactAdapters.my_effect = {
+  preview:function (state, ctx, event, effects) {
+    return [{ type:'gold', amount:-5 }];
+  },
+  report:function (state, captured, ctx, event, effects) {
+    return [{ type:'system', system:'property', resolved:true }];
+  }
+};
+```
+
+`preview` must be pure: it cannot mutate state, create roles, emit news, or consume RNG.
+It must expose guaranteed costs and major risks exactly while keeping rewards qualitative.
+`report` runs after the authoritative custom handler and adds semantic results to the
+engine's clamp-aware before/after ledger. An optional `capture(state, ctx, event, effects)`
+may return JSON-safe pre-effect context for `report`. Every core custom option effect has
+an adapter; an unregistered third-party effect remains playable and displays
+**Story-specific consequence** plus its authored `desc`.
 
 Wounds and sicknesses get named even without an explicit `ailment` key: any `health`
 loss of 2 or more adds a random wound from `FBDATA.ailments` (in `data/traits.js`;

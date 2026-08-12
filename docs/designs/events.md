@@ -195,6 +195,32 @@ stable event id plus the active bookmark id. The daily scheduler described in
 [time.md](time.md) makes `season` and `day` optional while preserving Spring day 1
 behavior and flag keys for every existing 867 entry.
 
+## Choice stakes and resolution receipts
+
+Authored option `desc` text remains narrative flavor. `FB.previewEventOption(state, event,
+option, ctx)` derives the mechanical layer from the live effect objects without writing
+state, creating roles, or consuming RNG. Compact chips appear on every choice; the complete
+view separates **Guaranteed**, **If successful**, and **If failed** effects. Guaranteed
+costs, penalties, property losses, upkeep/duration, permanent decisions, and lethal risks
+are exact. Favorable rewards remain qualitative until resolution. Numeric and named chance
+formulas render only as Very likely (80%+), Likely (60–79%), Even (40–59%), Risky
+(20–39%), or Long shot (under 20%); branch narrative is never shown early.
+
+`FB.resolveEventOption` is the single manual/autoresolve authority. It rolls once, consumes
+one-shot chance bonuses, applies the top-level effects and then the selected branch in the
+established order, and returns a structured receipt. `FB.applyEffects` remains safe for old
+callers that ignore its return value, but now returns semantic before/after impacts with
+actual clamp-aware deltas. Resolution suppresses transient effect toasts, not their durable
+Chronicle messages, and adds one `kind:"choice"` entry containing the event/option/outcome
+descriptors plus the complete impact ledger.
+
+Declarative effects are formatted by the engine. A custom option effect also registers
+`FB.eventImpactAdapters[customId]` with pure `preview(state, ctx, event, effects)` and
+post-resolution `report(state, captured, ctx, event, effects)` functions; `capture` is an
+optional pre-effect snapshot hook. Core custom effects must have an adapter. Unregistered
+mod effects degrade to **Story-specific consequence** while the authored `desc` remains
+visible, so a third-party story is never blocked by missing presentation metadata.
+
 The event modal shows a character card for the event's `charCard` role and for every
 `{role}` token the event's strings mention (js/ui.js `showEvent`); cards carry the
 character's house arms, home county, and the arms of the realm holding it.
@@ -317,7 +343,8 @@ event definition.
 
 The event modal derives modifier consequences from those ordinary effect objects.
 Before a choice, it states the modifier name, snapshotted county, catalog duration,
-exact supported effects, upkeep, and county-transfer rule. Chance branches label their
+exact adverse effects, qualitative favorable effects, upkeep, and county-transfer rule.
+After resolution the receipt states every supported effect exactly. Chance branches label their
 success and failure consequences separately. Autoresolve scores the same modifier
 objects and applies them through the same interpreter path; presentation adds no
 parallel mutation.

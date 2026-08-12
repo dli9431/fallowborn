@@ -361,7 +361,19 @@ body.travel-picking #timebtns { visibility: hidden; }
   padding: 7px 11px; font-size: 13px; color: #e0d0a8; animation: toastin .25s;
   pointer-events: auto; cursor: pointer;
 }
+.event-receipt-toast {
+  position: fixed; z-index: 85; left: 50%; bottom: 18px;
+  width: min(680px, calc(100vw - 28px)); max-width: none;
+  transform: translateX(-50%); text-align: left; font-family: inherit;
+  box-shadow: 0 6px 24px rgba(0,0,0,.58);
+  animation: eventreceiptin .25s;
+}
+.event-receipt-headline { display: block; margin-bottom: 6px; color: #f0dfb0; }
 @keyframes toastin { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; } }
+@keyframes eventreceiptin {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
 
 #side {
   flex: 0 0 340px; display: flex; flex-direction: column;
@@ -974,6 +986,29 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .op-good { color: #9fc06a; } .op-bad { color: #d07050; } .op-mid { color: #b8a888; }
 .logentry { font-size: 13px; padding: 4px 0; border-bottom: 1px dotted #33291d; }
 .logentry .ldate { color: #a08858; font-size: 11px; }
+.chronicle-filters {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 0 9px; border: 1px solid #66522f; border-radius: 8px;
+  overflow: hidden;
+}
+.chronicle-filters button {
+  min-height: 36px; border: 0; border-right: 1px solid #55452a;
+  background: #211a12; color: #a99878; font: inherit; cursor: pointer;
+}
+.chronicle-filters button:last-child { border-right: 0; }
+.chronicle-filters button.active,
+.chronicle-filters button[aria-pressed="true"] { background: #3a2d1b; color: #e0c060; }
+.choice-entry {
+  margin: 6px 0; padding: 8px 9px; border: 1px solid #4f4028;
+  border-radius: 8px; background: #241d15;
+}
+.choice-receipt-title { color: #e0c060; font-weight: bold; margin: 2px 0 3px; }
+.choice-receipt-option { color: #d8c8a4; }
+.choice-receipt-option > span {
+  color: #938264; font-size: 10px; font-weight: bold;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.choice-receipt-outcome { margin-top: 4px; color: #bfae89; font-style: italic; }
 .progressnote { background: #241d15; border: 1px solid #55452a; border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-bottom: 8px; }
 .warnote { border-color: #8a4030; }
 .tutorial-card .tutorial-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
@@ -1020,6 +1055,42 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 .evopt:hover { border-color: #d8b24a; background: #3d3020; }
 .evopt .odesc { display: block; color: #a08d68; font-size: 12px; margin-top: 2px; }
+.event-choice {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch; gap: 7px; margin-bottom: 8px;
+}
+.event-choice .evopt { margin-bottom: 0; min-width: 0; }
+.event-details-button {
+  min-width: 82px; min-height: 46px; align-self: stretch; margin: 0;
+}
+.event-choice-details {
+  grid-column: 1 / -1; padding: 9px 10px; border: 1px solid #55452a;
+  border-radius: 8px; background: #211a12; color: #c8b995;
+}
+.event-consequence-section + .event-consequence-section { margin-top: 8px; }
+.event-consequence-section > b {
+  display: block; margin-bottom: 4px; color: #c9a24a; font-size: 12px;
+}
+.event-chance-line {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; margin-bottom: 8px; color: #9c8b6b; font-size: 12px;
+}
+.event-impact-chips {
+  display: flex; flex-wrap: wrap; gap: 4px; min-width: 0;
+}
+.event-impact-chips.compact { margin-top: 7px; }
+.event-impact-chips.receipt { margin-top: 2px; }
+.event-impact-chips.chronicle { margin-top: 7px; }
+.event-impact-chip, .event-impact-more {
+  display: inline-flex; align-items: center; max-width: 100%;
+  padding: 2px 6px; border: 1px solid #5e5037; border-radius: 999px;
+  background: #211b14; color: #bcae91; font-size: 11px; line-height: 1.35;
+  white-space: normal; overflow-wrap: anywhere;
+}
+.event-impact-chip.cost { border-color: #8a5b3b; color: #d9a17e; }
+.event-impact-chip.danger { border-color: #a2463b; color: #ef9b8d; }
+.event-impact-chip.gain { border-color: #58703c; color: #abc978; }
+.event-impact-more { color: #a99878; }
 .gm-list button { margin-bottom: 8px; }
 .automation-protection {
   display: block; margin: 8px 0 12px; padding: 9px 10px;

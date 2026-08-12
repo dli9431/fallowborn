@@ -64,6 +64,35 @@ window.FB = window.FB || {};
     }
   }
 
+  function eventFocusable() {
+    const modal = $('eventmodal');
+    if (!modal) return [];
+    const nodes = modal.querySelectorAll(
+      'button:not([disabled]), input:not([disabled]), ' +
+      '[tabindex]:not([tabindex="-1"])');
+    return Array.prototype.filter.call(nodes, function (node) {
+      return !node.hidden && node.getClientRects().length > 0;
+    });
+  }
+
+  function containEventTab(e) {
+    const modal = $('eventmodal');
+    const controls = eventFocusable();
+    if (!controls.length) {
+      e.preventDefault();
+      return;
+    }
+    const first = controls[0], last = controls[controls.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || !modal.contains(active))) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (active === last || !modal.contains(active))) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
   function centerProvince() {
     const M = FB.map;
     if (!M || !M.canvas || !FB.world) return null;
@@ -123,8 +152,9 @@ window.FB = window.FB || {};
 
     /* ---- event modal first: it demands a choice ---- */
     if (eventOpen()) {
-      if (digit) { e.preventDefault(); clickNth('#ev-options .evopt', slot); }
-      return; // Enter/Space/Tab act natively on the focused option
+      if (k === 'Tab') containEventTab(e);
+      else if (digit) { e.preventDefault(); clickNth('#ev-options .evopt', slot); }
+      return; // Enter/Space act natively on the focused control
     }
 
     /* ---- generic dialog (menu, war targets, heirs, saves...) ---- */

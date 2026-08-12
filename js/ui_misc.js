@@ -1575,12 +1575,14 @@ window.FB = window.FB || {};
     if (FB.clearPortraitCache) FB.clearPortraitCache();
     SH.logRenderedTail = null; SH.logRenderedLen = -1;
     SH.logRenderedHeader = ''; SH.logRenderedLocale = '';
+    SH.logRenderedFilter = '';
     FB.map.resize();
     FB.map.request();
   };
 
   /* ================= toasts (tap one to dismiss it) ================= */
   UI.toast = function (text, params) {
+    if (UI.suppressEventEffectToasts) return;
     const box = $('toasts');
     if (!box) return;
     const el = document.createElement('div');
@@ -1595,6 +1597,7 @@ window.FB = window.FB || {};
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
   };
   UI.toastMessage = function (message, legacyText) {
+    if (UI.suppressEventEffectToasts) return;
     const box = $('toasts');
     if (!box) return;
     const el = document.createElement('div');
@@ -1605,6 +1608,55 @@ window.FB = window.FB || {};
     }) : (legacyText || '');
     el.title = FB.T('Dismiss');
     el.addEventListener('click', function () {
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+    box.appendChild(el);
+    while (box.children.length > 5) box.removeChild(box.firstChild);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
+  };
+
+  UI.eventReceiptToast = function (receipt) {
+    const box = $('toasts');
+    if (!box || !receipt) return;
+    const older = box.querySelector('.event-receipt-toast');
+    if (older && older.parentNode) older.parentNode.removeChild(older);
+    const context = {
+      state:FB.state,
+      viewer:FB.state && FB.state.player ? FB.state.player.charId : null
+    };
+    const title = FB.renderMessage(receipt.title, context);
+    const option = FB.renderMessage(receipt.option, context);
+    const outcome = receipt.outcome ? FB.renderMessage(receipt.outcome, context) : '';
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'toast event-receipt-toast';
+    el.title = FB.T('Open Choices in the Chronicle');
+    let h = '<span class="event-receipt-headline">' + esc(outcome
+      ? FB.T('{event} — {outcome}', { event:title, outcome:outcome })
+      : FB.T('{event} — {choice}', { event:title, choice:option })) + '</span>';
+    const impacts = receipt.impacts || [];
+    const shown = Math.min(3, impacts.length);
+    if (shown) {
+      h += '<span class="event-impact-chips receipt">';
+      for (let i = 0; i < shown; i++) {
+        const record = impacts[i];
+        let tone = 'neutral';
+        if (record.lethal) tone = 'danger';
+        else if (record.amount < 0 || record.action === 'remove' ||
+            record.action === 'lose') tone = 'cost';
+        else if (record.amount > 0 || record.action === 'add') tone = 'gain';
+        h += '<span class="event-impact-chip ' + tone + '">' +
+          esc(FB.eventImpactText(FB.state, record, 'resolved')) + '</span>';
+      }
+      if (impacts.length > shown) h += '<span class="event-impact-more">' +
+        esc(FB.T('+{count} more', { count:impacts.length - shown })) + '</span>';
+      h += '</span>';
+    }
+    el.innerHTML = h;
+    el.addEventListener('click', function () {
+      if (UI.eventsBusy && UI.eventsBusy()) return;
+      if (UI.showTab) UI.showTab('log');
+      if (UI.setChronicleFilter) UI.setChronicleFilter('choices');
       if (el.parentNode) el.parentNode.removeChild(el);
     });
     box.appendChild(el);
@@ -2150,8 +2202,23 @@ window.FB = window.FB || {};
       tip.id = 'tooltip';
       tip.className = 'hidden';
       document.body.appendChild(tip);
+      function showEventChoiceTip(control) {
+        const row = control && control.closest
+          ? control.closest('.event-choice') : null;
+        const details = row && row.querySelector('.event-choice-details');
+        if (!details) return false;
+        tip.innerHTML = details.innerHTML;
+        tip.classList.remove('hidden');
+        const r = control.getBoundingClientRect();
+        tip.style.left = Math.max(4,
+          Math.min(window.innerWidth - 310, r.left)) + 'px';
+        tip.style.top = Math.min(window.innerHeight - 180, r.bottom + 6) + 'px';
+        return true;
+      }
       document.addEventListener('mouseover', function (e) {
         if (!e.target || !e.target.closest) { tip.classList.add('hidden'); return; }
+        const eventChoice = e.target.closest('.event-choice .evopt');
+        if (eventChoice && showEventChoiceTip(eventChoice)) return;
         // hovering a topbar resource shows what feeds it, season by season
         const statEl = e.target.closest('#tb-stats .stat[data-stat]');
         if (statEl && FB.state && !FB.game.observe) {
@@ -2217,6 +2284,17 @@ window.FB = window.FB || {};
         const r = chip.getBoundingClientRect();
         tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, r.left)) + 'px';
         tip.style.top = Math.min(window.innerHeight - 110, r.bottom + 6) + 'px';
+      });
+      document.addEventListener('focusin', function (e) {
+        if (!e.target || !e.target.closest) return;
+        const eventChoice = e.target.closest('.event-choice .evopt');
+        if (eventChoice) showEventChoiceTip(eventChoice);
+      });
+      document.addEventListener('focusout', function (e) {
+        if (!e.target || !e.target.closest ||
+            e.target.closest('.event-choice .evopt')) {
+          tip.classList.add('hidden');
+        }
       });
     }
   };

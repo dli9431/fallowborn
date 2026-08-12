@@ -311,6 +311,15 @@ core `FB.news` producer now uses the structured form. `js/messages.js` clones, v
 and freezes JSON-safe semantic params at the boundary; state never stores an
 active-locale rendering for a new core chronicle entry.
 
+Event receipts are an additive specialization of that same format and keep save version 3:
+`{y,s,d,msg,kind:"choice",receipt}`. `msg` is the ordinary locale-neutral fallback, so an
+older build renders the entry as normal news and ignores the extra fields. `receipt` stores
+only JSON-safe semantic data: schema number, stable event id and authored option index,
+success/failure marker, automation marker, title/option/outcome descriptors, and the exact
+resolved impact records. Entries without `kind` — including every old-save entry — count
+as News. Chronicle filter selection and unread state are not saved. The saved log still
+caps at 300 entries; each UI filter independently shows its newest 80 matches.
+
 The selected locale (`fb_lang`) is browser-local display preference in `localStorage`, not
 part of `FB.state`, a save slot, a start seed, RNG state, or deterministic simulation state.
 Save metadata stores `titleData` and renders its slot label in the locale active at display

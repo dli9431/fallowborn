@@ -29,7 +29,6 @@ window.FB = window.FB || {};
   const equipmentBlockedText = SH.equipmentBlockedText;
   const equipmentSheetHtml = SH.equipmentSheetHtml;
   const esc = SH.esc;
-  const eventModifierPreview = SH.eventModifierPreview;
   const firstMissingTech = SH.firstMissingTech;
   const fmtAmt = SH.fmtAmt;
   const focusShortcutTarget = SH.focusShortcutTarget;
@@ -296,59 +295,13 @@ window.FB = window.FB || {};
         if (v > best) { best = v; pick = o; }
       }
     }
-    const authoredIndex = ev.options ? ev.options.indexOf(pick) : -1;
-    let outcomeMsg = null;
-    let outcomePath = null;
-    if (pick.chance !== undefined) {
-      const p = typeof pick.chance === 'string' ? FB.namedChance(s, pick.chance) : pick.chance;
-      const ok = FB.chance(p);
-      if (pick.chance === 'battle' || pick.chance === 'war_battle') delete s.player.flags.blessed_war;
-      if (pick.effects) FB.applyEffects(s, pick.effects, ctx, ev);
-      const branch = ok ? pick.success : pick.failure;
-      if (branch) {
-        if (branch.effects) FB.applyEffects(s, branch.effects, ctx, ev);
-        if (branch.text && authoredIndex >= 0) {
-          outcomePath = 'options.' + authoredIndex + '.' +
-            (ok ? 'success' : 'failure') + '.text';
-        } else {
-          outcomeMsg = ok
-            ? FB.msg('fx.event.autoresolve.success', 'It goes well.', {})
-            : FB.msg('fx.event.autoresolve.failure', 'It goes poorly.', {});
-        }
-      }
-    } else if (pick.effects) {
-      FB.applyEffects(s, pick.effects, ctx, ev);
+    let receipt;
+    try {
+      receipt = FB.resolveEventOption(s, ev, pick, ctx, { automated:true });
+    } finally {
+      UI.autoResolving = false;
     }
-    /* Match the old simulation order while keeping rendering pure: effects
-       resolve first, then any outcome roles, title roles, and choice roles. */
-    if (outcomePath) {
-      FB.prepareEventPath(s, ev, outcomePath, ctx);
-      outcomeMsg = FB.eventMessage(s, s.player.charId, ev, outcomePath, ctx);
-    }
-    FB.prepareEventPath(s, ev, 'title', ctx);
-    const titleMsg = FB.eventMessage(s, s.player.charId, ev, 'title', ctx);
-    let choiceMsg;
-    if (authoredIndex >= 0) {
-      const choicePath = 'options.' + authoredIndex + '.label';
-      FB.prepareEventPath(s, ev, choicePath, ctx);
-      choiceMsg = FB.eventMessage(s, s.player.charId, ev, choicePath, ctx);
-    } else {
-      choiceMsg = FB.msg('fx.event.autoresolve.default_choice', 'So it goes.', {});
-    }
-    FB.news(s, FB.msg('news.event.autoresolved', {
-      forms: {
-        select: 'value', param: 'result', cases: {
-          outcome: '⚙ {title}: {choice} — {outcome}',
-          other: '⚙ {title}: {choice}'
-        }
-      }
-    }, {
-      result: outcomeMsg ? 'outcome' : 'other',
-      title: FB.messageParam(titleMsg),
-      choice: FB.messageParam(choiceMsg),
-      outcome: outcomeMsg ? FB.messageParam(outcomeMsg) : ''
-    }));
-    UI.autoResolving = false;
+    if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
   }
 
   UI.showAutoResolve = function () {
@@ -565,6 +518,51 @@ window.FB = window.FB || {};
       kv('If property is exhausted', esc(consequence)) + '</div>';
   }
 
+  function consequenceTone(record) {
+    if (record.lethal) return 'danger';
+    if (record.cost || record.amount < 0 || record.action === 'remove' ||
+        record.action === 'lose') return 'cost';
+    if (record.reward || record.amount > 0) return 'gain';
+    return 'neutral';
+  }
+
+  function consequenceChipHtml(s, record, mode) {
+    return '<span class="event-impact-chip ' + consequenceTone(record) + '">' +
+      esc(FB.eventImpactText(s, record, mode)) + '</span>';
+  }
+
+  function consequenceDetailsHtml(s, preview) {
+    let h = '';
+    if (preview.chance) {
+      h += '<div class="event-chance-line"><span>' + esc(FB.T('Chance')) +
+        '</span>' + consequenceChipHtml(s, {
+          type:'chance', band:preview.chance.band
+        }, 'preview') + '</div>';
+    }
+    for (let i = 0; i < preview.sections.length; i++) {
+      const section = preview.sections[i];
+      const heading = section.id === 'guaranteed' ? FB.T('Guaranteed') :
+        (section.id === 'success' ? FB.T('If successful') : FB.T('If failed'));
+      h += '<section class="event-consequence-section"><b>' + esc(heading) +
+        '</b><div class="event-impact-chips full">';
+      for (let j = 0; j < section.impacts.length; j++) {
+        h += consequenceChipHtml(s, section.impacts[j], 'preview');
+      }
+      h += '</div></section>';
+    }
+    return h || '<div class="event-impact-chips full">' +
+      consequenceChipHtml(s, { type:'system', system:'story' }, 'preview') +
+      '</div>';
+  }
+
+  function compactConsequencesHtml(s, preview) {
+    let h = '<span class="event-impact-chips compact">';
+    for (let i = 0; i < preview.compact.length; i++) {
+      h += consequenceChipHtml(s, preview.compact[i], 'preview');
+    }
+    return h + '</span>';
+  }
+
   function showEvent(ev, ctx) {
     const s = FB.state;
     eventOpen = true;
@@ -638,18 +636,41 @@ window.FB = window.FB || {};
       const o = opts[i];
       /* original index (not the filtered position) keys the overlay stably */
       const oi = ev.options ? ev.options.indexOf(o) : -1;
+      const preview = FB.previewEventOption(s, ev, o, ctx);
+      const row = document.createElement('div');
+      const detailsId = 'event-choice-details-' + i;
+      row.className = 'event-choice';
       const btn = document.createElement('button');
+      btn.type = 'button';
       btn.className = 'evopt';
-      const modifierPreview = eventModifierPreview(s, o, ctx);
+      btn.setAttribute('aria-describedby', detailsId);
       btn.innerHTML = hintFor(i) +
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
         (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '') +
-        (modifierPreview ? '<span class="odesc modifier-choice-preview">' +
-          esc(modifierPreview) + '</span>' : '');
+        compactConsequencesHtml(s, preview);
       (function (opt) {
         btn.addEventListener('click', function () { if (eventInputGuarded()) return; chooseOption(ev, opt, ctx); });
       })(o);
-      box.appendChild(btn);
+      const detailsButton = document.createElement('button');
+      detailsButton.type = 'button';
+      detailsButton.className = 'btn small event-details-button';
+      detailsButton.textContent = FB.T('Details');
+      detailsButton.setAttribute('aria-expanded', 'false');
+      detailsButton.setAttribute('aria-controls', detailsId);
+      const details = document.createElement('div');
+      details.id = detailsId;
+      details.className = 'event-choice-details hidden';
+      details.innerHTML = consequenceDetailsHtml(s, preview);
+      detailsButton.addEventListener('click', function () {
+        const opening = details.classList.contains('hidden');
+        details.classList.toggle('hidden', !opening);
+        detailsButton.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        detailsButton.textContent = opening ? FB.T('Hide details') : FB.T('Details');
+      });
+      row.appendChild(btn);
+      row.appendChild(detailsButton);
+      row.appendChild(details);
+      box.appendChild(row);
     }
     FB.localizeTree(box);
     armEventGuard();
@@ -673,43 +694,9 @@ window.FB = window.FB || {};
         if (nm) nc.name = nm;
       }
     }
-    if (opt.chance !== undefined) {
-      const p = typeof opt.chance === 'string' ? FB.namedChance(s, opt.chance) : opt.chance;
-      const ok = FB.chance(p);
-      // a blessed sword is spent on the battle it blesses, won or lost
-      if (opt.chance === 'battle' || opt.chance === 'war_battle') delete s.player.flags.blessed_war;
-      const branch = ok ? opt.success : opt.failure;
-      if (opt.effects) FB.applyEffects(s, opt.effects, ctx, ev);
-      if (branch) {
-        if (branch.effects) FB.applyEffects(s, branch.effects, ctx, ev);
-        const oi = ev.options ? ev.options.indexOf(opt) : -1;
-        const outcomePath = oi >= 0
-          ? 'options.' + oi + '.' + (ok ? 'success' : 'failure') + '.text'
-          : '';
-        if (branch.text && outcomePath) FB.prepareEventPath(s, ev, outcomePath, ctx);
-        const btext = branch.text
-          ? (oi >= 0 ? FB.eventText(s, s.player.charId, ev, outcomePath, ctx) : FB.fmt(s, branch.text, ctx))
-          : (ok ? FB.T('It goes well.') : FB.T('It goes poorly.'));
-        showOutcome(btext);
-        return;
-      }
-    } else if (opt.effects) {
-      FB.applyEffects(s, opt.effects, ctx, ev);
-    }
+    const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false });
+    if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     nextEvent();
-  }
-
-  function showOutcome(text) {
-    $('ev-text').innerHTML = '<i>' + esc(text) + '</i>';
-    const box = $('ev-options');
-    box.innerHTML = '';
-    const btn = document.createElement('button');
-    btn.className = 'evopt';
-    btn.textContent = FB.T('Continue');
-    btn.addEventListener('click', function () { if (eventInputGuarded()) return; nextEvent(); });
-    box.appendChild(btn);
-    armEventGuard();
-    btn.focus();
   }
 
   UI.eventsBusy = function () { return eventOpen; };
