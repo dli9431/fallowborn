@@ -1615,6 +1615,7 @@ window.FB = window.FB || {};
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
@@ -1859,6 +1860,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
+        militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
         flags: {}, cooldowns: {}, fired: {}, courtingId: null,
@@ -3309,7 +3311,7 @@ window.FB = window.FB || {};
     p.foreignPolicy = {};
     p.vassalLevyFavors = {};
     p.aggressiveWars = [];
-    p.warService = 0; p.liegeGrants = 0;
+    p.warService = 0; p.liegeGrants = 0; p.militaryCommand = null;
     p.professionBack = null;
     p.travelHistory = [];
     p.travelSettlement = null;

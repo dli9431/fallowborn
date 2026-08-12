@@ -348,6 +348,27 @@ Each positive `fx.warService` award also adds its exact value to Muster-Bred
 acquisition progress; six points award the formation without changing the existing
 service tally or its succession reset.
 
+**Battlefield knighting belongs to an active war.** Saving the fallen lord may mark a
+soldier for elevation, but `knighted` also requires `realmAtWar:true` when it is selected.
+The top-level `wartime:true` flag controls the wartime event pool; it does not make an
+event war-only during peace. A delayed honor therefore cannot raise a serf or freeholder
+after the armies have stood down.
+
+**A newly gentle founder may take real field command.** `FB.militaryCommandStatus`
+offers the Deed only to the first playable head before the house is established, after
+that character has both seen battle and won the lord's personal favor, and after the
+configured Martial and prestige thresholds are met. The local patron resolved through
+`state.holder` must be a living count or greater; their top realm must be at war with a
+live AI host. Accepting saves `player.militaryCommand:{charId,patronRealmId,
+sovereignRealmId,startedTurn}`, changes focus to `lead_host`, counts as personal wartime,
+and lets the protagonist's Martial improve that AI host when it exceeds the realm
+ruler's. `resolveBattle` is the only victory writer: when that exact sovereign host wins
+a hostile map battle, it clears the command and queues `military_barony_victory` for the
+snapshotted patron. No event roll, abstract soldier story, tournament, player war, or
+another realm's victory satisfies it. If the host is destroyed, the war ends, the
+patron falls below count rank, the hierarchy changes, or the protagonist changes, the
+next army tick clears the command and restores the prior focus without a grant.
+
 **One computed levy ledger is authoritative.** `FB.playerCompositionBreakdown` returns
 the levy, archers, cavalry, and retinue together with ordered source entries for direct counties,
 buildings, technology, Royal Constable, ruler Martial, domain penalty, each vassal,

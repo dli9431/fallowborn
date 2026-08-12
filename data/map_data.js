@@ -943,6 +943,7 @@ FBDATA.balance = {
   landConsolidationBonus: 0.10, landPlotMaxSettlement: 5,
   manorPlotRequirement: 5, manorPrestige: 150,
   baronyGold: 2500, baronyPrestige: 400, baronyOpinion: 60,
+  militaryBaronyMartial: 12, militaryBaronyPrestige: 120, // founder's exceptional field-command gate
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
   serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],
