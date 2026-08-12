@@ -36174,6 +36174,18 @@
         "text": "🛡 The household goes inside the lord’s wall — his people now, protected and bound."
       }
     },
+    "news.world.crown_lapsed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "kingdom",
+        "realm",
+        "style"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🥀 No land in {kingdom} remains to {realm} — the world ceases to recognize its crown. It is now the {style}."
+      }
+    },
     "news.world.devastation_holding": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -139731,6 +139743,16 @@
       ],
       "source": {
         "text": "Music for offline play"
+      }
+    },
+    "src.ea73fab8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🥀 No land in {kingdom} remains to {realm} — the world ceases to recognize its crown. It is now the {style}."
       }
     },
     "src.ea7de527": {

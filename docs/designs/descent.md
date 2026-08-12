@@ -35,6 +35,12 @@ liege, or go independent with a notice (`news.world.vassal_loosed`) when the
 player bows to no one. Below tier 5 there is no lapse: a count's rank *is*
 his county, and losing that has its own paths (war, attainder, downfall).
 
+AI crowns get the complementary rule: not a timed lapse, but **recognition**
+— an AI king keeps the royal style while he holds any county in his de jure
+kingdom (rival kings may coexist), and the world restyles his house at its
+true dignity the moment he holds none (`FB.checkCrownRecognition`; see
+`docs/designs/realms.md` — *Crown recognition*).
+
 ## The loser's homage (war, tiers 4–7): submission
 
 A defender whose enemy outranks him and outweighs him

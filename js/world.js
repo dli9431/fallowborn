@@ -3831,6 +3831,90 @@ window.FB = window.FB || {};
     for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = r.liege || null;
   };
 
+  /* ---- crown recognition ---------------------------------------------------
+     An anointed crown is sticky: an independent realm styled as a kingdom
+     keeps the royal style while it holds even one county inside the de jure
+     kingdom its name claims — rival kings of one kingdom may coexist for
+     years. But a "king" with no land left in his kingdom is recognized by no
+     one: the world restyles his house at its true dignity (duke of his best
+     duchy majority, else count of his capital county). Conquest still never
+     grants or transfers the defeated crown — see docs/designs/realms.md. */
+  FB.realmKingdomClaim = function (state, rid) {
+    const r = state.realms[rid];
+    if (!r || !r.alive || rid === 'player' || r.rank !== 3 || r.liege) return null;
+    for (const kid in FBDATA.kingdoms) {
+      if (r.name === 'Kingdom of ' + FBDATA.kingdoms[kid].name) return kid;
+    }
+    return null;
+  };
+
+  FB.checkCrownRecognition = function (state, rid) {
+    const r = state.realms[rid];
+    const kid = FB.realmKingdomClaim(state, rid);
+    if (!kid) return false;
+    const terr = FB.realmTerritory(state, rid);
+    if (!terr.length) return false; // the realm-death boundary handles this
+    let recognized = false;
+    for (const pid of terr) {
+      if (FB.dejureOf(pid).kingdom === kid) { recognized = true; break; }
+    }
+    if (recognized) return false; // rival phase: he holds land in his kingdom
+    // restyle at the true dignity: best duchy majority, else the capital county
+    const byDuchy = {};
+    for (const pid of terr) {
+      const dj = FB.dejureOf(pid);
+      if (dj.duchy) byDuchy[dj.duchy] = (byDuchy[dj.duchy] || 0) + 1;
+    }
+    const capDuchy = (FB.world.byId[r.capital] || {}).duchy;
+    let bestDuchy = null, bestHave = 0;
+    for (const did in byDuchy) {
+      const cs = FB.duchyCounties(did);
+      if (cs.length < 2) continue; // a duchy must span 2+ counties
+      const have = byDuchy[did];
+      if (have < Math.max(2, Math.ceil(cs.length / 2))) continue;
+      if (!bestDuchy || have > bestHave || (have === bestHave && did === capDuchy)) {
+        bestDuchy = did; bestHave = have;
+      }
+    }
+    const oldName = r.name;
+    let newRank;
+    if (bestDuchy) {
+      r.name = 'Duchy of ' + (FBDATA.duchies[bestDuchy].name || bestDuchy);
+      newRank = 2;
+    } else {
+      r.name = 'County of ' + ((FB.world.byId[r.capital] || {}).name || r.capital);
+      newRank = 1;
+    }
+    r.rank = newRank;
+    /* peers cannot kneel to a peer: vassals of equal or greater rank reattach
+       to the fallen crown's own liege, or stand independent (mirrors the
+       player hollow-crown lapse). A vassal going independent takes his
+       subtree's sovereignty with him, as in the breakaway path. */
+    for (const vid in state.realms) {
+      const v = state.realms[vid];
+      if (!v.alive || v.liege !== rid || v.rank < newRank) continue;
+      const vassalTerr = FB.realmTerritory(state, vid);
+      v.liege = r.liege || null;
+      if (!v.liege) {
+        for (const pid of vassalTerr) state.owner[pid] = vid;
+        FB.invalidateRealmCache();
+      }
+      FB.news(state, FB.msg('news.world.vassal_loosed',
+        '🕊 {realm} no longer kneels to a house of equal dignity.',
+        { realm: v.name }));
+    }
+    FB.news(state, FB.msg('news.world.crown_lapsed',
+      '🥀 No land in {kingdom} remains to {realm} — the world ceases to recognize its crown. It is now the {style}.',
+      { kingdom: FBDATA.kingdoms[kid].name, realm: oldName, style: r.name }));
+    FB.invalidateRealmCache();
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    return true;
+  };
+
+  FB.checkAllCrownRecognition = function (state) {
+    for (const rid in state.realms) FB.checkCrownRecognition(state, rid);
+  };
+
   FB.realmsAdjacent = function (state, r1, r2) {
     rcEnsure(state);
     for (const pid of (rc.provs[r1] || [])) {
@@ -3893,6 +3977,9 @@ window.FB = window.FB || {};
         if (rid === 'player' && held.length) forcedPlayerCapital = fr.capital;
       }
     }
+    // a crown with no land left in its kingdom loses the world's recognition
+    FB.checkCrownRecognition(state, from);
+    if (oldHolder !== from) FB.checkCrownRecognition(state, oldHolder);
     // a tier-3 baron or Bishop is bound to the home county: if it changes
     // hands, the office answers to its new holder even while the old lord's
     // house survives elsewhere
@@ -4290,6 +4377,7 @@ window.FB = window.FB || {};
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
     FB.ensureDynasticState(state);
+    FB.checkAllCrownRecognition(state);
     if (FB.papacyYearly) FB.papacyYearly(state);
     if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
     /* Family deaths invalidate the live index. This read-only snapshot stays
