@@ -121,9 +121,68 @@ test('the role orientation is a focused sheet with a Guide deep link',
     const dayDocs = page.locator(
       '#guide-entry-detail-day-to-day [data-guide-more-info]');
     await expect(dayDocs).toHaveAttribute('href',
-      'https://github.com/dli9431/fallowborn/blob/main/docs/designs/time.md');
+      'https://github.com/dli9431/fallowborn/blob/main/docs/designs/time.md#daily-time-focuses-and-deeds');
     await expect(dayDocs).toHaveAttribute('target', '_blank');
     await expect(dayDocs).toHaveAttribute('rel', 'noopener');
+    const guideDocHrefs = await page.locator('[data-guide-more-info]')
+      .evaluateAll(function (links) {
+        return links.map(function (link) { return link.getAttribute('href'); });
+      });
+    expect(guideDocHrefs.every(function (href) {
+      return href.indexOf('.md#') >= 0;
+    })).toBe(true);
+    const exactGuideDocs = {
+      resources:'docs/README.md#resources-and-reputation',
+      roles:'docs/README.md#the-ladder',
+      'role-monk':'docs/README.md#the-religious-ladder',
+      'role-priest':'docs/README.md#the-religious-ladder',
+      'role-bishop':'docs/designs/papacy.md#bishoprics-and-investiture',
+      'role-cardinal':'docs/designs/papacy.md#cardinals',
+      'role-pope':'docs/designs/papacy.md#authority-and-governance',
+      careers:'docs/designs/characters.md#careers-training-and-work',
+      'career-farmer':'docs/designs/characters.md#careers-training-and-work',
+      'family-scopes':
+        'docs/designs/characters.md#family-house-and-household-scope',
+      inheritance:'docs/designs/characters.md#succession-and-inheritance',
+      'child-identity':
+        'docs/designs/marriage.md#child-culture-faith-and-house',
+      'exceptional-sibling-courtship':
+        'docs/designs/marriage.md#exceptional-sibling-courtship',
+      'settlements-development':
+        'docs/designs/development.md#settlements-and-development',
+      travel:'docs/designs/travel.md#data-and-destinations',
+      war:'docs/designs/war.md#causes-and-defensive-alliances',
+      government:'docs/README.md#the-feudal-ladder'
+    };
+    for (const entryId in exactGuideDocs) {
+      await expect(page.locator('#guide-entry-detail-' + entryId +
+        ' [data-guide-more-info]')).toHaveAttribute('href',
+        'https://github.com/dli9431/fallowborn/blob/main/' +
+          exactGuideDocs[entryId]);
+    }
+    const generatedGuideDocErrors = await page.evaluate(function () {
+      const root = 'https://github.com/dli9431/fallowborn/blob/main/';
+      const groups = [
+        ['[data-guide-entry^="skill-"]',
+          root + 'docs/designs/characters.md#skills'],
+        ['[data-guide-entry^="role-tier-"]',
+          root + 'docs/README.md#the-ladder'],
+        ['[data-guide-entry^="career-"]',
+          root + 'docs/designs/characters.md#careers-training-and-work']
+      ];
+      const errors = [];
+      groups.forEach(function (group) {
+        document.querySelectorAll(group[0]).forEach(function (entry) {
+          const detail = document.getElementById(
+            entry.getAttribute('aria-controls'));
+          const href = detail.querySelector('[data-guide-more-info]')
+            .getAttribute('href');
+          if (href !== group[1]) errors.push(entry.dataset.guideEntry);
+        });
+      });
+      return errors;
+    });
+    expect(generatedGuideDocErrors).toEqual([]);
     await expect(page.locator(
       '#guide-entry-detail-role-tier-1 [data-guide-more-info]'))
       .toHaveAttribute('href',
@@ -145,7 +204,7 @@ test('the role orientation is a focused sheet with a Guide deep link',
     await expect(learningDetail).toContainText('Papal systems');
     await expect(learningDetail.locator('[data-guide-more-info]'))
       .toHaveAttribute('href',
-        'https://github.com/dli9431/fallowborn/blob/main/docs/designs/characters.md');
+        'https://github.com/dli9431/fallowborn/blob/main/docs/designs/characters.md#skills');
     await expect(page.locator('#guide-search')).toBeVisible();
 
     await page.locator('#guide-search').fill('Workshop');
@@ -166,6 +225,43 @@ test('the role orientation is a focused sheet with a Guide deep link',
     const landedGuideEntryCount = await page.locator('[data-guide-entry]').count();
     await expect(page.locator('[data-guide-more-info]'))
       .toHaveCount(landedGuideEntryCount);
+    const landedGuideDocHrefs = await page.locator('[data-guide-more-info]')
+      .evaluateAll(function (links) {
+        return links.map(function (link) { return link.getAttribute('href'); });
+      });
+    expect(landedGuideDocHrefs.every(function (href) {
+      return href.indexOf('.md#') >= 0;
+    })).toBe(true);
+    await expect(page.locator(
+      '#guide-entry-detail-technology [data-guide-more-info]'))
+      .toHaveAttribute('href',
+        'https://github.com/dli9431/fallowborn/blob/main/docs/designs/tech.md#research-slots-reserve-and-completion');
+    const technologyGuideDocErrors = await page.evaluate(function () {
+      const root = 'https://github.com/dli9431/fallowborn/blob/main/' +
+        'docs/research/medieval-technology-catalogue.md#';
+      const sections = {
+        agriculture:'agriculture-and-animal-power-26',
+        crafts:'crafts-materials-and-industry-30',
+        commerce:'commerce-transport-and-infrastructure-24',
+        learning:'learning-medicine-and-natural-knowledge-25',
+        governance:'governance-law-and-institutions-25',
+        warfare:'warfare-and-fortification-32',
+        seafaring:'seafaring-and-navigation-18'
+      };
+      const errors = [];
+      document.querySelectorAll('[data-guide-entry^="tech-"]')
+        .forEach(function (entry) {
+          const id = entry.dataset.guideEntry.slice(5);
+          const detail = document.getElementById(
+            entry.getAttribute('aria-controls'));
+          const href = detail.querySelector('[data-guide-more-info]')
+            .getAttribute('href');
+          const def = FBDATA.tech[id];
+          if (!def || href !== root + sections[def.domain]) errors.push(id);
+        });
+      return errors;
+    });
+    expect(technologyGuideDocErrors).toEqual([]);
     await expect(page.locator(
       '#guide-entry-detail-tech-horizontal_loom [data-guide-more-info]'))
       .toHaveAttribute('href',

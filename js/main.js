@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.15';
+  FB.VERSION = '1.117.16';
   FB.CHANGELOG = [
+    { v: '1.117.16', date: '2026-08-11', changes: [
+      'Guide More info links now land on the exact documentation section for each topic.'
+    ] },
     { v: '1.117.15', date: '2026-08-11', changes: [
       'Every in-game Guide topic now links to the matching GitHub documentation for deeper detail.'
     ] },

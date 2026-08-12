@@ -1,5 +1,7 @@
 # Development & buildings
 
+## Settlements and development
+
 Starting development is an ordinal measure of a whole county's productive,
 fiscal, and manpower capacity in 867, not a city-population estimate or a
 ranking of later fame. The 1–10 scale reads: 1–2 sparse frontier; 3 ordinary

@@ -653,9 +653,11 @@ Technology, settlement, travel, inheritance, Governance, and the conquest picker
 deep-link to the relevant entry. The War entry explains recognized claims, explicit
 aggression costs, siege requirements, and the difference between field victory and
 territorial conquest. Every expanded entry ends with a **More info** link to the
-corresponding GitHub player, design, or research-document section. Generated technology
-entries select the catalogue section for their authored domain. These external links are
-optional; searching and reading the complete in-game Guide remains offline-capable.
+corresponding GitHub player, design, or research-document heading; document-root links are
+not used. Fixed topics and generated skill, role, and career entries resolve to focused
+sections, while generated technology entries select the catalogue heading for their
+authored domain. These external links are optional; searching and reading the complete
+in-game Guide remains offline-capable.
 
 `player.roleOrientationsSeen` records one-time, per-save orientations for the current
 social tier and religious vocation/office. On first entry, a small focused sheet opens

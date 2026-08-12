@@ -78,6 +78,17 @@ new chronicle messages are localized; proper names, mod-authored text, old prose
 frozen into a save, and the changelog may remain English. Invalid or outdated catalogs
 safely fall back to English.
 
+### Resources and reputation
+
+**Money** belongs to the playable household and pays its costs, upkeep, wages, gifts, and
+contracts. **Prestige** supports social and political advancement, while **piety** supports
+religious acts and offices. **Common Voice** measures popular support.
+
+**Standing** always belongs to a particular relationship. A person, realm, lord, Pope,
+guild, or institution can each hold a different opinion of the current protagonist. Guild
+Standing is part of an active vocational guild record rather than a general household
+resource. Hover or tap the top-bar resources for their current sources and seasonal effects.
+
 ### The loop
 
 Time passes **day by day** (90-day seasons, 360-day years).
@@ -230,6 +241,8 @@ banner, normally after the manor has passed to an heir; battlefield glory and th
 can still raise an exceptional life more quickly, and marriage and scheming offer other
 shortcuts. Meanwhile ~65 sovereign realms fight their own wars — and their dukes and counts
 sometimes break away — so the map redraws itself decade by decade.
+
+#### The religious ladder
 
 The household also has a **religious ladder** under **Work, training & enterprises**.
 Catholic and Muslim laypeople can become known for almsgiving, pilgrimage, and patronage;

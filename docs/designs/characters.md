@@ -98,6 +98,8 @@ for travel, gifts, friendship, rivalry, and mortality; unrelated dead Cardinals 
 into the Papal archive while genealogy-critical family members remain as minimal dead
 characters. See [papacy.md](papacy.md).
 
+## Skills
+
 **Skills grow on an uncapped diminishing-return curve.** Every skill gain (focus
 training, event `skills` effects, education, coming of age) goes through
 `FB.gainSkill` (model.js). Below `balance.skillSoftCap` (20) each point lands;
@@ -394,6 +396,8 @@ is not rewritten. Generic NPC commoners still carry no family name at all
 also design cadet branches and title-derived surnames, rather than bolting a
 general NPC-naming pass onto this increment.
 
+## Careers, training, and work
+
 **Careers belong to characters.** Every managed household member lazily receives
 `c.career = {profession,rank,experience,startedYear,guildRank,guildStanding,chosen}` through
 `FB.careerOf` (`js/economy.js`). `player.profession` remains a compatibility mirror for
@@ -545,6 +549,8 @@ career, retainer, enterprise-purchase, religious-office, and match choices advan
 and then rebuild the originating Household Plan or person manager beneath any event that was
 queued.
 
+## Family, house, and household scope
+
 **Family visibility is not household control.** Work & Enterprises names its scope:
 the playable head, resident spouses and descendants, unwed siblings living with the
 household, and hired retainers appear when old enough for work or training. A visible
@@ -591,6 +597,8 @@ branch controls hide or reveal biological descendant subtrees without rewriting
 parentage, and jump controls target the protagonist, first eligible successor, spouse,
 and house founder. When the founder has moved beyond the nearby generation window, one
 standalone founder card keeps the jump reachable.
+
+## Succession and inheritance
 
 `FB.heirReview` is the shared read-only succession explanation. `FB.heirsOf` filters
 that review instead of rebuilding the order. The review preserves the existing named

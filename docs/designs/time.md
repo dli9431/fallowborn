@@ -1,5 +1,7 @@
 # Time, focuses & automation
 
+## Daily time, focuses, and deeds
+
 **Time is daily** (`G.passDay` in main.js): 90-day seasons, 360-day years; `state.turn`
 counts days. Each day the player's **focus** ticks (`FB.focuses` in actions.js — continuous
 activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds that spend

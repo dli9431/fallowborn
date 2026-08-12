@@ -16309,40 +16309,43 @@ window.FB = window.FB || {};
 
   function guideDocUrl(entry) {
     const docs = {
-      'day-to-day':'docs/designs/time.md',
-      resources:'docs/README.md#the-loop',
+      'day-to-day':'docs/designs/time.md#daily-time-focuses-and-deeds',
+      resources:'docs/README.md#resources-and-reputation',
       roles:'docs/README.md#the-ladder',
-      careers:'docs/designs/characters.md',
-      'family-scopes':'docs/designs/characters.md',
-      inheritance:'docs/designs/characters.md',
-      'child-identity':'docs/designs/marriage.md',
+      careers:'docs/designs/characters.md#careers-training-and-work',
+      'family-scopes':
+        'docs/designs/characters.md#family-house-and-household-scope',
+      inheritance:'docs/designs/characters.md#succession-and-inheritance',
+      'child-identity':
+        'docs/designs/marriage.md#child-culture-faith-and-house',
       'exceptional-sibling-courtship':
         'docs/designs/marriage.md#exceptional-sibling-courtship',
-      'settlements-development':'docs/designs/development.md',
-      technology:'docs/designs/tech.md',
+      'settlements-development':
+        'docs/designs/development.md#settlements-and-development',
+      technology:'docs/designs/tech.md#research-slots-reserve-and-completion',
       travel:'docs/designs/travel.md#data-and-destinations',
       war:'docs/designs/war.md#causes-and-defensive-alliances',
       government:'docs/README.md#the-feudal-ladder',
-      'role-monk':'docs/designs/characters.md',
-      'role-priest':'docs/designs/characters.md',
+      'role-monk':'docs/README.md#the-religious-ladder',
+      'role-priest':'docs/README.md#the-religious-ladder',
       'role-bishop':'docs/designs/papacy.md#bishoprics-and-investiture',
       'role-cardinal':'docs/designs/papacy.md#cardinals',
       'role-pope':'docs/designs/papacy.md#authority-and-governance'
     };
     let doc = docs[entry.id];
     if (!doc && entry.id.indexOf('skill-') === 0) {
-      doc = 'docs/designs/characters.md';
+      doc = 'docs/designs/characters.md#skills';
     } else if (!doc && entry.id.indexOf('role-tier-') === 0) {
       doc = 'docs/README.md#the-ladder';
     } else if (!doc && entry.id.indexOf('career-') === 0) {
-      doc = 'docs/designs/characters.md';
+      doc = 'docs/designs/characters.md#careers-training-and-work';
     } else if (!doc && entry.route && entry.route.kind === 'tech') {
       const tech = FBDATA.tech && FBDATA.tech[entry.route.id];
       const section = tech && GUIDE_TECH_DOC_SECTIONS[tech.domain];
       doc = 'docs/research/medieval-technology-catalogue.md' +
         (section ? '#' + section : '#live-catalogue');
     }
-    return GUIDE_DOC_ROOT + (doc || 'docs/README.md');
+    return GUIDE_DOC_ROOT + (doc || 'docs/README.md#play');
   }
 
   function roleOrientationBody(def) {

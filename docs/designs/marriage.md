@@ -210,6 +210,8 @@ above the player's station gate on prestige (20 per step). Marriage removes that
 from the managed household, clears work and equipment assignments, and leaves their outfit
 in the shared armory.
 
+## Child culture, faith, and house
+
 Marriage candidate rows preview child identity through `FB.childIdentityPreview`, the
 same two paths used by birth simulation. A protagonist-line child takes culture, faith,
 and house from the recorded playable-line parent. A collateral child takes culture and
