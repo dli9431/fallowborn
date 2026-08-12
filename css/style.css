@@ -2004,7 +2004,14 @@ textarea.modjson, textarea.savetext {
 .guide-entry-body p { margin: 0 0 10px; }
 .guide-entry-body ul, .role-orientation ol { padding-left: 22px; }
 .guide-entry-body li, .role-orientation li { margin-bottom: 7px; }
-.guide-entry-actions { display: flex; justify-content: center; padding: 4px 0 10px; }
+.guide-entry-actions {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  padding: 4px 0 10px;
+}
+.guide-entry-actions .btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  text-decoration: none;
+}
 .role-orientation .kv { align-items: flex-start; }
 .role-orientation .kv b { max-width: 68%; text-align: right; }
 .succession-review { margin: 5px 0 10px; }

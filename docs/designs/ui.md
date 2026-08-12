@@ -652,7 +652,10 @@ resource and settlement entries read live state. Self/character skills, Work,
 Technology, settlement, travel, inheritance, Governance, and the conquest picker
 deep-link to the relevant entry. The War entry explains recognized claims, explicit
 aggression costs, siege requirements, and the difference between field victory and
-territorial conquest.
+territorial conquest. Every expanded entry ends with a **More info** link to the
+corresponding GitHub player, design, or research-document section. Generated technology
+entries select the catalogue section for their authored domain. These external links are
+optional; searching and reading the complete in-game Guide remains offline-capable.
 
 `player.roleOrientationsSeen` records one-time, per-save orientations for the current
 social tier and religious vocation/office. On first entry, a small focused sheet opens

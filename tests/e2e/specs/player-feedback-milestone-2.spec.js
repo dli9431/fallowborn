@@ -115,6 +115,23 @@ test('the role orientation is a focused sheet with a Guide deep link',
       FB.ui.showGuide();
     });
     await expect(page.locator('#genmodal')).toHaveClass(/guide-modal/);
+    const guideEntryCount = await page.locator('[data-guide-entry]').count();
+    await expect(page.locator('[data-guide-more-info]'))
+      .toHaveCount(guideEntryCount);
+    const dayDocs = page.locator(
+      '#guide-entry-detail-day-to-day [data-guide-more-info]');
+    await expect(dayDocs).toHaveAttribute('href',
+      'https://github.com/dli9431/fallowborn/blob/main/docs/designs/time.md');
+    await expect(dayDocs).toHaveAttribute('target', '_blank');
+    await expect(dayDocs).toHaveAttribute('rel', 'noopener');
+    await expect(page.locator(
+      '#guide-entry-detail-role-tier-1 [data-guide-more-info]'))
+      .toHaveAttribute('href',
+        'https://github.com/dli9431/fallowborn/blob/main/docs/README.md#the-ladder');
+    await expect(page.locator(
+      '#guide-entry-detail-role-bishop [data-guide-more-info]'))
+      .toHaveAttribute('href',
+        'https://github.com/dli9431/fallowborn/blob/main/docs/designs/papacy.md#bishoprics-and-investiture');
 
     await page.locator('#guide-search').fill('religious advancement');
     const learning = page.locator('[data-guide-entry="skill-lea"]');
@@ -126,6 +143,9 @@ test('the role orientation is a focused sheet with a Guide deep link',
     await expect(learningDetail).toContainText('national research');
     await expect(learningDetail).toContainText('education and tutoring');
     await expect(learningDetail).toContainText('Papal systems');
+    await expect(learningDetail.locator('[data-guide-more-info]'))
+      .toHaveAttribute('href',
+        'https://github.com/dli9431/fallowborn/blob/main/docs/designs/characters.md');
     await expect(page.locator('#guide-search')).toBeVisible();
 
     await page.locator('#guide-search').fill('Workshop');
@@ -143,6 +163,13 @@ test('the role orientation is a focused sheet with a Guide deep link',
       '[data-guide-entry="tech-horizontal_loom"]');
     await expect(landedTechnology).toBeVisible();
     await expect(landedTechnology).toContainText('Horizontal Loom');
+    const landedGuideEntryCount = await page.locator('[data-guide-entry]').count();
+    await expect(page.locator('[data-guide-more-info]'))
+      .toHaveCount(landedGuideEntryCount);
+    await expect(page.locator(
+      '#guide-entry-detail-tech-horizontal_loom [data-guide-more-info]'))
+      .toHaveAttribute('href',
+        'https://github.com/dli9431/fallowborn/blob/main/docs/research/medieval-technology-catalogue.md#crafts-materials-and-industry-30');
   });
 
 test('succession and child identity explanations use the live family rules',

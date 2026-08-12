@@ -16295,6 +16295,56 @@ window.FB = window.FB || {};
     return h + '</div>';
   }
 
+  const GUIDE_DOC_ROOT =
+    'https://github.com/dli9431/fallowborn/blob/main/';
+  const GUIDE_TECH_DOC_SECTIONS = {
+    agriculture:'agriculture-and-animal-power-26',
+    crafts:'crafts-materials-and-industry-30',
+    commerce:'commerce-transport-and-infrastructure-24',
+    learning:'learning-medicine-and-natural-knowledge-25',
+    governance:'governance-law-and-institutions-25',
+    warfare:'warfare-and-fortification-32',
+    seafaring:'seafaring-and-navigation-18'
+  };
+
+  function guideDocUrl(entry) {
+    const docs = {
+      'day-to-day':'docs/designs/time.md',
+      resources:'docs/README.md#the-loop',
+      roles:'docs/README.md#the-ladder',
+      careers:'docs/designs/characters.md',
+      'family-scopes':'docs/designs/characters.md',
+      inheritance:'docs/designs/characters.md',
+      'child-identity':'docs/designs/marriage.md',
+      'exceptional-sibling-courtship':
+        'docs/designs/marriage.md#exceptional-sibling-courtship',
+      'settlements-development':'docs/designs/development.md',
+      technology:'docs/designs/tech.md',
+      travel:'docs/designs/travel.md#data-and-destinations',
+      war:'docs/designs/war.md#causes-and-defensive-alliances',
+      government:'docs/README.md#the-feudal-ladder',
+      'role-monk':'docs/designs/characters.md',
+      'role-priest':'docs/designs/characters.md',
+      'role-bishop':'docs/designs/papacy.md#bishoprics-and-investiture',
+      'role-cardinal':'docs/designs/papacy.md#cardinals',
+      'role-pope':'docs/designs/papacy.md#authority-and-governance'
+    };
+    let doc = docs[entry.id];
+    if (!doc && entry.id.indexOf('skill-') === 0) {
+      doc = 'docs/designs/characters.md';
+    } else if (!doc && entry.id.indexOf('role-tier-') === 0) {
+      doc = 'docs/README.md#the-ladder';
+    } else if (!doc && entry.id.indexOf('career-') === 0) {
+      doc = 'docs/designs/characters.md';
+    } else if (!doc && entry.route && entry.route.kind === 'tech') {
+      const tech = FBDATA.tech && FBDATA.tech[entry.route.id];
+      const section = tech && GUIDE_TECH_DOC_SECTIONS[tech.domain];
+      doc = 'docs/research/medieval-technology-catalogue.md' +
+        (section ? '#' + section : '#live-catalogue');
+    }
+    return GUIDE_DOC_ROOT + (doc || 'docs/README.md');
+  }
+
   function roleOrientationBody(def) {
     let h = '<div class="role-orientation">' +
       kv('New resources', esc(def.resources)) +
@@ -16855,8 +16905,13 @@ window.FB = window.FB || {};
       if (entry.route && entry.route.kind === 'tech') {
         h += '<div class="guide-entry-actions"><button class="btn" ' +
           'data-guide-tech="' + esc(entry.route.id) + '">' +
-          esc(FB.T('Open technology detail')) + '</button></div>';
+          esc(FB.T('Open technology detail')) + '</button>';
+      } else {
+        h += '<div class="guide-entry-actions">';
       }
+      h += '<a class="btn" data-guide-more-info href="' +
+        esc(guideDocUrl(entry)) + '" target="_blank" rel="noopener">' +
+        esc(FB.T('More info')) + '</a></div>';
       h += '</div></div>';
     }
     /* entered from another dialog (a context modal or the menu): offer a

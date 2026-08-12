@@ -92532,6 +92532,16 @@
         "text": "training"
       }
     },
+    "src.7b9c70fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "More info"
+      }
+    },
     "src.7ba5cedc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159684,6 +159694,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Money, land plots, guild Standing, and local relationships open longer plans."
+      }
+    },
+    "ui:More info": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "More info"
       }
     },
     "ui:More likely": {
