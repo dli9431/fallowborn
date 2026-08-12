@@ -48,7 +48,7 @@ is wrong forever.
 
 The version-3 wire form omits only reconstructible court fields: member `childIds`
 (rebuilt from canonical `parentId`), a derived member-to-character id, true/null member
-defaults, and false/null defaults on royal characters. It also writes national
+defaults, and false/null/empty-children defaults on royal characters. It also writes national
 `exposed` as the technologies not already in `completed`, because completion already
 implies exposure. `S.restore` expands all of these before the ordinary ensure chain, so
 live `FB.state` keeps its explicit object shape and uncompressed older version-3 saves

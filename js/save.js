@@ -38,6 +38,9 @@ window.FB = window.FB || {};
       }
     }
     if (holder && holder.royalLine) {
+      if (key === 'childrenIds' && Array.isArray(value) && !value.length) {
+        return undefined;
+      }
       if (key === 'dead' && value === false) return undefined;
       if (key === 'role' && value === null) return undefined;
       if ((key === 'fatherId' || key === 'motherId' || key === 'spouseId') &&
@@ -68,6 +71,7 @@ window.FB = window.FB || {};
       if (!own(c, 'fatherId')) c.fatherId = null;
       if (!own(c, 'motherId')) c.motherId = null;
       if (!own(c, 'spouseId')) c.spouseId = null;
+      if (!Array.isArray(c.childrenIds)) c.childrenIds = [];
     }
     const realms = state.realms || {};
     for (const rid in realms) {

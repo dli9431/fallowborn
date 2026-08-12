@@ -133,6 +133,7 @@ test('save compaction rehydrates court links and technology exposure',
     expect(await page.evaluate(function () {
       const s = FB.state;
       let sample = null;
+      let emptyChildCharId = null;
       for (const rid in s.realms) {
         const realm = s.realms[rid];
         const succession = realm && realm.alive && rid !== 'player' &&
@@ -150,6 +151,14 @@ test('save compaction rehydrates court links and technology exposure',
         };
         break;
       }
+      for (const id in s.chars) {
+        const c = s.chars[id];
+        if (c && c.royalLine && Array.isArray(c.childrenIds) &&
+            !c.childrenIds.length) {
+          emptyChildCharId = id;
+          break;
+        }
+      }
       let techSample = null;
       for (const rid in s.realmTech) {
         const record = s.realmTech[rid];
@@ -161,12 +170,13 @@ test('save compaction rehydrates court links and technology exposure',
         }
         if (techSample) break;
       }
-      if (!sample || !techSample) return { skipped:true };
+      if (!sample || !emptyChildCharId || !techSample) return { skipped:true };
 
       const payload = JSON.parse(FB.save.serialize());
       const rawSuccession = payload.state.realms[sample.rid].succession;
       const rawMember = rawSuccession.members[sample.memberId];
       const rawChar = payload.state.chars[sample.charId];
+      const rawEmptyChildChar = payload.state.chars[emptyChildCharId];
       const rawTech = payload.state.realmTech[techSample.rid];
       const own = Object.prototype.hasOwnProperty;
       const compact = !own.call(rawMember, 'charId') &&
@@ -177,6 +187,7 @@ test('save compaction rehydrates court links and technology exposure',
         !own.call(rawChar, 'role') &&
         !own.call(rawChar, 'fatherId') &&
         !own.call(rawChar, 'motherId') &&
+        !own.call(rawEmptyChildChar, 'childrenIds') &&
         rawTech.completed.indexOf(techSample.id) >= 0 &&
         rawTech.exposed.indexOf(techSample.id) < 0;
 
@@ -184,6 +195,7 @@ test('save compaction rehydrates court links and technology exposure',
       const restoredMember = FB.state.realms[sample.rid]
         .succession.members[sample.memberId];
       const restoredChar = FB.state.chars[sample.charId];
+      const restoredEmptyChildChar = FB.state.chars[emptyChildCharId];
       const restoredTech = FB.state.realmTech[techSample.rid];
       const restoredRuler = FB.realmRulerCharacterSnapshot(
         FB.state, sample.rid);
@@ -195,7 +207,10 @@ test('save compaction rehydrates court links and technology exposure',
           restoredMember.childIds.length === sample.childCount,
         character:!!restoredChar && restoredChar.dead === false &&
           restoredChar.role === null && restoredChar.fatherId === null &&
-          restoredChar.motherId === null,
+          restoredChar.motherId === null &&
+          !!restoredEmptyChildChar &&
+          Array.isArray(restoredEmptyChildChar.childrenIds) &&
+          restoredEmptyChildChar.childrenIds.length === 0,
         ruler:!!restoredRuler && restoredRuler.id === sample.charId,
         exposure:!!restoredTech &&
           restoredTech.exposed.indexOf(techSample.id) >= 0

@@ -424,7 +424,7 @@ test('annual ruler intrigue obeys weighting, cadence, caps, cooldowns, and letha
       var topIds = Object.keys(s.realms).filter(function (id) {
         var realm = s.realms[id];
         return id !== 'player' && realm && realm.alive && !realm.liege;
-      }).slice(0, 10);
+      });
       var actors = [];
       var favored = {};
       for (var i = 0; i < topIds.length; i++) {
@@ -440,12 +440,14 @@ test('annual ruler intrigue obeys weighting, cadence, caps, cooldowns, and letha
           born:s.date.year - 30, station:2, traitsN:0
         });
         target.homeProvinceId = capital;
-        actor.traits = i < 3 ? ['cruel'] : ['kind', 'honest'];
-        s.agency.rulerAims[rid] = {
-          id:i < 3 ? 'expand_realm' : 'keep_peace'
-        };
+        actor.traits = ['kind', 'honest'];
+        s.agency.rulerAims[rid] = { id:'keep_peace' };
         actors.push({ rid:rid, id:actor.id });
-        if (i < 3) favored[actor.id] = 1;
+      }
+      for (i = 0; i < Math.min(3, actors.length); i++) {
+        s.chars[actors[i].id].traits = ['cruel'];
+        s.agency.rulerAims[actors[i].rid] = { id:'expand_realm' };
+        favored[actors[i].id] = 1;
       }
       var year = s.date.year;
       var originalChance = FB.chance;
