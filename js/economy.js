@@ -92,6 +92,8 @@ window.FB = window.FB || {};
   }
   function managedCareerCharacter(state, c) {
     if (!state || !c || c.dead) return false;
+    if (FB.isExternalHouseholdAuthority &&
+        FB.isExternalHouseholdAuthority(state, c)) return false;
     if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) {
       return true;
     }
@@ -1225,8 +1227,8 @@ window.FB = window.FB || {};
     const out = [], seen = {}, married = {};
     function add(c) {
       if (!c || c.dead || seen[c.id]) return;
-      if (c.id !== me.id && FB.isReigningRealmRuler &&
-          FB.isReigningRealmRuler(state, c)) return;
+      if (c.id !== me.id && FB.isExternalHouseholdAuthority &&
+          FB.isExternalHouseholdAuthority(state, c)) return;
       seen[c.id] = 1;
       out.push(c);
     }
@@ -1504,8 +1506,27 @@ window.FB = window.FB || {};
       FB.householdStandardEffect(state, 'retainers'));
   };
 
+  function releaseAuthorityRetainer(state, c) {
+    if (!c) return;
+    if (state.roles && state.roles.lord === c.id) c.role = 'lord';
+    if (FB.unassignEnterpriseWorker) {
+      FB.unassignEnterpriseWorker(state, c.id);
+    }
+    for (const sid in state.chars) {
+      const student = state.chars[sid];
+      if (student && student.edu && student.edu.tutorId === c.id &&
+          student.edu.school === 'master') {
+        student.edu.tutorId = null;
+        student.edu.school = null;
+      }
+    }
+    if (FB.clearLoadout) FB.clearLoadout(state, c.id);
+  }
+
   /* Retainers are inherited household contracts, not family members. Records
-     stay compact and point at normal characters for every human quality. */
+     stay compact and point at normal characters for every human quality.
+     Normalization also repairs saves made while a political household head
+     could incorrectly enter the player's service. */
   FB.retainerRecords = function (state) {
     const p = state.player;
     if (!Array.isArray(p.retainers)) p.retainers = [];
@@ -1513,9 +1534,13 @@ window.FB = window.FB || {};
     for (const record of p.retainers) {
       const c = record && state.chars[record.charId];
       const def = record && FB.positionDef(record.office);
+      const authority = c && FB.isExternalHouseholdAuthority &&
+        FB.isExternalHouseholdAuthority(state, c);
       if (!record || !c || c.dead || !def || def.kind !== 'retainer' ||
-          (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) ||
-          seen[record.charId] || seenOffice[record.office]) continue;
+          authority || seen[record.charId] || seenOffice[record.office]) {
+        if (authority) releaseAuthorityRetainer(state, c);
+        continue;
+      }
       seen[record.charId] = 1;
       seenOffice[record.office] = 1;
       if (!isFinite(Number(record.pay)) || Number(record.pay) < 0) record.pay = def.pay || 0;
@@ -1586,7 +1611,8 @@ window.FB = window.FB || {};
       const c = id && state.chars[id];
       if (!c || c.dead || c.id === state.player.charId || seen[id] ||
           (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
-          (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) ||
+          (FB.isExternalHouseholdAuthority &&
+            FB.isExternalHouseholdAuthority(state, c)) ||
           FB.retainerRecord(state, id)) return;
       seen[id] = 1;
       ids.push(id);
@@ -1605,7 +1631,9 @@ window.FB = window.FB || {};
     for (const c of FB.householdMembers(state)) family[c.id] = 1;
     for (const id of retainerCandidateIds(state)) {
       const c = state.chars[id];
-      if (family[id] || (FB.isAgencyFamilyMember &&
+      if ((FB.isExternalHouseholdAuthority &&
+          FB.isExternalHouseholdAuthority(state, c)) || family[id] ||
+          (FB.isAgencyFamilyMember &&
           FB.isAgencyFamilyMember(state, id)) ||
           FB.ageOf(c, state.date.year) < 16 ||
           FB.standingOf(state, { kind:'character', id:c.id }) <= -40 ||
@@ -1624,6 +1652,9 @@ window.FB = window.FB || {};
   FB.canHireRetainer = function (state, office, cid) {
     const def = FB.positionDef(office);
     if (!def || def.kind !== 'retainer' || state.player.tier < (def.minTier || 0)) return false;
+    const candidate = cid && state.chars[cid];
+    if (candidate && FB.isExternalHouseholdAuthority &&
+        FB.isExternalHouseholdAuthority(state, candidate)) return false;
     if (FB.retainerRecords(state).length >= FB.retainerCapacity(state)) return false;
     if (FB.retainerOfficeRecord(state, office) ||
         (FB.familyOfficeHolder && FB.familyOfficeHolder(state, office))) return false;

@@ -73,8 +73,8 @@ window.FB = window.FB || {};
     for (let i = 0; i < ((state.player && state.player.retainers) || []).length; i++) {
       const record = state.player.retainers[i];
       const retainer = record && state.chars[record.charId];
-      if (retainer && (!FB.isReigningRealmRuler ||
-          !FB.isReigningRealmRuler(state, retainer))) add(retainer, false);
+      if (retainer && (!FB.isExternalHouseholdAuthority ||
+          !FB.isExternalHouseholdAuthority(state, retainer))) add(retainer, false);
     }
     return out;
   }
@@ -92,7 +92,8 @@ window.FB = window.FB || {};
        boundary; every other household member must still be living. */
     if (c.id === me.id) return true;
     if (c.dead) return false;
-    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+    if (FB.isExternalHouseholdAuthority &&
+        FB.isExternalHouseholdAuthority(state, c)) {
       return false;
     }
     if (c.spouseId === me.id || me.spouseId === c.id) return true;

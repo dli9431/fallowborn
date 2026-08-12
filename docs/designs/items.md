@@ -4,7 +4,8 @@
 list of exact item references. `player.loadouts[characterId]` maps Head, Neck, Body,
 Waist, Feet, Left hand, Right hand, and Ring to those references. The managed wearers
 are the current head, living spouses, paid retainers, and resident unmarried children
-and grandchildren. An object can
+and grandchildren, except that a reigning ruler or local lord who marries the player keeps
+a separate political household and never becomes a managed wearer. An object can
 appear in only one loadout, and a two-handed object writes the same reference into both
 hand slots. Marriage out, divorce, departure, and non-player death clear the assignment
 but leave the object in the armory.

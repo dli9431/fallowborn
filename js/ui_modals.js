@@ -13248,6 +13248,9 @@ window.FB = window.FB || {};
     const descendantKind = FB.playerDescendantKind(s, c.id);
     const household = !c.dead && FB.isHouseholdCharacter &&
       FB.isHouseholdCharacter(s, c.id);
+    const householdAuthority = !c.dead &&
+      FB.isExternalHouseholdAuthority &&
+      FB.isExternalHouseholdAuthority(s, c);
     const retainer = !c.dead
       ? interactionRetainerRecord(s, c.id) : null;
     const agencyFamily = !c.dead && FB.isAgencyFamilyMember &&
@@ -13840,7 +13843,8 @@ window.FB = window.FB || {};
         consequence:FB.T('Office changes and dismissal use their existing confirmations.'),
         route:'retainer'
       });
-    } else if (!household && FB.ageOf(c, s.date.year) >= 16) {
+    } else if (!household && !householdAuthority &&
+        FB.ageOf(c, s.date.year) >= 16) {
       addInteractionAction(model, {
         id:'management.retainer.consider',
         group:'management',

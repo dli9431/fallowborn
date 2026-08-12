@@ -549,7 +549,15 @@ window.FB = window.FB || {};
       return state.player.courtingId ? state.chars[state.player.courtingId] : null;
     }
     const id = state.roles[role];
-    if (id && state.chars[id] && !state.chars[id].dead) return state.chars[id];
+    if (id && state.chars[id] && !state.chars[id].dead) {
+      /* Old saves could turn this authoritative story role into a retainer.
+         The role index is canonical, so restore its character metadata as it
+         is resolved even if the obsolete contract has already been removed. */
+      if (role === 'lord' && state.chars[id].role !== 'lord') {
+        state.chars[id].role = 'lord';
+      }
+      return state.chars[id];
+    }
     if (!create) return null;
     if (role === 'friend') {
       if (id) delete state.player.flags.sworn_friend;
@@ -4036,6 +4044,12 @@ window.FB = window.FB || {};
       } else if (jb) jb.betrothedId = null;
       me.betrothedId = null;
     }
+    /* Marriage links an external political household head to the player, but
+       does not dissolve the office or bring that separate establishment under
+       household management. Capture this before any relationship-role edits. */
+    const authoritySpouse = FB.isExternalHouseholdAuthority &&
+      FB.isExternalHouseholdAuthority(state, s);
+    const localLordSpouse = s.role === 'lord' || state.roles.lord === s.id;
     s.spouseId = me.id;
     FB.touchFamily();
     if (!others.length) { me.spouseId = s.id; state.roles.spouse = s.id; }
@@ -4057,26 +4071,26 @@ window.FB = window.FB || {};
       FB.recordStepfamily(state, me, s);
       FB.recordStepfamily(state, s, me);
     }
-    /* An object given during courtship was external character property.
-       Once its owner enters the household, move that exact object into the
-       shared armory so the household ownership invariant continues to hold. */
-    const reigningSpouse = FB.isReigningRealmRuler &&
-      FB.isReigningRealmRuler(state, s);
-    if (!reigningSpouse && FB.reclaimCharacterItems) {
+    /* An object given during courtship was external character property. When
+       an ordinary spouse enters the household, move that exact object into the
+       shared armory; an authority spouse keeps a separate establishment. */
+    if (!authoritySpouse && FB.reclaimCharacterItems) {
       FB.reclaimCharacterItems(state, s.id);
     }
-    if (!reigningSpouse && FB.receiveMarriageLivelihood) {
+    if (!authoritySpouse && FB.receiveMarriageLivelihood) {
       FB.receiveMarriageLivelihood(state, s);
     }
-    s.role = 'spouse';
-    // a spouse cannot stay your lord, priest, friend, or rival — those seats
-    // empty and are lazily refilled where the game next needs them
+    if (localLordSpouse) s.role = 'lord';
+    else s.role = 'spouse';
+    // Ordinary relationship seats empty and are lazily refilled. A local lord
+    // remains the same political authority after marrying the player.
     if (state.roles.friend === s.id && FB.clearFriendship) {
       FB.clearFriendship(state, false);
     }
     if (state.player.friendContacts) delete state.player.friendContacts[s.id];
     for (const r in state.roles) {
-      if (r !== 'spouse' && state.roles[r] === s.id) delete state.roles[r];
+      if (r !== 'spouse' && state.roles[r] === s.id &&
+          !(r === 'lord' && authoritySpouse)) delete state.roles[r];
     }
     adjustCharacterStanding(state, s, 30, 'relationship:marriage');
     p.courtingId = null;

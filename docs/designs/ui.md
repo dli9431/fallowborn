@@ -885,6 +885,11 @@ Standing effect, cooldown, and replacement consequence supplied by the owning
 system. Clicking routes to the existing action or confirmation, which
 revalidates its own gate.
 
+Focused household management is also derived from the shared authority boundary.
+`FB.isExternalHouseholdAuthority` suppresses equipment, career, and prospective-retainer
+actions for a reigning ruler or local lord even when that character is a spouse or cultivated
+contact; the owning mutations revalidate the same exclusion.
+
 Every living AI reigning ruler has a materialized character record. The realm
 sheet therefore begins with the standard full character card and a bounded
 court strip for the current consort and displayed heirs; each court member is

@@ -518,6 +518,17 @@ The retainer candidate picker uses the shared person-assignment card to preview 
 effect, entry and seasonal pay, occupation, Standing, and additive-office consequence before
 the existing hire action spends the day.
 
+**Political household authorities never enter the managed household.**
+`FB.isExternalHouseholdAuthority` is the shared boundary for both a reigning realm ruler and
+a generated local lord, recognized by the active `state.roles.lord` seat or the character's
+persisted `lord` role after relocation. Friendship can make either person a cultivated contact,
+and marriage can create ordinary spouse links, but neither relationship permits household
+service, work or career direction, enterprise staffing, paid master tutoring, or
+family-armory equipment.
+Retainer admission rechecks the same boundary at candidate, eligibility, and contract
+normalization time. Normalizing an older invalid local-lord contract removes its household
+assignments and restores the canonical `lord` character role.
+
 **Managed family members have ambitions and may hold household offices.** The
 bounded family set is the current protagonist's resident spouse, unmarried
 children and grandchildren, and resident manageable siblings; it never expands
@@ -553,9 +564,10 @@ queued.
 
 **Family visibility is not household control.** Work & Enterprises names its scope:
 the playable head, resident spouses and descendants, unwed siblings living with the
-household, and hired retainers appear when old enough for work or training. A visible
-relative outside the managed household is not assignable. Each present but unavailable
-row states the applicable age, station, faith, career, or landed-head rule. The Guide
+household, and hired retainers appear when old enough for work or training. A spouse who
+remains an external political household authority is excluded from that managed scope.
+A visible relative outside the managed household is not assignable. Each present but
+unavailable row states the applicable age, station, faith, career, or landed-head rule. The Guide
 separately defines playable line, house, managed household, visible kin, and royal
 branch.
 

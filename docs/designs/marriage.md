@@ -113,6 +113,14 @@ conceive only when the player’s physical travel location is the capital; every
 child is registered beneath the reigning compact member and therefore enters the realm’s
 normal succession.
 
+The same managed-household exclusion applies to the generated local lord.
+`FB.isExternalHouseholdAuthority` is the shared rule for the active
+`state.roles.lord`, a relocated character who retains the `lord` role, and reigning realm
+rulers. A wedding preserves ordinary spouse links and station effects, but the local lord
+keeps that `lord` identity. The player cannot hire them, direct their career, staff an
+enterprise or tutoring post with them, or equip them from the family armory. Unlike a reigning
+ruler at a remote capital, the local lord remains physically local.
+
 ## Marriage residence and living abdication
 
 When a tier-3+ protagonist marries the exact relationship-visit target in that

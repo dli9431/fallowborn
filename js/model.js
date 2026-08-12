@@ -1333,6 +1333,20 @@ window.FB = window.FB || {};
     if (c.role === 'notable' && c.dyn) return 3; // the lord’s house shares his name
     return 0;
   };
+  /* Political household heads keep authority over their own establishments.
+     A generated local lord is recognized through the active role seat or the
+     persisted character role after relocation; neither is a realm-succession
+     ruler. Household systems use this shared guard instead of testing only the
+     realm roster. Marriage and friendship do not make either kind manageable. */
+  FB.isExternalHouseholdAuthority = function (state, value) {
+    if (!state || !state.player || !state.chars) return false;
+    const c = typeof value === 'string' ? state.chars[value] : value;
+    if (!c || c.dead || c.id === state.player.charId) return false;
+    if (c.role === 'lord' ||
+        (state.roles && state.roles.lord === c.id)) return true;
+    return !!(FB.isReigningRealmRuler &&
+      FB.isReigningRealmRuler(state, c));
+  };
   FB.playerStation = function (state) {
     if ((FB.playerCardinal && FB.playerCardinal(state)) ||
         (FB.playerPope && FB.playerPope(state))) return 4;
