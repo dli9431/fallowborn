@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.117.16';
+  FB.VERSION = '1.118.0';
   FB.CHANGELOG = [
+    { v: '1.118.0', date: '2026-08-11', changes: [
+      'Hostile intrigue now brings targeted assassination, abduction, blackmail, fabricated charges, and sabotage to Deeds, with accomplices, captives, and evidence hearings.'
+    ] },
     { v: '1.117.16', date: '2026-08-11', changes: [
       'Guide More info links now land on the exact documentation section for each topic.'
     ] },
@@ -1744,6 +1747,7 @@ window.FB = window.FB || {};
       FB.ensureFaithStandingBaselines(state);
     }
     if (FB.ensureAgency) FB.ensureAgency(state);
+    if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     state.player.focus = sc.focus || FB.defaultFocus(state);
@@ -1953,12 +1957,14 @@ window.FB = window.FB || {};
     if (FB.papacyDay) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
     if (FB.modifierTick) FB.modifierTick(s);
+    if (FB.intrigueDay) FB.intrigueDay(s);
     if (FB.politicsDay) FB.politicsDay(s);
 
     /* observe mode: the calendar turns, the realms tick once a year, hosts
        march daily — and that is all. No focus, upkeep, mortality, births,
        events, or autosaves; nothing personal ever reaches the watcher. */
     if (G.observe) {
+      if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
       if (seasonBoundary && newYear) FB.worldTick(s);
       FB.armyTick(s);
@@ -1972,6 +1978,8 @@ window.FB = window.FB || {};
     if (FB.financeDay) FB.financeDay(s);
 
     if (seasonBoundary) {
+      if (FB.intrigueSeason) FB.intrigueSeason(s);
+      if (p.dead) return 'dead';
       const upkeep = FB.householdUpkeep(s);
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
@@ -2411,10 +2419,12 @@ window.FB = window.FB || {};
 
     // an heir who succeeded while pledged honors the match their parent made:
     // once both are of age the wedding follows through the ordinary door
-    if (me.betrothedId && !FB.spouseOf(s, me)) {
+    if (me.betrothedId && !FB.spouseOf(s, me) &&
+        !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, me.id))) {
       const b = s.chars[me.betrothedId];
       if (!b || b.dead) { me.betrothedId = null; }
-      else if (FB.ageOf(me, year) >= 16 && FB.ageOf(b, year) >= 16) {
+      else if (FB.ageOf(me, year) >= 16 && FB.ageOf(b, year) >= 16 &&
+          !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, b.id))) {
         me.betrothedId = null; b.betrothedId = null;
         delete b.dowryAsk; delete b.dowryDue; // settled between the houses long ago
         p.courtingId = b.id;
@@ -2690,6 +2700,7 @@ window.FB = window.FB || {};
     for (const e of all) {
       const k = e.c;
       if (k.dead || k.id === s.player.charId) continue;
+      if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, k.id)) continue;
       const age = FB.ageOf(k, year);
       if (age < 16 || age > 55) continue;
       const close = ['Son', 'Daughter', 'Grandson', 'Granddaughter',
@@ -2699,7 +2710,8 @@ window.FB = window.FB || {};
       // gets a say
       if (!sp && k.betrothedId) {
         const b = s.chars[k.betrothedId];
-        if (b && !b.dead && FB.ageOf(b, year) >= 16) {
+        if (b && !b.dead && FB.ageOf(b, year) >= 16 &&
+            !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, b.id))) {
           FB.doKinWedding(s, k, b);
           sp = b;
         } else if (!b || b.dead) {
@@ -3004,6 +3016,7 @@ window.FB = window.FB || {};
       telemetrySession.entryType : 'unknown';
     const activeSeconds = telemetryPulse();
     const titleDataAtDeath = FB.titleSnapshot(s);
+    if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(s, me);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death
     if (FB.endRoyalCompact) FB.endRoyalCompact(s);
@@ -3264,6 +3277,9 @@ window.FB = window.FB || {};
     const keep = {};
     for (const fl of ['own_ox']) if (p.flags[fl]) keep[fl] = 1; // household property passes separately
     p.flags = keep;
+    if (FB.intriguePlayerSuccession) {
+      FB.intriguePlayerSuccession(s, old.id, heir.id);
+    }
     /* A chosen heir may already hold a separately appointed see. Activate
        that personal office after clearing the predecessor's life flags. */
     if (FB.activateBishopricForPlayer) {

@@ -321,3 +321,21 @@ exact supported effects, upkeep, and county-transfer rule. Chance branches label
 success and failure consequences separately. Autoresolve scores the same modifier
 objects and applies them through the same interpreter path; presentation adds no
 parallel mutation.
+
+## Intrigue decisions and evidence
+
+Hostile attempts resolve in `js/intrigue.js`, but player-facing uncertainty remains
+declarative event data in `data/events_intrigue.js`. `intrigue_warning` is a mandatory
+pre-attempt choice for AI murder or abduction aimed at the protagonist or managed
+household. Its context validator stamps the AI scheme id and actor generation, so a
+cancelled scheme or succession silently expires the warning. Investigation, security,
+counter-trap, and ignore effects update only that exact scheme.
+
+`intrigue_hearing` is the sole gate to severe punishment of a player plotter. Queued
+context contains a hearing id, exact victim/county ids, target kind, and the derived
+sentence/fine preview shown before the choice; the durable
+hearing holds locale-neutral evidence, severity, offense, success, and authority fields.
+Suspicion never queues a hearing. Testimony, material proof, and red-handed capture do.
+Challenge, compensation, penance, sentence, flight, and resistance are ordinary options
+backed by custom validators/effects. Ransom demands likewise queue an exact captive and
+captor-generation context. No queued intrigue event stores rendered prose.

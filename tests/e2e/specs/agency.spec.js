@@ -407,3 +407,166 @@ test('the annual agency pass caps player approaches and family requests',
     expect(result.approachYear).toBe(result.currentYear);
     expect(result.familyYear).toBe(result.currentYear);
   });
+
+test('annual ruler intrigue obeys weighting, cadence, caps, cooldowns, and lethal warnings',
+  async function ({ page }, testInfo) {
+    await startAgencyGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var intrigue = FB.ensureIntrigue(s);
+      intrigue.aiSchemes = [];
+      intrigue.cooldowns = {};
+      intrigue.startYear = null;
+      intrigue.startsThisYear = 0;
+      intrigue.playerFacingStartsThisYear = 0;
+      FB.ensureAgency(s);
+      s.agency.rulerAims = s.agency.rulerAims || {};
+      var topIds = Object.keys(s.realms).filter(function (id) {
+        var realm = s.realms[id];
+        return id !== 'player' && realm && realm.alive && !realm.liege;
+      }).slice(0, 10);
+      var actors = [];
+      var favored = {};
+      for (var i = 0; i < topIds.length; i++) {
+        var rid = topIds[i];
+        var actor = FB.materializeRealmRuler(s, rid);
+        if (!actor) continue;
+        var capital = s.realms[rid].capital;
+        var place = FB.world.byId[capital];
+        var target = FB.makeCharacter(s, {
+          name:'Court Intrigue Target ' + i,
+          sex:i % 2 ? 'f' : 'm',
+          culture:place.culture, religion:place.religion,
+          born:s.date.year - 30, station:2, traitsN:0
+        });
+        target.homeProvinceId = capital;
+        actor.traits = i < 3 ? ['cruel'] : ['kind', 'honest'];
+        s.agency.rulerAims[rid] = {
+          id:i < 3 ? 'expand_realm' : 'keep_peace'
+        };
+        actors.push({ rid:rid, id:actor.id });
+        if (i < 3) favored[actor.id] = 1;
+      }
+      var year = s.date.year;
+      var originalChance = FB.chance;
+      FB.chance = function () { return true; };
+      FB.intrigueAgencyYearly(s);
+      var firstCount = intrigue.aiSchemes.length;
+      var firstIds = intrigue.aiSchemes.map(function (scheme) {
+        return scheme.actorId;
+      });
+      var firstPlayerFacing = intrigue.playerFacingStartsThisYear;
+      FB.intrigueAgencyYearly(s);
+      var repeatedCount = intrigue.aiSchemes.length;
+
+      for (i = 0; i < actors.length; i++) {
+        s.chars[actors[i].id].traits = ['cruel'];
+        s.agency.rulerAims[actors[i].rid] = { id:'expand_realm' };
+      }
+      var growth = [];
+      for (var offset = 1; offset <= 3; offset++) {
+        s.date.year = year + offset;
+        var before = intrigue.aiSchemes.length;
+        FB.intrigueAgencyYearly(s);
+        growth.push(intrigue.aiSchemes.length - before);
+      }
+      var maxCount = intrigue.aiSchemes.length;
+      var activeActorIds = intrigue.aiSchemes.map(function (scheme) {
+        return scheme.actorId;
+      });
+      var majorTargetIds = intrigue.aiSchemes.filter(function (scheme) {
+        return scheme.schemeId === 'assassination' ||
+          scheme.schemeId === 'abduction';
+      }).map(function (scheme) { return scheme.context.characterId; });
+      s.date.year = year + 4;
+      var beforeCap = intrigue.aiSchemes.length;
+      FB.intrigueAgencyYearly(s);
+      var afterCap = intrigue.aiSchemes.length;
+
+      intrigue.aiSchemes = [];
+      var playerSovereign = FB.playerRealmId(s);
+      var warningRealm = playerSovereign !== 'player'
+        ? playerSovereign : Object.keys(s.realms).filter(function (id) {
+          return id !== 'player' && s.realms[id] && s.realms[id].alive &&
+            FB.topRealm(s, id) === playerSovereign;
+        })[0];
+      var warningActor = FB.materializeRealmRuler(s, warningRealm);
+      var playerOption = warningActor && FB.intrigueTargetOptions(s,
+        FBDATA.plots.assassination, warningActor.id, warningRealm).filter(
+        function (option) {
+          return option.characterId === s.player.charId;
+        })[0];
+      if (warningActor && playerOption) {
+        intrigue.aiSchemes.push({
+          recordId:'warning-test', schemeId:'assassination',
+          actorId:warningActor.id, actorRealmId:warningRealm,
+          actorGeneration:FB.realmRulerGeneration(s, warningRealm),
+          context:playerOption.context, methodId:'forceful',
+          power:FBDATA.plots.assassination.need,
+          startedTurn:s.turn, accomplice:null,
+          playerFacing:true, warningStatus:null
+        });
+      }
+      s.eventQueue = [];
+      var playerAliveBefore = !s.chars[s.player.charId].dead;
+      FB.intrigueSeason(s);
+      var warning = s.eventQueue.filter(function (entry) {
+        return entry.id === 'intrigue_warning';
+      });
+      var warningPending = intrigue.aiSchemes.length === 1 &&
+        intrigue.aiSchemes[0].warningStatus === 'pending';
+      var deathCalls = 0;
+      var originalDie = FB.game.die;
+      FB.game.die = function () { deathCalls++; };
+      if (warning.length) {
+        FB.fns.intrigue_warning_ignore(s, warning[0].ctx);
+        FB.intrigueSeason(s);
+      }
+      FB.game.die = originalDie;
+      FB.chance = originalChance;
+      return {
+        actorCount:actors.length,
+        firstCount:firstCount,
+        repeatedCount:repeatedCount,
+        favoredOnly:firstIds.every(function (id) { return !!favored[id]; }),
+        firstPlayerFacing:firstPlayerFacing,
+        cooldowns:firstIds.map(function (id) {
+          return intrigue.cooldowns[id] - year;
+        }),
+        growth:growth,
+        maxCount:maxCount,
+        uniqueActors:activeActorIds.every(function (id, index) {
+          return activeActorIds.indexOf(id) === index;
+        }),
+        uniqueMajorTargets:majorTargetIds.every(function (id, index) {
+          return majorTargetIds.indexOf(id) === index;
+        }),
+        capGrowth:afterCap - beforeCap,
+        warningPrepared:!!(warningActor && playerOption),
+        warningCount:warning.length,
+        warningPending:warningPending,
+        deathCalls:deathCalls,
+        resolvedAfterWarning:intrigue.aiSchemes.length === 0,
+        playerStillAlive:playerAliveBefore &&
+          !s.chars[s.player.charId].dead
+      };
+    });
+
+    expect(result.actorCount).toBeGreaterThanOrEqual(6);
+    expect(result.firstCount).toBe(2);
+    expect(result.repeatedCount).toBe(2);
+    expect(result.favoredOnly).toBe(true);
+    expect(result.firstPlayerFacing).toBeLessThanOrEqual(1);
+    expect(result.cooldowns).toEqual([4, 4]);
+    expect(result.growth).toEqual([2, 2, 0]);
+    expect(result.maxCount).toBe(6);
+    expect(result.uniqueActors).toBe(true);
+    expect(result.uniqueMajorTargets).toBe(true);
+    expect(result.capGrowth).toBe(0);
+    expect(result.warningPrepared).toBe(true);
+    expect(result.warningCount).toBe(1);
+    expect(result.warningPending).toBe(true);
+    expect(result.deathCalls).toBe(1);
+    expect(result.resolvedAfterWarning).toBe(true);
+    expect(result.playerStillAlive).toBe(true);
+  });

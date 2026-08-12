@@ -1478,6 +1478,7 @@ window.FB = window.FB || {};
     if (c.id !== state.player.charId && FB.clearLoadout) FB.clearLoadout(state, c.id);
     if (me && (me.spouseId === c.id || c.spouseId === me.id)) FB.endRoyalCompact(state, c);
     if (state.roles.rival === c.id) FB.endRivalry(state, c.id, true);
+    if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(state, c);
     c.dead = true;
     c.died = state.date.year; // remembered on their sheet: born–died
     /* A dead character no longer reigns, and no longer belongs to any
@@ -1547,6 +1548,12 @@ window.FB = window.FB || {};
     if (!c || c.dead || !me || c.id === me.id) {
       return blocked('invalid',
         FB.T('That person is not available for courtship.'), false);
+    }
+    if (FB.intrigueCaptivityOf &&
+        (FB.intrigueCaptivityOf(state, me.id) ||
+          FB.intrigueCaptivityOf(state, c.id))) {
+      return blocked('captive',
+        FB.T('A captive cannot enter or arrange a marriage.'));
     }
     if (FB.papacyCelibateSnapshot &&
         (FB.papacyCelibateSnapshot(state, me) ||
@@ -1896,6 +1903,8 @@ window.FB = window.FB || {};
   function managedMatchKind(state, descendant) {
     if (!descendant || descendant.dead ||
         FB.ageOf(descendant, state.date.year) < 12 ||
+        (FB.intrigueCaptivityOf &&
+          FB.intrigueCaptivityOf(state, descendant.id)) ||
         FB.spousesOf(state, descendant).length || descendant.betrothedId ||
         (FB.isHouseholdCharacter &&
           !FB.isHouseholdCharacter(state, descendant.id))) return null;
@@ -1926,6 +1935,8 @@ window.FB = window.FB || {};
     let reason = null;
     if (!managedMatchKind(state, child)) reason = 'descendant';
     else if (!cand || cand.dead || cand.role !== 'match') reason = 'candidate';
+    else if (FB.intrigueCaptivityOf &&
+        FB.intrigueCaptivityOf(state, cand.id)) reason = 'captive';
     else if (FB.ageOf(cand, state.date.year) < 12) reason = 'age';
     else if (FB.spousesOf(state, cand).length || cand.betrothedId) reason = 'pledged';
     else if (cand.sex === child.sex) reason = 'doctrine';
@@ -2204,7 +2215,10 @@ window.FB = window.FB || {};
      kin tick; settles the bride's dowry and the standing of the match. */
   FB.doKinWedding = function (state, k, sp) {
     if (!k || !sp || k.dead || sp.dead || FB.spousesOf(state, k).length ||
-        FB.spousesOf(state, sp).length) return false;
+        FB.spousesOf(state, sp).length ||
+        (FB.intrigueCaptivityOf &&
+          (FB.intrigueCaptivityOf(state, k.id) ||
+            FB.intrigueCaptivityOf(state, sp.id)))) return false;
     const B = FBDATA.balance, p = state.player;
     const descendantKind = FB.playerDescendantKind(state, k.id);
     /* A managed kinsman (descendant or resident unwed sibling) establishing
@@ -3984,6 +3998,9 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const s = state.chars[p.courtingId];
     if (!s) return;
+    if (FB.intrigueCaptivityOf &&
+        (FB.intrigueCaptivityOf(state, me.id) ||
+          FB.intrigueCaptivityOf(state, s.id))) return false;
     const settleDowry = options.settleDowry !== false;
     const marriageTerms = settleDowry
       ? FB.courtshipTerms(state, s, false)

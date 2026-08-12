@@ -65,7 +65,8 @@ see-only dynasty successor continues as gentry with the family's private propert
 A living Catholic man who is unmarried or widowed, not betrothed, already holds a
 Bishopric, is at least 35 with Learning 14+, and is backed by 250 piety, 150 prestige,
 and Standing with the Pope +25 may petition for the red hat for 25 gold. Refusal starts a saved
-720-day cooldown.
+720-day cooldown. Intrigue captivity blocks a new Cardinal appointment and removes a
+captive Cardinal from conclave candidacy without stripping an office already held.
 
 Cardinal is an appointed personal office, never a purchased ladder rank. It sets social
 station 4 and replaces the Bishop's seasonal religious yield with 3.5 piety, but grants

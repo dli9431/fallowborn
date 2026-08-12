@@ -264,6 +264,14 @@
         "text": "🍗 Hold a feast"
       }
     },
+    "action.intrigue_assets.label.default": {
+      "context": "action intrigue_assets, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🕸 Intrigue affairs…"
+      }
+    },
     "action.join_great_holy_war.label.default": {
       "context": "action join_great_holy_war, visible label.",
       "glossary": [],
@@ -13019,6 +13027,262 @@
       "location": "data/events_noble.js",
       "source": {
         "text": "Whispers of a Crown"
+      }
+    },
+    "event.intrigue_captive_ransom.options.0.desc.default": {
+      "context": "Event intrigue_captive_ransom, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Pay the recorded demand and return home."
+      }
+    },
+    "event.intrigue_captive_ransom.options.0.label.default": {
+      "context": "Event intrigue_captive_ransom, authored option 0, label, branch default.",
+      "glossary": [
+        "money:ransom"
+      ],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Pay the ransom. ({money:ransom})"
+      }
+    },
+    "event.intrigue_captive_ransom.options.1.desc.default": {
+      "context": "Event intrigue_captive_ransom, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Remain captive and trust to escape or the captor’s death."
+      }
+    },
+    "event.intrigue_captive_ransom.options.1.label.default": {
+      "context": "Event intrigue_captive_ransom, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Refuse."
+      }
+    },
+    "event.intrigue_captive_ransom.text.default": {
+      "context": "Event intrigue_captive_ransom, text, faith branch default.",
+      "glossary": [
+        "money:ransom"
+      ],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Your captor offers release for {money:ransom}. Refuse, and the hidden confinement continues while your household waits."
+      }
+    },
+    "event.intrigue_captive_ransom.title.default": {
+      "context": "Event intrigue_captive_ransom, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "A Ransom from the Shadows"
+      }
+    },
+    "event.intrigue_hearing.options.0.desc.default": {
+      "context": "Event intrigue_hearing, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Put your Intrigue against the strength of the evidence."
+      }
+    },
+    "event.intrigue_hearing.options.0.label.default": {
+      "context": "Event intrigue_hearing, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Challenge the proof."
+      }
+    },
+    "event.intrigue_hearing.options.1.desc.default": {
+      "context": "Event intrigue_hearing, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Pay the projected fine, diya, or wergild and accept public blame."
+      }
+    },
+    "event.intrigue_hearing.options.1.label.default": {
+      "context": "Event intrigue_hearing, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Offer compensation."
+      }
+    },
+    "event.intrigue_hearing.options.2.desc.default": {
+      "context": "Event intrigue_hearing, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Submit to a public spiritual sentence where the court permits it."
+      }
+    },
+    "event.intrigue_hearing.options.2.label.default": {
+      "context": "Event intrigue_hearing, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Accept religious penance."
+      }
+    },
+    "event.intrigue_hearing.options.3.desc.default": {
+      "context": "Event intrigue_hearing, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Accept the court’s projected lawful punishment."
+      }
+    },
+    "event.intrigue_hearing.options.3.label.default": {
+      "context": "Event intrigue_hearing, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Submit to sentence."
+      }
+    },
+    "event.intrigue_hearing.options.4.desc.default": {
+      "context": "Event intrigue_hearing, authored option 4, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Abandon land and station to carry the household beyond the court’s reach."
+      }
+    },
+    "event.intrigue_hearing.options.4.label.default": {
+      "context": "Event intrigue_hearing, authored option 4, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Flee before judgment."
+      }
+    },
+    "event.intrigue_hearing.options.5.desc.default": {
+      "context": "Event intrigue_hearing, authored option 5, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Answer forfeiture through the existing attainder and independence-war path."
+      }
+    },
+    "event.intrigue_hearing.options.5.label.default": {
+      "context": "Event intrigue_hearing, authored option 5, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Resist with force."
+      }
+    },
+    "event.intrigue_hearing.text.param": {
+      "context": "Event intrigue_hearing, text, faith branch param.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "sentence"
+      }
+    },
+    "event.intrigue_hearing.text.select": {
+      "context": "Event intrigue_hearing, text, faith branch select.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "value"
+      }
+    },
+    "event.intrigue_hearing.title.default": {
+      "context": "Event intrigue_hearing, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Called to Answer"
+      }
+    },
+    "event.intrigue_warning.options.0.desc.default": {
+      "context": "Event intrigue_warning, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Try to identify the plotter and weaken the attempt."
+      }
+    },
+    "event.intrigue_warning.options.0.label.default": {
+      "context": "Event intrigue_warning, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Investigate the clue."
+      }
+    },
+    "event.intrigue_warning.options.1.desc.default": {
+      "context": "Event intrigue_warning, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Pay for security that sharply reduces the attempt’s chance."
+      }
+    },
+    "event.intrigue_warning.options.1.label.default": {
+      "context": "Event intrigue_warning, authored option 1, label, branch default.",
+      "glossary": [
+        "money:15"
+      ],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Hire guards and tasters. ({money:15})"
+      }
+    },
+    "event.intrigue_warning.options.2.desc.default": {
+      "context": "Event intrigue_warning, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Risk strengthening the attempt in order to cancel it and catch its author."
+      }
+    },
+    "event.intrigue_warning.options.2.label.default": {
+      "context": "Event intrigue_warning, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Set a counter-trap."
+      }
+    },
+    "event.intrigue_warning.options.3.desc.default": {
+      "context": "Event intrigue_warning, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Make no preparation. The attempt proceeds at its full strength."
+      }
+    },
+    "event.intrigue_warning.options.3.label.default": {
+      "context": "Event intrigue_warning, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "Ignore the warning."
+      }
+    },
+    "event.intrigue_warning.text.default": {
+      "context": "Event intrigue_warning, text, faith branch default.",
+      "glossary": [
+        "student"
+      ],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "A frightened servant brings one clue: someone is preparing a grave attack on {student}. There is time for one response before the attempt."
+      }
+    },
+    "event.intrigue_warning.title.default": {
+      "context": "Event intrigue_warning, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_intrigue.js",
+      "source": {
+        "text": "A Thread in the Dark"
       }
     },
     "event.iron_shortage.options.0.desc.default": {
@@ -31282,6 +31546,22 @@
         }
       }
     },
+    "legend.death.intrigue": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "Killed by a hidden hand in a successful assassination."
+      }
+    },
+    "legend.death.intrigue_sentence": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "Executed after conviction for a hostile scheme."
+      }
+    },
     "legend.death.wounds": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -31666,6 +31946,22 @@
       "location": "data/modifiers.js",
       "source": {
         "text": "Contested Tolls"
+      }
+    },
+    "modifier.covert_sabotage.desc.default": {
+      "context": "modifier covert_sabotage, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Spoiled stores, damaged works, and whispered threats hinder collection and muster."
+      }
+    },
+    "modifier.covert_sabotage.name.default": {
+      "context": "modifier covert_sabotage, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Covert Sabotage"
       }
     },
     "modifier.custom_confirmed.desc.default": {
@@ -33935,6 +34231,146 @@
           "param": "automatic",
           "select": "value"
         }
+      }
+    },
+    "news.intrigue.abandoned": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕊 The hostile scheme is abandoned before it can be sprung."
+      }
+    },
+    "news.intrigue.accomplice_leak": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "plot"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 A refused accomplice exposes the proposed {plot}."
+      }
+    },
+    "news.intrigue.accomplice_refused": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 The proposed accomplice refuses, but keeps silent. The plot proceeds alone."
+      }
+    },
+    "news.intrigue.begins": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "plot"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 A hostile scheme is set in motion: {plot}."
+      }
+    },
+    "news.intrigue.captor_died": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "⛓ A captor’s death ends the confinement."
+      }
+    },
+    "news.intrigue.captor_succession": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "⛓ A captor’s succession ends the confinement."
+      }
+    },
+    "news.intrigue.countertrap_caught": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 The counter-trap catches {name}’s agents red-handed and ends the attempt."
+      }
+    },
+    "news.intrigue.escape": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "⛓ A captive escapes confinement and returns to freedom."
+      }
+    },
+    "news.intrigue.ransom_paid": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "⛓ The ransom is paid and the captive returns home."
+      }
+    },
+    "news.intrigue.ransom_received": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "⛓ A captive is released after ransom is paid."
+      }
+    },
+    "news.intrigue.release_leverage": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "✉ A captive is released under a binding private obligation."
+      }
+    },
+    "news.intrigue.release_mercy": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕊 A captive is released without terms."
+      }
+    },
+    "news.intrigue.security_identified": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🛡 The hired security traces the preparations to {name}."
+      }
+    },
+    "news.intrigue.suspicion": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "plot"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 Suspicion of {plot} damages a relationship, but no hearing can proceed."
+      }
+    },
+    "news.intrigue.target_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 The hostile scheme ends because its exact target or plotter is no longer available."
+      }
+    },
+    "news.intrigue.warning_identified": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "🕸 The investigation identifies {name} as the plotter."
       }
     },
     "news.item.acquired": {
@@ -45388,6 +45824,16 @@
         "text": "👴 Hand over the house"
       }
     },
+    "src.0476e19d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border."
+      }
+    },
     "src.0478725c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45502,7 +45948,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_misc.js"
+        "js/ui_misc.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Clear"
@@ -45797,6 +46244,16 @@
       ],
       "source": {
         "text": "The great mortality walks, and it stopped here."
+      }
+    },
+    "src.059820ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Estimated duration"
       }
     },
     "src.05a292c2": {
@@ -46550,6 +47007,16 @@
         "text": "Your purpose in {destination} is complete, but rank makes this a courtly residence rather than a search for wages. You will remain as an honored guest for at least three months before taking the road home."
       }
     },
+    "src.07550316": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The scheme occupies the Scheming focus until it ends."
+      }
+    },
     "src.07582b24": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -46692,6 +47159,16 @@
       ],
       "source": {
         "text": "0/{capacity} assigned · +{rate} Standing/day when assigned"
+      }
+    },
+    "src.07a3776e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Ignore the warning."
       }
     },
     "src.07a5595f": {
@@ -48888,6 +49365,16 @@
         "text": "Used for {claimant}"
       }
     },
+    "src.0cfb2192": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No hostile personal scheme is currently eligible."
+      }
+    },
     "src.0cff5b48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49740,6 +50227,16 @@
       ],
       "source": {
         "text": "A quiet childhood is worth more than a lawsuit."
+      }
+    },
+    "src.0f2972bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "⛓ The ransom is paid and the captive returns home."
       }
     },
     "src.0f2a4828": {
@@ -52792,6 +53289,16 @@
         "text": "At the destination you must stay and find local work for at least {days} days before returning home."
       }
     },
+    "src.1634249c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Offer {money:10} to {name}"
+      }
+    },
     "src.1643247b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52932,6 +53439,16 @@
       ],
       "source": {
         "text": "Permanent stalls and oversight concentrate exchange in growing towns."
+      }
+    },
+    "src.16692072": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 A refused accomplice exposes the proposed {plot}."
       }
     },
     "src.166e4adc": {
@@ -53153,6 +53670,26 @@
       ],
       "source": {
         "text": "FBS2."
+      }
+    },
+    "src.16de9607": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Compel as accomplice"
+      }
+    },
+    "src.16e6658b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No hostile intrigue affairs are active."
       }
     },
     "src.16f420bc": {
@@ -53759,6 +54296,16 @@
       ],
       "source": {
         "text": "💰 The house of {house} pays the full portion: {money:gold}."
+      }
+    },
+    "src.18521d69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "⛓ A captor’s death ends the confinement."
       }
     },
     "src.185a96f3": {
@@ -54633,6 +55180,16 @@
         "text": "Equipment bonuses"
       }
     },
+    "src.1a471d55": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Three hidden victories have sharpened a practiced conspirator."
+      }
+    },
     "src.1a47ea4d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54792,6 +55349,16 @@
       ],
       "source": {
         "text": "Double the guard, reward the loyal. ({money:15})"
+      }
+    },
+    "src.1aa835c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the Method"
       }
     },
     "src.1aaaae02": {
@@ -55987,6 +56554,16 @@
         "text": "Dublin"
       }
     },
+    "src.1e4046d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Remain captive and trust to escape or the captor’s death."
+      }
+    },
     "src.1e43e526": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56718,6 +57295,16 @@
       ],
       "source": {
         "text": "The lord’s steward finds you among the ashes and is almost kind: “This will keep happening while the wars last. My lord’s wall is high and his men are many. Bring your household inside it, and no host will touch what is his. All he asks is what every protected man owes: service.” Freedom or safety — the old bargain."
+      }
+    },
+    "src.20302342": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Leverage"
       }
     },
     "src.2032b121": {
@@ -57976,6 +58563,16 @@
         "text": "{count} constituencies · {weight} weighted votes"
       }
     },
+    "src.23157980": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose an eligible hostile scheme, method, and optional accomplice against this exact person."
+      }
+    },
     "src.23188062": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58598,6 +59195,16 @@
         "text": "Paris"
       }
     },
+    "src.24722d50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Abandon land and station to carry the household beyond the court’s reach."
+      }
+    },
     "src.2475bd64": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58997,6 +59604,16 @@
       ],
       "source": {
         "text": "Surrender them to the lord’s officer."
+      }
+    },
+    "src.25846e0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 A hostile scheme is set in motion: {plot}."
       }
     },
     "src.25879294": {
@@ -59842,6 +60459,16 @@
         "text": "Salisbury"
       }
     },
+    "src.273d8e33": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "A frightened servant brings one clue: someone is preparing a grave attack on {student}. There is time for one response before the attempt."
+      }
+    },
     "src.273ef9e0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60596,6 +61223,16 @@
         "text": "💰 The value of coin changes this year."
       }
     },
+    "src.29a99e6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "one leverage record"
+      }
+    },
     "src.29ac17e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61274,6 +61911,16 @@
       ],
       "source": {
         "text": "A New Hand on the Seal"
+      }
+    },
+    "src.2b4892be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 Suspicion of {plot} damages a relationship, but no hearing can proceed."
       }
     },
     "src.2b5945bc": {
@@ -62459,6 +63106,16 @@
         "text": "You must hold Roma personally."
       }
     },
+    "src.2e252651": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose an Accomplice"
+      }
+    },
     "src.2e2e32a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62587,6 +63244,16 @@
       ],
       "source": {
         "text": "The bailiffs have taken every movable claim they can find, yet the debt remains. The creditor now claims the manor itself. Its surrender will clear the account, but your house will no longer possess the estate that made it gentle."
+      }
+    },
+    "src.2eb52089": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 A {plot} against {target} fails without revealing its author."
       }
     },
     "src.2ec5ddf7": {
@@ -64115,6 +64782,16 @@
         "text": "Requires {money:cost} for the motion and the subsidy; you have {money:current}."
       }
     },
+    "src.32840850": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Covert Sabotage"
+      }
+    },
     "src.32a1ab1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64174,6 +64851,16 @@
       ],
       "source": {
         "text": "No refund. The lost level and its setup investment must be purchased again."
+      }
+    },
+    "src.32e0d047": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Convicted of plotting against a liege or sovereign."
       }
     },
     "src.32e1a58d": {
@@ -64685,6 +65372,16 @@
       ],
       "source": {
         "text": "Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds."
+      }
+    },
+    "src.34169be6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Rulers and officeholders"
       }
     },
     "src.341738cb": {
@@ -65428,6 +66125,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -65502,6 +66200,16 @@
       ],
       "source": {
         "text": "🎓 {name} is left to their own devices."
+      }
+    },
+    "src.36815003": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your one plot slot is already occupied."
       }
     },
     "src.36815e60": {
@@ -65842,6 +66550,16 @@
       ],
       "source": {
         "text": "Trust your stars."
+      }
+    },
+    "src.37547be3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/institutions.js"
+      ],
+      "source": {
+        "text": "A captive cannot seek a new guild office."
       }
     },
     "src.3754b186": {
@@ -66337,6 +67055,16 @@
       ],
       "source": {
         "text": "Import Save"
+      }
+    },
+    "src.38da4df8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Spoiled stores, damaged works, and whispered threats hinder collection and muster."
       }
     },
     "src.38da747e": {
@@ -67210,6 +67938,16 @@
         "text": "Judaism"
       }
     },
+    "src.3adaecae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Known to have arranged an unlawful death."
+      }
+    },
     "src.3adc79f0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67560,6 +68298,16 @@
         "text": "Changing careers preserves the inactive record’s rank, experience, specialization, examination cooldown, guild rank, Standing, and start year. Ordinary apprentices train until sixteen; landed rulers keep their former calling as biography."
       }
     },
+    "src.3bdf074c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "⛓ A captor’s succession ends the confinement."
+      }
+    },
     "src.3be09796": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67820,6 +68568,16 @@
       ],
       "source": {
         "text": "{years} years · receive {money:fee} now · +{tax}% tax · +{enterprise}% matching enterprise profit · {opinion} popular opinion"
+      }
+    },
+    "src.3c9dcea1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Known to have held another person outside lawful custody."
       }
     },
     "src.3ca4bc2e": {
@@ -68718,6 +69476,16 @@
         "text": "Loot and stories favor the bold — if the dark allows."
       }
     },
+    "src.3f38ca5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Set a counter-trap."
+      }
+    },
     "src.3f3ea6f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69267,6 +70035,16 @@
       ],
       "source": {
         "text": "Locked"
+      }
+    },
+    "src.406e3e92": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "{station} · {residence}"
       }
     },
     "src.407832b5": {
@@ -69973,6 +70751,16 @@
       ],
       "source": {
         "text": "Kingdom of France"
+      }
+    },
+    "src.425ed3ca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "value"
       }
     },
     "src.42709cff": {
@@ -71232,6 +72020,16 @@
         "text": "End the foreign support by giving the vassal a better reason to stay."
       }
     },
+    "src.45160bce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An accomplice is optional. Acceptance is rolled only after confirmation; a refusal may leak the scheme."
+      }
+    },
     "src.45183332": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71959,6 +72757,16 @@
         "text": "px Georgia"
       }
     },
+    "src.46afc432": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No exact targets are currently eligible."
+      }
+    },
     "src.46b697df": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72228,6 +73036,16 @@
       ],
       "source": {
         "text": "Discredit {rival} in public."
+      }
+    },
+    "src.477f8070": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Schemer"
       }
     },
     "src.47801e9b": {
@@ -72660,6 +73478,16 @@
       ],
       "source": {
         "text": "Somewhere the bells are not ringing. Perhaps."
+      }
+    },
+    "src.48a67241": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Captive"
       }
     },
     "src.48a6cfda": {
@@ -73112,6 +73940,16 @@
       ],
       "source": {
         "text": "Repay early?"
+      }
+    },
+    "src.4a1d4e7a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Traitor"
       }
     },
     "src.4a1f7af3": {
@@ -73895,6 +74733,17 @@
       ],
       "source": {
         "text": "The table is a battlefield."
+      }
+    },
+    "src.4c4aa0c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js",
+        "js/papacy.js"
+      ],
+      "source": {
+        "text": "not held captive"
       }
     },
     "src.4c4b1da6": {
@@ -75153,6 +76002,16 @@
         "text": "Work & Enterprises lists only assignable members of the managed household. A visible relative elsewhere is family, but is not household labor."
       }
     },
+    "src.4f77b7a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Abductor"
+      }
+    },
     "src.4f788a33": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75502,6 +76361,16 @@
       ],
       "source": {
         "text": "🕊 {pope} grants absolution to {target}; the sentence is lifted."
+      }
+    },
+    "src.505c5d42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{accept}% acceptance · {leak}% leak after refusal. If accepted, these displayed success and duration values include their help."
       }
     },
     "src.505e2372": {
@@ -77294,6 +78163,16 @@
         "text": "Albi"
       }
     },
+    "src.54cab28f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🛡 The hired security traces the preparations to {name}."
+      }
+    },
     "src.54ce3a41": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77938,6 +78817,16 @@
         "text": "A spear finds the gap beneath your arm. The line advances over you."
       }
     },
+    "src.56501a9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Foreign border counties"
+      }
+    },
     "src.5650da26": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78288,6 +79177,16 @@
         "text": "Good profit, poor prayers — and his mill if he fails."
       }
     },
+    "src.57184957": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕊 A captive is released without terms."
+      }
+    },
     "src.571fc625": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78619,6 +79518,16 @@
         "text": "📜 Petition for a barony"
       }
     },
+    "src.57efb27f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "another realm"
+      }
+    },
     "src.57f61758": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78627,6 +79536,16 @@
       ],
       "source": {
         "text": "At a great ceremony, two magnates claim the place nearest your throne. Genealogy, old privilege, and naked ambition have turned a pace of floor into a contest for the realm to watch."
+      }
+    },
+    "src.57fd85ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Release for leverage"
       }
     },
     "src.580a9faa": {
@@ -78677,6 +79596,16 @@
       ],
       "source": {
         "text": "Debase the coinage?"
+      }
+    },
+    "src.58220783": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Pay the projected fine, diya, or wergild and accept public blame."
       }
     },
     "src.58290ecd": {
@@ -79291,6 +80220,16 @@
         "text": "the town"
       }
     },
+    "src.59e02574": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "sentence"
+      }
+    },
     "src.59e7cb17": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79896,6 +80835,16 @@
         "text": "A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose."
       }
     },
+    "src.5b555881": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Refuse."
+      }
+    },
     "src.5b62c16f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79994,6 +80943,16 @@
       ],
       "source": {
         "text": "· 🔒 locked"
+      }
+    },
+    "src.5b9bae22": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{success}% success · about {days} days · {money:cost} · {exposure}% yearly exposure"
       }
     },
     "src.5b9d380b": {
@@ -80116,6 +81075,16 @@
         "text": "Available now"
       }
     },
+    "src.5bef1f43": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "You cannot travel, marry, hold a plot, or take a new office while confined."
+      }
+    },
     "src.5bf74906": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80144,6 +81113,16 @@
       ],
       "source": {
         "text": "Leave merchants to buy their own guards."
+      }
+    },
+    "src.5bfc684b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Ask {name}"
       }
     },
     "src.5bfe0453": {
@@ -80184,6 +81163,16 @@
       ],
       "source": {
         "text": "Letters, law, worship, and the learned work of a religious house."
+      }
+    },
+    "src.5c1252d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Begin scheme"
       }
     },
     "src.5c1b8a0e": {
@@ -80475,6 +81464,16 @@
       ],
       "source": {
         "text": "Galway"
+      }
+    },
+    "src.5cd7d310": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "⛓ A captive is released after ransom is paid."
       }
     },
     "src.5ce4c937": {
@@ -80840,6 +81839,16 @@
       ],
       "source": {
         "text": "You are pledged to another."
+      }
+    },
+    "src.5df951f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Abandon scheme"
       }
     },
     "src.5dfa81cf": {
@@ -81565,6 +82574,16 @@
         "text": "Take on the adventurers. ({money:25})"
       }
     },
+    "src.5fae7341": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Pay for security that sharply reduces the attempt’s chance."
+      }
+    },
     "src.5fb21162": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82161,6 +83180,16 @@
         "text": "Departure assigns your personal attention to {name}; progress begins only once you arrive."
       }
     },
+    "src.61120879": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "one captive"
+      }
+    },
     "src.61172920": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82189,6 +83218,16 @@
       ],
       "source": {
         "text": "Laminated horn, sinew, and wood store great power in a short bow."
+      }
+    },
+    "src.6121b89c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 The counter-trap catches {name}’s agents red-handed and ends the attempt."
       }
     },
     "src.6129d9b4": {
@@ -82309,6 +83348,16 @@
       ],
       "source": {
         "text": "Fled a debt-bondage sentence."
+      }
+    },
+    "src.616d145e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Name, station, county, or realm"
       }
     },
     "src.616f0bf6": {
@@ -82772,6 +83821,16 @@
         "text": "The marshal produces your written order."
       }
     },
+    "src.627d7929": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Current success"
+      }
+    },
     "src.62823a02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83220,6 +84279,16 @@
       ],
       "source": {
         "text": "Lime Mortar"
+      }
+    },
+    "src.63be8d24": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Demand ransom"
       }
     },
     "src.63cbf192": {
@@ -83776,6 +84845,16 @@
       ],
       "source": {
         "text": "High King"
+      }
+    },
+    "src.656ad29d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Release for {money:amount}."
       }
     },
     "src.656c273f": {
@@ -86555,6 +87634,16 @@
         "text": "Honor the dead, and hope the craft honors you."
       }
     },
+    "src.6c8e6586": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Release mercifully"
+      }
+    },
     "src.6c8f4393": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87749,6 +88838,16 @@
         "text": "Write a line about the bug or idea first."
       }
     },
+    "src.6f775d5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal intrigue-modal"
+      }
+    },
     "src.6f7a55ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88519,6 +89618,16 @@
         "text": "Seek the next guild rank — {rank} ({money:gold})"
       }
     },
+    "src.71a97630": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Try to identify the plotter and weaken the attempt."
+      }
+    },
     "src.71a9c42d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88980,6 +90089,16 @@
         "text": "Whose Mark Is It?"
       }
     },
+    "src.72c735fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Answer forfeiture through the existing attainder and independence-war path."
+      }
+    },
     "src.72d26ace": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89008,6 +90127,16 @@
       ],
       "source": {
         "text": "The bones favor you tonight."
+      }
+    },
+    "src.72e5f37d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Pay the recorded demand and return home."
       }
     },
     "src.72e65ad5": {
@@ -89842,6 +90971,16 @@
         "text": "Warmth given is remembered when the thaw comes."
       }
     },
+    "src.74b9faa0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Success if accepted"
+      }
+    },
     "src.74bb9ddf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89920,6 +91059,16 @@
       ],
       "source": {
         "text": "kingdom crown"
+      }
+    },
+    "src.74dec0ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Plot against…"
       }
     },
     "src.74f3814f": {
@@ -91134,6 +92283,16 @@
       ],
       "source": {
         "text": "Manners hide as much as they reveal."
+      }
+    },
+    "src.784a2df0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 A {plot} against {target} fails and is exposed."
       }
     },
     "src.7858bd12": {
@@ -93125,6 +94284,16 @@
         "text": "Chaptered royal orders circulate policy among assemblies and local officers."
       }
     },
+    "src.7d7418ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "A Thread in the Dark"
+      }
+    },
     "src.7d750796": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93553,6 +94722,16 @@
       ],
       "source": {
         "text": "Truth is a tool like any other."
+      }
+    },
+    "src.7e2e529f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Submit to sentence."
       }
     },
     "src.7e326311": {
@@ -95492,6 +96671,16 @@
         "text": "Merchant’s son"
       }
     },
+    "src.82b9dc28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "A Ransom from the Shadows"
+      }
+    },
     "src.82ba2b51": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95730,6 +96919,16 @@
       ],
       "source": {
         "text": "No simulated institution applies. Independent counts and dukes govern their own domain without the liege’s Estates or a Royal Council."
+      }
+    },
+    "src.835ed2d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 The proposed accomplice refuses, but keeps silent. The plot proceeds alone."
       }
     },
     "src.835f8103": {
@@ -95990,6 +97189,16 @@
       ],
       "source": {
         "text": "The captain wants men for a night raid on the enemy pickets — quiet feet, quick knives, and no promises about the morning."
+      }
+    },
+    "src.83e3a426": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Estimated time remaining"
       }
     },
     "src.83ec3fd5": {
@@ -98249,6 +99458,16 @@
         "text": "Papal investiture demand"
       }
     },
+    "src.89308882": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Proceed alone"
+      }
+    },
     "src.893250f1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99194,6 +100413,16 @@
         "text": "Preserve the charter and gain guild support at the Common Voice’s expense."
       }
     },
+    "src.8b5ee01c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Counties of the realm"
+      }
+    },
     "src.8b6ec367": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99242,6 +100471,16 @@
       ],
       "source": {
         "text": "A Motion to Confirm Local Custom"
+      }
+    },
+    "src.8b829af5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Proposed accomplice"
       }
     },
     "src.8b8812ab": {
@@ -99844,6 +101083,16 @@
       ],
       "source": {
         "text": "Ends {modifier} for this great holy war."
+      }
+    },
+    "src.8cefeb8c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{power}/{needed}"
       }
     },
     "src.8cf745c5": {
@@ -100587,6 +101836,16 @@
         "text": "Watermill"
       }
     },
+    "src.8e9aa62d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "A captive cannot enter or arrange a marriage."
+      }
+    },
     "src.8e9c2874": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101199,6 +102458,16 @@
       ],
       "source": {
         "text": "The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears."
+      }
+    },
+    "src.90018139": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Make no preparation. The attempt proceeds at its full strength."
       }
     },
     "src.9008fc1e": {
@@ -101945,6 +103214,16 @@
         "text": "A lesson mastered is worth more than a favor chased."
       }
     },
+    "src.921b1d3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "Killed by a hidden hand in a successful assassination."
+      }
+    },
     "src.9220283e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102253,6 +103532,16 @@
       ],
       "source": {
         "text": "This instruction is not available to this child."
+      }
+    },
+    "src.9366e42f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Adds 10 points of discovery risk."
       }
     },
     "src.93670d0f": {
@@ -103974,6 +105263,16 @@
         "text": "you yourself"
       }
     },
+    "src.97ddddfc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Yearly exposure"
+      }
+    },
     "src.97de5894": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104369,6 +105668,16 @@
         "text": "Clerical servant"
       }
     },
+    "src.98a2c750": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Method"
+      }
+    },
     "src.98b3d7dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104477,6 +105786,16 @@
       ],
       "source": {
         "text": "This obedience has no living claimant."
+      }
+    },
+    "src.98fdae4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Your captor offers release for {money:ransom}. Refuse, and the hidden confinement continues while your household waits."
       }
     },
     "src.9912c136": {
@@ -105914,6 +107233,16 @@
         "text": "Mercy costs a little coin and buys goodwill."
       }
     },
+    "src.9c9083a2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Scheme"
+      }
+    },
     "src.9c9a7781": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106032,6 +107361,16 @@
       ],
       "source": {
         "text": "No neighboring hostile realm can be reached from your border."
+      }
+    },
+    "src.9ccecbc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A captive cannot hold a plot."
       }
     },
     "src.9cd242f5": {
@@ -106807,6 +108146,16 @@
         "text": "Republic of Venice"
       }
     },
+    "src.9eba6417": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Challenge the proof."
+      }
+    },
     "src.9ec05db6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107055,6 +108404,16 @@
       ],
       "source": {
         "text": "Horns. Mud. A line of strangers who mean to kill you, close enough now to see their teeth. The man beside you is praying; the man beyond him is laughing."
+      }
+    },
+    "src.9f452a02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Review an active hostile scheme, captive, or exact leverage."
       }
     },
     "src.9f5a3b71": {
@@ -107791,6 +109150,16 @@
         "text": "Grant the {profession} monopoly"
       }
     },
+    "src.a14bff7a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No consent roll and no accomplice bonus."
+      }
+    },
     "src.a14ea4c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107902,6 +109271,16 @@
         "text": "Resist with steel."
       }
     },
+    "src.a178f689": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🕸 Intrigue affairs…"
+      }
+    },
     "src.a17f9450": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108010,6 +109389,16 @@
       ],
       "source": {
         "text": "Money remaining after purchase"
+      }
+    },
+    "src.a1c9b264": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Accept religious penance."
       }
     },
     "src.a1d195bf": {
@@ -108743,6 +110132,16 @@
         "text": "Bid on the lot. ({money:8})"
       }
     },
+    "src.a393d69a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Active scheme"
+      }
+    },
     "src.a394a2cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109294,6 +110693,16 @@
         "text": "Creates the one canonical active rivalry."
       }
     },
+    "src.a4c31185": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Pay the ransom. ({money:ransom})"
+      }
+    },
     "src.a4c472ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109687,6 +111096,16 @@
       ],
       "source": {
         "text": "Frankish"
+      }
+    },
+    "src.a5ebe5b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Resist with force."
       }
     },
     "src.a5f6735c": {
@@ -112312,6 +113731,16 @@
         "text": "Papers are produced; clerks smile thinly. You leave with hard words and an empty purse."
       }
     },
+    "src.acf65cb5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Exact target"
+      }
+    },
     "src.acfb24f1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112542,6 +113971,16 @@
       ],
       "source": {
         "text": "After the Reapers"
+      }
+    },
+    "src.ad70caec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕊 The hostile scheme is abandoned before it can be sprung."
       }
     },
     "src.ad7219a0": {
@@ -112803,6 +114242,16 @@
       ],
       "source": {
         "text": "Rest and broth."
+      }
+    },
+    "src.ae3b3752": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Flee before judgment."
       }
     },
     "src.ae54c1dc": {
@@ -113355,6 +114804,16 @@
       ],
       "source": {
         "text": "Institution management"
+      }
+    },
+    "src.afbed282": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "⛓ A captive escapes confinement and returns to freedom."
       }
     },
     "src.afc08c71": {
@@ -114081,6 +115540,16 @@
         "text": "Petition at the great houses."
       }
     },
+    "src.b10d7100": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Demand payment"
+      }
+    },
     "src.b10e75e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114149,6 +115618,16 @@
       ],
       "source": {
         "text": "Renounce {liege} and raise your own banner — it means war."
+      }
+    },
+    "src.b141b745": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Offer compensation."
       }
     },
     "src.b15712cb": {
@@ -114279,6 +115758,16 @@
       ],
       "source": {
         "text": "👑 Enter the settlement council…"
+      }
+    },
+    "src.b1c3aa62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Be exposed for a successful assassination."
       }
     },
     "src.b1c43a24": {
@@ -116587,6 +118076,16 @@
         "text": "with a spouse and grown children"
       }
     },
+    "src.b7233000": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "you are captive"
+      }
+    },
     "src.b7245164": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116696,6 +118195,16 @@
       ],
       "source": {
         "text": "⚖ The last assigned revenues reach the lender; the defaulted obligation is settled."
+      }
+    },
+    "src.b76b57b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "✉ A captive is released under a binding private obligation."
       }
     },
     "src.b782c0bb": {
@@ -118593,6 +120102,16 @@
         "text": "heir successor named heir children grandchildren siblings house death retirement abdication"
       }
     },
+    "src.bcc2cb53": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{accept}% acceptance · {leak}% leak after refusal"
+      }
+    },
     "src.bcc8d916": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118771,6 +120290,16 @@
       ],
       "source": {
         "text": "Prestige required"
+      }
+    },
+    "src.bd449bdc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Create target-bound leverage lasting two years."
       }
     },
     "src.bd4acea6": {
@@ -119113,6 +120642,16 @@
       ],
       "source": {
         "text": "Return to title"
+      }
+    },
+    "src.bdfbe4ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/travel.js"
+      ],
+      "source": {
+        "text": "A captive cannot receive a relationship visit."
       }
     },
     "src.be00dacf": {
@@ -119469,6 +121008,16 @@
         "text": "At least one family is above the immediate gold cap."
       }
     },
+    "src.bf595e84": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 A {plot} against {target} succeeds and is exposed."
+      }
+    },
     "src.bf639999": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119567,6 +121116,16 @@
       ],
       "source": {
         "text": "Only a sovereign may restore the Papacy."
+      }
+    },
+    "src.bfa21e10": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Intrigue Affairs"
       }
     },
     "src.bfa58276": {
@@ -120352,6 +121911,16 @@
       ],
       "source": {
         "text": "fullsheet-modal domain-cleanup-modal"
+      }
+    },
+    "src.c16f4834": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Put your Intrigue against the strength of the evidence."
       }
     },
     "src.c1706b7a": {
@@ -121994,6 +123563,16 @@
         "text": "Honor the sacred claim and write the local levy concession in full."
       }
     },
+    "src.c59fa951": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Accept the court’s projected lawful punishment."
+      }
+    },
     "src.c5a4c167": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122244,6 +123823,16 @@
         "text": "Search"
       }
     },
+    "src.c64c36b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Intrigue affairs"
+      }
+    },
     "src.c663c9cc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122374,6 +123963,16 @@
         "text": "Cash costs {money:cost} for +{standing} Standing; an eligible armory item grants its quality value. The recipient cooldown is {days} days."
       }
     },
+    "src.c6bfea9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{plot}: {power}/{needed}"
+      }
+    },
     "src.c6c47cb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122392,6 +123991,16 @@
       ],
       "source": {
         "text": "Direct their formative years toward one art."
+      }
+    },
+    "src.c6c54268": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 The hostile scheme ends because its exact target or plotter is no longer available."
       }
     },
     "src.c6cddf92": {
@@ -122572,6 +124181,16 @@
       ],
       "source": {
         "text": "Flee beyond the court’s reach."
+      }
+    },
+    "src.c70e2395": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Be convicted for a scheme against lawful authority."
       }
     },
     "src.c70ff75a": {
@@ -124120,6 +125739,16 @@
         "text": "Home again."
       }
     },
+    "src.cb50a887": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Search targets"
+      }
+    },
     "src.cb5f6a36": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124446,6 +126075,16 @@
         "text": "Household service"
       }
     },
+    "src.cc0d52ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Murderer"
+      }
+    },
     "src.cc0eaefa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124547,6 +126186,16 @@
       ],
       "source": {
         "text": "Refuse outright."
+      }
+    },
+    "src.cc296837": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{days} days remain. It can be used exactly once."
       }
     },
     "src.cc2f6c8e": {
@@ -125150,6 +126799,16 @@
       ],
       "source": {
         "text": "Settle default balance ({money:amount})"
+      }
+    },
+    "src.cd692432": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Complete three hostile schemes."
       }
     },
     "src.cd6a6cec": {
@@ -126556,6 +128215,16 @@
       ],
       "source": {
         "text": "about {money:gold}"
+      }
+    },
+    "src.d16c148f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Expose political foothold"
       }
     },
     "src.d173b4cb": {
@@ -128141,6 +129810,16 @@
         "text": "Dead dogs do not cut their own throats."
       }
     },
+    "src.d5e35b92": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Risk strengthening the attempt in order to cancel it and catch its author."
+      }
+    },
     "src.d5e3e7e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128619,6 +130298,16 @@
       ],
       "source": {
         "text": "Smile and let the verses die."
+      }
+    },
+    "src.d6e0e6eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Confirm the Scheme"
       }
     },
     "src.d6e27ff7": {
@@ -129692,6 +131381,16 @@
       ],
       "source": {
         "text": "Press the suit."
+      }
+    },
+    "src.d975f535": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "unknown residence"
       }
     },
     "src.d97e2502": {
@@ -130866,6 +132565,16 @@
       ],
       "source": {
         "text": "Caught in the moonlight, shovel in hand. The moot fines you."
+      }
+    },
+    "src.dca4085e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pay ransom ({money:amount})"
       }
     },
     "src.dca48804": {
@@ -132198,6 +133907,16 @@
       ],
       "source": {
         "text": "Luxor"
+      }
+    },
+    "src.dfe07a43": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "Executed after conviction for a hostile scheme."
       }
     },
     "src.dfec3bb6": {
@@ -134363,6 +136082,16 @@
         "text": "{count} member houses"
       }
     },
+    "src.e52af139": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 The investigation identifies {name} as the plotter."
+      }
+    },
     "src.e52e1315": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135352,6 +137081,16 @@
       ],
       "source": {
         "text": "That person is not available for courtship."
+      }
+    },
+    "src.e7a2159d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Called to Answer"
       }
     },
     "src.e7acb27c": {
@@ -136597,6 +138336,16 @@
         "text": "Crushed the great rising of the commons."
       }
     },
+    "src.ea89cd80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "🕸 A {plot} against {target} succeeds in secret."
+      }
+    },
     "src.ea942dfd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137249,6 +138998,16 @@
         "text": "Throw yourself on the mercy of {god} — and flee."
       }
     },
+    "src.eca9fe07": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your captivity"
+      }
+    },
     "src.ecb02c1c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137498,6 +139257,16 @@
       ],
       "source": {
         "text": "Open Royal Council management…"
+      }
+    },
+    "src.ed1ae5da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Plot against {name}"
       }
     },
     "src.ed1b3c85": {
@@ -138944,6 +140713,16 @@
         "text": "Grandchildren"
       }
     },
+    "src.f0b0a8ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Hire guards and tasters. ({money:15})"
+      }
+    },
     "src.f0c0d260": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139374,6 +141153,16 @@
         "text": "Trade leniency for warmer Standing and lower crown authority."
       }
     },
+    "src.f1bb5533": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "County inside your sovereign realm"
+      }
+    },
     "src.f1c15f42": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139482,6 +141271,16 @@
       ],
       "source": {
         "text": "Labored on the lord’s works."
+      }
+    },
+    "src.f20883d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial."
       }
     },
     "src.f20a2607": {
@@ -140932,6 +142731,16 @@
         "text": "Press House"
       }
     },
+    "src.f5ded540": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/intrigue.js"
+      ],
+      "source": {
+        "text": "Foreign border county held by {realm}"
+      }
+    },
     "src.f5e3a250": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140940,6 +142749,16 @@
       ],
       "source": {
         "text": "A positional zero makes long calculation compact and systematic."
+      }
+    },
+    "src.f5e57823": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "People of the realm"
       }
     },
     "src.f5e750e9": {
@@ -141061,6 +142880,16 @@
       ],
       "source": {
         "text": "Steel answers what words cannot."
+      }
+    },
+    "src.f625e57a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Investigate the clue."
       }
     },
     "src.f6363405": {
@@ -143512,6 +145341,16 @@
         "text": "Granada"
       }
     },
+    "src.fc959576": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_intrigue.js"
+      ],
+      "source": {
+        "text": "Submit to a public spiritual sentence where the court permits it."
+      }
+    },
     "src.fc988b1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143743,6 +145582,16 @@
         "text": "No province chosen yet. Tap the map or use Random Province."
       }
     },
+    "src.fd6bd911": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/traits.js"
+      ],
+      "source": {
+        "text": "Be exposed for an unlawful abduction."
+      }
+    },
     "src.fd6ebc9f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143791,6 +145640,16 @@
       ],
       "source": {
         "text": "Slip away through the brush."
+      }
+    },
+    "src.fd8f327f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your one leverage slot is occupied."
       }
     },
     "src.fd98018c": {
@@ -148481,6 +150340,30 @@
         "text": "High Queen"
       }
     },
+    "trait.abductor.desc.default": {
+      "context": "trait abductor, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Known to have held another person outside lawful custody."
+      }
+    },
+    "trait.abductor.earned.default": {
+      "context": "trait abductor, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Be exposed for an unlawful abduction."
+      }
+    },
+    "trait.abductor.name.default": {
+      "context": "trait abductor, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Abductor"
+      }
+    },
     "trait.ambitious.desc.default": {
       "context": "trait ambitious, desc, faith branch default.",
       "glossary": [],
@@ -148961,6 +150844,30 @@
         "text": "Moot-Speaker"
       }
     },
+    "trait.murderer.desc.default": {
+      "context": "trait murderer, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Known to have arranged an unlawful death."
+      }
+    },
+    "trait.murderer.earned.default": {
+      "context": "trait murderer, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Be exposed for a successful assassination."
+      }
+    },
+    "trait.murderer.name.default": {
+      "context": "trait murderer, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Murderer"
+      }
+    },
     "trait.muster_bred.desc.default": {
       "context": "trait muster_bred, desc, faith branch default.",
       "glossary": [],
@@ -149193,6 +151100,30 @@
         "text": "Scarred"
       }
     },
+    "trait.schemer.desc.default": {
+      "context": "trait schemer, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Three hidden victories have sharpened a practiced conspirator."
+      }
+    },
+    "trait.schemer.earned.default": {
+      "context": "trait schemer, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Complete three hostile schemes."
+      }
+    },
+    "trait.schemer.name.default": {
+      "context": "trait schemer, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Schemer"
+      }
+    },
     "trait.sickly.desc.default": {
       "context": "trait sickly, desc, faith branch default.",
       "glossary": [],
@@ -149263,6 +151194,30 @@
       "location": "data/traits.js",
       "source": {
         "text": "Temperate"
+      }
+    },
+    "trait.traitor.desc.default": {
+      "context": "trait traitor, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Convicted of plotting against a liege or sovereign."
+      }
+    },
+    "trait.traitor.earned.default": {
+      "context": "trait traitor, earned, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Be convicted for a scheme against lawful authority."
+      }
+    },
+    "trait.traitor.name.default": {
+      "context": "trait traitor, name, faith branch default.",
+      "glossary": [],
+      "location": "data/traits.js",
+      "source": {
+        "text": "Traitor"
       }
     },
     "trait.veteran.desc.default": {
@@ -150007,6 +151962,38 @@
         "text": "A bishopric is a non-hereditary church office. A merit petition is free; a disclosed cathedral endowment improves the lawful appointment chance but is spent whether the petition succeeds or fails."
       }
     },
+    "ui:A captive cannot enter or arrange a marriage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "A captive cannot enter or arrange a marriage."
+      }
+    },
+    "ui:A captive cannot hold a plot.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A captive cannot hold a plot."
+      }
+    },
+    "ui:A captive cannot receive a relationship visit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/travel.js",
+      "source": {
+        "text": "A captive cannot receive a relationship visit."
+      }
+    },
+    "ui:A captive cannot seek a new guild office.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/institutions.js",
+      "source": {
+        "text": "A captive cannot seek a new guild office."
+      }
+    },
     "ui:A career record keeps rank and experience even while inactive.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -150499,6 +152486,14 @@
         "text": "A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals."
       }
     },
+    "ui:Abandon scheme": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Abandon scheme"
+      }
+    },
     "ui:Abandon the journey and retrace the road. Nothing is refunded.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -150806,6 +152801,14 @@
         "text": "Active rivalry"
       }
     },
+    "ui:Active scheme": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Active scheme"
+      }
+    },
     "ui:Active war": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -150820,6 +152823,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Add shortcut"
+      }
+    },
+    "ui:Adds 10 points of discovery risk.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Adds 10 points of discovery risk."
       }
     },
     "ui:Adds national research slot {slot}.": {
@@ -151227,6 +153238,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "An accepted suit uses ordinary personal attention and needs +80 Standing before proposal. A rejected proposal is permanent; breaking off an accepted suit prevents renewal for five years. No sibling match ever creates a dowry, royal compact, or alliance."
+      }
+    },
+    "ui:An accomplice is optional. Acceptance is rolled only after confirmation; a refusal may leak the scheme.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An accomplice is optional. Acceptance is rolled only after confirmation; a refusal may leak the scheme."
       }
     },
     "ui:An active mod has an invalid currency definition. The default currency is being used.": {
@@ -151693,6 +153712,16 @@
       "location": "js/actions.js",
       "source": {
         "text": "Ask {lord} for lands and a banner."
+      }
+    },
+    "ui:Ask {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Ask {name}"
       }
     },
     "ui:Asset and effect summary": {
@@ -152392,6 +154421,14 @@
         "text": "Begin research"
       }
     },
+    "ui:Begin scheme": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Begin scheme"
+      }
+    },
     "ui:Begin unlawful revocation…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153009,6 +155046,14 @@
         "text": "Capital"
       }
     },
+    "ui:Captive": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Captive"
+      }
+    },
     "ui:Cardinal": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153414,6 +155459,14 @@
         "text": "Choose a target"
       }
     },
+    "ui:Choose an Accomplice": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose an Accomplice"
+      }
+    },
     "ui:Choose an action": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153436,6 +155489,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose an education focus first."
+      }
+    },
+    "ui:Choose an eligible hostile scheme, method, and optional accomplice against this exact person.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose an eligible hostile scheme, method, and optional accomplice against this exact person."
       }
     },
     "ui:Choose an unseated vassal for this office. Appointment changes Standing and crown authority immediately; it does not create a household pay contract.": {
@@ -153506,12 +155567,28 @@
         "text": "Choose long-range diplomatic and research priorities."
       }
     },
+    "ui:Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border."
+      }
+    },
     "ui:Choose one tactic for this ballot. Every elector’s current lean is shown below; the saved ballot may still vary.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose one tactic for this ballot. Every elector’s current lean is shown below; the saved ballot may still vary."
+      }
+    },
+    "ui:Choose the Method": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the Method"
       }
     },
     "ui:Choose the Target": {
@@ -153735,7 +155812,7 @@
     "ui:Clear": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_misc.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Clear"
       }
@@ -153838,6 +155915,14 @@
         "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
       }
     },
+    "ui:Compel as accomplice": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Compel as accomplice"
+      }
+    },
     "ui:Complete a deed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -153868,6 +155953,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Condemned as hostile"
+      }
+    },
+    "ui:Confirm the Scheme": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Confirm the Scheme"
       }
     },
     "ui:Confirm the contract": {
@@ -154147,6 +156240,14 @@
         "text": "Counties ({count})"
       }
     },
+    "ui:Counties of the realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Counties of the realm"
+      }
+    },
     "ui:Counties over the limit: {count}. The multiplier applies to your own demesne tax and levy, not vassal contributions.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -154182,6 +156283,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "County economy, levies, and local events"
+      }
+    },
+    "ui:County inside your sovereign realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "County inside your sovereign realm"
       }
     },
     "ui:County levy — {county}": {
@@ -154271,6 +156380,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Craft"
+      }
+    },
+    "ui:Create target-bound leverage lasting two years.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Create target-bound leverage lasting two years."
       }
     },
     "ui:Creates the one canonical active rivalry.": {
@@ -154819,6 +156936,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Demand canonical investiture"
+      }
+    },
+    "ui:Demand payment": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Demand payment"
+      }
+    },
+    "ui:Demand ransom": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Demand ransom"
       }
     },
     "ui:Demolish {building}": {
@@ -156284,6 +158417,14 @@
         "text": "Expiry"
       }
     },
+    "ui:Expose political foothold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Expose political foothold"
+      }
+    },
     "ui:Exposed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -156689,6 +158830,24 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Foreign Policy"
+      }
+    },
+    "ui:Foreign border counties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Foreign border counties"
+      }
+    },
+    "ui:Foreign border county held by {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "Foreign border county held by {realm}"
       }
     },
     "ui:Foreign sovereign": {
@@ -158204,6 +160363,22 @@
         "text": "Interests"
       }
     },
+    "ui:Intrigue Affairs": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Intrigue Affairs"
+      }
+    },
+    "ui:Intrigue affairs": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Intrigue affairs"
+      }
+    },
     "ui:Intrigue decides the outcome; success lowers Standing by 8, discovery by 20. Spends the day.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -158810,6 +160985,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Level {level}: {name}"
+      }
+    },
+    "ui:Leverage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Leverage"
       }
     },
     "ui:Levy food and supplies": {
@@ -159954,6 +162137,14 @@
         "text": "Name, role, work, office, or realm"
       }
     },
+    "ui:Name, station, county, or realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Name, station, county, or realm"
+      }
+    },
     "ui:Named friend": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -160303,6 +162494,14 @@
         "text": "No compact"
       }
     },
+    "ui:No consent roll and no accomplice bonus.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No consent roll and no accomplice bonus."
+      }
+    },
     "ui:No constituency is presently organized around a refused demand.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -160487,6 +162686,14 @@
         "text": "No equipment bonuses."
       }
     },
+    "ui:No exact targets are currently eligible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No exact targets are currently eligible."
+      }
+    },
     "ui:No fee": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -160581,6 +162788,22 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "No guild favor is available."
+      }
+    },
+    "ui:No hostile intrigue affairs are active.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No hostile intrigue affairs are active."
+      }
+    },
+    "ui:No hostile personal scheme is currently eligible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No hostile personal scheme is currently eligible."
       }
     },
     "ui:No household is ready to trade.": {
@@ -161747,6 +163970,17 @@
         "text": "Offer terms · take it as vassal of {realm}"
       }
     },
+    "ui:Offer {money:10} to {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:10",
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Offer {money:10} to {name}"
+      }
+    },
     "ui:Offer {money:gold} in cash": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -162683,6 +164917,16 @@
         "text": "Pay missed this season"
       }
     },
+    "ui:Pay ransom ({money:amount})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pay ransom ({money:amount})"
+      }
+    },
     "ui:Pay to call in light coin, restore weight, and press prices back toward stability.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -162818,6 +165062,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "People"
+      }
+    },
+    "ui:People of the realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "People of the realm"
       }
     },
     "ui:Permanent household property": {
@@ -163119,6 +165371,24 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Pledged; cannot be equipped, sold, or gifted"
+      }
+    },
+    "ui:Plot against {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Plot against {name}"
+      }
+    },
+    "ui:Plot against…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Plot against…"
       }
     },
     "ui:Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor.": {
@@ -163482,6 +165752,14 @@
         "text": "Problems first"
       }
     },
+    "ui:Proceed alone": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Proceed alone"
+      }
+    },
     "ui:Professed Brother": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -163599,6 +165877,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Proposed"
+      }
+    },
+    "ui:Proposed accomplice": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Proposed accomplice"
       }
     },
     "ui:Proposed outfit": {
@@ -164253,6 +166539,32 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Relationship journey"
+      }
+    },
+    "ui:Release for leverage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Release for leverage"
+      }
+    },
+    "ui:Release for {money:amount}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Release for {money:amount}."
+      }
+    },
+    "ui:Release mercifully": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Release mercifully"
       }
     },
     "ui:Releases personal attention and lowers Standing by 20.": {
@@ -165872,6 +168184,14 @@
         "text": "Ruler within another realm"
       }
     },
+    "ui:Rulers and officeholders": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Rulers and officeholders"
+      }
+    },
     "ui:Rulers of your faith also lose 8 Standing.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166054,6 +168374,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Search realm, ruler, or territory"
+      }
+    },
+    "ui:Search targets": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Search targets"
       }
     },
     "ui:Search this list": {
@@ -168511,6 +170839,14 @@
         "text": "The match assistant will omit this person from future recommendations. Manual matching remains available."
       }
     },
+    "ui:The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial."
+      }
+    },
     "ui:The motion has already been called to a vote.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -168753,6 +171089,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "The same faith"
+      }
+    },
+    "ui:The scheme occupies the Scheming focus until it ends.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The scheme occupies the Scheming focus until it ends."
       }
     },
     "ui:The see returns to the Church; private property and separate secular titles follow dynasty law.": {
@@ -171071,6 +173415,14 @@
         "text": "You cannot leave while personally at war."
       }
     },
+    "ui:You cannot travel, marry, hold a plot, or take a new office while confined.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "You cannot travel, marry, hold a plot, or take a new office while confined."
+      }
+    },
     "ui:You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -171394,6 +173746,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Your campaign service"
+      }
+    },
+    "ui:Your captivity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your captivity"
       }
     },
     "ui:Your child": {
@@ -171763,12 +174123,28 @@
         "text": "Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill."
       }
     },
+    "ui:Your one leverage slot is occupied.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your one leverage slot is occupied."
+      }
+    },
     "ui:Your one lobbying attempt has already been used.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/parliament.js",
       "source": {
         "text": "Your one lobbying attempt has already been used."
+      }
+    },
+    "ui:Your one plot slot is already occupied.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your one plot slot is already occupied."
       }
     },
     "ui:Your participation in this great holy war": {
@@ -172223,6 +174599,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "another household member"
+      }
+    },
+    "ui:another realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "another realm"
       }
     },
     "ui:appointment cooldown ({days} days remain)": {
@@ -173026,6 +175410,14 @@
         "text": "not excommunicated"
       }
     },
+    "ui:not held captive": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/papacy.js",
+      "source": {
+        "text": "not held captive"
+      }
+    },
     "ui:not held directly": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173082,6 +175474,22 @@
       "location": "js/main.js",
       "source": {
         "text": "once your story begins, the ☰ menu holds the full start code to share."
+      }
+    },
+    "ui:one captive": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "one captive"
+      }
+    },
+    "ui:one leverage record": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "one leverage record"
       }
     },
     "ui:open": {
@@ -173679,6 +176087,14 @@
         "text": "unknown place"
       }
     },
+    "ui:unknown residence": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "unknown residence"
+      }
+    },
     "ui:unknown ruler": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173761,6 +176177,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "yearly health"
+      }
+    },
+    "ui:you are captive": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "you are captive"
       }
     },
     "ui:you yourself": {
@@ -173891,6 +176315,28 @@
       "location": "js/events.js",
       "source": {
         "text": "your spouse"
+      }
+    },
+    "ui:{accept}% acceptance · {leak}% leak after refusal": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "accept",
+        "leak"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{accept}% acceptance · {leak}% leak after refusal"
+      }
+    },
+    "ui:{accept}% acceptance · {leak}% leak after refusal. If accepted, these displayed success and duration values include their help.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "accept",
+        "leak"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{accept}% acceptance · {leak}% leak after refusal. If accepted, these displayed success and duration values include their help."
       }
     },
     "ui:{action} — {reason}": {
@@ -174870,6 +177316,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{days} days remain · launches {season} {day}, {year}"
+      }
+    },
+    "ui:{days} days remain. It can be used exactly once.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{days} days remain. It can be used exactly once."
       }
     },
     "ui:{days} days remaining": {
@@ -176575,6 +179031,18 @@
         "text": "{plots} plots for {money:cost}. Review the complete purchase before paying."
       }
     },
+    "ui:{plot}: {power}/{needed}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "needed",
+        "plot",
+        "power"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{plot}: {power}/{needed}"
+      }
+    },
     "ui:{points}/2 points": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -176627,6 +179095,17 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{position} — {name}"
+      }
+    },
+    "ui:{power}/{needed}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "needed",
+        "power"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{power}/{needed}"
       }
     },
     "ui:{prestige} prestige": {
@@ -177376,6 +179855,30 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{station} · age {age}"
+      }
+    },
+    "ui:{station} · {residence}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "residence",
+        "station"
+      ],
+      "location": "js/intrigue.js",
+      "source": {
+        "text": "{station} · {residence}"
+      }
+    },
+    "ui:{success}% success · about {days} days · {money:cost} · {exposure}% yearly exposure": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "exposure",
+        "money:cost",
+        "success"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{success}% success · about {days} days · {money:cost} · {exposure}% yearly exposure"
       }
     },
     "ui:{summary} · fee unpaid; this term is paused": {

@@ -1043,6 +1043,9 @@ window.FB = window.FB || {};
       appointerId = null;
     }
     if (c.sex !== 'm') missing.push(FB.T('a man'));
+    if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) {
+      missing.push(FB.T('not held captive'));
+    }
     if (livingSpouse(state, c)) missing.push(FB.T('unmarried or widowed'));
     if (c.betrothedId) missing.push(FB.T('not betrothed'));
     if (age < step.age) missing.push(FB.T('age {needed} (now {current})', {
@@ -1582,6 +1585,7 @@ window.FB = window.FB || {};
     function add(id) {
       const c = id && state.chars[id];
       if (!c || c.dead || c.id === state.player.charId || seen[id] ||
+          (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
           (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) ||
           FB.retainerRecord(state, id)) return;
       seen[id] = 1;

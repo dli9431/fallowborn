@@ -1012,6 +1012,10 @@ window.FB = window.FB || {};
       out.reason = FB.T('That character cannot receive a visit.');
       return out;
     }
+    if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) {
+      out.reason = FB.T('A captive cannot receive a relationship visit.');
+      return out;
+    }
     const eligible = FB.travelEligible(state, 'relationship', options);
     if (eligible !== true) {
       out.reason = eligible;

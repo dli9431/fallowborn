@@ -695,3 +695,20 @@ same mechanics before mutation. A reigning ruler represented by a full
 character shares the realm target's typed Standing but has no personal gift
 action; **Realm and court** opens the political sheet that owns ruler gifts
 and ruler-generation commitments.
+
+**Hostile conduct belongs to exact characters, including AI rulers and accomplices.**
+The optional bounded `character.conduct` record holds successful-scheme progress and
+deceit/cruelty axes from -3 to +3. Three successful hostile schemes grant Schemer
+(+1 Intrigue and +5 percentage points to hostile success). Repeated deceptive or violent
+choices move toward Deceitful or Cruel and replace Honest or Kind through the existing
+opposite-trait rule; confession, abandonment, and mercy move toward the opposites.
+Secret conduct advances the axes but does not create a public reputation. Conviction or
+exposure grants Murderer (-15 opinion), Abductor (-10), or Traitor (-20) where applicable,
+and an accomplice receives the same culpability. A proven killing of spouse or blood kin
+also grants Kinslayer.
+
+Intrigue captivity is a character condition read through the exact captive record.
+Captives cannot travel, marry, hold or join plots, accept new household/Council offices,
+or receive relationship visits. A captive sovereign cannot begin wars or schemes and
+fields 20% less base host strength. These gates augment the existing protagonist prison
+flag rather than introducing a second general prison simulation.

@@ -2436,7 +2436,11 @@ window.FB = window.FB || {};
     linkMaterializedRoyalFamily(state, s, m, c, opts);
     if (ruler && !ruler.dead && !c.dead) {
       let changed = false;
-      if (!committedToOther(state, ruler, c, opts) &&
+      const captivityBlocksMarriage = FB.intrigueCaptivityOf &&
+        (FB.intrigueCaptivityOf(state, ruler.id) ||
+          FB.intrigueCaptivityOf(state, c.id));
+      if (!captivityBlocksMarriage &&
+          !committedToOther(state, ruler, c, opts) &&
           !committedToOther(state, c, ruler, opts)) {
         if (ruler.betrothedId === c.id) {
           ruler.betrothedId = null;
@@ -3251,6 +3255,7 @@ window.FB = window.FB || {};
       FB.reconcileHouseholdLoadouts(state);
     }
     if (c && c.id === state.player.charId && FB.absorbRealm) FB.absorbRealm(state, rid, c);
+    if (FB.intrigueRealmSuccession) FB.intrigueRealmSuccession(state, rid);
     return heir;
   };
 
@@ -3351,9 +3356,12 @@ window.FB = window.FB || {};
   };
 
   FB.aiBaseHost = function (state, rid) {
-    return Math.max(60, Math.round(FB.realmStrength(state, rid) *
+    const captivePenalty = FB.intrigueRealmRulerCaptive &&
+      FB.intrigueRealmRulerCaptive(state, rid) ? 0.8 : 1;
+    const base = Math.max(60, Math.round(FB.realmStrength(state, rid) *
       FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
       (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
+    return Math.round(base * captivePenalty);
   };
 
   function alliedReinforcement(state, defenderId, readOnly) {
@@ -4439,6 +4447,8 @@ window.FB = window.FB || {};
         }
         if (!r.alive) continue;
       } else if (!FB.isRealmAtWar(state, id) &&
+                 !(FB.intrigueRealmRulerCaptive &&
+                   FB.intrigueRealmRulerCaptive(state, id)) &&
                  FB.chance(B.aiWarChance * (0.5 + 0.5 * r.aggression))) {
         // pick a neighboring realm to attack
         const targets = [];
@@ -4474,6 +4484,8 @@ window.FB = window.FB || {};
       // FB.chance roll still fires under exactly the same conditions
       if (FB.isPlayerSovereign(state) && !state.player.war &&
         !FB.isRealmAtWar(state, id) &&
+        !(FB.intrigueRealmRulerCaptive &&
+          FB.intrigueRealmRulerCaptive(state, id)) &&
         !(state.pacts && state.pacts[id] > state.turn) &&
         !FB.areAllied(state, id, 'player') &&
         !FB.sameFaithHeadWarPolicy(state, FB.realmReligionId(state, id), 'player', null)) {
@@ -4501,6 +4513,8 @@ window.FB = window.FB || {};
     for (const id in state.realms) {
       const r = state.realms[id];
       if (!r.alive || !r.liege || id === 'player') continue;
+      if (FB.intrigueRealmRulerCaptive &&
+          FB.intrigueRealmRulerCaptive(state, id)) continue;
       const top = FB.topRealm(state, id);
       if (top === id || FB.isRealmAtWar(state, top)) continue;
       // the 1.5% gate first: realmTerritory walks the whole realm table, and

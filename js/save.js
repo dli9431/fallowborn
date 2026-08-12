@@ -575,6 +575,7 @@ window.FB = window.FB || {};
     if (FB.repairGreatHolyWar) FB.repairGreatHolyWar(FB.state);
     if (FB.repairWars) FB.repairWars(FB.state);
     if (FB.ensureModifiers) FB.ensureModifiers(FB.state);
+    if (FB.ensureIntrigue) FB.ensureIntrigue(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
     /* Personal attention and explicit-gift clocks are additive life-local
        fields. This also converts the removed court_suitor focus in old saves. */

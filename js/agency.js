@@ -474,6 +474,7 @@ window.FB = window.FB || {};
       var def = FB.positionDef && FB.positionDef(office);
       var career = c && FB.careerOf ? FB.careerOf(state, c) : null;
       if (!c || c.dead || !def || def.kind !== 'retainer' || seen[cid] ||
+          (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
           !FB.isAgencyFamilyMember(state, cid, familySnapshot) ||
           FB.ageOf(c, state.date.year) < 16 ||
           !career || career.profession !== def.profession ||
@@ -513,6 +514,7 @@ window.FB = window.FB || {};
     var c = state.chars[cid];
     var career = c && FB.careerOf ? FB.careerOf(state, c) : null;
     if (!def || def.kind !== 'retainer' || !c || c.dead ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
         !FB.isAgencyFamilyMember(state, cid) ||
         FB.ageOf(c, state.date.year) < 16 ||
         state.player.tier < (def.minTier || 0) ||
@@ -546,7 +548,10 @@ window.FB = window.FB || {};
   };
 
   function charCommitted(state, c) {
-    if (!c || c.dead || c.betrothedId) return true;
+    if (!c || c.dead || c.betrothedId ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id))) {
+      return true;
+    }
     if (FB.spousesSnapshot && FB.spousesSnapshot(state, c).length) return true;
     return false;
   }
@@ -754,7 +759,9 @@ window.FB = window.FB || {};
       var sponsorRealm = state.realms[sponsorId];
       var aim = FB.rulerAimSnapshot(state, sponsorId);
       if (sponsorId === 'player' || !sponsorRealm || !sponsorRealm.alive ||
-          sponsorRealm.liege || !aim ||
+          sponsorRealm.liege ||
+          (FB.intrigueRealmRulerCaptive &&
+            FB.intrigueRealmRulerCaptive(state, sponsorId)) || !aim ||
           (aim.id !== 'expand_realm' && aim.id !== 'strengthen_crown')) continue;
       var rivals = Object.keys(neighbors[sponsorId] || {});
       for (var rivalIndex = 0; rivalIndex < rivals.length; rivalIndex++) {
@@ -859,6 +866,7 @@ window.FB = window.FB || {};
     cultivateRulers(state, neighbors);
     maintainFamilyAmbitions(state, family);
     maybeSponsorRebels(state, neighbors);
+    if (FB.intrigueAgencyYearly) FB.intrigueAgencyYearly(state, neighbors);
     maybeApproachPlayer(state, family);
     maybeQueueFamilyRequest(state, family);
   };

@@ -3388,7 +3388,8 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-plot]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const def = FBDATA.plots[btn.dataset.plot];
-        if (def && def.target) UI.showPlotTargets(btn.dataset.plot);
+        if (def && def.hostile) UI.showIntrigueTargets(btn.dataset.plot);
+        else if (def && def.target) UI.showPlotTargets(btn.dataset.plot);
         else {
           FB.beginPlot(FB.state, btn.dataset.plot);
           UI.closeModal(); UI.refresh();
@@ -3401,6 +3402,10 @@ window.FB = window.FB || {};
   UI.showPlotTargets = function (plotId) {
     const s = FB.state, def = FBDATA.plots[plotId];
     if (!def) return;
+    if (def.hostile) {
+      UI.showIntrigueTargets(plotId);
+      return;
+    }
     const targets = FB.plotTargetOptions(s, def);
     let h = '<p class="hint">' + esc(FB.T(
       'Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.')) +
@@ -3427,6 +3432,425 @@ window.FB = window.FB || {};
       });
     });
     $('gm-back').addEventListener('click', UI.showPlots);
+  };
+
+  function intrigueDataText(s, plotId, path) {
+    const def = FBDATA.plots[plotId];
+    return def ? FB.dataText(s, s.player.charId, 'plot', plotId, def,
+      path, {}) : plotId;
+  }
+
+  function intrigueTargetSectionTitle(group) {
+    if (group === 'rulers') return FB.T('Rulers and officeholders');
+    if (group === 'household') return FB.T('Your household');
+    if (group === 'court') return FB.T('People of the realm');
+    if (group === 'foreign') return FB.T('Foreign border counties');
+    return FB.T('Counties of the realm');
+  }
+
+  function intrigueBackButton(id) {
+    return '<div class="gm-footer"><button type="button" class="btn" id="' +
+      id + '">' + esc(FB.T('Back')) + '</button></div>';
+  }
+
+  UI.showIntrigueTargets = function (plotId, preselectedCharacterId) {
+    const s = FB.state, def = FBDATA.plots[plotId];
+    if (!def || !def.hostile) return;
+    let targets = FB.intrigueTargetOptions(s, def);
+    if (preselectedCharacterId) {
+      targets = targets.filter(function (target) {
+        return target.characterId === preselectedCharacterId;
+      });
+    }
+    if (preselectedCharacterId && targets.length === 1) {
+      UI.showIntrigueMethods(plotId, targets[0].context,
+        preselectedCharacterId);
+      return;
+    }
+    const groups = [];
+    for (const target of targets) {
+      let section = groups.find(function (candidate) {
+        return candidate.id === target.group;
+      });
+      if (!section) {
+        section = { id:target.group, title:intrigueTargetSectionTitle(target.group),
+          rows:[], empty:FB.T('No exact targets are currently eligible.') };
+        groups.push(section);
+      }
+      let identity = '';
+      if (target.characterId && s.chars[target.characterId]) {
+        identity = UI.charCardHtml(s, s.chars[target.characterId], false);
+      } else if (target.realmId && s.realms[target.realmId]) {
+        identity = UI.realmCardHtml(s, target.realmId);
+      }
+      section.rows.push({
+        search:(target.label + ' ' + target.desc).toLocaleLowerCase(),
+        html:'<div class="intrigue-target-entry" data-intrigue-target-row ' +
+          'data-intrigue-search="' +
+          esc((target.label + ' ' + target.desc).toLocaleLowerCase()) + '">' + identity +
+          '<button type="button" class="actionbtn large-list-target-button" ' +
+          'data-intrigue-target="' + esc(String(targets.indexOf(target))) + '">' +
+          esc(target.icon + ' ' + target.label) +
+          (target.desc ? '<span class="adesc">' + esc(target.desc) + '</span>' : '') +
+          '</button></div>'
+      });
+    }
+    let h = '<p class="hint">' + esc(FB.T(
+      'Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border.')) +
+      '</p><div class="large-list-search"><label for="intrigue-target-search">' +
+      esc(FB.T('Search targets')) + '</label><div><input type="search" ' +
+      'id="intrigue-target-search" autocomplete="off" spellcheck="false" ' +
+      'placeholder="' + esc(FB.T('Name, station, county, or realm')) + '">' +
+      '<button type="button" class="btn small" id="intrigue-target-clear" hidden>' +
+      esc(FB.T('Clear')) + '</button></div></div>';
+    for (const group of groups) {
+      h += '<section class="intrigue-target-group" data-intrigue-target-group><h4>' +
+        esc(group.title) + '</h4><div class="gm-list">';
+      for (const row of group.rows) h += row.html;
+      h += '</div></section>';
+    }
+    if (!targets.length) h += '<p class="hint">' +
+      esc(FB.T('No exact targets are currently eligible.')) + '</p>';
+    h += intrigueBackButton('intrigue-target-back');
+    openModal(FB.T('Choose the Target'), h, {
+      modalClass:'fullsheet-modal intrigue-modal', historyView:true,
+      historyBackRender:UI.showPlots
+    });
+    const search = $('intrigue-target-search');
+    const clear = $('intrigue-target-clear');
+    function filterTargets() {
+      const query = search.value.trim().toLocaleLowerCase();
+      document.querySelectorAll('[data-intrigue-target-row]').forEach(
+        function (row) {
+          row.hidden = !!query &&
+            row.dataset.intrigueSearch.indexOf(query) < 0;
+        });
+      document.querySelectorAll('[data-intrigue-target-group]').forEach(
+        function (group) {
+          group.hidden = !group.querySelector(
+            '[data-intrigue-target-row]:not([hidden])');
+        });
+      clear.hidden = !query;
+    }
+    search.addEventListener('input', filterTargets);
+    clear.addEventListener('click', function () {
+      search.value = '';
+      filterTargets();
+      search.focus();
+    });
+    document.querySelectorAll('[data-intrigue-target]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const target = targets[Number(button.dataset.intrigueTarget)];
+        if (target) UI.showIntrigueMethods(plotId, target.context);
+      });
+    });
+    $('intrigue-target-back').addEventListener('click', function () {
+      modalHistoryBack(UI.showPlots);
+    });
+    FB.paintFaces($('gm-body'), s);
+  };
+
+  UI.showIntrigueMethods = function (plotId, context, returnCharacterId) {
+    const s = FB.state, methods = FB.intrigueMethodOptions(s, plotId, context);
+    let h = '<p class="hint">' + esc(FB.T(
+      'The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial.')) +
+      '</p><div class="gm-list">';
+    for (let i = 0; i < methods.length; i++) {
+      const item = methods[i];
+      const preview = FB.intriguePreview(s, plotId, context, item.id);
+      h += '<button type="button" class="actionbtn" data-intrigue-method="' +
+        esc(item.id) + '"><b>' +
+        esc(intrigueDataText(s, plotId, 'methods.' + i + '.name')) + '</b>' +
+        '<span class="adesc">' + esc(FB.T(
+          '{success}% success · about {days} days · {money:cost} · {exposure}% yearly exposure', {
+            success:Math.round(preview.success * 100), days:preview.days,
+            cost:preview.cost, exposure:preview.exposure
+          })) + '</span></button>';
+    }
+    h += '</div>' + intrigueBackButton('intrigue-method-back');
+    const back = function () {
+      if (returnCharacterId) UI.showIntrigueForCharacter(returnCharacterId);
+      else UI.showIntrigueTargets(plotId);
+    };
+    openModal(FB.T('Choose the Method'), h, {
+      modalClass:'fullsheet-modal intrigue-modal', historyView:true,
+      historyBackRender:back
+    });
+    document.querySelectorAll('[data-intrigue-method]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showIntrigueAccomplices(plotId, context,
+          button.dataset.intrigueMethod, returnCharacterId);
+      });
+    });
+    $('intrigue-method-back').addEventListener('click', function () {
+      modalHistoryBack(back);
+    });
+  };
+
+  UI.showIntrigueAccomplices = function (plotId, context, methodId,
+    returnCharacterId) {
+    const s = FB.state;
+    const unpaid = FB.intrigueAccompliceOptions(s, plotId, context, false);
+    const paid = FB.intrigueAccompliceOptions(s, plotId, context, true);
+    let h = '<p class="hint">' + esc(FB.T(
+      'An accomplice is optional. Acceptance is rolled only after confirmation; a refusal may leak the scheme.')) +
+      '</p><div class="gm-list"><button type="button" class="actionbtn" ' +
+      'data-intrigue-accomplice=""><b>' + esc(FB.T('Proceed alone')) +
+      '</b><span class="adesc">' + esc(FB.T('No consent roll and no accomplice bonus.')) +
+      '</span></button>';
+    for (let i = 0; i < unpaid.length; i++) {
+      const option = unpaid[i], paidOption = paid[i];
+      const exactPaid = paid.find(function (candidate) {
+        return candidate.characterId === option.characterId;
+      }) || paidOption;
+      const c = s.chars[option.characterId];
+      h += '<div class="intrigue-accomplice-entry">' +
+        (c ? UI.charCardHtml(s, c, false) : '') +
+        '<button type="button" class="actionbtn" data-intrigue-accomplice="' +
+        esc(option.characterId) + '" data-intrigue-paid="false"><b>' +
+        esc(FB.T('Ask {name}', { name:option.label })) + '</b><span class="adesc">' +
+        esc(FB.T('{accept}% acceptance · {leak}% leak after refusal', {
+          accept:Math.round(option.acceptance * 100),
+          leak:Math.round(option.leak * 100)
+        })) + '</span></button>' +
+        '<button type="button" class="actionbtn" data-intrigue-accomplice="' +
+        esc(option.characterId) + '" data-intrigue-paid="true"><b>' +
+        esc(FB.T('Offer {money:10} to {name}', { name:option.label })) +
+        '</b><span class="adesc">' + esc(FB.T(
+          '{accept}% acceptance · {leak}% leak after refusal', {
+            accept:Math.round(exactPaid.acceptance * 100),
+            leak:Math.round(exactPaid.leak * 100)
+          })) + '</span></button></div>';
+    }
+    h += '</div>' + intrigueBackButton('intrigue-accomplice-back');
+    const back = function () {
+      UI.showIntrigueMethods(plotId, context, returnCharacterId);
+    };
+    openModal(FB.T('Choose an Accomplice'), h, {
+      modalClass:'fullsheet-modal intrigue-modal', historyView:true,
+      historyBackRender:back
+    });
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-intrigue-accomplice]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showIntrigueReview(plotId, context, methodId,
+          button.dataset.intrigueAccomplice || null,
+          button.dataset.intriguePaid === 'true', returnCharacterId);
+      });
+    });
+    $('intrigue-accomplice-back').addEventListener('click', function () {
+      modalHistoryBack(back);
+    });
+  };
+
+  UI.showIntrigueReview = function (plotId, context, methodId,
+    accompliceId, paid, returnCharacterId) {
+    const s = FB.state, def = FBDATA.plots[plotId];
+    const preview = FB.intriguePreview(s, plotId, context, methodId,
+      accompliceId, paid, { accepted:!!accompliceId });
+    if (!preview) return;
+    const target = context.characterId && s.chars[context.characterId];
+    const accomplice = accompliceId && s.chars[accompliceId];
+    const methodIndex = def.methods.findIndex(function (method) {
+      return method.id === methodId;
+    });
+    let h = target ? UI.charCardHtml(s, target, false) : '';
+    if (!target && context.pid && FB.world.byId[context.pid]) {
+      h += '<div class="progressnote"><b>' +
+        esc(FB.world.byId[context.pid].name) + '</b></div>';
+    }
+    h += '<div class="intrigue-preview">' +
+      kv('Scheme', esc(intrigueDataText(s, plotId, 'name'))) +
+      kv('Method', esc(intrigueDataText(s, plotId,
+        'methods.' + methodIndex + '.name'))) +
+      kv('Success if accepted', esc(FB.T('{chance}%', {
+        chance:Math.round(preview.success * 100)
+      }))) +
+      kv('Estimated duration', esc(FB.T('{days} days', { days:preview.days }))) +
+      kv('Cost now', esc(FB.T('{money:cost}', { cost:preview.cost }))) +
+      kv('Yearly exposure', esc(FB.T('{chance}%', {
+        chance:preview.exposure
+      }))) + '</div>';
+    if (accomplice) {
+      h += '<h4>' + esc(FB.T('Proposed accomplice')) + '</h4>' +
+        UI.charCardHtml(s, accomplice, false) +
+        '<p class="hint">' + esc(FB.T(
+          '{accept}% acceptance · {leak}% leak after refusal. If accepted, these displayed success and duration values include their help.', {
+            accept:Math.round(preview.accompliceAcceptance * 100),
+            leak:Math.round(preview.refusalLeak * 100)
+          })) + '</p>';
+    }
+    const affordable = s.player.gold >= preview.cost;
+    h += '<div class="gm-footer"><button type="button" class="btn primary" ' +
+      'id="intrigue-confirm"' + (affordable ? '' : ' disabled') + '>' +
+      esc(FB.T('Begin scheme')) + '</button><button type="button" class="btn" ' +
+      'id="intrigue-review-back">' + esc(FB.T('Back')) + '</button></div>';
+    const back = function () {
+      UI.showIntrigueAccomplices(plotId, context, methodId,
+        returnCharacterId);
+    };
+    openModal(FB.T('Confirm the Scheme'), h, {
+      modalClass:'fullsheet-modal intrigue-modal', historyView:true,
+      historyBackRender:back
+    });
+    FB.paintFaces($('gm-body'), s);
+    $('intrigue-confirm').addEventListener('click', function () {
+      if (!FB.beginIntriguePlot(s, plotId, context, methodId,
+          accompliceId, paid)) {
+        UI.closeModal();
+        UI.refresh();
+        return;
+      }
+      UI.closeModal();
+      UI.refresh();
+    });
+    $('intrigue-review-back').addEventListener('click', function () {
+      modalHistoryBack(back);
+    });
+  };
+
+  UI.showIntrigueForCharacter = function (characterId) {
+    const s = FB.state, c = s.chars[characterId];
+    if (!c || c.dead) return;
+    const schemes = FB.intrigueSchemesForTarget(s, characterId);
+    let h = UI.charCardHtml(s, c, false) + '<div class="gm-list">';
+    for (const scheme of schemes) {
+      h += '<button type="button" class="actionbtn" data-character-scheme="' +
+        esc(scheme.id) + '">' + esc(scheme.def.icon + ' ' +
+          intrigueDataText(s, scheme.id, 'name')) + '<span class="adesc">' +
+        esc(intrigueDataText(s, scheme.id, 'desc')) + '</span></button>';
+    }
+    h += '</div>' + intrigueBackButton('intrigue-character-back');
+    openModal(FB.T('Plot against {name}', { name:FB.fullName(c) }), h, {
+      modalClass:'fullsheet-modal intrigue-modal', historyView:true,
+      historyBackRender:function () { UI.showCharModal(characterId); }
+    });
+    FB.paintFaces($('gm-body'), s);
+    document.querySelectorAll('[data-character-scheme]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const scheme = schemes.find(function (item) {
+          return item.id === button.dataset.characterScheme;
+        });
+        if (scheme) UI.showIntrigueMethods(scheme.id, scheme.context,
+          characterId);
+      });
+    });
+    $('intrigue-character-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showCharModal(characterId); });
+    });
+  };
+
+  UI.showIntrigueAssets = function () {
+    const s = FB.state, me = s.chars[s.player.charId];
+    const plot = s.player.plot;
+    const def = plot && FBDATA.plots[plot.id];
+    const captiveRecord = FB.intrigueCaptiveOf(s, s.player.charId);
+    const capturedBy = FB.intrigueCaptivityOf(s, s.player.charId);
+    const leverage = FB.intrigueLeverageOf(s, s.player.charId);
+    let h = '';
+    if (plot && def && def.hostile) {
+      const accomplice = plot.accomplice &&
+        s.chars[plot.accomplice.characterId];
+      const preview = FB.intriguePreview(s, plot.id, plot.context,
+        plot.methodId, accomplice && accomplice.id, false, {
+          accepted:!!accomplice,
+          compelled:!!(plot.accomplice && plot.accomplice.compelled),
+          power:plot.power,
+          discoveryModifier:Number(plot.discoveryModifier) || 0
+        });
+      h += '<section><h4>' + esc(FB.T('Active scheme')) + '</h4>' +
+        kv('Scheme', esc(intrigueDataText(s, plot.id, 'name'))) +
+        kv('Exact target', esc(FB.plotContextLabel(s, def, plot.context))) +
+        kv('Progress', esc(FB.T('{power}/{needed}', {
+          power:Math.floor(plot.power), needed:def.need
+        }))) + (preview ? kv('Current success', esc(FB.T('{chance}%', {
+          chance:Math.round(preview.success * 100)
+        }))) + kv('Estimated time remaining', esc(FB.T('{days} days', {
+          days:preview.days
+        }))) + kv('Yearly exposure', esc(FB.T('{chance}%', {
+          chance:preview.exposure
+        }))) : '') +
+        '<button type="button" class="btn" id="intrigue-abandon">' +
+        esc(FB.T('Abandon scheme')) + '</button></section>';
+    }
+    if (captiveRecord) {
+      const captive = s.chars[captiveRecord.captiveId];
+      h += '<section><h4>' + esc(FB.T('Captive')) + '</h4>' +
+        (captive ? UI.charCardHtml(s, captive, false) : '') +
+        '<div class="gm-list"><button type="button" class="actionbtn" ' +
+        'id="intrigue-ransom"><b>' + esc(FB.T('Demand ransom')) + '</b>' +
+        '<span class="adesc">' + esc(FB.T('Release for {money:amount}.', {
+          amount:captiveRecord.demand.amount
+        })) + '</span></button><button type="button" class="actionbtn" ' +
+        'id="intrigue-release-leverage"' + (leverage ? ' disabled' : '') + '><b>' +
+        esc(FB.T('Release for leverage')) + '</b><span class="adesc">' +
+        esc(leverage ? FB.T('Your one leverage slot is occupied.') :
+          FB.T('Create target-bound leverage lasting two years.')) +
+        '</span></button><button type="button" class="actionbtn" ' +
+        'id="intrigue-release-mercy"><b>' + esc(FB.T('Release mercifully')) +
+        '</b></button></div></section>';
+    }
+    if (capturedBy) {
+      const captor = s.chars[capturedBy.captorId];
+      h += '<section><h4>' + esc(FB.T('Your captivity')) + '</h4>' +
+        (captor ? UI.charCardHtml(s, captor, false) : '') +
+        '<p class="hint">' + esc(FB.T(
+          'You cannot travel, marry, hold a plot, or take a new office while confined.')) +
+        '</p><button type="button" class="actionbtn" id="intrigue-pay-ransom"' +
+        (s.player.gold >= capturedBy.demand.amount ? '' : ' disabled') + '><b>' +
+        esc(FB.T('Pay ransom ({money:amount})', {
+          amount:capturedBy.demand.amount
+        })) + '</b></button></section>';
+    }
+    if (leverage) {
+      const target = s.chars[leverage.targetId];
+      h += '<section><h4>' + esc(FB.T('Leverage')) + '</h4>' +
+        (target ? UI.charCardHtml(s, target, false) : '') +
+        '<p class="hint">' + esc(FB.T('{days} days remain. It can be used exactly once.', {
+          days:Math.max(0, leverage.endTurn - s.turn)
+        })) + '</p><div class="gm-list"><button type="button" class="actionbtn" ' +
+        'data-use-leverage="payment"' +
+        (!FB.canUseIntrigueLeverage(s, me.id, 'payment') ? ' disabled' : '') +
+        '>' + esc(FB.T('Demand payment')) +
+        '</button><button type="button" class="actionbtn" ' +
+        'data-use-leverage="accomplice"' +
+        (!FB.canUseIntrigueLeverage(s, me.id, 'accomplice') ? ' disabled' : '') + '>' +
+        esc(FB.T('Compel as accomplice')) +
+        '<span class="adesc">' + esc(FB.T('Adds 10 points of discovery risk.')) +
+        '</span></button><button type="button" class="actionbtn" ' +
+        'data-use-leverage="expose"' +
+        (!FB.canUseIntrigueLeverage(s, me.id, 'expose') ? ' disabled' : '') + '>' +
+        esc(FB.T('Expose political foothold')) + '</button></div></section>';
+    }
+    if (!h) h = '<p class="hint">' + esc(FB.T('No hostile intrigue affairs are active.')) + '</p>';
+    h += '<div class="gm-footer"><button type="button" class="btn" id="intrigue-assets-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Intrigue Affairs'), h, {
+      modalClass:'fullsheet-modal intrigue-modal'
+    });
+    FB.paintFaces($('gm-body'), s);
+    if ($('intrigue-abandon')) $('intrigue-abandon').addEventListener('click', function () {
+      FB.abandonIntriguePlot(s); UI.showIntrigueAssets(); UI.refresh();
+    });
+    if ($('intrigue-ransom')) $('intrigue-ransom').addEventListener('click', function () {
+      FB.intrigueRansomCaptive(s, me.id); UI.showIntrigueAssets(); UI.refresh();
+    });
+    if ($('intrigue-release-leverage')) $('intrigue-release-leverage').addEventListener('click', function () {
+      FB.intrigueReleaseForLeverage(s, me.id); UI.showIntrigueAssets(); UI.refresh();
+    });
+    if ($('intrigue-release-mercy')) $('intrigue-release-mercy').addEventListener('click', function () {
+      FB.intrigueReleaseMercifully(s, me.id); UI.showIntrigueAssets(); UI.refresh();
+    });
+    if ($('intrigue-pay-ransom')) $('intrigue-pay-ransom').addEventListener('click', function () {
+      FB.payIntrigueRansom(s); UI.showIntrigueAssets(); UI.refresh();
+    });
+    document.querySelectorAll('[data-use-leverage]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        FB.useIntrigueLeverage(s, me.id, button.dataset.useLeverage);
+        UI.showIntrigueAssets(); UI.refresh();
+      });
+    });
+    $('intrigue-assets-close').addEventListener('click', UI.closeModal);
   };
 
   /* ================= envoy picker ================= */
@@ -12982,6 +13406,27 @@ window.FB = window.FB || {};
       });
     }
 
+    const intrigueSchemes = FB.intrigueSchemesForTarget
+      ? FB.intrigueSchemesForTarget(s, c.id) : [];
+    const plotterCaptive = !!(s.player.flags.in_prison ||
+      FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(s, me.id));
+    if (intrigueSchemes.length || s.player.plot || plotterCaptive) {
+      addInteractionAction(model, {
+        id:'relationship.hostility.plot',
+        group:'war',
+        label:FB.T('Plot against…'),
+        detail:FB.T(
+          'Choose an eligible hostile scheme, method, and optional accomplice against this exact person.'),
+        enabled:!!intrigueSchemes.length && !s.player.plot && !plotterCaptive,
+        blockedReason:s.player.plot
+          ? FB.T('Your one plot slot is already occupied.')
+          : (plotterCaptive ? FB.T('A captive cannot hold a plot.') :
+            FB.T('No hostile personal scheme is currently eligible.')),
+        consequence:FB.T('The scheme occupies the Scheming focus until it ends.'),
+        route:'intrigue-plot'
+      });
+    }
+
     if (assigned) {
       addInteractionAction(model, {
         id:'relationship.attention.stop',
@@ -13630,6 +14075,8 @@ window.FB = window.FB || {};
                 { name:c.name }));
             }
           });
+        } else if (action.route === 'intrigue-plot') {
+          UI.showIntrigueForCharacter(c.id);
         } else if (action.route === 'rival-declare') {
           actThen(function () {
             FB.startRivalry(s, c, 'player', 'declared', null);

@@ -436,7 +436,9 @@ window.FB = window.FB || {};
     var obedience = papacy && papacy.obediences[
       obedienceId || papacy.romanObedience
     ];
-    if (!c || c.dead || !catholicFaith(state, c) || c.sex !== 'm' ||
+    if (!c || c.dead ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
+        !catholicFaith(state, c) || c.sex !== 'm' ||
         !obedience || obedience.college.length >= (definition().hardCap || 18)) {
       return false;
     }
@@ -674,6 +676,9 @@ window.FB = window.FB || {};
     var obedience = papacy && papacy.obediences[papacy.romanObedience];
     var missing = [];
     if (!c || c.dead) return { visible:false, ready:false, missing:[FB.T('No living candidate.')] };
+    if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) {
+      missing.push(FB.T('not held captive'));
+    }
     if (!catholicFaith(state, c)) missing.push(FB.T('Catholic faith'));
     if (c.sex !== 'm') missing.push(FB.T('a man'));
     if (hasLivingSpouse(state, c)) missing.push(FB.T('unmarried or widowed'));
@@ -764,7 +769,9 @@ window.FB = window.FB || {};
 
   function candidateEligibleForAppointment(state, c, obedience) {
     var req = definition().cardinalRequirements || {};
-    return !!(c && !c.dead && catholicFaith(state, c) && c.sex === 'm' &&
+    return !!(c && !c.dead &&
+      !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) &&
+      catholicFaith(state, c) && c.sex === 'm' &&
       !hasLivingSpouse(state, c) && !c.betrothedId &&
       FB.isCatholicBishop(state, c) &&
       FB.ageOf(c, state.date.year) >= req.age &&
@@ -896,6 +903,7 @@ window.FB = window.FB || {};
       var c = state.chars[id];
       var record = papalRecord(state, id);
       if (!c || c.dead || !record || record.office !== 'cardinal' ||
+          (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) ||
           election.withdrawn[id]) continue;
       if (election.law.shortlist === 'bishops' && election.round <= 1 &&
           record.order !== 'bishop') continue;
@@ -906,12 +914,16 @@ window.FB = window.FB || {};
         id = obedience.college[i];
         c = state.chars[id];
         record = papalRecord(state, id);
-        if (c && !c.dead && record && record.office === 'cardinal' &&
+        if (c && !c.dead &&
+            !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) &&
+            record && record.office === 'cardinal' &&
             !election.withdrawn[id]) ids.push(id);
       }
     }
     if (election.compromiseId && state.chars[election.compromiseId] &&
-        !state.chars[election.compromiseId].dead) ids.push(election.compromiseId);
+        !state.chars[election.compromiseId].dead &&
+        !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state,
+          election.compromiseId))) ids.push(election.compromiseId);
     return ids;
   }
 

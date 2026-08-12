@@ -496,3 +496,9 @@ award retains the final accept/decline choice; decline creates the cadet and con
 service to honor. Sacred custody is stored on its awarded realm and pays the player
 2 piety per season while their realm or a vassal holds it and its sovereign bloc still
 controls a listed site.
+
+Intrigue captivity blocks a ruler from initiating an ordinary war, an independence
+rising, or a great-holy-war call. An already-running war continues because capture does
+not erase realm obligations or campaign state. While an AI sovereign remains captive,
+its projected base host is multiplied by `0.8`; escape, ransom, release, captor death,
+or captor succession removes that penalty.

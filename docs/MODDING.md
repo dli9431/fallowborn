@@ -696,9 +696,9 @@ only a fallback for legacy definitions with
 no marriage property. Every eligible spouse pairing can bear children, the first is the
 one `{spouse}` and the spouse-role address, and the next in line is promoted when the
 first dies or is set aside
-(`FB.spousesOf` / `FB.canWed` / `FB.promoteSpouse`). The married may also weave the
-`widow_veil` plot (map_data.js) to be rid of a spouse the darker way — its resolution is
-`plot_spouse_end`.
+(`FB.spousesOf` / `FB.canWed` / `FB.promoteSpouse`). New spouse plots use
+`assassination`. The old `widow_veil` definition remains hidden so an active version-3
+save can still resolve `plot_spouse_end`.
 
 ### Effects
 
@@ -1862,7 +1862,7 @@ unmarried children:
 
 ## Plots, blessings, and pacts
 
-**Plots** (`FBDATA.plots` in `data/map_data.js`) drive the intrigue game. The "Begin a
+**Plots** (`FBDATA.plots` in `data/map_data.js` and `data/intrigue.js`) drive the intrigue game. The "Begin a
 plot…" deed offers every plot whose `trigger` (standard trigger syntax) passes; beginning
 one switches the player to the Scheming focus, which accrues `need` power over the days —
 with a daily discovery risk — then queues the plot's resolution `event`. Discovery offers
@@ -1877,6 +1877,50 @@ plot clears and the old focus returns:
   "name": "Sour the Well", "icon": "🕳", "need": 10, "event": "plot_poison_well",
   "trigger": { "hasRole": "rival" }, "desc": "Petty, deniable, and effective." } } }
 ```
+
+Definitions without further fields retain that event-driven behavior. A hostile plot may
+add the following optional schema:
+
+```json
+{
+  "hostile": true,
+  "scope": "character_same_sovereign",
+  "offense": "attempted_murder",
+  "target": "intrigue_character",
+  "outcome": "death",
+  "accomplice": true,
+  "baseChance": 0.20,
+  "methods": [
+    { "id":"careful", "name":"Poison", "profile":"careful",
+      "progress":0.8, "success":0.10, "discovery":-4 },
+    { "id":"bought", "name":"Staged Accident", "profile":"bought_access",
+      "progress":1.2, "success":0.05, "discovery":0, "stationCost":true },
+    { "id":"forceful", "name":"Ambush", "profile":"forceful",
+      "progress":1.5, "success":-0.05, "discovery":10, "martial":true }
+  ]
+}
+```
+
+Core hostile outcomes are `death`, `captive`, `leverage`, `foothold`, and
+`covert_sabotage`. Core scopes are same-sovereign named characters and own/adjacent
+foreign-border counties. `hidden:true` keeps a definition resolvable for an old active
+save but removes it from new setup. Hostile resolution is engine-owned: do not add an
+`event` or `plot_end` effect. Exact target, ruler generation, method, accomplice, and
+political-foothold stamps remain attached; invalidation ends the plot without substitution.
+The three core `profile` ids read defaults from `FBDATA.intrigue.methodProfiles`;
+method-local fields override those defaults, so a mod can reuse the common math with a
+scheme-specific `name` or deliberately tune one method.
+
+The shared hostile chance is
+`clamp(baseChance + actorIntrigue*0.035 - targetIntrigue*0.02 +
+targetStanding/500 + method.success + accomplice + Council + Schemer, 0.05, 0.90)`.
+Forceful methods add Martial to progress. Bought-access cost is `5 + 5*targetStation`.
+Accomplice acceptance is
+`clamp(0.35 + Standing/200 + hostility + traitMotive + payment, 0.05, 0.95)`;
+the optional payment is 10 gold and adds 0.20. An accepted accomplice adds 0.05 plus
+up to 0.10 from Intrigue to success, and matching the target residence multiplies
+progress by 1.25. The default yearly exposure is 12 percentage points plus the method
+value; compelled leverage adds 10 points. All rolls use the saved game RNG.
 
 **Blessings** are plain event data (`seek_blessing`, fired by the Seek-a-blessing deed) that
 spend piety on flags the engine reads: `blessed_crops` (+harvest odds, spent with the

@@ -403,6 +403,11 @@ window.FB = window.FB || {};
       if (!pl) return;
       const def = FBDATA.plots[pl.id];
       if (!def) { s.player.plot = null; return; }
+      if (def.hostile && FB.intrigueTickPlayerPlot) {
+        FB.intrigueTickPlayerPlot(s);
+        if (skillDch(0.25)) skillUp(s, 'int');
+        return;
+      }
       if (def.target && !FB.plotTargetValid(s, def, pl.context)) {
         const lost = FB.plotContextLabel(s, def, pl.context);
         if (def.target === 'border_county_without_dejure') {
@@ -969,9 +974,18 @@ window.FB = window.FB || {};
     } },
   { id: 'begin_plot', label: '🕸 Begin a plot…', noConsume: true,
     desc: function () { return 'Patience, whispers, and a long knife. Occupies your focus until sprung.'; },
-    show: function (s) { return adult(s) && !s.player.plot; },
+    show: function (s) { return adult(s) && !s.player.plot &&
+      !s.player.flags.in_prison && !(FB.intrigueCaptivityOf &&
+        FB.intrigueCaptivityOf(s, s.player.charId)); },
     can: function (s) { return FB.plotAvailable(s).length ? true : 'No plot within your reach.'; },
     run: function (s) { if (FB.ui && FB.ui.showPlots) FB.ui.showPlots(); } },
+  { id: 'intrigue_assets', label: '🕸 Intrigue affairs…', noConsume: true,
+    desc: function () { return 'Review an active hostile scheme, captive, or exact leverage.'; },
+    show: function (s) { return !!(FB.intrigueAssetsAvailable &&
+      FB.intrigueAssetsAvailable(s)); },
+    run: function () {
+      if (FB.ui && FB.ui.showIntrigueAssets) FB.ui.showIntrigueAssets();
+    } },
   { id: 'mediate', label: '🤝 Mediate a quarrel', cd: 60,
     desc: function () { return 'Neighbors at odds trust a fair tongue.'; },
     show: function (s) { return s.player.tier <= 2 && adult(s); },
@@ -2341,6 +2355,7 @@ window.FB = window.FB || {};
     if (state.player.plot) return out;
     for (const id in FBDATA.plots) {
       const def = FBDATA.plots[id];
+      if (def.hidden) continue;
       if (def.trigger && !FB.checkTrigger(state, def.trigger)) continue;
       if (def.target && !FB.plotTargets(state, def).length) continue;
       out.push({ id: id, def: def });
@@ -2397,6 +2412,9 @@ window.FB = window.FB || {};
   FB.plotTargetOptions = function (state, def) {
     const out = [];
     if (!def || !def.target) return out;
+    if (def.hostile && FB.intrigueTargetOptions) {
+      return FB.intrigueTargetOptions(state, def);
+    }
     if (def.target === 'border_county_without_dejure') {
       for (const pid of FB.claimCandidates(state)) {
         const pr = FB.world.byId[pid], realm = pr && state.realms[state.owner[pid]];
@@ -2528,6 +2546,9 @@ window.FB = window.FB || {};
 
   FB.plotTargetValid = function (state, def, context) {
     if (!def || !def.target) return true;
+    if (def.hostile && FB.intrigueTargetValid) {
+      return FB.intrigueTargetValid(state, def, context);
+    }
     for (const option of FB.plotTargetOptions(state, def)) {
       if (samePlotContext(option.context, context)) return true;
     }
@@ -2535,6 +2556,9 @@ window.FB = window.FB || {};
   };
 
   FB.plotTargetContext = function (state, def, context) {
+    if (def && def.hostile && FB.intrigueTargetContext) {
+      return FB.intrigueTargetContext(state, def, context);
+    }
     for (const option of FB.plotTargetOptions(state, def)) {
       if (samePlotContext(option.context, context)) {
         const out = {};
@@ -2577,6 +2601,7 @@ window.FB = window.FB || {};
   FB.beginPlot = function (state, id, context) {
     const def = FBDATA.plots[id];
     if (!def || state.player.plot) return;
+    if (def.hostile) return false;
     if (def.trigger && !FB.checkTrigger(state, def.trigger)) return;
     if (def.target) {
       context = FB.plotTargetContext(state, def, context);

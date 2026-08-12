@@ -348,12 +348,15 @@ window.FB = window.FB || {};
       var c = state.chars[active.candidateId];
       var current = c && !c.dead ? guildCurrentScope(state, c) : null;
       return !!(current && current.profession === active.profession &&
+        !(FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) &&
         current.provinceId === active.scopeId);
     }
     if (active.kind === 'council') {
       var realm = state.realms[active.nomineeRealmId];
       return !!(state.player.tier >= 6 && realm && realm.alive &&
         realm.liege === 'player' &&
+        !(FB.intrigueRealmRulerCaptive &&
+          FB.intrigueRealmRulerCaptive(state, active.nomineeRealmId)) &&
         realm.ruler && isFinite(Number(active.nomineeGeneration)) &&
         Number(realm.ruler.generation || 0) ===
           Number(active.nomineeGeneration) &&
@@ -428,6 +431,9 @@ window.FB = window.FB || {};
     if (!def || !career || !current || !FBDATA.careers[career.profession] ||
         !FBDATA.careers[career.profession].guild) {
       return { ready:false, missing:[FB.T('No valid guild electorate is available.')] };
+    }
+    if (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, c.id)) {
+      missing.push(FB.T('A captive cannot seek a new guild office.'));
     }
     if (c.id === state.player.charId && state.player.tier >= 3) {
       missing.push(FB.T('A landed ruler keeps the calling as biography and cannot seek a local guild office.'));

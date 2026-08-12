@@ -29,6 +29,12 @@ FBDATA.modifiers = {
     scope:'county', days:720,
     fx:{ tax:-0.10, unrest:0.25 }
   },
+  covert_sabotage: {
+    name:'Covert Sabotage', icon:'🔥',
+    desc:'Spoiled stores, damaged works, and whispered threats hinder collection and muster.',
+    scope:'county', days:720,
+    fx:{ tax:-0.12, levy:-0.12, unrest:0.25 }
+  },
   levy_exemption: {
     name:'Levy Exemption', icon:'🕊',
     desc:'A witnessed concession shelters this county from the full muster.',

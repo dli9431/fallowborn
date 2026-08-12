@@ -272,11 +272,15 @@ window.FB = window.FB || {};
 
   FB.canCallGreatHolyWar = function (state, religionId, kingdomId, callerRealm) {
     if (!state || state.greatHolyWar || !config(state, religionId)) return false;
+    if (callerRealm === 'player' && FB.intrigueCaptivityOf &&
+        FB.intrigueCaptivityOf(state, state.player.charId)) return false;
     var conf = config(state, religionId), history = ensureHistory(state);
     if (!dateReached(state, conf.minDate)) return false;
     if ((history.cooldownUntil[religionId] || 0) > state.turn) return false;
     var head = FB.religiousHeadOf(state, religionId);
     if (!head) return false;
+    if (FB.intrigueRealmRulerCaptive &&
+        FB.intrigueRealmRulerCaptive(state, head.id)) return false;
     if (papalFaith(state, religionId) && FB.ensurePapacy) {
       var papacy = FB.ensurePapacy(state);
       var obedience = papacy && papacy.obediences[papacy.romanObedience];

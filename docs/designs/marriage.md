@@ -183,8 +183,9 @@ pairing can conceive, and the first holds the spouse role. See
 `birthTick` — a pregnancy already begun still comes to term, and kin households are
 unaffected. Pregnancy follows its recorded parents across succession: a surviving
 mother still gives birth after the father dies, and the newborn is linked as the new
-protagonist's sibling rather than child. The `widow_veil` plot
-(map_data.js → `plot_spouse_end`) murders the current spouse.
+protagonist's sibling rather than child. New schemes against a spouse use the shared
+Assassination setup and authoritative death path. The hidden `widow_veil` definition
+and `plot_spouse_end` remain only so an active version-3 plot can finish.
 
 Catholic Bishoprics, Cardinalates, and Papal claims are personally celibate offices.
 `FB.canCourt`, `FB.canWed`, `FB.doMarry`, and the queued-wedding path all reject a living

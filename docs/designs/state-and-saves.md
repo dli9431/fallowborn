@@ -233,6 +233,8 @@ Elections, privileges, and collective demands are additive save-format-3 state.
 terms, chartered Council terms, stable cooldown clocks, and a bounded outcome history.
 Forecasts, localized candidate labels, and support prose are derived. Legacy officer and
 guildmaster careers receive one current term during repair instead of losing rank on load.
+An active guild or Council campaign becomes invalid if its exact candidate enters intrigue
+captivity, so confinement cannot confer a new office at the later resolution boundary.
 
 `state.privileges` is a list of legal records with stable definition, holder, grantor,
 scope, source, effect-ledger, grant turn, optional end turn, and revocation ids. It never
@@ -680,3 +682,22 @@ the campaign household, so it survives protagonist succession and ordinary save/
 round trips. Missing state means no orientation has been seen and requires no save-version
 migration. Manually replaying a Guide orientation records it as seen but never clears
 another entry.
+
+Hostile intrigue is another additive save-format-3 extension. `FB.ensureIntrigue`
+lazily repairs `state.intrigue` with at most six generation-stamped `aiSchemes`, exact
+`captives`, one exact expiring `leverage` record per actor, actor cooldowns, an optional
+player `hearing`, and bounded counters. Captive records contain captive/captor ids,
+captor realm and generation, source, capture turn, and demand. Leverage contains actor
+and target ids, actor generation, source, creation/expiry turns, and the exact political
+foothold available at creation. Missing or malformed records are dropped or clamped
+without consuming RNG, materializing replacement people, retargeting, or raising the
+save version.
+
+`character.conduct` is an optional `{schemes,deceit,cruelty}` record repaired only when
+present and updated for both protagonists and AI characters. All saved intrigue state is
+locale-neutral. Death, actor/realm succession, expiry, target departure, and lost
+footholds invalidate their exact records; restore calls repair after modifiers and before
+agency so downstream readers receive the same shape. The internal
+`player.flags.intrigue_captive` and `intrigue_legal_custody` markers only identify which
+intrigue record owns the shared `in_prison` blocker, so repair never clears imprisonment
+created by another system.

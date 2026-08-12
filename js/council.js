@@ -173,6 +173,8 @@ window.FB = window.FB || {};
     if (!summary || !FB.councilSeat(seatId)) return null;
     const candidates = FB.playerVassals(state).filter(function (rid) {
       return !summary.seated[rid] &&
+        !(FB.intrigueRealmRulerCaptive &&
+          FB.intrigueRealmRulerCaptive(state, rid)) &&
         !FB.isProtected(state, 'councilRealm', rid);
     });
     candidates.sort(function (a, b) {
@@ -235,7 +237,9 @@ window.FB = window.FB || {};
     const c = FB.councilEnsure(state);
     const seat = FB.councilSeat(seatId);
     const r = rid && state.realms[rid];
-    if (!c || !seat || !r || !r.alive || r.liege !== 'player') return;
+    if (!c || !seat || !r || !r.alive || r.liege !== 'player' ||
+        (FB.intrigueRealmRulerCaptive &&
+          FB.intrigueRealmRulerCaptive(state, rid))) return;
     if (!options.confirmed && FB.councilAppointmentStatus) {
       const status = FB.councilAppointmentStatus(state, seatId, rid);
       if (!status.ready) return false;

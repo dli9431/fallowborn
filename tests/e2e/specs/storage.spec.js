@@ -277,6 +277,72 @@ test('legacy plain slots and FBS1 exports still load; fresh exports are FBS2',
     });
   });
 
+test('save-format-3 restore lazily repairs malformed intrigue state and conduct',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      me.conduct = { schemes:99, deceit:-99, cruelty:'not-a-number' };
+      s.player.flags.in_prison = 1;
+      s.intrigue = {
+        aiSchemes:'broken',
+        captives:[null, {}, { captiveId:'missing', captorId:'also-missing' },
+          { captiveId:me.id, captorId:'missing' }],
+        leverage:{ actorId:me.id },
+        cooldowns:[],
+        nextId:-9,
+        startYear:'bad-year',
+        startsThisYear:99,
+        playerFacingStartsThisYear:99,
+        hearing:'not-a-hearing',
+        legalCustody:{}
+      };
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      const restored = FB.state;
+      const repaired = restored.intrigue;
+      const restoredMe = restored.chars[restored.player.charId];
+      return {
+        incomingVersion:payload.v,
+        outgoingVersion:JSON.parse(FB.save.serialize()).v,
+        arrays:[
+          Array.isArray(repaired.aiSchemes),
+          Array.isArray(repaired.captives),
+          Array.isArray(repaired.leverage)
+        ],
+        lengths:[repaired.aiSchemes.length, repaired.captives.length,
+          repaired.leverage.length],
+        cooldownObject:!!repaired.cooldowns &&
+          !Array.isArray(repaired.cooldowns),
+        nextId:repaired.nextId,
+        startYear:repaired.startYear,
+        startsThisYear:repaired.startsThisYear,
+        playerFacingStartsThisYear:repaired.playerFacingStartsThisYear,
+        hearing:repaired.hearing,
+        legalCustody:repaired.legalCustody,
+        unrelatedPrisonPreserved:!!restored.player.flags.in_prison,
+        conduct:restoredMe.conduct
+      };
+    });
+
+    expect(result.incomingVersion).toBe(3);
+    expect(result.outgoingVersion).toBe(3);
+    expect(result.arrays).toEqual([true, true, true]);
+    expect(result.lengths).toEqual([0, 0, 0]);
+    expect(result.cooldownObject).toBe(true);
+    expect(result.nextId).toBe(1);
+    expect(result.startYear).toBeNull();
+    expect(result.startsThisYear).toBe(2);
+    expect(result.playerFacingStartsThisYear).toBe(1);
+    expect(result.hearing).toBeNull();
+    expect(result.legalCustody).toBeNull();
+    expect(result.unrelatedPrisonPreserved).toBe(true);
+    expect(result.conduct).toEqual({ schemes:3, deceit:-3, cruelty:0 });
+  });
+
 test('a quota-shaped storage failure advises export, not a generic error',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

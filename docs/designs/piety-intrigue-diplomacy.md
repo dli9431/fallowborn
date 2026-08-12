@@ -151,3 +151,54 @@ available Finance deed offers explicit pledge, merchant, and revenue contracts i
 
 Related: [events.md](events.md) for named chances, [war.md](war.md) for what pacts block,
 and [finance.md](finance.md) for contract forms.
+
+## Expanded hostile intrigue
+
+Hostile setup remains one `player.plot` and the Scheming focus, but now selects an exact
+target, one authored method, and an optional same-sovereign accomplice. Assassination,
+abduction, blackmail, fabricated charges, and sabotage use the shared preview and seeded
+resolution APIs in `js/intrigue.js`; ordinary plots keep their event definitions and old
+math. Personal victims may be any living named non-self character in the actor's
+sovereign realm. Cross-border action is limited to the existing rebel sponsorship and
+sabotage of an immediately adjacent foreign border county.
+
+Scheme-specific method names inherit one of three shared profiles: careful is slower but
+adds 10 success points and removes four annual exposure points; bought access costs
+`5 + 5 * target station`, runs at 1.2 speed, and adds five success points; forceful runs
+at 1.5 speed, loses five success points, adds ten exposure points, and lets Martial join
+Intrigue in progress. The review sheet shows the resulting exact odds, duration, cost,
+and exposure before confirmation.
+
+Assassination uses the authoritative character-death and succession paths. Abduction
+creates one durable captive per abductor. Blackmail creates the actor's one exact
+two-year leverage record. Fabricated charges remove the stamped office, Council seat,
+claim/restoration right, or landed foothold where it still exists, otherwise they lower
+the target at the direct liege's court. Sabotage applies `covert_sabotage` for 720 days.
+No outcome retargets when a person dies, moves courts, loses office, or succeeds to a
+different generation.
+
+Evidence, not a flat failure penalty, controls consequences. Suspicion damages Standing;
+testimony, material proof, or capture red-handed queues a lawful hearing. The authority
+is the victim's direct lawful lord or sovereign. Severity begins at one for blackmail
+and sabotage, two for false charges and abduction, three for attempted murder, and four
+for a proven killing, with political and sacred victims aggravating it. Player execution,
+deposition, mutilation, exile, imprisonment, forfeiture, or outlawry occurs only after
+the hearing decision. Latin, Byzantine, Muslim, and customary forms select fines,
+penance, prison, monastic exile, blinding/deposition, diya/qisas, wergild, outlawry, or
+execution from one mechanical ladder.
+
+The regional presentation follows the historical institutions the ladder abstracts:
+[the National Archives on treason](https://www.nationalarchives.gov.uk/whats-on/exhibitions/treason-people-power-plot/)
+and [medieval outlawry](https://www.nationalarchives.gov.uk/help-with-your-research/research-guides/outlaws-outlawry-medieval-early-modern-england/),
+[the British Museum on penance after Becket's murder](https://www.britishmuseum.org/blog/who-killed-thomas-becket),
+[Harvard on Byzantine political blinding](https://dash.harvard.edu/entities/publication/31093e1f-6c00-409c-928f-b15083378cf6),
+and [Cambridge on qisas and diya](https://assets.cambridge.org/97805217/92264/excerpt/9780521792264_excerpt.htm).
+They inform names and sentencing forms; the bounded severity ladder remains the shared
+game mechanic.
+
+AI rulers receive the same odds and outcomes through a six-record bounded seasonal pool.
+Annual agency starts no more than two, no more than one player-facing, with one scheme per
+actor, no duplicate lethal/abduction target, and a four-year actor cooldown. A murder or
+abduction attempt against the protagonist or managed household always pauses at a clue
+event before final resolution. Investigation, paid security, and a counter-trap can
+identify, weaken, or cancel it; ignoring it preserves the lethal possibility.

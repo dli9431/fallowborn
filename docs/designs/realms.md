@@ -687,3 +687,19 @@ An awarded realm may carry additive
 `sacredCustody:{religion,siteIds,campaignId,grantTurn}`. Custody changes no population
 faith and grants seasonal piety only while a listed site remains in the custodian's
 sovereign bloc.
+
+## Bounded ruler intrigue
+
+Annual ruler agency may seed hostile schemes, but the seasonal intrigue pool is capped
+at six records and two new starts per year. Each record stamps the actor character,
+actor realm and ruler generation, exact target context, method, power, and warning state.
+An actor has at most one scheme and a four-year cooldown; lethal and abduction attempts
+cannot duplicate a target. Trait and durable aim weights encourage cruel, deceitful,
+wrathful, ambitious, greedy, expansion, wealth, and crown-building rulers, while kind,
+honest, content, patient, and peace-seeking rulers are strongly suppressed.
+
+Personal schemes cannot cross sovereign borders. A neighboring court may still use the
+existing rebel-sponsorship system or sabotage a county across a shared border. Captive
+rulers cannot start wars or schemes and their projected host is multiplied by 0.8.
+Succession invalidates generation-stamped schemes, releases captives held by the former
+ruler, and removes predecessor leverage without substituting the new ruler.

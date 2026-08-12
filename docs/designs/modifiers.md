@@ -204,3 +204,10 @@ Runtime JSON mods may provide a top-level `modifiers` object. Like traits and ot
 id-keyed definitions, a later mod replaces the complete definition at a matching id.
 Catalog ids and numeric state remain locale-neutral; `name` and `desc` are structured
 display fields and are extracted for localization.
+
+`covert_sabotage` is the intrigue-owned county record. Success applies it through the
+ordinary `FB.addModifier` API for 720 days with `tax:-0.12`, `levy:-0.12`, and
+`unrest:0.25`. It remains attached to the county through conquest and expires through
+the shared daily modifier tick; intrigue has no parallel county timer or cleanup path.
+The existing Land chips, tax/levy consumers, event-tag scaling, save repair, and mod
+replacement rules therefore apply unchanged.

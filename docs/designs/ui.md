@@ -1010,3 +1010,19 @@ protagonist's campaign records. Each native-button chip exposes localized icon, 
 and remaining duration. Pointer hover shows description/effects; click, tap, Enter, or
 Space opens the same information in a focus-managed modal. County chips remain visible
 when ownership changes. See [modifiers.md](modifiers.md).
+
+**Hostile intrigue remains in Deeds.** Begin a Plot opens the ordinary plot list; a
+hostile choice then uses exact target, method, optional accomplice, and review sheets.
+The target sheet groups named people by rulers/officeholders, household, and other realm
+residents, groups sabotage counties by own realm/foreign border, and supplies a live
+search over names, station, county, and realm. Every named target and accomplice keeps an
+identity card. Method and review sheets disclose exact success, estimated duration,
+up-front cost, annual exposure, acceptance, and refusal-leak chances before mutation.
+
+The Ongoing Commitments card and Intrigue Affairs deed expose the active scheme, exact
+target/method progress, captive, player captivity, and leverage actions without adding a
+tab. Eligible character sheets add **Plot against…**, including kin, spouses, and minors;
+the route still applies the authoritative target gates. All sheets use generic-modal
+focus, keyboard action ordering, nested history Back, minimum touch targets, and mobile
+bottom-sheet behavior. UI strings use `FB.T` or localized data fields, while saved
+contexts keep ids and numbers only.

@@ -75,7 +75,7 @@ window.FB = window.FB || {};
     coin_credit:'work',
     debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
-    scheme_rival:'life', begin_plot:'life', take_road:'life', travel_turn_back:'life',
+    scheme_rival:'life', begin_plot:'life', intrigue_assets:'life', take_road:'life', travel_turn_back:'life',
     travel_marriage_residence:'life', travel_settle_here:'life',
     seek_blessing:'faith', seek_absolution:'faith', papacy:'faith',
     bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
@@ -425,6 +425,14 @@ window.FB = window.FB || {};
     const attentionTarget = FB.socialAttentionTarget(s);
     const attentionCapacity = FB.politicalAttentionCapacity(s);
     const finance = financeCommitmentText(s);
+    const hostilePlot = s.player.plot && FBDATA.plots[s.player.plot.id] &&
+      FBDATA.plots[s.player.plot.id].hostile ? s.player.plot : null;
+    const intrigueCaptive = FB.intrigueCaptiveOf
+      ? FB.intrigueCaptiveOf(s, s.player.charId) : null;
+    const intrigueCaptured = FB.intrigueCaptivityOf
+      ? FB.intrigueCaptivityOf(s, s.player.charId) : null;
+    const intrigueLeverage = FB.intrigueLeverageOf
+      ? FB.intrigueLeverageOf(s, s.player.charId) : null;
     const collapsed = !!(FB.game.uiPrefs &&
       FB.game.uiPrefs.commitmentsCollapsed);
     let h = '<section class="ongoing-commitments' +
@@ -457,6 +465,23 @@ window.FB = window.FB || {};
       action:travel ? FB.T('Paused') : FB.T('Change…'),
       disabled:!!travel
     });
+    if (hostilePlot || intrigueCaptive || intrigueCaptured || intrigueLeverage) {
+      const intrigueParts = [];
+      if (hostilePlot) {
+        const hostileDef = FBDATA.plots[hostilePlot.id];
+        intrigueParts.push(FB.T('{plot}: {power}/{needed}', {
+          plot:dt(s, 'plot', hostilePlot.id, hostileDef, 'name'),
+          power:Math.floor(hostilePlot.power), needed:hostileDef.need
+        }));
+      }
+      if (intrigueCaptive) intrigueParts.push(FB.T('one captive'));
+      if (intrigueCaptured) intrigueParts.push(FB.T('you are captive'));
+      if (intrigueLeverage) intrigueParts.push(FB.T('one leverage record'));
+      h += ongoingCommitmentRow({
+        id:'intrigue', icon:'🕸', label:FB.T('Intrigue affairs'),
+        status:intrigueParts.join(' · '), action:FB.T('Review…')
+      });
+    }
     h += ongoingCommitmentRow({
       id:'personal-attention',
       icon:'🤝',
@@ -782,6 +807,8 @@ window.FB = window.FB || {};
               '[data-action-id="travel_settle_here"]');
           } else if (commitment === 'finance') {
             UI.showFinance();
+          } else if (commitment === 'intrigue') {
+            UI.showIntrigueAssets();
           }
         });
       });
