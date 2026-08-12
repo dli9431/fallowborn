@@ -36,10 +36,15 @@ entry replaces a slot's generated name/location but does not force early visibil
 development reveals it on the normal thresholds. Counties with no curated list also
 gain a county-head entry named after the county itself; where the geodata offers
 too few named places, the remaining slots keep generated names. Because the
-geodata is modern, the import's `HISTORICAL_NAMES` table swaps post-medieval
-foundation/renaming names for the settlement's well-attested period name
-('Tel Aviv' → 'Jaffa') — the county-head entry is exempt and keeps the
-county's name.
+geodata is modern, the import's `HISTORICAL_NAMES` table swaps later names for
+the settlement's well-attested medieval identity (the modern Milton Keynes and
+Bletchley records resolve to one 'Bicchelai'; 'Tel Aviv' → 'Jaffa').
+`POST_MEDIEVAL_NAMES` rejects a candidate that has no defensible medieval
+identity. GeoNames `PPLX` city-section records are excluded at ingestion, and
+`NON_SETTLEMENT_NAMES` rejects remaining modern districts and geographic
+labels. This allows the next ranked known place to fill the slot; if none remains,
+the normal generated fallback is preserved.
+The county-head entry is exempt and keeps the county's name.
 
 At world compilation (`compileSites` in `js/world.js`) every settled county receives an
 ordered record list: authored slots first (never renumbered), then deterministic

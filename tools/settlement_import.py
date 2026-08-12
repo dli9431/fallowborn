@@ -41,6 +41,7 @@ resumes where it stopped.
 """
 
 import argparse
+import bisect
 import hashlib
 import io
 import json
@@ -627,7 +628,7 @@ def load_geonames(bounds, offline):
             continue
         for line in raw.split('\n'):
             f = line.split('\t')
-            if len(f) < 19 or f[6] != 'P':
+            if len(f) < 19 or f[6] != 'P' or f[7] == 'PPLX':
                 continue
             lat, lon = float(f[4]), float(f[5])
             if not (lat_min - 1 <= lat <= lat_max + 1 and
@@ -682,13 +683,13 @@ def slugify(name, node):
     return '%s_%s_%d' % (node['src'], slug, node['id'])
 
 
-# GeoNames (and OSM) are modern databases: a place that is a post-medieval
-# foundation or renaming carries its modern name. Where the same settlement
-# has a well-attested older name (the era the game portrays is 867/1066),
-# emit that instead. County-head entries are exempt — they must keep the
-# county's own name (the head contract asserted by the e2e suite). Places
-# founded post-medieval with no predecessor settlement keep their modern
-# name: there is nothing older to use.
+# GeoNames (and OSM) are modern databases. Use a well-attested medieval name
+# for a later foundation or renaming where the same place has one. If no
+# defensible medieval predecessor is known, POST_MEDIEVAL_NAMES rejects that
+# candidate so the next ranked real place can fill the slot instead.
+# NON_SETTLEMENT_NAMES does the same for modern districts and geographic
+# labels. County-head entries are exempt: they must keep the county's own name
+# (the head contract asserted by the e2e suite).
 HISTORICAL_NAMES = {
     'Acqui Terme': 'Acqui',
     'Adıyaman': 'Hisn Mansur',
@@ -699,9 +700,11 @@ HISTORICAL_NAMES = {
     'Albertville': 'Conflans',
     'Ankara': 'Ancyra',
     'Antalya': 'Attaleia',
+    'Anapa': 'Mapa',
     'Armadale': 'Barbauchlaw',
     'Asenovgrad': 'Stenimachos',
     'Ashbourne': 'Killegland',
+    'Azov': 'Tana',
     'Ashgabat': 'Konjikala',
     'Aydın': 'Tralles',
     'Babol': 'Mamtir',
@@ -714,6 +717,8 @@ HISTORICAL_NAMES = {
     'Bassano del Grappa': 'Bassano',
     'Batman': 'Iluh',
     'Benghazi': 'Berenice',
+    'Bingöl': 'Çapakçur',
+    'Bletchley': 'Bicchelai',
     'Bognor Regis': 'Bognor',
     'Bolu': 'Claudiopolis',
     'Bolvadin': 'Polybotos',
@@ -721,6 +726,7 @@ HISTORICAL_NAMES = {
     'Budapest': 'Óbuda',
     'Bursa': 'Prusa',
     'Casablanca': 'Anfa',
+    'Bremerhaven': 'Geestendorf',
     'Castellammare di Stabia': 'Castellammare',
     'Castle Douglas': 'Carlingwark',
     'Cava Dè Tirreni': 'Cava',
@@ -728,18 +734,23 @@ HISTORICAL_NAMES = {
     'Chernyakhovsk': 'Insterburg',
     'Clermont-Ferrand': 'Clermont',
     'Constanţa': 'Constantia',
+    'Craigavon': 'Seagoe',
     'Crotone': 'Cotrone',
     'Daugavpils': 'Dünaburg',
     'Diyarbakır': 'Amida',
     'Drobeta-Turnu Severin': 'Drobeta',
     'Edirne': 'Adrianople',
+    'Elazığ': 'Harput',
     'Ereğli': 'Heraclea',
     'Erzurum': 'Theodosiopolis',
     'Eskişehir': 'Dorylaeum',
     'Fort William': 'Inverlochy',
     'Friedrichshafen': 'Buchhorn',
+    'Gatchina': 'Khotchino',
     'Gaziantep': 'Aintab',
     'Giresun': 'Kerasous',
+    'Glenrothes': 'Markinch',
+    'Gothenburg': 'Nya Lödöse',
     'Guidonia Montecelio': 'Montecelio',
     'Gyumri': 'Kumayri',
     'Halle (Saale)': 'Halle',
@@ -751,6 +762,7 @@ HISTORICAL_NAMES = {
     'Kahramanmaraş': 'Marash',
     'Kaliningrad': 'Königsberg',
     'Karaman': 'Laranda',
+    'Kędzierzyn-Koźle': 'Koźle',
     'Karlstad': 'Tingvalla',
     'Kavala': 'Christoupolis',
     'Kayseri': 'Caesarea',
@@ -763,6 +775,7 @@ HISTORICAL_NAMES = {
     'Klaipėda': 'Memel',
     'Konya': 'Iconium',
     'Kozan': 'Sis',
+    'Küçükçekmece': 'Rhegion',
     'Kütahya': 'Cotyaeum',
     'Kızıltepe': 'Dunaysir',
     'Latakia': 'Laodicea',
@@ -770,17 +783,23 @@ HISTORICAL_NAMES = {
     'Lisburn': 'Lisnagarvey',
     'Londonderry County Borough': 'Derry',
     'Lüleburgaz': 'Arcadiopolis',
+    'Makhachkala': 'Tarki',
     'Manisa': 'Magnesia',
     'Martigny-Ville': 'Martigny',
     'Mashhad': 'Sanabad',
+    'Mikkeli': 'Savilahti',
+    'Mohammedia': 'Fedala',
     'Montana': 'Kutlovitsa',
     'Nikšić': 'Onogošt',
+    'Novorossiysk': 'Bata',
+    'Nova Gorica': 'Solkan',
     'Orumiyeh': 'Urmia',
     'Pescara': 'Piscaria',
     'Priego de Córdoba': 'Bago',
     'Qarshi': 'Nasaf',
     "Reggio nell'Emilia": 'Reggio',
     'Riva del Garda': 'Riva',
+    'Riyadh': 'Hajr',
     'Romorantin-Lanthenay': 'Romorantin',
     'Rosignano Solvay-Castiglioncello': 'Castiglioncello',
     'Royal Leamington Spa': 'Leamington Priors',
@@ -791,31 +810,226 @@ HISTORICAL_NAMES = {
     'Samsun': 'Amisos',
     'San Donà di Piave': 'San Donà',
     'Sarlat-la-Canéda': 'Sarlat',
+    'Saratov': 'Uvek',
+    'Savonlinna': 'Olavinlinna',
     'Schwandorf in Bayern': 'Schwandorf',
+    'Sevastopol': 'Chersonesus',
     'Shahr-e Kord': 'Deh Kord',
     'Shahreza': 'Qomsheh',
     'Shahrisabz': 'Kesh',
     'Silifke': 'Seleucia',
+    'Simferopol': 'Scythian Neapolis',
     'Sivas': 'Sebasteia',
     'Sovetsk': 'Tilsit',
     'Stara Zagora': 'Beroe',
     'Stoke-on-Trent': 'Stoke-upon-Trent',
+    'Suez': 'al-Qulzum',
+    'Tampere': 'Koski',
     'Tarquinia': 'Corneto',
     'Tekirdağ': 'Rodosto',
     'Tel Aviv': 'Jaffa',
+    'Telford': 'Dawley',
     'Thonon-les-Bains': 'Thonon',
     'Torbat-e Heydariyeh': 'Zaveh',
     'Torbat-e Jam': 'Jam',
     'Trabzon': 'Trebizond',
     'Tuzla': 'Soli',
+    'Vaasa': 'Korsholm',
     'Valencia de Don Juan': 'Valencia de Campos',
+    'Vantaa': 'Helsinge',
     'Veliko Turnovo': 'Tarnovo',
     'Viranşehir': 'Constantina',
+    'Wilhelmshaven': 'Heppens',
+    'Wolfsburg': 'Hesslingen',
+    'Yevpatoriya': 'Gözleve',
     'Yalvaç': 'Pisidian Antioch',
     'İskenderun': 'Alexandretta',
     'İzmir': 'Smyrna',
     'İzmit': 'Nicomedia',
     'Şanlıurfa': 'Edessa',
+}
+
+POST_MEDIEVAL_NAMES = {
+    'Alchevsk',
+    'Kramatorsk',
+    'Novoshakhtinsk',
+    'Siverskodonetsk',
+    'Slovyansk',
+    'Argun',
+    'Balakovo',
+    'Bataysk',
+    'Belgorod',
+    'Berdyansk',
+    'Borisoglebsk',
+    'Buynaksk',
+    'Engels',
+    'Esenler',
+    'Gudermes',
+    'Iisalmi',
+    'Imatra',
+    'Ismailia',
+    'Izberbash',
+    'Joensuu',
+    'Kamyshin',
+    'Kaspiysk',
+    'Kizlyar',
+    'Kronstadt',
+    'Lipetsk',
+    'Lomonosov',
+    'Maltepe',
+    'Melitopol',
+    'Novocherkassk',
+    'Nõmme',
+    'Oryol',
+    'Östersund',
+    'Penza',
+    'Sancaktepe',
+    'Sestroretsk',
+    'Shakhty',
+    'Shubra al Khaymah',
+    'Siilinjärvi',
+    'Slavyansk-na-Kubani',
+    'Sochi',
+    'Sultangazi',
+    'Tambov',
+    'Tikhoretsk',
+    'Volgodonsk',
+    'Zelenogorsk',
+    'Dagestanskiye Ogni',
+    'Agadir',
+    'Al Ahmadi',
+    'Al Madinah',
+    'Baharestan',
+    'Bekobod',
+    'Bournemouth',
+    'Caol',
+    'Castlebridge',
+    'Cherkessk',
+    'Clydebank',
+    'Coalville',
+    'Courtown',
+    'Dnipro',
+    'Donetsk',
+    'Eastleigh',
+    'El Jadida',
+    'Elista',
+    'Esenyurt',
+    'Färjestaden',
+    'Grozny',
+    'Havířov',
+    'Holon',
+    'Horlivka',
+    'Kajaani',
+    'Khasavyurt',
+    'Khartoum',
+    'Khouribga',
+    'Kizilyurt',
+    'Kostomuksha',
+    'Kotka',
+    'Krasnodar',
+    'Kropotkin',
+    'Luhansk',
+    'Lusail',
+    'Makiyivka',
+    'Mariupol',
+    'Marsa Alam',
+    'Maykop',
+    'Milton Keynes',
+    'Mohammadia',
+    'Nalchik',
+    'Orenburg',
+    'Örnsköldsvik',
+    'Petrodvorets',
+    'Petrozavodsk',
+    'Saint Petersburg',
+    'Rostov-on-Don',
+    'Saransk',
+    'Sosnovyy Bor',
+    'St Helens',
+    'Stavropol',
+    'Taganrog',
+    'Ufa',
+    'Umraniye',
+    'Vladikavkaz',
+    'Volgograd',
+    'Volzhsky',
+    'Waterlooville',
+    'Yeysk',
+    'Zagazig',
+    'Zaporizhzhya',
+    'Zarhalol',
+    'Zonguldak',
+    'Aprilia',
+    'Ar Rayyan',
+    'Arak',
+    'Bandar Abbas',
+    'Carbonia',
+    'Dammam',
+    'Doha',
+    'Dushanbe',
+    'Esbjerg',
+    'Fredrikstad',
+    'Halle-Neustadt',
+    'Helsinki',
+    'Jyväskylä',
+    'Karabük',
+    'Karlskrona',
+    'Kenitra',
+    'Khorramshahr',
+    'Kırıkkale',
+    'Kristiansand',
+    'Kuopio',
+    'Latina',
+    'Lorient',
+    'Ludwigshafen am Rhein',
+    'Madinat an Nasr',
+    'Netanya',
+    'Newtownabbey',
+    'Osmaniye',
+    'Petah Tiqva',
+    'Port Said',
+    'Ramadi',
+    'Rishon LeTsiyyon',
+    'Shahin Shahr',
+    'Shannon',
+    'Sidi Bel Abbes',
+    'Sundsvall',
+    'Tolyatti',
+    'Zahedan',
+}
+
+NON_SETTLEMENT_NAMES = {
+    'Ataşehir',
+    'Beylikdüzü',
+    'Sultanbeyli',
+    'Şişli',
+    'Bağcılar',
+    'Kristiine',
+    'Livoberezhnyi',
+    'Obolonskyi',
+    'Shevchenkivskyi',
+    'Verhunskyi',
+    'Zelenograd',
+    'Bahçelievler',
+    'Carabanchel',
+    'Ciudad Lineal',
+    'Darnytsya',
+    'Desna',
+    'Dniprovskyi',
+    'East Helsinki',
+    'Haabersti',
+    'Isle Of Mull',
+    'Isle of North Uist',
+    'Kesklinn',
+    'Kurortnyy',
+    'Lasnamäe',
+    'Mustamäe',
+    'Nou Barris',
+    'Põhja-Tallinn',
+    'Pravyi Bereh',
+    'Puente de Vallecas',
+    'Tsentralnyi',
+    'Vyhurivshchyna-Troyeshchyna',
 }
 
 
@@ -994,6 +1208,7 @@ def main():
     selected = {}  # pid -> [node, ...]
     dropped_water = 0
     dropped_numbered = 0
+    dropped_ineligible = 0
     for seed in targets:
         pid = seed['id']
         cand = by_winner.get(pid, [])
@@ -1016,6 +1231,9 @@ def main():
             if not cleaned:
                 dropped_numbered += 1
                 continue
+            if cleaned in POST_MEDIEVAL_NAMES or cleaned in NON_SETTLEMENT_NAMES:
+                dropped_ineligible += 1
+                continue
             cleaned = HISTORICAL_NAMES.get(cleaned, cleaned)
             n['name'] = cleaned
             nn = norm_name(cleaned)
@@ -1030,7 +1248,8 @@ def main():
 
     total = sum(len(v) for v in selected.values())
     print('selected %d real settlements (%d dropped offshore, %d numbered '
-          'labels cleaned or dropped)' % (total, dropped_water, dropped_numbered))
+          'labels cleaned or dropped, %d ineligible candidates dropped)'
+          % (total, dropped_water, dropped_numbered, dropped_ineligible))
 
     # -- phase 5: emit data/settlements_real.js ----------------------------
     def county_entries(seed):

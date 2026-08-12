@@ -1761,11 +1761,16 @@ early visibility. Curated entries always win; where the geodata has too few name
 places (steppe, desert, tundra), the remaining slots keep generated names.
 Modern numbered administrative labels ('Paris 16 Passy') are cleaned to the
 historical name they embed ('Passy'); labels with no historical reading are
-dropped for the next real place. Where a place is itself a post-medieval
-foundation or renaming, the tool's `HISTORICAL_NAMES` table emits the
-settlement's well-attested older name instead ('Tel Aviv' → 'Jaffa',
-'Ankara' → 'Ancyra'); county-head entries are exempt and keep the county's
-name.
+dropped for the next real place. Where a modern place has a documented medieval
+identity, the tool's `HISTORICAL_NAMES` table emits that name instead (the
+modern Milton Keynes and Bletchley records resolve to one 'Bicchelai'; 'Tel
+Aviv' → 'Jaffa'; 'Ankara' → 'Ancyra'). A candidate
+listed in `POST_MEDIEVAL_NAMES` has no defensible medieval identity and is
+dropped so the next ranked known settlement fills its slot.
+GeoNames `PPLX` city-section records are excluded at ingestion, while
+`NON_SETTLEMENT_NAMES` rejects remaining modern districts and geographic labels.
+If no eligible real candidate remains, the normal generated fallback is
+preserved. County-head entries are exempt and keep the county's name.
 An optional `--topup` pass adds places from OpenStreetMap.
 Settlement data: GeoNames geographical database (CC BY 4.0);
 top-up data © OpenStreetMap contributors, ODbL.

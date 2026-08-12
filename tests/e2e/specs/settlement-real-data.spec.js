@@ -90,39 +90,76 @@ test('fill names use the attested period name, not the modern one',
     await openGame(page, testInfo);
 
     const result = await page.evaluate(function () {
-      /* tools/settlement_import.py HISTORICAL_NAMES: post-medieval
-         foundation/renaming names are emitted under the settlement's older
-         name instead. Spot-check the canonical cases across the map. */
+      /* The importer substitutes a documented medieval identity when there
+         is one and drops modern-only candidates so another real place fills
+         the slot. Spot-check both policies across the map. */
       const modern = ['Tel Aviv', 'Ankara', 'İzmir', 'Clermont-Ferrand',
-        'Casablanca', 'Kaliningrad', 'Trabzon', 'Şanlıurfa'];
+        'Casablanca', 'Kaliningrad', 'Trabzon', 'Şanlıurfa',
+        'Milton Keynes', 'Bletchley', 'Wolfsburg', 'Bremerhaven',
+        'Wilhelmshaven', 'Glenrothes', 'Telford', 'Bingöl', 'Tampere',
+        'Kędzierzyn-Koźle', 'Küçükçekmece', 'Makhachkala', 'Mikkeli',
+        'Novorossiysk', 'Saratov', 'Savonlinna', 'Sevastopol', 'Simferopol',
+        'Vaasa', 'Vantaa', 'Anapa', 'Gatchina', 'Yevpatoriya'];
+      const rejected = ['Aprilia', 'Ar Rayyan', 'Arak', 'Bandar Abbas',
+        'Carbonia', 'Dammam', 'Doha', 'Dushanbe', 'Esbjerg', 'Fredrikstad',
+        'Halle-Neustadt', 'Helsinki', 'Jyväskylä', 'Karabük', 'Karlskrona',
+        'Kenitra', 'Khorramshahr', 'Kırıkkale', 'Kristiansand', 'Kuopio',
+        'Latina', 'Lorient', 'Ludwigshafen am Rhein', 'Madinat an Nasr',
+        'Netanya', 'Newtownabbey', 'Osmaniye', 'Petah Tiqva', 'Port Said',
+        'Ramadi', 'Rishon LeTsiyyon', 'Shahin Shahr', 'Shannon',
+        'Sidi Bel Abbes', 'Sundsvall', 'Tolyatti', 'Zahedan',
+        'Bournemouth', 'Donetsk', 'Khartoum', 'Lusail', 'Saint Petersburg',
+        'Zagazig', 'Bağcılar', 'Ciudad Lineal', 'Dniprovskyi',
+        'East Helsinki', 'Põhja-Tallinn', 'Rostov-on-Don', 'Volgograd',
+        'Joensuu', 'Kronstadt', 'Shakhty', 'Shevchenkivskyi', 'Volgodonsk'];
       const period = ['Jaffa', 'Ancyra', 'Smyrna', 'Clermont', 'Anfa',
-        'Königsberg', 'Trebizond', 'Edessa'];
-      const seenModern = [], seenPeriod = {}, heads = {};
+        'Königsberg', 'Trebizond', 'Edessa', 'Bicchelai', 'Hesslingen',
+        'Geestendorf', 'Heppens', 'Markinch', 'Dawley', 'Çapakçur', 'Koski',
+        'Koźle', 'Rhegion', 'Tarki', 'Savilahti', 'Bata', 'Tana', 'Uvek',
+        'Olavinlinna', 'Chersonesus', 'Scythian Neapolis', 'Korsholm',
+        'Helsinge', 'Mapa', 'Khotchino', 'Gözleve'];
+      const seenModern = [], seenRejected = [], seenPeriod = {};
+      const bicchelaiSites = {};
       for (const bm of ['867', '1066']) {
         for (const pr of FB.bookmark(bm).provinces) {
           for (let i = 0; i < (pr.settlements || []).length; i++) {
-            const name = pr.settlements[i].name;
+            const site = pr.settlements[i];
+            const name = site.name;
             if (modern.indexOf(name) >= 0) seenModern.push(bm + ':' + pr.id + ':' + name);
+            if (rejected.indexOf(name) >= 0) seenRejected.push(bm + ':' + pr.id + ':' + name);
             if (period.indexOf(name) >= 0) seenPeriod[name] = 1;
-            if (i === 0 && !pr.settlements[i].fill) heads[name] = 1;
+            if (name === 'Bicchelai') bicchelaiSites[pr.id + ':' + site.id] = 1;
           }
         }
       }
       /* a period name the curated county head already carries never appears
          as a fill entry (the import dedups it), so only require the ones
-         with no curated head; the head check keeps the exemption honest */
-      return { seenModern: seenModern,
+         with no curated head */
+      return { seenModern: seenModern, seenRejected: seenRejected,
         jaffa: !!seenPeriod['Jaffa'], smyrna: !!seenPeriod['Smyrna'],
         clermont: !!seenPeriod['Clermont'], anfa: !!seenPeriod['Anfa'],
-        konigsberg: !!seenPeriod['Königsberg'] };
+        konigsberg: !!seenPeriod['Königsberg'],
+        bicchelaiSites: Object.keys(bicchelaiSites).length,
+        hesslingen: !!seenPeriod['Hesslingen'],
+        geestendorf: !!seenPeriod['Geestendorf'],
+        uvek: !!seenPeriod['Uvek'],
+        chersonesus: !!seenPeriod['Chersonesus'],
+        korsholm: !!seenPeriod['Korsholm'] };
     });
 
     expect(result.seenModern).toEqual([]);
+    expect(result.seenRejected).toEqual([]);
     expect(result.jaffa).toBe(true);
     expect(result.smyrna).toBe(true);
     expect(result.clermont).toBe(true);
     expect(result.anfa).toBe(true);
     expect(result.konigsberg).toBe(true);
+    expect(result.bicchelaiSites).toBe(1);
+    expect(result.hesslingen).toBe(true);
+    expect(result.geestendorf).toBe(true);
+    expect(result.uvek).toBe(true);
+    expect(result.chersonesus).toBe(true);
+    expect(result.korsholm).toBe(true);
   });
 
 test('fill presentations do not force early settlement visibility', async function ({ page }, testInfo) {

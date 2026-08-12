@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.118.1';
+  FB.VERSION = '1.118.2';
   FB.CHANGELOG = [
+    { v: '1.118.2', date: '2026-08-12', changes: [
+      'Settlement fill now uses more medieval place names and skips modern-only towns across the map.'
+    ] },
     { v: '1.118.1', date: '2026-08-12', changes: [
       'The title screen now chooses among Christian, Muslim, and pagan themes, and each theme joins its faith’s in-game soundtrack.'
     ] },
