@@ -8,7 +8,11 @@ silent. Music is not simulation state and never changes deterministic gameplay.
 
 The source of truth is the `music/` directory. `tools/music_catalog.py build` validates the files
 and writes the classic-script catalog at `data/music_catalog.js`; runtime code never scans a web
-directory. The title theme is `music/intro/000-fallowborn.opus`. Gameplay tracks use:
+directory. The three title themes are:
+
+`music/intro/000-fallowborn-<faith>.opus`
+
+where `faith` is `christian`, `muslim`, or `pagan`. Gameplay tracks use:
 
 `music/<faith>/<culture>/<role>/<NNN>-<slug>.opus`
 
@@ -19,8 +23,10 @@ changes the generated revision token, allowing the persistent music cache to kee
 ## Choosing music
 
 The first boot with a non-empty catalog asks whether to play music and shows the expected download
-size. The answer is remembered, and Settings can change it later. The title theme may play before
-a campaign. In a campaign the context resolver selects:
+size. The answer is remembered, and Settings can change it later. Each page load chooses one of
+the three title themes with an equal one-third chance and keeps that choice for the loaded
+session, including title-screen pauses, resumes, and returns. In a campaign the context resolver
+selects:
 
 - `war` while the player's sovereign realm is at war, during a pledged great holy war, or in a
   soldier/campaign context;
@@ -31,6 +37,10 @@ Faith and culture selectors prefer an exact bank, then related lineage/group sel
 broad faith fallback. Jewish and Zoroastrian starts currently fall back to the Muslim collection;
 the final general fallback is the Christian collection. Adding a more precise folder and
 regenerating the catalog makes it available without changing runtime code.
+
+Every Christian, Muslim, or pagan gameplay bank also includes its matching title theme as one
+ordinary shuffled song. It follows normal history, repeat, preference, rating, and transition
+rules there; only title-screen playback loops it automatically.
 
 The hosted and itch builds use the same contextual bank selection and weighted shuffle. The itch
 artifact includes the complete current soundtrack, so faith, culture, and role resolution behave
@@ -102,12 +112,12 @@ is not, so a download started from the title menu stays visible inside the game.
 the result and refreshes the dialog only when it is already open — it never pops the dialog over
 the game.
 
-The service worker's app shell includes the intro but excludes gameplay tracks. The title's
-**Game available offline** message refers to the core game, not to every music bank.
+The service worker's app shell includes all three intro themes but excludes gameplay-only tracks.
+The title's **Game available offline** message refers to the core game, not to every music bank.
 
 ## Distribution
 
 The play.fallowborn.com Docker build validates and ships the full catalog. The private itch deploy
 uses `stage-itch` to require and stage the same complete catalog beneath a 200,000,000-byte
-gameplay-audio cap, with the intro outside the cap. If the complete catalog exceeds that boundary,
-deployment fails instead of silently dropping tracks or leaving contextual banks incomplete.
+gameplay-audio cap, with the intro themes outside the cap. If the complete catalog exceeds that
+boundary, deployment fails instead of silently dropping tracks or leaving contextual banks incomplete.

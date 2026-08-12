@@ -16144,7 +16144,7 @@ window.FB = window.FB || {};
   UI.showMusicTrack = function (replaceView) {
     const music = FB.music;
     const track = music && music.current();
-    if (!music || !track || track.kind === 'intro') {
+    if (!music || !track) {
       UI.toast('No soundtrack song is playing.');
       return;
     }

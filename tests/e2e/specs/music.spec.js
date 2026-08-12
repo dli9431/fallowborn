@@ -25,26 +25,34 @@ const tracks = [
   };
 });
 
+const intros = ['christian', 'muslim', 'pagan'].map(function (faith) {
+  return {
+    id:'intro-fallowborn-' + faith,
+    title:'Fallowborn ' + faith.charAt(0).toUpperCase() + faith.slice(1),
+    src:'music/intro/000-fallowborn-' + faith + '.opus',
+    order:0, bytes:2000000, duration:180, channels:2, inputRate:48000,
+    bitrate:96000, rev:'test-intro-' + faith, kind:'intro', faith:faith,
+    culture:'all', role:'theme', bankId:faith + '/all/theme'
+  };
+});
+
 const catalog = {
   schema:1,
-  intro:{
-    id:'intro-fallowborn', title:'Fallowborn', src:'music/intro/000-fallowborn.opus',
-    order:0, bytes:2000000, duration:180, channels:2, inputRate:48000,
-    bitrate:96000, rev:'test-intro', kind:'intro'
-  },
+  intro:intros[0],
+  intros:intros,
   tracks:tracks,
   banks:['folk', 'war', 'court'].map(function (role) {
     const records = tracks.filter(function (track) { return track.role === role; });
     return {
       id:'christian/anglo_saxon/' + role,
       faith:'christian', culture:'anglo_saxon', role:role,
-      trackIds:records.map(function (track) { return track.id; }),
-      bytes:records.length * 2000000,
-      duration:records.length * 180
+      trackIds:records.map(function (track) { return track.id; }).concat(intros[0].id),
+      bytes:(records.length + 1) * 2000000,
+      duration:(records.length + 1) * 180
     };
   }),
-  totalBytes:12000000,
-  totalDuration:1080
+  totalBytes:16000000,
+  totalDuration:1440
 };
 
 async function routeSyntheticSoundtrack(page) {
@@ -159,6 +167,16 @@ test('first soundtrack boot, title pause, and background playback preserve state
         return window.__musicAudio.some(function (item) { return item.src && !item.paused; });
       });
     }).toBe(true);
+    const titleSelection = await page.evaluate(function () {
+      return {
+        selected:FB.music.selectedIntro().id,
+        current:FB.music.current().id,
+        title:FB.music.selectedIntro().title
+      };
+    });
+    expect(intros.map(function (intro) { return intro.id; }))
+      .toContain(titleSelection.selected);
+    expect(titleSelection.current).toBe(titleSelection.selected);
     const playingSrc = await page.evaluate(function () {
       window.__titleAudio = window.__musicAudio.filter(function (item) {
         return item.src && !item.paused;
@@ -175,7 +193,7 @@ test('first soundtrack boot, title pause, and background playback preserve state
       };
     })).toEqual({
       nativeLoop:true,
-      mediaTitle:'Fallowborn',
+      mediaTitle:titleSelection.title,
       playbackState:'playing',
       actions:['nexttrack', 'pause', 'play', 'previoustrack']
     });
@@ -399,6 +417,7 @@ test('context banks, playback controls, and listening history stay consistent',
       FB.ui.showScreen(null);
       FB.platform.isItch = true;
       FB.music.sync(state, true);
+      const folkTrackIds = FB.music.currentBank().trackIds.slice();
       const itchFolkBank = FB.music.currentBank();
       state.realms.lord.war = { enemy:'foe' };
       FB.music.sync(state, true);
@@ -410,6 +429,7 @@ test('context banks, playback controls, and listening history stay consistent',
         folk:folk, realmWar:realmWar, war:war, court:court,
         itchFolk:itchFolkBank ? itchFolkBank.id : null,
         itchWar:itchWarBank ? itchWarBank.id : null,
+        folkTrackIds:folkTrackIds,
         first:FB.music.current().id
       };
     });
@@ -419,7 +439,8 @@ test('context banks, playback controls, and listening history stay consistent',
       war:'christian/anglo_saxon/war',
       court:'christian/anglo_saxon/court',
       itchFolk:'christian/anglo_saxon/folk',
-      itchWar:'christian/anglo_saxon/war'
+      itchWar:'christian/anglo_saxon/war',
+      folkTrackIds:expect.arrayContaining(['intro-fallowborn-christian'])
     }));
     await expect(page.locator('#btn-title-music')).toBeHidden();
 
@@ -664,21 +685,20 @@ test('context banks, playback controls, and listening history stay consistent',
       state.realms.lord.war = { enemy:'foe' };
       FB.music.sync(state);
       window.__finishGameMusic();
+      const afterEndBank = FB.music.currentBank();
       return {
         first:first,
         atWar:atWar,
         atPeaceAgain:atPeaceAgain,
-        afterEndRole:FB.music.current().role,
-        afterEndBank:FB.music.currentBank().id
+        afterEndTrack:FB.music.current().id,
+        afterEndTrackIds:afterEndBank.trackIds.slice(),
+        afterEndBank:afterEndBank.id
       };
     });
-    expect(queuedContext).toEqual({
-      first:queuedContext.first,
-      atWar:queuedContext.first,
-      atPeaceAgain:queuedContext.first,
-      afterEndRole:'war',
-      afterEndBank:'christian/anglo_saxon/war'
-    });
+    expect(queuedContext.atWar).toBe(queuedContext.first);
+    expect(queuedContext.atPeaceAgain).toBe(queuedContext.first);
+    expect(queuedContext.afterEndBank).toBe('christian/anglo_saxon/war');
+    expect(queuedContext.afterEndTrackIds).toContain(queuedContext.afterEndTrack);
 
     await expect.poll(function () {
       return page.evaluate(function () {
@@ -695,23 +715,65 @@ test('context banks, playback controls, and listening history stay consistent',
       FB.music.sync(state);
       const beforeEnd = FB.music.current().id;
       window.__finishGameMusic();
+      const afterEndBank = FB.music.currentBank();
       return {
         warTrack:warTrack,
         beforeEnd:beforeEnd,
-        afterEndRole:FB.music.current().role,
-        afterEndBank:FB.music.currentBank().id
+        afterEndTrack:FB.music.current().id,
+        afterEndTrackIds:afterEndBank.trackIds.slice(),
+        afterEndBank:afterEndBank.id
       };
     });
-    expect(peaceContext).toEqual({
-      warTrack:peaceContext.warTrack,
-      beforeEnd:peaceContext.warTrack,
-      afterEndRole:'folk',
-      afterEndBank:'christian/anglo_saxon/folk'
-    });
+    expect(peaceContext.beforeEnd).toBe(peaceContext.warTrack);
+    expect(peaceContext.afterEndBank).toBe('christian/anglo_saxon/folk');
+    expect(peaceContext.afterEndTrackIds).toContain(peaceContext.afterEndTrack);
 
     await page.setViewportSize({ width:390, height:740 });
     expect(await quickToggle.evaluate(function (button) {
       const box = button.getBoundingClientRect();
       return { width:box.width, height:box.height };
     })).toEqual({ width:44, height:44 });
+  });
+
+test('a downloaded faith theme remains cached while another bank still uses it',
+  async function ({ page }, testInfo) {
+    test.skip(!testInfo.project.name.endsWith('-served'),
+      'Synthetic soundtrack responses require the served-origin project.');
+    await page.addInitScript(function () {
+      localStorage.setItem('fb_ui', JSON.stringify({
+        musicChoice:'off', musicOfflineBanks:{}, musicPreferred:{}, musicRatings:{}
+      }));
+    });
+    await routeSyntheticSoundtrack(page);
+    await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+
+    const result = await page.evaluate(async function () {
+      function download(id) {
+        return new Promise(function (resolve, reject) {
+          FB.music.downloadBank(id, null, function (error) {
+            if (error) reject(error);
+            else resolve();
+          });
+        });
+      }
+      function remove(id) {
+        return new Promise(function (resolve) { FB.music.removeBank(id, resolve); });
+      }
+      function cached(track) {
+        return new Promise(function (resolve) { FB.music.isTrackCached(track, resolve); });
+      }
+
+      const theme = FB.music.catalog().intros.filter(function (intro) {
+        return intro.faith === 'christian';
+      })[0];
+      await download('christian/anglo_saxon/folk');
+      await download('christian/anglo_saxon/war');
+      await remove('christian/anglo_saxon/folk');
+      const afterOneRemoval = await cached(theme);
+      await remove('christian/anglo_saxon/war');
+      const afterLastRemoval = await cached(theme);
+      return { afterOneRemoval:afterOneRemoval, afterLastRemoval:afterLastRemoval };
+    });
+
+    expect(result).toEqual({ afterOneRemoval:true, afterLastRemoval:false });
   });

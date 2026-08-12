@@ -26,7 +26,8 @@ COPY static/ /usr/share/nginx/html/static/
 COPY --from=music-catalog /catalog/data/music_catalog.js /usr/share/nginx/html/data/music_catalog.js
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Derive the offline asset list before stamping index.html (the match excludes
+# Derive the offline asset list, including every intro theme, before stamping
+# index.html (the match excludes
 # query strings), then stamp the worker and document with one deployment
 # fingerprint. Uses only BusyBox-compatible shell tools from nginx:alpine.
 RUN set -eu; \

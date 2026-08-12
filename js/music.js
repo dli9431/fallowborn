@@ -10,6 +10,7 @@ window.FB = window.FB || {};
   const PLAYBACK_EVENT_LIMIT = 30;
   const CROSSFADE_MS = 1400;
   let catalog = null;
+  let selectedIntro = null;
   let tracksById = {};
   let banksById = {};
   let supported = false;
@@ -105,7 +106,7 @@ window.FB = window.FB || {};
   }
 
   function nativeLoopEnabled(track) {
-    return !!(track && (repeatTrack || track.kind === 'intro'));
+    return !!(track && (repeatTrack || (mode === 'title' && track.kind === 'intro')));
   }
 
   function recordPlaybackEvent(type, element) {
@@ -209,13 +210,21 @@ window.FB = window.FB || {};
     return faith + ' · ' + culture + ' · ' + FB.T(humanize(bank.role));
   };
 
+  function introTracks() {
+    if (!catalog) return [];
+    if (Array.isArray(catalog.intros) && catalog.intros.length) {
+      return catalog.intros;
+    }
+    return catalog.intro ? [catalog.intro] : [];
+  }
+
   function buildIndexes() {
     tracksById = {};
     banksById = {};
     if (!catalog) return;
     (catalog.tracks || []).forEach(function (track) { tracksById[track.id] = track; });
     (catalog.banks || []).forEach(function (bank) { banksById[bank.id] = bank; });
-    if (catalog.intro) tracksById[catalog.intro.id] = catalog.intro;
+    introTracks().forEach(function (track) { tracksById[track.id] = track; });
   }
 
   function createAudio() {
@@ -340,7 +349,7 @@ window.FB = window.FB || {};
   function reconcileCache() {
     if (!cacheAvailable() || !catalog) return;
     const allowed = {};
-    const records = (catalog.intro ? [catalog.intro] : []).concat(catalog.tracks || []);
+    const records = introTracks().concat(catalog.tracks || []);
     records.forEach(function (track) { allowed[absoluteUrl(trackUrl(track))] = true; });
     caches.open(MUSIC_CACHE).then(function (cache) {
       return cache.keys().then(function (requests) {
@@ -359,8 +368,12 @@ window.FB = window.FB || {};
     if (initialized) return;
     initialized = true;
     catalog = FBDATA.musicCatalog || {
-      schema:1, intro:null, tracks:[], banks:[], totalBytes:0, totalDuration:0
+      schema:1, intro:null, intros:[], tracks:[], banks:[], totalBytes:0, totalDuration:0
     };
+    const intros = introTracks();
+    const rngState = FB.getRngState();
+    selectedIntro = intros.length ? FB.pick(intros) : null;
+    FB.setRngState(rngState);
     buildIndexes();
     const probe = document.createElement('audio');
     try {
@@ -438,8 +451,8 @@ window.FB = window.FB || {};
     }
     updateTitleToggle();
     reconcileCache();
-    if (catalog.intro && supported) {
-      loadTrack(catalog.intro, function (error, url) {
+    if (selectedIntro && supported) {
+      loadTrack(selectedIntro, function (error, url) {
         if (!error && /^blob:/.test(url || '')) {
           try { URL.revokeObjectURL(url); } catch (revokeError) {}
         }
@@ -448,7 +461,7 @@ window.FB = window.FB || {};
   };
 
   M.hasCatalog = function () {
-    return !!(catalog && catalog.intro && catalog.tracks && catalog.tracks.length);
+    return !!(catalog && selectedIntro && catalog.tracks && catalog.tracks.length);
   };
 
   M.supported = function () { return supported; };
@@ -456,6 +469,7 @@ window.FB = window.FB || {};
   M.enabled = enabled;
   M.backgroundPlaybackEnabled = backgroundPlaybackEnabled;
   M.catalog = function () { return catalog; };
+  M.selectedIntro = function () { return selectedIntro; };
   M.banks = function () { return catalog ? (catalog.banks || []).slice() : []; };
   M.current = function () { return currentTrack; };
   M.currentBank = function () { return currentBankId ? banksById[currentBankId] || null : null; };
@@ -517,7 +531,7 @@ window.FB = window.FB || {};
     const toggle = document.getElementById('music-now-playing-toggle');
     const title = document.getElementById('music-now-playing-title');
     if (!button || !title) return;
-    const gameplayTrack = currentTrack && currentTrack.kind !== 'intro' && mode === 'game';
+    const gameplayTrack = currentTrack && mode === 'game';
     const hidden = !gameplayTrack || !enabled();
     button.classList.toggle('hidden', hidden);
     if (toggle) toggle.classList.toggle('hidden', hidden);
@@ -809,7 +823,7 @@ window.FB = window.FB || {};
   }
 
   function recordHistory(track, fromHistory) {
-    if (fromHistory || track.kind === 'intro') return;
+    if (fromHistory || mode !== 'game') return;
     if (historyAt < history.length - 1) history = history.slice(0, historyAt + 1);
     if (!history.length || history[history.length - 1] !== track.id) {
       history.push(track.id);
@@ -1125,9 +1139,9 @@ window.FB = window.FB || {};
     history = [];
     historyAt = -1;
     updateNowPlaying();
-    if (!enabled() || titlePaused || !supported || !catalog || !catalog.intro) return;
-    if (!force && currentTrack && currentTrack.id === catalog.intro.id) return;
-    playTrack(catalog.intro);
+    if (!enabled() || titlePaused || !supported || !selectedIntro) return;
+    if (!force && currentTrack && currentTrack.id === selectedIntro.id) return;
+    playTrack(selectedIntro);
   };
 
   M.next = function (options) {
@@ -1193,13 +1207,14 @@ window.FB = window.FB || {};
     p.musicRatings[id] = value;
     savePrefs();
     const track = tracksById[id];
+    const bank = currentBankId ? banksById[currentBankId] : null;
     if (FB.trackTelemetry) {
       FB.trackTelemetry('music-rating', {
         track_id:id,
         track_title:track.title,
         rating:value > 0 ? 'up' : 'down',
-        music_bank:track.bankId,
-        music_role:track.role
+        music_bank:bank ? bank.id : track.bankId,
+        music_role:bank ? bank.role : track.role
       });
     }
     return true;
@@ -1286,7 +1301,7 @@ window.FB = window.FB || {};
   };
 
   M.downloadAll = function (progress, done) {
-    const records = (catalog.intro ? [catalog.intro] : []).concat(catalog.tracks || []);
+    const records = introTracks().concat(catalog.tracks || []);
     downloadRecords(records, (catalog.banks || []).map(function (bank) { return bank.id; }),
       true, progress, done);
   };
@@ -1303,7 +1318,17 @@ window.FB = window.FB || {};
   M.removeBank = function (id, done) {
     const bank = banksById[id];
     if (!bank) { done(); return; }
-    const records = bank.trackIds.map(function (trackId) { return tracksById[trackId]; });
+    const downloaded = downloadedBanks();
+    const retainedTracks = {};
+    for (const otherId in downloaded) {
+      if (otherId === id || !downloaded[otherId] || !banksById[otherId]) continue;
+      banksById[otherId].trackIds.forEach(function (trackId) {
+        retainedTracks[trackId] = true;
+      });
+    }
+    const records = bank.trackIds.filter(function (trackId) {
+      return !retainedTracks[trackId];
+    }).map(function (trackId) { return tracksById[trackId]; });
     removeRecords(records, function () {
       const p = prefs();
       if (p && p.musicOfflineBanks) delete p.musicOfflineBanks[id];

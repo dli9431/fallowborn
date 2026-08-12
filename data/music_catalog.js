@@ -3,18 +3,75 @@ window.FBDATA = window.FBDATA || {};
 FBDATA.musicCatalog = {
   "schema": 1,
   "intro": {
-    "id": "intro-fallowborn",
-    "title": "Fallowborn",
-    "src": "music/intro/001-fallowborn.opus",
-    "order": 1,
-    "bytes": 2409264,
+    "id": "intro-fallowborn-christian",
+    "title": "Fallowborn Christian",
+    "src": "music/intro/000-fallowborn-christian.opus",
+    "order": 0,
+    "bytes": 2409279,
     "duration": 178.208,
     "channels": 2,
     "inputRate": 48000,
-    "bitrate": 108155,
-    "rev": "24359f792edda0cb",
-    "kind": "intro"
+    "bitrate": 108156,
+    "rev": "a21804ef6946aaba",
+    "kind": "intro",
+    "faith": "christian",
+    "culture": "all",
+    "role": "theme",
+    "bankId": "christian/all/theme"
   },
+  "intros": [
+    {
+      "id": "intro-fallowborn-christian",
+      "title": "Fallowborn Christian",
+      "src": "music/intro/000-fallowborn-christian.opus",
+      "order": 0,
+      "bytes": 2409279,
+      "duration": 178.208,
+      "channels": 2,
+      "inputRate": 48000,
+      "bitrate": 108156,
+      "rev": "a21804ef6946aaba",
+      "kind": "intro",
+      "faith": "christian",
+      "culture": "all",
+      "role": "theme",
+      "bankId": "christian/all/theme"
+    },
+    {
+      "id": "intro-fallowborn-muslim",
+      "title": "Fallowborn Muslim",
+      "src": "music/intro/000-fallowborn-muslim.opus",
+      "order": 0,
+      "bytes": 2049413,
+      "duration": 148.821,
+      "channels": 2,
+      "inputRate": 48000,
+      "bitrate": 110168,
+      "rev": "d0e5f5e9d835561f",
+      "kind": "intro",
+      "faith": "muslim",
+      "culture": "all",
+      "role": "theme",
+      "bankId": "muslim/all/theme"
+    },
+    {
+      "id": "intro-fallowborn-pagan",
+      "title": "Fallowborn Pagan",
+      "src": "music/intro/000-fallowborn-pagan.opus",
+      "order": 0,
+      "bytes": 2142564,
+      "duration": 165.781,
+      "channels": 2,
+      "inputRate": 48000,
+      "bitrate": 103392,
+      "rev": "314a4c1d73610be3",
+      "kind": "intro",
+      "faith": "pagan",
+      "culture": "all",
+      "role": "theme",
+      "bankId": "pagan/all/theme"
+    }
+  ],
   "tracks": [
     {
       "id": "christian-all-court-the-manor-wakes",
@@ -1344,10 +1401,11 @@ FBDATA.musicCatalog = {
         "christian-all-court-crown-without-choir",
         "christian-all-court-feast-without-fanfare",
         "christian-all-court-council-under-stone",
-        "christian-all-court-the-kingdom-sleeps"
+        "christian-all-court-the-kingdom-sleeps",
+        "intro-fallowborn-christian"
       ],
-      "bytes": 21528593,
-      "duration": 1534.486
+      "bytes": 23937872,
+      "duration": 1712.694
     },
     {
       "id": "christian/all/folk",
@@ -1363,10 +1421,11 @@ FBDATA.musicCatalog = {
         "christian-all-folk-thread-by-candlelight",
         "christian-all-folk-the-carpenters-measure",
         "christian-all-folk-stone-for-the-chapel-wall",
-        "christian-all-folk-the-guildhall-apprentices"
+        "christian-all-folk-the-guildhall-apprentices",
+        "intro-fallowborn-christian"
       ],
-      "bytes": 21452245,
-      "duration": 1501.098
+      "bytes": 23861524,
+      "duration": 1679.306
     },
     {
       "id": "christian/all/war",
@@ -1382,10 +1441,11 @@ FBDATA.musicCatalog = {
         "christian-all-war-the-field-after-2",
         "christian-all-war-the-banner-homeward",
         "christian-all-war-watch-at-the-palisade",
-        "christian-all-war-campfire-vigil"
+        "christian-all-war-campfire-vigil",
+        "intro-fallowborn-christian"
       ],
-      "bytes": 19615389,
-      "duration": 1502.154
+      "bytes": 22024668,
+      "duration": 1680.362
     },
     {
       "id": "muslim/all/court",
@@ -1401,10 +1461,11 @@ FBDATA.musicCatalog = {
         "muslim-all-court-council-in-the-garden",
         "muslim-all-court-the-hidden-succession",
         "muslim-all-court-investiture-under-the-canopy",
-        "muslim-all-court-the-sultans-lamp"
+        "muslim-all-court-the-sultans-lamp",
+        "intro-fallowborn-muslim"
       ],
-      "bytes": 20932562,
-      "duration": 1559.968
+      "bytes": 22981975,
+      "duration": 1708.789
     },
     {
       "id": "muslim/all/folk",
@@ -1420,10 +1481,11 @@ FBDATA.musicCatalog = {
         "muslim-all-folk-saddles-for-the-caravan",
         "muslim-all-folk-shipwrights-of-the-harbor",
         "muslim-all-folk-the-spice-ledger",
-        "muslim-all-folk-master-of-inlay"
+        "muslim-all-folk-master-of-inlay",
+        "intro-fallowborn-muslim"
       ],
-      "bytes": 20000285,
-      "duration": 1478.711
+      "bytes": 22049698,
+      "duration": 1627.532
     },
     {
       "id": "muslim/all/war",
@@ -1439,10 +1501,11 @@ FBDATA.musicCatalog = {
         "muslim-all-war-engineers-beneath-stone",
         "muslim-all-war-lamps-in-the-camp",
         "muslim-all-war-dust-after-battle",
-        "muslim-all-war-return-through-the-gate"
+        "muslim-all-war-return-through-the-gate",
+        "intro-fallowborn-muslim"
       ],
-      "bytes": 19774674,
-      "duration": 1522.668
+      "bytes": 21824087,
+      "duration": 1671.489
     },
     {
       "id": "pagan/all/court",
@@ -1458,10 +1521,11 @@ FBDATA.musicCatalog = {
         "pagan-all-court-the-steppe-envoy",
         "pagan-all-court-rival-hearths",
         "pagan-all-court-winter-tribute",
-        "pagan-all-court-the-elder-throne"
+        "pagan-all-court-the-elder-throne",
+        "intro-fallowborn-pagan"
       ],
-      "bytes": 21585190,
-      "duration": 1582.688
+      "bytes": 23727754,
+      "duration": 1748.469
     },
     {
       "id": "pagan/all/folk",
@@ -1477,10 +1541,11 @@ FBDATA.musicCatalog = {
         "pagan-all-folk-herbs-beneath-the-oak",
         "pagan-all-folk-market-at-the-river-fort",
         "pagan-all-folk-the-shipwrights-measure",
-        "pagan-all-folk-winter-masterwork"
+        "pagan-all-folk-winter-masterwork",
+        "intro-fallowborn-pagan"
       ],
-      "bytes": 21161063,
-      "duration": 1540.106
+      "bytes": 23303627,
+      "duration": 1705.887
     },
     {
       "id": "pagan/all/war",
@@ -1497,12 +1562,13 @@ FBDATA.musicCatalog = {
         "pagan-all-war-snow-camp",
         "pagan-all-war-ashes-at-daybreak",
         "pagan-all-war-keels-returning",
-        "pagan-all-war-earthworks-at-the-hill-fort"
+        "pagan-all-war-earthworks-at-the-hill-fort",
+        "intro-fallowborn-pagan"
       ],
-      "bytes": 22878261,
-      "duration": 1734.42
+      "bytes": 25020825,
+      "duration": 1900.201
     }
   ],
-  "totalBytes": 191337526,
-  "totalDuration": 14134.507
+  "totalBytes": 195529518,
+  "totalDuration": 14449.109
 };

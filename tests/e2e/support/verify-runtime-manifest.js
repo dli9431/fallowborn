@@ -123,8 +123,9 @@ if (!musicCatalog || musicCatalog.schema !== 1 ||
     !Array.isArray(musicCatalog.tracks) || !Array.isArray(musicCatalog.banks)) {
   fail('data/music_catalog.js has an invalid schema.');
 }
-const musicRecords = (musicCatalog.intro ? [musicCatalog.intro] : [])
-  .concat(musicCatalog.tracks);
+const musicIntros = Array.isArray(musicCatalog.intros) && musicCatalog.intros.length
+  ? musicCatalog.intros : (musicCatalog.intro ? [musicCatalog.intro] : []);
+const musicRecords = musicIntros.concat(musicCatalog.tracks);
 const catalogSources = [];
 for (const track of musicRecords) {
   if (!track || typeof track.id !== 'string' ||
@@ -256,7 +257,7 @@ if (hasWorker) {
       expectedAssets.push('/data/' + filename);
     }
   }
-  if (musicCatalog.intro) expectedAssets.push('/' + musicCatalog.intro.src);
+  for (const intro of musicIntros) expectedAssets.push('/' + intro.src);
   const expectedUnique = Array.from(new Set(expectedAssets)).sort();
   const actualUnique = versionedAssets.slice().sort();
   if (JSON.stringify(actualUnique) !== JSON.stringify(expectedUnique)) {

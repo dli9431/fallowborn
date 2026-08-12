@@ -4,7 +4,9 @@ The soundtrack is generated from the directory layout. Do not add tracks to a
 hand-written JavaScript list.
 
 ```text
-music/intro/000-fallowborn.opus
+music/intro/000-fallowborn-christian.opus
+music/intro/000-fallowborn-muslim.opus
+music/intro/000-fallowborn-pagan.opus
 music/<faith>/<culture>/<role>/<NNN>-<song-slug>.opus
 ```
 
@@ -37,4 +39,4 @@ python tools/music_catalog.py check
 
 Hosted releases regenerate or validate the same complete catalog. The itch
 release requires that complete catalog to fit beneath 200,000,000 bytes of
-gameplay music and fails otherwise; its intro is staged outside that budget.
+gameplay music and fails otherwise; its three intro themes are staged outside that budget.

@@ -19,6 +19,7 @@ DEFAULT_BUDGET = 200_000_000
 FILENAME_RE = re.compile(r"^(?P<order>[0-9]{3})-(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)\.opus$")
 SELECTOR_RE = re.compile(r"^(?:all|[a-z][a-z0-9_]*)$")
 ROLES = {"folk", "war", "court"}
+INTRO_FAITHS = {"christian", "muslim", "pagan"}
 
 
 class CatalogError(Exception):
@@ -92,7 +93,18 @@ def track_record(path: Path, music_root: Path, intro: bool = False) -> dict:
     }
     record.update(opus_metadata(path))
     if intro:
-        record["kind"] = "intro"
+        faith = slug.rsplit("-", 1)[-1]
+        if faith not in INTRO_FAITHS:
+            raise CatalogError(
+                f"{path}: intro slug must end in christian, muslim, or pagan"
+            )
+        record.update({
+            "kind": "intro",
+            "faith": faith,
+            "culture": "all",
+            "role": "theme",
+            "bankId": f"{faith}/all/theme",
+        })
         return record
 
     parts = path.relative_to(music_root).parts
@@ -117,14 +129,12 @@ def track_record(path: Path, music_root: Path, intro: bool = False) -> dict:
     return record
 
 
-def scan(root: Path, selected_sources: set[str] | None = None) -> tuple[dict | None, list[dict]]:
+def scan(root: Path, selected_sources: set[str] | None = None) -> tuple[list[dict], list[dict]]:
     music_root = root / "music"
     if not music_root.exists():
-        return None, []
+        return [], []
     intro_paths = sorted((music_root / "intro").glob("*.opus")) if (music_root / "intro").exists() else []
-    if len(intro_paths) > 1:
-        raise CatalogError("music/intro must contain at most one Opus file")
-    intro = track_record(intro_paths[0], music_root, True) if intro_paths else None
+    intros = [track_record(path, music_root, True) for path in intro_paths]
 
     tracks = []
     for path in sorted(music_root.rglob("*.opus")):
@@ -134,11 +144,21 @@ def scan(root: Path, selected_sources: set[str] | None = None) -> tuple[dict | N
         if selected_sources is not None and source not in selected_sources:
             continue
         tracks.append(track_record(path, music_root))
-    if tracks and not intro:
-        raise CatalogError("a gameplay soundtrack requires one music/intro/*.opus file")
+    if tracks and {intro["faith"] for intro in intros} != INTRO_FAITHS:
+        raise CatalogError(
+            "a gameplay soundtrack requires one Christian, Muslim, and pagan intro theme"
+        )
 
     seen_ids = set()
     seen_orders = set()
+    seen_intro_faiths = set()
+    for intro in intros:
+        if intro["id"] in seen_ids:
+            raise CatalogError(f"duplicate track id {intro['id']}")
+        if intro["faith"] in seen_intro_faiths:
+            raise CatalogError(f"duplicate intro theme for {intro['faith']}")
+        seen_ids.add(intro["id"])
+        seen_intro_faiths.add(intro["faith"])
     for track in tracks:
         if track["id"] in seen_ids:
             raise CatalogError(f"duplicate track id {track['id']}")
@@ -150,30 +170,37 @@ def scan(root: Path, selected_sources: set[str] | None = None) -> tuple[dict | N
             )
         seen_orders.add(order_key)
     tracks.sort(key=lambda item: (item["bankId"], item["order"], item["id"]))
-    return intro, tracks
+    intros.sort(key=lambda item: (item["faith"], item["order"], item["id"]))
+    return intros, tracks
 
 
-def make_catalog(intro: dict | None, tracks: list[dict]) -> dict:
+def make_catalog(intros: list[dict], tracks: list[dict]) -> dict:
     grouped = defaultdict(list)
     for track in tracks:
         grouped[track["bankId"]].append(track)
+    intro_by_faith = {intro["faith"]: intro for intro in intros}
     banks = []
     for bank_id in sorted(grouped):
         bank_tracks = grouped[bank_id]
         faith, culture, role = bank_id.split("/")
+        bank_records = bank_tracks[:]
+        if faith in intro_by_faith:
+            bank_records.append(intro_by_faith[faith])
         banks.append({
             "id": bank_id,
             "faith": faith,
             "culture": culture,
             "role": role,
-            "trackIds": [track["id"] for track in bank_tracks],
-            "bytes": sum(track["bytes"] for track in bank_tracks),
-            "duration": round(sum(track["duration"] for track in bank_tracks), 3),
+            "trackIds": [track["id"] for track in bank_records],
+            "bytes": sum(track["bytes"] for track in bank_records),
+            "duration": round(sum(track["duration"] for track in bank_records), 3),
         })
-    all_records = ([intro] if intro else []) + tracks
+    all_records = intros + tracks
     return {
         "schema": 1,
-        "intro": intro,
+        # Kept as an alias for older runtime consumers; new code selects from intros.
+        "intro": intros[0] if intros else None,
+        "intros": intros,
         "tracks": tracks,
         "banks": banks,
         "totalBytes": sum(record["bytes"] for record in all_records),
@@ -195,20 +222,20 @@ def write_catalog(path: Path, catalog: dict) -> None:
     path.write_text(render(catalog), encoding="utf-8", newline="\n")
 
 
-def copy_stage(root: Path, stage: Path, intro: dict | None, tracks: list[dict]) -> None:
+def copy_stage(root: Path, stage: Path, intros: list[dict], tracks: list[dict]) -> None:
     if not (stage / "index.html").is_file() or not (stage / "data").is_dir():
         raise CatalogError(f"{stage}: expected an existing Fallowborn staging root")
     target_music = stage / "music"
     if target_music.exists():
         shutil.rmtree(target_music)
     target_music.mkdir(parents=True)
-    records = ([intro] if intro else []) + tracks
+    records = intros + tracks
     for record in records:
         source = root / record["src"]
         target = stage / record["src"]
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
-    write_catalog(stage / "data" / "music_catalog.js", make_catalog(intro, tracks))
+    write_catalog(stage / "data" / "music_catalog.js", make_catalog(intros, tracks))
 
 
 def parse_args() -> argparse.Namespace:
@@ -226,18 +253,24 @@ def main() -> int:
     root = args.root.resolve()
     output = args.output.resolve() if args.output else root / "data" / "music_catalog.js"
     try:
-        intro, tracks = scan(root)
+        intros, tracks = scan(root)
         if args.command == "build":
-            write_catalog(output, make_catalog(intro, tracks))
-            print(f"Wrote {output} ({len(tracks)} gameplay tracks).")
+            write_catalog(output, make_catalog(intros, tracks))
+            print(
+                f"Wrote {output} ({len(intros)} intro themes, "
+                f"{len(tracks)} gameplay tracks)."
+            )
         elif args.command == "check":
-            expected = render(make_catalog(intro, tracks))
+            expected = render(make_catalog(intros, tracks))
             actual = output.read_text(encoding="utf-8") if output.exists() else ""
             if actual != expected:
                 raise CatalogError(
                     f"{output} is stale; run python tools/music_catalog.py build"
                 )
-            print(f"Verified {output} ({len(tracks)} gameplay tracks).")
+            print(
+                f"Verified {output} ({len(intros)} intro themes, "
+                f"{len(tracks)} gameplay tracks)."
+            )
         else:
             if not args.stage:
                 raise CatalogError("stage-itch requires --stage <directory>")
@@ -248,7 +281,7 @@ def main() -> int:
                     f"{gameplay_bytes} bytes, exceeding the itch budget of "
                     f"{args.budget} bytes"
                 )
-            copy_stage(root, args.stage.resolve(), intro, tracks)
+            copy_stage(root, args.stage.resolve(), intros, tracks)
             print(
                 f"Staged the complete soundtrack: {len(tracks)} gameplay tracks "
                 f"({gameplay_bytes}/{args.budget} bytes)."

@@ -60,9 +60,14 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.musicCatalog).toEqual(expect.objectContaining({
       schema:1,
       intro:expect.objectContaining({
-        id:'intro-fallowborn',
+        id:'intro-fallowborn-christian',
         kind:'intro'
       }),
+      intros:expect.arrayContaining([
+        expect.objectContaining({ id:'intro-fallowborn-christian', faith:'christian' }),
+        expect.objectContaining({ id:'intro-fallowborn-muslim', faith:'muslim' }),
+        expect.objectContaining({ id:'intro-fallowborn-pagan', faith:'pagan' })
+      ]),
       tracks:expect.any(Array),
       banks:expect.any(Array)
     }));

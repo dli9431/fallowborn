@@ -15,8 +15,8 @@ Zip the folder contents with `index.html` at the zip root, upload to itch.io as 
 the cache key for the itch build, so browsers and the itch CDN fetch fresh files on each release.
 The script stages only `index.html`, `LICENSE`, `css/`, `data/`, `docs/`, `js/`, `mods/`, and
 `static/`, then uses `tools/music_catalog.py` to validate and add the complete soundtrack.
-Gameplay music must fit beneath 200,000,000 bytes; the intro is required and sits outside that
-cap. Deployment fails if the complete catalog no longer fits, so itch never receives partial
+Gameplay music must fit beneath 200,000,000 bytes; all three intro themes are required and sit
+outside that cap. Deployment fails if the complete catalog no longer fits, so itch never receives partial
 contextual banks. The staged generated catalog describes the complete copied soundtrack. That
 fail-closed process is the artifact boundary. Test files, Node packages, reports, and repository
 metadata must not be added to it.
@@ -77,9 +77,9 @@ Umami loader. Older event names remain only as historical schema-1 rows in Umami
 `js/util.js` adds the manifest metadata and `js/main.js` registers `/sw.js` only when the page
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the
 Docker build from every `css/js/data/mods` reference in the unstamped `index.html` plus every
-shipped `data/lang_*.js` catalog. It also precaches the intro theme, but not the full soundtrack.
-Installation activates only after that whole bundle and the unversioned HTML, manifest, favicons,
-install icons, and intro have cached successfully.
+shipped `data/lang_*.js` catalog. It also precaches all three intro themes, but not the full
+soundtrack. Installation activates only after that whole bundle and the unversioned HTML,
+manifest, favicons, install icons, and intros have cached successfully.
 
 Hosted navigation is network-first so an online visit still receives the newest deployment.
 The response is not written into the active worker's cache: only a completed worker installation

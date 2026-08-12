@@ -84,9 +84,17 @@ test('committed soundtrack provides complete contextual faith banks within itch 
     'pagan/all/war'
   ];
 
+  assert.deepEqual(catalog.intros.map(function (intro) { return intro.faith; }), [
+    'christian', 'muslim', 'pagan'
+  ]);
   assert.deepEqual(catalog.banks.map(function (bank) { return bank.id; }), expected);
   catalog.banks.forEach(function (bank) {
-    assert.ok(bank.trackIds.length >= 9, bank.id + ' has fewer than nine tracks');
+    const gameplayTracks = catalog.tracks.filter(function (track) {
+      return track.bankId === bank.id;
+    });
+    assert.ok(gameplayTracks.length >= 9, bank.id + ' has fewer than nine gameplay tracks');
+    assert.ok(bank.trackIds.includes('intro-fallowborn-' + bank.faith),
+      bank.id + ' does not include its faith theme');
   });
   assert.ok(catalog.tracks.reduce(function (sum, track) {
     return sum + track.bytes;
@@ -96,7 +104,9 @@ test('committed soundtrack provides complete contextual faith banks within itch 
 test('catalog generation requires the complete itch soundtrack to fit its budget', function () {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fallowborn-music-catalog-'));
   try {
-    writeTrack(root, 'music/intro/000-fallowborn.opus', 60, 20);
+    writeTrack(root, 'music/intro/000-fallowborn-christian.opus', 60, 20);
+    writeTrack(root, 'music/intro/000-fallowborn-muslim.opus', 70, 30);
+    writeTrack(root, 'music/intro/000-fallowborn-pagan.opus', 80, 40);
     const christian = writeTrack(
       root, 'music/christian/all/folk/001-hammer-and-lute.opus', 180, 70);
     const pagan = writeTrack(
@@ -108,6 +118,9 @@ test('catalog generation requires the complete itch soundtrack to fit its budget
     runTool(root, ['check', '--root', root]);
     const full = readCatalog(path.join(root, 'data', 'music_catalog.js'));
     assert.equal(full.intro.kind, 'intro');
+    assert.deepEqual(full.intros.map(function (intro) { return intro.faith; }), [
+      'christian', 'muslim', 'pagan'
+    ]);
     assert.equal(full.tracks.length, 3);
     assert.deepEqual(full.banks.map(function (bank) { return bank.id; }), [
       'christian/all/folk',
@@ -134,7 +147,12 @@ test('catalog generation requires the complete itch soundtrack to fit its budget
       'muslim/all/court',
       'pagan/all/war'
     ]);
-    assert.equal(fs.existsSync(path.join(stage, staged.intro.src)), true);
+    staged.intros.forEach(function (intro) {
+      assert.equal(fs.existsSync(path.join(stage, intro.src)), true);
+    });
+    staged.banks.forEach(function (bank) {
+      assert.ok(bank.trackIds.includes('intro-fallowborn-' + bank.faith));
+    });
     staged.tracks.forEach(function (track) {
       assert.equal(fs.existsSync(path.join(stage, track.src)), true);
     });
