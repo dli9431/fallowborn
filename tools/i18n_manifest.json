@@ -46733,6 +46733,16 @@
         "text": "🎒 From the chest: {item}."
       }
     },
+    "src.06911d56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Sound out new families"
+      }
+    },
     "src.0692ca4d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69157,7 +69167,8 @@
       "location": [
         "js/actions.js",
         "js/events.js",
-        "js/travel.js"
+        "js/travel.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Ready in {days} days."
@@ -134016,6 +134027,16 @@
         "text": "scandalous sibling union"
       }
     },
+    "src.dcfafc9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Replace all three prospects without spending a day or resources."
+      }
+    },
     "src.dcfeb62f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -168483,7 +168504,7 @@
       "glossary": [
         "days"
       ],
-      "location": "js/travel.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Ready in {days} days."
       }
@@ -169182,6 +169203,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price."
+      }
+    },
+    "ui:Replace all three prospects without spending a day or resources.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Replace all three prospects without spending a day or resources."
       }
     },
     "ui:Replace this ambition without choosing the replacement yourself.": {
@@ -171387,6 +171416,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Sound out families for a binding pledge; sealing one spends the day."
+      }
+    },
+    "ui:Sound out new families": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Sound out new families"
       }
     },
     "ui:Sovereign": {

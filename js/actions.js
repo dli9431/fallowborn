@@ -548,7 +548,11 @@ window.FB = window.FB || {};
           'The scheme unravels, and fingers point at you.', {}));
       }
     } },
-  { id: 'seek_match', label: '💍 Seek a match', cd: 30, noConsume: true,
+  { id: 'seek_match', label: '💍 Seek a match',
+    cd: FB.marriageProspectRefreshDays(), noConsume: true,
+    cooldownDays: function () {
+      return FB.marriageProspectRefreshDays();
+    },
     desc: function () { return 'Ask kin and gossips to find you a spouse from your own walk of life.'; },
     show: function (s) {
       const m = me(s);
@@ -557,7 +561,7 @@ window.FB = window.FB || {};
       return adult(s) && FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
     },
     run: function (s) {
-      const cands = FB.spawnSuitor(s);
+      const cands = FB.refreshSuitors(s);
       if (FB.ui && FB.ui.showSuitorPicker) FB.ui.showSuitorPicker();
       else { // no UI to choose with: take the peer match through the old door
         FB.pickSuitor(s, cands[1] ? cands[1].id : cands[0].id);
@@ -5192,12 +5196,14 @@ window.FB = window.FB || {};
     const shown = !!action.show(state);
     let can = shown, reason = '';
     if (shown && action.cd !== undefined) {
+      const cooldownDays = action.cooldownDays
+        ? action.cooldownDays(state) : action.cd;
       const cooldowns = state.player.cooldowns || {};
       const last = cooldowns[action.id];
-      if (last !== undefined && state.turn - last < action.cd) {
+      if (last !== undefined && state.turn - last < cooldownDays) {
         can = false;
         reason = FB.T('Ready in {days} days.', {
-          days:action.cd - (state.turn - last)
+          days:cooldownDays - (state.turn - last)
         });
       }
     }

@@ -14339,10 +14339,11 @@ window.FB = window.FB || {};
 
   /* ================= arranged match picker =================
      Three families sounded out for a managed descendant's hand — the same
-     three wait until a pledge is sealed or the descendant weds elsewhere.
+     three wait until a pledge is sealed, the search cooldown permits a new
+     pool, or the descendant weds elsewhere.
      A daughter's or granddaughter's dowry is paid at the pledge; a son's or
      grandson's bride brings hers to the wedding. */
-  UI.showMatchPicker = function (cid, returnContext) {
+  UI.showMatchPicker = function (cid, returnContext, replaceView) {
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
     const c = s.chars[cid];
@@ -14357,6 +14358,7 @@ window.FB = window.FB || {};
     const recommendation = FB.matchRecommendationOf(s, c);
     const recommendedId = recommendation && recommendation.candidate.id;
     const matchProtected = FB.isProtected(s, 'matchCharacter', c.id);
+    const refreshStatus = FB.matchCandidateRefreshStatus(s, c);
     cands = cands.map(function (candidate, order) {
       return { candidate:candidate, order:order };
     }).sort(function (a, b) {
@@ -14375,7 +14377,14 @@ window.FB = window.FB || {};
       '</p>' + (recommendedId ? '<p class="hint">' + esc(FB.T(
         'The assistant’s recommendation is listed first. Every family remains your decision.')) +
         '</p>' : '') +
-      '</div><div class="gm-list">';
+      '</div><button class="actionbtn" id="match-candidate-refresh"' +
+      (refreshStatus.ready ? '' : ' disabled') + '>🔄 ' +
+      esc(FB.T('Sound out new families')) + '<span class="adesc">' +
+      esc(refreshStatus.ready
+        ? FB.T('Replace all three prospects without spending a day or resources.')
+        : FB.T('Ready in {days} days.', {
+          days:refreshStatus.daysRemaining
+        })) + '</span></button><div class="gm-list">';
     for (const m of cands) {
       if (s.player.courtingId === m.id) continue; // no pledging your own paramour
       const gap = FB.stationOf(m) - ps;
@@ -14422,7 +14431,10 @@ window.FB = window.FB || {};
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Decide nothing today')) +
       '</button>';
-    const historyOptions = { historyView:true };
+    const historyOptions = {
+      historyView:!replaceView,
+      replaceView:!!replaceView
+    };
     if (returnsToHouseholdPlan(returnContext)) {
       historyOptions.historyBackRender = function () { UI.showHouseholdPlan(); };
     } else if (returnsToInteractionManagement(returnContext)) {
@@ -14431,6 +14443,10 @@ window.FB = window.FB || {};
       };
     }
     openModal(FB.T('A Match for {name}', { name: c.name }), h, historyOptions);
+    $('match-candidate-refresh').addEventListener('click', function () {
+      if (!FB.refreshMatchCandidates(s, c)) return;
+      UI.showMatchPicker(cid, returnContext, true);
+    });
     $('match-policy-protection').addEventListener('change', function () {
       FB.setProtected(s, 'matchCharacter', c.id, this.checked);
       if (this.checked) delete c.matchRecommendation;
@@ -14458,7 +14474,8 @@ window.FB = window.FB || {};
   /* ================= suitor picker =================
      Seeking a match sounds out three families at once — an established house,
      a peer, and a young one (FB.spawnSuitor) — so age never decides the match
-     by itself. The same three wait until one is chosen; the usual
+     by itself. The same three wait until one is chosen or a later eligible
+     search replaces them; the usual
      meet-and-court flow follows from there. */
   UI.showSuitorPicker = function () {
     const s = FB.state;

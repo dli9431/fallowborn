@@ -1842,6 +1842,21 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* A new search replaces the unchosen families. Ordinary picker rendering
+     continues to call spawnSuitor, which reuses the stored trio. */
+  FB.refreshSuitors = function (state) {
+    if (state.player.suitorIds) {
+      for (const id of state.player.suitorIds) {
+        const m = state.chars[id];
+        if (m && m.role === 'suitor' && state.player.courtingId !== id) {
+          delete state.chars[id];
+        }
+      }
+    }
+    state.player.suitorIds = null;
+    return FB.spawnSuitor(state);
+  };
+
   /* the families not chosen are told no and forgotten */
   FB.pickSuitor = function (state, id) {
     state.player.courtingId = id;
@@ -1918,6 +1933,26 @@ window.FB = window.FB || {};
           !FB.isHouseholdCharacter(state, descendant.id))) return null;
     return FB.playerDescendantKind(state, descendant.id);
   }
+
+  FB.marriageProspectRefreshDays = function () {
+    const days = Number(FBDATA.balance.marriageProspectRefreshDays);
+    return isFinite(days) ? Math.max(0, Math.floor(days)) : 30;
+  };
+
+  FB.matchCandidateRefreshStatus = function (state, child) {
+    const eligible = !!(state && child && managedMatchKind(state, child));
+    const value = child && child.matchSearchTurn;
+    const hasTurn = !!state && value !== undefined && value !== null &&
+      isFinite(Number(value));
+    const elapsed = hasTurn ? Math.max(0, state.turn - Number(value)) : 0;
+    const daysRemaining = hasTurn
+      ? Math.max(0, FB.marriageProspectRefreshDays() - elapsed) : 0;
+    return {
+      eligible:eligible,
+      ready:eligible && daysRemaining === 0,
+      daysRemaining:daysRemaining
+    };
+  };
 
   /* Ordinary full characters use recorded parentage. Parent/child,
      grandparent/grandchild, siblings, and aunt-or-uncle/niece-or-nephew are
@@ -2066,6 +2101,26 @@ window.FB = window.FB || {};
     }
   }
 
+  function storeMatchRecommendation(state, entry, policy, options) {
+    const child = entry.child;
+    if (FB.isProtected(state, 'matchCharacter', child.id)) {
+      delete child.matchRecommendation;
+      return entry;
+    }
+    const opts = options || {};
+    const key = matchPolicyKey(policy);
+    const previous = child.matchRecommendation;
+    const candidateId = entry.candidate ? entry.candidate.id : null;
+    const changed = !previous || previous.policyKey !== key ||
+      previous.candidateId !== candidateId;
+    child.matchRecommendation = {
+      candidateId:candidateId,
+      policyKey:key
+    };
+    if (changed && opts.notify !== false) matchRecommendationNotice(state, entry);
+    return entry;
+  }
+
   FB.recommendDescendantMatches = function (state, options) {
     const policy = FB.ensureMatchPolicy(state);
     const opts = options || {};
@@ -2076,18 +2131,9 @@ window.FB = window.FB || {};
         delete c.matchRecommendation;
       }
     }
-    const key = matchPolicyKey(policy);
     const out = FB.matchPolicyPreview(state, policy);
     for (const entry of out) {
-      const previous = entry.child.matchRecommendation;
-      const candidateId = entry.candidate ? entry.candidate.id : null;
-      const changed = !previous || previous.policyKey !== key ||
-        previous.candidateId !== candidateId;
-      entry.child.matchRecommendation = {
-        candidateId:candidateId,
-        policyKey:key
-      };
-      if (changed && opts.notify !== false) matchRecommendationNotice(state, entry);
+      storeMatchRecommendation(state, entry, policy, opts);
     }
     return out;
   };
@@ -2126,6 +2172,8 @@ window.FB = window.FB || {};
       if (child && FB.discardMatches) FB.discardMatches(state, child, null);
       return out;
     }
+    const initialSearch = (!child.matchIds || !child.matchIds.length) &&
+      child.matchSearchTurn === undefined;
     if (child.matchIds) {
       for (const id of child.matchIds) {
         const m = state.chars[id];
@@ -2163,7 +2211,25 @@ window.FB = window.FB || {};
       out.push(m);
       child.matchIds.push(m.id);
     }
+    if (initialSearch) child.matchSearchTurn = state.turn;
     return out;
+  };
+
+  FB.refreshMatchCandidates = function (state, child) {
+    const status = FB.matchCandidateRefreshStatus(state, child);
+    if (!status.ready) return null;
+    FB.discardMatches(state, child, null);
+    const candidates = FB.spawnMatchCandidates(state, child);
+    child.matchSearchTurn = state.turn;
+    delete child.matchRecommendation;
+    const policy = FB.ensureMatchPolicy(state);
+    if (policy.enabled &&
+        !FB.isProtected(state, 'matchCharacter', child.id)) {
+      const entry = FB.matchPolicyRecommendation(
+        state, child, policy, candidates);
+      storeMatchRecommendation(state, entry, policy, { notify:false });
+    }
+    return candidates;
   };
 
   /* the families not chosen are told no and forgotten */

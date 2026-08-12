@@ -2579,7 +2579,9 @@ fertility roll at every conception site (the player's household and kin alike).
 The marriage-of-station knobs live there too: `dowryByStation` (gold by the spouse's rank
 0–4; the bride's house pays, and protagonist courtship snapshots the resulting
 amount/direction before proposal), `marryUpPrestige` / `marryDownPrestigeLoss` (per step of difference),
-`proposalStationPenalty` (chance lost per step the suitor stands above the player).
+`proposalStationPenalty` (chance lost per step the suitor stands above the player), and
+`marriageProspectRefreshDays` (the shared protagonist and per-descendant family-search
+cooldown; core 30 days).
 `wivesByGroup` is deprecated compatibility data used only when a legacy faith has no
 effective `properties.marriage`; new spouse limits belong in the faith graph.
 Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,

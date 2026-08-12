@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.120.0';
+  FB.VERSION = '1.120.1';
   FB.CHANGELOG = [
+    { v: '1.120.1', date: '2026-08-12', changes: [
+      'Marriage searches can now sound out new families every 30 days for the protagonist and each eligible descendant.'
+    ] },
     { v: '1.120.0', date: '2026-08-12', changes: [
       'Rival AI kings now keep their crown while they hold land in its kingdom, then fall to their true rank once driven out.'
     ] },

@@ -1111,6 +1111,7 @@ FBDATA.balance = {
   wartimeNecessitiesSurcharge: 0.25, // added to base household upkeep + family provisions while the player's realm is at war
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
+  marriageProspectRefreshDays: 30, // protagonist and descendant family searches
   socialGiftCooldownDays: 90, socialCashGiftOpinion: 4,
   socialItemGiftOpinion: [4,8,12], // Plain/common, Well-made/fine, Masterwork/famed
   rulerCashGiftCostByRank: [0,10,15,25,40], // count, duke, king, emperor

@@ -160,9 +160,13 @@ up is blocked (`FB.canCourt`), the `proposal` named chance drops per step up
 swing (`FB.doMarry`), and matchmaking sounds out three families at once
 (`FB.spawnSuitor`): an established house (older, a step up — fatter dowry, harder
 suit, fewer childbearing years), a peer, and a young match a step down. The three
-persist on the player as `suitorIds` until one is chosen in the picker
-(`UI.showSuitorPicker` → `FB.pickSuitor`); the usual meet-and-court event flow
-follows. Outliving a spouse of higher station queues `widow_settlement` /
+persist on the player as `suitorIds` until one is chosen in the picker or the
+next eligible **Seek a match** replaces the full pool
+(`FB.refreshSuitors` → `UI.showSuitorPicker` → `FB.pickSuitor`). Merely reopening
+the picker reuses the current records. Searches observe
+`balance.marriageProspectRefreshDays` and spend no day or resources, including
+when the player closes the picker without choosing; the usual meet-and-court
+event flow follows after a choice. Outliving a spouse of higher station queues `widow_settlement` /
 `house_claim` (`FB.spouseDied`, called from the mortality tick and `killRole:'spouse'`;
 payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner to tier 2).
 
@@ -205,7 +209,13 @@ either office.
 The household head arranges descendant matches: from age 12 an unwed resident child or
 grandchild's sheet offers three sounded-out families
 (`FB.spawnMatchCandidates`/`FB.sealKinMatch`/`FB.doKinWedding` in events.js, picker in
-ui.js; the candidates persist on the descendant as `matchIds`). A pledge
+ui_modals.js; the candidates persist on the descendant as `matchIds`). The
+initial search records a lazy `matchSearchTurn`; **Sound out new families** may
+replace all three records after `balance.marriageProspectRefreshDays`, without
+spending a day, gold, or prestige. A manual replacement restarts that
+descendant's clock, while replacing a dead or otherwise unavailable candidate
+does not. Existing saves without `matchSearchTurn` may replace an existing pool
+immediately, and merely reopening the picker never replaces an eligible pool. A pledge
 sets `betrothedId` and the yearly `kinLifeTick` weds the pair once both are 16 —
 unpledged kin still auto-wed at `balance.kinMarryChance`. Past
 `balance.familyMaxChars` tracked family records the unscripted weddings and kin
@@ -237,8 +247,9 @@ nearer age. Saving the policy triggers an immediate review, and each New Year re
 eligible resident descendants from age 12. `matchRecommendation` records only a candidate
 id and the policy signature;
 it creates a Household Plan marker and one Chronicle notice, not a betrothal. Previewing,
-saving, and refreshing a recommendation spend no resources or days. The ordinary picker
-lists the recommendation first but preserves all manual choices, and only
+saving, and refreshing a recommendation spend no resources or days. Replacing a
+prospect pool clears its obsolete recommendation and silently reviews the new
+three for that descendant. The ordinary picker lists the recommendation first but preserves all manual choices, and only
 `FB.sealKinMatch` can make the consequential pledge.
 The household head may put an eligible descendant in the `matchCharacter` protection
 scope from that same picker. Protected descendants are omitted from immediate and New Year
