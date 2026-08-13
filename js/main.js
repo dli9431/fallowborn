@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.123.0';
+  FB.VERSION = '1.124.0';
   FB.CHANGELOG = [
+    { v: '1.124.0', date: '2026-08-13', changes: [
+      'Play now announces when a newer version is ready and offers to save and reload without interrupting the current session.',
+      'Event result notices now remain anchored while they fade into the map.'
+    ] },
     { v: '1.123.0', date: '2026-08-13', changes: [
       'Social access now follows rank: warm intermediaries can open higher courts, while distant contacts make cultivation, gifts, courtship, and bought intrigue less effective and more costly.'
     ] },
@@ -953,16 +957,108 @@ window.FB = window.FB || {};
     if (ready) note.textContent = FB.T('Game available offline');
   }
 
+  const HOSTED_UPDATE_CHECK_MS = 5 * 60 * 1000;
+  const HOSTED_UPDATE_MIN_GAP_MS = 60 * 1000;
+  let hostedWorkerRegistration = null;
+  let hostedWorkerController = null;
+  let hostedUpdateAvailable = false;
+  let hostedUpdateLastCheck = 0;
+
+  function loadedHostedBuildKey() {
+    const scripts = document.getElementsByTagName('script');
+    for (let i = scripts.length - 1; i >= 0; i--) {
+      const src = scripts[i].getAttribute('src') || '';
+      if (!/(^|\/)js\/main\.js(?:[?#]|$)/.test(src)) continue;
+      const version = /[?&]v=([^&#]+)/.exec(src);
+      if (!version) return FB.VERSION;
+      try { return decodeURIComponent(version[1]); } catch (error) { return version[1]; }
+    }
+    return FB.VERSION;
+  }
+  const hostedPageBuildKey = loadedHostedBuildKey();
+
+  function noteHostedBuild(buildKey) {
+    if (!FB.platform.isPlay || !buildKey ||
+        String(buildKey) === hostedPageBuildKey || hostedUpdateAvailable) return false;
+    const banner = document.getElementById('update-banner');
+    if (!banner) return false;
+    hostedUpdateAvailable = true;
+    banner.classList.remove('hidden');
+    return true;
+  }
+  G.noteHostedBuild = noteHostedBuild;
+
+  function saveAndReloadHostedUpdate() {
+    const button = document.getElementById('update-reload');
+    if (button) button.disabled = true;
+    if (FB.state && FB.state.player && !FB.state.player.dead && !G.observe) {
+      /* An older deferred autosave must land before the current synchronous
+         snapshot, or pagehide could overwrite the newer state during reload. */
+      if (FB.save.flushPending) FB.save.flushPending();
+      if (!FB.save.toSlot('auto')) {
+        if (button) button.disabled = false;
+        return false;
+      }
+    }
+    window.location.reload();
+    return true;
+  }
+
+  const hostedReloadButton = document.getElementById('update-reload');
+  if (hostedReloadButton) {
+    hostedReloadButton.addEventListener('click', saveAndReloadHostedUpdate);
+  }
+
+  function requestHostedBuildKey(worker) {
+    if (!worker || typeof worker.postMessage !== 'function') return;
+    try { worker.postMessage({ type:'fallowborn-build-key-request' }); } catch (error) {}
+  }
+
+  function hostedControllerChanged() {
+    const current = navigator.serviceWorker.controller;
+    refreshOfflineStatus();
+    if (hostedWorkerController && current && current !== hostedWorkerController) {
+      requestHostedBuildKey(current);
+    }
+    if (current) hostedWorkerController = current;
+  }
+
+  function checkHostedUpdate() {
+    if (!hostedWorkerRegistration || hostedUpdateAvailable || document.hidden ||
+        typeof hostedWorkerRegistration.update !== 'function') return;
+    const now = Date.now();
+    if (now - hostedUpdateLastCheck < HOSTED_UPDATE_MIN_GAP_MS) return;
+    hostedUpdateLastCheck = now;
+    hostedWorkerRegistration.update().catch(function () {
+      /* Being offline is ordinary; the current complete shell keeps running. */
+    });
+  }
+
   /* Offline refresh belongs only to the first-party hosted surface. A failed
      registration is progressive-enhancement failure and must not stop boot. */
   if (FB.platform.isPlay && 'serviceWorker' in navigator) {
     try {
-      navigator.serviceWorker.addEventListener('controllerchange', refreshOfflineStatus);
+      hostedWorkerController = navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        const data = event.data;
+        if (!data || data.type !== 'fallowborn-build-key-response') return;
+        noteHostedBuild(data.buildKey);
+      });
+      navigator.serviceWorker.addEventListener('controllerchange', hostedControllerChanged);
       navigator.serviceWorker.register('/sw.js', {
         scope: '/',
         updateViaCache: 'none'
+      }).then(function (registration) {
+        hostedWorkerRegistration = registration;
+        hostedControllerChanged();
+        checkHostedUpdate();
+        setInterval(checkHostedUpdate, HOSTED_UPDATE_CHECK_MS);
       }).catch(function () {
         /* Ordinary online play remains available without the offline shell. */
+      });
+      window.addEventListener('focus', checkHostedUpdate);
+      document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) checkHostedUpdate();
       });
     } catch (error) {
       /* Older or restricted browsers may reject registration synchronously. */

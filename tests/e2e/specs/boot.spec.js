@@ -1,7 +1,7 @@
 'use strict';
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game');
+const { openGame, startDeterministicGame } = require('../support/game');
 
 test('boots the real game without browser, asset, or network errors',
   async function ({ page }, testInfo) {
@@ -37,6 +37,8 @@ test('boots the real game without browser, asset, or network errors',
         manifests: document.querySelectorAll('link[rel="manifest"]').length,
         themeColors: document.querySelectorAll('meta[name="theme-color"]').length,
         offlineStatusHidden: document.getElementById('offline-status')
+          .classList.contains('hidden'),
+        updateBannerHidden: document.getElementById('update-banner')
           .classList.contains('hidden'),
         registrations: registrations
       };
@@ -77,7 +79,54 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.manifests).toBe(0);
     expect(contract.themeColors).toBe(0);
     expect(contract.offlineStatusHidden).toBe(true);
+    expect(contract.updateBannerHidden).toBe(true);
     expect([null, -1, 0]).toContain(contract.registrations);
+  });
+
+test('the hosted update banner is play-only and saves a live campaign before reload',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const detection = await page.evaluate(function () {
+      const offPlay = FB.game.noteHostedBuild('future-hosted-build');
+      const hiddenOffPlay = document.getElementById('update-banner')
+        .classList.contains('hidden');
+      FB.platform.isPlay = true;
+      const currentBuild = FB.game.noteHostedBuild(FB.VERSION);
+      const futureBuild = FB.game.noteHostedBuild('future-hosted-build');
+      FB.game.paused = true;
+      FB.state.player.gold = 4321;
+      return {
+        offPlay:offPlay,
+        hiddenOffPlay:hiddenOffPlay,
+        currentBuild:currentBuild,
+        futureBuild:futureBuild
+      };
+    });
+
+    expect(detection).toEqual({
+      offPlay:false,
+      hiddenOffPlay:true,
+      currentBuild:false,
+      futureBuild:true
+    });
+    const banner = page.locator('#update-banner');
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText('New version available');
+    const reload = page.getByRole('button', { name:'Save and reload', exact:true });
+    await expect(reload).toBeVisible();
+
+    await Promise.all([
+      page.waitForNavigation({ waitUntil:'domcontentloaded' }),
+      reload.click()
+    ]);
+    await page.waitForFunction(function () {
+      return !!(window.FB && FB.save && FB.save.read('auto'));
+    });
+    expect(await page.evaluate(function () {
+      return FB.save.read('auto').state.player.gold;
+    })).toBe(4321);
   });
 
 test('title menu gives every action a decorative icon and a clean accessible name',

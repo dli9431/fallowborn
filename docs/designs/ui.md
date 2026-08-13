@@ -164,6 +164,12 @@ title-screen offline status is an `aria-live` region that stays absent from layo
 actually controls the page, at which point it shows localized **Game available offline** copy.
 That status covers the core game and intro; soundtrack banks have separate download controls. A
 rendered page alone is never treated as proof that its complete bundle was cached.
+While a play-host tab remains open, it asks the worker to check for a deployment at boot, every
+five visible minutes, and when the tab regains focus. A newly activated worker reports its stamped
+deployment fingerprint; only a fingerprint different from the page's stamped `main.js` reveals
+the persistent, localized **New version available** status banner. Its **Save and reload** action
+writes the current playable life synchronously before reloading. First worker installation,
+`file://`, localhost, mirrors, and itch never reveal the banner.
 
 New Game proceeds through bookmark → social scenario → province → character. Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario
@@ -884,7 +890,8 @@ the guard naturally; question-mark detail controls never resolve and need no gua
 longer create a blocking outcome screen: one receipt toast appears for six seconds above
 the event layer in the map's bottom-left toast region, and the queue advances immediately.
 It remains the bottom-most toast when tutorial notices stack above it and stays within the
-map on narrow layouts, so it cannot cover panel action buttons or climb into the top bar.
+map on narrow layouts, including throughout its fade-in, so it cannot cover panel action
+buttons or climb into the top bar.
 The toast replaces an older receipt instead of stacking; when no event blocks input,
 activating it opens the Chronicle's Choices filter. Exceptional choices that automation
 intentionally shows remain protected.

@@ -79,6 +79,34 @@
     </script>
   </head>
   <body>
+    <aside
+      id="update-banner"
+      class="update-banner hidden"
+      role="region"
+      aria-labelledby="update-banner-title"
+    >
+      <div
+        class="update-banner-copy"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <strong id="update-banner-title" data-i18n="New version available"
+          >New version available</strong
+        >
+        <span data-i18n="Your game will be saved before the page reloads."
+          >Your game will be saved before the page reloads.</span
+        >
+      </div>
+      <button
+        id="update-reload"
+        class="btn primary"
+        type="button"
+        data-i18n="Save and reload"
+      >
+        Save and reload
+      </button>
+    </aside>
     <div id="app">
       <!-- ======== LOADING ======== -->
       <div id="loading" class="screen">

@@ -66092,6 +66092,16 @@
         "text": "Buy back your name with the truth."
       }
     },
+    "src.3089bd4a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Save and reload"
+      }
+    },
     "src.308afc92": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95673,6 +95683,16 @@
         "text": "your child"
       }
     },
+    "src.78d9250b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Your game will be saved before the page reloads."
+      }
+    },
     "src.78e72066": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104661,6 +104681,16 @@
       ],
       "source": {
         "text": "🕊 The enemy sues for peace. Your lands are safe."
+      }
+    },
+    "src.8d315ff6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "New version available"
       }
     },
     "src.8d3db26e": {

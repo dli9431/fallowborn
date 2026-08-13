@@ -90,6 +90,12 @@ for dynamically loaded language catalogs, whose runtime query uses `FB.VERSION` 
 precache uses the deployment fingerprint. Activation claims existing pages, deletes only older
 `fallowborn-offline-*` caches, preserves the separate stable `fallowborn-music-v1` cache, and makes
 the title-screen **Game available offline** status visible once the page has a controlling worker.
+An open play-host page also requests an update at boot, every five minutes while visible, and on
+refocus. Once a replacement worker has installed its complete bundle and activated, it reports the
+same stamped deployment fingerprint used by the document's asset URLs. A different fingerprint
+reveals a persistent **New version available** banner; **Save and reload** synchronously updates the autosave
+before loading the new document. Matching fingerprints and a first worker installation stay quiet,
+and no part of this notification path runs on itch or `file://`.
 
 Gameplay music is fetched a complete track at a time and stored in `fallowborn-music-v1` under a
 revisioned URL. A repeated track reuses that response. The offline-music screen can download or

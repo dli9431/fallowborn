@@ -88,6 +88,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .offline-status {
   margin-top: 7px; color: #9daf75; font-size: 12px;
 }
+.update-banner {
+  position: fixed; z-index: 90; top: max(10px, env(safe-area-inset-top));
+  left: 50%; transform: translateX(-50%); width: calc(100% - 24px); max-width: 680px;
+  display: flex; align-items: center; gap: 14px; padding: 11px 12px 11px 15px;
+  background: rgba(35, 28, 18, .98); border: 1px solid #b18a32; border-radius: 9px;
+  color: #ded0ad; text-align: left; box-shadow: 0 8px 28px rgba(0,0,0,.62);
+}
+.update-banner-copy { flex: 1 1 240px; min-width: 0; }
+.update-banner-copy strong { display: block; color: #f0d77d; font-size: 15px; }
+.update-banner-copy span { display: block; margin-top: 1px; font-size: 13px; }
+.update-banner .btn { flex: 0 0 auto; white-space: nowrap; }
 .loadbarwrap { width: min(70vw, 360px); height: 10px; background: #33291f; border-radius: 5px; margin-top: 16px; overflow: hidden; }
 #loadbar { height: 100%; width: 0%; background: linear-gradient(90deg, #a07828, #e0c060); transition: width .15s; }
 #loadmsg { color: #b8a888; font-style: italic; }
@@ -368,7 +379,7 @@ body.travel-picking #timebtns { visibility: hidden; }
   animation: toastin .25s;
 }
 .event-receipt-headline { display: block; margin-bottom: 6px; color: #f0dfb0; }
-@keyframes toastin { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; } }
+@keyframes toastin { from { opacity: 0; } to { opacity: 1; } }
 
 #side {
   flex: 0 0 340px; display: flex; flex-direction: column;
@@ -2386,6 +2397,9 @@ textarea.modjson, textarea.savetext {
 }
 
 @media (max-width: 600px) {
+  .update-banner { flex-wrap: wrap; gap: 9px; }
+  .update-banner-copy { flex-basis: 100%; }
+  .update-banner .btn { width: 100%; }
   .large-list-toolbar { align-items: stretch; flex-direction: column; }
   .large-list-search, .large-list-filters { width: 100%; flex-basis: auto; }
   .large-list-search > div { flex-wrap: wrap; }

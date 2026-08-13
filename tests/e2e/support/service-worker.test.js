@@ -13,6 +13,7 @@ function workerHarness(cachedIndex, cachedMusic) {
   const listeners = {};
   const puts = [];
   const deletedCaches = [];
+  const clientMessages = [];
   let cacheNames = [];
   let fetchRequest = function () {
     return Promise.reject(new Error('Network unavailable'));
@@ -124,6 +125,15 @@ function workerHarness(cachedIndex, cachedMusic) {
       assert.ok(completion, 'the worker must handle activation');
       return completion;
     },
+    dispatchMessage:function (data) {
+      listeners.message({
+        data:data,
+        source:{
+          postMessage:function (message) { clientMessages.push(message); }
+        }
+      });
+    },
+    clientMessages:clientMessages,
     deletedCaches:deletedCaches,
     puts:puts,
     setFetch:function (handler) {
@@ -185,3 +195,15 @@ test('music is cache-first, Range requests bypass storage, and activation preser
     await harness.dispatchActivate();
     assert.deepEqual(harness.deletedCaches, ['fallowborn-offline-old-release']);
   });
+
+test('the worker reports its stamped build key to a controlled page', function () {
+  const harness = workerHarness({ id:'release-a', ok:true });
+
+  harness.dispatchMessage({ type:'unrelated-message' });
+  assert.equal(harness.clientMessages.length, 0);
+
+  harness.dispatchMessage({ type:'fallowborn-build-key-request' });
+  assert.equal(harness.clientMessages.length, 1);
+  assert.equal(harness.clientMessages[0].type, 'fallowborn-build-key-response');
+  assert.equal(harness.clientMessages[0].buildKey, '__FB_CACHE_KEY__');
+});

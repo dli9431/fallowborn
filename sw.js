@@ -57,6 +57,15 @@ self.addEventListener('activate', function (event) {
   );
 });
 
+self.addEventListener('message', function (event) {
+  if (!event.data || event.data.type !== 'fallowborn-build-key-request') return;
+  if (!event.source || typeof event.source.postMessage !== 'function') return;
+  event.source.postMessage({
+    type:'fallowborn-build-key-response',
+    buildKey:BUILD_KEY
+  });
+});
+
 function navigationResponse(request) {
   return fetch(request).then(function (response) {
     return response;
