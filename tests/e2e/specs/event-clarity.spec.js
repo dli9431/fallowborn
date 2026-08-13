@@ -373,7 +373,8 @@ test('event result toasts stay in the bottom-left map toast region',
         leftGap:toastRect.left - mapRect.left,
         bottomGap:mapRect.bottom - toastRect.bottom,
         insideMap:toastRect.top >= mapRect.top &&
-          toastRect.right <= mapRect.right,
+          toastRect.right <= mapRect.right &&
+          toastRect.bottom <= mapRect.bottom,
         clearsPanels:toastRect.bottom <= panelsRect.top + 1
       };
     });

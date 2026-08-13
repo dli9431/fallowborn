@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.122.0';
+  FB.VERSION = '1.122.1';
   FB.CHANGELOG = [
+    { v: '1.122.1', date: '2026-08-13', changes: [
+      'Event result notices now stay anchored inside the map when tutorial notices stack.'
+    ] },
     { v: '1.122.0', date: '2026-08-13', changes: [
       'Serf and other commoner lives now face new customary burdens and rare culture-specific slave raids with plunder, captivity, and forced settlement.',
       'Event result notices now appear above the map’s bottom-left edge instead of covering action controls.'

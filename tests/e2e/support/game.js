@@ -59,7 +59,12 @@ async function startDeterministicGame(page) {
   await expect(page.locator('#game:not(.hidden)')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your Story Begins', exact: true }))
     .toBeVisible();
-  await page.getByRole('button', { name: 'Begin', exact: true }).click();
+  const storyBegin = page.getByRole('button', { name: 'Begin', exact: true });
+  await expect(storyBegin).toBeFocused();
+  // The modal already owns keyboard focus. Enter exercises the real button
+  // handler without asking WebKit to establish pointer stability during the
+  // first painted game frame.
+  await page.keyboard.press('Enter');
   // The CADENCE seed starts the Free Farmer scenario, tier 1: a focused
   // Freeholder orientation sheet opens — never the whole Guide.
   await expect(page.getByRole('heading', { name: 'Freeholder', exact: true }))
