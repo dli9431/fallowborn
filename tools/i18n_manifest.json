@@ -47918,16 +47918,6 @@
         "text": "A Feud on Your Doorstep"
       }
     },
-    "src.08e28da7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Hide beginner hints"
-      }
-    },
     "src.08ec733a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91503,6 +91493,16 @@
         "text": "No motion is pending. Allegiances persist, while influence and interests follow the current court."
       }
     },
+    "src.74122bf7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guidance"
+      }
+    },
     "src.74158d7a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97110,16 +97110,6 @@
         "text": "Made peace with a rival through compensation."
       }
     },
-    "src.815157b4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too."
-      }
-    },
     "src.81546d49": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100730,6 +100720,16 @@
       ],
       "source": {
         "text": "Leave the charter and its enemies untouched."
+      }
+    },
+    "src.8980059a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can disable guide hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you."
       }
     },
     "src.898a767f": {
@@ -121175,16 +121175,6 @@
         "text": "Riding Horses and Covered Wagon"
       }
     },
-    "src.bbbb7e0e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Deeds panel"
-      }
-    },
     "src.bbbbcddb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122451,6 +122441,16 @@
       ],
       "source": {
         "text": "Bam"
+      }
+    },
+    "src.bec69581": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Disable guide hints"
       }
     },
     "src.bed0dcc1": {
@@ -133624,16 +133624,6 @@
       ],
       "source": {
         "text": "Rest at the ale-house. ({money:2})"
-      }
-    },
-    "src.daf278fc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can hide beginner hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you."
       }
     },
     "src.daf9076d": {
@@ -146037,6 +146027,16 @@
       ],
       "source": {
         "text": "Work Between the Stalls"
+      }
+    },
+    "src.f9742227": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu."
       }
     },
     "src.f97c888e": {
@@ -158970,14 +158970,6 @@
         "text": "Deeds"
       }
     },
-    "ui:Deeds panel": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Deeds panel"
-      }
-    },
     "ui:Deeds — done at once unless noted": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -159403,6 +159395,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Directed study"
+      }
+    },
+    "ui:Disable guide hints": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Disable guide hints"
       }
     },
     "ui:Discipline": {
@@ -161590,6 +161590,14 @@
         "text": "Guarded"
       }
     },
+    "ui:Guidance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Guidance"
+      }
+    },
     "ui:Guidance changes their yearly personal progress and family requests.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161850,28 +161858,12 @@
         "text": "Held directly: {held} of {cap}."
       }
     },
-    "ui:Hide beginner hints": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Hide beginner hints"
-      }
-    },
     "ui:Hide details": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Hide details"
-      }
-    },
-    "ui:Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too."
       }
     },
     "ui:High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.": {
@@ -172337,6 +172329,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Stewardship {value}"
+      }
+    },
+    "ui:Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu."
       }
     },
     "ui:Stop cultivating": {

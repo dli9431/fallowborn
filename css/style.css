@@ -998,8 +998,8 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .chronicle-filters button:last-child { border-right: 0; }
 .chronicle-filters button.active,
 .chronicle-filters button[aria-pressed="true"] { background: #3a2d1b; color: #e0c060; }
-.choice-entry {
-  margin: 6px 0; padding: 8px 9px; border: 1px solid #4f4028;
+.logentry.choice-entry {
+  margin: 6px 0; padding: 12px; border: 1px solid #4f4028;
   border-radius: 8px; background: #241d15;
 }
 .choice-receipt-title { color: #e0c060; font-weight: bold; margin: 2px 0 3px; }
@@ -2189,12 +2189,18 @@ textarea.modjson, textarea.savetext {
   .hudbtn { width: 46px; height: 46px; font-size: 22px; }
   #maphud { right: max(10px, env(safe-area-inset-right)); }
   .music-now-playing-controls {
-    bottom: max(8px, env(safe-area-inset-bottom)); max-width: calc(100% - 90px);
+    right: max(8px, env(safe-area-inset-right)); left: auto;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    transform: none; max-width: min(42%, 184px); gap: 4px;
   }
-  .music-now-playing { min-height: 44px; padding-inline: 11px; }
+  .music-now-playing {
+    min-height: 44px; gap: 0; padding-inline: 8px; font-size: 11px;
+  }
+  .music-now-playing span:first-child { display: none; }
   .music-now-playing-toggle {
-    flex-basis: 44px; width: 44px; height: 44px; font-size: 16px;
+    flex-basis: 44px; width: 44px; height: 44px; font-size: 14px;
   }
+  #toasts { max-width: 50%; }
   .music-track-actions { grid-template-columns: 1fr; }
   .kv { font-size: 14px; padding: 4px 0; }
   .land-section { padding: 9px 10px 10px; }

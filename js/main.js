@@ -9,8 +9,13 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.121.0';
+  FB.VERSION = '1.121.1';
   FB.CHANGELOG = [
+    { v: '1.121.1', date: '2026-08-12', changes: [
+      'Music now switches immediately from the title theme into gameplay, with compact mobile controls that stay clear of map notices.',
+      'Guide hints can now be disabled in Settings.',
+      'Chronicle choices and event consequence details now use clearer spacing and omit internal or empty outcome labels.'
+    ] },
     { v: '1.121.0', date: '2026-08-12', changes: [
       'Battle-proven founders can now command a patron’s wartime host and earn their first barony through a field victory.'
     ] },
@@ -1788,7 +1793,9 @@ window.FB = window.FB || {};
     FB.ui.refresh();
     if (!state.player.flags.mapHintShown) {
       state.player.flags.mapHintShown = 1; // once per save: how to work the map
-      FB.ui.toast('Drag to pan, scroll or pinch to zoom — tap a province for details. Zoom in to see county names.');
+      if (!G.uiPrefs || !G.uiPrefs.hideBeginnerHints) {
+        FB.ui.toast('Drag to pan, scroll or pinch to zoom — tap a province for details. Zoom in to see county names.');
+      }
     }
     FB.news(state, FB.msg('news.life.chronicle_begins',
       '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
@@ -2274,7 +2281,7 @@ window.FB = window.FB || {};
     // chapter one of the scripted chain, a couple of days into the life
     if (!flags.tut_ev_welcome && s.turn >= 2) {
       flags.tut_ev_welcome = 1;
-      FB.queueEvent(s, 'tut_welcome', {});
+      if (!hidden) FB.queueEvent(s, 'tut_welcome', {});
     }
     let allDone = true;
     for (const track of TUTORIAL_TRACKS) {
@@ -2293,7 +2300,7 @@ window.FB = window.FB || {};
       if (status.done < status.total) { allDone = false; continue; }
       if (flags['tut_track_' + track.id]) continue;
       flags['tut_track_' + track.id] = 1;
-      if (track.event) FB.queueEvent(s, track.event, {}); // scripted chain chapter
+      if (track.event && !hidden) FB.queueEvent(s, track.event, {}); // scripted chain chapter
       if (!hidden) {
         FB.news(s, FB.msg('news.tutorial.track_done',
           '{icon} {track} — the lessons take root.', {

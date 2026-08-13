@@ -1639,7 +1639,9 @@ window.FB = window.FB || {};
     let h = '<span class="event-receipt-headline">' + esc(outcome
       ? FB.T('{event} — {outcome}', { event:title, outcome:outcome })
       : FB.T('{event} — {choice}', { event:title, choice:option })) + '</span>';
-    const impacts = receipt.impacts || [];
+    const impacts = (receipt.impacts || []).filter(function (record) {
+      return !FB.eventImpactVisible || FB.eventImpactVisible(record);
+    });
     const shown = Math.min(3, impacts.length);
     if (shown) {
       h += '<span class="event-impact-chips receipt">';

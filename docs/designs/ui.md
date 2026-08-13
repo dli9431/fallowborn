@@ -150,11 +150,11 @@ reflects whether the title theme is currently playing. Pausing retains the curre
 position for an in-session resume and remembers silent title playback for the next visit. Resuming
 stores title autoplay again. The button remains hidden while loading, during gameplay, or when the
 soundtrack cannot play.
-During gameplay, the bottom-center song title opens the full music controls and a separate compact
-button immediately to its right pauses or resumes playback. Both controls are native buttons, and
-the compact control keeps the 44-pixel minimum touch target on mobile. Settings keeps focus-loss
-pausing as the default and offers an opt-in background-playback checkbox for inactive tabs, windows,
-and locked screens.
+During gameplay, the song title opens the full music controls and a separate compact button
+immediately to its right pauses or resumes playback. Desktop centers the pair below the map. Mobile
+uses a narrower lower-right presentation, opposite the lower-left toast region, while both native
+buttons retain 44-pixel minimum touch targets. Settings keeps focus-loss pausing as the default and
+offers an opt-in background-playback checkbox for inactive tabs, windows, and locked screens.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
 `js/util.js` before boot. Its current `isPlay` flag is true only for the HTTPS
@@ -469,11 +469,12 @@ with `aria-expanded`; closed actions are not rendered, so number-key selection c
 activate an invisible deed. Every available daily focus appears together in one block
 above the category accordions; the accordions split and count only deeds by category.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
-a browser-local **Hide beginner hints** preference (`fb_ui`) so experienced players can
+a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the
-whole beginner-guidance layer: the path note, the tutorial checklist, the scripted
-tutorial chain, tab nudges, panel intro sheets, empty-state guidance lines, stat
-teaching lines, and the contextual one-line hints below.
+whole beginner-guidance layer: the path note, tutorial checklist and scripted tutorial
+chain, tab nudges, initial map tip, panel intro and role-orientation sheets, empty-state
+guidance lines, stat teaching lines, and the contextual one-line hints below. The complete
+Guide remains available from the menu.
 
 New lives created from this version on carry `player.flags.tutorial` and a
 `startGold` baseline, which put a dismissible tutorial checklist at the top of the
@@ -496,7 +497,9 @@ Track progress also advances a scripted **tutorial event chain**
 (`data/events_tutorial.js`): a neighbor’s welcome queues a couple of days into the
 life, and one chapter queues as each later track completes. The chain is ordinary
 declarative event data — `trigger:{never:true}`, `once:true`, queued via
-`FB.queueEvent` — with small all-positive options so autoresolve stays sane.
+`FB.queueEvent` — with small all-positive options so autoresolve stays sane. With
+**Disable guide hints** enabled, the stage flags still advance but these chapters are
+not queued.
 
 Around the checklist, the rest of the beginner layer for a tutorial life
 (`FB.tutorialLife` — the checklist was offered, finished or not): tab **nudge
@@ -677,7 +680,8 @@ with that role's summary, new resources, recurring duties, and three suggested
 actions — never the whole Guide. Its **Read more in the Guide** button deep-links to
 the same complete orientation, which remains available as an inline Guide entry.
 Orientation checks run only when the game is visible and neither generic nor event
-modal is active, so they never replace a pending choice.
+modal is active, so they never replace a pending choice, and **Disable guide hints**
+suppresses them without marking the orientation as read.
 
 Overland movement and sea-crossing speed use distinct effect labels, and a transport-tier
 technology states its concrete men-per-crossing-cycle capacity. A manual host order uses
@@ -882,8 +886,9 @@ Choices filter. Exceptional choices that automation intentionally shows remain p
 The Chronicle has session-local **All / Choices / News** filters. Choices are typed event
 receipts with rich exact-change chips; News includes legacy untyped entries and ordinary
 notices. Each filter renders its newest 80 matches while saved history retains the existing
-300-entry cap. The incremental prepend cache includes the active filter, so switching views
-cannot reuse markup from another category.
+300-entry cap. Recorded-choice cards use a generous inner inset to separate their date, title,
+selected option, outcome, and impact chips from the card border. The incremental prepend cache
+includes the active filter, so switching views cannot reuse markup from another category.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 

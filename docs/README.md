@@ -233,8 +233,8 @@ Time passes **day by day** (90-day seasons, 360-day years).
 Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor.
 A brand-new life finds a dismissible **First steps** checklist atop the *Deeds* tab —
 five tiny goals that teach the core loop once — and the tab shows a hint for the
-next rung by default; experienced players can hide beginner hints in Settings. Wealth buys freedom; Freeholders
-then buy inherited plots settlement by settlement. Land held together grows more
+next rung by default; experienced players can disable guide hints in Settings. Wealth
+buys freedom; Freeholders then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement can be declared a manor once the family has
 the standing to join the gentry. Standing with a lord then earns an established gentle house a
 banner, normally after the manor has passed to an heir; battlefield glory during an active

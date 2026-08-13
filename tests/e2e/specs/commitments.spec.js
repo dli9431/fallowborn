@@ -170,7 +170,7 @@ test('the commitments title collapses and restores its ledger',
     }).toBe(false);
   });
 
-test('daily focuses stay together and Settings can hide beginner hints',
+test('daily focuses stay together and Settings can disable guide hints',
   async function ({ page }) {
     const structure = await page.locator('#tab-actions').evaluate(
       function (panel) {
@@ -206,16 +206,21 @@ test('daily focuses stay together and Settings can hide beginner hints',
     })).toHaveCount(0);
 
     const hideBeginnerHints = page.getByRole('checkbox', {
-      name:/Hide beginner hints/
+      name:/Disable guide hints/
     });
     await expect(hideBeginnerHints).not.toBeChecked();
+    await expect(page.locator('label.autorow', { has:hideBeginnerHints }))
+      .toContainText('role orientation popups');
     await hideBeginnerHints.check();
     await expect(pathHint).toHaveCount(0);
     await expect.poll(async function () {
       return page.evaluate(function () {
-        return FB.game.uiPrefs.hideBeginnerHints;
+        return {
+          preference:FB.game.uiPrefs.hideBeginnerHints,
+          stored:JSON.parse(localStorage.getItem('fb_ui')).hideBeginnerHints
+        };
       });
-    }).toBe(true);
+    }).toEqual({ preference:true, stored:true });
   });
 
 test('conditional commitments expose travel, finance, and political management',

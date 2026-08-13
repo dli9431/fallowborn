@@ -201,9 +201,12 @@ Authored option `desc` text remains narrative flavor. `FB.previewEventOption(sta
 option, ctx)` derives the mechanical layer from the live effect objects without writing
 state, creating roles, or consuming RNG. The choice row itself retains only authored label and
 description prose; its desktop contextual tooltip, or the question-mark disclosure on touch and
-tablet-width or short layouts, separates **Guaranteed**, **If successful**, and **If failed**
-effects. Guaranteed costs, penalties,
-property losses, upkeep/duration, permanent decisions, and lethal risks are exact. Favorable
+tablet-width or short layouts, separates non-empty **Guaranteed**, **If successful**, and
+**If failed** effects. **Guaranteed** is omitted when the choice has no direct guaranteed
+mechanical consequence. Guaranteed costs, penalties,
+property losses, upkeep/duration, meaningful permanent outcomes, and lethal risks are exact.
+Internal set/clear-flag bookkeeping is omitted because it does not explain a useful player-facing
+consequence. Favorable
 rewards remain qualitative until resolution. Numeric and named chance formulas render only as
 Very likely (80%+), Likely (60–79%), Even (40–59%), Risky (20–39%), or Long shot (under 20%);
 branch narrative is never shown early.
@@ -214,7 +217,7 @@ established order, and returns a structured receipt. `FB.applyEffects` remains s
 callers that ignore its return value, but now returns semantic before/after impacts with
 actual clamp-aware deltas. Resolution suppresses transient effect toasts, not their durable
 Chronicle messages, and adds one `kind:"choice"` entry containing the event/option/outcome
-descriptors plus the complete impact ledger.
+descriptors plus the complete player-facing impact ledger.
 
 Declarative effects are formatted by the engine. A custom option effect also registers
 `FB.eventImpactAdapters[customId]` with pure `preview(state, ctx, event, effects)` and

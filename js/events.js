@@ -4108,11 +4108,6 @@ window.FB = window.FB || {};
     if (fx.queue) out.push(impact('queue', { eventId:fx.queue }));
     if (fx.worldNews) out.push(impact('worldNews', {}));
     if (fx.clearHarvestFlags) out.push(impact('system', { system:'harvest' }));
-    if (fx.setFlag || fx.setFlag2 || fx.clearFlag || fx.clearFlag2) {
-      out.push(impact('system', {
-        system:'decision', permanent:!!(fx.setFlag || fx.setFlag2)
-      }));
-    }
     if (fx.custom) {
       const adapter = FB.eventImpactAdapters[fx.custom];
       const customImpacts = adapter && typeof adapter.preview === 'function'
@@ -4145,15 +4140,19 @@ window.FB = window.FB || {};
       chance = { band:chanceBand(probability) };
     }
     const sections = [];
-    const guaranteed = previewEffects(state, option.effects, ctx, ev);
-    const success = previewEffects(state,
-      option.success && option.success.effects, ctx, ev);
-    const failure = previewEffects(state,
-      option.failure && option.failure.effects, ctx, ev);
-    sections.push({
-      id:'guaranteed',
-      impacts:guaranteed.length ? guaranteed : [impact('none', { internal:true })]
-    });
+    function visible(records) {
+      return records.filter(function (record) {
+        return FB.eventImpactVisible(record);
+      });
+    }
+    const guaranteed = visible(previewEffects(state, option.effects, ctx, ev));
+    const success = visible(previewEffects(state,
+      option.success && option.success.effects, ctx, ev));
+    const failure = visible(previewEffects(state,
+      option.failure && option.failure.effects, ctx, ev));
+    if (guaranteed.length) {
+      sections.push({ id:'guaranteed', impacts:guaranteed });
+    }
     if (option.chance !== undefined || success.length) {
       sections.push({ id:'success', impacts:success.length ? success : [impact('system', {
         system:'story', narrative:true
@@ -4548,8 +4547,14 @@ window.FB = window.FB || {};
       }
     }
     return out.filter(function (record) {
-      return typeof record.amount !== 'number' || !!record.amount;
+      return FB.eventImpactVisible(record) &&
+        (typeof record.amount !== 'number' || !!record.amount);
     });
+  };
+
+  FB.eventImpactVisible = function (record) {
+    return !(record && (record.internal ||
+      (record.type === 'system' && record.system === 'decision')));
   };
 
   function numberText(value) {

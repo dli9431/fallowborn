@@ -1123,7 +1123,8 @@ window.FB = window.FB || {};
       pendingBankId = bank.id === currentBankId ? null : bank.id;
       return;
     }
-    playFromBank(bank.id);
+    if (enteringGame && activeAudio >= 0) audio[activeAudio].loop = false;
+    playFromBank(bank.id, enteringGame ? { noCrossfade:true } : null);
   };
 
   M.showTitle = function (force) {

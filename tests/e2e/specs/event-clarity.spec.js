@@ -175,6 +175,9 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
         actualGold:receipt.impacts.filter(function (record) {
           return record.type === 'gold';
         })[0],
+        decisionImpacts:receipt.impacts.filter(function (record) {
+          return record.type === 'system' && record.system === 'decision';
+        }).length,
         receiptText:receiptText,
         choiceCount:choiceEntries.length,
         fallbackKey:choiceEntries[0] && choiceEntries[0].msg.key,
@@ -201,7 +204,7 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
     })).toEqual(['guaranteed', 'success', 'failure']);
     var previewWords = JSON.stringify(result.sections);
     expect(previewWords).toContain('Money');
-    expect(previewWords).toContain('Permanent story decision');
+    expect(previewWords).not.toContain('Permanent story decision');
     expect(previewWords).toContain('Prestige may increase');
     expect(previewWords).toContain('Piety may increase');
     expect(previewWords).not.toContain('Prestige +10');
@@ -211,6 +214,7 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
     expect(result.actualGold).toMatchObject({
       type:'gold', before:3, after:0, amount:-3
     });
+    expect(result.decisionImpacts).toBe(0);
     expect(result.receiptText.join(' ')).toContain('Money');
     expect(result.choiceCount).toBe(1);
     expect(result.fallbackKey).toBe('news.event.autoresolved');
@@ -251,8 +255,8 @@ test('desktop choices keep side tooltips visible and separate from resolution',
 
     await resolveButton.hover();
     await expect(page.locator('#tooltip')).toBeVisible();
-    await expect(page.locator('#tooltip')).toContainText('Guaranteed');
-    await expect(page.locator('#tooltip')).toContainText(
+    await expect(page.locator('#tooltip')).not.toContainText('Guaranteed');
+    await expect(page.locator('#tooltip')).not.toContainText(
       'No direct mechanical change');
     await expect(page.locator('#tooltip')).toContainText('If failed');
 
@@ -343,6 +347,9 @@ test('touch choices use a full-size question-mark Details control without inline
     await expect(details).toHaveText('?');
     await expect(details).toHaveAttribute('aria-label', 'Hide details');
     await expect(row.locator('.event-choice-details')).toBeVisible();
+    await expect(row.locator('.event-choice-details')).not.toContainText('Guaranteed');
+    await expect(row.locator('.event-choice-details')).not.toContainText(
+      'No direct mechanical change');
     await expect(page.getByRole('dialog', {
       name:'A Child Burns With Fever'
     })).toBeVisible();
@@ -392,7 +399,12 @@ test('Chronicle filters typed receipts, caps each view, and preserves metadata',
             'Choose path {n}', { n:i }),
           outcome:FB.msg('news.e2e.event_clarity_outcome',
             'Outcome {n}', { n:i }),
-          impacts:[{ type:'gold', amount:i + 1, before:0, after:i + 1 }]
+          impacts:[
+            { type:'gold', amount:i + 1, before:0, after:i + 1 },
+            {
+              type:'system', system:'decision', permanent:true, resolved:true
+            }
+          ]
         };
         FB.news(s, FB.msg('news.event.autoresolved', {
           forms:{
@@ -426,6 +438,14 @@ test('Chronicle filters typed receipts, caps each view, and preserves metadata',
     await page.locator('[data-chronicle-filter="choices"]').click();
     await expect(page.locator('#tab-log .logentry')).toHaveCount(80);
     await expect(page.locator('#tab-log .logentry:not(.choice-entry)')).toHaveCount(0);
+    await page.setViewportSize({ width:390, height:740 });
+    var choicePadding = await page.locator('#tab-log .choice-entry').first()
+      .evaluate(function (entry) {
+        var style = getComputedStyle(entry);
+        return [style.paddingTop, style.paddingRight,
+          style.paddingBottom, style.paddingLeft];
+      });
+    expect(choicePadding).toEqual(['12px', '12px', '12px', '12px']);
     var exactMoney = await page.evaluate(function () {
       return FB.eventImpactText(FB.state, {
         type:'gold', amount:90, before:0, after:90
@@ -435,6 +455,8 @@ test('Chronicle filters typed receipts, caps each view, and preserves metadata',
       .toContainText(exactMoney);
     await expect(page.locator('#tab-log .choice-entry').last())
       .toContainText('Recorded choice 10');
+    await expect(page.locator('#tab-log')).not.toContainText(
+      'Permanent story decision');
 
     await page.locator('[data-chronicle-filter="news"]').click();
     await expect(page.locator('#tab-log .logentry')).toHaveCount(80);

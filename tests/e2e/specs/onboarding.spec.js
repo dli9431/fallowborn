@@ -50,6 +50,27 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await expect(card.locator('li.done').first()).toContainText('daily focus');
   });
 
+test('a saved guide-hints setting suppresses new-life map and orientation popups',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.saveUiPrefs();
+    });
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    const seedInput = page.locator('#ng-seed');
+    await seedInput.fill(START_CODE);
+    await seedInput.press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.getByRole('heading', {
+      name:'Your Story Begins', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#toasts')).not.toContainText('Drag to pan');
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('.tutorial-card')).toHaveCount(0);
+  });
+
 test('First steps flip from ordinary play and the track advances',
   async function ({ page }) {
     await startDeterministicGame(page);
@@ -126,7 +147,7 @@ test('dismissing First steps is a per-save opt-out',
     await expect(page.locator('.tutorial-card')).toHaveCount(0);
   });
 
-test('the beginner-hints preference silences the checklist and hints',
+test('the guide-hints preference silences checklists, popups, and tutorial chapters',
   async function ({ page }) {
     await startDeterministicGame(page);
     await expect(page.locator('.tutorial-card')).toBeVisible();
@@ -140,12 +161,35 @@ test('the beginner-hints preference silences the checklist and hints',
 
     const hintResult = await page.evaluate(function () {
       const suppressed = FB.ui.maybeHint('spec-hint', 'should not appear');
+      FB.state.player.roleOrientationsSeen = {};
+      const orientation = FB.ui.maybeShowRoleOrientation();
+      delete FB.state.player.flags.tut_ev_welcome;
+      FB.state.turn = 2;
+      const queued = [];
+      const queueEvent = FB.queueEvent;
+      FB.queueEvent = function (state, id) { queued.push(id); };
+      FB.tutorialCheck(FB.state);
+      FB.queueEvent = queueEvent;
       FB.game.uiPrefs.hideBeginnerHints = false;
       const first = FB.ui.maybeHint('spec-hint-2', 'appears once');
       const second = FB.ui.maybeHint('spec-hint-2', 'appears once');
-      return { suppressed:suppressed, first:first, second:second };
+      return {
+        suppressed:suppressed,
+        orientation:orientation,
+        queued:queued,
+        welcomeMarked:!!FB.state.player.flags.tut_ev_welcome,
+        first:first,
+        second:second
+      };
     });
-    expect(hintResult).toEqual({ suppressed:false, first:true, second:false });
+    expect(hintResult).toEqual({
+      suppressed:false,
+      orientation:false,
+      queued:[],
+      welcomeMarked:true,
+      first:true,
+      second:false
+    });
 
     // a save without the tutorial stamp (every pre-feature life) never sees it
     await page.evaluate(function () {

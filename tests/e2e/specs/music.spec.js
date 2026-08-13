@@ -389,6 +389,11 @@ test('context banks, playback controls, and listening history stay consistent',
     await routeSyntheticSoundtrack(page);
     await openGame(page, testInfo);
     await expect(page.locator('#btn-title-music')).toBeVisible();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!window.__lastGameMusicAudio && !window.__lastGameMusicAudio.paused;
+      });
+    }).toBe(true);
 
     const context = await page.evaluate(function () {
       const state = {
@@ -414,9 +419,17 @@ test('context banks, playback controls, and listening history stay consistent',
       // role orientations, autosave) dereferences a full game state and
       // throws against this partial one. Every sync takes the stub explicitly.
       window.__musicContextState = state;
+      const titleTrack = FB.music.current().id;
+      const titleAudio = window.__lastGameMusicAudio;
       FB.ui.showScreen(null);
       FB.platform.isItch = true;
-      FB.music.sync(state, true);
+      FB.music.sync(state);
+      const immediateGame = {
+        titleTrack:titleTrack,
+        track:FB.music.current().id,
+        bank:FB.music.currentBank().id,
+        titleLooping:titleAudio.loop
+      };
       const folkTrackIds = FB.music.currentBank().trackIds.slice();
       const itchFolkBank = FB.music.currentBank();
       state.realms.lord.war = { enemy:'foe' };
@@ -430,6 +443,7 @@ test('context banks, playback controls, and listening history stay consistent',
         itchFolk:itchFolkBank ? itchFolkBank.id : null,
         itchWar:itchWarBank ? itchWarBank.id : null,
         folkTrackIds:folkTrackIds,
+        immediateGame:immediateGame,
         first:FB.music.current().id
       };
     });
@@ -440,8 +454,14 @@ test('context banks, playback controls, and listening history stay consistent',
       court:'christian/anglo_saxon/court',
       itchFolk:'christian/anglo_saxon/folk',
       itchWar:'christian/anglo_saxon/war',
-      folkTrackIds:expect.arrayContaining(['intro-fallowborn-christian'])
+      folkTrackIds:expect.arrayContaining(['intro-fallowborn-christian']),
+      immediateGame:expect.objectContaining({
+        bank:'christian/anglo_saxon/folk',
+        titleLooping:false
+      })
     }));
+    expect(context.immediateGame.track).not.toBe(context.immediateGame.titleTrack);
+    expect(context.folkTrackIds).toContain(context.immediateGame.track);
     await expect(page.locator('#btn-title-music')).toBeHidden();
 
     const quickToggle = page.locator('#music-now-playing-toggle');
@@ -729,10 +749,41 @@ test('context banks, playback controls, and listening history stay consistent',
     expect(peaceContext.afterEndTrackIds).toContain(peaceContext.afterEndTrack);
 
     await page.setViewportSize({ width:390, height:740 });
-    expect(await quickToggle.evaluate(function (button) {
-      const box = button.getBoundingClientRect();
-      return { width:box.width, height:box.height };
-    })).toEqual({ width:44, height:44 });
+    await page.evaluate(function () {
+      FB.ui.toast('A long map notification stays clear of the compact music controls.');
+    });
+    const mobileNowPlaying = await page.locator('.music-now-playing-controls').evaluate(
+      function (controls) {
+        const map = document.getElementById('mapwrap').getBoundingClientRect();
+        const controlBox = controls.getBoundingClientRect();
+        const title = controls.querySelector('#music-now-playing');
+        const titleBox = title.getBoundingClientRect();
+        const toggleBox = controls.querySelector(
+          '#music-now-playing-toggle').getBoundingClientRect();
+        const toastBox = document.querySelector('#toasts .toast:last-child')
+          .getBoundingClientRect();
+        return {
+          rightInset:Math.round(map.right - controlBox.right),
+          bottomInset:Math.round(map.bottom - controlBox.bottom),
+          controlsWidth:Math.round(controlBox.width),
+          titleFont:parseFloat(getComputedStyle(title).fontSize),
+          titleHeight:Math.round(titleBox.height),
+          toggleWidth:Math.round(toggleBox.width),
+          toggleHeight:Math.round(toggleBox.height),
+          clearsToast:toastBox.right <= controlBox.left
+        };
+      });
+    expect(mobileNowPlaying).toEqual({
+      rightInset:8,
+      bottomInset:8,
+      controlsWidth:expect.any(Number),
+      titleFont:11,
+      titleHeight:44,
+      toggleWidth:44,
+      toggleHeight:44,
+      clearsToast:true
+    });
+    expect(mobileNowPlaying.controlsWidth).toBeLessThanOrEqual(164);
   });
 
 test('a downloaded faith theme remains cached while another bank still uses it',

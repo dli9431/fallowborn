@@ -528,6 +528,7 @@ window.FB = window.FB || {};
   }
 
   function consequenceChipHtml(s, record, mode) {
+    if (FB.eventImpactVisible && !FB.eventImpactVisible(record)) return '';
     return '<span class="event-impact-chip ' + consequenceTone(record) + '">' +
       esc(FB.eventImpactText(s, record, mode)) + '</span>';
   }
@@ -16443,11 +16444,11 @@ window.FB = window.FB || {};
           : '');
     }
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
-      esc(FB.T('Deeds panel')) + '</p></div>' +
+      esc(FB.T('Guidance')) + '</p></div>' +
       '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
       (G.uiPrefs.hideBeginnerHints ? ' checked' : '') + '> <b>' +
-      esc(FB.T('Hide beginner hints')) + '</b><span class="adesc">' +
-      esc(FB.T('Hide path guidance in the Deeds panel. Future beginner guidance will use this preference too.')) +
+      esc(FB.T('Disable guide hints')) + '</b><span class="adesc">' +
+      esc(FB.T('Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu.')) +
       '</span></label>';
     if (desktopKeyboard) {
       const bindingCount = Object.keys(shortcutBindings()).length;
@@ -16553,7 +16554,7 @@ window.FB = window.FB || {};
     $('set-hide-beginner-hints').addEventListener('change', function () {
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
       G.saveUiPrefs();
-      if (FB.state && !G.observe) renderActions();
+      if (FB.state && !G.observe) UI.refresh();
     });
     if ($('set-shortcuts')) {
       $('set-shortcuts').addEventListener('click', UI.showShortcutSettings);
@@ -17016,6 +17017,7 @@ window.FB = window.FB || {};
         !$('eventmodal').classList.contains('hidden') ||
         !$('genmodal').classList.contains('hidden') ||
         $('game').classList.contains('hidden')) return false;
+    if (FB.game.uiPrefs && FB.game.uiPrefs.hideBeginnerHints) return false;
     if (!s.player.roleOrientationsSeen) s.player.roleOrientationsSeen = {};
     const ids = currentOrientationIds(s);
     for (const id of ids) {
@@ -17029,7 +17031,7 @@ window.FB = window.FB || {};
   /* First-open panel intros: one small focused sheet the first time a
      tutorial life opens a major panel — a summary, a few things worth
      knowing, and a Guide deep-link, never the whole Guide. Per-save records
-     live in player.panelIntrosSeen; the layer defers to Hide beginner hints. */
+     live in player.panelIntrosSeen; the layer defers to Disable guide hints. */
   function panelIntroDefinitions() {
     return {
       prov:{ title:FB.T('The Land tab'), guideId:'settlements-development',
@@ -17478,7 +17480,7 @@ window.FB = window.FB || {};
       '<li><b>Deeds</b> are one-shot acts (poach, scheme, propose, petitions…) — each spends the day, and some need time before they can be repeated.</li>' +
       '<li>Press <b>Space</b> (or the Play/Pause button) to set time flowing — days pass on their own — and press it again to pause. <b>F</b> (or ▶▶) skips straight to the next happening. Events halt the days while they await your choice.</li></ul>' +
       '<h4>Climbing the ladder</h4>' +
-      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can hide beginner hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>' +
+      '<p>Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor. The Deeds tab shows a hint for your next step by default; Settings can disable guide hints. Wealth, prestige, Standing with your lord, marriage, war-glory, or the church can all raise you.</p>' +
       '<h4>Dynasty</h4>' +
       '<p>Marry and raise children. When you die, you continue as your heir. No heir — no story. Ruler sheets show royal families and their designated successor. Courting a ruler’s child creates a dynastic tie; the crown passes only through the designated heir’s branch. A royal spouse may reign before your shared child becomes the protagonist, and only then do the realms join.</p>' +
       '<p>Open a child’s sheet (Kin tab) to choose an <b>education focus</b>, then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16.</p>' +

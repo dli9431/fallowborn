@@ -4100,7 +4100,9 @@ window.FB = window.FB || {};
       '<div class="choice-receipt-option"><span>' + esc(FB.T('Choice')) +
       '</span> ' + esc(option) + '</div>';
     if (outcome) h += '<div class="choice-receipt-outcome">' + esc(outcome) + '</div>';
-    const impacts = receipt.impacts || [];
+    const impacts = (receipt.impacts || []).filter(function (record) {
+      return !FB.eventImpactVisible || FB.eventImpactVisible(record);
+    });
     if (impacts.length) {
       h += '<div class="event-impact-chips chronicle">';
       for (let i = 0; i < impacts.length; i++) {

@@ -4,6 +4,6 @@
 - Hash schema: 1
 - Keys: 19710
 - Unique English records: 10442
-- Approximate source words: 88238
+- Approximate source words: 88240
 - Routed inventory: structured event/data fields, durable messages, explicit localization calls, static HTML, and UI literal aliases.
 - Intentional exceptions: generated personal/place/realm names, mod-authored text without a matching catalog, legacy rendered save text, and the changelog.

@@ -56,6 +56,9 @@ this more** gives a persistent weight to the current track. The bounded listenin
 both **Previous** and **Next**,
 while **Repeat** replays the current track without changing that history.
 
+Entering gameplay switches to the first contextual gameplay song immediately. The active title
+theme stops looping and is released without a crossfade as soon as the gameplay song is ready.
+
 During gameplay the shuffled next track is reserved and fully loaded while the current track is
 still playing. A natural transition can therefore start it synchronously without depending on a
 new background fetch after Android has ended the old media session. Visible-page transitions keep
