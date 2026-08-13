@@ -65,14 +65,16 @@ new background fetch after Android has ended the old media session. Visible-page
 the crossfade; hidden-page and already-ended transitions switch at the saved volume because
 animation frames may be suspended while the screen is locked.
 
-The pregame screens share one compact bottom-corner music control. It displays a pause icon while
-music plays and a music icon while silent. Pausing retains the intro element and playback position
-for an in-session resume, while also saving the persistent **Play music** choice as off. The next
-visit therefore stays silent without asking again. Resuming the same page continues from the saved
-position and stores the choice as on, so later visits autoplay the title theme. Enabling music from
-a newly loaded silent preference starts the intro normally. Entering gameplay releases any paused
-title element. The control stays hidden during loading, gameplay, or when the soundtrack cannot
-play.
+The pregame screens share a compact pair of lower-left music controls, clear of the itch.io
+fullscreen control. The first displays a pause icon while music plays and a music icon while
+silent. Pausing retains the intro element and playback position for an in-session resume, while
+also saving the persistent **Play music** choice as off. The next visit therefore stays silent
+without asking again. Resuming the same page continues from the saved position and stores the
+choice as on, so later visits autoplay the title theme. The adjacent next control cycles through
+the three title themes in catalog order and wraps at the end; while paused it changes the theme
+that will play on resume without enabling music. Enabling music from a newly loaded silent
+preference starts the selected intro normally. Entering gameplay releases any paused title
+element. The controls stay hidden during loading, gameplay, or when the soundtrack cannot play.
 
 The now-playing title sits at the bottom of the map and opens the track modal. A compact adjacent
 button pauses or resumes the current track without opening that modal. By default, leaving the game

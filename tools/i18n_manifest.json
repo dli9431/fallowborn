@@ -151262,6 +151262,17 @@
         "text": "Give up this level with no refund"
       }
     },
+    "src.ff224b9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/music.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "Next title theme"
+      }
+    },
     "src.ff2482b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -167910,6 +167921,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Next setup"
+      }
+    },
+    "ui:Next title theme": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/music.js",
+      "source": {
+        "text": "Next title theme"
       }
     },
     "ui:Next ⏭": {

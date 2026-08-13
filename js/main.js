@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.124.0';
+  FB.VERSION = '1.124.1';
   FB.CHANGELOG = [
+    { v: '1.124.1', date: '2026-08-13', changes: [
+      'Title-screen music controls now sit in the lower-left, with a next button for cycling through all three themes.'
+    ] },
     { v: '1.124.0', date: '2026-08-13', changes: [
       'Play now announces when a newer version is ready and offers to save and reload without interrupting the current session.',
       'Event result notices now remain anchored while they fade into the map.'

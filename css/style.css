@@ -155,10 +155,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   box-shadow: 0 3px 12px rgba(0,0,0,.45);
   font: 13px/1.35 Georgia, serif; pointer-events: none;
 }
-.title-music-toggle {
-  position: fixed; right: 12px; bottom: 12px; z-index: 45;
-  right: calc(12px + env(safe-area-inset-right));
+.title-music-controls {
+  position: fixed; left: 12px; bottom: 12px; z-index: 45;
+  left: calc(12px + env(safe-area-inset-left));
   bottom: calc(12px + env(safe-area-inset-bottom));
+  display: flex; gap: 8px;
+}
+.title-music-toggle {
   display: inline-flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; padding: 0; border: 1px solid #7a6234;
   border-radius: 50%; background: rgba(36,29,21,.94); color: #e0c060;

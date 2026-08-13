@@ -67,20 +67,29 @@ window.FB = window.FB || {};
   }
 
   function updateTitleToggle() {
+    const controls = document.getElementById('title-music-controls');
     const button = document.getElementById('btn-title-music');
     if (!button) return;
+    const nextButton = document.getElementById('btn-title-music-next');
     const loading = document.getElementById('loading');
     const game = document.getElementById('game');
     const pregame = loading && loading.classList.contains('hidden') &&
       game && game.classList.contains('hidden');
     const available = supported && M.hasCatalog() && pregame;
     const playing = enabled() && !titlePaused;
-    button.classList.toggle('hidden', !available);
+    if (controls) controls.classList.toggle('hidden', !available);
+    else button.classList.toggle('hidden', !available);
+    if (nextButton) nextButton.classList.toggle('hidden', introTracks().length < 2);
     button.setAttribute('aria-pressed', playing ? 'true' : 'false');
     button.textContent = playing ? '⏸' : '♫';
     const label = FB.T(playing ? 'Pause music' : 'Play music');
     button.setAttribute('aria-label', label);
     button.title = label;
+    if (nextButton) {
+      const nextLabel = FB.T('Next title theme');
+      nextButton.setAttribute('aria-label', nextLabel);
+      nextButton.title = nextLabel;
+    }
   }
 
   function cacheAvailable() {
@@ -174,7 +183,8 @@ window.FB = window.FB || {};
       if (mode === 'game') M.previous();
     });
     action('nexttrack', function () {
-      if (mode === 'game') M.next();
+      if (mode === 'title') M.nextTitle();
+      else if (mode === 'game') M.next();
     });
   }
 
@@ -447,6 +457,12 @@ window.FB = window.FB || {};
     if (titleToggle) {
       titleToggle.addEventListener('click', function () {
         M.toggleTitlePlayback();
+      });
+    }
+    const titleNext = document.getElementById('btn-title-music-next');
+    if (titleNext) {
+      titleNext.addEventListener('click', function () {
+        M.nextTitle();
       });
     }
     updateTitleToggle();
@@ -1143,6 +1159,27 @@ window.FB = window.FB || {};
     if (!enabled() || titlePaused || !supported || !selectedIntro) return;
     if (!force && currentTrack && currentTrack.id === selectedIntro.id) return;
     playTrack(selectedIntro);
+  };
+
+  M.nextTitle = function () {
+    if (!initialized) M.init();
+    if (mode !== 'title') return false;
+    const intros = introTracks();
+    if (intros.length < 2) return false;
+    let selectedAt = -1;
+    for (let i = 0; i < intros.length; i++) {
+      if (selectedIntro && intros[i].id === selectedIntro.id) {
+        selectedAt = i;
+        break;
+      }
+    }
+    selectedIntro = intros[(selectedAt + 1) % intros.length];
+    if (!enabled() || titlePaused) {
+      if (currentTrack && currentTrack.kind === 'intro') stopAudio();
+      updateTitleToggle();
+      return true;
+    }
+    return playTrack(selectedIntro, { noCrossfade:true });
   };
 
   M.next = function (options) {

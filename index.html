@@ -293,16 +293,29 @@
         </div>
       </div>
 
-      <button
-        id="btn-title-music"
-        type="button"
-        class="title-music-toggle hidden"
-        aria-label="Play music"
-        aria-pressed="false"
-        title="Play music"
-      >
-        &#9835;
-      </button>
+      <div id="title-music-controls" class="title-music-controls hidden">
+        <button
+          id="btn-title-music"
+          type="button"
+          class="title-music-toggle"
+          aria-label="Play music"
+          aria-pressed="false"
+          title="Play music"
+        >
+          &#9835;
+        </button>
+        <button
+          id="btn-title-music-next"
+          type="button"
+          class="title-music-toggle"
+          aria-label="Next title theme"
+          data-i18n-aria-label="Next title theme"
+          title="Next title theme"
+          data-i18n-title="Next title theme"
+        >
+          &#9197;
+        </button>
+      </div>
 
       <!-- ======== GAME ======== -->
       <div id="game" class="hidden">

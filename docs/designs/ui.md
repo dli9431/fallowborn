@@ -145,11 +145,13 @@ short viewports retain `.screen` scrolling as the fallback.
 Each main-menu action has a distinct leading system icon in a fixed-width slot. The icons are
 decorative and hidden from assistive technology, leaving the localized text as the accessible
 button name.
-The title and its pregame flow share a compact bottom-corner music button. Its pause or music icon
-reflects whether the title theme is currently playing. Pausing retains the current title-track
-position for an in-session resume and remembers silent title playback for the next visit. Resuming
-stores title autoplay again. The button remains hidden while loading, during gameplay, or when the
-soundtrack cannot play.
+The title and its pregame flow share a compact pair of lower-left music buttons, away from the
+itch.io fullscreen control. The first button's pause or music icon reflects whether the title
+theme is currently playing. Pausing retains the current title-track position for an in-session
+resume and remembers silent title playback for the next visit. Resuming stores title autoplay
+again. The adjacent next icon cycles through the three title themes and wraps to the first; while
+paused it selects the theme that will play on resume without enabling music. The controls remain
+hidden while loading, during gameplay, or when the soundtrack cannot play.
 During gameplay, the song title opens the full music controls and a separate compact button
 immediately to its right pauses or resumes playback. Desktop centers the pair below the map. Mobile
 uses a narrower lower-right presentation, opposite the lower-left toast region, while both native

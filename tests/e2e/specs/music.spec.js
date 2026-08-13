@@ -135,22 +135,34 @@ test('first soundtrack boot, title pause, and background playback preserve state
     })).toEqual({ choice:'off', stored:'off' });
 
     const titleMusic = page.locator('#btn-title-music');
+    const titleMusicNext = page.locator('#btn-title-music-next');
     await expect(titleMusic).toBeVisible();
+    await expect(titleMusicNext).toBeVisible();
     await expect(titleMusic).toHaveText('♫');
     await expect(titleMusic).toHaveAttribute('aria-label', 'Play music');
     await expect(titleMusic).toHaveAttribute('aria-pressed', 'false');
-    const musicButtonBox = await titleMusic.evaluate(function (button) {
-      const box = button.getBoundingClientRect();
+    await expect(titleMusicNext).toHaveText('⏭');
+    await expect(titleMusicNext).toHaveAttribute('aria-label', 'Next title theme');
+    const musicControlsBox = await page.locator('#title-music-controls').evaluate(function (controls) {
+      const box = controls.getBoundingClientRect();
+      const toggleBox = controls.querySelector('#btn-title-music').getBoundingClientRect();
+      const nextBox = controls.querySelector('#btn-title-music-next').getBoundingClientRect();
       return {
-        width:box.width,
-        height:box.height,
-        right:window.innerWidth - box.right,
-        bottom:window.innerHeight - box.bottom
+        left:box.left,
+        bottom:window.innerHeight - box.bottom,
+        leftHalf:box.right <= window.innerWidth / 2,
+        toggleWidth:toggleBox.width,
+        toggleHeight:toggleBox.height,
+        nextWidth:nextBox.width,
+        nextHeight:nextBox.height,
+        gap:nextBox.left - toggleBox.right
       };
     });
-    expect(musicButtonBox).toEqual(expect.objectContaining({ width:44, height:44 }));
-    expect(musicButtonBox.right).toBeLessThanOrEqual(24);
-    expect(musicButtonBox.bottom).toBeLessThanOrEqual(24);
+    expect(musicControlsBox).toEqual(expect.objectContaining({
+      leftHalf:true, toggleWidth:44, toggleHeight:44, nextWidth:44, nextHeight:44, gap:8
+    }));
+    expect(musicControlsBox.left).toBeLessThanOrEqual(24);
+    expect(musicControlsBox.bottom).toBeLessThanOrEqual(24);
 
     await titleMusic.click();
     await expect(titleMusic).toHaveText('⏸');
@@ -177,6 +189,31 @@ test('first soundtrack boot, title pause, and background playback preserve state
     expect(intros.map(function (intro) { return intro.id; }))
       .toContain(titleSelection.selected);
     expect(titleSelection.current).toBe(titleSelection.selected);
+    const selectedIntroAt = intros.map(function (intro) { return intro.id; })
+      .indexOf(titleSelection.selected);
+    const expectedNextIntro = intros[(selectedIntroAt + 1) % intros.length];
+    await page.evaluate(function () {
+      window.__initialTitleAudio = window.__musicAudio.filter(function (item) {
+        return item.src && !item.paused;
+      })[0];
+    });
+    await titleMusicNext.click();
+    expect(await page.evaluate(function () {
+      return {
+        selected:FB.music.selectedIntro().id,
+        current:FB.music.current().id
+      };
+    })).toEqual({ selected:expectedNextIntro.id, current:expectedNextIntro.id });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return {
+          previousPaused:window.__initialTitleAudio.paused,
+          playing:window.__musicAudio.filter(function (item) {
+            return item.src && !item.paused;
+          }).length
+        };
+      });
+    }).toEqual({ previousPaused:true, playing:1 });
     const playingSrc = await page.evaluate(function () {
       window.__titleAudio = window.__musicAudio.filter(function (item) {
         return item.src && !item.paused;
@@ -193,7 +230,7 @@ test('first soundtrack boot, title pause, and background playback preserve state
       };
     })).toEqual({
       nativeLoop:true,
-      mediaTitle:titleSelection.title,
+      mediaTitle:expectedNextIntro.title,
       playbackState:'playing',
       actions:['nexttrack', 'pause', 'play', 'previoustrack']
     });
