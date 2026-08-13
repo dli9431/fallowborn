@@ -12,6 +12,10 @@ restoration rights and re-promotion keep working: a fall is a chapter, not
 an ending. All knobs live in `FBDATA.balance`; all ruinous custom handlers
 carry deep-negative entries in `CUSTOM_FX_SCORE` (`js/ui_modals.js`) so
 automation endures, pays, or resists — it never sells the family down.
+The extraordinary captive-raid chain is the deliberate exception to the
+one-rung pacing: only repeated failed escape choices reach its final scene,
+where bondage is the certain survival option and death is disclosed before a
+last voluntary gamble.
 
 ## The hollow crown (tiers 5–7): the title lapse
 
@@ -116,6 +120,21 @@ all three scenes resolves through `bondage_submit`. `gentryGeneration`
 survives the fall: the house stays *established*, so the climb back is
 shorter than the first.
 
+## Raid capture & forced settlement (non-rulers, tiers 0–2)
+
+The rare `historic_raid` chain models people as plunder rather than treating
+commoner capture like a noble's ransom interlude. Its pure context selector
+freezes a culture/faith-based raider profile and captor county, while two
+successive scenes give the player clean or property-sacrificing escapes. Only
+a failed pursuit reaches the captive column. Submission there invokes
+`raid_enslave`: loose coin and immovable household property are stripped, the
+whole playable household is moved to the recorded captor county, and any
+gentry or freeholder station falls directly to tier 0. Culture, faith, family,
+portable armory items, and the house's remembered peak remain intact, leaving
+a severe new beginning rather than a disguised game over. The alternative is
+an explicitly lethal final escape attempt; its success still pays
+`raid_plunder`, and its failure records raid death provenance.
+
 ## Devastation & the protection bargain (war, commoners, tiers 0–2)
 
 A hostile host standing in a commoner's **home province** — checked through
@@ -139,7 +158,8 @@ and exposed. The chevauchée and the commendation wave, as one mechanic.
 | 4→2 | Attainder yield, defensive war, ransom cession of the last county, `df_*` |
 | 3→2 | Attainder yield, bishop release (existing) |
 | 2→1 | Debt bondage (manor lost) |
-| 1→0 | Debt bondage, the protection bargain |
+| 2→0 | Capture and forced settlement after a slave raid |
+| 1→0 | Debt bondage, the protection bargain, capture and forced settlement |
 | any→2 | `df_*` catastrophes (existing), `FB.loseAllLand` (existing) |
 
 The mechanics interlock into organic spirals rather than isolated checks:

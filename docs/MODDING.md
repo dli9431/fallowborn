@@ -585,8 +585,12 @@ the event context. The exact selector result is checked again at the
 display/autoresolve boundary, so an earlier pending choice may invalidate the story
 without redirecting it. Core selectors are `foreign_policy_improve`,
 `foreign_policy_provoke`, `active_pact`, and `active_alliance`, all producing
-`{realmId}` plus a validity stamp only when needed. This is an engine extension point, not
-a JSON-only way to invent arbitrary selectors.
+`{realmId}` plus a validity stamp only when needed. The lower-station
+`historic_raider` selector instead produces `{raidProfile,destinationId}` for one
+of the nearest counties associated with the protagonist's historical enemy
+profile; its queued chain rechecks that protagonist, profile, and destination
+through `historic_raid_context_valid`. This is an engine extension point, not a
+JSON-only way to invent arbitrary selectors.
 
 A code-queued event may declare `contextValidator:"fnName"`. Before display or
 autoresolve, the queue calls that `FB.fns` function with `(state, ctx)` and drops the

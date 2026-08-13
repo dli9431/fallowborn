@@ -362,18 +362,13 @@ body.travel-picking #timebtns { visibility: hidden; }
   pointer-events: auto; cursor: pointer;
 }
 .event-receipt-toast {
-  position: fixed; z-index: 85; left: 50%; bottom: 18px;
-  width: min(680px, calc(100vw - 28px)); max-width: none;
-  transform: translateX(-50%); text-align: left; font-family: inherit;
+  position: relative; z-index: 85; max-width: 680px;
+  text-align: left; font-family: inherit;
   box-shadow: 0 6px 24px rgba(0,0,0,.58);
-  animation: eventreceiptin .25s;
+  animation: toastin .25s;
 }
 .event-receipt-headline { display: block; margin-bottom: 6px; color: #f0dfb0; }
 @keyframes toastin { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; } }
-@keyframes eventreceiptin {
-  from { opacity: 0; transform: translate(-50%, 8px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
-}
 
 #side {
   flex: 0 0 340px; display: flex; flex-direction: column;

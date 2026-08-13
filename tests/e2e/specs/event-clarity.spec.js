@@ -355,6 +355,37 @@ test('touch choices use a full-size question-mark Details control without inline
     })).toBeVisible();
   });
 
+test('event result toasts stay in the bottom-left map toast region',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:740 });
+    await startGame(page, testInfo);
+    await openChildFever(page);
+
+    await page.locator('#ev-options .event-choice .evopt').first().click();
+    var toast = page.locator('.event-receipt-toast');
+    await expect(toast).toHaveCount(1);
+    var placement = await toast.evaluate(function (element) {
+      var toastRect = element.getBoundingClientRect();
+      var mapRect = document.getElementById('mapwrap').getBoundingClientRect();
+      var panelsRect = document.getElementById('panels').getBoundingClientRect();
+      return {
+        parentId:element.parentNode.id,
+        leftGap:toastRect.left - mapRect.left,
+        bottomGap:mapRect.bottom - toastRect.bottom,
+        insideMap:toastRect.top >= mapRect.top &&
+          toastRect.right <= mapRect.right,
+        clearsPanels:toastRect.bottom <= panelsRect.top + 1
+      };
+    });
+    expect(placement.parentId).toBe('toasts');
+    expect(placement.leftGap).toBeGreaterThanOrEqual(9);
+    expect(placement.leftGap).toBeLessThanOrEqual(11);
+    expect(placement.bottomGap).toBeGreaterThanOrEqual(9);
+    expect(placement.bottomGap).toBeLessThanOrEqual(11);
+    expect(placement.insideMap).toBe(true);
+    expect(placement.clearsPanels).toBe(true);
+  });
+
 test('tablet-width choices use question-mark details and suppress event tooltips',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:900, height:700 });

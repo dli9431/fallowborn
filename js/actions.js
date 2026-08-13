@@ -3601,10 +3601,95 @@ window.FB = window.FB || {};
     return out;
   }
 
+  /* Extraordinary raids choose a historical enemy family from the current
+     protagonist's faith and culture, then snapshot one plausible captor
+     county. The selector is deliberately geographic and read-only: no realm
+     or county is changed, and the event picker owns the one seeded draw after
+     it has chosen the story. */
+  function historicRaidProfile(state) {
+    const c = state.chars[state.player.charId];
+    if (!c) return 'rival_raiders';
+    if (FB.faithIsA(c.religion, 'christian', state)) return 'northmen';
+    if (FB.faithIsA(c.religion, 'muslim', state)) return 'cross_banners';
+    if (FB.faithIsA(c.religion, 'zoroastrian', state)) return 'steppe_riders';
+    if (FB.faithIsA(c.religion, 'norse_pagan', state)) return 'saxon_host';
+    if (FB.faithIsA(c.religion, 'baltic_pagan', state)) return 'saxon_host';
+    if (FB.faithIsA(c.religion, 'slavic_pagan', state)) return 'steppe_riders';
+    if (FB.faithIsA(c.religion, 'tengri', state)) return 'rus_raiders';
+    if (FB.faithIsA(c.religion, 'jewish', state) &&
+        (c.culture === 'turkic' || c.culture === 'magyar')) {
+      return 'rus_raiders';
+    }
+    if (c.culture === 'persian' || c.culture === 'armenian' ||
+        c.culture === 'georgian' || c.culture === 'slavic') {
+      return 'steppe_riders';
+    }
+    if (c.culture === 'norse' || c.culture === 'baltic') return 'saxon_host';
+    if (c.culture === 'turkic' || c.culture === 'magyar') return 'rus_raiders';
+    if (c.culture === 'arabic' || c.culture === 'andalusi' ||
+        c.culture === 'berber') return 'cross_banners';
+    return 'rival_raiders';
+  }
+
+  function historicRaidCountyMatches(state, pr, profile, player) {
+    if (!pr || pr.wasteland || pr.id === player.provinceId) return false;
+    const holder = (state.holder && state.holder[pr.id]) || state.owner[pr.id];
+    if (holder === 'player') return false;
+    if (profile === 'northmen') return pr.culture === 'norse' ||
+      FB.faithIsA(pr.religion, 'norse_pagan', state);
+    if (profile === 'cross_banners') return FB.faithIsA(
+      pr.religion, 'christian', state);
+    if (profile === 'saxon_host') return pr.culture === 'german' ||
+      pr.culture === 'frankish' || pr.culture === 'english' ||
+      FB.faithIsA(pr.religion, 'christian', state);
+    if (profile === 'steppe_riders') return pr.culture === 'turkic' ||
+      pr.culture === 'magyar' || FB.faithIsA(pr.religion, 'tengri', state);
+    if (profile === 'rus_raiders') return pr.culture === 'slavic' ||
+      pr.culture === 'norse' ||
+      FB.faithIsA(pr.religion, 'slavic_pagan', state) ||
+      FB.faithIsA(pr.religion, 'orthodox', state);
+    return pr.culture !== player.culture || pr.religion !== player.religion;
+  }
+
+  function historicRaidContexts(state) {
+    const out = [];
+    const p = state.player;
+    const c = state.chars[p.charId];
+    if (!c || p.tier > 2 || !FB.world || !FB.world.provs) return out;
+    let profile = historicRaidProfile(state);
+    const home = FB.world.byId[p.provinceId];
+    let candidates = FB.world.provs.filter(function (pr) {
+      return historicRaidCountyMatches(state, pr, profile, {
+        provinceId:p.provinceId, culture:c.culture, religion:c.religion
+      });
+    });
+    if (!candidates.length) {
+      profile = 'rival_raiders';
+      candidates = FB.world.provs.filter(function (pr) {
+        return historicRaidCountyMatches(state, pr, profile, {
+          provinceId:p.provinceId, culture:c.culture, religion:c.religion
+        });
+      });
+    }
+    candidates.sort(function (a, b) {
+      const adx = home ? a.sx - home.sx : 0;
+      const ady = home ? a.sy - home.sy : 0;
+      const bdx = home ? b.sx - home.sx : 0;
+      const bdy = home ? b.sy - home.sy : 0;
+      const distance = adx * adx + ady * ady - bdx * bdx - bdy * bdy;
+      return distance || (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0));
+    });
+    for (let i = 0; i < candidates.length && i < 6; i++) {
+      out.push({ raidProfile:profile, destinationId:candidates[i].id });
+    }
+    return out;
+  }
+
   /* Reusable random-event context selectors. They return only stable,
      JSON-safe semantic ids; the event picker chooses one after choosing the
      authored story, so eligibility checks never consume RNG. */
   FB.eventContextOptions = function (state, selector) {
+    if (selector === 'historic_raider') return historicRaidContexts(state);
     const out = [];
     if (!FB.isPlayerSovereign(state)) return out;
     if (selector === 'foreign_policy_improve' ||

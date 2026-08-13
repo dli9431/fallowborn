@@ -12494,6 +12494,288 @@
         "text": "Dangerous Questions"
       }
     },
+    "event.historic_raid.options.0.desc.default": {
+      "context": "Event historic_raid, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Move quietly before panic fills every lane."
+      }
+    },
+    "event.historic_raid.options.0.failure.text.default": {
+      "context": "Event historic_raid, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "A dog barks, a child cries out, or a branch moves at the wrong moment. The raiders turn toward you and the quiet flight becomes a chase."
+      }
+    },
+    "event.historic_raid.options.0.label.default": {
+      "context": "Event historic_raid, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Take the old paths into cover."
+      }
+    },
+    "event.historic_raid.options.0.success.effects.log.default": {
+      "context": "Durable event log for historic_raid, authored option 0, success.effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Escaped a slave raid without loss."
+      }
+    },
+    "event.historic_raid.options.0.success.text.default": {
+      "context": "Event historic_raid, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "You lie still while the search passes within speaking distance. At dusk the household slips home with every person and possession intact."
+      }
+    },
+    "event.historic_raid.options.1.desc.default": {
+      "context": "Event historic_raid, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "The household may escape if its property is made easier to catch."
+      }
+    },
+    "event.historic_raid.options.1.effects.log.default": {
+      "context": "Durable event log for historic_raid, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Escaped a slave raid after abandoning household wealth."
+      }
+    },
+    "event.historic_raid.options.1.label.default": {
+      "context": "Event historic_raid, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Leave the cart and every heavy thing."
+      }
+    },
+    "event.historic_raid.options.2.desc.default": {
+      "context": "Event historic_raid, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Speed and violence may win a clean road — or draw every pursuer."
+      }
+    },
+    "event.historic_raid.options.2.failure.text.default": {
+      "context": "Event historic_raid, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "The first line gives, but a second closes behind it. You are driven away from the settlement with the raiders at your heels."
+      }
+    },
+    "event.historic_raid.options.2.label.default": {
+      "context": "Event historic_raid, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Break through before the ring closes."
+      }
+    },
+    "event.historic_raid.options.2.success.effects.log.default": {
+      "context": "Durable event log for historic_raid, authored option 2, success.effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Broke through a raiding line and escaped without loss."
+      }
+    },
+    "event.historic_raid.options.2.success.text.default": {
+      "context": "Event historic_raid, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "One hard rush opens a gap. The raiders close too late, and the household reaches cover without leaving so much as a bundle behind."
+      }
+    },
+    "event.historic_raid_captive.options.0.desc.default": {
+      "context": "Event historic_raid_captive, authored option 0, desc, branch default.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Captivity, dispossession, and bondage in {destination} — but survival."
+      }
+    },
+    "event.historic_raid_captive.options.0.effects.log.default": {
+      "context": "Durable event log for historic_raid_captive, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Was carried away in a raid and bound to the land."
+      }
+    },
+    "event.historic_raid_captive.options.0.label.default": {
+      "context": "Event historic_raid_captive, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Submit to the rope and keep the household alive."
+      }
+    },
+    "event.historic_raid_captive.options.1.desc.default": {
+      "context": "Event historic_raid_captive, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "One last chance at freedom. Failure is a killing blow."
+      }
+    },
+    "event.historic_raid_captive.options.1.failure.effects.log.default": {
+      "context": "Durable event log for historic_raid_captive, authored option 1, failure.effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Died attempting to escape a raiding column."
+      }
+    },
+    "event.historic_raid_captive.options.1.failure.text.default": {
+      "context": "Event historic_raid_captive, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "The guard catches you before the slope ends. The blow is deliberate, final, and meant as a lesson to every captive still standing."
+      }
+    },
+    "event.historic_raid_captive.options.1.label.default": {
+      "context": "Event historic_raid_captive, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Run when the column crosses broken ground."
+      }
+    },
+    "event.historic_raid_captive.options.1.success.effects.log.default": {
+      "context": "Durable event log for historic_raid_captive, authored option 1, success.effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Escaped a captive column after losing household wealth."
+      }
+    },
+    "event.historic_raid_captive.options.1.success.text.default": {
+      "context": "Event historic_raid_captive, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "You wrench free in the confusion. The guards take what falls from you, but darkness and rough ground hide the living."
+      }
+    },
+    "event.historic_raid_pursuit.options.0.desc.default": {
+      "context": "Event historic_raid_pursuit, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Give the hunters property to gather while people vanish separately."
+      }
+    },
+    "event.historic_raid_pursuit.options.0.effects.log.default": {
+      "context": "Durable event log for historic_raid_pursuit, authored option 0, effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Escaped raiders by sacrificing household wealth."
+      }
+    },
+    "event.historic_raid_pursuit.options.0.label.default": {
+      "context": "Event historic_raid_pursuit, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Scatter and leave the bundles in the track."
+      }
+    },
+    "event.historic_raid_pursuit.options.1.desc.default": {
+      "context": "Event historic_raid_pursuit, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Stillness against men trained to find frightened people."
+      }
+    },
+    "event.historic_raid_pursuit.options.1.failure.text.default": {
+      "context": "Event historic_raid_pursuit, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "A spear probes the leaves. Hands drag you into the open and drive you toward the other captives."
+      }
+    },
+    "event.historic_raid_pursuit.options.1.label.default": {
+      "context": "Event historic_raid_pursuit, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Crawl under the deadfall and wait for dark."
+      }
+    },
+    "event.historic_raid_pursuit.options.1.success.effects.log.default": {
+      "context": "Durable event log for historic_raid_pursuit, authored option 1, success.effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Outwaited raiders and escaped without loss."
+      }
+    },
+    "event.historic_raid_pursuit.options.1.success.text.default": {
+      "context": "Event historic_raid_pursuit, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Boots pass, return, and finally fade. Darkness gives you a clean road home, and the household has lost nothing but daylight."
+      }
+    },
+    "event.historic_raid_pursuit.options.2.desc.default": {
+      "context": "Event historic_raid_pursuit, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Break one link in the chain before the others reach you."
+      }
+    },
+    "event.historic_raid_pursuit.options.2.failure.text.default": {
+      "context": "Event historic_raid_pursuit, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "The blow is caught. A club drops you to your knees, and when sight returns your wrists are bound with the rest."
+      }
+    },
+    "event.historic_raid_pursuit.options.2.label.default": {
+      "context": "Event historic_raid_pursuit, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Turn on the nearest pursuer."
+      }
+    },
+    "event.historic_raid_pursuit.options.2.success.effects.log.default": {
+      "context": "Durable event log for historic_raid_pursuit, authored option 2, success.effects.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "Fought free of raiders without loss."
+      }
+    },
+    "event.historic_raid_pursuit.options.2.success.text.default": {
+      "context": "Event historic_raid_pursuit, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_world.js",
+      "source": {
+        "text": "The nearest pursuer falls. By the time the others understand, you are beyond their cordon and carrying everything you began with."
+      }
+    },
     "event.hold_court_event.options.0.desc.default": {
       "context": "Event hold_court_event, authored option 0, desc, branch default.",
       "glossary": [],
@@ -22175,6 +22457,992 @@
       "location": "data/events_common.js",
       "source": {
         "text": "At the {temple}"
+      }
+    },
+    "event.serf_boon_harvest.options.0.desc.default": {
+      "context": "Event serf_boon_harvest, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The lord’s grain comes in while yours waits under the weather."
+      }
+    },
+    "event.serf_boon_harvest.options.0.label.default": {
+      "context": "Event serf_boon_harvest, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Send every hand to the demesne."
+      }
+    },
+    "event.serf_boon_harvest.options.1.desc.default": {
+      "context": "Event serf_boon_harvest, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Buy back the day your own harvest needs."
+      }
+    },
+    "event.serf_boon_harvest.options.1.label.default": {
+      "context": "Event serf_boon_harvest, authored option 1, label, branch default.",
+      "glossary": [
+        "money:4"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Hire someone to answer for you. ({money:4})"
+      }
+    },
+    "event.serf_boon_harvest.options.2.desc.default": {
+      "context": "Event serf_boon_harvest, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "One pair of hands for your field, if the tally misses them."
+      }
+    },
+    "event.serf_boon_harvest.options.2.failure.text.default": {
+      "context": "Event serf_boon_harvest, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The missing hand is named before noon. The amercement costs more than the grain it saved."
+      }
+    },
+    "event.serf_boon_harvest.options.2.label.default": {
+      "context": "Event serf_boon_harvest, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Keep one reaper hidden at home."
+      }
+    },
+    "event.serf_boon_harvest.options.2.success.text.default": {
+      "context": "Event serf_boon_harvest, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The reeve counts heads, not shadows. Your hidden reaper saves the ripest rows."
+      }
+    },
+    "event.serf_boon_harvest.text.default": {
+      "context": "Event serf_boon_harvest, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Your own grain stands ripe when the reeve’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip."
+      }
+    },
+    "event.serf_boon_harvest.title.default": {
+      "context": "Event serf_boon_harvest, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The Lord’s Harvest First"
+      }
+    },
+    "event.serf_bridge_cartage.options.0.desc.default": {
+      "context": "Event serf_bridge_cartage, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A sound bridge for everyone, paid for by your bones."
+      }
+    },
+    "event.serf_bridge_cartage.options.0.label.default": {
+      "context": "Event serf_bridge_cartage, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Take the cart road and haul it."
+      }
+    },
+    "event.serf_bridge_cartage.options.1.desc.default": {
+      "context": "Event serf_bridge_cartage, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Let wheel and axle suffer in your place."
+      }
+    },
+    "event.serf_bridge_cartage.options.1.label.default": {
+      "context": "Event serf_bridge_cartage, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Lend the household cart and stay afield."
+      }
+    },
+    "event.serf_bridge_cartage.options.2.desc.default": {
+      "context": "Event serf_bridge_cartage, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Save half the road if your eye for ground is true."
+      }
+    },
+    "event.serf_bridge_cartage.options.2.failure.text.default": {
+      "context": "Event serf_bridge_cartage, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A wheel sinks to the hub. Dragging it free costs the strength you meant to save."
+      }
+    },
+    "event.serf_bridge_cartage.options.2.label.default": {
+      "context": "Event serf_bridge_cartage, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Find a shorter way through the shallows."
+      }
+    },
+    "event.serf_bridge_cartage.options.2.success.text.default": {
+      "context": "Event serf_bridge_cartage, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The ford holds, the timber arrives early, and others follow your track."
+      }
+    },
+    "event.serf_bridge_cartage.options.3.desc.default": {
+      "context": "Event serf_bridge_cartage, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Another household takes the mud; yours pays the coin."
+      }
+    },
+    "event.serf_bridge_cartage.options.3.label.default": {
+      "context": "Event serf_bridge_cartage, authored option 3, label, branch default.",
+      "glossary": [
+        "money:3"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay a carter to take your mark. ({money:3})"
+      }
+    },
+    "event.serf_bridge_cartage.text.default": {
+      "context": "Event serf_bridge_cartage, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Floodwater has bitten through the bridge piles. The steward apportions timber, carts, and labor by holding; your mark appears beside the longest haul."
+      }
+    },
+    "event.serf_bridge_cartage.title.default": {
+      "context": "Event serf_bridge_cartage, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Timber for the Bridge"
+      }
+    },
+    "event.serf_common_oven.options.0.desc.default": {
+      "context": "Event serf_common_oven, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Lawful bread, dearer than yesterday’s."
+      }
+    },
+    "event.serf_common_oven.options.0.label.default": {
+      "context": "Event serf_common_oven, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay the oven toll."
+      }
+    },
+    "event.serf_common_oven.options.1.desc.default": {
+      "context": "Event serf_common_oven, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Trade a day in the coppice for the baker’s share."
+      }
+    },
+    "event.serf_common_oven.options.1.label.default": {
+      "context": "Event serf_common_oven, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Bring fuel and tend the fire instead."
+      }
+    },
+    "event.serf_common_oven.options.2.desc.default": {
+      "context": "Event serf_common_oven, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A small loaf leaves a long trail of smoke."
+      }
+    },
+    "event.serf_common_oven.options.2.failure.text.default": {
+      "context": "Event serf_common_oven, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Smoke curls above the roof. The baker arrives before the loaf is cool."
+      }
+    },
+    "event.serf_common_oven.options.2.label.default": {
+      "context": "Event serf_common_oven, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Bake beneath a covered pot after dark."
+      }
+    },
+    "event.serf_common_oven.options.2.success.text.default": {
+      "context": "Event serf_common_oven, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The coals cool before dawn, leaving bread and no witness."
+      }
+    },
+    "event.serf_common_oven.text.default": {
+      "context": "Event serf_common_oven, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The village oven is hot, and the baker has raised the customary toll. He points to the cold clay ovens behind the cottages: none may bake while {lord}’s fire burns."
+      }
+    },
+    "event.serf_common_oven.title.default": {
+      "context": "Event serf_common_oven, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The Lord’s Oven"
+      }
+    },
+    "event.serf_deadwood_amerced.options.0.desc.default": {
+      "context": "Event serf_deadwood_amerced, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Keep the fuel and surrender the coin."
+      }
+    },
+    "event.serf_deadwood_amerced.options.0.label.default": {
+      "context": "Event serf_deadwood_amerced, authored option 0, label, branch default.",
+      "glossary": [
+        "money:3"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay the wood amercement. ({money:3})"
+      }
+    },
+    "event.serf_deadwood_amerced.options.1.desc.default": {
+      "context": "Event serf_deadwood_amerced, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Walk home cold rather than enter the forester’s book."
+      }
+    },
+    "event.serf_deadwood_amerced.options.1.label.default": {
+      "context": "Event serf_deadwood_amerced, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Leave the whole bundle."
+      }
+    },
+    "event.serf_deadwood_amerced.options.2.desc.default": {
+      "context": "Event serf_deadwood_amerced, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Custom may shelter the poor, if anyone admits remembering it."
+      }
+    },
+    "event.serf_deadwood_amerced.options.2.failure.text.default": {
+      "context": "Event serf_deadwood_amerced, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The forester calls custom a tale told by thieves. The fine doubles."
+      }
+    },
+    "event.serf_deadwood_amerced.options.2.label.default": {
+      "context": "Event serf_deadwood_amerced, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Name the old right to fallen branches."
+      }
+    },
+    "event.serf_deadwood_amerced.options.2.success.text.default": {
+      "context": "Event serf_deadwood_amerced, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "An elder confirms the right before the forester can close the question."
+      }
+    },
+    "event.serf_deadwood_amerced.text.default": {
+      "context": "Event serf_deadwood_amerced, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The forester stops your sledge at the wood’s edge. You gathered only storm-fallen limbs, but he says even dead wood belongs first to {lord}."
+      }
+    },
+    "event.serf_deadwood_amerced.title.default": {
+      "context": "Event serf_deadwood_amerced, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Whose Fallen Wood?"
+      }
+    },
+    "event.serf_extraordinary_tallage.options.0.desc.default": {
+      "context": "Event serf_extraordinary_tallage, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Keep your body and your silence; lose the household reserve."
+      }
+    },
+    "event.serf_extraordinary_tallage.options.0.label.default": {
+      "context": "Event serf_extraordinary_tallage, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Empty the purse into the tally chest."
+      }
+    },
+    "event.serf_extraordinary_tallage.options.1.desc.default": {
+      "context": "Event serf_extraordinary_tallage, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay the arbitrary demand in winter strength."
+      }
+    },
+    "event.serf_extraordinary_tallage.options.1.label.default": {
+      "context": "Event serf_extraordinary_tallage, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Offer a month of added labor."
+      }
+    },
+    "event.serf_extraordinary_tallage.options.2.desc.default": {
+      "context": "Event serf_extraordinary_tallage, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Keep coin and strength; let defiance become the next debt."
+      }
+    },
+    "event.serf_extraordinary_tallage.options.2.label.default": {
+      "context": "Event serf_extraordinary_tallage, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Refuse before the manor court."
+      }
+    },
+    "event.serf_extraordinary_tallage.text.default": {
+      "context": "Event serf_extraordinary_tallage, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A sealed tally arrives without harvest, feast, or judgment to explain it. {lord} needs silver, the steward says, and an unfree household owes what its lord chooses to ask."
+      }
+    },
+    "event.serf_extraordinary_tallage.title.default": {
+      "context": "Event serf_extraordinary_tallage, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Tallage Without Measure"
+      }
+    },
+    "event.serf_marriage_leave.options.0.desc.default": {
+      "context": "Event serf_marriage_leave, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Begin married life with an emptier purse and a closed tally."
+      }
+    },
+    "event.serf_marriage_leave.options.0.label.default": {
+      "context": "Event serf_marriage_leave, authored option 0, label, branch default.",
+      "glossary": [
+        "money:5"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay the marriage fine. ({money:5})"
+      }
+    },
+    "event.serf_marriage_leave.options.1.desc.default": {
+      "context": "Event serf_marriage_leave, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Let your back purchase what the wedding promised."
+      }
+    },
+    "event.serf_marriage_leave.options.1.label.default": {
+      "context": "Event serf_marriage_leave, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Work the fine in extra days."
+      }
+    },
+    "event.serf_marriage_leave.options.2.desc.default": {
+      "context": "Event serf_marriage_leave, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Ask the lord to value a settled household over ready silver."
+      }
+    },
+    "event.serf_marriage_leave.options.2.failure.text.default": {
+      "context": "Event serf_marriage_leave, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The petition is called ingratitude. The full fine grows by another coin."
+      }
+    },
+    "event.serf_marriage_leave.options.2.label.default": {
+      "context": "Event serf_marriage_leave, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Petition for a smaller payment."
+      }
+    },
+    "event.serf_marriage_leave.options.2.success.text.default": {
+      "context": "Event serf_marriage_leave, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The steward cuts the fine to two coins and calls it favor."
+      }
+    },
+    "event.serf_marriage_leave.text.default": {
+      "context": "Event serf_marriage_leave, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The reeve comes after the wedding feast with a reminder: an unfree tenant does not marry beyond the household without {lord}’s leave, and leave has its price."
+      }
+    },
+    "event.serf_marriage_leave.title.default": {
+      "context": "Event serf_marriage_leave, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Leave to Wed"
+      }
+    },
+    "event.serf_mill_multure.options.0.desc.default": {
+      "context": "Event serf_mill_multure, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Lose the grain and close the matter."
+      }
+    },
+    "event.serf_mill_multure.options.0.label.default": {
+      "context": "Event serf_mill_multure, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Surrender the miller’s share."
+      }
+    },
+    "event.serf_mill_multure.options.1.desc.default": {
+      "context": "Event serf_mill_multure, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay the toll in grain, road, and aching shoulders."
+      }
+    },
+    "event.serf_mill_multure.options.1.label.default": {
+      "context": "Event serf_mill_multure, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Carry the rest back to the lord’s mill."
+      }
+    },
+    "event.serf_mill_multure.options.2.desc.default": {
+      "context": "Event serf_mill_multure, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A boundary may hide what a quern cannot."
+      }
+    },
+    "event.serf_mill_multure.options.2.failure.text.default": {
+      "context": "Event serf_mill_multure, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The flour is still warm from your quern. He seizes the sack and adds a fine."
+      }
+    },
+    "event.serf_mill_multure.options.2.label.default": {
+      "context": "Event serf_mill_multure, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Swear the meal came from another manor."
+      }
+    },
+    "event.serf_mill_multure.options.2.success.text.default": {
+      "context": "Event serf_mill_multure, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The miller cannot prove whose stones ground it and lets the sack go."
+      }
+    },
+    "event.serf_mill_multure.text.default": {
+      "context": "Event serf_mill_multure, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The miller finds meal from a hand-quern in your bin. Grain from this holding must pass beneath {lord}’s millstones, with every lawful sack leaving a share behind."
+      }
+    },
+    "event.serf_mill_multure.title.default": {
+      "context": "Event serf_mill_multure, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The Miller’s Share"
+      }
+    },
+    "event.serf_officers_quartered.options.0.desc.default": {
+      "context": "Event serf_officers_quartered, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "An empty larder may purchase a favorable word."
+      }
+    },
+    "event.serf_officers_quartered.options.0.label.default": {
+      "context": "Event serf_officers_quartered, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Set out everything they ask."
+      }
+    },
+    "event.serf_officers_quartered.options.1.desc.default": {
+      "context": "Event serf_officers_quartered, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Spare some food by yielding every comfort."
+      }
+    },
+    "event.serf_officers_quartered.options.1.label.default": {
+      "context": "Event serf_officers_quartered, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Give them the hearth and sleep in the byre."
+      }
+    },
+    "event.serf_officers_quartered.options.2.desc.default": {
+      "context": "Event serf_officers_quartered, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A bare shelf can lie more smoothly than its owner."
+      }
+    },
+    "event.serf_officers_quartered.options.2.failure.text.default": {
+      "context": "Event serf_officers_quartered, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A trooper finds the false panel. They take the hidden food as well as the supper."
+      }
+    },
+    "event.serf_officers_quartered.options.2.label.default": {
+      "context": "Event serf_officers_quartered, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Hide the best stores before they dismount."
+      }
+    },
+    "event.serf_officers_quartered.options.2.success.text.default": {
+      "context": "Event serf_officers_quartered, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "They eat coarse bread, complain, and never find the smoked meat overhead."
+      }
+    },
+    "event.serf_officers_quartered.options.3.desc.default": {
+      "context": "Event serf_officers_quartered, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Move the burden to a neighbor and live with the village’s memory."
+      }
+    },
+    "event.serf_officers_quartered.options.3.label.default": {
+      "context": "Event serf_officers_quartered, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Send them toward a richer roof."
+      }
+    },
+    "event.serf_officers_quartered.text.default": {
+      "context": "Event serf_officers_quartered, text, faith branch default.",
+      "glossary": [
+        "lord"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Mounted officers in {lord}’s colors claim your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently."
+      }
+    },
+    "event.serf_officers_quartered.title.default": {
+      "context": "Event serf_officers_quartered, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Boots by the Hearth"
+      }
+    },
+    "event.serf_pannage_due.options.0.desc.default": {
+      "context": "Event serf_pannage_due, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A lean purse now for a fatter animal in winter."
+      }
+    },
+    "event.serf_pannage_due.options.0.label.default": {
+      "context": "Event serf_pannage_due, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay for the woodland mast."
+      }
+    },
+    "event.serf_pannage_due.options.1.desc.default": {
+      "context": "Event serf_pannage_due, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Save the fee and spend the household’s own food instead."
+      }
+    },
+    "event.serf_pannage_due.options.1.label.default": {
+      "context": "Event serf_pannage_due, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Keep the swine penned and feed them grain."
+      }
+    },
+    "event.serf_pannage_due.options.2.desc.default": {
+      "context": "Event serf_pannage_due, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The pigs know no law; the forester does."
+      }
+    },
+    "event.serf_pannage_due.options.2.failure.text.default": {
+      "context": "Event serf_pannage_due, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A bellwether squeals beneath the forester’s window. He takes the fattest pig as amercement."
+      }
+    },
+    "event.serf_pannage_due.options.2.label.default": {
+      "context": "Event serf_pannage_due, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Drive them in after moonrise."
+      }
+    },
+    "event.serf_pannage_due.options.2.success.text.default": {
+      "context": "Event serf_pannage_due, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "By dawn the herd is round-bellied and back behind its wattle fence."
+      }
+    },
+    "event.serf_pannage_due.text.default": {
+      "context": "Event serf_pannage_due, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Acorns lie thick beneath the lord’s oaks, enough to fatten every village pig. The forester waits at the wood’s edge to collect pannage before a snout crosses the ditch."
+      }
+    },
+    "event.serf_pannage_due.title.default": {
+      "context": "Event serf_pannage_due, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Under the Oak Mast"
+      }
+    },
+    "event.serf_seed_grain_requisition.options.0.desc.default": {
+      "context": "Event serf_seed_grain_requisition, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Feed the host now and meet winter with a hollow bin."
+      }
+    },
+    "event.serf_seed_grain_requisition.options.0.label.default": {
+      "context": "Event serf_seed_grain_requisition, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Yield the seed grain."
+      }
+    },
+    "event.serf_seed_grain_requisition.options.1.desc.default": {
+      "context": "Event serf_seed_grain_requisition, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Keep seed enough to sow by giving up the means to haul it."
+      }
+    },
+    "event.serf_seed_grain_requisition.options.1.label.default": {
+      "context": "Event serf_seed_grain_requisition, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Surrender cart and draft gear instead."
+      }
+    },
+    "event.serf_seed_grain_requisition.options.2.desc.default": {
+      "context": "Event serf_seed_grain_requisition, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Make them move you before they move the sacks."
+      }
+    },
+    "event.serf_seed_grain_requisition.options.2.label.default": {
+      "context": "Event serf_seed_grain_requisition, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Stand in the granary door."
+      }
+    },
+    "event.serf_seed_grain_requisition.text.default": {
+      "context": "Event serf_seed_grain_requisition, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The war has eaten the lord’s stores. Armed men break the seal on your granary and name its seed corn provisions for the host; what they leave will not sow every strip."
+      }
+    },
+    "event.serf_seed_grain_requisition.title.default": {
+      "context": "Event serf_seed_grain_requisition, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The Granary Is Opened"
+      }
+    },
+    "event.serf_tithe_sheaf.options.0.desc.default": {
+      "context": "Event serf_tithe_sheaf, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Render the sacred share and tighten the household store."
+      }
+    },
+    "event.serf_tithe_sheaf.options.0.label.default": {
+      "context": "Event serf_tithe_sheaf, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Give the full tenth."
+      }
+    },
+    "event.serf_tithe_sheaf.options.1.desc.default": {
+      "context": "Event serf_tithe_sheaf, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Pay with shoulders where the granary cannot."
+      }
+    },
+    "event.serf_tithe_sheaf.options.1.label.default": {
+      "context": "Event serf_tithe_sheaf, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Cart the parish grain in place of part of it."
+      }
+    },
+    "event.serf_tithe_sheaf.options.2.desc.default": {
+      "context": "Event serf_tithe_sheaf, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Hide grain from the collector and the sin from yourself."
+      }
+    },
+    "event.serf_tithe_sheaf.options.2.failure.text.default": {
+      "context": "Event serf_tithe_sheaf, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A fork strikes the hidden bundle. The grain goes to the church with an amercement besides."
+      }
+    },
+    "event.serf_tithe_sheaf.options.2.label.default": {
+      "context": "Event serf_tithe_sheaf, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Bury two sheaves beneath the straw."
+      }
+    },
+    "event.serf_tithe_sheaf.options.2.success.text.default": {
+      "context": "Event serf_tithe_sheaf, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The count ends two sheaves short, and no hand finds them."
+      }
+    },
+    "event.serf_tithe_sheaf.text.default": {
+      "context": "Event serf_tithe_sheaf, text, faith branch default.",
+      "glossary": [
+        "temple"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The tithe collector walks the stubble counting every tenth sheaf for the {temple}. The lord’s harvest is already gone, and winter has not yet shown its teeth."
+      }
+    },
+    "event.serf_tithe_sheaf.title.default": {
+      "context": "Event serf_tithe_sheaf, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The Tenth Sheaf"
+      }
+    },
+    "event.serf_weekwork_tally.options.0.desc.default": {
+      "context": "Event serf_weekwork_tally, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A day for the lord is a day stolen from your own ground."
+      }
+    },
+    "event.serf_weekwork_tally.options.0.label.default": {
+      "context": "Event serf_weekwork_tally, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Give the added day."
+      }
+    },
+    "event.serf_weekwork_tally.options.1.desc.default": {
+      "context": "Event serf_weekwork_tally, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Silver works even when your back does not."
+      }
+    },
+    "event.serf_weekwork_tally.options.1.label.default": {
+      "context": "Event serf_weekwork_tally, authored option 1, label, branch default.",
+      "glossary": [
+        "money:3"
+      ],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Commute it into coin. ({money:3})"
+      }
+    },
+    "event.serf_weekwork_tally.options.2.desc.default": {
+      "context": "Event serf_weekwork_tally, authored option 2, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Custom lives in witnesses, but stewards keep the ink."
+      }
+    },
+    "event.serf_weekwork_tally.options.2.failure.text.default": {
+      "context": "Event serf_weekwork_tally, authored option 2, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Memory bends under questions. The new tally stands, with a penalty for delay."
+      }
+    },
+    "event.serf_weekwork_tally.options.2.label.default": {
+      "context": "Event serf_weekwork_tally, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Call neighbors who remember the old tally."
+      }
+    },
+    "event.serf_weekwork_tally.options.2.success.text.default": {
+      "context": "Event serf_weekwork_tally, authored option 2, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "Three elders repeat the same number. The steward restores the missing stroke."
+      }
+    },
+    "event.serf_weekwork_tally.text.default": {
+      "context": "Event serf_weekwork_tally, text, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "The steward measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed."
+      }
+    },
+    "event.serf_weekwork_tally.title.default": {
+      "context": "Event serf_weekwork_tally, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_peasant.js",
+      "source": {
+        "text": "A Longer Week"
       }
     },
     "event.sergeant.options.0.desc.default": {
@@ -33571,6 +34839,72 @@
         "text": "💔 The old pledge to {name} is quietly set aside."
       }
     },
+    "news.event.raid_empty_handed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "The raiders find no purse or property worth slowing for."
+      }
+    },
+    "news.event.raid_enslaved": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Carried to {county}, the household is stripped of property and bound to the land."
+      }
+    },
+    "news.event.raid_gold_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "The raiders take a purse worth {money:amount}."
+      }
+    },
+    "news.event.raid_holding_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "holding"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "The raiders strip the household of {holding}."
+      }
+    },
+    "news.event.raid_item_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "The raiders carry off {item}."
+      }
+    },
+    "news.event.raid_plot_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "The abandoned family plot is seized before you can return."
+      }
+    },
+    "news.event.raid_standard_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "goods"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "The raiders ruin or carry off {goods}."
+      }
+    },
     "news.event.reigning_royal_marriage": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -44907,6 +46241,16 @@
         "text": "Wanted more. Got a grave, which is technically more."
       }
     },
+    "src.019b4999": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The missing hand is named before noon. The amercement costs more than the grain it saved."
+      }
+    },
     "src.01a0218e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -45937,6 +47281,16 @@
       ],
       "source": {
         "text": "Great {temple}"
+      }
+    },
+    "src.046b501c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay the wood amercement. ({money:3})"
       }
     },
     "src.046dd191": {
@@ -47396,6 +48750,16 @@
         "text": "Emergency Subsidy"
       }
     },
+    "src.07bb3528": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Boots by the Hearth"
+      }
+    },
     "src.07bb9220": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47846,6 +49210,16 @@
       ],
       "source": {
         "text": "🎓 Choose your education focus…"
+      }
+    },
+    "src.08bd4c1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay the arbitrary demand in winter strength."
       }
     },
     "src.08c767fd": {
@@ -48518,6 +49892,16 @@
         "text": "Obotrite Confederation"
       }
     },
+    "src.0a4c7ec5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "The abandoned family plot is seized before you can return."
+      }
+    },
     "src.0a4e3260": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48676,6 +50060,16 @@
       ],
       "source": {
         "text": "event-choice-details hidden"
+      }
+    },
+    "src.0aa906bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "The raiders carry off {item}."
       }
     },
     "src.0aaa130d": {
@@ -49721,6 +51115,16 @@
         "text": "Too Much in the Crown’s Hand"
       }
     },
+    "src.0d22e58a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The forester calls custom a tale told by thieves. The fine doubles."
+      }
+    },
     "src.0d245b0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50091,6 +51495,16 @@
       ],
       "source": {
         "text": "Your one lobbying attempt has already been used."
+      }
+    },
+    "src.0e178128": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Send every hand to the demesne."
       }
     },
     "src.0e1e8eea": {
@@ -51139,6 +52553,16 @@
         "text": "Keep the ordinary stay and return journey. The Stay after marriage deed remains available until this journey ends."
       }
     },
+    "src.10df2931": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Run when the column crosses broken ground."
+      }
+    },
     "src.10f069e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51528,6 +52952,16 @@
       ],
       "source": {
         "text": "The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority."
+      }
+    },
+    "src.11e8fe0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Lose money, an item, or household property"
       }
     },
     "src.11ead8bd": {
@@ -52371,6 +53805,16 @@
         "text": "Default focus: {focus}"
       }
     },
+    "src.137c5495": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Carried to {county}, the household is stripped of property and bound to the land."
+      }
+    },
     "src.137ec3b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52860,6 +54304,16 @@
       ],
       "source": {
         "text": "Review education, work, assignments, matches, and equipment for every managed person."
+      }
+    },
+    "src.147b5143": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Spare some food by yielding every comfort."
       }
     },
     "src.1481097c": {
@@ -53435,6 +54889,16 @@
         "text": "{money:pay}/season"
       }
     },
+    "src.15cfca7a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Move the burden to a neighbor and live with the village’s memory."
+      }
+    },
     "src.15e1b09e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53443,6 +54907,16 @@
       ],
       "source": {
         "text": "Acknowledge the injury and put silver behind the apology."
+      }
+    },
+    "src.15e7c781": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "The raiders ruin or carry off {goods}."
       }
     },
     "src.15fc60a1": {
@@ -56257,6 +57731,16 @@
         "text": "The Road Behind the Host"
       }
     },
+    "src.1ca9be3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Three elders repeat the same number. The steward restores the missing stroke."
+      }
+    },
     "src.1caf5f02": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56275,6 +57759,16 @@
       ],
       "source": {
         "text": "🕯 {name} answers yes. The dangerous courtship begins."
+      }
+    },
+    "src.1cb57efa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Surrender cart and draft gear instead."
       }
     },
     "src.1cb85199": {
@@ -56307,6 +57801,16 @@
         "text": "✓ Hear this more"
       }
     },
+    "src.1cc54f30": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A wheel sinks to the hub. Dragging it free costs the strength you meant to save."
+      }
+    },
     "src.1cc90638": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56325,6 +57829,16 @@
       ],
       "source": {
         "text": "{tier} terms"
+      }
+    },
+    "src.1cce4fc4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The petition is called ingratitude. The full fine grows by another coin."
       }
     },
     "src.1cd405f9": {
@@ -57269,6 +58783,16 @@
       ],
       "source": {
         "text": "Quick of wit, and quicker to mention it."
+      }
+    },
+    "src.1f5ac7d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Boots pass, return, and finally fade. Darkness gives you a clean road home, and the household has lost nothing but daylight."
       }
     },
     "src.1f605ae0": {
@@ -58640,6 +60164,16 @@
         "text": "Destroyed a pretender in open war."
       }
     },
+    "src.226c3577": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "An elder confirms the right before the forester can close the question."
+      }
+    },
     "src.227373e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58839,6 +60373,16 @@
       ],
       "source": {
         "text": "{trait} progress {change}"
+      }
+    },
+    "src.22fe9847": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "The blow is caught. A club drops you to your knees, and when sight returns your wrists are bound with the rest."
       }
     },
     "src.23042d92": {
@@ -60274,6 +61818,16 @@
         "text": "You will serve through your liege’s army or a personal expedition."
       }
     },
+    "src.262f4963": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Lend the household cart and stay afield."
+      }
+    },
     "src.26325dab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60384,6 +61938,16 @@
       ],
       "source": {
         "text": "Martial"
+      }
+    },
+    "src.2661ab61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay with shoulders where the granary cannot."
       }
     },
     "src.26655334": {
@@ -61190,6 +62754,16 @@
         "text": "💡 Suggestion — an idea for the game"
       }
     },
+    "src.283d99c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Carry the rest back to the lord’s mill."
+      }
+    },
     "src.2841fb7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61328,6 +62902,16 @@
       ],
       "source": {
         "text": "Silves"
+      }
+    },
+    "src.28ad70e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The Granary Is Opened"
       }
     },
     "src.28aed65c": {
@@ -61589,6 +63173,16 @@
       ],
       "source": {
         "text": "Name {target}, and nothing beyond it."
+      }
+    },
+    "src.298c008a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Was carried away in a raid and bound to the land."
       }
     },
     "src.29984523": {
@@ -62221,6 +63815,16 @@
         "text": "Your household is personally free and can accumulate durable property and local influence."
       }
     },
+    "src.2b05ee30": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "An empty larder may purchase a favorable word."
+      }
+    },
     "src.2b0741b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62319,6 +63923,16 @@
       ],
       "source": {
         "text": "🕸 Suspicion of {plot} damages a relationship, but no hearing can proceed."
+      }
+    },
+    "src.2b5306de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Keep coin and strength; let defiance become the next debt."
       }
     },
     "src.2b5945bc": {
@@ -62893,6 +64507,16 @@
         "text": "Start seed:"
       }
     },
+    "src.2c8babd5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Broke through a raiding line and escaped without loss."
+      }
+    },
     "src.2c8c5fda": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63144,6 +64768,16 @@
         "text": "Answer with your fists."
       }
     },
+    "src.2d1dd5a2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Drive them in after moonrise."
+      }
+    },
     "src.2d1f8256": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63302,6 +64936,16 @@
       ],
       "source": {
         "text": "Attack the real political foothold behind the feud."
+      }
+    },
+    "src.2d8179b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Ask the lord to value a settled household over ready silver."
       }
     },
     "src.2d8ee837": {
@@ -63854,6 +65498,16 @@
         "text": "fullsheet-modal technology-modal"
       }
     },
+    "src.2f2dd19c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Mounted officers in {lord}’s colors claim your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently."
+      }
+    },
     "src.2f34e7b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63922,6 +65576,16 @@
       ],
       "source": {
         "text": "A small gift buys a large peace."
+      }
+    },
+    "src.2f5e0fdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The war has eaten the lord’s stores. Armed men break the seal on your granary and name its seed corn provisions for the host; what they leave will not sow every strip."
       }
     },
     "src.2f616a54": {
@@ -64840,6 +66504,16 @@
         "text": "+{amount} waiting for your next eligible claim"
       }
     },
+    "src.3188cdfe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The steward cuts the fine to two coins and calls it favor."
+      }
+    },
     "src.31a03846": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65512,6 +67186,16 @@
         "text": "The world still rings and tilts."
       }
     },
+    "src.336eba01": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Escaped a captive column after losing household wealth."
+      }
+    },
     "src.33790e35": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66166,6 +67850,16 @@
         "text": "in the Deeds tab — it is pursued every day until you change it (work the land, drill, haggle, pray, court…)."
       }
     },
+    "src.34fccd09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Escaped a slave raid without loss."
+      }
+    },
     "src.3500d2dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66314,6 +68008,16 @@
       ],
       "source": {
         "text": "Withdraw after fulfilling the term for {piety} piety and {prestige} prestige."
+      }
+    },
+    "src.355458ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Walk home cold rather than enter the forester’s book."
       }
     },
     "src.3560eb8c": {
@@ -66618,6 +68322,16 @@
       ],
       "source": {
         "text": "Uphold the forest law."
+      }
+    },
+    "src.3673e23c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "By dawn the herd is round-bellied and back behind its wattle fence."
       }
     },
     "src.367e74de": {
@@ -67804,6 +69518,16 @@
       ],
       "source": {
         "text": "A coerced settlement is obeyed in public and resented in every village."
+      }
+    },
+    "src.397491d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Custom may shelter the poor, if anyone admits remembering it."
       }
     },
     "src.3978d2b3": {
@@ -69009,6 +70733,16 @@
         "text": "{count} mercenary"
       }
     },
+    "src.3c93076f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "The guard catches you before the slope ends. The blow is deliberate, final, and meant as a lesson to every captive still standing."
+      }
+    },
     "src.3c931404": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69785,6 +71519,16 @@
         "text": "Buy {plots} plots for {money:cost}"
       }
     },
+    "src.3ed271db": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The steward measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed."
+      }
+    },
     "src.3edea13e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70388,6 +72132,16 @@
         "text": "The Drill-Yard"
       }
     },
+    "src.402aa32f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Give the added day."
+      }
+    },
     "src.40315491": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70913,6 +72667,16 @@
         "text": "The bailiffs’ cart is full and the debt still stands. With neither goods nor land left to answer it, the lord’s steward offers the final settlement: the account will be cleared, but your free household will be bound to the lord’s land."
       }
     },
+    "src.4167c52b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Stand in the granary door."
+      }
+    },
     "src.417ce5ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71072,6 +72836,16 @@
       ],
       "source": {
         "text": "🎓 You are left to your own devices."
+      }
+    },
+    "src.41e175cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The Lord’s Oven"
       }
     },
     "src.41e773cc": {
@@ -71926,6 +73700,16 @@
       ],
       "source": {
         "text": "No one is displaced."
+      }
+    },
+    "src.43f64cb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Feed the host now and meet winter with a hollow bin."
       }
     },
     "src.43f90834": {
@@ -73469,6 +75253,16 @@
         "text": "Road Fever"
       }
     },
+    "src.474123cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "The raiders take a purse worth {money:amount}."
+      }
+    },
     "src.4746c78b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74041,6 +75835,16 @@
         "text": "From the family armory"
       }
     },
+    "src.48cd2397": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Timber for the Bridge"
+      }
+    },
     "src.48ce0e66": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74382,6 +76186,16 @@
         "text": "Oaths in chorus are heavy to lift against."
       }
     },
+    "src.49d34ced": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Petition for a smaller payment."
+      }
+    },
     "src.49ddacb8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74531,6 +76345,16 @@
       ],
       "source": {
         "text": "Reduces yearly household mortality by 0.2 percentage points."
+      }
+    },
+    "src.4a2a4546": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Keep your body and your silence; lose the household reserve."
       }
     },
     "src.4a3327a4": {
@@ -77265,6 +79089,16 @@
         "text": "After a recent defeat and {warLosses} recorded campaign losses, the morning count wavers. {hostMen} soldiers still stand beneath the banner, but men are slipping home to harvests, wives, and unfinished lives."
       }
     },
+    "src.511daa5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Swear the meal came from another manor."
+      }
+    },
     "src.511dfae9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77403,6 +79237,16 @@
       ],
       "source": {
         "text": "Too good to be honest."
+      }
+    },
+    "src.5171439f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Trade a day in the coppice for the baker’s share."
       }
     },
     "src.5174ed52": {
@@ -77956,6 +79800,16 @@
       ],
       "source": {
         "text": "the two-year refusal cooldown ({days} days remain)"
+      }
+    },
+    "src.528d7461": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay a carter to take your mark. ({money:3})"
       }
     },
     "src.5294213d": {
@@ -78925,6 +80779,16 @@
         "text": "No named personal connections are recorded."
       }
     },
+    "src.553532ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A lean purse now for a fatter animal in winter."
+      }
+    },
     "src.5537534e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79174,6 +81038,16 @@
       ],
       "source": {
         "text": "Balance direct land, vassals, liege demands, and succession."
+      }
+    },
+    "src.55e09836": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub"
       }
     },
     "src.55ecb077": {
@@ -80309,6 +82183,16 @@
         "text": "Harold wears England’s crown; Normandy and Norway have not yet crossed the sea."
       }
     },
+    "src.5848e153": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "You wrench free in the confusion. The guards take what falls from you, but darkness and rough ground hide the living."
+      }
+    },
     "src.584a1d74": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80681,6 +82565,16 @@
         "text": "Secured an academy patron’s introduction for {student}."
       }
     },
+    "src.598fb18f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Take the cart road and haul it."
+      }
+    },
     "src.598fe83a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80840,6 +82734,16 @@
       ],
       "source": {
         "text": "Lalibela"
+      }
+    },
+    "src.59e81d9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "They eat coarse bread, complain, and never find the smoked meat overhead."
       }
     },
     "src.59eb197d": {
@@ -82118,6 +84022,16 @@
         "text": "A Banner Won in Blood"
       }
     },
+    "src.5cdfc75e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Break through before the ring closes."
+      }
+    },
     "src.5ce4c937": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82766,6 +84680,16 @@
         "text": "A frightened crowd becomes a line of hands. Nobody is lost."
       }
     },
+    "src.5e997117": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Your own grain stands ripe when the reeve’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip."
+      }
+    },
     "src.5e9d8c6b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82804,6 +84728,16 @@
       ],
       "source": {
         "text": "Bayonne"
+      }
+    },
+    "src.5ea47f2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Tallage Without Measure"
       }
     },
     "src.5eafe926": {
@@ -83056,6 +84990,16 @@
         "text": "Accept what the road has brought."
       }
     },
+    "src.5f426dd4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The Lord’s Harvest First"
+      }
+    },
     "src.5f4c223d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83304,6 +85248,16 @@
       ],
       "source": {
         "text": "🤝 {realm} and {ally} bind themselves in a defensive alliance."
+      }
+    },
+    "src.5fdf61c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Lawful bread, dearer than yesterday’s."
       }
     },
     "src.5ff0d5f3": {
@@ -84693,6 +86647,16 @@
         "text": "Renew the surviving pact. ({money:8})"
       }
     },
+    "src.62e9b3d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Find a shorter way through the shallows."
+      }
+    },
     "src.62f83f34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84891,6 +86855,16 @@
       ],
       "source": {
         "text": "{student} speaks plainly about a private ambition: {ambition}. Family can open doors, offer counsel, or make clear that another road would serve the house better."
+      }
+    },
+    "src.63572431": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Escaped raiders by sacrificing household wealth."
       }
     },
     "src.6366e2b9": {
@@ -85413,6 +87387,16 @@
       ],
       "source": {
         "text": "Flee to another province."
+      }
+    },
+    "src.64e09757": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "You lie still while the search passes within speaking distance. At dusk the household slips home with every person and possession intact."
       }
     },
     "src.64e10c71": {
@@ -85960,6 +87944,16 @@
         "text": "Prestige requirement cap: none"
       }
     },
+    "src.6673a920": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Move quietly before panic fills every lane."
+      }
+    },
     "src.667800e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86038,6 +88032,16 @@
       ],
       "source": {
         "text": "Requires a town or city in your home county."
+      }
+    },
+    "src.669d07b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "The first line gives, but a second closes behind it. You are driven away from the settlement with the raiders at your heels."
       }
     },
     "src.669f4551": {
@@ -86168,6 +88172,16 @@
       ],
       "source": {
         "text": "Cost now"
+      }
+    },
+    "src.66ec63c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Work the fine in extra days."
       }
     },
     "src.66f4036e": {
@@ -87486,6 +89500,16 @@
         "text": "Recorded electorate result"
       }
     },
+    "src.6a2289cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Begin married life with an emptier purse and a closed tally."
+      }
+    },
     "src.6a2b5d0c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87576,6 +89600,16 @@
         "text": "{money:stake} accompanied venture at risk"
       }
     },
+    "src.6a5f27fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Under the Oak Mast"
+      }
+    },
     "src.6a62846c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87594,6 +89628,16 @@
       ],
       "source": {
         "text": "Back the ambition. ({money:5})"
+      }
+    },
+    "src.6a7ed38a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Empty the purse into the tally chest."
       }
     },
     "src.6a83cda4": {
@@ -88106,6 +90150,16 @@
         "text": "Read the mint and ruler on the face."
       }
     },
+    "src.6bc1a259": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Name the old right to fallen branches."
+      }
+    },
     "src.6bc683fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88144,6 +90198,16 @@
       ],
       "source": {
         "text": "💬 Discord"
+      }
+    },
+    "src.6be96487": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The count ends two sheaves short, and no hand finds them."
       }
     },
     "src.6bf56930": {
@@ -88274,6 +90338,16 @@
       ],
       "source": {
         "text": "Redress for the County"
+      }
+    },
+    "src.6c40647f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The coals cool before dawn, leaving bread and no witness."
       }
     },
     "src.6c42b0ab": {
@@ -88976,6 +91050,16 @@
       ],
       "source": {
         "text": ": non-numeric cost effect"
+      }
+    },
+    "src.6db0ee6e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Keep seed enough to sow by giving up the means to haul it."
       }
     },
     "src.6db6bdd9": {
@@ -89801,6 +91885,16 @@
         "text": "Existing choice remains, but it is unavailable for this focus"
       }
     },
+    "src.7003d222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A bellwether squeals beneath the forester’s window. He takes the fattest pig as amercement."
+      }
+    },
     "src.70040615": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90441,6 +92535,16 @@
         "text": "Spear practice on the green. (+martial over time)"
       }
     },
+    "src.719b2e52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Render the sacred share and tighten the household store."
+      }
+    },
     "src.71a8456f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90619,6 +92723,16 @@
       ],
       "source": {
         "text": "Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne."
+      }
+    },
+    "src.7217983b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Hire someone to answer for you. ({money:4})"
       }
     },
     "src.721c5337": {
@@ -91052,6 +93166,16 @@
         "text": "Water the wine."
       }
     },
+    "src.7311eaf6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Give the hunters property to gather while people vanish separately."
+      }
+    },
     "src.7318ca15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91160,6 +93284,16 @@
       ],
       "source": {
         "text": "Let the claim sleep. The child needs no feud."
+      }
+    },
+    "src.734bd7da": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A fork strikes the hidden bundle. The grain goes to the church with an amercement besides."
       }
     },
     "src.734c4193": {
@@ -92786,6 +94920,16 @@
       ],
       "source": {
         "text": "🐞 Bug — something went wrong"
+      }
+    },
+    "src.7713a7b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Stillness against men trained to find frightened people."
       }
     },
     "src.771b1d94": {
@@ -96238,6 +98382,16 @@
         "text": "🗡 Evidence drives {rival} from household office."
       }
     },
+    "src.7f480504": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A boundary may hide what a quern cannot."
+      }
+    },
     "src.7f4908ea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97211,6 +99365,16 @@
         "text": "Hear them and grant what costs nothing."
       }
     },
+    "src.818d531d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Bury two sheaves beneath the straw."
+      }
+    },
     "src.819b8cb5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97331,6 +99495,16 @@
       ],
       "source": {
         "text": "Keep the privilege"
+      }
+    },
+    "src.81db62fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The tithe collector walks the stubble counting every tenth sheaf for the {temple}. The lord’s harvest is already gone, and winter has not yet shown its teeth."
       }
     },
     "src.81dd7293": {
@@ -97593,6 +99767,16 @@
         "text": "Moved"
       }
     },
+    "src.82878d21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The reeve counts heads, not shadows. Your hidden reaper saves the ripest rows."
+      }
+    },
     "src.828c706f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97792,6 +99976,16 @@
       ],
       "source": {
         "text": "A king’s patience, firmly applied."
+      }
+    },
+    "src.83117c30": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The miller cannot prove whose stones ground it and lets the sack go."
       }
     },
     "src.8311f90f": {
@@ -99157,6 +101351,16 @@
         "text": "Cast down by a rising of the commons."
       }
     },
+    "src.85da304e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Surrender the miller’s share."
+      }
+    },
     "src.85da5292": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99967,6 +102171,16 @@
       ],
       "source": {
         "text": "Members’ relationships with your house"
+      }
+    },
+    "src.87cb2eb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay the toll in grain, road, and aching shoulders."
       }
     },
     "src.87d1209a": {
@@ -101637,6 +103851,16 @@
         "text": "decisive Papal war lost"
       }
     },
+    "src.8b8d6e21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Speed and violence may win a clean road — or draw every pursuer."
+      }
+    },
     "src.8b96b42e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102789,6 +105013,16 @@
         "text": "Grant {seat} and restore the Papacy"
       }
     },
+    "src.8e3219cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The lord’s grain comes in while yours waits under the weather."
+      }
+    },
     "src.8e339cb0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102918,6 +105152,16 @@
       ],
       "source": {
         "text": "Daughter of the lord’s house"
+      }
+    },
+    "src.8e7437dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "The raiders strip the household of {holding}."
       }
     },
     "src.8e788a4a": {
@@ -104058,6 +106302,16 @@
         "text": "Betrothal"
       }
     },
+    "src.9106afc1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Make them move you before they move the sacks."
+      }
+    },
     "src.91074677": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104509,6 +106763,16 @@
         "text": "Daily focus changes"
       }
     },
+    "src.9287bb69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The forester stops your sledge at the wood’s edge. You gathered only storm-fallen limbs, but he says even dead wood belongs first to {lord}."
+      }
+    },
     "src.928d016d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104567,6 +106831,16 @@
       ],
       "source": {
         "text": "Children in the protagonist line take culture, faith, and house from the recorded playable-line parent, preserving the line across succession."
+      }
+    },
+    "src.92be11e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Lose the grain and close the matter."
       }
     },
     "src.92c30d58": {
@@ -105227,6 +107501,16 @@
       ],
       "source": {
         "text": "Earn from the war instead of feeding it."
+      }
+    },
+    "src.94ef631f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Floodwater has bitten through the bridge piles. The steward apportions timber, carts, and labor by holding; your mark appears beside the longest haul."
       }
     },
     "src.94f8bfb4": {
@@ -106408,6 +108692,16 @@
         "text": "Godi"
       }
     },
+    "src.97a9be23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Save half the road if your eye for ground is true."
+      }
+    },
     "src.97aace60": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107133,6 +109427,16 @@
         "text": "👶 Your daughter {parent} has a daughter, {baby}."
       }
     },
+    "src.99750ad6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The pigs know no law; the forester does."
+      }
+    },
     "src.997fb113": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107342,6 +109646,16 @@
       ],
       "source": {
         "text": "Dongola"
+      }
+    },
+    "src.9a0b194f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Set out everything they ask."
       }
     },
     "src.9a0fc21d": {
@@ -107945,6 +110259,16 @@
       ],
       "source": {
         "text": "Open a child’s sheet (Kin tab) to choose an"
+      }
+    },
+    "src.9b4c7523": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Custom lives in witnesses, but stewards keep the ink."
       }
     },
     "src.9b544d1a": {
@@ -108856,6 +111180,16 @@
       ],
       "source": {
         "text": "Positive Common Voice gains"
+      }
+    },
+    "src.9d5572e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The ford holds, the timber arrives early, and others follow your track."
       }
     },
     "src.9d58ef81": {
@@ -110906,6 +113240,16 @@
         "text": "Dasht-e Lut"
       }
     },
+    "src.a22dfbd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay the oven toll."
+      }
+    },
     "src.a2324eed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111057,6 +113401,16 @@
         "text": "Dumbarton"
       }
     },
+    "src.a28f2cd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Yield the seed grain."
+      }
+    },
     "src.a292c7e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111155,6 +113509,16 @@
       ],
       "source": {
         "text": "blocked by marriage doctrine"
+      }
+    },
+    "src.a2b08e0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A day for the lord is a day stolen from your own ground."
       }
     },
     "src.a2bc65cf": {
@@ -111287,6 +113651,16 @@
         "text": "Gossip fades; a good marriage does not."
       }
     },
+    "src.a30cda95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Keep one reaper hidden at home."
+      }
+    },
     "src.a3304be3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111305,6 +113679,16 @@
       ],
       "source": {
         "text": "Bound to the land for debt."
+      }
+    },
+    "src.a336ca50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The flour is still warm from your quern. He seizes the sack and adds a fine."
       }
     },
     "src.a33a79de": {
@@ -111536,6 +113920,16 @@
       ],
       "source": {
         "text": "The motion carries. Henceforth the liege’s summons can be answered with a purse, and the aid creeps up to pay for the privilege."
+      }
+    },
+    "src.a3b09870": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Save the fee and spend the household’s own food instead."
       }
     },
     "src.a3b6b53a": {
@@ -112058,6 +114452,16 @@
         "text": "Béziers"
       }
     },
+    "src.a4f87078": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Hide the best stores before they dismount."
+      }
+    },
     "src.a4f8962a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112514,6 +114918,16 @@
         "text": "Old Prussians"
       }
     },
+    "src.a619e79e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Send them toward a richer roof."
+      }
+    },
     "src.a62303a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112884,6 +115298,16 @@
         "text": "💒 Your child {child} weds {spouse}, as was pledged."
       }
     },
+    "src.a6c445b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Hide grain from the collector and the sin from yourself."
+      }
+    },
     "src.a6dd401c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112892,6 +115316,16 @@
       ],
       "source": {
         "text": "Confess, and expose what the reeve paid for."
+      }
+    },
+    "src.a6eceb86": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Bring fuel and tend the fire instead."
       }
     },
     "src.a6efdfd0": {
@@ -114352,6 +116786,16 @@
         "text": "Disorder lowers abstract condition; live troop totals do not change yet."
       }
     },
+    "src.aadc5f64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Smoke curls above the roof. The baker arrives before the loaf is cool."
+      }
+    },
     "src.aae2b419": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114430,6 +116874,16 @@
       ],
       "source": {
         "text": "Realm & demesne"
+      }
+    },
+    "src.ab35fb27": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The miller finds meal from a hand-quern in your bin. Grain from this holding must pass beneath {lord}’s millstones, with every lawful sack leaving a share behind."
       }
     },
     "src.ab3e50ee": {
@@ -114773,6 +117227,16 @@
       ],
       "source": {
         "text": "Foreign policy"
+      }
+    },
+    "src.abf4403d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Captivity, dispossession, and bondage in {destination} — but survival."
       }
     },
     "src.abfa3c1b": {
@@ -115257,6 +117721,16 @@
         "text": "🧭 The accompanied venture ends without a payout. The household remains at {home}."
       }
     },
+    "src.ad2cde86": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Fought free of raiders without loss."
+      }
+    },
     "src.ad30bd50": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115285,6 +117759,16 @@
       ],
       "source": {
         "text": "Salé"
+      }
+    },
+    "src.ad4afbfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The Miller’s Share"
       }
     },
     "src.ad4b5a4b": {
@@ -117065,6 +119549,16 @@
         "text": "Offer compensation."
       }
     },
+    "src.b151aae5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "The household may escape if its property is made easier to catch."
+      }
+    },
     "src.b15712cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117273,6 +119767,16 @@
       ],
       "source": {
         "text": "Mosul"
+      }
+    },
+    "src.b1e13497": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Let your back purchase what the wedding promised."
       }
     },
     "src.b1e28066": {
@@ -118839,6 +121343,16 @@
         "text": "Learn the spear as if your life depends on it."
       }
     },
+    "src.b56f1e25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Died attempting to escape a raiding column."
+      }
+    },
     "src.b5715912": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119159,6 +121673,16 @@
       ],
       "source": {
         "text": "A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)"
+      }
+    },
+    "src.b63a086e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A small loaf leaves a long trail of smoke."
       }
     },
     "src.b63b2972": {
@@ -119913,6 +122437,16 @@
         "text": "Judge by ancient right."
       }
     },
+    "src.b80ea909": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A sealed tally arrives without harvest, feast, or judgment to explain it. {lord} needs silver, the steward says, and an unfree household owes what its lord chooses to ask."
+      }
+    },
     "src.b814e6fc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119951,6 +122485,16 @@
       ],
       "source": {
         "text": "Every county belongs by ancient right to a duchy, a kingdom, and an empire — its"
+      }
+    },
+    "src.b825b1f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay for the woodland mast."
       }
     },
     "src.b82b1e2c": {
@@ -120283,6 +122827,16 @@
         "text": "Courier returning to {destination} · {days} days remain."
       }
     },
+    "src.b8d60585": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Leave to Wed"
+      }
+    },
     "src.b8e2ef6f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120353,16 +122907,6 @@
         "text": "Lewes"
       }
     },
-    "src.b914f320": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub"
-      }
-    },
     "src.b91b1d86": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120381,6 +122925,16 @@
       ],
       "source": {
         "text": "Accept a fair charter and help enforce it. ({money:10})"
+      }
+    },
+    "src.b93faa71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Take the old paths into cover."
       }
     },
     "src.b9480456": {
@@ -120561,6 +123115,16 @@
       ],
       "source": {
         "text": "{lord} summons you before the hall. “You have served beyond any debt. The vacant lands and tower shall be yours — swear to me, and hold them as my sworn baron.”"
+      }
+    },
+    "src.b9b6c3a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The reeve comes after the wedding feast with a reminder: an unfree tenant does not marry beyond the household without {lord}’s leave, and leave has its price."
       }
     },
     "src.b9b895f4": {
@@ -120963,6 +123527,16 @@
       ],
       "source": {
         "text": "🕯 The claimant of a rival obedience is dead; its Cardinals gather to choose a successor."
+      }
+    },
+    "src.bae69f18": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The village oven is hot, and the baker has raised the customary toll. He points to the cold clay ovens behind the cottages: none may bake while {lord}’s fire burns."
       }
     },
     "src.bae7c8a8": {
@@ -122463,6 +125037,16 @@
         "text": "Torsion Artillery"
       }
     },
+    "src.bedd429f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Escaped a slave raid after abandoning household wealth."
+      }
+    },
     "src.bee2cbd2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122521,6 +125105,16 @@
       ],
       "source": {
         "text": "At least one family is above the immediate gold cap."
+      }
+    },
+    "src.bf4c262a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Scatter and leave the bundles in the track."
       }
     },
     "src.bf595e84": {
@@ -122681,6 +125275,16 @@
       ],
       "source": {
         "text": "Repaid an assassin in kind."
+      }
+    },
+    "src.bfcc5de1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Bake beneath a covered pot after dark."
       }
     },
     "src.bfcf59ed": {
@@ -122851,6 +125455,16 @@
       ],
       "source": {
         "text": "Brittany"
+      }
+    },
+    "src.c058afeb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Keep the swine penned and feed them grain."
       }
     },
     "src.c05d7c70": {
@@ -123650,6 +126264,16 @@
       ],
       "source": {
         "text": "📚 {name} does not satisfy the examiners and must wait before trying again."
+      }
+    },
+    "src.c1e9a554": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "One hard rush opens a gap. The raiders close too late, and the household reaches cover without leaving so much as a bundle behind."
       }
     },
     "src.c1ecd48e": {
@@ -125589,6 +128213,16 @@
         "text": "Small charity, small return."
       }
     },
+    "src.c6d6b800": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Buy back the day your own harvest needs."
+      }
+    },
     "src.c6d74963": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125757,6 +128391,16 @@
       ],
       "source": {
         "text": "Retirement waits until age {age}."
+      }
+    },
+    "src.c7102742": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Let wheel and axle suffer in your place."
       }
     },
     "src.c7130bba": {
@@ -126479,6 +129123,16 @@
       ],
       "source": {
         "text": "Stone Castles"
+      }
+    },
+    "src.c8ca1999": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A trooper finds the false panel. They take the hidden food as well as the supper."
       }
     },
     "src.c8cd2d42": {
@@ -127864,6 +130518,16 @@
         "text": "Age {age} · {mar} {marValue} · {ste} {steValue} · {dip} {dipValue}"
       }
     },
+    "src.cc5a0980": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Break one link in the chain before the others reach you."
+      }
+    },
     "src.cc5e1935": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128448,6 +131112,16 @@
       ],
       "source": {
         "text": "Forty-eight years old and married, with grown children ready to inherit."
+      }
+    },
+    "src.cd916b02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Permanent: property lost and station falls to {rank}"
       }
     },
     "src.cd9e5138": {
@@ -129903,6 +132577,16 @@
         "text": "Renew the vow"
       }
     },
+    "src.d1b7e912": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "The Tenth Sheaf"
+      }
+    },
     "src.d1c31a69": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130324,6 +133008,16 @@
         "text": "Back to Settings"
       }
     },
+    "src.d2ea4cbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Keep the fuel and surrender the coin."
+      }
+    },
     "src.d2fb3927": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130704,6 +133398,16 @@
         "text": "Carolingian Italy"
       }
     },
+    "src.d3af2b67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "One last chance at freedom. Failure is a killing blow."
+      }
+    },
     "src.d3b9678d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130915,6 +133619,16 @@
         "text": "Hid the household goods from raiders."
       }
     },
+    "src.d42b698b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Acorns lie thick beneath the lord’s oaks, enough to fatten every village pig. The forester waits at the wood’s edge to collect pannage before a snout crosses the ditch."
+      }
+    },
     "src.d435b33c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131093,6 +133807,16 @@
       ],
       "source": {
         "text": "Duration"
+      }
+    },
+    "src.d4dc4344": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "One pair of hands for your field, if the tally misses them."
       }
     },
     "src.d4f434e8": {
@@ -131977,6 +134701,16 @@
         "text": "Full barns were built for days like this."
       }
     },
+    "src.d6e36951": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Call neighbors who remember the old tally."
+      }
+    },
     "src.d6f530c2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132145,6 +134879,16 @@
       ],
       "source": {
         "text": "The match assistant will omit this person from future recommendations. Manual matching remains available."
+      }
+    },
+    "src.d748862c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A sound bridge for everyone, paid for by your bones."
       }
     },
     "src.d7540a86": {
@@ -136279,6 +139023,16 @@
         "text": "Report it to the lord."
       }
     },
+    "src.e177482d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Give them the hearth and sleep in the byre."
+      }
+    },
     "src.e1778f1f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137338,6 +140092,16 @@
         "text": "Offer equal treatment, not privilege."
       }
     },
+    "src.e410c61d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Memory bends under questions. The new tally stands, with a penalty for delay."
+      }
+    },
     "src.e412eb57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137691,6 +140455,16 @@
         "text": "{days}-day grace remaining before a creditor may seek a writ, a court order to seize property."
       }
     },
+    "src.e4d06b46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "A spear probes the leaves. Hands drag you into the open and drive you toward the other captives."
+      }
+    },
     "src.e4d39fd6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137952,6 +140726,16 @@
         "text": "{count} archer"
       }
     },
+    "src.e577cde9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Commute it into coin. ({money:3})"
+      }
+    },
     "src.e5795c32": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138182,6 +140966,16 @@
         "text": "Survive a ruinous injury."
       }
     },
+    "src.e5fc067a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Another household takes the mud; yours pays the coin."
+      }
+    },
     "src.e6058ea2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138342,6 +141136,16 @@
         "text": "Inventory and seal the goods."
       }
     },
+    "src.e6667442": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "A dog barks, a child cries out, or a branch moves at the wrong moment. The raiders turn toward you and the quiet flight becomes a chase."
+      }
+    },
     "src.e666a69f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138350,6 +141154,16 @@
       ],
       "source": {
         "text": "The war will not wait for you to wake."
+      }
+    },
+    "src.e66b63fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Leave the whole bundle."
       }
     },
     "src.e66f5c1c": {
@@ -138702,6 +141516,16 @@
         "text": "Kingdom of Sweden"
       }
     },
+    "src.e747cab8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Leave the cart and every heavy thing."
+      }
+    },
     "src.e75527ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138780,6 +141604,16 @@
       ],
       "source": {
         "text": "{ruler} · Standing {standing}"
+      }
+    },
+    "src.e7783f64": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Cart the parish grain in place of part of it."
       }
     },
     "src.e77b9681": {
@@ -139533,6 +142367,16 @@
         "text": "Hersir"
       }
     },
+    "src.e8d381fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Pay the marriage fine. ({money:5})"
+      }
+    },
     "src.e8d623cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139561,6 +142405,16 @@
       ],
       "source": {
         "text": "Reduces yearly household mortality by 0.1 percentage points and adds room for one retainer."
+      }
+    },
+    "src.e8fe218c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Turn on the nearest pursuer."
       }
     },
     "src.e904abb9": {
@@ -139784,6 +142638,16 @@
         "text": "Take the tribute."
       }
     },
+    "src.e9c5c0d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "The raiders find no purse or property worth slowing for."
+      }
+    },
     "src.e9c7a5cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140003,6 +142867,26 @@
       ],
       "source": {
         "text": "No effect"
+      }
+    },
+    "src.ea4b6922": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A bare shelf can lie more smoothly than its owner."
+      }
+    },
+    "src.ea4ee888": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Outwaited raiders and escaped without loss."
       }
     },
     "src.ea57380a": {
@@ -140645,6 +143529,16 @@
       ],
       "source": {
         "text": "Stavanger"
+      }
+    },
+    "src.ec42ffad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Whose Fallen Wood?"
       }
     },
     "src.ec481976": {
@@ -142404,6 +145298,16 @@
         "text": "Tabaristan"
       }
     },
+    "src.f0589cd5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Offer a month of added labor."
+      }
+    },
     "src.f05a9c55": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142942,6 +145846,16 @@
       ],
       "source": {
         "text": "Périgueux"
+      }
+    },
+    "src.f1867dfd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Refuse before the manor court."
       }
     },
     "src.f1896654": {
@@ -144795,6 +147709,16 @@
         "text": "Revocation"
       }
     },
+    "src.f655858a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Submit to the rope and keep the household alive."
+      }
+    },
     "src.f65c8676": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145196,6 +148120,16 @@
         "text": "Became a merchant."
       }
     },
+    "src.f75f9942": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Silver works even when your back does not."
+      }
+    },
     "src.f7625406": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145315,6 +148249,16 @@
       ],
       "source": {
         "text": "📖 The chronicle of {dynasty} begins in {province}, {year} AD."
+      }
+    },
+    "src.f7c49931": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "The nearest pursuer falls. By the time the others understand, you are beyond their cordon and carrying everything you began with."
       }
     },
     "src.f7c78e47": {
@@ -147235,6 +150179,16 @@
         "text": "Edinburgh"
       }
     },
+    "src.fc727f0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "Give the full tenth."
+      }
+    },
     "src.fc7c2588": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147625,6 +150579,16 @@
       ],
       "source": {
         "text": "Private negotiation"
+      }
+    },
+    "src.fdb496b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_peasant.js"
+      ],
+      "source": {
+        "text": "A Longer Week"
       }
     },
     "src.fdb9046e": {
@@ -148066,6 +151030,16 @@
       ],
       "source": {
         "text": "📜 Abandon fabricated claim"
+      }
+    },
+    "src.fecba5b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_world.js"
+      ],
+      "source": {
+        "text": "Crawl under the deadfall and wait for dark."
       }
     },
     "src.fecfffd8": {
@@ -163614,6 +166588,14 @@
         "text": "Lose item: {item}"
       }
     },
+    "ui:Lose money, an item, or household property": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Lose money, an item, or household property"
+      }
+    },
     "ui:Lose trait: {trait}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -167708,6 +170690,16 @@
       "location": "js/events.js",
       "source": {
         "text": "Permanent: marriage ends"
+      }
+    },
+    "ui:Permanent: property lost and station falls to {rank}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Permanent: property lost and station falls to {rank}"
       }
     },
     "ui:Permanent: settle the household here": {

@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.121.1';
+  FB.VERSION = '1.122.0';
   FB.CHANGELOG = [
+    { v: '1.122.0', date: '2026-08-13', changes: [
+      'Serf and other commoner lives now face new customary burdens and rare culture-specific slave raids with plunder, captivity, and forced settlement.',
+      'Event result notices now appear above the map’s bottom-left edge instead of covering action controls.'
+    ] },
     { v: '1.121.1', date: '2026-08-12', changes: [
       'Music now switches immediately from the title theme into gameplay, with compact mobile controls that stay clear of map notices.',
       'Guide hints can now be disabled in Settings.',

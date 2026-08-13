@@ -150,6 +150,74 @@ allowing saved events and autoresolve to retain the wording with which they bega
 Event-data `cooldown` stays in seasons — the engine multiplies by 90 (see
 [time.md](time.md)).
 
+**Serf life carries a dedicated customary-burden pool.** Ten ordinary tier-0
+stories cover demesne boon-harvest, revised week-work, mill multure, pannage,
+marriage leave, the Christian tithe sheaf, bridge cartage, the common oven,
+deadwood amercement, and wartime quartering. Seasonal, terrain, faith, marriage,
+and war gates keep the narrower customs in their proper circumstances. Most
+choices exchange household coin or health for compliance, risk a larger fine,
+or preserve one resource at the expense of another; this pool is pressure, not
+an alternate early-game reward track.
+
+Two once-per-life stories are deliberately extraordinary no-win burdens:
+`serf_extraordinary_tallage` and `serf_seed_grain_requisition`. Both have low
+slot gates, weight 2, and three unconditional choices. Every choice applies an
+immediate resource loss; the wartime seed seizure can also cause a lean winter.
+They never hide a safe refusal behind an unaffordable option or a chance roll.
+
+The motifs come from recorded obligations rather than a single universal
+“serf law.” The ninth-century [*Capitulary de
+Villis*](https://sourcebooks.web.fordham.edu/source/carol-devillis.asp) accounts
+for tenant ploughing, pigs, rents, fines, forests, mills, bridges, transport,
+grain, and livestock. The later [manorial management
+texts](https://sourcebooks.web.fordham.edu/source/1275manors1.asp) describe
+closely tallied boon-work and harvest service, while the recorded obligations
+of [Matilda de Herdeby](https://www.nottingham.ac.uk/manuscriptsandspecialcollections/learning/medievalwomen/theme1/natureornurture.aspx)
+include autumn work by the family except the housewife, pannage, and merchet.
+The extraordinary levy draws on documented
+[tallage-at-will](https://ueaeprints.uea.ac.uk/id/eprint/71006/) against unfree
+tenants. The event gates treat these as geographically broad historical motifs,
+not claims that every manor imposed every custom.
+
+**A rare captive raid can strike every non-ruler life.** `historic_raid` is a
+once-per-life, childhood-capable tier-0–2 opener with the same 3.5% slot gate and
+weight 2 used by extraordinary tallage. A pure `historic_raider` context
+selector snapshots both a semantic `raidProfile` and one of the six geographically
+nearest counties matching that profile. Christian protagonists face Northmen;
+Muslim protagonists face cross-bannered Byzantine or Frankish frontier troops;
+Norse and Baltic pagans face Christian march forces; Slavic pagans and Iranian
+traditions face steppe riders; Tengri and Turkic/Khazar Jewish traditions face Rus
+raiders; remaining cultures receive a foreign rival war-band. The selector falls
+back to a culturally or religiously foreign county when a modded map contains no
+profile match. Every later chapter carries that exact `{raidProfile,destinationId}`
+through `historic_raid_context_valid`, so the prose and captivity destination never
+change midway through the chase.
+
+The opener and `historic_raid_pursuit` each provide two kinds of survival: a skilled
+clean escape with no loss, or a guaranteed escape bought by `raid_plunder`. Plunder
+uses the saved RNG and chooses only among wealth the household actually has: one
+armory item, household holding, maintained household-standard level, land plot, or a
+bounded share of loose coin. Failure in the chase queues `historic_raid_captive`.
+Submitting there invokes `raid_enslave`: all local property and loose coin are lost,
+the household moves to the snapshotted captor county, and the protagonist falls to
+the faith-appropriate tier-0 station without changing culture or religion. The only
+alternative is a disclosed 25% escape attempt; success escapes after plunder, while
+failure applies an explicit lethal health blow with raid provenance.
+
+The severity follows period evidence rather than treating capture as a short prison
+term. The [National Museum of Denmark](https://en.natmus.dk/historical-knowledge/denmark/prehistoric-period-until-1050-ad/the-viking-age/power-and-aristocracy/slaves-and-thralls/)
+describes Viking expeditions in the British Isles and eastern Europe as a principal
+source of captives and records their sale through long-distance markets. Research on
+the [Arab–Byzantine frontier](https://pmc.ncbi.nlm.nih.gov/articles/PMC10962249/)
+likewise distinguishes civilians taken in raids and sacked settlements amid the
+ninth-century cycle of pillage, captivity, ransom, and forced labor. The eastern
+profiles draw on evidence for Rus seizure and trafficking of captives across the
+[Baltic and river networks](https://doi.org/10.1080/0144039X.2019.1592976), while
+[Iranian evidence](https://www.iranicaonline.org/articles/barda-iii/) records war
+captives and slave routes through the Caucasus and Transoxania. These were grave but
+episodic hazards, so one low-gate chain per protagonist represents them better than a
+repeatable seasonal tax on every household.
+
 Earned traits use ordinary declarative effects. `traitProgress:{id,amount?}` adds
 progress for the current protagonist (default one), clamps it at the trait definition's
 `earn.threshold`, and awards the trait with a durable localized Chronicle notice when

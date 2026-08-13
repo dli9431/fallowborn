@@ -213,6 +213,7 @@ window.FB = window.FB || {};
     distraint_settle:4, distraint_yield_one:2, distraint_seize:-6,
     bondage_submit:-20, bondage_flee:-8,
     devastation_lose_holding:-8, devastation_commend:-15,
+    raid_plunder:-8, raid_enslave:-30,
     ghw_recruit_volunteers:8, ghw_recruit_mercenaries:22,
     ghw_recruit_knights:20, ghw_recruit_adventurers:21,
     academy_introduction:3, academy_student_focus:1.5,

@@ -18,6 +18,121 @@ FBDATA.events.push(
       success:{ text:'The raiders, laden elsewhere, pass the church by. A miracle, plainly.', effects:{ piety:8 } },
       failure:{ text:'The church is exactly where they went first.', effects:{ gold:-10, health:-2 } } }
   ]},
+
+/* ---------- extraordinary captive raid: rare, portable, and personal -----
+   The opening selector freezes both the historically flavored attacker and a
+   captor county. Clean escape, escape after plunder, captivity/serfdom, and a
+   final lethal gamble all remain explicit player outcomes across the chain. */
+{ id:'historic_raid', once:true, childhood:true,
+  title:{ forms:{ select:'value', param:'raidProfile', cases:{
+    northmen:'The Wolf-Sails',
+    cross_banners:'Crosses in the Dust',
+    saxon_host:'Men from the March',
+    steppe_riders:'Hooves at Dawn',
+    rus_raiders:'Oars on the River',
+    rival_raiders:'The Enemy Comes',
+    other:'Raiders at Dawn'
+  }}},
+  trigger:{ tierMax:2, chance:0.035 }, weight:2, cooldown:32,
+  contextSelector:'historic_raider',
+  text:{ forms:{ select:'value', param:'raidProfile', cases:{
+    northmen:'A horn sounds from the shore road. Northmen are already among the outlying roofs, driving livestock toward their ships and binding whoever cannot outrun them.',
+    cross_banners:'Cross-bannered riders break from the frontier road — Greek and Frankish steel moving faster than any levy. They strip the fields and rope captives behind the remounts.',
+    saxon_host:'Mail-shirted men from the Christian marches pour across the boundary behind a cross and a lord’s pennon. They burn the shrine, seize cattle, and bind the living for labor.',
+    steppe_riders:'Mounted raiders fan across the fields before sunrise. Arrows drive the village from cover while rawhide loops wait for anyone run down in the open.',
+    rus_raiders:'Long river-boats grind into the reeds. Rus raiders come ashore with axes, ropes, and merchants’ weights — plunder for the boats, captives for the road east.',
+    rival_raiders:'An enemy war-band falls upon the settlement at dawn. They came for portable wealth and living hands, and they mean to leave before any lord can gather men.',
+    other:'Raiders reach the settlement at dawn, taking portable wealth and binding anyone too slow to flee.'
+  }}},
+  options:[
+    { label:'Take the old paths into cover.',
+      desc:'Move quietly before panic fills every lane.', chance:'skill_int',
+      success:{ text:'You lie still while the search passes within speaking distance. At dusk the household slips home with every person and possession intact.',
+        effects:{ log:'Escaped a slave raid without loss.' } },
+      failure:{ text:'A dog barks, a child cries out, or a branch moves at the wrong moment. The raiders turn toward you and the quiet flight becomes a chase.',
+        effects:{ queue:'historic_raid_pursuit' } } },
+    { label:'Leave the cart and every heavy thing.',
+      desc:'The household may escape if its property is made easier to catch.',
+      effects:{ custom:'raid_plunder', log:'Escaped a slave raid after abandoning household wealth.' } },
+    { label:'Break through before the ring closes.',
+      desc:'Speed and violence may win a clean road — or draw every pursuer.', chance:'battle',
+      success:{ text:'One hard rush opens a gap. The raiders close too late, and the household reaches cover without leaving so much as a bundle behind.',
+        effects:{ prestige:4, log:'Broke through a raiding line and escaped without loss.' } },
+      failure:{ text:'The first line gives, but a second closes behind it. You are driven away from the settlement with the raiders at your heels.',
+        effects:{ queue:'historic_raid_pursuit' } } }
+  ]},
+
+{ id:'historic_raid_pursuit', trigger:{ never:true }, childhood:true,
+  contextValidator:'historic_raid_context_valid',
+  title:{ forms:{ select:'value', param:'raidProfile', cases:{
+    northmen:'The Hunt Inland',
+    cross_banners:'Riders on the Track',
+    saxon_host:'Hounds of the March',
+    steppe_riders:'No Shelter from Hooves',
+    rus_raiders:'Axes in the Reeds',
+    rival_raiders:'The Hunt Closes',
+    other:'The Hunt Closes'
+  }}},
+  text:{ forms:{ select:'value', param:'raidProfile', cases:{
+    northmen:'The Northmen spread through the woods in practiced pairs, reading broken fern and mud while the ship horns answer behind them.',
+    cross_banners:'The frontier riders trade horses and keep coming. Their scouts point out every fresh print while the captive column gathers on the road.',
+    saxon_host:'March hounds take the scent and mail rings behind them. The raiders shout that the living are worth more than the dead.',
+    steppe_riders:'The riders loose arrows beside your feet, herding rather than killing. Fresh ponies wait beyond the ridge; they can hunt longer than you can run.',
+    rus_raiders:'The Rus beat through the reeds toward you while their companions pole loaded boats upstream. Rope collars hang ready from their belts.',
+    rival_raiders:'The war-band divides to sweep both sides of the track. You hear captives being counted behind them.',
+    other:'The raiders divide to sweep both sides of the track. You hear captives being counted behind them.'
+  }}},
+  options:[
+    { label:'Scatter and leave the bundles in the track.',
+      desc:'Give the hunters property to gather while people vanish separately.',
+      effects:{ custom:'raid_plunder', log:'Escaped raiders by sacrificing household wealth.' } },
+    { label:'Crawl under the deadfall and wait for dark.',
+      desc:'Stillness against men trained to find frightened people.', chance:'skill_int',
+      success:{ text:'Boots pass, return, and finally fade. Darkness gives you a clean road home, and the household has lost nothing but daylight.',
+        effects:{ log:'Outwaited raiders and escaped without loss.' } },
+      failure:{ text:'A spear probes the leaves. Hands drag you into the open and drive you toward the other captives.',
+        effects:{ queue:'historic_raid_captive' } } },
+    { label:'Turn on the nearest pursuer.',
+      desc:'Break one link in the chain before the others reach you.', chance:'battle',
+      success:{ text:'The nearest pursuer falls. By the time the others understand, you are beyond their cordon and carrying everything you began with.',
+        effects:{ prestige:5, log:'Fought free of raiders without loss.' } },
+      failure:{ text:'The blow is caught. A club drops you to your knees, and when sight returns your wrists are bound with the rest.',
+        effects:{ queue:'historic_raid_captive' } } }
+  ]},
+
+{ id:'historic_raid_captive', trigger:{ never:true }, childhood:true,
+  contextValidator:'historic_raid_context_valid',
+  title:{ forms:{ select:'value', param:'raidProfile', cases:{
+    northmen:'Bound for the Ships',
+    cross_banners:'Bound for the Frontier',
+    saxon_host:'Bound for the March',
+    steppe_riders:'Bound Behind the Herd',
+    rus_raiders:'Bound for the River',
+    rival_raiders:'Bound for a Foreign County',
+    other:'Bound for a Foreign County'
+  }}},
+  text:{ forms:{ select:'value', param:'raidProfile', cases:{
+    northmen:'A rope joins your wrists to the captive file. The Northmen say those who reach the ships alive will work fields in {destination}; anyone who cannot keep pace will be left beside the road.',
+    cross_banners:'The captive line turns toward the frontier. The riders speak of estates in {destination} that need hands, and of no road back once your name enters a master’s tally.',
+    saxon_host:'The march-men bind the household into their column. Beyond the boundary, they say, the fields of {destination} will have new laborers before winter.',
+    steppe_riders:'A rawhide thong fixes you behind the remounts. The riders point toward {destination}, where captives are divided among tents, farms, and buyers.',
+    rus_raiders:'The captives are packed beside the plunder and turned toward the boats. At {destination}, the Rus say, labor and living bodies both have a price.',
+    rival_raiders:'The captives are bound for {destination}, where the victorious will divide property and people together.',
+    other:'The captives are bound for {destination}, where the victorious will divide property and people together.'
+  }}},
+  options:[
+    { label:'Submit to the rope and keep the household alive.',
+      desc:'Captivity, dispossession, and bondage in {destination} — but survival.',
+      effects:{ custom:'raid_enslave', log:'Was carried away in a raid and bound to the land.' } },
+    { label:'Run when the column crosses broken ground.',
+      desc:'One last chance at freedom. Failure is a killing blow.', chance:0.25,
+      success:{ text:'You wrench free in the confusion. The guards take what falls from you, but darkness and rough ground hide the living.',
+        effects:{ custom:'raid_plunder', log:'Escaped a captive column after losing household wealth.' } },
+      failure:{ text:'The guard catches you before the slope ends. The blow is deliberate, final, and meant as a lesson to every captive still standing.',
+        effects:{ health:-10, deathProvenance:{ kind:'raid', province:'context' },
+          log:'Died attempting to escape a raiding column.' } } }
+  ]},
+
 { id:'levy_call', title:'The Levy Is Called',
   trigger:{ tierMax:1, sex:'m', minAge:16, maxAge:45, realmAtWar:true, notFlags:['on_campaign'], professions:['farmer','craftsman','merchant'], chance:0.35 }, weight:12, cooldown:8,
   text:'War. The reeve reads the summons at the {temple} door: every able man of {province} to muster with spear, shield, and three weeks’ bread.',

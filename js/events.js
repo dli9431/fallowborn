@@ -3735,7 +3735,7 @@ window.FB = window.FB || {};
     if (/^(?:diplomacy_|vassal_|appeal_|county_petition)/.test(id)) return 'diplomacy';
     if (/^(?:plot_|fabricate_claim)/.test(id)) return 'plot';
     if (/^(?:council_|parliament_|collective_demand)/.test(id)) return 'politics';
-    if (/^(?:finance_|guild_|distraint_|bondage_|prison_)/.test(id)) return 'property';
+    if (/^(?:finance_|guild_|distraint_|bondage_|prison_|raid_)/.test(id)) return 'property';
     if (/^(?:agency_|sibling_|begin_courtship|formalize_attention|dower_|claim_)/.test(id)) {
       return 'relationship';
     }
@@ -3748,7 +3748,7 @@ window.FB = window.FB || {};
   }
 
   function customPermanent(id) {
-    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|county_petition_grant|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted)$/.test(id);
+    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|raid_plunder|raid_enslave|county_petition_grant|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted)$/.test(id);
   }
 
   /* Core ids are explicit so a newly authored custom option cannot silently
@@ -3764,7 +3764,7 @@ window.FB = window.FB || {};
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security ' +
     'loot_item offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
-    'sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_harry war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
     'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_no_enemy_host war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
@@ -3886,6 +3886,16 @@ window.FB = window.FB || {};
       }
       return [impact('gold', { amount:-5 })];
     }
+    if (id === 'raid_plunder') return [impact('system', {
+      system:'property', action:'plunder', permanent:true, variable:true
+    })];
+    if (id === 'raid_enslave') return [
+      impact('rank', { action:'serfdom', permanent:true }),
+      impact('home', { action:'changed', permanent:true }),
+      impact('system', {
+        system:'property', action:'enslavement', permanent:true, variable:true
+      })
+    ];
     if (id === 'dower_take' || id === 'dower_take_full' ||
         id === 'claim_won' || id === 'claim_sold') {
       return [impact('gold', { reward:true, variable:true })];
@@ -4913,6 +4923,14 @@ window.FB = window.FB || {};
       if (record.system === 'diplomacy') return FB.T('A diplomatic relationship changes');
       if (record.system === 'plot') return FB.T('The active plot changes');
       if (record.system === 'politics') return FB.T('Political terms change');
+      if (record.system === 'property' && record.action === 'plunder') {
+        return FB.T('Lose money, an item, or household property');
+      }
+      if (record.system === 'property' && record.action === 'enslavement') {
+        return FB.T('Permanent: property lost and station falls to {rank}', {
+          rank:FB.titleWordFor(state, 0)
+        });
+      }
       if (record.system === 'property') return record.permanent
         ? FB.T('Permanent land, property, or station change')
         : FB.T('Property or contract terms change');
@@ -6022,6 +6040,138 @@ window.FB = window.FB || {};
   };
   FB.fns.record_liege_grant = function (state) {
     FB.recordLiegeGrant(state);
+  };
+
+  const HISTORIC_RAID_PROFILES = {
+    northmen:1, cross_banners:1, saxon_host:1,
+    steppe_riders:1, rus_raiders:1, rival_raiders:1
+  };
+
+  FB.fns.historic_raid_context_valid = function (state, ctx) {
+    const p = state.player;
+    const target = ctx && ctx.destinationId && FB.world.byId[ctx.destinationId];
+    return !!(p && p.tier <= 2 && ctx &&
+      ctx.protagonistId === p.charId && HISTORIC_RAID_PROFILES[ctx.raidProfile] &&
+      target && !target.wasteland && target.id !== p.provinceId);
+  };
+
+  /* A neutral escape costs one represented piece of portable or household
+     wealth. The seeded draw chooses only among categories the family actually
+     owns, so an heirloom cannot be named when the armory is empty and a
+     penniless household is never charged imaginary coin. */
+  FB.fns.raid_plunder = function (state) {
+    const p = state.player;
+    const items = FB.itemList ? FB.itemList(state) : (p.items || []);
+    const holdings = FB.holdingList ? FB.holdingList(state) : (p.holdings || []);
+    const plots = p.landPlots || [];
+    const standards = FB.ensureHouseholdStandards
+      ? FB.ensureHouseholdStandards(state) : (p.householdStandards || {});
+    const standardIds = Object.keys(standards).filter(function (id) {
+      return Number(standards[id]) > 0;
+    }).sort();
+    const categories = [];
+    if (items.length) categories.push('item');
+    if (holdings.length) categories.push('holding');
+    if (standardIds.length) categories.push('standard');
+    if (plots.length) categories.push('plot');
+    if (p.gold > 0) categories.push('gold');
+    if (!categories.length) {
+      FB.news(state, FB.msg('news.event.raid_empty_handed',
+        'The raiders find no purse or property worth slowing for.', {}));
+      return true;
+    }
+    const category = FB.pick(categories);
+    if (category === 'item') {
+      const ref = FB.pick(items);
+      const item = FB.itemParam ? FB.itemParam(state, ref) : ref;
+      if (FB.destroyItem) FB.destroyItem(state, ref, { force:true });
+      FB.news(state, FB.msg('news.event.raid_item_lost',
+        'The raiders carry off {item}.', { item:item }));
+    } else if (category === 'holding') {
+      const id = FB.pick(holdings);
+      holdings.splice(holdings.indexOf(id), 1);
+      FB.news(state, FB.msg('news.event.raid_holding_lost',
+        'The raiders strip the household of {holding}.', {
+          holding:FB.dataParam('holding', id)
+        }));
+    } else if (category === 'standard') {
+      const id = FB.pick(standardIds);
+      const level = Number(standards[id]) || 1;
+      if (level > 1) standards[id] = level - 1;
+      else delete standards[id];
+      FB.news(state, FB.msg('news.event.raid_standard_lost',
+        'The raiders ruin or carry off {goods}.', {
+          goods:FB.dataParam('householdStandard', id,
+            'levels.' + (level - 1) + '.name')
+        }));
+    } else if (category === 'plot') {
+      plots.splice(FB.ri(0, plots.length - 1), 1);
+      FB.news(state, FB.msg('news.event.raid_plot_lost',
+        'The abandoned family plot is seized before you can return.', {}));
+    } else {
+      const amount = Math.min(p.gold,
+        Math.max(2, Math.min(20, Math.ceil(p.gold * 0.35))));
+      p.gold -= amount;
+      FB.news(state, FB.msg('news.event.raid_gold_lost',
+        'The raiders take a purse worth {money:amount}.', { amount:amount }));
+    }
+    return true;
+  };
+
+  /* Capture is not ordinary imprisonment. The raiders transport the whole
+     playable household to their snapshotted county, erase immovable commoner
+     property, and bind the protagonist at the tier floor. Culture and faith
+     remain the captive family's own. */
+  FB.fns.raid_enslave = function (state, ctx) {
+    if (!FB.fns.historic_raid_context_valid(state, ctx)) return false;
+    const p = state.player;
+    const destination = ctx.destinationId;
+    p.gold = 0;
+    p.provs = [];
+    p.holdings = [];
+    p.enterprises = [];
+    p.householdStandards = {};
+    p.landPlots = [];
+    p.manor = null;
+    p.professionBack = null;
+    delete p.flags.on_campaign;
+    delete p.flags.was_civilian;
+    delete p.flags.guild_member;
+    delete p.flags.has_farm;
+    delete p.flags.abbot;
+    delete p.flags.qadi;
+    delete p.flags.home_burned;
+    delete p.flags.home_burned2;
+    delete p.flags.lord_protection;
+    FB.setPlayerTier(state, 0, { attachLiege:false });
+    p.provinceId = destination;
+    FB.changePlayerLiege(state, null, 'raid:enslavement');
+    if (FB.clearCourtship) FB.clearCourtship(state);
+    if (FB.socialAttentionClear) FB.socialAttentionClear(state);
+    if (FB.clearFriendship) FB.clearFriendship(state, true);
+    for (const role of ['lord', 'priest', 'friend', 'rival', 'notable']) {
+      delete state.roles[role];
+    }
+    if (FB.setCareer) {
+      const me = state.chars[p.charId];
+      const rank = FB.ageOf(me, state.date.year) < 16 ? 'apprentice' : 'journeyman';
+      FB.setCareer(state, me, 'farmer', rank);
+    } else {
+      p.profession = 'farmer';
+    }
+    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+    if (FB.reconcileHouseholdLoadouts) FB.reconcileHouseholdLoadouts(state);
+    if (FB.enterpriseList) FB.enterpriseList(state);
+    if (FB.validateFocus) FB.validateFocus(state);
+    FB.news(state, FB.msg('news.event.raid_enslaved',
+      'Carried to {county}, the household is stripped of property and bound to the land.', {
+        county:FB.world.byId[destination].name
+      }));
+    if (FB.map) {
+      FB.map.playerProv = destination;
+      FB.map.request();
+    }
+    return true;
   };
 
   FB.movePlayerRandom = function (state) {

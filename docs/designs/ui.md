@@ -879,9 +879,11 @@ must not pick an outcome by accident, while a deliberate next tap should feel im
 guard rearms for each queued event. Autoresolved events render no buttons, so they bypass
 the guard naturally; question-mark detail controls never resolve and need no guard. Chance choices no
 longer create a blocking outcome screen: one receipt toast appears for six seconds above
-the event layer and the queue advances immediately. The toast replaces an older receipt
-instead of stacking; when no event blocks input, activating it opens the Chronicle's
-Choices filter. Exceptional choices that automation intentionally shows remain protected.
+the event layer in the map's bottom-left toast region, and the queue advances immediately.
+It stays within the map on narrow layouts so it cannot cover panel action buttons. The toast
+replaces an older receipt instead of stacking; when no event blocks input, activating it
+opens the Chronicle's Choices filter. Exceptional choices that automation intentionally
+shows remain protected.
 
 The Chronicle has session-local **All / Choices / News** filters. Choices are typed event
 receipts with rich exact-change chips; News includes legacy untyped entries and ordinary
