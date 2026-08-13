@@ -3729,14 +3729,16 @@ window.FB = window.FB || {};
     p.provinceId = destinationId;
     if (realm && realm.alive) realm.capital = destinationId;
 
-    /* Lord/priest are local story roles, not personal relationships. Their
+    /* Lord/steward/priest are local story roles, not personal relationships. Their
        former holders remain resident at the old seat; the new county receives
        a fresh local cast. */
     delete state.roles.lord;
+    delete state.roles.steward;
     delete state.roles.priest;
     delete state.roles.notable;
     if (FB.getRole) {
       FB.getRole(state, 'lord', true);
+      FB.getRole(state, 'steward', true);
       FB.getRole(state, 'priest', true);
     }
 

@@ -456,7 +456,7 @@ window.FB = window.FB || {};
     return FB.renderKey('rarity.' + source + '.default', { text: source }, {});
   }
   const ROLE_NAMES = {
-    lord: 'Lord', priest: 'Priest', friend: 'Friend', rival: 'Rival',
+    lord: 'Lord', steward: 'Lord’s steward', priest: 'Priest', friend: 'Friend', rival: 'Rival',
     notable: 'Notable', suitor: 'Suitor', match: 'Match', kinspouse: 'Kin by marriage',
     spouse: 'Spouse', tutor: 'Tutor', parent: 'Parent', sibling: 'Sibling'
   };

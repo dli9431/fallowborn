@@ -546,7 +546,12 @@ Network state is additive and lazily validated. `player.friendContacts` maps kno
 character ids to current-life contact timestamps; the canonical friend remains
 `state.roles.friend` for events and mods. `player.socialAttention` is a character-id-keyed
 assignment map (one entry with core balance) and `player.socialGiftTurns` stores the last
-explicit cash-or-item gift turn per character recipient for the current life.
+explicit cash-or-item gift turn per character recipient for the current life. Ranked
+access adds no save field: `FB.rankAccessStatus` derives the reachable station and
+intermediary chain from the protagonist's current tier, existing `friendContacts`, and
+their live typed Standing. `state.roles.steward` is a lazily created, location-scoped
+station-2 character like the local lord and priest; permanent household or capital moves
+leave the former steward at the old home and generate a new local officeholder.
 An active formal courtship may also carry
 `player.courtshipTerms:{suitorId,amount,playerPays}`. The snapshot freezes the
 visible transfer through proposal and wedding; restore recreates it for a valid

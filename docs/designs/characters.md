@@ -310,10 +310,36 @@ everywhere: the dead `traitAgg(me).opinion` aggregate now
 scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk faster),
 and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
 add the target's `opinion/500` to success — a trusting victim is easier to undo.
+
+**Ranked access is a chain of introductions, not a hard prohibition.** A household can
+normally approach its own station or one station above it. A cultivated contact at Warm
+Standing (the shared +40 relationship threshold) opens the next exact station, so a serf
+normally reaches a station-3 lord through a station-1 priest or freeholder and then a
+station-2 lord's steward or gentle notable. The home cast therefore includes a local
+`steward` at station 2 between priest and lord. Each station beyond ordinary reach halves
+positive cultivation and gift effects and doubles cash-gift and bought-access costs by
+default (`rankAccessInfluenceMult`, `rankAccessCashCostMult`). A spouse, kinsperson,
+household member, named friend or rival, warm direct contact, and royal compact is already
+a personal relationship and needs no intermediary chain.
+
+This models the institutional routes visible in surviving records rather than pretending
+that medieval ranks never spoke. English manorial courts were presided over by a lord's
+steward, with the bailiff summoning tenants and reporting business ([University of
+Nottingham](https://www.nottingham.ac.uk/manuscriptsandspecialcollections/learning/laxton/theme2/manorialcourt.aspx));
+petitioners seeking royal mercy commonly depended on patrons or intercessors with court
+influence ([Cambridge, *Royal Pardon*](https://www.cambridge.org/core/books/royal-pardon-access-to-mercy-in-fourteenthcentury-england/intercessor/BEB12EB4D22B91BE9B10E9614294EFB3)).
+Formal offices, event audiences, clergy advocacy, guild petitions, homage, and recorded
+service already embody such an institutional route, so their authored Standing effects
+do not pass through the manual-interaction penalty a second time. An existing attention
+assignment remains a valid introduction for old saves. Personal wartime participation or
+the local lord's explicit favor grants an extraordinary audience with that local lord,
+though the class-distance influence penalty remains.
+
 `player.socialAttention` is not another relationship meter: it names the one character
-whose existing Standing gains `balance.socialAttentionDailyOpinion` (+0.2 by default) each
-ordinary player day. Assignment and withdrawal cost no day, and Diplomacy does not change
-that fixed rate. `FB.characterResidence(state, character)` is the authoritative
+whose existing Standing gains `balance.socialAttentionDailyOpinion` (+0.2 by default),
+scaled by ranked access, each ordinary player day. Assignment and withdrawal cost no day,
+and Diplomacy does not change that rate. `FB.characterResidence(state, character)` is the
+authoritative
 county for social presence: managed household members and retainers live at the
 household home, foreign notables in their saved roster county, royal children and
 materialized reigning rulers at their realm’s current capital, and explicitly relocated
@@ -325,9 +351,12 @@ county, and continues alongside work, study, war, destination residence, and dee
 that consume a day. Observe mode never advances it.
 
 **Explicit gifts are recipient-bound.** Every living non-player character sheet offers one
-gift picker. Cash costs 5 gold for `balance.socialCashGiftOpinion` Standing (+4 by default);
-an unequipped, unpledged armory object grants the quality-tier value from
-`balance.socialItemGiftOpinion` (+4/+8/+12). Cash and items share the character-id clock in
+gift picker once ranked access exists. Cash begins at 5 gold for
+`balance.socialCashGiftOpinion` Standing (+4 by default); an unequipped, unpledged armory
+object begins at the quality-tier value from `balance.socialItemGiftOpinion` (+4/+8/+12).
+Ranked access raises the cash requirement and reduces both cash and item Standing effects
+at the same per-station rates described above. Cash and items share the character-id clock
+in
 `player.socialGiftTurns`, so the same person may receive only one explicit gift every
 `balance.socialGiftCooldownDays` (90 by default), and every accepted gift spends one day.
 Spouses, dependent children, retainers, and other managed household members may receive
@@ -701,7 +730,7 @@ retainer, equipment, education, work, and arranged-match mechanics. The card
 does not store a relationship model and does not replace biography, the
 Household Plan, or the long Network roster.
 
-`FB.socialAttentionStatus` and `FB.friendshipStatus` expose read-only,
+`FB.rankAccessStatus`, `FB.socialAttentionStatus`, and `FB.friendshipStatus` expose read-only,
 localized gate results. Assignment and naming still revalidate through the
 same mechanics before mutation. A reigning ruler represented by a full
 character shares the realm target's typed Standing but has no personal gift

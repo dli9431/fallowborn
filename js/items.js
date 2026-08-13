@@ -1098,6 +1098,10 @@ window.FB = window.FB || {};
     const item = rawResolved(state, ref);
     const ruler = kind === 'ruler' && state.realms && state.realms[id];
     const character = kind === 'character' && state.chars && state.chars[id];
+    const accessTarget = {
+      kind:kind === 'ruler' ? 'realm' : 'character', id:id
+    };
+    const access = FB.rankAccessStatus(state, accessTarget);
     const days = kind === 'ruler' && FB.rulerGiftDaysRemainingSnapshot
       ? FB.rulerGiftDaysRemainingSnapshot(state, id)
       : (kind === 'character' && FB.socialGiftDaysRemainingSnapshot
@@ -1109,11 +1113,14 @@ window.FB = window.FB || {};
       ref:ref,
       recipientKind:kind,
       recipientId:id,
-      standing:item ? FB.giftOpinion(item) : 0,
+      standing:item
+        ? FB.rankAccessStandingEffect(state, accessTarget,
+          FB.giftOpinion(item)) : 0,
       cooldownDays:FB.socialGiftCooldownDays
         ? FB.socialGiftCooldownDays() : 90,
       daysRemaining:days,
       delivery:delivery,
+      access:access,
       reason:''
     };
     if (!item || !Array.isArray(state.player.items) ||
@@ -1135,6 +1142,8 @@ window.FB = window.FB || {};
         FB.isHouseholdCharacter(state, id)) {
       status.reason = FB.T(
         'Household equipment remains in the shared family armory.');
+    } else if (!access.ready) {
+      status.reason = access.reason;
     } else if (delivery && delivery.pending) {
       status.reason = FB.T(
         'A gift courier is already traveling for this recipient.');

@@ -1112,6 +1112,8 @@ FBDATA.balance = {
   wartimeNecessitiesSurcharge: 0.25, // added to base household upkeep + family provisions while the player's realm is at war
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
+  rankAccessInfluenceMult: 0.5, // each station beyond ordinary one-rank reach halves cultivation and gift Standing
+  rankAccessCashCostMult: 2, // each such station doubles cash gifts and bought-access intrigue costs
   marriageProspectRefreshDays: 30, // protagonist and descendant family searches
   socialGiftCooldownDays: 90, socialCashGiftOpinion: 4,
   socialItemGiftOpinion: [4,8,12], // Plain/common, Well-made/fine, Masterwork/famed

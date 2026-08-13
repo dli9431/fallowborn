@@ -348,6 +348,16 @@ Each positive `fx.warService` award also adds its exact value to Muster-Bred
 acquisition progress; six points award the formation without changing the existing
 service tally or its succession reset.
 
+Personal participation in war also creates a rare break in ordinary social access. A
+campaigning protagonist may reach the current local lord without first completing the
+priest/freeholder-to-steward chain: muster, guard duty, and the lord's host put otherwise
+distant ranks in the same urgent setting. This is an audience, not equality; cultivation
+and explicit gifts still keep their class-distance effect and cash multipliers. It never
+opens unrelated nobles or foreign rulers. The pattern complements the game's existing
+service route to elevation: early medieval royal land grants explicitly record devoted
+service alongside military, bridge, and fortress obligations ([The National
+Archives](https://www.nationalarchives.gov.uk/education/resources/anglo-saxons-gift-from-a-king/)).
+
 **Battlefield knighting belongs to an active war.** Saving the fallen lord may mark a
 soldier for elevation, but `knighted` also requires `realmAtWar:true` when it is selected.
 The top-level `wartime:true` flag controls the wartime event pool; it does not make an

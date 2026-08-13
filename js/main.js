@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.122.2';
+  FB.VERSION = '1.123.0';
   FB.CHANGELOG = [
+    { v: '1.123.0', date: '2026-08-13', changes: [
+      'Social access now follows rank: warm intermediaries can open higher courts, while distant contacts make cultivation, gifts, courtship, and bought intrigue less effective and more costly.'
+    ] },
     { v: '1.122.2', date: '2026-08-13', changes: [
       'Marriage searches now offer age-relative prospects, with a fourth young-adult option for protagonists aged forty or older.'
     ] },
