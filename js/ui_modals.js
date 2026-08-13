@@ -14474,11 +14474,10 @@ window.FB = window.FB || {};
   };
 
   /* ================= suitor picker =================
-     Seeking a match sounds out three families at once — an established house,
-     a peer, and a young one (FB.spawnSuitor) — so age never decides the match
-     by itself. The same three wait until one is chosen or a later eligible
-     search replaces them; the usual
-     meet-and-court flow follows from there. */
+     Seeking a match sounds out an established house, a peer, and a young one
+     (FB.spawnSuitor), plus a very young adult for protagonists aged forty or
+     older. The same pool waits until one is chosen or a later eligible search
+     replaces it; the usual meet-and-court flow follows from there. */
   UI.showSuitorPicker = function () {
     const s = FB.state;
     if (!s || UI.eventsBusy()) return;
@@ -14488,7 +14487,9 @@ window.FB = window.FB || {};
     if (!cands.length) return;
     const ps = FB.playerStation(s);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Kin and gossips name three who would hear your suit:')) +
+      'Kin and gossips name {count} people who would hear your suit:', {
+        count:cands.length
+      })) +
       '</p></div><div class="gm-list">';
     for (const m of cands) {
       const st = FB.stationOf(m);

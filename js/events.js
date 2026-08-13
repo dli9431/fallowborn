@@ -1788,16 +1788,31 @@ window.FB = window.FB || {};
       FB.msg('fx.epithet.suitor.3.f.2', 'Of an old noble house', {})
     ] }
   ];
-  /* Seeking a match sounds out three families at once, so age never decides
-     the match by itself: an established house (older, a step up — fatter
-     dowry and more prestige, a harder suit, fewer childbearing years), a peer
-     (same years, same station), and a young one (a step down, but fertile
-     years ahead). The three persist on the player as suitorIds until one is
-     chosen (FB.pickSuitor); the picker lives in ui.js. */
+  /* Seeking a match sounds out three core families at once, so age never
+     decides the match by itself: an established house (older, a step up —
+     fatter dowry and more prestige, a harder suit, fewer childbearing years),
+     a peer (same years, same station), and a young one (a step down, but more
+     fertile years ahead). All three ages stay relative to the protagonist
+     instead of collapsing against upper caps. From age forty, a fourth family
+     offers a very young adult match aged sixteen to twenty-four. The available
+     candidates persist on the player as suitorIds until one is chosen
+     (FB.pickSuitor); the picker lives in ui_modals.js. */
   const SUITOR_PROFILES = [
-    { dSt: 1, age: function (a) { return a + FB.ri(0, 8); }, min: 18, max: 45 },  // established
-    { dSt: 0, age: function (a) { return a + FB.ri(-5, 5); }, min: 16, max: 40 }, // peer
-    { dSt: -1, age: function (a) { return a - FB.ri(8, 18); }, min: 16, max: 30 } // young
+    { dSt: 1, age: function (a) { // established: the protagonist's age to eight years older
+      const low = Math.max(18, a);
+      return FB.ri(low, Math.max(low, a + 8));
+    } },
+    { dSt: 0, age: function (a) { // peer: within five years
+      const low = Math.max(16, a - 5);
+      return FB.ri(low, Math.max(low, a + 5));
+    } },
+    { dSt: -1, age: function (a) { // young: eight to eighteen years younger
+      const low = Math.max(16, a - 18);
+      return FB.ri(low, Math.max(low, a - 8));
+    } },
+    { dSt: -1, minPlayerAge: 40, age: function () { // very young adult
+      return FB.ri(16, 24);
+    } }
   ];
   FB.spawnSuitor = function (state) {
     const me = state.chars[state.player.charId];
@@ -1823,13 +1838,14 @@ window.FB = window.FB || {};
       state.player.suitorIds.push(m.id);
     }
     for (let i = 0; i < SUITOR_PROFILES.length; i++) {
-      if (out.some(function (m) { return m.suitorProfile === i; })) continue;
       const prof = SUITOR_PROFILES[i];
+      if (prof.minPlayerAge !== undefined && myAge < prof.minPlayerAge) continue;
+      if (out.some(function (m) { return m.suitorProfile === i; })) continue;
       const st = FB.clamp(ps + prof.dSt, 0, 3);
       const c = FB.makeCharacter(state, {
         sex: me.sex === 'm' ? 'f' : 'm',
         culture: pr.culture, religion: me.religion,
-        born: y - FB.clamp(prof.age(myAge), prof.min, prof.max),
+        born: y - prof.age(myAge),
         role: 'suitor', opinion: FB.ri(-10, 25),
         station: st, quality: st + FB.ri(0, 1)
       });
@@ -1843,7 +1859,7 @@ window.FB = window.FB || {};
   };
 
   /* A new search replaces the unchosen families. Ordinary picker rendering
-     continues to call spawnSuitor, which reuses the stored trio. */
+     continues to call spawnSuitor, which reuses the stored pool. */
   FB.refreshSuitors = function (state) {
     if (state.player.suitorIds) {
       for (const id of state.player.suitorIds) {

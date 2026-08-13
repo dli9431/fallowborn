@@ -142,6 +142,59 @@ test('Seek a match replaces all three prospects only after its cooldown',
     })).toBe(false);
   });
 
+test('age forty adds a fourth adult prospect without capping older age bands',
+  async function ({ page }) {
+    const prospects = await page.evaluate(function () {
+      const state = FB.state;
+      const protagonist = state.chars[state.player.charId];
+      protagonist.born = state.date.year - 39;
+      const belowForty = FB.refreshSuitors(state).map(function (candidate) {
+        return candidate.suitorProfile;
+      }).sort();
+      protagonist.born = state.date.year - 40;
+      const atForty = FB.spawnSuitor(state).map(function (candidate) {
+        return candidate.suitorProfile;
+      }).sort();
+      protagonist.born = state.date.year - 48;
+      const candidates = FB.refreshSuitors(state);
+      const byProfile = {};
+      candidates.forEach(function (candidate) {
+        byProfile[candidate.suitorProfile] =
+          FB.ageOf(candidate, state.date.year);
+      });
+      return {
+        ages:byProfile,
+        belowForty:belowForty,
+        atForty:atForty,
+        profiles:candidates.map(function (candidate) {
+          return candidate.suitorProfile;
+        }).sort()
+      };
+    });
+
+    const ages = prospects.ages;
+    expect(prospects.belowForty).toEqual([0, 1, 2]);
+    expect(prospects.atForty).toEqual([0, 1, 2, 3]);
+    expect(prospects.profiles).toEqual([0, 1, 2, 3]);
+    expect(ages[0]).toBeGreaterThanOrEqual(48);
+    expect(ages[0]).toBeLessThanOrEqual(56);
+    expect(ages[1]).toBeGreaterThanOrEqual(43);
+    expect(ages[1]).toBeLessThanOrEqual(53);
+    expect(ages[2]).toBeGreaterThanOrEqual(30);
+    expect(ages[2]).toBeLessThanOrEqual(40);
+    expect(ages[3]).toBeGreaterThanOrEqual(16);
+    expect(ages[3]).toBeLessThanOrEqual(24);
+
+    await page.evaluate(function () {
+      FB.ui.showSuitorPicker();
+    });
+    await expect(page.locator('[data-suitor]')).toHaveCount(4);
+    await expect(page.getByText(
+      'Kin and gossips name 4 people who would hear your suit:',
+      { exact:true }
+    )).toBeVisible();
+  });
+
 test('descendant picker refreshes in place without spending time or resources',
   async function ({ page }) {
     const family = await addEligibleDescendant(page);

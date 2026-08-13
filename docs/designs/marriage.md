@@ -157,11 +157,17 @@ death dues, or clears an unrelated pregnancy.
 (`FB.stationOf` in model.js; the player's is their tier capped at 4). Courting 3+ steps
 up is blocked (`FB.canCourt`), the `proposal` named chance drops per step up
 (`balance.proposalStationPenalty`), weddings settle a station-scaled dowry and prestige
-swing (`FB.doMarry`), and matchmaking sounds out three families at once
-(`FB.spawnSuitor`): an established house (older, a step up — fatter dowry, harder
-suit, fewer childbearing years), a peer, and a young match a step down. The three
-persist on the player as `suitorIds` until one is chosen in the picker or the
-next eligible **Seek a match** replaces the full pool
+swing (`FB.doMarry`), and matchmaking sounds out three core families at once
+(`FB.spawnSuitor`): an established house (the protagonist's age to eight years
+older, a step up — fatter dowry, harder suit, fewer childbearing years), a peer
+within five years, and a young match eight to eighteen years younger and a step
+down. None has an artificial upper-age cap, so every profile stays relative to the
+protagonist instead of every later-life search collapsing to the same 45/40/30
+ages. The ordinary age-fertility curve still makes younger options more useful
+for extending the line. Once the protagonist is forty, a fourth
+step-down family offers a very young adult aged sixteen to twenty-four. The
+available candidates persist on the player as `suitorIds` until one is chosen
+in the picker or the next eligible **Seek a match** replaces the full pool
 (`FB.refreshSuitors` → `UI.showSuitorPicker` → `FB.pickSuitor`). Merely reopening
 the picker reuses the current records. Searches observe
 `balance.marriageProspectRefreshDays` and spend no day or resources, including
