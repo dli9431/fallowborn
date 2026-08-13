@@ -4311,7 +4311,9 @@ window.FB = window.FB || {};
     const cashBoost = cashStatus.standing;
     const cashBlocked = !cashStatus.ready;
     let cashDetail;
-    if (deliveryText || deliveryUnavailable) {
+    if (cashBlocked && cashStatus.reason) {
+      cashDetail = cashStatus.reason;
+    } else if (deliveryText || deliveryUnavailable) {
       cashDetail = deliveryText || deliveryUnavailable;
     } else if (days) {
       cashDetail = FB.T(
@@ -4359,9 +4361,9 @@ window.FB = window.FB || {};
       for (const ref of refs) {
         const item = FB.resolveItem(s, ref);
         if (!item) continue;
-        const blocked = giftItemUnavailableText(
-          s, ref, 'character', cid);
-        const boost = FB.giftOpinion(item);
+        const itemStatus = FB.itemGiftStatus(s, ref, 'character', cid);
+        const blocked = itemStatus.ready ? '' : itemStatus.reason;
+        const boost = itemStatus.standing;
         const detail = blocked
           ? FB.T('+{standing} Standing · unavailable: {reason}', {
             standing:boost, reason:blocked
@@ -4454,7 +4456,9 @@ window.FB = window.FB || {};
     const standing = FB.T('Standing');
     const cashBlocked = !cashStatus.ready;
     let cashDetail;
-    if (deliveryText || deliveryUnavailable) {
+    if (cashBlocked && cashStatus.reason) {
+      cashDetail = cashStatus.reason;
+    } else if (deliveryText || deliveryUnavailable) {
       cashDetail = deliveryText || deliveryUnavailable;
     } else if (days) {
       cashDetail = FB.T(
@@ -4499,8 +4503,9 @@ window.FB = window.FB || {};
     for (const ref of refs) {
       const item = FB.resolveItem(s, ref);
       if (!item) continue;
-      const blocked = giftItemUnavailableText(s, ref, 'ruler', rid);
-      const boost = FB.giftOpinion(item);
+      const itemStatus = FB.itemGiftStatus(s, ref, 'ruler', rid);
+      const blocked = itemStatus.ready ? '' : itemStatus.reason;
+      const boost = itemStatus.standing;
       const detail = blocked
         ? FB.T('+{amount} {standing} · unavailable: {reason}', {
           amount:boost, standing:standing, reason:blocked
@@ -4660,6 +4665,7 @@ window.FB = window.FB || {};
     const locationId = travel
       ? (travel.phase === 'arrived' ? travel.currentId : null)
       : s.player.provinceId;
+    const access = FB.rankAccessStatus(s, { kind:'realm', id:rid });
     const out = {
       eligible:false,
       active:!!destinationId && locationId === destinationId,
@@ -4667,9 +4673,14 @@ window.FB = window.FB || {};
       days:0,
       cost:0,
       minimumStay:FBDATA.balance.travelMinStayDays || 90,
-      rate:FB.socialAttentionDailyOpinion(),
+      rate:FB.socialAttentionDailyOpinion() * access.standingMultiplier,
+      access:access,
       reason:''
     };
+    if (!access.ready) {
+      out.reason = access.reason;
+      return out;
+    }
     if (out.active) {
       out.eligible = true;
       return out;
@@ -4763,6 +4774,7 @@ window.FB = window.FB || {};
       ? FB.realmReligionId(s, rid)
       : (cap && cap.religion);
     const standing = FB.standingOf(s, { kind:'realm', id:rid });
+    const access = FB.rankAccessStatus(s, { kind:'realm', id:rid });
     const rulerCharacter = interactionRealmRulerCharacter(s, rid);
     const succession = realm.succession;
     const family = realmFamilySnapshot(s, rid);
@@ -4778,6 +4790,7 @@ window.FB = window.FB || {};
         { label:FB.T('Political relationship'),
           value:realmRelationshipText(s, rid) },
         { label:FB.T('Rank'), value:FB.realmRankTitle(s, realm) },
+        { label:FB.T('Access'), value:access.description },
         { label:FB.T('Ruler'), value:realm.ruler.name },
         { label:FB.T('Ruler’s ambition'), value:FB.rulerAimLabel
           ? FB.rulerAimLabel(s, rid) : FB.T('Unknown') },
@@ -4926,7 +4939,7 @@ window.FB = window.FB || {};
         group:'gift',
         label:FB.T('Offer a gift…'),
         detail:FB.T(
-          'Cash costs {money:cost} for +{standing} Standing; eligible armory items grant their quality value. The recipient cooldown is {days} days and accepting a gift spends the day.', {
+          'Cash costs {money:cost} for +{standing} Standing; eligible armory items show their access-adjusted value. The recipient cooldown is {days} days and accepting a gift spends the day.', {
             cost:gift.cost,
             standing:gift.standing,
             days:gift.cooldownDays
@@ -5124,14 +5137,12 @@ window.FB = window.FB || {};
     const mayApproach = chain.indexOf(rid) >= 0 || royalNeighbor;
     for (const child of family) {
       const age = Math.max(0, s.date.year - child.born);
-      const station = realm.rank <= 2 ? 3 : 4;
       const canTry = mayApproach && age >= 16 && child.sex !== me.sex &&
         !compact && FB.canWedSnapshot(s) &&
         !(FB.closeMarriageKinSnapshot &&
           FB.closeMarriageKinSnapshot(s, me, {
           royalLine:{ realmId:rid, memberId:child.id }
-        })) &&
-        station - FB.playerStation(s) < 3;
+        }));
       if (!canTry) continue;
       addInteractionAction(model, {
         id:'relationship.royal-courtship.' + child.id,
@@ -5139,12 +5150,14 @@ window.FB = window.FB || {};
         label:FB.T('Approach {name} for courtship…', {
           name:child.name
         }),
-        detail:succession && succession.heirId === child.id
-          ? FB.T('The designated heir can transmit the crown to your shared branch.')
-          : FB.T(
-            'This creates a dynastic tie, but this child does not currently transmit the crown.'),
-        enabled:true,
-        blockedReason:null,
+        detail:access.ready
+          ? (succession && succession.heirId === child.id
+            ? FB.T('The designated heir can transmit the crown to your shared branch.')
+            : FB.T(
+              'This creates a dynastic tie, but this child does not currently transmit the crown.'))
+          : access.reason,
+        enabled:access.ready,
+        blockedReason:access.ready ? null : access.reason,
         consequence:FB.T(
           'Materializes this royal child only after you choose the action.'),
         route:'royal-courtship',
@@ -13207,7 +13220,7 @@ window.FB = window.FB || {};
             days:gift.cooldownDays
           })
         : FB.T(
-          'Cash costs {money:cost} for +{standing} Standing; an eligible armory item grants its quality value. The recipient cooldown is {days} days.', {
+          'Cash costs {money:cost} for +{standing} Standing; eligible armory items show their access-adjusted value. The recipient cooldown is {days} days.', {
             cost:gift.cost,
             standing:gift.standing,
             days:gift.cooldownDays
@@ -13239,6 +13252,8 @@ window.FB = window.FB || {};
     const householdAuthority = !c.dead &&
       FB.isExternalHouseholdAuthority &&
       FB.isExternalHouseholdAuthority(s, c);
+    const access = !c.dead && c.id !== me.id
+      ? FB.rankAccessStatus(s, { kind:'character', id:c.id }) : null;
     const retainer = !c.dead
       ? interactionRetainerRecord(s, c.id) : null;
     const agencyFamily = !c.dead && FB.isAgencyFamilyMember &&
@@ -13267,6 +13282,9 @@ window.FB = window.FB || {};
       commitments:[],
       actions:[]
     };
+    if (access) {
+      model.context.push({ label:FB.T('Access'), value:access.description });
+    }
     if (c.dead || c.id === me.id) return model;
 
     const attentionTarget = interactionAttentionTarget(s);
@@ -13541,10 +13559,11 @@ window.FB = window.FB || {};
     if (!isSpouse && s.player.courtingId !== c.id) {
       const courtship = FB.courtshipStatus(s, c, false);
       if (courtship.relevant) {
-        const courtVisitReady = together || (visit && visit.eligible &&
-          visit.cost <= s.player.gold);
+        const courtVisitReady = attention.ready &&
+          (together || (visit && visit.eligible &&
+            visit.cost <= s.player.gold));
         const ready = courtship.ready && courtVisitReady;
-        let reason = courtship.reason;
+        let reason = courtship.reason || attention.reason;
         if (!reason && !courtVisitReady) {
           reason = visit && visit.eligible
             ? FB.T('Requires {money:cost}; you have {money:current}.', {
@@ -14645,7 +14664,7 @@ window.FB = window.FB || {};
         (assigned ? '' :
         '<button class="actionbtn" id="im-give">🎁 Give it as a gift…' +
         '<span class="adesc">' + esc(FB.T(
-          '+{standing} Standing. Each recipient can receive one cash or item gift every {days} days. (spends the day)', {
+          'Up to +{standing} Standing; recipient access determines the exact value. Each recipient can receive one cash or item gift every {days} days. (spends the day)', {
             standing:FB.giftOpinion(item), days:FB.socialGiftCooldownDays()
           })) + '</span></button>' +
         '<button class="actionbtn" id="im-sell">' +
@@ -14714,32 +14733,39 @@ window.FB = window.FB || {};
     for (const contact of FB.friendConnections(s)) {
       add(contact, FB.T('cultivated connection'));
     }
-    for (const role of ['lord', 'priest', 'friend', 'rival']) {
+    for (const role of ['lord', 'steward', 'priest', 'friend', 'rival']) {
       const relation = role === 'lord' ? FB.T('your lord') :
-        (role === 'priest' ? FB.T('your priest') :
-          (role === 'friend' ? FB.T('your friend') : FB.T('your rival')));
+        (role === 'steward' ? FB.T('the lord’s steward') :
+          (role === 'priest' ? FB.T('your priest') :
+            (role === 'friend' ? FB.T('your friend') : FB.T('your rival'))));
       add(FB.getRole(s, role, false), relation);
     }
     if (!folk.length) {
       UI.toast('You know no one to honor with it.');
       return;
     }
-    const boost = FB.giftOpinion(item);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Whom to honor with {icon} {item}? Such largesse is worth +{standing} Standing.', {
-        icon:def.icon, item:FB.itemName(s, id), standing:boost
+      'Whom to honor with {icon} {item}? Such largesse is worth up to +{standing} Standing; access determines the exact value.', {
+        icon:def.icon, item:FB.itemName(s, id),
+        standing:FB.giftOpinion(item)
       })) + '</p></div><div class="gm-list">';
     for (const e of folk) {
       const op = FB.standingOf(s, { kind:'character', id:e.c.id });
-      const giftDays = FB.socialGiftDaysRemaining(s, e.c.id);
+      const rulerId = FB.realmIdForRulerCharacter &&
+        FB.realmIdForRulerCharacter(s, e.c);
+      const itemStatus = FB.itemGiftStatus(s, id,
+        rulerId ? 'ruler' : 'character', rulerId || e.c.id);
       const detailParams = {
-        relation:e.rel, standing:standingText(op), days:giftDays
+        relation:e.rel,
+        standing:standingText(op),
+        effect:itemStatus.standing,
+        reason:itemStatus.reason
       };
-      const details = giftDays
-        ? FB.T('{relation} · Standing {standing} · gift ready in {days} days', detailParams)
-        : FB.T('{relation} · Standing {standing} · gift ready now', detailParams);
+      const details = itemStatus.ready
+        ? FB.T('{relation} · Standing {standing} · gift grants +{effect}', detailParams)
+        : FB.T('{relation} · Standing {standing} · unavailable: {reason}', detailParams);
       h += '<button class="actionbtn" data-give="' + e.c.id + '"' +
-        (giftDays ? ' disabled' : '') + '>🎁 ' + esc(FB.fullName(e.c)) +
+        (itemStatus.ready ? '' : ' disabled') + '>🎁 ' + esc(FB.fullName(e.c)) +
         '<span class="adesc ' + standingClass(op) + '">' + esc(details) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Keep it</button>';

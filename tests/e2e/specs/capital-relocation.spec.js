@@ -88,6 +88,7 @@ async function startCapitalRealm(page, testInfo, options) {
     p.manor = { provinceId:'london', settlement:0 };
 
     var oldLord = FB.getRole(s, 'lord', true);
+    var oldSteward = FB.getRole(s, 'steward', true);
     var oldPriest = FB.getRole(s, 'priest', true);
     var home = FB.world.byId.london;
     var friend = FB.makeCharacter(s, {
@@ -149,6 +150,7 @@ async function startCapitalRealm(page, testInfo, options) {
       thirdId:'rochester',
       friendId:friend.id,
       oldLordId:oldLord.id,
+      oldStewardId:oldSteward.id,
       oldPriestId:oldPriest.id
     };
   }, options || {});
@@ -209,8 +211,10 @@ test('valid capital relocation applies exact consequences without moving land or
         friendRole:s.roles.friend,
         friendHome:s.chars[setup.friendId].homeProvinceId,
         newLord:s.roles.lord,
+        newSteward:s.roles.steward,
         newPriest:s.roles.priest,
         oldLordHome:s.chars[setup.oldLordId].homeProvinceId,
+        oldStewardHome:s.chars[setup.oldStewardId].homeProvinceId,
         oldPriestHome:s.chars[setup.oldPriestId].homeProvinceId,
         chronicle:capitalEntry ? FB.newsText(
           capitalEntry, s, p.charId) : '',
@@ -258,8 +262,10 @@ test('valid capital relocation applies exact consequences without moving land or
     expect(result.friendRole).toBe(ids.friendId);
     expect(result.friendHome).toBe('london');
     expect(result.newLord).not.toBe(ids.oldLordId);
+    expect(result.newSteward).not.toBe(ids.oldStewardId);
     expect(result.newPriest).not.toBe(ids.oldPriestId);
     expect(result.oldLordHome).toBe('london');
+    expect(result.oldStewardHome).toBe('london');
     expect(result.oldPriestHome).toBe('london');
     expect(result.chronicle).toContain(
       'moves from London to Canterbury');

@@ -2984,7 +2984,12 @@ window.FB = window.FB || {};
 
   FB.rulerGiftStatus = function (state, rid) {
     const realm = state.realms && state.realms[rid];
-    const cost = realm ? FB.rulerCashGiftCost(state, rid) : 0;
+    const access = FB.rankAccessStatus(state, { kind:'realm', id:rid });
+    const baseCost = realm ? FB.rulerCashGiftCost(state, rid) : 0;
+    const cost = FB.rankAccessCashCost(state,
+      { kind:'realm', id:rid }, baseCost);
+    const standing = FB.rankAccessStandingEffect(state,
+      { kind:'realm', id:rid }, FB.rulerCashGiftOpinion());
     const days = realm && FB.rulerGiftDaysRemainingSnapshot
       ? FB.rulerGiftDaysRemainingSnapshot(state, rid) : 0;
     const delivery = realm && FB.giftDeliveryPreview
@@ -2995,15 +3000,19 @@ window.FB = window.FB || {};
       ready:false,
       realmId:rid,
       cost:cost,
-      standing:FB.rulerCashGiftOpinion(),
+      baseCost:baseCost,
+      standing:standing,
       cooldownDays:FB.socialGiftCooldownDays
         ? FB.socialGiftCooldownDays() : 90,
       daysRemaining:days,
       delivery:delivery,
+      access:access,
       reason:''
     };
     if (!realm || !realm.alive || !realm.ruler || rid === 'player') {
       status.reason = FB.T('That ruler cannot receive a gift.');
+    } else if (!access.ready) {
+      status.reason = access.reason;
     } else if (delivery && delivery.pending) {
       status.reason = FB.T(
         'A gift courier is already traveling for this ruler.');
@@ -3029,7 +3038,7 @@ window.FB = window.FB || {};
     const status = FB.rulerGiftStatus(state, rid);
     const cost = status.cost;
     if (!r || !status.ready) return false;
-    const boost = FB.rulerCashGiftOpinion();
+    const boost = status.standing;
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'ruler', rid);
     if (delivery && delivery.foreign) {

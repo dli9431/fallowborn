@@ -69,6 +69,9 @@ test('hostile targets stay in scope and method previews use the named math',
           }) / 500 + 0.10, 0.05, 0.90),
         carefulExposure:careful.exposure,
         boughtCost:bought.cost,
+        expectedBoughtCost:Math.ceil(20 * Math.pow(
+          FBDATA.balance.rankAccessCashCostMult,
+          Math.max(0, FB.stationOf(target) - FB.playerStation(s) - 1))),
         forcefulFaster:forceful.days < careful.days,
         ownSabotage:sabotage.some(function (option) {
           return option.group === 'realm';
@@ -92,7 +95,7 @@ test('hostile targets stay in scope and method previews use the named math',
     expect(result.includesForeign).toBe(false);
     expect(result.carefulSuccess).toBeCloseTo(result.expectedCareful, 8);
     expect(result.carefulExposure).toBe(8);
-    expect(result.boughtCost).toBe(20);
+    expect(result.boughtCost).toBe(result.expectedBoughtCost);
     expect(result.forcefulFaster).toBe(true);
     expect(result.ownSabotage).toBe(true);
     expect(result.borderSabotage).toBe(true);

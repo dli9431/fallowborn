@@ -163,8 +163,10 @@ sovereign realm. Cross-border action is limited to the existing rebel sponsorshi
 sabotage of an immediately adjacent foreign border county.
 
 Scheme-specific method names inherit one of three shared profiles: careful is slower but
-adds 10 success points and removes four annual exposure points; bought access costs
-`5 + 5 * target station`, runs at 1.2 speed, and adds five success points; forceful runs
+adds 10 success points and removes four annual exposure points; bought access begins at
+`5 + 5 * target station`, then multiplies by `balance.rankAccessCashCostMult` for every
+target station beyond the actor's ordinary one-rank reach. It runs at 1.2 speed and adds
+five success points; forceful runs
 at 1.5 speed, loses five success points, adds ten exposure points, and lets Martial join
 Intrigue in progress. The review sheet shows the resulting exact odds, duration, cost,
 and exposure before confirmation.

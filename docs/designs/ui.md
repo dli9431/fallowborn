@@ -422,12 +422,13 @@ a day when the character is local; while courting, the suitor holds that slot un
 courtship ends. A distant character instead offers **Travel to cultivate…**, or
 **Travel to continue cultivating…** beside Stop for an existing paused assignment.
 The review names the person and county, route, days, cost, 90-day minimum stay,
-fixed daily rate, and estimated time to +40. Confirming assigns attention and
+rank-access-adjusted daily rate, and estimated time to +40. Confirming assigns attention and
 departs as one operation. The assigned person's sheet repeats their Standing,
-fixed daily rate, and estimated active days to +40. **Call
+access-adjusted daily rate, and estimated active days to +40. **Call
 friend** and **Propose marriage** remain visibly disabled below the shared threshold.
 **Offer a gift…** opens a numbered cash-and-armory picker. Cash and every exact armory
-object show their +Standing value and either readiness or recipient-specific days remaining
+object show their access-adjusted cost and +Standing value and either readiness or
+recipient-specific days remaining
 on the shared cash/item gift cooldown. Equipped and pledged objects remain visible but
 disabled with the blocking reason. Managed household recipients see cash only and an
 explanation that their objects remain under shared-armory management. A cross-sovereign
@@ -440,7 +441,9 @@ the Hostile/Guarded/Neutral/Favorable/Warm band, and the same positive/neutral/n
 colors. Character and ruler sheets add a context note explaining whether the score
 affects personal, feudal, or diplomatic consequences. A materialized ruler resolves
 through the realm target, so the character sheet, realm sheet, Council, Estates, and
-gift interfaces cannot display different values.
+gift interfaces cannot display different values. Living character and ruler context rows
+also state whether access is direct, personal, brokered, extraordinary, or blocked, and a
+blocked action names the station of intermediary still needed.
 
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. It is
 listed for every free station; a serf sees it only once the sheet holds

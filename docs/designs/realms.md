@@ -503,10 +503,15 @@ officers of the crown.
 
 Every living AI ruler sheet offers the same cash-or-armory gift picker. Cash prices follow
 realm rank through `balance.rulerCashGiftCostByRank` (Count 10, Duke 15, King 25, Emperor
-40 by default) and grant `balance.rulerCashGiftOpinion` (+15). Unequipped, unpledged items
-grant the same +4/+8/+12 quality-tier influence as personal item gifts and permanently
+40 by default) and begin at `balance.rulerCashGiftOpinion` (+15). A ruler beyond ordinary
+one-rank social reach first requires the warm intermediary chain described in
+[characters.md](characters.md); each extra station multiplies the cash price and reduces
+the resulting Standing. Unequipped, unpledged items begin at the same +4/+8/+12
+quality-tier influence as personal item gifts, receive the same access reduction, and
+permanently
 leave the family armory; their semantic snapshot remains in the Chronicle. Direct and
-higher lieges, vassals beneath the player, and foreign rulers all gain Standing. Context
+higher lieges, vassals beneath the player, and foreign rulers can all gain Standing once
+access exists. Context
 changes the available consequences, not the meter; the compatibility backing remains the
 player-relative realm-opinion store.
 Cash and items share one 90-day ruler-recipient clock in `player.realmGiftTurns`. Each

@@ -55,6 +55,205 @@ window.FB = window.FB || {};
     return p.friendContacts;
   };
 
+  /* ---------- social access across station ----------
+     A household can normally reach only one station upward. Warm cultivated
+     contacts form a derived chain of introducers, one station at a time; no
+     extra access state is serialized. Close personal ties bypass the chain,
+     while wartime access to the current local lord opens an extraordinary
+     audience without erasing the underlying class penalty. */
+  function rankAccessTarget(state, target) {
+    target = target || {};
+    const kind = target.kind === 'ruler' ? 'realm' : target.kind;
+    if (kind === 'realm') {
+      const realm = state.realms && state.realms[target.id];
+      if (!realm || !realm.alive || target.id === 'player') return null;
+      const ruler = FB.realmRulerCharacterSnapshot
+        ? FB.realmRulerCharacterSnapshot(state, target.id) : null;
+      return {
+        kind:'realm', id:target.id, realmId:target.id,
+        character:ruler,
+        station:realm.rank <= 2 ? 3 : 4
+      };
+    }
+    if (kind !== 'character') return null;
+    const c = state.chars && state.chars[target.id];
+    if (!c || c.dead || c.id === state.player.charId) return null;
+    const realmId = FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(state, c) : null;
+    return {
+      kind:'character', id:c.id, realmId:realmId,
+      character:c, station:FB.clamp(FB.stationOf(c), 0, 4)
+    };
+  }
+
+  function rankAccessStanding(state, c) {
+    if (!c) return 0;
+    return FB.standingOf
+      ? FB.standingOf(state, { kind:'character', id:c.id })
+      : (Number(c.opinion) || 0);
+  }
+
+  function rankAccessPersonal(state, info, threshold) {
+    const c = info.character;
+    const p = state.player;
+    const me = state.chars[p.charId];
+    if (info.realmId && p.royalCompact &&
+        p.royalCompact.realmId === info.realmId) return true;
+    if (!c) return false;
+    if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) {
+      return true;
+    }
+    if (me && (me.spouseId === c.id || c.spouseId === me.id ||
+        me.fatherId === c.id || me.motherId === c.id ||
+        (me.childrenIds || []).indexOf(c.id) >= 0)) return true;
+    const kin = FB.kinOf ? FB.kinOf(state).byId : null;
+    if (kin && kin[c.id]) return true;
+    if (state.roles && (state.roles.friend === c.id ||
+        state.roles.rival === c.id)) return true;
+    const contacts = p.friendContacts;
+    return !!(contacts && typeof contacts === 'object' &&
+      !Array.isArray(contacts) && contacts[c.id] &&
+      rankAccessStanding(state, c) >= threshold);
+  }
+
+  function rankAccessAssigned(state, info) {
+    const c = info.character;
+    const attention = state.player.socialAttention;
+    return !!(c && attention && typeof attention === 'object' &&
+      !Array.isArray(attention) && attention[c.id]);
+  }
+
+  function rankAccessExtraordinary(state, info) {
+    const c = info.character;
+    if (!c || !state.roles || state.roles.lord !== c.id) return false;
+    if (state.player.flags && state.player.flags.lords_favor) return true;
+    return !!(FB.atWarPersonally && FB.atWarPersonally(state));
+  }
+
+  FB.rankAccessStatus = function (state, target) {
+    const info = state && state.player && state.chars
+      ? rankAccessTarget(state, target) : null;
+    const status = {
+      ready:false,
+      mode:'blocked',
+      playerStation:state && state.player ? FB.playerStation(state) : 0,
+      targetStation:info ? info.station : null,
+      ceiling:0,
+      threshold:FB.relationshipOpinionThreshold(),
+      neededStation:null,
+      intermediaries:[],
+      standingMultiplier:1,
+      cashMultiplier:1,
+      description:'',
+      reason:''
+    };
+    if (!info) {
+      status.reason = FB.T('No social access can be established to this target.');
+      status.description = status.reason;
+      return status;
+    }
+
+    const B = FBDATA.balance;
+    const standingStep = B.rankAccessInfluenceMult === undefined
+      ? 0.5 : FB.clamp(Number(B.rankAccessInfluenceMult) || 0, 0.01, 1);
+    const cashStep = B.rankAccessCashCostMult === undefined
+      ? 2 : Math.max(1, Number(B.rankAccessCashCostMult) || 1);
+    const rawSteps = Math.max(0,
+      info.station - status.playerStation - 1);
+    const personal = rankAccessPersonal(state, info, status.threshold);
+    const assigned = rankAccessAssigned(state, info);
+    const extraordinary = rankAccessExtraordinary(state, info);
+    let ceiling = Math.min(4, status.playerStation + 1);
+    const contacts = state.player.friendContacts;
+    const warmByStation = {};
+    if (contacts && typeof contacts === 'object' &&
+        !Array.isArray(contacts)) {
+      for (const cid in contacts) {
+        const c = state.chars[cid];
+        if (!c || c.dead || (info.character && c.id === info.character.id) ||
+            rankAccessStanding(state, c) < status.threshold) continue;
+        const station = FB.clamp(FB.stationOf(c), 0, 4);
+        const existing = warmByStation[station];
+        if (!existing || rankAccessStanding(state, c) >
+            rankAccessStanding(state, existing) ||
+            (rankAccessStanding(state, c) ===
+              rankAccessStanding(state, existing) &&
+              String(c.id) < String(existing.id))) {
+          warmByStation[station] = c;
+        }
+      }
+    }
+    while (ceiling < info.station && warmByStation[ceiling]) {
+      status.intermediaries.push(warmByStation[ceiling].id);
+      ceiling++;
+    }
+    status.ceiling = ceiling;
+
+    if (personal) {
+      status.ready = true;
+      status.mode = 'personal';
+      status.description = FB.T(
+        'An established personal relationship grants direct access.');
+      return status;
+    }
+
+    status.standingMultiplier = Math.pow(standingStep, rawSteps);
+    status.cashMultiplier = Math.pow(cashStep, rawSteps);
+    const percent = Math.round(status.standingMultiplier * 100);
+    if (extraordinary) {
+      status.ready = true;
+      status.mode = 'wartime';
+      status.description = FB.T(
+        'Wartime service opens an extraordinary audience; class distance leaves influence at {percent}% of its usual strength.', {
+          percent:percent
+        });
+      return status;
+    }
+    if (assigned) {
+      status.ready = true;
+      status.mode = 'introduced';
+      status.description = rawSteps
+        ? FB.T(
+          'An existing introduction grants access; class distance leaves influence at {percent}% of its usual strength.', {
+            percent:percent
+          })
+        : FB.T('Within ordinary social reach.');
+      return status;
+    }
+    if (info.station <= ceiling) {
+      status.ready = true;
+      status.mode = rawSteps ? 'brokered' : 'direct';
+      status.description = rawSteps
+        ? FB.T(
+          'Warm intermediaries grant an audience; class distance leaves influence at {percent}% of its usual strength.', {
+            percent:percent
+          })
+        : FB.T('Within ordinary social reach.');
+      return status;
+    }
+
+    status.neededStation = ceiling;
+    status.reason = FB.T(
+      'No personal audience. Cultivate a {station} intermediary to +{standing} Standing; each warm intermediary opens the next station.', {
+        station:FB.stationName(ceiling),
+        standing:status.threshold
+      });
+    status.description = status.reason;
+    return status;
+  };
+
+  FB.rankAccessStandingEffect = function (state, target, amount) {
+    const access = FB.rankAccessStatus(state, target);
+    return Math.round((Number(amount) || 0) *
+      access.standingMultiplier * 10) / 10;
+  };
+
+  FB.rankAccessCashCost = function (state, target, amount) {
+    const access = FB.rankAccessStatus(state, target);
+    return Math.ceil(Math.max(0, Number(amount) || 0) *
+      access.cashMultiplier);
+  };
+
   function friendEligible(state, c) {
     if (!c || c.dead || c.id === state.player.charId ||
         state.roles.rival === c.id || FB.ageOf(c, state.date.year) < 16) return false;
@@ -179,18 +378,25 @@ window.FB = window.FB || {};
     const attention = state.player.socialAttention;
     const assigned = !!(attention && typeof attention === 'object' &&
       !Array.isArray(attention) && c && attention[c.id]);
+    const access = FB.rankAccessStatus(state, {
+      kind:'character', id:c && c.id
+    });
     const status = {
       ready:false,
       assigned:assigned,
       characterId:c && c.id || null,
       capacity:FB.socialAttentionCapacity(),
-      rate:FB.socialAttentionDailyOpinion(),
+      rate:access.ready
+        ? FB.socialAttentionDailyOpinion() * access.standingMultiplier : 0,
+      access:access,
       reason:''
     };
     if (!c || c.dead || c.id === state.player.charId) {
       status.reason = FB.T('That person cannot receive personal attention.');
     } else if (!status.capacity) {
       status.reason = FB.T('No personal-attention assignment is available.');
+    } else if (!access.ready) {
+      status.reason = access.reason;
     } else if (state.player.courtingId &&
         state.player.courtingId !== c.id && !opts.courtship) {
       status.reason = FB.T(
@@ -239,7 +445,7 @@ window.FB = window.FB || {};
   };
 
   FB.socialAttentionDaysToThreshold = function (state, c) {
-    const rate = FB.socialAttentionDailyOpinion();
+    const rate = FB.socialAttentionStatus(state, c).rate;
     const need = FB.courtshipStandingThreshold(state, c) -
       characterStanding(state, c);
     if (need <= 0) return 0;
@@ -248,13 +454,15 @@ window.FB = window.FB || {};
   };
 
   FB.tickSocialAttention = function (state) {
-    const rate = FB.socialAttentionDailyOpinion();
-    if (rate !== 0) {
+    if (FB.socialAttentionDailyOpinion() !== 0) {
       const ids = FB.socialAttentionIds(state);
       for (let i = 0; i < ids.length; i++) {
         const c = state.chars[ids[i]];
         if (!c || c.dead) continue;
         if (FB.socialAttentionPresence(state, c).status !== 'active') continue;
+        const status = FB.socialAttentionStatus(state, c);
+        const rate = status.ready ? status.rate : 0;
+        if (!rate) continue;
         adjustCharacterStanding(state, c, rate, 'social_attention');
         state.player.socialAttention[c.id].lastTurn = state.turn;
       }
@@ -349,9 +557,15 @@ window.FB = window.FB || {};
 
   FB.characterGiftStatus = function (state, cid) {
     const c = state.chars && state.chars[cid];
-    const cost = 5;
-    const boost = FBDATA.balance.socialCashGiftOpinion === undefined
+    const access = FB.rankAccessStatus(state, {
+      kind:'character', id:cid
+    });
+    const cost = FB.rankAccessCashCost(state,
+      { kind:'character', id:cid }, 5);
+    const baseBoost = FBDATA.balance.socialCashGiftOpinion === undefined
       ? 4 : FBDATA.balance.socialCashGiftOpinion;
+    const boost = FB.rankAccessStandingEffect(state,
+      { kind:'character', id:cid }, baseBoost);
     const days = c ? FB.socialGiftDaysRemainingSnapshot(state, cid) : 0;
     const delivery = c && FB.giftDeliveryPreview
       ? FB.giftDeliveryPreview(state, 'character', cid, {
@@ -366,10 +580,13 @@ window.FB = window.FB || {};
       cooldownDays:FB.socialGiftCooldownDays(),
       daysRemaining:days,
       delivery:delivery,
+      access:access,
       reason:''
     };
     if (!c || c.dead || c.id === state.player.charId) {
       status.reason = FB.T('That person cannot receive a gift.');
+    } else if (!access.ready) {
+      status.reason = access.reason;
     } else if (pending) {
       status.reason = FB.T(
         'A gift courier is already traveling for this recipient.');
@@ -410,8 +627,7 @@ window.FB = window.FB || {};
     const status = FB.characterGiftStatus(state, cid);
     const cost = status.cost;
     if (!c || !status.ready) return false;
-    const value = FBDATA.balance.socialCashGiftOpinion;
-    const boost = value === undefined ? 4 : value;
+    const boost = status.standing;
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'character', cid);
     if (delivery && delivery.foreign) {
@@ -556,6 +772,13 @@ window.FB = window.FB || {};
       if (role === 'lord' && state.chars[id].role !== 'lord') {
         state.chars[id].role = 'lord';
       }
+      if (role === 'lord' && create) {
+        const stewardId = state.roles.steward;
+        if (!stewardId || !state.chars[stewardId] ||
+            state.chars[stewardId].dead) {
+          FB.getRole(state, 'steward', true);
+        }
+      }
       return state.chars[id];
     }
     if (!create) return null;
@@ -569,6 +792,7 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     let opts = { culture: pr.culture, religion: pr.religion, born: state.date.year - FB.ri(25, 55), role: role };
     if (role === 'lord') { opts.quality = 4; opts.sex = 'm'; opts.dyn = 'of ' + pr.name; opts.station = 3; }
+    else if (role === 'steward') { opts.quality = 3; opts.born = state.date.year - FB.ri(30, 60); opts.station = 2; }
     else if (role === 'priest') { opts.quality = 2; opts.sex = 'm'; opts.born = state.date.year - FB.ri(30, 60); opts.station = 1; }
     else if (role === 'rival') {
       opts.born = state.date.year - FB.clamp(FB.ageOf(me, state.date.year) + FB.ri(-8, 8), 16, 70);
@@ -577,6 +801,7 @@ window.FB = window.FB || {};
     }
     const c = FB.makeCharacter(state, opts);
     state.roles[role] = c.id;
+    if (role === 'lord' && create) FB.getRole(state, 'steward', true);
     return c;
   };
 
@@ -1638,9 +1863,11 @@ window.FB = window.FB || {};
       return blocked('current',
         FB.T('This courtship is already active.'));
     }
-    if (FB.stationOf(c) - FB.playerStation(state) >= 3) {
-      return blocked('station',
-        FB.T('They stand too far above your station.'));
+    const access = FB.rankAccessStatus(state, {
+      kind:'character', id:c.id
+    });
+    if (!access.ready) {
+      return blocked('access', access.reason);
     }
     status.ready = true;
     status.code = 'ready';
@@ -1652,9 +1879,10 @@ window.FB = window.FB || {};
     if (!pr || pr.wasteland) return [];
     if (pid === state.player.provinceId) {
       FB.getRole(state, 'lord', true);
+      FB.getRole(state, 'steward', true);
       FB.getRole(state, 'priest', true);
       const out = [];
-      for (const r of ['lord', 'priest', 'friend', 'rival']) {
+      for (const r of ['lord', 'steward', 'priest', 'friend', 'rival']) {
         const c = FB.getRole(state, r, false);
         if (c && !c.dead) out.push(c);
       }
@@ -6149,7 +6377,7 @@ window.FB = window.FB || {};
     if (FB.clearCourtship) FB.clearCourtship(state);
     if (FB.socialAttentionClear) FB.socialAttentionClear(state);
     if (FB.clearFriendship) FB.clearFriendship(state, true);
-    for (const role of ['lord', 'priest', 'friend', 'rival', 'notable']) {
+    for (const role of ['lord', 'steward', 'priest', 'friend', 'rival', 'notable']) {
       delete state.roles[role];
     }
     if (FB.setCareer) {
@@ -6190,7 +6418,9 @@ window.FB = window.FB || {};
     if (dest) {
       p.provinceId = dest;
       // local cast stays behind
-      for (const r of ['lord', 'priest', 'friend', 'rival']) delete state.roles[r];
+      for (const r of ['lord', 'steward', 'priest', 'friend', 'rival']) {
+        delete state.roles[r];
+      }
       const rid = (state.holder && state.holder[dest]) || state.owner[dest];
       FB.changePlayerLiege(state,
         p.tier >= 3 && rid && rid !== 'player' ? rid : null,

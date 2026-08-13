@@ -1748,7 +1748,11 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   `relationshipOpinionThreshold` (shared Call friend / proposal gate; core 40),
   `socialGiftCooldownDays` (one explicit cash or item gift per recipient; core 90),
   `socialCashGiftOpinion` (core 4), and the three-entry `socialItemGiftOpinion`
-  array (core `[4,8,12]`). Ruler cash gifts use
+  array (core `[4,8,12]`). `rankAccessInfluenceMult` (core 0.5) multiplies
+  cultivation and gift Standing for every target station beyond ordinary one-rank reach;
+  `rankAccessCashCostMult` (core 2) multiplies cash gifts and bought-access intrigue costs
+  across the same gap. Warm contacts at the exact intervening stations open higher access.
+  Ruler cash gifts use
   `rulerCashGiftCostByRank` (rank-indexed core `[0,10,15,25,40]`) and
   `rulerCashGiftOpinion` (core 15). Character and ruler recipients use separate saved maps,
   but each recipient's cash and item choices share `socialGiftCooldownDays`; ruler entries

@@ -436,6 +436,11 @@ window.FB = window.FB || {};
 
   FB.dispatchGiftDelivery = function (state, spec) {
     spec = spec || {};
+    const access = FB.rankAccessStatus && FB.rankAccessStatus(state, {
+      kind:spec.recipientKind === 'ruler' ? 'realm' : 'character',
+      id:spec.recipientId
+    });
+    if (access && !access.ready) return false;
     const preview = FB.giftDeliveryPreview(state,
       spec.recipientKind, spec.recipientId);
     if (!preview.eligible || !preview.foreign || preview.pending) return false;
@@ -1016,6 +1021,16 @@ window.FB = window.FB || {};
       out.reason = FB.T('A captive cannot receive a relationship visit.');
       return out;
     }
+    const access = FB.rankAccessStatus(state, {
+      kind:'character', id:c.id
+    });
+    out.access = access;
+    out.dailyRate = FB.socialAttentionDailyOpinion
+      ? FB.socialAttentionDailyOpinion() * access.standingMultiplier : 0;
+    if (!access.ready) {
+      out.reason = access.reason;
+      return out;
+    }
     const eligible = FB.travelEligible(state, 'relationship', options);
     if (eligible !== true) {
       out.reason = eligible;
@@ -1053,8 +1068,6 @@ window.FB = window.FB || {};
       ? FB.travelCostSnapshot('relationship', route, state)
       : FB.travelCost('relationship', route, state);
     out.minimumStay = balance('travelMinStayDays', 90);
-    out.dailyRate = FB.socialAttentionDailyOpinion ?
-      FB.socialAttentionDailyOpinion() : 0;
     out.daysToThreshold = activeDays;
     out.daysFromDeparture = activeDays === null ? null : out.days + activeDays;
     return out;
@@ -1478,6 +1491,7 @@ window.FB = window.FB || {};
     p.provinceId = destination;
     FB.changePlayerLiege(state, null, 'travel:flight');
     delete state.roles.lord;
+    delete state.roles.steward;
     delete state.roles.priest;
     if (FB.clearCourtship) FB.clearCourtship(state);
     if (FB.socialAttentionClear) FB.socialAttentionClear(state);
@@ -1488,6 +1502,7 @@ window.FB = window.FB || {};
        deliberately untouched. Local authority is regenerated at the new home. */
     if (FB.getRole) {
       FB.getRole(state, 'lord', true);
+      FB.getRole(state, 'steward', true);
       FB.getRole(state, 'priest', true);
     }
     p.travelSettlement = { turn:state.turn, destinationId:destination };

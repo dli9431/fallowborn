@@ -67,7 +67,9 @@ proposal formula plus Standing with that realm's ruler divided by 400 and clamps
 5-90%. Only the
 current protagonist may create a royal compact, and only one such compact may be active
 at once; adulthood, sex, kinship, doctrine, courtship, proposal, and spouse capacity
-remain the standard gates.
+remain the standard gates. The court itself must also be reachable through the ranked
+access chain; the ruler sheet leaves an otherwise eligible approach visible with the
+missing-intermediary reason.
 
 Every ordinary, matchmade, or royal courtship assigns the player's one
 `player.socialAttention` slot to that suitor while leaving the normal work/study focus
@@ -153,10 +155,13 @@ pregnancy record, so a deferred decision can be completed after the birth.
 Living abdication never marks the predecessor dead, records a legend, charges
 death dues, or clears an unrelated pregnancy.
 
-**Marriage is station-gated.** Characters carry a social rank `station` 0–4
-(`FB.stationOf` in model.js; the player's is their tier capped at 4). Courting 3+ steps
-up is blocked (`FB.canCourt`), the `proposal` named chance drops per step up
-(`balance.proposalStationPenalty`), weddings settle a station-scaled dowry and prestige
+**Marriage is station-shaped rather than absolutely station-gated.** Characters carry a
+social rank `station` 0–4 (`FB.stationOf` in model.js; the player's is their tier capped
+at 4). Beginning courtship above ordinary one-rank reach requires the same exact-station
+chain of Warm intermediaries as cultivation and gifts (`FB.rankAccessStatus`); close
+personal relationships already have access. Once courtship is possible, the `proposal`
+named chance still drops per step up (`balance.proposalStationPenalty`), and weddings
+settle a station-scaled dowry and prestige
 swing (`FB.doMarry`), and matchmaking sounds out three families at once
 (`FB.spawnSuitor`): an established house (older, a step up — fatter dowry, harder
 suit, fewer childbearing years), a peer, and a young match a step down. The three

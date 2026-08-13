@@ -1707,6 +1707,7 @@ window.FB = window.FB || {};
       (me.motherId && me.motherId === c.motherId)) return FB.T('Your sibling');
     if (s.player.courtingId === c.id) return FB.T('Courting');
     if (s.roles.lord === c.id) return FB.T('Your lord');
+    if (s.roles.steward === c.id) return FB.T('The lord’s steward');
     if (s.roles.priest === c.id) {
       return FB.T('Your {cleric}', { cleric: FB.holyWord(me.religion) });
     }
@@ -2001,7 +2002,7 @@ window.FB = window.FB || {};
     kinSection('Uncles & aunts', kin.unclesAunts);
     kinSection('Cousins', kin.cousins);
     h += panelh('Notable folk');
-    for (const role of ['lord', 'priest', 'friend', 'rival']) {
+    for (const role of ['lord', 'steward', 'priest', 'friend', 'rival']) {
       const c = FB.getRole(s, role, false);
       if (c && !c.dead) {
         h += charRow(s, c, roleName(role) +
@@ -2323,7 +2324,8 @@ window.FB = window.FB || {};
       { id:'suitor', label:roleName('suitor'), priority:3,
         attention:true, attentionLabel:FB.T('Opportunity') },
       { id:'priest', label:roleName('priest'), priority:4 },
-      { id:'lord', label:roleName('lord'), priority:5 }
+      { id:'steward', label:roleName('steward'), priority:5 },
+      { id:'lord', label:roleName('lord'), priority:6 }
     ];
     for (const role of connectionRoles) {
       const c = FB.getRole(s, role.id, false);

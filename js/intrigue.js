@@ -110,9 +110,20 @@ window.FB = window.FB || {};
       0, 4);
   }
 
-  function methodCost(state, def, context, method) {
+  function methodCost(state, def, context, method, actorId) {
     if (!method || !method.stationCost) return 0;
-    return 5 + 5 * targetStation(state, context);
+    actorId = actorId || state.player.charId;
+    var actor = actorCharacter(state, actorId);
+    var actorStation = actorId === state.player.charId
+      ? FB.playerStation(state)
+      : FB.clamp(actor ? FB.stationOf(actor) : 0, 0, 4);
+    var gap = Math.max(0,
+      targetStation(state, context) - actorStation - 1);
+    var step = FBDATA.balance.rankAccessCashCostMult === undefined
+      ? 2 : Math.max(1,
+        finite(FBDATA.balance.rankAccessCashCostMult, 1));
+    return Math.ceil((5 + 5 * targetStation(state, context)) *
+      Math.pow(step, gap));
   }
 
   function recordMatchesActor(state, record) {
@@ -715,7 +726,8 @@ window.FB = window.FB || {};
       var method = methodOf(def, methods[i].id);
       if (!method || typeof method.id !== 'string' || !method.id) continue;
       out.push({ id:method.id, def:method,
-        cost:methodCost(state, def, context, method) });
+        cost:methodCost(state, def, context, method,
+          state.player.charId) });
     }
     return out;
   };
@@ -902,7 +914,8 @@ window.FB = window.FB || {};
       success:FB.clamp(success, 0.05, 0.90),
       days:Math.max(1, Math.ceil(remaining / Math.max(0.001, progress))),
       dailyProgress:progress,
-      cost:methodCost(state, def, validContext, method) + (paid ? 10 : 0),
+      cost:methodCost(state, def, validContext, method, actorId) +
+        (paid ? 10 : 0),
       exposure:exposure,
       accompliceAcceptance:acceptance,
       refusalLeak:leak,
