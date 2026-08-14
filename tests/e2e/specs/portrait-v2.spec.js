@@ -129,7 +129,7 @@ test('busts and figures are pixel-deterministic across appearance families',
     }));
   });
 
-test('barber previews add five deterministic silhouettes and normalize visual keys',
+test('barber previews keep hair and facial-hair silhouettes deterministic and distinct',
   async function ({ page }) {
     expect(await page.evaluate(function () {
       var s=FB.state,source=JSON.parse(JSON.stringify(s.chars[s.player.charId]));
@@ -167,6 +167,45 @@ test('barber previews add five deterministic silhouettes and normalize visual ke
           source,s.date.year,s,{appearance:appearance}).hair);
       });
       var repeat=render({hairStyle:'crownBraid',beardKind:'long',beardCut:'forked'});
+      var moustacheCuts=['moustache','moustachePencil','moustacheChevron',
+        'moustacheHandlebar','moustacheWalrus','moustacheHorseshoe'];
+      var moustacheHashes=moustacheCuts.map(function(cut){
+        return render({hairStyle:'crop',beardKind:'short',beardCut:cut});
+      });
+      var moustacheLooks=moustacheCuts.map(function(cut){
+        return FB.characterLook(source,s.date.year,s,{appearance:{hairStyle:'crop',
+          beardKind:'short',beardCut:cut}}).beardCut;
+      });
+      var beardCuts=['beardNatural','beardSquare','beardSpade','beardForked',
+        'beardGoatee','chinstrap','sideburns'];
+      var beardHashes=beardCuts.map(function(cut){
+        return render({hairStyle:'crop',beardKind:cut==='chinstrap'||
+          cut==='sideburns'?'short':'full',beardCut:cut});
+      });
+      var cleanCanvas=document.createElement('canvas');
+      cleanCanvas.width=192;cleanCanvas.height=216;
+      FB.paintPortrait(cleanCanvas,source,s.date.year,{state:s,transparent:true,
+        appearance:{hairStyle:'crop',beardKind:'none',beardCut:'natural'},
+        suppressEquipment:true,suppressHeadwear:true});
+      var strapCanvas=document.createElement('canvas');
+      strapCanvas.width=192;strapCanvas.height=216;
+      FB.paintPortrait(strapCanvas,source,s.date.year,{state:s,transparent:true,
+        appearance:{hairStyle:'crop',beardKind:'short',beardCut:'chinstrap'},
+        suppressEquipment:true,suppressHeadwear:true});
+      var cleanPixels=cleanCanvas.getContext('2d').getImageData(0,0,192,216).data;
+      var strapPixels=strapCanvas.getContext('2d').getImageData(0,0,192,216).data;
+      var strapTop=216,outsidePixels=0;
+      for(var p=0;p<strapPixels.length;p+=4){
+        if(cleanPixels[p]!==strapPixels[p]||cleanPixels[p+1]!==strapPixels[p+1]||
+            cleanPixels[p+2]!==strapPixels[p+2]||cleanPixels[p+3]!==strapPixels[p+3]){
+          strapTop=Math.min(strapTop,Math.floor((p/4)/192));
+          if(cleanPixels[p+3]===0&&strapPixels[p+3]>0)outsidePixels++;
+        }
+      }
+      var bareBeard=render({hairStyle:'crop',beardKind:'full',
+        beardCut:'beardNatural'});
+      var beardAndMoustache=render({hairStyle:'crop',beardKind:'full',
+        beardCut:'natural'});
       var cleanKey=FB.characterVisualKey(s,source,{appearance:{hairStyle:'crop',
         beardKind:'none',beardCut:'natural'}});
       var beardKey=FB.characterVisualKey(s,source,{appearance:{hairStyle:'crop',
@@ -191,6 +230,12 @@ test('barber previews add five deterministic silhouettes and normalize visual ke
         uniqueSilhouettes:new Set(styles.map(function(style){return hashes[style];})).size,
         uniqueKeys:new Set(styles.map(function(style){return keys[style];})).size,
         deterministic:repeat===hashes.crownBraid,
+        moustacheSilhouettes:new Set(moustacheHashes).size,
+        moustacheDescriptors:new Set(moustacheLooks).size,
+        beardSilhouettes:new Set(beardHashes).size,
+        chinstrapStartsBelowMidface:strapTop>108,
+        chinstrapOutsidePixels:outsidePixels,
+        bareBeardDistinct:bareBeard!==beardAndMoustache,
         appearanceSensitive:cleanKey!==beardKey,
         invalidFallback:invalidFallback,
         headwearSuppressed:covered.headwear!=='none'&&uncovered.headwear==='none'&&
@@ -204,6 +249,12 @@ test('barber previews add five deterministic silhouettes and normalize visual ke
       uniqueSilhouettes:5,
       uniqueKeys:5,
       deterministic:true,
+      moustacheSilhouettes:6,
+      moustacheDescriptors:6,
+      beardSilhouettes:7,
+      chinstrapStartsBelowMidface:true,
+      chinstrapOutsidePixels:0,
+      bareBeardDistinct:true,
       appearanceSensitive:true,
       invalidFallback:true,
       headwearSuppressed:true,

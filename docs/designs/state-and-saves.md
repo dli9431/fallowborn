@@ -302,13 +302,16 @@ stable hashes for legacy appearance and consumes no saved RNG.
 Barber customization is likewise additive save-format-3 character state. A customized
 protagonist may carry `appearance: {hairStyle, beardKind?, beardCut?}`; an absent record
 continues to use deterministic generation, and unknown values are ignored lazily by the
-portrait descriptor. No migration or eager repair is needed. A haircut selected while a
+portrait descriptor. New beard-only cuts, moustache variants, and bare sideburns are additive
+accepted ids in the same flat fields. Existing `none`/`stubble`/`short`/`full`/`long` kinds
+and legacy cuts remain valid and render as before; the barber derives a semantic family and
+style without rewriting them. No migration or eager repair is needed. A haircut selected while a
 character is a minor stores only `hairStyle`, allowing their adult facial hair to remain
 generated until it is explicitly changed. Preview selections are UI-local and are never
 serialized. `FB.visitBarber` revalidates the current protagonist, life, selection,
 travel/event state, tier quote, affordability, and an actual visual change immediately
-before deducting gold. It writes one canonical appearance record without advancing the
-day or consuming saved RNG.
+before deducting gold. It maps a valid family/style choice to exactly one canonical pair and
+writes one appearance record without advancing the day or consuming saved RNG.
 
 On ordinary succession, `FB.autoEquipBest` deterministically rebuilds the new head’s
 loadout from all age-valid, unpledged armory objects after household assignments are

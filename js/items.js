@@ -672,11 +672,73 @@ window.FB = window.FB || {};
   ];
   const BARBER_BEARD_CUTS = [
     { id:'natural' }, { id:'square' }, { id:'spade' }, { id:'forked' },
-    { id:'goatee' }, { id:'sideburn' }, { id:'moustache' }
+    { id:'goatee' }, { id:'sideburn' }, { id:'moustache' },
+    { id:'chinstrap' }, { id:'beardNatural' }, { id:'beardSquare' },
+    { id:'beardSpade' }, { id:'beardForked' }, { id:'beardGoatee' },
+    { id:'sideburns' }, { id:'moustachePencil' }, { id:'moustacheChevron' },
+    { id:'moustacheHandlebar' }, { id:'moustacheWalrus' },
+    { id:'moustacheHorseshoe' }
+  ];
+  const BARBER_BEARD_FAMILIES = [
+    { id:'none' }, { id:'stubble' }, { id:'moustache' }, { id:'beard' },
+    { id:'beardMoustache' }, { id:'goatee' }, { id:'sideburns' }
+  ];
+  const BARBER_BEARD_STYLES = [
+    { id:'clean', family:'none', kind:'none', cut:'natural' },
+
+    { id:'stubbleEven', family:'stubble', kind:'stubble', cut:'natural' },
+    { id:'stubbleSquare', family:'stubble', kind:'stubble', cut:'square' },
+    { id:'stubblePointed', family:'stubble', kind:'stubble', cut:'spade' },
+    { id:'stubbleForked', family:'stubble', kind:'stubble', cut:'forked' },
+    { id:'stubbleGoatee', family:'stubble', kind:'stubble', cut:'goatee' },
+    { id:'stubbleChops', family:'stubble', kind:'stubble', cut:'sideburn' },
+
+    { id:'moustacheNatural', family:'moustache', kind:'short', cut:'moustache' },
+    { id:'moustachePencil', family:'moustache', kind:'short', cut:'moustachePencil' },
+    { id:'moustacheChevron', family:'moustache', kind:'short', cut:'moustacheChevron' },
+    { id:'moustacheHandlebar', family:'moustache', kind:'short', cut:'moustacheHandlebar' },
+    { id:'moustacheWalrus', family:'moustache', kind:'short', cut:'moustacheWalrus' },
+    { id:'moustacheHorseshoe', family:'moustache', kind:'short', cut:'moustacheHorseshoe' },
+
+    { id:'beardShort', family:'beard', kind:'short', cut:'beardNatural' },
+    { id:'beardFull', family:'beard', kind:'full', cut:'beardNatural' },
+    { id:'beardLong', family:'beard', kind:'long', cut:'beardNatural' },
+    { id:'beardSquare', family:'beard', kind:'full', cut:'beardSquare' },
+    { id:'beardSpade', family:'beard', kind:'full', cut:'beardSpade' },
+    { id:'beardForked', family:'beard', kind:'long', cut:'beardForked' },
+    { id:'beardChinstrap', family:'beard', kind:'short', cut:'chinstrap' },
+
+    { id:'comboShortNatural', family:'beardMoustache', kind:'short', cut:'natural' },
+    { id:'comboFullNatural', family:'beardMoustache', kind:'full', cut:'natural' },
+    { id:'comboLongNatural', family:'beardMoustache', kind:'long', cut:'natural' },
+    { id:'comboShortSquare', family:'beardMoustache', kind:'short', cut:'square' },
+    { id:'comboFullSquare', family:'beardMoustache', kind:'full', cut:'square' },
+    { id:'comboLongSquare', family:'beardMoustache', kind:'long', cut:'square' },
+    { id:'comboShortSpade', family:'beardMoustache', kind:'short', cut:'spade' },
+    { id:'comboFullSpade', family:'beardMoustache', kind:'full', cut:'spade' },
+    { id:'comboLongSpade', family:'beardMoustache', kind:'long', cut:'spade' },
+    { id:'comboShortForked', family:'beardMoustache', kind:'short', cut:'forked' },
+    { id:'comboFullForked', family:'beardMoustache', kind:'full', cut:'forked' },
+    { id:'comboLongForked', family:'beardMoustache', kind:'long', cut:'forked' },
+
+    { id:'goateeShort', family:'goatee', kind:'short', cut:'beardGoatee' },
+    { id:'goateeFull', family:'goatee', kind:'full', cut:'beardGoatee' },
+    { id:'goateeLong', family:'goatee', kind:'long', cut:'beardGoatee' },
+    { id:'goateeShortMoustache', family:'goatee', kind:'short', cut:'goatee' },
+    { id:'goateeFullMoustache', family:'goatee', kind:'full', cut:'goatee' },
+    { id:'goateeLongMoustache', family:'goatee', kind:'long', cut:'goatee' },
+
+    { id:'sideburnsChops', family:'sideburns', kind:'short', cut:'sideburns' },
+    { id:'sideburnsImperial', family:'sideburns', kind:'short', cut:'sideburn' }
   ];
   const BARBER_PUBLIC_CUT = {
     full:'natural', square:'square', spade:'spade', forked:'forked',
-    goatee:'goatee', chops:'sideburn', stache:'moustache'
+    goatee:'goatee', chops:'sideburn', stache:'moustache',
+    chinstrap:'chinstrap',bareFull:'beardNatural',bareSquare:'beardSquare',
+    bareSpade:'beardSpade',bareForked:'beardForked',bareGoatee:'beardGoatee',
+    bareChops:'sideburns',stachePencil:'moustachePencil',
+    stacheChevron:'moustacheChevron',stacheHandlebar:'moustacheHandlebar',
+    stacheWalrus:'moustacheWalrus',stacheHorseshoe:'moustacheHorseshoe'
   };
 
   function barberHas(list, id) {
@@ -690,16 +752,62 @@ window.FB = window.FB || {};
     return !!c && c.sex === 'm' && year - born >= 16;
   }
 
+  function barberMoustacheCut(cut) {
+    return typeof cut === 'string' && cut.indexOf('moustache') === 0;
+  }
+
   function canonicalBeard(kind, cut) {
     if (!barberHas(BARBER_BEARD_KINDS, kind) ||
         !barberHas(BARBER_BEARD_CUTS, cut)) return null;
     if (kind === 'none') cut = 'natural';
-    else if (kind === 'stubble' && cut === 'moustache') {
+    else if (kind === 'stubble' && barberMoustacheCut(cut)) {
       kind = 'none'; cut = 'natural';
     }
-    else if ((cut === 'sideburn' || cut === 'moustache') &&
+    else if ((cut === 'sideburn' || cut === 'sideburns' ||
+        cut === 'chinstrap' || barberMoustacheCut(cut)) &&
         (kind === 'full' || kind === 'long')) kind = 'short';
     return { beardKind:kind, beardCut:cut };
+  }
+
+  function barberStyleById(id) {
+    for (let i = 0; i < BARBER_BEARD_STYLES.length; i++) {
+      if (BARBER_BEARD_STYLES[i].id === id) return BARBER_BEARD_STYLES[i];
+    }
+    return null;
+  }
+
+  function barberStylesForFamily(family) {
+    return BARBER_BEARD_STYLES.filter(function (style) {
+      return style.family === family;
+    });
+  }
+
+  function barberBeardSelection(kind, cut) {
+    const beard = canonicalBeard(kind, cut) ||
+      { beardKind:'none', beardCut:'natural' };
+    for (let i = 0; i < BARBER_BEARD_STYLES.length; i++) {
+      const style = BARBER_BEARD_STYLES[i];
+      if (style.kind === beard.beardKind && style.cut === beard.beardCut) {
+        return {
+          beardFamily:style.family, beardStyle:style.id,
+          beardKind:beard.beardKind, beardCut:beard.beardCut
+        };
+      }
+    }
+    let family = 'beardMoustache';
+    if (beard.beardKind === 'none') family = 'none';
+    else if (beard.beardKind === 'stubble') family = 'stubble';
+    else if (barberMoustacheCut(beard.beardCut)) family = 'moustache';
+    else if (beard.beardCut.indexOf('beard') === 0 ||
+        beard.beardCut === 'chinstrap') family = 'beard';
+    else if (beard.beardCut === 'goatee') family = 'goatee';
+    else if (beard.beardCut === 'sideburn' ||
+        beard.beardCut === 'sideburns') family = 'sideburns';
+    const styles = barberStylesForFamily(family);
+    return {
+      beardFamily:family, beardStyle:styles[0].id,
+      beardKind:beard.beardKind, beardCut:beard.beardCut
+    };
   }
 
   function storedBeardAppearance(state, c) {
@@ -710,10 +818,13 @@ window.FB = window.FB || {};
   function publicLook(c, state, appearance) {
     const opts = appearance === undefined ? {} : { appearance:appearance };
     const look = FB.characterLook(c, state.date.year, state, opts);
+    const beard = canonicalBeard(look.beardKind,
+      BARBER_PUBLIC_CUT[look.beardCut] || 'natural') ||
+      { beardKind:'none', beardCut:'natural' };
     return {
       hairStyle:look.hairStyle,
-      beardKind:look.beardKind,
-      beardCut:BARBER_PUBLIC_CUT[look.beardCut] || 'natural'
+      beardKind:beard.beardKind,
+      beardCut:beard.beardCut
     };
   }
 
@@ -749,12 +860,89 @@ window.FB = window.FB || {};
     if (id === 'goatee') return FB.T('Goatee');
     if (id === 'sideburn') return FB.T('Sideburns');
     if (id === 'moustache') return FB.T('Moustache');
+    if (id === 'chinstrap') return FB.T('Chinstrap');
+    if (id === 'beardNatural') return FB.T('Natural beard');
+    if (id === 'beardSquare') return FB.T('Square beard');
+    if (id === 'beardSpade') return FB.T('Spade beard');
+    if (id === 'beardForked') return FB.T('Forked beard');
+    if (id === 'beardGoatee') return FB.T('Plain goatee');
+    if (id === 'sideburns') return FB.T('Mutton chops');
+    if (id === 'moustachePencil') return FB.T('Pencil moustache');
+    if (id === 'moustacheChevron') return FB.T('Chevron moustache');
+    if (id === 'moustacheHandlebar') return FB.T('Handlebar moustache');
+    if (id === 'moustacheWalrus') return FB.T('Walrus moustache');
+    if (id === 'moustacheHorseshoe') return FB.T('Horseshoe moustache');
+    return id;
+  }
+
+  function barberBeardFamilyLabel(id) {
+    if (id === 'none') return FB.T('Clean-shaven');
+    if (id === 'stubble') return FB.T('Stubble');
+    if (id === 'moustache') return FB.T('Moustache');
+    if (id === 'beard') return FB.T('Beard');
+    if (id === 'beardMoustache') return FB.T('Beard + moustache');
+    if (id === 'goatee') return FB.T('Goatee');
+    if (id === 'sideburns') return FB.T('Sideburns');
+    return id;
+  }
+
+  function barberBeardStyleLabel(id) {
+    if (id === 'clean') return FB.T('Clean-shaven');
+    if (id === 'stubbleEven') return FB.T('Even');
+    if (id === 'stubbleSquare') return FB.T('Square');
+    if (id === 'stubblePointed') return FB.T('Pointed');
+    if (id === 'stubbleForked') return FB.T('Forked');
+    if (id === 'stubbleGoatee') return FB.T('Goatee');
+    if (id === 'stubbleChops') return FB.T('Mutton chops');
+    if (id === 'moustacheNatural') return FB.T('Natural');
+    if (id === 'moustachePencil') return FB.T('Pencil');
+    if (id === 'moustacheChevron') return FB.T('Chevron');
+    if (id === 'moustacheHandlebar') return FB.T('Handlebar');
+    if (id === 'moustacheWalrus') return FB.T('Walrus');
+    if (id === 'moustacheHorseshoe') return FB.T('Horseshoe');
+    if (id === 'beardShort') return FB.T('Short');
+    if (id === 'beardFull') return FB.T('Full');
+    if (id === 'beardLong') return FB.T('Long');
+    if (id === 'beardSquare') return FB.T('Square');
+    if (id === 'beardSpade') return FB.T('Spade');
+    if (id === 'beardForked') return FB.T('Forked');
+    if (id === 'beardChinstrap') return FB.T('Chinstrap');
+    if (id === 'comboShortNatural') return FB.T('Short natural');
+    if (id === 'comboFullNatural') return FB.T('Full natural');
+    if (id === 'comboLongNatural') return FB.T('Long natural');
+    if (id === 'comboShortSquare') return FB.T('Short square');
+    if (id === 'comboFullSquare') return FB.T('Full square');
+    if (id === 'comboLongSquare') return FB.T('Long square');
+    if (id === 'comboShortSpade') return FB.T('Short spade');
+    if (id === 'comboFullSpade') return FB.T('Full spade');
+    if (id === 'comboLongSpade') return FB.T('Long spade');
+    if (id === 'comboShortForked') return FB.T('Short forked');
+    if (id === 'comboFullForked') return FB.T('Full forked');
+    if (id === 'comboLongForked') return FB.T('Long forked');
+    if (id === 'goateeShort') return FB.T('Short');
+    if (id === 'goateeFull') return FB.T('Full');
+    if (id === 'goateeLong') return FB.T('Long');
+    if (id === 'goateeShortMoustache') return FB.T('Short + moustache');
+    if (id === 'goateeFullMoustache') return FB.T('Full + moustache');
+    if (id === 'goateeLongMoustache') return FB.T('Long + moustache');
+    if (id === 'sideburnsChops') return FB.T('Mutton chops');
+    if (id === 'sideburnsImperial') return FB.T('Mutton chops + moustache');
     return id;
   }
 
   function barberChoiceList(entries, labelOf) {
     return entries.map(function (entry) {
       return { id:entry.id, label:labelOf(entry.id) };
+    });
+  }
+
+  function barberBeardStyleChoices() {
+    return BARBER_BEARD_STYLES.map(function (style) {
+      return {
+        id:style.id,
+        family:style.family,
+        label:barberBeardStyleLabel(style.id)
+      };
     });
   }
 
@@ -777,6 +965,8 @@ window.FB = window.FB || {};
     const effective = publicLook(c, state);
     const choiceHair = barberHas(BARBER_HAIR, effective.hairStyle)
       ? effective.hairStyle : 'crop';
+    const choiceBeard = facialHair
+      ? barberBeardSelection(effective.beardKind, effective.beardCut) : null;
     return {
       ok:true,
       cid:cid,
@@ -789,10 +979,15 @@ window.FB = window.FB || {};
         ? barberChoiceList(BARBER_BEARD_KINDS, barberBeardKindLabel) : [],
       beardCuts:facialHair
         ? barberChoiceList(BARBER_BEARD_CUTS, barberBeardCutLabel) : [],
+      beardFamilies:facialHair
+        ? barberChoiceList(BARBER_BEARD_FAMILIES, barberBeardFamilyLabel) : [],
+      beardStyles:facialHair ? barberBeardStyleChoices() : [],
       current:{
         hairStyle:choiceHair,
-        beardKind:facialHair ? effective.beardKind : null,
-        beardCut:facialHair ? effective.beardCut : null
+        beardKind:choiceBeard ? choiceBeard.beardKind : null,
+        beardCut:choiceBeard ? choiceBeard.beardCut : null,
+        beardFamily:choiceBeard ? choiceBeard.beardFamily : null,
+        beardStyle:choiceBeard ? choiceBeard.beardStyle : null
       }
     };
   };
@@ -829,25 +1024,36 @@ window.FB = window.FB || {};
     const adultMan = barberAdultMan(state, c);
     const hasKind = own(selection, 'beardKind');
     const hasCut = own(selection, 'beardCut');
-    if (!adultMan && (hasKind || hasCut)) {
+    const hasFamily = own(selection, 'beardFamily');
+    const hasStyle = own(selection, 'beardStyle');
+    if (!adultMan && (hasKind || hasCut || hasFamily || hasStyle)) {
       result.code = 'invalid_selection';
       return result;
     }
-    if (adultMan && hasKind !== hasCut) {
+    if (adultMan && (hasKind !== hasCut || hasFamily !== hasStyle ||
+        ((hasKind || hasCut) && (hasFamily || hasStyle)))) {
       result.code = 'invalid_selection';
       return result;
     }
     let beard = null;
     let explicitBeard = false;
-    if (adultMan && hasKind) {
-      beard = canonicalBeard(selection.beardKind, selection.beardCut);
-      explicitBeard = true;
-      if (!beard) {
+    if (adultMan && hasFamily) {
+      const style = barberStyleById(selection.beardStyle);
+      if (!style || style.family !== selection.beardFamily) {
         result.code = 'invalid_selection';
         return result;
       }
+      beard = canonicalBeard(style.kind, style.cut);
+      explicitBeard = true;
+    } else if (adultMan && hasKind) {
+      beard = canonicalBeard(selection.beardKind, selection.beardCut);
+      explicitBeard = true;
     } else if (adultMan) {
       beard = storedBeardAppearance(state, c);
+    }
+    if (explicitBeard && !beard) {
+      result.code = 'invalid_selection';
+      return result;
     }
     const appearance = { hairStyle:selection.hairStyle };
     if (beard) {
@@ -856,10 +1062,14 @@ window.FB = window.FB || {};
     }
     const current = publicLook(c, state);
     const proposed = publicLook(c, state, appearance);
+    const proposedBeard = adultMan
+      ? barberBeardSelection(proposed.beardKind, proposed.beardCut) : null;
     result.selection = {
       hairStyle:proposed.hairStyle,
-      beardKind:adultMan ? proposed.beardKind : null,
-      beardCut:adultMan ? proposed.beardCut : null
+      beardKind:proposedBeard ? proposedBeard.beardKind : null,
+      beardCut:proposedBeard ? proposedBeard.beardCut : null,
+      beardFamily:proposedBeard ? proposedBeard.beardFamily : null,
+      beardStyle:proposedBeard ? proposedBeard.beardStyle : null
     };
     result.appearance = appearance;
     result.explicitBeard = explicitBeard;

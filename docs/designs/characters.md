@@ -72,14 +72,23 @@ the player can see and touch. See [realms.md](realms.md) for the court's structu
 the consort.
 
 The current protagonist may replace the deterministic hairstyle and, once an adult man,
-facial-hair amount and shape through **Visit Barber…** on the Equipment sheet. The
+facial-hair family and family-specific style through **Visit Barber…** on the Equipment sheet.
+The families are clean-shaven, stubble, moustache, beard, beard with moustache, goatee,
+and sideburns; each exposes only styles that paint distinctly for that family. Moustaches
+include natural, pencil, chevron, handlebar, walrus, and horseshoe designs. The
+beard cuts use deliberately different coverage and terminal silhouettes (round, square,
+spade, fork, or narrow goatee) so they remain legible at retained-portrait size. The
+chinstrap is clipped to the head and follows the lower-cheek and jaw contour rather than
+hanging outside the face. The
 optional character record is `appearance: {hairStyle, beardKind?, beardCut?}`; it changes
 style only, so identity, natural color, and age-related greying remain derived. Ordinary
 cuts are elective for either sex, while baldness, recession, and tonsure remain generated
 contextual results rather than picker choices. A minor's chosen hair persists after
 majority, but facial hair remains generated until an adult man explicitly chooses it.
-Invalid or obsolete override values fall back to the corresponding deterministic result
-without mutating the record. Preview descriptors may supply a temporary `appearance` and
+The semantic family/style picker resolves to one canonical `beardKind`/`beardCut` pair,
+so it never offers Cartesian combinations that collapse to another visible choice. Invalid
+or obsolete override values fall back to the corresponding deterministic result without
+mutating the record. Preview descriptors may supply a temporary `appearance` and
 suppress equipment or headwear; resolved style and suppression flags participate in the
 visual key, so cached faces cannot cross appearance boundaries.
 

@@ -272,6 +272,16 @@ test('barber status prices every tier and applies a persistent, day-free overrid
       const adultLook=FB.characterLook(me,s.date.year,s);
       const normalized=FB.barberStatus(s,me.id,{hairStyle:'crop',
         beardKind:'long',beardCut:'moustache'});
+      const semantic=adultOptions.beardStyles.map(function(style){
+        const status=FB.barberStatus(s,me.id,{hairStyle:'crop',
+          beardFamily:style.family,beardStyle:style.id});
+        return {code:status.code,family:status.selection&&status.selection.beardFamily,
+          style:status.selection&&status.selection.beardStyle,
+          pair:status.appearance&&status.appearance.beardKind+'|'+
+            status.appearance.beardCut};
+      });
+      const mismatched=FB.barberStatus(s,me.id,{hairStyle:'crop',
+        beardFamily:'moustache',beardStyle:'beardLong'});
       const payload=JSON.parse(FB.save.serialize());
       FB.save.restore(payload);
       const restored=FB.state.chars[FB.state.player.charId].appearance;
@@ -297,6 +307,18 @@ test('barber status prices every tier and applies a persistent, day-free overrid
         persistsIntoAdulthood:adultLook.hairStyle===selection.hairStyle,
         adultFacialHair:adultOptions.facialHair,
         generatedBeardStillLive:adultOptions.beardOverridden===false,
+        familyCount:adultOptions.beardFamilies.length,
+        styleCount:adultOptions.beardStyles.length,
+        moustacheCount:adultOptions.beardStyles.filter(function(style){
+          return style.family==='moustache';
+        }).length,
+        semanticValid:semantic.every(function(entry,index){
+          return entry.code!=='invalid_selection'&&
+            entry.family===adultOptions.beardStyles[index].family&&
+            entry.style===adultOptions.beardStyles[index].id;
+        }),
+        semanticUnique:new Set(semantic.map(function(entry){return entry.pair;})).size,
+        mismatchedCode:mismatched.code,
         normalizedKind:normalized.selection.beardKind,
         normalizedCut:normalized.selection.beardCut,
         restored:restored
@@ -325,6 +347,12 @@ test('barber status prices every tier and applies a persistent, day-free overrid
     expect(result.persistsIntoAdulthood).toBe(true);
     expect(result.adultFacialHair).toBe(true);
     expect(result.generatedBeardStillLive).toBe(true);
+    expect(result.familyCount).toBe(7);
+    expect(result.styleCount).toBe(40);
+    expect(result.moustacheCount).toBe(6);
+    expect(result.semanticValid).toBe(true);
+    expect(result.semanticUnique).toBe(40);
+    expect(result.mismatchedCode).toBe('invalid_selection');
     expect(result.normalizedKind).toBe('short');
     expect(result.normalizedCut).toBe('moustache');
     expect(result.restored).toEqual(result.applied.appearance);
@@ -337,7 +365,7 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
     const setup = await page.evaluate(function () {
       const s=FB.state,me=s.chars[s.player.charId];
       me.sex='m';me.born=s.date.year-28;delete me.appearance;
-      s.player.tier=3;s.player.gold=80;
+      s.player.tier=3;s.player.gold=80.75;
       FB.ui.showEquipmentModal(me.id,'close');
       return {id:me.id,gold:s.player.gold,turn:s.turn,
         rng:JSON.stringify(FB.getRngState())};
@@ -348,10 +376,42 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
     await page.getByRole('button',{name:'Visit Barber…',exact:true}).click();
     await expect(page.getByRole('heading', {name:/Visit Barber for/})).toBeVisible();
     await expect(page.locator('[data-barber-hair]')).toHaveCount(11);
-    await expect(page.locator('[data-barber-beard-kind]')).toHaveCount(5);
-    await expect(page.locator('[data-barber-beard-cut]')).toHaveCount(7);
+    await expect(page.locator('[data-barber-beard-family]')).toHaveCount(7);
+    await expect(page.locator('[data-barber-beard-style]')).toHaveCount(40);
+    await expect(page.locator('.barber-cycle').first()).toBeHidden();
     await expect(page.locator('#barber-quote')).toContainText('Cost: 8 gold');
     await expect(page.locator('#barber-quote')).toContainText('Current gold: 80');
+    await expect(page.locator('#barber-quote')).not.toContainText('80.75');
+    const desktopScroll=await page.evaluate(function () {
+      const body=document.getElementById('gm-body');
+      const controls=body.querySelector('.barber-controls');
+      const preview=body.querySelector('.barber-preview');
+      controls.style.maxHeight='120px';
+      controls.scrollTop=0;
+      const before=preview.getBoundingClientRect().top;
+      const canScroll=controls.scrollHeight>controls.clientHeight;
+      controls.scrollTop=controls.scrollHeight;
+      const result={
+        bodyOverflow:getComputedStyle(body).overflowY,
+        controlsOverflow:getComputedStyle(controls).overflowY,
+        canScroll:canScroll,
+        scrolled:controls.scrollTop>0,
+        portraitStable:Math.abs(preview.getBoundingClientRect().top-before)<0.5
+      };
+      controls.style.maxHeight='';
+      controls.scrollTop=0;
+      return result;
+    });
+    expect(desktopScroll).toEqual({
+      bodyOverflow:'hidden',controlsOverflow:'auto',canScroll:true,
+      scrolled:true,portraitStable:true
+    });
+    await page.locator('[data-barber-beard-family="moustache"]').click();
+    await expect(page.locator('[data-barber-beard-style]:visible')).toHaveCount(6);
+    const handlebar=page.locator(
+      '[data-barber-beard-style="moustacheHandlebar"]');
+    await handlebar.click();
+    await expect(handlebar).toHaveAttribute('aria-pressed','true');
     const alternate=page.locator('[data-barber-hair][aria-pressed="false"]').first();
     await alternate.focus();
     await page.keyboard.press('Enter');
@@ -367,6 +427,9 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
     },setup.id)).toBeNull();
 
     await page.getByRole('button',{name:'Visit Barber…',exact:true}).click();
+    await page.locator('[data-barber-beard-family="moustache"]').click();
+    await page.locator(
+      '[data-barber-beard-style="moustacheHandlebar"]').click();
     const paidChoice=page.locator('[data-barber-hair][aria-pressed="false"]').last();
     await paidChoice.focus();
     await page.keyboard.press('Space');
@@ -378,6 +441,8 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
         rng:JSON.stringify(FB.getRngState())};
     },setup);
     expect(applied.appearance.hairStyle).toBeTruthy();
+    expect(applied.appearance.beardKind).toBe('short');
+    expect(applied.appearance.beardCut).toBe('moustacheHandlebar');
     expect(applied.gold).toBe(setup.gold-8);
     expect(applied.turn).toBe(setup.turn);
     expect(applied.rng).toBe(setup.rng);
@@ -394,6 +459,79 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
       .toHaveCount(0);
   });
 
+test('mobile barber cycles each category while only its options pane scrolls',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({width:390,height:520});
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const setup=await page.evaluate(function () {
+      const s=FB.state,me=s.chars[s.player.charId];
+      me.sex='m';me.born=s.date.year-28;
+      me.appearance={hairStyle:'crop',beardKind:'short',beardCut:'natural'};
+      s.player.gold=80.75;
+      FB.ui.showEquipmentModal(me.id,'close');
+      return {id:me.id,gold:s.player.gold,
+        appearance:JSON.parse(JSON.stringify(me.appearance))};
+    });
+    await page.getByRole('button',{name:'Visit Barber…',exact:true}).click();
+
+    await expect(page.locator('.barber-cycle')).toHaveCount(3);
+    await expect(page.locator('.barber-choices')).toHaveCount(3);
+    await expect(page.locator('[data-barber-direction="-1"]')).toHaveCount(3);
+    await expect(page.locator('[data-barber-direction="1"]')).toHaveCount(3);
+    const desktopGroups=page.locator('.barber-choices');
+    for(let i=0;i<await desktopGroups.count();i++){
+      await expect(desktopGroups.nth(i)).toBeHidden();
+    }
+    const hairCurrent=page.locator('[data-barber-current="hair"]');
+    const familyCurrent=page.locator('[data-barber-current="beard-family"]');
+    const styleCurrent=page.locator('[data-barber-current="beard-style"]');
+    const before={
+      hair:await hairCurrent.textContent(),
+      family:await familyCurrent.textContent(),
+      style:await styleCurrent.textContent()
+    };
+    await page.getByRole('button',{name:'Next Hair',exact:true}).click();
+    expect(await hairCurrent.textContent()).not.toBe(before.hair);
+    await page.getByRole('button',{name:'Previous Hair',exact:true}).click();
+    expect(await hairCurrent.textContent()).toBe(before.hair);
+    await page.getByRole('button',{name:'Next Hair',exact:true}).click();
+    await page.getByRole('button',{name:'Next Facial hair',exact:true}).click();
+    await page.getByRole('button',{name:'Next Facial hair style',exact:true}).click();
+    expect(await hairCurrent.textContent()).not.toBe(before.hair);
+    expect(await familyCurrent.textContent()).not.toBe(before.family);
+    expect(await styleCurrent.textContent()).not.toBe(before.style);
+    await expect(page.locator('#barber-quote')).toContainText('Current gold: 80');
+    await expect(page.locator('#barber-quote')).not.toContainText('80.75');
+
+    const geometry=await page.evaluate(function () {
+      const body=document.getElementById('gm-body');
+      const controls=body.querySelector('.barber-controls');
+      const preview=body.querySelector('.barber-preview');
+      controls.scrollTop=0;
+      const previewTop=preview.getBoundingClientRect().top;
+      const overflow=controls.scrollHeight>controls.clientHeight;
+      controls.scrollTop=controls.scrollHeight;
+      return {
+        bodyOverflow:getComputedStyle(body).overflowY,
+        controlsOverflow:getComputedStyle(controls).overflowY,
+        overflow:overflow,
+        scrolled:controls.scrollTop>0,
+        portraitStable:Math.abs(preview.getBoundingClientRect().top-previewTop)<0.5
+      };
+    });
+    expect(geometry).toEqual({
+      bodyOverflow:'hidden',controlsOverflow:'auto',overflow:true,
+      scrolled:true,portraitStable:true
+    });
+    expect(await page.evaluate(function (setup) {
+      const s=FB.state;
+      return {gold:s.player.gold,appearance:s.chars[setup.id].appearance};
+    },setup)).toEqual({gold:setup.gold,appearance:setup.appearance});
+    await page.evaluate(function(){history.back();});
+    await expect(page.getByRole('heading',{name:/Equipment for/})).toBeVisible();
+  });
+
 test('female and minor pickers hide facial hair and narrow browser Back returns safely',
   async function ({ page }, testInfo) {
     await page.setViewportSize({width:390,height:740});
@@ -407,23 +545,32 @@ test('female and minor pickers hide facial hair and narrow browser Back returns 
     });
     await page.getByRole('button',{name:'Visit Barber…',exact:true}).click();
     await expect(page.locator('[data-barber-hair]')).toHaveCount(11);
-    await expect(page.locator('[data-barber-beard-kind]')).toHaveCount(0);
-    await expect(page.locator('[data-barber-beard-cut]')).toHaveCount(0);
+    await expect(page.locator('.barber-choices')).toHaveCount(1);
+    await expect(page.locator('.barber-choices')).toBeHidden();
+    await expect(page.locator('.barber-cycle')).toHaveCount(1);
+    await expect(page.locator('.barber-cycle')).toBeVisible();
+    await expect(page.locator('[data-barber-beard-family]')).toHaveCount(0);
+    await expect(page.locator('[data-barber-beard-style]')).toHaveCount(0);
     const geometry=await page.locator('#genmodal .modalcard').evaluate(function(card){
       const rect=card.getBoundingClientRect();
       const buttons=Array.prototype.slice.call(
-        card.querySelectorAll('.barber-choice')).map(function(button){
+        card.querySelectorAll('.barber-cycle-button')).map(function(button){
           return button.getBoundingClientRect().height;
         });
       const body=document.getElementById('gm-body');
       return {left:rect.left,right:rect.right,width:window.innerWidth,
         scrollWidth:body.scrollWidth,clientWidth:body.clientWidth,
-        minButton:Math.min.apply(Math,buttons)};
+        minButton:Math.min.apply(Math,buttons),
+        bodyOverflow:getComputedStyle(body).overflowY,
+        controlsOverflow:getComputedStyle(
+          body.querySelector('.barber-controls')).overflowY};
     });
     expect(geometry.left).toBeGreaterThanOrEqual(0);
     expect(geometry.right).toBeLessThanOrEqual(geometry.width+1);
     expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth+1);
     expect(geometry.minButton).toBeGreaterThanOrEqual(44);
+    expect(geometry.bodyOverflow).toBe('hidden');
+    expect(geometry.controlsOverflow).toBe('auto');
     await page.evaluate(function(){history.back();});
     await expect(page.getByRole('heading',{name:/Equipment for/})).toBeVisible();
     expect(await page.evaluate(function (setup) {
@@ -436,6 +583,9 @@ test('female and minor pickers hide facial hair and narrow browser Back returns 
       FB.ui.showEquipmentModal(id,'close');
     },setup.id);
     await page.getByRole('button',{name:'Visit Barber…',exact:true}).click();
-    await expect(page.locator('[data-barber-beard-kind]')).toHaveCount(0);
-    await expect(page.locator('[data-barber-beard-cut]')).toHaveCount(0);
+    await expect(page.locator('.barber-cycle')).toHaveCount(1);
+    await expect(page.locator('[data-barber-beard-family]')).toHaveCount(0);
+    await expect(page.locator('[data-barber-beard-style]')).toHaveCount(0);
+    await expect(page.locator('[data-barber-cycle="beard-family"]')).toHaveCount(0);
+    await expect(page.locator('[data-barber-cycle="beard-style"]')).toHaveCount(0);
   });

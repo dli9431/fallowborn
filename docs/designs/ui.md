@@ -343,16 +343,20 @@ explicit apply. If an assignment changes while the review is open, it shows a fr
 and requires another confirmation. Applying returns to the selected character’s equipment
 sheet; manual slot buttons remain the primary fine-grained control.
 Only the current protagonist's Equipment sheet also shows **Visit Barber…**. Its nested
-full-sheet picker paints a large equipment- and headwear-free bust and offers every
-ordinary hairstyle as native, minimum-44-pixel choice buttons. Adult men additionally get
-facial-hair amount and shape groups; women and minors do not render those controls. Every
-choice updates only the preview and its `aria-pressed` selection state. The sheet always
-shows the live tier-scaled cost and current gold, and only **Pay and apply** may mutate the
-character. Apply re-quotes and revalidates travel, unresolved events, funds, and a changed
-appearance, deducts gold once, consumes no day, then returns to Equipment. The visible
-Back control and browser Back both return to the same Equipment sheet without mutation.
-On narrow screens the preview stacks above two-column choices
-without horizontal overflow.
+full-sheet picker paints a large equipment- and headwear-free bust. The preview, whole-coin
+gold quote, and status stay stationary while only the adjacent options pane scrolls.
+Desktop offers every ordinary hairstyle as native, minimum-44-pixel choice buttons. Mobile
+replaces each full grid with minimum-44-pixel **Previous / current / Next** cycling controls
+for hair and, where applicable, facial-hair family and style. Adult men choose among
+clean-shaven, stubble, moustache, beard, beard with moustache, goatee, and sideburn families;
+the style group immediately filters to valid designs in that family, including six distinct
+moustaches. Women and minors do not render those controls. Every choice updates only the preview,
+the desktop grid's `aria-pressed` state, and the mobile current-value announcement. Only
+**Pay and apply** may mutate the character. Apply re-quotes and revalidates travel, unresolved
+events, funds, and a changed appearance, deducts gold once, consumes no day, then returns to
+Equipment. The visible Back control and browser Back both return to the same Equipment sheet
+without mutation. On narrow screens the stationary preview stacks above the independently
+scrolling cycling controls without horizontal overflow.
 Each owned item card has a **Protect from automatic equipment changes** checkbox. Protected
 armory items are omitted from Equip Best and succession, protected worn items keep their
 assignment when possible, and the hand pair is preserved together if either hand is

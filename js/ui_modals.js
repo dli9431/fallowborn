@@ -14297,17 +14297,44 @@ window.FB = window.FB || {};
     });
   };
 
-  function barberChoiceGroup(label, attribute, choices, selected) {
+  function barberChoiceLabel(choices, selected) {
+    for (let i = 0; i < choices.length; i++) {
+      if (choices[i].id === selected) return choices[i].label;
+    }
+    return '';
+  }
+
+  function barberChoiceGroup(label, key, attribute, choices, selected) {
     let h = '<section class="barber-group"><h4>' + esc(label) + '</h4>' +
       '<div class="barber-choices" role="group" aria-label="' + esc(label) + '">';
     for (let i = 0; i < choices.length; i++) {
       const choice = choices[i];
       const active = choice.id === selected;
-      h += '<button type="button" class="barber-choice" ' + attribute + '="' +
+      const family = choice.family ? ' data-barber-option-family="' +
+        esc(choice.family) + '"' : '';
+      h += '<button type="button" class="barber-choice"' + family + ' ' +
+        attribute + '="' +
         esc(choice.id) + '" aria-pressed="' + (active ? 'true' : 'false') + '">' +
         esc(choice.label) + '</button>';
     }
-    return h + '</div></section>';
+    const previousLabel = FB.T('Previous {category}', { category:label });
+    const nextLabel = FB.T('Next {category}', { category:label });
+    return h + '</div><div class="barber-cycle" role="group" aria-label="' +
+      esc(label) + '"><button type="button" class="barber-cycle-button" ' +
+      'data-barber-cycle="' + esc(key) + '" data-barber-direction="-1" ' +
+      'aria-label="' + esc(previousLabel) + '">' + esc(FB.T('Previous')) +
+      '</button><span class="barber-cycle-current" data-barber-current="' +
+      esc(key) + '" aria-live="polite" aria-atomic="true">' +
+      esc(barberChoiceLabel(choices, selected)) +
+      '</span><button type="button" class="barber-cycle-button" ' +
+      'data-barber-cycle="' + esc(key) + '" data-barber-direction="1" ' +
+      'aria-label="' + esc(nextLabel) + '">' + esc(FB.T('Next')) +
+      '</button></div></section>';
+  }
+
+  function barberWholeGold(value) {
+    const amount = Number(value);
+    return isFinite(amount) ? Math.floor(amount) : 0;
   }
 
   function barberStatusText(status) {
@@ -14320,7 +14347,7 @@ window.FB = window.FB || {};
     }
     if (status.code === 'insufficient_funds') {
       return FB.T('You need {cost} gold, but have {gold}.', {
-        cost:status.cost, gold:status.gold
+        cost:status.cost, gold:barberWholeGold(status.gold)
       });
     }
     if (status.code === 'unchanged') {
@@ -14342,7 +14369,9 @@ window.FB = window.FB || {};
     let selection = {
       hairStyle:options.current.hairStyle,
       beardKind:options.current.beardKind,
-      beardCut:options.current.beardCut
+      beardCut:options.current.beardCut,
+      beardFamily:options.current.beardFamily,
+      beardStyle:options.current.beardStyle
     };
     let beardExplicit = false;
     const previewLabel = FB.T('Uncovered appearance preview for {name}', {
@@ -14356,13 +14385,15 @@ window.FB = window.FB || {};
       '<div class="barber-quote" id="barber-quote"></div>' +
       '<div class="progressnote" id="barber-status" aria-live="polite"></div>' +
       '</div><div class="barber-controls">' +
-      barberChoiceGroup(FB.T('Hair'), 'data-barber-hair',
+      barberChoiceGroup(FB.T('Hair'), 'hair', 'data-barber-hair',
         options.hair, selection.hairStyle);
     if (options.facialHair) {
-      h += barberChoiceGroup(FB.T('Facial hair amount'), 'data-barber-beard-kind',
-        options.beardKinds, selection.beardKind) +
-        barberChoiceGroup(FB.T('Facial hair shape'), 'data-barber-beard-cut',
-          options.beardCuts, selection.beardCut);
+      h += barberChoiceGroup(FB.T('Facial hair'), 'beard-family',
+        'data-barber-beard-family', options.beardFamilies,
+        selection.beardFamily) +
+        barberChoiceGroup(FB.T('Facial hair style'), 'beard-style',
+          'data-barber-beard-style', options.beardStyles,
+          selection.beardStyle);
     }
     h += '</div></div><div class="gm-footer">' +
       '<button type="button" class="btn primary" id="barber-apply">' +
@@ -14372,6 +14403,7 @@ window.FB = window.FB || {};
     openModal(FB.T('Visit Barber for {name}', { name:FB.fullName(c) }), h, {
       historyView:true,
       modalClass:'fullsheet-modal barber-modal',
+      noFocus:true,
       historyBackRender:function () {
         UI.showEquipmentModal(cid, exitMode, returnContext);
       }
@@ -14381,45 +14413,63 @@ window.FB = window.FB || {};
     function requestedSelection() {
       const request = { hairStyle:selection.hairStyle };
       if (options.facialHair && beardExplicit) {
-        request.beardKind = selection.beardKind;
-        request.beardCut = selection.beardCut;
+        request.beardFamily = selection.beardFamily;
+        request.beardStyle = selection.beardStyle;
       }
       return request;
     }
-    function updateChoiceState(attribute, value) {
+    function beardStylesForFamily(family) {
+      return options.beardStyles.filter(function (style) {
+        return style.family === family;
+      });
+    }
+    function selectFirstBeardStyle(family) {
+      const styles = beardStylesForFamily(family);
+      selection.beardStyle = styles.length ? styles[0].id : null;
+    }
+    function updateBeardStyleVisibility() {
+      const buttons = $('gm-body').querySelectorAll('[data-barber-beard-style]');
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].hidden = buttons[i].getAttribute('data-barber-option-family') !==
+          selection.beardFamily;
+      }
+    }
+    function updateChoiceState(attribute, key, choices, value) {
       const buttons = $('gm-body').querySelectorAll('[' + attribute + ']');
       for (let i = 0; i < buttons.length; i++) {
         buttons[i].setAttribute('aria-pressed',
           buttons[i].getAttribute(attribute) === value ? 'true' : 'false');
       }
+      const current = $('gm-body').querySelector(
+        '[data-barber-current="' + key + '"]');
+      if (current) current.textContent = barberChoiceLabel(choices, value);
     }
     function updatePreview() {
       status = FB.barberStatus(FB.state, cid, requestedSelection());
       if (status.selection) selection = status.selection;
-      updateChoiceState('data-barber-hair', selection.hairStyle);
+      updateChoiceState('data-barber-hair', 'hair', options.hair,
+        selection.hairStyle);
       if (options.facialHair) {
-        updateChoiceState('data-barber-beard-kind', selection.beardKind);
-        updateChoiceState('data-barber-beard-cut', selection.beardCut);
+        updateBeardStyleVisibility();
+        updateChoiceState('data-barber-beard-family', 'beard-family',
+          options.beardFamilies, selection.beardFamily);
+        updateChoiceState('data-barber-beard-style', 'beard-style',
+          options.beardStyles, selection.beardStyle);
       }
       const liveState = FB.state;
       const liveCharacter = liveState && liveState.chars[cid];
       if (liveCharacter) {
-        const appearance = { hairStyle:selection.hairStyle };
-        if (options.facialHair) {
-          appearance.beardKind = selection.beardKind;
-          appearance.beardCut = selection.beardCut;
-        }
         FB.paintPortrait($('barber-preview'), liveCharacter,
           liveState.date.year, {
             state:liveState,
-            appearance:appearance,
+            appearance:status.appearance,
             suppressEquipment:true,
             suppressHeadwear:true
           });
       }
       $('barber-quote').textContent = FB.T(
         'Cost: {cost} gold · Current gold: {gold}', {
-          cost:status.cost, gold:status.gold
+          cost:status.cost, gold:barberWholeGold(status.gold)
         });
       $('barber-status').textContent = barberStatusText(status);
       $('barber-status').classList.toggle('warnote', !status.ok);
@@ -14433,19 +14483,51 @@ window.FB = window.FB || {};
         updatePreview();
       });
     }
-    const amountButtons = $('gm-body').querySelectorAll('[data-barber-beard-kind]');
-    for (let i = 0; i < amountButtons.length; i++) {
-      amountButtons[i].addEventListener('click', function () {
+    const familyButtons = $('gm-body').querySelectorAll('[data-barber-beard-family]');
+    for (let i = 0; i < familyButtons.length; i++) {
+      familyButtons[i].addEventListener('click', function () {
         beardExplicit = true;
-        selection.beardKind = amountButtons[i].getAttribute('data-barber-beard-kind');
+        selection.beardFamily = familyButtons[i].getAttribute(
+          'data-barber-beard-family');
+        selectFirstBeardStyle(selection.beardFamily);
         updatePreview();
       });
     }
-    const cutButtons = $('gm-body').querySelectorAll('[data-barber-beard-cut]');
-    for (let i = 0; i < cutButtons.length; i++) {
-      cutButtons[i].addEventListener('click', function () {
+    const styleButtons = $('gm-body').querySelectorAll('[data-barber-beard-style]');
+    for (let i = 0; i < styleButtons.length; i++) {
+      styleButtons[i].addEventListener('click', function () {
         beardExplicit = true;
-        selection.beardCut = cutButtons[i].getAttribute('data-barber-beard-cut');
+        selection.beardStyle = styleButtons[i].getAttribute(
+          'data-barber-beard-style');
+        updatePreview();
+      });
+    }
+    const cycleButtons = $('gm-body').querySelectorAll('[data-barber-cycle]');
+    for (let i = 0; i < cycleButtons.length; i++) {
+      cycleButtons[i].addEventListener('click', function () {
+        const key = cycleButtons[i].getAttribute('data-barber-cycle');
+        const direction = Number(cycleButtons[i].getAttribute('data-barber-direction'));
+        let choices = options.hair;
+        let property = 'hairStyle';
+        if (key === 'beard-family') {
+          choices = options.beardFamilies;
+          property = 'beardFamily';
+          beardExplicit = true;
+        } else if (key === 'beard-style') {
+          choices = beardStylesForFamily(selection.beardFamily);
+          property = 'beardStyle';
+          beardExplicit = true;
+        }
+        if (!choices.length) return;
+        let currentIndex = 0;
+        for (let j = 0; j < choices.length; j++) {
+          if (choices[j].id === selection[property]) currentIndex = j;
+        }
+        selection[property] = choices[
+          (currentIndex + direction + choices.length) % choices.length].id;
+        if (key === 'beard-family') {
+          selectFirstBeardStyle(selection.beardFamily);
+        }
         updatePreview();
       });
     }

@@ -237,10 +237,18 @@ window.FB = window.FB || {};
   var NEW_HAIR_STYLES = ['bowl','sweptBack','shoulderWaves','tiedBack','crownBraid'];
   var APPEARANCE_BEARD_KINDS = ['none','stubble','short','full','long'];
   var APPEARANCE_BEARD_CUTS = ['natural','square','spade','forked','goatee',
-    'sideburn','moustache'];
+    'sideburn','moustache','chinstrap','beardNatural','beardSquare',
+    'beardSpade','beardForked','beardGoatee','sideburns','moustachePencil',
+    'moustacheChevron','moustacheHandlebar','moustacheWalrus',
+    'moustacheHorseshoe'];
   var APPEARANCE_BEARD_RENDER = {
     natural:'full',square:'square',spade:'spade',forked:'forked',goatee:'goatee',
-    sideburn:'chops',moustache:'stache'
+    sideburn:'chops',moustache:'stache',chinstrap:'chinstrap',
+    beardNatural:'bareFull',beardSquare:'bareSquare',beardSpade:'bareSpade',
+    beardForked:'bareForked',beardGoatee:'bareGoatee',sideburns:'bareChops',
+    moustachePencil:'stachePencil',moustacheChevron:'stacheChevron',
+    moustacheHandlebar:'stacheHandlebar',moustacheWalrus:'stacheWalrus',
+    moustacheHorseshoe:'stacheHorseshoe'
   };
   FB.PORTRAIT_HAIR_STYLES = ORDINARY_HAIR_STYLES.slice();
   FB.PORTRAIT_BEARD_KINDS = APPEARANCE_BEARD_KINDS.slice();
@@ -495,10 +503,13 @@ window.FB = window.FB || {};
          saved overrides, and the picker selection honest about the result. */
       if (out.beardKind === 'none') {
         out.beardCut = 'natural';
-      } else if (out.beardKind === 'stubble' && out.beardCut === 'moustache') {
+      } else if (out.beardKind === 'stubble' &&
+          out.beardCut.indexOf('moustache') === 0) {
         out.beardKind = 'none';
         out.beardCut = 'natural';
-      } else if ((out.beardCut === 'sideburn' || out.beardCut === 'moustache') &&
+      } else if ((out.beardCut === 'sideburn' || out.beardCut === 'sideburns' ||
+          out.beardCut === 'chinstrap' ||
+          out.beardCut.indexOf('moustache') === 0) &&
           (out.beardKind === 'full' || out.beardKind === 'long')) {
         out.beardKind = 'short';
       }
@@ -2112,16 +2123,37 @@ window.FB = window.FB || {};
   /* The cut, which the descriptor picks and the amount only scales.
      reach: how far round the jaw; cheek: how high it rides; chinW: the
      mass at the chin; drop: hang below the chin; tip: the bottom edge;
-     stache/droop: the moustache it carries. */
+     stache/droop: the moustache it carries. These silhouettes are
+     intentionally broad caricatures: subtle barber differences vanish
+     at the size of the retained portrait. */
   var BEARD = {
-    full:      {reach:1,cheek:1,chinW:1,drop:1,tip:'round',stache:1,droop:.2},
-    square:    {reach:1,cheek:.88,chinW:1.14,drop:.92,tip:'square',stache:1,droop:0},
-    spade:     {reach:.96,cheek:.94,chinW:1.06,drop:1.18,tip:'point',stache:1.05,droop:.3},
-    forked:    {reach:1,cheek:1,chinW:.98,drop:1.12,tip:'fork',stache:1,droop:.35},
-    goatee:    {reach:.32,cheek:.04,chinW:.8,drop:1.2,tip:'point',stache:.95,droop:.25},
+    full:      {reach:1,cheek:1,chinW:1.04,drop:.92,tip:'round',stache:1,droop:.2},
+    square:    {reach:.94,cheek:.64,chinW:1.34,drop:.78,tip:'square',stache:1,droop:0},
+    spade:     {reach:.78,cheek:.8,chinW:.78,drop:1.12,tip:'point',stache:1.05,droop:.3},
+    forked:    {reach:.96,cheek:.92,chinW:1.02,drop:1.08,tip:'fork',forkGap:1.35,
+      stache:1,droop:.35},
+    goatee:    {reach:.2,cheek:0,chinW:.56,drop:1.18,tip:'point',stache:.95,droop:.25},
     chinstrap: {reach:.92,cheek:.62,chinW:.84,drop:.52,tip:'round',stache:0,droop:0},
     chops:     {reach:1,cheek:1,chinW:0,drop:0,tip:'chops',stache:.92,droop:.8},
-    stache:    {reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:1.28,droop:.55}
+    bareFull:  {reach:1,cheek:1,chinW:1.04,drop:.92,tip:'round',stache:0,droop:0},
+    bareSquare:{reach:.94,cheek:.64,chinW:1.34,drop:.78,tip:'square',stache:0,droop:0},
+    bareSpade: {reach:.78,cheek:.8,chinW:.78,drop:1.12,tip:'point',stache:0,droop:0},
+    bareForked:{reach:.96,cheek:.92,chinW:1.02,drop:1.08,tip:'fork',forkGap:1.35,
+      stache:0,droop:0},
+    bareGoatee:{reach:.2,cheek:0,chinW:.56,drop:1.18,tip:'point',stache:0,droop:0},
+    bareChops: {reach:1,cheek:1,chinW:0,drop:0,tip:'chops',stache:0,droop:0},
+    stache:    {reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:1.16,
+      stacheThick:1,droop:.32,curl:.35},
+    stachePencil:{reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:.88,
+      stacheThick:.42,droop:.03,curl:0},
+    stacheChevron:{reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:1.18,
+      stacheThick:1.28,droop:.28,curl:0},
+    stacheHandlebar:{reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:1.42,
+      stacheThick:.78,droop:-.18,curl:1},
+    stacheWalrus:{reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:1.35,
+      stacheThick:1.48,droop:.92,curl:.12},
+    stacheHorseshoe:{reach:0,cheek:0,chinW:0,drop:0,tip:'none',stache:1.12,
+      stacheThick:1.08,droop:.62,curl:0,tails:1}
   };
   function cutOf(spec) {
     return BEARD[spec.beardCut]||BEARD.full;
@@ -2176,9 +2208,13 @@ window.FB = window.FB || {};
     ctx.bezierCurveTo(jlx+fw*.012,mixV2(f.jawY,f.chinY,.75),
       f.chinX-jw,f.chinY+d*.22,f.chinX-mw,f.chinY+d*.7);
     if(c.tip==='fork'){
-      ctx.quadraticCurveTo(f.chinX-bw*.7,f.chinY+d*1.05,f.chinX-fw*.05,f.chinY+d);
-      ctx.quadraticCurveTo(f.chinX,f.chinY+d*.7,f.chinX+fw*.05,f.chinY+d);
-      ctx.quadraticCurveTo(f.chinX+bw*.7,f.chinY+d*1.05,f.chinX+mw,f.chinY+d*.7);
+      var forkGap=fw*.05*(c.forkGap||1);
+      ctx.quadraticCurveTo(f.chinX-bw*.74,f.chinY+d*1.08,
+        f.chinX-forkGap,f.chinY+d*1.12);
+      ctx.quadraticCurveTo(f.chinX,f.chinY+d*.56,
+        f.chinX+forkGap,f.chinY+d*1.12);
+      ctx.quadraticCurveTo(f.chinX+bw*.74,f.chinY+d*1.08,
+        f.chinX+mw,f.chinY+d*.7);
     }else if(c.tip==='point'){
       ctx.quadraticCurveTo(f.chinX-bw*.55,f.chinY+d*.96,f.chinX,f.chinY+d*1.3);
       ctx.quadraticCurveTo(f.chinX+bw*.55,f.chinY+d*.96,f.chinX+mw,f.chinY+d*.7);
@@ -2243,38 +2279,77 @@ window.FB = window.FB || {};
     var base=rgbMixV2(spec.hair.base,spec.hair.deep,.34);
     var lit=hairLit(spec,.26);
     if(spec.beardCut==='chinstrap'){
-      /* A chinstrap is a narrow BAND of beard hugging the jaw: a filled
-         mass between the silhouette and an inset line. Drawn as strokes
-         it read as a leather harness, not hair. */
-      var ys=[f.eyeY+2*u,mixV2(f.eyeY,f.jawY,.5),f.jawY+1*u];
-      var outerL=[],innerL=[],outerR=[],innerR=[],k,ey,w2;
-      for(k=0;k<ys.length;k++){
-        ey=ys[k];
-        w2=(4+k*1.4)*u;
-        outerL.push([faceEdgeAt(f,ey,-1)-1*u,ey]);
-        innerL.push([faceEdgeAt(f,ey,-1)+w2,ey]);
-        outerR.push([faceEdgeAt(f,ey,1)+1*u,ey]);
-        innerR.push([faceEdgeAt(f,ey,1)-w2,ey]);
-      }
+      /* Follow the face's own lower beziers and clip to the head. The
+         old eye-high outer ribbon sat beyond those curves and read as a
+         loose black harness. A real chinstrap begins on the lower cheek
+         and turns with the jaw instead. */
+      var strapTop=Math.max(f.eyeY+hH*.18,
+        Math.min(f.jawY-4*u,f.mouthY-hH*.12));
+      var outerInset=.35*u,topWidth=3.1*u,jawWidth=4.35*u;
+      var chinWidth=5.15*u;
+      var leftTop=faceEdgeAt(f,strapTop,-1)+outerInset;
+      var rightTop=faceEdgeAt(f,strapTop,1)-outerInset;
       var band2=function () {
         ctx.beginPath();
-        edgeThrough(ctx,[outerL[0],outerL[1],outerL[2],
-          [f.chinX,f.chinBottom+2.5*u],outerR[2],outerR[1],outerR[0]],true);
-        edgeThrough(ctx,[innerR[0],innerR[1],innerR[2],
-          [f.chinX,f.chinBottom-4.5*u],innerL[2],innerL[1],innerL[0]],false);
+        ctx.moveTo(leftTop,strapTop);
+        ctx.quadraticCurveTo(faceEdgeAt(f,mixV2(strapTop,f.jawY,.55),-1)+
+          outerInset,mixV2(strapTop,f.jawY,.55),f.jawL+outerInset,f.jawY+2*u);
+        ctx.bezierCurveTo(f.jawL+(1+f.jawT*2)*u+outerInset,f.chinY-5*u,
+          f.chinX-f.chinSpan+outerInset,f.chinBottom-outerInset,
+          f.chinX,f.chinBottom-outerInset);
+        ctx.bezierCurveTo(f.chinX+f.chinSpan-outerInset,
+          f.chinBottom-outerInset,
+          f.jawR-(1+f.jawT*2)*u-outerInset,f.chinY-5*u,
+          f.jawR-outerInset,f.jawY+2*u);
+        ctx.quadraticCurveTo(faceEdgeAt(f,mixV2(strapTop,f.jawY,.55),1)-
+          outerInset,mixV2(strapTop,f.jawY,.55),rightTop,strapTop);
+        ctx.lineTo(rightTop-topWidth,strapTop+1*u);
+        ctx.quadraticCurveTo(faceEdgeAt(f,mixV2(strapTop,f.jawY,.55),1)-
+          jawWidth,mixV2(strapTop,f.jawY,.55),f.jawR-jawWidth,f.jawY);
+        ctx.bezierCurveTo(f.jawR-(1+f.jawT*2)*u-jawWidth,f.chinY-7*u,
+          f.chinX+f.chinSpan-chinWidth,f.chinBottom-chinWidth,
+          f.chinX,f.chinBottom-chinWidth);
+        ctx.bezierCurveTo(f.chinX-f.chinSpan+chinWidth,
+          f.chinBottom-chinWidth,
+          f.jawL+(1+f.jawT*2)*u+jawWidth,f.chinY-7*u,
+          f.jawL+jawWidth,f.jawY);
+        ctx.quadraticCurveTo(faceEdgeAt(f,mixV2(strapTop,f.jawY,.55),-1)+
+          jawWidth,mixV2(strapTop,f.jawY,.55),leftTop+topWidth,strapTop+1*u);
         ctx.closePath();
       };
+      ctx.save();
+      headPath(ctx,f);
+      ctx.clip();
       band2();
       fillStrokeA(ctx,base,spec.hair.deep,1.2*u,.85,q);
       ctx.save();
       band2();
       ctx.clip();
       if(q.fine){
-        for(i=0;i<22;i++){
-          t=(i+.5)/22;
-          var cxb=mixV2(f.jawL-6*u,f.jawR+6*u,t);
-          var cyb=mixV2(f.jawY,f.chinBottom+1*u,
-            1-Math.abs(t*2-1))+(rng()-.5)*3*u;
+        var strapMid=mixV2(strapTop,f.jawY,.55);
+        var strapLow=mixV2(f.jawY,f.chinBottom,.68);
+        var edgeMid=(outerInset+jawWidth)*.5;
+        var edgeLow=(outerInset+chinWidth)*.42;
+        var centers=[
+          [leftTop+topWidth*.5,strapTop],
+          [faceEdgeAt(f,strapMid,-1)+edgeMid,strapMid],
+          [f.jawL+edgeMid,f.jawY+1*u],
+          [mixV2(f.jawL,f.chinX,.58)+edgeLow,strapLow],
+          [f.chinX,f.chinBottom-(outerInset+chinWidth)*.5],
+          [mixV2(f.jawR,f.chinX,.58)-edgeLow,strapLow],
+          [f.jawR-edgeMid,f.jawY+1*u],
+          [faceEdgeAt(f,strapMid,1)-edgeMid,strapMid],
+          [rightTop-topWidth*.5,strapTop]
+        ];
+        for(i=0;i<28;i++){
+          t=(i+.5)/28;
+          var centerPos=t*(centers.length-1);
+          var centerIndex=Math.min(centers.length-2,Math.floor(centerPos));
+          var centerT=centerPos-centerIndex;
+          var cxb=mixV2(centers[centerIndex][0],centers[centerIndex+1][0],
+            centerT)+(rng()-.5)*.8*u;
+          var cyb=mixV2(centers[centerIndex][1],centers[centerIndex+1][1],
+            centerT)+(rng()-.5)*1.2*u;
           ink(ctx,.75*u,i%3?spec.hair.deep:hairLit(spec,.2),.45,q);
           ctx.beginPath();
           ctx.moveTo(cxb,cyb-2*u);
@@ -2282,6 +2357,7 @@ window.FB = window.FB || {};
           ctx.stroke();
         }
       }
+      ctx.restore();
       ctx.restore();
       return;
     }
@@ -2390,18 +2466,19 @@ window.FB = window.FB || {};
     /* the cut's signature marks sit on top of the texture */
     if(c.tip==='fork'){
       var df=len*c.drop;
+      var forkMark=fw*.045*(c.forkGap||1);
       ctx.fillStyle=cssV2(spec.skin.base);
       ctx.beginPath();
-      ctx.moveTo(f.chinX-fw*.04,f.chinY+df*.78);
-      ctx.quadraticCurveTo(f.chinX,f.chinY+df*.68,
-        f.chinX+fw*.04,f.chinY+df*.78);
-      ctx.lineTo(f.chinX,f.chinY+df*1.02);
+      ctx.moveTo(f.chinX-forkMark,f.chinY+df*.7);
+      ctx.quadraticCurveTo(f.chinX,f.chinY+df*.55,
+        f.chinX+forkMark,f.chinY+df*.7);
+      ctx.lineTo(f.chinX,f.chinY+df*1.08);
       ctx.closePath();
       ctx.fill();
       ink(ctx,.7*u,spec.skin.deep,.4,q);
       ctx.beginPath();
-      ctx.moveTo(f.chinX,f.chinY+df*.72);
-      ctx.lineTo(f.chinX,f.chinY+df*.96);
+      ctx.moveTo(f.chinX,f.chinY+df*.61);
+      ctx.lineTo(f.chinX,f.chinY+df*1.02);
       ctx.stroke();
     }
     if(c.tip==='point'||c.tip==='fork'){
@@ -2447,7 +2524,7 @@ window.FB = window.FB || {};
     var color=rgbMixV2(spec.hair.base,spec.hair.deep,.34);
     var lit=hairLit(spec,.28);
     var solo=c.tip==='none';
-    var thick=solo?1.55:1;
+    var thick=(solo?1.55:1)*(c.stacheThick||1);
     var W=fw*(solo?.23:.185)*s;
     var T=hH*.054*thick;
     var tipY=f.mouthY-hH*.01+hH*.073*c.droop;
@@ -2486,12 +2563,14 @@ window.FB = window.FB || {};
           ctx.stroke();
         }
       }
-      if(solo){
+      if(solo&&c.curl){
         ink(ctx,1.5*u,color,1,q);
         ctx.beginPath();
         ctx.moveTo(f.mouthX+side*W*.96,tipY-hH*.004);
-        ctx.quadraticCurveTo(f.mouthX+side*W*1.11,tipY+hH*.004,
-          f.mouthX+side*W*1.07,tipY-hH*.019);
+        ctx.quadraticCurveTo(f.mouthX+side*W*(1.04+.07*c.curl),
+          tipY+hH*(.006-.012*c.curl),
+          f.mouthX+side*W*(1.02+.05*c.curl),
+          tipY-hH*(.006+.025*c.curl));
         ctx.stroke();
       }else if(c.droop>.6){
         ink(ctx,1.2*u,color,.95,q);
@@ -2501,6 +2580,20 @@ window.FB = window.FB || {};
           f.mouthX+side*W*.99,tipY+hH*.044);
         ctx.stroke();
       }
+    }
+    if(c.tails){
+      ctx.save();
+      ctx.lineCap='round';
+      ink(ctx,T*.72,color,1,q);
+      for(side=-1;side<=1;side+=2){
+        ctx.beginPath();
+        ctx.moveTo(f.mouthX+side*W*.82,tipY-T*.15);
+        ctx.bezierCurveTo(f.mouthX+side*W*.92,tipY+hH*.04,
+          f.mouthX+side*W*.86,tipY+hH*.12,
+          f.mouthX+side*W*.78,tipY+hH*.19);
+        ctx.stroke();
+      }
+      ctx.restore();
     }
     ink(ctx,.7*u,spec.hair.deep,.5,q);
     ctx.beginPath();

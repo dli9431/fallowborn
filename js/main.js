@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.126.0';
+  FB.VERSION = '1.126.1';
   FB.CHANGELOG = [
+    { v: '1.126.1', date: '2026-08-14', changes: [
+      'Barber controls now keep the portrait fixed, use compact mobile selectors, and separate facial-hair families from their styles.',
+      'Beard and moustache designs now have clearer, better-aligned silhouettes.'
+    ] },
     { v: '1.126.0', date: '2026-08-14', changes: [
       'Manual land grants can now install eligible adult relatives as county or duchy vassals.'
     ] },
