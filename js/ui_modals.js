@@ -5517,9 +5517,9 @@ window.FB = window.FB || {};
         '🔓 ' + esc(FB.T('Reserve'))) + '</button>';
   }
 
-  /* Give a demesne county — or a whole duchy — to a sworn man. Grant
-     protections are visible here and are hard stops for this picker until
-     deliberately removed; other land-transfer mechanics remain independent. */
+  /* Choose the demesne land first. Grant protections are visible here and are
+     hard stops for this picker until deliberately removed; the following
+     recipient step can found either a generated house or a family branch. */
   UI.showGrantLand = function (returnContext, replaceView) {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
@@ -5534,7 +5534,7 @@ window.FB = window.FB || {};
     }
     const duchies = FB.grantableDuchies(s);
     if (duchies.length) {
-      h += '<div class="panelh">' + esc(FB.T('Raise a duke over a duchy you hold in full')) + '</div><div class="gm-list">';
+      h += '<div class="panelh">' + esc(FB.T('Grant a duchy you hold in full')) + '</div><div class="gm-list">';
       for (const d of duchies) {
         const reserved = d.counties.filter(function (pid) {
           return FB.isProtected(s, 'grantCounty', pid);
@@ -5568,14 +5568,12 @@ window.FB = window.FB || {};
     openModal(FB.T('Grant Land'), h, options);
     document.querySelectorAll('[data-did]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (!FB.grantDuchy(FB.state, btn.dataset.did)) return;
-        managementFinish(returnContext, UI.closeModal);
+        UI.showGrantLandRecipients('duchy', btn.dataset.did, returnContext);
       });
     });
     document.querySelectorAll('[data-pid]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        if (!FB.grantCounty(FB.state, btn.dataset.pid)) return;
-        managementFinish(returnContext, UI.closeModal);
+        UI.showGrantLandRecipients('county', btn.dataset.pid, returnContext);
       });
     });
     document.querySelectorAll('[data-grant-protection]').forEach(function (btn) {
@@ -5592,6 +5590,75 @@ window.FB = window.FB || {};
     });
     $('gm-cancel').addEventListener('click', function () {
       managementBack(returnContext, UI.closeModal);
+    });
+  };
+
+  UI.showGrantLandRecipients = function (kind, id, returnContext, notice,
+      replaceView) {
+    const s = FB.state;
+    const isDuchy = kind === 'duchy';
+    const landName = isDuchy
+      ? ((FBDATA.duchies[id] || {}).name || id)
+      : ((FB.world.byId[id] || {}).name || id);
+    const grantLabel = isDuchy
+      ? FB.T('the Duchy of {land}', { land:landName })
+      : FB.T('{land} County', { land:landName });
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose who will receive {land}. The new ruler becomes your direct vassal and gains 40 Standing for the grant.', {
+        land:grantLabel
+      })) + '</p></div>';
+    if (notice) {
+      h += '<div class="progressnote warnote">' + esc(notice) + '</div>';
+    }
+    h += '<div class="gm-list"><button type="button" class="actionbtn" ' +
+      'data-grant-recipient="" aria-label="' + esc(FB.T(
+        'Grant {land} to a new loyal vassal.', { land:grantLabel })) + '">' +
+      '🎁 ' + esc(FB.T('New loyal vassal')) + '<span class="adesc">' +
+      esc(FB.T('Generate a new ruler and dynasty for this land.')) +
+      '</span></button>';
+    for (const row of FB.landGrantRecipients(s)) {
+      const name = FB.fullName(row.c);
+      const relationship = FB.T(row.rel);
+      h += '<button type="button" class="actionbtn" data-grant-recipient="' +
+        esc(row.id) + '" aria-label="' + esc(FB.T(
+          'Grant {land} to {name}, your {relationship}, age {age}.', {
+            land:grantLabel,
+            name:name,
+            relationship:relationship,
+            age:row.age
+          })) + '">👤 ' + esc(name) + '<span class="adesc">' + esc(FB.T(
+            '{relationship} · age {age}', {
+              relationship:relationship,
+              age:row.age
+            })) + '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
+      'id="grant-recipient-back">' + esc(FB.T('Back')) +
+      '</button></div>';
+    openModal(FB.T('Choose a Recipient'), h, {
+      historyView:true,
+      replaceView:!!replaceView,
+      historyBackRender:function () {
+        UI.showGrantLand(returnContext);
+      }
+    });
+    document.querySelectorAll('[data-grant-recipient]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const recipientId = btn.dataset.grantRecipient || null;
+        const granted = isDuchy
+          ? FB.grantDuchy(s, id, recipientId)
+          : FB.grantCounty(s, id, recipientId);
+        if (!granted) {
+          UI.showGrantLandRecipients(kind, id, returnContext, FB.T(
+            'The land or recipient changed before the grant. Choose again.'),
+          true);
+          return;
+        }
+        managementFinish(returnContext, UI.closeModal);
+      });
+    });
+    $('grant-recipient-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showGrantLand(returnContext); });
     });
   };
 

@@ -618,6 +618,25 @@ hand (`FB.grantableDuchies`) — raise a duke over the whole duchy (`FB.grantDuc
 `pd_<did>`, holding all its counties directly), who then renders `vassalTaxRate` of its
 counties' tax and `vassalLevyRate` of their levy back to you.
 
+Each manual grant chooses its recipient after choosing the land. Omitting the recipient
+from `FB.grantCounty`/`FB.grantDuchy` retains the generated loyal-vassal path used by
+Domain Cleanup and compatibility callers. `FB.landGrantRecipientStatus` and
+`FB.landGrantRecipients` provide the deterministic, read-only family projection: a
+candidate must be living adult kin, not the protagonist's spouse, and neither reigning nor
+landed through station or `royalLine`. Sex, faith, marriage to somebody else, captivity,
+and vocation do not disqualify them. A named recipient is revalidated before any land or
+RNG mutation and installed with `FB.assignRealmRulerCharacter`; the new realm is still an
+ordinary direct vassal and receives the same +40 Standing as a generated grantee.
+
+Family grants preserve the character's identity and genealogy: parents, spouse, children,
+dynasty, current and historical career, betrothal, and personal relationship records remain
+theirs. Living children seed the granted realm's ordinary succession line. Governing a new
+household is incompatible with serving in the player's, so installation releases enterprise
+work, household office and retainer records, family-agency ambitions, tutoring, and armory
+loadout assignments. The character's residence then resolves to the granted realm's capital.
+Eligibility and the modal draft are derived rather than saved, so family grants add no save
+field and require no migration.
+
 Governance exposes a preview-first **Domain Cleanup** assistant while the player is over
 that limit. `FB.domainCleanupPlan` is read-only, deterministic, and never consumes RNG. It
 keeps the household home and realm capital, omits counties in the `grantCounty` protection
@@ -722,8 +741,10 @@ campaign sovereign. A ruler crossing the captured boundary cannot carry uncaptur
 land into the settlement; their right and local support instead belong to a generated
 local cadet. `FB.assignRealmRulerCharacter(state, realmId, charId)` installs a living,
 non-reigning ordinary character on a generated realm while retaining personal parents,
-spouse, children, dynasty, and any existing royal-line identity. This is the route for
-named holy-war beneficiaries.
+spouse, children, dynasty, career history, betrothal, personal relationships, and any
+existing royal-line identity. It also releases assignments tying that character to the
+player's managed household. This is the route for named holy-war beneficiaries and family
+land grants.
 
 An awarded realm may carry additive
 `sacredCustody:{religion,siteIds,campaignId,grantTurn}`. Custody changes no population

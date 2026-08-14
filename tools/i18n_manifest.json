@@ -33625,6 +33625,29 @@
         "text": "💰 Your vassals render {money:gold} in extraordinary taxes — grumbling all the while."
       }
     },
+    "news.action.family_county_granted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🎁 {name}, a member of your family, receives {province} and holds it in your name."
+      }
+    },
+    "news.action.family_duchy_granted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "count",
+        "duchy",
+        "name"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🎁 {name}, a member of your family, receives the Duchy of {duchy} and holds {count} counties in your name."
+      }
+    },
     "news.action.fealty": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -58664,6 +58687,16 @@
         "text": "Send the subsidy. ({money:20})"
       }
     },
+    "src.1efc576b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant {land} to {name}, your {relationship}, age {age}."
+      }
+    },
     "src.1f003bd3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68160,6 +68193,16 @@
         "text": "About {money:gold}/season"
       }
     },
+    "src.356f3b52": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "New loyal vassal"
+      }
+    },
     "src.3571ab18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68672,6 +68715,16 @@
       ],
       "source": {
         "text": "Sunday Woollens"
+      }
+    },
+    "src.36ef585c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose who will receive {land}. The new ruler becomes your direct vassal and gains 40 Standing for the grant."
       }
     },
     "src.36f2c2ae": {
@@ -73028,6 +73081,16 @@
         "text": "Buried at a crossroads by popular ecclesiastical demand."
       }
     },
+    "src.4201e38f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "the Duchy of {land}"
+      }
+    },
     "src.4207dd9e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75240,6 +75303,16 @@
       ],
       "source": {
         "text": "Makes training and work in {content} available."
+      }
+    },
+    "src.46cb6f67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 {name}, a member of your family, receives the Duchy of {duchy} and holds {count} counties in your name."
       }
     },
     "src.46d0d455": {
@@ -78988,6 +79061,16 @@
         "text": "Buy grain at winter prices."
       }
     },
+    "src.5084cb8e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Generate a new ruler and dynasty for this land."
+      }
+    },
     "src.508730b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80226,6 +80309,16 @@
       ],
       "source": {
         "text": "Work outfits"
+      }
+    },
+    "src.533ed283": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant a duchy you hold in full"
       }
     },
     "src.533fe57a": {
@@ -84420,6 +84513,16 @@
       ],
       "source": {
         "text": "⬇ Cast down. The family keeps its coffers and its name — but not an acre."
+      }
+    },
+    "src.5d4b7794": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a Recipient"
       }
     },
     "src.5d4c2246": {
@@ -102963,16 +103066,6 @@
         "text": "A prisoner cannot hand over the house."
       }
     },
-    "src.88e733fd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Enfeoff a loyal man with a county — or a whole duchy. Vassals pay taxes, send levies — and remember."
-      }
-    },
     "src.88ecba4b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108651,6 +108744,16 @@
         "text": "Issue another promise."
       }
     },
+    "src.96df1c1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{relationship} · age {age}"
+      }
+    },
     "src.96e7a8f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109482,6 +109585,16 @@
       ],
       "source": {
         "text": "Bless the line, and the road ahead of it."
+      }
+    },
+    "src.986754dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{land} County"
       }
     },
     "src.986d0759": {
@@ -111611,6 +111724,16 @@
       ],
       "source": {
         "text": "Known character"
+      }
+    },
+    "src.9d737b48": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The land or recipient changed before the grant. Choose again."
       }
     },
     "src.9d8ed9bd": {
@@ -126148,16 +126271,6 @@
         "text": "Repair some of the damage your Provoke direction invited."
       }
     },
-    "src.c0e6bd05": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Raise a duke over a duchy you hold in full"
-      }
-    },
     "src.c0ee5389": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135271,6 +135384,16 @@
         "text": "Restore the crown of {title}"
       }
     },
+    "src.d7372a65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Grant {land} to a new loyal vassal."
+      }
+    },
     "src.d73aaa15": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141746,6 +141869,16 @@
         "text": "⚖ {new_liege} takes you as his direct man — your old lord is passed over."
       }
     },
+    "src.e68fbd0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🎁 {name}, a member of your family, receives {province} and holds it in your name."
+      }
+    },
     "src.e6965aa6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143317,6 +143450,16 @@
       ],
       "source": {
         "text": "Ash’ari"
+      }
+    },
+    "src.ea3eb589": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Enfeoff a new loyal vassal or an adult relative with a county — or a whole duchy. Vassals pay taxes, send levies — and remember."
       }
     },
     "src.ea449564": {
@@ -160977,6 +161120,14 @@
         "text": "Choose Your Conquest"
       }
     },
+    "ui:Choose a Recipient": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a Recipient"
+      }
+    },
     "ui:Choose a daily focus.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161328,6 +161479,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose who should wear {item}. Selecting an assigned object moves it from its previous wearer."
+      }
+    },
+    "ui:Choose who will receive {land}. The new ruler becomes your direct vassal and gains 40 Standing for the grant.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "land"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose who will receive {land}. The new ruler becomes your direct vassal and gains 40 Standing for the grant."
       }
     },
     "ui:Choose why you are leaving. The next screen marks every valid county and keeps an accessible destination list beside the map.": {
@@ -164902,6 +165063,14 @@
         "text": "General council"
       }
     },
+    "ui:Generate a new ruler and dynasty for this land.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Generate a new ruler and dynasty for this land."
+      }
+    },
     "ui:Gentry": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -165094,6 +165263,14 @@
         "text": "Grant a directly held county…"
       }
     },
+    "ui:Grant a duchy you hold in full": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant a duchy you hold in full"
+      }
+    },
     "ui:Grant a get": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -165171,6 +165348,29 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Grant the {profession} monopoly"
+      }
+    },
+    "ui:Grant {land} to a new loyal vassal.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "land"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant {land} to a new loyal vassal."
+      }
+    },
+    "ui:Grant {land} to {name}, your {relationship}, age {age}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "land",
+        "name",
+        "relationship"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Grant {land} to {name}, your {relationship}, age {age}."
       }
     },
     "ui:Grant {seat} and restore the Papacy": {
@@ -168429,6 +168629,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "New extraordinary aids require the Estates’ consent."
+      }
+    },
+    "ui:New loyal vassal": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "New loyal vassal"
       }
     },
     "ui:New policy choice": {
@@ -172464,14 +172672,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Raise a Building in {settlement}"
-      }
-    },
-    "ui:Raise a duke over a duchy you hold in full": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Raise a duke over a duchy you hold in full"
       }
     },
     "ui:Raise my banner": {
@@ -177541,6 +177741,14 @@
       "location": "js/events.js",
       "source": {
         "text": "The journey home begins"
+      }
+    },
+    "ui:The land or recipient changed before the grant. Choose again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The land or recipient changed before the grant. Choose again."
       }
     },
     "ui:The liege is already sworn to seek the estates’ consent.": {
@@ -182919,6 +183127,16 @@
         "text": "the County of {name}"
       }
     },
+    "ui:the Duchy of {land}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "land"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "the Duchy of {land}"
+      }
+    },
     "ui:the Duchy of {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -185231,6 +185449,16 @@
         "text": "{label}: {amount}"
       }
     },
+    "ui:{land} County": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "land"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{land} County"
+      }
+    },
     "ui:{leader}’s rank attracts {house}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -186504,6 +186732,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "{realm}: {completed} completed · {active}/{slots} active research."
+      }
+    },
+    "ui:{relationship} · age {age}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "age",
+        "relationship"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{relationship} · age {age}"
       }
     },
     "ui:{relation} · Standing {standing}": {

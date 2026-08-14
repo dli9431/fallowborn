@@ -2854,15 +2854,56 @@ window.FB = window.FB || {};
     }
   }
 
+  function releaseRulerHouseholdAssignments(state, c) {
+    const p = state.player || {};
+    if (FB.unassignEnterpriseWorker) {
+      FB.unassignEnterpriseWorker(state, c.id);
+    } else {
+      for (const enterprise of (p.enterprises || [])) {
+        if (enterprise.workerId !== c.id) continue;
+        enterprise.workerId = null;
+        if (enterprise.workerLocked !== undefined) {
+          delete enterprise.workerLocked;
+        }
+      }
+    }
+    if (p.familyOffices) {
+      for (const office in p.familyOffices) {
+        if (p.familyOffices[office] === c.id) delete p.familyOffices[office];
+      }
+    }
+    if (Array.isArray(p.retainers)) {
+      p.retainers = p.retainers.filter(function (record) {
+        return !record || record.charId !== c.id;
+      });
+    }
+    for (const id in state.chars) {
+      const student = state.chars[id];
+      if (!student || !student.edu || student.edu.tutorId !== c.id) continue;
+      student.edu.tutorId = null;
+      if (student.edu.school === 'master') student.edu.school = null;
+    }
+    if (state.agency && state.agency.familyAmbitions) {
+      delete state.agency.familyAmbitions[c.id];
+    }
+    if (p.loadouts) delete p.loadouts[c.id];
+    if (FB.setProtected) FB.setProtected(state, 'staffingWorker', c.id, false);
+    if (c.role === 'retainer') c.role = null;
+  }
+
   /* Install an existing ordinary character as the ruler of a generated
      realm. Settlement beneficiaries keep their personal parents, spouse,
-     children, dynasty, and any prior royal-line identity; only the compact
-     realm root is replaced. */
+     children, dynasty, career history, betrothal, and relationships. Work,
+     household office, retainer, family-agency, tutoring, and armory
+     assignments end because the new ruler now governs a separate household. */
   FB.assignRealmRulerCharacter = function (state, realmId, charId) {
     const realm = state && state.realms && state.realms[realmId];
     const c = state && state.chars && state.chars[charId];
     if (!realm || !realm.alive || !realm.generated || realmId === 'player' ||
         !c || c.dead || FB.isReigningRealmRuler(state, c)) return false;
+    const personalStanding = FB.standingOf
+      ? FB.standingOf(state, { kind:'character', id:c.id })
+      : FB.clamp(Number(c.opinion) || 0, -100, 100);
     const generation = realm.ruler && realm.ruler.generation !== undefined
       ? realm.ruler.generation : 1;
     const rootId = 'royal_' + realmId + '_' + c.id;
@@ -2922,6 +2963,12 @@ window.FB = window.FB || {};
     if (!c.royalLine) c.royalLine = { realmId:realmId, memberId:rootId };
     indexRuler(c.id, realmId);
     FB.refreshRealmSuccession(state, realmId);
+    if (FB.setRealmRulerStanding) {
+      FB.setRealmRulerStanding(state, realmId, personalStanding);
+    } else {
+      c.opinion = personalStanding;
+    }
+    releaseRulerHouseholdAssignments(state, c);
     return realm;
   };
 

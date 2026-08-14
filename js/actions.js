@@ -1593,7 +1593,7 @@ window.FB = window.FB || {};
       }
     } },
   { id: 'grant_land', label: '🎁 Grant land…', noConsume: true,
-    desc: function () { return 'Enfeoff a loyal man with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.'; },
+    desc: function () { return 'Enfeoff a new loyal vassal or an adult relative with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.'; },
     show: function (s) { return s.realms.player && s.realms.player.alive && s.player.provs && s.player.provs.length >= 2; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showGrantLand) {
@@ -3239,15 +3239,84 @@ window.FB = window.FB || {};
     return true;
   };
 
-  /* hand a demesne county to a new sworn man */
-  FB.grantCounty = function (state, pid) {
+  /* A grant may found a new branch of the player's family, but it cannot be
+     used to stack land on an existing household or realm. This projection is
+     deliberately read-only: callers may safely use it for lists and stale
+     confirmation checks without consuming RNG or normalizing save state. */
+  FB.landGrantRecipientStatus = function (state, charId) {
+    const c = state && state.chars && state.chars[charId];
+    const me = state && state.player && state.chars &&
+      state.chars[state.player.charId];
+    if (!state || !state.player || !c || !me) {
+      return { ready:false, code:'missing', charId:charId || null,
+        relation:null };
+    }
+    const kin = FB.kinOf(state);
+    const relation = kin.byId[c.id] || null;
+    if (!relation) {
+      return { ready:false, code:'not_kin', charId:c.id, relation:null };
+    }
+    if (c.dead) {
+      return { ready:false, code:'dead', charId:c.id, relation:relation };
+    }
+    if (c.id === me.spouseId || c.spouseId === me.id) {
+      return { ready:false, code:'spouse', charId:c.id, relation:relation };
+    }
+    if (FB.ageOf(c, state.date.year) < 16) {
+      return { ready:false, code:'minor', charId:c.id, relation:relation };
+    }
+    if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
+      return { ready:false, code:'reigning', charId:c.id, relation:relation };
+    }
+    if (FB.stationOf(c) >= 1 || c.royalLine) {
+      return { ready:false, code:'landed', charId:c.id, relation:relation };
+    }
+    return { ready:true, code:'eligible', charId:c.id, relation:relation };
+  };
+
+  FB.landGrantRecipients = function (state) {
+    const out = [];
+    if (!state || !state.chars || !state.player) return out;
+    const kin = FB.kinOf(state);
+    for (const charId in kin.byId) {
+      const status = FB.landGrantRecipientStatus(state, charId);
+      if (!status.ready) continue;
+      const c = state.chars[charId];
+      out.push({
+        id:c.id,
+        c:c,
+        rel:status.relation,
+        age:FB.ageOf(c, state.date.year)
+      });
+    }
+    out.sort(function (a, b) {
+      return a.c.born - b.c.born ||
+        (a.c.id < b.c.id ? -1 : a.c.id > b.c.id ? 1 : 0);
+    });
+    return out;
+  };
+
+  function namedGrantRecipient(state, recipientId, realmId) {
+    if (recipientId === undefined || recipientId === null) return null;
+    const status = FB.landGrantRecipientStatus(state, recipientId);
+    const existing = state.realms[realmId];
+    if (!status.ready || (existing && !existing.generated)) return false;
+    return state.chars[recipientId];
+  }
+
+  /* Hand a demesne county to a new loyal vassal or eligible adult relative.
+     Null/omitted recipients retain the legacy generated-house behavior used
+     by Domain Cleanup and old callers. */
+  FB.grantCounty = function (state, pid, recipientId) {
     const p = state.player;
     const pr = FB.world.byId[pid];
     if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) {
       return false;
     }
-    p.provs.splice(p.provs.indexOf(pid), 1);
     const vid = 'pv_' + pid;
+    const recipient = namedGrantRecipient(state, recipientId, vid);
+    if (recipient === false) return false;
+    p.provs.splice(p.provs.indexOf(pid), 1);
     let revivedCourt = false;
     if (state.realms[vid]) {
       state.realms[vid].alive = true;
@@ -3258,16 +3327,26 @@ window.FB = window.FB || {};
     }
     state.holder[pid] = vid;
     state.owner[pid] = FB.playerRealmId(state) || 'player';
-    /* Repair after the county is attached, so an heir who is the protagonist
-       can absorb the revived demesne through ordinary succession. */
-    if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
-    else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
+    if (recipient) {
+      FB.assignRealmRulerCharacter(state, vid, recipient.id);
+    } else {
+      /* Repair after the county is attached, so an heir who is the protagonist
+         can absorb the revived demesne through ordinary succession. */
+      if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
+      else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
+    }
     FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
       'deed:grant_county');
     FB.invalidateRealmCache();
-    FB.news(state, FB.msg('news.action.county_granted',
-      '🎁 {province} is granted to a loyal man — {name} holds it in your name.',
-      { province: pr.name, name: state.realms[vid].ruler.name }));
+    if (recipient) {
+      FB.news(state, FB.msg('news.action.family_county_granted',
+        '🎁 {name}, a member of your family, receives {province} and holds it in your name.',
+        { province:pr.name, name:FB.fullName(recipient) }));
+    } else {
+      FB.news(state, FB.msg('news.action.county_granted',
+        '🎁 {province} is granted to a loyal man — {name} holds it in your name.',
+        { province: pr.name, name: state.realms[vid].ruler.name }));
+    }
     return true;
   };
 
@@ -3292,7 +3371,7 @@ window.FB = window.FB || {};
 
   /* raise a duke over a de jure duchy the player holds in full — hand him every
      county in it at once. Keeps at least one county in the player's own hand. */
-  FB.grantDuchy = function (state, did) {
+  FB.grantDuchy = function (state, did, recipientId) {
     const p = state.player;
     if (!p.provs) return false;
     const cs = [];
@@ -3305,6 +3384,8 @@ window.FB = window.FB || {};
     for (const pid of cs) if ((state.dev[pid] || 1) > (state.dev[seat] || 1)) seat = pid; // richest = ducal seat
     const dname = (FBDATA.duchies[did] || {}).name || did;
     const vid = 'pd_' + did;
+    const recipient = namedGrantRecipient(state, recipientId, vid);
+    if (recipient === false) return false;
     let revivedCourt = false;
     if (state.realms[vid]) {
       state.realms[vid].alive = true;
@@ -3319,16 +3400,26 @@ window.FB = window.FB || {};
       state.holder[pid] = vid;
       state.owner[pid] = FB.playerRealmId(state) || 'player';
     }
-    /* Keep revival identical for retained and compacted dead ruler records:
-       the successor is eagerly loaded before the grant returns. */
-    if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
-    else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
+    if (recipient) {
+      FB.assignRealmRulerCharacter(state, vid, recipient.id);
+    } else {
+      /* Keep revival identical for retained and compacted dead ruler records:
+         the successor is eagerly loaded before the grant returns. */
+      if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
+      else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
+    }
     FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
       'deed:grant_duchy');
     FB.invalidateRealmCache();
-    FB.news(state, FB.msg('news.action.duchy_granted',
-      '🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name.',
-      { duchy: dname, name: state.realms[vid].ruler.name, count: cs.length }));
+    if (recipient) {
+      FB.news(state, FB.msg('news.action.family_duchy_granted',
+        '🎁 {name}, a member of your family, receives the Duchy of {duchy} and holds {count} counties in your name.',
+        { duchy:dname, name:FB.fullName(recipient), count:cs.length }));
+    } else {
+      FB.news(state, FB.msg('news.action.duchy_granted',
+        '🎁 The Duchy of {duchy} is granted to {name} — {count} counties held in your name.',
+        { duchy: dname, name: state.realms[vid].ruler.name, count: cs.length }));
+    }
     return true;
   };
 

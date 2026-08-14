@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.125.0';
+  FB.VERSION = '1.126.0';
   FB.CHANGELOG = [
+    { v: '1.126.0', date: '2026-08-14', changes: [
+      'Manual land grants can now install eligible adult relatives as county or duchy vassals.'
+    ] },
     { v: '1.125.0', date: '2026-08-14', changes: [
       'Visit the barber from Equipment to customize the protagonist’s hair and facial hair.'
     ] },
