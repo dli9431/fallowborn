@@ -387,6 +387,11 @@ test('domain cleanup is preview-first, stale-safe, and respects county reservati
       FB.setProtected(s, 'grantCounty', staleTarget, false);
       var fresh = FB.domainCleanupPlan(s);
       var applied = FB.applyDomainCleanupPlan(s, fresh);
+      var generatedOnly = applied.ok && applied.grants.every(function (grant) {
+        var rid = grant.kind === 'duchy'
+          ? 'pd_' + grant.id : 'pv_' + grant.id;
+        return s.realms[rid] && s.realms[rid].generated === true;
+      });
       return {
         readOnly:readOnly,
         excess:plan.excess,
@@ -400,6 +405,7 @@ test('domain cleanup is preview-first, stale-safe, and respects county reservati
         staleCode:stale.code,
         staleDidNotGrant:staleKeptCounty,
         applied:applied.ok,
+        generatedOnly:generatedOnly,
         held:p.provs.length,
         cap:FB.domainCap(s),
         keptReserved:p.provs.indexOf(reserved) >= 0,
@@ -416,9 +422,537 @@ test('domain cleanup is preview-first, stale-safe, and respects county reservati
     expect(result.staleCode).toBe('stale');
     expect(result.staleDidNotGrant).toBe(true);
     expect(result.applied).toBe(true);
+    expect(result.generatedOnly).toBe(true);
     expect(result.held).toBe(result.cap);
     expect(result.keptReserved).toBe(true);
     expect(result.keptSeat).toBe(true);
+  });
+
+test('family land-grant recipients are deterministic, read-only, and stale-safe',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var culture = me.culture;
+      var religion = me.religion;
+      var dynasty = me.dyn || 'House Test';
+
+      function child(id, name, age, sex) {
+        var c = FB.makeCharacter(s, {
+          id:id,
+          name:name,
+          sex:sex || 'm',
+          culture:culture,
+          religion:religion,
+          born:s.date.year - age,
+          dyn:dynasty,
+          traits:[],
+          fatherId:me.sex === 'm' ? me.id : null,
+          motherId:me.sex === 'f' ? me.id : null
+        });
+        me.childrenIds.push(c.id);
+        return c;
+      }
+
+      var eligible = child('grant_eligible', 'Eligible Kin', 31, 'f');
+      eligible.religion = religion === 'catholic' ? 'norse_pagan' : 'catholic';
+      eligible.career = {
+        profession:'monk', rank:'journeyman', experience:4,
+        startedYear:s.date.year - 5, guildRank:'none',
+        guildStanding:0, chosen:true
+      };
+      var partner = FB.makeCharacter(s, {
+        id:'grant_partner', name:'Outside Spouse', sex:'m',
+        culture:culture, religion:eligible.religion,
+        born:s.date.year - 33, dyn:'Outside House', traits:[]
+      });
+      eligible.spouseId = partner.id;
+      partner.spouseId = eligible.id;
+      s.intrigue = s.intrigue || {};
+      s.intrigue.captives = s.intrigue.captives || [];
+      s.intrigue.captives.push({
+        captiveId:eligible.id,
+        captorId:partner.id,
+        source:'test',
+        capturedTurn:s.turn
+      });
+
+      var minor = child('grant_minor', 'Minor Kin', 15, 'm');
+      var spouse = child('grant_spouse', 'Related Spouse', 27, 'f');
+      spouse.spouseId = me.id;
+      me.spouseId = spouse.id;
+      var dead = child('grant_dead', 'Dead Kin', 40, 'm');
+      dead.dead = true;
+      var landed = child('grant_landed', 'Landed Kin', 34, 'm');
+      landed.station = 2;
+      var royal = child('grant_royal', 'Royal Kin', 29, 'f');
+      royal.royalLine = { realmId:'old_line', memberId:'old_member' };
+      var reigning = child('grant_reigning', 'Reigning Kin', 38, 'm');
+      var reignRealm = FB.makeVassalRealm(s, {
+        id:'grant_reigning_realm',
+        name:'County of Reigning Test',
+        capital:p.provs[0],
+        rank:1,
+        liege:null,
+        culture:culture
+      });
+      FB.assignRealmRulerCharacter(s, reignRealm.id, reigning.id);
+      FB.touchFamily();
+
+      var saveBefore = FB.save.serialize();
+      var rngBefore = JSON.stringify(FB.getRngState());
+      var first = FB.landGrantRecipients(s).map(function (row) {
+        return row.id + ':' + row.rel + ':' + row.age;
+      });
+      var second = FB.landGrantRecipients(s).map(function (row) {
+        return row.id + ':' + row.rel + ':' + row.age;
+      });
+      var statuses = {
+        eligible:FB.landGrantRecipientStatus(s, eligible.id).code,
+        minor:FB.landGrantRecipientStatus(s, minor.id).code,
+        spouse:FB.landGrantRecipientStatus(s, spouse.id).code,
+        dead:FB.landGrantRecipientStatus(s, dead.id).code,
+        landed:FB.landGrantRecipientStatus(s, landed.id).code,
+        royal:FB.landGrantRecipientStatus(s, royal.id).code,
+        reigning:FB.landGrantRecipientStatus(s, reigning.id).code,
+        outsider:FB.landGrantRecipientStatus(s, partner.id).code,
+        missing:FB.landGrantRecipientStatus(s, 'no_such_person').code
+      };
+      var projectionReadOnly = saveBefore === FB.save.serialize() &&
+        rngBefore === JSON.stringify(FB.getRngState());
+
+      var did = null;
+      var duchyIds = [];
+      for (var candidateDid in FBDATA.duchies) {
+        var candidateIds = FB.duchyCounties(candidateDid);
+        if (candidateIds.length >= 2) {
+          did = candidateDid;
+          duchyIds = candidateIds;
+          break;
+        }
+      }
+      for (var i = 0; i < duchyIds.length; i++) {
+        if (p.provs.indexOf(duchyIds[i]) < 0) p.provs.push(duchyIds[i]);
+        s.holder[duchyIds[i]] = 'player';
+        s.owner[duchyIds[i]] = 'player';
+      }
+      var staleCounty = p.provs.filter(function (pid) {
+        return duchyIds.indexOf(pid) < 0;
+      })[0];
+      if (!staleCounty) {
+        for (var provinceIndex = 0;
+            provinceIndex < FB.world.provs.length; provinceIndex++) {
+          var possible = FB.world.provs[provinceIndex];
+          if (!possible.wasteland && duchyIds.indexOf(possible.id) < 0) {
+            staleCounty = possible.id;
+            p.provs.push(staleCounty);
+            s.holder[staleCounty] = 'player';
+            s.owner[staleCounty] = 'player';
+            break;
+          }
+        }
+      }
+      eligible.station = 2;
+      var staleBefore = FB.save.serialize();
+      var staleRng = JSON.stringify(FB.getRngState());
+      var countyGrant = FB.grantCounty(s, staleCounty, eligible.id);
+      var duchyGrant = FB.grantDuchy(s, did, eligible.id);
+
+      return {
+        statuses:statuses,
+        eligibleListed:first.indexOf(eligible.id + ':Daughter:31') >= 0,
+        stable:JSON.stringify(first) === JSON.stringify(second),
+        projectionReadOnly:projectionReadOnly,
+        countyRejected:countyGrant === false,
+        duchyRejected:duchyGrant === false,
+        staleAtomic:staleBefore === FB.save.serialize() &&
+          staleRng === JSON.stringify(FB.getRngState())
+      };
+    });
+
+    expect(result.statuses).toEqual({
+      eligible:'eligible',
+      minor:'minor',
+      spouse:'spouse',
+      dead:'dead',
+      landed:'landed',
+      royal:'landed',
+      reigning:'reigning',
+      outsider:'not_kin',
+      missing:'missing'
+    });
+    expect(result.eligibleListed).toBe(true);
+    expect(result.stable).toBe(true);
+    expect(result.projectionReadOnly).toBe(true);
+    expect(result.countyRejected).toBe(true);
+    expect(result.duchyRejected).toBe(true);
+    expect(result.staleAtomic).toBe(true);
+  });
+
+test('named county grants preserve family identity and release household assignments',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var pid = p.provs[p.provs.length - 1];
+      var rid = 'pv_' + pid;
+      var recipient = FB.makeCharacter(s, {
+        id:'county_family_grantee',
+        name:'Family Recipient',
+        sex:'m',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year - 32,
+        dyn:me.dyn || 'House Test',
+        traits:[],
+        opinion:5,
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null
+      });
+      me.childrenIds.push(recipient.id);
+      var spouse = FB.makeCharacter(s, {
+        id:'county_grantee_spouse', name:'Preserved Spouse', sex:'f',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 30, dyn:'Spouse House', traits:[]
+      });
+      recipient.spouseId = spouse.id;
+      spouse.spouseId = recipient.id;
+      var betrothed = FB.makeCharacter(s, {
+        id:'county_grantee_betrothed', name:'Preserved Betrothed', sex:'f',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 26, dyn:'Betrothed House', traits:[]
+      });
+      recipient.betrothedId = betrothed.id;
+      betrothed.betrothedId = recipient.id;
+      var child = FB.makeCharacter(s, {
+        id:'county_grantee_child', name:'Existing Heir', sex:'m',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 9, dyn:recipient.dyn, traits:[],
+        fatherId:recipient.id, motherId:spouse.id
+      });
+      recipient.childrenIds.push(child.id);
+      spouse.childrenIds.push(child.id);
+      recipient.career = {
+        profession:'merchant', rank:'journeyman', experience:37,
+        startedYear:s.date.year - 10, guildRank:'member',
+        guildStanding:24, chosen:true
+      };
+      recipient.careerHistory = {
+        farmer:{
+          profession:'farmer', rank:'journeyman', experience:12,
+          startedYear:s.date.year - 18, guildRank:'none',
+          guildStanding:0, chosen:true
+        }
+      };
+      var careerBefore = JSON.stringify(recipient.career);
+      var historyBefore = JSON.stringify(recipient.careerHistory);
+      p.enterprises = [{
+        uid:'grant_cleanup_enterprise', type:'market_stall_business',
+        settlement:0, workerId:recipient.id, workerLocked:true
+      }];
+      p.familyOffices = { factor:recipient.id };
+      p.retainers = [{
+        charId:recipient.id, office:'factor', pay:2,
+        startedTurn:s.turn, unpaid:0
+      }];
+      p.loadouts = p.loadouts || {};
+      p.loadouts[recipient.id] = { head:'grant_cleanup_item' };
+      FB.setProtected(s, 'staffingWorker', recipient.id, true);
+      s.agency = s.agency || {};
+      s.agency.familyAmbitions = s.agency.familyAmbitions || {};
+      s.agency.familyAmbitions[recipient.id] = {
+        id:'prosper', sinceYear:s.date.year, guidance:'encouraged',
+        progress:2, lastRequestYear:null
+      };
+      child.edu = { focus:'lea', school:'master', tutorId:recipient.id };
+      s.roles.friend = recipient.id;
+      p.friendContacts = p.friendContacts || {};
+      p.friendContacts[recipient.id] = {
+        score:2, lastTurn:s.turn, cause:'test'
+      };
+      FB.touchFamily();
+      var expectedOwner = FB.playerRealmId(s) || 'player';
+      var granted = FB.grantCounty(s, pid, recipient.id);
+      var realm = s.realms[rid];
+      var ruler = FB.realmRulerCharacterSnapshot(s, rid);
+      var heir = realm.succession.heirId &&
+        realm.succession.members[realm.succession.heirId];
+      var familyOfficeKept = Object.keys(p.familyOffices || {}).some(
+        function (office) { return p.familyOffices[office] === recipient.id; });
+      var retainerKept = (p.retainers || []).some(function (record) {
+        return record.charId === recipient.id;
+      });
+      var lastNews = s.log[s.log.length - 1];
+
+      return {
+        granted:granted,
+        directVassal:realm.liege === 'player',
+        holder:s.holder[pid],
+        owner:s.owner[pid],
+        expectedOwner:expectedOwner,
+        rulerId:ruler && ruler.id,
+        rulerName:realm.ruler.name,
+        dynasty:realm.dynasty,
+        station:recipient.station,
+        royalRealm:recipient.royalLine && recipient.royalLine.realmId,
+        standing:FB.standingOf(s, { kind:'realm', id:rid }),
+        residence:FB.characterResidence(s, recipient),
+        capital:realm.capital,
+        spouseLinks:recipient.spouseId === spouse.id &&
+          spouse.spouseId === recipient.id,
+        childLinks:recipient.childrenIds.indexOf(child.id) >= 0 &&
+          child.fatherId === recipient.id && child.motherId === spouse.id,
+        heirId:heir && heir.charId,
+        betrothalLinks:recipient.betrothedId === betrothed.id &&
+          betrothed.betrothedId === recipient.id,
+        careerKept:JSON.stringify(recipient.career) === careerBefore,
+        historyKept:JSON.stringify(recipient.careerHistory) === historyBefore,
+        friendKept:s.roles.friend === recipient.id &&
+          !!p.friendContacts[recipient.id],
+        enterpriseReleased:p.enterprises[0].workerId === null &&
+          p.enterprises[0].workerLocked === undefined,
+        familyOfficeReleased:!familyOfficeKept,
+        retainerReleased:!retainerKept,
+        agencyReleased:!s.agency.familyAmbitions[recipient.id],
+        tutorReleased:child.edu.tutorId === null && child.edu.school === null,
+        loadoutReleased:!p.loadouts[recipient.id],
+        staffingReservationReleased:!FB.isProtected(
+          s, 'staffingWorker', recipient.id),
+        newsKey:lastNews && lastNews.msg && lastNews.msg.key
+      };
+    });
+
+    expect(result).toEqual({
+      granted:true,
+      directVassal:true,
+      holder:result.holder,
+      owner:result.expectedOwner,
+      expectedOwner:result.expectedOwner,
+      rulerId:'county_family_grantee',
+      rulerName:'Family Recipient',
+      dynasty:result.dynasty,
+      station:3,
+      royalRealm:result.holder,
+      standing:45,
+      residence:result.capital,
+      capital:result.capital,
+      spouseLinks:true,
+      childLinks:true,
+      heirId:'county_grantee_child',
+      betrothalLinks:true,
+      careerKept:true,
+      historyKept:true,
+      friendKept:true,
+      enterpriseReleased:true,
+      familyOfficeReleased:true,
+      retainerReleased:true,
+      agencyReleased:true,
+      tutorReleased:true,
+      loadoutReleased:true,
+      staffingReservationReleased:true,
+      newsKey:'news.action.family_county_granted'
+    });
+    expect(result.holder).toMatch(/^pv_/);
+    expect(result.dynasty).toBeTruthy();
+  });
+
+test('named duchy grants map every county and seed succession from existing children',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var did = null;
+      var counties = [];
+      for (var candidateDid in FBDATA.duchies) {
+        var candidate = FB.duchyCounties(candidateDid);
+        if (candidate.length >= 2) {
+          did = candidateDid;
+          counties = candidate;
+          break;
+        }
+      }
+      for (var i = 0; i < counties.length; i++) {
+        if (p.provs.indexOf(counties[i]) < 0) p.provs.push(counties[i]);
+        s.holder[counties[i]] = 'player';
+        s.owner[counties[i]] = 'player';
+        s.dev[counties[i]] = 4 + i;
+      }
+      var outsideCounties = p.provs.filter(function (pid) {
+        return counties.indexOf(pid) < 0;
+      });
+      if (outsideCounties.length < 2) {
+        for (var provinceIndex = 0;
+            provinceIndex < FB.world.provs.length; provinceIndex++) {
+          var possible = FB.world.provs[provinceIndex];
+          if (!possible.wasteland && counties.indexOf(possible.id) < 0 &&
+              outsideCounties.indexOf(possible.id) < 0) {
+            outsideCounties.push(possible.id);
+            p.provs.push(possible.id);
+            s.holder[possible.id] = 'player';
+            s.owner[possible.id] = 'player';
+            s.dev[possible.id] = 3;
+            if (outsideCounties.length >= 2) break;
+          }
+        }
+      }
+      var recipient = FB.makeCharacter(s, {
+        id:'duchy_family_grantee', name:'Ducal Relative', sex:'f',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 36, dyn:me.dyn || 'House Test', traits:[],
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null
+      });
+      me.childrenIds.push(recipient.id);
+      var daughter = FB.makeCharacter(s, {
+        id:'duchy_grantee_daughter', name:'Older Daughter', sex:'f',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 14, dyn:recipient.dyn, traits:[],
+        motherId:recipient.id
+      });
+      var son = FB.makeCharacter(s, {
+        id:'duchy_grantee_son', name:'Younger Son', sex:'m',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 10, dyn:recipient.dyn, traits:[],
+        motherId:recipient.id
+      });
+      recipient.childrenIds.push(daughter.id, son.id);
+      FB.touchFamily();
+      var expectedOwner = FB.playerRealmId(s) || 'player';
+      var granted = FB.grantDuchy(s, did, recipient.id);
+      var rid = 'pd_' + did;
+      var realm = s.realms[rid];
+      var mapped = counties.every(function (pid) {
+        return s.holder[pid] === rid && s.owner[pid] === expectedOwner &&
+          p.provs.indexOf(pid) < 0;
+      });
+      var successionIds = realm.succession.order.map(function (memberId) {
+        return realm.succession.members[memberId].charId;
+      });
+      var legacyPid = p.provs[p.provs.length - 1];
+      var legacyGranted = FB.grantCounty(s, legacyPid);
+      var legacyRealm = s.realms['pv_' + legacyPid];
+      var lastNews = s.log[s.log.length - (legacyGranted ? 2 : 1)];
+      return {
+        granted:granted,
+        rank:realm.rank,
+        directVassal:realm.liege === 'player',
+        mapped:mapped,
+        capital:realm.capital,
+        richest:counties[counties.length - 1],
+        rulerId:FB.realmRulerCharacterSnapshot(s, rid).id,
+        heirId:realm.succession.members[realm.succession.heirId].charId,
+        successionIds:successionIds,
+        childrenPreserved:recipient.childrenIds.join(',') ===
+          [daughter.id, son.id].join(','),
+        legacyGranted:legacyGranted,
+        legacyGenerated:legacyRealm && legacyRealm.generated === true,
+        legacyNamedFamily:legacyRealm &&
+          legacyRealm.ruler.name === recipient.name,
+        newsKey:lastNews && lastNews.msg && lastNews.msg.key
+      };
+    });
+
+    expect(result.granted).toBe(true);
+    expect(result.rank).toBe(2);
+    expect(result.directVassal).toBe(true);
+    expect(result.mapped).toBe(true);
+    expect(result.capital).toBe(result.richest);
+    expect(result.rulerId).toBe('duchy_family_grantee');
+    expect(result.heirId).toBe('duchy_grantee_son');
+    expect(result.successionIds).toEqual([
+      'duchy_grantee_son',
+      'duchy_grantee_daughter'
+    ]);
+    expect(result.childrenPreserved).toBe(true);
+    expect(result.legacyGranted).toBe(true);
+    expect(result.legacyGenerated).toBe(true);
+    expect(result.legacyNamedFamily).toBe(false);
+    expect(result.newsKey).toBe('news.action.family_duchy_granted');
+  });
+
+test('Grant Land chooses a recipient and preserves Back and Governance return flow',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    const setup = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var recipient = FB.makeCharacter(s, {
+        id:'grant_ui_relative', name:'Grant UI Relative', sex:'m',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 24, dyn:me.dyn || 'House Test', traits:[],
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null
+      });
+      me.childrenIds.push(recipient.id);
+      FB.touchFamily();
+      FB.ui.showGovernance('domain');
+      return {
+        recipientId:recipient.id,
+        firstCounty:p.provs[p.provs.length - 1]
+      };
+    });
+
+    await page.locator(
+      '#governance-domain [data-governance-action="grant_land"]')
+      .last().click();
+    await page.locator('[data-pid="' + setup.firstCounty + '"]').click();
+    await expect(page.getByRole('heading', {
+      name:'Choose a Recipient', exact:true
+    })).toBeVisible();
+    await expect(page.getByRole('button', {
+      name:/new loyal vassal/i
+    })).toBeVisible();
+    const familyChoice = page.locator(
+      '[data-grant-recipient="' + setup.recipientId + '"]');
+    await expect(familyChoice).toContainText('Grant UI Relative');
+    await expect(familyChoice).toContainText('Son · age 24');
+    await expect(familyChoice).toHaveAccessibleName(
+      /Grant .* to Grant UI Relative.*your Son, age 24/);
+    await page.locator('#grant-recipient-back').click();
+    await expect(page.getByRole('heading', {
+      name:'Grant Land', exact:true
+    })).toBeVisible();
+    await expect(page.locator(
+      '[data-pid="' + setup.firstCounty + '"]')).toBeVisible();
+
+    await page.locator('[data-pid="' + setup.firstCounty + '"]').click();
+    await page.locator(
+      '[data-grant-recipient="' + setup.recipientId + '"]').click();
+    await expect(page.locator('#governance-domain')).toBeVisible();
+    expect(await page.evaluate(function (ids) {
+      return FB.state.holder[ids.firstCounty] === 'pv_' + ids.firstCounty &&
+        FB.realmRulerCharacterSnapshot(
+          FB.state, 'pv_' + ids.firstCounty).id === ids.recipientId;
+    }, setup)).toBe(true);
+
+    const generatedCounty = await page.evaluate(function () {
+      var p = FB.state.player;
+      var pid = p.provs[p.provs.length - 1];
+      FB.ui.showGovernance('domain');
+      return pid;
+    });
+    await page.locator(
+      '#governance-domain [data-governance-action="grant_land"]')
+      .last().click();
+    await page.locator('[data-pid="' + generatedCounty + '"]').click();
+    await page.getByRole('button', { name:/new loyal vassal/i }).click();
+    await expect(page.locator('#governance-domain')).toBeVisible();
+    expect(await page.evaluate(function (pid) {
+      var realm = FB.state.realms['pv_' + pid];
+      return realm && realm.generated === true &&
+        realm.ruler.name !== 'Grant UI Relative';
+    }, generatedCounty)).toBe(true);
   });
 
 test('Governance county and grant flows return to Domain while Council reservations stay manual',

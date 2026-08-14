@@ -575,6 +575,13 @@ When over the domain cap it also offers a review-first cleanup proposal that kee
 capital and household home, omits reserved counties, prefers whole duchies, shows the exact
 grants and land tax/levy estimate, and revalidates before applying. Vassal rows expose the
 equivalent reservation from automatic Council appointment.
+Manual **Grant Land** is a two-step modal: first choose a single county or complete held
+duchy, then choose a generated loyal vassal or an eligible adult relative. Family rows name
+the character, relationship, and age and expose the complete grant sentence as their
+accessible label. Visible and browser Back from the recipient step restore the unchanged
+land picker; canceling there still returns through the original Governance Domain context.
+The generated option preserves the same path used by Domain Cleanup, while a family choice
+is revalidated before mutation and returns to Governance after a successful grant.
 
 Political Blocs consumes `FB.politicalSummary` directly. Its full cards show
 each archetype, leader and member-ruler links, influence, interests, current
