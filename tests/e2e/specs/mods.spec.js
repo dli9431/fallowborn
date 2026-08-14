@@ -74,6 +74,9 @@ test('runtime mods merge definitions and the complete technology configuration',
           costFloor:{ build:0.45 },
           units:{ arch:333 }
         },
+        auctionLotTypes:{
+          claim:{ weight:2, requiresTech:'experimental_gearing' }
+        },
         defaultBookmark:'1066'
       });
 
@@ -104,6 +107,8 @@ test('runtime mods merge definitions and the complete technology configuration',
         traditionLabel:FB.dataText(null, null, 'techTradition',
           'workshop_exchange', customTradition, 'name', {}),
         capsMerged:capsMerged,
+        auctionLotMerged:FBDATA.auctionLotTypes.claim.weight === 2 &&
+          FBDATA.auctionLotTypes.claim.requiresTech === 'experimental_gearing',
         defaultBookmark:FBDATA.defaultBookmark,
         validationErrors:errors,
         invalidCapRejected:invalidCapErrors.indexOf(
@@ -119,6 +124,7 @@ test('runtime mods merge definitions and the complete technology configuration',
       domainLabel:'Experimental arts',
       traditionLabel:'Workshop exchange',
       capsMerged:true,
+      auctionLotMerged:true,
       defaultBookmark:'1066',
       validationErrors:[],
       invalidCapRejected:true

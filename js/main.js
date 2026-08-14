@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.128.0';
+  FB.VERSION = '1.129.0';
   FB.CHANGELOG = [
+    { v: '1.129.0', date: '2026-08-14', changes: [
+      'Craft and Trade guildmasters can now choose permanent specialty paths, with advanced paths shaped by national technology.',
+      'Households can now attend bounded market auctions for items, enterprises, and documented county title rights.'
+    ] },
     { v: '1.128.0', date: '2026-08-14', changes: [
       'Technology now governs select advanced institutional, charter, and tournament choices while preserving ordinary alternatives.'
     ] },
@@ -1781,7 +1785,7 @@ window.FB = window.FB || {};
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:settIdx }] : [],
-        landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null
+        landPlotMigration: 1, manor: null, fabricatedClaim: null, auction: null, royalCompact: null
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       economy: {
@@ -2028,7 +2032,7 @@ window.FB = window.FB || {};
         },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
-        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null
+        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, auction: null, royalCompact: null
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null

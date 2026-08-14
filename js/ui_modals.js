@@ -108,6 +108,15 @@ window.FB = window.FB || {};
 
   let eventOpen = false;
   let pendingEvents = [];
+  let auctionOpenAfterEvents = false;
+
+  UI.deferAuctionOpen = function () {
+    if (eventOpen) {
+      auctionOpenAfterEvents = true;
+      return;
+    }
+    if (UI.showAuction) UI.showAuction();
+  };
 
   /* Touch mis-tap guard. On mobile the event modal is a bottom sheet that can
      appear just as the player's thumb is already coming down toward the time
@@ -289,6 +298,7 @@ window.FB = window.FB || {};
     UI.autoResolving = true;
     FB.markFired(s, ev);
     let opts = (ev.options || []).filter(function (o) {
+      if (o.manualOnly) return false;
       return FB.eventOptionStatus
         ? FB.eventOptionStatus(s, ev, o, ctx).ready
         : (!o.require || FB.checkTrigger(s, o.require, ctx));
@@ -424,10 +434,17 @@ window.FB = window.FB || {};
     }
     eventOpen = false;
     $('eventmodal').classList.add('hidden');
+    const openAuction = auctionOpenAfterEvents;
+    auctionOpenAfterEvents = false;
     UI.refresh();
+    if (FB.game && FB.game.afterEvents) FB.game.afterEvents();
+    if (openAuction && FB.auctionOf && FB.auctionOf(s) &&
+        s.player && !s.player.dead) {
+      UI.showAuction();
+      return true;
+    }
     if (FB.state && !$('game').classList.contains('hidden') &&
       $('genmodal').classList.contains('hidden')) $('btn-endturn').focus();
-    if (FB.game && FB.game.afterEvents) FB.game.afterEvents();
     return false;
   }
 
@@ -3239,6 +3256,103 @@ window.FB = window.FB || {};
     $('gm-cancel').addEventListener('click', function () {
       delete FB.state.player.cooldowns.go_to_town; // no visit, no cooldown
       UI.closeModal(); UI.refresh();
+    });
+  };
+
+  /* ================= bounded market auction ================= */
+  UI.showAuctionVenuePicker = function (venues) {
+    const s = FB.state;
+    const status = !venues && FB.auctionStatus ? FB.auctionStatus(s) : null;
+    venues = venues || (status && status.venues) || [];
+    if (!venues.length) return;
+    if (venues.length === 1) {
+      if (FB.beginAuction(s, venues[0])) UI.showAuction();
+      return;
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < venues.length; i++) {
+      const venue = venues[i];
+      h += '<button class="actionbtn" data-auction-venue="' + i + '">' +
+        (venue.kind === 'city' ? '🏙' : '🏘') + ' ' + esc(venue.name) +
+        '<span class="adesc">' + esc(FB.T('{kind} market', {
+          kind:settlementKindName(venue.kind)
+        })) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="auction-cancel">' +
+      esc(FB.T('Not today')) + '</button>';
+    openModal(FB.T('Attend auction'), h, { noFocus:true });
+    document.querySelectorAll('[data-auction-venue]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const venue = venues[Number(button.dataset.auctionVenue)];
+        if (venue && FB.beginAuction(s, venue)) UI.showAuction(true);
+      });
+    });
+    $('auction-cancel').addEventListener('click', function () {
+      UI.closeModal();
+      UI.refresh();
+    });
+  };
+
+  UI.showAuction = function (replaceView) {
+    const s = FB.state;
+    const auction = FB.auctionOf && FB.auctionOf(s);
+    if (!auction) {
+      if (!$('genmodal').classList.contains('hidden')) UI.closeModal();
+      UI.refresh();
+      return;
+    }
+    const venue = FB.settlementsOf(s, auction.venue.provinceId)[
+      auction.venue.settlement];
+    const label = FB.auctionLotLabel(s, auction);
+    const options = FB.auctionBidOptions(s);
+    const maxRounds = FBDATA.balance.auctionMaxBidRounds || 3;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The auctioneer calls one lot at a time. A hidden rival either counters at once or drops out; no coin leaves your purse unless you win.')) +
+      '</p></div>' +
+      kv('Lot', esc(label)) +
+      kv('Current call', esc(FB.T('{money:amount}', { amount:auction.currentBid }))) +
+      kv('Bidding round', esc(FB.T('{current} of {maximum}', {
+        current:auction.bidCount + 1, maximum:maxRounds
+      }))) +
+      '<div class="gm-list">';
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      h += '<button class="actionbtn" data-auction-bid="' + option.increments + '"' +
+        (option.affordable ? '' : ' disabled') + '>⚖ ' +
+        esc(FB.T('Bid {money:amount}', { amount:option.amount })) +
+        '<span class="adesc">' + esc(option.affordable
+          ? FB.T('Raise by {increments} increments.', { increments:option.increments })
+          : FB.T('You do not have enough gold for this bid.')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="auction-withdraw">' +
+      esc(FB.T('Leave the auction')) + '</button>';
+    openModal(FB.T('Auction at {settlement}', {
+      settlement:venue ? venue.name : FB.T('the market')
+    }), h, { replaceView:!!replaceView, noFocus:true });
+    document.querySelectorAll('[data-auction-bid]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const result = FB.placeAuctionBid(s, button.dataset.auctionBid);
+        if (!result) return;
+        if (result.status === 'countered') {
+          UI.showAuction(true);
+          return;
+        }
+        UI.closeModal();
+        UI.toast(result.status === 'won'
+          ? FB.T('The hammer falls in your favor.')
+          : (result.status === 'lost'
+            ? FB.T('The rival takes the lot.')
+            : FB.T('The lot is withdrawn.')));
+        UI.refresh();
+      });
+    });
+    $('auction-withdraw').addEventListener('click', function () {
+      FB.cancelAuction(s);
+      UI.closeModal();
+      UI.refresh();
     });
   };
 
@@ -11147,6 +11261,30 @@ window.FB = window.FB || {};
             requirements:exam.missing.join('; ')
           })) + '</span></button>';
     }
+    const careerSpecializations = FB.careerSpecializationOptions ?
+      FB.careerSpecializationOptions(s, c) : [];
+    const guildSpecializations = careerSpecializations.filter(function (option) {
+      return option.method === 'induction';
+    });
+    if (guildSpecializations.length) {
+      h += '</div><div class="panelh">' + esc(FB.T('Guild path')) +
+        '</div><div class="gm-body-text"><p>' + esc(FB.T(
+          'An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements.')) +
+        '</p></div><div class="gm-list">';
+      for (const option of guildSpecializations) {
+        h += '<button class="actionbtn" data-career-specialization="' +
+          esc(option.specialization) + '"' + (option.ready ? '' : ' disabled') +
+          '>🏅 ' + esc(FB.T('Induct as {specialization} — {money:gold}', {
+            specialization:option.name, gold:option.cost
+          })) + '<span class="adesc">' + esc(option.ready
+            ? FB.T('Requires: {requirements}. This becomes the vocation’s permanent title.', {
+              requirements:option.requirements.join('; ')
+            })
+            : FB.T('Unmet: {requirements}', {
+              requirements:option.missing.join('; ')
+            })) + '</span></button>';
+      }
+    }
     const step = FB.guildAdvance(s, c);
     const activeGuildElection = FB.activeElectionForCharacter &&
       FB.activeElectionForCharacter(s, c.id);
@@ -11304,6 +11442,16 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-career-exam]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.takeCareerExam(s, c, b.dataset.careerExam)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showCareerPicker(cid, returnContext);
+        });
+      });
+    });
+    document.querySelectorAll('[data-career-specialization]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!FB.chooseCareerSpecialization(s, c, b.dataset.careerSpecialization)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext, function () {
@@ -13037,11 +13185,28 @@ window.FB = window.FB || {};
         const careerName = dt(s, 'career', careerId, career, 'name');
         const specializationName = dt(s, 'career', careerId, career,
           'specializations.' + specializationId + '.name');
-        add('career-specialization:' + careerId + ':' + specializationId,
-          FB.T('Makes the {specialization} examination available in {career}.', {
+        const specializationText = career.guild && !career.learned
+          ? FB.T('Makes the {specialization} guild induction available in {career}.', {
             specialization:specializationName, career:careerName
-          }));
+          })
+          : FB.T('Makes the {specialization} examination available in {career}.', {
+            specialization:specializationName, career:careerName
+          });
+        add('career-specialization:' + careerId + ':' + specializationId,
+          specializationText);
       }
+    }
+
+    for (const lotTypeId in (FBDATA.auctionLotTypes || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.auctionLotTypes,
+          lotTypeId)) continue;
+      const lotType = FBDATA.auctionLotTypes[lotTypeId];
+      if (!lotType || !techRequiresId(lotType.requiresTech, id)) continue;
+      const lotName = lotTypeId === 'claim' ? FB.T('county title rights') :
+        lotTypeId === 'enterprise' ? FB.T('family enterprises') :
+        FB.T('fine and famed items');
+      add('auction-lot:' + lotTypeId,
+        FB.T('Makes {content} available as auction lots.', { content:lotName }));
     }
 
     for (const standardId in (FBDATA.householdStandards || {})) {

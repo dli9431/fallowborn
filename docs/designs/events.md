@@ -57,6 +57,20 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+**Guild-path stories stay declarative.** An event may use
+`trigger.career:{profession,specialization,guildRankMin,guildStandingMin}` to require
+the protagonist's current working career. This is distinct from broad `professions`:
+landed protagonists retain their calling as biography but cannot receive active-work
+guild stories. Craft and Trade paths each have a small weighted, seasonal-cooldown
+pool whose choices exchange coin, Guild Standing, prestige, skill, or a normal local
+modifier. `guildStanding:n` is a clamp-aware declarative effect on the active guild
+career. There is no guild-day tick, settlement membership list, or generated guild
+population.
+
+The rare market invitation is also an ordinary cooldown-controlled event. Its custom
+effect opens the same bounded household auction as the deed; it does not start a
+separate event chain or market simulator.
+
 Faith fracture uses that same data boundary. `foundFaith` validates and stores a
 JSON-safe definition, optionally converts the founder, household, and player realm, and
 places the resulting id in `ctx.faithId`. A following `faithRelation` effect may refer to
@@ -297,6 +311,13 @@ exact missing ids. Tier-3+ players may use that row as a technology-detail link.
 Autoresolve filters on the same ready status. Direct resolution rechecks the technology
 portion before any RNG or mutation, so a custom caller cannot bypass a hard gate; ordinary
 `require` remains an authored-flow condition for compatibility with direct event tooling.
+
+An option may also declare `manualOnly:true` when its effect opens an interactive flow
+that cannot be completed by a policy score. It remains an ordinary manual choice, but
+autoresolve removes it from the candidate list and direct automated resolution rejects it
+before RNG or mutation. The rare auction invitation uses this contract, leaving **Send
+regrets** as its automation-safe outcome; a manual acceptance defers its auction sheet
+until the current event queue has cleared.
 
 `FB.resolveEventOption` is the single manual/autoresolve authority. It rolls once, consumes
 one-shot chance bonuses, applies the top-level effects and then the selected branch in the

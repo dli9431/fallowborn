@@ -581,6 +581,9 @@ window.FB = window.FB || {};
     if (FB.ensureModifiers) FB.ensureModifiers(FB.state);
     if (FB.ensureIntrigue) FB.ensureIntrigue(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
+    /* An unresolved market lot is a household record. Repair it after claims
+       and item ownership so a stale or impossible lot is safely discarded. */
+    if (FB.ensureAuction) FB.ensureAuction(FB.state);
     /* Personal attention and explicit-gift clocks are additive life-local
        fields. This also converts the removed court_suitor focus in old saves. */
     if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(FB.state);

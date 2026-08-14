@@ -38,6 +38,23 @@ test('the prospective review ledger and every gate schema validate together',
       });
       option.showWhenTechLocked = originalVisible;
 
+      var invitationOption = FB.eventById('rare_auction_invitation').options[0];
+      var originalManualOnly = invitationOption.manualOnly;
+      invitationOption.manualOnly = 'yes';
+      var manualOnlyErrors = FB.validateTechnologyData().filter(function (error) {
+        return error.indexOf('rare_auction_invitation.0') >= 0;
+      });
+      invitationOption.manualOnly = originalManualOnly;
+
+      var originalClaimLot = FBDATA.auctionLotTypes.claim;
+      FBDATA.auctionLotTypes.claim = {
+        weight:-1, requiresTech:'missing_e2e_technology'
+      };
+      var auctionLotErrors = FB.validateTechnologyData().filter(function (error) {
+        return error.indexOf('Auction lot type claim') >= 0;
+      });
+      FBDATA.auctionLotTypes.claim = originalClaimLot;
+
       var originalRequirement = FBDATA.policies.redress.requiresTech;
       FBDATA.policies.redress.requiresTech = 'missing_e2e_technology';
       var consumerErrors = FB.validateTechnologyData().filter(function (error) {
@@ -62,6 +79,40 @@ test('the prospective review ledger and every gate schema validate together',
       var eligibleButLocked = FB.eventOptionStatus(
         FB.state, wreck, compact, {});
 
+      var guildCharterOptions = [];
+      var guildCharterEventIds = [
+        'smith_tempered_steel', 'weaver_hall_hangings',
+        'weaver_dyed_thread', 'broker_grain_contract'
+      ];
+      FBDATA.events.forEach(function (guildEvent) {
+        if (guildCharterEventIds.indexOf(guildEvent.id) < 0) return;
+        (guildEvent.options || []).forEach(function (guildOption) {
+          var modifier = guildOption.effects && guildOption.effects.addModifier;
+          if (modifier && modifier.id === 'market_charter') {
+            guildCharterOptions.push(guildOption);
+          }
+        });
+      });
+      var guildChartersLocked = guildCharterOptions.map(function (guildOption) {
+        return FB.eventOptionStatus(FB.state, null, guildOption, {});
+      });
+      technology.completed.push('urban_markets', 'authenticated_seals');
+      var guildChartersReady = guildCharterOptions.every(function (guildOption) {
+        return FB.eventOptionStatus(FB.state, null, guildOption, {}).ready;
+      });
+
+      technology.completed = technology.completed.filter(function (id) {
+        return id !== 'notarial_contracts';
+      });
+      var lockedClaimLot = FB.auctionLotTypeStatus(FB.state, 'claim');
+      FB.state.player.tier = 4;
+      var auctionAction = FB.instants.filter(function (action) {
+        return action.id === 'attend_auction';
+      })[0];
+      var auctionDescription = auctionAction.desc(FB.state);
+      technology.completed.push('notarial_contracts');
+      var readyClaimLot = FB.auctionLotTypeStatus(FB.state, 'claim');
+
       return {
         baseline:FBDATA.techImpactReviews.baselineVersion,
         featureIds:featureIds,
@@ -69,24 +120,45 @@ test('the prospective review ledger and every gate schema validate together',
         coreErrors:coreErrors,
         reviewErrors:reviewErrors,
         optionErrors:optionErrors,
+        manualOnlyErrors:manualOnlyErrors,
+        auctionLotErrors:auctionLotErrors,
         consumerErrors:consumerErrors,
         structurallyHidden:structurallyHidden,
-        eligibleButLocked:eligibleButLocked
+        eligibleButLocked:eligibleButLocked,
+        guildCharterCount:guildCharterOptions.length,
+        guildChartersLocked:guildChartersLocked,
+        guildChartersReady:guildChartersReady,
+        lockedClaimLot:lockedClaimLot,
+        readyClaimLot:readyClaimLot,
+        auctionDescription:auctionDescription
       };
     });
 
     expect(result.baseline).toBe('1.127.1');
     expect(result.featureIds).toEqual([
+      'auction_enterprise_lots',
+      'auction_item_lots',
+      'auction_title_rights',
+      'bounded_market_auctions',
       'confirmation_of_great_offices',
       'consent_of_estates',
       'direct_vassal_charter_of_liberties',
       'estates_scutage',
       'formal_confirmation_of_custom',
       'formal_market_charters',
+      'guild_broker_path',
+      'guild_caravan_factor_path',
+      'guild_cooper_path',
+      'guild_maritime_factor_path',
+      'guild_smith_path',
+      'guild_weaver_path',
+      'rare_auction_invitations',
       'tournament_jousting'
     ]);
     expect(Object.values(result.modes)).toEqual([
-      'hard', 'hard', 'hard', 'hard', 'hard', 'hard', 'hard'
+      'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',
+      'hard', 'hard', 'none', 'hard', 'hard', 'hard', 'none', 'hard',
+      'none', 'hard'
     ]);
     expect(result.coreErrors).toEqual([]);
     expect(result.reviewErrors.some(function (error) {
@@ -100,6 +172,12 @@ test('the prospective review ledger and every gate schema validate together',
     })).toBe(true);
     expect(result.optionErrors).toContain(
       'Event option tournament_invitation.0: showWhenTechLocked must be a boolean.');
+    expect(result.manualOnlyErrors).toContain(
+      'Event option rare_auction_invitation.0: manualOnly must be a boolean.');
+    expect(result.auctionLotErrors).toContain(
+      'Auction lot type claim: weight must be a non-negative number.');
+    expect(result.auctionLotErrors).toContain(
+      'Auction lot type claim: missing required technology missing_e2e_technology.');
     expect(result.consumerErrors).toContain(
       'Policy redress: missing required technology missing_e2e_technology.');
     expect(result.structurallyHidden).toMatchObject({
@@ -111,6 +189,19 @@ test('the prospective review ledger and every gate schema validate together',
       techLocked:true,
       missingTech:['urban_markets', 'authenticated_seals']
     });
+    expect(result.guildCharterCount).toBe(4);
+    result.guildChartersLocked.forEach(function (status) {
+      expect(status).toMatchObject({
+        visible:true, ready:false, techLocked:true,
+        missingTech:['urban_markets', 'authenticated_seals']
+      });
+    });
+    expect(result.guildChartersReady).toBe(true);
+    expect(result.lockedClaimLot).toMatchObject({
+      ready:false, missing:['notarial_contracts']
+    });
+    expect(result.readyClaimLot.ready).toBe(true);
+    expect(result.auctionDescription).toContain('Notarial Contracts');
   });
 
 test('formal privileges reject new grants, filter demands, and preserve records',

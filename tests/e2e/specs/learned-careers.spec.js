@@ -470,3 +470,98 @@ test('learned specialties pay their formulas and Trade leadership needs literacy
       to:'officer', lettered:true, learning:0, blocked:false
     });
   });
+
+test('guild paths require induction, restore with their career, and gate tagged work',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      let state = FB.state;
+      let me = state.chars[state.player.charId];
+      const record = FB.realmTechRecord(state, FB.techRealmId(state));
+      const addTech = function (id) {
+        if (record.completed.indexOf(id) < 0) record.completed.push(id);
+      };
+      state.player.tier = 1;
+      state.player.gold = 50;
+      me.born = state.date.year - 30;
+      me.skills = { dip:0, mar:0, ste:9, int:0, lea:0 };
+      me.career = {
+        profession:'craftsman', rank:'master', experience:12,
+        startedYear:state.date.year - 12, guildRank:'guildmaster',
+        guildStanding:35, chosen:true
+      };
+      FB.syncPlayerCareer(state);
+
+      record.completed = record.completed.filter(function (id) {
+        return id !== 'bloomery_iron';
+      });
+      const locked = FB.careerSpecializationOptions(state, me).filter(function (option) {
+        return option.specialization === 'smith';
+      })[0];
+      addTech('bloomery_iron');
+      const ready = FB.careerSpecializationOptions(state, me).filter(function (option) {
+        return option.specialization === 'smith';
+      })[0];
+      const work = FB.focuses.filter(function (focus) {
+        return focus.id === 'craft_work';
+      })[0];
+      const plainFocusGold = work.gain(state).gold;
+      const selected = FB.chooseCareerSpecialization(state, me, 'smith');
+      const focusGold = work.gain(state).gold;
+      const enterprise = {
+        uid:'guild_path_workshop_fixture', type:'workshop_business',
+        provinceId:state.player.provinceId, settlement:0, workerId:me.id
+      };
+      const taggedYield = FB.enterpriseYield(state, enterprise);
+      delete me.career.specialization;
+      const plainYield = FB.enterpriseYield(state, enterprise);
+      me.career.specialization = 'smith';
+      const storyGate = {
+        career:{ profession:'craftsman', specialization:'smith',
+          guildRankMin:'guildmaster', guildStandingMin:35 }
+      };
+      const activeStory = FB.checkTrigger(state, storyGate);
+      state.player.tier = 3;
+      const landedStory = FB.checkTrigger(state, storyGate);
+      state.player.tier = 1;
+
+      FB.setCareer(state, me, 'farmer', 'journeyman');
+      const archived = JSON.parse(JSON.stringify(me.careerHistory.craftsman));
+      const resumed = FB.setCareer(state, me, 'craftsman');
+      const save = JSON.parse(FB.save.serialize());
+      FB.save.restore(save);
+      state = FB.state;
+      me = state.chars[state.player.charId];
+      return {
+        lockedReady:locked.ready,
+        lockedMissing:locked.missing.length,
+        ready:ready.ready,
+        selected:selected,
+        title:FB.careerTitle(state, me),
+        gold:state.player.gold,
+        focusGoldBonus:focusGold - plainFocusGold,
+        taggedMultiplier:taggedYield / plainYield,
+        activeStory:activeStory,
+        landedStory:landedStory,
+        archived:archived,
+        resumed:resumed,
+        restored:me.career.specialization
+      };
+    });
+
+    expect(result.lockedReady).toBe(false);
+    expect(result.lockedMissing).toBeGreaterThan(0);
+    expect(result.ready).toBe(true);
+    expect(result.selected).toEqual({ cost:20, specialization:'smith' });
+    expect(result.title).toBe('Smith');
+    expect(result.gold).toBe(30);
+    expect(result.focusGoldBonus).toBeCloseTo(1.5, 8);
+    expect(result.taggedMultiplier).toBeCloseTo(1.15, 8);
+    expect(result.activeStory).toBe(true);
+    expect(result.landedStory).toBe(false);
+    expect(result.archived).toMatchObject({
+      profession:'craftsman', specialization:'smith', guildRank:'guildmaster',
+      guildStanding:35
+    });
+    expect(result.resumed).toBe(true);
+    expect(result.restored).toBe('smith');
+  });

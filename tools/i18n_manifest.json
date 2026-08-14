@@ -24,6 +24,14 @@
         "text": "⚖ Appeal over your liege’s head…"
       }
     },
+    "action.attend_auction.label.default": {
+      "context": "action attend_auction, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "⚖ Attend auction…"
+      }
+    },
     "action.begin_plot.label.default": {
       "context": "action begin_plot, visible label.",
       "glossary": [],
@@ -1062,6 +1070,30 @@
         "text": "Master craftsman"
       }
     },
+    "career.craftsman.specializations.cooper.name.default": {
+      "context": "career craftsman, specialization cooper, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Cooper"
+      }
+    },
+    "career.craftsman.specializations.smith.name.default": {
+      "context": "career craftsman, specialization smith, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Smith"
+      }
+    },
+    "career.craftsman.specializations.weaver.name.default": {
+      "context": "career craftsman, specialization weaver, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Weaver"
+      }
+    },
     "career.farmer.desc.default": {
       "context": "career farmer, desc, faith branch default.",
       "glossary": [],
@@ -1140,6 +1172,30 @@
       "location": "data/economy.js",
       "source": {
         "text": "Merchant"
+      }
+    },
+    "career.merchant.specializations.broker.name.default": {
+      "context": "career merchant, specialization broker, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Broker"
+      }
+    },
+    "career.merchant.specializations.caravan_factor.name.default": {
+      "context": "career merchant, specialization caravan_factor, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Caravan Factor"
+      }
+    },
+    "career.merchant.specializations.maritime_factor.name.default": {
+      "context": "career merchant, specialization maritime_factor, faith branch default.",
+      "glossary": [],
+      "location": "data/economy.js",
+      "source": {
+        "text": "Maritime Factor"
       }
     },
     "career.monk.desc.default": {
@@ -34123,6 +34179,57 @@
         "text": "🚩 The host musters at {province} — {men} men take the field."
       }
     },
+    "news.auction.lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:price"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ A rival carries the lot at {money:price}; your purse stays closed."
+      }
+    },
+    "news.auction.withdrawn": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ You leave the auction before the hammer falls."
+      }
+    },
+    "news.auction.won_claim": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "money:price",
+        "province"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ You win the county title right to {province} at {money:price}."
+      }
+    },
+    "news.auction.won_enterprise": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "enterprise",
+        "money:price"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ You win the auction for {enterprise} at {money:price}."
+      }
+    },
+    "news.auction.won_item": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item",
+        "money:price"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "⚖ You win the auction for {item} at {money:price}."
+      }
+    },
     "news.career.begins": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -34193,6 +34300,17 @@
       "location": "js/economy.js",
       "source": {
         "text": "🧰 {name} returns to their former standing in {career}."
+      }
+    },
+    "news.career.specialization_inducted": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "name",
+        "specialization"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🏅 {name} is received by the guild as {specialization}."
       }
     },
     "news.career.work_authored": {
@@ -47891,6 +48009,16 @@
         "text": "{days} protected days remain"
       }
     },
+    "src.04791586": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Bid {money:amount}"
+      }
+    },
     "src.047eccb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50294,6 +50422,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/economy.js",
         "js/institutions.js"
       ],
       "source": {
@@ -51151,6 +51280,16 @@
       ],
       "source": {
         "text": "no autobuild"
+      }
+    },
+    "src.0b8e1859": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requires: {requirements}. This becomes the vocation’s permanent title."
       }
     },
     "src.0b94b451": {
@@ -52064,6 +52203,16 @@
         "text": "Off"
       }
     },
+    "src.0de01606": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raise by {increments} increments."
+      }
+    },
     "src.0dfccea1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52313,6 +52462,16 @@
       ],
       "source": {
         "text": "Make a gift to the host’s stable. ({money:5})"
+      }
+    },
+    "src.0e883aa3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{rank} rank"
       }
     },
     "src.0e902ce6": {
@@ -52837,6 +52996,16 @@
       ],
       "source": {
         "text": "⚡ {name} now counts you an enemy."
+      }
+    },
+    "src.0fefd46e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": weight must be a non-negative number."
       }
     },
     "src.0ff41191": {
@@ -54752,6 +54921,16 @@
       ],
       "source": {
         "text": "High Chief"
+      }
+    },
+    "src.13eec634": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "county title rights"
       }
     },
     "src.13f2304c": {
@@ -56856,6 +57035,16 @@
         "text": "Fes"
       }
     },
+    "src.189312b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{current} of {maximum}"
+      }
+    },
     "src.18987ad9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58349,6 +58538,16 @@
         "text": "Listen, and learn the old tricks."
       }
     },
+    "src.1c57e785": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{skill} {needed}"
+      }
+    },
     "src.1c5c36fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59019,6 +59218,16 @@
       ],
       "source": {
         "text": "🤝 Through {student}’s academy patron, you meet {contact}. The new connection begins at {regard} Standing."
+      }
+    },
+    "src.1ddb7cbe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Maritime Factor"
       }
     },
     "src.1debc360": {
@@ -60014,6 +60223,16 @@
       ],
       "source": {
         "text": "Map filter: Realm (R)"
+      }
+    },
+    "src.20648312": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Current call"
       }
     },
     "src.2069a4fb": {
@@ -61063,6 +61282,16 @@
         "text": "Forked"
       }
     },
+    "src.22961e2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The auctioneer calls one lot at a time. A hidden rival either counters at once or drops out; no coin leaves your purse unless you win."
+      }
+    },
     "src.22a1f55a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62095,6 +62324,16 @@
         "text": "No household is ready to trade."
       }
     },
+    "src.24c5161c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🏅 {name} is received by the guild as {specialization}."
+      }
+    },
     "src.24ceead6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62794,6 +63033,16 @@
       ],
       "source": {
         "text": "The lords of the realm gather at {liege}’s summons: petty business mostly — a boundary dispute, a widow’s dower, a reading of old charters — but every bench is a pair of ears, and every recess a market of favors."
+      }
+    },
+    "src.2655f5cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Cooper"
       }
     },
     "src.265915f3": {
@@ -71079,6 +71328,16 @@
         "text": "Harvest preparations end"
       }
     },
+    "src.3a990df7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Auction lot type"
+      }
+    },
     "src.3a9c95a6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72147,6 +72406,7 @@
       "glossary": [],
       "location": [
         "js/actions.js",
+        "js/economy.js",
         "js/events.js",
         "js/travel.js",
         "js/ui_modals.js"
@@ -73441,6 +73701,16 @@
         "text": "Locked"
       }
     },
+    "src.406b631c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ You win the county title right to {province} at {money:price}."
+      }
+    },
     "src.406e3e92": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73719,6 +73989,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/economy.js",
         "js/events.js"
       ],
       "source": {
@@ -75472,6 +75743,16 @@
       ],
       "source": {
         "text": "Imam"
+      }
+    },
+    "src.450c5e1d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{kind} market"
       }
     },
     "src.450eb326": {
@@ -78029,6 +78310,16 @@
         "text": "Live host {change} troops"
       }
     },
+    "src.4b47f931": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only an adult may attend an auction."
+      }
+    },
     "src.4b488239": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78599,6 +78890,16 @@
       ],
       "source": {
         "text": "🕯 {name}, betrothed to your daughter {child}, has died before the wedding. The dowry returns to your coffers."
+      }
+    },
+    "src.4cbb7cfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "You cannot attend an auction while imprisoned."
       }
     },
     "src.4cc4a633": {
@@ -79354,6 +79655,16 @@
         "text": "Leaves no children; the gossips needed no invitation."
       }
     },
+    "src.4ea35222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once."
+      }
+    },
     "src.4ea41da2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79646,6 +79957,16 @@
         "text": "{percent}% siege progress for the {camp} camp"
       }
     },
+    "src.4f40e82e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin."
+      }
+    },
     "src.4f4e38e7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79925,6 +80246,16 @@
       ],
       "source": {
         "text": "The Constable spreads the muster roll across the board. One more levy from the crown county would stiffen the host, but the Almoner warns that ploughs already stand idle and every extra spear leaves a hungry household."
+      }
+    },
+    "src.4fe296bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Guild Standing {change}"
       }
     },
     "src.4fe59259": {
@@ -80527,6 +80858,16 @@
       ],
       "source": {
         "text": "Gold-spend cap: {money:amount}"
+      }
+    },
+    "src.51439477": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw auction_invitation_available auction_invitation_open"
       }
     },
     "src.514b318b": {
@@ -82261,6 +82602,16 @@
         "text": "Current officer"
       }
     },
+    "src.555dcf42": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ You win the auction for {item} at {money:price}."
+      }
+    },
     "src.55608276": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83684,6 +84035,16 @@
       ],
       "source": {
         "text": "Pope {name}"
+      }
+    },
+    "src.5853d324": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Auction at {settlement}"
       }
     },
     "src.5855a908": {
@@ -93055,16 +93416,6 @@
         "text": "Poisoned Words"
       }
     },
-    "src.6e7167c4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw"
-      }
-    },
     "src.6e7cf62f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93476,6 +93827,16 @@
       ],
       "source": {
         "text": "What was promised is yours, no more and no less."
+      }
+    },
+    "src.6fb2f9f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Makes the {specialization} guild induction available in {career}."
       }
     },
     "src.6fb622e1": {
@@ -94917,6 +95278,16 @@
       ],
       "source": {
         "text": "Checking…"
+      }
+    },
+    "src.732cb290": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "⚖ Attend auction…"
       }
     },
     "src.732d3ef8": {
@@ -97896,6 +98267,16 @@
       ],
       "source": {
         "text": "But a house is more than one life. Who carries the name onward?"
+      }
+    },
+    "src.7a4203c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements."
       }
     },
     "src.7a4c3a1e": {
@@ -101280,6 +101661,16 @@
         "text": "No political deed applies to the current position."
       }
     },
+    "src.81c941d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Broker"
+      }
+    },
     "src.81c94599": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102202,6 +102593,16 @@
         "text": "Abdicate and slip away."
       }
     },
+    "src.83cd7d4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Induct as {specialization} — {money:gold}"
+      }
+    },
     "src.83ce2dfc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102581,6 +102982,16 @@
       ],
       "source": {
         "text": "✨ The trade partnership returns a remarkable {money:payout}."
+      }
+    },
+    "src.848c3989": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "fine and famed items"
       }
     },
     "src.84931f96": {
@@ -107591,6 +108002,16 @@
         "text": "Keen Seax"
       }
     },
+    "src.8f635989": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "County title right: {province}"
+      }
+    },
     "src.8f64d6fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109185,6 +109606,16 @@
       ],
       "source": {
         "text": "{rival} laughs at the demand. The mediator’s table has merely given the quarrel a new insult."
+      }
+    },
+    "src.940b2aec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "No auction is available."
       }
     },
     "src.9422d7ed": {
@@ -112856,6 +113287,26 @@
         "text": "Mercy costs a little coin and buys goodwill."
       }
     },
+    "src.9c870aa6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ A rival carries the lot at {money:price}; your purse stays closed."
+      }
+    },
+    "src.9c8d0867": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guild path"
+      }
+    },
     "src.9c9083a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114350,6 +114801,16 @@
         "text": "The council offers you a {award}: {counties}. {consequence}"
       }
     },
+    "src.9fe7516c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "You do not have enough gold for this bid."
+      }
+    },
     "src.9fe9bca2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114438,6 +114899,16 @@
       ],
       "source": {
         "text": "Land grants received this life"
+      }
+    },
+    "src.a0172934": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Bidding round"
       }
     },
     "src.a019a375": {
@@ -118858,6 +119329,16 @@
         "text": "Visit, teach, correct, and reconcile. (+piety, +Common Voice, +Learning over time)"
       }
     },
+    "src.aa9f678a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ You win the auction for {enterprise} at {money:price}."
+      }
+    },
     "src.aaa2cb5d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119572,6 +120053,16 @@
       ],
       "source": {
         "text": "Household equipment remains in the shared family armory."
+      }
+    },
+    "src.ac7d3d79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": id is not supported."
       }
     },
     "src.ac7d874a": {
@@ -120477,6 +120968,16 @@
       ],
       "source": {
         "text": "Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties."
+      }
+    },
+    "src.aebc436b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "⚖ You leave the auction before the hammer falls."
       }
     },
     "src.aec4d444": {
@@ -123799,6 +124300,16 @@
         "text": "Send them in search of another banner."
       }
     },
+    "src.b5dd4399": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Auctioned title rights are locked: {requirement}"
+      }
+    },
     "src.b5eaa249": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125572,6 +126083,16 @@
         "text": "Natural"
       }
     },
+    "src.ba2afcd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Leave the auction"
+      }
+    },
     "src.ba2b473c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125650,6 +126171,16 @@
       ],
       "source": {
         "text": "Standing with the Pope"
+      }
+    },
+    "src.ba58a4c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Caravan Factor"
       }
     },
     "src.ba61a9d4": {
@@ -127441,6 +127972,16 @@
         "text": "At least one family is above the immediate gold cap."
       }
     },
+    "src.bf479f6f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Not today"
+      }
+    },
     "src.bf4c262a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127932,6 +128473,16 @@
         "text": "The liege’s clerks stamp it without a second glance. The difference is yours, this year and after."
       }
     },
+    "src.c0a6dae1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": definition is invalid."
+      }
+    },
     "src.c0ac1ef6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128062,6 +128613,16 @@
         "text": "Northampton"
       }
     },
+    "src.c0d8ee59": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The lot is withdrawn."
+      }
+    },
     "src.c0dfad56": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128070,6 +128631,16 @@
       ],
       "source": {
         "text": "Repair some of the damage your Provoke direction invited."
+      }
+    },
+    "src.c0ec95c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "family enterprises"
       }
     },
     "src.c0ee5389": {
@@ -128587,6 +129158,16 @@
       ],
       "source": {
         "text": "Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}."
+      }
+    },
+    "src.c1e634af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "County title right"
       }
     },
     "src.c1e6eab7": {
@@ -130415,6 +130996,16 @@
       ],
       "source": {
         "text": "The retainer leaves immediately and remembers the slight."
+      }
+    },
+    "src.c67fb070": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": manualOnly must be a boolean."
       }
     },
     "src.c67fbe02": {
@@ -137136,6 +137727,16 @@
         "text": "Itinerant Royal Judges"
       }
     },
+    "src.d6baaa2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Unknown lot"
+      }
+    },
     "src.d6c15bc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139453,6 +140054,16 @@
       ],
       "source": {
         "text": "What Is Remembered"
+      }
+    },
+    "src.dc4a2d8c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Resolve the current auction first."
       }
     },
     "src.dc4b06ff": {
@@ -143931,6 +144542,16 @@
         "text": "{grantor} must hold at least 40 Standing toward you; currently {standing}."
       }
     },
+    "src.e6aa5ba0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The hammer falls in your favor."
+      }
+    },
     "src.e6b05655": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147210,6 +147831,16 @@
         "text": "Ambition of {name}"
       }
     },
+    "src.eeaa0fc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Attend auction"
+      }
+    },
     "src.eeac12e7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147852,6 +148483,16 @@
       ],
       "source": {
         "text": "🌾 Buy Freehold Land"
+      }
+    },
+    "src.f007669d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "A town or city market is required."
       }
     },
     "src.f00be03c": {
@@ -148804,6 +149445,16 @@
         "text": "{percent}% of noble revenue"
       }
     },
+    "src.f23098e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "the market"
+      }
+    },
     "src.f24c9632": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149353,6 +150004,16 @@
       ],
       "source": {
         "text": "Adrianople"
+      }
+    },
+    "src.f3b7a323": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": definition is required."
       }
     },
     "src.f3c1a11d": {
@@ -151067,6 +151728,16 @@
         "text": "Caught!"
       }
     },
+    "src.f7e013de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The rival takes the lot."
+      }
+    },
     "src.f7e3be0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -151185,6 +151856,16 @@
       ],
       "source": {
         "text": "Disorder lowers abstract condition; the live roster is unchanged."
+      }
+    },
+    "src.f835d9e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Makes {content} available as auction lots."
       }
     },
     "src.f83a9af9": {
@@ -152230,6 +152911,16 @@
         "text": "Both magnates accept a rule that honors each without yielding to either."
       }
     },
+    "src.faa383e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Guild Standing may improve"
+      }
+    },
     "src.faa43f73": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152618,6 +153309,16 @@
       ],
       "source": {
         "text": "Grapple the blade and hope the dark is kind."
+      }
+    },
+    "src.fba6027f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Guild Standing {needed}"
       }
     },
     "src.fba67e33": {
@@ -153255,6 +153956,16 @@
         "text": "Keeps the current assignment."
       }
     },
+    "src.fd6aa1fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No valid lot is available at this market."
+      }
+    },
     "src.fd6b758b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153375,6 +154086,16 @@
       ],
       "source": {
         "text": "Private negotiation"
+      }
+    },
+    "src.fdad8130": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/economy.js"
+      ],
+      "source": {
+        "text": "Smith"
       }
     },
     "src.fdb496b7": {
@@ -160244,6 +160965,14 @@
         "text": "A targeted visit is unavailable."
       }
     },
+    "ui:A town or city market is required.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "A town or city market is required."
+      }
+    },
     "ui:A traveler cannot organize another venture.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161124,6 +161853,14 @@
         "text": "An envoy without {money:10} in gifts insults his host."
       }
     },
+    "ui:An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements."
+      }
+    },
     "ui:An established personal relationship grants direct access.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161905,6 +162642,42 @@
         "text": "Attempt {examination}"
       }
     },
+    "ui:Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin."
+      }
+    },
+    "ui:Attend auction": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Attend auction"
+      }
+    },
+    "ui:Auction at {settlement}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Auction at {settlement}"
+      }
+    },
+    "ui:Auctioned title rights are locked: {requirement}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "requirement"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Auctioned title rights are locked: {requirement}"
+      }
+    },
     "ui:Automatic allowed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -162445,6 +163218,16 @@
       "location": "js/agency.js",
       "source": {
         "text": "Beyond reachable diplomatic routes"
+      }
+    },
+    "ui:Bid {money:amount}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Bid {money:amount}"
       }
     },
     "ui:Bind your friend to your house by oath — for life.": {
@@ -163661,6 +164444,14 @@
         "text": "Choose the focus outline and, when you are independent, your realm’s map color."
       }
     },
+    "ui:Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once."
+      }
+    },
     "ui:Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164482,6 +165273,24 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "County tax, levy, development, domain capacity, and liege Standing become central."
+      }
+    },
+    "ui:County title right": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "County title right"
+      }
+    },
+    "ui:County title right: {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "County title right: {province}"
       }
     },
     "ui:Courier delivery": {
@@ -167886,6 +168695,34 @@
         "text": "Guide: work and family scope"
       }
     },
+    "ui:Guild Standing may improve": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "Guild Standing may improve"
+      }
+    },
+    "ui:Guild Standing {change}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "change"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Guild Standing {change}"
+      }
+    },
+    "ui:Guild Standing {needed}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "needed"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Guild Standing {needed}"
+      }
+    },
     "ui:Guild Standing {needed} (now {current})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -167915,6 +168752,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Guild monopoly tolls"
+      }
+    },
+    "ui:Guild path": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Guild path"
       }
     },
     "ui:Guild standing brings commissions, enterprise access, and better profits.": {
@@ -168800,6 +169645,17 @@
         "text": "Independent: no liege receives an aid or may summon your banner. Neighboring sovereign courts currently in foreign-policy reach: {count}."
       }
     },
+    "ui:Induct as {specialization} — {money:gold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold",
+        "specialization"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Induct as {specialization} — {money:gold}"
+      }
+    },
     "ui:Inherited debt:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169425,6 +170281,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Leave it idle"
+      }
+    },
+    "ui:Leave the auction": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Leave the auction"
       }
     },
     "ui:Leave the choice to them": {
@@ -170145,6 +171009,17 @@
         "text": "Makes the {specialization} examination available in {career}."
       }
     },
+    "ui:Makes the {specialization} guild induction available in {career}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "career",
+        "specialization"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Makes the {specialization} guild induction available in {career}."
+      }
+    },
     "ui:Makes training and work in {content} available.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -170153,6 +171028,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Makes training and work in {content} available."
+      }
+    },
+    "ui:Makes {content} available as auction lots.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "content"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Makes {content} available as auction lots."
       }
     },
     "ui:Makes {content} available for children.": {
@@ -171345,6 +172230,14 @@
         "text": "No assignment fee"
       }
     },
+    "ui:No auction is available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "No auction is available."
+      }
+    },
     "ui:No autobuild": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172490,6 +173383,14 @@
         "text": "No valid local grantor can hear this petition."
       }
     },
+    "ui:No valid lot is available at this market.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No valid lot is available at this market."
+      }
+    },
     "ui:No valid political court is available for this motion.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172728,6 +173629,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Not recognized by you"
+      }
+    },
+    "ui:Not today": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Not today"
       }
     },
     "ui:Not yet": {
@@ -173189,6 +174098,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "Only an adult can take to the road."
+      }
+    },
+    "ui:Only an adult may attend an auction.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only an adult may attend an auction."
       }
     },
     "ui:Only an independent king or emperor may claim the Caliphate.": {
@@ -175305,6 +176222,16 @@
         "text": "Raise a Building in {settlement}"
       }
     },
+    "ui:Raise by {increments} increments.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "increments"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raise by {increments} increments."
+      }
+    },
     "ui:Raise my banner": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176694,6 +177621,16 @@
         "text": "Requires {technology}."
       }
     },
+    "ui:Requires: {requirements}. This becomes the vocation’s permanent title.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "requirements"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Requires: {requirements}. This becomes the vocation’s permanent title."
+      }
+    },
     "ui:Research may advance": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176848,6 +177785,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Resolve each asset in order. Claims combine service, vows, occupation, rights, local support, and religious standing. Land winners may receive only one territorial award."
+      }
+    },
+    "ui:Resolve the current auction first.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Resolve the current auction first."
       }
     },
     "ui:Resolve the current event before changing equipment.": {
@@ -180005,6 +180950,14 @@
         "text": "The assistant’s recommendation is listed first. Every family remains your decision."
       }
     },
+    "ui:The auctioneer calls one lot at a time. A hidden rival either counters at once or drops out; no coin leaves your purse unless you win.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The auctioneer calls one lot at a time. A hidden rival either counters at once or drops out; no coin leaves your purse unless you win."
+      }
+    },
     "ui:The barber cannot work while the household is traveling.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180463,6 +181416,14 @@
         "text": "The great offices have not formed yet; the next simulation boundary will establish them."
       }
     },
+    "ui:The hammer falls in your favor.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The hammer falls in your favor."
+      }
+    },
     "ui:The house of {dynasty} passes out of memory, as all things must.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -180606,6 +181567,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "The lord’s steward"
+      }
+    },
+    "ui:The lot is withdrawn.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The lot is withdrawn."
       }
     },
     "ui:The manor is forfeited and the house falls to Freeholder.": {
@@ -180876,6 +181845,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The reviewed domain grants have been applied."
+      }
+    },
+    "ui:The rival takes the lot.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The rival takes the lot."
       }
     },
     "ui:The road is open to freeholders and gentry.": {
@@ -182311,6 +183288,14 @@
         "text": "Unknown enterprise"
       }
     },
+    "ui:Unknown lot": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Unknown lot"
+      }
+    },
     "ui:Unknown place": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -183423,6 +184408,14 @@
         "text": "You broke off this suit. It cannot be renewed for {days} days."
       }
     },
+    "ui:You cannot attend an auction while imprisoned.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "You cannot attend an auction while imprisoned."
+      }
+    },
     "ui:You cannot form a trade venture while personally at war.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -183445,6 +184438,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "You cannot travel, marry, hold a plot, or take a new office while confined."
+      }
+    },
+    "ui:You do not have enough gold for this bid.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "You do not have enough gold for this bid."
       }
     },
     "ui:You do not hold a local council seat.": {
@@ -184965,6 +185966,14 @@
         "text": "county tax"
       }
     },
+    "ui:county title rights": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "county title rights"
+      }
+    },
     "ui:courting": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185174,12 +186183,28 @@
         "text": "extraordinary-tax exempt · breakaway ×{multiplier}"
       }
     },
+    "ui:family enterprises": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "family enterprises"
+      }
+    },
     "ui:famine resilience": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/events.js",
       "source": {
         "text": "famine resilience"
+      }
+    },
+    "ui:fine and famed items": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "fine and famed items"
       }
     },
     "ui:for {days} days": {
@@ -186140,6 +187165,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "the lost realm"
+      }
+    },
+    "ui:the market": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "the market"
       }
     },
     "ui:the old faith": {
@@ -187498,6 +188531,17 @@
         "text": "{count}/{needed} plots — ready to declare a manor once the household has enough standing"
       }
     },
+    "ui:{current} of {maximum}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "maximum"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{current} of {maximum}"
+      }
+    },
     "ui:{date} · {days} days": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -188369,6 +189413,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{kind} in {county} county · held by {holder}"
+      }
+    },
+    "ui:{kind} market": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "kind"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{kind} market"
       }
     },
     "ui:{kind} · a day’s outing": {
@@ -189577,6 +190631,16 @@
         "text": "{purpose} · {phase} · {location} → {destination}"
       }
     },
+    "ui:{rank} rank": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rank"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "{rank} rank"
+      }
+    },
     "ui:{rate}%": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -190096,6 +191160,17 @@
       "location": "js/events.js",
       "source": {
         "text": "{skill} {change}"
+      }
+    },
+    "ui:{skill} {needed}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "needed",
+        "skill"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "{skill} {needed}"
       }
     },
     "ui:{skill} {needed} (now {current})": {

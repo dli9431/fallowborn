@@ -3425,6 +3425,25 @@ window.FB = window.FB || {};
        Landed careers survive as biography, but no longer satisfy work gates. */
     if (tg.professions && (p.tier >= 3 ||
       tg.professions.indexOf(p.profession) < 0)) return false;
+    /* A specialty path is an active vocation requirement, deliberately
+       separate from broad profession gates. It is evaluated only by events
+       which declare it, and a landed former calling never qualifies. */
+    if (tg.career) {
+      const requirement = tg.career;
+      const career = FB.careerOf ? FB.careerOf(state, me) : null;
+      const guildOrder = { none:0, member:1, master:2, officer:3, guildmaster:4 };
+      if (p.tier >= 3 || !career || !career.chosen ||
+          career.rank === 'unassigned' || career.rank === 'apprentice') return false;
+      if (requirement.profession && career.profession !== requirement.profession) return false;
+      if (requirement.specialization &&
+          career.specialization !== requirement.specialization) return false;
+      if (requirement.guildRankMin &&
+          (guildOrder[career.guildRank] || 0) <
+            (guildOrder[requirement.guildRankMin] || 0)) return false;
+      if (requirement.guildStandingMin !== undefined &&
+          (Number(career.guildStanding) || 0) <
+            Math.max(0, Number(requirement.guildStandingMin) || 0)) return false;
+    }
     if (tg.minAge !== undefined && age < tg.minAge) return false;
     if (tg.maxAge !== undefined && age > tg.maxAge) return false;
     if (tg.sex && me.sex !== tg.sex) return false;
@@ -3949,7 +3968,7 @@ window.FB = window.FB || {};
      as they actually landed. */
   const EVENT_EFFECT_KEYS = [
     'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource',
-    'prestige','piety','warService','health','ailment','skills','addTrait',
+    'prestige','piety','guildStanding','warService','health','ailment','skills','addTrait',
     'addTraitOnce','removeTrait','traitProgress','setFlag','setFlag2','clearFlag',
     'clearFlag2','clearHarvestFlags','opinion','rivalContact','rivalHeat',
     'endRivalry','opinionLiege','standingRealm','papalOpinion','popularOpinion',
@@ -4001,7 +4020,7 @@ window.FB = window.FB || {};
      registry. Adapters may be replaced by an owning system with a more exact
      pure preview/report pair before an event is shown. */
   const CORE_CUSTOM_EFFECT_IDS = (
-    'academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw ' +
+    'academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw auction_invitation_available auction_invitation_open ' +
     'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
     'annul_granted appeal_lose appeal_win attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
     'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
@@ -4252,6 +4271,7 @@ window.FB = window.FB || {};
     }
     if (typeof fx.gold === 'number') previewNumeric(out, 'gold', fx.gold);
     else if (fx.gold === 'harvest_good') out.push(impact('gold', { reward:true, variable:true }));
+    previewNumeric(out, 'guildStanding', fx.guildStanding);
     previewNumeric(out, 'prestige', fx.prestige);
     previewNumeric(out, 'piety', fx.piety);
     previewNumeric(out, 'health', fx.health, {
@@ -4974,6 +4994,10 @@ window.FB = window.FB || {};
         target:target, change:numberText(amount)
       });
     }
+    if (record.type === 'guildStanding') {
+      if (concealedGain) return FB.T('Guild Standing may improve');
+      return FB.T('Guild Standing {change}', { change:numberText(amount) });
+    }
     if (record.type === 'skill') {
       const skill = FB.skillName(record.id);
       if (record.targetKind === 'child' && !resolved) {
@@ -5259,6 +5283,7 @@ window.FB = window.FB || {};
     const customBefore = customAdapter && typeof customAdapter.capture === 'function'
       ? customAdapter.capture(state, ctx, ev, fx) : null;
     let appliedResearch = 0;
+    let appliedGuildStanding = 0;
     let appliedPricePressure = false;
     const p = state.player;
     const me = state.chars[p.charId];
@@ -5306,6 +5331,19 @@ window.FB = window.FB || {};
     }
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
+    if (fx.guildStanding && FB.careerOf) {
+      const career = FB.careerOf(state, me);
+      const standingChange = Number(fx.guildStanding);
+      if (career && career.guildRank && career.guildRank !== 'none' &&
+          isFinite(standingChange)) {
+        const before = Math.max(0, Number(career.guildStanding) || 0);
+        const configuredMax = Number(FBDATA.balance.guildStandingMax);
+        const maximum = isFinite(configuredMax) ? Math.max(0, configuredMax) : 100;
+        career.guildStanding = FB.clamp(before + standingChange, 0,
+          maximum);
+        appliedGuildStanding = career.guildStanding - before;
+      }
+    }
     if (fx.warService) {
       p.warService = Math.max(0, (p.warService || 0) + fx.warService);
       if (fx.warService > 0 && FB.noteTraitProgress) {
@@ -5592,6 +5630,9 @@ window.FB = window.FB || {};
     if (appliedResearch) ledger.push(impact('research', {
       amount:appliedResearch, resolved:true
     }));
+    if (appliedGuildStanding) ledger.push(impact('guildStanding', {
+      amount:appliedGuildStanding, resolved:true
+    }));
     if (appliedPricePressure) ledger.push(impact('price', {
       amount:fx.pricePressure,
       years:fx.pricePressureYears || 1,
@@ -5661,6 +5702,7 @@ window.FB = window.FB || {};
     option = option || { label:'So it goes.', effects:{} };
     ctx = ctx || {};
     meta = meta || {};
+    if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus &&
         FB.eventOptionStatus(state, ev, option, ctx).techLocked) return false;
     const optionIndex = ev.options ? ev.options.indexOf(option) : -1;
