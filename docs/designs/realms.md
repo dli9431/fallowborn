@@ -663,6 +663,13 @@ Liberties realms. Host Duty and Liberties feed their multipliers into the bounde
 yearly breakaway calculation and introduce no second rebellion simulation. Charters
 are not renegotiable and survive hereditary succession.
 
+Scutage Compact requires `scutage`; Charter of Liberties requires both `customary_law`
+and `authenticated_seals`. Requirements apply only when a new county or duchy grant is
+confirmed. Locked charter cards remain visible with exact missing technologies, while
+Customary Service and Host Duty remain available. `FB.grantCounty` and `FB.grantDuchy`
+recheck the requirement before any land mutation. Existing contracts are grandfathered
+and continue to supply their saved terms after technology or allegiance changes.
+
 Tenure is `hereditary`, `life`, or a 3,600-day fixed term. Life grants reduce initial
 Standing by 5 and fixed terms by 10. Life land reverts at its ruler's death; fixed-term
 land reverts at death or expiry. During the final 90 days a fixed-term vassal petitions

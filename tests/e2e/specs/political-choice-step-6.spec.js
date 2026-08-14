@@ -157,6 +157,10 @@ test('Council remains appointive by default and chartered offices require confir
       s.elections = null;
       FB.invalidateRealmCache();
       FB.ensureInstitutions(s, { silent:true });
+      const technology = FB.realmTechRecord(s, 'player');
+      if (technology.completed.indexOf('representative_estates') < 0) {
+        technology.completed.push('representative_estates');
+      }
 
       const direct = FB.councilAppoint(s, 'treasurer', 'choice_vassal_a');
       const directHolder = s.council.seats.treasurer;
@@ -269,6 +273,10 @@ test('mistreatment creates bounded demands and refusal organizes opposition',
       s.collectiveDemands = null;
       s.privileges = [];
       FB.ensureInstitutions(s, { silent:true });
+      const technology = FB.realmTechRecord(s);
+      if (technology.completed.indexOf('customary_law') < 0) {
+        technology.completed.push('customary_law');
+      }
       FB.notePoliticalMistreatment(s, 'extraordinary_tax', { gold:40 });
       const candidates = FB.collectiveDemandCandidates(s).map(function (row) {
         return row.id;

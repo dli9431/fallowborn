@@ -62,7 +62,9 @@ FBDATA.events.push(
   trigger:{ tierMin:6, custom:'council_charter_due', chance:0.4 }, weight:9, cooldown:12,
   text:'They come to you together — the whole council, unsmiling, with a parchment already drafted. Extraordinary taxes without consent. Revocations without judgment. They ask — the word "ask" doing heavy work — that the crown bind itself by charter to govern with its great officers, as kings are meant to govern.',
   options:[
-    { label:'Seal the charter.', desc:'Yield a little power now, keep the crown and their love.', effects:{ custom:'council_charter_seal', prestige:-5, log:'Sealed a charter of liberties for the great council.' } },
+    { label:'Seal the charter.', desc:'Yield a little power now, keep the crown and their love.',
+      requiresTech:'representative_estates', showWhenTechLocked:true,
+      effects:{ custom:'council_charter_seal', prestige:-5, log:'Sealed a charter of liberties for the great council.' } },
     { label:'Tear it up before their faces.', desc:'The crown answers to God, not to its own servants.', chance:0.5,
       success:{ text:'A long, dangerous silence — and then they kneel, one by one. The crown stands alone, and stands supreme. They will remember this.', effects:{ custom:'council_defy_hold', prestige:5 } },
       failure:{ text:'The eldest of them picks up the pieces, bows with insulting correctness, and rides home. Within the month, his defiance is armed.', effects:{ custom:'council_defy_fail' } } }
@@ -94,11 +96,13 @@ FBDATA.events.push(
   options:[
     { label:'Publish a measured market charter. ({money:15})',
       require:{ goldMin:15 },
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
       desc:'Pay for clerks and enforcement; trade grows under rules everyone can read.',
       effects:{ gold:-15, popularOpinion:4,
         custom:'council_market_concession',
         addModifier:{id:'market_charter'} } },
     { label:'Sell the privilege to the highest guild.',
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
       desc:'The treasury gains at once; the villages pay for the favoritism.',
       effects:{ gold:25, popularOpinion:-10,
         custom:'council_market_prerogative',
@@ -140,6 +144,7 @@ FBDATA.events.push(
         log:'Ordered the council to prepare an orderly grant.' } },
     { label:'Confirm the county’s customs while you consider.',
       desc:'A charter buys patience without pretending that a grant has already occurred.',
+      requiresTech:'customary_law', showWhenTechLocked:true,
       effects:{ prestige:-3, custom:'council_domain_custom',
         addModifier:{id:'custom_confirmed'} } },
     { label:'The crown grants when the crown chooses.',

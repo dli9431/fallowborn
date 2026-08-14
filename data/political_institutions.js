@@ -145,6 +145,7 @@ FBDATA.privileges = {
   market_charter: {
     name:'Market Charter', icon:'⚖', order:1,
     desc:'A county holds measured tolls and protected stalls under public seal.',
+    requiresTech:['urban_markets','authenticated_seals'],
     holderTypes:['county'], scopeTypes:['county'],
     rights:['Protected market and measured tolls.'],
     exemptions:[], obligations:['Pay any upkeep recorded by the county effect.'],
@@ -154,6 +155,7 @@ FBDATA.privileges = {
   confirmed_custom: {
     name:'Confirmed Local Custom', icon:'📜', order:2,
     desc:'A county’s witnessed customs stand against unilateral alteration.',
+    requiresTech:'customary_law',
     holderTypes:['county'], scopeTypes:['county'],
     rights:['Local custom is confirmed in writing.'],
     exemptions:['The full ordinary levy is limited while the confirmation lasts.'],
@@ -192,6 +194,7 @@ FBDATA.privileges = {
   consent_of_estates: {
     name:'Consent of the Estates', icon:'🗳', order:6,
     desc:'The liege is sworn to seek the assembly’s consent before new aids.',
+    requiresTech:'representative_estates',
     holderTypes:['institution'], scopeTypes:['realm'],
     rights:['New aids require the assembled estates’ consent.'],
     exemptions:['Unilateral aid demands leave the ordinary agenda.'],
@@ -202,6 +205,7 @@ FBDATA.privileges = {
   office_confirmation: {
     name:'Confirmation of Great Offices', icon:'🏛', order:7,
     desc:'The Treasurer and Constable require a chartered council’s confirmation and hold protected fixed terms.',
+    requiresTech:'representative_estates',
     holderTypes:['institution'], scopeTypes:['realm'],
     rights:['Treasurer and Constable nominees receive a recorded confirmation vote.'],
     exemptions:['Confirmed holders cannot be dismissed during the protected term.'],

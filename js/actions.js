@@ -2069,6 +2069,33 @@ window.FB = window.FB || {};
       FBDATA.feudalServiceCharters.customary_service;
   };
 
+  FB.feudalCharterStatus = function (state, charterId) {
+    const def = FBDATA.feudalServiceCharters[charterId];
+    if (!def) {
+      return {
+        ready:false,
+        reason:FB.T('That service charter is not recognized.'),
+        missingTech:[]
+      };
+    }
+    const technology = FB.techRequirementStatus
+      ? FB.techRequirementStatus(state, def.requiresTech) : {
+          ready:!def.requiresTech || FB.techRequirementMet(state, def.requiresTech),
+          requirements:[], missing:[]
+        };
+    if (!technology.ready) {
+      return {
+        ready:false,
+        techLocked:true,
+        requiredTech:technology.requirements,
+        missingTech:technology.missing,
+        reason:FB.techRequirementReason
+          ? FB.techRequirementReason(state, def.requiresTech) : ''
+      };
+    }
+    return { ready:true, reason:'', missingTech:[] };
+  };
+
   FB.feudalContractOf = function (state, rid) {
     const realm = state.realms && state.realms[rid];
     const saved = realm && realm.feudalContract;
@@ -3966,6 +3993,7 @@ window.FB = window.FB || {};
       charterOrTenure, tenure) {
     const options = feudalGrantOptions(
       recipientOrOptions, charterOrTenure, tenure);
+    if (!FB.feudalCharterStatus(state, options.charterId).ready) return false;
     const p = state.player;
     const pr = FB.world.byId[pid];
     if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) {
@@ -4036,6 +4064,7 @@ window.FB = window.FB || {};
       charterOrTenure, tenure) {
     const options = feudalGrantOptions(
       recipientOrOptions, charterOrTenure, tenure);
+    if (!FB.feudalCharterStatus(state, options.charterId).ready) return false;
     const p = state.player;
     if (!p.provs) return false;
     const cs = [];

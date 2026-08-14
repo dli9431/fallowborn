@@ -48,6 +48,15 @@ rejected nominee receives a bounded candidacy cooldown and the existing holder o
 remains. Seneschal, Almoner, and Chamberlain keep the original appointment rules. Existing
 holders are grandfathered into one protected term when the charter first takes effect.
 
+Technology applies only to the Council's advanced institutional choices. The Treasurer-led
+market-charter event enters the random pool only after `urban_markets` and
+`authenticated_seals`. The domain-pressure event remains available, but its written-custom
+choice requires `customary_law`; its other responses remain ordinary alternatives.
+Sealing the institutional Charter of Liberties and creating Confirmation of Great Offices
+requires `representative_estates`, while defiance and the appointed Council remain
+available. Locked mixed-event choices stay visible and route eligible rulers to the missing
+technology. Existing privileges and protected terms are grandfathered.
+
 Triggers and effects are the `council_*` custom fns in `js/council.js`; like the older
 vassal events, slot-day council events stay archetypal (no named ruler tokens) and let
 the effect fns pick the councillor involved. The new custom handlers mutate only Crown

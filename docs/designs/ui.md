@@ -609,7 +609,9 @@ The generated option preserves the same path used by Domain Cleanup, while a fam
 is revalidated before mutation and returns to Governance after a successful grant.
 Charter and tenure are labeled native-button groups whose current choices expose
 `aria-pressed` and the standard selected action styling. Confirm and Back share the sticky
-`.gm-footer`; only Confirm may mutate the grant.
+`.gm-footer`; only Confirm may mutate the grant. A technology-locked charter remains in
+the group with its exact missing innovation. Tier-3+ players may use that locked row as a
+technology-detail link; confirmation rechecks the same requirement.
 
 The Town Council motion and Castellan petition dialogs likewise keep their substantive,
 number-keyed choices in a scrolling `.gm-list` and **Not now** in the sticky footer. Because
@@ -629,6 +631,9 @@ replace the current modal view while preserving its existing history token,
 so visible Back and browser Back return directly to Governance rather than to
 a stale pre-campaign sheet. Political cards and motion rows stack on narrow
 layouts, and lobbying controls retain the 44-pixel minimum touch target.
+Technology-locked motions remain visible with the exact missing innovation and open its
+detail sheet instead of beginning a campaign. Other unavailable motions keep their ordinary
+disabled reason and selector behavior.
 Opening or navigating Network, Governance, Estates, or any forecast consumes
 no RNG and writes no simulation state.
 
@@ -649,6 +654,9 @@ Details button. Touch, tablet-width, and short layouts never depend on hover: a
 question-mark control with an accessible Details label toggles that breakdown inline and
 remains at least 44 pixels high. The event surface is an `aria-modal` dialog labelled by
 its title and description, and expanded details remain inside the modal's scroll area.
+Authored `showWhenTechLocked` choices stay in their original order with an exact requirement;
+they are disabled below tier 3 and act only as technology-detail links for tier-3+ players.
+Autoresolve excludes them until the technology is complete.
 
 The Institution section and Network's Trade & Guild summary also open the shared
 **Privileges & collective demands** sheet. Each contract names its holder, grantor,

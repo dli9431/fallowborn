@@ -247,6 +247,10 @@ window.FBMODS = window.FBMODS || [];
     if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
     if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);
     if (mod.techCaps) mergeTechCaps(mod.techCaps);
+    if (mod.techImpactReviews && mod.techImpactReviews.features) {
+      mergeTable(FBDATA.techImpactReviews.features,
+        mod.techImpactReviews.features);
+    }
     if (mod.holdings) for (const k in mod.holdings) FBDATA.holdings[k] = mod.holdings[k];
     if (mod.careers) for (const k in mod.careers) FBDATA.careers[k] = mod.careers[k];
     if (mod.positions) for (const k in mod.positions) FBDATA.positions[k] = mod.positions[k];

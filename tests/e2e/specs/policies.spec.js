@@ -115,6 +115,18 @@ async function configurePolicies(page) {
     s.realms.player.rank = 1;
     s.realms.player.liege = polityId;
     s.realms.player.capital = countyIds[2];
+    var technology = FB.realmTechRecord(s, polityId);
+    [
+      'scutage', 'urban_markets', 'authenticated_seals',
+      'customary_law', 'representative_estates'
+    ].forEach(function (techId) {
+      if (technology.completed.indexOf(techId) < 0) {
+        technology.completed.push(techId);
+      }
+      if (technology.exposed.indexOf(techId) < 0) {
+        technology.exposed.push(techId);
+      }
+    });
     s.realms[polityId].obl = {
       aid:FBDATA.balance.parliamentAidBase || 0.25,
       scutage:false,
@@ -289,6 +301,178 @@ test('a catalog policy campaign lobbies, tallies, and applies its result event',
     });
     expect(regated.ready).toBe(false);
     expect(regated.reason).toContain('market charter');
+  });
+
+test('advanced Estates motions name missing technology and preserve locked state',
+  async function ({ page }, testInfo) {
+    await startPoliciesGame(page, testInfo);
+    await configurePolicies(page);
+    var result = await page.evaluate(function () {
+      var s = FB.state;
+      var record = FB.realmTechRecord(s);
+      var gated = [
+        'scutage', 'urban_markets', 'authenticated_seals',
+        'customary_law', 'representative_estates'
+      ];
+      record.completed = record.completed.filter(function (id) {
+        return gated.indexOf(id) < 0;
+      });
+      var before = FB.save.serialize();
+      var rngBefore = FB.getRngState();
+      var statuses = {
+        scutage:FB.parliamentMotionStatus(s, 'scutage'),
+        market:FB.parliamentMotionStatus(s, 'market_charter'),
+        custom:FB.parliamentMotionStatus(s, 'local_custom'),
+        consent:FB.parliamentMotionStatus(s, 'revocation_consent')
+      };
+      var began = FB.parliamentBeginMotion(s, 'scutage');
+      var candidatesWithoutMarket = FB.parliamentSessionCandidates(s);
+      var unchanged = before === FB.save.serialize() &&
+        rngBefore === FB.getRngState();
+      record.completed.push('urban_markets');
+      var partialMarket = FB.parliamentMotionStatus(s, 'market_charter');
+      record.completed.push('authenticated_seals');
+      var candidatesWithMarket = FB.parliamentSessionCandidates(s);
+      record.completed.push('scutage');
+      var beganInFlight = FB.parliamentBeginMotion(s, 'scutage');
+      var forecast = FB.politicalMotionForecast(s, 'scutage');
+      forecast.blocs.forEach(function (bloc) {
+        s.politics.pendingMotion.pledges[bloc.id] = 'support';
+      });
+      record.completed = record.completed.filter(function (id) {
+        return id !== 'scutage';
+      });
+      var inFlightVote = FB.parliamentCallVote(s);
+      var inFlightPassed = !!(inFlightVote &&
+        s.politics.pendingMotion.result.passed);
+      return {
+        statuses:statuses,
+        began:began,
+        candidatesWithoutMarket:candidatesWithoutMarket,
+        partialMarket:partialMarket,
+        candidatesWithMarket:candidatesWithMarket,
+        unchanged:unchanged,
+        beganInFlight:beganInFlight,
+        inFlightPassed:inFlightPassed,
+        inFlightQueued:s.eventQueue.some(function (item) {
+          return item.id === 'parliament_scutage';
+        })
+      };
+    });
+
+    expect(result.statuses.scutage).toMatchObject({
+      ready:false, techLocked:true, missingTech:['scutage']
+    });
+    expect(result.statuses.scutage.reason).toContain('Scutage');
+    expect(result.statuses.market.missingTech).toEqual([
+      'urban_markets', 'authenticated_seals'
+    ]);
+    expect(result.statuses.market.reason).toContain('Permanent Urban Markets');
+    expect(result.statuses.market.reason).toContain('Authenticated Seals');
+    expect(result.statuses.custom.missingTech).toEqual(['customary_law']);
+    expect(result.statuses.consent.missingTech).toEqual([
+      'representative_estates'
+    ]);
+    expect(result.began).toBe(false);
+    expect(result.unchanged).toBe(true);
+    expect(result.candidatesWithoutMarket).not.toContain(
+      'parliament_market_charter');
+    expect(result.partialMarket.missingTech).toEqual(['authenticated_seals']);
+    expect(result.partialMarket.reason).toContain('Authenticated Seals');
+    expect(result.partialMarket.reason).not.toContain('Permanent Urban Markets');
+    expect(result.candidatesWithMarket).toContain('parliament_market_charter');
+    expect(result.beganInFlight).toBe(true);
+    expect(result.inFlightPassed).toBe(true);
+    expect(result.inFlightQueued).toBe(true);
+  });
+
+test('ordinary redress stays available while written confirmation is snapshotted',
+  async function ({ page }, testInfo) {
+    await startPoliciesGame(page, testInfo);
+    await configurePolicies(page);
+    var result = await page.evaluate(function () {
+      var baseline = JSON.parse(FB.save.serialize());
+      function removeCustomaryLaw(s) {
+        var record = FB.realmTechRecord(s);
+        record.completed = record.completed.filter(function (id) {
+          return id !== 'customary_law';
+        });
+      }
+      function carryRedress(s, removeAfterBegin) {
+        var beforeAid = FB.parliamentTerms(s).aid;
+        var began = FB.parliamentBeginMotion(s, 'redress');
+        if (removeAfterBegin) removeCustomaryLaw(s);
+        var forecast = FB.politicalMotionForecast(s, 'redress');
+        forecast.blocs.forEach(function (bloc) {
+          s.politics.pendingMotion.pledges[bloc.id] = 'support';
+        });
+        FB.parliamentCallVote(s);
+        var item = s.eventQueue.pop();
+        var event = FB.eventById(item.id);
+        var option = event.options.filter(function (candidate) {
+          return FB.eventOptionStatus(s, event, candidate, item.ctx).ready;
+        })[0];
+        var preview = FB.previewEventOption(s, event, option, item.ctx);
+        var previewHasConfirmation = preview.sections.some(function (section) {
+          return section.impacts.some(function (impact) {
+            return impact.type === 'modifier' &&
+              impact.id === 'custom_confirmed';
+          });
+        });
+        var receipt = FB.resolveEventOption(s, event, option, item.ctx, {
+          automated:false
+        });
+        return {
+          began:began,
+          aidFell:FB.parliamentTerms(s).aid < beforeAid,
+          confirmed:FB.hasModifier(s, 'custom_confirmed',
+            s.player.provinceId),
+          pending:s.politics.pendingMotion,
+          receipt:!!receipt,
+          previewHasConfirmation:previewHasConfirmation
+        };
+      }
+
+      removeCustomaryLaw(FB.state);
+      var foundational = carryRedress(FB.state, false);
+      FB.save.restore(JSON.parse(JSON.stringify(baseline)));
+      var grandfathered = carryRedress(FB.state, true);
+      return { foundational:foundational, grandfathered:grandfathered };
+    });
+
+    expect(result.foundational).toEqual({
+      began:true, aidFell:true, confirmed:false, pending:null, receipt:true,
+      previewHasConfirmation:false
+    });
+    expect(result.grandfathered).toEqual({
+      began:true, aidFell:true, confirmed:true, pending:null, receipt:true,
+      previewHasConfirmation:true
+    });
+  });
+
+test('locked Estates cards deep-link to their exact technology entry',
+  async function ({ page }, testInfo) {
+    await startPoliciesGame(page, testInfo);
+    await configurePolicies(page);
+    await page.evaluate(function () {
+      var record = FB.realmTechRecord(FB.state);
+      record.completed = record.completed.filter(function (id) {
+        return id !== 'scutage';
+      });
+      FB.ui.showParliament();
+    });
+
+    var locked = page.locator('[data-motion-tech="scutage"]');
+    await expect(locked).toBeVisible();
+    await expect(locked).toContainText('Requires Scutage');
+    await expect(locked).toContainText('Open the technology entry');
+    await expect(page.locator('[data-motion="scutage"]')).toHaveCount(0);
+    await locked.click();
+    await expect(page.getByRole('heading', { name:/Scutage/ })).toBeVisible();
+    await expect(page.locator('#gm-body')).toContainText(
+      'Makes the Estates motion Scutage available');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Allows the service charter Scutage Compact');
   });
 
 test('levy relief trades one aid step for a county exemption',

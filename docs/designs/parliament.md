@@ -126,6 +126,23 @@ first award do not erase accumulated wins. Moot-Speaker also multiplies only pos
 `popularOpinion` event effects by 1.2; losses and non-event Common Voice changes remain
 unchanged.
 
+## Technology gates
+
+Policies may declare all-of `requiresTech`. Scutage uses `scutage`; Market Charter uses
+`urban_markets` plus `authenticated_seals`; Confirmation of Custom uses `customary_law`;
+and Consent of the Estates uses `representative_estates`. The shared motion status exposes
+the exact missing ids before spending gold, and the Estates sheet keeps a locked motion
+visible as a technology-detail link. A pending campaign is grandfathered and may finish if
+the effective sovereign changes before the vote.
+
+Ordinary Redress remains ungated. Without Recorded Customary Law it lowers the aid only;
+a campaign begun with that technology also records Custom Confirmed on the snapshotted
+home county. The yearly Market Charter agenda is not queued without both market
+technologies. Mixed local-redress choices for a market charter or written custom stay
+visible and locked until their own requirements are met, while leaving the petition
+outstanding remains available. Existing scutage, consent, privileges, and modifiers never
+lapse merely because technology or allegiance later changes.
+
 Related: [council.md](council.md) for the king-side mirror,
 [realms.md](realms.md) for the liege chain and Standing, [events.md](events.md)
 for the interpreter.

@@ -1287,10 +1287,39 @@ window.FB = window.FB || {};
     return false;
   };
 
+  FB.privilegeGrantStatus = function (state, defId) {
+    var def = privilegeDef(defId);
+    if (!def || !def.effect) {
+      return {
+        ready:false,
+        reason:FB.T('That privilege is not recognized.'),
+        missingTech:[]
+      };
+    }
+    var technology = FB.techRequirementStatus
+      ? FB.techRequirementStatus(state, def.requiresTech) : {
+          ready:!def.requiresTech || FB.techRequirementMet(state, def.requiresTech),
+          requirements:[], missing:[]
+        };
+    if (!technology.ready) {
+      return {
+        ready:false,
+        techLocked:true,
+        requiredTech:technology.requirements,
+        missingTech:technology.missing,
+        reason:FB.techRequirementReason
+          ? FB.techRequirementReason(state, def.requiresTech) : ''
+      };
+    }
+    return { ready:true, reason:'', missingTech:[] };
+  };
+
   FB.grantPrivilege = function (state, defId, options) {
     options = options || {};
     var def = privilegeDef(defId);
     if (!def || !def.effect) return false;
+    var status = FB.privilegeGrantStatus(state, defId);
+    if (!status.ready && !options.grandfathered) return false;
     var effect = def.effect;
     if (effect.kind === 'modifier') {
       var pid = options.scopeId || state.player.provinceId;
@@ -1536,6 +1565,9 @@ window.FB = window.FB || {};
       var def = demandDef(id);
       if (!def || state.player.tier < finite(def.minTier, 0) ||
           state.player.tier > finite(def.maxTier, 7)) continue;
+      var privilegeStatus = FB.privilegeGrantStatus
+        ? FB.privilegeGrantStatus(state, def.privilege) : { ready:true };
+      if (!privilegeStatus.ready) continue;
       var lastYear = store && store.lastYears &&
         Number(store.lastYears[id]);
       if (isFinite(lastYear) && state.date.year - lastYear <
@@ -1579,6 +1611,9 @@ window.FB = window.FB || {};
         isFinite(Number(record.turn)) &&
         state.turn - Number(record.turn) <= MISTREATMENT_DAYS);
     }).slice(-24);
+    if (store.pending && store.pending.technologyApproved === undefined) {
+      store.pending.technologyApproved = true;
+    }
     if (store.pending && !pendingDemandValid(state, store.pending)) {
       store.pending = null;
     }
@@ -1634,7 +1669,8 @@ window.FB = window.FB || {};
       demandedTurn:state.turn,
       demandedYear:state.date.year,
       pressure:selected.pressure,
-      reasons:selected.reasons
+      reasons:selected.reasons,
+      technologyApproved:true
     };
     FB.queueEvent(state, 'collective_privilege_demand', {
       demandId:store.pending.id,
@@ -1678,7 +1714,8 @@ window.FB = window.FB || {};
       holderType:holder.type,
       holderId:holder.id,
       grantor:{ type:'realm', id:'player' },
-      sourceType:'demand', sourceId:pending.id
+      sourceType:'demand', sourceId:pending.id,
+      grandfathered:pending.technologyApproved !== false
     });
     if (!granted) return false;
     state.player.pop = FB.clamp((state.player.pop || 0) + 6, -100, 100);

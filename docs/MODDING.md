@@ -150,6 +150,7 @@ A JSON mod is one object with any of these keys:
   "techTraditions": { "id": { "name": "...", "cultures": [], "religions": [] } },
   "tech":      { "id": { ... } },
   "techCaps":  { "seaMovement": 0.5, "units": { "arch": 250 } },
+  "techImpactReviews": { "features": { "feature_id": { ... } } },
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
   "positions": { "id": { ... } },
@@ -642,6 +643,11 @@ liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
 vassal_comply county_petition parliament_vote parliament_redress_vote travel_trade`) with
 `success` / `failure`
 branches (`{text, effects}`), and `effects`.
+An option may also declare all-of `requiresTech:"technology_id"` (or an array).
+By default a missing technology hides the option like an unmet `require`.
+`showWhenTechLocked:true` instead keeps it visible with the exact missing technology;
+tier-3+ players may open the technology detail from that locked row. Manual selection,
+autoresolve, and direct `FB.resolveEventOption` calls share this requirement.
 The engine supplies a full contextual consequence breakdown without adding mechanical text
 beneath the authored option prose. Desktop pointer and keyboard users receive it as a tooltip;
 touch, tablet-width, and short layouts open it with the adjacent question-mark control. It
@@ -1041,6 +1047,7 @@ definitions are replaced atomically rather than deep-merged:
       "repeal": "none",
       "emergency": false,
       "order": 4,
+      "requiresTech": ["urban_markets", "authenticated_seals"],
       "gate": "parliament_gate_market_charter",
       "posture": { "traits": { "greedy": 6, "generous": -4 } }
     }
@@ -1063,6 +1070,9 @@ Fields:
   first catalog. `emergency: true` waives the family cooldown (its gate still
   applies; the core emergency subsidy requires a liege at war).
 - `cost` overrides `balance.parliamentMotionCost` for the proposal.
+- `requiresTech` optionally names one technology id or an all-of array completed by the
+  player's effective sovereign. It is checked before any motion cost or cooldown is spent;
+  an already-started campaign remains valid after a later allegiance change.
 - `gate` names an `FB.fns` fn that returns `true` when the policy may be
   proposed, or a localized reason string shown wherever the proposal is
   disabled. Home-county gates use `state.player.provinceId`.
@@ -1154,6 +1164,7 @@ A privilege is a legal wrapper around one authoritative effect ledger:
       "icon": "⚖",
       "desc": "Measured tolls and protected stalls.",
       "order": 1,
+      "requiresTech": ["urban_markets", "authenticated_seals"],
       "holderTypes": ["county"],
       "scopeTypes": ["county"],
       "rights": ["Protected market and measured tolls."],
@@ -1177,6 +1188,10 @@ grantor, scope, source, duration, and revocation provenance for saves and UI.
 ordinary Levy Exemption do. Keep holder/scope values within `holderTypes` and
 `scopeTypes`: `house`, `guild`, `county`, `faith`, and `institution` are the core holder
 categories; `county` and `realm` are the core territorial scopes.
+`requiresTech` optionally names one id or an all-of array. `FB.grantPrivilege` rejects a
+new grant when the effective sovereign lacks it, while existing effect and privilege
+records remain active. Collective demands pointing at a locked privilege are omitted
+before queueing; a demand already pending is grandfathered.
 
 A collective demand points at one privilege and one engine-registered pressure gate:
 
@@ -1564,6 +1579,9 @@ and levy bases. `standingBonus` is added to the normal +40 new-vassal Standing;
 and `desc` are localized display fields, and `icon` is cosmetic. Keep
 `customary_service`: callers and old saves without explicit terms deliberately default
 to that id.
+`requiresTech` optionally names one technology id or an all-of array. The grant picker
+keeps a locked charter visible and `FB.grantCounty` / `FB.grantDuchy` recheck it before
+mutation. Existing saved `feudalContract` records do not recheck technology.
 
 Tenure is an engine-defined separate argument to `FB.grantCounty` and `FB.grantDuchy`:
 `hereditary`, `life`, or `term`. Both helpers retain their older call signatures; mods
@@ -2030,7 +2048,8 @@ attack the player and cannot be declared on.
 
 ## Technology
 
-`FBDATA.techDomains`, `FBDATA.techTraditions`, `FBDATA.tech`, and `FBDATA.techCaps`
+`FBDATA.techDomains`, `FBDATA.techTraditions`, `FBDATA.tech`, `FBDATA.techCaps`, and the
+developer-facing `FBDATA.techImpactReviews`
 (in `data/technology.js`, with matching mod keys) define the national prerequisite
 graph. Each sovereign owns one saved `state.realmTech[realmId]` record; vassals use and
 contribute to the effective top independent realm's completed knowledge, exposures, and
@@ -2052,6 +2071,13 @@ leaves every other built-in cap intact. Caps must be finite non-negative numbers
 cap keys are the scalar `fx` keys below; `costFloor` accepts `build`, `enterprise`, and
 `training`; `units` accepts `levy`, `arch`, `cav`, and `ret`; and `aiUnits` accepts
 `arch`, `cav`, and `ret`.
+
+`techImpactReviews` is the forward-only core design ledger rather than a gameplay or save
+contract. Mods need not classify arbitrary custom code, but may merge optional entries
+under `techImpactReviews.features`. Each entry has `mode:"hard|soft|none"` and a non-empty
+`rationale`; hard and soft entries use a non-empty `tech` array, hard entries also use a
+non-empty `fallback`, and none entries must not name technologies. The core baseline is
+`1.127.1`.
 
 ```json
 {
@@ -2132,7 +2158,8 @@ cap keys are the scalar `fx` keys below; `costFloor` accepts `build`, `enterpris
   completed ids with `techs`/`notTechs`. Buildings may carry a `research` per-season key
   (see the library); contributions become reserve if no project is active.
 - Buildings, careers, schooling, enterprises, household-standard levels, finance
-  contracts, and trade partnerships may use `requiresTech:"technology_id"`.
+  contracts, trade partnerships, policies, privileges, feudal-service charters, and event
+  options may use `requiresTech:"technology_id"` or an all-of array.
 
 Legacy definitions are normalized at runtime. `branch` becomes `domain`, scalar `req`
 becomes an array, and `yearMin:Y` becomes an inferred soft historical window rather than

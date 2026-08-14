@@ -57,6 +57,48 @@ window.FBDATA = window.FBDATA || {};
     aiUnits:{ arch:0.20, cav:0.20, ret:0.20 }
   };
 
+  /* Forward-only design ledger. The v1.127.1 audit is the baseline: older
+     capabilities do not need a metadata backfill. Every independently
+     gateable core capability added or materially expanded after that audit
+     records one hard/soft/none decision here. This is authoring metadata;
+     live eligibility remains on the owning definition's `requiresTech` or
+     consumed technology effect. */
+  FBDATA.techImpactReviews = {
+    baselineVersion:'1.127.1',
+    features:{
+      estates_scutage:{
+        mode:'hard', tech:['scutage'], fallback:'customary_service',
+        rationale:'Advanced cash substitution for customary military service.'
+      },
+      formal_market_charters:{
+        mode:'hard', tech:['urban_markets','authenticated_seals'],
+        fallback:'ordinary_markets_and_toll_disputes',
+        rationale:'A protected market requires both an urban market practice and an authenticated public seal.'
+      },
+      formal_confirmation_of_custom:{
+        mode:'hard', tech:['customary_law'], fallback:'ordinary_custom_and_aid_redress',
+        rationale:'Written confirmation is distinct from unwritten local custom and ordinary fiscal redress.'
+      },
+      consent_of_estates:{
+        mode:'hard', tech:['representative_estates'], fallback:'ordinary_estates_motions',
+        rationale:'Permanent assembly consent is an advanced representative rule, not a prerequisite for an Estates session.'
+      },
+      confirmation_of_great_offices:{
+        mode:'hard', tech:['representative_estates'], fallback:'appointed_royal_council',
+        rationale:'Confirmation votes formalize offices that otherwise remain crown appointments.'
+      },
+      direct_vassal_charter_of_liberties:{
+        mode:'hard', tech:['customary_law','authenticated_seals'],
+        fallback:'other_service_charters',
+        rationale:'A durable liberties charter requires recorded law and an authenticated seal.'
+      },
+      tournament_jousting:{
+        mode:'hard', tech:['cavalry_lances'], fallback:'melee_attendance_patronage_or_wagers',
+        rationale:'Formal couched-lance competition depends on the matching cavalry practice.'
+      }
+    }
+  };
+
   var TRADITIONS = [
     'latin','byzantine','islamic','persianate','slavic','nordic',
     'steppe','baltic_finnic','caucasian','northeast_african'

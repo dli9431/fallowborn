@@ -21,6 +21,7 @@ FBDATA.events.push(
   options:[
     { label:'Ride in the joust. ({money:10} for harness and heralds)',
       require:{ goldMin:10 },
+      requiresTech:'cavalry_lances', showWhenTechLocked:true,
       desc:'The entry gift buys your place in the lists. The champion’s purse is {money:20}; the price of defeat is a hard fall.',
       effects:{ gold:-10 }, chance:'battle',
       success:{ text:'Three courses, three splintered lances, and the herald cries your name. {lord} hangs the champion’s purse on your lance-tip with his own hands.',
@@ -64,6 +65,7 @@ FBDATA.events.push(
   options:[
     { label:'Enter the joust. ({money:25} in harness and herald’s fees)',
       require:{ goldMin:25 },
+      requiresTech:'cavalry_lances', showWhenTechLocked:true,
       desc:'Your entry gift and fees stake {money:25} against the {money:40} purse — and against a very public fall.',
       effects:{ gold:-25 }, chance:'battle',
       success:{ text:'Course after course your lance strikes true, and the field yields to you. {lord} names you champion before the assembled houses, and even the beaten men cheer.',

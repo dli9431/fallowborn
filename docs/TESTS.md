@@ -112,11 +112,13 @@ orchestration, assertions, fixtures, and reporting.
 Every direct commit on `main` and every merge into `main` has a test-authoring requirement:
 
 1. Identify each observable behavior added, changed, or fixed.
-2. Add or update automated tests that exercise the expected behavior and would catch its
+2. For a new or materially expanded gameplay capability, record its required hard/soft/none
+   technology-impact decision under the repository policy and in the owning design doc.
+3. Add or update automated tests that exercise the expected behavior and would catch its
    regression. Keep those tests in the same commit or branch as the implementation.
-3. Do not run any focused test, syntax gate, browser matrix, runtime verifier, or manual browser
+4. Do not run any focused test, syntax gate, browser matrix, runtime verifier, or manual browser
    check. Do not install Playwright dependencies or browsers.
-4. In the handoff, list the test files added or updated and state that the tests were not run.
+5. In the handoff, list the test files added or updated and state that the tests were not run.
 
 The owner decides when to use the commands in [Running the tests](#running-the-tests), including
 before commits, merges, releases, or deployments. A documentation-only change does not need an

@@ -193,6 +193,7 @@ FBDATA.feudalServiceCharters = {
   scutage_compact: {
     name:'Scutage Compact', icon:'💰',
     desc:'Cash replaces all ordinary military service.',
+    requiresTech:'scutage',
     taxShare:0.30, levyShare:0, standingBonus:0,
     breakawayMultiplier:1, extraordinaryTaxExempt:false
   },
@@ -205,6 +206,7 @@ FBDATA.feudalServiceCharters = {
   charter_of_liberties: {
     name:'Charter of Liberties', icon:'🕊',
     desc:'Lower dues and legal exemptions buy lasting political security.',
+    requiresTech:['customary_law','authenticated_seals'],
     taxShare:0.10, levyShare:0.05, standingBonus:15,
     breakawayMultiplier:0.5, extraordinaryTaxExempt:true
   }
