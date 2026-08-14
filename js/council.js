@@ -368,7 +368,9 @@ window.FB = window.FB || {};
   };
   FB.fns.council_has_sycophant = function (state) { return !!sycophant(state); };
   FB.fns.council_market_charter_due = function (state) {
-    return !!effectiveSeat(state, 'treasurer') && !!homeCounty(state) &&
+    return (!FB.techRequirementMet || FB.techRequirementMet(state,
+      ['urban_markets','authenticated_seals'])) &&
+      !!effectiveSeat(state, 'treasurer') && !!homeCounty(state) &&
       !localModifier(state, 'market_charter') &&
       !localModifier(state, 'contested_tolls');
   };

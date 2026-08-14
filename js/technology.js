@@ -432,6 +432,37 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.techRequirementStatus = function (state, requirement, realmId) {
+    var list = asList(requirement);
+    var missing = [];
+    for (var i = 0; i < list.length; i++) {
+      if (!FB.hasTech(state, list[i], realmId)) missing.push(list[i]);
+    }
+    return {
+      ready:missing.length === 0,
+      requirements:list,
+      missing:missing,
+      realmId:FB.techRealmId(state, realmId)
+    };
+  };
+
+  FB.techRequirementReason = function (state, requirement, realmId) {
+    var status = FB.techRequirementStatus(state, requirement, realmId);
+    var ids = status.missing.length ? status.missing : status.requirements;
+    var viewerId = state && state.player ? state.player.charId : null;
+    var names = ids.map(function (id) {
+      var def = FBDATA.tech && FBDATA.tech[id];
+      return def ? FB.dataText(state, viewerId,
+        'tech', id, def, 'name', {}) : id;
+    });
+    if (!names.length) return '';
+    return names.length === 1
+      ? FB.T('Requires {technology}.', { technology:names[0] })
+      : FB.T('Requires every listed technology: {technologies}.', {
+          technologies:names.join(', ')
+        });
+  };
+
   FB.techAnyRequirementMet = function (state, requirement, realmId) {
     var list = asList(requirement);
     if (!list.length) return true;
@@ -1414,6 +1445,65 @@ window.FB = window.FB || {};
         }
       }
     }
+    var impactReviews = FBDATA.techImpactReviews;
+    if (!impactReviews || typeof impactReviews !== 'object' ||
+        Array.isArray(impactReviews)) {
+      errors.push('Technology impact review registry is invalid.');
+    } else {
+      if (typeof impactReviews.baselineVersion !== 'string' ||
+          !/^\d+\.\d+\.\d+$/.test(impactReviews.baselineVersion)) {
+        errors.push('Technology impact review baseline version is invalid.');
+      }
+      var reviewedFeatures = impactReviews.features;
+      if (!reviewedFeatures || typeof reviewedFeatures !== 'object' ||
+          Array.isArray(reviewedFeatures)) {
+        errors.push('Technology impact review feature table is invalid.');
+      } else {
+        for (var featureId in reviewedFeatures) {
+          if (!own(reviewedFeatures, featureId)) continue;
+          var review = reviewedFeatures[featureId];
+          if (!review || typeof review !== 'object' || Array.isArray(review)) {
+            errors.push('Technology impact review ' + featureId + ' is invalid.');
+            continue;
+          }
+          if (['hard','soft','none'].indexOf(review.mode) < 0) {
+            errors.push('Technology impact review ' + featureId +
+              ': mode must be hard, soft, or none.');
+          }
+          if (typeof review.rationale !== 'string' || !review.rationale.trim()) {
+            errors.push('Technology impact review ' + featureId +
+              ': rationale is required.');
+          }
+          var reviewTech = review.tech === undefined ? [] : review.tech;
+          if (!Array.isArray(reviewTech)) {
+            errors.push('Technology impact review ' + featureId +
+              ': tech must be an array.');
+            reviewTech = [];
+          }
+          if ((review.mode === 'hard' || review.mode === 'soft') &&
+              !reviewTech.length) {
+            errors.push('Technology impact review ' + featureId +
+              ': hard and soft reviews require technology ids.');
+          }
+          if (review.mode === 'none' && reviewTech.length) {
+            errors.push('Technology impact review ' + featureId +
+              ': none reviews cannot name technology ids.');
+          }
+          if (review.mode === 'hard' &&
+              (typeof review.fallback !== 'string' || !review.fallback.trim())) {
+            errors.push('Technology impact review ' + featureId +
+              ': hard reviews require a fallback.');
+          }
+          for (var reviewTechIndex = 0; reviewTechIndex < reviewTech.length;
+              reviewTechIndex++) {
+            if (!FBDATA.tech[reviewTech[reviewTechIndex]]) {
+              errors.push('Technology impact review ' + featureId +
+                ': missing technology ' + reviewTech[reviewTechIndex] + '.');
+            }
+          }
+        }
+      }
+    }
     for (var id in (FBDATA.tech || {})) {
       if (!own(FBDATA.tech, id)) continue;
       var def = FB.normalizeTechDefinition(id, FBDATA.tech[id]);
@@ -1545,7 +1635,10 @@ window.FB = window.FB || {};
       Career:FBDATA.careers,
       Schooling:FBDATA.schooling,
       Enterprise:FBDATA.enterprises,
-      Finance:FBDATA.finance
+      Finance:FBDATA.finance,
+      Policy:FBDATA.policies,
+      Privilege:FBDATA.privileges,
+      'Feudal service charter':FBDATA.feudalServiceCharters
     };
     for (var tableName in requirementTables) {
       if (!own(requirementTables, tableName)) continue;
@@ -1572,6 +1665,25 @@ window.FB = window.FB || {};
       for (var levelIndex = 0; levelIndex < levels.length; levelIndex++) {
         validateRequirement('Household standard level',
           standardId + '.' + levelIndex, levels[levelIndex].requiresTech);
+      }
+    }
+    var events = FBDATA.events || [];
+    for (var eventIndex = 0; eventIndex < events.length; eventIndex++) {
+      var event = events[eventIndex];
+      if (!event || !Array.isArray(event.options)) continue;
+      for (var optionIndex = 0; optionIndex < event.options.length; optionIndex++) {
+        var eventOption = event.options[optionIndex];
+        validateRequirement('Event option', event.id + '.' + optionIndex,
+          eventOption.requiresTech);
+        if (eventOption.showWhenTechLocked !== undefined &&
+            typeof eventOption.showWhenTechLocked !== 'boolean') {
+          errors.push('Event option ' + event.id + '.' + optionIndex +
+            ': showWhenTechLocked must be a boolean.');
+        }
+        if (eventOption.showWhenTechLocked && !eventOption.requiresTech) {
+          errors.push('Event option ' + event.id + '.' + optionIndex +
+            ': showWhenTechLocked requires requiresTech.');
+        }
       }
     }
     var bookmarks = FBDATA.bookmarks || {};

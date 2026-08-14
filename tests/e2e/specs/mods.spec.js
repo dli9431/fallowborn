@@ -63,6 +63,12 @@ test('runtime mods merge definitions and the complete technology configuration',
         techDomains:{ experimental:customDomain },
         techTraditions:{ workshop_exchange:customTradition },
         tech:{ experimental_gearing:customTech },
+        techImpactReviews:{ features:{
+          experimental_gearing:{
+            mode:'soft', tech:['experimental_gearing'],
+            rationale:'The mod uses the experimental practice as an efficiency bonus.'
+          }
+        } },
         techCaps:{
           movement:0.5,
           costFloor:{ build:0.45 },
@@ -91,6 +97,8 @@ test('runtime mods merge definitions and the complete technology configuration',
         domainAdded:FBDATA.techDomains.experimental === customDomain,
         traditionAdded:FBDATA.techTraditions.workshop_exchange === customTradition,
         techAdded:FBDATA.tech.experimental_gearing === customTech,
+        impactReviewAdded:FBDATA.techImpactReviews.features
+          .experimental_gearing.tech[0] === 'experimental_gearing',
         domainLabel:FB.dataText(null, null, 'techDomain', 'experimental',
           customDomain, 'name', {}),
         traditionLabel:FB.dataText(null, null, 'techTradition',
@@ -107,6 +115,7 @@ test('runtime mods merge definitions and the complete technology configuration',
       domainAdded:true,
       traditionAdded:true,
       techAdded:true,
+      impactReviewAdded:true,
       domainLabel:'Experimental arts',
       traditionLabel:'Workshop exchange',
       capsMerged:true,

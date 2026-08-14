@@ -28,6 +28,8 @@ though the game still *runs*.
   the same `FB.dataText` path as `name` and `desc`.
   Career rank names, learned-license names, and specialty names are nested structured
   display fields and must also render through their exact `FB.dataText` paths.
+  Formal privilege names and descriptions in `data/political_institutions.js` use the
+  `privilege` structured-data namespace, including when technology details list them as unlocks.
   Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}` objects
   in the source (the renderer selects the branch, then localizes it). Technology `name`
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;

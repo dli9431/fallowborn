@@ -245,6 +245,7 @@ FBDATA.events.push(
       effects:{ gold:15, prestige:5, popularOpinion:-3 } },
     { label:'Return marked goods to their owners.', require:{ societalRoles:['lord','crowned'] },
       desc:'Costly honesty carries across the sea; their factors answer with a market compact.',
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
       effects:{ gold:-5, prestige:10, piety:5,
         addModifier:{id:'market_charter'} } }
   ]},

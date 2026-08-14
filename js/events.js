@@ -4070,6 +4070,20 @@ window.FB = window.FB || {};
         amount:-(FBDATA.balance.parliamentSubsidyGold || 20)
       })];
     }
+    if (id === 'parliament_redress_won') {
+      const redress = [impact('system', {
+        system:'politics', customId:id, preview:true
+      })];
+      const pending = state.politics && state.politics.pendingMotion;
+      if (pending && pending.customaryLawAtStart !== false) {
+        redress.push(impact('modifier', {
+          action:'add', id:'custom_confirmed',
+          pid:ctx.locationId || p.provinceId,
+          reward:true
+        }));
+      }
+      return redress;
+    }
     if (id === 'intrigue_hearing_pay' && FB.intrigueSentenceProjection) {
       const hearing = state.intrigue && state.intrigue.hearing;
       if (hearing && (!ctx.hearingId || hearing.id === ctx.hearingId)) {
@@ -5643,6 +5657,39 @@ window.FB = window.FB || {};
     return ledger;
   };
 
+  FB.eventOptionStatus = function (state, ev, option, ctx) {
+    ctx = ctx || {};
+    if (!option) {
+      return { visible:false, ready:false, techLocked:false, missingTech:[] };
+    }
+    const triggerReady = !option.require ||
+      FB.checkTrigger(state, option.require, ctx);
+    const technology = FB.techRequirementStatus
+      ? FB.techRequirementStatus(state, option.requiresTech) : {
+          ready:!option.requiresTech ||
+            FB.techRequirementMet(state, option.requiresTech),
+          requirements:[], missing:[]
+        };
+    if (!technology.ready) {
+      return {
+        visible:triggerReady && !!option.showWhenTechLocked,
+        ready:false,
+        techLocked:true,
+        requiredTech:technology.requirements,
+        missingTech:technology.missing,
+        reason:FB.techRequirementReason
+          ? FB.techRequirementReason(state, option.requiresTech) : ''
+      };
+    }
+    return {
+      visible:triggerReady,
+      ready:triggerReady,
+      techLocked:false,
+      requiredTech:technology.requirements,
+      missingTech:[]
+    };
+  };
+
   /* One roll, one effect order, one durable receipt. Manual event buttons and
      autoresolve both call this function; callers only decide how to present
      the returned receipt and when to advance to the next queued dialog. */
@@ -5650,6 +5697,8 @@ window.FB = window.FB || {};
     option = option || { label:'So it goes.', effects:{} };
     ctx = ctx || {};
     meta = meta || {};
+    if (FB.eventOptionStatus &&
+        FB.eventOptionStatus(state, ev, option, ctx).techLocked) return false;
     const optionIndex = ev.options ? ev.options.indexOf(option) : -1;
     const ledgers = [];
     let succeeded = null;

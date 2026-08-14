@@ -142,6 +142,18 @@ async function configurePolitics(page) {
     s.realms.player.rank = 1;
     s.realms.player.liege = polityId;
     s.realms.player.capital = countyIds[2];
+    var technology = FB.realmTechRecord(s, polityId);
+    [
+      'scutage', 'urban_markets', 'authenticated_seals',
+      'customary_law', 'representative_estates'
+    ].forEach(function (techId) {
+      if (technology.completed.indexOf(techId) < 0) {
+        technology.completed.push(techId);
+      }
+      if (technology.exposed.indexOf(techId) < 0) {
+        technology.exposed.push(techId);
+      }
+    });
     s.realms[polityId].obl = {
       aid:FBDATA.balance.parliamentAidBase || 0.25,
       scutage:false,

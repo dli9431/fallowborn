@@ -122,7 +122,10 @@ comes from its numeric `order`, and domain/tradition names use the structured-da
 localization path so mod-authored labels fall back to their English source. `techCaps`
 merges scalar members and merges members of `costFloor`, `units`, and `aiUnits` one level
 deeper; this permits a focused cap override without erasing unrelated built-in caps. The graph
-engine normalizes legacy `branch` to `domain`, scalar `req` to an array, and `yearMin` to
+engine also merges optional developer-facing entries under
+`techImpactReviews.features`. These entries participate in validation and document a mod's
+hard, soft, or no-gate decision, but they do not create runtime eligibility by themselves.
+The graph engine normalizes legacy `branch` to `domain`, scalar `req` to an array, and `yearMin` to
 an inferred soft attestation/adoption window; legacy `cultures` and `notCultures`
 restrictions remain valid. New definitions should author `domain`, `cost`, `req`,
 optional `reqAny`, full `history`, localized `name`/`desc`, `unlocks`, and `fx`.

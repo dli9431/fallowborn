@@ -217,10 +217,38 @@ the AI selection weight by six, and never interrupts an active project.
 
 ## Gameplay effects and caps
 
+### Prospective technology-impact review
+
+The completed post-revamp audit ends at `v1.127.1`. `FBDATA.techImpactReviews` is the
+forward-only authoring ledger: each independently gateable capability added or materially
+expanded afterward records `mode:'hard'|'soft'|'none'` and a rationale. Hard and soft
+entries name valid technology ids; hard entries also name a meaningful fallback. None
+entries name no technology. `FB.validateTechnologyData` validates this structure and its
+references. Runtime mods may add review entries under `techImpactReviews.features`, but
+arbitrary mod code is not required to classify itself. The ledger documents the decision;
+the owning definition's `requiresTech` or consumed `fx` remains runtime authority.
+
+Technology should change how the player acts more often than whether they can act. Across
+future additions, roughly 15â€“25% hard, 35â€“45% soft, and the remainder none is a review
+target rather than a validation quota. A hard gate is appropriate only for a specific,
+historically legible dependency with an optional capability, a worthwhile baseline
+alternative, reasonable player influence through research or advocacy, a visible exact
+lock, and grandfathering. Core progression, recovery, and personal/social play should
+normally be soft or none. Prefer an existing underused innovation before adding a node;
+every new node must immediately expose a consumed effect or unlock.
+
+Pure fixes, numeric tuning, localization, presentation, accessibility, tooling, and
+refactors need no ledger entry unless eligibility changes. An expansion updates the same
+entry or adds one for a separately gateable option. This procedural rule catches omissions;
+the validator can verify a declaration but cannot infer that arbitrary JavaScript introduced
+a semantic feature.
+
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
-schooling, household standards, careers, career specialties, enterprises, credit, and
-trade partnerships.
+schooling, household standards, careers, career specialties, enterprises, credit, trade
+partnerships, Estates policies, privileges, feudal-service charters, and event options.
+`FB.techRequirementStatus` is the shared all-of projection and exposes exact required and
+missing ids. Technology detail reverse discovery scans every one of those consumers.
 Warfare technologies alter the existing levy/archer/cavalry/retinue classes, overland
 movement, quality, siege progress, and composition; they do not add a second unit taxonomy.
 Seafaring and naval-organization technologies provide two army effects without adding
@@ -247,6 +275,16 @@ loses access with the sovereign technology relationship; an already issued chart
 its frozen numeric terms until expiry or scope invalidation. Both deeds declare
 `requiresTech:'guild_charters'`; the generic deed-status and UI paths therefore enforce
 and explain the same gate before their more specific eligibility checks.
+
+The first prospective review set gates Scutage policy and compact (`scutage`), formal
+Market Charters (`urban_markets` plus `authenticated_seals`), written Confirmation of
+Custom (`customary_law`), Consent of the Estates and Confirmation of Great Offices
+(`representative_estates`), the direct-vassal Charter of Liberties (`customary_law` plus
+`authenticated_seals`), and tournament jousting (`cavalry_lances`). Ordinary Estates
+redress remains available without Recorded Customary Law; only its additional written
+county confirmation depends on that technology. Existing terms, privileges, modifiers,
+contracts, and already-started political commitments remain in force after allegiance or
+technology changes.
 
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI

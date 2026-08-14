@@ -83,6 +83,18 @@ async function configureCrownedRealm(page) {
     s.realms.player.rank = 3;
     s.realms.player.liege = null;
     s.realms.player.capital = homeId;
+    var technology = FB.realmTechRecord(s, 'player');
+    [
+      'urban_markets', 'authenticated_seals',
+      'customary_law', 'representative_estates'
+    ].forEach(function (techId) {
+      if (technology.completed.indexOf(techId) < 0) {
+        technology.completed.push(techId);
+      }
+      if (technology.exposed.indexOf(techId) < 0) {
+        technology.exposed.push(techId);
+      }
+    });
     addTestVassal(vassalId, vassalCounty, 'Aldred March', 25);
     addTestVassal(constableId, counties[7], 'Baldric March', 20);
     addTestVassal(almonerId, counties[8], 'Cenric March', 20);
@@ -129,6 +141,18 @@ async function configureEstates(page, ids) {
     s.realms.player.rank = 1;
     s.realms.player.liege = setup.externalId;
     s.realms.player.capital = setup.homeId;
+    var technology = FB.realmTechRecord(s, setup.externalId);
+    [
+      'urban_markets', 'authenticated_seals',
+      'customary_law', 'representative_estates'
+    ].forEach(function (techId) {
+      if (technology.completed.indexOf(techId) < 0) {
+        technology.completed.push(techId);
+      }
+      if (technology.exposed.indexOf(techId) < 0) {
+        technology.exposed.push(techId);
+      }
+    });
     liege.obl = { aid:0.25, scutage:false, lastMotion:null };
     liege.war = null;
     s.council = null;

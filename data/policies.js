@@ -15,7 +15,7 @@ FBDATA.policies = {
   redress: {
     name:'Redress of the Aid',
     icon:'⚖',
-    desc:'If carried, the liege’s aid falls one step, and your home county’s custom is confirmed.',
+    desc:'If carried, the liege’s aid falls one step. Recorded Customary Law also confirms your home county’s custom in writing.',
     family:'aid',
     institution:'estates',
     proposer:'vassal',
@@ -59,6 +59,7 @@ FBDATA.policies = {
     repeal:'none',
     emergency:false,
     order:2,
+    requiresTech:'scutage',
     gate:'parliament_gate_scutage',
     posture:{ aidSlope:-60, martialSlope:2, traits:{
       brave:-10, craven:12, greedy:5, patient:4, wrathful:-6 } }
@@ -92,6 +93,7 @@ FBDATA.policies = {
     repeal:'none',
     emergency:false,
     order:4,
+    requiresTech:['urban_markets','authenticated_seals'],
     gate:'parliament_gate_market_charter',
     resultEvent:'parliament_market_charter_grant',
     posture:{ traits:{ greedy:6, generous:-4 } }
@@ -109,6 +111,7 @@ FBDATA.policies = {
     repeal:'none',
     emergency:false,
     order:5,
+    requiresTech:'customary_law',
     gate:'parliament_gate_local_custom',
     posture:{ traits:{ content:6, ambitious:-6, proud:4 } }
   },
@@ -125,6 +128,7 @@ FBDATA.policies = {
     repeal:'none',
     emergency:false,
     order:6,
+    requiresTech:'representative_estates',
     gate:'parliament_gate_revocation_consent',
     posture:{ traits:{ ambitious:-8, proud:6, deceitful:4 } }
   },

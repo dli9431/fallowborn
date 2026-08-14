@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.127.1';
+  FB.VERSION = '1.128.0';
   FB.CHANGELOG = [
+    { v: '1.128.0', date: '2026-08-14', changes: [
+      'Technology now governs select advanced institutional, charter, and tournament choices while preserving ordinary alternatives.'
+    ] },
     { v: '1.127.1', date: '2026-08-14', changes: [
       'Local-government dialogs now show clearer selections and keep confirmation and Back controls in consistent sticky footers.'
     ] },

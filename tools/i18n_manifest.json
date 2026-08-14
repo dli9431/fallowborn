@@ -38714,7 +38714,7 @@
       "glossary": [],
       "location": "data/policies.js",
       "source": {
-        "text": "If carried, the liege’s aid falls one step, and your home county’s custom is confirmed."
+        "text": "If carried, the liege’s aid falls one step. Recorded Customary Law also confirms your home county’s custom in writing."
       }
     },
     "policy.redress.name.default": {
@@ -38947,6 +38947,134 @@
       "location": "data/economy.js",
       "source": {
         "text": "Household Tutor"
+      }
+    },
+    "privilege.confirmed_custom.desc.default": {
+      "context": "privilege confirmed_custom, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "A county’s witnessed customs stand against unilateral alteration."
+      }
+    },
+    "privilege.confirmed_custom.name.default": {
+      "context": "privilege confirmed_custom, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Confirmed Local Custom"
+      }
+    },
+    "privilege.consent_of_estates.desc.default": {
+      "context": "privilege consent_of_estates, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "The liege is sworn to seek the assembly’s consent before new aids."
+      }
+    },
+    "privilege.consent_of_estates.name.default": {
+      "context": "privilege consent_of_estates, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Consent of the Estates"
+      }
+    },
+    "privilege.guild_monopoly.desc.default": {
+      "context": "privilege guild_monopoly, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "An exclusive guild charter with copied commercial and fiscal terms."
+      }
+    },
+    "privilege.guild_monopoly.name.default": {
+      "context": "privilege guild_monopoly, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Guild Monopoly"
+      }
+    },
+    "privilege.levy_exemption.desc.default": {
+      "context": "privilege levy_exemption, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "A county is sheltered from part of the ordinary muster for a fixed term."
+      }
+    },
+    "privilege.levy_exemption.name.default": {
+      "context": "privilege levy_exemption, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Levy Exemption"
+      }
+    },
+    "privilege.market_charter.desc.default": {
+      "context": "privilege market_charter, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "A county holds measured tolls and protected stalls under public seal."
+      }
+    },
+    "privilege.market_charter.name.default": {
+      "context": "privilege market_charter, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Market Charter"
+      }
+    },
+    "privilege.office_confirmation.desc.default": {
+      "context": "privilege office_confirmation, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "The Treasurer and Constable require a chartered council’s confirmation and hold protected fixed terms."
+      }
+    },
+    "privilege.office_confirmation.name.default": {
+      "context": "privilege office_confirmation, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Confirmation of Great Offices"
+      }
+    },
+    "privilege.sanctuary.desc.default": {
+      "context": "privilege sanctuary, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "A faith community’s witnessed sanctuary limits levy and coercive entry."
+      }
+    },
+    "privilege.sanctuary.name.default": {
+      "context": "privilege sanctuary, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Sanctuary"
+      }
+    },
+    "privilege.tax_concession.desc.default": {
+      "context": "privilege tax_concession, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "A county receives a bounded remission after coercive collection."
+      }
+    },
+    "privilege.tax_concession.name.default": {
+      "context": "privilege tax_concession, name, faith branch default.",
+      "glossary": [],
+      "location": "data/political_institutions.js",
+      "source": {
+        "text": "Tax Concession"
       }
     },
     "province.aachen.name.default": {
@@ -49302,6 +49430,16 @@
         "text": "{position} — {name}"
       }
     },
+    "src.07d3b984": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Feudal service charter"
+      }
+    },
     "src.07d9abe2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53844,6 +53982,16 @@
         "text": "distant right"
       }
     },
+    "src.12849509": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "Sanctuary"
+      }
+    },
     "src.1284ea8b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54263,6 +54411,16 @@
       ],
       "source": {
         "text": "Broken mod (bad JSON)"
+      }
+    },
+    "src.13608211": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": tech must be an array."
       }
     },
     "src.13612a9e": {
@@ -64475,6 +64633,16 @@
         "text": "Baltic-Finnic"
       }
     },
+    "src.2ad2864d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Allows the formal privilege {content}."
+      }
+    },
     "src.2ad63701": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68056,6 +68224,16 @@
         "text": "btn small contextual-help-link"
       }
     },
+    "src.339984b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "A county receives a bounded remission after coercive collection."
+      }
+    },
     "src.339b657a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69534,6 +69712,16 @@
         "text": "{count} eligible household workers."
       }
     },
+    "src.373e13ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That service charter is not recognized."
+      }
+    },
     "src.37465369": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70909,6 +71097,16 @@
       ],
       "source": {
         "text": "adoption predates first attestation."
+      }
+    },
+    "src.3aa45de0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Makes the Estates motion {content} available."
       }
     },
     "src.3aa9f27c": {
@@ -72484,7 +72682,8 @@
       "glossary": [],
       "location": [
         "data/modifiers.js",
-        "data/policies.js"
+        "data/policies.js",
+        "data/political_institutions.js"
       ],
       "source": {
         "text": "Market Charter"
@@ -75456,6 +75655,16 @@
         "text": "Preview policy"
       }
     },
+    "src.456bd449": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "A county’s witnessed customs stand against unilateral alteration."
+      }
+    },
     "src.456f87fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77637,6 +77846,16 @@
         "text": "The family attended the grave at a careful distance."
       }
     },
+    "src.4ab158ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Allows the service charter {content} when granting land."
+      }
+    },
     "src.4ab6b19b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78511,6 +78730,16 @@
       ],
       "source": {
         "text": "The purses stay shut. Your loyalty is noted — and so is your failure to deliver the hall."
+      }
+    },
+    "src.4cf26889": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology impact review"
       }
     },
     "src.4cf7a9c8": {
@@ -79648,6 +79877,16 @@
         "text": "{chance}% natural support chance."
       }
     },
+    "src.4fcb0199": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "A county is sheltered from part of the ordinary muster for a fixed term."
+      }
+    },
     "src.4fcdbbb5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79746,6 +79985,16 @@
       ],
       "source": {
         "text": "You keep your feet while better-known men lose theirs. The melee’s captains will remember your name."
+      }
+    },
+    "src.5016a6fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "Confirmation of Great Offices"
       }
     },
     "src.50196ec2": {
@@ -80012,7 +80261,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/policies.js"
+        "data/policies.js",
+        "data/political_institutions.js"
       ],
       "source": {
         "text": "Consent of the Estates"
@@ -81343,7 +81593,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/modifiers.js"
+        "data/modifiers.js",
+        "data/political_institutions.js"
       ],
       "source": {
         "text": "Levy Exemption"
@@ -82731,6 +82982,16 @@
       ],
       "source": {
         "text": "Learn the creature before commanding it."
+      }
+    },
+    "src.56e2ca09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": showWhenTechLocked must be a boolean."
       }
     },
     "src.56ea1388": {
@@ -89246,6 +89507,16 @@
         "text": "Prayer costs nothing; hail forgives nothing either."
       }
     },
+    "src.666d6ac8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "An exclusive guild charter with copied commercial and fiscal terms."
+      }
+    },
     "src.66712c4b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90900,6 +91171,16 @@
       ],
       "source": {
         "text": "Maximum dowry"
+      }
+    },
+    "src.6a3479c0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "Confirmed Local Custom"
       }
     },
     "src.6a38d01b": {
@@ -93105,6 +93386,16 @@
       ],
       "source": {
         "text": "Your sovereign determines the obedience recognized by every vassal in the realm."
+      }
+    },
+    "src.6f6a7b2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": missing technology"
       }
     },
     "src.6f726255": {
@@ -101333,6 +101624,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/technology.js",
         "js/ui_misc.js"
       ],
       "source": {
@@ -101368,6 +101660,16 @@
       ],
       "source": {
         "text": "The caravan master pays late and short."
+      }
+    },
+    "src.82ad5754": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": none reviews cannot name technology ids."
       }
     },
     "src.82b3869e": {
@@ -102771,6 +103073,16 @@
       ],
       "source": {
         "text": "Current household: {money:gold}; prestige {prestige}; piety {piety}; Common Voice {voice}."
+      }
+    },
+    "src.8594c2be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": mode must be hard, soft, or none."
       }
     },
     "src.859b510c": {
@@ -104962,6 +105274,16 @@
         "text": "The Pay Chest Is Light"
       }
     },
+    "src.8a93bcee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Makes a choice in {event} available."
+      }
+    },
     "src.8aa23e3f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106113,16 +106435,6 @@
       ],
       "source": {
         "text": "A Place in the Household"
-      }
-    },
-    "src.8d164a24": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/policies.js"
-      ],
-      "source": {
-        "text": "If carried, the liege’s aid falls one step, and your home county’s custom is confirmed."
       }
     },
     "src.8d1bb836": {
@@ -108303,6 +108615,16 @@
       ],
       "source": {
         "text": "Massed Longbow Tactics"
+      }
+    },
+    "src.9243d70f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": hard reviews require a fallback."
       }
     },
     "src.92505197": {
@@ -118255,6 +118577,16 @@
         "text": "Send to {lord} for soldiers."
       }
     },
+    "src.a9a6226d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "Guild Monopoly"
+      }
+    },
     "src.a9a831b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118646,6 +118978,16 @@
       ],
       "source": {
         "text": "Synagogue or charity school"
+      }
+    },
+    "src.ab14ea91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": rationale is required."
       }
     },
     "src.ab169476": {
@@ -122952,6 +123294,16 @@
       ],
       "source": {
         "text": "👍 Like"
+      }
+    },
+    "src.b4afbd4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology impact review baseline version is invalid."
       }
     },
     "src.b4b54bbf": {
@@ -129703,6 +130055,16 @@
         "text": "Exact faith"
       }
     },
+    "src.c5615b71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": hard and soft reviews require technology ids."
+      }
+    },
     "src.c562c25d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131005,6 +131367,16 @@
       ],
       "source": {
         "text": ": invalid confidence."
+      }
+    },
+    "src.c845d6d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/policies.js"
+      ],
+      "source": {
+        "text": "If carried, the liege’s aid falls one step. Recorded Customary Law also confirms your home county’s custom in writing."
       }
     },
     "src.c84db9f8": {
@@ -133167,7 +133539,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/modifiers.js"
+        "data/modifiers.js",
+        "data/political_institutions.js"
       ],
       "source": {
         "text": "Tax Concession"
@@ -134407,6 +134780,16 @@
         "text": "Pavia"
       }
     },
+    "src.d0fb43c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": ": showWhenTechLocked requires requiresTech."
+      }
+    },
     "src.d1021fc2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134918,6 +135301,16 @@
       ],
       "source": {
         "text": "Brindisi"
+      }
+    },
+    "src.d24e1ee8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "A faith community’s witnessed sanctuary limits levy and coercive entry."
       }
     },
     "src.d25e9de2": {
@@ -135909,6 +136302,16 @@
       ],
       "source": {
         "text": "You need another county before granting Roma away."
+      }
+    },
+    "src.d4bf52ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology impact review registry is invalid."
       }
     },
     "src.d4c7492d": {
@@ -141265,6 +141668,16 @@
         "text": "{count} total"
       }
     },
+    "src.e1889476": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "The Treasurer and Constable require a chartered council’s confirmation and hold protected fixed terms."
+      }
+    },
     "src.e18e9bc2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145010,6 +145423,16 @@
         "text": "Smoke on the home road, and the church bell ringing backwards from the next village: a hostile host is living off this land, and your holding lies in its path. They take what burns slowest — grain, beasts, tools — and leave the rest to the crows."
       }
     },
+    "src.ea226fbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Event option"
+      }
+    },
     "src.ea2898a6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146519,6 +146942,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/technology.js",
         "js/ui_misc.js"
       ],
       "source": {
@@ -148080,6 +148504,16 @@
         "text": "🏳 The host de-musters at {province} — {men} men return to the muster rolls."
       }
     },
+    "src.f152acc6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "A county holds measured tolls and protected stalls under public seal."
+      }
+    },
     "src.f154244b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149061,6 +149495,16 @@
         "text": "best: {skill} {value}"
       }
     },
+    "src.f412e305": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/political_institutions.js"
+      ],
+      "source": {
+        "text": "The liege is sworn to seek the assembly’s consent before new aids."
+      }
+    },
     "src.f41645db": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149316,6 +149760,16 @@
       ],
       "source": {
         "text": "Continue clerical service and meet the current faith’s office requirements."
+      }
+    },
+    "src.f4bd0d58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/technology.js"
+      ],
+      "source": {
+        "text": "Technology impact review feature table is invalid."
       }
     },
     "src.f4c07ef3": {
@@ -150430,6 +150884,16 @@
       ],
       "source": {
         "text": "Silver works even when your back does not."
+      }
+    },
+    "src.f76129e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/institutions.js"
+      ],
+      "source": {
+        "text": "That privilege is not recognized."
       }
     },
     "src.f7625406": {
@@ -160462,6 +160926,26 @@
         "text": "Allows households to establish {content}."
       }
     },
+    "ui:Allows the formal privilege {content}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "content"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Allows the formal privilege {content}."
+      }
+    },
+    "ui:Allows the service charter {content} when granting land.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "content"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Allows the service charter {content} when granting land."
+      }
+    },
     "ui:Almoner": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169608,6 +170092,26 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Make {destination} our permanent home"
+      }
+    },
+    "ui:Makes a choice in {event} available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "event"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Makes a choice in {event} available."
+      }
+    },
+    "ui:Makes the Estates motion {content} available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "content"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Makes the Estates motion {content} available."
       }
     },
     "ui:Makes the deed {content} available.": {
@@ -179183,6 +179687,14 @@
         "text": "That privilege is no longer active."
       }
     },
+    "ui:That privilege is not recognized.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/institutions.js",
+      "source": {
+        "text": "That privilege is not recognized."
+      }
+    },
     "ui:That recipient cannot receive a gift.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -179197,6 +179709,14 @@
       "location": "js/items.js",
       "source": {
         "text": "That ruler cannot receive a gift."
+      }
+    },
+    "ui:That service charter is not recognized.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That service charter is not recognized."
       }
     },
     "ui:That stake is not available.": {

@@ -19,6 +19,13 @@ async function startTournamentGame(page, testInfo) {
     s.player.gold = 100;
     s.date.season = 0;
     s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
+    var technology = FB.realmTechRecord(s);
+    if (technology.completed.indexOf('cavalry_lances') < 0) {
+      technology.completed.push('cavalry_lances');
+    }
+    if (technology.exposed.indexOf('cavalry_lances') < 0) {
+      technology.exposed.push('cavalry_lances');
+    }
     FB.ui.refresh();
   });
 }
@@ -84,7 +91,7 @@ test('faith variants rephrase the ceremony and swap the wager for patronage',
       var gentry = FB.eventById('tournament_invitation');
       function visibleCount() {
         return gentry.options.filter(function (o) {
-          return !o.require || FB.checkTrigger(s, o.require, {});
+          return FB.eventOptionStatus(s, gentry, o, {}).ready;
         }).length;
       }
 
@@ -154,6 +161,77 @@ test('the contests resolve through the existing battle chance and worn equipment
     expect(result.marAfter).toBe(result.marBefore);
   });
 
+test('jousting is visibly gated while the melee and social fallbacks remain',
+  async function ({ page }, testInfo) {
+    await startTournamentGame(page, testInfo);
+    var result = await page.evaluate(function () {
+      var s = FB.state;
+      var event = FB.eventById('tournament_invitation');
+      var technology = FB.realmTechRecord(s);
+      technology.completed = technology.completed.filter(function (id) {
+        return id !== 'cavalry_lances';
+      });
+      var joust = FB.eventOptionStatus(s, event, event.options[0], {});
+      var melee = FB.eventOptionStatus(s, event, event.options[1], {});
+      var before = FB.save.serialize();
+      var rngBefore = FB.getRngState();
+      var receipt = FB.resolveEventOption(
+        s, event, event.options[0], {}, { automated:false });
+      var unchanged = before === FB.save.serialize() &&
+        rngBefore === FB.getRngState();
+      var baseline = JSON.parse(FB.save.serialize());
+      var oldAuto = FB.game.auto;
+      var originalResolve = FB.resolveEventOption;
+      var autoresolvedIndex = null;
+      FB.resolveEventOption = function (state, resolvedEvent, option, ctx, meta) {
+        autoresolvedIndex = resolvedEvent.options.indexOf(option);
+        return originalResolve(state, resolvedEvent, option, ctx, meta);
+      };
+      FB.game.auto = {
+        all:true, minor:true, major:true, war:true, style:'first'
+      };
+      FB.ui.runEvents([{ id:event.id, ctx:{}, rnd:true }]);
+      FB.resolveEventOption = originalResolve;
+      FB.save.restore(JSON.parse(JSON.stringify(baseline)));
+      FB.game.auto = oldAuto;
+      return {
+        joust:joust,
+        melee:melee,
+        receipt:receipt,
+        autoresolvedIndex:autoresolvedIndex,
+        unchanged:unchanged
+      };
+    });
+
+    expect(result.joust).toMatchObject({
+      visible:true,
+      ready:false,
+      techLocked:true,
+      missingTech:['cavalry_lances']
+    });
+    expect(result.joust.reason).toContain('Couched Cavalry Lance');
+    expect(result.melee.ready).toBe(true);
+    expect(result.receipt).toBe(false);
+    expect(result.autoresolvedIndex).toBe(1);
+    expect(result.unchanged).toBe(true);
+
+    await page.evaluate(function () {
+      FB.ui.runEvents([{
+        id:'tournament_invitation', ctx:{}, rnd:true
+      }]);
+    });
+    var lockedJoust = page.locator('#ev-options .evopt', {
+      hasText:'Ride in the joust'
+    });
+    await expect(lockedJoust).toBeVisible();
+    await expect(lockedJoust).toBeDisabled();
+    await expect(lockedJoust).toContainText('Requires Couched Cavalry Lance');
+    await expect(lockedJoust).not.toContainText('Open the technology entry');
+    await expect(page.locator('#ev-options .evopt', {
+      hasText:'Fight in the melee'
+    })).toBeEnabled();
+  });
+
 test('options with unmet purses stay hidden and cannot spend unavailable gold',
   async function ({ page }, testInfo) {
     await startTournamentGame(page, testInfo);
@@ -164,7 +242,7 @@ test('options with unmet purses stay hidden and cannot spend unavailable gold',
       // the same filter autoresolve uses before choosing
       function visible() {
         return gentry.options.filter(function (o) {
-          return !o.require || FB.checkTrigger(s, o.require, {});
+          return FB.eventOptionStatus(s, gentry, o, {}).ready;
         }).map(function (o) { return gentry.options.indexOf(o); });
       }
       p.gold = 0;
@@ -300,7 +378,7 @@ test('visible and autoresolved tournament choices use the same effects',
       var s = FB.state;
       event = FB.eventById('tournament_invitation');
       var opts = event.options.filter(function (o) {
-        return !o.require || FB.checkTrigger(s, o.require, {});
+        return FB.eventOptionStatus(s, event, o, {}).ready;
       });
       var pick = opts[0];
       var p = FB.namedChance(s, pick.chance);

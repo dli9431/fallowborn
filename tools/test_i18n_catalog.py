@@ -20,5 +20,21 @@ class StaticHtmlExtractionTests(unittest.TestCase):
         self.assertEqual(stripped.count('\n'), source.count('\n'))
 
 
+class StructuredDataExtractionTests(unittest.TestCase):
+    def test_privilege_display_fields_use_the_privilege_namespace(self):
+        inventory = i18n_catalog.Inventory()
+
+        i18n_catalog.extract_structured(inventory)
+
+        self.assertEqual(
+            inventory.entries['privilege.market_charter.name.default']['text'],
+            'Market Charter',
+        )
+        self.assertIn(
+            'privilege.office_confirmation.desc.default',
+            inventory.entries,
+        )
+
+
 if __name__ == '__main__':
     unittest.main()

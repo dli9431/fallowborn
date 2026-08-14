@@ -202,6 +202,26 @@ about to touch, and update it when you change that system.**
 - `docs/designs/i18n.md` — localization catalogs, message descriptors, locale lifecycle.
 - `docs/designs/music.md` - generated soundtrack catalog, contextual playback, and offline banks.
 
+### Technology-impact review
+
+Every new or materially expanded player/world capability must make an explicit technology
+impact decision before implementation. Record one entry per independently gateable
+capability in `FBDATA.techImpactReviews` and explain the same decision in the owning design
+doc. Use `hard` when technology blocks an optional advanced capability, `soft` when the
+baseline remains available but technology improves or extends it, and `none` when no
+credible dependency belongs there. A hard gate must name a meaningful ungated fallback,
+remain visible with its exact missing technology, and grandfather already-created records
+or in-flight commitments. Prefer soft interaction for core play, recovery, personal/social
+actions, or mechanics whose research is controlled by AI. Do not invent a weak dependency
+to fill the tree.
+
+The forward-review baseline is `v1.127.1`; do not backfill older capabilities merely to
+satisfy the ledger. Pure fixes, numeric balance changes, localization, presentation,
+accessibility, documentation, tooling, and internal refactors need no entry unless they
+change gameplay eligibility. An expansion updates an existing entry when it changes the
+same capability, or adds an entry when it introduces a separately gateable option. Tests
+must cover the declared behavior and the technology validator must accept the ledger.
+
 ## Code style conventions
 
 - Classic scripts in the house `function(){}` style; each engine file is an IIFE that

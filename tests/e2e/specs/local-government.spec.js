@@ -130,6 +130,11 @@ test('four service charters produce exact distinct tax, levy, and political term
       s.realms.player.alive = true;
       s.realms.player.rank = 3;
       s.realms.player.liege = null;
+      var technology = FB.realmTechRecord(s, 'player');
+      ['scutage','customary_law','authenticated_seals'].forEach(function (id) {
+        if (technology.completed.indexOf(id) < 0) technology.completed.push(id);
+        if (technology.exposed.indexOf(id) < 0) technology.exposed.push(id);
+      });
       var ids = Object.keys(FBDATA.feudalServiceCharters);
       var rows = {};
       var oldRebelSupport = FB.rebelSupportMultiplier;
@@ -235,6 +240,11 @@ test('fixed and life tenure revert through escheat while hereditary contracts su
       FB.foundPlayerRealm(s);
       s.realms.player.alive = true;
       s.realms.player.rank = 3;
+      var technology = FB.realmTechRecord(s, 'player');
+      ['scutage','customary_law','authenticated_seals'].forEach(function (id) {
+        if (technology.completed.indexOf(id) < 0) technology.completed.push(id);
+        if (technology.exposed.indexOf(id) < 0) technology.exposed.push(id);
+      });
       FB.grantCounty(s, counties[0], 'host_duty', 'term');
       var termId = 'pv_' + counties[0];
       var term = s.realms[termId].feudalContract;
@@ -342,6 +352,90 @@ test('fixed and life tenure revert through escheat while hereditary contracts su
     expect(result.legacy.charterId).toBe('customary_service');
     expect(result.legacy.tenure).toBe('hereditary');
     expect(result.rngPreserved).toBe(true);
+  });
+
+test('advanced service charters gate new grants and preserve existing contracts',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    var result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var home = p.provinceId;
+      var counties = FB.world.provs.filter(function (province) {
+        return !province.wasteland && province.id !== home;
+      }).slice(0, 2).map(function (province) { return province.id; });
+      p.tier = 6;
+      p.provs = [home].concat(counties);
+      p.liege = null;
+      [home].concat(counties).forEach(function (pid) {
+        s.owner[pid] = 'player';
+        s.holder[pid] = 'player';
+        s.dev[pid] = 8;
+      });
+      FB.foundPlayerRealm(s);
+      s.realms.player.alive = true;
+      s.realms.player.rank = 3;
+      s.realms.player.liege = null;
+      var technology = FB.realmTechRecord(s, 'player');
+      var gated = ['scutage','customary_law','authenticated_seals'];
+      technology.completed = technology.completed.filter(function (id) {
+        return gated.indexOf(id) < 0;
+      });
+      var scutage = FB.feudalCharterStatus(s, 'scutage_compact');
+      var liberties = FB.feudalCharterStatus(s, 'charter_of_liberties');
+      var before = FB.save.serialize();
+      var rngBefore = FB.getRngState();
+      var denied = FB.grantCounty(
+        s, counties[1], 'scutage_compact', 'hereditary');
+      var unchanged = before === FB.save.serialize() &&
+        rngBefore === FB.getRngState();
+      technology.completed.push('scutage');
+      var granted = FB.grantCounty(
+        s, counties[1], 'scutage_compact', 'hereditary');
+      technology.completed = technology.completed.filter(function (id) {
+        return id !== 'scutage';
+      });
+      var contract = FB.feudalContractOf(s, 'pv_' + counties[1]);
+      FB.ui.showGrantTerms('county', counties[0], null, null);
+      return {
+        lockedCounty:counties[0],
+        scutage:scutage,
+        liberties:liberties,
+        denied:denied,
+        unchanged:unchanged,
+        granted:granted,
+        contract:contract
+      };
+    });
+
+    expect(result.scutage).toMatchObject({
+      ready:false, techLocked:true, missingTech:['scutage']
+    });
+    expect(result.scutage.reason).toContain('Scutage');
+    expect(result.liberties.missingTech).toEqual([
+      'customary_law', 'authenticated_seals'
+    ]);
+    expect(result.liberties.reason).toContain('Recorded Customary Law');
+    expect(result.liberties.reason).toContain('Authenticated Seals');
+    expect(result.denied).toBe(false);
+    expect(result.unchanged).toBe(true);
+    expect(result.granted).toBe(true);
+    expect(result.contract).toMatchObject({
+      charterId:'scutage_compact', tenure:'hereditary'
+    });
+
+    var scutageLink = page.locator('[data-grant-charter-tech="scutage"]');
+    await expect(scutageLink).toBeVisible();
+    await expect(scutageLink).toContainText('Requires Scutage');
+    await expect(scutageLink).toContainText('Open the technology entry');
+    await expect(page.locator(
+      '[data-grant-charter="scutage_compact"]')).toHaveCount(0);
+    var libertiesLink = page.locator(
+      '[data-grant-charter-tech="customary_law"]');
+    await expect(libertiesLink).toContainText('Recorded Customary Law');
+    await expect(libertiesLink).toContainText('Authenticated Seals');
+    await scutageLink.click();
+    await expect(page.getByRole('heading', { name:/Scutage/ })).toBeVisible();
   });
 
 test('Castellan is an appointed tier-three office with renewal and clean demotion paths',
@@ -583,6 +677,11 @@ test('grant terms and local council state are visible before and after confirmat
       FB.foundPlayerRealm(s);
       s.realms.player.alive = true;
       s.realms.player.rank = 3;
+      var technology = FB.realmTechRecord(s, 'player');
+      ['scutage','customary_law','authenticated_seals'].forEach(function (id) {
+        if (technology.completed.indexOf(id) < 0) technology.completed.push(id);
+        if (technology.exposed.indexOf(id) < 0) technology.exposed.push(id);
+      });
       FB.ui.showGrantLand();
       return { county:county };
     });

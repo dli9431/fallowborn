@@ -195,6 +195,18 @@ window.FB = window.FB || {};
         reason:FB.T('That motion is not recognized by the Estates.')
       };
     }
+    if (def.requiresTech && FB.techRequirementStatus) {
+      const technology = FB.techRequirementStatus(state, def.requiresTech);
+      if (!technology.ready) {
+        return {
+          ready:false,
+          techLocked:true,
+          requiredTech:technology.requirements,
+          missingTech:technology.missing,
+          reason:FB.techRequirementReason(state, def.requiresTech)
+        };
+      }
+    }
     const politics = FB.politicalSummary
       ? FB.politicalSummary(state) : null;
     if (!politics) {
@@ -276,6 +288,9 @@ window.FB = window.FB || {};
       locationId:state.player.provinceId,
       pledges:{},
       lobby:{ used:false, blocId:null, success:null },
+      technologyApproved:true,
+      customaryLawAtStart:FB.techRequirementMet
+        ? FB.techRequirementMet(state, 'customary_law') : false,
       result:null
     };
     return true;
@@ -424,7 +439,9 @@ window.FB = window.FB || {};
     if (FB.isRealmAtWar(state, state.player.liege)) {
       out.push('parliament_subsidy', 'parliament_levy_concession');
     } else {
-      if (!has('market_charter') && !has('contested_tolls')) {
+      if ((!FB.techRequirementMet || FB.techRequirementMet(state,
+          ['urban_markets','authenticated_seals'])) &&
+          !has('market_charter') && !has('contested_tolls')) {
         out.push('parliament_market_charter');
       }
       if (!has('levy_exemption') && !has('settlement_grudge')) {
@@ -522,13 +539,23 @@ window.FB = window.FB || {};
     // the hall refuses the crown's demand; the crown remembers the ringleader
     adjustLiegeStanding(state, -12, 'aid_hike_rebuff');
   };
-  FB.fns.parliament_redress_won = function (state, ctx) {
+  FB.fns.parliament_redress_won = function (state, ctx, ev) {
+    const pending = state.politics && state.politics.pendingMotion;
     const aid = FB.parliamentAidAdjust(state, -1);
     if (aid === null) {
       finishPendingMotion(state, ctx || {});
       return;
     }
     delete state.player.flags.plot_obligation_evidence;
+    /* Redress itself is foundational and remains available. Written local
+       confirmation is the optional advanced result. Old pending campaigns
+       predate the snapshot and are grandfathered. */
+    if (pending && pending.customaryLawAtStart !== false &&
+        ctx && ctx.locationId && FB.addModifier) {
+      FB.addModifier(state, 'custom_confirmed', ctx.locationId, {
+        sourceEventId:ev && ev.id
+      });
+    }
     // the liege is bound by the vote — and displeased with its author
     adjustLiegeStanding(state, -5, 'redress_won');
     FB.news(state, FB.msg('news.parliament.aid_down',

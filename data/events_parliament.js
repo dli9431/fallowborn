@@ -43,7 +43,7 @@ FBDATA.events.push(
   text:'Your own parchment is read to the assembled lords: a motion for redress of grievances — that the aid exacted by {liege} is heavier than custom allows, and should be lowered. The benches murmur. The liege’s face gives nothing away, which says everything.',
   options:[
     { label:'Receive the carried vote.', desc:'It carries — first by voices, then by a show of hands the steward cannot ignore. The aid falls, and the liege’s courtesy promises nothing good.', require:{ custom:'parliament_motion_passed' },
-      effects:{ custom:'parliament_redress_won', addModifier:{id:'custom_confirmed'}, prestige:5, traitProgress:{id:'moot_speaker'}, log:'Won redress of grievances in the estates.' } },
+      effects:{ custom:'parliament_redress_won', prestige:5, traitProgress:{id:'moot_speaker'}, log:'Won redress of grievances in the estates.' } },
     { label:'Accept the failed vote.', desc:'The hands stay down. Your motion dies in a long silence, and the liege’s smile finds you across the hall.', require:{ custom:'parliament_motion_failed' },
       effects:{ custom:'parliament_redress_lost', prestige:-4, removeTrait:'moot_speaker' } }
   ]},
@@ -183,11 +183,13 @@ FBDATA.events.push(
   options:[
     { label:'Accept a fair charter and help enforce it. ({money:10})',
       require:{ goldMin:10 },
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
       desc:'Spend locally, gain the liege’s notice, and put the bargain in writing.',
       effects:{ gold:-10, opinionLiege:5, popularOpinion:3,
         addModifier:{id:'market_charter'} } },
     { label:'Demand lower aid in return for your support.',
       require:{ custom:'parliament_redress_possible' },
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
       desc:'Put the trade bargain to the benches as a service concession.',
       chance:'parliament_vote',
       success:{ text:'The benches join trade and redress in one settlement. The charter passes, and the liege’s aid falls a step.',
@@ -228,6 +230,7 @@ FBDATA.events.push(
   options:[
     { label:'Settle the disputed tolls. ({money:15})',
       require:{ goldMin:15, hasModifier:'contested_tolls' },
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
       desc:'Compensate the rival claimants, end the toll dispute, and replace it with a measured charter.',
       effects:{ gold:-15, popularOpinion:5,
         removeModifier:{id:'contested_tolls'},
@@ -235,6 +238,7 @@ FBDATA.events.push(
         log:'Settled the county’s disputed tolls before the estates.' } },
     { label:'Hear the grievance and confirm the old custom. ({money:10})',
       require:{ goldMin:10, hasModifier:'settlement_grudge' },
+      requiresTech:'customary_law', showWhenTechLocked:true,
       desc:'Pay for redress, end the grudge, and bind the judgment by charter.',
       effects:{ gold:-10, popularOpinion:6,
         removeModifier:{id:'settlement_grudge'},

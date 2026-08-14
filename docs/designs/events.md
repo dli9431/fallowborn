@@ -153,6 +153,16 @@ faith-appropriate. Attendance and withdrawal choices trade host Standing for saf
 Participation only: hosting, brackets, entrant rosters, and AI tournament calendars
 are deliberately deferred.
 
+The joust option requires the effective sovereign's `cavalry_lances`. It remains visible
+when locked: gentry receive the exact technology name, while tier-3+ rulers can open its
+detail. Melee, wagers or patronage, attendance, and withdrawal remain available, so an AI
+research choice never removes the invitation itself.
+
+Formal market-charter choices in Council, Estates, and the coastal wreck's market
+compact require both Permanent Urban Markets and Authenticated Seals. Written
+confirmation of local custom requires Recorded Customary Law. Each affected story
+retains at least one ordinary response when the formal option is locked.
+
 **Social audience is explicit.** `FB.societalRole` maps tier 0 to `serf`, tier 1
 to `commoner`, tier 2 to `gentry`, tiers 3–5 to `lord`, and tiers 6–7 to
 `crowned`. Event triggers and option requirements may use `societalRoles`; vassal,
@@ -292,6 +302,15 @@ consequence. Favorable
 rewards remain qualitative until resolution. Numeric and named chance formulas render only as
 Very likely (80%+), Likely (60–79%), Even (40–59%), Risky (20–39%), or Long shot (under 20%);
 branch narrative is never shown early.
+
+An option may declare all-of `requiresTech` and `showWhenTechLocked:true`.
+`FB.eventOptionStatus` combines its ordinary `require` with the technology requirement.
+Ordinary failed requirements retain the established hidden behavior; an opted-in missing
+technology instead keeps the option visible, disabled as a choice, and annotated with the
+exact missing ids. Tier-3+ players may use that row as a technology-detail link.
+Autoresolve filters on the same ready status. Direct resolution rechecks the technology
+portion before any RNG or mutation, so a custom caller cannot bypass a hard gate; ordinary
+`require` remains an authored-flow condition for compatibility with direct event tooling.
 
 `FB.resolveEventOption` is the single manual/autoresolve authority. It rolls once, consumes
 one-shot chance bonuses, applies the top-level effects and then the selected branch in the

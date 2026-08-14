@@ -94,7 +94,11 @@ window.FB = window.FB || {};
   const statBreakdownHtml = SH.statBreakdownHtml;
   const techCostEstimateText = SH.techCostEstimateText;
   const techEstimatedSeasons = SH.techEstimatedSeasons;
-  const techRequirementText = SH.techRequirementText;
+  function techRequirementText(s, requirement) {
+    return FB.techRequirementReason
+      ? FB.techRequirementReason(s, requirement)
+      : SH.techRequirementText(s, requirement);
+  }
   const technologyName = SH.technologyName;
   const terrainName = SH.terrainName;
   const traitClassName = SH.traitClassName;
@@ -285,7 +289,9 @@ window.FB = window.FB || {};
     UI.autoResolving = true;
     FB.markFired(s, ev);
     let opts = (ev.options || []).filter(function (o) {
-      return !o.require || FB.checkTrigger(s, o.require, ctx);
+      return FB.eventOptionStatus
+        ? FB.eventOptionStatus(s, ev, o, ctx).ready
+        : (!o.require || FB.checkTrigger(s, o.require, ctx));
     });
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
     let pick = opts[0];
@@ -624,12 +630,19 @@ window.FB = window.FB || {};
       }
     }
     let opts = (ev.options || []).filter(function (o) {
-      return !o.require || FB.checkTrigger(s, o.require, ctx);
+      return FB.eventOptionStatus
+        ? FB.eventOptionStatus(s, ev, o, ctx).visible
+        : (!o.require || FB.checkTrigger(s, o.require, ctx));
     });
     if (!opts.length) opts = [{ label: 'So it goes.', effects: {} }];
     const usesDetailsButton = eventChoiceUsesDisclosure();
     for (let i = 0; i < opts.length; i++) {
       const o = opts[i];
+      const optionStatus = FB.eventOptionStatus
+        ? FB.eventOptionStatus(s, ev, o, ctx)
+        : { ready:true, techLocked:false, missingTech:[] };
+      const technologyLink = optionStatus.techLocked &&
+        optionStatus.missingTech.length && FB.techUiRelevant(s);
       /* original index (not the filtered position) keys the overlay stably */
       const oi = ev.options ? ev.options.indexOf(o) : -1;
       const preview = FB.previewEventOption(s, ev, o, ctx);
@@ -638,14 +651,28 @@ window.FB = window.FB || {};
       row.className = 'event-choice' + (usesDetailsButton ? ' has-details' : '');
       const btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'evopt';
+      btn.className = 'evopt' +
+        (optionStatus.techLocked ? ' tech-locked-link' : '');
+      btn.disabled = !optionStatus.ready && !technologyLink;
       btn.setAttribute('aria-describedby', detailsId);
       btn.innerHTML = hintFor(i) +
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
-        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '');
-      (function (opt) {
-        btn.addEventListener('click', function () { if (eventInputGuarded()) return; chooseOption(ev, opt, ctx); });
-      })(o);
+        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '') +
+        (optionStatus.techLocked ? '<span class="odesc">' +
+          esc(optionStatus.reason) + (technologyLink
+            ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
+          '</span>' : '');
+      (function (opt, status) {
+        btn.addEventListener('click', function () {
+          if (eventInputGuarded()) return;
+          if (!status.ready) {
+            if (status.techLocked && status.missingTech.length &&
+                FB.techUiRelevant(s)) UI.showTechDetail(status.missingTech[0]);
+            return;
+          }
+          chooseOption(ev, opt, ctx);
+        });
+      })(o, optionStatus);
       const details = document.createElement('div');
       details.id = detailsId;
       details.className = 'event-choice-details hidden';
@@ -685,6 +712,8 @@ window.FB = window.FB || {};
 
   function chooseOption(ev, opt, ctx) {
     const s = FB.state;
+    if (FB.eventOptionStatus &&
+        !FB.eventOptionStatus(s, ev, opt, ctx).ready) return false;
     if (!s.player.flags) s.player.flags = {};
     s.player.flags.tut_event = 1; // First-steps checklist: answered an event
     if (ev.nameChild && ctx.childId) {
@@ -696,6 +725,7 @@ window.FB = window.FB || {};
       }
     }
     const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false });
+    if (!receipt) return false;
     if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
     nextEvent();
   }
@@ -5702,6 +5732,10 @@ window.FB = window.FB || {};
     const s = FB.state;
     charterId = FBDATA.feudalServiceCharters[charterId]
       ? charterId : 'customary_service';
+    if (FB.feudalCharterStatus &&
+        !FB.feudalCharterStatus(s, charterId).ready) {
+      charterId = 'customary_service';
+    }
     tenure = tenure === 'life' || tenure === 'term'
       ? tenure : 'hereditary';
     const selected = FB.feudalGrantPreview(s, kind, id, charterId, tenure);
@@ -5723,6 +5757,10 @@ window.FB = window.FB || {};
     for (const cid in FBDATA.feudalServiceCharters) {
       const def = FBDATA.feudalServiceCharters[cid];
       const preview = FB.feudalGrantPreview(s, kind, id, cid, tenure);
+      const status = FB.feudalCharterStatus
+        ? FB.feudalCharterStatus(s, cid) : { ready:true, missingTech:[] };
+      const technologyLink = status.techLocked &&
+        status.missingTech.length && FB.techUiRelevant(s);
       const political = def.extraordinaryTaxExempt
         ? FB.T('extraordinary-tax exempt · breakaway ×{multiplier}', {
           multiplier:def.breakawayMultiplier
@@ -5731,14 +5769,21 @@ window.FB = window.FB || {};
           multiplier:def.breakawayMultiplier
         });
       h += '<button type="button" class="actionbtn' +
-        (cid === charterId ? ' focused' : '') + '" data-grant-charter="' +
-        esc(cid) + '" aria-pressed="' + (cid === charterId ? 'true' : 'false') +
+        (cid === charterId ? ' focused' : '') +
+        (status.techLocked ? ' tech-locked-link' : '') + '"' +
+        (status.ready ? ' data-grant-charter="' + esc(cid) + '"' :
+          (technologyLink ? ' data-grant-charter-tech="' +
+            esc(status.missingTech[0]) + '"' : ' disabled')) +
+        ' aria-pressed="' + (cid === charterId ? 'true' : 'false') +
         '">' + def.icon + ' ' + esc(feudalCharterName(s, cid)) +
         '<span class="adesc">' + esc(FB.T(
           '{money:gold}/season · {men} soldiers · {political}', {
             gold:Math.round(preview.tax * 100) / 100,
             men:Math.round(preview.levy), political:political
-          })) + '</span></button>';
+          })) + (status.techLocked
+            ? ' ' + esc(status.reason) + (technologyLink
+              ? ' ' + esc(FB.T('Open the technology entry.')) : '')
+            : '') + '</span></button>';
     }
     h += '</div><div class="panelh">' + esc(tenureLabel) + '</div>' +
       '<div class="gm-list" role="group" aria-label="' +
@@ -5807,6 +5852,11 @@ window.FB = window.FB || {};
     $('grant-terms-back').addEventListener('click', function () {
       modalHistoryBack(function () {
         UI.showGrantLandRecipients(kind, id, returnContext);
+      });
+    });
+    document.querySelectorAll('[data-grant-charter-tech]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showTechDetail(button.dataset.grantCharterTech);
       });
     });
   };
@@ -7964,8 +8014,15 @@ window.FB = window.FB || {};
       for (const policy of policies) {
         const status = FB.parliamentMotionStatus(s, policy.id);
         const forecast = forecasts[policy.id] || null;
-        h += '<button class="actionbtn" data-motion="' + esc(policy.id) + '"' +
-          (status.ready ? '' : ' disabled') + '>' +
+        const technologyLink = status.techLocked &&
+          status.missingTech && status.missingTech.length && FB.techUiRelevant(s);
+        h += '<button class="actionbtn' +
+          (status.techLocked ? ' tech-locked-link' : '') + '"' +
+          (status.techLocked
+            ? (technologyLink ? ' data-motion-tech="' +
+              esc(status.missingTech[0]) + '"' : ' disabled')
+            : ' data-motion="' + esc(policy.id) + '"' +
+              (status.ready ? '' : ' disabled')) + '>' +
           (policy.def.icon ? esc(policy.def.icon) + ' ' : '') +
           esc(FB.T('Propose: {policy} ({money:cost})', {
             policy:politicalMotionName(policy.id),
@@ -7973,6 +8030,7 @@ window.FB = window.FB || {};
           })) + '<span class="adesc">' +
           esc(status.reason || (politicalTotalsText(forecast) +
             '. ' + politicalPolicyDesc(policy.id))) +
+          (technologyLink ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
           '</span></button>';
       }
     } else if (activeForecast) {
@@ -8046,6 +8104,11 @@ window.FB = window.FB || {};
       btn.addEventListener('click', function () {
         if (!FB.parliamentBeginMotion(s, btn.dataset.motion)) return;
         UI.showParliament(returnView, true);
+      });
+    });
+    document.querySelectorAll('[data-motion-tech]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showTechDetail(btn.dataset.motionTech);
       });
     });
     document.querySelectorAll('[data-lobby-bloc]').forEach(function (btn) {
@@ -13007,11 +13070,18 @@ window.FB = window.FB || {};
       kind === 'career' ? FBDATA.careers :
       kind === 'enterprise' ? FBDATA.enterprises :
       kind === 'schooling' ? FBDATA.schooling :
-      kind === 'householdStandard' ? FBDATA.householdStandards : null;
+      kind === 'householdStandard' ? FBDATA.householdStandards :
+      kind === 'policy' ? FBDATA.policies :
+      kind === 'privilege' ? FBDATA.privileges :
+      kind === 'feudalServiceCharter' ? FBDATA.feudalServiceCharters : null;
     const dataKind = kind === 'building' ? 'building' :
       kind === 'career' ? 'career' :
       kind === 'enterprise' ? 'enterprise' :
-      kind === 'schooling' ? 'schooling' : 'householdStandard';
+      kind === 'schooling' ? 'schooling' :
+      kind === 'policy' ? 'policy' :
+      kind === 'privilege' ? 'privilege' :
+      kind === 'feudalServiceCharter' ? 'feudalServiceCharter' :
+      'householdStandard';
     if (table && table[target]) {
       const content = dt(s, dataKind, target, table[target], 'name');
       if (kind === 'building') {
@@ -13025,6 +13095,19 @@ window.FB = window.FB || {};
       }
       if (kind === 'schooling') {
         return FB.T('Makes {content} available for children.', { content:content });
+      }
+      if (kind === 'policy') {
+        return FB.T('Makes the Estates motion {content} available.', {
+          content:content
+        });
+      }
+      if (kind === 'privilege') {
+        return FB.T('Allows the formal privilege {content}.', { content:content });
+      }
+      if (kind === 'feudalServiceCharter') {
+        return FB.T('Allows the service charter {content} when granting land.', {
+          content:content
+        });
       }
       return FB.T('Makes the {content} household standard available.', { content:content });
     }
@@ -13060,7 +13143,10 @@ window.FB = window.FB || {};
       { kind:'building', data:FBDATA.buildings },
       { kind:'career', data:FBDATA.careers },
       { kind:'enterprise', data:FBDATA.enterprises },
-      { kind:'schooling', data:FBDATA.schooling }
+      { kind:'schooling', data:FBDATA.schooling },
+      { kind:'policy', data:FBDATA.policies },
+      { kind:'privilege', data:FBDATA.privileges },
+      { kind:'feudalServiceCharter', data:FBDATA.feudalServiceCharters }
     ];
     for (const entry of tables) {
       for (const target in (entry.data || {})) {
@@ -13119,6 +13205,17 @@ window.FB = window.FB || {};
       add('action:' + action.id, FB.T('Makes the deed {content} available.', {
         content:dt(s, 'action', action.id, action, 'label')
       }));
+    }
+    for (const event of (FBDATA.events || [])) {
+      for (let optionIndex = 0; optionIndex < (event.options || []).length;
+          optionIndex++) {
+        const option = event.options[optionIndex];
+        if (!techRequiresId(option.requiresTech, id)) continue;
+        add('event-option:' + event.id + ':' + optionIndex,
+          FB.T('Makes a choice in {event} available.', {
+            event:FB.eventText(s, s.player.charId, event, 'title', {})
+          }));
+      }
     }
     return out;
   }
