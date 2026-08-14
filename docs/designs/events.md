@@ -57,6 +57,20 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+**Guild-path stories stay declarative.** An event may use
+`trigger.career:{profession,specialization,guildRankMin,guildStandingMin}` to require
+the protagonist's current working career. This is distinct from broad `professions`:
+landed protagonists retain their calling as biography but cannot receive active-work
+guild stories. Craft and Trade paths each have a small weighted, seasonal-cooldown
+pool whose choices exchange coin, Guild Standing, prestige, skill, or a normal local
+modifier. `guildStanding:n` is a clamp-aware declarative effect on the active guild
+career. There is no guild-day tick, settlement membership list, or generated guild
+population.
+
+The rare market invitation is also an ordinary cooldown-controlled event. Its custom
+effect opens the same bounded household auction as the deed; it does not start a
+separate event chain or market simulator.
+
 Faith fracture uses that same data boundary. `foundFaith` validates and stores a
 JSON-safe definition, optionally converts the founder, household, and player realm, and
 places the resulting id in `ctx.faithId`. A following `faithRelation` effect may refer to

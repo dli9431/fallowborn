@@ -42,6 +42,14 @@ It shows the see, tenure, authority and investiture policy, Papal recognition an
 episcopal focus, temporalities, office piety, household retinue, non-hereditary succession,
 and the four church powers with their costs and cooldowns.
 
+The Work picker presents eligible Craft and Trade **Guild paths** beside existing learned
+career examinations. Each induction button names its fixed fee and all unmet Guildmaster,
+Guild Standing, Stewardship, and technology gates. The Deeds panel offers **Attend
+auction…** only when a town/city market can present one valid bounded lot. The auction
+sheet shows the exact current call and round, keeps unaffordable bids visibly disabled,
+and offers a deliberate leave control; countered bids replace the same modal view.
+Opening and closing it uses the generic modal's normal activating-control restoration.
+
 **Keyboard support is a requirement** (`js/keys.js` + focus management in `ui_misc.js`): the game
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via

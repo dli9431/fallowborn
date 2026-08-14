@@ -951,6 +951,13 @@ FBDATA.balance = {
   careerExamBaseChance:0.55, careerExamLearningBonus:0.04,
   careerExamSkillBonus:0.02, careerExamMaxChance:0.90,
   careerExamCooldownDays:360, learnedPractitionerMortality:0.002,
+  /* Bounded household auctions: a market-day deed creates exactly one
+     saved lot and immediate rival. The rival's maximum is rolled once and
+     every player bid is a multiple of the fixed increment. */
+  auctionLotWeights:{ item:6, enterprise:3, claim:1 },
+  auctionOpeningBidRatio:0.60, auctionBidIncrementRatio:0.10,
+  auctionRivalMaxRatio:[1.10,1.90], auctionCountyClaimValue:100,
+  auctionCooldownDays:360, auctionMaxBidRounds:3,
   /* a rich house keeps its children better fed, watered, and warmed: childhood
      mortality falls by this fraction per station above serf, and each station
      gives a yearly chance the child grows hardier (health +1, up to 8) */

@@ -3212,6 +3212,103 @@ window.FB = window.FB || {};
     });
   };
 
+  /* ================= bounded market auction ================= */
+  UI.showAuctionVenuePicker = function (venues) {
+    const s = FB.state;
+    venues = venues || (FB.auctionVenues ? FB.auctionVenues(s) : []);
+    if (!venues.length) return;
+    if (venues.length === 1) {
+      if (FB.beginAuction(s, venues[0])) UI.showAuction();
+      return;
+    }
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose the market whose auction you will attend. The invitation is annual, but the bidding itself resolves at once.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < venues.length; i++) {
+      const venue = venues[i];
+      h += '<button class="actionbtn" data-auction-venue="' + i + '">' +
+        (venue.kind === 'city' ? '🏙' : '🏘') + ' ' + esc(venue.name) +
+        '<span class="adesc">' + esc(FB.T('{kind} market', {
+          kind:settlementKindName(venue.kind)
+        })) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="auction-cancel">' +
+      esc(FB.T('Not today')) + '</button>';
+    openModal(FB.T('Attend auction'), h, { noFocus:true });
+    document.querySelectorAll('[data-auction-venue]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const venue = venues[Number(button.dataset.auctionVenue)];
+        if (venue && FB.beginAuction(s, venue)) UI.showAuction(true);
+      });
+    });
+    $('auction-cancel').addEventListener('click', function () {
+      if (s.player.cooldowns) delete s.player.cooldowns.attend_auction;
+      UI.closeModal();
+      UI.refresh();
+    });
+  };
+
+  UI.showAuction = function (replaceView) {
+    const s = FB.state;
+    const auction = FB.auctionOf && FB.auctionOf(s);
+    if (!auction) {
+      if (!$('genmodal').classList.contains('hidden')) UI.closeModal();
+      UI.refresh();
+      return;
+    }
+    const venue = FB.settlementsOf(s, auction.venue.provinceId)[
+      auction.venue.settlement];
+    const label = FB.auctionLotLabel(s, auction);
+    const options = FB.auctionBidOptions(s);
+    const maxRounds = FBDATA.balance.auctionMaxBidRounds || 3;
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The auctioneer calls one lot at a time. A hidden rival either counters at once or drops out; no coin leaves your purse unless you win.')) +
+      '</p></div>' +
+      kv('Lot', esc(label)) +
+      kv('Current call', esc(FB.T('{money:amount}', { amount:auction.currentBid }))) +
+      kv('Bidding round', esc(FB.T('{current} of {maximum}', {
+        current:auction.bidCount + 1, maximum:maxRounds
+      }))) +
+      '<div class="gm-list">';
+    for (let i = 0; i < options.length; i++) {
+      const option = options[i];
+      h += '<button class="actionbtn" data-auction-bid="' + option.increments + '"' +
+        (option.affordable ? '' : ' disabled') + '>⚖ ' +
+        esc(FB.T('Bid {money:amount}', { amount:option.amount })) +
+        '<span class="adesc">' + esc(option.affordable
+          ? FB.T('Raise by {increments} increments.', { increments:option.increments })
+          : FB.T('You do not have enough gold for this bid.')) +
+        '</span></button>';
+    }
+    h += '</div><button class="btn" id="auction-withdraw">' +
+      esc(FB.T('Leave the auction')) + '</button>';
+    openModal(FB.T('Auction at {settlement}', {
+      settlement:venue ? venue.name : FB.T('the market')
+    }), h, { replaceView:!!replaceView, noFocus:true });
+    document.querySelectorAll('[data-auction-bid]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const result = FB.placeAuctionBid(s, button.dataset.auctionBid);
+        if (!result) return;
+        if (result.status === 'countered') {
+          UI.showAuction(true);
+          return;
+        }
+        UI.closeModal();
+        UI.toast(result.status === 'won'
+          ? FB.T('The hammer falls in your favor.')
+          : (result.status === 'lost'
+            ? FB.T('The rival takes the lot.')
+            : FB.T('The lot is withdrawn.')));
+        UI.refresh();
+      });
+    });
+    $('auction-withdraw').addEventListener('click', function () {
+      FB.cancelAuction(s);
+      UI.closeModal();
+      UI.refresh();
+    });
+  };
+
   /* ================= settlement view =================
      One sheet for every settled county, reached from the Land tab or a map
      marker. It shows what stands THERE: buildings are per-settlement
@@ -11084,6 +11181,28 @@ window.FB = window.FB || {};
             requirements:exam.missing.join('; ')
           })) + '</span></button>';
     }
+    const careerSpecializations = FB.careerSpecializationOptions ?
+      FB.careerSpecializationOptions(s, c) : [];
+    const guildSpecializations = careerSpecializations.filter(function (option) {
+      return option.method === 'induction';
+    });
+    if (guildSpecializations.length) {
+      h += '</div><div class="panelh">' + esc(FB.T('Guild path')) +
+        '</div><div class="gm-body-text"><p>' + esc(FB.T(
+          'A guildmaster may take one permanent specialty after reaching Guild Standing 35, Stewardship 9, the listed technology, and its {money:20} induction fee.')) +
+        '</p></div><div class="gm-list">';
+      for (const option of guildSpecializations) {
+        h += '<button class="actionbtn" data-career-specialization="' +
+          esc(option.specialization) + '"' + (option.ready ? '' : ' disabled') +
+          '>🏅 ' + esc(FB.T('Induct as {specialization} — {money:gold}', {
+            specialization:option.name, gold:option.cost
+          })) + '<span class="adesc">' + esc(option.ready
+            ? FB.T('The guild path becomes this vocation’s permanent title.')
+            : FB.T('Unmet: {requirements}', {
+              requirements:option.missing.join('; ')
+            })) + '</span></button>';
+      }
+    }
     const step = FB.guildAdvance(s, c);
     const activeGuildElection = FB.activeElectionForCharacter &&
       FB.activeElectionForCharacter(s, c.id);
@@ -11241,6 +11360,16 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-career-exam]').forEach(function (b) {
       b.addEventListener('click', function () {
         if (!FB.takeCareerExam(s, c, b.dataset.careerExam)) return;
+        UI.closeModal();
+        FB.game.passDay({ skipFocus:true });
+        resumeManagementAfterDay(returnContext, function () {
+          UI.showCareerPicker(cid, returnContext);
+        });
+      });
+    });
+    document.querySelectorAll('[data-career-specialization]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (!FB.chooseCareerSpecialization(s, c, b.dataset.careerSpecialization)) return;
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext, function () {

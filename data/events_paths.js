@@ -507,3 +507,113 @@ FBDATA.events.push(
     { label:'Keep clear of it.', desc:'Their feud, their funerals.', effects:{ } }
   ]}
 );
+
+/* ================= GUILD PATHS =================
+   Permanent Craft and Trade specialties use the normal slot-day scheduler.
+   Their career trigger keeps these stories personal work, never a ruler’s
+   former calling, and their long cooldowns make a guild path an occasion. */
+FBDATA.events.push(
+{ id:'smith_tempered_steel', title:'Steel for a Captain',
+  trigger:{ career:{ profession:'craftsman', specialization:'smith', guildRankMin:'guildmaster' }, chance:0.22 }, weight:3, cooldown:16,
+  text:'A captain lays a purse and a snapped sword on your anvil. His company marches soon; he wants a blade that will not fail when men crowd close.',
+  options:[
+    { label:'Forge the blade for hard coin.', desc:'Take the captain’s silver and keep the guild out of the bargain.', effects:{ gold:14 } },
+    { label:'Call the masters to witness the work.', desc:'A public masterwork grows Guild Standing and your name.', effects:{ guildStanding:7, prestige:5, skills:{ste:1} } },
+    { label:'Set the town smithies to shared standards.', desc:'Earn less now; the market gains a temporary charter.', effects:{ gold:4, addModifier:{id:'market_charter'} } }
+  ]},
+{ id:'smith_bridge_irons', title:'Iron at the Bridge',
+  trigger:{ career:{ profession:'craftsman', specialization:'smith', guildRankMin:'guildmaster' }, seasons:[1,2], chance:0.18 }, weight:3, cooldown:18,
+  text:'The bridge master needs fresh chains and pins before the autumn carts arrive. A shoddy repair would be cheaper, and nobody would know until floodwater comes.',
+  options:[
+    { label:'Charge the full lawful price.', desc:'Good iron brings good money.', effects:{ gold:12 } },
+    { label:'Give the guild’s labor at cost.', desc:'The masters reward public service with Standing.', effects:{ guildStanding:8, prestige:3 } },
+    { label:'Train two young hands on the repair.', desc:'A slower job sharpens your Stewardship.', effects:{ skills:{ste:2}, addModifier:{id:'roads_patrolled'} } }
+  ]},
+{ id:'weaver_hall_hangings', title:'Hangings for the Hall',
+  trigger:{ career:{ profession:'craftsman', specialization:'weaver', guildRankMin:'guildmaster' }, chance:0.22 }, weight:3, cooldown:16,
+  text:'The town hall asks for new hangings before a visiting lord arrives. The council offers coin, the guild offers its seal, and the apprentices beg to weave their own marks into the border.',
+  options:[
+    { label:'Take the council’s commission.', desc:'The household gains a useful purse.', effects:{ gold:13 } },
+    { label:'Weave the guild’s mark openly.', desc:'Public credit becomes Guild Standing and prestige.', effects:{ guildStanding:7, prestige:5 } },
+    { label:'Let the apprentices design the border.', desc:'Teach the bench and make the market more welcoming.', effects:{ skills:{ste:1}, addModifier:{id:'market_charter'} } }
+  ]},
+{ id:'weaver_dyed_thread', title:'A Dyer’s Dispute',
+  trigger:{ career:{ profession:'craftsman', specialization:'weaver', guildRankMin:'guildmaster' }, chance:0.18 }, weight:3, cooldown:18,
+  text:'A dyer claims a rival has spoiled imported thread with bad mordant. Both demand that you judge the cloth before the market opens.',
+  options:[
+    { label:'Sell the sound bolts quickly.', desc:'The dispute becomes a tidy profit.', effects:{ gold:11 } },
+    { label:'Judge by the guild book.', desc:'A patient ruling improves your Standing with the masters.', effects:{ guildStanding:8, skills:{ste:1} } },
+    { label:'Compensate both workshops and keep peace.', desc:'Your name rises and market grievance cools.', effects:{ gold:-3, prestige:7, addModifier:{id:'market_charter'} } }
+  ]},
+{ id:'cooper_vintage_casks', title:'Casks Before the Vintage',
+  trigger:{ career:{ profession:'craftsman', specialization:'cooper', guildRankMin:'guildmaster' }, seasons:[2], chance:0.22 }, weight:3, cooldown:16,
+  text:'Wine merchants discover their cellars are short of sound casks. Every vineyard wants your hoops and staves before the first pressing.',
+  options:[
+    { label:'Auction your casks to the highest bidder.', desc:'The shortage pays in hard coin.', effects:{ gold:15 } },
+    { label:'Divide them by the guild’s allotment.', desc:'Fair dealing earns Guild Standing.', effects:{ guildStanding:8, prestige:3 } },
+    { label:'Reserve a share for the public granary.', desc:'The town gains a modest local safeguard.', effects:{ skills:{ste:1}, addModifier:{id:'granaries_opened'} } }
+  ]},
+{ id:'cooper_caravan_barrels', title:'Barrels for the Road',
+  trigger:{ career:{ profession:'craftsman', specialization:'cooper', guildRankMin:'guildmaster' }, chance:0.18 }, weight:3, cooldown:18,
+  text:'A caravan master wants water barrels for a long crossing. The price is generous, but the drivers fear bandits on the route.',
+  options:[
+    { label:'Sell every barrel at the offered price.', desc:'A quick contract fills the purse.', effects:{ gold:12 } },
+    { label:'Stamp every barrel with the guild seal.', desc:'A dependable lot brings Standing and a better craft reputation.', effects:{ guildStanding:7, skills:{ste:1} } },
+    { label:'Contribute casks for the road patrol.', desc:'Spend some material to make local roads safer.', effects:{ gold:3, prestige:5, addModifier:{id:'roads_patrolled'} } }
+  ]},
+{ id:'broker_grain_contract', title:'A Grain Contract',
+  trigger:{ career:{ profession:'merchant', specialization:'broker', guildRankMin:'guildmaster' }, chance:0.22 }, weight:3, cooldown:16,
+  text:'Two estates bring competing grain contracts to your table. Each will pay for a favorable introduction, and each has enough cousins to make a public quarrel costly.',
+  options:[
+    { label:'Take the richer commission.', desc:'The better contract yields a private fee.', effects:{ gold:14 } },
+    { label:'Match the terms by the guild ledger.', desc:'Neutral dealing earns Guild Standing and prestige.', effects:{ guildStanding:8, prestige:4 } },
+    { label:'Publish fair measures for both houses.', desc:'Your careful bargain improves Stewardship and the market’s standing.', effects:{ skills:{ste:2}, addModifier:{id:'market_charter'} } }
+  ]},
+{ id:'broker_debtors', title:'Debtors at Market',
+  trigger:{ career:{ profession:'merchant', specialization:'broker', guildRankMin:'guildmaster' }, chance:0.18 }, weight:3, cooldown:18,
+  text:'A debtor and a cloth seller accuse each other before the market crowd. Both ask you to value goods that may be worth less by next week.',
+  options:[
+    { label:'Buy the claim cheaply.', desc:'Risk a little reputation for immediate profit.', effects:{ gold:10 } },
+    { label:'Arbitrate under the guild seal.', desc:'Your measured judgment gains Guild Standing.', effects:{ guildStanding:8, skills:{ste:1} } },
+    { label:'Remit the market toll for the day.', desc:'The crowd remembers generosity, and local resentment eases.', effects:{ prestige:6, addModifier:{id:'tax_concession'} } }
+  ]},
+{ id:'caravan_factor_guard_contract', title:'Guard Contract for the Caravan',
+  trigger:{ career:{ profession:'merchant', specialization:'caravan_factor', guildRankMin:'guildmaster' }, chance:0.22 }, weight:3, cooldown:16,
+  text:'Three wagon masters want one escort contract for the eastern road. They trust your books, but disagree over who should bear the cost of armed riders.',
+  options:[
+    { label:'Charge each wagon a factor’s fee.', desc:'Your ledger work becomes household coin.', effects:{ gold:15 } },
+    { label:'Write the agreement before the guild.', desc:'The public contract gains Guild Standing and prestige.', effects:{ guildStanding:7, prestige:5 } },
+    { label:'Put part of the fee into patrols.', desc:'A smaller fee makes the road safer and teaches practical Stewardship.', effects:{ gold:4, skills:{ste:1}, addModifier:{id:'roads_patrolled'} } }
+  ]},
+{ id:'caravan_factor_missing_bales', title:'Missing Bales',
+  trigger:{ career:{ profession:'merchant', specialization:'caravan_factor', guildRankMin:'guildmaster' }, chance:0.18 }, weight:3, cooldown:18,
+  text:'A caravan arrives with three bales missing and six conflicting accounts. The drivers want payment today; the investors want someone blamed.',
+  options:[
+    { label:'Settle the books for a fee.', desc:'Untangle the ledgers and collect a broker’s share.', effects:{ gold:12, skills:{ste:1} } },
+    { label:'Make the guild absorb the loss fairly.', desc:'The masters prize a clean accounting.', effects:{ guildStanding:8, prestige:3 } },
+    { label:'Fund a search party along the route.', desc:'The immediate purse shrinks, but patrols strengthen.', effects:{ gold:-2, prestige:6, addModifier:{id:'roads_patrolled'} } }
+  ]},
+{ id:'maritime_factor_harbor_duty', title:'Harbor Duties',
+  trigger:{ career:{ profession:'merchant', specialization:'maritime_factor', guildRankMin:'guildmaster' }, coastal:true, chance:0.22 }, weight:3, cooldown:16,
+  text:'A captain’s cargo waits on the quay while port officers argue over duties. Every tide lost costs money, and every favor shown will be remembered.',
+  options:[
+    { label:'Clear the cargo for a private fee.', desc:'Speed brings silver to the household.', effects:{ gold:14 } },
+    { label:'Submit the manifest to the guild court.', desc:'Orderly practice earns Guild Standing and prestige.', effects:{ guildStanding:7, prestige:5 } },
+    { label:'Pay for quay watchmen through the season.', desc:'The port road grows safer and your Stewardship improves.', effects:{ gold:2, skills:{ste:1}, addModifier:{id:'roads_patrolled'} } }
+  ]},
+{ id:'maritime_factor_storm_surety', title:'Surety After the Storm',
+  trigger:{ career:{ profession:'merchant', specialization:'maritime_factor', guildRankMin:'guildmaster' }, coastal:true, chance:0.18 }, weight:3, cooldown:18,
+  text:'A storm scatters a convoy and leaves merchants arguing about salvage. They ask you to set a value before the next ship sails.',
+  options:[
+    { label:'Buy the salvage rights.', desc:'A risky valuation can still be profitable.', effects:{ gold:11 } },
+    { label:'Settle the shares by guild custom.', desc:'A fair division wins Guild Standing and sharper accounts.', effects:{ guildStanding:8, skills:{ste:1} } },
+    { label:'Reserve timber for the harbor stores.', desc:'Less money now, but a public supply eases the county’s next lean season.', effects:{ prestige:6, addModifier:{id:'granaries_opened'} } }
+  ]},
+{ id:'rare_auction_invitation', title:'An Invitation to Auction',
+  trigger:{ tierMin:1, tierMax:2, chance:0.06, custom:'auction_invitation_available' }, weight:2, cooldown:16,
+  text:'A sealed market invitation offers one rare lot under the hammer. The auctioneer promises a short room, fixed increments, and no debt for a losing bid.',
+  options:[
+    { label:'Attend the auction.', desc:'Open one saved lot and bid against a single immediate rival.', effects:{ custom:'auction_invitation_open' } },
+    { label:'Send regrets.', desc:'Keep the invitation’s mystery for another market day.', effects:{} }
+  ]}
+);

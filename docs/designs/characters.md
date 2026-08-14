@@ -497,6 +497,18 @@ Resident active medical practitioners reduce yearly household mortality by 0.2%,
 Physicians by 0.6%, and Apothecaries by 0.3%; only the single best locally present
 provider applies.
 
+**Craft and Trade guild paths are deliberate permanent specialties.** A working
+Craft guildmaster may become a Smith, Weaver, or Cooper; a Trade guildmaster may
+become a Broker, Caravan Factor, or Maritime Factor. Each path requires Guildmaster,
+35 Guild Standing, Stewardship 9, its named technology, and a 20-gold induction fee.
+`career.specialization` is the one saved title field for both examinations and guild
+paths, so it restores with that profession's career-history snapshot and is shown
+wherever the character's vocation is named. The bonuses remain definitions on the
+live path: Craft and Trade work focuses receive `fx.focusGold`; matching tagged
+enterprises receive `fx.enterprise`; and a path may add `fx.tradeVenture` to the
+formation-time venture preview. No enterprise copies a specialty bonus into its saved
+instance.
+
 At tier 3+, that career is biography rather than daily employment. The player cannot
 change occupation, seek guild advancement, earn ordinary career experience, or staff
 an enterprise personally. Existing rank, guild standing, and history remain available

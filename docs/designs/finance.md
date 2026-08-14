@@ -116,6 +116,24 @@ candidacy cooldown. Expiry returns the worker to master (or from guildmaster to 
 valid officer term). Guild Standing remains both visible support and, for favor tactics,
 a spendable reputation rather than a second currency.
 
+**Bounded market auctions are immediate household choices, not a market simulation.**
+**Attend auction…** is available once per configured year in a home town or city with a
+valid lot; a rare invitation opens that same flow. Opening saves exactly one
+`player.auction` record containing the venue, lot, opening call, fixed increment,
+seeded rival maximum, and bid count. The player has at most three bids of one, two, or
+three increments. The rival either counters immediately from its saved ceiling or
+drops out; only a winner pays, so a loss or withdrawal costs no coin.
+
+Lots are an unowned Fine/Famed item (transferred through the ordinary item API), one
+valid neighboring foreign county title right (the existing single fabricated-claim
+record, with `source:'auction'`), or an ordinary family enterprise at the exact venue.
+An existing fabricated claim excludes title rights rather than being replaced. A
+temporary repeatable item is discarded if the sale is cancelled or becomes invalid;
+the normal enterprise acquisition and staffing rules apply to a winning business, so
+it can be idle. Lot weights, opening/increment ratios, rival range, cooldown, and
+round cap live in `FBDATA.balance`. There are no bidder purses, stock lists, clocks,
+or daily auction work.
+
 **Self-founded ventures are separate household investments.** Any adult tier-1/2
 protagonist may choose a configured stake, select a reachable development-4+ market,
 and pay route overhead separately from the invested capital. Maintained transport may

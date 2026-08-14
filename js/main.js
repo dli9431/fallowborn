@@ -1778,7 +1778,7 @@ window.FB = window.FB || {};
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
         landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:settIdx }] : [],
-        landPlotMigration: 1, manor: null, fabricatedClaim: null, royalCompact: null
+        landPlotMigration: 1, manor: null, fabricatedClaim: null, auction: null, royalCompact: null
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
       economy: {
@@ -2025,7 +2025,7 @@ window.FB = window.FB || {};
         },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
-        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, royalCompact: null
+        landPlots: [], landPlotMigration:1, manor:null, fabricatedClaim: null, auction: null, royalCompact: null
       },
       pregnant: null, peakTier: 0, peakTitleData: null,
       seasonMark: { gold: 0, prestige: 0, piety: 0 }, seasonNet: null

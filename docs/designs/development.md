@@ -102,6 +102,14 @@ for credit capacity. Buildings remain real land assets when the price index move
 never seized by an ordinary generic default; a landed revenue default assigns one quarter
 of regular income instead.
 
+**Family enterprises retain their physical site.** Purchase and acquisition APIs accept
+an explicit province and settlement, which permits a normal household business to be
+awarded at an auction venue or retained after a household move. Only a resident eligible
+worker can staff it, so a remote or newly acquired enterprise is allowed to remain idle.
+Enterprise definitions may carry simple `tags`; a worker's active career specialization
+can apply its declared bonus only when one of those tags matches. The specialty remains
+live career data rather than a copied property of the enterprise instance.
+
 A settlement building can be demolished without a refund. Demolition is permanent: the
 entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
 occupy that settlement slot. One-time development, Common Voice, and prestige already granted

@@ -86,6 +86,9 @@ window.FB = window.FB || {};
     return 1 + Math.min(2, FB.skillOf(me(state), 'lea') / 10) +
       (Number(specializationFx(state).focusResearch) || 0);
   }
+  function craftTradeFocusGold(state) {
+    return Number(specializationFx(state).focusGold) || 0;
+  }
   function administrationStandingTarget(state) {
     if (state.player.liege) {
       return { kind:'realm', id:state.player.liege };
@@ -186,10 +189,14 @@ window.FB = window.FB || {};
     desc: function () { return 'Steady hands, steady coin.'; },
     show: function (s) { return s.player.profession === 'craftsman' && s.player.tier <= 2; },
     tick: function (s) {
-      s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0)) / D;
+      s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0) +
+        craftTradeFocusGold(s)) / D;
       if (skillDch(0.3)) skillUp(s, 'ste');
     },
-    gain: function (s) { return { gold: 3.5 + (s.player.flags.guild_member ? 1 : 0) }; } },
+    gain: function (s) {
+      return { gold:3.5 + (s.player.flags.guild_member ? 1 : 0) +
+        craftTradeFocusGold(s) };
+    } },
   { id: 'trade_run', label: '🐫 Run trade ventures',
     vocational: 'merchant',
     desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
@@ -199,7 +206,7 @@ window.FB = window.FB || {};
       const c = 0.55 + ste * 0.015;
       let g = c * (9 + ste / 2) - (1 - c) * 6; // expected seasonal profit
       if (s.player.gold < 10) g *= 0.3;
-      s.player.gold += Math.max(0.5, g) / D;
+      s.player.gold += (Math.max(0.5, g) + craftTradeFocusGold(s)) / D;
       if (skillDch(0.4)) skillUp(s, 'ste');
     },
     gain: function (s) {
@@ -207,7 +214,7 @@ window.FB = window.FB || {};
       const c = 0.55 + ste * 0.015;
       let g = c * (9 + ste / 2) - (1 - c) * 6;
       if (s.player.gold < 10) g *= 0.3;
-      return { gold: Math.max(0.5, g) };
+      return { gold:Math.max(0.5, g) + craftTradeFocusGold(s) };
     } },
 
   { id: 'keep_records', label: '📜 Keep records',
@@ -595,6 +602,31 @@ window.FB = window.FB || {};
     show: function (s) { return adult(s); },
     can: function (s) { return FB.settlementsOf(s, s.player.provinceId).length ? true : 'Only wilderness here.'; },
     run: function (s) { if (FB.ui && FB.ui.showSettlements) FB.ui.showSettlements(); } },
+  { id: 'attend_auction', label: '⚖ Attend auction…', cd: 360, noConsume:true,
+    cooldownDays: function (s) {
+      return FB.auctionOf && FB.auctionOf(s) ? 0 :
+        (FBDATA.balance.auctionCooldownDays || 360);
+    },
+    desc: function () {
+      return FB.T('Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.');
+    },
+    show: function (s) { return adult(s) && !(s.player.flags && s.player.flags.in_prison); },
+    can: function (s) {
+      const status = FB.auctionStatus && FB.auctionStatus(s);
+      return status && (status.ready || status.active) ? true :
+        (status && status.reason || FB.T('No auction is available.'));
+    },
+    run: function (s) {
+      const status = FB.auctionStatus && FB.auctionStatus(s);
+      if (!status) return;
+      if (status.active) {
+        if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
+      } else if (FB.ui && FB.ui.showAuctionVenuePicker) {
+        FB.ui.showAuctionVenuePicker(status.venues || []);
+      } else if (status.venues && status.venues.length && FB.beginAuction(s, status.venues[0])) {
+        if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
+      }
+    } },
   { id: 'take_road', label: '🧭 Take to the road…', noConsume: true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {

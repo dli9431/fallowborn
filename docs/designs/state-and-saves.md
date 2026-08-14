@@ -127,7 +127,13 @@ without changing their member ids or order. A materialized current ruler also ca
 `realmStanding`, the last synchronized Standing marker.
 `state.alliances` holds canonical, generation-stamped defensive realm pairs.
 `player.royalCompact` identifies the current protagonist's one royal marriage compact,
-and `player.fabricatedClaim` holds the single `{pid, madeTurn}` county claim.
+and `player.fabricatedClaim` holds the single `{pid, madeTurn,source?}` county claim.
+An auctioned title right uses the existing field with `source:'auction'`; it follows the
+normal fabricated-war and conquest-clear path rather than creating a second claim slot.
+`player.auction`, when present, is one unresolved household market record
+`{schema,status,startedTurn,venue,lot,openingBid,bidIncrement,rivalMaximum,currentBid,bidCount}`.
+Its lot and rival ceiling are already fixed, so restore validates or discards it without
+consuming RNG. Both records are additive and keep save format 3.
 `player.war.casus` records the semantic cause selected for a new war, while a displaced
 rightful character may carry one `restorationRight`. `FB.ensureDynasticState`,
 `FB.fabricatedClaimOf`, and the normal load repairs lazily initialize and validate all

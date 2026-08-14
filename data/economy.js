@@ -15,12 +15,46 @@ FBDATA.careers = {
     name:'Craft', icon:'🔨', skill:'ste', apprenticeAge:10, apprenticeCost:8, tierMin:1, requiresTech:'bloomery_iron',
     wage:1.8, masterWage:3, guild:true,
     ranks:{ apprentice:'Apprentice', journeyman:'Journeyman', master:'Master craftsman' },
+    specializations:{
+      smith:{
+        name:'Smith', requiresTech:'bloomery_iron', guildRankMin:'guildmaster',
+        guildStandingMin:35, skills:{ ste:9 }, cost:20,
+        fx:{ focusGold:1.5, enterprise:{ tags:['workshop'], bonus:0.15 } }
+      },
+      weaver:{
+        name:'Weaver', requiresTech:'horizontal_loom', guildRankMin:'guildmaster',
+        guildStandingMin:35, skills:{ ste:9 }, cost:20,
+        fx:{ focusGold:1, enterprise:{ tags:['workshop'], bonus:0.18 } }
+      },
+      cooper:{
+        name:'Cooper', requiresTech:'cooperage', guildRankMin:'guildmaster',
+        guildStandingMin:35, skills:{ ste:9 }, cost:20,
+        fx:{ focusGold:1, enterprise:{ tags:['workshop'], bonus:0.12 } }
+      }
+    },
     desc:'Learn a skilled trade, earn a mark, and one day keep a bench of your own.'
   },
   merchant: {
     name:'Trade', icon:'⚖', skill:'ste', apprenticeAge:12, apprenticeCost:10, tierMin:1, requiresTech:'weights_measures',
     wage:2, masterWage:3.5, guild:true,
     ranks:{ apprentice:'Merchant’s clerk', journeyman:'Peddler', master:'Merchant' },
+    specializations:{
+      broker:{
+        name:'Broker', requiresTech:'urban_markets', guildRankMin:'guildmaster',
+        guildStandingMin:35, skills:{ ste:9 }, cost:20,
+        fx:{ focusGold:1.5, enterprise:{ tags:['market'], bonus:0.18 } }
+      },
+      caravan_factor:{
+        name:'Caravan Factor', requiresTech:'trade_houses', guildRankMin:'guildmaster',
+        guildStandingMin:35, skills:{ ste:9 }, cost:20,
+        fx:{ focusGold:2, enterprise:{ tags:['trade-house'], bonus:0.15 }, tradeVenture:0.04 }
+      },
+      maritime_factor:{
+        name:'Maritime Factor', requiresTech:'knarrs', guildRankMin:'guildmaster',
+        guildStandingMin:35, skills:{ ste:9 }, cost:20,
+        fx:{ focusGold:1, enterprise:{ tags:['trade-house'], bonus:0.12 }, tradeVenture:0.06 }
+      }
+    },
     desc:'Weights, ledgers, roads, and the trust that lets silver travel.'
   },
   administration: {
@@ -264,16 +298,16 @@ FBDATA.enterprises = {
   },
   workshop_business: {
     name:'Workshop', icon:'⚒', cost:80, profession:'craftsman', yield:4, devMin:2,
-    guildRank:'member', requiresTech:'horizontal_loom',
+    guildRank:'member', requiresTech:'horizontal_loom', tags:['workshop'],
     desc:'A public bench and your mark above the door. A guild member must staff it.'
   },
   market_stall_business: {
-    name:'Market Stall', icon:'⛺', cost:60, profession:'merchant', yield:3.5, devMin:2, requiresTech:'urban_markets',
+    name:'Market Stall', icon:'⛺', cost:60, profession:'merchant', yield:3.5, devMin:2, requiresTech:'urban_markets', tags:['market'],
     desc:'A fixed place in the market, profitable while a practiced seller tends it.'
   },
   trade_house_business: {
     name:'Trading House', icon:'🏛', cost:150, profession:'merchant', yield:6, devMin:5,
-    guildRank:'member', requiresTech:'trade_houses',
+    guildRank:'member', requiresTech:'trade_houses', tags:['trade-house'],
     desc:'Stores, ledgers, and agents gathered beneath one family name.'
   },
   fishing_boat_business: {

@@ -533,6 +533,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `tierMin` / `tierMax` | rank 0 serf … 7 emperor |
 | `societalRoles` | any of `serf commoner gentry lord crowned`; these map to tiers 0, 1, 2, 3–5, and 6–7 |
 | `professions` | any actively practiced vocation from `farmer craftsman merchant administration physician scholar soldier monk priest noble`; landed players (tier 3+) retain their career as biography but do not pass profession gates |
+| `career` | nested active-work career requirement `{profession?,specialization?,guildRankMin?,guildStandingMin?}`; uses the protagonist's resolved career and likewise excludes landed or unassigned/apprentice work |
 | `minAge` / `maxAge`, `sex` | `"m"`/`"f"` |
 | `seasons` | array of 0 spring … 3 winter |
 | `yearMin` / `yearMax` | calendar gate |
@@ -736,6 +737,7 @@ spent `blessed_crops` blessing) ·
 `opinion: {role, amt}` · `opinionLiege`, `popularOpinion` ·
 (`opinion` and `opinionLiege` retain their compatibility names but adjust personal or
 realm Standing; `popularOpinion` remains the distinct Common Voice population score) ·
+`guildStanding: n` (adjust active guild-career Standing, clamped 0–100; no-op for a non-guild calling) ·
 `standingRealm: n` (adjust Standing with the exact living realm in
 `ctx.realmId`, with legacy `ctx.rid` accepted; no pairwise AI opinion is created) ·
 `papalOpinion: n` (adjust the recognized Pope's opinion of `ctx.candidateId`, or of the
@@ -1456,20 +1458,29 @@ character can learn and perform:
   minimums. Every learned examination also requires Lettered and the career's
   `requiresTech`.
 - `specializations` maps permanent specialty ids to
-  `{name,requiresTech?,years,skills,cost,fx?,authoredWork?}`. Passing one stores its id
-  on the career and promotes the character to master. Core focus effects recognize
-  `focusGold`, `focusStanding`, `focusPrestige`, and `focusResearch`; the medical
-  household rule recognizes `mortality`. `authoredWork:true` invokes the core Author
-  treatise reward and should be used only with that intended content contract.
+  `{name,requiresTech?,years?,skills,cost,fx?,authoredWork?,guildRankMin?,guildStandingMin?}`.
+  Learned careers use the examination fields (`years` and the normal examination gate)
+  and promote a passing character to master. A non-learned guild path instead requires
+  its configured `guildRankMin` (core Guildmaster), `guildStandingMin` (core 35), skills,
+  technology, and its fixed fee; it is selected without chance. Core focus effects
+  recognize `focusGold`, `focusStanding`, `focusPrestige`, and `focusResearch`; the
+  medical household rule recognizes `mortality`. `fx.enterprise:{tags:[...],bonus:n}`
+  applies only while the specialty holder staffs a matching enterprise, and
+  `fx.tradeVenture:n` contributes to a venture's saved formation preview. `authoredWork:true`
+  invokes the core Author treatise reward and should be used only with that intended
+  content contract.
 - License and specialty `name` values are structured-data display fields. Specialty
   `requiresTech` values are validated and appear in reverse technology discovery.
 - Owned character state lives in `character.career`; `player.profession` mirrors the
   current head's exact occupation for existing `professions` event triggers. Feudal station
   is separate: gaining land or a title does not erase a merchant, clerical, or military
-  occupation. `FB.careerExamOptions` is the read-only status surface,
-  `FB.takeCareerExam` performs a live-revalidated attempt, `FB.careerSpecialization`
-  resolves the saved specialty, and `FB.householdMedicalProtection` returns the single
-  best locally present provider's yearly mortality reduction.
+  occupation. `FB.careerExamOptions` remains the learned-examination compatibility
+  surface; `FB.careerSpecializationOptions` is the canonical read-only specialty
+  surface and `FB.chooseCareerSpecialization` performs a live-revalidated guild
+  induction. `FB.takeCareerExam` performs a learned attempt,
+  `FB.careerSpecialization` resolves the saved specialty, and
+  `FB.householdMedicalProtection` returns the single best locally present provider's
+  yearly mortality reduction.
 
 Core Catholic and Muslim religious ladders live in `js/economy.js`, separately from moddable
 career rank labels. Per-character progress is saved in `character.religiousRanks`; unsupported
@@ -1637,6 +1648,8 @@ productive property:
 - Siting gates are `devMin`, `coastal`, and `terrains`, matching building gates.
 - `requiresTech` optionally requires a completed technology in the household's effective
   sovereign nation. Purchase costs honor national `fx.costs.enterprise` modifiers.
+- `tags` is an optional array of plain category ids. It has no saved instance effect by
+  itself, but enables a matching career-specialization `fx.enterprise` bonus.
 - `chainFrom` optionally names another enterprise type that feeds this one: while at
   least one household enterprise of that type produces in the same province, this
   enterprise's yield grows by `balance.enterpriseChainBonus`.
@@ -1649,6 +1662,10 @@ productive property:
   false means unlocked. One type may stand once per settlement, but the family may own
   further copies elsewhere; repeat cost grows by `balance.enterpriseRepeatCostGrowth`.
 - An idle or invalidly staffed enterprise earns nothing.
+- `FB.enterpriseAvailable(state, provinceId, settlement, includeTechLocked?)` and
+  `FB.acquireEnterprise(state, type, provinceId, settlement, opts?)` accept an explicit
+  site; the legacy local-site availability and buy calls remain valid. Acquisition uses
+  the same normal availability and resident-worker checks at the specified site.
 - Runtime normalization removes both `workerId` and `workerLocked` when a worker dies,
   leaves the household or enterprise province, becomes career/guild ineligible, or is
   manually replaced or unassigned. Valid locks survive saves and succession.
@@ -2623,6 +2640,11 @@ above every other required skill, then caps at the maximum. Failed attempts wait
 cooldown in game days. `learnedPractitionerMortality` is the default yearly mortality
 reduction for a licensed Medicine practitioner without a specialty; specialty
 `fx.mortality` replaces it, and only the household's single best local provider applies.
+Bounded auction tuning is `auctionLotWeights:{item,enterprise,claim}`,
+`auctionOpeningBidRatio`, `auctionBidIncrementRatio`, `auctionRivalMaxRatio:[low,high]`,
+`auctionCountyClaimValue`, `auctionCooldownDays`, and `auctionMaxBidRounds`. The core
+auction has one saved immediate rival and never treats those values as a simulated
+market inventory or NPC purse.
 `richChildMortalityBonus` is the fraction of childhood mortality removed per
 station above serf for the household's own children (and a child protagonist),
 and `richChildHealthChance` the yearly chance per station that such a child
