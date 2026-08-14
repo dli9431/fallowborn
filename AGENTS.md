@@ -44,7 +44,8 @@ From `tests/e2e/`:
 These commands are for owner-initiated manual runs. AI coding agents must author or update
 relevant tests, but must not install test browsers or dependencies and must not execute
 `npm run check`, Playwright, the static-server regression, runtime verification, or any other
-command from the test harness. Report the tests added and state that they were not run. Do not
+command from the test harness. In the final user handoff, report the tests added and state that
+they were not run. This is handoff-only status; never put it in a commit or merge message. Do not
 launch ad hoc shell browsers or servers outside this harness. Keep tests deterministic, bounded,
 and isolated in fresh browser contexts. Manual testing remains required for appearance, touch
 behavior, itch.io iframe behavior, real mobile browsers, and subjective game feel.
@@ -80,12 +81,19 @@ merge into `main`, follow the [main integration workflow](docs/TESTS.md#main-int
    exercise the expected behavior and land in the same commit or merge as the implementation.
 2. Do not run the tests. Test execution, including focused cases, syntax checks, browser
    matrices, runtime verification, and manual browser checks, is always owner-controlled.
-3. In the handoff, list the test files added or updated and explicitly record that no tests
-   were run.
+3. In the final user handoff, list the test files added or updated and explicitly record that no
+   tests were run. Never copy that test-execution status into Git metadata.
 
 For a branch merge, add the tests on the branch with the behavior change, but leave all
 execution to the owner. A documentation-only change does not need an artificial gameplay test.
 There is no GitHub Actions test workflow. The owner runs any desired test commands locally.
+
+**Commit-message hygiene.** Commit subjects and bodies describe only the durable repository or
+player-facing change. Never include transient agent-process metadata such as test-execution
+status, handoff boilerplate, tool or approval details, agent/model identity, prompt text, branch
+cleanup, or generated-entry counts. Keep that information in the final user handoff when it is
+required or useful. A commit or merge message may mention validation only when the owner
+explicitly asks for it or the result is itself the durable purpose of the commit.
 
 **Every integration commit that assigns `FB.VERSION` must include that exact version in its
 commit subject**, using `vMAJOR.MINOR.PATCH: description` (for example,

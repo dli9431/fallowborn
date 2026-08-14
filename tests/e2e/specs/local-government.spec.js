@@ -504,6 +504,66 @@ test('Castellan is an appointed tier-three office with renewal and clean demotio
     expect(result.superseded).toBeNull();
   });
 
+test('local government choices use neutral focus and sticky modal footers',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () {
+      var s = FB.state;
+      var originalStatus = FB.localCouncilMotionStatus;
+      var originalCouncil = FB.localCouncilOf;
+      FB.localCouncilMotionStatus = function () {
+        return { ready:true, chance:0.65 };
+      };
+      FB.localCouncilOf = function () {
+        return { provinceId:s.player.provinceId };
+      };
+      FB.ui.showLocalCouncilMotion();
+      FB.localCouncilMotionStatus = originalStatus;
+      FB.localCouncilOf = originalCouncil;
+    });
+
+    const modal = page.locator('#genmodal');
+    const councilChoices = page.locator(
+      '#gm-body > .gm-list > [data-local-motion]');
+    await expect(modal).toBeFocused();
+    expect(await councilChoices.count()).toBeGreaterThan(0);
+    expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
+      return buttons.every(function (button) { return button.type === 'button'; });
+    })).toBe(true);
+    await expect(councilChoices.first().locator('.keyhint')).toHaveText('1');
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #local-motion-cancel')).toBeVisible();
+    await page.locator('#local-motion-cancel').click();
+
+    await page.evaluate(function () {
+      var originalStatus = FB.castellanAppointmentStatus;
+      FB.castellanAppointmentStatus = function (state, tenure) {
+        return {
+          visible:true,
+          ready:tenure === 'term',
+          reason:tenure === 'term' ? '' : 'Unavailable',
+          chance:tenure === 'term' ? 0.6 : 0.4,
+          provinceName:'Test County'
+        };
+      };
+      FB.ui.showCastellanPetition();
+      FB.castellanAppointmentStatus = originalStatus;
+    });
+
+    const castellanChoices = page.locator(
+      '#gm-body > .gm-list > [data-castellan-tenure]');
+    await expect(modal).toBeFocused();
+    await expect(castellanChoices).toHaveCount(2);
+    await expect(castellanChoices.first()).toBeEnabled();
+    await expect(castellanChoices.last()).toBeDisabled();
+    expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
+      return buttons.every(function (button) { return button.type === 'button'; });
+    })).toBe(true);
+    await expect(castellanChoices.first().locator('.keyhint')).toHaveText('1');
+    await expect(page.locator(
+      '#gm-body > .gm-footer > #castellan-cancel')).toBeVisible();
+  });
+
 test('grant terms and local council state are visible before and after confirmation',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
@@ -532,10 +592,41 @@ test('grant terms and local council state are visible before and after confirmat
     })).toBeVisible();
     await page.getByRole('button', { name:/new loyal vassal/i }).click();
     await expect(page.getByRole('heading', { name:/Terms for/ })).toBeVisible();
+    const charterGroup = page.locator(
+      '#gm-body > .gm-list[role="group"][aria-label="Service charter"]');
+    const tenureGroup = page.locator(
+      '#gm-body > .gm-list[role="group"][aria-label="Tenure"]');
+    const footer = page.locator('#gm-body > .gm-footer');
+    await expect(charterGroup.locator('[data-grant-charter]')).toHaveCount(4);
+    await expect(tenureGroup.locator('[data-grant-tenure]')).toHaveCount(3);
+    await expect(page.locator(
+      '[data-grant-charter="customary_service"]')).toHaveAttribute(
+        'aria-pressed', 'true');
+    await expect(page.locator(
+      '[data-grant-charter="customary_service"]')).toHaveClass(/focused/);
+    await expect(page.locator(
+      '[data-grant-tenure="hereditary"]')).toHaveAttribute(
+        'aria-pressed', 'true');
+    await expect(page.locator(
+      '[data-grant-tenure="hereditary"]')).toHaveClass(/focused/);
+    await expect(footer.locator('#grant-terms-confirm')).toBeVisible();
+    await expect(footer.locator('#grant-terms-back')).toBeVisible();
+    expect(await page.locator('#gm-body button').evaluateAll(function (buttons) {
+      return buttons.every(function (button) { return button.type === 'button'; });
+    })).toBe(true);
     await expect(page.locator('#gm-body')).toContainText('3 gold/season');
     await expect(page.locator('#gm-body')).toContainText('135 soldiers');
     await page.locator('[data-grant-charter="host_duty"]').click();
     await page.locator('[data-grant-tenure="term"]').click();
+    await expect(page.locator(
+      '[data-grant-charter="host_duty"]')).toHaveAttribute(
+        'aria-pressed', 'true');
+    await expect(page.locator(
+      '[data-grant-charter="host_duty"]')).toHaveClass(/focused/);
+    await expect(page.locator(
+      '[data-grant-tenure="term"]')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator(
+      '[data-grant-tenure="term"]')).toHaveClass(/focused/);
     await expect(page.locator('#gm-body')).toContainText('270 soldiers');
     await expect(page.locator('#gm-body')).toContainText('initial Standing +30');
     await page.locator('#grant-terms-confirm').click();

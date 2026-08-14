@@ -5527,11 +5527,11 @@ window.FB = window.FB || {};
         esc(dt(s, 'localCouncilMotion', id, def, 'desc')) +
         '</span></button>';
     }
-    h += '</div><button type="button" class="btn" id="local-motion-cancel">' +
-      esc(FB.T('Not now')) + '</button>';
+    h += '</div><div class="gm-footer"><button type="button" class="btn" ' +
+      'id="local-motion-cancel">' + esc(FB.T('Not now')) + '</button></div>';
     openModal(FB.T('Council of {province}', {
       province:province ? province.name : seat.provinceId
-    }), h);
+    }), h, { noFocus:true });
     document.querySelectorAll('[data-local-motion]').forEach(function (button) {
       button.addEventListener('click', function () {
         if (!FB.proposeLocalCouncilMotion(s, button.dataset.localMotion)) return;
@@ -5563,9 +5563,9 @@ window.FB = window.FB || {};
         ? FB.T('{chance}% grant chance · ends with the current character’s death.', {
           chance:Math.round(life.chance * 100)
         }) : life.reason) + '</span></button></div>' +
-      '<button type="button" class="btn" id="castellan-cancel">' +
-      esc(FB.T('Not now')) + '</button>';
-    openModal(FB.T('Seek appointment as Castellan'), h);
+      '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="castellan-cancel">' + esc(FB.T('Not now')) + '</button></div>';
+    openModal(FB.T('Seek appointment as Castellan'), h, { noFocus:true });
     document.querySelectorAll('[data-castellan-tenure]').forEach(function (button) {
       button.addEventListener('click', function () {
         const result = FB.appointCastellan(s, button.dataset.castellanTenure);
@@ -5616,9 +5616,13 @@ window.FB = window.FB || {};
     const target = kind === 'duchy'
       ? ((FBDATA.duchies[id] || {}).name || id)
       : ((FB.world.byId[id] || {}).name || id);
+    const charterLabel = FB.T('Service charter');
+    const tenureLabel = FB.T('Tenure');
     let h = '<p class="hint">' + esc(FB.T(
       'Choose what this vassal chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.')) + '</p>' +
-      '<div class="panelh">' + esc(FB.T('Service charter')) + '</div>';
+      '<div class="panelh">' + esc(charterLabel) + '</div>' +
+      '<div class="gm-list" role="group" aria-label="' +
+      esc(charterLabel) + '">';
     for (const cid in FBDATA.feudalServiceCharters) {
       const def = FBDATA.feudalServiceCharters[cid];
       const preview = FB.feudalGrantPreview(s, kind, id, cid, tenure);
@@ -5629,7 +5633,8 @@ window.FB = window.FB || {};
         : FB.T('breakaway ×{multiplier}', {
           multiplier:def.breakawayMultiplier
         });
-      h += '<button type="button" class="actionbtn" data-grant-charter="' +
+      h += '<button type="button" class="actionbtn' +
+        (cid === charterId ? ' focused' : '') + '" data-grant-charter="' +
         esc(cid) + '" aria-pressed="' + (cid === charterId ? 'true' : 'false') +
         '">' + def.icon + ' ' + esc(feudalCharterName(s, cid)) +
         '<span class="adesc">' + esc(FB.T(
@@ -5638,20 +5643,23 @@ window.FB = window.FB || {};
             men:Math.round(preview.levy), political:political
           })) + '</span></button>';
     }
-    h += '<div class="panelh">' + esc(FB.T('Tenure')) + '</div>';
+    h += '</div><div class="panelh">' + esc(tenureLabel) + '</div>' +
+      '<div class="gm-list" role="group" aria-label="' +
+      esc(tenureLabel) + '">';
     const tenures = [
       { id:'hereditary', desc:FB.T('Existing male-preference succession continues.') },
       { id:'life', desc:FB.T('Reverts at the appointed ruler’s death; initial Standing −5.') },
       { id:'term', desc:FB.T('Reverts at death or after 3,600 days; initial Standing −10.') }
     ];
     for (const item of tenures) {
-      h += '<button type="button" class="actionbtn" data-grant-tenure="' +
+      h += '<button type="button" class="actionbtn' +
+        (item.id === tenure ? ' focused' : '') + '" data-grant-tenure="' +
         item.id + '" aria-pressed="' + (item.id === tenure ? 'true' : 'false') +
         '">' + esc(feudalTenureText(item.id)) + '<span class="adesc">' +
         esc(item.desc) + '</span></button>';
     }
     const selectedDef = FBDATA.feudalServiceCharters[charterId];
-    h += '<div class="progressnote"><b>' + esc(FB.T('Grant preview')) +
+    h += '</div><div class="progressnote"><b>' + esc(FB.T('Grant preview')) +
       '</b><br>' + esc(FB.T(
         '{target}: {money:gold} each season · {men} soldiers · initial Standing +{standing} · breakaway ×{multiplier}.', {
           target:target,
@@ -5661,7 +5669,7 @@ window.FB = window.FB || {};
           multiplier:selected.breakawayMultiplier
         })) + (selectedDef.extraordinaryTaxExempt
           ? '<br>' + esc(FB.T('This vassal is exempt from extraordinary taxes.'))
-          : '') + '</div><div class="modal-actions"><button type="button" ' +
+          : '') + '</div><div class="gm-footer"><button type="button" ' +
       'class="btn primary" id="grant-terms-confirm">' +
       esc(FB.T('Confirm grant')) + '</button><button type="button" class="btn" ' +
       'id="grant-terms-back">' + esc(FB.T('Back')) + '</button></div>';

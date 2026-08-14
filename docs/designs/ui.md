@@ -587,10 +587,10 @@ blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
 The Domain section exposes per-county **Reserve from grants** and **No autobuild** controls.
-Choosing a county or duchy to grant opens a second, non-mutating terms sheet. It keeps
-service charter and tenure as separate controls and shows the selected grant's exact
-projected gold per season, soldiers, initial Standing, extraordinary-tax eligibility,
-and breakaway effect before confirmation. Customary, Scutage, Host Duty, and Liberties
+Choosing a county or duchy to grant opens a recipient sheet and then a non-mutating terms
+sheet. It keeps service charter and tenure as separate controls and shows the selected
+grant's exact projected gold per season, soldiers, initial Standing, extraordinary-tax
+eligibility, and breakaway effect before confirmation. Customary, Scutage, Host Duty, and Liberties
 therefore remain legible choices without requiring the player to infer results from
 percentages. A direct-vassal row repeats the saved charter and tenure; the player's own
 row separately reports any appointed tenure and the Estates' current aid and scutage.
@@ -598,13 +598,23 @@ When over the domain cap it also offers a review-first cleanup proposal that kee
 capital and household home, omits reserved counties, prefers whole duchies, shows the exact
 grants and land tax/levy estimate, and revalidates before applying. Vassal rows expose the
 equivalent reservation from automatic Council appointment.
-Manual **Grant Land** is a two-step modal: first choose a single county or complete held
-duchy, then choose a generated loyal vassal or an eligible adult relative. Family rows name
+Manual **Grant Land** is a three-step modal: first choose a single county or complete held
+duchy, then choose a generated loyal vassal or an eligible adult relative, and finally set
+the service charter and tenure. Family rows name
 the character, relationship, and age and expose the complete grant sentence as their
 accessible label. Visible and browser Back from the recipient step restore the unchanged
-land picker; canceling there still returns through the original Governance Domain context.
+land picker; Back from the terms step restores the recipient picker; canceling still returns
+through the original Governance Domain context.
 The generated option preserves the same path used by Domain Cleanup, while a family choice
 is revalidated before mutation and returns to Governance after a successful grant.
+Charter and tenure are labeled native-button groups whose current choices expose
+`aria-pressed` and the standard selected action styling. Confirm and Back share the sticky
+`.gm-footer`; only Confirm may mutate the grant.
+
+The Town Council motion and Castellan petition dialogs likewise keep their substantive,
+number-keyed choices in a scrolling `.gm-list` and **Not now** in the sticky footer. Because
+choosing a motion or appointment tenure immediately rolls the result and spends the day,
+both sheets initially focus the dialog container instead of preselecting the first action.
 
 Political Blocs consumes `FB.politicalSummary` directly. Its full cards show
 each archetype, leader and member-ruler links, influence, interests, current

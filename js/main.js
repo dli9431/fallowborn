@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.127.0';
+  FB.VERSION = '1.127.1';
   FB.CHANGELOG = [
+    { v: '1.127.1', date: '2026-08-14', changes: [
+      'Local-government dialogs now show clearer selections and keep confirmation and Back controls in consistent sticky footers.'
+    ] },
     { v: '1.127.0', date: '2026-08-14', changes: [
       'Local government now brings town-council motions and appointed Castellan tenures.',
       'Land grants now combine a chosen recipient with a service charter and hereditary, life, or fixed-term tenure.'
