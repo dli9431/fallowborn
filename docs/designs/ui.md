@@ -342,6 +342,17 @@ wearer for each selected object, and spells out every move and displaced object 
 explicit apply. If an assignment changes while the review is open, it shows a fresh plan
 and requires another confirmation. Applying returns to the selected character’s equipment
 sheet; manual slot buttons remain the primary fine-grained control.
+Only the current protagonist's Equipment sheet also shows **Visit Barber…**. Its nested
+full-sheet picker paints a large equipment- and headwear-free bust and offers every
+ordinary hairstyle as native, minimum-44-pixel choice buttons. Adult men additionally get
+facial-hair amount and shape groups; women and minors do not render those controls. Every
+choice updates only the preview and its `aria-pressed` selection state. The sheet always
+shows the live tier-scaled cost and current gold, and only **Pay and apply** may mutate the
+character. Apply re-quotes and revalidates travel, unresolved events, funds, and a changed
+appearance, deducts gold once, consumes no day, then returns to Equipment. The visible
+Back control and browser Back both return to the same Equipment sheet without mutation.
+On narrow screens the preview stacks above two-column choices
+without horizontal overflow.
 Each owned item card has a **Protect from automatic equipment changes** checkbox. Protected
 armory items are omitted from Equip Best and succession, protected worn items keep their
 assignment when possible, and the hand pair is preserved together if either hand is

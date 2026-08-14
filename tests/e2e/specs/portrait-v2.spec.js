@@ -129,6 +129,90 @@ test('busts and figures are pixel-deterministic across appearance families',
     }));
   });
 
+test('barber previews add five deterministic silhouettes and normalize visual keys',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      var s=FB.state,source=JSON.parse(JSON.stringify(s.chars[s.player.charId]));
+      source.id='barber-portrait-fixture';source.name='Barber Portrait';
+      source.sex='m';source.born=s.date.year-30;delete source.appearance;
+      var stateBefore=JSON.stringify(s),rngBefore=JSON.stringify(FB.getRngState());
+      var styles=['bowl','sweptBack','shoulderWaves','tiedBack','crownBraid'];
+      function pixelHash(canvas) {
+        var data=canvas.getContext('2d').getImageData(
+          0,0,canvas.width,canvas.height).data;
+        var hash=2166136261;
+        for(var i=0;i<data.length;i+=4){
+          hash^=data[i];hash=Math.imul(hash,16777619);
+          hash^=data[i+1];hash=Math.imul(hash,16777619);
+          hash^=data[i+2];hash=Math.imul(hash,16777619);
+          hash^=data[i+3];hash=Math.imul(hash,16777619);
+        }
+        return hash>>>0;
+      }
+      function render(appearance,extra) {
+        var canvas=document.createElement('canvas');canvas.width=192;canvas.height=216;
+        var opts={state:s,appearance:appearance,suppressEquipment:true,
+          suppressHeadwear:true};
+        if(extra)Object.keys(extra).forEach(function(key){opts[key]=extra[key];});
+        FB.paintPortrait(canvas,source,s.date.year,opts);
+        return pixelHash(canvas);
+      }
+      var hashes={},keys={},colors={};
+      styles.forEach(function(style){
+        var appearance={hairStyle:style,beardKind:'long',beardCut:'forked'};
+        hashes[style]=render(appearance);
+        keys[style]=FB.characterVisualKey(s,source,{appearance:appearance,
+          suppressEquipment:true,suppressHeadwear:true});
+        colors[style]=JSON.stringify(FB.characterLook(
+          source,s.date.year,s,{appearance:appearance}).hair);
+      });
+      var repeat=render({hairStyle:'crownBraid',beardKind:'long',beardCut:'forked'});
+      var cleanKey=FB.characterVisualKey(s,source,{appearance:{hairStyle:'crop',
+        beardKind:'none',beardCut:'natural'}});
+      var beardKey=FB.characterVisualKey(s,source,{appearance:{hairStyle:'crop',
+        beardKind:'long',beardCut:'forked'}});
+      var plain=JSON.parse(JSON.stringify(source));delete plain.appearance;
+      var invalid=JSON.parse(JSON.stringify(source));
+      invalid.appearance={hairStyle:'laser_spikes',beardKind:'enormous',beardCut:'rope'};
+      var invalidFallback=FB.characterVisualKey(s,plain)===
+        FB.characterVisualKey(s,invalid);
+      var covered=FB.characterLook(source,s.date.year,s,{tier:7,loadout:{}});
+      var uncovered=FB.characterLook(source,s.date.year,s,{tier:7,loadout:{},
+        suppressHeadwear:true});
+      var coveredKey=FB.characterVisualKey(s,source,{tier:7,loadout:{}});
+      var uncoveredKey=FB.characterVisualKey(s,source,{tier:7,loadout:{},
+        suppressHeadwear:true});
+      var coveredHash=render({hairStyle:'crop',beardKind:'short',beardCut:'natural'},
+        {tier:7,suppressHeadwear:false});
+      var uncoveredHash=render({hairStyle:'crop',beardKind:'short',beardCut:'natural'},
+        {tier:7,suppressHeadwear:true});
+      return {
+        allSilhouettes:styles.every(function(style){return hashes[style]!==0;}),
+        uniqueSilhouettes:new Set(styles.map(function(style){return hashes[style];})).size,
+        uniqueKeys:new Set(styles.map(function(style){return keys[style];})).size,
+        deterministic:repeat===hashes.crownBraid,
+        appearanceSensitive:cleanKey!==beardKey,
+        invalidFallback:invalidFallback,
+        headwearSuppressed:covered.headwear!=='none'&&uncovered.headwear==='none'&&
+          coveredKey!==uncoveredKey&&coveredHash!==uncoveredHash,
+        naturalColorPreserved:new Set(styles.map(function(style){return colors[style];})).size,
+        statePure:stateBefore===JSON.stringify(s),
+        rngPure:rngBefore===JSON.stringify(FB.getRngState())
+      };
+    })).toEqual({
+      allSilhouettes:true,
+      uniqueSilhouettes:5,
+      uniqueKeys:5,
+      deterministic:true,
+      appearanceSensitive:true,
+      invalidFallback:true,
+      headwearSuppressed:true,
+      naturalColorPreserved:1,
+      statePure:true,
+      rngPure:true
+    });
+  });
+
 test('zoomed framing: bust head and figure body fill their frames',
   async function ({ page }) {
     expect(await page.evaluate(function () {

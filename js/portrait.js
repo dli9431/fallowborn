@@ -232,6 +232,19 @@ window.FB = window.FB || {};
      glued to a hand never posed convincingly. */
   var VISIBLE_SLOTS = ['head','neck','body','waist','feet','leftHand','rightHand','ring'];
   var BUST_SLOTS = ['head','body'];
+  var ORDINARY_HAIR_STYLES = ['crop','sidePart','curly','longLoose','braids','bun',
+    'bowl','sweptBack','shoulderWaves','tiedBack','crownBraid'];
+  var NEW_HAIR_STYLES = ['bowl','sweptBack','shoulderWaves','tiedBack','crownBraid'];
+  var APPEARANCE_BEARD_KINDS = ['none','stubble','short','full','long'];
+  var APPEARANCE_BEARD_CUTS = ['natural','square','spade','forked','goatee',
+    'sideburn','moustache'];
+  var APPEARANCE_BEARD_RENDER = {
+    natural:'full',square:'square',spade:'spade',forked:'forked',goatee:'goatee',
+    sideburn:'chops',moustache:'stache'
+  };
+  FB.PORTRAIT_HAIR_STYLES = ORDINARY_HAIR_STYLES.slice();
+  FB.PORTRAIT_BEARD_KINDS = APPEARANCE_BEARD_KINDS.slice();
+  FB.PORTRAIT_BEARD_CUTS = APPEARANCE_BEARD_CUTS.slice();
   var CULTURE_TONE = {
     norse:.3,english:.5,german:.5,frankish:.6,slavic:.7,baltic:.65,
     gaelic:.4,brezhon:.5,magyar:.8,iberian:1.3,italian:1.2,greek:1.3,
@@ -445,6 +458,16 @@ window.FB = window.FB || {};
     } else {
       style = (spec.female ? female : male)[saltedByte(identity,'wardrobe-hair',0)%5];
     }
+    /* New cuts use their own salt and only replace a bounded minority of
+       ordinary adult results. Existing wardrobe identities therefore mostly
+       keep their old silhouette, while the contextual rules below remain the
+       final authority. */
+    if (spec.adult && style !== 'tonsure' && style !== 'receding' &&
+        style !== 'bald' &&
+        saltedByte(identity,'wardrobe-hair-new',0) > 207) {
+      style = NEW_HAIR_STYLES[
+        saltedByte(identity,'wardrobe-hair-new',1)%NEW_HAIR_STYLES.length];
+    }
     if (!spec.female && spec.age > 42 &&
         saltedUnit(identity,'wardrobe-recede',0) > .62) style = 'receding';
     if (!spec.female && spec.age > 52 &&
@@ -453,6 +476,34 @@ window.FB = window.FB || {};
         saltedByte(identity,'wardrobe-hair',1) > 120) style = 'longLoose';
     if (spec.child) style = spec.female ? 'braids' : 'crop';
     return style;
+  }
+  function hasAppearanceValue(list, value) {
+    return typeof value === 'string' && list.indexOf(value) >= 0;
+  }
+  function normalizedAppearance(spec, appearance) {
+    var out = {};
+    if (!appearance || typeof appearance !== 'object') return out;
+    if (hasAppearanceValue(ORDINARY_HAIR_STYLES,appearance.hairStyle)) {
+      out.hairStyle = appearance.hairStyle;
+    }
+    if (spec.adult && !spec.female &&
+        hasAppearanceValue(APPEARANCE_BEARD_KINDS,appearance.beardKind) &&
+        hasAppearanceValue(APPEARANCE_BEARD_CUTS,appearance.beardCut)) {
+      out.beardKind = appearance.beardKind;
+      out.beardCut = appearance.beardCut;
+      /* These pairs paint identically. Canonicalizing them keeps cache keys,
+         saved overrides, and the picker selection honest about the result. */
+      if (out.beardKind === 'none') {
+        out.beardCut = 'natural';
+      } else if (out.beardKind === 'stubble' && out.beardCut === 'moustache') {
+        out.beardKind = 'none';
+        out.beardCut = 'natural';
+      } else if ((out.beardCut === 'sideburn' || out.beardCut === 'moustache') &&
+          (out.beardKind === 'full' || out.beardKind === 'long')) {
+        out.beardKind = 'short';
+      }
+    }
+    return out;
   }
   function generatedHeadwear(spec, identity) {
     if (spec.child && spec.tier >= 6) return 'circlet';
@@ -596,12 +647,21 @@ window.FB = window.FB || {};
       spec.beardCut = ['full','square','spade','forked'][
         saltedByte(identity,'identity-beard-cut',1)%4];
     }
+    var appearanceSource = Object.prototype.hasOwnProperty.call(opts,'appearance')
+      ? opts.appearance : c.appearance;
+    var appearance = normalizedAppearance(spec,appearanceSource);
+    if (appearance.hairStyle) spec.hairStyle = appearance.hairStyle;
+    if (appearance.beardKind) {
+      spec.beardKind = appearance.beardKind;
+      spec.beardCut = APPEARANCE_BEARD_RENDER[appearance.beardCut] || 'full';
+    }
     spec.freckles = spec.pigment < 1.2
       ? Math.max(0,saltedUnit(identity,'incidental-freckle',0)*1.4-.7)*
         (spec.child ? 1.6 : 1) : 0;
     spec.hwTrim = clampV2(.2+saltedUnit(identity,'wardrobe-hw-trim',0)*.6+
       (tier >= 4 ? .2 : 0),0,1);
     spec.headwear = generatedHeadwear(spec,identity);
+    if (opts.suppressHeadwear) spec.headwear = 'none';
     var hwVariants = HEADWEAR_VARIANTS[spec.headwear];
     spec.headwearVariant = hwVariants
       ? hwVariants[saltedByte(identity,'wardrobe-hw-variant',0)%hwVariants.length] : '';
@@ -614,8 +674,10 @@ window.FB = window.FB || {};
       keyToken(c.dyn||''),keyToken(c.sex||''),age,keyToken(culture),keyToken(faith),
       tier,keyToken(profession),health,expressionClass,spec.scarred?1:0,
       spec.oneEyed?1:0,ailments.sickness||legacyIll?1:0,markKey,
+      keyToken(spec.hairStyle),keyToken(spec.beardKind),keyToken(spec.beardCut),
       equipmentKeys.join(','),opts.transparent?'transparent':'opaque',
-      opts.suppressEquipment?'no-equipment':'equipment'];
+      opts.suppressEquipment?'no-equipment':'equipment',
+      opts.suppressHeadwear?'no-headwear':'headwear'];
     return {key:parts.join('|'),frame:frame,spec:spec,loadout:loadout,
       transparent:!!opts.transparent,suppressEquipment:!!opts.suppressEquipment};
   }
@@ -936,7 +998,8 @@ window.FB = window.FB || {};
   function capPath(ctx, f, style) {
     var u=f.u;
     var temple=f.eyeY-9*u;
-    var fringe=style==='crop'?f.hairY-2*u:f.hairY+3*u;
+    var fringe=style==='crop'||style==='sweptBack'||style==='tiedBack'
+      ? f.hairY-2*u : (style==='bowl' ? f.hairY+8*u : f.hairY+3*u);
     var part=style==='sidePart'?f.cx+f.halfR*.28:f.cx;
     ctx.beginPath();
     ctx.moveTo(f.left-1*u,temple);
@@ -944,7 +1007,15 @@ window.FB = window.FB || {};
       f.crownX-f.halfL*.55,f.top-5*u,f.crownX,f.top-5*u);
     ctx.bezierCurveTo(f.crownX+f.halfR*.55,f.top-5*u,
       f.right+3*u,f.top+18*u,f.right+1*u,temple);
-    if(style==='sidePart'){
+    if(style==='bowl'){
+      ctx.quadraticCurveTo(f.right-5*u,fringe+1*u,f.cx+8*u,fringe);
+      ctx.quadraticCurveTo(f.cx,fringe+2*u,f.cx-8*u,fringe);
+      ctx.quadraticCurveTo(f.left+5*u,fringe+1*u,f.left-1*u,temple);
+    }else if(style==='sweptBack'||style==='tiedBack'){
+      ctx.quadraticCurveTo(f.right-3*u,f.hairY-1*u,f.cx+10*u,f.hairY-7*u);
+      ctx.quadraticCurveTo(f.cx-1*u,f.hairY-10*u,f.left+3*u,f.hairY-2*u);
+      ctx.quadraticCurveTo(f.left+1*u,f.hairY-1*u,f.left-1*u,temple);
+    }else if(style==='sidePart'){
       ctx.quadraticCurveTo(f.right-5*u,fringe+1*u,part+3*u,fringe-5*u);
       ctx.quadraticCurveTo(f.cx-4*u,fringe+8*u,f.left+1*u,temple);
     }else if(style==='braids'){
@@ -1205,6 +1276,66 @@ window.FB = window.FB || {};
   function paintBackHair(ctx, scaffold, spec, q) {
     var f=scaffold.face,u=f.u,style=spec.hairStyle;
     if(style==='bald'||style==='receding'||style==='tonsure')return;
+    if(style==='shoulderWaves'){
+      var waveH=f.chinBottom-f.top;
+      var waveBottom=Math.min(f.chinBottom+waveH*.38,
+        q.bottom ? q.bottom-3*u : f.chinBottom+waveH*.38);
+      ctx.beginPath();
+      ctx.moveTo(f.crownX,f.top-5*u);
+      ctx.bezierCurveTo(f.left-waveH*.12,f.top+waveH*.08,
+        f.left-waveH*.15,f.jawY,f.left-waveH*.18,waveBottom);
+      ctx.quadraticCurveTo(f.left+waveH*.02,waveBottom-waveH*.1,
+        f.cx,waveBottom+waveH*.03);
+      ctx.quadraticCurveTo(f.right-waveH*.02,waveBottom-waveH*.1,
+        f.right+waveH*.18,waveBottom);
+      ctx.bezierCurveTo(f.right+waveH*.15,f.jawY,
+        f.right+waveH*.12,f.top+waveH*.08,f.crownX,f.top-5*u);
+      ctx.closePath();
+      fillStrokeA(ctx,rgbMixV2(spec.hair.base,spec.hair.deep,.46),
+        spec.hair.deep,1.7*u,.9,q);
+      var waveSide;
+      for(waveSide=-1;waveSide<=1;waveSide+=2){
+        ink(ctx,1.1*u,waveSide===spec.lightSide?hairLit(spec,.3):spec.hair.deep,
+          .48,q);
+        var waveIndex;
+        for(waveIndex=0;waveIndex<3;waveIndex++){
+          var waveX=f.cx+waveSide*(f.halfR*.65+waveIndex*4*u);
+          ctx.beginPath();
+          ctx.moveTo(waveX,f.top+8*u);
+          ctx.bezierCurveTo(waveX+waveSide*8*u,f.eyeY,
+            waveX-waveSide*5*u,f.jawY,
+            waveX+waveSide*8*u,waveBottom-4*u);
+          ctx.stroke();
+        }
+      }
+    }
+    if(style==='tiedBack'){
+      var tailH=f.chinBottom-f.top;
+      var tailTop=f.neckTop-7*u;
+      var tailBottom=Math.min(f.collarY+tailH*.48,
+        q.bottom ? q.bottom-3*u : f.collarY+tailH*.48);
+      ctx.beginPath();
+      ctx.moveTo(f.throatX-7*u,tailTop);
+      ctx.bezierCurveTo(f.throatX-13*u,tailTop+tailH*.18,
+        f.throatX-10*u,tailBottom-tailH*.12,f.throatX-3*u,tailBottom);
+      ctx.quadraticCurveTo(f.throatX,tailBottom+5*u,
+        f.throatX+3*u,tailBottom);
+      ctx.bezierCurveTo(f.throatX+11*u,tailBottom-tailH*.12,
+        f.throatX+14*u,tailTop+tailH*.18,f.throatX+7*u,tailTop);
+      ctx.closePath();
+      fillStrokeA(ctx,rgbMixV2(spec.hair.base,spec.hair.deep,.4),
+        spec.hair.deep,1.5*u,.9,q);
+      ink(ctx,1*u,hairLit(spec,.28),.5,q);
+      ctx.beginPath();
+      ctx.moveTo(f.throatX+spec.lightSide*2*u,tailTop+5*u);
+      ctx.bezierCurveTo(f.throatX+spec.lightSide*5*u,tailTop+tailH*.2,
+        f.throatX-spec.lightSide*3*u,tailBottom-tailH*.1,
+        f.throatX,tailBottom-3*u);
+      ctx.stroke();
+      ink(ctx,4*u,spec.cloth.raw,1,q);
+      ctx.beginPath();ctx.moveTo(f.throatX-8*u,tailTop+2*u);
+      ctx.lineTo(f.throatX+8*u,tailTop+2*u);ctx.stroke();
+    }
     if(style==='longLoose'){
       /* the fall waves: out past the temple, in at the jaw, out again
          over the shoulder, ending in locks rather than a hem */
@@ -2493,6 +2624,59 @@ window.FB = window.FB || {};
           cxx+(f.cx-cxx)*.12,f.hairY-1*u);
         ctx.stroke();
       }
+    }else if(style==='bowl'){
+      ink(ctx,.9*u,spec.hair.deep,.58,q);
+      for(i=0;i<12;i++){
+        var bowlT=(i+.5)/12;
+        var bowlX=mixV2(f.left+3*u,f.right-3*u,bowlT);
+        ctx.beginPath();
+        ctx.moveTo(bowlX,f.top+(4+Math.abs(bowlT-.5)*8)*u);
+        ctx.quadraticCurveTo(bowlX+(rng()-.5)*2*u,f.hairY+1*u,
+          bowlX+(rng()-.5)*1.2*u,f.hairY+7*u);
+        ctx.stroke();
+      }
+    }else if(style==='sweptBack'){
+      ink(ctx,1*u,spec.hair.light,.5,q);
+      for(i=0;i<10;i++){
+        var sweptT=(i+.5)/10;
+        var sweptX=mixV2(f.left+4*u,f.right-4*u,sweptT);
+        ctx.beginPath();
+        ctx.moveTo(sweptX,f.hairY-1*u);
+        ctx.bezierCurveTo(sweptX+(sweptX-f.cx)*.15,f.top+13*u,
+          f.crownX+(sweptX-f.cx)*.38,f.top+5*u,
+          f.crownX+(sweptX-f.cx)*.52,f.top-2*u);
+        ctx.stroke();
+      }
+    }else if(style==='shoulderWaves'){
+      ink(ctx,.9*u,spec.hair.light,.46,q);
+      for(i=0;i<9;i++){
+        var shoulderX=mixV2(f.left+4*u,f.right-4*u,(i+.5)/9);
+        ctx.beginPath();
+        ctx.moveTo(shoulderX,f.top+4*u);
+        ctx.quadraticCurveTo(shoulderX+(f.cx-shoulderX)*.1,
+          f.hairY-5*u,shoulderX+(rng()-.5)*2*u,f.hairY+4*u);
+        ctx.stroke();
+      }
+    }else if(style==='tiedBack'){
+      ink(ctx,.9*u,spec.hair.light,.5,q);
+      for(i=0;i<10;i++){
+        var tiedX=mixV2(f.left+3*u,f.right-3*u,(i+.5)/10);
+        ctx.beginPath();
+        ctx.moveTo(tiedX,f.hairY-1*u);
+        ctx.quadraticCurveTo(mixV2(tiedX,f.crownX,.65),f.top+4*u,
+          f.crownX+(tiedX-f.cx)*.12,f.top-3*u);
+        ctx.stroke();
+      }
+    }else if(style==='crownBraid'){
+      ink(ctx,.9*u,spec.hair.deep,.45,q);
+      for(i=0;i<8;i++){
+        var crownX=mixV2(f.left+5*u,f.right-5*u,(i+.5)/8);
+        ctx.beginPath();
+        ctx.moveTo(crownX,f.hairY+1*u);
+        ctx.quadraticCurveTo(crownX+(f.cx-crownX)*.25,f.top+7*u,
+          f.crownX+(crownX-f.cx)*.18,f.top+1*u);
+        ctx.stroke();
+      }
     }else if(style==='sidePart'){
       var part=f.cx+f.halfR*.28;
       ink(ctx,.85*u,spec.hair.light,.5,q);
@@ -2573,6 +2757,33 @@ window.FB = window.FB || {};
       ctx.quadraticCurveTo(partX-.8*u,f.top+16*u,partX-3.8*u,f.hairY-1*u);
       ctx.stroke();
     }
+    if(style==='bowl'){
+      ink(ctx,1.2*u,spec.hair.deep,.75,q);
+      ctx.beginPath();
+      ctx.moveTo(f.left+4*u,f.hairY+7*u);
+      for(i=1;i<=8;i++){
+        var bowlEdge=mixV2(f.left+4*u,f.right-4*u,i/8);
+        ctx.quadraticCurveTo(bowlEdge-3*u,
+          f.hairY+(i%2?9:6)*u,bowlEdge,f.hairY+7*u);
+      }
+      ctx.stroke();
+    }
+    if(style==='crownBraid'){
+      var braidCount=11;
+      for(i=0;i<braidCount;i++){
+        var braidT=i/(braidCount-1);
+        var braidX=mixV2(f.left+5*u,f.right-5*u,braidT);
+        var braidArch=1-Math.pow(braidT*2-1,2);
+        var braidY=mixV2(f.hairY-1*u,f.top+3*u,braidArch);
+        fEll(ctx,braidX,braidY,4.6*u,3.4*u,
+          i&1?spec.hair.base:hairLit(spec,.18));
+        ink(ctx,.8*u,spec.hair.deep,.62,q);
+        ctx.beginPath();
+        ctx.ellipse(braidX,braidY,4.6*u,3.4*u,
+          (i&1?.45:-.45),0,TAU);
+        ctx.stroke();
+      }
+    }
     var hH=f.chinBottom-f.top;
     if(style==='longLoose'){
       /* the lock in front of the shoulder is a mass with its own
@@ -2626,7 +2837,7 @@ window.FB = window.FB || {};
       }
       fringeWisps(ctx,f,spec,rng,f.hairY+3*u,7,q);
     }
-    if(style==='bun'||style==='curly'){
+    if(style==='bun'||style==='curly'||style==='shoulderWaves'){
       fringeWisps(ctx,f,spec,rng,f.hairY+3*u,6,q);
     }
     if(style==='braids'){

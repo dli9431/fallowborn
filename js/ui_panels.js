@@ -1123,7 +1123,11 @@ window.FB = window.FB || {};
       '</div>') +
       '<button type="button" class="btn equip-best-action" id="equipment-best"' +
       (blocked ? ' disabled' : '') + '>' +
-      esc(FB.T('Equip Best…')) + '</button></div></div>';
+      esc(FB.T('Equip Best…')) + '</button>' +
+      (c.id === s.player.charId
+        ? '<button type="button" class="btn barber-action" id="equipment-barber"' +
+          (blocked ? ' disabled' : '') + '>' + esc(FB.T('Visit Barber…')) + '</button>'
+        : '') + '</div></div>';
     return h;
   }
   function wireEquipmentButtons(root, returnMode) {
