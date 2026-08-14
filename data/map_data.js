@@ -979,6 +979,7 @@ FBDATA.balance = {
   rivalHeatPlayerStart: 20, rivalHeatNpcStart: 30, rivalHeatLegacyStart: 25,
   rivalHeatOldSave: 35, rivalContactHeat: 8, rivalHeatDecayDelay: 720, rivalHeatDecay: 3,
   rivalPeaceDays: 1440,
+  barberCostByTier: [1, 2, 4, 8, 12, 18, 28, 40],
   itemSellRatio: 0.5, // what a buyer gives against an item's value
   /* peddler stock bands (js/items.js FB.offerItem): the full-table offer first
      rolls a rarity class from the customer's station band, then picks inside

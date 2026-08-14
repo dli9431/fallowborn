@@ -14214,6 +14214,10 @@ window.FB = window.FB || {};
     $('equipment-best').addEventListener('click', function () {
       UI.showEquipBestPreview(cid, exitMode, returnContext);
     });
+    const barber = $('equipment-barber');
+    if (barber) barber.addEventListener('click', function () {
+      UI.showBarber(cid, exitMode, returnContext);
+    });
     $('equipment-close').addEventListener('click', function () {
       if (householdPlan) {
         finishHouseholdPlanReturn(returnContext, function () {});
@@ -14224,6 +14228,179 @@ window.FB = window.FB || {};
       }
       else UI.closeModal();
     });
+  };
+
+  function barberChoiceGroup(label, attribute, choices, selected) {
+    let h = '<section class="barber-group"><h4>' + esc(label) + '</h4>' +
+      '<div class="barber-choices" role="group" aria-label="' + esc(label) + '">';
+    for (let i = 0; i < choices.length; i++) {
+      const choice = choices[i];
+      const active = choice.id === selected;
+      h += '<button type="button" class="barber-choice" ' + attribute + '="' +
+        esc(choice.id) + '" aria-pressed="' + (active ? 'true' : 'false') + '">' +
+        esc(choice.label) + '</button>';
+    }
+    return h + '</div></section>';
+  }
+
+  function barberStatusText(status) {
+    if (!status) return '';
+    if (status.code === 'travel') {
+      return FB.T('The barber cannot work while the household is traveling.');
+    }
+    if (status.code === 'event') {
+      return FB.T('Resolve the current event before visiting the barber.');
+    }
+    if (status.code === 'insufficient_funds') {
+      return FB.T('You need {cost} gold, but have {gold}.', {
+        cost:status.cost, gold:status.gold
+      });
+    }
+    if (status.code === 'unchanged') {
+      return FB.T('Choose a different appearance to apply.');
+    }
+    if (status.code === 'invalid_selection') {
+      return FB.T('Choose a valid hairstyle and facial-hair combination.');
+    }
+    if (!status.ok) return FB.T('The barber is unavailable right now.');
+    return FB.T('The new appearance will be applied without advancing time.');
+  }
+
+  UI.showBarber = function (cid, exitMode, returnContext) {
+    const s = FB.state;
+    const c = s && s.chars[cid];
+    const options = s && FB.barberOptions(s, cid);
+    if (!s || !c || !options || !options.ok) return;
+    exitMode = exitMode === 'character' ? 'character' : 'close';
+    let selection = {
+      hairStyle:options.current.hairStyle,
+      beardKind:options.current.beardKind,
+      beardCut:options.current.beardCut
+    };
+    let beardExplicit = false;
+    const previewLabel = FB.T('Uncovered appearance preview for {name}', {
+      name:FB.fullName(c)
+    });
+    let h = '<div class="barber-sheet"><div class="barber-preview-wrap">' +
+      '<canvas id="barber-preview" class="barber-preview" width="' +
+      Math.round(192 * FB.portraitDpr) + '" height="' +
+      Math.round(216 * FB.portraitDpr) + '" role="img" aria-label="' +
+      esc(previewLabel) + '"></canvas>' +
+      '<div class="barber-quote" id="barber-quote"></div>' +
+      '<div class="progressnote" id="barber-status" aria-live="polite"></div>' +
+      '</div><div class="barber-controls">' +
+      barberChoiceGroup(FB.T('Hair'), 'data-barber-hair',
+        options.hair, selection.hairStyle);
+    if (options.facialHair) {
+      h += barberChoiceGroup(FB.T('Facial hair amount'), 'data-barber-beard-kind',
+        options.beardKinds, selection.beardKind) +
+        barberChoiceGroup(FB.T('Facial hair shape'), 'data-barber-beard-cut',
+          options.beardCuts, selection.beardCut);
+    }
+    h += '</div></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="barber-apply">' +
+      esc(FB.T('Pay and apply')) + '</button>' +
+      '<button type="button" class="btn" id="barber-back">' +
+      esc(FB.T('Back to equipment')) + '</button></div>';
+    openModal(FB.T('Visit Barber for {name}', { name:FB.fullName(c) }), h, {
+      historyView:true,
+      modalClass:'fullsheet-modal barber-modal',
+      historyBackRender:function () {
+        UI.showEquipmentModal(cid, exitMode, returnContext);
+      }
+    });
+
+    let status = null;
+    function requestedSelection() {
+      const request = { hairStyle:selection.hairStyle };
+      if (options.facialHair && beardExplicit) {
+        request.beardKind = selection.beardKind;
+        request.beardCut = selection.beardCut;
+      }
+      return request;
+    }
+    function updateChoiceState(attribute, value) {
+      const buttons = $('gm-body').querySelectorAll('[' + attribute + ']');
+      for (let i = 0; i < buttons.length; i++) {
+        buttons[i].setAttribute('aria-pressed',
+          buttons[i].getAttribute(attribute) === value ? 'true' : 'false');
+      }
+    }
+    function updatePreview() {
+      status = FB.barberStatus(FB.state, cid, requestedSelection());
+      if (status.selection) selection = status.selection;
+      updateChoiceState('data-barber-hair', selection.hairStyle);
+      if (options.facialHair) {
+        updateChoiceState('data-barber-beard-kind', selection.beardKind);
+        updateChoiceState('data-barber-beard-cut', selection.beardCut);
+      }
+      const liveState = FB.state;
+      const liveCharacter = liveState && liveState.chars[cid];
+      if (liveCharacter) {
+        const appearance = { hairStyle:selection.hairStyle };
+        if (options.facialHair) {
+          appearance.beardKind = selection.beardKind;
+          appearance.beardCut = selection.beardCut;
+        }
+        FB.paintPortrait($('barber-preview'), liveCharacter,
+          liveState.date.year, {
+            state:liveState,
+            appearance:appearance,
+            suppressEquipment:true,
+            suppressHeadwear:true
+          });
+      }
+      $('barber-quote').textContent = FB.T(
+        'Cost: {cost} gold · Current gold: {gold}', {
+          cost:status.cost, gold:status.gold
+        });
+      $('barber-status').textContent = barberStatusText(status);
+      $('barber-status').classList.toggle('warnote', !status.ok);
+      $('barber-apply').disabled = !status.ok;
+    }
+
+    const hairButtons = $('gm-body').querySelectorAll('[data-barber-hair]');
+    for (let i = 0; i < hairButtons.length; i++) {
+      hairButtons[i].addEventListener('click', function () {
+        selection.hairStyle = hairButtons[i].getAttribute('data-barber-hair');
+        updatePreview();
+      });
+    }
+    const amountButtons = $('gm-body').querySelectorAll('[data-barber-beard-kind]');
+    for (let i = 0; i < amountButtons.length; i++) {
+      amountButtons[i].addEventListener('click', function () {
+        beardExplicit = true;
+        selection.beardKind = amountButtons[i].getAttribute('data-barber-beard-kind');
+        updatePreview();
+      });
+    }
+    const cutButtons = $('gm-body').querySelectorAll('[data-barber-beard-cut]');
+    for (let i = 0; i < cutButtons.length; i++) {
+      cutButtons[i].addEventListener('click', function () {
+        beardExplicit = true;
+        selection.beardCut = cutButtons[i].getAttribute('data-barber-beard-cut');
+        updatePreview();
+      });
+    }
+    $('barber-apply').addEventListener('click', function () {
+      const result = FB.visitBarber(FB.state, cid, requestedSelection());
+      if (!result.ok) {
+        updatePreview();
+        return;
+      }
+      UI.refresh();
+      UI.showEquipmentModal(cid, exitMode, returnContext);
+      mobileNavClosedAll('modal-view', true);
+      UI.toast(FB.T('New appearance applied for {cost} gold.', {
+        cost:result.cost
+      }));
+    });
+    $('barber-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showEquipmentModal(cid, exitMode, returnContext);
+      });
+    });
+    updatePreview();
   };
 
   function equipmentSlotsText(slots) {

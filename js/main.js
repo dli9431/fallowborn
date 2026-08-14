@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.124.1';
+  FB.VERSION = '1.125.0';
   FB.CHANGELOG = [
+    { v: '1.125.0', date: '2026-08-14', changes: [
+      'Visit the barber from Equipment to customize the protagonist’s hair and facial hair.'
+    ] },
     { v: '1.124.1', date: '2026-08-13', changes: [
       'Title-screen music controls now sit in the lower-left, with a next button for cycling through all three themes.'
     ] },

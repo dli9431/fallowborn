@@ -48236,6 +48236,16 @@
         "text": "Claim the deer was already dead."
       }
     },
+    "src.06961d6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Visit Barber…"
+      }
+    },
     "src.069c73dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54045,6 +54055,16 @@
         "text": "Under One Roof"
       }
     },
+    "src.13de5358": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Curls"
+      }
+    },
     "src.13e44906": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59058,6 +59078,16 @@
         "text": "The wax cracks twice. The returning packet carries proof of the hand that opened it."
       }
     },
+    "src.1fdbb0fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Tied back"
+      }
+    },
     "src.1fe1dace": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59298,6 +59328,16 @@
       ],
       "source": {
         "text": "Discredit a Political Rival"
+      }
+    },
+    "src.2089a657": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "fullsheet-modal barber-modal"
       }
     },
     "src.208e8d72": {
@@ -60203,6 +60243,16 @@
       ],
       "source": {
         "text": "Learning {value}"
+      }
+    },
+    "src.228cf2d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Forked"
       }
     },
     "src.22a1f55a": {
@@ -64025,6 +64075,16 @@
         "text": "Your campaign service"
       }
     },
+    "src.2b6c5ea5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a valid hairstyle and facial-hair combination."
+      }
+    },
     "src.2b729250": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64464,6 +64524,16 @@
       ],
       "source": {
         "text": "Guide: technology"
+      }
+    },
+    "src.2c7226e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cost: {cost} gold · Current gold: {gold}"
       }
     },
     "src.2c74f119": {
@@ -65676,6 +65746,16 @@
       ],
       "source": {
         "text": "Meet them with the host you already have."
+      }
+    },
+    "src.2f9c18c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Clean-shaven"
       }
     },
     "src.2f9c78d7": {
@@ -67384,6 +67464,16 @@
       ],
       "source": {
         "text": "Carry water and tend the weary."
+      }
+    },
+    "src.33cd32fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Moustache"
       }
     },
     "src.33cfa351": {
@@ -70931,6 +71021,16 @@
       ],
       "source": {
         "text": "Piety {change}"
+      }
+    },
+    "src.3d0c27ba": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "New appearance applied for {cost} gold."
       }
     },
     "src.3d13f465": {
@@ -74604,6 +74704,16 @@
       ],
       "source": {
         "text": "There is no patron left to pay you."
+      }
+    },
+    "src.45939473": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Long"
       }
     },
     "src.459a6081": {
@@ -80729,6 +80839,16 @@
         "text": "A screw press applies steady force to grapes and fruit."
       }
     },
+    "src.54e455d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Hair"
+      }
+    },
     "src.54e5dd8a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81380,6 +81500,16 @@
       ],
       "source": {
         "text": "Stay. This is home, chains and all."
+      }
+    },
+    "src.5659e626": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Facial hair shape"
       }
     },
     "src.565b0199": {
@@ -82071,6 +82201,16 @@
       ],
       "source": {
         "text": "Release for leverage"
+      }
+    },
+    "src.580a8888": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The new appearance will be applied without advancing time."
       }
     },
     "src.580a9faa": {
@@ -82945,6 +83085,16 @@
       ],
       "source": {
         "text": "{days} days remain · deadline {season} {day}, {year}"
+      }
+    },
+    "src.5a393f1c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Sideburns"
       }
     },
     "src.5a3967cc": {
@@ -85320,6 +85470,16 @@
         "text": "🤝 {realm} and {ally} bind themselves in a defensive alliance."
       }
     },
+    "src.5fdddd75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Short"
+      }
+    },
     "src.5fdf61c0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85328,6 +85488,16 @@
       ],
       "source": {
         "text": "Lawful bread, dearer than yesterday’s."
+      }
+    },
+    "src.5fee386c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Goatee"
       }
     },
     "src.5ff0d5f3": {
@@ -87075,6 +87245,16 @@
       ],
       "source": {
         "text": "Zaragoza"
+      }
+    },
+    "src.63d90b0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Swept back"
       }
     },
     "src.63dae8ef": {
@@ -90358,6 +90538,16 @@
       ],
       "source": {
         "text": "Have it pulled."
+      }
+    },
+    "src.6c1caba5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Bowl cut"
       }
     },
     "src.6c214169": {
@@ -97070,6 +97260,16 @@
         "text": "Rasht"
       }
     },
+    "src.7c1e565b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Side part"
+      }
+    },
     "src.7c24c551": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98643,6 +98843,16 @@
         "text": "Fund learned people; their work aids the national project {technology}."
       }
     },
+    "src.7fa5ff5c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Full"
+      }
+    },
     "src.7fa6dcee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99413,6 +99623,16 @@
       ],
       "source": {
         "text": "Clergy marriage"
+      }
+    },
+    "src.81771fda": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Stubble"
       }
     },
     "src.817c050f": {
@@ -101642,6 +101862,16 @@
         "text": "Choose the focus outline and, when you are independent, your realm’s map color."
       }
     },
+    "src.86503e93": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The barber cannot work while the household is traveling."
+      }
+    },
     "src.865735ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102661,6 +102891,16 @@
       ],
       "source": {
         "text": "Warm, sweet, and free. A skill worth keeping."
+      }
+    },
+    "src.88d42120": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Long and loose"
       }
     },
     "src.88d51264": {
@@ -104031,6 +104271,16 @@
         "text": "Study or apprenticeship"
       }
     },
+    "src.8bbc4549": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Facial hair amount"
+      }
+    },
     "src.8bcc5cfe": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104069,6 +104319,16 @@
       ],
       "source": {
         "text": "Fine copies make a scholar’s name — or a week of blots."
+      }
+    },
+    "src.8be17db6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Visit Barber for {name}"
       }
     },
     "src.8bee6a4a": {
@@ -109716,6 +109976,16 @@
       ],
       "source": {
         "text": "Response under a recognized rite"
+      }
+    },
+    "src.99ee500e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Resolve the current event before visiting the barber."
       }
     },
     "src.99eed8f6": {
@@ -121935,6 +122205,16 @@
         "text": "Expand {name}’s branch"
       }
     },
+    "src.b6a85491": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a different appearance to apply."
+      }
+    },
     "src.b6ad7acb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123416,6 +123696,16 @@
       ],
       "source": {
         "text": "{count} active"
+      }
+    },
+    "src.ba25b0b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Natural"
       }
     },
     "src.ba2b473c": {
@@ -125147,6 +125437,16 @@
         "text": "Disable guide hints"
       }
     },
+    "src.becf7d28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "You need {cost} gold, but have {gold}."
+      }
+    },
     "src.bed0dcc1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126272,6 +126572,16 @@
       ],
       "source": {
         "text": "Active commitment"
+      }
+    },
+    "src.c1b76632": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Spade"
       }
     },
     "src.c1ba09e7": {
@@ -129073,6 +129383,16 @@
       ],
       "source": {
         "text": ": invalid confidence."
+      }
+    },
+    "src.c84db9f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The barber is unavailable right now."
       }
     },
     "src.c856e97b": {
@@ -135834,6 +136154,16 @@
         "text": "Royal Chancery"
       }
     },
+    "src.d92d8963": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Close crop"
+      }
+    },
     "src.d938a3ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138482,6 +138812,16 @@
         "text": "The worn letters offer no answer."
       }
     },
+    "src.dfda991a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Bun"
+      }
+    },
     "src.dfdebedb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139942,6 +140282,16 @@
         "text": "Every debt in one place — most of them owed to you."
       }
     },
+    "src.e34038d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pay and apply"
+      }
+    },
     "src.e34b12a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140553,6 +140903,16 @@
       ],
       "source": {
         "text": "Fled a final debt judgment."
+      }
+    },
+    "src.e4bb1d17": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Shoulder waves"
       }
     },
     "src.e4bdd6be": {
@@ -141234,6 +141594,16 @@
       ],
       "source": {
         "text": "Muster Burden"
+      }
+    },
+    "src.e651e186": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Braids"
       }
     },
     "src.e6584f41": {
@@ -149654,6 +150024,16 @@
         "text": "Send a legation"
       }
     },
+    "src.fac98c66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Square"
+      }
+    },
     "src.facf80a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150265,6 +150645,16 @@
       ],
       "source": {
         "text": "Work the extra days instead."
+      }
+    },
+    "src.fc5ff0fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "Crown braid"
       }
     },
     "src.fc63924a": {
@@ -151411,6 +151801,16 @@
       ],
       "source": {
         "text": "Fisherman with his own boat"
+      }
+    },
+    "src.ff72563e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Uncovered appearance preview for {name}"
       }
     },
     "src.ff7bf037": {
@@ -159829,6 +160229,22 @@
         "text": "Bound to the direct liege relationship with {grantor}"
       }
     },
+    "ui:Bowl cut": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Bowl cut"
+      }
+    },
+    "ui:Braids": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Braids"
+      }
+    },
     "ui:Bread and coin for the poor at the {temple} gate. ({money:10})": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -159959,6 +160375,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Buildings that grant development identify the immediate amount when raised. National technologies can raise every county’s development ceiling in that nation above its base of 10."
+      }
+    },
+    "ui:Bun": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Bun"
       }
     },
     "ui:But a house is more than one life. Who carries the name onward?": {
@@ -160579,6 +161003,14 @@
         "text": "Choose a developed market on the map or from the list. The stake and route overhead are charged separately."
       }
     },
+    "ui:Choose a different appearance to apply.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a different appearance to apply."
+      }
+    },
     "ui:Choose a household wearer and compatible slot. This costs no day.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -160649,6 +161081,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose a target"
+      }
+    },
+    "ui:Choose a valid hairstyle and facial-hair combination.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a valid hairstyle and facial-hair combination."
       }
     },
     "ui:Choose an Accomplice": {
@@ -161009,6 +161449,14 @@
         "text": "Class: {className}"
       }
     },
+    "ui:Clean-shaven": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Clean-shaven"
+      }
+    },
     "ui:Clear": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161047,6 +161495,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Close"
+      }
+    },
+    "ui:Close crop": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Close crop"
       }
     },
     "ui:Coin and prices this year": {
@@ -161374,6 +161830,17 @@
         "text": "Controlled by its current owner"
       }
     },
+    "ui:Cost: {cost} gold · Current gold: {gold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cost: {cost} gold · Current gold: {gold}"
+      }
+    },
     "ui:Costs {money:10}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -161674,6 +162141,14 @@
         "text": "Crown authority, council support, national research, diplomacy, and the full realm host become strategic resources."
       }
     },
+    "ui:Crown braid": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Crown braid"
+      }
+    },
     "ui:Crowned ruler": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161722,6 +162197,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Curial Standing, order, bloc, piety, and relationships within the college matter."
+      }
+    },
+    "ui:Curls": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Curls"
       }
     },
     "ui:Current": {
@@ -163792,6 +164275,22 @@
         "text": "Face value: {money:face} in nominal coin. What that face value can buy may rise or fall with prices."
       }
     },
+    "ui:Facial hair amount": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Facial hair amount"
+      }
+    },
+    "ui:Facial hair shape": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Facial hair shape"
+      }
+    },
     "ui:Faith": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164192,6 +164691,14 @@
         "text": "Foreign-sovereign Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
       }
     },
+    "ui:Forked": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Forked"
+      }
+    },
     "ui:Form your own venture": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164272,6 +164779,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "From the family armory"
+      }
+    },
+    "ui:Full": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Full"
       }
     },
     "ui:Full figure of {name}": {
@@ -164420,6 +164935,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds."
+      }
+    },
+    "ui:Goatee": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Goatee"
       }
     },
     "ui:Gold spent now": {
@@ -164881,6 +165404,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Guild: {rank}"
+      }
+    },
+    "ui:Hair": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Hair"
       }
     },
     "ui:Hajja": {
@@ -166700,6 +167231,22 @@
         "text": "Locked enterprises and deeds link back to their prerequisite technology."
       }
     },
+    "ui:Long": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Long"
+      }
+    },
+    "ui:Long and loose": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Long and loose"
+      }
+    },
     "ui:Long shot": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167510,6 +168057,14 @@
         "text": "Motion posture"
       }
     },
+    "ui:Moustache": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Moustache"
+      }
+    },
     "ui:Move capital to {destination}?": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -167776,6 +168331,14 @@
         "text": "National technology"
       }
     },
+    "ui:Natural": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Natural"
+      }
+    },
     "ui:Navigate the college while maintaining the character’s household and other offices.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167848,6 +168411,16 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Neutral direction"
+      }
+    },
+    "ui:New appearance applied for {cost} gold.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "New appearance applied for {cost} gold."
       }
     },
     "ui:New extraordinary aids require the Estates’ consent.": {
@@ -170576,6 +171149,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Pay Homage"
+      }
+    },
+    "ui:Pay and apply": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pay and apply"
       }
     },
     "ui:Pay missed this season": {
@@ -173408,6 +173989,14 @@
         "text": "Resolve the current event before changing equipment."
       }
     },
+    "ui:Resolve the current event before visiting the barber.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Resolve the current event before visiting the barber."
+      }
+    },
     "ui:Resolve the current wartime duty before retiring.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174861,6 +175450,22 @@
         "text": "Several kingdoms answer to an imperial crown."
       }
     },
+    "ui:Short": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Short"
+      }
+    },
+    "ui:Shoulder waves": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Shoulder waves"
+      }
+    },
     "ui:Show all {count}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -174893,6 +175498,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Sickness has taken hold."
+      }
+    },
+    "ui:Side part": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Side part"
+      }
+    },
+    "ui:Sideburns": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Sideburns"
       }
     },
     "ui:Siege progress {change}": {
@@ -175021,6 +175642,14 @@
         "text": "Space plays or pauses time; F skips to the next happening. On touch screens the same controls are in the top bar."
       }
     },
+    "ui:Spade": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Spade"
+      }
+    },
     "ui:Spears — you must ride, or pay dearly": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175125,6 +175754,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Spouse: {name}"
+      }
+    },
+    "ui:Square": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Square"
       }
     },
     "ui:Staff all idle enterprises…": {
@@ -175548,6 +176185,14 @@
         "text": "Story-specific consequence"
       }
     },
+    "ui:Stubble": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Stubble"
+      }
+    },
     "ui:Student of the Faith": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175662,6 +176307,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Swear Fealty"
+      }
+    },
+    "ui:Swept back": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Swept back"
       }
     },
     "ui:Sworn peace pacts protect every reachable neighboring target.": {
@@ -176329,6 +176982,22 @@
         "text": "The assistant’s recommendation is listed first. Every family remains your decision."
       }
     },
+    "ui:The barber cannot work while the household is traveling.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The barber cannot work while the household is traveling."
+      }
+    },
+    "ui:The barber is unavailable right now.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The barber is unavailable right now."
+      }
+    },
     "ui:The bloc pledges its support.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176954,6 +177623,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "The motion has already been called to a vote."
+      }
+    },
+    "ui:The new appearance will be applied without advancing time.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The new appearance will be applied without advancing time."
       }
     },
     "ui:The new head receives the family’s money in full (no death dues), land, realm, house property, enterprises, and the family armory.": {
@@ -178114,6 +178791,14 @@
         "text": "Three years · 12 seasons"
       }
     },
+    "ui:Tied back": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/items.js",
+      "source": {
+        "text": "Tied back"
+      }
+    },
     "ui:Too distant for this culture and faith": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178427,6 +179112,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Unchanged"
+      }
+    },
+    "ui:Uncovered appearance preview for {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Uncovered appearance preview for {name}"
       }
     },
     "ui:Undecided": {
@@ -178909,6 +179604,24 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Visible kin, a dynasty, the managed household, and the playable line are different sets."
+      }
+    },
+    "ui:Visit Barber for {name}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Visit Barber for {name}"
+      }
+    },
+    "ui:Visit Barber…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Visit Barber…"
       }
     },
     "ui:Visit the capital: {days} travel days, {money:cost}, at least {stay} days in residence, then +{rate} Standing each ordinary day.": {
@@ -179825,6 +180538,17 @@
       "location": "js/armies.js",
       "source": {
         "text": "You need at least {needed} prestige to be entrusted with an army (now {current})."
+      }
+    },
+    "ui:You need {cost} gold, but have {gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost",
+        "gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "You need {cost} gold, but have {gold}."
       }
     },
     "ui:You need {needed} piety (now {current}).": {

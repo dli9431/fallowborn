@@ -661,6 +661,255 @@ window.FB = window.FB || {};
     return null;
   };
 
+  /* ---------- protagonist appearance and barbering ---------- */
+  const BARBER_HAIR = [
+    { id:'crop' }, { id:'sidePart' }, { id:'curly' }, { id:'longLoose' },
+    { id:'braids' }, { id:'bun' }, { id:'bowl' }, { id:'sweptBack' },
+    { id:'shoulderWaves' }, { id:'tiedBack' }, { id:'crownBraid' }
+  ];
+  const BARBER_BEARD_KINDS = [
+    { id:'none' }, { id:'stubble' }, { id:'short' }, { id:'full' }, { id:'long' }
+  ];
+  const BARBER_BEARD_CUTS = [
+    { id:'natural' }, { id:'square' }, { id:'spade' }, { id:'forked' },
+    { id:'goatee' }, { id:'sideburn' }, { id:'moustache' }
+  ];
+  const BARBER_PUBLIC_CUT = {
+    full:'natural', square:'square', spade:'spade', forked:'forked',
+    goatee:'goatee', chops:'sideburn', stache:'moustache'
+  };
+
+  function barberHas(list, id) {
+    for (let i = 0; i < list.length; i++) if (list[i].id === id) return true;
+    return false;
+  }
+
+  function barberAdultMan(state, c) {
+    const year = state && state.date ? Number(state.date.year) || 0 : 0;
+    const born = c && isFinite(c.born) ? Number(c.born) : year;
+    return !!c && c.sex === 'm' && year - born >= 16;
+  }
+
+  function canonicalBeard(kind, cut) {
+    if (!barberHas(BARBER_BEARD_KINDS, kind) ||
+        !barberHas(BARBER_BEARD_CUTS, cut)) return null;
+    if (kind === 'none') cut = 'natural';
+    else if (kind === 'stubble' && cut === 'moustache') {
+      kind = 'none'; cut = 'natural';
+    }
+    else if ((cut === 'sideburn' || cut === 'moustache') &&
+        (kind === 'full' || kind === 'long')) kind = 'short';
+    return { beardKind:kind, beardCut:cut };
+  }
+
+  function storedBeardAppearance(state, c) {
+    if (!barberAdultMan(state, c) || !c.appearance) return null;
+    return canonicalBeard(c.appearance.beardKind, c.appearance.beardCut);
+  }
+
+  function publicLook(c, state, appearance) {
+    const opts = appearance === undefined ? {} : { appearance:appearance };
+    const look = FB.characterLook(c, state.date.year, state, opts);
+    return {
+      hairStyle:look.hairStyle,
+      beardKind:look.beardKind,
+      beardCut:BARBER_PUBLIC_CUT[look.beardCut] || 'natural'
+    };
+  }
+
+  function barberHairLabel(id) {
+    if (id === 'crop') return FB.T('Close crop');
+    if (id === 'sidePart') return FB.T('Side part');
+    if (id === 'curly') return FB.T('Curls');
+    if (id === 'longLoose') return FB.T('Long and loose');
+    if (id === 'braids') return FB.T('Braids');
+    if (id === 'bun') return FB.T('Bun');
+    if (id === 'bowl') return FB.T('Bowl cut');
+    if (id === 'sweptBack') return FB.T('Swept back');
+    if (id === 'shoulderWaves') return FB.T('Shoulder waves');
+    if (id === 'tiedBack') return FB.T('Tied back');
+    if (id === 'crownBraid') return FB.T('Crown braid');
+    return id;
+  }
+
+  function barberBeardKindLabel(id) {
+    if (id === 'none') return FB.T('Clean-shaven');
+    if (id === 'stubble') return FB.T('Stubble');
+    if (id === 'short') return FB.T('Short');
+    if (id === 'full') return FB.T('Full');
+    if (id === 'long') return FB.T('Long');
+    return id;
+  }
+
+  function barberBeardCutLabel(id) {
+    if (id === 'natural') return FB.T('Natural');
+    if (id === 'square') return FB.T('Square');
+    if (id === 'spade') return FB.T('Spade');
+    if (id === 'forked') return FB.T('Forked');
+    if (id === 'goatee') return FB.T('Goatee');
+    if (id === 'sideburn') return FB.T('Sideburns');
+    if (id === 'moustache') return FB.T('Moustache');
+    return id;
+  }
+
+  function barberChoiceList(entries, labelOf) {
+    return entries.map(function (entry) {
+      return { id:entry.id, label:labelOf(entry.id) };
+    });
+  }
+
+  FB.barberCost = function (state) {
+    const defaults = [1, 2, 4, 8, 12, 18, 28, 40];
+    const costs = FBDATA.balance.barberCostByTier || defaults;
+    const tier = state && state.player
+      ? Math.max(0, Math.min(7, Math.round(Number(state.player.tier) || 0))) : 0;
+    const value = Number(costs[tier]);
+    return isFinite(value) && value >= 0 ? value : defaults[tier];
+  };
+
+  FB.barberOptions = function (state, cid) {
+    if (!state || !state.player || cid !== state.player.charId) {
+      return { ok:false, code:'not_protagonist' };
+    }
+    const c = state.chars && state.chars[cid];
+    if (!c || c.dead) return { ok:false, code:'dead' };
+    const facialHair = barberAdultMan(state, c);
+    const effective = publicLook(c, state);
+    const choiceHair = barberHas(BARBER_HAIR, effective.hairStyle)
+      ? effective.hairStyle : 'crop';
+    return {
+      ok:true,
+      cid:cid,
+      cost:FB.barberCost(state),
+      gold:Number(state.player.gold) || 0,
+      facialHair:facialHair,
+      beardOverridden:!!storedBeardAppearance(state, c),
+      hair:barberChoiceList(BARBER_HAIR, barberHairLabel),
+      beardKinds:facialHair
+        ? barberChoiceList(BARBER_BEARD_KINDS, barberBeardKindLabel) : [],
+      beardCuts:facialHair
+        ? barberChoiceList(BARBER_BEARD_CUTS, barberBeardCutLabel) : [],
+      current:{
+        hairStyle:choiceHair,
+        beardKind:facialHair ? effective.beardKind : null,
+        beardCut:facialHair ? effective.beardCut : null
+      }
+    };
+  };
+
+  function barberResultBase(state, cid) {
+    return {
+      ok:false,
+      cid:cid,
+      cost:FB.barberCost(state),
+      gold:state && state.player ? Number(state.player.gold) || 0 : 0
+    };
+  }
+
+  FB.barberStatus = function (state, cid, selection) {
+    const result = barberResultBase(state, cid);
+    if (!state || !state.player || !state.chars) {
+      result.code = 'missing';
+      return result;
+    }
+    if (cid !== state.player.charId) {
+      result.code = 'not_protagonist';
+      return result;
+    }
+    const c = state.chars[cid];
+    if (!c || c.dead) {
+      result.code = 'dead';
+      return result;
+    }
+    if (!selection || typeof selection !== 'object' ||
+        !barberHas(BARBER_HAIR, selection.hairStyle)) {
+      result.code = 'invalid_selection';
+      return result;
+    }
+    const adultMan = barberAdultMan(state, c);
+    const hasKind = own(selection, 'beardKind');
+    const hasCut = own(selection, 'beardCut');
+    if (!adultMan && (hasKind || hasCut)) {
+      result.code = 'invalid_selection';
+      return result;
+    }
+    if (adultMan && hasKind !== hasCut) {
+      result.code = 'invalid_selection';
+      return result;
+    }
+    let beard = null;
+    let explicitBeard = false;
+    if (adultMan && hasKind) {
+      beard = canonicalBeard(selection.beardKind, selection.beardCut);
+      explicitBeard = true;
+      if (!beard) {
+        result.code = 'invalid_selection';
+        return result;
+      }
+    } else if (adultMan) {
+      beard = storedBeardAppearance(state, c);
+    }
+    const appearance = { hairStyle:selection.hairStyle };
+    if (beard) {
+      appearance.beardKind = beard.beardKind;
+      appearance.beardCut = beard.beardCut;
+    }
+    const current = publicLook(c, state);
+    const proposed = publicLook(c, state, appearance);
+    result.selection = {
+      hairStyle:proposed.hairStyle,
+      beardKind:adultMan ? proposed.beardKind : null,
+      beardCut:adultMan ? proposed.beardCut : null
+    };
+    result.appearance = appearance;
+    result.explicitBeard = explicitBeard;
+    const blocked = FB.equipmentBlockedReason(state);
+    if (blocked) {
+      result.code = blocked;
+      return result;
+    }
+    if (result.gold < result.cost) {
+      result.code = 'insufficient_funds';
+      return result;
+    }
+    const changed = current.hairStyle !== proposed.hairStyle ||
+      (adultMan && (current.beardKind !== proposed.beardKind ||
+        current.beardCut !== proposed.beardCut));
+    if (!changed) {
+      result.code = 'unchanged';
+      return result;
+    }
+    result.ok = true;
+    result.code = 'ready';
+    return result;
+  };
+
+  FB.visitBarber = function (state, cid, selection) {
+    const status = FB.barberStatus(state, cid, selection);
+    if (!status.ok) return status;
+    /* Quote and gates above are recomputed on every call. This mutation does
+       not advance the calendar and does not draw from the saved RNG. */
+    state.player.gold -= status.cost;
+    state.chars[cid].appearance = {
+      hairStyle:status.appearance.hairStyle
+    };
+    if (status.appearance.beardKind) {
+      state.chars[cid].appearance.beardKind = status.appearance.beardKind;
+      state.chars[cid].appearance.beardCut = status.appearance.beardCut;
+    }
+    status.ok = true;
+    status.code = 'applied';
+    status.gold = state.player.gold;
+    status.appearance = {
+      hairStyle:state.chars[cid].appearance.hairStyle
+    };
+    if (state.chars[cid].appearance.beardKind) {
+      status.appearance.beardKind = state.chars[cid].appearance.beardKind;
+      status.appearance.beardCut = state.chars[cid].appearance.beardCut;
+    }
+    return status;
+  };
+
   FB.canEquipItem = function (state, cid, slot, ref) {
     FB.ensureItems(state);
     return basicEquipCheck(state, cid, slot, ref, false);

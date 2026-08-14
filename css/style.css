@@ -1770,7 +1770,41 @@ textarea.modjson, textarea.savetext {
   font-weight: normal; line-height: 1.25; text-overflow: ellipsis;
 }
 .equip-note { color: #918163; font-size: 11px; line-height: 1.35; margin-top: 7px; }
-.equip-best-action { width: 100%; min-height: 44px; margin-top: 10px; }
+.equip-best-action, .barber-action {
+  width: 100%; min-height: 44px; margin-top: 10px;
+}
+.barber-sheet {
+  display: grid; grid-template-columns: minmax(210px, 270px) minmax(0, 1fr);
+  gap: 18px; align-items: start; width: min(100%, 980px); margin: 0 auto 14px;
+}
+.barber-preview-wrap { min-width: 0; }
+.barber-preview {
+  display: block; width: min(100%, 240px); height: auto; margin: 0 auto;
+  border: 1px solid #66522f; border-radius: 8px; background: #211b14;
+}
+.barber-quote {
+  margin-top: 9px; color: #e5d3a7; font-size: 13px; line-height: 1.4;
+  text-align: center;
+}
+.barber-preview-wrap .progressnote { margin-top: 7px; }
+.barber-controls { min-width: 0; }
+.barber-group { margin: 0 0 14px; }
+.barber-group h4 { margin: 0 0 7px; color: #d8b24a; font-size: 14px; }
+.barber-choices {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 7px;
+}
+.barber-choice {
+  min-width: 0; min-height: 44px; padding: 7px 9px;
+  border: 1px solid #5b4a30; border-radius: 7px;
+  background: #292116; color: #dfcca0; cursor: pointer;
+  font: inherit; line-height: 1.2; white-space: normal;
+}
+.barber-choice:hover { border-color: #a8863a; background: #33291b; }
+.barber-choice[aria-pressed="true"] {
+  border-color: #d8b24a; background: #44351d; color: #fff0bd;
+  box-shadow: inset 0 0 0 1px rgba(216,178,74,.28);
+}
 .equip-best-section { width: min(100%, 900px); margin: 0 auto 14px; }
 .equip-best-section h4 { margin: 0 0 7px; color: #d8b24a; }
 .equip-best-list {
@@ -2426,6 +2460,9 @@ textarea.modjson, textarea.savetext {
   }
   .paper-sheet, .death-paper { grid-template-columns: 1fr; }
   .paper-sheet .paperdoll, .death-paper .paperdoll { width: 150px; }
+  .barber-sheet { grid-template-columns: 1fr; gap: 14px; }
+  .barber-preview { width: min(68vw, 220px); }
+  .barber-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .item-card .itemart { width: 112px; height: 112px; }
   .person-assignment-head {
     display: grid; grid-template-columns: 18px 34px minmax(0, 1fr);

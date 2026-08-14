@@ -71,6 +71,18 @@ dates in the family tree, but no posthumous character sheet. Records are spent o
 the player can see and touch. See [realms.md](realms.md) for the court's structure and
 the consort.
 
+The current protagonist may replace the deterministic hairstyle and, once an adult man,
+facial-hair amount and shape through **Visit Barber…** on the Equipment sheet. The
+optional character record is `appearance: {hairStyle, beardKind?, beardCut?}`; it changes
+style only, so identity, natural color, and age-related greying remain derived. Ordinary
+cuts are elective for either sex, while baldness, recession, and tonsure remain generated
+contextual results rather than picker choices. A minor's chosen hair persists after
+majority, but facial hair remains generated until an adult man explicitly chooses it.
+Invalid or obsolete override values fall back to the corresponding deterministic result
+without mutating the record. Preview descriptors may supply a temporary `appearance` and
+suppress equipment or headwear; resolved style and suppression flags participate in the
+visual key, so cached faces cannot cross appearance boundaries.
+
 **A portrait is derived state and is never persisted.** The Court Illustration v2
 renderer constructs a direct analytic scaffold of named face/body anchors and paints it
 with raw Canvas 2D; it has no mesh vertices, faces, contour cache, external art, or game
