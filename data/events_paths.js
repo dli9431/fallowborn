@@ -519,7 +519,9 @@ FBDATA.events.push(
   options:[
     { label:'Forge the blade for hard coin.', desc:'Take the captain’s silver and keep the guild out of the bargain.', effects:{ gold:14 } },
     { label:'Call the masters to witness the work.', desc:'A public masterwork grows Guild Standing and your name.', effects:{ guildStanding:7, prestige:5, skills:{ste:1} } },
-    { label:'Set the town smithies to shared standards.', desc:'Earn less now; the market gains a temporary charter.', effects:{ gold:4, addModifier:{id:'market_charter'} } }
+    { label:'Set the town smithies to shared standards.', desc:'Earn less now; the market gains a temporary charter.',
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
+      effects:{ gold:4, addModifier:{id:'market_charter'} } }
   ]},
 { id:'smith_bridge_irons', title:'Iron at the Bridge',
   trigger:{ career:{ profession:'craftsman', specialization:'smith', guildRankMin:'guildmaster' }, seasons:[1,2], chance:0.18 }, weight:3, cooldown:18,
@@ -535,7 +537,9 @@ FBDATA.events.push(
   options:[
     { label:'Take the council’s commission.', desc:'The household gains a useful purse.', effects:{ gold:13 } },
     { label:'Weave the guild’s mark openly.', desc:'Public credit becomes Guild Standing and prestige.', effects:{ guildStanding:7, prestige:5 } },
-    { label:'Let the apprentices design the border.', desc:'Teach the bench and make the market more welcoming.', effects:{ skills:{ste:1}, addModifier:{id:'market_charter'} } }
+    { label:'Let the apprentices design the border.', desc:'Teach the bench and make the market more welcoming.',
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
+      effects:{ skills:{ste:1}, addModifier:{id:'market_charter'} } }
   ]},
 { id:'weaver_dyed_thread', title:'A Dyer’s Dispute',
   trigger:{ career:{ profession:'craftsman', specialization:'weaver', guildRankMin:'guildmaster' }, chance:0.18 }, weight:3, cooldown:18,
@@ -543,7 +547,9 @@ FBDATA.events.push(
   options:[
     { label:'Sell the sound bolts quickly.', desc:'The dispute becomes a tidy profit.', effects:{ gold:11 } },
     { label:'Judge by the guild book.', desc:'A patient ruling improves your Standing with the masters.', effects:{ guildStanding:8, skills:{ste:1} } },
-    { label:'Compensate both workshops and keep peace.', desc:'Your name rises and market grievance cools.', effects:{ gold:-3, prestige:7, addModifier:{id:'market_charter'} } }
+    { label:'Compensate both workshops and keep peace.', desc:'Your name rises and market grievance cools.',
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
+      effects:{ gold:-3, prestige:7, addModifier:{id:'market_charter'} } }
   ]},
 { id:'cooper_vintage_casks', title:'Casks Before the Vintage',
   trigger:{ career:{ profession:'craftsman', specialization:'cooper', guildRankMin:'guildmaster' }, seasons:[2], chance:0.22 }, weight:3, cooldown:16,
@@ -567,7 +573,9 @@ FBDATA.events.push(
   options:[
     { label:'Take the richer commission.', desc:'The better contract yields a private fee.', effects:{ gold:14 } },
     { label:'Match the terms by the guild ledger.', desc:'Neutral dealing earns Guild Standing and prestige.', effects:{ guildStanding:8, prestige:4 } },
-    { label:'Publish fair measures for both houses.', desc:'Your careful bargain improves Stewardship and the market’s standing.', effects:{ skills:{ste:2}, addModifier:{id:'market_charter'} } }
+    { label:'Publish fair measures for both houses.', desc:'Your careful bargain improves Stewardship and the market’s standing.',
+      requiresTech:['urban_markets','authenticated_seals'], showWhenTechLocked:true,
+      effects:{ skills:{ste:2}, addModifier:{id:'market_charter'} } }
   ]},
 { id:'broker_debtors', title:'Debtors at Market',
   trigger:{ career:{ profession:'merchant', specialization:'broker', guildRankMin:'guildmaster' }, chance:0.18 }, weight:3, cooldown:18,
@@ -613,7 +621,8 @@ FBDATA.events.push(
   trigger:{ tierMin:1, tierMax:2, chance:0.06, custom:'auction_invitation_available' }, weight:2, cooldown:16,
   text:'A sealed market invitation offers one rare lot under the hammer. The auctioneer promises a short room, fixed increments, and no debt for a losing bid.',
   options:[
-    { label:'Attend the auction.', desc:'Open one saved lot and bid against a single immediate rival.', effects:{ custom:'auction_invitation_open' } },
+    { label:'Attend the auction.', desc:'Open one saved lot and bid against a single immediate rival.',
+      manualOnly:true, effects:{ custom:'auction_invitation_open' } },
     { label:'Send regrets.', desc:'Keep the invitation’s mystery for another market day.', effects:{} }
   ]}
 );

@@ -499,15 +499,21 @@ provider applies.
 
 **Craft and Trade guild paths are deliberate permanent specialties.** A working
 Craft guildmaster may become a Smith, Weaver, or Cooper; a Trade guildmaster may
-become a Broker, Caravan Factor, or Maritime Factor. Each path requires Guildmaster,
-35 Guild Standing, Stewardship 9, its named technology, and a 20-gold induction fee.
+become a Broker, Caravan Factor, or Maritime Factor. Each path requires its configured
+guild rank, Guild Standing, skills, inherited career technology, and induction fee.
+Smith and Broker are the baseline routes beyond the Craft and Trade careers' own
+technology gates. Weaver requires Horizontal Loom, Cooper requires Cooperage, Caravan
+Factor requires Trade Houses, and Maritime Factor requires culturally neutral Coastal
+Piloting rather than a particular ship type. The core numeric gates remain Guildmaster,
+35 Guild Standing, Stewardship 9, and a 20-gold fee.
 `career.specialization` is the one saved title field for both examinations and guild
 paths, so it restores with that profession's career-history snapshot and is shown
 wherever the character's vocation is named. The bonuses remain definitions on the
 live path: Craft and Trade work focuses receive `fx.focusGold`; matching tagged
 enterprises receive `fx.enterprise`; and a path may add `fx.tradeVenture` to the
 formation-time venture preview. No enterprise copies a specialty bonus into its saved
-instance.
+instance. The picker derives both its complete requirements and unmet reasons from the
+live definitions; it does not restate the core numbers as UI authority.
 
 At tier 3+, that career is biography rather than daily employment. The player cannot
 change occupation, seek guild advancement, earn ordinary career experience, or staff

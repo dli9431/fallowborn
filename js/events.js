@@ -3968,7 +3968,7 @@ window.FB = window.FB || {};
      as they actually landed. */
   const EVENT_EFFECT_KEYS = [
     'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource',
-    'prestige','piety','warService','health','ailment','skills','addTrait',
+    'prestige','piety','guildStanding','warService','health','ailment','skills','addTrait',
     'addTraitOnce','removeTrait','traitProgress','setFlag','setFlag2','clearFlag',
     'clearFlag2','clearHarvestFlags','opinion','rivalContact','rivalHeat',
     'endRivalry','opinionLiege','standingRealm','papalOpinion','popularOpinion',
@@ -5333,9 +5333,14 @@ window.FB = window.FB || {};
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
     if (fx.guildStanding && FB.careerOf) {
       const career = FB.careerOf(state, me);
-      if (career && career.guildRank && career.guildRank !== 'none') {
+      const standingChange = Number(fx.guildStanding);
+      if (career && career.guildRank && career.guildRank !== 'none' &&
+          isFinite(standingChange)) {
         const before = Math.max(0, Number(career.guildStanding) || 0);
-        career.guildStanding = FB.clamp(before + Number(fx.guildStanding), 0, 100);
+        const configuredMax = Number(FBDATA.balance.guildStandingMax);
+        const maximum = isFinite(configuredMax) ? Math.max(0, configuredMax) : 100;
+        career.guildStanding = FB.clamp(before + standingChange, 0,
+          maximum);
         appliedGuildStanding = career.guildStanding - before;
       }
     }
@@ -5697,6 +5702,7 @@ window.FB = window.FB || {};
     option = option || { label:'So it goes.', effects:{} };
     ctx = ctx || {};
     meta = meta || {};
+    if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus &&
         FB.eventOptionStatus(state, ev, option, ctx).techLocked) return false;
     const optionIndex = ev.options ? ev.options.indexOf(option) : -1;

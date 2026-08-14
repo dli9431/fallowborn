@@ -118,8 +118,10 @@ a spendable reputation rather than a second currency.
 
 **Bounded market auctions are immediate household choices, not a market simulation.**
 **Attend auction…** is available once per configured year in a home town or city with a
-valid lot; a rare invitation opens that same flow. Opening saves exactly one
-`player.auction` record containing the venue, lot, opening call, fixed increment,
+valid lot; a rare invitation opens that same flow. `FB.beginAuction` owns the shared
+cooldown and revalidates age, captivity, venue, and lot availability, so the deed,
+invitation, and direct callers cannot create separate market clocks. Opening saves exactly
+one `player.auction` record containing the venue, lot, opening call, fixed increment,
 seeded rival maximum, and bid count. The player has at most three bids of one, two, or
 three increments. The rival either counters immediately from its saved ceiling or
 drops out; only a winner pays, so a loss or withdrawal costs no coin.
@@ -127,12 +129,16 @@ drops out; only a winner pays, so a loss or withdrawal costs no coin.
 Lots are an unowned Fine/Famed item (transferred through the ordinary item API), one
 valid neighboring foreign county title right (the existing single fabricated-claim
 record, with `source:'auction'`), or an ordinary family enterprise at the exact venue.
+The auction itself and item lots have no technology gate. Enterprise lots inherit the
+selected enterprise's own `requiresTech`; county title rights require Notarial Contracts,
+with ordinary claim fabrication and other war rights as the fallback. Once a lot opens,
+it is grandfathered through resolution if allegiance changes its effective technology.
 An existing fabricated claim excludes title rights rather than being replaced. A
 temporary repeatable item is discarded if the sale is cancelled or becomes invalid;
 the normal enterprise acquisition and staffing rules apply to a winning business, so
-it can be idle. Lot weights, opening/increment ratios, rival range, cooldown, and
-round cap live in `FBDATA.balance`. There are no bidder purses, stock lists, clocks,
-or daily auction work.
+it can be idle. Lot-family weights and requirements live in `FBDATA.auctionLotTypes`;
+opening/increment ratios, rival range, cooldown, and round cap live in `FBDATA.balance`.
+There are no bidder purses, stock lists, clocks, or daily auction work.
 
 **Self-founded ventures are separate household investments.** Any adult tier-1/2
 protagonist may choose a configured stake, select a reachable development-4+ market,

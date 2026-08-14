@@ -1630,11 +1630,35 @@ window.FB = window.FB || {};
         }
       }
     }
+    var auctionLotTypes = FBDATA.auctionLotTypes || {};
+    var knownAuctionLotTypes = ['item','enterprise','claim'];
+    for (var knownAuctionLotIndex = 0;
+        knownAuctionLotIndex < knownAuctionLotTypes.length; knownAuctionLotIndex++) {
+      if (!auctionLotTypes[knownAuctionLotTypes[knownAuctionLotIndex]]) {
+        errors.push('Auction lot type ' + knownAuctionLotTypes[knownAuctionLotIndex] +
+          ': definition is required.');
+      }
+    }
+    for (var auctionLotTypeId in auctionLotTypes) {
+      if (!own(auctionLotTypes, auctionLotTypeId)) continue;
+      var auctionLotType = auctionLotTypes[auctionLotTypeId];
+      if (knownAuctionLotTypes.indexOf(auctionLotTypeId) < 0) {
+        errors.push('Auction lot type ' + auctionLotTypeId + ': id is not supported.');
+      } else if (!auctionLotType || typeof auctionLotType !== 'object' ||
+          Array.isArray(auctionLotType)) {
+        errors.push('Auction lot type ' + auctionLotTypeId + ': definition is invalid.');
+      } else if (typeof auctionLotType.weight !== 'number' ||
+          !isFinite(auctionLotType.weight) || auctionLotType.weight < 0) {
+        errors.push('Auction lot type ' + auctionLotTypeId +
+          ': weight must be a non-negative number.');
+      }
+    }
     var requirementTables = {
       Building:FBDATA.buildings,
       Career:FBDATA.careers,
       Schooling:FBDATA.schooling,
       Enterprise:FBDATA.enterprises,
+      'Auction lot type':FBDATA.auctionLotTypes,
       Finance:FBDATA.finance,
       Policy:FBDATA.policies,
       Privilege:FBDATA.privileges,
@@ -1644,7 +1668,8 @@ window.FB = window.FB || {};
       if (!own(requirementTables, tableName)) continue;
       var table = requirementTables[tableName] || {};
       for (var itemId in table) if (own(table, itemId)) {
-        validateRequirement(tableName, itemId, table[itemId].requiresTech);
+        validateRequirement(tableName, itemId,
+          table[itemId] && table[itemId].requiresTech);
       }
     }
     var careers = FBDATA.careers || {};
@@ -1683,6 +1708,11 @@ window.FB = window.FB || {};
         if (eventOption.showWhenTechLocked && !eventOption.requiresTech) {
           errors.push('Event option ' + event.id + '.' + optionIndex +
             ': showWhenTechLocked requires requiresTech.');
+        }
+        if (eventOption.manualOnly !== undefined &&
+            typeof eventOption.manualOnly !== 'boolean') {
+          errors.push('Event option ' + event.id + '.' + optionIndex +
+            ': manualOnly must be a boolean.');
         }
       }
     }

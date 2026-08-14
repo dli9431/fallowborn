@@ -649,6 +649,9 @@ By default a missing technology hides the option like an unmet `require`.
 `showWhenTechLocked:true` instead keeps it visible with the exact missing technology;
 tier-3+ players may open the technology detail from that locked row. Manual selection,
 autoresolve, and direct `FB.resolveEventOption` calls share this requirement.
+`manualOnly:true` keeps an interactive choice available to a player but removes it from
+autoresolve candidates; direct automated resolution also rejects it before mutation. Use
+it only when the effect opens a second UI flow that automation cannot finish.
 The engine supplies a full contextual consequence breakdown without adding mechanical text
 beneath the authored option prose. Desktop pointer and keyboard users receive it as a tooltip;
 touch, tablet-width, and short layouts open it with the adjacent question-mark control. It
@@ -1860,6 +1863,27 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   charter copies those numeric values into its save record, so a later mod or balance
   edit does not rewrite an active charter.
 
+### Bounded auction lot families
+
+`FBDATA.auctionLotTypes` (in `data/economy.js`, mod key `auctionLotTypes`) owns
+selection weights and optional all-of technology requirements for the three engine-backed
+lot families:
+
+```json
+{ "auctionLotTypes": {
+  "item": { "weight": 6 },
+  "enterprise": { "weight": 3 },
+  "claim": { "weight": 1, "requiresTech": "notarial_contracts" }
+} }
+```
+
+`weight` is a finite non-negative number. A zero-weight family is never selected.
+`requiresTech` accepts one id or an all-of array and controls only new lots; an already
+opened saved auction is grandfathered through resolution. Enterprise candidates also
+retain each enterprise definition's own `requiresTech`. The supported ids are exactly
+`item`, `enterprise`, and `claim`; adding an id is rejected because a new family also
+needs engine selection, validation, award, label, and save behavior.
+
 ## Settlements
 
 Each settled county exposes 2–8 settlement slots through **authored presentations plus
@@ -2667,8 +2691,8 @@ above every other required skill, then caps at the maximum. Failed attempts wait
 cooldown in game days. `learnedPractitionerMortality` is the default yearly mortality
 reduction for a licensed Medicine practitioner without a specialty; specialty
 `fx.mortality` replaces it, and only the household's single best local provider applies.
-Bounded auction tuning is `auctionLotWeights:{item,enterprise,claim}`,
-`auctionOpeningBidRatio`, `auctionBidIncrementRatio`, `auctionRivalMaxRatio:[low,high]`,
+Bounded auction tuning is `auctionOpeningBidRatio`, `auctionBidIncrementRatio`,
+`auctionRivalMaxRatio:[low,high]`,
 `auctionCountyClaimValue`, `auctionCooldownDays`, and `auctionMaxBidRounds`. The core
 auction has one saved immediate rival and never treats those values as a simulated
 market inventory or NPC purse.

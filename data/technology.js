@@ -73,7 +73,7 @@ window.FBDATA = window.FBDATA || {};
       formal_market_charters:{
         mode:'hard', tech:['urban_markets','authenticated_seals'],
         fallback:'ordinary_markets_and_toll_disputes',
-        rationale:'A protected market requires both an urban market practice and an authenticated public seal.'
+        rationale:'Every source of a protected market charter requires both an urban market practice and an authenticated public seal.'
       },
       formal_confirmation_of_custom:{
         mode:'hard', tech:['customary_law'], fallback:'ordinary_custom_and_aid_redress',
@@ -95,6 +95,50 @@ window.FBDATA = window.FBDATA || {};
       tournament_jousting:{
         mode:'hard', tech:['cavalry_lances'], fallback:'melee_attendance_patronage_or_wagers',
         rationale:'Formal couched-lance competition depends on the matching cavalry practice.'
+      },
+      guild_smith_path:{
+        mode:'none',
+        rationale:'Smith is the baseline Craft guild path and inherits the Craft career’s existing ironworking requirement.'
+      },
+      guild_weaver_path:{
+        mode:'hard', tech:['horizontal_loom'], fallback:'smith_or_cooper_guild_path',
+        rationale:'A permanent weaving specialty depends on the horizontal loom while other Craft paths remain available.'
+      },
+      guild_cooper_path:{
+        mode:'hard', tech:['cooperage'], fallback:'smith_or_weaver_guild_path',
+        rationale:'A permanent cooperage specialty depends on its barrel-making practice while other Craft paths remain available.'
+      },
+      guild_broker_path:{
+        mode:'none',
+        rationale:'Broker is the baseline Trade guild path and inherits the Trade career’s public weights-and-measures requirement.'
+      },
+      guild_caravan_factor_path:{
+        mode:'hard', tech:['trade_houses'], fallback:'broker_or_maritime_guild_path',
+        rationale:'A permanent caravan-factor specialty depends on organized trade houses while other Trade paths remain available.'
+      },
+      guild_maritime_factor_path:{
+        mode:'hard', tech:['coastal_piloting'], fallback:'broker_or_caravan_guild_path',
+        rationale:'A maritime-factor specialty depends on coastal piloting without tying the path to one culture’s ship type.'
+      },
+      bounded_market_auctions:{
+        mode:'none',
+        rationale:'Immediate household bidding is broad market play; individual lot families keep their own requirements.'
+      },
+      auction_item_lots:{
+        mode:'none',
+        rationale:'Fine and famed household goods need no additional innovation beyond access to the auction itself.'
+      },
+      auction_enterprise_lots:{
+        mode:'none',
+        rationale:'Enterprise lots inherit the selected enterprise’s existing technology requirement instead of adding an auction-wide gate.'
+      },
+      auction_title_rights:{
+        mode:'hard', tech:['notarial_contracts'], fallback:'fabricate_claim_or_use_existing_war_rights',
+        rationale:'Selling a county title right requires durable notarial transfer, while ordinary claims and other auction lots remain available.'
+      },
+      rare_auction_invitations:{
+        mode:'none',
+        rationale:'The rare invitation is an alternate route into the same cooldown-controlled auction, not a separate advanced market institution.'
       }
     }
   };

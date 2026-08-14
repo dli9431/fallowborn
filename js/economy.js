@@ -432,13 +432,17 @@ window.FB = window.FB || {};
     const def = career && FBDATA.careers[career.profession];
     if (!career || !def || !definition) return null;
     const missing = [];
+    const requirements = [];
     const guildRank = definition.guildRankMin || 'guildmaster';
     const guildStanding = definition.guildStandingMin === undefined
       ? 35 : Math.max(0, Number(definition.guildStandingMin) || 0);
     const skills = definition.skills || { ste:9 };
+    const rankName = FB.guildTitle({ guildRank:guildRank });
+    requirements.push(FB.T('{rank} rank', { rank:rankName }));
     if ((GUILD_ORDER[career.guildRank] || 0) < (GUILD_ORDER[guildRank] || 0)) {
-      missing.push(FB.T('Guildmaster rank'));
+      missing.push(FB.T('{rank} rank', { rank:rankName }));
     }
+    requirements.push(FB.T('Guild Standing {needed}', { needed:guildStanding }));
     if ((Number(career.guildStanding) || 0) < guildStanding) {
       missing.push(FB.T('Guild Standing {needed} (now {current})', {
         needed:guildStanding, current:Math.round(career.guildStanding || 0)
@@ -447,6 +451,9 @@ window.FB = window.FB || {};
     for (const skill in skills) {
       const needed = Math.max(0, Number(skills[skill]) || 0);
       const current = FB.skillOf(c, skill);
+      requirements.push(FB.T('{skill} {needed}', {
+        skill:FB.T(FB.SKILL_NAMES[skill] || skill), needed:needed
+      }));
       if (current < needed) {
         missing.push(FB.T('{skill} {needed} (now {current})', {
           skill:FB.T(FB.SKILL_NAMES[skill] || skill),
@@ -455,17 +462,19 @@ window.FB = window.FB || {};
       }
     }
     const requiredTechs = [];
-    if (def.requiresTech) requiredTechs.push(def.requiresTech);
-    if (definition.requiresTech &&
-        requiredTechs.indexOf(definition.requiresTech) < 0) {
-      requiredTechs.push(definition.requiresTech);
+    function addTechnologies(value) {
+      const list = Array.isArray(value) ? value : (value ? [value] : []);
+      for (let i = 0; i < list.length; i++) {
+        if (requiredTechs.indexOf(list[i]) < 0) requiredTechs.push(list[i]);
+      }
     }
-    for (let i = 0; i < requiredTechs.length; i++) {
-      const techId = requiredTechs[i];
-      if (FB.techRequirementMet(state, techId)) continue;
-      const tech = FBDATA.tech && FBDATA.tech[techId];
-      missing.push(tech ? FB.dataText(state, state.player.charId, 'tech',
-        techId, tech, 'name', {}) : techId);
+    addTechnologies(def.requiresTech);
+    addTechnologies(definition.requiresTech);
+    const technology = FB.techRequirementStatus(state, requiredTechs);
+    if (requiredTechs.length) {
+      const technologyRequirement = FB.techRequirementReason(state, requiredTechs);
+      requirements.push(technologyRequirement);
+      if (!technology.ready) missing.push(technologyRequirement);
     }
     const cost = Math.max(0, Math.round(Number(definition.cost) || 0));
     if (state.player.gold < cost) {
@@ -480,6 +489,7 @@ window.FB = window.FB || {};
       cost:cost,
       chance:null,
       method:'induction',
+      requirements:requirements,
       missing:missing,
       ready:missing.length === 0
     };
@@ -503,7 +513,7 @@ window.FB = window.FB || {};
           exam.method = 'exam';
           out.push(exam);
         }
-      } else {
+      } else if (def.guild) {
         const model = guildSpecializationModel(state, c, id, specialization);
         if (model) out.push(model);
       }
@@ -2910,7 +2920,15 @@ window.FB = window.FB || {};
       settlement = provinceId;
       provinceId = state.player.provinceId;
     }
-    const avail = FB.enterpriseAvailable(state, provinceId, settlement);
+    const auction = opts.auction;
+    const auctionLot = auction && auction.lot;
+    const grandfatheredAuction = !!(auction &&
+      state.player.auction === auction && auction.status === 'open' &&
+      auctionLot && auctionLot.kind === 'enterprise' &&
+      auctionLot.type === type && auctionLot.provinceId === provinceId &&
+      auctionLot.settlement === settlement);
+    const avail = FB.enterpriseAvailable(state, provinceId, settlement,
+      grandfatheredAuction);
     let item = null;
     for (const a of avail) if (a.id === type) { item = a; break; }
     const price = opts.price === undefined ? item && item.cost :
@@ -2954,6 +2972,23 @@ window.FB = window.FB || {};
     return Math.max(1, Math.floor(auctionNumber('auctionMaxBidRounds', 3)));
   }
 
+  function auctionCooldownDays() {
+    return Math.max(0, Math.floor(auctionNumber('auctionCooldownDays', 360)));
+  }
+
+  FB.auctionCooldownRemaining = function (state) {
+    const cooldowns = state && state.player && state.player.cooldowns || {};
+    const last = cooldowns.attend_auction;
+    if (last === undefined) return 0;
+    return Math.max(0, auctionCooldownDays() - (state.turn - last));
+  };
+
+  FB.auctionLotTypeStatus = function (state, id) {
+    const def = FBDATA.auctionLotTypes && FBDATA.auctionLotTypes[id];
+    if (!def) return { ready:false, requirements:[], missing:[] };
+    return FB.techRequirementStatus(state, def.requiresTech);
+  };
+
   function auctionVenue(state, pid, settlement) {
     const provinceId = pid || state.player.provinceId;
     const index = Math.max(0, Math.floor(Number(settlement) || 0));
@@ -2980,6 +3015,7 @@ window.FB = window.FB || {};
 
   function auctionItemCandidates(state) {
     const out = [];
+    if (!FB.auctionLotTypeStatus(state, 'item').ready) return out;
     if (!FBDATA.items || !FB.itemDefinition || !FB.itemOwner) return out;
     for (const id in FBDATA.items) {
       const info = FB.itemDefinition(id);
@@ -2997,12 +3033,14 @@ window.FB = window.FB || {};
   }
 
   function auctionEnterpriseCandidates(state, venue) {
+    if (!FB.auctionLotTypeStatus(state, 'enterprise').ready) return [];
     const available = FB.enterpriseAvailable(state, venue.provinceId,
       venue.settlement, false);
     return available.filter(function (entry) { return !entry.techLocked; });
   }
 
   function auctionClaimCandidates(state) {
+    if (!FB.auctionLotTypeStatus(state, 'claim').ready) return [];
     if (FB.fabricatedClaimOf && FB.fabricatedClaimOf(state)) return [];
     return FB.claimCandidates ? FB.claimCandidates(state) : [];
   }
@@ -3012,16 +3050,15 @@ window.FB = window.FB || {};
     const items = auctionItemCandidates(state);
     const enterprises = auctionEnterpriseCandidates(state, venue);
     const claims = auctionClaimCandidates(state);
-    const weights = FBDATA.balance && FBDATA.balance.auctionLotWeights || {};
-    function add(id, entries, fallback) {
-      const configured = weights[id];
-      const weight = configured === undefined ? fallback :
-        Math.max(0, Number(configured) || 0);
+    const definitions = FBDATA.auctionLotTypes || {};
+    function add(id, entries) {
+      const definition = definitions[id] || {};
+      const weight = Math.max(0, Number(definition.weight) || 0);
       if (entries.length && weight) types.push({ id:id, entries:entries, weight:weight });
     }
-    add('item', items, 6);
-    add('enterprise', enterprises, 3);
-    add('claim', claims, 1);
+    add('item', items);
+    add('enterprise', enterprises);
+    add('claim', claims);
     if (!types.length) return null;
     let total = 0;
     for (let i = 0; i < types.length; i++) total += types[i].weight;
@@ -3083,9 +3120,14 @@ window.FB = window.FB || {};
       return !!(item && !FB.itemOwner(state, lot.ref));
     }
     if (lot.kind === 'enterprise') {
-      return !!(FBDATA.enterprises && FBDATA.enterprises[lot.type] &&
-        lot.provinceId === auction.venue.provinceId &&
-        lot.settlement === auction.venue.settlement);
+      if (lot.provinceId !== auction.venue.provinceId ||
+          lot.settlement !== auction.venue.settlement) return false;
+      const available = FB.enterpriseAvailable(state, lot.provinceId,
+        lot.settlement, true);
+      for (let i = 0; i < available.length; i++) {
+        if (available[i].id === lot.type) return true;
+      }
+      return false;
     }
     if (lot.kind === 'claim') {
       return !FB.fabricatedClaimOf(state) && FB.claimCandidates &&
@@ -3142,30 +3184,55 @@ window.FB = window.FB || {};
     const active = FB.ensureAuction(state);
     if (active) return { ready:false, active:active,
       reason:FB.T('Resolve the current auction first.') };
-    const venues = FB.auctionVenues(state);
-    if (!venues.length) return { ready:false, active:null,
+    const character = state && state.player && state.chars &&
+      state.chars[state.player.charId];
+    if (!character || FB.ageOf(character, state.date.year) < 16) {
+      return { ready:false, active:null,
+        reason:FB.T('Only an adult may attend an auction.') };
+    }
+    if (state.player.flags && state.player.flags.in_prison) {
+      return { ready:false, active:null,
+        reason:FB.T('You cannot attend an auction while imprisoned.') };
+    }
+    const remaining = FB.auctionCooldownRemaining(state);
+    if (remaining) return { ready:false, active:null,
+      cooldownRemaining:remaining,
+      reason:FB.T('Ready in {days} days.', { days:remaining }) };
+    const venueCandidates = FB.auctionVenues(state);
+    const venues = [];
+    if (!venueCandidates.length) return { ready:false, active:null,
       reason:FB.T('A town or city market is required.') };
-    let possible = false;
-    for (let i = 0; i < venues.length; i++) {
-      if (auctionItemCandidates(state).length ||
-          auctionEnterpriseCandidates(state, venues[i]).length ||
-          auctionClaimCandidates(state).length) {
-        possible = true;
-        break;
+    const items = auctionItemCandidates(state);
+    const claims = auctionClaimCandidates(state);
+    for (let i = 0; i < venueCandidates.length; i++) {
+      const venue = venueCandidates[i];
+      if (items.length ||
+          auctionEnterpriseCandidates(state, venue).length || claims.length) {
+        venues.push(venue);
       }
     }
-    return possible ? { ready:true, active:null, venues:venues } : {
+    return venues.length ? { ready:true, active:null, venues:venues } : {
       ready:false, active:null,
       reason:FB.T('No valid lot is available at this market.')
     };
   };
 
   FB.beginAuction = function (state, venueSpec) {
-    if (FB.ensureAuction(state)) return null;
+    const status = FB.auctionStatus(state);
+    if (!status.ready) return null;
     const venue = auctionVenue(state,
       venueSpec && venueSpec.provinceId,
       venueSpec && venueSpec.settlement);
     if (!venue) return null;
+    let allowedVenue = false;
+    for (let i = 0; i < status.venues.length; i++) {
+      if (status.venues[i].provinceId === venue.provinceId &&
+          status.venues[i].settlement === venue.settlement) {
+        allowedVenue = true;
+        break;
+      }
+    }
+    if (!allowedVenue) return null;
     const lot = makeAuctionLot(state, venue);
     if (!lot) return null;
     const value = Math.max(1, Number(lot.value) || 1);
@@ -3185,6 +3252,8 @@ window.FB = window.FB || {};
       rivalMaximum:Math.max(opening, Math.ceil(value * Math.max(1, rivalRatio))),
       currentBid:opening, bidCount:0
     };
+    state.player.cooldowns = state.player.cooldowns || {};
+    state.player.cooldowns.attend_auction = state.turn;
     state.player.auction = auction;
     return auction;
   };
@@ -3219,7 +3288,7 @@ window.FB = window.FB || {};
       awarded = { kind:'claim', pid:lot.pid };
     } else if (lot.kind === 'enterprise') {
       const enterprise = FB.acquireEnterprise(state, lot.type, lot.provinceId,
-        lot.settlement, { price:price, notice:false });
+        lot.settlement, { price:price, notice:false, auction:auction });
       if (!enterprise) return null;
       awarded = { kind:'enterprise', uid:enterprise.uid };
       /* acquireEnterprise already charged the winning price. */
@@ -3303,9 +3372,8 @@ window.FB = window.FB || {};
     const status = FB.auctionStatus(state);
     if (!status || !status.ready || !status.venues || !status.venues.length) return false;
     const auction = FB.beginAuction(state, status.venues[0]);
-    if (auction && FB.ui && FB.ui.showAuction) {
-      setTimeout(function () { FB.ui.showAuction(); }, 0);
-    }
+    if (auction && FB.ui && FB.ui.deferAuctionOpen) FB.ui.deferAuctionOpen();
+    else if (auction && FB.ui && FB.ui.showAuction) FB.ui.showAuction();
     return !!auction;
   };
 

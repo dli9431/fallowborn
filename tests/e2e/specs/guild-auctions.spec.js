@@ -13,7 +13,7 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
     const result = await page.evaluate(function () {
       let state = FB.state;
       const originalItems = FBDATA.items;
-      const originalWeights = FBDATA.balance.auctionLotWeights;
+      const originalLotTypes = FBDATA.auctionLotTypes;
       let output;
       try {
         FBDATA.items = {
@@ -23,10 +23,19 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
             desc:'A deterministic auction test item.'
           }
         };
-        FBDATA.balance.auctionLotWeights = { item:1, enterprise:0, claim:0 };
+        FBDATA.auctionLotTypes = {
+          item:{ weight:1 }, enterprise:{ weight:0 }, claim:{ weight:0 }
+        };
         state.player.gold = 500;
         state.dev[state.player.provinceId] = 7;
         const venue = FB.auctionVenues(state)[0];
+        state.player.flags = state.player.flags || {};
+        state.player.flags.in_prison = 1;
+        const captivityBlocked = FB.beginAuction(state, venue) === null;
+        delete state.player.flags.in_prison;
+        const invalidVenueBlocked = FB.beginAuction(state, {
+          provinceId:'missing_auction_venue', settlement:0
+        }) === null;
         const auctionDeed = FB.instantStatus(state, 'attend_auction');
         const deedListed = FB.listInstants(state).some(function (item) {
           return item.a.id === 'attend_auction';
@@ -42,11 +51,18 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
         restored.rivalMaximum = restored.currentBid;
         const won = FB.placeAuctionBid(state, 1);
         const owner = FB.itemOwner(state, openedRef);
+        const immediateRetryBlocked =
+          FB.beginAuction(state, FB.auctionVenues(state)[0]) === null;
+        const cooldownAfterWin = FB.auctionCooldownRemaining(state);
 
+        state.turn += FBDATA.balance.auctionCooldownDays;
         const cancelled = FB.beginAuction(state, FB.auctionVenues(state)[0]);
         const cancelledRef = cancelled.lot.ref;
         const cancelledOk = FB.cancelAuction(state);
+        const invitationBlockedAfterCancel =
+          !FB.fns.auction_invitation_available(state);
 
+        state.turn += FBDATA.balance.auctionCooldownDays;
         const lost = FB.beginAuction(state, FB.auctionVenues(state)[0]);
         lost.rivalMaximum = 999999;
         const goldBeforeLoss = state.player.gold;
@@ -61,6 +77,7 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
         document.body.appendChild(opener);
         opener.focus();
         state.player.gold = 0;
+        state.turn += FBDATA.balance.auctionCooldownDays;
         const uiAuction = FB.beginAuction(state, FB.auctionVenues(state)[0]);
         FB.ui.showAuction();
         const disabledBids = document.querySelectorAll(
@@ -81,12 +98,17 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
             bidCount:opened.bidCount
           },
           auctionDeed:{ shown:auctionDeed.shown, can:auctionDeed.can },
+          captivityBlocked:captivityBlocked,
+          invalidVenueBlocked:invalidVenueBlocked,
           deedListed:deedListed,
           duplicateBlocked:duplicateBlocked,
           restoredRival:restoredRival,
           won:won,
           owner:owner && owner.kind,
+          immediateRetryBlocked:immediateRetryBlocked,
+          cooldownAfterWin:cooldownAfterWin,
           cancelledOk:cancelledOk,
+          invitationBlockedAfterCancel:invitationBlockedAfterCancel,
           cancelledRemoved:!state.itemInstances[cancelledRef],
           lossStatuses:[first && first.status, second && second.status,
             third && third.status],
@@ -101,7 +123,7 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
         delete state.itemInstances[openedRef];
       } finally {
         FBDATA.items = originalItems;
-        FBDATA.balance.auctionLotWeights = originalWeights;
+        FBDATA.auctionLotTypes = originalLotTypes;
       }
       return output;
     });
@@ -113,12 +135,17 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
     expect(result.opened.openingBid).toBeGreaterThan(0);
     expect(result.opened.bidIncrement).toBeGreaterThan(0);
     expect(result.auctionDeed).toEqual({ shown:true, can:true });
+    expect(result.captivityBlocked).toBe(true);
+    expect(result.invalidVenueBlocked).toBe(true);
     expect(result.deedListed).toBe(true);
     expect(result.duplicateBlocked).toBe(true);
     expect(result.restoredRival).toBe(result.opened.rivalMaximum);
     expect(result.won).toMatchObject({ status:'won', awarded:{ kind:'item' } });
     expect(result.owner).toBe('armory');
+    expect(result.immediateRetryBlocked).toBe(true);
+    expect(result.cooldownAfterWin).toBeGreaterThan(0);
     expect(result.cancelledOk).toBe(true);
+    expect(result.invitationBlockedAfterCancel).toBe(true);
     expect(result.cancelledRemoved).toBe(true);
     expect(result.lossStatuses).toEqual(['countered', 'countered', 'lost']);
     expect(result.lossGoldUnchanged).toBe(true);
@@ -134,7 +161,7 @@ test('auctioned claims and enterprises use their existing transfer paths',
     const result = await page.evaluate(function () {
       let state = FB.state;
       const originalEnterprises = FBDATA.enterprises;
-      const originalWeights = FBDATA.balance.auctionLotWeights;
+      const originalLotTypes = FBDATA.auctionLotTypes;
       let output;
       try {
         const home = state.player.provinceId;
@@ -146,8 +173,15 @@ test('auctioned claims and enterprises use their existing transfer paths',
         state.player.fabricatedClaim = null;
         state.dev[home] = 7;
         FB.foundPlayerRealm(state);
+        const technology = FB.realmTechRecord(state);
+        if (technology.completed.indexOf('notarial_contracts') < 0) {
+          technology.completed.push('notarial_contracts');
+        }
         const claimCandidates = FB.claimCandidates(state);
-        FBDATA.balance.auctionLotWeights = { item:0, enterprise:0, claim:1 };
+        FBDATA.auctionLotTypes = {
+          item:{ weight:0 }, enterprise:{ weight:0 },
+          claim:{ weight:1, requiresTech:'notarial_contracts' }
+        };
         const claimAuction = FB.beginAuction(state, FB.auctionVenues(state)[0]);
         claimAuction.rivalMaximum = claimAuction.currentBid;
         const claimWin = FB.placeAuctionBid(state, 1);
@@ -164,6 +198,7 @@ test('auctioned claims and enterprises use their existing transfer paths',
         FB.warCapture(state);
         const claimCleared = !state.player.fabricatedClaim;
 
+        state.turn += FBDATA.balance.auctionCooldownDays;
         state.player.tier = 1;
         state.player.provinceId = home;
         state.player.provs = [];
@@ -176,15 +211,27 @@ test('auctioned claims and enterprises use their existing transfer paths',
         FBDATA.enterprises = {
           auction_enterprise_fixture:{
             name:'Auction Workshop', icon:'house', cost:40, profession:'farmer',
-            yield:2, devMin:1, tags:['fixture'],
+            yield:2, devMin:1, tags:['fixture'], requiresTech:'horizontal_loom',
             desc:'A deterministic auction enterprise.'
           }
         };
-        FBDATA.balance.auctionLotWeights = { item:0, enterprise:1, claim:0 };
+        FBDATA.auctionLotTypes = {
+          item:{ weight:0 }, enterprise:{ weight:1 }, claim:{ weight:0 }
+        };
         const venue = FB.auctionVenues(state)[0];
+        technology.completed = technology.completed.filter(function (id) {
+          return id !== 'horizontal_loom';
+        });
+        const availableWhileLocked = FB.enterpriseAvailable(state,
+          venue.provinceId, venue.settlement).length;
+        technology.completed.push('horizontal_loom');
         const availableBefore = FB.enterpriseAvailable(state, venue.provinceId,
           venue.settlement).length;
         const enterpriseAuction = FB.beginAuction(state, venue);
+        technology.completed = technology.completed.filter(function (id) {
+          return id !== 'horizontal_loom';
+        });
+        const enterpriseGrandfathered = !!FB.auctionOf(state);
         enterpriseAuction.rivalMaximum = enterpriseAuction.currentBid;
         const enterpriseWin = FB.placeAuctionBid(state, 1);
         const enterprise = state.player.enterprises.filter(function (entry) {
@@ -204,7 +251,9 @@ test('auctioned claims and enterprises use their existing transfer paths',
           fabricationBlocked:fabricationBlocked,
           lawfulCause:lawfulCause && lawfulCause.type,
           claimCleared:claimCleared,
+          availableWhileLocked:availableWhileLocked,
           availableBefore:availableBefore,
+          enterpriseGrandfathered:enterpriseGrandfathered,
           enterpriseLot:enterpriseAuction.lot.kind,
           enterpriseWin:enterpriseWin,
           enterpriseSite:enterprise && {
@@ -216,7 +265,7 @@ test('auctioned claims and enterprises use their existing transfer paths',
         };
       } finally {
         FBDATA.enterprises = originalEnterprises;
-        FBDATA.balance.auctionLotWeights = originalWeights;
+        FBDATA.auctionLotTypes = originalLotTypes;
       }
       return output;
     });
@@ -230,7 +279,9 @@ test('auctioned claims and enterprises use their existing transfer paths',
     expect(result.fabricationBlocked).toBe(true);
     expect(result.lawfulCause).toBe('fabricated');
     expect(result.claimCleared).toBe(true);
+    expect(result.availableWhileLocked).toBe(0);
     expect(result.availableBefore).toBeGreaterThan(0);
+    expect(result.enterpriseGrandfathered).toBe(true);
     expect(result.enterpriseLot).toBe('enterprise');
     expect(result.enterpriseWin).toMatchObject({
       status:'won', awarded:{ kind:'enterprise' }
@@ -238,4 +289,169 @@ test('auctioned claims and enterprises use their existing transfer paths',
     expect(result.enterpriseSite).toMatchObject({ provinceId:expect.any(String) });
     expect(result.staffedYield).toBeGreaterThan(0);
     expect(result.idleAfterMove).toBe(true);
+  });
+
+test('guild routes use balanced technology gates and interactive invitations stay manual',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const c = s.chars[s.player.charId];
+      const technology = FB.realmTechRecord(s);
+      const originalStandingMax = FBDATA.balance.guildStandingMax;
+      const brokerDefinition = FBDATA.careers.merchant.specializations.broker;
+      const originalBrokerRequirement = brokerDefinition.requiresTech;
+      function addTech(id) {
+        if (technology.completed.indexOf(id) < 0) technology.completed.push(id);
+      }
+      function removeTech(id) {
+        technology.completed = technology.completed.filter(function (entry) {
+          return entry !== id;
+        });
+      }
+      function bySpecialization(list) {
+        const out = {};
+        list.forEach(function (entry) { out[entry.specialization] = entry; });
+        return out;
+      }
+      let output;
+      try {
+        s.player.tier = 1;
+        s.player.gold = 100;
+        c.skills.ste = 9;
+        addTech('bloomery_iron');
+        addTech('weights_measures');
+        removeTech('horizontal_loom');
+        removeTech('cooperage');
+        removeTech('trade_houses');
+        removeTech('coastal_piloting');
+        c.career = {
+          profession:'craftsman', rank:'master', experience:12,
+          startedYear:s.date.year - 12, guildRank:'guildmaster',
+          guildStanding:35, chosen:true
+        };
+        FB.syncPlayerCareer(s);
+        const craftLocked = bySpecialization(
+          FB.careerSpecializationOptions(s, c));
+        const lockedChoice = FB.chooseCareerSpecialization(s, c, 'weaver');
+        addTech('horizontal_loom');
+        const craftUnlocked = bySpecialization(
+          FB.careerSpecializationOptions(s, c));
+        const chosen = FB.chooseCareerSpecialization(s, c, 'weaver');
+        const chosenSpecialization = c.career.specialization;
+
+        c.career = {
+          profession:'merchant', rank:'master', experience:12,
+          startedYear:s.date.year - 12, guildRank:'guildmaster',
+          guildStanding:35, chosen:true
+        };
+        FB.syncPlayerCareer(s);
+        const tradeLocked = bySpecialization(
+          FB.careerSpecializationOptions(s, c));
+        removeTech('urban_markets');
+        removeTech('authenticated_seals');
+        brokerDefinition.requiresTech = ['urban_markets','authenticated_seals'];
+        const arrayRequirement = bySpecialization(
+          FB.careerSpecializationOptions(s, c)).broker;
+        if (originalBrokerRequirement === undefined) {
+          delete brokerDefinition.requiresTech;
+        } else {
+          brokerDefinition.requiresTech = originalBrokerRequirement;
+        }
+        addTech('coastal_piloting');
+        const tradeUnlocked = bySpecialization(
+          FB.careerSpecializationOptions(s, c));
+
+        FBDATA.balance.guildStandingMax = 42;
+        c.career.guildStanding = 41;
+        const standingLedger = FB.applyEffects(s, { guildStanding:10 }, {}, null);
+
+        const invitation = FB.eventById('rare_auction_invitation');
+        const attend = invitation.options[0];
+        const beforeAutomatic = FB.save.serialize();
+        const rngBeforeAutomatic = FB.getRngState();
+        const automated = FB.resolveEventOption(s, invitation, attend, {}, {
+          automated:true
+        });
+        output = {
+          definitions:{
+            smith:FBDATA.careers.craftsman.specializations.smith.requiresTech || null,
+            broker:FBDATA.careers.merchant.specializations.broker.requiresTech || null,
+            maritime:FBDATA.careers.merchant.specializations.maritime_factor.requiresTech
+          },
+          craftLocked:{
+            smith:craftLocked.smith.ready,
+            weaver:craftLocked.weaver.ready,
+            weaverMissing:craftLocked.weaver.missing.join(' | '),
+            cooper:craftLocked.cooper.ready,
+            smithRequirements:craftLocked.smith.requirements
+          },
+          lockedChoice:lockedChoice,
+          weaverUnlocked:craftUnlocked.weaver.ready,
+          chosen:!!chosen,
+          chosenSpecialization:chosenSpecialization,
+          tradeLocked:{
+            broker:tradeLocked.broker.ready,
+            caravan:tradeLocked.caravan_factor.ready,
+            maritime:tradeLocked.maritime_factor.ready,
+            maritimeMissing:tradeLocked.maritime_factor.missing.join(' | ')
+          },
+          maritimeUnlocked:tradeUnlocked.maritime_factor.ready,
+          arrayRequirement:{
+            ready:arrayRequirement.ready,
+            missing:arrayRequirement.missing.join(' | ')
+          },
+          standing:{
+            value:c.career.guildStanding,
+            previewRegistered:FB.eventPreviewEffectKeys.guildStanding,
+            impact:standingLedger.filter(function (entry) {
+              return entry.type === 'guildStanding';
+            })[0]
+          },
+          invitation:{
+            manualOnly:attend.manualOnly,
+            automated:automated,
+            unchanged:beforeAutomatic === FB.save.serialize() &&
+              rngBeforeAutomatic === FB.getRngState()
+          }
+        };
+      } finally {
+        FBDATA.balance.guildStandingMax = originalStandingMax;
+        if (originalBrokerRequirement === undefined) {
+          delete brokerDefinition.requiresTech;
+        } else {
+          brokerDefinition.requiresTech = originalBrokerRequirement;
+        }
+      }
+      return output;
+    });
+
+    expect(result.definitions).toEqual({
+      smith:null, broker:null, maritime:'coastal_piloting'
+    });
+    expect(result.craftLocked.smith).toBe(true);
+    expect(result.craftLocked.weaver).toBe(false);
+    expect(result.craftLocked.weaverMissing).toContain('Horizontal Loom');
+    expect(result.craftLocked.cooper).toBe(false);
+    expect(result.craftLocked.smithRequirements.join(' | ')).toContain(
+      'Guild Standing 35');
+    expect(result.craftLocked.smithRequirements.join(' | ')).toContain(
+      'Stewardship 9');
+    expect(result.lockedChoice).toBe(false);
+    expect(result.weaverUnlocked).toBe(true);
+    expect(result.chosen).toBe(true);
+    expect(result.chosenSpecialization).toBe('weaver');
+    expect(result.tradeLocked.broker).toBe(true);
+    expect(result.tradeLocked.caravan).toBe(false);
+    expect(result.tradeLocked.maritime).toBe(false);
+    expect(result.tradeLocked.maritimeMissing).toContain('Coastal Piloting');
+    expect(result.maritimeUnlocked).toBe(true);
+    expect(result.arrayRequirement.ready).toBe(false);
+    expect(result.arrayRequirement.missing).toContain('Urban Markets');
+    expect(result.arrayRequirement.missing).toContain('Authenticated Seals');
+    expect(result.standing.value).toBe(42);
+    expect(result.standing.previewRegistered).toBe(true);
+    expect(result.standing.impact).toMatchObject({ amount:1 });
+    expect(result.invitation).toEqual({
+      manualOnly:true, automated:false, unchanged:true
+    });
   });

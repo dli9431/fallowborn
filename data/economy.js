@@ -17,7 +17,7 @@ FBDATA.careers = {
     ranks:{ apprentice:'Apprentice', journeyman:'Journeyman', master:'Master craftsman' },
     specializations:{
       smith:{
-        name:'Smith', requiresTech:'bloomery_iron', guildRankMin:'guildmaster',
+        name:'Smith', guildRankMin:'guildmaster',
         guildStandingMin:35, skills:{ ste:9 }, cost:20,
         fx:{ focusGold:1.5, enterprise:{ tags:['workshop'], bonus:0.15 } }
       },
@@ -40,7 +40,7 @@ FBDATA.careers = {
     ranks:{ apprentice:'Merchant’s clerk', journeyman:'Peddler', master:'Merchant' },
     specializations:{
       broker:{
-        name:'Broker', requiresTech:'urban_markets', guildRankMin:'guildmaster',
+        name:'Broker', guildRankMin:'guildmaster',
         guildStandingMin:35, skills:{ ste:9 }, cost:20,
         fx:{ focusGold:1.5, enterprise:{ tags:['market'], bonus:0.18 } }
       },
@@ -50,7 +50,7 @@ FBDATA.careers = {
         fx:{ focusGold:2, enterprise:{ tags:['trade-house'], bonus:0.15 }, tradeVenture:0.04 }
       },
       maritime_factor:{
-        name:'Maritime Factor', requiresTech:'knarrs', guildRankMin:'guildmaster',
+        name:'Maritime Factor', requiresTech:'coastal_piloting', guildRankMin:'guildmaster',
         guildStandingMin:35, skills:{ ste:9 }, cost:20,
         fx:{ focusGold:1, enterprise:{ tags:['trade-house'], bonus:0.12 }, tradeVenture:0.06 }
       }
@@ -511,6 +511,15 @@ FBDATA.householdStandards = {
         desc:'Raises estate-service output by 15%.', fx:{ work:0.15 } }
     ]
   }
+};
+
+/* Bounded auctions remain generally available at a suitable market. Each lot
+   family owns its selection weight and any extra national prerequisite, so a
+   mod can change one family without gating the auction deed itself. */
+FBDATA.auctionLotTypes = {
+  item:{ weight:6 },
+  enterprise:{ weight:3 },
+  claim:{ weight:1, requiresTech:'notarial_contracts' }
 };
 
 /* Coin & Credit contracts. These are deliberately exact-term contracts, not

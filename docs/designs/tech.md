@@ -245,8 +245,9 @@ a semantic feature.
 
 Most entries expose a discrete practice, rule, building, enterprise, career, unit access,
 or research slot through `unlocks`. Data definitions use `requiresTech` for buildings,
-schooling, household standards, careers, career specialties, enterprises, credit, trade
-partnerships, Estates policies, privileges, feudal-service charters, and event options.
+schooling, household standards, careers, career specialties, enterprises, auction lot
+families, credit, trade partnerships, Estates policies, privileges, feudal-service charters,
+and event options.
 `FB.techRequirementStatus` is the shared all-of projection and exposes exact required and
 missing ids. Technology detail reverse discovery scans every one of those consumers.
 Warfare technologies alter the existing levy/archer/cavalry/retinue classes, overland
@@ -285,6 +286,15 @@ redress remains available without Recorded Customary Law; only its additional wr
 county confirmation depends on that technology. Existing terms, privileges, modifiers,
 contracts, and already-started political commitments remain in force after allegiance or
 technology changes.
+
+The Guild Paths and Bounded Auctions review keeps the activity surfaces broad. Smith and
+Broker add no gate beyond their parent careers; Weaver, Cooper, Caravan Factor, and
+Maritime Factor use Horizontal Loom, Cooperage, Trade Houses, and Coastal Piloting while
+the baseline sibling path remains available. Auctions, item lots, and their rare
+invitation route are ungated; enterprise lots inherit the enterprise definition, and only
+auctioned county title rights require Notarial Contracts. Formal Market Charter outcomes
+in guild stories reuse the existing Urban Markets plus Authenticated Seals decision instead
+of creating a parallel unlock.
 
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI

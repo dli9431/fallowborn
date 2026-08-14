@@ -312,6 +312,13 @@ Autoresolve filters on the same ready status. Direct resolution rechecks the tec
 portion before any RNG or mutation, so a custom caller cannot bypass a hard gate; ordinary
 `require` remains an authored-flow condition for compatibility with direct event tooling.
 
+An option may also declare `manualOnly:true` when its effect opens an interactive flow
+that cannot be completed by a policy score. It remains an ordinary manual choice, but
+autoresolve removes it from the candidate list and direct automated resolution rejects it
+before RNG or mutation. The rare auction invitation uses this contract, leaving **Send
+regrets** as its automation-safe outcome; a manual acceptance defers its auction sheet
+until the current event queue has cleared.
+
 `FB.resolveEventOption` is the single manual/autoresolve authority. It rolls once, consumes
 one-shot chance bonuses, applies the top-level effects and then the selected branch in the
 established order, and returns a structured receipt. `FB.applyEffects` remains safe for old

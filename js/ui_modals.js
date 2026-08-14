@@ -108,6 +108,15 @@ window.FB = window.FB || {};
 
   let eventOpen = false;
   let pendingEvents = [];
+  let auctionOpenAfterEvents = false;
+
+  UI.deferAuctionOpen = function () {
+    if (eventOpen) {
+      auctionOpenAfterEvents = true;
+      return;
+    }
+    if (UI.showAuction) UI.showAuction();
+  };
 
   /* Touch mis-tap guard. On mobile the event modal is a bottom sheet that can
      appear just as the player's thumb is already coming down toward the time
@@ -289,6 +298,7 @@ window.FB = window.FB || {};
     UI.autoResolving = true;
     FB.markFired(s, ev);
     let opts = (ev.options || []).filter(function (o) {
+      if (o.manualOnly) return false;
       return FB.eventOptionStatus
         ? FB.eventOptionStatus(s, ev, o, ctx).ready
         : (!o.require || FB.checkTrigger(s, o.require, ctx));
@@ -424,10 +434,17 @@ window.FB = window.FB || {};
     }
     eventOpen = false;
     $('eventmodal').classList.add('hidden');
+    const openAuction = auctionOpenAfterEvents;
+    auctionOpenAfterEvents = false;
     UI.refresh();
+    if (FB.game && FB.game.afterEvents) FB.game.afterEvents();
+    if (openAuction && FB.auctionOf && FB.auctionOf(s) &&
+        s.player && !s.player.dead) {
+      UI.showAuction();
+      return true;
+    }
     if (FB.state && !$('game').classList.contains('hidden') &&
       $('genmodal').classList.contains('hidden')) $('btn-endturn').focus();
-    if (FB.game && FB.game.afterEvents) FB.game.afterEvents();
     return false;
   }
 
@@ -3245,14 +3262,15 @@ window.FB = window.FB || {};
   /* ================= bounded market auction ================= */
   UI.showAuctionVenuePicker = function (venues) {
     const s = FB.state;
-    venues = venues || (FB.auctionVenues ? FB.auctionVenues(s) : []);
+    const status = !venues && FB.auctionStatus ? FB.auctionStatus(s) : null;
+    venues = venues || (status && status.venues) || [];
     if (!venues.length) return;
     if (venues.length === 1) {
       if (FB.beginAuction(s, venues[0])) UI.showAuction();
       return;
     }
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Choose the market whose auction you will attend. The invitation is annual, but the bidding itself resolves at once.')) +
+      'Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once.')) +
       '</p></div><div class="gm-list">';
     for (let i = 0; i < venues.length; i++) {
       const venue = venues[i];
@@ -3272,7 +3290,6 @@ window.FB = window.FB || {};
       });
     });
     $('auction-cancel').addEventListener('click', function () {
-      if (s.player.cooldowns) delete s.player.cooldowns.attend_auction;
       UI.closeModal();
       UI.refresh();
     });
@@ -11252,7 +11269,7 @@ window.FB = window.FB || {};
     if (guildSpecializations.length) {
       h += '</div><div class="panelh">' + esc(FB.T('Guild path')) +
         '</div><div class="gm-body-text"><p>' + esc(FB.T(
-          'A guildmaster may take one permanent specialty after reaching Guild Standing 35, Stewardship 9, the listed technology, and its {money:20} induction fee.')) +
+          'An established guildmaster may take one permanent specialty. Each path lists its exact rank, standing, skill, technology, and induction-fee requirements.')) +
         '</p></div><div class="gm-list">';
       for (const option of guildSpecializations) {
         h += '<button class="actionbtn" data-career-specialization="' +
@@ -11260,7 +11277,9 @@ window.FB = window.FB || {};
           '>🏅 ' + esc(FB.T('Induct as {specialization} — {money:gold}', {
             specialization:option.name, gold:option.cost
           })) + '<span class="adesc">' + esc(option.ready
-            ? FB.T('The guild path becomes this vocation’s permanent title.')
+            ? FB.T('Requires: {requirements}. This becomes the vocation’s permanent title.', {
+              requirements:option.requirements.join('; ')
+            })
             : FB.T('Unmet: {requirements}', {
               requirements:option.missing.join('; ')
             })) + '</span></button>';
@@ -13166,11 +13185,28 @@ window.FB = window.FB || {};
         const careerName = dt(s, 'career', careerId, career, 'name');
         const specializationName = dt(s, 'career', careerId, career,
           'specializations.' + specializationId + '.name');
-        add('career-specialization:' + careerId + ':' + specializationId,
-          FB.T('Makes the {specialization} examination available in {career}.', {
+        const specializationText = career.guild && !career.learned
+          ? FB.T('Makes the {specialization} guild induction available in {career}.', {
             specialization:specializationName, career:careerName
-          }));
+          })
+          : FB.T('Makes the {specialization} examination available in {career}.', {
+            specialization:specializationName, career:careerName
+          });
+        add('career-specialization:' + careerId + ':' + specializationId,
+          specializationText);
       }
+    }
+
+    for (const lotTypeId in (FBDATA.auctionLotTypes || {})) {
+      if (!Object.prototype.hasOwnProperty.call(FBDATA.auctionLotTypes,
+          lotTypeId)) continue;
+      const lotType = FBDATA.auctionLotTypes[lotTypeId];
+      if (!lotType || !techRequiresId(lotType.requiresTech, id)) continue;
+      const lotName = lotTypeId === 'claim' ? FB.T('county title rights') :
+        lotTypeId === 'enterprise' ? FB.T('family enterprises') :
+        FB.T('fine and famed items');
+      add('auction-lot:' + lotTypeId,
+        FB.T('Makes {content} available as auction lots.', { content:lotName }));
     }
 
     for (const standardId in (FBDATA.householdStandards || {})) {

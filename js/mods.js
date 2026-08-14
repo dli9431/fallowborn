@@ -266,6 +266,8 @@ window.FBMODS = window.FBMODS || [];
     }
     if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
+    if (mod.auctionLotTypes) mergeTable(FBDATA.auctionLotTypes,
+      mod.auctionLotTypes);
     if (mod.householdStandards) {
       for (const k in mod.householdStandards) {
         FBDATA.householdStandards[k] = mod.householdStandards[k];

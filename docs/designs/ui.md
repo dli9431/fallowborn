@@ -43,10 +43,13 @@ episcopal focus, temporalities, office piety, household retinue, non-hereditary 
 and the four church powers with their costs and cooldowns.
 
 The Work picker presents eligible Craft and Trade **Guild paths** beside existing learned
-career examinations. Each induction button names its fixed fee and all unmet Guildmaster,
-Guild Standing, Stewardship, and technology gates. The Deeds panel offers **Attend
-auction…** only when a town/city market can present one valid bounded lot. The auction
-sheet shows the exact current call and round, keeps unaffordable bids visibly disabled,
+career examinations. Each induction button derives the configured fee and complete rank,
+Guild Standing, skill, and technology requirements from the owning career definition;
+unmet rows include current values. The Deeds panel offers **Attend auction…** only when a
+town/city market can present one valid bounded lot. At title-owning station its description
+keeps the exact Notarial Contracts lock for county-title lots visible without disabling
+the rest of the auction. The auction sheet shows the exact current call and round, keeps
+unaffordable bids visibly disabled,
 and offers a deliberate leave control; countered bids replace the same modal view.
 Opening and closing it uses the generic modal's normal activating-control restoration.
 

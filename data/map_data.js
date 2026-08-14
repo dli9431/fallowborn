@@ -953,8 +953,8 @@ FBDATA.balance = {
   careerExamCooldownDays:360, learnedPractitionerMortality:0.002,
   /* Bounded household auctions: a market-day deed creates exactly one
      saved lot and immediate rival. The rival's maximum is rolled once and
-     every player bid is a multiple of the fixed increment. */
-  auctionLotWeights:{ item:6, enterprise:3, claim:1 },
+     every player bid is a multiple of the fixed increment. Lot-family
+     weights and requirements live in FBDATA.auctionLotTypes. */
   auctionOpeningBidRatio:0.60, auctionBidIncrementRatio:0.10,
   auctionRivalMaxRatio:[1.10,1.90], auctionCountyClaimValue:100,
   auctionCooldownDays:360, auctionMaxBidRounds:3,

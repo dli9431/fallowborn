@@ -602,15 +602,24 @@ window.FB = window.FB || {};
     show: function (s) { return adult(s); },
     can: function (s) { return FB.settlementsOf(s, s.player.provinceId).length ? true : 'Only wilderness here.'; },
     run: function (s) { if (FB.ui && FB.ui.showSettlements) FB.ui.showSettlements(); } },
-  { id: 'attend_auction', label: '⚖ Attend auction…', cd: 360, noConsume:true,
-    cooldownDays: function (s) {
-      return FB.auctionOf && FB.auctionOf(s) ? 0 :
-        (FBDATA.balance.auctionCooldownDays || 360);
+  { id: 'attend_auction', label: '⚖ Attend auction…', noConsume:true,
+    desc: function (s) {
+      let description = FB.T(
+        'Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.');
+      const claimTechnology = s.player.tier >= 4 && FB.auctionLotTypeStatus
+        ? FB.auctionLotTypeStatus(s, 'claim') : null;
+      if (claimTechnology && !claimTechnology.ready) {
+        description += ' ' + FB.T('Auctioned title rights are locked: {requirement}', {
+          requirement:FB.techRequirementReason(s,
+            FBDATA.auctionLotTypes.claim.requiresTech)
+        });
+      }
+      return description;
     },
-    desc: function () {
-      return FB.T('Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.');
+    show: function (s) {
+      return !!(FB.auctionOf && FB.auctionOf(s)) ||
+        (adult(s) && !(s.player.flags && s.player.flags.in_prison));
     },
-    show: function (s) { return adult(s) && !(s.player.flags && s.player.flags.in_prison); },
     can: function (s) {
       const status = FB.auctionStatus && FB.auctionStatus(s);
       return status && (status.ready || status.active) ? true :
