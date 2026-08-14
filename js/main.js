@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.126.1';
+  FB.VERSION = '1.127.0';
   FB.CHANGELOG = [
+    { v: '1.127.0', date: '2026-08-14', changes: [
+      'Local government now brings town-council motions and appointed Castellan tenures.',
+      'Land grants now combine a chosen recipient with a service charter and hereditary, life, or fixed-term tenure.'
+    ] },
     { v: '1.126.1', date: '2026-08-14', changes: [
       'Barber controls now keep the portrait fixed, use compact mobile selectors, and separate facial-hair families from their styles.',
       'Beard and moustache designs now have clearer, better-aligned silhouettes.'
@@ -1759,6 +1763,7 @@ window.FB = window.FB || {};
         provs: [], war: null, greatHolyWar: null, plot: null,
         aggressiveWars: [],
         focus: null, dead: false,
+        localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
         holdings: [], enterprises: [], householdStandards: {},
@@ -2006,6 +2011,7 @@ window.FB = window.FB || {};
         provs: [], war: null, greatHolyWar: null, plot: null,
         aggressiveWars: [],
         focus: null, dead: false, holdings: [],
+        localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
         householdStandards: {},
@@ -2107,6 +2113,7 @@ window.FB = window.FB || {};
       seasonBoundary = true;
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
     }
+    if (FB.localGovernmentDay) FB.localGovernmentDay(s);
     FB.scriptedTick(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.papacyDay) FB.papacyDay(s);
@@ -3171,6 +3178,8 @@ window.FB = window.FB || {};
       telemetrySession.entryType : 'unknown';
     const activeSeconds = telemetryPulse();
     const titleDataAtDeath = FB.titleSnapshot(s);
+    if (FB.endLocalCouncil) FB.endLocalCouncil(s, 'death', true);
+    if (FB.endCastellany) FB.endCastellany(s, 'death', true);
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(s, me);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death

@@ -568,7 +568,8 @@ active, paused while on the road, or paused because the target is in another cou
 never replaces the work focus.
 
 Rank & Realm exposes one no-day-cost **Governance…** entry for every territorial
-baron-or-greater player. Its desktop-wide and mobile full-sheet layout is the
+baron-or-greater player and every appointed Castellan. Its desktop-wide and mobile
+full-sheet layout is the
 authoritative political presentation: Position, Domain, Liege & Obligations (or
 Independence), Vassals, Political Blocs, the rank-appropriate Institution, and grouped Political
 Actions. `FB.governanceSummary` supplies locale-neutral ids and exact numeric values;
@@ -586,6 +587,13 @@ blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
 The Domain section exposes per-county **Reserve from grants** and **No autobuild** controls.
+Choosing a county or duchy to grant opens a second, non-mutating terms sheet. It keeps
+service charter and tenure as separate controls and shows the selected grant's exact
+projected gold per season, soldiers, initial Standing, extraordinary-tax eligibility,
+and breakaway effect before confirmation. Customary, Scutage, Host Duty, and Liberties
+therefore remain legible choices without requiring the player to infer results from
+percentages. A direct-vassal row repeats the saved charter and tenure; the player's own
+row separately reports any appointed tenure and the Estates' current aid and scutage.
 When over the domain cap it also offers a review-first cleanup proposal that keeps the
 capital and household home, omits reserved counties, prefers whole duchies, shows the exact
 grants and land tax/levy estimate, and revalidates before applying. Vassal rows expose the
@@ -764,7 +772,9 @@ guild commissions, and the shared privilege roll), Political Blocs, and Realm. F
 Political Blocs is the compact shared-court summary and Realm contains one
 Governance route, foreign ties, and the computed levy ledger rather than duplicating
 liege, vassal, Estates, or Council prose. Other protagonists retain the compact legacy
-relationship summary. Empty sections explain what is absent rather than inventing
+relationship summary. A Town Councilman sees the seat's county, active ordinance and
+expiry, and next available session in this Realm section; these are reads of the local
+office record and consume no RNG. Empty sections explain what is absent rather than inventing
 placeholder people.
 
 Work & Enterprises and Network share a render-only large-list grammar. Every semantic

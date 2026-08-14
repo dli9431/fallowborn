@@ -6,6 +6,15 @@ FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
 
+{ id:'vassal_tenure_renewal', title:'A Term Nears Its End', trigger:{ never:true },
+  contextValidator:'feudal_renewal_valid',
+  text:'{ruler} of {realm} reminds you that the grant expires in {days} days. The charter is unchanged; only the tenure is in question.',
+  options:[
+    { label:'Renew the grant for ten years.', desc:'Keep this ruler and service charter in place for another 3,600 days.',
+      effects:{ custom:'feudal_renewal_accept' } },
+    { label:'Let the term run its course.', desc:'The fiefs will revert to your hand when the remaining ninety days end.',
+      effects:{ custom:'feudal_renewal_decline' } }
+  ]},
 { id:'hold_court_event', title:'Petitioners at the Gate', trigger:{ never:true },
   text:'Court day. Two farmers claim one cow; a widow begs relief of taxes; a merchant accuses your reeve of taking bribes.',
   options:[

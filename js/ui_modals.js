@@ -5508,6 +5508,75 @@ window.FB = window.FB || {};
     });
   };
 
+  UI.showLocalCouncilMotion = function () {
+    const s = FB.state;
+    const status = FB.localCouncilMotionStatus(s);
+    const seat = FB.localCouncilOf(s);
+    if (!status.ready || !seat) return;
+    const province = FB.world.byId[seat.provinceId];
+    let h = '<p class="hint">' + esc(FB.T(
+      'The seeded vote chance is {chance}% for every motion: Diplomacy and Stewardship shape your case, while popular opinion shapes the room.', {
+        chance:Math.round(status.chance * 100)
+      })) + '</p><div class="gm-list">';
+    for (const id in FBDATA.localCouncilMotions) {
+      const def = FBDATA.localCouncilMotions[id];
+      h += '<button type="button" class="actionbtn" data-local-motion="' +
+        esc(id) + '">' + def.icon + ' ' +
+        esc(dt(s, 'localCouncilMotion', id, def, 'name')) +
+        '<span class="adesc">' +
+        esc(dt(s, 'localCouncilMotion', id, def, 'desc')) +
+        '</span></button>';
+    }
+    h += '</div><button type="button" class="btn" id="local-motion-cancel">' +
+      esc(FB.T('Not now')) + '</button>';
+    openModal(FB.T('Council of {province}', {
+      province:province ? province.name : seat.provinceId
+    }), h);
+    document.querySelectorAll('[data-local-motion]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!FB.proposeLocalCouncilMotion(s, button.dataset.localMotion)) return;
+        UI.closeModal();
+        if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
+      });
+    });
+    $('local-motion-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showCastellanPetition = function () {
+    const s = FB.state;
+    const term = FB.castellanAppointmentStatus(s, 'term');
+    const life = FB.castellanAppointmentStatus(s, 'life');
+    if (!term.visible) return;
+    let h = '<p class="hint">' + esc(FB.T(
+      'This is an appointed office over the castle at {county}; no county ownership is transferred. Repeated patronage modifies the displayed chance.', {
+        county:term.provinceName
+      })) + '</p><div class="gm-list">' +
+      '<button type="button" class="actionbtn" data-castellan-tenure="term"' +
+      (term.ready ? '' : ' disabled') + '>🏰 ' + esc(FB.T('Ten-year appointment')) +
+      '<span class="adesc">' + esc(term.ready
+        ? FB.T('{chance}% grant chance · 3,600 days · one renewal petition in the final 90 days.', {
+          chance:Math.round(term.chance * 100)
+        }) : term.reason) + '</span></button>' +
+      '<button type="button" class="actionbtn" data-castellan-tenure="life"' +
+      (life.ready ? '' : ' disabled') + '>🗝 ' + esc(FB.T('Life appointment')) +
+      '<span class="adesc">' + esc(life.ready
+        ? FB.T('{chance}% grant chance · ends with the current character’s death.', {
+          chance:Math.round(life.chance * 100)
+        }) : life.reason) + '</span></button></div>' +
+      '<button type="button" class="btn" id="castellan-cancel">' +
+      esc(FB.T('Not now')) + '</button>';
+    openModal(FB.T('Seek appointment as Castellan'), h);
+    document.querySelectorAll('[data-castellan-tenure]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const result = FB.appointCastellan(s, button.dataset.castellanTenure);
+        if (!result) return;
+        UI.closeModal();
+        if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
+      });
+    });
+    $('castellan-cancel').addEventListener('click', UI.closeModal);
+  };
+
   function grantProtectionButton(pid) {
     const reserved = FB.isProtected(FB.state, 'grantCounty', pid);
     return '<button type="button" class="btn small protection-toggle" ' +
@@ -5517,9 +5586,129 @@ window.FB = window.FB || {};
         '🔓 ' + esc(FB.T('Reserve'))) + '</button>';
   }
 
-  /* Choose the demesne land first. Grant protections are visible here and are
-     hard stops for this picker until deliberately removed; the following
-     recipient step can found either a generated house or a family branch. */
+  function feudalTenureText(tenure) {
+    if (tenure === 'life') return FB.T('Life');
+    if (tenure === 'term') return FB.T('Ten-year');
+    return FB.T('Hereditary');
+  }
+
+  function feudalCharterName(s, charterId) {
+    const def = FBDATA.feudalServiceCharters[charterId];
+    return def ? dt(s, 'feudalServiceCharter', charterId, def, 'name') : charterId;
+  }
+
+  /* Service and tenure are chosen after the land and recipient. Every
+     charter card uses the authoritative projection, and confirmation repeats
+     the exact gold, men, Standing, and political rule being granted. */
+  UI.showGrantTerms = function (kind, id, returnContext, recipientId,
+      charterId, tenure, replaceView) {
+    const s = FB.state;
+    charterId = FBDATA.feudalServiceCharters[charterId]
+      ? charterId : 'customary_service';
+    tenure = tenure === 'life' || tenure === 'term'
+      ? tenure : 'hereditary';
+    const selected = FB.feudalGrantPreview(s, kind, id, charterId, tenure);
+    if (!selected.countyIds.length) {
+      UI.showGrantLandRecipients(kind, id, returnContext, FB.T(
+        'The land or recipient changed before the grant. Choose again.'), true);
+      return;
+    }
+    const target = kind === 'duchy'
+      ? ((FBDATA.duchies[id] || {}).name || id)
+      : ((FB.world.byId[id] || {}).name || id);
+    let h = '<p class="hint">' + esc(FB.T(
+      'Choose what this vassal chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.')) + '</p>' +
+      '<div class="panelh">' + esc(FB.T('Service charter')) + '</div>';
+    for (const cid in FBDATA.feudalServiceCharters) {
+      const def = FBDATA.feudalServiceCharters[cid];
+      const preview = FB.feudalGrantPreview(s, kind, id, cid, tenure);
+      const political = def.extraordinaryTaxExempt
+        ? FB.T('extraordinary-tax exempt · breakaway ×{multiplier}', {
+          multiplier:def.breakawayMultiplier
+        })
+        : FB.T('breakaway ×{multiplier}', {
+          multiplier:def.breakawayMultiplier
+        });
+      h += '<button type="button" class="actionbtn" data-grant-charter="' +
+        esc(cid) + '" aria-pressed="' + (cid === charterId ? 'true' : 'false') +
+        '">' + def.icon + ' ' + esc(feudalCharterName(s, cid)) +
+        '<span class="adesc">' + esc(FB.T(
+          '{money:gold}/season · {men} soldiers · {political}', {
+            gold:Math.round(preview.tax * 100) / 100,
+            men:Math.round(preview.levy), political:political
+          })) + '</span></button>';
+    }
+    h += '<div class="panelh">' + esc(FB.T('Tenure')) + '</div>';
+    const tenures = [
+      { id:'hereditary', desc:FB.T('Existing male-preference succession continues.') },
+      { id:'life', desc:FB.T('Reverts at the appointed ruler’s death; initial Standing −5.') },
+      { id:'term', desc:FB.T('Reverts at death or after 3,600 days; initial Standing −10.') }
+    ];
+    for (const item of tenures) {
+      h += '<button type="button" class="actionbtn" data-grant-tenure="' +
+        item.id + '" aria-pressed="' + (item.id === tenure ? 'true' : 'false') +
+        '">' + esc(feudalTenureText(item.id)) + '<span class="adesc">' +
+        esc(item.desc) + '</span></button>';
+    }
+    const selectedDef = FBDATA.feudalServiceCharters[charterId];
+    h += '<div class="progressnote"><b>' + esc(FB.T('Grant preview')) +
+      '</b><br>' + esc(FB.T(
+        '{target}: {money:gold} each season · {men} soldiers · initial Standing +{standing} · breakaway ×{multiplier}.', {
+          target:target,
+          gold:Math.round(selected.tax * 100) / 100,
+          men:Math.round(selected.levy),
+          standing:selected.initialStanding,
+          multiplier:selected.breakawayMultiplier
+        })) + (selectedDef.extraordinaryTaxExempt
+          ? '<br>' + esc(FB.T('This vassal is exempt from extraordinary taxes.'))
+          : '') + '</div><div class="modal-actions"><button type="button" ' +
+      'class="btn primary" id="grant-terms-confirm">' +
+      esc(FB.T('Confirm grant')) + '</button><button type="button" class="btn" ' +
+      'id="grant-terms-back">' + esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Terms for {target}', { target:target }), h, {
+      historyView:!replaceView,
+      replaceView:!!replaceView,
+      historyBackRender:function () {
+        UI.showGrantLandRecipients(kind, id, returnContext);
+      }
+    });
+    document.querySelectorAll('[data-grant-charter]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showGrantTerms(kind, id, returnContext,
+          recipientId, button.dataset.grantCharter, tenure, true);
+      });
+    });
+    document.querySelectorAll('[data-grant-tenure]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showGrantTerms(kind, id, returnContext,
+          recipientId, charterId, button.dataset.grantTenure, true);
+      });
+    });
+    $('grant-terms-confirm').addEventListener('click', function () {
+      const applied = kind === 'duchy'
+        ? FB.grantDuchy(s, id, {
+          recipientId:recipientId, charterId:charterId, tenure:tenure
+        })
+        : FB.grantCounty(s, id, {
+          recipientId:recipientId, charterId:charterId, tenure:tenure
+        });
+      if (!applied) {
+        UI.showGrantLandRecipients(kind, id, returnContext, FB.T(
+          'The land or recipient changed before the grant. Choose again.'), true);
+        return;
+      }
+      managementFinish(returnContext, UI.closeModal);
+    });
+    $('grant-terms-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showGrantLandRecipients(kind, id, returnContext);
+      });
+    });
+  };
+
+  /* Give a demesne county — or a whole duchy — to a sworn man. Grant
+     protections are hard stops until removed; the following steps may choose
+     a generated ruler or relative, then the service charter and tenure. */
   UI.showGrantLand = function (returnContext, replaceView) {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T('A vassal holds the land in your name, pays taxes each season, sends part of its levy to your host, and remembers the grant in their Standing. Your dignity still counts land held through vassals.')) + '</p>';
@@ -5645,16 +5834,7 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-grant-recipient]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const recipientId = btn.dataset.grantRecipient || null;
-        const granted = isDuchy
-          ? FB.grantDuchy(s, id, recipientId)
-          : FB.grantCounty(s, id, recipientId);
-        if (!granted) {
-          UI.showGrantLandRecipients(kind, id, returnContext, FB.T(
-            'The land or recipient changed before the grant. Choose again.'),
-          true);
-          return;
-        }
-        managementFinish(returnContext, UI.closeModal);
+        UI.showGrantTerms(kind, id, returnContext, recipientId);
       });
     });
     $('grant-recipient-back').addEventListener('click', function () {
@@ -6264,9 +6444,13 @@ window.FB = window.FB || {};
     let h = kv('Current title', esc(FB.styledTitle(s))) +
       kv('Player realm', esc(playerRealm
         ? playerRealm.name
-        : FB.T('Barony at {county}', {
-          county:home ? home.name : summary.homeCountyId
-        }))) +
+        : (FB.castellanyOf(s)
+          ? FB.T('Appointed office at {county}', {
+            county:home ? home.name : summary.homeCountyId
+          })
+          : FB.T('Barony at {county}', {
+            county:home ? home.name : summary.homeCountyId
+          })))) +
       kv('Political role', esc(role));
     if (summary.liegeId) {
       h += kv('Direct liege', governanceRealmLink(
@@ -6321,8 +6505,9 @@ window.FB = window.FB || {};
         '</span></button>';
     }
     if (!summary.directCounties.length) {
-      h += '<div class="hint">' + esc(FB.T(
-        'This barony is a territorial office inside the home county; no county is held directly in your hand.')) + '</div>';
+      h += '<div class="hint">' + esc(FB.castellanyOf(s)
+        ? FB.T('This castellany is an appointed office inside the home county; no county is held directly in your hand.')
+        : FB.T('This barony is a territorial office inside the home county; no county is held directly in your hand.')) + '</div>';
     }
     for (const pid of summary.directCounties) {
       const province = FB.world.byId[pid];
@@ -6408,6 +6593,11 @@ window.FB = window.FB || {};
     else if ((s.eventQueue || []).some(function (item) {
       return item && item.id === 'liege_summons';
     })) service = FB.T('A banner summons is pending');
+    const ownTenure = summary.tenureExpiryTurn
+      ? FB.T('{tenure} · {days} days remain', {
+        tenure:feudalTenureText(summary.tenure || 'hereditary'),
+        days:Math.max(0, summary.tenureExpiryTurn - s.turn)
+      }) : feudalTenureText(summary.tenure || 'hereditary');
     let h = kv('Direct liege', governanceRealmLink(
       s, summary.liegeId, liege && liege.name, 'obligations')) +
       (summary.sovereignId && summary.sovereignId !== summary.liegeId
@@ -6423,6 +6613,7 @@ window.FB = window.FB || {};
       kv('Banner obligation', esc(terms.scutage
         ? FB.T('Scutage — silver may answer the summons')
         : FB.T('Personal service or the ordinary buy-out'))) +
+      kv('Your tenure', esc(ownTenure)) +
       kv('Lifetime war service', esc(String(summary.warService))) +
       kv('Current summons', esc(service));
     return h;
@@ -6444,6 +6635,18 @@ window.FB = window.FB || {};
         ? FB.T('Days remaining: {days}', {
           days:item.exceptionalLevyUntil - s.turn
         }) : FB.T('None');
+      const tenure = item.expiryTurn
+        ? FB.T('{tenure} · {days} days remain', {
+          tenure:feudalTenureText(item.tenure),
+          days:Math.max(0, item.expiryTurn - s.turn)
+        }) : feudalTenureText(item.tenure);
+      const political = item.extraordinaryTaxExempt
+        ? FB.T('Extraordinary-tax exempt · breakaway ×{multiplier}', {
+          multiplier:item.breakawayMultiplier
+        })
+        : FB.T('Breakaway ×{multiplier}', {
+          multiplier:item.breakawayMultiplier
+        });
       h += '<div class="governance-vassal">' +
         '<div class="governance-vassal-head"><div>' +
         governanceRealmLink(s, item.realmId, realm.name, 'vassals') +
@@ -6458,6 +6661,9 @@ window.FB = window.FB || {};
           Math.round(item.taxContribution * 10) / 10))) +
         kv('Host levy contribution', esc(menText(
           s, Math.round(item.levyContribution * 10) / 10))) +
+        kv('Service charter', esc(feudalCharterName(s, item.charterId))) +
+        kv('Tenure', esc(tenure)) +
+        kv('Political terms', esc(political)) +
         kv('Council office', esc(office)) +
         kv('Exceptional levy', esc(promise)) +
         '</div><div class="governance-vassal-actions">' +

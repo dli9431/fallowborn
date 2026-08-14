@@ -879,7 +879,7 @@ test('named duchy grants map every county and seed succession from existing chil
     expect(result.newsKey).toBe('news.action.family_duchy_granted');
   });
 
-test('Grant Land chooses a recipient and preserves Back and Governance return flow',
+test('Grant Land combines recipient and terms while preserving Back and Governance return flow',
   async function ({ page }, testInfo) {
     await startGovernanceGame(page, testInfo);
     await configureGovernance(page, 'king');
@@ -929,11 +929,24 @@ test('Grant Land chooses a recipient and preserves Back and Governance return fl
     await page.locator('[data-pid="' + setup.firstCounty + '"]').click();
     await page.locator(
       '[data-grant-recipient="' + setup.recipientId + '"]').click();
+    await expect(page.getByRole('heading', { name:/Terms for/ })).toBeVisible();
+    await page.locator('#grant-terms-back').click();
+    await expect(page.getByRole('heading', {
+      name:'Choose a Recipient', exact:true
+    })).toBeVisible();
+    await page.locator(
+      '[data-grant-recipient="' + setup.recipientId + '"]').click();
+    await page.locator('[data-grant-charter="host_duty"]').click();
+    await page.locator('[data-grant-tenure="term"]').click();
+    await page.locator('#grant-terms-confirm').click();
     await expect(page.locator('#governance-domain')).toBeVisible();
     expect(await page.evaluate(function (ids) {
-      return FB.state.holder[ids.firstCounty] === 'pv_' + ids.firstCounty &&
+      var rid = 'pv_' + ids.firstCounty;
+      var contract = FB.feudalContractOf(FB.state, rid);
+      return FB.state.holder[ids.firstCounty] === rid &&
         FB.realmRulerCharacterSnapshot(
-          FB.state, 'pv_' + ids.firstCounty).id === ids.recipientId;
+          FB.state, rid).id === ids.recipientId &&
+        contract.charterId === 'host_duty' && contract.tenure === 'term';
     }, setup)).toBe(true);
 
     const generatedCounty = await page.evaluate(function () {
@@ -947,6 +960,8 @@ test('Grant Land chooses a recipient and preserves Back and Governance return fl
       .last().click();
     await page.locator('[data-pid="' + generatedCounty + '"]').click();
     await page.getByRole('button', { name:/new loyal vassal/i }).click();
+    await expect(page.getByRole('heading', { name:/Terms for/ })).toBeVisible();
+    await page.locator('#grant-terms-confirm').click();
     await expect(page.locator('#governance-domain')).toBeVisible();
     expect(await page.evaluate(function (pid) {
       var realm = FB.state.realms['pv_' + pid];

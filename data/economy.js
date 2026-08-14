@@ -159,6 +159,57 @@ FBDATA.positions = {
   }
 };
 
+/* A town councillor may carry one local ordinance at a time. These are
+   separate from the royal Council: the saved seat names one county and the
+   motion definition supplies only the successful, time-bounded effect. */
+FBDATA.localCouncilMotions = {
+  fair_measures: {
+    name:'Fair Measures', icon:'⚖',
+    desc:'Enforced weights and measures increase enterprise income by 10%.',
+    fx:{ enterprise:0.10 }
+  },
+  civic_works: {
+    name:'Civic Works', icon:'🧱',
+    desc:'Maintained streets, bridges, and stalls bring 1 gold each season.',
+    fx:{ gold:1 }
+  },
+  watch_and_ward: {
+    name:'Watch and Ward', icon:'🛡',
+    desc:'An organized town watch adds 30 men to the household retinue.',
+    fx:{ retinue:30 }
+  }
+};
+
+/* Service and tenure are deliberately independent. Tax is a true share of
+   balance.taxPerDev; levy is a share of balance.levyPerDev. Missing records
+   on legacy vassals resolve to customary_service + hereditary in the engine. */
+FBDATA.feudalServiceCharters = {
+  customary_service: {
+    name:'Customary Service', icon:'📜',
+    desc:'A balanced settlement of ordinary rents and military service.',
+    taxShare:0.20, levyShare:0.15, standingBonus:0,
+    breakawayMultiplier:1, extraordinaryTaxExempt:false
+  },
+  scutage_compact: {
+    name:'Scutage Compact', icon:'💰',
+    desc:'Cash replaces all ordinary military service.',
+    taxShare:0.30, levyShare:0, standingBonus:0,
+    breakawayMultiplier:1, extraordinaryTaxExempt:false
+  },
+  host_duty: {
+    name:'Host Duty', icon:'⚔',
+    desc:'Maximum military service brings greater yearly breakaway pressure.',
+    taxShare:0.05, levyShare:0.30, standingBonus:0,
+    breakawayMultiplier:1.25, extraordinaryTaxExempt:false
+  },
+  charter_of_liberties: {
+    name:'Charter of Liberties', icon:'🕊',
+    desc:'Lower dues and legal exemptions buy lasting political security.',
+    taxShare:0.10, levyShare:0.05, standingBonus:15,
+    breakawayMultiplier:0.5, extraordinaryTaxExempt:true
+  }
+};
+
 /* Childhood instruction. A child's education focus names the subject; one of
    these arrangements names the school and its seasonal fee. Personal masters
    remain actual characters, so their skill and traits matter. */

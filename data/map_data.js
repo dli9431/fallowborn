@@ -1093,8 +1093,10 @@ FBDATA.balance = {
   settlementContributionWeight: 0.25, settlementVowWeight: 0.20,
   settlementOccupationWeight: 0.20, settlementRightWeight: 0.15,
   settlementSupportWeight: 0.10, settlementOfficeWeight: 0.10,
+  /* vassalTaxRate and vassalLevyRate remain legacy compatibility defaults;
+     ordinary player-vassal dues now come from feudalServiceCharters. */
   breakawayChance: 0.015, vassalTaxRate: 0.3, appealBase: 0.25, homageOpinion: 12,
-  vassalLevyRate: 0.15, // a vassal county sends this fraction of its levy to your host
+  vassalLevyRate: 0.15,
   /* a count-or-higher ruler's one voluntary capital move per lifetime */
   capitalRelocationPrestigeCost: 200,
   capitalRelocationPopularOpinion: -15,

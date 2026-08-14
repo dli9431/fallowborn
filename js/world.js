@@ -3140,6 +3140,19 @@ window.FB = window.FB || {};
     FB.refreshRealmSuccession(state, r.id);
   };
 
+  function advanceRealmAfterRulerDeath(state, rid) {
+    const appointedTenureEnds = FB.feudalTenureEndsAtDeath &&
+      FB.feudalTenureEndsAtDeath(state, rid);
+    const appointedTenure = appointedTenureEnds && FB.feudalContractOf
+      ? FB.feudalContractOf(state, rid).tenure : null;
+    const heir = FB.advanceRealmSuccession(state, rid);
+    if (appointedTenureEnds && state.realms[rid] && state.realms[rid].alive &&
+        FB.revertFeudalRealm) {
+      FB.revertFeudalRealm(state, rid, appointedTenure);
+    }
+    return heir;
+  }
+
   FB.royalCharDied = function (state, c, reigningRealmId) {
     if (!state || !state.realms || !c) return;
     const line = c.royalLine;
@@ -3151,7 +3164,7 @@ window.FB = window.FB || {};
     if (m) {
       m.alive = false;
       if (s.rulerMemberId === m.id && r.alive) {
-        FB.advanceRealmSuccession(state, r.id);
+        advanceRealmAfterRulerDeath(state, r.id);
         advanced[r.id] = 1;
       } else if (r.alive) {
         FB.refreshRealmSuccession(state, r.id);
@@ -3171,7 +3184,7 @@ window.FB = window.FB || {};
         succession.members && succession.members[succession.rulerMemberId];
       if (!root || root.charId !== c.id) continue;
       root.alive = false;
-      FB.advanceRealmSuccession(state, rid);
+      advanceRealmAfterRulerDeath(state, rid);
       advanced[rid] = 1;
     }
   };
@@ -4050,6 +4063,9 @@ window.FB = window.FB || {};
     if (state.player && FB.invalidateGuildMonopolies) {
       FB.invalidateGuildMonopolies(state);
     }
+    if (state.player && FB.castellanyValidate) {
+      FB.castellanyValidate(state, false);
+    }
     if (FB.papacyProvinceTransferred) {
       FB.papacyProvinceTransferred(state, pid, from, toRealm);
     }
@@ -4059,7 +4075,8 @@ window.FB = window.FB || {};
   /* a petty count dies without an heir: the fief escheats to his liege —
      unless the player borders it, shares its sovereign, and has the standing
      to win the scramble at court. Returns true when the house was buried */
-  FB.escheatRealm = function (state, rid) {
+  FB.escheatRealm = function (state, rid, opts) {
+    opts = opts || {};
     const r = state.realms[rid];
     if (!r || !r.alive) return false;
     const held = FB.realmHeldCounties(state, rid);
@@ -4074,9 +4091,11 @@ window.FB = window.FB || {};
       if (liege === 'player') {
         // your own man dies heirless: the fief returns to your hand
         toPlayer = true;
-        FB.news(state, FB.msg('news.world.escheat_to_player',
-          '🕯 The lord of {province} dies without an heir — the fief returns to your hand.',
-          { province: pr.name }));
+        if (!opts.silent) {
+          FB.news(state, FB.msg('news.world.escheat_to_player',
+            '🕯 The lord of {province} dies without an heir — the fief returns to your hand.',
+            { province: pr.name }));
+        }
       } else if (p.tier >= 4 && p.provs && liege && state.realms[liege] &&
                  FB.topRealm(state, rid) === FB.playerRealmId(state)) {
         // the scramble: you must border the empty fief and share its sovereign
@@ -4091,9 +4110,11 @@ window.FB = window.FB || {};
           if (FB.chance(c)) {
             toPlayer = true;
             FB.recordLiegeGrant(state);
-            FB.news(state, FB.msg('news.world.escheat_granted',
-              '🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}.',
-              { province: pr.name, liege: state.realms[liege].name }));
+            if (!opts.silent) {
+              FB.news(state, FB.msg('news.world.escheat_granted',
+                '🕯 The lord of {province} dies without an heir — {liege} passes over every other suit and invests you with {province}.',
+                { province: pr.name, liege: state.realms[liege].name }));
+            }
           }
         }
       }
@@ -4103,7 +4124,8 @@ window.FB = window.FB || {};
         state.holder[pid] = 'player';
       } else {
         state.holder[pid] = liege;
-        if (FB.game.observe || (FB.world.adj[p.provinceId] && FB.world.adj[p.provinceId][pid])) {
+        if (!opts.silent && (FB.game.observe ||
+            (FB.world.adj[p.provinceId] && FB.world.adj[p.provinceId][pid]))) {
           FB.news(state, FB.msg('news.world.escheat_observed', {
             forms: {
               select: 'value', param: 'holder', cases: {
@@ -4397,16 +4419,19 @@ window.FB = window.FB || {};
     const support = FB.rebelSupportMultiplier
       ? FB.rebelSupportMultiplier(state, rid) : 1;
     if (!realm || !realm.alive || !realm.liege) return base;
+    const charter = realm.liege === 'player' &&
+      FB.feudalCharterBreakawayMultiplier
+      ? FB.feudalCharterBreakawayMultiplier(state, rid) : 1;
     if (FB.topRealm(state, rid) !== 'player') {
-      return FB.clamp(base * support, 0, 1);
+      return FB.clamp(base * support * charter, 0, 1);
     }
     const aggression = FB.aggressiveWarBreakawayMultiplier(state);
-    if (aggression <= 1) return FB.clamp(base * support, 0, 1);
+    if (aggression <= 1) return FB.clamp(base * support * charter, 0, 1);
     const standing = FB.standingOf
       ? FB.standingOf(state, { kind:'realm', id:rid }) : 0;
     const discontent = 1 + Math.min(1,
       Math.max(0, -(Number(standing) || 0)) / 100);
-    return FB.clamp(base * aggression * discontent * support, 0, 1);
+    return FB.clamp(base * aggression * discontent * support * charter, 0, 1);
   };
 
   /* Automatic war prestige is cause-aware in every settlement path. Event
@@ -4453,10 +4478,14 @@ window.FB = window.FB || {};
         (FB.techBonus ? FB.techBonus(state, 'health', id) : 0));
       if ((!papalTerritorialRealm || papalClaimantId) &&
           papalClaimantId !== state.player.charId && FB.chance(q)) {
+        const appointedTenureEnds = FB.feudalTenureEndsAtDeath &&
+          FB.feudalTenureEndsAtDeath(state, id);
+        const appointedTenure = appointedTenureEnds && FB.feudalContractOf
+          ? FB.feudalContractOf(state, id).tenure : null;
         const succession = papalClaimantId ? r.succession :
           FB.refreshRealmSuccession(state, id);
         // Escheat is now the last resort for a genuinely exhausted count line.
-        if (!papalClaimantId && r.liege && r.rank === 1 &&
+        if (!appointedTenureEnds && !papalClaimantId && r.liege && r.rank === 1 &&
             (!succession || !succession.heirId) &&
             FB.chance(B.escheatChance || 0) && FB.escheatRealm(state, id)) continue;
         const oldGeneration = r.ruler.generation;
@@ -4509,6 +4538,8 @@ window.FB = window.FB || {};
         if (!papalClaimantId && r.alive && r.ruler.generation === oldGeneration) {
           FB.advanceRealmSuccession(state, id);
         }
+        if (appointedTenureEnds && r.alive && FB.revertFeudalRealm &&
+            FB.revertFeudalRealm(state, id, appointedTenure)) continue;
         if (!papalClaimantId &&
             (FB.game.observe || id === FB.playerRealmId(state) ||
               id === state.player.liege)) {
@@ -4781,7 +4812,8 @@ window.FB = window.FB || {};
     } else if (p.tier >= 3 &&
         !(FB.hasBishopric && FB.hasBishopric(state, state.chars[p.charId]))) {
       const retinue = B.baronyRetinue || 120;
-      add('ret', 'barony_retinue', retinue);
+      add('ret', FB.castellanyOf && FB.castellanyOf(state)
+        ? 'castellany_retinue' : 'barony_retinue', retinue);
       /* A baron holds no county, so the county-levy loop above never ran and
          a levy concession on their seat went unapplied. Itemize it against
          the household the baron actually raises, by the same ownership rule
@@ -6327,6 +6359,15 @@ window.FB = window.FB || {};
      data; counties remain bare ids so the caller can render them compactly. */
   FB.playerTitles = function (state) {
     const p = state.player, out = [];
+    const castellany = FB.castellanyOf && FB.castellanyOf(state);
+    if (castellany) {
+      const castleCounty = FB.world && FB.world.byId[castellany.provinceId];
+      const castellanTitle = FB.rankTitleSnapshot(state, 3,
+        castleCounty ? castleCounty.name : castellany.provinceId);
+      castellanTitle.special = 'castellan';
+      return { high:[{ d:'Appointed office', titleData:castellanTitle }],
+        counties:[] };
+    }
     const bishopric = FB.bishopricOf &&
       FB.bishopricOf(state, state.chars[p.charId]);
     let bishopEntry = null;

@@ -153,6 +153,8 @@ A JSON mod is one object with any of these keys:
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
   "positions": { "id": { ... } },
+  "localCouncilMotions": { "id": { ... } },
+  "feudalServiceCharters": { "id": { ... } },
   "schooling": { "id": { ... } },
   "enterprises": { "id": { ... } },
   "householdStandards": { "id": { ... } },
@@ -1501,6 +1503,8 @@ as councilman and sergeant, or paid household service:
 
 - `kind` is `earned` or `retainer`. An earned position is active while its matching
   `player.flags` id is true; a retainer position is active while a paid contract exists.
+  The core `councilman` id is special: its flag is compatibility state, while
+  `player.localCouncil` validates locality and carries the active motion.
 - `profession` optionally determines the career of a newly generated retainer.
   `minTier` and `maleOnly` gate hiring.
 - `pay` is charged every season per retained character; `quality` weights generated
@@ -1518,6 +1522,58 @@ as councilman and sergeant, or paid household service:
 - Capacity and the default contract economy are controlled by `retainerCapacity` and
   the `pay` values in the position definitions. Contracts pass to the next head, but
   personal friendship does not.
+
+### Local council motions
+
+`FBDATA.localCouncilMotions` (mod key `localCouncilMotions`) defines the complete choices
+available to a seated Town Councilman. Mods add or replace whole definitions by id:
+
+```json
+{ "localCouncilMotions": { "fair_measures": {
+  "name": "Fair Measures", "icon": "⚖️",
+  "desc": "Standard weights and measures encourage honest trade.",
+  "fx": { "enterprise": 0.10 }
+} } }
+```
+
+`name` and `desc` are localized display fields. `icon` is cosmetic. A motion's `fx`
+supports `gold` (flat seasonal household income), `enterprise` (fractional enterprise
+income), and `retinue` (flat household soldiers). The core action always applies one
+passed ordinance for 360 days and replaces any prior ordinance; duration and voting
+formula are engine rules rather than per-definition schema.
+
+### Feudal service charters and tenure
+
+`FBDATA.feudalServiceCharters` (mod key `feudalServiceCharters`) defines outgoing terms
+shown when the player grants a county or duchy:
+
+```json
+{ "feudalServiceCharters": { "customary_service": {
+  "name": "Customary Service", "icon": "📜",
+  "desc": "Balanced rents and ordinary host service.",
+  "taxShare": 0.20, "levyShare": 0.15,
+  "standingBonus": 0, "breakawayMultiplier": 1,
+  "extraordinaryTaxExempt": false
+} } }
+```
+
+`taxShare` and `levyShare` are true fractions of the affected counties' ordinary tax
+and levy bases. `standingBonus` is added to the normal +40 new-vassal Standing;
+`breakawayMultiplier` scales the existing yearly breakaway chance; and
+`extraordinaryTaxExempt` removes the realm from the Extraordinary Taxes deed. `name`
+and `desc` are localized display fields, and `icon` is cosmetic. Keep
+`customary_service`: callers and old saves without explicit terms deliberately default
+to that id.
+
+Tenure is an engine-defined separate argument to `FB.grantCounty` and `FB.grantDuchy`:
+`hereditary`, `life`, or `term`. Both helpers retain their older call signatures; mods
+may optionally pass `(charterId, tenure)` after the existing arguments or supply those
+two keys in an options object. Direct player vassals then save
+`feudalContract:{liegeId,charterId,tenure,grantTurn,expiryTurn,renewal}`.
+Hereditary has no expiry, life reverts at the ruler's death, and term reverts at death
+or after 3,600 days unless the final-90-day renewal is accepted. These records are a
+player-outgoing system; authored bookmark realms and AI-to-AI vassals do not require or
+simulate a charter.
 
 ## Childhood schooling
 
