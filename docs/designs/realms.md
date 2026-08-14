@@ -142,8 +142,8 @@ use the player realm itself. Swearing fealty reparents this node instead of diss
 it.
 
 **Governance is the player-facing shell over this hierarchy, not another realm
-record.** `FB.governanceEligible` admits a territorial baron or a player holding
-count-or-greater land, but excludes observe mode, landless offices, and a see-only
+record.** `FB.governanceEligible` admits a territorial baron, an appointed Castellan,
+or a player holding count-or-greater land, but excludes observe mode and a see-only
 Bishop. A Bishop who also holds temporal counties qualifies for those counties.
 `FB.governanceSummary` derives stable ids and numbers for role, player realm, liege,
 sovereign, demesne, whole territory, domain cap and multiplier, direct vassals,
@@ -403,9 +403,9 @@ assembly where the terms of service, the aid and scutage, are voted on — see
 [parliament.md](parliament.md)) and, once sovereign, runs vassals of their own
 (`grant_land` — a single county via `FB.grantCounty` or a whole de jure duchy via
 `FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal Standing retains its legacy
-backing in `player.liegeOps`, taxes flow through `FB.playerTax` at
-`balance.vassalTaxRate` and a
-share of levies through `FB.playerLevy` at `balance.vassalLevyRate`).
+backing in `player.liegeOps`, while each direct vassal's service charter determines
+the true share of county tax and levy returned through `FB.playerTax` and
+`FB.playerLevy`).
 
 The Land panel's **Notable folk** is a live political view of this hierarchy. It lists
 the selected county's direct holder, every living realm sworn directly to that holder
@@ -471,6 +471,34 @@ path's normal chance clamp, so its minimum chance cannot erase the penalty. Fail
 petitions do not count. Buying or conquering land, settling wasteland, inheritance,
 independence, and automatic de jure promotions do not count as patronage. Succession
 resets both `liegeGrants` and the lifetime `warService` tally.
+
+**Appointed castellany is office, not land.** A landless tier-2 player may petition a
+living local liege for appointment as Castellan of the home county with 200 prestige,
+60 Standing, and Martial or Stewardship 10. The ten-year chance is
+`clamp(0.15 + Standing/400 + Prestige/1200 + max(Martial,Stewardship)/100, 0.10, 0.85)`
+before the ordinary repeated-patronage multiplier; asking for life subtracts 0.20
+before clamping. The appointment reuses tier-3 governance, income, and retinue
+machinery without changing county holder or owner. Its additive
+`player.castellany` record identifies the appointer, county, tenure, grant/expiry
+turns, and renewal marker; every player-facing title says Castellan, never Baron.
+A fixed appointment may be renewed once in its last 90 days at
+`clamp(0.25 + Standing/300 + max(Martial,Stewardship)/80, 0.20, 0.90)`.
+Expiry, resignation, the appointer's loss of the county, or the appointed character's
+death returns the household to tier 2. Ordinary landed promotion supersedes the
+office rather than transferring or inheriting it. Castellan is the generic first
+office; culture-specific aliases and offices such as the podestà remain future flavor.
+
+**Town council is a local commoner office.** Councilman remains a tier-1–2 earned
+position for merchant, craftsman, and administration careers, worth 0.5 gold per
+season and +5% enterprise income. `player.localCouncil` binds it to the home county;
+permanent relocation, death, or landed promotion ends the seat. Legacy `councilman`
+flags self-heal into a local record whose first motion is immediately available.
+Failed candidates may try the candidacy event again after its 720-day cooldown.
+Once every 360 days the officeholder may bring a motion with the visible seeded chance
+`clamp(0.50 + 0.02 * (Diplomacy + Stewardship - 10) + 0.002 * Popular Opinion,
+0.20, 0.90)`. A passed Fair Measures ordinance adds 10% enterprise income, Civic
+Works adds 1 gold per season, and Watch and Ward adds 30 retinue; only one ordinance
+is active and it expires after 360 days.
 
 **Inside a realm, counties also change hands without war.** A vassal house carries a
 `favor` standing at its liege's court (−100…100, drifting yearly in `FB.worldTick`).
@@ -615,8 +643,39 @@ and `FB.playerLevy` — vassal dues and vassal levies are never penalized). The 
 the `grant_land` deed: enfeoff the surplus to a new count (`FB.grantCounty`, realm
 `pv_<pid>`) or — only when every de jure county of a duchy sits in the player's own
 hand (`FB.grantableDuchies`) — raise a duke over the whole duchy (`FB.grantDuchy`, realm
-`pd_<did>`, holding all its counties directly), who then renders `vassalTaxRate` of its
-counties' tax and `vassalLevyRate` of their levy back to you.
+`pd_<did>`, holding all its counties directly).
+
+Every grant combines a service charter with a separate tenure. The charter records
+true shares of the county's normal tax and levy bases, so the grant preview can show
+exact gold and soldiers rather than an ambiguous per-development rate:
+
+| Service charter | Tax | Levy | Political term |
+| --- | ---: | ---: | --- |
+| Customary Service | 20% | 15% | Balanced default |
+| Scutage Compact | 30% | 0% | Cash replaces ordinary military service |
+| Host Duty | 5% | 30% | Yearly breakaway pressure ×1.25 |
+| Charter of Liberties | 10% | 5% | +15 initial Standing, breakaway pressure ×0.5, extraordinary-tax exemption |
+
+Customary, Scutage, and Host Duty begin with +40 Standing; Liberties begins with +55.
+Existing and legacy vassals normalize to Customary Service, reproducing the old 0.3
+gold per development and 15% levy at the standard tax base. Extraordinary Taxes omit
+Liberties realms. Host Duty and Liberties feed their multipliers into the bounded
+yearly breakaway calculation and introduce no second rebellion simulation. Charters
+are not renegotiable and survive hereditary succession.
+
+Tenure is `hereditary`, `life`, or a 3,600-day fixed term. Life grants reduce initial
+Standing by 5 and fixed terms by 10. Life land reverts at its ruler's death; fixed-term
+land reverts at death or expiry. During the final 90 days a fixed-term vassal petitions
+the player once; acceptance preserves its ruler and charter for another ten years,
+while refusal allows ordinary reversion. `realm.feudalContract` stores the liege,
+charter, tenure, grant/expiry turns, and renewal marker. Reversion delegates to the
+existing escheat path so counties return to the player, subordinate vassals reattach,
+realm and war references are cleaned, and an excess-domain warning is raised. Old
+realms without this record read as Customary/Hereditary. These contracts govern only
+the player's outgoing direct vassals; the player's incoming obligations remain the
+Estates' existing aid and scutage votes. This tenure axis does not add partition,
+seniority, elective succession, freeform obligations, coercive negotiation, or
+AI-to-AI fiscal charters.
 
 Governance exposes a preview-first **Domain Cleanup** assistant while the player is over
 that limit. `FB.domainCleanupPlan` is read-only, deterministic, and never consumes RNG. It

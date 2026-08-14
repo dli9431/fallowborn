@@ -3723,6 +3723,7 @@ window.FB = window.FB || {};
     if (FB.validateFocus) FB.validateFocus(state);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.repairPolitics) FB.repairPolitics(state);
+    if (FB.localGovernmentTierChanged) FB.localGovernmentTierChanged(state);
     return true;
   };
   FB.fns.barony_offer_eligible = function (state) {
@@ -4004,8 +4005,8 @@ window.FB = window.FB || {};
     'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
     'annul_granted appeal_lose appeal_win attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
     'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
-    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend ' +
-    'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security ' +
+    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend ' +
+    'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
     'loot_item offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
     'raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
@@ -6433,6 +6434,7 @@ window.FB = window.FB || {};
     const dest = adj.length ? FB.pick(adj) : null;
     if (dest) {
       p.provinceId = dest;
+      if (FB.localCouncilValidate) FB.localCouncilValidate(state, false);
       // local cast stays behind
       for (const r of ['lord', 'steward', 'priest', 'friend', 'rival']) {
         delete state.roles[r];
@@ -6720,8 +6722,9 @@ window.FB = window.FB || {};
     for (const v of vs) {
       if (realmStanding(state, v) < realmStanding(state, worst)) worst = v;
     }
-    let g = 0;
-    for (const pid of FB.realmHeldCounties(state, worst)) g += Math.ceil((state.dev[pid] || 1) * FBDATA.balance.vassalTaxRate * 2);
+    const ordinary = FB.vassalTaxContribution
+      ? FB.vassalTaxContribution(state, worst) : 0;
+    const g = Math.ceil(ordinary * 2);
     state.player.gold += g;
     adjustRealmStanding(state, worst, -20, 'event:vassal_insist');
     FB.news(state, FB.msg('news.event.vassal_tax_paid',

@@ -1489,6 +1489,7 @@ window.FB = window.FB || {};
     if (rival) rival.homeProvinceId = t.homeId;
     clearQueued(state);
     p.provinceId = destination;
+    if (FB.localCouncilValidate) FB.localCouncilValidate(state, false);
     FB.changePlayerLiege(state, null, 'travel:flight');
     delete state.roles.lord;
     delete state.roles.steward;

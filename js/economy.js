@@ -485,7 +485,10 @@ window.FB = window.FB || {};
     const flags = state.player.flags || {};
     for (const id in FBDATA.positions) {
       const def = FBDATA.positions[id];
-      if (def.kind === 'earned' && flags[id]) out.push(id);
+      if (def.kind !== 'earned' || !flags[id]) continue;
+      if (id === 'councilman' && FB.localCouncilValidate &&
+          !FB.localCouncilValidate(state, true)) continue;
+      out.push(id);
     }
     return out;
   };
@@ -499,6 +502,16 @@ window.FB = window.FB || {};
       if (def && def.fx && def.fx[key]) {
         out.push({ kind:'position', id:id, amount:def.fx[key] });
       }
+    }
+    const ordinance = FB.localCouncilOrdinance &&
+      FB.localCouncilOrdinance(state);
+    const ordinanceDef = ordinance &&
+      FBDATA.localCouncilMotions[ordinance.id];
+    if (ordinanceDef && ordinanceDef.fx && ordinanceDef.fx[key]) {
+      out.push({
+        kind:'local-ordinance', id:ordinance.id,
+        amount:ordinanceDef.fx[key]
+      });
     }
     if (FB.retainerRecords) {
       for (const record of FB.retainerRecords(state)) {

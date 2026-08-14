@@ -84,11 +84,12 @@ FBDATA.events.push(
     { label:'Stay true to the craft.', desc:'The honest work you know, and nothing more.', effects:{ } }
   ]},
 { id:'town_elder', title:'A Voice in the Town',
-  trigger:{ professions:['merchant','craftsman'], tierMin:1, prestigeMin:60, chance:0.25 }, weight:8, once:true,
+  trigger:{ professions:['merchant','craftsman','administration'], tierMin:1, tierMax:2,
+    prestigeMin:60, notFlags:['councilman'], chance:0.25 }, weight:8, cooldown:8,
   text:'The townsfolk mutter that the council needs a man of sense — your name comes up more than once.',
   options:[
     { label:'Stand for the council.', desc:'A seat on the bench, if the town will have you.', chance:0.6,
-      success:{ text:'They raise you to the council bench. Small power, but power.', effects:{ prestige:15, setFlag:'councilman', log:'Elected to the town council.' } },
+      success:{ text:'They raise you to the council bench. Small power, but power.', effects:{ prestige:15, setFlag:'councilman', custom:'local_council_elected', log:'Elected to the town council.' } },
       failure:{ text:'An older name edges you out. Next time.', effects:{ prestige:3 } } },
     { label:'Trade needs no title.', desc:'Coin over ceremony.', effects:{ gold:3 } }
   ]},

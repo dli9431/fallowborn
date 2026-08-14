@@ -1996,6 +1996,7 @@ window.FB = window.FB || {};
     }
     const headed = FB.religionsHeadedBy(state, 'player');
     if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
+    if (FB.castellanyOf && FB.castellanyOf(state)) return FB.T('Castellan');
     let t = FB.titleWordFor(state, p.tier);
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
       const profNames = {
@@ -2064,6 +2065,13 @@ window.FB = window.FB || {};
       const head = FB.faithValue(state, headReligion, 'head.title');
       snap.headTitleReligion = head.sourceId || headReligion;
       snap.headTitle = head.value;
+      return snap;
+    }
+    const castellany = FB.castellanyOf && FB.castellanyOf(state);
+    if (castellany) {
+      snap.special = 'castellan';
+      const castleCounty = FB.world && FB.world.byId[castellany.provinceId];
+      snap.place = castleCounty ? castleCounty.name : castellany.provinceId;
       return snap;
     }
     if (p.tier <= 1 && p.profession && p.profession !== 'farmer') {
@@ -2141,7 +2149,8 @@ window.FB = window.FB || {};
       craftsman: 'Craftsman', merchant: 'Merchant', soldier: 'Soldier',
       scholar: 'Scholar', monk: 'Monk', nun: 'Nun', imam: 'Imam', godi: 'Godi', priest: 'Priest',
       bishop: 'Bishop', cardinal: 'Cardinal', pope: 'Pope',
-      grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi'
+      grand_qadi: 'Grand Qadi', abbot: 'Abbot', abbess: 'Abbess', qadi: 'Qadi',
+      castellan:'Castellan'
     };
     const title = snapshot.faithRolePath && snapshot.faithRoleWord
       ? FB.renderKey('religion.' + snapshot.faithRoleReligion + '.' +

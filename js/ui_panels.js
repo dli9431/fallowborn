@@ -68,6 +68,8 @@ window.FB = window.FB || {};
     buy_freedom:'realm', buy_land:'realm', declare_manor:'realm',
     build:'realm', adopt_tech:'realm',
     squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
+    bring_council_motion:'realm', seek_castellany:'realm',
+    renew_castellany:'realm', resign_castellany:'realm',
     seek_field_command:'war',
     grant_monopoly:'realm',
     petition_liege:'realm', petition_county:'realm', buy_county:'realm',
@@ -2059,7 +2061,14 @@ window.FB = window.FB || {};
         : FB.T('{realm} — vassal levy', { realm:r ? r.name : entry.rid });
     }
     if (entry.kind === 'barony_retinue') return FB.T('Standing barony household');
+    if (entry.kind === 'castellany_retinue') return FB.T('Castellan’s household guard');
     if (entry.kind === 'episcopal_household') return FB.T('Episcopal household');
+    if (entry.kind === 'local-ordinance') {
+      const motion = FBDATA.localCouncilMotions[entry.positionId];
+      return motion
+        ? dt(s, 'localCouncilMotion', entry.positionId, motion, 'name')
+        : FB.T('Local ordinance');
+    }
     if (entry.kind === 'position') return positionName(s, entry.positionId);
     if (entry.kind === 'retainer') {
       const c = entry.charId && s.chars[entry.charId];
@@ -2735,6 +2744,48 @@ window.FB = window.FB || {};
     }
     const realmSpecialRows = [];
     let realmSummary = '';
+    const localCouncil = FB.localCouncilValidate &&
+      FB.localCouncilValidate(s, true);
+    if (localCouncil) {
+      const councilProvince = FB.world.byId[localCouncil.provinceId];
+      const ordinance = FB.localCouncilOrdinance(s);
+      const ordinanceDef = ordinance &&
+        FBDATA.localCouncilMotions[ordinance.id];
+      const nextDays = Math.max(0,
+        (Number(localCouncil.nextMotionTurn) || 0) - s.turn);
+      realmSummary += kv('Town council locality', esc(councilProvince
+        ? councilProvince.name : localCouncil.provinceId)) +
+        kv('Active ordinance', esc(ordinanceDef
+          ? dt(s, 'localCouncilMotion', ordinance.id, ordinanceDef, 'name')
+          : FB.T('None'))) +
+        (ordinance ? kv('Ordinance expiry', esc(FB.T('{days} days remain', {
+          days:Math.max(0, ordinance.endTurn - s.turn)
+        }))) : '') +
+        kv('Next council session', esc(nextDays
+          ? FB.T('{days} days remain', { days:nextDays })
+          : FB.T('Available now')));
+      const councilRecord = {
+        attention:nextDays === 0,
+        state:nextDays === 0 ? 'opportunity' : 'commitment',
+        stateLabel:nextDays === 0 ? FB.T('Opportunity') : FB.T('Active commitment'),
+        priority:0,
+        index:0,
+        identity:'local-town-council',
+        kind:'other',
+        title:FB.T('Town Council of {province}', {
+          province:councilProvince ? councilProvince.name : localCouncil.provinceId
+        }),
+        meta:[ordinanceDef
+          ? FB.T('{ordinance} · {days} days remain', {
+            ordinance:dt(s, 'localCouncilMotion', ordinance.id,
+              ordinanceDef, 'name'),
+            days:Math.max(0, ordinance.endTurn - s.turn)
+          })
+          : FB.T('No ordinance is active')]
+      };
+      councilRecord.html = networkReadableStaticRow(councilRecord);
+      realmSpecialRows.push(councilRecord);
+    }
     if (governance) {
       realmSummary += '<button class="actionbtn" id="network-governance">🏛 ' +
         esc(FB.T('Governance…')) + '<span class="adesc">' +

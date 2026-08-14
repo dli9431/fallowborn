@@ -354,6 +354,29 @@ current character's liege wars and `liegeGrants` records successful feudal patro
 in the current lifetime. Both reset on succession. Older saves need no migration;
 the grant multiplier treats a missing `liegeGrants` as zero.
 
+Local office and outgoing service-contract state are additive and keep save format 3.
+`player.localCouncil` optionally stores
+`{provinceId,holderCharId,appointedTurn,nextMotionTurn,ordinance}`; an ordinance is a definition
+id plus its start and end turns. Missing state with the legacy `councilman` flag repairs
+to the current home with an immediately available motion. Validation is deterministic
+and clears a seat after permanent relocation, death, or landed promotion.
+`player.castellany` optionally stores the appointing realm, home county, appointed
+character, `life` or `term` tenure, grant/expiry turns, and renewal
+marker. It is character-bound and never changes `state.owner`, `state.holder`, or the
+player's province list. Expiry, resignation, death, or loss of the appointer's control
+clears the office and restores tier 2; acquisition of ordinary land instead clears it
+in favor of the new landed dignity.
+
+Each direct player vassal may carry
+`realm.feudalContract:{liegeId,charterId,tenure,grantTurn,expiryTurn,renewal}`.
+Missing and malformed records read as Customary Service with hereditary tenure, so old
+saves retain their exact historical 20% tax-base and 15% levy behavior without a bulk
+migration. Charter and tenure ids are saved, while current definition rates and
+localized labels remain derived data. Hereditary succession preserves the record;
+life and fixed-term death or expiry call the existing escheat machinery. The daily
+tenure sweep is deliberately bounded to the player and direct player vassals. Restore
+normalizes these optional records without consuming RNG.
+
 Voluntary ruler-capital relocation is additive save-format-3 state.
 `player.capitalRelocation` is absent/null before use or records
 `{charId,turn,fromId,destinationId}` after the current protagonist moves the realm
@@ -582,8 +605,10 @@ the array: a record whose `senderCharId` is no longer the protagonist completes 
 then returns its exact payload to the new household head’s current permanent home.
 Cooldown maps still clear normally and a failed delivery creates no new entry.
 
-Position definitions and the levy ledger are derived data. Earned offices continue to
-read compatibility flags, retainer contributions read live contracts, and
+Position definitions and the levy ledger are derived data. Most earned offices continue
+to read compatibility flags; the Town Councilman flag is backed by the validated local
+seat above so its active ordinance can be derived in O(1). Retainer contributions read
+live contracts, and
 `FB.playerCompositionBreakdown` calculates troop sources from counties, buildings,
 technology, Council, ruler, domain penalty, vassals, and positions. No displayed levy
 total or ledger prose is serialized.

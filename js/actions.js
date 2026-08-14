@@ -1190,6 +1190,64 @@ window.FB = window.FB || {};
       }
     } },
 
+  { id: 'bring_council_motion', label: '⚖ Bring a motion before the council…',
+    noConsume:true,
+    desc: function (s) {
+      const status = FB.localCouncilMotionStatus(s);
+      return status.ready
+        ? FB.T('Put one local ordinance to a seeded vote. Current chance: {chance}%.', {
+          chance:Math.round(status.chance * 100)
+        }) : status.reason;
+    },
+    show: function (s) { return !!FB.localCouncilOf(s); },
+    can: function (s) {
+      const status = FB.localCouncilMotionStatus(s);
+      return status.ready ? true : status.reason;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showLocalCouncilMotion) {
+        FB.ui.showLocalCouncilMotion();
+      }
+    } },
+
+  { id: 'seek_castellany', label: '🏰 Seek appointment as Castellan…',
+    noConsume:true,
+    desc: function (s) {
+      const status = FB.castellanAppointmentStatus(s, 'term');
+      return status.visible
+        ? FB.T('Petition for a ten-year or life appointment over the castle at {county}.', {
+          county:status.provinceName
+        }) : FB.T('Seek delegated command of the local castle.');
+    },
+    show: function (s) { return FB.castellanAppointmentStatus(s, 'term').visible; },
+    can: function (s) {
+      const status = FB.castellanAppointmentStatus(s, 'term');
+      return status.ready ? true : status.reason;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showCastellanPetition) FB.ui.showCastellanPetition();
+    } },
+
+  { id: 'renew_castellany', label: '🏰 Petition to renew the Castellan appointment',
+    desc: function (s) {
+      const status = FB.castellanRenewalStatus(s);
+      return status.ready
+        ? FB.T('Ask for another ten years. Current chance: {chance}%.', {
+          chance:Math.round(status.chance * 100)
+        }) : status.reason;
+    },
+    show: function (s) { return FB.castellanRenewalStatus(s).visible; },
+    can: function (s) {
+      const status = FB.castellanRenewalStatus(s);
+      return status.ready ? true : status.reason;
+    },
+    run: function (s) { FB.renewCastellany(s); } },
+
+  { id: 'resign_castellany', label: '🏰 Resign the Castellan appointment',
+    desc: function () { return FB.T('Lay down the castle keys and return the household to the gentry.'); },
+    show: function (s) { return !!FB.castellanyOf(s); },
+    run: function (s) { FB.endCastellany(s, 'resignation'); } },
+
   { id: 'seek_field_command', label: '🚩 Take a field command',
     desc: function (s) {
       const status = FB.militaryCommandStatus(s);
@@ -1672,6 +1730,548 @@ window.FB = window.FB || {};
 
   /* ================= shared helpers ================= */
 
+  const LOCAL_COUNCIL_DAYS = 360;
+  const FEUDAL_TERM_DAYS = 3600;
+  const FEUDAL_RENEWAL_WINDOW = 90;
+
+  function localCouncilCareer(profession) {
+    return ['merchant', 'craftsman', 'administration'].indexOf(profession) >= 0;
+  }
+
+  FB.localCouncilOf = function (state) {
+    const p = state && state.player;
+    const seat = p && p.localCouncil;
+    if (!seat || typeof seat !== 'object' || Array.isArray(seat)) return null;
+    if (!seat.provinceId || !FB.world.byId[seat.provinceId]) return null;
+    return seat;
+  };
+
+  FB.localCouncilOrdinance = function (state) {
+    const seat = FB.localCouncilOf(state);
+    if (!seat || !seat.ordinance || seat.ordinance.endTurn <= state.turn ||
+        !FBDATA.localCouncilMotions[seat.ordinance.id]) return null;
+    return seat.ordinance;
+  };
+
+  FB.endLocalCouncil = function (state, reason, silent) {
+    const p = state.player;
+    const seat = FB.localCouncilOf(state);
+    if (!seat && !(p.flags && p.flags.councilman)) return false;
+    delete p.localCouncil;
+    if (p.flags) delete p.flags.councilman;
+    if (!silent) {
+      const province = seat && FB.world.byId[seat.provinceId];
+      FB.news(state, FB.msg('news.local_council.ended',
+        '⚖ Your seat on the council of {province} ends as the household’s circumstances change.', {
+          province:province ? province.name :
+            (seat && seat.provinceId ? seat.provinceId : p.provinceId)
+        }));
+    }
+    return true;
+  };
+
+  FB.fns.local_council_elected = function (state) {
+    const p = state.player;
+    p.flags = p.flags || {};
+    p.flags.councilman = 1;
+    p.localCouncil = {
+      provinceId:p.provinceId,
+      holderCharId:p.charId,
+      appointedTurn:state.turn || 0,
+      nextMotionTurn:state.turn || 0,
+      ordinance:null
+    };
+    return p.localCouncil;
+  };
+
+  FB.localCouncilValidate = function (state, silent) {
+    const p = state && state.player;
+    if (!p) return null;
+    let seat = FB.localCouncilOf(state);
+    if (!seat && p.flags && p.flags.councilman) {
+      seat = FB.fns.local_council_elected(state);
+    }
+    if (!seat) return null;
+    if (seat.holderCharId === undefined) seat.holderCharId = p.charId;
+    if (seat.nextMotionTurn === undefined) seat.nextMotionTurn = state.turn || 0;
+    const holder = state.chars && state.chars[p.charId];
+    if (seat.holderCharId !== p.charId || p.dead || !holder || holder.dead ||
+        p.provinceId !== seat.provinceId ||
+        p.tier < 1 || p.tier > 2 || !localCouncilCareer(p.profession)) {
+      FB.endLocalCouncil(state, 'ineligible', silent);
+      return null;
+    }
+    p.flags = p.flags || {};
+    p.flags.councilman = 1;
+    if (seat.ordinance && (seat.ordinance.endTurn <= state.turn ||
+        !FBDATA.localCouncilMotions[seat.ordinance.id])) seat.ordinance = null;
+    return seat;
+  };
+
+  FB.localCouncilMotionChance = function (state) {
+    const me = state.chars[state.player.charId];
+    const skills = me ? FB.skillOf(me, 'dip') + FB.skillOf(me, 'ste') : 0;
+    return FB.clamp(0.50 + 0.02 * (skills - 10) +
+      0.002 * (Number(state.player.pop) || 0), 0.20, 0.90);
+  };
+
+  FB.localCouncilMotionStatus = function (state) {
+    const seat = FB.localCouncilValidate(state, true);
+    if (!seat) return {
+      visible:false, ready:false, chance:0,
+      reason:FB.T('You do not hold a local council seat.')
+    };
+    const remaining = Math.max(0, (Number(seat.nextMotionTurn) || 0) - state.turn);
+    return {
+      visible:true,
+      ready:remaining === 0,
+      chance:FB.localCouncilMotionChance(state),
+      daysRemaining:remaining,
+      reason:remaining ? FB.T('The next council session is in {days} days.', {
+        days:remaining
+      }) : ''
+    };
+  };
+
+  FB.proposeLocalCouncilMotion = function (state, motionId) {
+    const status = FB.localCouncilMotionStatus(state);
+    const def = FBDATA.localCouncilMotions[motionId];
+    if (!status.ready || !def) return false;
+    const seat = state.player.localCouncil;
+    seat.nextMotionTurn = state.turn + LOCAL_COUNCIL_DAYS;
+    const passed = FB.chance(status.chance);
+    if (passed) {
+      seat.ordinance = {
+        id:motionId,
+        passedTurn:state.turn,
+        endTurn:state.turn + LOCAL_COUNCIL_DAYS
+      };
+      FB.news(state, FB.msg('news.local_council.motion_passed',
+        '⚖ The council of {province} adopts {motion} for one year.', {
+          province:FB.world.byId[seat.provinceId].name,
+          motion:FB.dataParam('localCouncilMotion', motionId, 'name')
+        }));
+    } else {
+      FB.news(state, FB.msg('news.local_council.motion_failed',
+        '⚖ The council of {province} rejects {motion}.', {
+          province:FB.world.byId[seat.provinceId].name,
+          motion:FB.dataParam('localCouncilMotion', motionId, 'name')
+        }));
+    }
+    return { passed:passed, chance:status.chance, motionId:motionId };
+  };
+
+  function castellanPatronId(state) {
+    const p = state.player;
+    const local = (state.holder && state.holder[p.provinceId]) ||
+      (state.owner && state.owner[p.provinceId]);
+    return local && local !== 'player' && state.realms[local] &&
+      state.realms[local].alive ? local : null;
+  }
+
+  FB.castellanyOf = function (state) {
+    const p = state && state.player;
+    const record = p && p.castellany;
+    if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
+    return record;
+  };
+
+  FB.castellanAppointmentStatus = function (state, tenure) {
+    tenure = tenure === 'life' ? 'life' : 'term';
+    const p = state.player;
+    const patronId = castellanPatronId(state);
+    const patron = patronId && state.realms[patronId];
+    const me = state.chars[p.charId];
+    const bestSkill = me ? Math.max(FB.skillOf(me, 'mar'), FB.skillOf(me, 'ste')) : 0;
+    const standing = patronId ? FB.standingOf(state, {
+      kind:'realm', id:patronId
+    }) : 0;
+    const visible = p.tier === 2 && !(p.provs && p.provs.length) &&
+      !FB.castellanyOf(state);
+    let reason = '';
+    if (!visible) reason = FB.T('Only landless gentry may seek this appointment.');
+    else if (!patron) reason = FB.T('No living local liege can make the appointment.');
+    else if (p.prestige < 200) reason = FB.T('Requires 200 prestige; currently {current}.', {
+      current:Math.round(p.prestige)
+    });
+    else if (standing < 60) reason = FB.T('Requires 60 Standing with the appointing lord; currently {standing}.', {
+      standing:Math.round(standing)
+    });
+    else if (bestSkill < 10) reason = FB.T('Requires Martial or Stewardship 10; your best is {skill}.', {
+      skill:bestSkill
+    });
+    let base = 0.15 + standing / 400 + p.prestige / 1200 + bestSkill / 100;
+    if (tenure === 'life') base -= 0.20;
+    const uncluttered = FB.clamp(base, 0.10, 0.85);
+    const chance = FB.liegeGrantChance(state, uncluttered);
+    const province = FB.world.byId[p.provinceId];
+    return {
+      visible:visible, ready:visible && !reason, reason:reason,
+      patronId:patronId, patron:patron, tenure:tenure,
+      chance:chance, baseChance:uncluttered,
+      provinceId:p.provinceId,
+      provinceName:province ? province.name : p.provinceId,
+      standing:standing, bestSkill:bestSkill
+    };
+  };
+
+  FB.appointCastellan = function (state, tenure) {
+    const status = FB.castellanAppointmentStatus(state, tenure);
+    if (!status.ready) return false;
+    if (!FB.chance(status.chance)) {
+      FB.news(state, FB.msg('news.castellany.refused',
+        '🏰 {liege} declines to entrust the castle of {province} to you.', {
+          liege:status.patron.name,
+          province:status.provinceName
+        }));
+      return { accepted:false, chance:status.chance, tenure:status.tenure };
+    }
+    const p = state.player;
+    p.castellany = {
+      provinceId:status.provinceId,
+      appointerId:status.patronId,
+      holderCharId:p.charId,
+      tenure:status.tenure,
+      grantTurn:state.turn,
+      expiryTurn:status.tenure === 'term'
+        ? state.turn + FEUDAL_TERM_DAYS : null,
+      renewal:null,
+      previousTier:2
+    };
+    FB.changePlayerLiege(state, status.patronId, 'office:castellany');
+    FB.setPlayerTier(state, 3, { stationFarewell:false, attachLiege:false });
+    FB.recordLiegeGrant(state);
+    const appointmentMessage = status.tenure === 'life'
+      ? FB.msg('news.castellany.appointed_life',
+        '🏰 {liege} appoints you Castellan of {province} for life.', {
+          liege:status.patron.name,
+          province:status.provinceName
+        })
+      : FB.msg('news.castellany.appointed_term',
+        '🏰 {liege} appoints you Castellan of {province} for ten years.', {
+        liege:status.patron.name,
+        province:status.provinceName
+      });
+    FB.news(state, appointmentMessage);
+    return { accepted:true, chance:status.chance, tenure:status.tenure };
+  };
+
+  FB.castellanRenewalStatus = function (state) {
+    const record = FB.castellanyOf(state);
+    if (!record || record.tenure !== 'term' ||
+        typeof record.expiryTurn !== 'number' || !isFinite(record.expiryTurn)) {
+      return { visible:false, ready:false, chance:0,
+        reason:FB.T('No fixed-term Castellan appointment is active.') };
+    }
+    const days = record.expiryTurn - state.turn;
+    const visible = days <= FEUDAL_RENEWAL_WINDOW && days > 0;
+    const me = state.chars[state.player.charId];
+    const bestSkill = me ? Math.max(FB.skillOf(me, 'mar'), FB.skillOf(me, 'ste')) : 0;
+    const standing = FB.standingOf(state, {
+      kind:'realm', id:record.appointerId
+    });
+    const chance = FB.clamp(0.25 + standing / 300 + bestSkill / 80,
+      0.20, 0.90);
+    let reason = '';
+    if (!visible) reason = days > FEUDAL_RENEWAL_WINDOW
+      ? FB.T('Renewal opens ninety days before the term ends.')
+      : FB.T('The appointment has reached its end.');
+    else if (record.renewal) reason = FB.T('A renewal petition has already been made for this term.');
+    return {
+      visible:visible, ready:visible && !record.renewal,
+      reason:reason, chance:chance, daysRemaining:Math.max(0, days)
+    };
+  };
+
+  FB.renewCastellany = function (state) {
+    const status = FB.castellanRenewalStatus(state);
+    const record = FB.castellanyOf(state);
+    if (!status.ready || !record) return false;
+    record.renewal = 'petitioned';
+    const accepted = FB.chance(status.chance);
+    if (accepted) {
+      record.expiryTurn += FEUDAL_TERM_DAYS;
+      record.renewal = null;
+      FB.news(state, FB.msg('news.castellany.renewed',
+        '🏰 The Castellan appointment is renewed for another ten years.', {}));
+    } else {
+      FB.news(state, FB.msg('news.castellany.renewal_refused',
+        '🏰 The appointing lord refuses to renew the Castellan appointment.', {}));
+    }
+    return { accepted:accepted, chance:status.chance };
+  };
+
+  FB.endCastellany = function (state, reason, silent) {
+    const record = FB.castellanyOf(state);
+    if (!record) return false;
+    const province = FB.world.byId[record.provinceId];
+    delete state.player.castellany;
+    if (!(state.player.provs && state.player.provs.length) &&
+        state.player.tier <= 3) {
+      if (state.player.tier === 3) {
+        FB.setPlayerTier(state, Math.max(2, record.previousTier || 2), {
+          attachLiege:false, stationFarewell:false
+        });
+      }
+      FB.changePlayerLiege(state, null, 'office:castellany_ended');
+    }
+    if (!silent) {
+      FB.news(state, FB.msg('news.castellany.ended',
+        '🏰 Your appointment as Castellan of {province} ends.', {
+          province:province ? province.name : record.provinceId
+        }));
+    }
+    return record;
+  };
+
+  FB.castellanyValidate = function (state, silent) {
+    const record = FB.castellanyOf(state);
+    if (!record) return null;
+    const p = state.player;
+    if (p.provs && p.provs.length) {
+      delete p.castellany;
+      return null;
+    }
+    if (record.tenure === 'term' &&
+        (typeof record.expiryTurn !== 'number' || !isFinite(record.expiryTurn))) {
+      const grantTurn = typeof record.grantTurn === 'number' &&
+        isFinite(record.grantTurn) ? record.grantTurn : state.turn;
+      record.expiryTurn = grantTurn + FEUDAL_TERM_DAYS;
+    }
+    const patron = state.realms[record.appointerId];
+    const holder = (state.holder && state.holder[record.provinceId]) ||
+      (state.owner && state.owner[record.provinceId]);
+    let reason = null;
+    const appointed = state.chars && state.chars[p.charId];
+    if (record.holderCharId !== p.charId || p.dead || !appointed || appointed.dead) {
+      reason = 'death';
+    }
+    else if (!patron || !patron.alive || holder !== record.appointerId) {
+      reason = 'control_lost';
+    } else if (record.tenure === 'term' && state.turn >= record.expiryTurn) {
+      reason = 'expiry';
+    } else if (p.tier !== 3) reason = 'rank_changed';
+    if (reason) {
+      FB.endCastellany(state, reason, silent);
+      return null;
+    }
+    return record;
+  };
+
+  function feudalTenure(value) {
+    if (value === 'life') return 'life';
+    if (value === 'term' || value === 'ten_year') return 'term';
+    return 'hereditary';
+  }
+
+  FB.feudalCharterDef = function (charterId) {
+    return FBDATA.feudalServiceCharters[charterId] ||
+      FBDATA.feudalServiceCharters.customary_service;
+  };
+
+  FB.feudalContractOf = function (state, rid) {
+    const realm = state.realms && state.realms[rid];
+    const saved = realm && realm.feudalContract;
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) {
+      const tenure = feudalTenure(saved.tenure);
+      const grantTurn = typeof saved.grantTurn === 'number' &&
+        isFinite(saved.grantTurn) ? saved.grantTurn : 0;
+      const expiryTurn = tenure === 'term'
+        ? (typeof saved.expiryTurn === 'number' && isFinite(saved.expiryTurn)
+          ? saved.expiryTurn : grantTurn + FEUDAL_TERM_DAYS)
+        : null;
+      return {
+        liegeId:saved.liegeId || realm.liege || null,
+        charterId:FBDATA.feudalServiceCharters[saved.charterId]
+          ? saved.charterId : 'customary_service',
+        tenure:tenure,
+        grantTurn:grantTurn,
+        expiryTurn:expiryTurn,
+        renewal:saved.renewal || null
+      };
+    }
+    return {
+      liegeId:realm ? realm.liege || null : null,
+      charterId:'customary_service', tenure:'hereditary',
+      grantTurn:0, expiryTurn:null, renewal:null
+    };
+  };
+
+  FB.ensureFeudalContracts = function (state) {
+    for (const rid of FB.playerVassals(state)) {
+      const realm = state.realms[rid];
+      if (!realm.feudalContract || typeof realm.feudalContract !== 'object' ||
+          Array.isArray(realm.feudalContract)) {
+        realm.feudalContract = FB.feudalContractOf(state, rid);
+      } else {
+        const normalized = FB.feudalContractOf(state, rid);
+        realm.feudalContract.liegeId = normalized.liegeId;
+        realm.feudalContract.charterId = normalized.charterId;
+        realm.feudalContract.tenure = normalized.tenure;
+        realm.feudalContract.grantTurn = normalized.grantTurn;
+        realm.feudalContract.expiryTurn = normalized.expiryTurn;
+        realm.feudalContract.renewal = normalized.renewal;
+      }
+    }
+  };
+
+  FB.feudalCharterBreakawayMultiplier = function (state, rid) {
+    const contract = FB.feudalContractOf(state, rid);
+    const def = FB.feudalCharterDef(contract.charterId);
+    const value = Number(def.breakawayMultiplier);
+    return isFinite(value) && value >= 0 ? value : 1;
+  };
+
+  FB.feudalGrantPreview = function (state, kind, id, charterId, tenure) {
+    charterId = FBDATA.feudalServiceCharters[charterId]
+      ? charterId : 'customary_service';
+    const def = FB.feudalCharterDef(charterId);
+    tenure = feudalTenure(tenure);
+    let countyIds = [];
+    if (kind === 'duchy') {
+      for (const item of FB.grantableDuchies(state)) {
+        if (item.did === id) countyIds = item.counties.slice();
+      }
+    } else if (state.player.provs.indexOf(id) >= 0) countyIds = [id];
+    let tax = 0, levy = 0;
+    for (const pid of countyIds) {
+      tax += countyTaxBase(state, pid,
+        FBDATA.balance.taxPerDev * def.taxShare);
+      levy += domainCountyLevyBase(state, pid) * def.levyShare;
+    }
+    const tenureStanding = tenure === 'life' ? -5 : (tenure === 'term' ? -10 : 0);
+    return {
+      kind:kind, id:id, countyIds:countyIds,
+      charterId:charterId, tenure:tenure,
+      tax:tax, levy:levy,
+      initialStanding:40 + (Number(def.standingBonus) || 0) + tenureStanding,
+      breakawayMultiplier:Number(def.breakawayMultiplier) || 0,
+      extraordinaryTaxExempt:!!def.extraordinaryTaxExempt,
+      expiryTurn:tenure === 'term' ? state.turn + FEUDAL_TERM_DAYS : null
+    };
+  };
+
+  function installFeudalContract(state, rid, charterId, tenure) {
+    const realm = state.realms[rid];
+    tenure = feudalTenure(tenure);
+    charterId = FBDATA.feudalServiceCharters[charterId]
+      ? charterId : 'customary_service';
+    realm.feudalContract = {
+      liegeId:'player', charterId:charterId, tenure:tenure,
+      grantTurn:state.turn,
+      expiryTurn:tenure === 'term' ? state.turn + FEUDAL_TERM_DAYS : null,
+      renewal:null
+    };
+    return realm.feudalContract;
+  }
+
+  FB.feudalRenewalValid = function (state, rid) {
+    const realm = state.realms[rid];
+    if (!realm || !realm.alive || realm.liege !== 'player') return false;
+    const contract = FB.feudalContractOf(state, rid);
+    return contract.tenure === 'term' && contract.renewal === 'queued' &&
+      contract.expiryTurn > state.turn &&
+      contract.expiryTurn - state.turn <= FEUDAL_RENEWAL_WINDOW;
+  };
+
+  FB.fns.feudal_renewal_valid = function (state, ctx) {
+    return !!(ctx && FB.feudalRenewalValid(state, ctx.realmId));
+  };
+
+  FB.fns.feudal_renewal_accept = function (state, ctx) {
+    const rid = ctx && ctx.realmId;
+    if (!FB.feudalRenewalValid(state, rid)) return false;
+    const realm = state.realms[rid];
+    realm.feudalContract.expiryTurn += FEUDAL_TERM_DAYS;
+    realm.feudalContract.renewal = null;
+    FB.news(state, FB.msg('news.feudal.tenure_renewed',
+      '📜 The fixed-term grant of {realm} is renewed for another ten years.', {
+        realm:realm.name
+      }));
+    return true;
+  };
+
+  FB.fns.feudal_renewal_decline = function (state, ctx) {
+    const rid = ctx && ctx.realmId;
+    if (!FB.feudalRenewalValid(state, rid)) return false;
+    state.realms[rid].feudalContract.renewal = 'declined';
+    return true;
+  };
+
+  FB.feudalTenureEndsAtDeath = function (state, rid) {
+    const realm = state.realms && state.realms[rid];
+    if (!realm || realm.liege !== 'player') return false;
+    return FB.feudalContractOf(state, rid).tenure !== 'hereditary';
+  };
+
+  FB.revertFeudalRealm = function (state, rid, reason) {
+    const realm = state.realms[rid];
+    if (!realm || !realm.alive || realm.liege !== 'player') return false;
+    const name = realm.name;
+    if (state.player.war && state.player.war.enemy === rid) {
+      if (FB.endPlayerWar) FB.endPlayerWar(state);
+      else state.player.war = null;
+    }
+    for (const otherId in state.realms) {
+      const other = state.realms[otherId];
+      if (other && other.war && other.war.enemy === rid) other.war = null;
+    }
+    if (state.player.vassalLevyFavors) delete state.player.vassalLevyFavors[rid];
+    const reverted = FB.escheatRealm(state, rid, { silent:true });
+    if (!reverted) return false;
+    if (FB.repairWars) FB.repairWars(state);
+    if (FB.repairPolitics) FB.repairPolitics(state);
+    FB.news(state, FB.msg('news.feudal.tenure_reverted',
+      '📜 {realm} reverts to your hand as its non-hereditary tenure ends.', {
+        realm:name
+      }));
+    const over = FB.domainOver(state);
+    if (over) {
+      FB.news(state, FB.msg('news.feudal.reversion_over_domain',
+        '⚠ The reversion leaves your domain {count} counties over its limit.', {
+          count:over
+        }));
+    }
+    return true;
+  };
+
+  FB.ensureLocalGovernment = function (state, silent) {
+    FB.localCouncilValidate(state, silent !== false);
+    FB.castellanyValidate(state, silent !== false);
+    FB.ensureFeudalContracts(state);
+  };
+
+  FB.localGovernmentTierChanged = function (state) {
+    FB.localCouncilValidate(state, false);
+    FB.castellanyValidate(state, false);
+  };
+
+  FB.localGovernmentDay = function (state) {
+    FB.ensureLocalGovernment(state, false);
+    const vassals = FB.playerVassals(state).slice();
+    for (const rid of vassals) {
+      const realm = state.realms[rid];
+      const contract = FB.feudalContractOf(state, rid);
+      if (contract.tenure !== 'term' ||
+          typeof contract.expiryTurn !== 'number' ||
+          !isFinite(contract.expiryTurn)) continue;
+      if (state.turn >= contract.expiryTurn) {
+        FB.revertFeudalRealm(state, rid, 'fixed-term');
+        continue;
+      }
+      if (contract.expiryTurn - state.turn <= FEUDAL_RENEWAL_WINDOW &&
+          !contract.renewal) {
+        realm.feudalContract.renewal = 'queued';
+        FB.queueEvent(state, 'vassal_tenure_renewal', {
+          realmId:rid,
+          realm:realm.name,
+          ruler:realm.ruler ? realm.ruler.name : realm.name,
+          days:contract.expiryTurn - state.turn
+        });
+      }
+    }
+  };
+
   function countyTaxBase(state, pid, rate) {
     const local = FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0;
     return (state.dev[pid] || 1) * rate * Math.max(0, 1 + local);
@@ -1682,9 +2282,12 @@ window.FB = window.FB || {};
   FB.vassalTaxContribution = function (state, rid) {
     const realm = state.realms[rid];
     if (!realm || !realm.alive || realm.liege !== 'player') return 0;
+    const contract = FB.feudalContractOf(state, rid);
+    const charter = FB.feudalCharterDef(contract.charterId);
+    const rate = FBDATA.balance.taxPerDev * charter.taxShare;
     let total = 0;
     for (const pid of FB.realmHeldCounties(state, rid)) {
-      total += countyTaxBase(state, pid, FBDATA.balance.vassalTaxRate);
+      total += countyTaxBase(state, pid, rate);
     }
     return total;
   };
@@ -1807,10 +2410,11 @@ window.FB = window.FB || {};
       directTaxBefore += countyTaxBase(state, pid, FBDATA.balance.taxPerDev);
       directLevyBefore += domainCountyLevyBase(state, pid);
       if (granted[pid]) {
+        const customary = FB.feudalCharterDef('customary_service');
         grantedTax += countyTaxBase(state, pid,
-          FBDATA.balance.vassalTaxRate);
+          FBDATA.balance.taxPerDev * customary.taxShare);
         grantedLevy += domainCountyLevyBase(state, pid) *
-          (FBDATA.balance.vassalLevyRate || 0);
+          customary.levyShare;
       } else {
         directTaxAfter += countyTaxBase(state, pid,
           FBDATA.balance.taxPerDev);
@@ -2018,6 +2622,8 @@ window.FB = window.FB || {};
         }
       }
       const until = Number(levyFavors[rid]);
+      const contract = FB.feudalContractOf(state, rid);
+      const charter = FB.feudalCharterDef(contract.charterId);
       directVassals.push({
         realmId:rid,
         countyIds:FB.realmHeldCounties(state, rid).slice().sort(),
@@ -2025,6 +2631,13 @@ window.FB = window.FB || {};
         taxContribution:FB.vassalTaxContribution(state, rid),
         levyContribution:FB.vassalLevyContribution
           ? FB.vassalLevyContribution(state, rid) : 0,
+        charterId:contract.charterId,
+        tenure:contract.tenure,
+        grantTurn:contract.grantTurn,
+        expiryTurn:contract.expiryTurn,
+        renewal:contract.renewal,
+        breakawayMultiplier:Number(charter.breakawayMultiplier) || 0,
+        extraordinaryTaxExempt:!!charter.extraordinaryTaxExempt,
         councilSeatId:seatId,
         exceptionalLevyUntil:isFinite(until) && until > state.turn
           ? until : null
@@ -2116,6 +2729,11 @@ window.FB = window.FB || {};
       council:council,
       politics:politics,
       obligations:obligations,
+      localCouncil:FB.localCouncilOf(state),
+      tenure:FB.castellanyOf(state)
+        ? FB.castellanyOf(state).tenure : 'hereditary',
+      tenureExpiryTurn:FB.castellanyOf(state)
+        ? FB.castellanyOf(state).expiryTurn : null,
       warService:p.warService || 0,
       servingLiegeWar:!!(p.flags && p.flags.with_liege_host),
       pending:pending,
@@ -2217,7 +2835,9 @@ window.FB = window.FB || {};
        cut by a liege */
     if (p.tier >= 3) {
       const tax = FB.playerTaxParts(state);
-      add('gold', FB.T('Rents from your lands'), tax.rentBase);
+      add('gold', FB.castellanyOf && FB.castellanyOf(state)
+        ? FB.T('Castellan’s stipend and revenues')
+        : FB.T('Rents from your lands'), tax.rentBase);
       for (const source of tax.rentTraits) {
         const trait = FBDATA.traits[source.id];
         if (!trait) continue;
@@ -2234,11 +2854,14 @@ window.FB = window.FB || {};
       add('gold', FB.T('Episcopal temporalities'), tax.bishopric);
       if (FB.positionContributions) {
         for (const source of FB.positionContributions(state, 'tax')) {
-          const def = FBDATA.positions[source.id];
+          const local = source.kind === 'local-ordinance';
+          const def = local ? FBDATA.localCouncilMotions[source.id] :
+            FBDATA.positions[source.id];
           if (!def) continue;
           const amount = tax.taxable * source.amount;
           const holder = source.charId && state.chars[source.charId];
-          const name = FB.dataText(state, p.charId, 'position', source.id, def, 'name');
+          const name = FB.dataText(state, p.charId,
+            local ? 'localCouncilMotion' : 'position', source.id, def, 'name');
           add('gold', holder ? FB.T('{position} — {name}', {
             position:name, name:holder.name
           }) : name, amount);
@@ -2280,10 +2903,13 @@ window.FB = window.FB || {};
     }
     if (FB.positionContributions) {
       for (const source of FB.positionContributions(state, 'gold')) {
-        const def = FBDATA.positions[source.id];
+        const local = source.kind === 'local-ordinance';
+        const def = local ? FBDATA.localCouncilMotions[source.id] :
+          FBDATA.positions[source.id];
         if (!def) continue;
         const holder = source.charId && state.chars[source.charId];
-        const name = FB.dataText(state, p.charId, 'position', source.id, def, 'name');
+        const name = FB.dataText(state, p.charId,
+          local ? 'localCouncilMotion' : 'position', source.id, def, 'name');
         add('gold', holder ? FB.T('{position} — {name}', {
           position:name, name:holder.name
         }) : name, source.amount);
@@ -3169,7 +3795,9 @@ window.FB = window.FB || {};
   };
 
   FB.vassalLevyRate = function (state, rid) {
-    return (FBDATA.balance.vassalLevyRate || 0) +
+    const contract = FB.feudalContractOf(state, rid);
+    const charter = FB.feudalCharterDef(contract.charterId);
+    return (Number(charter.levyShare) || 0) +
       (FB.vassalLevyFavor(state, rid) ? (FBDATA.balance.vassalLevyFavorRate || 0.05) : 0);
   };
 
@@ -3240,12 +3868,21 @@ window.FB = window.FB || {};
   };
 
   /* hand a demesne county to a new sworn man */
-  FB.grantCounty = function (state, pid) {
+  FB.grantCounty = function (state, pid, charterId, tenure) {
+    if (charterId && typeof charterId === 'object') {
+      tenure = charterId.tenure;
+      charterId = charterId.charterId;
+    }
+    charterId = FBDATA.feudalServiceCharters[charterId]
+      ? charterId : 'customary_service';
+    tenure = feudalTenure(tenure);
     const p = state.player;
     const pr = FB.world.byId[pid];
     if (!pr || !p.provs || p.provs.indexOf(pid) < 0 || p.provs.length < 2) {
       return false;
     }
+    const preview = FB.feudalGrantPreview(state, 'county', pid,
+      charterId, tenure);
     p.provs.splice(p.provs.indexOf(pid), 1);
     const vid = 'pv_' + pid;
     let revivedCourt = false;
@@ -3262,7 +3899,8 @@ window.FB = window.FB || {};
        can absorb the revived demesne through ordinary succession. */
     if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
     else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
-    FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
+    installFeudalContract(state, vid, charterId, tenure);
+    FB.adjustStanding(state, { kind:'realm', id:vid }, preview.initialStanding,
       'deed:grant_county');
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.county_granted',
@@ -3292,7 +3930,14 @@ window.FB = window.FB || {};
 
   /* raise a duke over a de jure duchy the player holds in full — hand him every
      county in it at once. Keeps at least one county in the player's own hand. */
-  FB.grantDuchy = function (state, did) {
+  FB.grantDuchy = function (state, did, charterId, tenure) {
+    if (charterId && typeof charterId === 'object') {
+      tenure = charterId.tenure;
+      charterId = charterId.charterId;
+    }
+    charterId = FBDATA.feudalServiceCharters[charterId]
+      ? charterId : 'customary_service';
+    tenure = feudalTenure(tenure);
     const p = state.player;
     if (!p.provs) return false;
     const cs = [];
@@ -3301,6 +3946,8 @@ window.FB = window.FB || {};
     // only a duchy held whole may be granted as a duchy — and always keep a seat
     if (dej.length < 2 || cs.length !== dej.length ||
         p.provs.length - cs.length < 1) return false;
+    const preview = FB.feudalGrantPreview(state, 'duchy', did,
+      charterId, tenure);
     let seat = cs[0];
     for (const pid of cs) if ((state.dev[pid] || 1) > (state.dev[seat] || 1)) seat = pid; // richest = ducal seat
     const dname = (FBDATA.duchies[did] || {}).name || did;
@@ -3323,7 +3970,8 @@ window.FB = window.FB || {};
        the successor is eagerly loaded before the grant returns. */
     if (revivedCourt && FB.ensureRealmCourt) FB.ensureRealmCourt(state, vid);
     else if (revivedCourt && FB.rebuildRulerIndex) FB.rebuildRulerIndex(state);
-    FB.adjustStanding(state, { kind:'realm', id:vid }, 40,
+    installFeudalContract(state, vid, charterId, tenure);
+    FB.adjustStanding(state, { kind:'realm', id:vid }, preview.initialStanding,
       'deed:grant_duchy');
     FB.invalidateRealmCache();
     FB.news(state, FB.msg('news.action.duchy_granted',
@@ -3429,9 +4077,13 @@ window.FB = window.FB || {};
     const me = state.chars[p.charId];
     const steMul = 1 + (me ? FB.skillOf(me, 'ste') : 0) * (B.demandTaxPerSte || 0);
     const seasons = B.demandTaxSeasons || 3;
-    let gold = 0;
+    let gold = 0, eligible = 0;
     for (const vid of FB.playerVassals(state)) {
-      for (const pid of FB.realmHeldCounties(state, vid)) gold += (state.dev[pid] || 1) * B.vassalTaxRate * seasons;
+      const contract = FB.feudalContractOf(state, vid);
+      const charter = FB.feudalCharterDef(contract.charterId);
+      if (charter.extraordinaryTaxExempt) continue;
+      gold += FB.vassalTaxContribution(state, vid) * seasons;
+      eligible++;
       FB.adjustStanding(state, { kind:'realm', id:vid }, -15,
         'deed:demand_taxes');
       if (FB.standingOf(state, { kind:'realm', id:vid }) <= -50) {
@@ -3443,7 +4095,7 @@ window.FB = window.FB || {};
       p.gold += gold;
       if (FB.notePoliticalMistreatment) {
         FB.notePoliticalMistreatment(state, 'extraordinary_tax', {
-          vassals:FB.playerVassals(state).length, gold:gold
+          vassals:eligible, gold:gold
         });
       }
       if (FB.councilAuthority) FB.councilAuthority(state, 4); // the crown rules without its council — they notice
@@ -4880,7 +5532,9 @@ window.FB = window.FB || {};
     }
     const me = state.chars[state.player.charId];
     if (state.player.tier < 4 && !(me && me.restorationRight)) {
-      return FB.T('A baron must first hold a county before waging a foreign war.');
+      return FB.castellanyOf && FB.castellanyOf(state)
+        ? FB.T('An appointed Castellan holds no county from which to wage a foreign war.')
+        : FB.T('A baron must first hold a county before waging a foreign war.');
     }
     if (!playerBorderLands(state).length && !(me && me.restorationRight)) {
       return FB.T('You hold no landed realm from which to wage war.');

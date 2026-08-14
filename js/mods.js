@@ -250,6 +250,16 @@ window.FBMODS = window.FBMODS || [];
     if (mod.holdings) for (const k in mod.holdings) FBDATA.holdings[k] = mod.holdings[k];
     if (mod.careers) for (const k in mod.careers) FBDATA.careers[k] = mod.careers[k];
     if (mod.positions) for (const k in mod.positions) FBDATA.positions[k] = mod.positions[k];
+    if (mod.localCouncilMotions) {
+      for (const k in mod.localCouncilMotions) {
+        FBDATA.localCouncilMotions[k] = mod.localCouncilMotions[k];
+      }
+    }
+    if (mod.feudalServiceCharters) {
+      for (const k in mod.feudalServiceCharters) {
+        FBDATA.feudalServiceCharters[k] = mod.feudalServiceCharters[k];
+      }
+    }
     if (mod.schooling) for (const k in mod.schooling) FBDATA.schooling[k] = mod.schooling[k];
     if (mod.enterprises) for (const k in mod.enterprises) FBDATA.enterprises[k] = mod.enterprises[k];
     if (mod.householdStandards) {

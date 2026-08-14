@@ -594,6 +594,9 @@ window.FB = window.FB || {};
     if (FB.ensureInstitutions) {
       FB.ensureInstitutions(FB.state, { silent:true });
     }
+    if (FB.ensureLocalGovernment) {
+      FB.ensureLocalGovernment(FB.state, true);
+    }
     return FB.state;
   };
 })();

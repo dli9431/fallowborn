@@ -1749,6 +1749,7 @@ window.FB = window.FB || {};
         provs: [], war: null, greatHolyWar: null, plot: null,
         aggressiveWars: [],
         focus: null, dead: false,
+        localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
         holdings: [], enterprises: [], householdStandards: {},
@@ -1996,6 +1997,7 @@ window.FB = window.FB || {};
         provs: [], war: null, greatHolyWar: null, plot: null,
         aggressiveWars: [],
         focus: null, dead: false, holdings: [],
+        localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
         householdStandards: {},
@@ -2097,6 +2099,7 @@ window.FB = window.FB || {};
       seasonBoundary = true;
       if (s.date.season > 3) { s.date.season = 0; s.date.year++; newYear = true; }
     }
+    if (FB.localGovernmentDay) FB.localGovernmentDay(s);
     FB.scriptedTick(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.papacyDay) FB.papacyDay(s);
@@ -3161,6 +3164,8 @@ window.FB = window.FB || {};
       telemetrySession.entryType : 'unknown';
     const activeSeconds = telemetryPulse();
     const titleDataAtDeath = FB.titleSnapshot(s);
+    if (FB.endLocalCouncil) FB.endLocalCouncil(s, 'death', true);
+    if (FB.endCastellany) FB.endCastellany(s, 'death', true);
     if (FB.intrigueCharacterDied) FB.intrigueCharacterDied(s, me);
     me.dead = true;
     me.died = s.date.year; // killChar is bypassed for the player's own death

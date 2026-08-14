@@ -47,6 +47,8 @@ STRUCTURED_DATA = {
     "holdings": "holding",
     "careers": "career",
     "positions": "position",
+    "localCouncilMotions": "localCouncilMotion",
+    "feudalServiceCharters": "feudalServiceCharter",
     "schooling": "schooling",
     "enterprises": "enterprise",
     "householdStandards": "householdStandard",
@@ -664,7 +666,8 @@ def extract_structured(inv: Inventory) -> None:
                            "cultures.js" if data_name in ("cultures", "religions") else
                            "economy.js" if data_name in (
                                "careers", "positions", "schooling", "enterprises",
-                               "householdStandards"
+                               "householdStandards", "localCouncilMotions",
+                               "feudalServiceCharters"
                            ) else
                            "travel.js" if data_name == "travelPurposes" else
                            "political_blocs.js" if data_name == "politicalBlocs" else
