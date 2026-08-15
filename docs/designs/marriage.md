@@ -48,10 +48,14 @@ rule in [realms.md](realms.md), and their current aim must favor dynastic securi
 peace, or crown consolidation. The candidate on the player's side is drawn only
 from managed family, never arbitrary visible kin; both people must be at least
 twelve, uncommitted, opposite-sex under the modeled doctrine, exact-faith
-compatible, and outside the close-kin gate. The proposing court weighs realm
-Standing, player prestige and station, the family member's station and Diplomacy,
-and the ruler's dynastic aim. The queued context freezes exact character ids,
-ruler generation, payer, and dowry; resolution revalidates every live gate.
+compatible, and outside the close-kin gate. Before the proposing court scores a
+pair, two hard house-rank gates apply to the royal partner: a match three or more
+stations above the player's house is unreachable, and an otherwise eligible
+upward match requires 20 prestige per station. The proposing court then weighs
+realm Standing, additional player prestige and station, the family member's
+station and Diplomacy, and the ruler's dynastic aim. The queued context freezes
+exact character ids, ruler generation, payer, and dowry; resolution revalidates
+every live gate, including current house station and prestige.
 
 Acceptance uses the ordinary bride's-house transfer exactly once and the normal
 `FB.doKinWedding` path at majority. Declining cools Standing with the proposing

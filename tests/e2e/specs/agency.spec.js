@@ -280,6 +280,127 @@ test('only managed family receive ambitions and family offices exclude enterpris
     }).toBe('genmodal');
   });
 
+test('AI royal offers hard-gate a lowborn sibling by station and prestige',
+  async function ({ page }, testInfo) {
+    await startAgencyGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var me = s.chars[s.player.charId];
+      var homeNeighbor = Object.keys(FB.world.adj[s.player.provinceId] || {})[0] ||
+        s.player.provinceId;
+      var rid = Object.keys(s.realms).filter(function (id) {
+        var realm = s.realms[id];
+        return id !== 'player' && realm && realm.alive && realm.ruler &&
+          FB.realmFamilySnapshot(s, id).some(function (member) {
+            var c = member.charId && s.chars[member.charId];
+            return c && !c.dead && FB.ageOf(c, s.date.year) >= 16 &&
+              !(FB.papacyCelibateSnapshot &&
+                FB.papacyCelibateSnapshot(s, c)) &&
+              !FB.spousesSnapshot(s, c).length && !c.betrothedId;
+          });
+      })[0];
+      var realm = s.realms[rid];
+      realm.capital = homeNeighbor;
+      realm.religion = me.religion;
+      realm.ruler.culture = me.culture;
+      var partner = FB.realmFamilySnapshot(s, rid).map(function (member) {
+        return member.charId && s.chars[member.charId];
+      }).filter(function (c) {
+        return c && !c.dead && FB.ageOf(c, s.date.year) >= 16 &&
+          !(FB.papacyCelibateSnapshot && FB.papacyCelibateSnapshot(s, c)) &&
+          !FB.spousesSnapshot(s, c).length && !c.betrothedId;
+      })[0];
+      partner.religion = me.religion;
+      partner.spouseId = null;
+      partner.betrothedId = null;
+
+      var parent = me.fatherId && s.chars[me.fatherId];
+      if (!parent) {
+        parent = FB.makeCharacter(s, {
+          name:'Shared Parent', sex:'m', culture:me.culture,
+          religion:me.religion, born:s.date.year - 48,
+          dyn:me.dyn, traitsN:0
+        });
+        me.fatherId = parent.id;
+      }
+      parent.childrenIds = parent.childrenIds || [];
+      if (parent.childrenIds.indexOf(me.id) < 0) parent.childrenIds.push(me.id);
+      var sibling = FB.makeCharacter(s, {
+        name:'Lowborn Sibling', sex:partner.sex === 'm' ? 'f' : 'm',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 20, dyn:me.dyn,
+        fatherId:parent.id, role:'sibling', station:0, traitsN:0
+      });
+      sibling.homeProvinceId = s.player.provinceId;
+      parent.childrenIds.push(sibling.id);
+      FB.touchFamily();
+      FB.ensureAgency(s);
+
+      var terms = FB.marriageTerms(s, sibling, partner);
+      var ctx = {
+        realmId:rid, rulerGeneration:realm.ruler.generation,
+        studentId:sibling.id, partnerId:partner.id,
+        dowry:terms.amount, playerPays:terms.subjectPays ? 'yes' : 'no'
+      };
+      s.player.tier = 0;
+      s.player.prestige = 999;
+      var stationBlocked = FB.agencyMarriageOfferStatus(s, partner);
+      var stationContext = FB.fns.agency_marriage_context_valid(s, ctx);
+      s.eventQueue = [];
+      for (var agencyRid in s.agency.rulerAims) {
+        s.agency.rulerAims[agencyRid].id = 'secure_dynasty';
+        delete s.agency.rulerAims[agencyRid].lastApproachYear;
+      }
+      delete s.agency.lastPlayerApproachYear;
+      var originalChance = FB.chance;
+      FB.chance = function () { return true; };
+      FB.rulerAgencyYearly(s);
+      FB.chance = originalChance;
+      var queuedSerfMarriage = s.eventQueue.some(function (item) {
+        return item.id === 'ruler_marriage_offer';
+      });
+
+      s.player.tier = FB.stationOf(partner) - 2;
+      var prestigeNeed = FB.kinMatchPrestigeNeed(s, partner);
+      s.player.prestige = prestigeNeed - 1;
+      var prestigeBlocked = FB.agencyMarriageOfferStatus(s, partner);
+      var prestigeContext = FB.fns.agency_marriage_context_valid(s, ctx);
+
+      s.player.prestige = prestigeNeed;
+      var ready = FB.agencyMarriageOfferStatus(s, partner);
+      var readyContext = FB.fns.agency_marriage_context_valid(s, ctx);
+      s.player.prestige = prestigeNeed - 1;
+      var staleContext = FB.fns.agency_marriage_context_valid(s, ctx);
+      return {
+        manageable:FB.manageableKinKind(s, sibling.id),
+        partnerStation:FB.stationOf(partner),
+        stationReason:stationBlocked.reason,
+        stationGap:stationBlocked.stationGap,
+        stationContext:stationContext,
+        queuedSerfMarriage:queuedSerfMarriage,
+        prestigeReason:prestigeBlocked.reason,
+        prestigeNeed:prestigeNeed,
+        prestigeContext:prestigeContext,
+        ready:ready.ready,
+        readyContext:readyContext,
+        staleContext:staleContext
+      };
+    });
+
+    expect(result.manageable).toBe('sibling');
+    expect(result.partnerStation).toBeGreaterThanOrEqual(3);
+    expect(result.stationReason).toBe('station');
+    expect(result.stationGap).toBeGreaterThanOrEqual(3);
+    expect(result.stationContext).toBe(false);
+    expect(result.queuedSerfMarriage).toBe(false);
+    expect(result.prestigeReason).toBe('prestige');
+    expect(result.prestigeNeed).toBe(40);
+    expect(result.prestigeContext).toBe(false);
+    expect(result.ready).toBe(true);
+    expect(result.readyContext).toBe(true);
+    expect(result.staleContext).toBe(false);
+  });
+
 test('AI royal offers revalidate exact managed kin, ruler generation, and dowry',
   async function ({ page }, testInfo) {
     await startAgencyGame(page, testInfo);
@@ -329,6 +450,8 @@ test('AI royal offers revalidate exact managed kin, ruler generation, and dowry'
         dowry:terms.amount, playerPays:terms.subjectPays ? 'yes' : 'no'
       };
       s.player.gold = 500;
+      s.player.tier = FB.stationOf(partner) - 2;
+      s.player.prestige = FB.kinMatchPrestigeNeed(s, partner);
       var valid = FB.fns.agency_marriage_context_valid(s, ctx);
       var stale = {};
       for (var key in ctx) stale[key] = ctx[key];

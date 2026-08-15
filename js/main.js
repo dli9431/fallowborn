@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.130.0';
+  FB.VERSION = '1.130.1';
   FB.CHANGELOG = [
+    { v: '1.130.1', date: '2026-08-14', changes: [
+      'Royal marriage offers now respect the householdâ€™s station and prestige, preventing implausible matches far above its standing.'
+    ] },
     { v: '1.130.0', date: '2026-08-14', changes: [
       'Fortifications now act as strategic strongpoints: build and upgrade them at settlements to block hostile passage and force invading hosts into sieges.'
     ] },

@@ -2210,6 +2210,11 @@ window.FB = window.FB || {};
   /* Shared authoritative terms for the picker, assistant, and final pledge.
      Policy limits are deliberately absent: they guide recommendations but
      never disable a manual choice. */
+  FB.kinMatchPrestigeNeed = function (state, cand) {
+    const station = cand ? FB.stationOf(cand) : 0;
+    return Math.max(0, station - FB.playerStation(state)) * 20;
+  };
+
   FB.kinMatchTerms = function (state, child, cand) {
     const station = cand ? FB.stationOf(cand) : 0;
     const savedAmount = cand
@@ -2217,8 +2222,7 @@ window.FB = window.FB || {};
       : 0;
     const marriage = FB.marriageTerms(state, child, cand, savedAmount);
     const dowry = marriage.subjectPays ? marriage.amount : 0;
-    const prestigeNeed = cand ?
-      Math.max(0, station - FB.playerStation(state)) * 20 : 0;
+    const prestigeNeed = cand ? FB.kinMatchPrestigeNeed(state, cand) : 0;
     let reason = null;
     if (!managedMatchKind(state, child)) reason = 'descendant';
     else if (!cand || cand.dead || cand.role !== 'match') reason = 'candidate';

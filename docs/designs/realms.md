@@ -223,6 +223,13 @@ unconnected Sunni ruler in Iraq cannot send social or marriage overtures to an
 Irish Catholic household, while a nearby foreign ruler or an actual liege can.
 Hostile border wars retain their existing adjacency gate.
 
+Marriage overtures add hard house-rank eligibility before their ordinary score:
+the offered royal partner cannot stand three or more stations above the player's
+house, and each allowable upward station requires 20 current prestige. The same
+shared status is checked when choosing the annual approach and again when its
+queued event resolves, so lost station or prestige cannot leave a stale offer
+acceptable.
+
 Expansionist sovereigns may fund one discontented vassal of an adjacent rival.
 `state.agency.rebelSupport` stores at most three five-year records and increases
 the existing seeded breakaway probability; it does not create a second civil-war
