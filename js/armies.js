@@ -1013,22 +1013,41 @@ window.FB = window.FB || {};
     const start = {
       pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0
     };
-    const frontier = [], best = {};
+    const frontier = [], best = {}, blocked = [];
     best[fromPid] = start;
     frontierPush(frontier, start);
     while (frontier.length) {
       const current = frontierPop(frontier);
       if (best[current.pid] !== current) continue;
       if (current.pid === toPid) {
-        return {
+        const around = [];
+        for (let blockedIndex = 0; blockedIndex < blocked.length; blockedIndex++) {
+          const blockedPid = blocked[blockedIndex].blockedByFort;
+          if (around.indexOf(blockedPid) < 0) around.push(blockedPid);
+        }
+        const reached = {
           path:current.path,
           totalDays:current.totalDays,
           waterLegs:current.waterLegs
         };
+        if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, toPid, army)) {
+          reached.blockedByFort = toPid;
+        } else if (around.length) {
+          reached.routedAroundForts = around;
+        }
+        return reached;
       }
       const neighbors = sortedNeighbors(adj, current.pid);
       for (let i = 0; i < neighbors.length; i++) {
         const neighbor = neighbors[i];
+        /* A host already pinned inside a hostile fortified county may leave
+           only by its arrival edge or directly into friendly-controlled
+           ground. Once clear, ordinary routing resumes. */
+        if (current.pid === fromPid && FB.fortBlocksArmy &&
+            FB.fortBlocksArmy(state, fromPid, army) &&
+            neighbor !== army.from &&
+            !(FB.armyFriendlyProvince &&
+              FB.armyFriendlyProvince(state, army, neighbor))) continue;
         const quote = quoteFromMemo(memo, current.pid, neighbor);
         const candidate = {
           pid:neighbor,
@@ -1037,9 +1056,80 @@ window.FB = window.FB || {};
           legs:current.legs + 1,
           waterLegs:current.waterLegs + (quote.water ? 1 : 0)
         };
+        /* A hostile fort is a legal destination but never an intermediate
+           node. Remember the best encountered obstacle so a route with no
+           bypass ends at the fort instead of pretending no march is
+           possible. */
+        if (neighbor !== toPid && FB.fortBlocksArmy &&
+            FB.fortBlocksArmy(state, neighbor, army)) {
+          candidate.blockedByFort = neighbor;
+          blocked.push(candidate);
+          continue;
+        }
         if (!best[neighbor] || routeCompare(candidate, best[neighbor]) < 0) {
           best[neighbor] = candidate;
           frontierPush(frontier, candidate);
+        }
+      }
+    }
+    /* No legal bypass reached the requested province. Walk the unrestricted
+       graph once to find the first fort on the shortest route to that actual
+       destination; choosing the nearest encountered dead-end fort could send
+       an order away from its intended road. The returned route still ends at
+       the first strongpoint and never carries the host through it. */
+    if (blocked.length) {
+      const virtualStart = {
+        pid:fromPid, path:[], totalDays:0, legs:0, waterLegs:0,
+        firstFort:null, firstFortLength:0, firstFortDays:0,
+        firstFortWaterLegs:0
+      };
+      const virtualFrontier = [], virtualBest = {};
+      virtualBest[fromPid] = virtualStart;
+      frontierPush(virtualFrontier, virtualStart);
+      while (virtualFrontier.length) {
+        const current = frontierPop(virtualFrontier);
+        if (virtualBest[current.pid] !== current) continue;
+        if (current.pid === toPid) {
+          if (!current.firstFort) return null;
+          return {
+            path:current.path.slice(0, current.firstFortLength),
+            totalDays:current.firstFortDays,
+            waterLegs:current.firstFortWaterLegs,
+            blockedByFort:current.firstFort
+          };
+        }
+        const neighbors = sortedNeighbors(adj, current.pid);
+        for (let i = 0; i < neighbors.length; i++) {
+          const neighbor = neighbors[i];
+          if (current.pid === fromPid && FB.fortBlocksArmy &&
+              FB.fortBlocksArmy(state, fromPid, army) &&
+              neighbor !== army.from &&
+              !(FB.armyFriendlyProvince &&
+                FB.armyFriendlyProvince(state, army, neighbor))) continue;
+          const quote = quoteFromMemo(memo, current.pid, neighbor);
+          const candidate = {
+            pid:neighbor,
+            path:current.path.concat([neighbor]),
+            totalDays:current.totalDays + quote.totalDays,
+            legs:current.legs + 1,
+            waterLegs:current.waterLegs + (quote.water ? 1 : 0),
+            firstFort:current.firstFort,
+            firstFortLength:current.firstFortLength,
+            firstFortDays:current.firstFortDays,
+            firstFortWaterLegs:current.firstFortWaterLegs
+          };
+          if (!candidate.firstFort && FB.fortBlocksArmy &&
+              FB.fortBlocksArmy(state, neighbor, army)) {
+            candidate.firstFort = neighbor;
+            candidate.firstFortLength = candidate.path.length;
+            candidate.firstFortDays = candidate.totalDays;
+            candidate.firstFortWaterLegs = candidate.waterLegs;
+          }
+          if (!virtualBest[neighbor] ||
+              routeCompare(candidate, virtualBest[neighbor]) < 0) {
+            virtualBest[neighbor] = candidate;
+            frontierPush(virtualFrontier, candidate);
+          }
         }
       }
     }
@@ -1093,7 +1183,9 @@ window.FB = window.FB || {};
         path:[next].concat(remainder.path),
         totalDays:army.moveLeft + remainder.totalDays,
         waterLegs:(FB.waterCrossing(army.at, next) ? 1 : 0) +
-          remainder.waterLegs
+          remainder.waterLegs,
+        blockedByFort:remainder.blockedByFort || null,
+        routedAroundForts:remainder.routedAroundForts || []
       };
     } else {
       route = findArmyPathFrom(state, army, army.at, destPid, memo);
@@ -1107,6 +1199,8 @@ window.FB = window.FB || {};
       goal:destPid,
       totalDays:route.totalDays,
       waterLegs:route.waterLegs,
+      blockedByFort:route.blockedByFort || null,
+      routedAroundForts:route.routedAroundForts || [],
       crossings:routeCrossings(state, army, army.at, route.path, memo)
     };
   }
@@ -1150,7 +1244,14 @@ window.FB = window.FB || {};
         // the leg completes: the host steps into the next province
         army.from = army.at;
         army.at = army.path.shift();
-        if (army.path.length) {
+        if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, army.at, army)) {
+          /* Arrival is the moment the obstacle pins the host. A route saved
+             before construction, conquest, or occupation cannot carry it
+             through the strongpoint. */
+          army.path = [];
+          army.goal = null;
+          army.moveLeft = 0;
+        } else if (army.path.length) {
           beginArmyLeg(state, army);
         }
         requestMap();
@@ -1169,6 +1270,7 @@ window.FB = window.FB || {};
     const r = state.realms[army.realm];
     if (!r) return army.at;
     if (army.broken !== undefined && state.turn - army.broken < 40) return r.capital;
+    if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) return army.at;
     let best = null, bd = Infinity;
     const pa = FB.world.byId[army.at];
     for (const o of state.armies) {
@@ -1200,6 +1302,7 @@ window.FB = window.FB || {};
     const p = state.player, w = p.war;
     const home = playerHome(state);
     if (host.broken !== undefined && state.turn - host.broken < 40) return home;
+    if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, host)) return host.at;
     if (!w && FB.playerGreatHolyWarHostActive &&
         FB.playerGreatHolyWarHostActive(state) && FB.greatHolyWarArmyGoal) {
       return FB.greatHolyWarArmyGoal(state, 'player', host.at) || home;
@@ -1226,7 +1329,7 @@ window.FB = window.FB || {};
     return home;
   }
 
-  function battlePower(state, army) {
+  function battlePower(state, army, pid) {
     let pw;
     const q = FB.compQuality(army.units, army.men); // 1 for hosts from before levy tiers
     if (army.realm === 'player') {
@@ -1249,6 +1352,9 @@ window.FB = window.FB || {};
       pw = army.men * q * (1 + martial / (B().battleMarAI || 22));
       pw *= 1 + (FB.techBonus ? FB.techBonus(state, 'battle', army.realm) : 0);
     }
+    if (pid && FB.fortBattleBonus) {
+      pw *= 1 + FB.fortBattleBonus(state, pid, army);
+    }
     return pw;
   }
 
@@ -1261,8 +1367,8 @@ window.FB = window.FB || {};
   }
 
   function resolveBattle(state, pid, a, b) {
-    const sa = battlePower(state, a) * FB.rf(0.75, 1.25);
-    const sb = battlePower(state, b) * FB.rf(0.75, 1.25);
+    const sa = battlePower(state, a, pid) * FB.rf(0.75, 1.25);
+    const sb = battlePower(state, b, pid) * FB.rf(0.75, 1.25);
     const winner = sa >= sb ? a : b, loser = sa >= sb ? b : a;
     const winnerBefore = winner.men, loserBefore = loser.men;
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
@@ -1391,6 +1497,17 @@ window.FB = window.FB || {};
       FB.raisePlayerHost(state);
     }
     for (const a of state.armies) {
+      if (a.path && a.path.length && FB.fortBlocksArmy &&
+          FB.fortBlocksArmy(state, a.at, a) &&
+          a.path[0] !== a.from &&
+          !(FB.armyFriendlyProvince &&
+            FB.armyFriendlyProvince(state, a, a.path[0]))) {
+        /* Save repair or a control change can make a once-valid onward leg
+           stale while the host is already standing inside the fort. */
+        a.path = [];
+        a.goal = null;
+        a.moveLeft = 0;
+      }
       if (a.realm !== 'player') {
         const goal = aiGoal(state, a, warring);
         if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
@@ -1542,7 +1659,26 @@ window.FB = window.FB || {};
           sel.huntPrey = null; // a hand-given order ends any hunt
           sel.manual = 1; sel.holdManual = 0; // and plays out before automation resumes
           FB.selectArmy(null); // and lets go, so further taps browse the map
-          if (FB.ui && orderPlan.waterLegs) {
+          if (FB.ui && orderPlan.blockedByFort) {
+            const blockedFort = FB.fortAt &&
+              FB.fortAt(FB.state, orderPlan.blockedByFort);
+            const blockedDef = blockedFort && FB.fortLevelDef
+              ? FB.fortLevelDef(blockedFort.level) : null;
+            FB.ui.toast('🏰 The host marches to {province}, where {fort} will pin it. A siege needs at least {men} men and costs {attrition} casualties each active season.', {
+              province:provName(orderPlan.blockedByFort),
+              fort:blockedFort && FB.fortLevelName
+                ? FB.fortLevelName(FB.state, blockedFort.level) : 'the fort',
+              men:blockedDef ? blockedDef.garrison *
+                (FBDATA.forts.garrisonStrengthRatio || 3) : 0,
+              attrition:blockedDef ? Math.ceil(blockedDef.garrison *
+                (FBDATA.forts.seasonalAttritionRate || 0.15)) : 0
+            });
+          } else if (FB.ui && orderPlan.routedAroundForts &&
+              orderPlan.routedAroundForts.length) {
+            FB.ui.toast('🚩 The host marches around the fortified road to {province} — about {days} days.', {
+              province:pr.name, days:orderPlan.totalDays
+            });
+          } else if (FB.ui && orderPlan.waterLegs) {
             let limiting = null;
             for (let i = 0; i < orderPlan.crossings.length; i++) {
               const crossing = orderPlan.crossings[i];

@@ -1133,9 +1133,16 @@ window.FB = window.FB || {};
     return realm && realm.capital || fromPid;
   };
 
-  function occupationRequirement(state, pid) {
+  function occupationRequirement(state, pid, occupation) {
+    occupation = occupation || (state.greatHolyWar &&
+      state.greatHolyWar.occupations && state.greatHolyWar.occupations[pid]) || {};
+    var fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+    var level = occupation.fortLevel !== undefined
+      ? Math.max(0, Math.min(4, Number(occupation.fortLevel) || 0))
+      : (fort && !fort.ruined ? Number(fort.level) || 0 : 0);
     return B('greatHolyWarSiegeBase', 120) +
-      (state.dev[pid] || 1) * B('greatHolyWarSiegePerDev', 10);
+      (state.dev[pid] || 1) * B('greatHolyWarSiegePerDev', 10) +
+      level * ((FBDATA.forts && FBDATA.forts.holyWarDaysPerLevel) || 90);
   }
 
   FB.greatHolyWarSiegeRequirement = occupationRequirement;
@@ -1175,17 +1182,24 @@ window.FB = window.FB || {};
       var canWork = (camp === 'attackers' && !occupation.occupied) ||
         (camp === 'defenders' && occupation.occupied);
       if (!canWork) {
-        if (occupation.progress > 0) {
-          occupation.progress = Math.max(0, occupation.progress -
-            B('greatHolyWarSiegeDecay', 1));
-          changed = true;
-        }
-        if (!occupation.progress) occupation.progressCamp = null;
         continue;
       }
-      if (occupation.progressCamp && occupation.progressCamp !== camp) occupation.progress = 0;
+      if (occupation.progressCamp && occupation.progressCamp !== camp) {
+        occupation.progress = 0;
+        delete occupation.fortLevel;
+      }
       occupation.progressCamp = camp;
       var men = present[camp + 'Men'];
+      if (occupation.fortLevel === undefined) {
+        var activeFort = FB.fortAt ? FB.fortAt(state, pid) : null;
+        occupation.fortLevel = activeFort && !activeFort.ruined
+          ? Number(activeFort.level) || 0 : 0;
+      }
+      if (FB.fortSiegeStatus) {
+        var strongpoint = FB.fortSiegeStatus(state, pid, occupation,
+          present[camp]);
+        if (!strongpoint.canProgress) continue;
+      }
       var rate = FB.clamp(men /
         ((state.dev[pid] || 1) * B('greatHolyWarSiegeMenPerDev', 27)),
         B('greatHolyWarSiegeMinRate', 0.5),
@@ -1199,10 +1213,11 @@ window.FB = window.FB || {};
       rate *= 1 + siegeBonus;
       occupation.progress += rate;
       changed = true;
-      if (occupation.progress < occupationRequirement(state, pid)) continue;
+      if (occupation.progress < occupationRequirement(state, pid, occupation)) continue;
       var points = 10 + (state.dev[pid] || 1) * 2;
       occupation.progress = 0;
       occupation.progressCamp = null;
+      delete occupation.fortLevel;
       if (camp === 'attackers') {
         occupation.occupied = true;
         occupation.occupiedBy = present.attackers.slice().sort(function (a, b) {
@@ -2745,6 +2760,37 @@ window.FB = window.FB || {};
   FB.greatHolyWarSeason = function (state) {
     var campaign = state && state.greatHolyWar;
     if (!campaign || campaign.phase !== 'active') return;
+    /* Great-holy-war progress is earned daily, but abandoned works decay and
+       a fort's sortie attrition both pulse only at the seasonal boundary. */
+    for (var objectiveIndex = 0;
+         objectiveIndex < campaign.objectiveCounties.length; objectiveIndex++) {
+      var objectivePid = campaign.objectiveCounties[objectiveIndex];
+      var objectiveOccupation = campaign.occupations[objectivePid];
+      if (!objectiveOccupation || !(objectiveOccupation.progress > 0)) continue;
+      var objectivePresent = hostsAtByCamp(state, objectivePid);
+      var objectiveCamp = objectivePresent.attackersMen && !objectivePresent.defendersMen
+        ? 'attackers'
+        : (objectivePresent.defendersMen && !objectivePresent.attackersMen
+          ? 'defenders' : null);
+      var objectiveCanWork = objectiveCamp &&
+        objectiveOccupation.progressCamp === objectiveCamp &&
+        ((objectiveCamp === 'attackers' && !objectiveOccupation.occupied) ||
+         (objectiveCamp === 'defenders' && objectiveOccupation.occupied));
+      if (!objectiveCanWork) {
+        objectiveOccupation.progress = Math.max(0,
+          objectiveOccupation.progress - B('greatHolyWarSiegeDecay', 1));
+        if (!objectiveOccupation.progress) {
+          objectiveOccupation.progressCamp = null;
+          delete objectiveOccupation.fortLevel;
+        }
+        continue;
+      }
+      if (FB.advanceFortSiegePulse) {
+        FB.advanceFortSiegePulse(state, objectivePid, objectiveOccupation, {
+          hosts:objectivePresent[objectiveCamp], progressAmount:0
+        });
+      }
+    }
     var camps = ['attackers','defenders'], served = {};
     for (var c = 0; c < camps.length; c++) {
       var list = campaign.participants[camps[c]];
@@ -3010,6 +3056,10 @@ window.FB = window.FB || {};
         };
       } else {
         occupation.occupied = !!occupation.occupied;
+        if (occupation.fortLevel !== undefined) {
+          occupation.fortLevel = Math.max(0, Math.min(4,
+            Math.floor(Number(occupation.fortLevel) || 0)));
+        }
         occupation.progress = isFinite(occupation.progress)
           ? FB.clamp(occupation.progress, 0, occupationRequirement(state, pid)) : 0;
         if (occupation.progressCamp !== 'attackers' &&

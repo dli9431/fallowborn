@@ -44,6 +44,7 @@ STRUCTURED_DATA = {
     "cultures": "culture",
     "religions": "religion",
     "buildings": "building",
+    "fortLevels": "fort",
     "holdings": "holding",
     "careers": "career",
     "positions": "position",

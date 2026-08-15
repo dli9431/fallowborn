@@ -1,5 +1,20 @@
 # Game state & saves
 
+Fortifications are additive save-format-3 data. A county's settlement-scoped `walls`
+record is `{s,id:'walls',level,targetLevel?,completeTurn?,maintenanceGraceUntil?,ruined?}`;
+active siege records independently snapshot that level as `fortLevel`. `FB.repairForts`
+normalizes old bare ids, converts legacy Walls to level 3, adds four seasons of old-rate
+maintenance only when the player already holds them, and performs the one-time AI-seat
+seed behind `state.fortMigration`. No rendered fort, project, or siege prose is saved.
+
+Fort lookup caches (`byCounty`, `bySite`, active projects) are module-private derived
+state. Repair or an external data merge rebuilds them; construction, demolition, and
+completion update them in place. They never enter serialization. AI realms add the
+compact `fortWorks` balance, `fortWorksYear` annual-accrual guard, and `fortProjectYear`
+start guard. Projects and completed forts remain on the county record, so ordinary
+succession and `FB.transferProvince` naturally preserve them without a second ownership
+field or a save-version bump.
+
 Exceptional sibling courtship is additive and retains strict save format 3.
 `state.siblingCourtships` is a pair-keyed map (`lowerId|higherId`) whose compact
 records keep initiator/target ids, accepted/refused/cooldown/married status,

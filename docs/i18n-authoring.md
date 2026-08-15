@@ -20,8 +20,8 @@ though the game still *runs*.
   `panelh(title)`, `toast`, modal/button/tab helpers. Splice values with `{token}` placeholders,
   never concatenation: `FB.T('You have {n} children', { n: n })`, **not** `'You have ' + n + '
   children'`.
-- **Event & structured-data display fields (`data/events_*.js`, traits, buildings, items,
-  technologies, …):**
+- **Event & structured-data display fields (`data/events_*.js`, traits, buildings, fort tiers,
+  items, technologies, …):**
   keep the English in the source data — it is id-keyed and auto-extracted, including the `log:`
   effect string. Put `{token}` placeholders in the prose; the renderer fills them per-locale.
   Trait acquisition guidance lives in the pure-display `earned` field and renders through
@@ -30,6 +30,8 @@ though the game still *runs*.
   display fields and must also render through their exact `FB.dataText` paths.
   Formal privilege names and descriptions in `data/political_institutions.js` use the
   `privilege` structured-data namespace, including when technology details list them as unlocks.
+  Fortification tier names in `FBDATA.fortLevels` use the `fort` namespace and are addressed by
+  their stringified numeric tier.
   Never renumber authored option indices. Faith variants stay `{default, muslim, jewish}` objects
   in the source (the renderer selects the branch, then localizes it). Technology `name`
   and historical `desc` live in `data/technology.js` and render through `FB.dataText`;

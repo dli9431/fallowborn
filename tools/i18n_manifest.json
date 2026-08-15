@@ -955,7 +955,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Stone walls rally the defense of your home county."
+        "text": "A county strongpoint that blocks hostile passage until its defenses are breached."
       }
     },
     "building.walls.name.default": {
@@ -963,7 +963,7 @@
       "glossary": [],
       "location": "data/map_data.js",
       "source": {
-        "text": "Stone Walls"
+        "text": "Fortification"
       }
     },
     "career.administration.desc.default": {
@@ -28625,7 +28625,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties."
+        "text": "Ladders, mines, and patience — your host must stand in the target province. Fortifications add siege work, demand enough uncontested men, and exact seasonal losses."
       }
     },
     "event.war_council.options.2.label.default": {
@@ -29700,7 +29700,7 @@
       ],
       "location": "data/events_war.js",
       "source": {
-        "text": "Keep your host standing on {target} and press the siege at each war council — three seasons of works take it."
+        "text": "Keep your host standing on {target} and press the siege at each war council. Fortifications may demand more work and a larger host."
       }
     },
     "event.war_tribute_offer.options.1.effects.log.default": {
@@ -30742,6 +30742,38 @@
       "location": "js/actions.js",
       "source": {
         "text": "🌾 Work your land"
+      }
+    },
+    "fort.1.name.default": {
+      "context": "fort 1, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Ringwork"
+      }
+    },
+    "fort.2.name.default": {
+      "context": "fort 2, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Towered Stronghold"
+      }
+    },
+    "fort.3.name.default": {
+      "context": "fort 3, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Stone Castle"
+      }
+    },
+    "fort.4.name.default": {
+      "context": "fort 4, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Concentric Fortress"
       }
     },
     "fx.action.mercenary_desc": {
@@ -35637,6 +35669,29 @@
         "text": "🧭 The household dispatches {money:stake} to {destination}; {money:overhead} pays the road."
       }
     },
+    "news.fort.completed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "fort",
+        "province"
+      ],
+      "location": "js/fortifications.js",
+      "source": {
+        "text": "🏰 {fort} is completed in {province}; its defenses command the road."
+      }
+    },
+    "news.fort.project_started": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "fort",
+        "province",
+        "settlement"
+      ],
+      "location": "js/fortifications.js",
+      "source": {
+        "text": "🏰 Work begins on {fort} at {settlement}, {province}."
+      }
+    },
     "news.gift.courier_delivered_character_cash": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -37718,7 +37773,7 @@
       ],
       "location": "js/world.js",
       "source": {
-        "text": "⚠ {enemy} presses deep into your lands — another season unchecked, and something falls."
+        "text": "⚠ {enemy} presses the siege in your lands; only a breach can take the county."
       }
     },
     "news.war.enemy_gone": {
@@ -37727,6 +37782,18 @@
       "location": "js/world.js",
       "source": {
         "text": "🕊 The war ends — our enemy has ceased to exist."
+      }
+    },
+    "news.war.enemy_siege_stalled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "enemy",
+        "province",
+        "shortage"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🏰 {enemy} lacks {shortage} men to press the fort at {province}."
       }
     },
     "news.war.exhausted": {
@@ -37763,6 +37830,14 @@
       "location": "js/world.js",
       "source": {
         "text": "⚔ Victory in the field! ({wins}/{needed})"
+      }
+    },
+    "news.war.fort_holds": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/world.js",
+      "source": {
+        "text": "🏰 Field defeat cannot surrender an unbreached fortified county; the invasion continues."
       }
     },
     "news.war.hunt_enemy": {
@@ -37909,11 +37984,12 @@
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
         "progress",
+        "required",
         "target"
       ],
       "location": "js/world.js",
       "source": {
-        "text": "⚔ The siege of {target} tightens. ({progress}/3)"
+        "text": "⚔ The siege of {target} tightens. ({progress}/{required})"
       }
     },
     "news.war.sortie_repelled": {
@@ -47067,16 +47143,6 @@
         "text": "Unknown profession"
       }
     },
-    "src.021bef69": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
-      }
-    },
     "src.022d5ade": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47627,6 +47693,16 @@
       ],
       "source": {
         "text": "Some doors are better left unknocked."
+      }
+    },
+    "src.0399219d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land"
       }
     },
     "src.03a98ff9": {
@@ -48340,6 +48416,16 @@
         "text": "Next level: {name} — {effect}"
       }
     },
+    "src.055cbb00": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/fortifications.js"
+      ],
+      "source": {
+        "text": "🏰 Work begins on {fort} at {settlement}, {province}."
+      }
+    },
     "src.055cc745": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48419,6 +48505,16 @@
       ],
       "source": {
         "text": "Fellah"
+      }
+    },
+    "src.058b1c75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Fortify this county: {fort}"
       }
     },
     "src.0592165d": {
@@ -48670,6 +48766,16 @@
       ],
       "source": {
         "text": "Every elder remembers the boundary, but none remembers it quite alike. If custom is to stand before judgment, memory must become proof."
+      }
+    },
+    "src.05fec9e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "None until complete"
       }
     },
     "src.060b73a3": {
@@ -50186,16 +50292,6 @@
       ],
       "source": {
         "text": "Record the holder, scope, obligations, protected term, and lawful route of revocation."
-      }
-    },
-    "src.095bb211": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Keep your host standing on {target} and press the siege at each war council — three seasons of works take it."
       }
     },
     "src.09684866": {
@@ -59661,6 +59757,16 @@
         "text": "Small overlapping plates protect warriors while preserving movement."
       }
     },
+    "src.1f09b293": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{place}; controls hostile movement through its county"
+      }
+    },
     "src.1f0efffa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62214,6 +62320,16 @@
         "text": "Receive the local notables."
       }
     },
+    "src.247e532a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No active defenses until construction completes"
+      }
+    },
     "src.2480286c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64011,6 +64127,16 @@
         "text": ": invalid AI unit effect"
       }
     },
+    "src.2896826e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pay {money:cost} now to begin {fort}. Work cannot be cancelled or refunded; it survives succession and conquest and completes {finish}."
+      }
+    },
     "src.28a101b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64089,16 +64215,6 @@
       ],
       "source": {
         "text": "Standing with this ruler"
-      }
-    },
-    "src.28c56ff6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
     "src.28d93522": {
@@ -64452,6 +64568,16 @@
         "text": "No fixed end; leaves through sale, gift, loss, or destruction"
       }
     },
+    "src.29e25082": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/fortifications.js"
+      ],
+      "source": {
+        "text": "🏰 {fort} is completed in {province}; its defenses command the road."
+      }
+    },
     "src.29e4957f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64480,6 +64606,16 @@
       ],
       "source": {
         "text": "Disorder and cruelty lower abstract condition despite immediate plunder."
+      }
+    },
+    "src.29f300e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Keep your host standing on {target} and press the siege at each war council. Fortifications may demand more work and a larger host."
       }
     },
     "src.29f561a2": {
@@ -64790,6 +64926,16 @@
       ],
       "source": {
         "text": "Review the see, temporalities, episcopal powers, investiture, and Cardinal requirements."
+      }
+    },
+    "src.2a9f37a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Begin {fort}"
       }
     },
     "src.2aa0fec4": {
@@ -65220,6 +65366,16 @@
       ],
       "source": {
         "text": "✓ Repeating"
+      }
+    },
+    "src.2b7dcab4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
       }
     },
     "src.2b7e3395": {
@@ -67145,6 +67301,16 @@
       ],
       "source": {
         "text": "You seize the wrong people, and the true conspirators use the fear — half your servants flee, and the rest dare not warn you now."
+      }
+    },
+    "src.304bdb53": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches around the fortified road to {province} — about {days} days."
       }
     },
     "src.304d987a": {
@@ -71108,6 +71274,16 @@
         "text": "A Season as a Guest"
       }
     },
+    "src.3a20cd67": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raise {fort}?"
+      }
+    },
     "src.3a2223e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73721,6 +73897,16 @@
         "text": "{station} · {residence}"
       }
     },
+    "src.40736b7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Fort ruins occupy this settlement; choose another site in the county."
+      }
+    },
     "src.407832b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74127,6 +74313,16 @@
         "text": "Stand in the granary door."
       }
     },
+    "src.416b6dfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps."
+      }
+    },
     "src.417ce5ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74406,6 +74602,16 @@
       ],
       "source": {
         "text": "Began a season in residence at {destination}."
+      }
+    },
+    "src.4231daaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pay {money:cost} now; completes in {seasons} seasons."
       }
     },
     "src.4238897e": {
@@ -76274,6 +76480,16 @@
       ],
       "source": {
         "text": "The mourning is done, and the kin of {late} send a clerk with a strongbox and papers. What was settled on your marriage must now be paid out — though their faces say they would rather not."
+      }
+    },
+    "src.45ff1985": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "⚔ The siege of {target} tightens. ({progress}/{required})"
       }
     },
     "src.460c69ab": {
@@ -78500,6 +78716,16 @@
         "text": "Raises farming output by 10%."
       }
     },
+    "src.4bb7198a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Fort garrisons retained"
+      }
+    },
     "src.4bc1c9c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79997,6 +80223,16 @@
         "text": "🤝 {student}’s academy patron renews your connection with {contact}, now at {regard} Standing."
       }
     },
+    "src.4f5cf28d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requires Baron rank or higher."
+      }
+    },
     "src.4f5f95c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80687,6 +80923,16 @@
       ],
       "source": {
         "text": "+{amount} development when raised"
+      }
+    },
+    "src.50e1c74b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{money:oldRate} through {date}; then {money:newRate} each season"
       }
     },
     "src.50e2459c": {
@@ -82450,6 +82696,16 @@
       ],
       "source": {
         "text": "Yielded a duel and ended a feud."
+      }
+    },
+    "src.54e9b193": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Begin {fort} for {money:cost}"
       }
     },
     "src.54ec5e72": {
@@ -88310,6 +88566,16 @@
         "text": "Someone under this roof can read — and the children learn young."
       }
     },
+    "src.624803a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{fort} · {requirement} occupation days · {minimum} besiegers minimum · {attrition} seasonal casualties"
+      }
+    },
     "src.6252aed8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90236,6 +90502,16 @@
       ],
       "source": {
         "text": "Trade the workbench for the open road."
+      }
+    },
+    "src.671f88b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
     "src.6723ac77": {
@@ -92866,16 +93142,6 @@
         "text": "Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)"
       }
     },
-    "src.6d4f5b57": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Stone Walls"
-      }
-    },
     "src.6d52070a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95028,6 +95294,16 @@
       ],
       "source": {
         "text": "{count} man-at-arms"
+      }
+    },
+    "src.72a510a0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Enemy advance: {progress}/{required}"
       }
     },
     "src.72a67f55": {
@@ -98047,6 +98323,16 @@
         "text": "Abandon the journey and retrace the road. Nothing is refunded."
       }
     },
+    "src.79ad7475": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Concentric Fortress"
+      }
+    },
     "src.79ae4ad5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98971,6 +99257,16 @@
       ],
       "source": {
         "text": "Lose item: {item}"
+      }
+    },
+    "src.7be567f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Construction cannot begin while the county is contested."
       }
     },
     "src.7be715fe": {
@@ -99985,16 +100281,6 @@
         "text": "Keep the road, whatever the sky says."
       }
     },
-    "src.7e3c4a2f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Target {realm}; conquer {province} by holding it and completing three war-council siege steps."
-      }
-    },
     "src.7e3e94d8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100304,6 +100590,16 @@
       ],
       "source": {
         "text": "🏛 Governance"
+      }
+    },
+    "src.7efb595b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Project and fort pass intact with the county"
       }
     },
     "src.7efbfff9": {
@@ -100967,6 +101263,16 @@
         "text": "Hire them to thresh. ({money:2})"
       }
     },
+    "src.804cc2e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Siege of {place}: {progress}/{required}"
+      }
+    },
     "src.804fb4f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101436,6 +101742,16 @@
       ],
       "source": {
         "text": "Made peace with a rival through compensation."
+      }
+    },
+    "src.81527382": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Until demolished; demolition also destroys unfinished work"
       }
     },
     "src.81546d49": {
@@ -102143,6 +102459,16 @@
         "text": "🎁 Your courier delivers {money:amount} to {recipient} of {realm}. (Standing {value})"
       }
     },
+    "src.82cf9a60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requires {money:cost}."
+      }
+    },
     "src.82d488f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102393,16 +102719,6 @@
         "text": "🕸 The plot ends: {target} is no longer a valid target."
       }
     },
-    "src.836718c0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves."
-      }
-    },
     "src.8369d134": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102451,16 +102767,6 @@
       ],
       "source": {
         "text": "Who shall carry the name when you are gone? Naming changes priority among eligible successors; it does not make an ineligible relative eligible."
-      }
-    },
-    "src.83871117": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "+8% battle odds when defending the home county"
       }
     },
     "src.838a8870": {
@@ -102591,6 +102897,16 @@
       ],
       "source": {
         "text": "Abdicate and slip away."
+      }
+    },
+    "src.83cbfe09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🏰 {enemy} lacks {shortage} men to press the fort at {province}."
       }
     },
     "src.83cd7d4f": {
@@ -105796,6 +106112,16 @@
         "text": "Unrelated faith"
       }
     },
+    "src.8ac7dc6f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more."
+      }
+    },
     "src.8acd33b1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106034,16 +106360,6 @@
       ],
       "source": {
         "text": "Sleep beneath your cloak."
-      }
-    },
-    "src.8b3cc76e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "⚠ {enemy} presses deep into your lands — another season unchecked, and something falls."
       }
     },
     "src.8b4eb89e": {
@@ -109979,6 +110295,16 @@
         "text": "Offer {money:gold} in cash"
       }
     },
+    "src.9523a241": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A county strongpoint that blocks hostile passage until its defenses are breached."
+      }
+    },
     "src.95271b43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112404,6 +112730,16 @@
         "text": "Open this realm ruler’s sheet"
       }
     },
+    "src.9a8eef75": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "On completion: {prestige} prestige, {percent}% defense in this county, {garrison} men retained as garrison, {upkeep} seasonal upkeep, and {steps} added siege steps."
+      }
+    },
     "src.9a9711ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113237,6 +113573,16 @@
         "text": "Correct discipline and learn how the parishes truly work."
       }
     },
+    "src.9c6d1afa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Stone Castle"
+      }
+    },
     "src.9c6dd9b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113990,6 +114336,16 @@
         "text": "Crushed a peasant revolt."
       }
     },
+    "src.9e278397": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This fort project is unavailable here."
+      }
+    },
     "src.9e280cc2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114598,6 +114954,16 @@
       ],
       "source": {
         "text": "This obedience has already excommunicated the target."
+      }
+    },
+    "src.9f720985": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Begin {fort}…"
       }
     },
     "src.9f7864de": {
@@ -115344,16 +115710,6 @@
         "text": "Trusted {student}’s merit at the academy, but no patron came forward."
       }
     },
-    "src.a1450f43": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/map_data.js"
-      ],
-      "source": {
-        "text": "Stone walls rally the defense of your home county."
-      }
-    },
     "src.a14514d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116046,6 +116402,16 @@
         "text": "Koblenz"
       }
     },
+    "src.a2a61195": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{fort}: {minimum} besiegers required; {attrition} casualties each active season"
+      }
+    },
     "src.a2a71ea6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116354,6 +116720,16 @@
       ],
       "source": {
         "text": "Mercy helps public resolve without altering either army ledger."
+      }
+    },
+    "src.a3666b82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Work began {start}; {fort} completes {finish}. The current tier remains active until then."
       }
     },
     "src.a36dd97e": {
@@ -117472,6 +117848,16 @@
         "text": "License the camp market."
       }
     },
+    "src.a6091ad4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{fort} · {days} days · {minimum} men minimum · {attrition} seasonal losses"
+      }
+    },
     "src.a60dbaf3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118181,6 +118567,16 @@
       ],
       "source": {
         "text": "Choose a Starting Date"
+      }
+    },
+    "src.a7aafd2f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{percent}% local defense · {garrison} garrison · {steps} added siege steps"
       }
     },
     "src.a7ac91cd": {
@@ -120406,6 +120802,16 @@
         "text": "🧭 The accompanied venture ends without a payout. The household remains at {home}."
       }
     },
+    "src.ad2bbba3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Paid upfront; no cancellation or refund"
+      }
+    },
     "src.ad2cde86": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120958,16 +121364,6 @@
       ],
       "source": {
         "text": "Gain item: {item}"
-      }
-    },
-    "src.aea6755f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties."
       }
     },
     "src.aebc436b": {
@@ -122934,16 +123330,6 @@
         "text": "The market catches the trick and remembers your face."
       }
     },
-    "src.b2ebbaec": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{place}; defense applies in the home county"
-      }
-    },
     "src.b2f12539": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123494,6 +123880,16 @@
       ],
       "source": {
         "text": "Appoint {office}"
+      }
+    },
+    "src.b4052d06": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Ringwork"
       }
     },
     "src.b40a81a9": {
@@ -125662,6 +126058,16 @@
         "text": "Died rich. The coffers were pried from still-warm fingers."
       }
     },
+    "src.b903bdfa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🏰 The host marches to {province}, where {fort} will pin it. A siege needs at least {men} men and costs {attrition} casualties each active season."
+      }
+    },
     "src.b905635b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126261,6 +126667,16 @@
       ],
       "source": {
         "text": "The nominee already holds another protected great office."
+      }
+    },
+    "src.baa9a0f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{fort} pins passage through the county until breached; it needs {minimum} uncontested besiegers and inflicts {attrition} casualties each active season."
       }
     },
     "src.babf07ac": {
@@ -128302,6 +128718,16 @@
         "text": "Northern Wastes"
       }
     },
+    "src.c01305d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "⚠ {enemy} presses the siege in your lands; only a breach can take the county."
+      }
+    },
     "src.c017b5eb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128551,6 +128977,16 @@
       ],
       "source": {
         "text": "Your motion is the dangerous one: that the estates declare {liege}’s war a waste of the realm’s blood and silver, and call for its end. Some lords meet your eye and nod. Others are already composing their report to the crown."
+      }
+    },
+    "src.c0c787ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{fort} foundations"
       }
     },
     "src.c0c8acb8": {
@@ -130666,6 +131102,16 @@
         "text": "Holds this county"
       }
     },
+    "src.c5786ed0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Their siege is stalled: {shortage} more men required"
+      }
+    },
     "src.c57bc736": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131689,6 +132135,16 @@
         "text": "Well-wishers bring gifts to the new couple — a pig, a bolt of cloth, a few coins pressed into your palm."
       }
     },
+    "src.c79f1c39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Next: {fort}"
+      }
+    },
     "src.c79f6b13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131868,6 +132324,16 @@
       ],
       "source": {
         "text": "simmering"
+      }
+    },
+    "src.c8156137": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Already paid"
       }
     },
     "src.c818c0bb": {
@@ -132359,6 +132825,16 @@
       ],
       "source": {
         "text": "The return journey has already begun."
+      }
+    },
+    "src.c94259dc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your {fort} needs {minimum} besiegers and costs them {attrition} men each active season"
       }
     },
     "src.c9564902": {
@@ -133481,6 +133957,16 @@
       ],
       "source": {
         "text": "{days} days remain. It can be used exactly once."
+      }
+    },
+    "src.cc2f0c00": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Garrison and field-army burden: {garrison} men. A siege needs at least {minimum} uncontested besiegers and inflicts {attrition} casualties each active season. Hostile armies may enter, but cannot pass onward before a breach."
       }
     },
     "src.cc2f6c8e": {
@@ -137767,6 +138253,16 @@
         "text": "A traveler cannot organize another venture."
       }
     },
+    "src.d6d6df54": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Fortification upkeep"
+      }
+    },
     "src.d6d9506b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138105,6 +138601,16 @@
       ],
       "source": {
         "text": "The camp remembers what you forgive."
+      }
+    },
+    "src.d77923cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Towered Stronghold"
       }
     },
     "src.d77e33dd": {
@@ -139856,6 +140362,16 @@
         "text": "👑 The usurper’s crown and vassals return intact to your rightful rule."
       }
     },
+    "src.dbc447e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🏰 Field defeat cannot surrender an unbreached fortified county; the invasion continues."
+      }
+    },
     "src.dbc7b69b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140294,6 +140810,16 @@
       ],
       "source": {
         "text": "Withdraw personal attention. This costs no day."
+      }
+    },
+    "src.dd047754": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}"
       }
     },
     "src.dd0aa42e": {
@@ -141168,6 +141694,16 @@
         "text": "A Lord Unhorsed"
       }
     },
+    "src.ded42dcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "the fort"
+      }
+    },
     "src.ded59f7f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142019,6 +142555,16 @@
         "text": "A sprung trap can catch the hunter."
       }
     },
+    "src.e0e238b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Siege stalled: {shortage} more men required"
+      }
+    },
     "src.e0e523a9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142490,6 +143036,16 @@
       ],
       "source": {
         "text": "Could talk a beggar into lending money, and did."
+      }
+    },
+    "src.e1ee08d4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Fortification"
       }
     },
     "src.e1f328a5": {
@@ -143761,6 +144317,16 @@
         "text": "{family}: {focus}"
       }
     },
+    "src.e4fd36b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The current fort project must finish first."
+      }
+    },
     "src.e5070891": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -144870,6 +145436,16 @@
       ],
       "source": {
         "text": "Surrender the lands for your lives and your strongboxes."
+      }
+    },
+    "src.e772e129": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{fort}: {steps} siege steps, {minimum} uncontested besiegers, {attrition} seasonal casualties; hostile passage stops there until breach."
       }
     },
     "src.e775e378": {
@@ -147007,6 +147583,16 @@
         "text": "Show all {count}"
       }
     },
+    "src.ec94a005": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{money:cost} upfront · {seasons} seasons · one fort per county · requires {technology}"
+      }
+    },
     "src.eca53dcc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147564,7 +148150,8 @@
       "glossary": [],
       "location": [
         "js/technology.js",
-        "js/ui_misc.js"
+        "js/ui_misc.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Requires {technology}."
@@ -148975,6 +149562,16 @@
         "text": "Spade beard"
       }
     },
+    "src.f0f80e1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
+      }
+    },
     "src.f0ff7994": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149183,6 +149780,16 @@
       ],
       "source": {
         "text": "🏠 The household gives up {level} in {standard}."
+      }
+    },
+    "src.f1610726": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This county’s fort stands in another settlement."
       }
     },
     "src.f1694e5d": {
@@ -151196,16 +151803,6 @@
         "text": "Allow autobuild"
       }
     },
-    "src.f6846837": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained."
-      }
-    },
     "src.f69412a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -151796,16 +152393,6 @@
       ],
       "source": {
         "text": "Good Counsel"
-      }
-    },
-    "src.f807a84d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "⚔ The siege of {target} tightens. ({progress}/3)"
       }
     },
     "src.f80eb9bd": {
@@ -152478,6 +153065,16 @@
       ],
       "source": {
         "text": "Manage household education policy"
+      }
+    },
+    "src.f9887144": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Ladders, mines, and patience — your host must stand in the target province. Fortifications add siege work, demand enough uncontested men, and exact seasonal losses."
       }
     },
     "src.f98b9366": {
@@ -153846,6 +154443,16 @@
         "text": "mountains"
       }
     },
+    "src.fcf7bbcd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This is the strongest available fortification."
+      }
+    },
     "src.fcf89545": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154463,6 +155070,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -154938,6 +155546,16 @@
       ],
       "source": {
         "text": "Keeps accounts, directs servants, and makes the household’s work run more cleanly."
+      }
+    },
+    "src.ffca2b65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Controls hostile movement through this county"
       }
     },
     "src.ffd691b6": {
@@ -159943,14 +160561,6 @@
         "text": "+10% taxes while he serves"
       }
     },
-    "ui:+8% battle odds when defending the home county": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "+8% battle odds when defending the home county"
-      }
-    },
     "ui:+{amount} development when raised": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -160491,12 +161101,12 @@
         "text": "A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union."
       }
     },
-    "ui:A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves.": {
+    "ui:A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves."
+        "text": "A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
       }
     },
     "ui:A defensive alliance may be offered only to an adjacent sovereign.": {
@@ -161717,6 +162327,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "Already on the road."
+      }
+    },
+    "ui:Already paid": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Already paid"
       }
     },
     "ui:Already returning home.": {
@@ -163096,6 +163714,37 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Begin unlawful revocation…"
+      }
+    },
+    "ui:Begin {fort}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Begin {fort}"
+      }
+    },
+    "ui:Begin {fort} for {money:cost}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort",
+        "money:cost"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Begin {fort} for {money:cost}"
+      }
+    },
+    "ui:Begin {fort}…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Begin {fort}…"
       }
     },
     "ui:Beginning a motion costs {money:cost} in gifts and promises, spends the year’s hearing for its family of business, and opens a 90-day campaign. One targeted lobbying attempt is included.": {
@@ -164804,12 +165453,12 @@
         "text": "Commoner household"
       }
     },
-    "ui:Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.": {
+    "ui:Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more."
+        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more."
       }
     },
     "ui:Compel as accomplice": {
@@ -164958,6 +165607,14 @@
         "text": "Constable"
       }
     },
+    "ui:Construction cannot begin while the county is contested.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Construction cannot begin while the county is contested."
+      }
+    },
     "ui:Contest the Caliphate?": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -165051,6 +165708,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Controlled by its current owner"
+      }
+    },
+    "ui:Controls hostile movement through this county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Controls hostile movement through this county"
       }
     },
     "ui:Cost: {cost} gold · Current gold: {gold}": {
@@ -165755,7 +166420,7 @@
         "text": "Declare the succession war"
       }
     },
-    "ui:Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office.": {
+    "ui:Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "capital",
@@ -165764,7 +166429,7 @@
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office."
+        "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
     "ui:Declaring war on {realm} reduces your piety to zero, gives you −{standing} Standing with every living Catholic ruler, and excommunicates the current ruler.": {
@@ -168010,6 +168675,40 @@
         "text": "Former calling of {name}"
       }
     },
+    "ui:Fort garrisons retained": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Fort garrisons retained"
+      }
+    },
+    "ui:Fort ruins occupy this settlement; choose another site in the county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Fort ruins occupy this settlement; choose another site in the county."
+      }
+    },
+    "ui:Fortification upkeep": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Fortification upkeep"
+      }
+    },
+    "ui:Fortify this county: {fort}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Fortify this county: {fort}"
+      }
+    },
     "ui:Founded branch": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -168198,6 +168897,18 @@
       "location": "js/main.js",
       "source": {
         "text": "Game available offline"
+      }
+    },
+    "ui:Garrison and field-army burden: {garrison} men. A siege needs at least {minimum} uncontested besiegers and inflicts {attrition} casualties each active season. Hostile armies may enter, but cannot pass onward before a breach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "attrition",
+        "garrison",
+        "minimum"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Garrison and field-army burden: {garrison} men. A siege needs at least {minimum} uncontested besiegers and inflicts {attrition} casualties each active season. Hostile armies may enter, but cannot pass onward before a breach."
       }
     },
     "ui:Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.": {
@@ -170164,6 +170875,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Land is bought plot by plot within a settlement — a cluster of plots makes a manor."
+      }
+    },
+    "ui:Land is taken only by siege:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Land is taken only by siege:"
       }
     },
     "ui:Land plots {change}": {
@@ -172134,6 +172853,16 @@
         "text": "Next ⏭"
       }
     },
+    "ui:Next: {fort}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Next: {fort}"
+      }
+    },
     "ui:No Council office": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172148,6 +172877,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "No Estates motion is currently being campaigned."
+      }
+    },
+    "ui:No active defenses until construction completes": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No active defenses until construction completes"
       }
     },
     "ui:No active household obligations.": {
@@ -173455,6 +174192,14 @@
         "text": "None of the three sounded-out families fits every limit and current resource gate."
       }
     },
+    "ui:None until complete": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "None until complete"
+      }
+    },
     "ui:None while dormant": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173908,6 +174653,20 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Offline copy"
+      }
+    },
+    "ui:On completion: {prestige} prestige, {percent}% defense in this county, {garrison} men retained as garrison, {upkeep} seasonal upkeep, and {steps} added siege steps.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "garrison",
+        "percent",
+        "prestige",
+        "steps",
+        "upkeep"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "On completion: {prestige} prestige, {percent}% defense in this county, {garrison} men retained as garrison, {upkeep} seasonal upkeep, and {steps} added siege steps."
       }
     },
     "ui:On failure: {result}": {
@@ -174673,6 +175432,14 @@
         "text": "Paid retainer · {office}"
       }
     },
+    "ui:Paid upfront; no cancellation or refund": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Paid upfront; no cancellation or refund"
+      }
+    },
     "ui:Paid when raised": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174908,6 +175675,29 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Pay {money:cost} and establish {name}"
+      }
+    },
+    "ui:Pay {money:cost} now to begin {fort}. Work cannot be cancelled or refunded; it survives succession and conquest and completes {finish}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "finish",
+        "fort",
+        "money:cost"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pay {money:cost} now to begin {fort}. Work cannot be cancelled or refunded; it survives succession and conquest and completes {finish}."
+      }
+    },
+    "ui:Pay {money:cost} now; completes in {seasons} seasons.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "seasons"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pay {money:cost} now; completes in {seasons} seasons."
       }
     },
     "ui:Pay {money:gold} to be struck from the serf-roll.": {
@@ -176001,6 +176791,14 @@
         "text": "Progress toward a trait"
       }
     },
+    "ui:Project and fort pass intact with the county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Project and fort pass intact with the county"
+      }
+    },
     "ui:Projected learning": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176248,6 +177046,16 @@
       "location": "js/actions.js",
       "source": {
         "text": "Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it."
+      }
+    },
+    "ui:Raise {fort}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raise {fort}?"
       }
     },
     "ui:Raised-host base logistics": {
@@ -177264,6 +178072,14 @@
         "text": "Requires 60 Standing with the appointing lord; currently {standing}."
       }
     },
+    "ui:Requires Baron rank or higher.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Requires Baron rank or higher."
+      }
+    },
     "ui:Requires Martial or Stewardship 10; your best is {skill}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -177467,6 +178283,16 @@
         "text": "Requires {money:cost} for the motion and the subsidy; you have {money:current}."
       }
     },
+    "ui:Requires {money:cost}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Requires {money:cost}."
+      }
+    },
     "ui:Requires {money:cost}; you have {money:current}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -177616,7 +178442,7 @@
       "glossary": [
         "technology"
       ],
-      "location": "js/ui_misc.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Requires {technology}."
       }
@@ -179738,6 +180564,14 @@
         "text": "Stand for election as {rank} — {chance}% chance"
       }
     },
+    "ui:Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
+      }
+    },
     "ui:Standing": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180353,15 +181187,16 @@
         "text": "Tap the 🚩 on the map to give march orders."
       }
     },
-    "ui:Target {realm}; conquer {province} by holding it and completing three war-council siege steps.": {
+    "ui:Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "province",
-        "realm"
+        "realm",
+        "steps"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Target {realm}; conquer {province} by holding it and completing three war-council siege steps."
+        "text": "Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps."
       }
     },
     "ui:Target: {province}. Opens the existing cause review and muster preview.": {
@@ -181216,6 +182051,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The current assignments already produce the best available total yield."
+      }
+    },
+    "ui:The current fort project must finish first.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The current fort project must finish first."
       }
     },
     "ui:The current protections do not permit a complete cleanup proposal.": {
@@ -182405,6 +183248,14 @@
         "text": "This county is already your capital and home."
       }
     },
+    "ui:This county’s fort stands in another settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This county’s fort stands in another settlement."
+      }
+    },
     "ui:This court is joined to your dynasty through marriage.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182467,6 +183318,14 @@
       "location": "js/papacy.js",
       "source": {
         "text": "This faith does not recognize Papal authority."
+      }
+    },
+    "ui:This fort project is unavailable here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This fort project is unavailable here."
       }
     },
     "ui:This household office is already filled.": {
@@ -182539,6 +183398,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "This is the ruler’s first recent aggressive war; later declarations escalate every political cost."
+      }
+    },
+    "ui:This is the strongest available fortification.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This is the strongest available fortification."
       }
     },
     "ui:This is their current household office.": {
@@ -183394,6 +184261,14 @@
         "text": "Unresolved"
       }
     },
+    "ui:Until demolished; demolition also destroys unfinished work": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Until demolished; demolition also destroys unfinished work"
+      }
+    },
     "ui:Until demolished; permanent ruins keep the site occupied": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184201,6 +185076,18 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Work & standing"
+      }
+    },
+    "ui:Work began {start}; {fort} completes {finish}. The current tier remains active until then.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "finish",
+        "fort",
+        "start"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Work began {start}; {fort} completes {finish}. The current tier remains active until then."
       }
     },
     "ui:Work choice needed": {
@@ -188970,6 +189857,67 @@
         "text": "{family}: {focus}"
       }
     },
+    "ui:{fort} foundations": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{fort} foundations"
+      }
+    },
+    "ui:{fort} pins passage through the county until breached; it needs {minimum} uncontested besiegers and inflicts {attrition} casualties each active season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "attrition",
+        "fort",
+        "minimum"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{fort} pins passage through the county until breached; it needs {minimum} uncontested besiegers and inflicts {attrition} casualties each active season."
+      }
+    },
+    "ui:{fort} · {days} days · {minimum} men minimum · {attrition} seasonal losses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "attrition",
+        "days",
+        "fort",
+        "minimum"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{fort} · {days} days · {minimum} men minimum · {attrition} seasonal losses"
+      }
+    },
+    "ui:{fort} · {requirement} occupation days · {minimum} besiegers minimum · {attrition} seasonal casualties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "attrition",
+        "fort",
+        "minimum",
+        "requirement"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{fort} · {requirement} occupation days · {minimum} besiegers minimum · {attrition} seasonal casualties"
+      }
+    },
+    "ui:{fort}: {steps} siege steps, {minimum} uncontested besiegers, {attrition} seasonal casualties; hostile passage stops there until breach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "attrition",
+        "fort",
+        "minimum",
+        "steps"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{fort}: {steps} siege steps, {minimum} uncontested besiegers, {attrition} seasonal casualties; hostile passage stops there until breach."
+      }
+    },
     "ui:{from}–{to}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -189687,6 +190635,32 @@
         "text": "{money:cost}"
       }
     },
+    "ui:{money:cost} upfront · {seasons} seasons · one fort per county · requires {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "seasons",
+        "technology"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{money:cost} upfront · {seasons} seasons · one fort per county · requires {technology}"
+      }
+    },
+    "ui:{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "garrison",
+        "money:cost",
+        "seasons",
+        "technology",
+        "upkeep"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}"
+      }
+    },
     "ui:{money:gold}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -189760,6 +190734,18 @@
       "location": "js/papacy.js",
       "source": {
         "text": "{money:needed} for the petition (now {money:current})"
+      }
+    },
+    "ui:{money:oldRate} through {date}; then {money:newRate} each season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "date",
+        "money:newRate",
+        "money:oldRate"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{money:oldRate} through {date}; then {money:newRate} each season"
       }
     },
     "ui:{money:overhead} route overhead was paid separately.": {
@@ -190362,6 +191348,18 @@
         "text": "{percent}% higher {category} cost"
       }
     },
+    "ui:{percent}% local defense · {garrison} garrison · {steps} added siege steps": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "garrison",
+        "percent",
+        "steps"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{percent}% local defense · {garrison} garrison · {steps} added siege steps"
+      }
+    },
     "ui:{percent}% lower {category} cost": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -190405,14 +191403,14 @@
         "text": "{percent}% {camp} siege"
       }
     },
-    "ui:{place}; defense applies in the home county": {
+    "ui:{place}; controls hostile movement through its county": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "place"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "{place}; defense applies in the home county"
+        "text": "{place}; controls hostile movement through its county"
       }
     },
     "ui:{place}; standing benefits count across the demesne": {

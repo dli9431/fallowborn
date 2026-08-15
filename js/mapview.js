@@ -583,6 +583,9 @@ window.FB = window.FB || {};
           ctx.strokeStyle = focused ? 'rgba(24,18,10,0.9)' : 'rgba(24,18,10,0.45)';
           ctx.stroke();
         }
+        if (FB.renderFortBadge) {
+          FB.renderFortBadge(ctx, FB.state, site, scrX, scrY, half, dpr);
+        }
         const pad = 3.5 * dpr;
         // label, emblem band only: deterministic rectangle rejection in
         // priority order, below the emblem first, above only under pressure

@@ -195,6 +195,9 @@ test('auctioned claims and enterprises use their existing transfer paths',
           wins:0, losses:0, seasons:0, defending:false,
           casus:{ type:'fabricated', target:claim.pid }
         };
+        const strongpoint = FB.fortSiegeStatus(state, claim.pid, {}, 0);
+        state.player.war.siegeFortLevel = strongpoint.level;
+        state.player.war.siege = strongpoint.required;
         FB.warCapture(state);
         const claimCleared = !state.player.fabricatedClaim;
 

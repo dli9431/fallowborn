@@ -439,7 +439,8 @@ window.FBDATA = window.FBDATA || {};
         }
       } else if (value && typeof value === 'object' && value.$data && value.id) {
         const tables = {
-          item: FBDATA.items, building: FBDATA.buildings, holding: FBDATA.holdings,
+          item: FBDATA.items, building: FBDATA.buildings, fort:FBDATA.fortLevels,
+          holding: FBDATA.holdings,
           plot: FBDATA.plots, tech: FBDATA.tech,
           techDomain:FBDATA.techDomains, techTradition:FBDATA.techTraditions,
           trait: FBDATA.traits,

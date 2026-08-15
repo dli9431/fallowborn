@@ -567,6 +567,7 @@ window.FB = window.FB || {};
     /* Dynasty scholarship and innovations from older version-3 lives become
        the effective sovereign nation's first technology record. */
     if (FB.ensureRealmTech) FB.ensureRealmTech(FB.state);
+    if (FB.repairForts) FB.repairForts(FB.state);
     /* Save format 3 is deliberately stable. The equipment subsystem repairs
        old inventories and grows exact instances/loadouts additively here. */
     if (FB.ensureItems) FB.ensureItems(FB.state);

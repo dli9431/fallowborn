@@ -3126,6 +3126,13 @@ window.FB = window.FB || {};
       ? FB.renderKey('fx.warstate.in_field', { text: 'In the field at {place}' },
         { place: FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?' })
       : FB.renderKey('fx.warstate.not_mustered', { text: 'Not yet mustered' }, {}));
+    const pinned = host && FB.fortPinnedStatus
+      ? FB.fortPinnedStatus(state, host) : null;
+    if (pinned) {
+      clauses.push(FB.renderKey('fx.warstate.fort_pinned', {
+        text:'Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land'
+      }, { fort:pinned.name, place:FB.world.byId[pinned.pid].name }));
+    }
     const enemyHost = FB.hostOf ? FB.hostOf(state, war.enemy) : null;
     if (enemyHost) {
       clauses.push(FB.renderKey('fx.warstate.enemy_host',
@@ -3135,13 +3142,55 @@ window.FB = window.FB || {};
         }));
     }
     if (!war.defending && war.target && FB.world.byId[war.target]) {
+      const siegeStatus = (FB.playerSiegeStatus
+        ? FB.playerSiegeStatus(state) : null) ||
+        (FB.fortSiegeStatus ? FB.fortSiegeStatus(state, war.target, {
+          fortLevel:war.siegeFortLevel, progress:war.siege || 0
+        }, host ? [host] : []) : { required:3 });
       clauses.push(FB.renderKey('fx.warstate.siege',
-        { text: 'Siege of {place}: {progress}/3' },
-        { place: FB.world.byId[war.target].name, progress: war.siege || 0 }));
+        { text: 'Siege of {place}: {progress}/{required}' },
+        { place: FB.world.byId[war.target].name, progress: war.siege || 0,
+          required:siegeStatus ? siegeStatus.required : 3 }));
+      if (siegeStatus && siegeStatus.level) {
+        clauses.push(FB.renderKey('fx.warstate.fort_siege_terms', {
+          text:'{fort}: {minimum} besiegers required; {attrition} casualties each active season'
+        }, {
+          fort:siegeStatus.name, minimum:siegeStatus.minimum,
+          attrition:siegeStatus.attrition
+        }));
+        if (siegeStatus.shortage) {
+          clauses.push(FB.renderKey('fx.warstate.fort_shortage', {
+            text:'Siege stalled: {shortage} more men required'
+          }, { shortage:siegeStatus.shortage }));
+        }
+      }
     }
     if (war.defending) {
+      let enemyStatus = war.enemyTarget && FB.enemySiegeStatus
+        ? FB.enemySiegeStatus(state)
+        : null;
+      if (!enemyStatus && war.enemyTarget && FB.fortSiegeStatus) {
+        enemyStatus = FB.fortSiegeStatus(state, war.enemyTarget, {
+          fortLevel:war.enemySiegeFortLevel, progress:war.enemySiege || 0
+        }, 0);
+      }
+      if (!enemyStatus) enemyStatus = { required:3 };
       clauses.push(FB.renderKey('fx.warstate.advance',
-        { text: 'Enemy advance: {progress}/3' }, { progress: war.enemySiege || 0 }));
+        { text: 'Enemy advance: {progress}/{required}' }, {
+          progress: war.enemySiege || 0,
+          required:enemyStatus ? enemyStatus.required : 3
+        }));
+      if (enemyStatus && enemyStatus.level) {
+        clauses.push(FB.renderKey('fx.warstate.enemy_fort_siege', {
+          text:'Your {fort} needs {minimum} besiegers and costs them {attrition} men each active season'
+        }, { fort:enemyStatus.name, minimum:enemyStatus.minimum,
+          attrition:enemyStatus.attrition }));
+        if (enemyStatus.shortage) {
+          clauses.push(FB.renderKey('fx.warstate.enemy_fort_shortage', {
+            text:'Their siege is stalled: {shortage} more men required'
+          }, { shortage:enemyStatus.shortage }));
+        }
+      }
     }
     return clauses.join(' · ');
   };
@@ -3332,11 +3381,15 @@ window.FB = window.FB || {};
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
         c += 0.08 * (w.harried || 0) + (w.rested ? 0.05 : 0);  // council preparations
         c += (w.mass ? 0.05 : 0);                              // the great levy
-        /* walls guard where they stand: the defensive war record has no target
-           county and the council's pitched battle no field province, so the
-           bonus reads the walls of the HOME county — the seat the host musters
-           at and the defense rallies around */
-        if (w.defending && FB.hasBuildingIn(state, FB.homeProv(state), 'walls')) c += 0.08;
+        /* The council's abstract battle uses the invaded county when a live
+           host supplies one; otherwise it falls back to the defended seat. */
+        if (w.defending && FB.fortBattleBonus) {
+          const invader = FB.enemyHostInPlayerLandsArmy
+            ? FB.enemyHostInPlayerLandsArmy(state) : null;
+          c += FB.fortBattleBonus(state,
+            (invader && invader.at) || w.enemyTarget || FB.homeProv(state),
+            { realm:'player' });
+        }
         c += FB.techBonus(state, 'battle') + FB.holdingBonus(state, 'battle') + FB.itemBonus(state, 'battle');
         if (f.blessed_war) c += 0.06;
         return FB.clamp(c, 0.1, 0.9);

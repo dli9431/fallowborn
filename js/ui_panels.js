@@ -2057,6 +2057,7 @@ window.FB = window.FB || {};
     }
     if (entry.kind === 'martial_rate') return FB.T('Ruler’s Martial');
     if (entry.kind === 'domain_penalty') return FB.T('Over-domain penalty');
+    if (entry.kind === 'fort_garrison') return FB.T('Fort garrisons retained');
     if (entry.kind === 'papal_policy') return FB.T('Investiture and Papal standing');
     if (entry.kind === 'vassal') {
       const r = s.realms[entry.rid];
@@ -4002,7 +4003,13 @@ window.FB = window.FB || {};
         h += '<div class="settblock land-settlements"><span>' +
           esc(FB.T('Settlements')) + '</span>' +
           '<div class="settlist">' + setts.map(function (st, si) {
-            const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') + ' ' + esc(st.name);
+            const fort = FB.fortAtSettlement
+              ? FB.fortAtSettlement(s, pid, si, false) : null;
+            const fortLabel = fort
+              ? ' ◆' + (fort.level || fort.targetLevel || 1) +
+                (fort.targetLevel ? '⚒' : '') : '';
+            const label = (st.kind === 'city' ? '🏙' : st.kind === 'town' ? '🏘' : '🏡') +
+              ' ' + esc(st.name) + fortLabel;
             return '<button class="linklike settlink" data-sett="' + si + '" title="' +
               esc(FB.T('See the buildings of {settlement}', { settlement: st.name })) + '">' + label + '</button>';
           }).join('') + '</div></div>';
@@ -4044,10 +4051,17 @@ window.FB = window.FB || {};
                 ? FB.T('defending') : FB.T('attacking')
             })
             : FB.T('not occupied'));
+        const strongpoint = FB.fortSiegeStatus
+          ? FB.fortSiegeStatus(s, pid, occupation, 0) : null;
         h += '<div class="progressnote warnote">' + esc(FB.T(
           '📯 Great holy-war objective · {status}', {
             status:objectiveStatus
-          })) + '</div>';
+          })) + (strongpoint && strongpoint.level
+          ? '<br>' + esc(FB.T(
+            '{fort} · {requirement} occupation days · {minimum} besiegers minimum · {attrition} seasonal casualties', {
+              fort:strongpoint.name, requirement:requirement,
+              minimum:strongpoint.minimum, attrition:strongpoint.attrition
+            })) : '') + '</div>';
       }
       if (s.player.provs && s.player.provs.indexOf(pid) >= 0) {
         h += '<div class="progressnote">' + esc(FB.T('🏰 You hold this province.')) + '</div>';

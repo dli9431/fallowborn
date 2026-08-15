@@ -119,6 +119,14 @@ Standing (`opinion`) fields retain their old meaning, while numeric objects such
 `FB.traitBonus`. Acquisition guidance in `earned` is display text; `earn.threshold`
 is mechanical progress state.
 
+Fortification tuning is exposed under the top-level `forts` key. Scalar campaign,
+maintenance, migration, and AI-work values replace individually, while `forts.levels`
+merges by numeric tier so a focused override does not discard the other three tiers.
+Each supplied tier is a complete record: sequential construction, technology validation,
+localized tier names, siege snapshots, and saved `walls` records all read the resulting
+shared table. The active mod fingerprint remains the save compatibility boundary for
+those changed rules.
+
 Technology domain, tradition, and technology definitions merge by id under the top-level
 `techDomains`, `techTraditions`, and `tech` keys before validation. Domain display order
 comes from its numeric `order`, and domain/tradition names use the structured-data

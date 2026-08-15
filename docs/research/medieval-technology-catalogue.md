@@ -202,7 +202,7 @@ moment of invention.
 | `mounted_archery` — Mounted Archery | 200…900 | 450…850; Steppe/Persianate/Islamic/Byzantine | composite_bow, cavalry_saddles | `rule:mounted_archery` | high; DEVRIES/BACHRACH |
 | `cavalry_lances` — Couched Cavalry Lance | 850…1150 | 980…1160; Latin/Byzantine | stirrups, mail_hauberks | `rule:lance_charge` | high; DEVRIES/BACHRACH |
 | `castle_towers` — Flanking Castle Towers | 750…1100 | 900…1120; Byzantine/Islamic/Latin/Caucasian | ringworks, lime_mortar | `rule:flanking_towers` | high; DEVRIES/BACHRACH |
-| `stone_castles` — Stone Castles | 850…1150 | 980…1170; Byzantine/Islamic/Latin/Caucasian | castle_towers, lime_mortar | `building:walls` | high; DEVRIES/BACHRACH |
+| `stone_castles` — Stone Castles | 850…1150 | 980…1170; Byzantine/Islamic/Latin/Caucasian | castle_towers, lime_mortar | `building:keep` | high; DEVRIES/BACHRACH |
 | `crossbows` — Military Crossbows | 500…1100 | 850…1100; Byzantine/Islamic/Latin | iron_weaponry | `building:archery_butts` | high; DEVRIES/BACHRACH |
 | `siege_engineering` — Siege Engineering | 650…1100 | 850…1120; Byzantine/Islamic/Persianate/Latin | torsion_artillery, geometry | `rule:siege_engineers` | high; DEVRIES/BACHRACH |
 | `sapper_corps` — Organized Sappers | 750…1150 | 920…1160; Byzantine/Islamic/Persianate | siege_engineering | `rule:sappers` | high; DEVRIES/BACHRACH |

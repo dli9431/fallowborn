@@ -136,6 +136,23 @@ window.FBDATA = window.FBDATA || {};
         mode:'hard', tech:['notarial_contracts'], fallback:'fabricate_claim_or_use_existing_war_rights',
         rationale:'Selling a county title right requires durable notarial transfer, while ordinary claims and other auction lots remain available.'
       },
+      fort_construction:{
+        mode:'hard', tech:['ringworks'], fallback:'unfortified_settlement',
+        rationale:'A route-blocking local strongpoint requires the earth-and-timber ringwork tradition; ordinary settlements remain available without one.'
+      },
+      towered_stronghold_upgrade:{
+        mode:'hard', tech:['castle_towers'], fallback:'ringwork',
+        rationale:'Flanking towers create a separately stronger obstacle while an existing ringwork remains fully usable.'
+      },
+      stone_castle_upgrade:{
+        mode:'hard', tech:['stone_castles'], fallback:'towered_stronghold',
+        rationale:'Masonry fortification is an advanced upgrade; the previous towered stronghold remains active during and after any technology loss.'
+      },
+      concentric_fortress_upgrade:{
+        mode:'hard', tech:['concentric_defenses','fortified_gates'],
+        fallback:'stone_castle',
+        rationale:'The final independently gateable tier requires both layered defenses and advanced gates while the stone castle remains the fallback.'
+      },
       rare_auction_invitations:{
         mode:'none',
         rationale:'The rare invitation is an alternate route into the same cooldown-controlled auction, not a separate advanced market institution.'
@@ -663,7 +680,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin','caucasian'], unlocks:['rule:flanking_towers'], fx:{ battle:0.005 } });
   add('stone_castles','Stone Castles','🏰','warfare',[850,1150],[980,1170],['castle_towers','lime_mortar'],
     'Masonry keeps and curtains turn elite residences into durable fortresses.',
-    { leaders:['byzantine','islamic','latin','caucasian'], unlocks:['building:walls','building:keep'], fx:{ siege:0.03 } });
+    { leaders:['byzantine','islamic','latin','caucasian'], unlocks:['building:keep'], fx:{ siege:0.03 } });
   add('crossbows','Military Crossbows','🏹','warfare',[500,1100],[850,1100],['iron_weaponry'],
     'Mechanical bows trade shooting speed for power and modest training demands.',
     { leaders:['byzantine','islamic','latin'], unlocks:['building:archery_butts','rule:crossbow_levies'], fx:{ units:{ arch:15 }, aiUnits:{ arch:0.02 } } });

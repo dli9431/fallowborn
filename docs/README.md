@@ -353,12 +353,15 @@ than the available transport, it waits through repeated crossing cycles before t
 whole host arrives; national seafaring and naval-organization technologies raise
 transport capacity and crossing speed. You do not raise a separate fleet.
 **Land is taken only by siege:** keep your host standing on the prize
-and press the siege at each season's war council — after three seasons of works the
-county falls to you. Field victories never hand over land by themselves; enough of
+and press the siege at each season's war council. An unfortified county takes three
+steps. A fort adds one to four steps, pins hostile hosts that enter its county, requires
+three times its garrison in uncontested besiegers, and inflicts predictable casualties
+each active season; another road may bypass it. Field victories never hand over land by themselves; enough of
 them make the enemy sue for peace, and then the choice is yours — take the tribute,
 or press on for the walls. Defense cuts the same way against you: keep the enemy's
-host out of your lands, for three seasons unchecked costs you a border county. Wars
-bleed gold and men — and past eight seasons, exhaustion ends them with nothing gained.
+host out of your lands, because only a completed breach can take a fortified border
+county. Fortified works extend the normal eight-season exhaustion limit by their tier.
+Wars bleed gold and men throughout.
 
 Great holy wars are separate global campaigns with many sovereign hosts on two camps.
 Catholic Crusades may be called from late 1095 when Jerusalem is outside Christian rule;

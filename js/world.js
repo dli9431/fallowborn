@@ -3421,7 +3421,16 @@ window.FB = window.FB || {};
     const base = Math.max(60, Math.round(FB.realmStrength(state, rid) *
       FBDATA.balance.levyPerDev * (FBDATA.balance.aiHostPerDev || 0.3) *
       (1 + (FB.techBonus ? FB.techBonus(state, 'levy', rid) : 0))));
-    return Math.round(base * captivePenalty);
+    const burden = FB.fortGarrisonBurden
+      ? FB.fortGarrisonBurden(state, rid) : 0;
+    return Math.max(0, Math.round(base * captivePenalty) - burden);
+  };
+
+  FB.aiFieldHostRatio = function (state, rid) {
+    const field = FB.aiBaseHost(state, rid);
+    const burden = FB.fortGarrisonBurden
+      ? FB.fortGarrisonBurden(state, rid) : 0;
+    return field / Math.max(1, field + burden);
   };
 
   function alliedReinforcement(state, defenderId, readOnly) {
@@ -3513,8 +3522,16 @@ window.FB = window.FB || {};
     const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
     if (!info) return 0;
     const dev = settlementDev(state, pid);
-    return Math.min(SETTLEMENT_MAX_SLOTS,
+    let visible = Math.min(SETTLEMENT_MAX_SLOTS,
       Math.max(info.authored, info.legacyBase + villageBonus(dev)));
+    /* A fort remains a map landmark even if later development decline would
+       ordinarily conceal its settlement. The cached fort lookup keeps this
+       allocation-free renderer seam constant-time. */
+    if (state && FB.fortAt) {
+      const fort = FB.fortAt(state, pid);
+      if (fort && !fort.ruined) visible = Math.max(visible, (fort.s | 0) + 1);
+    }
+    return Math.min(SETTLEMENT_MAX_SLOTS, visible);
   };
 
   /* Allocation-free seam for the map renderer: whether one compiled site is
@@ -4452,6 +4469,7 @@ window.FB = window.FB || {};
     const B = FBDATA.balance;
     FB.ensureDynasticState(state);
     FB.checkAllCrownRecognition(state);
+    if (FB.fortAIYear) FB.fortAIYear(state);
     if (FB.papacyYearly) FB.papacyYearly(state);
     if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
     /* Family deaths invalidate the live index. This read-only snapshot stays
@@ -4557,12 +4575,15 @@ window.FB = window.FB || {};
         if (!enemy || !enemy.alive) { r.war = null; continue; }
         const sa = FB.realmStrength(state, id) *
           (1 + (FB.techBonus ? FB.techBonus(state, 'levy', id) : 0)) *
+          FB.aiFieldHostRatio(state, id) *
           (FB.aiHostQuality ? FB.aiHostQuality(state, id) : 1) *
           (1 + (FB.techBonus ? FB.techBonus(state, 'battle', id) : 0)) *
           (1 + r.ruler.mar / 30) * FB.rf(0.7, 1.3) *
           (1 + 0.12 * ((war.fw || 0) - (war.fl || 0))); // field wins tilt the war
+        const enemyGarrisons = FB.fortGarrisonBurden
+          ? FB.fortGarrisonBurden(state, war.enemy) : 0;
         const defenseRatio = FB.realmDefensiveStrength(state, war.enemy) /
-          Math.max(1, FB.aiBaseHost(state, war.enemy));
+          Math.max(1, FB.aiBaseHost(state, war.enemy) + enemyGarrisons);
         const sd = FB.realmStrength(state, war.enemy) *
           (1 + (FB.techBonus ? FB.techBonus(state, 'levy', war.enemy) : 0)) *
           defenseRatio *
@@ -4573,9 +4594,34 @@ window.FB = window.FB || {};
         const winner = sa > sd ? id : war.enemy;
         const loser = winner === id ? war.enemy : id;
         const winnerReligion = FB.realmReligionId(state, winner);
-        const taken = FB.borderProvince(state, loser, winner, function (pid) {
+        const winnerHost = FB.hostOf ? FB.hostOf(state, winner) : null;
+        let taken = winnerHost && state.owner[winnerHost.at] === loser &&
+          FB.fortBlocksArmy && FB.fortBlocksArmy(state, winnerHost.at, winnerHost)
+          ? winnerHost.at : null;
+        if (taken && FB.sameFaithHeadWarPolicy(
+            state, winnerReligion, loser, taken)) taken = null;
+        if (!taken) taken = FB.borderProvince(state, loser, winner, function (pid) {
           return !FB.sameFaithHeadWarPolicy(state, winnerReligion, loser, pid);
         });
+        let fortDelay = 0;
+        const takenFort = taken && FB.fortAt ? FB.fortAt(state, taken) : null;
+        if (takenFort && (Number(takenFort.level) || 0) > 0) {
+          const fortStatus = FB.advanceAIYearlyFortSiege
+            ? FB.advanceAIYearlyFortSiege(state, war, taken, winner) : null;
+          fortDelay = fortStatus ? fortStatus.delay : 0;
+          if (!fortStatus || !fortStatus.breached) taken = null;
+          if (FB.decayAIYearlyFortSieges) {
+            FB.decayAIYearlyFortSieges(war, fortStatus ? fortStatus.pid : null);
+          }
+        } else if (FB.decayAIYearlyFortSieges) {
+          FB.decayAIYearlyFortSieges(war, null);
+        }
+        if (war.fortSieges) for (const siegePid in war.fortSieges) {
+          const siegeDef = FB.fortLevelDef
+            ? FB.fortLevelDef(war.fortSieges[siegePid].fortLevel) : null;
+          fortDelay = Math.max(fortDelay,
+            siegeDef ? Number(siegeDef.siegeDelay) || 0 : 0);
+        }
         if (taken) {
           FB.transferProvince(state, taken, winner);
           war.captures = (war.captures || 0) + 1;
@@ -4607,7 +4653,8 @@ window.FB = window.FB || {};
           }
           r.war = null;
         }
-        else if (war.years >= 3 || FB.chance(0.35) || (war.captures || 0) >= 2) {
+        else if (war.years >= 3 + fortDelay || FB.chance(0.35) ||
+                 (war.captures || 0) >= 2) {
           if (FB.papacyDecisiveWarLost) {
             FB.papacyDecisiveWarLost(state, loser);
           }
@@ -4892,6 +4939,13 @@ window.FB = window.FB || {};
           favored:!!(FB.vassalLevyFavor && FB.vassalLevyFavor(state, vid))
         });
       }
+
+      /* Fort garrisons stay behind when the field host musters. They are a
+         named negative levy source, clamped so a sparse domain never turns
+         the deployable levy below zero. */
+      const garrison = FB.fortGarrisonBurden
+        ? Math.min(comp.levy, FB.fortGarrisonBurden(state, 'player')) : 0;
+      if (garrison) add('levy', 'fort_garrison', -garrison);
     }
 
     /* Earned posts and paid household offices add named professionals. They
@@ -5016,6 +5070,17 @@ window.FB = window.FB || {};
       FB.endPlayerWar(state); return;
     }
     w.seasons++;
+    /* A siege pressed every seasonal council does not decay between those
+       councils. Once a full additional season passes without work, one step
+       is lost per season. */
+    if (!w.defending && (w.siege || 0) > 0) {
+      if (w.lastSiegeTurn === undefined) w.lastSiegeTurn = state.turn - 90;
+      if (state.turn - w.lastSiegeTurn > 90) {
+        w.siege = Math.max(0, w.siege - 1);
+        w.lastSiegeTurn += 90;
+        if (!w.siege) delete w.siegeFortLevel;
+      }
+    }
     /* a contested office can slip away mid-war (the holder falls to a third
        party and the saved vacancy is claimed elsewhere): the war's object is
        gone — end it quietly rather than dragging to exhaustion */
@@ -5041,7 +5106,17 @@ window.FB = window.FB || {};
         { province: FB.world.byId[w.target] ? FB.world.byId[w.target].name : '' }));
       FB.endPlayerWar(state); return;
     }
-    if (w.seasons > 8) {
+    let exhaustionDelay = 0;
+    if (!w.defending && w.target && FB.fortSiegeStatus) {
+      exhaustionDelay = FB.fortSiegeStatus(state, w.target, {
+        fortLevel:w.siegeFortLevel, progress:w.siege || 0
+      }, 0).delay;
+    } else if (w.defending && w.enemyTarget && FB.fortSiegeStatus) {
+      exhaustionDelay = FB.fortSiegeStatus(state, w.enemyTarget, {
+        fortLevel:w.enemySiegeFortLevel, progress:w.enemySiege || 0
+      }, 0).delay;
+    }
+    if (w.seasons > 8 + exhaustionDelay) {
       FB.news(state, FB.msg('news.war.exhausted',
         '🕊 Exhaustion ends the war with nothing gained.', {}));
       FB.endPlayerWar(state); return;
@@ -5049,13 +5124,47 @@ window.FB = window.FB || {};
     if (w.defending) {
       // the enemy's advance is now literal: their host must stand in your
       // lands to tighten the noose — keep it out and nothing falls
-      if (FB.enemyHostInPlayerLands(state)) {
-        w.enemySiege = (w.enemySiege || 0) + 1;
-        if (w.enemySiege >= 3) { FB.warLoseProvince(state); return; }
-        if (w.enemySiege === 2) {
+      const invader = FB.enemyHostInPlayerLandsArmy
+        ? FB.enemyHostInPlayerLandsArmy(state) : null;
+      if (invader) {
+        if (w.enemyTarget && w.enemyTarget !== invader.at && (w.enemySiege || 0) > 0) {
+          w.enemySiege = Math.max(0, w.enemySiege - 1);
+          if (!w.enemySiege) {
+            w.enemyTarget = invader.at;
+            delete w.enemySiegeFortLevel;
+          }
+        } else {
+          w.enemyTarget = invader.at;
+          const siegePreview = FB.enemySiegeStatus(state, invader);
+          const status = FB.advanceFortSiegePulse
+            ? FB.advanceFortSiegePulse(state, invader.at, w, {
+              progressKey:'enemySiege', levelKey:'enemySiegeFortLevel',
+              hosts:siegePreview.hosts, contested:siegePreview.contested,
+              progressAmount:1 + (FB.techBonus
+                ? FB.techBonus(state, 'siege', w.enemy) * 3 : 0)
+            })
+            : null;
+          if (status && status.breached) {
+            if (FB.warLoseProvince(state, invader.at, true)) return;
+          }
+          if (status && status.stalled === 'shortage') {
+            FB.news(state, FB.msg('news.war.enemy_siege_stalled',
+              '🏰 {enemy} lacks {shortage} men to press the fort at {province}.', {
+                enemy:enemy.name, shortage:status.shortage,
+                province:FB.world.byId[invader.at].name
+              }));
+          }
+        }
+        if ((w.enemySiege || 0) >= 2) {
           FB.news(state, FB.msg('news.war.enemy_advance',
-            '⚠ {enemy} presses deep into your lands — another season unchecked, and something falls.',
+            '⚠ {enemy} presses the siege in your lands; only a breach can take the county.',
             { enemy: enemy.name }));
+        }
+      } else if ((w.enemySiege || 0) > 0) {
+        w.enemySiege = Math.max(0, w.enemySiege - 1);
+        if (!w.enemySiege) {
+          w.enemyTarget = null;
+          delete w.enemySiegeFortLevel;
         }
       }
       FB.maybeOfferSubmission(state);
@@ -5095,6 +5204,43 @@ window.FB = window.FB || {};
       if (state.holder && state.holder[a.at] === 'player') return true;
     }
     return false;
+  };
+
+  FB.enemyHostInPlayerLandsArmy = function (state) {
+    const p = state.player, w = p.war;
+    if (!w || !state.armies) return null;
+    for (const army of state.armies) {
+      if (army.realm !== w.enemy) continue;
+      if (army.at === p.provinceId ||
+          (p.provs && p.provs.indexOf(army.at) >= 0) ||
+          (state.holder && state.holder[army.at] === 'player')) return army;
+    }
+    return null;
+  };
+
+  FB.enemySiegeStatus = function (state, invadingHost) {
+    const w = state.player.war;
+    const invader = invadingHost || FB.enemyHostInPlayerLandsArmy(state);
+    if (!w || !w.defending || !invader) return null;
+    const here = FB.armiesAt ? FB.armiesAt(state, invader.at) : [invader];
+    const besiegers = [], contested = here.some(function (army) {
+      if (army === invader || !FB.armiesHostile) return false;
+      if (FB.armiesHostile(state, invader, army)) return true;
+      if (army.realm === invader.realm ||
+          (FB.areAllied && FB.areAllied(state, invader.realm, army.realm))) {
+        besiegers.push(army);
+      }
+      return false;
+    });
+    besiegers.unshift(invader);
+    const status = FB.fortSiegeStatus(state, invader.at, {
+      fortLevel:w.enemySiegeFortLevel, progress:w.enemySiege || 0
+    }, besiegers);
+    status.host = invader;
+    status.hosts = besiegers;
+    status.contested = contested;
+    status.canProgress = status.canProgress && !contested;
+    return status;
   };
 
   /* ---- devastation & the protection bargain (docs/designs/descent.md) ----
@@ -5166,6 +5312,13 @@ window.FB = window.FB || {};
     const p = state.player;
     const w = p.war;
     const pid = w && w.target;
+    const targetFort = pid && FB.fortAt ? FB.fortAt(state, pid) : null;
+    if (targetFort && (Number(targetFort.level) || 0) > 0) {
+      const breach = FB.fortSiegeStatus(state, pid, {
+        fortLevel:w.siegeFortLevel, progress:w.siege || 0
+      }, 0);
+      if (!breach.breached) return false;
+    }
     if (w && w.casus && w.casus.type === 'caliphate') {
       const enemy = state.realms[w.enemy];
       if (!caliphateWarClaimantEligible(state)) {
@@ -5184,7 +5337,7 @@ window.FB = window.FB || {};
             realm: enemy.name
           }));
         FB.endPlayerWar(state);
-        return;
+        return true;
       }
       FB.news(state, FB.msg('news.war.caliphate_unresolved',
         '🕊 The succession war ends without the office of {title} changing hands.', {
@@ -5204,7 +5357,7 @@ window.FB = window.FB || {};
         FB.news(state, FB.msg('news.war.crown_restored',
           '👑 The usurper’s crown and vassals return intact to your rightful rule.', {}));
         FB.endPlayerWar(state);
-        return;
+        return true;
       }
     }
     if (pid && state.owner[pid] === w.enemy) {
@@ -5226,12 +5379,14 @@ window.FB = window.FB || {};
       p.prestige += FB.warPrestigeReward(w, 'conquest');
       FB.endPlayerWar(state);
       FB.checkTierPromotions(state);
+      return true;
     } else {
       p.prestige += FB.warPrestigeReward(w, 'slipped');
       p.gold += 25;
       FB.news(state, FB.msg('news.war.tribute_without_prize',
         '🕊 The prize has slipped away, but tribute is paid. The war ends in your favor.', {}));
       FB.endPlayerWar(state);
+      return true;
     }
   };
 
@@ -5239,21 +5394,40 @@ window.FB = window.FB || {};
      player's OWN counties bordering the invader, as the siege warning
      promises. (Picking across the whole sovereign bloc made the loss land on
      a vassal's county and quietly degrade to the reparations branch.) */
-  FB.warLoseProvince = function (state) {
+  FB.warLoseProvince = function (state, forcedPid, breached) {
     const p = state.player;
     const w = p.war;
     let lost = null;
-    if (p.provs && p.provs.length) {
+    if (forcedPid && p.provs && p.provs.indexOf(forcedPid) >= 0) {
+      lost = forcedPid;
+    } else if (p.provs && p.provs.length) {
       const opts = [];
       for (const pid of p.provs) {
         const adj = FB.world.adj[pid] || {};
         for (const nb in adj) {
-          if (state.owner[nb] === w.enemy) { opts.push(pid); break; }
+          const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+          if (state.owner[nb] === w.enemy &&
+              !(fort && (Number(fort.level) || 0) > 0)) {
+            opts.push(pid); break;
+          }
         }
       }
       if (opts.length) lost = FB.pick(opts);
     }
-    if (!lost) lost = FB.borderProvince(state, FB.playerRealmId(state), w.enemy);
+    if (!lost && !forcedPid) {
+      lost = FB.borderProvince(state, FB.playerRealmId(state), w.enemy,
+        function (pid) {
+          const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+          return !(fort && (Number(fort.level) || 0) > 0);
+        });
+    }
+    const lostFort = lost && FB.fortAt ? FB.fortAt(state, lost) : null;
+    if (lostFort && (Number(lostFort.level) || 0) > 0) {
+      const status = FB.fortSiegeStatus(state, lost, {
+        fortLevel:w.enemySiegeFortLevel, progress:w.enemySiege || 0
+      }, 0);
+      if (!breached || !status.breached || w.enemyTarget !== lost) lost = null;
+    }
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, FB.msg('news.war.province_lost',
@@ -5266,13 +5440,22 @@ window.FB = window.FB || {};
         FB.news(state, FB.msg('news.war.landless',
           '⬇ Landless once more. The banners are folded away.', {}));
       }
+      p.prestige = Math.max(0, p.prestige - 20);
+      FB.endPlayerWar(state);
+      return true;
     } else {
+      if (FB.fortGarrisonBurden && FB.fortGarrisonBurden(state, 'player') > 0) {
+        FB.news(state, FB.msg('news.war.fort_holds',
+          '🏰 Field defeat cannot surrender an unbreached fortified county; the invasion continues.', {}));
+        return false;
+      }
       p.gold = Math.max(0, p.gold - 30);
       FB.news(state, FB.msg('news.war.reparations',
         '🕊 A humiliating peace. Reparations drain your coffers.', {}));
+      p.prestige = Math.max(0, p.prestige - 20);
+      FB.endPlayerWar(state);
+      return true;
     }
-    p.prestige = Math.max(0, p.prestige - 20);
-    FB.endPlayerWar(state);
   };
 
   /* The house falls: every acre lost, the family back to landless gentry.
@@ -5388,6 +5571,12 @@ window.FB = window.FB || {};
     if (p.tier < 4 || (p.flags && p.flags.in_prison)) return false;
     const enemy = state.realms[w.enemy];
     if (!enemy || !enemy.alive) return false;
+    /* Submission changes political control of every directly held county.
+       It therefore cannot bypass even one standing, untransferred fort. A
+       successfully breached county is transferred immediately by the siege
+       path, so no active fortified holding can remain when terms are valid. */
+    if (FB.fortGarrisonBurden &&
+        FB.fortGarrisonBurden(state, 'player') > 0) return false;
     if ((enemy.rank || 1) <= Math.max(1, p.tier - 3)) return false; // only a greater lord
     return FB.realmStrength(state, w.enemy) >=
       playerWarStrength(state) * (FBDATA.balance.submissionStrengthRatio || 1.5);
@@ -5441,7 +5630,11 @@ window.FB = window.FB || {};
   };
   FB.fns.prison_can_cede = function (state) {
     const p = state.player;
-    return FB.fns.prison_still(state) && !!(p.provs && p.provs.length);
+    if (!FB.fns.prison_still(state)) return false;
+    return (p.provs || []).some(function (pid) {
+      const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+      return !(fort && (Number(fort.level) || 0) > 0);
+    });
   };
   FB.fns.prison_cede_land = function (state) {
     const p = state.player, w = p.war;
@@ -5451,13 +5644,20 @@ window.FB = window.FB || {};
     let ceded = null;
     const opts = [];
     for (const pid of (p.provs || [])) {
+      const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+      if (fort && (Number(fort.level) || 0) > 0) continue;
       const adj = FB.world.adj[pid] || {};
       for (const nb in adj) {
         if (state.owner[nb] === w.enemy) { opts.push(pid); break; }
       }
     }
     if (opts.length) ceded = FB.pick(opts);
-    else if (p.provs && p.provs.length) ceded = p.provs[0];
+    else if (p.provs && p.provs.length) {
+      ceded = p.provs.find(function (pid) {
+        const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+        return !(fort && (Number(fort.level) || 0) > 0);
+      });
+    }
     if (!ceded) return;
     const cname = FB.world.byId[ceded] ? FB.world.byId[ceded].name : '';
     FB.transferProvince(state, ceded, w.enemy);
@@ -5489,12 +5689,20 @@ window.FB = window.FB || {};
     // defeats first: once the tribute offer can be declined, wins and losses
     // can BOTH pass the threshold — a broken campaign ends even so
     if (w.losses >= NEED) {
-      if (FB.papacyDecisiveWarLost) {
-        FB.papacyDecisiveWarLost(state, 'player');
-      }
       if (w.defending) {
-        FB.warLoseProvince(state);
+        if (FB.warLoseProvince(state)) {
+          if (FB.papacyDecisiveWarLost) {
+            FB.papacyDecisiveWarLost(state, 'player');
+          }
+        } else {
+          /* Field defeat cannot teleport an enemy through an unbreached
+             fortified border. Keep the war live just below the shortcut. */
+          w.losses = Math.max(0, NEED - 1);
+        }
       } else {
+        if (FB.papacyDecisiveWarLost) {
+          FB.papacyDecisiveWarLost(state, 'player');
+        }
         p.prestige = Math.max(0, p.prestige - 15);
         FB.news(state, FB.msg('news.war.campaign_failed',
           '🕊 The campaign has failed. The host limps home.', {}));
@@ -5606,21 +5814,58 @@ window.FB = window.FB || {};
     } else {
       w.strength = Math.min(1.1, (w.strength || 1) + 0.15);
     }
-    if (w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1); // borders relieved
+    if (w.enemySiege) {
+      w.enemySiege = Math.max(0, w.enemySiege - 1); // borders relieved
+      if (!w.enemySiege) {
+        w.enemyTarget = null;
+        delete w.enemySiegeFortLevel;
+      }
+    }
   };
   /* press the siege of the war's target (attacking wars only): your host
      must stand in the target province to keep the works going */
   FB.fns.war_can_siege = function (state) {
     const w = state.player.war;
     if (!(w && !w.defending && w.target && state.owner[w.target] === w.enemy)) return false;
-    const host = FB.playerHost ? FB.playerHost(state) : null;
-    return !!host && host.at === w.target;
+    const status = FB.playerSiegeStatus ? FB.playerSiegeStatus(state) : null;
+    return !!status && status.canProgress && !status.contested;
+  };
+  FB.playerSiegeStatus = function (state) {
+    const w = state.player.war;
+    const host = w && FB.playerHost ? FB.playerHost(state) : null;
+    if (!w || w.defending || !w.target || !host || host.at !== w.target) return null;
+    const here = FB.armiesAt ? FB.armiesAt(state, w.target) : [host];
+    const besiegers = [], contested = here.some(function (army) {
+      if (army === host || !FB.armiesHostile) return false;
+      if (FB.armiesHostile(state, host, army)) return true;
+      if (army.realm === host.realm ||
+          (FB.areAllied && FB.areAllied(state, host.realm, army.realm))) {
+        besiegers.push(army);
+      }
+      return false;
+    });
+    besiegers.unshift(host);
+    const status = FB.fortSiegeStatus(state, w.target, {
+      fortLevel:w.siegeFortLevel, progress:w.siege || 0
+    }, besiegers);
+    status.hosts = besiegers;
+    status.contested = contested;
+    status.canProgress = status.canProgress && !contested;
+    return status;
   };
   FB.fns.war_siege = function (state) {
-    const w = state.player.war; if (!w || !FB.fns.war_can_siege(state)) return;
+    const w = state.player.war;
+    const preview = w && FB.playerSiegeStatus(state);
+    if (!w || !preview || !preview.canProgress) return;
     const tname = FB.world.byId[w.target].name;
-    w.siege = (w.siege || 0) + 1 + FB.techBonus(state, 'siege') * 3;
-    if (FB.chance(0.4)) { // a sortie from the walls
+    let status = FB.advanceFortSiegePulse(state, w.target, w, {
+      progressKey:'siege', levelKey:'siegeFortLevel', hosts:preview.hosts,
+      contested:preview.contested, playerCampaign:true,
+      progressAmount:1 + FB.techBonus(state, 'siege') * 3
+    });
+    /* Unfortified places retain the old uncertain sortie. Fortified pulses
+       already pay their exact garrison attrition instead. */
+    if (!status.level && FB.chance(0.4)) {
       if (FB.chance(FB.namedChance(state, 'war_battle'))) {
         FB.news(state, FB.msg('news.war.sortie_repelled',
           '⚔ A sortie from {target} is thrown back. The siege holds.', { target: tname }));
@@ -5639,14 +5884,17 @@ window.FB = window.FB || {};
         return;
       }
     }
-    if (w.siege >= 3) {
+    status = FB.fortSiegeStatus(state, w.target, {
+      fortLevel:w.siegeFortLevel, progress:w.siege || 0
+    }, preview.hosts);
+    if (status.breached) {
       FB.news(state, FB.msg('news.war.walls_breached',
         '🏰 The walls of {target} are breached!', { target: tname }));
       FB.warCapture(state);
     } else {
       FB.news(state, FB.msg('news.war.siege_tightens',
-        '⚔ The siege of {target} tightens. ({progress}/3)',
-        { target: tname, progress: w.siege }));
+        '⚔ The siege of {target} tightens. ({progress}/{required})',
+        { target: tname, progress: w.siege, required:status.required }));
     }
   };
   FB.fns.war_mercs = function (state) {
@@ -5934,7 +6182,9 @@ window.FB = window.FB || {};
   FB.fns.war_submission_valid = function (state) {
     const w = state.player.war;
     const enemy = w && state.realms[w.enemy];
-    return !!(w && w.defending && enemy && enemy.alive);
+    return !!(w && w.defending && enemy && enemy.alive &&
+      !(FB.fortGarrisonBurden &&
+        FB.fortGarrisonBurden(state, 'player') > 0));
   };
   function submissionTributePrice(state) {
     const w = state.player.war;
@@ -5949,7 +6199,8 @@ window.FB = window.FB || {};
      A crowned head that kneels fails the independence its style rests on —
      the title-lapse machinery (checkTierPromotions) takes it from there. */
   FB.fns.war_submit = function (state) {
-    const p = state.player, w = p.war; if (!w) return;
+    const p = state.player, w = p.war;
+    if (!w || !FB.fns.war_submission_valid(state)) return;
     const enemy = state.realms[w.enemy]; if (!enemy || !enemy.alive) return;
     const rid = w.enemy;
     FB.endPlayerWar(state);

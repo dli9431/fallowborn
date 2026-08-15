@@ -296,6 +296,16 @@ auctioned county title rights require Notarial Contracts. Formal Market Charter 
 in guild stories reuse the existing Urban Markets plus Authenticated Seals decision instead
 of creating a parallel unlock.
 
+Fortifications add four hard prospective reviews, one per independently gateable tier.
+`fort_construction` uses Ringworks and leaves an unfortified settlement as the fallback;
+`towered_stronghold_upgrade` uses Flanking Castle Towers and leaves the Ringwork;
+`stone_castle_upgrade` uses Stone Castles and leaves the Towered Stronghold; and
+`concentric_fortress_upgrade` requires both Concentric Defenses and Advanced Gate
+Defenses while leaving the Stone Castle. The settlement sheet exposes every next tier,
+opens the exact missing technology, and never disables an existing fort or in-flight
+project when allegiance later changes. Technology detail reverse discovery scans
+`FBDATA.fortLevels` alongside ordinary content consumers.
+
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
 composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,

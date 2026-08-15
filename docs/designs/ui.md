@@ -1042,6 +1042,11 @@ so the information remains accessible without relying on canvas color. All dialo
 use ordinary action buttons, number-key ordering, focus management, Escape/history
 rules, and the existing mobile bottom-sheet layout.
 
+Fortified holy-war objectives additionally name the fort, total occupation-day target,
+minimum besieger strength, and seasonal attrition. Ordinary war summaries give the
+snapshotted step count and exact shortage, while map-order feedback distinguishes a host
+that will stop at a strongpoint from one whose weighted route bypasses it.
+
 ## Settlement markers and the settlement sheet
 
 The canvas adds a settlement layer in screen space between the selection overlay and
@@ -1061,6 +1066,16 @@ noisy base raster into a flat sibling — one solid tone per county, no baked
 borders — and county boundaries draw as an anti-aliased vector pass that cuts the
 raster staircase into smooth diagonals with the same demesne/realm/sovereign
 strength graduation, so the close-up reads crisp rather than blocky or blurred.
+
+A fort adds a shape-coded shield badge with one to four internal marks over its existing
+settlement emblem; construction adds a crossed corner. Neither meaning depends on color,
+and the badge does not change cached site art. The settlement sheet shows current and
+target tier, project dates, upfront/no-refund terms, upkeep, local defense, garrison and
+field burden, movement control, siege minimum/attrition, and the next sequential tier.
+Owned sheets provide keyboard-numbered, mobile-size project and demolition controls;
+foreign sheets remain read-only. A locked tier stays visible and its action opens the
+exact technology detail.
+
 Labels reject
 deterministically on rectangle overlap in priority order (kind, head status,
 authored status, province/index), each name label sits below its emblem and moves

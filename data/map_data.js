@@ -670,9 +670,10 @@ FBDATA.titles = {
    siting: devMin, coastal, terrains (county gates), homeOnly, maxCounty,
    maxDemesne · ongoing: tax, piety & upkeep per season, levy men · one-time
    on completion: dev, pop (popular opinion), prestige. state.buildings[pid]
-   holds { s: settlement index, id, ruined? } entries.
-   The 'walls' id is special: it strengthens the ruler when defending the
-   home county it stands in.
+   holds { s: settlement index, id, ruined? } entries. The 'walls' id is the
+   settlement-scoped fortification record described by FBDATA.forts below;
+   fortifications have their own construction, maintenance, garrison, map,
+   movement, and siege rules.
    War keys: levy (untrained foot, mustered with the host), retinue
    (professional men-at-arms — few, hard to kill), archers (bowmen) —
    all three join the host's composition at muster (see docs/designs/war.md). */
@@ -683,8 +684,8 @@ FBDATA.buildings = {
     desc:'Grain laid up against the hungry years.' },
   bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10, requiresTech:'stone_bridgebuilding',
     desc:'Trade crosses where the ford once drowned it.' },
-  walls:   { name:'Stone Walls', icon:'🧱', cost:60, upkeep:1, maxCounty:1, homeOnly:true, requiresTech:'stone_castles',
-    desc:'Stone walls rally the defense of your home county.' },
+  walls:   { name:'Fortification', icon:'🏰', maxCounty:1, fort:true,
+    desc:'A county strongpoint that blocks hostile passage until its defenses are breached.' },
   market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, requiresTech:'urban_markets',
     desc:'Tolls, stalls, and strangers’ silver.' },
   temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, requiresTech:'lime_mortar',
@@ -699,6 +700,38 @@ FBDATA.buildings = {
     desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },
   archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50, requiresTech:'crossbows',
     desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' }
+};
+
+/* County strongpoints reuse the settlement-scoped `walls` building id but
+   advance through four sequential tiers. Cost is paid when work begins;
+   seasons are ninety days. `work` is the annual AI construction currency,
+   not a player-facing price. Requirements are all-of lists. */
+FBDATA.fortLevels = {
+  1:{ name:'Ringwork', requiresTech:['ringworks'], cost:120, seasons:2,
+    upkeep:2, garrison:40, siegeDelay:1, defense:0.05, prestige:10, work:60 },
+  2:{ name:'Towered Stronghold', requiresTech:['castle_towers'], cost:220,
+    seasons:3, upkeep:4, garrison:80, siegeDelay:2, defense:0.10,
+    prestige:25, work:120 },
+  3:{ name:'Stone Castle', requiresTech:['stone_castles'], cost:400,
+    seasons:5, upkeep:8, garrison:140, siegeDelay:3, defense:0.15,
+    prestige:60, work:220 },
+  4:{ name:'Concentric Fortress',
+    requiresTech:['concentric_defenses','fortified_gates'], cost:750,
+    seasons:8, upkeep:14, garrison:220, siegeDelay:4, defense:0.20,
+    prestige:150, work:400 }
+};
+FBDATA.forts = {
+  buildingId:'walls',
+  levels:FBDATA.fortLevels,
+  baseSiegeSteps:3,
+  garrisonStrengthRatio:3,
+  seasonalAttritionRate:0.15,
+  campaignStrengthLoss:0.05,
+  holyWarDaysPerLevel:90,
+  legacyLevel:3,
+  legacyUpkeep:1,
+  legacyGraceSeasons:4,
+  aiWorksCap:400
 };
 
 /* Household holdings (tiers 0-2; bought with gold via the "Better the

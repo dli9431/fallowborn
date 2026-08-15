@@ -71,12 +71,47 @@ same building in the same county costs `cost × balance.buildingRepeatCostGrowth
 raised)` (`FB.buildCost`); ruins remain in that count, so demolition cannot reset the repeat
 price. County gates (`devMin`, `coastal`, `terrains`) are joined by data-driven `homeOnly`,
 `maxCounty`, and `maxDemesne` limits. There may be only one Granary across the demesne and
-one set of Stone Walls in the home county. Walls strengthen defense in `war_battle`
-through `FB.hasBuildingIn`.
+ordinary buildings remain limited by their own definitions. Fortifications use the
+separate county rule below.
 
 Events still gate on `buildings` / `notBuildings` triggers demesne-wide (`FB.hasBuilding`).
 `state.buildings` is keyed by province id, so conquest moves buildings and ruins with the
 land.
+
+## Fortifications
+
+The settlement-scoped `walls` id is the county's one strategic fortification rather than
+an ordinary repeatable building. It is deliberately absent from Raise Next and autobuild:
+the player opens an exact settlement sheet and raises the next tier there. The four
+sequential tiers are Ringwork, Towered Stronghold, Stone Castle, and Concentric Fortress.
+They cost 120/220/400/750 gold up front, take 2/3/5/8 seasons, cost 2/4/8/14 gold each
+season after completion, retain 40/80/140/220 men from the field levy, award
+10/25/60/150 prestige once, and grant 5%/10%/15%/20% defense in that county.
+
+The save record is `{s,id:'walls',level,targetLevel?,completeTurn?,maintenanceGraceUntil?,
+ruined?}`. A new fort has level 0 until complete; an upgrade leaves the prior level active.
+Projects are county assets: succession and conquest do not cancel them, capture transfers
+the finished fort intact, and demolition destroys both active defenses and unfinished work
+without refund. `FB.fortAt` and `FB.fortAtSettlement` use a cached county/site index;
+`FB.fortificationDay` visits only its cached active-project list.
+
+Each tier is a hard technology decision with a useful fallback. Ringworks gates the first
+optional fort (`fort_construction`, fallback: no fort); Flanking Castle Towers gates tier 2
+(`towered_stronghold_upgrade`, fallback: Ringwork); Stone Castles gates tier 3
+(`stone_castle_upgrade`, fallback: Towered Stronghold); and Concentric Defenses plus
+Advanced Gate Defenses gate tier 4 (`concentric_fortress_upgrade`, fallback: Stone Castle).
+Existing tiers and projects remain usable if sovereignty or knowledge changes.
+
+New worlds seed settlement 0 of every rank-2+ non-player capital with the highest tier
+its sovereign technology supports. Compatibility repair does the same only for AI seats;
+it never grants a player fort. Each living AI holder banks annual `fortWorks` equal to
+directly held development, capped at 400; `fortWorksYear` makes that accrual idempotent,
+and at most one project may start per year. The stable priority is capital, foreign
+frontier, then higher development with county-id ties; costs are 60/120/220/400 works and
+construction uses the same durations as player projects.
+The planner is one annual realms-plus-counties pass. Legacy `walls` become level-3 Stone
+Castles; player-held copies retain the old one-gold upkeep for four seasons before the
+new eight-gold rate begins.
 
 Library research is a national contribution: it enters the current sovereign's shared
 research pool, which divides evenly among occupied project slots; unused points and
@@ -84,13 +119,13 @@ completion overflow remain reserve. Completed national technology may raise `FB.
 above 10 and applies signed building-cost modifiers through `FB.techCostFactor`;
 development and buildings themselves remain county state.
 
-Buildings may declare `requiresTech`. The built-in mill, granary, bridge, walls, market,
+Buildings may declare `requiresTech`. The built-in mill, granary, bridge, market,
 temple, harbor, library, keep, barracks, and archery butts use graph entries as discrete
 construction unlocks. The building picker and `FB.canBuildAt` enforce the requirement,
 while existing buildings remain with their land after conquest even if the new sovereign
 lacks the knowledge.
 
-**Non-revenue buildings cost upkeep.** Granaries, Bridges, Walls, Temples, Libraries, and
+**Non-revenue buildings cost upkeep.** Granaries, Bridges, Temples, Libraries, and
 Archery Butts cost 1 gold each season; Keeps cost 2 and Barracks 3 (a barracks’ paid
 men-at-arms are the dearest of all to keep). Mills, Markets, and Harbors directly fund themselves
 and have no separate upkeep. The seasonal charge applies only while the building stands in
@@ -116,7 +151,7 @@ occupy that settlement slot. One-time development, Common Voice, and prestige al
 when it was raised are not reversed.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for
-walls in battle.
+fort movement, battles, and sieges.
 
 **Initial development belongs to the bookmark.** On a new campaign,
 `state.dev[provinceId]` is copied from the active bookmark's county definition. Thus

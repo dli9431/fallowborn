@@ -1567,7 +1567,7 @@ window.FB = window.FB || {};
     const enemy = s.realms[cause.enemy];
     const capital = FB.world.byId[cause.target];
     const h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it at three war councils and the Caliphate passes to your realm. No land changes hands — the loser keeps their kingdom, but not the office.', {
+      'Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office.', {
         realm:enemy ? enemy.name : '',
         title:FB.religiousHeadTitle(s, 'sunni'),
         capital:capital ? capital.name : ''
@@ -1949,6 +1949,8 @@ window.FB = window.FB || {};
       const percent = Math.round(FB.clamp((occupation.progress || 0) /
         Math.max(1, requirement), 0, 1) * 100);
       const holy = campaign.holyCounties.indexOf(pid) >= 0;
+      const strongpoint = FB.fortSiegeStatus
+        ? FB.fortSiegeStatus(s, pid, occupation, 0) : null;
       const dev = s.dev[pid] || 1;
       totalDev += dev;
       if (occupation.occupied) { occupied++; occupiedDev += dev; }
@@ -1961,7 +1963,13 @@ window.FB = window.FB || {};
               camp:occupation.progressCamp === 'defenders'
                 ? FB.T('defender') : FB.T('attacker')
             })
-            : FB.T('open')) + '</b></div>';
+            : FB.T('open')) +
+        (strongpoint && strongpoint.level
+          ? '<span class="adesc">' + esc(FB.T(
+            '{fort} · {days} days · {minimum} men minimum · {attrition} seasonal losses', {
+              fort:strongpoint.name, days:requirement,
+              minimum:strongpoint.minimum, attrition:strongpoint.attrition
+            })) + '</span>' : '') + '</b></div>';
     }
     h += '<div class="progressnote">' + esc(FB.T(
       '{occupied}/{total} counties occupied · {development}/{totalDevelopment} objective development · attackers need every lost holy county, half the counties, and 60% of development.', {
@@ -2562,7 +2570,7 @@ window.FB = window.FB || {};
       ? s.realms.player.rank : s.player.tier;
     const models = [];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the siege at three war councils. Field victories bring the enemy to the table, nothing more.')) +
+      'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
           amount:financeAmount(musterUpkeep.total)
@@ -2578,6 +2586,8 @@ window.FB = window.FB || {};
       const causeText = warCauseName(s, cause);
       const preview = FB.warCausePreview
         ? FB.warCausePreview(s, cause) : null;
+      const targetSiege = FB.fortSiegeStatus
+        ? FB.fortSiegeStatus(s, pid, {}, 0) : null;
       const support = FB.alliedReinforcement(s, rid);
       const ruler = FB.realmRulerCharacterSnapshot
         ? FB.realmRulerCharacterSnapshot(s, rid) : null;
@@ -2618,7 +2628,13 @@ window.FB = window.FB || {};
           })) + '</span><span class="adesc' +
           (cause.type === 'aggression' ? ' warnote' : '') + '">' +
           esc(warCausePickerConsequenceText(s, preview)) +
-          '</span><span class="adesc ' + (cause.blocked ? 'warnote' : 'op-good') + '">' +
+          '</span>' + (targetSiege && targetSiege.level
+            ? '<span class="adesc warnote">' + esc(FB.T(
+              '{fort}: {steps} siege steps, {minimum} uncontested besiegers, {attrition} seasonal casualties; hostile passage stops there until breach.', {
+                fort:targetSiege.name, steps:targetSiege.required,
+                minimum:targetSiege.minimum, attrition:targetSiege.attrition
+              })) + '</span>' : '') + '<span class="adesc ' +
+          (cause.blocked ? 'warnote' : 'op-good') + '">' +
           esc(cause.blocked ? blockedReason : FB.T(
             'Available now · {distance}', {
               distance:adjacent ? FB.T('border target') : FB.T('distant right')
@@ -2746,6 +2762,8 @@ window.FB = window.FB || {};
     const realm = cause && s.realms[cause.enemy];
     const province = cause && FB.world.byId[cause.target];
     if (!consequence || !realm || !province) return;
+    const siege = FB.fortSiegeStatus
+      ? FB.fortSiegeStatus(s, cause.target, {}, 0) : { required:3, level:0 };
     const modifier = consequence.modifier;
     const modifierDef = modifier && FBDATA.modifiers[modifier.id];
     const modifierName = modifierDef
@@ -2782,10 +2800,15 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text"><p class="warnote"><b>' +
       esc(FB.T('This war has no recognized right.')) + '</b></p><p>' +
       esc(FB.T(
-        'Target {realm}; conquer {province} by holding it and completing three war-council siege steps.', {
+        'Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps.', {
           realm:realm.name,
-          province:province.name
-        })) + '</p><h4>' + esc(FB.T('Immediate consequences')) +
+          province:province.name,
+          steps:siege.required
+        })) + '</p>' + (siege.level
+        ? '<p class="hint">' + esc(FB.T(
+          '{fort} pins passage through the county until breached; it needs {minimum} uncontested besiegers and inflicts {attrition} casualties each active season.', {
+            fort:siege.name, minimum:siege.minimum, attrition:siege.attrition
+          })) + '</p>' : '') + '<h4>' + esc(FB.T('Immediate consequences')) +
       '</h4><ul><li>' + esc(FB.T('{prestige} prestige.', {
         prestige:signedNumber(consequence.prestigeChange)
       })) + '</li><li>' + esc(FB.T('{voice} Common Voice.', {
@@ -2965,7 +2988,6 @@ window.FB = window.FB || {};
     if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
     if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
     if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
-    if (id === 'walls') fx.push(FB.T('+8% battle odds when defending the home county'));
     if (id === 'granary') fx.push(FB.T('Unlocks granary choices during famine'));
     return fx;
   }
@@ -2976,7 +2998,7 @@ window.FB = window.FB || {};
     const place = settlements[idx] ? settlements[idx].name :
       (province ? province.name : pid);
     if (id === 'walls') {
-      return FB.T('{place}; defense applies in the home county', {
+      return FB.T('{place}; controls hostile movement through its county', {
         place:place
       });
     }
@@ -3090,6 +3112,7 @@ window.FB = window.FB || {};
           { percent: growth })) + '</b></p></div><div class="gm-list">';
       for (const id in FBDATA.buildings) {
         const d = FBDATA.buildings[id];
+        if (d.fort) continue;
         const slots = FB.buildingSlots(s, pid, id);
         const standing = FB.buildingCountIn(s, pid, id, false);
         const copies = FB.buildingCountIn(s, pid, id, true);
@@ -3365,6 +3388,165 @@ window.FB = window.FB || {};
      non-demesne settlement is read-only: demolition buttons render only for
      a county the player holds, and the raise button keeps the existing
      demesne/tier/buildable gates. */
+  function fortDateText(s, turn) {
+    const date = FB.dateAtTurn(s, turn);
+    return FB.T('{season} {day}, {year}', {
+      season:FB.seasonName(date.season), day:date.day, year:date.year
+    });
+  }
+
+  function fortRequirementNames(s, def) {
+    return (def.requiresTech || []).map(function (id) {
+      return technologyName(s, id);
+    }).join(' + ');
+  }
+
+  function fortName(s, level) {
+    return FB.fortLevelName ? FB.fortLevelName(s, level) :
+      FB.fortLevelDef(level).name;
+  }
+
+  function fortMaintenanceText(s, fort, active) {
+    if (!active) return FB.T('None until complete');
+    if (fort.maintenanceGraceUntil !== undefined &&
+        s.turn <= fort.maintenanceGraceUntil) {
+      return FB.T('{money:oldRate} through {date}; then {money:newRate} each season', {
+        oldRate:FBDATA.forts.legacyUpkeep || 1,
+        date:fortDateText(s, fort.maintenanceGraceUntil),
+        newRate:active.upkeep
+      });
+    }
+    return assetSeasonalMoneyCost(active.upkeep);
+  }
+
+  function fortProjectReason(s, status, def) {
+    if (!status) return '';
+    if (status.reason === 'technology') return FB.T('Requires {technology}.', {
+      technology:fortRequirementNames(s, def)
+    });
+    if (status.reason === 'gold') return FB.T('Requires {money:cost}.', {
+      cost:status.cost
+    });
+    if (status.reason === 'rank') return FB.T('Requires Baron rank or higher.');
+    if (status.reason === 'contested') return FB.T('Construction cannot begin while the county is contested.');
+    if (status.reason === 'ruins') return FB.T('Fort ruins occupy this settlement; choose another site in the county.');
+    if (status.reason === 'other_settlement') return FB.T('This county’s fort stands in another settlement.');
+    if (status.reason === 'active_project') return FB.T('The current fort project must finish first.');
+    if (status.reason === 'maximum') return FB.T('This is the strongest available fortification.');
+    return FB.T('This fort project is unavailable here.');
+  }
+
+  function fortAssetHtml(s, pid, idx, fort, own) {
+    const active = FB.fortLevelDef(fort.level);
+    const target = fort.targetLevel && FB.fortLevelDef(fort.targetLevel);
+    const shown = active || target;
+    if (!shown) return '';
+    const siege = FB.fortSiegeStatus(s, pid, {
+      fortLevel:fort.level || 0, progress:0
+    }, 0);
+    let h = '<div class="asset-owned-row fort-asset-row"><b>🏰 ' +
+      esc(active ? fortName(s, fort.level) : FB.T('{fort} foundations', {
+        fort:fortName(s, fort.targetLevel)
+      })) +
+      '</b>';
+    if (target) {
+      const began = fort.completeTurn - target.seasons * 90;
+      h += '<span class="adesc">' + esc(FB.T(
+        'Work began {start}; {fort} completes {finish}. The current tier remains active until then.', {
+          start:fortDateText(s, began), fort:fortName(s, fort.targetLevel),
+          finish:fortDateText(s, fort.completeTurn)
+        })) + '</span>';
+    }
+    h += assetEffectSummary({
+      compact:true,
+      owner:FB.T('{province} county', { province:FB.world.byId[pid].name }),
+      scope:FB.T('Controls hostile movement through this county'),
+      setupCost:target
+        ? FB.T('Paid upfront; no cancellation or refund')
+        : FB.T('Already paid'),
+      recurringCost:fortMaintenanceText(s, fort, active),
+      effect:active ? FB.T(
+        '{percent}% local defense · {garrison} garrison · {steps} added siege steps', {
+          percent:Math.round(active.defense * 100), garrison:active.garrison,
+          steps:active.siegeDelay
+        }) : FB.T('No active defenses until construction completes'),
+      transferRule:FB.T('Project and fort pass intact with the county'),
+      expiry:FB.T('Until demolished; demolition also destroys unfinished work')
+    }) + '</div>';
+    if (active) {
+      h += '<div class="hint fort-detail">' + esc(FB.T(
+        'Garrison and field-army burden: {garrison} men. A siege needs at least {minimum} uncontested besiegers and inflicts {attrition} casualties each active season. Hostile armies may enter, but cannot pass onward before a breach.', {
+          garrison:active.garrison, minimum:siege.minimum,
+          attrition:siege.attrition
+        })) + '</div>';
+    }
+    const currentLevel = Number(fort.level) || 0;
+    if (!fort.targetLevel && currentLevel < 4) {
+      const next = FB.fortLevelDef(currentLevel + 1);
+      const status = own
+        ? FB.fortProjectStatus(s, pid, idx, currentLevel + 1) : null;
+      h += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
+        fort:fortName(s, currentLevel + 1)
+      })) + '</b><span class="adesc">' + esc(FB.T(
+        '{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}', {
+          cost:next.cost, seasons:next.seasons, upkeep:next.upkeep,
+          garrison:next.garrison, technology:fortRequirementNames(s, next)
+        })) + '</span></div>';
+      if (own && status && status.ok) {
+        h += '<button class="actionbtn fort-project-action" data-fort-start="' +
+          (currentLevel + 1) + '">🏰 ' + esc(FB.T('Begin {fort}…', {
+            fort:fortName(s, currentLevel + 1)
+          })) + '<span class="adesc">' + esc(FB.T(
+            'Pay {money:cost} now; completes in {seasons} seasons.', {
+              cost:next.cost, seasons:next.seasons
+            })) + '</span></button>';
+      } else if (own && status && status.reason === 'technology' &&
+          status.missingTech.length) {
+        for (const missingTech of status.missingTech) {
+          h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
+            esc(missingTech) + '">' + esc(FB.T('Requires {technology}.', {
+              technology:technologyName(s, missingTech)
+            })) + '<span class="adesc">' +
+            esc(FB.T('Open the technology entry.')) + '</span></button>';
+        }
+      } else if (own && status) {
+        h += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
+          fort:fortName(s, currentLevel + 1)
+        })) + '<span class="adesc">' + esc(fortProjectReason(s, status, next)) +
+          '</span></button>';
+      }
+    }
+    return h;
+  }
+
+  UI.showFortProject = function (pid, idx, targetLevel) {
+    const s = FB.state;
+    const status = FB.fortProjectStatus(s, pid, idx, targetLevel);
+    const def = FB.fortLevelDef(targetLevel);
+    if (!status.ok || !def) return UI.showSettlement(pid, idx);
+    const finish = fortDateText(s, status.completeTurn);
+    const body = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Pay {money:cost} now to begin {fort}. Work cannot be cancelled or refunded; it survives succession and conquest and completes {finish}.', {
+        cost:status.cost, fort:fortName(s, targetLevel), finish:finish
+      })) + '</p><p>' + esc(FB.T(
+      'On completion: {prestige} prestige, {percent}% defense in this county, {garrison} men retained as garrison, {upkeep} seasonal upkeep, and {steps} added siege steps.', {
+        prestige:def.prestige, percent:Math.round(def.defense * 100),
+        garrison:def.garrison, upkeep:def.upkeep, steps:def.siegeDelay
+      })) + '</p></div><div class="gm-list"><button class="actionbtn" id="fort-project-confirm">' +
+      esc(FB.T('Begin {fort} for {money:cost}', {
+        fort:fortName(s, targetLevel), cost:status.cost
+      })) + '</button></div><button class="btn" id="fort-project-back">' +
+      esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Raise {fort}?', { fort:fortName(s, targetLevel) }), body);
+    $('fort-project-confirm').addEventListener('click', function () {
+      if (FB.startFortProject(FB.state, pid, idx, targetLevel)) UI.refresh();
+      UI.showSettlement(pid, idx);
+    });
+    $('fort-project-back').addEventListener('click', function () {
+      UI.showSettlement(pid, idx);
+    });
+  };
+
   UI.showSettlement = function (pid, idx) {
     const s = FB.state;
     const pr = FB.world.byId[pid];
@@ -3423,6 +3605,14 @@ window.FB = window.FB || {};
         const id = e.id;
         const d = FBDATA.buildings[id];
         if (!d) continue;
+        if (id === 'walls' && !e.ruined) {
+          h += fortAssetHtml(s, pid, idx, e, own);
+          if (own) {
+            h += '<button class="btn sett-demolish" data-demolish="walls">' +
+              esc(FB.T('Demolish…')) + '</button>';
+          }
+          continue;
+        }
         if (e.ruined) {
           h += '<div class="asset-owned-row"><b>' + d.icon + ' ' +
             esc(FB.T('Ruins of {building}', {
@@ -3461,6 +3651,32 @@ window.FB = window.FB || {};
       h += '<p class="hint">' + esc(FB.T('No buildings stand in {settlement} yet.',
         { settlement: st.name })) + '</p>';
     }
+    if (!FB.fortAt(s, pid) && own) {
+      const fortStatus = FB.fortProjectStatus(s, pid, idx, 1);
+      const firstFort = FB.fortLevelDef(1);
+      h += '<div class="fort-next-tier"><b>' + esc(FB.T('Fortify this county: {fort}', {
+        fort:fortName(s, 1)
+      })) + '</b><span class="adesc">' + esc(FB.T(
+        '{money:cost} upfront · {seasons} seasons · one fort per county · requires {technology}', {
+          cost:firstFort.cost, seasons:firstFort.seasons,
+          technology:fortRequirementNames(s, firstFort)
+        })) + '</span></div>';
+      if (fortStatus.ok) {
+        h += '<button class="actionbtn fort-project-action" data-fort-start="1">🏰 ' +
+          esc(FB.T('Begin {fort}…', { fort:fortName(s, 1) })) + '</button>';
+      } else if (fortStatus.reason === 'technology' && fortStatus.missingTech.length) {
+        h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
+          esc(fortStatus.missingTech[0]) + '">' +
+          esc(fortProjectReason(s, fortStatus, firstFort)) +
+          '<span class="adesc">' + esc(FB.T('Open the technology entry.')) +
+          '</span></button>';
+      } else {
+        h += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
+          fort:fortName(s, 1)
+        })) + '<span class="adesc">' + esc(fortProjectReason(s, fortStatus, firstFort)) +
+          '</span></button>';
+      }
+    }
     const canRaise = own && s.player.tier >= 3 &&
       FB.buildable(s, pid, idx).length > 0;
     if (canRaise) {
@@ -3475,6 +3691,16 @@ window.FB = window.FB || {};
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
+    document.querySelectorAll('[data-fort-start]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showFortProject(pid, idx, Number(button.dataset.fortStart));
+      });
+    });
+    document.querySelectorAll('[data-fort-tech]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showTechDetail(button.dataset.fortTech);
+      });
+    });
     $('settlement-guide').addEventListener('click', function () {
       UI.showGuideEntry('settlements-development');
     });
@@ -13092,7 +13318,8 @@ window.FB = window.FB || {};
       kind === 'householdStandard' ? FBDATA.householdStandards :
       kind === 'policy' ? FBDATA.policies :
       kind === 'privilege' ? FBDATA.privileges :
-      kind === 'feudalServiceCharter' ? FBDATA.feudalServiceCharters : null;
+      kind === 'feudalServiceCharter' ? FBDATA.feudalServiceCharters :
+      kind === 'fort' ? FBDATA.fortLevels : null;
     const dataKind = kind === 'building' ? 'building' :
       kind === 'career' ? 'career' :
       kind === 'enterprise' ? 'enterprise' :
@@ -13100,6 +13327,7 @@ window.FB = window.FB || {};
       kind === 'policy' ? 'policy' :
       kind === 'privilege' ? 'privilege' :
       kind === 'feudalServiceCharter' ? 'feudalServiceCharter' :
+      kind === 'fort' ? 'fort' :
       'householdStandard';
     if (table && table[target]) {
       const content = dt(s, dataKind, target, table[target], 'name');
@@ -13127,6 +13355,9 @@ window.FB = window.FB || {};
         return FB.T('Allows the service charter {content} when granting land.', {
           content:content
         });
+      }
+      if (kind === 'fort') {
+        return FB.T('Allows construction of {content}.', { content:content });
       }
       return FB.T('Makes the {content} household standard available.', { content:content });
     }
@@ -13165,7 +13396,8 @@ window.FB = window.FB || {};
       { kind:'schooling', data:FBDATA.schooling },
       { kind:'policy', data:FBDATA.policies },
       { kind:'privilege', data:FBDATA.privileges },
-      { kind:'feudalServiceCharter', data:FBDATA.feudalServiceCharters }
+      { kind:'feudalServiceCharter', data:FBDATA.feudalServiceCharters },
+      { kind:'fort', data:FBDATA.fortLevels }
     ];
     for (const entry of tables) {
       for (const target in (entry.data || {})) {
@@ -18108,7 +18340,7 @@ window.FB = window.FB || {};
         FB.T('Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration.'),
         FB.T('When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed.'),
         FB.T('Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration.'),
-        FB.T('A declaration must still be won on the map. March the host to the named prize and complete three siege steps at war councils. Field victories can produce peace offers but do not transfer the target by themselves.')
+        FB.T('A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.')
       ]), 'war warfare aggression aggressive casus belli claim fabricated de jure conquest siege host peace breakaway conquered without right');
     add('government', 'government', FB.T('Government systems'),
       FB.T('Territorial rank opens Governance; institutions vary by relationship to the crown.'),
@@ -18330,7 +18562,9 @@ window.FB = window.FB || {};
       '<h4>War</h4>' +
       '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war prefers a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). ' +
       esc(FB.T('Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.')) +
-      ' A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>Land is taken only by siege:</b> stand on the prize and press the siege at three war councils. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands — three seasons unchecked and a province falls. Past eight seasons, exhaustion ends the war with nothing gained.</p>' +
+      ' A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>' +
+      esc(FB.T('Land is taken only by siege:')) + '</b> ' +
+      esc(FB.T('Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.')) + '</p>' +
       '<p>' + esc(FB.T('Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.')) + '</p>' +
       '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +

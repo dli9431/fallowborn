@@ -42,7 +42,7 @@ FBDATA.events.push(
       desc:'March on their army in the field — battle joins when you catch it.',
       effects:{ custom:'war_hunt' } },
     { label:'Press the siege of {target}.', require:{ custom:'war_can_siege' },
-      desc:'Ladders, mines, and patience — your host must stand in the target province; three seasons of siege take the prize. Beware sorties.',
+      desc:'Ladders, mines, and patience — your host must stand in the target province. Fortifications add siege work, demand enough uncontested men, and exact seasonal losses.',
       effects:{ custom:'war_siege', prestige:2, skills:{mar:1} } },
     { label:'Harry their lands.', chance:0.7, desc:'Burn and take — weaken them before the next battle.',
       success:{ text:'Granaries burn and herds change owners. Their war grows dearer by the day — and yours a little richer.',
@@ -58,7 +58,7 @@ FBDATA.events.push(
   options:[
     { label:'Take the tribute.', desc:'Their coin, your glory — the war ends here.',
       effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
-    { label:'Press on for {target}.', desc:'Keep your host standing on {target} and press the siege at each war council — three seasons of works take it.',
+    { label:'Press on for {target}.', desc:'Keep your host standing on {target} and press the siege at each war council. Fortifications may demand more work and a larger host.',
       effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},
 

@@ -260,6 +260,36 @@ route, arriving in a county, changing allied levies, reinforcing, or fighting re
 render. Intermediate march-day countdowns do not, because markers remain on the county
 the host still occupies and there is no interpolated movement to draw.
 
+## Fortified strongpoints
+
+An active hostile fort is a movement obstacle, not merely a longer progress bar.
+`FB.findArmyPath` may end at its county but may not use that county as an intermediate
+node, so a second road can route around it. On arrival the fort clears any saved onward
+route and pins the host. A pinned host may remain and siege, return through `army.from`,
+or step into friendly-controlled land; allied and friendly armies pass normally. A
+broken host still seeks its retreat before automation applies the pinned hold.
+
+Ordinary conquest takes three base siege steps plus the fort's snapshotted tier. The
+snapshot is written when the first active pulse begins, so construction completed during
+the siege does not move the goalposts. Progress needs uncontested friendly strength of
+three times the garrison: 120/240/420/660 men. Every active seasonal pulse costs the
+besiegers `ceil(garrison × 0.15)` casualties (6/12/21/33), divided proportionally among
+friendly hosts, and costs a player campaign 0.05 condition. Falling below the threshold
+stalls later work. Abandoned work loses one step per season.
+
+A standing tier supplies 5%/10%/15%/20% local defensive battle power. Field victories,
+submission, capture-ransom land cession, and the old defensive-loss shortcut cannot move
+a fortified county before its exact siege is breached. Capture leaves the fort and any
+construction intact, even if the new controller lacks its technology. A fort's added
+steps also extend the bilateral war exhaustion limit. AI border wars likewise cannot
+abstractly transfer the county: only a pinned qualifying host applies four seasonal
+pulses in the yearly pass, and abandoned AI work decays four steps.
+
+The strongpoint protects political control, not every field and village. Hostile armies
+inside the county can still cause devastation and outside-the-walls events. Stores,
+surrender terms, repairs, garrison characters, and settlement-interior combat remain
+future work rather than hidden supply simulation.
+
 **The host can fight the war for you.** The ⚙ automation's host-command stances
 (`G.auto.hosts`) re-raise a destroyed host once the rearm window passes and steer an
 *idle* host each day (`playerGoal` in armies.js): defensive throws back any invader
@@ -451,10 +481,14 @@ disbanding loses the recruits, and a later remuster starts from the ordinary com
 Objectives are the target kingdom's counties controlled outside the caller's fold at
 the call. They keep their normal owner and holder throughout the campaign.
 `campaign.occupations[provinceId]` holds only temporary occupation, siege progress,
-the progressing camp, and the occupying host. An uncontested qualifying camp gains
+the progressing camp, the occupying host, and an in-flight fort-tier snapshot. An
+uncontested qualifying camp gains
 `clamp(combined men / (development × 27), 0.5, 2)` siege-days each day toward
-`120 + development × 10`; idle work decays by one. Defender work recaptures an
-occupied county. Battles shift resolve by 10 and occupations by 5. Defenders win at
+`120 + development × 10 + 90 × fort tier`; idle work decays by one each season. Fort
+work uses all same-camp hosts present, the ordinary three-times-garrison minimum, and
+proportional seasonal fort attrition. Temporary occupation suppresses the captured
+fort's block for the occupying camp, while defender recapture must breach it again.
+Battles shift resolve by 10 and occupations by 5. Defenders win at
 −100 resolve, when no sovereign attacker remains, or after eight years. Attackers
 must occupy every frozen lost holy county, at least half the objective counties, and
 60% of objective development. Only occupied counties transfer at settlement.

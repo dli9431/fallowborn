@@ -146,6 +146,7 @@ A JSON mod is one object with any of these keys:
   "traits":    { "id": { ... } },
   "ailments":  { "id": { ... } },
   "buildings": { "id": { ... } },
+  "forts":     { "levels": { "1": { ... } }, "baseSiegeSteps": 3 },
   "techDomains": { "id": { "name": "...", "icon": "...", "order": 7 } },
   "techTraditions": { "id": { "name": "...", "cultures": [], "religions": [] } },
   "tech":      { "id": { ... } },
@@ -673,7 +674,8 @@ per mercenary company otherwise), worn by the host's condition (`war.strength`),
 the enemy realm's fielded host (its per-development muster otherwise) — a side still
 re-forming a shattered host counts only a fraction of that muster (`FB.rearmScale`: the
 share of `armyRearmDays` elapsed, floored at 0.15) — with the bonuses
-banked by war-council effects, walls, tech, items, and blessings on top.
+banked by war-council effects, a fort in the defended county, tech, items, and blessings
+on top.
 `appeal_outcome` weighs an appeal above the player's liege (diplomacy, intrigue, and the
 target lord's opinion); `vassal_comply` weighs whether a vassal yields his fief peacefully.
 `county_petition` weighs the liege's favor toward the player, prestige, and war service
@@ -1313,8 +1315,8 @@ a province:
   docs/designs/war.md).
 - One-time on completion: `dev`, `pop` (popular opinion), `prestige`.
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
-- The `walls` id is special: the engine reads it for a defense bonus in the `war_battle`
-  chance — only when walls stand in the home county (`FB.hasBuildingIn`).
+- The `walls` id is reserved for the strategic fortification system below. It is excluded
+  from ordinary building pickers, repeat pricing, Raise Next, and autobuild.
 
 Built buildings live in `state.buildings` keyed by **province id**, each entry shaped
 `{ s: settlementIndex, id, ruined? }` — conquest takes them with the land, and they pass to heirs
@@ -1324,6 +1326,56 @@ entry keeps occupying its slot and counting toward repeat prices, but supplies n
 upkeep, or event requirement. Events can gate options or triggers on standing buildings
 via `buildings` / `notBuildings` (the famine event's granary option, for example) — those
 read demesne-wide through `FB.hasBuilding`.
+
+### Strategic fortifications
+
+`FBDATA.forts` configures the reserved `walls` asset. Runtime mods may provide a partial
+top-level `forts` object; scalar keys replace their core value and `forts.levels` merges
+by tier without dropping unspecified tiers. The shipped shape is:
+
+```json
+{
+  "forts": {
+    "baseSiegeSteps": 3,
+    "garrisonStrengthRatio": 3,
+    "seasonalAttritionRate": 0.15,
+    "campaignStrengthLoss": 0.05,
+    "holyWarDaysPerLevel": 90,
+    "legacyLevel": 3,
+    "legacyUpkeep": 1,
+    "legacyGraceSeasons": 4,
+    "aiWorksCap": 400,
+    "levels": {
+      "1": {
+        "name": "Ringwork",
+        "requiresTech": ["ringworks"],
+        "cost": 120, "seasons": 2, "upkeep": 2,
+        "garrison": 40, "siegeDelay": 1,
+        "defense": 0.05, "prestige": 10, "work": 60
+      }
+    }
+  }
+}
+```
+
+Levels 1–4 must remain sequential because construction derives the next target as
+`current level + 1`; `requiresTech` is an all-of list. `cost` is player gold paid up
+front, `seasons` is exactly 90 days each, `upkeep` is seasonal player maintenance,
+`garrison` is removed from deployable field levy, `siegeDelay` extends the three-step
+ordinary siege, `defense` is local battle power, `prestige` is awarded once on
+completion, and `work` is the AI-holder threshold.
+`campaignStrengthLoss` is the ordinary player war-condition cost of an active fortified
+pulse. The `legacy*` values govern old `walls` migration and its player maintenance grace;
+`aiWorksCap` limits banked construction work.
+
+Saved forts remain settlement building entries, but use
+`{s,id:"walls",level,targetLevel?,completeTurn?,maintenanceGraceUntil?,ruined?}`.
+Level 0 is unfinished and supplies no block, garrison, upkeep, or defense; an upgrade's
+old `level` remains active beside its higher `targetLevel`. Siege records copy the tier
+into `fortLevel`, so editing a live fort does not change an in-flight requirement.
+Shared consumers should use `FB.fortAt`, `FB.fortAtSettlement`, `FB.fortBlocksArmy`,
+`FB.fortSiegeStatus`, `FB.fortGarrisonBurden`, `FB.canStartFortProject`, and
+`FB.startFortProject` rather than scanning `state.buildings`.
 
 ## Household holdings
 

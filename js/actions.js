@@ -2841,6 +2841,7 @@ window.FB = window.FB || {};
     if (p.tier >= 3) {
       total += FB.playerTax(state);
       total -= FB.buildingBonus(state, 'upkeep');
+      if (FB.fortUpkeep) total -= FB.fortUpkeep(state);
     }
     total += FB.holdingBonus(state, 'gold');
     total += FB.landYield(state);
@@ -2939,6 +2940,9 @@ window.FB = window.FB || {};
         add('gold', FB.T('Liege’s cut'), tax.liege);
       }
       addBuildings('gold', 'upkeep', -1, true);
+      if (FB.fortUpkeep) {
+        add('gold', FB.T('Fortification upkeep'), -FB.fortUpkeep(state));
+      }
       addBuildings('piety', 'piety'); // chapels and temples pay in piety, not coin
     }
 
@@ -5195,7 +5199,10 @@ window.FB = window.FB || {};
   FB.hasBuilding = function (state, id) {
     for (const pid of FB.demesne(state)) {
       const done = FB.builtIn(state, pid);
-      for (const e of done) if (e.id === id && !e.ruined) return true;
+      for (const e of done) {
+        if (e.id === id && !e.ruined &&
+            (id !== 'walls' || (Number(e.level) || 0) > 0)) return true;
+      }
     }
     return false;
   };
@@ -5203,7 +5210,10 @@ window.FB = window.FB || {};
   /* built in ONE province (walls guard the county they stand in) */
   FB.hasBuildingIn = function (state, pid, id) {
     const done = FB.builtIn(state, pid);
-    for (const e of done) if (e.id === id && !e.ruined) return true;
+    for (const e of done) {
+      if (e.id === id && !e.ruined &&
+          (id !== 'walls' || (Number(e.level) || 0) > 0)) return true;
+    }
     return false;
   };
 
@@ -5212,7 +5222,7 @@ window.FB = window.FB || {};
     for (const pid of FB.demesne(state)) {
       for (const e of FB.builtIn(state, pid)) {
         const def = FBDATA.buildings[e.id];
-        if (!e.ruined && def && def[key]) sum += def[key];
+        if (!e.ruined && def && !def.fort && def[key]) sum += def[key];
       }
     }
     return sum;
@@ -5223,6 +5233,7 @@ window.FB = window.FB || {};
      instead of the bonus shrinking */
   FB.buildCost = function (state, pid, id) {
     const def = FBDATA.buildings[id];
+    if (!def || def.fort) return 0;
     const copies = FB.buildingCountIn(state, pid, id, true);
     let c = def.cost * Math.pow(FBDATA.balance.buildingRepeatCostGrowth || 1.5, copies) *
       Math.max(0, FB.techCostFactor(state, 'build') -
@@ -5236,7 +5247,7 @@ window.FB = window.FB || {};
   FB.canBuildAt = function (state, pid, idx, id) {
     const def = FBDATA.buildings[id];
     const pr = FB.world.byId[pid];
-    if (!def || FB.demesne(state).indexOf(pid) < 0 || !FB.settlementsOf(state, pid)[idx]) return false;
+    if (!def || def.fort || FB.demesne(state).indexOf(pid) < 0 || !FB.settlementsOf(state, pid)[idx]) return false;
     if (def.requiresTech && !FB.techRequirementMet(state, def.requiresTech)) return false;
     const done = FB.builtIn(state, pid);
     for (const e of done) if (e.id === id && e.s === idx) return false;
@@ -5255,6 +5266,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const id in FBDATA.buildings) {
       const def = FBDATA.buildings[id];
+      if (def.fort) continue;
       if (!FB.canBuildAt(state, pid, idx, id)) continue;
       out.push({ id: id, def: def, cost: FB.buildCost(state, pid, id) });
     }
@@ -5303,6 +5315,9 @@ window.FB = window.FB || {};
   };
 
   FB.demolishBuilding = function (state, pid, idx, id) {
+    if (id === 'walls' && FB.demolishFort) {
+      return FB.demolishFort(state, pid, idx);
+    }
     if (FB.demesne(state).indexOf(pid) < 0) return false;
     const done = FB.builtIn(state, pid);
     for (let i = 0; i < done.length; i++) {

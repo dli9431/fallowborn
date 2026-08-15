@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.129.0';
+  FB.VERSION = '1.130.0';
   FB.CHANGELOG = [
+    { v: '1.130.0', date: '2026-08-14', changes: [
+      'Fortifications now act as strategic strongpoints: build and upgrade them at settlements to block hostile passage and force invading hosts into sieges.'
+    ] },
     { v: '1.129.0', date: '2026-08-14', changes: [
       'Craft and Trade guildmasters can now choose permanent specialty paths, with advanced paths shaped by national technology.',
       'Households can now attend bounded market auctions for items, enterprises, and documented county title rights.'
@@ -1796,6 +1799,7 @@ window.FB = window.FB || {};
     };
     FB.state = state;
     FB.initPolitics(state);
+    if (FB.repairForts) FB.repairForts(state);
     FB.scriptedTick(state);
     scheduleSlots(state);
 
@@ -2039,6 +2043,7 @@ window.FB = window.FB || {};
     };
     FB.state = state;
     FB.initPolitics(state);
+    if (FB.repairForts) FB.repairForts(state);
     FB.scriptedTick(state);
     // a placeholder soul, never shown — some panels dereference it blindly
     const me = FB.makeCharacter(state, {
@@ -2125,6 +2130,7 @@ window.FB = window.FB || {};
     }
     if (FB.localGovernmentDay) FB.localGovernmentDay(s);
     FB.scriptedTick(s);
+    if (FB.fortificationDay) FB.fortificationDay(s);
     if (FB.religiousHeadRecoveryTick) FB.religiousHeadRecoveryTick(s);
     if (FB.papacyDay) FB.papacyDay(s);
     if (FB.guildMonopolyTick) FB.guildMonopolyTick(s);
@@ -2154,7 +2160,9 @@ window.FB = window.FB || {};
       if (p.dead) return 'dead';
       const upkeep = FB.householdUpkeep(s);
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
-      const buildingUpkeep = p.tier >= 3 ? FB.buildingBonus(s, 'upkeep') : 0;
+      const buildingUpkeep = p.tier >= 3
+        ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
+        : 0;
       const modifierUpkeep = FB.modifierUpkeep ? FB.modifierUpkeep(s, 'gold') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
       /* Settle ordinary household income together; livelihoodSeason clamps the

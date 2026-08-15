@@ -329,6 +329,9 @@ test('aggressive conquest grants no victory prestige and burdens the county',
       var afterDeclaration = p.prestige;
       p.tier = 7;
       s.realms.player.rank = 4;
+      var strongpoint = FB.fortSiegeStatus(s, setup.targetId, {}, 0);
+      p.war.siegeFortLevel = strongpoint.level;
+      p.war.siege = strongpoint.required;
       FB.warCapture(s);
       var records = FB.countyModifierRecords(s, setup.targetId);
       var record = records.filter(function (item) {

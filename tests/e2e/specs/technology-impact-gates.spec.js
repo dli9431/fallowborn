@@ -66,6 +66,13 @@ test('the prospective review ledger and every gate schema validate together',
         FBDATA.policies.redress.requiresTech = originalRequirement;
       }
 
+      var originalFortRequirement = FBDATA.fortLevels[1].requiresTech;
+      FBDATA.fortLevels[1].requiresTech = ['missing_e2e_technology'];
+      var fortConsumerErrors = FB.validateTechnologyData().filter(function (error) {
+        return error.indexOf('Fort 1') >= 0;
+      });
+      FBDATA.fortLevels[1].requiresTech = originalFortRequirement;
+
       var wreck = FB.eventById('strange_bounty');
       var compact = wreck.options[wreck.options.length - 1];
       var technology = FB.realmTechRecord(FB.state);
@@ -123,6 +130,7 @@ test('the prospective review ledger and every gate schema validate together',
         manualOnlyErrors:manualOnlyErrors,
         auctionLotErrors:auctionLotErrors,
         consumerErrors:consumerErrors,
+        fortConsumerErrors:fortConsumerErrors,
         structurallyHidden:structurallyHidden,
         eligibleButLocked:eligibleButLocked,
         guildCharterCount:guildCharterOptions.length,
@@ -140,12 +148,14 @@ test('the prospective review ledger and every gate schema validate together',
       'auction_item_lots',
       'auction_title_rights',
       'bounded_market_auctions',
+      'concentric_fortress_upgrade',
       'confirmation_of_great_offices',
       'consent_of_estates',
       'direct_vassal_charter_of_liberties',
       'estates_scutage',
       'formal_confirmation_of_custom',
       'formal_market_charters',
+      'fort_construction',
       'guild_broker_path',
       'guild_caravan_factor_path',
       'guild_cooper_path',
@@ -153,12 +163,14 @@ test('the prospective review ledger and every gate schema validate together',
       'guild_smith_path',
       'guild_weaver_path',
       'rare_auction_invitations',
-      'tournament_jousting'
+      'stone_castle_upgrade',
+      'tournament_jousting',
+      'towered_stronghold_upgrade'
     ]);
     expect(Object.values(result.modes)).toEqual([
       'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',
-      'hard', 'hard', 'none', 'hard', 'hard', 'hard', 'none', 'hard',
-      'none', 'hard'
+      'hard', 'hard', 'hard', 'hard', 'none', 'hard', 'hard', 'hard',
+      'none', 'hard', 'none', 'hard', 'hard', 'hard'
     ]);
     expect(result.coreErrors).toEqual([]);
     expect(result.reviewErrors.some(function (error) {
@@ -180,6 +192,8 @@ test('the prospective review ledger and every gate schema validate together',
       'Auction lot type claim: missing required technology missing_e2e_technology.');
     expect(result.consumerErrors).toContain(
       'Policy redress: missing required technology missing_e2e_technology.');
+    expect(result.fortConsumerErrors).toContain(
+      'Fort 1: missing required technology missing_e2e_technology.');
     expect(result.structurallyHidden).toMatchObject({
       visible:false, ready:false, techLocked:true
     });

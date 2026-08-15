@@ -243,6 +243,19 @@ window.FBMODS = window.FBMODS || [];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];
     if (mod.modifiers) for (const k in mod.modifiers) FBDATA.modifiers[k] = mod.modifiers[k];
     if (mod.buildings) for (const k in mod.buildings) FBDATA.buildings[k] = mod.buildings[k];
+    if (mod.forts) {
+      const modFortLevels = mod.forts.levels;
+      for (const fortKey in mod.forts) {
+        if (fortKey !== 'levels' && own(mod.forts, fortKey)) {
+          FBDATA.forts[fortKey] = mod.forts[fortKey];
+        }
+      }
+      if (modFortLevels) {
+        mergeTable(FBDATA.forts.levels, modFortLevels);
+        FBDATA.fortLevels = FBDATA.forts.levels;
+      }
+      if (FB.invalidateFortIndex) FB.invalidateFortIndex();
+    }
     if (mod.tech) for (const k in mod.tech) FBDATA.tech[k] = mod.tech[k];
     if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
     if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);

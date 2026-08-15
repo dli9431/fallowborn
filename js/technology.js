@@ -1655,6 +1655,7 @@ window.FB = window.FB || {};
     }
     var requirementTables = {
       Building:FBDATA.buildings,
+      Fort:FBDATA.fortLevels,
       Career:FBDATA.careers,
       Schooling:FBDATA.schooling,
       Enterprise:FBDATA.enterprises,

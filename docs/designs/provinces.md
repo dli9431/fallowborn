@@ -93,6 +93,14 @@ optional eighth start-code part ([seeds.md](seeds.md)). The go-into-town deed qu
 `visit_*` events (events_common.js) with the name in `ctx.settlement` (`{settlement}`
 token); options are require-gated by station.
 
+A fort keeps its exact settlement visible even when later development loss would hide
+that slot under the normal reveal thresholds. `mapview.js` draws one additional badge
+over the existing settlement emblem rather than a second marker or altered site-art
+cache: a shield-like outline plus one to four repeated marks encodes tier without color,
+and a crossed corner encodes active construction. `FB.fortBadgeDescriptor` is the
+accessible/testable projection behind that drawing. County settlement links repeat a
+compact tier/construction mark in ordinary DOM text.
+
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
 
