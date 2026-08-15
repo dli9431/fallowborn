@@ -70,7 +70,7 @@ test('map focus preserves member colors and shades only land outside the group',
     expect(result.outsideChannels[1]).toBeLessThan(result.outsideChannels[2]);
   });
 
-test('Self rank shows demesne details and Settings changes map presentation',
+test('Self rank shows demesne details and Settings changes text and map presentation',
   async function ({ page }) {
     const homeName = await page.evaluate(function () {
       const s = FB.state;
@@ -110,6 +110,66 @@ test('Self rank shows demesne details and Settings changes map presentation',
     await page.locator('#m-settings').click();
     await expect(page.getByRole('heading', { name:'Settings', exact:true }))
       .toBeVisible();
+    await expect(page.locator('#set-main-text-color-change')).toBeVisible();
+    await expect(page.locator('#set-main-text-color')).toHaveValue('#f2eadb');
+    await expect(page.locator('body'))
+      .toHaveCSS('color', 'rgb(242, 234, 219)');
+    await expect(page.locator('#tab-actions .actionbtn').first())
+      .toHaveCSS('color', 'rgb(242, 234, 219)');
+    await expect(page.locator('#set-helper-text-color-change')).toBeVisible();
+    await expect(page.locator('#set-helper-text-color')).toHaveValue('#c9b991');
+    await expect(page.locator('#set-speed-label'))
+      .toHaveCSS('color', 'rgb(201, 185, 145)');
+    await expect(page.locator('#tab-actions .actionbtn .adesc').first())
+      .toHaveCSS('color', 'rgb(201, 185, 145)');
+
+    await page.locator('#set-main-text-color').evaluate(function (input) {
+      input.value = '#fff4df';
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+    });
+    const mainText = await page.evaluate(function () {
+      return {
+        preference:FB.game.uiPrefs.mainTextColor,
+        stored:JSON.parse(localStorage.getItem('fb_ui')).mainTextColor,
+        property:document.documentElement.style.getPropertyValue(
+          '--main-text-color'),
+        bodyColor:getComputedStyle(document.body).color,
+        actionColor:getComputedStyle(document.querySelector(
+          '#tab-actions .actionbtn')).color
+      };
+    });
+    expect(mainText).toEqual({
+      preference:'#fff4df',
+      stored:'#fff4df',
+      property:'#fff4df',
+      bodyColor:'rgb(255, 244, 223)',
+      actionColor:'rgb(255, 244, 223)'
+    });
+
+    await page.locator('#set-helper-text-color').evaluate(function (input) {
+      input.value = '#d7f0ff';
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+    });
+    const helperText = await page.evaluate(function () {
+      return {
+        preference:FB.game.uiPrefs.helperTextColor,
+        stored:JSON.parse(localStorage.getItem('fb_ui')).helperTextColor,
+        property:document.documentElement.style.getPropertyValue(
+          '--helper-text-color'),
+        settingsColor:getComputedStyle(
+          document.getElementById('set-speed-label')).color,
+        actionColor:getComputedStyle(document.querySelector(
+          '#tab-actions .actionbtn .adesc')).color
+      };
+    });
+    expect(helperText).toEqual({
+      preference:'#d7f0ff',
+      stored:'#d7f0ff',
+      property:'#d7f0ff',
+      settingsColor:'rgb(215, 240, 255)',
+      actionColor:'rgb(215, 240, 255)'
+    });
+
     await expect(page.locator('#set-realm-highlight-change')).toBeVisible();
     await expect(page.locator('#gm-body')).toHaveCSS('padding-right', '10px');
     await page.locator('#set-realm-highlight-change').scrollIntoViewIfNeeded();
@@ -208,4 +268,16 @@ test('Self rank shows demesne details and Settings changes map presentation',
         return FB.game.uiPrefs.realmHighlightColor;
       });
     }).toBe('#e8dec4');
+    await page.locator('#set-main-text-color-reset').click();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.game.uiPrefs.mainTextColor;
+      });
+    }).toBe('#f2eadb');
+    await page.locator('#set-helper-text-color-reset').click();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return FB.game.uiPrefs.helperTextColor;
+      });
+    }).toBe('#c9b991');
   });

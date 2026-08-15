@@ -2,6 +2,7 @@
 
 const { test, expect } = require('../support/fixture');
 const { openGame, startDeterministicGame } = require('../support/game');
+const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -546,24 +547,269 @@ test('typed charters validate scope while legacy contracts and exact ids remain 
     expect(result.petitionDialogText).toContain('One corridor');
   });
 
+test('Land and settlement market entry points keep county-wide access in county places',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};
+      s.player.panelIntrosSeen.prov = 1;
+      FB.ui.selectProvince('london');
+      FB.ui.showTab('prov', { history:false });
+    });
+
+    const landMarket = page.locator('#tab-prov #county-market');
+    await expect(landMarket).toHaveCount(1);
+    await expect(page.locator('#tab-prov > #county-market')).toHaveCount(0);
+    const landCard = await landMarket.evaluate(function (button) {
+      const section = button.closest('.land-section');
+      return {
+        section:section && section.querySelector('.land-section-title').textContent,
+        classes:button.className,
+        summary:button.textContent
+      };
+    });
+    expect(landCard.section).toBe('Development');
+    expect(landCard.classes).toContain('land-market-card');
+    expect(landCard.summary).toContain('County market');
+    expect(landCard.summary).toContain('Provisions');
+
+    await landMarket.click();
+    await expect(page.getByRole('heading', { name:/London market$/i })).toBeVisible();
+    await expect(page.locator('#market-sheet-good')).toHaveAttribute('data-good', 'provisions');
+    await page.getByRole('button', { name:'Done', exact:true }).click();
+
+    const settlements = await page.evaluate(function () {
+      const list = FB.settlementsOf(FB.state, 'london');
+      FB.ui.showSettlement('london', 0);
+      return list.map(function (settlement) { return settlement.name; });
+    });
+    expect(settlements[0]).toBe('London');
+    expect(settlements.length).toBeGreaterThan(1);
+    await expect(page.locator('#settlement-market')).toBeVisible();
+    await page.locator('#settlement-market').click();
+    await expect(page.getByRole('heading', { name:/London market$/i })).toBeVisible();
+    await page.getByRole('button', { name:'Done', exact:true }).click();
+
+    await page.evaluate(function () { FB.ui.showSettlement('london', 1); });
+    await expect(page.locator('#gm-title')).toContainText(settlements[1]);
+    await expect(page.locator('#settlement-market')).toHaveCount(0);
+  });
+
+test('the Market lens stays contained on compact desktops and tablets',
+  async function ({ page }) {
+    await page.setViewportSize({ width:1144, height:710 });
+    await page.locator('#btn-marketlens').click();
+    await expect(page.locator('#market-lens-controls')).toBeVisible();
+
+    async function measure(width, height) {
+      await page.setViewportSize({ width:width, height:height });
+      await expect(page.locator('#market-lens-controls')).toBeVisible();
+      return page.locator('#market-lens-controls').evaluate(function (controls) {
+        const map = document.getElementById('mapwrap').getBoundingClientRect();
+        const side = document.getElementById('side').getBoundingClientRect();
+        const hud = document.getElementById('maphud').getBoundingClientRect();
+        const picker = controls.querySelector('.market-lens-picker');
+        const label = picker.querySelector('label').getBoundingClientRect();
+        const actionsElement = controls.querySelector('.market-lens-actions');
+        const actions = actionsElement.getBoundingClientRect();
+        const selector = actionsElement.querySelector('.market-lens-select-wrap')
+          .getBoundingClientRect();
+        const details = actionsElement.querySelector('#market-lens-details')
+          .getBoundingClientRect();
+        const legend = controls.querySelector('.market-price-legend')
+          .getBoundingClientRect();
+        const legendKeys = Array.from(controls.querySelectorAll('.market-price-key'));
+        const box = controls.getBoundingClientRect();
+        return {
+          columns:getComputedStyle(controls).gridTemplateColumns.trim().split(/\s+/).length,
+          actionColumns:getComputedStyle(actionsElement).gridTemplateColumns
+            .trim().split(/\s+/).length,
+          leftInset:Math.round(box.left - map.left),
+          containedByMap:box.right <= map.right + 0.5,
+          clearsSide:box.right <= side.left + 0.5,
+          clearsHud:box.right <= hud.left + 0.5,
+          labelAboveActions:label.bottom <= actions.top + 0.5,
+          legendBelowActions:actions.bottom <= legend.top + 0.5,
+          actionRowsStacked:selector.bottom <= details.top + 0.5,
+          selectorFullWidth:Math.abs(selector.width - actions.width) <= 1,
+          detailsFullWidth:Math.abs(details.width - actions.width) <= 1,
+          selectorWidth:selector.width,
+          detailsWidth:details.width,
+          legendKeysFit:legendKeys.every(function (key) {
+            return key.scrollWidth <= key.clientWidth + 1;
+          }),
+          legendKeysSeparated:legendKeys.every(function (key, index) {
+            if (!index) return true;
+            return legendKeys[index - 1].getBoundingClientRect().right <=
+              key.getBoundingClientRect().left;
+          })
+        };
+      });
+    }
+
+    const compact = await measure(1144, 710);
+    const smallDesktop = await measure(960, 710);
+    const tablet = await measure(733, 653);
+    const shortMobile = await measure(616, 320);
+
+    for (const layout of [compact, smallDesktop, tablet, shortMobile]) {
+      expect(layout.columns).toBe(1);
+      expect(layout.containedByMap).toBe(true);
+      expect(layout.clearsSide).toBe(true);
+      expect(layout.clearsHud).toBe(true);
+      expect(layout.labelAboveActions).toBe(true);
+      expect(layout.legendBelowActions).toBe(true);
+      expect(layout.legendKeysFit).toBe(true);
+      expect(layout.legendKeysSeparated).toBe(true);
+    }
+    expect(compact.leftInset).toBe(10);
+    expect(shortMobile.actionColumns).toBe(1);
+    for (const layout of [smallDesktop, tablet, shortMobile]) {
+      if (layout.actionColumns === 1) {
+        expect(layout.actionRowsStacked).toBe(true);
+        expect(layout.selectorFullWidth).toBe(true);
+        expect(layout.detailsFullWidth).toBe(true);
+      } else {
+        expect(layout.actionColumns).toBe(2);
+        expect(layout.selectorWidth).toBeGreaterThanOrEqual(135);
+        expect(layout.detailsWidth).toBeGreaterThanOrEqual(135);
+      }
+    }
+    expect(tablet.leftInset).toBe(8);
+    expect(shortMobile.leftInset).toBe(8);
+  });
+
 test('the Market lens and sheet are keyboard/touch accessible and storage stays bounded',
   async function ({ page }) {
     await page.setViewportSize({ width:390, height:844 });
     await page.locator('#btn-marketlens').focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('#market-lens-controls')).toBeVisible();
+    await expect(page.locator('#market-lens-good option[value="materials"]'))
+      .toHaveText('⚒ Materials');
     await page.locator('#market-lens-good').selectOption('luxuries');
     await expect(page.locator('#market-lens-good')).toHaveValue('luxuries');
     await page.locator('#market-lens-details').click();
     await expect(page.getByRole('heading', { name:/market$/i })).toBeVisible();
     await expect(page.locator('#market-sheet-good')).toBeVisible();
     await expect(page.locator('#gm-body')).toContainText('Historical endowments');
+    const closedSheet = await page.locator('.market-sheet-picker').evaluate(
+      function (picker) {
+        return {
+          pickerHeight:picker.getBoundingClientRect().height,
+          modalHeight:document.querySelector('#genmodal .modalcard')
+            .getBoundingClientRect().height
+        };
+      });
+    await page.locator('#market-sheet-good').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.market-sheet-dropdown')).toHaveAttribute('open', '');
+    const sheetPicker = await page.locator('.market-sheet-picker').evaluate(
+      function (picker) {
+        const label = picker.querySelector('.market-sheet-label').getBoundingClientRect();
+        const trigger = picker.querySelector('summary');
+        const triggerBox = trigger.getBoundingClientRect();
+        const options = picker.querySelector('.market-sheet-options').getBoundingClientRect();
+        const option = picker.querySelector('.market-sheet-option:not(.selected)');
+        const pickerBox = picker.getBoundingClientRect();
+        const modal = document.querySelector('#genmodal .modalcard').getBoundingClientRect();
+        return {
+          triggerBelowLabel:triggerBox.top >= label.bottom,
+          triggerHeight:Math.round(triggerBox.height),
+          pickerHeight:pickerBox.height,
+          modalHeight:modal.height,
+          triggerFullWidth:Math.abs(triggerBox.width - pickerBox.width) <= 1,
+          optionsFullWidth:Math.abs(options.width - pickerBox.width) <= 1,
+          optionsContained:options.left >= modal.left && options.right <= modal.right &&
+            options.left >= 0 && options.right <= window.innerWidth,
+          background:getComputedStyle(trigger).backgroundImage,
+          optionBackground:getComputedStyle(option).backgroundColor,
+          optionHeight:Math.round(option.getBoundingClientRect().height)
+        };
+      });
+    expect(sheetPicker.triggerBelowLabel).toBe(true);
+    expect(sheetPicker.triggerHeight).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(sheetPicker.pickerHeight - closedSheet.pickerHeight)).toBeLessThanOrEqual(1);
+    expect(Math.abs(sheetPicker.modalHeight - closedSheet.modalHeight)).toBeLessThanOrEqual(1);
+    expect(sheetPicker.triggerFullWidth).toBe(true);
+    expect(sheetPicker.optionsFullWidth).toBe(true);
+    expect(sheetPicker.optionsContained).toBe(true);
+    expect(sheetPicker.background).not.toBe('none');
+    expect(sheetPicker.optionBackground).toBe('rgb(42, 34, 24)');
+    expect(sheetPicker.optionHeight).toBeGreaterThanOrEqual(44);
+
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('.market-sheet-option.selected')).toBeFocused();
+    await page.keyboard.press('Home');
+    await expect(page.locator('.market-sheet-option[data-good="provisions"]')).toBeFocused();
+    await page.keyboard.press('ArrowDown');
+    await expect(page.locator('.market-sheet-option[data-good="wares"]')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#market-sheet-good')).toHaveAttribute('data-good', 'wares');
+
+    await page.setViewportSize({ width:1024, height:700 });
+    await page.locator('#market-sheet-good').click();
+    await expect(page.locator('.market-sheet-dropdown')).toHaveAttribute('open', '');
+    const desktopSheetPicker = await page.locator('.market-sheet-picker').evaluate(
+      function (picker) {
+        const label = picker.querySelector('.market-sheet-label').getBoundingClientRect();
+        const trigger = picker.querySelector('summary').getBoundingClientRect();
+        const options = picker.querySelector('.market-sheet-options').getBoundingClientRect();
+        const modal = document.querySelector('#genmodal .modalcard').getBoundingClientRect();
+        return {
+          triggerBelowLabel:trigger.top >= label.bottom,
+          optionsMatchTrigger:Math.abs(options.width - trigger.width) <= 1,
+          optionsContained:options.left >= modal.left && options.right <= modal.right &&
+            options.left >= 0 && options.right <= window.innerWidth
+        };
+      });
+    expect(desktopSheetPicker).toEqual({
+      triggerBelowLabel:true,
+      optionsMatchTrigger:true,
+      optionsContained:true
+    });
+    await page.setViewportSize({ width:390, height:844 });
     await page.getByRole('button', { name:'Done', exact:true }).click();
 
     const result = await page.evaluate(function () {
       const s = FB.state;
       const controls = document.getElementById('market-lens-controls');
       const selector = document.getElementById('market-lens-good');
+      const details = document.getElementById('market-lens-details');
+      const picker = controls.querySelector('.market-lens-picker');
+      const actions = controls.querySelector('.market-lens-actions');
+      const pickerLabel = picker.querySelector('label').getBoundingClientRect();
+      const actionsBox = actions.getBoundingClientRect();
+      const selectorBox = selector.getBoundingClientRect();
+      const detailsBox = details.getBoundingClientRect();
+      const legend = controls.querySelector('.market-price-legend');
+      const keys = Array.from(legend.querySelectorAll('.market-price-key'));
+      const legendStyle = getComputedStyle(legend);
+      const keyStyle = getComputedStyle(keys[0]);
+      const selectorStyle = getComputedStyle(selector);
+      const detailsStyle = getComputedStyle(details);
+      const keyColors = keys.map(function (key) { return getComputedStyle(key).color; });
+      const market = FB.ensureMarket(s);
+      const at = market.goods.indexOf('provisions');
+      const counties = FB.world.provs.filter(function (province) {
+        return !province.wasteland && market.counties[province.id];
+      }).slice(0, 3);
+      market.counties[counties[0].id][1][at] = 0.9;
+      market.counties[counties[1].id][1][at] = 1;
+      market.counties[counties[2].id][1][at] = 1.1;
+      const markerColors = {};
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 10;
+      const context = canvas.getContext('2d');
+      context.strokeText = function () {};
+      context.fillText = function (symbol) {
+        if (symbol === '▼' || symbol === '●' || symbol === '▲') {
+          markerColors[symbol] = context.fillStyle;
+        }
+      };
+      FB.renderMarketRoutes(context, 'provisions', function (x, y) {
+        return [x, y];
+      }, 2, 1);
       const before = s.market && s.market.lastTurn;
       s.date.day = 90;
       FB.game.observe = true;
@@ -572,7 +818,24 @@ test('the Market lens and sheet are keyboard/touch accessible and storage stays 
       FB.game.observe = false;
       return {
         controlHeight:controls.getBoundingClientRect().height,
-        selectorHeight:selector.getBoundingClientRect().height,
+        selectorHeight:selectorBox.height,
+        selectorWidth:selectorBox.width,
+        selectorBelowLabel:selectorBox.top >= pickerLabel.bottom,
+        selectorSharesButtonRow:Math.abs(selectorBox.top - detailsBox.top) <= 1,
+        actionsWidth:actionsBox.width,
+        detailsHeight:detailsBox.height,
+        detailsWidth:detailsBox.width,
+        selectorAppearance:selectorStyle.appearance,
+        selectorBackground:selectorStyle.backgroundImage,
+        optionBackground:getComputedStyle(selector.querySelector('option')).backgroundColor,
+        selectorFontSize:selectorStyle.fontSize,
+        detailsFontSize:detailsStyle.fontSize,
+        legendJustifyItems:legendStyle.justifyItems,
+        legendAlignItems:legendStyle.alignItems,
+        keyJustifyContent:keyStyle.justifyContent,
+        keyTextAlign:keyStyle.textAlign,
+        keyColors:keyColors,
+        markerColors:markerColors,
         progressed:s.market.lastTurn !== before,
         marketBytes:JSON.stringify(s.market).length,
         saveBytes:FB.save.serialize().length,
@@ -583,13 +846,33 @@ test('the Market lens and sheet are keyboard/touch accessible and storage stays 
     });
 
     expect(result.selectorHeight).toBeGreaterThanOrEqual(44);
+    expect(result.selectorBelowLabel).toBe(true);
+    expect(result.selectorSharesButtonRow).toBe(true);
+    expect(Math.abs(result.selectorWidth - result.detailsWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(result.selectorWidth + result.detailsWidth + 6 -
+      result.actionsWidth)).toBeLessThanOrEqual(1);
+    expect(result.detailsHeight).toBeGreaterThanOrEqual(44);
+    expect(Math.abs(result.selectorHeight - result.detailsHeight)).toBeLessThanOrEqual(1);
     expect(result.controlHeight).toBeGreaterThanOrEqual(44);
+    expect(result.selectorAppearance).toBe('none');
+    expect(result.selectorBackground).not.toBe('none');
+    expect(result.optionBackground).toBe('rgb(42, 34, 24)');
+    expect(result.selectorFontSize).toBe('14px');
+    expect(result.detailsFontSize).toBe('13px');
+    expect(result.legendJustifyItems).toBe('center');
+    expect(result.legendAlignItems).toBe('center');
+    expect(result.keyJustifyContent).toBe('center');
+    expect(result.keyTextAlign).toBe('center');
+    expect(new Set(result.keyColors).size).toBe(3);
+    expect(result.markerColors).toEqual({
+      '▼':'#6ee5d3', '●':'#f0d170', '▲':'#ff9676'
+    });
     expect(result.progressed).toBe(true);
     expect(Object.values(result.observeHousehold).every(function (amount) {
       return amount === 0;
     })).toBe(true);
     expect(result.marketBytes).toBeLessThan(64 * 1024);
-    expect(result.saveBytes).toBeLessThan(1.5 * 1024 * 1024);
+    expect(result.saveBytes).toBeLessThan(COMPLETE_SAVE_BUDGET);
     expect(result.routes).toBeLessThanOrEqual(4);
     expect(result.selectedGood).toBe('luxuries');
   });

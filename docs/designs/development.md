@@ -61,7 +61,9 @@ construction or demolition in that county. Tapping a settlement in your own deme
 only the buildings standing in THAT settlement, with what each provides, plus any
 household plots, manor, or enterprises in the same slot. Authorization lives inside the
 sheet — a foreign or non-demesne settlement is read-only, and the raise button keeps
-the demesne/tier/buildable gates.
+the demesne/tier/buildable gates. Because the commodity market belongs to the county,
+only the county-head sheet (`s: 0`) carries its Market shortcut; the Land panel presents
+the same county-wide destination as a card inside Development.
 
 **Bonuses stay demesne-wide; prices climb per county.** Ongoing bonuses flow through
 `FB.buildingBonus` (tax, levy, piety, research, upkeep, and the war keys `retinue`/`archers`

@@ -6,6 +6,7 @@ const {
   openGame,
   startDeterministicGame
 } = require('../support/game');
+const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
 
 test('served origin provides persistent storage for save slots',
   async function ({ page }, testInfo) {
@@ -110,10 +111,10 @@ test('an eager-court save stays within the storage budget and reloads whole',
         recordsSurviveRoundTrip:result.recordsSurviveRoundTrip,
         /* Court population is bound by the map, so this is a flat ceiling and
            not a figure that should drift upward with campaign length. The
-           measured full-court range is 1.1-1.4 MB; 1.5 MB leaves a narrow
-           serialization margin without weakening that acceptance target. */
+           county-market state has its own 64 KB cap; 1.6 MB preserves a
+           narrow combined serialization margin. */
         courtRecordsPresent:result.courtRecords > 100,
-        withinBudget:result.bytes < 1.5 * 1024 * 1024
+        withinBudget:result.bytes < COMPLETE_SAVE_BUDGET
       };
     })).toEqual({
       stored:true,

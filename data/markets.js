@@ -13,7 +13,7 @@ FBDATA.marketGoods = {
     desc:'Grain, fish, livestock products, oil, and ordinary drink.' },
   wares:{ name:'Wares', icon:'🧺', order:1,
     desc:'Cloth, pottery, leatherwork, vessels, and household furnishings.' },
-  materials:{ name:'Materials', icon:'🪵', order:2,
+  materials:{ name:'Materials', icon:'⚒', order:2,
     desc:'Timber, worked metal, stone, lime, and construction supplies.' },
   transport:{ name:'Transport', icon:'🐴', order:3,
     desc:'Draft animals, remounts, carts, barrels, rope, and carriage.' },

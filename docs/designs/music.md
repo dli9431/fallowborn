@@ -77,7 +77,9 @@ preference starts the selected intro normally. Entering gameplay releases any pa
 element. The controls stay hidden during loading, gameplay, or when the soundtrack cannot play.
 
 The now-playing title sits at the bottom of the map and opens the track modal. A compact adjacent
-button pauses or resumes the current track without opening that modal. By default, leaving the game
+button pauses or resumes the current track without opening that modal. On mobile the cluster anchors
+to the lower-right safe-area edge, opposite the lower-left notification region and beneath the
+tighter vertical HUD rail. By default, leaving the game
 window or tab pauses playback, and returning resumes only music that was playing before focus was
 lost. Settings can instead keep both the title theme and gameplay soundtrack playing while the tab,
 window, or screen is inactive. This preference bypasses only the automatic focus-loss pause; it

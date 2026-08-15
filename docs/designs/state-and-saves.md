@@ -216,14 +216,15 @@ ordinary rules block them.
 **The save must fit the localStorage quota beside its siblings** (~5 MB per origin on
 WebKit/iOS, ~10 MB elsewhere — shared by the autosave and all three slots; a serialized
 character record is ~400 bytes). Court records are map-bound by the eager-court
-compaction; the player's wider family is bounded at creation instead, because dead kin
-are never pruned (the family tree is the product). Two balance knobs do the bounding
+compaction; the complete serialized-life budget is 1.6 MB. The player's wider family
+is bounded at creation instead, because dead kin are never pruned (the family tree is
+the product). Two balance knobs do the bounding
 (see [../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility
 multipliers a probability rather than a certainty, and `familyMaxChars` caps total
 tracked family records — past it, unscripted kin weddings and kin births pause, so an
 over-cap save stops growing instead of failing. On top of that bounding, slots are
 stored LZ-compressed (`FBC1.` prefix packing the bit stream into storage-safe UTF-16;
-an lz-string port private to `js/save.js`), which shrinks the ~1.5 MB serialized life
+an lz-string port private to `js/save.js`), which shrinks the ~1.6 MB serialized life
 several-fold so autosave plus every slot fits even the WebKit quota. `S.serialize`
 still returns plain JSON — compression happens only at the storage and export
 boundaries, each write verifies its own round trip and falls back to plain JSON rather

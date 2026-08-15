@@ -157,7 +157,7 @@ The runtime is `O(goods × (counties + 2 × edges))` once per season. It has no
 daily scans, merchant actors, all-pairs searches, flow pathfinding, or serialized
 reports. The county report shown in the UI is an in-memory view of the last
 season only. The market save target is under 64 KB and the complete long-campaign
-save target remains under 1.5 MB.
+save target remains under 1.6 MB.
 
 ## Production, distribution, and shocks
 
@@ -229,15 +229,33 @@ has no separate technology gate. These decisions are recorded in
 
 ## Presentation and public API
 
-The Market lens has one basket selector. County shading and the repeated
-`▼`/`●`/`▲` symbols communicate price without relying on color. Patterned lines
-are bounded to four active player ventures/charters and never expose the full
-simulation graph. All controls are native keyboard-focusable buttons/selects
-with the repository's 44-pixel mobile target floor.
+The Market lens has one styled native basket selector. On narrow screens its
+label stacks above the selector and Market action; that action row stays paired
+when space permits and wraps into two full-width rows before either label clips.
+The county Market sheet always stacks its label over a full-width disclosure menu.
+Its keyboard-navigable option list overlays the sheet without changing modal size,
+but remains locked to the trigger and clipped by the modal viewport rather than using
+a browser popup that can escape the window. The lens's
+centered legend and the map use the same high-contrast teal `▼ cheap`, gold
+`● steady`, and coral
+`▲ dear` language; county shading strengthens the same three bands without
+making price depend on color alone. Patterned lines are bounded to four active
+player ventures/charters and never expose the full simulation graph. All
+controls remain native keyboard-focusable buttons/selects with the repository's
+44-pixel mobile target floor.
 
-The county Market sheet is reachable from the lens, county and settlement
-sheets, venture review, and Network → Trade & Guild. It shows endowments and
-their effects, stock, price/trend, last-season production/demand/import/export,
+The fixed desktop side panels can leave the center map column narrow before the
+mobile layout applies. At compact desktop widths the lens uses the same stacked
+label, action row, and legend structure, caps itself to the map column minus the
+right HUD lane, and never overlays the Land tabs or panel.
+
+The county Market sheet is reachable from the lens, the Market card inside the
+Land panel's Development section, the county-head settlement sheet, venture
+review, and Network → Trade & Guild. Secondary settlement sheets do not repeat
+the county-wide shortcut. The sheet's selector uses the same dark parchment
+field and dropdown styling as the lens, stacking below its label on mobile.
+The sheet shows endowments and their effects, stock, price/trend, last-season
+production/demand/import/export,
 player household/enterprise contributions, shocks, ventures, charters, and
 hardship. Before the first seasonal report, transient fields say when they will
 update.

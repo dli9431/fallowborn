@@ -435,10 +435,20 @@
               </button>
             </div>
             <div id="market-lens-controls" class="market-lens-controls hidden">
-              <label for="market-lens-good" data-i18n="Market basket">Market basket</label>
-              <select id="market-lens-good" aria-label="Market basket" data-i18n-aria-label="Market basket"></select>
-              <button class="btn" id="market-lens-details" data-i18n="County market">County market</button>
-              <span class="hint" aria-label="Price symbols: down cheap, dot steady, up dear" data-i18n="▼ cheap · ● steady · ▲ dear" data-i18n-aria-label="Price symbols: down cheap, dot steady, up dear">▼ cheap · ● steady · ▲ dear</span>
+              <div class="market-lens-picker">
+                <label for="market-lens-good" data-i18n="Market basket">Market basket</label>
+                <div class="market-lens-actions">
+                  <span class="market-lens-select-wrap">
+                    <select id="market-lens-good" aria-label="Market basket" data-i18n-aria-label="Market basket"></select>
+                  </span>
+                  <button class="btn" id="market-lens-details" data-i18n="County market">County market</button>
+                </div>
+              </div>
+              <span class="market-price-legend" aria-label="Price symbols: down cheap, dot steady, up dear" data-i18n-aria-label="Price symbols: down cheap, dot steady, up dear">
+                <span class="market-price-key market-price-cheap"><b aria-hidden="true">▼</b><span data-i18n="cheap">cheap</span></span>
+                <span class="market-price-key market-price-steady"><b aria-hidden="true">●</b><span data-i18n="steady">steady</span></span>
+                <span class="market-price-key market-price-dear"><b aria-hidden="true">▲</b><span data-i18n="dear">dear</span></span>
+              </span>
             </div>
             <div
               id="travel-picker"

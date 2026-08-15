@@ -113,7 +113,9 @@ clusters.
 Tapping a marker in ordinary
 browsing selects its parent county and opens the universal settlement sheet
 (`UI.showSettlement`), which is read-only abroad and keeps its construction/demolition
-authorization inside the sheet; the explicit county-targeting modes (travel,
+authorization inside the sheet. The county-wide commodity Market shortcut appears only
+on the county-head sheet (index 0); secondary settlement sheets remain scoped to their
+own buildings and property. The explicit county-targeting modes (travel,
 armies) still receive the parent county. The new-game pick is the one
 exception: it is two stages — a county tap zooms into the county (zoom 14, so
 its settlements draw with emblems and labels straight from the compiled

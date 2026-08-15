@@ -3387,15 +3387,22 @@ window.FB = window.FB || {};
     for (let i = 0; i < goodIds.length; i++) {
       const id = goodIds[i];
       const def = FBDATA.marketGoods[id];
-      options += '<option value="' + esc(id) + '"' +
-        (id === goodId ? ' selected' : '') + '>' +
+      options += '<button type="button" class="market-sheet-option' +
+        (id === goodId ? ' selected' : '') + '" role="option" aria-selected="' +
+        (id === goodId ? 'true' : 'false') + '" data-good="' + esc(id) + '">' +
         esc((def.icon || '') + ' ' + dt(s, 'marketGood', id, def, 'name')) +
-        '</option>';
+        '</button>';
     }
-    let h = '<div class="gm-body-text market-sheet"><label for="market-sheet-good">' +
-      esc(FB.T('Market basket')) + '</label> <select id="market-sheet-good">' +
-      options + '</select><p>' + esc(dt(s, 'marketGood', goodId, good, 'desc')) +
-      '</p></div>' +
+    const selectedGoodName = (good.icon || '') + ' ' +
+      dt(s, 'marketGood', goodId, good, 'name');
+    let h = '<div class="gm-body-text market-sheet"><div class="market-sheet-picker">' +
+      '<span class="market-sheet-label" id="market-sheet-label">' +
+      esc(FB.T('Market basket')) + '</span>' +
+      '<details class="market-sheet-dropdown"><summary id="market-sheet-good" data-good="' +
+      esc(goodId) + '" aria-labelledby="market-sheet-label market-sheet-good">' +
+      esc(selectedGoodName) + '</summary><div class="market-sheet-options" role="listbox" ' +
+      'aria-labelledby="market-sheet-label">' + options + '</div></details></div><p>' +
+      esc(dt(s, 'marketGood', goodId, good, 'desc')) + '</p></div>' +
       kv('Local price', esc(FB.T('{price}× · {trend}', {
         price:row.price, trend:trend
       }))) +
@@ -3517,9 +3524,39 @@ window.FB = window.FB || {};
     h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
     openModal(FB.T('{county} market', { county:pr.name }), h);
-    $('market-sheet-good').addEventListener('change', function () {
-      UI.showMarket(pid, this.value);
+    const marketMenu = $('market-sheet-good');
+    const marketOptions = document.querySelectorAll('.market-sheet-option');
+    marketMenu.addEventListener('keydown', function (event) {
+      if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+      event.preventDefault();
+      this.parentNode.open = true;
+      const selected = document.querySelector('.market-sheet-option.selected');
+      const target = event.key === 'ArrowUp'
+        ? marketOptions[marketOptions.length - 1] : (selected || marketOptions[0]);
+      if (target) target.focus();
     });
+    for (let i = 0; i < marketOptions.length; i++) {
+      marketOptions[i].addEventListener('click', function () {
+        UI.showMarket(pid, this.getAttribute('data-good'));
+      });
+      marketOptions[i].addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          marketMenu.parentNode.open = false;
+          marketMenu.focus();
+          return;
+        }
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp' &&
+            event.key !== 'Home' && event.key !== 'End') return;
+        event.preventDefault();
+        let at = Array.prototype.indexOf.call(marketOptions, this);
+        if (event.key === 'Home') at = 0;
+        else if (event.key === 'End') at = marketOptions.length - 1;
+        else if (event.key === 'ArrowDown') at = (at + 1) % marketOptions.length;
+        else at = (at + marketOptions.length - 1) % marketOptions.length;
+        marketOptions[at].focus();
+      });
+    }
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 
@@ -3924,9 +3961,10 @@ window.FB = window.FB || {};
       h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
     }
-    h += '<div class="gm-footer"><button class="btn" id="settlement-market">' +
-      esc(FB.T('County market')) +
-      '</button><button class="btn" id="settlement-guide">' +
+    h += '<div class="gm-footer">' +
+      (idx === 0 ? '<button class="btn" id="settlement-market">' +
+        esc(FB.T('County market')) + '</button>' : '') +
+      '<button class="btn" id="settlement-guide">' +
       esc(FB.T('Guide: settlements and development')) +
       '</button><button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
@@ -3934,7 +3972,8 @@ window.FB = window.FB || {};
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
-    $('settlement-market').addEventListener('click', function () {
+    const settlementMarket = $('settlement-market');
+    if (settlementMarket) settlementMarket.addEventListener('click', function () {
       UI.showMarket(pid, FB.map.marketGood || 'provisions');
     });
     document.querySelectorAll('[data-fort-start]').forEach(function (button) {
@@ -17844,6 +17883,10 @@ window.FB = window.FB || {};
     const G = FB.game;
     const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
     const desktopKeyboard = !FB.isTouch && !FB.isSmallScreen();
+    const mainTextColor = G.uiPrefs.mainTextColor ||
+      G.MAIN_TEXT_COLOR_DEFAULT;
+    const helperTextColor = G.uiPrefs.helperTextColor ||
+      G.HELPER_TEXT_COLOR_DEFAULT;
     const realmHighlightColor = FB.map.focusColor();
     const realmHighlightOpacity = Math.round((FB.map.focusOpacity
       ? FB.map.focusOpacity() : 1) * 100);
@@ -17855,6 +17898,32 @@ window.FB = window.FB || {};
       (G.SPEEDS.length - 1) + '" step="1" value="' + G.speedIdx + '" aria-label="' +
       esc(FB.T('Speed of days')) + '">' +
       '<div class="adesc" id="set-speed-label">' + speedLabel(G.speedIdx) + '</div></div>';
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+      esc(FB.T('Accessibility')) + '</p></div>' +
+      '<div class="main-text-color-summary"><span id="set-main-text-color-swatch" ' +
+      'class="main-text-color-swatch" aria-hidden="true">Aa</span><div><b>' +
+      esc(FB.T('Main text color')) + '</b><p class="adesc">' + esc(FB.T(
+        'Choose the color used for ordinary labels, values, and body copy.')) +
+      '</p></div></div><div class="main-text-color-actions">' +
+      '<label class="btn main-text-color-change" id="set-main-text-color-change">' +
+      '<span>' + esc(FB.T('Change main text color…')) + '</span>' +
+      '<input id="set-main-text-color" class="main-text-color-input" ' +
+      'type="color" aria-label="' + esc(FB.T('Main text color')) +
+      '" value="' + esc(mainTextColor) + '"></label>' +
+      '<button type="button" class="btn" id="set-main-text-color-reset">' +
+      esc(FB.T('Reset main text')) + '</button></div>' +
+      '<div class="helper-text-color-summary"><span id="set-helper-text-color-swatch" ' +
+      'class="helper-text-color-swatch" aria-hidden="true">Aa</span><div><b>' +
+      esc(FB.T('Helper text color')) + '</b><p class="adesc">' + esc(FB.T(
+        'Choose the color used for explanations beneath actions, options, cards, and settings.')) +
+      '</p></div></div><div class="helper-text-color-actions">' +
+      '<label class="btn helper-text-color-change" id="set-helper-text-color-change">' +
+      '<span>' + esc(FB.T('Change helper text color…')) + '</span>' +
+      '<input id="set-helper-text-color" class="helper-text-color-input" ' +
+      'type="color" aria-label="' + esc(FB.T('Helper text color')) +
+      '" value="' + esc(helperTextColor) + '"></label>' +
+      '<button type="button" class="btn" id="set-helper-text-color-reset">' +
+      esc(FB.T('Reset helper text')) + '</button></div>';
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Map')) + '</p></div>' +
       '<div class="realm-highlight-summary"><span id="set-realm-highlight-swatch" ' +
@@ -17947,6 +18016,32 @@ window.FB = window.FB || {};
     });
     slider.addEventListener('change', function () { // commit once, on release
       G.setSpeed(parseInt(slider.value, 10) - G.speedIdx);
+    });
+    const mainTextColorInput = $('set-main-text-color');
+    function setMainTextColor(color) {
+      mainTextColorInput.value = G.setMainTextColor(color);
+    }
+    mainTextColorInput.addEventListener('input', function () {
+      setMainTextColor(mainTextColorInput.value);
+    });
+    mainTextColorInput.addEventListener('change', function () {
+      setMainTextColor(mainTextColorInput.value);
+    });
+    $('set-main-text-color-reset').addEventListener('click', function () {
+      setMainTextColor(G.MAIN_TEXT_COLOR_DEFAULT);
+    });
+    const helperTextColorInput = $('set-helper-text-color');
+    function setHelperTextColor(color) {
+      helperTextColorInput.value = G.setHelperTextColor(color);
+    }
+    helperTextColorInput.addEventListener('input', function () {
+      setHelperTextColor(helperTextColorInput.value);
+    });
+    helperTextColorInput.addEventListener('change', function () {
+      setHelperTextColor(helperTextColorInput.value);
+    });
+    $('set-helper-text-color-reset').addEventListener('click', function () {
+      setHelperTextColor(G.HELPER_TEXT_COLOR_DEFAULT);
     });
     const realmColorInput = $('set-realm-highlight-color');
     const realmColorSwatch = $('set-realm-highlight-swatch');

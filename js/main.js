@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.132.0';
+  FB.VERSION = '1.133.0';
   FB.CHANGELOG = [
+    { v: '1.133.0', date: '2026-08-15', changes: [
+      'Settings → Accessibility now offers separate colors for main and helper text, with brighter defaults throughout the interface.',
+      'Market controls, side panels, and the mobile map HUD now stay clear and readable across compact layouts.'
+    ] },
     { v: '1.132.0', date: '2026-08-14', changes: [
       'Counties can now contain multiple cultural and religious communities, with a local identity chosen for the starting family during character creation.'
     ] },
@@ -2373,9 +2377,13 @@ window.FB = window.FB || {};
   G.obsQuiet = false; //   …silence the world-news toasts while watching
   G.obsBare = false;  //   …hide the Land & Chronicle panel while watching
   G.ACTION_SHORTCUT_DEFAULTS = { q:'action:livelihoods' };
+  G.MAIN_TEXT_COLOR_DEFAULT = '#f2eadb';
+  G.HELPER_TEXT_COLOR_DEFAULT = '#c9b991';
   G.uiPrefs = {
     commitmentsCollapsed:false,
     hideBeginnerHints:false,
+    mainTextColor:G.MAIN_TEXT_COLOR_DEFAULT,
+    helperTextColor:G.HELPER_TEXT_COLOR_DEFAULT,
     realmHighlightColor:'#e8dec4',
     realmHighlightOpacity:1,
     musicChoice:null,
@@ -2397,6 +2405,14 @@ window.FB = window.FB || {};
           ? !!storedUiPrefs.commitmentsCollapsed
           : !!storedUiPrefs.hideOngoingCommitments;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
+      if (typeof storedUiPrefs.mainTextColor === 'string' &&
+          /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.mainTextColor)) {
+        G.uiPrefs.mainTextColor = storedUiPrefs.mainTextColor.toLowerCase();
+      }
+      if (typeof storedUiPrefs.helperTextColor === 'string' &&
+          /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.helperTextColor)) {
+        G.uiPrefs.helperTextColor = storedUiPrefs.helperTextColor.toLowerCase();
+      }
       if (typeof storedUiPrefs.realmHighlightColor === 'string' &&
           /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.realmHighlightColor)) {
         G.uiPrefs.realmHighlightColor =
@@ -2446,6 +2462,34 @@ window.FB = window.FB || {};
   G.saveUiPrefs = function () {
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
+  G.applyMainTextColor = function (color) {
+    if (typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color)) {
+      color = G.MAIN_TEXT_COLOR_DEFAULT;
+    }
+    color = color.toLowerCase();
+    document.documentElement.style.setProperty('--main-text-color', color);
+    return color;
+  };
+  G.setMainTextColor = function (color) {
+    G.uiPrefs.mainTextColor = G.applyMainTextColor(color);
+    G.saveUiPrefs();
+    return G.uiPrefs.mainTextColor;
+  };
+  G.applyHelperTextColor = function (color) {
+    if (typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color)) {
+      color = G.HELPER_TEXT_COLOR_DEFAULT;
+    }
+    color = color.toLowerCase();
+    document.documentElement.style.setProperty('--helper-text-color', color);
+    return color;
+  };
+  G.setHelperTextColor = function (color) {
+    G.uiPrefs.helperTextColor = G.applyHelperTextColor(color);
+    G.saveUiPrefs();
+    return G.uiPrefs.helperTextColor;
+  };
+  G.uiPrefs.mainTextColor = G.applyMainTextColor(G.uiPrefs.mainTextColor);
+  G.uiPrefs.helperTextColor = G.applyHelperTextColor(G.uiPrefs.helperTextColor);
 
   /* ---------- Tutorial: staged checklist tracks that teach the game ----------
      Offered to lives created from this version on (player.flags.tutorial is

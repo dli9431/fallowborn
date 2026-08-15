@@ -3890,6 +3890,28 @@ window.FB = window.FB || {};
       '"><span>' + esc(FB.T(label)) + '</span><b>' + value + '</b></div>';
   }
 
+  function landMarketCard(s, pid) {
+    let goodId = FB.map.marketGood || 'provisions';
+    if (!FBDATA.marketGoods || !FBDATA.marketGoods[goodId]) goodId = 'provisions';
+    const good = FBDATA.marketGoods && FBDATA.marketGoods[goodId];
+    const market = good && FB.marketCounty ? FB.marketCounty(s, pid) : null;
+    const row = market && market.goods && market.goods[goodId];
+    if (!good || !row) return '';
+    const price = Math.round((Number(row.price) || 1) * 100) / 100;
+    const band = price >= 1.08 ? 'dear' : price <= 0.95 ? 'cheap' : 'steady';
+    const symbol = band === 'dear' ? '▲' : band === 'cheap' ? '▼' : '●';
+    const bandLabel = band === 'dear' ? FB.T('dear') :
+      band === 'cheap' ? FB.T('cheap') : FB.T('steady');
+    return '<button type="button" class="land-market-card" id="county-market">' +
+      '<span class="land-market-card-icon" aria-hidden="true">⚖</span>' +
+      '<span class="land-market-card-copy"><b>' + esc(FB.T('County market')) +
+      '</b><small>' + esc((good.icon || '') + ' ' +
+        dt(s, 'marketGood', goodId, good, 'name')) + ' · ' +
+      '<span class="market-price-' + band + '">' + symbol + ' ' +
+        esc(bandLabel) + '</span> · ' + esc(String(price)) + '×</small></span>' +
+      '<span class="land-market-card-open" aria-hidden="true">›</span></button>';
+  }
+
   function renderProv() {
     const s = FB.state;
     const pid = selectedProv || s.player.provinceId;
@@ -3903,8 +3925,6 @@ window.FB = window.FB || {};
       : '';
     let h = '<div class="panelh">' + esc(pr.name) +
       (homeLabel ? ' ' + esc(homeLabel) : '') + '</div>';
-    h += '<button class="btn small" id="county-market">⚖ ' +
-      esc(FB.T('County market')) + '</button>';
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     if (selA) {
       const selPr = FB.world.byId[selA.at];
@@ -4104,6 +4124,7 @@ window.FB = window.FB || {};
           esc(bookmarkDevelopmentText(s, pid)), true) +
         (realm && FB.techUiRelevant(s) ? landKv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
+        landMarketCard(s, pid) +
         '</section>';
       const countyModifiers = FB.countyModifierRecords
         ? FB.countyModifierRecords(s, pid) : [];

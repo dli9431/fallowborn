@@ -50564,7 +50564,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/keys.js"
+        "js/keys.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "ArrowUp"
@@ -67029,6 +67030,16 @@
         "text": "Bound the liege to seek the estates’ consent for new aids."
       }
     },
+    "src.2e6e359d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the color used for explanations beneath actions, options, cards, and settings."
+      }
+    },
     "src.2e71fa09": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67077,6 +67088,16 @@
       ],
       "source": {
         "text": "👑 You have wed above your station — your name rises with the match."
+      }
+    },
+    "src.2e950b20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Main text color"
       }
     },
     "src.2ea5a43b": {
@@ -70934,6 +70955,16 @@
       ],
       "source": {
         "text": "Lateen Sail"
+      }
+    },
+    "src.38030cdb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the color used for ordinary labels, values, and body copy."
       }
     },
     "src.38166898": {
@@ -91394,6 +91425,16 @@
         "text": "Papermaking"
       }
     },
+    "src.67a38047": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Helper text color"
+      }
+    },
     "src.67b52494": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103119,6 +103160,16 @@
         "text": "Evidence reaches you of a priest selling favors and neglecting his parish. His patrons call it gossip; his parishioners call it Tuesday."
       }
     },
+    "src.8251bbf5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Change helper text color…"
+      }
+    },
     "src.8260cf65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104291,6 +104342,16 @@
       ],
       "source": {
         "text": "Your men descend on the night-drill. The league scatters into the dark, leaderless and done."
+      }
+    },
+    "src.84b3d09f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Accessibility"
       }
     },
     "src.84b9dd24": {
@@ -109703,6 +109764,16 @@
         "text": "Already spent"
       }
     },
+    "src.906ad500": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "cheap"
+      }
+    },
     "src.9073518b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111172,7 +111243,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/keys.js"
+        "js/keys.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "ArrowDown"
@@ -116582,6 +116654,16 @@
         "text": "The binding holds through the march. The veterans begin to use your name."
       }
     },
+    "src.a0cbfc13": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "steady"
+      }
+    },
     "src.a0cc0ac1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118075,6 +118157,16 @@
       ],
       "source": {
         "text": "Pay without a murmur. ({money:12})"
+      }
+    },
+    "src.a3df0ed1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "dear"
       }
     },
     "src.a3e4e12d": {
@@ -124685,6 +124777,16 @@
         "text": "Pass them to the next fool."
       }
     },
+    "src.b3333230": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Reset main text"
+      }
+    },
     "src.b33bcc6b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125375,16 +125477,6 @@
       ],
       "source": {
         "text": "Press on for {target}."
-      }
-    },
-    "src.b4ad6c9b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "▼ cheap · ● steady · ▲ dear"
       }
     },
     "src.b4ad746e": {
@@ -126666,7 +126758,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/keys.js"
+        "js/keys.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Escape"
@@ -128262,6 +128355,16 @@
       ],
       "source": {
         "text": "A Banner of Your Own"
+      }
+    },
+    "src.bbc6ee07": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Reset helper text"
       }
     },
     "src.bbccaf15": {
@@ -149198,6 +149301,16 @@
         "text": "through a duchy, kingdom, or empire you hold, or your one"
       }
     },
+    "src.ecbb8d34": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Change main text color…"
+      }
+    },
     "src.ecc0e3ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -163469,6 +163582,14 @@
         "text": "Access"
       }
     },
+    "ui:Accessibility": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Accessibility"
+      }
+    },
     "ui:Accompany personally": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166285,6 +166406,22 @@
         "text": "Change equipment…"
       }
     },
+    "ui:Change helper text color…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Change helper text color…"
+      }
+    },
+    "ui:Change main text color…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Change main text color…"
+      }
+    },
     "ui:Change occupation or training…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166794,6 +166931,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally."
+      }
+    },
+    "ui:Choose the color used for explanations beneath actions, options, cards, and settings.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the color used for explanations beneath actions, options, cards, and settings."
+      }
+    },
+    "ui:Choose the color used for ordinary labels, values, and body copy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the color used for ordinary labels, values, and body copy."
       }
     },
     "ui:Choose the exact land named in the vow.": {
@@ -171441,6 +171594,14 @@
         "text": "Held directly: {held} of {cap}."
       }
     },
+    "ui:Helper text color": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Helper text color"
+      }
+    },
     "ui:Hereditary": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173453,6 +173614,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Lowers Standing by 12 and spends the day."
+      }
+    },
+    "ui:Main text color": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Main text color"
       }
     },
     "ui:Maintain the house across generations; landed status usually belongs to an heir of an established line.": {
@@ -180497,6 +180666,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Reserved worker; the assistant will preserve this assignment."
+      }
+    },
+    "ui:Reset helper text": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Reset helper text"
+      }
+    },
+    "ui:Reset main text": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Reset main text"
       }
     },
     "ui:Reset to Defaults": {
@@ -188769,6 +188954,14 @@
         "text": "cavalry"
       }
     },
+    "ui:cheap": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "cheap"
+      }
+    },
     "ui:coastal": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188879,6 +189072,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "custom"
+      }
+    },
+    "ui:dear": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "dear"
       }
     },
     "ui:defender": {
@@ -189902,6 +190103,14 @@
       "location": "js/events.js",
       "source": {
         "text": "stays with the county after transfer"
+      }
+    },
+    "ui:steady": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "steady"
       }
     },
     "ui:sworn to you": {

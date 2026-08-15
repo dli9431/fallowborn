@@ -793,6 +793,12 @@ test('context banks, playback controls, and listening history stay consistent',
       function (controls) {
         const map = document.getElementById('mapwrap').getBoundingClientRect();
         const controlBox = controls.getBoundingClientRect();
+        const hud = document.getElementById('maphud');
+        const hudBox = hud.getBoundingClientRect();
+        const marketButtonBox = document.getElementById('btn-marketlens')
+          .getBoundingClientRect();
+        const hudButtons = Array.from(hud.querySelectorAll('.hudbtn'));
+        const firstHudButton = hudButtons[0].getBoundingClientRect();
         const title = controls.querySelector('#music-now-playing');
         const titleBox = title.getBoundingClientRect();
         const toggleBox = controls.querySelector(
@@ -807,7 +813,20 @@ test('context banks, playback controls, and listening history stay consistent',
           titleHeight:Math.round(titleBox.height),
           toggleWidth:Math.round(toggleBox.width),
           toggleHeight:Math.round(toggleBox.height),
-          clearsToast:toastBox.right <= controlBox.left
+          hudDirection:getComputedStyle(hud).flexDirection,
+          hudGap:parseFloat(getComputedStyle(hud).rowGap),
+          hudButtonWidth:Math.round(firstHudButton.width),
+          hudButtonHeight:Math.round(firstHudButton.height),
+          hudButtonsVertical:hudButtons.every(function (button, index) {
+            if (!index) return true;
+            const previous = hudButtons[index - 1].getBoundingClientRect();
+            return previous.bottom <= button.getBoundingClientRect().top;
+          }),
+          clearsToast:toastBox.right <= controlBox.left,
+          marketButtonClearsControls:marketButtonBox.right <= controlBox.left ||
+            marketButtonBox.bottom <= controlBox.top || marketButtonBox.top >= controlBox.bottom,
+          clearsHud:controlBox.right <= hudBox.left ||
+            controlBox.bottom <= hudBox.top || controlBox.top >= hudBox.bottom
         };
       });
     expect(mobileNowPlaying).toEqual({
@@ -818,7 +837,14 @@ test('context banks, playback controls, and listening history stay consistent',
       titleHeight:44,
       toggleWidth:44,
       toggleHeight:44,
-      clearsToast:true
+      hudDirection:'column',
+      hudGap:2,
+      hudButtonWidth:44,
+      hudButtonHeight:44,
+      hudButtonsVertical:true,
+      clearsToast:true,
+      marketButtonClearsControls:true,
+      clearsHud:true
     });
     expect(mobileNowPlaying.controlsWidth).toBeLessThanOrEqual(164);
   });

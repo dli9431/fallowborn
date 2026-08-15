@@ -833,6 +833,29 @@
     return lines.slice(0, 4);
   };
 
+  function marketPriceBand(price) {
+    return price >= 1.08 ? 'dear' : price <= 0.95 ? 'cheap' : 'steady';
+  }
+
+  function marketPriceSymbol(price) {
+    const band = marketPriceBand(price);
+    return band === 'dear' ? '▲' : band === 'cheap' ? '▼' : '●';
+  }
+
+  function marketPriceColor(price) {
+    const band = marketPriceBand(price);
+    return band === 'dear' ? '#ff9676' :
+      band === 'cheap' ? '#6ee5d3' : '#f0d170';
+  }
+
+  function marketOverlayColor(price) {
+    if (price >= 1.25) return [179,49,56,194];
+    if (price >= 1.08) return [205,92,60,178];
+    if (price <= 0.82) return [32,105,159,194];
+    if (price <= 0.95) return [37,139,143,178];
+    return [171,139,54,158];
+  }
+
   function marketOverlay(goodId) {
     const state = FB.state;
     const market = state && FB.ensureMarket(state);
@@ -857,10 +880,7 @@
         continue;
       }
       const price = market.counties[pr.id][1][at];
-      countyColors.push(price >= 1.25 ? [151,43,43,172] :
-        price >= 1.08 ? [190,111,45,154] :
-        price <= 0.82 ? [43,112,151,158] :
-        price <= 0.95 ? [71,139,111,144] : [126,119,82,128]);
+      countyColors.push(marketOverlayColor(price));
     }
     for (let i = 0; i < FB.world.grid.length; i++) {
       const provinceIndex = FB.world.grid[i];
@@ -921,16 +941,16 @@
       const at = market.goods.indexOf(goodId);
       if (at < 0) { ctx.restore(); return; }
       ctx.textAlign = 'center';
-      ctx.font = Math.round(12 * dpr) + 'px Georgia';
+      ctx.font = 'bold ' + Math.round(14 * dpr) + 'px Georgia';
       for (let i = 0; i < FB.world.provs.length; i++) {
         const pr = FB.world.provs[i];
         if (pr.wasteland || !market.counties[pr.id]) continue;
         const point = toScreen(pr.cx, pr.cy);
         const price = market.counties[pr.id][1][at];
-        const symbol = price >= 1.08 ? '▲' : price <= 0.95 ? '▼' : '●';
-        ctx.lineWidth = 3 * dpr;
-        ctx.strokeStyle = 'rgba(10,10,10,.8)';
-        ctx.fillStyle = '#fff4ce';
+        const symbol = marketPriceSymbol(price);
+        ctx.lineWidth = 4 * dpr;
+        ctx.strokeStyle = 'rgba(8,9,10,.92)';
+        ctx.fillStyle = marketPriceColor(price);
         ctx.strokeText(symbol, point[0], point[1] + 15 * dpr);
         ctx.fillText(symbol, point[0], point[1] + 15 * dpr);
       }

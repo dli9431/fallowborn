@@ -80,3 +80,46 @@ test('Land facts use readable desktop columns and stack on compact layouts',
     expect(compact.alignment).toBe('left');
     expect(compact.overflow).toBeLessThanOrEqual(1);
   });
+
+test('desktop sidebars scale evenly while preserving the center map',
+  async function ({ page }) {
+    async function measure(width) {
+      await page.setViewportSize({ width:width, height:935 });
+      return page.locator('#main').evaluate(function (main) {
+        const left = document.getElementById('left').getBoundingClientRect();
+        const map = document.getElementById('mapwrap').getBoundingClientRect();
+        const side = document.getElementById('side').getBoundingClientRect();
+        const mainBox = main.getBoundingClientRect();
+        const leftBody = document.getElementById('leftbody');
+        const sideBody = document.getElementById('sidebody');
+        return {
+          left:left.width,
+          map:map.width,
+          side:side.width,
+          fillsMain:Math.abs(left.width + map.width + side.width - mainBox.width) <= 1,
+          leftOverflow:leftBody.scrollWidth - leftBody.clientWidth,
+          sideOverflow:sideBody.scrollWidth - sideBody.clientWidth
+        };
+      });
+    }
+
+    const smallest = await measure(821);
+    const laptop = await measure(1024);
+    const full = await measure(1440);
+
+    expect(smallest.left).toBeCloseTo(232, 0);
+    expect(smallest.side).toBeCloseTo(272, 0);
+    expect(full.left).toBeCloseTo(290, 0);
+    expect(full.side).toBeCloseTo(340, 0);
+    expect(smallest.left / full.left).toBeCloseTo(
+      smallest.side / full.side, 2);
+    expect(laptop.left / full.left).toBeCloseTo(
+      laptop.side / full.side, 2);
+    expect(smallest.map).toBeGreaterThan(smallest.side);
+    expect(laptop.map).toBeGreaterThan(smallest.map);
+    for (const layout of [smallest, laptop, full]) {
+      expect(layout.fillsMain).toBe(true);
+      expect(layout.leftOverflow).toBeLessThanOrEqual(1);
+      expect(layout.sideOverflow).toBeLessThanOrEqual(1);
+    }
+  });

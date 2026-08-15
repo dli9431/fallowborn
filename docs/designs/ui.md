@@ -96,9 +96,13 @@ buttons into that footer while leaving substantive choices in the scrolling body
 controls are centered, 200 px wide, and at least 52 px high on every layout; multiple
 controls wrap as equal-sized rows rather than changing width.
 
-**Mobile layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
-on desktop (`display:contents`). On phones the Deeds/Land/Chronicle panel takes the full
-width and Self/Kin becomes a drawer (`#left` fixed, shown by `body.showself` — toggled in
+**Responsive layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
+on desktop (`display:contents`). From the 821 px desktop breakpoint through 1440 px, the
+persistent Self/Kin and Deeds/Land/Network/Chronicle bars scale together from 80% to their
+established 290 px and 340 px widths. This preserves a useful center-map column on the
+smallest desktop layouts without changing wide-desktop sizing. On phones the
+Deeds/Land/Chronicle panel takes the full width and Self/Kin becomes a drawer (`#left`
+fixed, shown by `body.showself` — toggled in
 `setTab`, opened by tapping the mobile-only topbar portrait, closed by `#btn-closeself`).
 The drawer Close uses the same footer control at the bottom middle, immediately above the
 fixed time bar.
@@ -168,8 +172,10 @@ paused it selects the theme that will play on resume without enabling music. The
 hidden while loading, during gameplay, or when the soundtrack cannot play.
 During gameplay, the song title opens the full music controls and a separate compact button
 immediately to its right pauses or resumes playback. Desktop centers the pair below the map. Mobile
-uses a narrower lower-right presentation, opposite the lower-left toast region, while both native
-buttons retain 44-pixel minimum touch targets. Settings keeps focus-loss pausing as the default and
+uses a narrower lower-right presentation, opposite the lower-left toast region; shallow portrait
+maps keep the HUD in a tighter vertical rail above the playback cluster. Both the HUD
+and native music buttons retain 44-pixel minimum
+touch targets. Settings keeps focus-loss pausing as the default and
 offers an opt-in background-playback checkbox for inactive tabs, windows, and locked screens.
 
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
@@ -343,16 +349,29 @@ persistent topbar already names the character. On desktop, a subtle divider sepa
 Traits from the rank, age, culture, faith, and health details below.
 The rank value is a native link-styled button. It opens a compact realm-and-demesne
 sheet showing the current seat, direct holdings and capacity, realm-wide territory,
-vassals, landed tax and levy, and the directly held county names. Settings owns a dedicated
-Map section with the browser-local realm-map color and fill-opacity controls. They set the
+vassals, landed tax and levy, and the directly held county names. Settings owns separate
+Accessibility controls for the two neutral text roles. Ordinary labels, values, and body copy
+share a brighter ivory main-text default; explanations beneath actions, event choices, cards,
+form controls, and compact metadata share a higher-contrast parchment helper-text default.
+Each has a browser-local custom color that applies live without replacing gold accents or
+semantic gain, danger, and warning colors. Settings also owns a dedicated Map section with the
+browser-local realm-map color and fill-opacity controls. They set the
 focus outline and the independent player realm's displayed political fill without mutating
 saved political state; lowering opacity reveals terrain while keeping the outline clear.
-The map also exposes a keyboard/touch **Market** lens with one native basket selector.
-County fill shows the selected basket's local price and every sufficiently zoomed county
-repeats the meaning with `▼`/`●`/`▲`, so scarcity never relies on color alone. Only the
-player's active ventures and corridor charters draw patterned routes, bounded to four;
-the simulated adjacency-flow graph is never rendered. The lens, county/settlement sheets,
-venture review, and Network → Trade & Guild all open the same county Market sheet.
+The map also exposes a keyboard/touch **Market** lens with one styled native basket
+selector. Narrow screens stack its label above an action area that keeps the selector
+and Market button paired when they fit and wraps them into full-width rows before they
+clip; the Market sheet uses a full-width disclosure menu beneath its label. Its
+keyboard-navigable options overlay the sheet without expanding it and remain bounded
+to the modal and viewport.
+Compact desktop widths also stack the lens within the center map column and reserve
+the right HUD lane, rather than allowing its wide toolbar to overlap the Land panel.
+A centered, high-contrast teal/gold/coral legend matches the colored
+`▼`/`●`/`▲` map symbols and stronger county price bands, so scarcity remains legible
+without relying on color alone. Only the player's active ventures and corridor charters
+draw patterned routes, bounded to four; the simulated adjacency-flow graph is never
+rendered. The lens, the Land panel's Development Market card, the county-head settlement
+sheet, venture review, and Network → Trade & Guild all open the same county Market sheet.
 Its selector, textual trend, stock and seasonal report, named endowments, disruptions,
 ventures, charters, and hardship duplicate every canvas meaning for keyboard, touch,
 screen-reader, and color-vision access. See [markets.md](markets.md).
