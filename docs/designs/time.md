@@ -74,11 +74,14 @@ day's income. A second idempotent pass after army/holy-war/travel movement catch
 same-day relocation or political invalidation; clearing the slot makes its durable
 Chronicle notice one-shot.
 
-At a season boundary the household receives normal income, pays station and resident-family
-upkeep, including the wartime necessities surcharge when the player's sovereign realm is
-at war, and collects livelihood wages. Maintained commoner standards settle next. If their
-total is unaffordable, discretionary levels lapse in a stable order until the remainder can
-be paid; surviving luxuries then grant their prestige. Retainer capacity/pay and active
+At a season boundary `FB.marketSeason` first updates deterministic county production,
+demand, two adjacency-flow passes, shocks, and prices. Observe mode runs this same world
+market pass without any protagonist settlement. In ordinary play the household then
+receives normal landed/property income and livelihood wages before paying locally quoted
+station and resident-family necessities. An unpaid share becomes market hardship instead
+of a fixed wartime surcharge. Maintained commoner standards settle next. If their total is
+unaffordable, discretionary levels lapse in a stable order until the remainder can be paid;
+surviving luxuries then grant their prestige. Retainer capacity/pay and active
 school terms settle after standards, so a lost quarters level can reduce service capacity
 before contracts are paid. Unaffordable schooling pauses for that term. Any live player
 host then pays composition-based logistics, clamped at an empty purse if unaffordable,

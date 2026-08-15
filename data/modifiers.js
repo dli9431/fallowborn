@@ -8,7 +8,7 @@ FBDATA.modifiers = {
     desc:'The lord’s stores stand open against the hunger.',
     scope:'county', days:1080,
     upkeep:{ gold:2 },
-    fx:{ famine:-0.30, commonVoice:8 }
+    fx:{ famine:-0.30, commonVoice:8, marketProvisions:0.15 }
   },
   custom_confirmed: {
     name:'Custom Confirmed', icon:'📜',
@@ -21,19 +21,20 @@ FBDATA.modifiers = {
     desc:'Measured tolls and protected stalls draw trade under a public charter.',
     scope:'county', days:1440,
     upkeep:{ gold:1 },
-    fx:{ tax:0.08, buildingCost:-0.08 }
+    fx:{ tax:0.08, buildingCost:-0.08, marketFlow:0.15 }
   },
   contested_tolls: {
     name:'Contested Tolls', icon:'🪙',
     desc:'Rival claims at bridge and market turn trade into grievance.',
     scope:'county', days:720,
-    fx:{ tax:-0.10, unrest:0.25 }
+    fx:{ tax:-0.10, unrest:0.25, marketFlow:-0.20 }
   },
   covert_sabotage: {
     name:'Covert Sabotage', icon:'🔥',
     desc:'Spoiled stores, damaged works, and whispered threats hinder collection and muster.',
     scope:'county', days:720,
-    fx:{ tax:-0.12, levy:-0.12, unrest:0.25 }
+    fx:{ tax:-0.12, levy:-0.12, unrest:0.25,
+      marketProduction:-0.15, marketFlow:-0.10 }
   },
   levy_exemption: {
     name:'Levy Exemption', icon:'🕊',
@@ -58,7 +59,7 @@ FBDATA.modifiers = {
     desc:'Paid riders keep the markets open and trouble away from the roads.',
     scope:'county', days:720,
     upkeep:{ gold:1 },
-    fx:{ tax:0.04, unrest:-0.20 }
+    fx:{ tax:0.04, unrest:-0.20, marketFlow:0.12 }
   },
   settlement_grudge: {
     name:'Settlement Grudge', icon:'✊',

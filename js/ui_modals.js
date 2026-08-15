@@ -774,8 +774,11 @@ window.FB = window.FB || {};
         if (id !== 'trade') return item.cost <= s.player.gold;
         if (FB.tradeVentureEligible(s, 'dispatch') !== true) return false;
         return stakes.some(function (stake) {
-          const preview = FB.tradeVenturePreview(s, stake, item.destinationId);
-          return preview && preview.totalCost <= s.player.gold;
+          return FB.tradeVentureGoods(s, stake).some(function (good) {
+            const preview = FB.tradeVenturePreview(s, stake,
+              item.destinationId, good.id);
+            return good.available && preview && preview.totalCost <= s.player.gold;
+          });
         });
       });
       h += '<button class="actionbtn" data-travel-purpose="' + esc(id) + '"' +
@@ -822,6 +825,7 @@ window.FB = window.FB || {};
       purpose:opts.purpose || null,
       stake:opts.stake || 0,
       source:opts.source || null,
+      goodId:opts.goodId || null,
       choices:choices,
       selected:null,
       wasPaused:wasPaused,
@@ -838,7 +842,8 @@ window.FB = window.FB || {};
       const item = choices[i];
       const pr = FB.world.byId[item.destinationId];
       const preview = opts.kind === 'trade_venture'
-        ? FB.tradeVenturePreview(s, opts.stake, item.destinationId) : null;
+        ? FB.tradeVenturePreview(s, opts.stake, item.destinationId,
+          opts.goodId) : null;
       const cost = opts.kind === 'trade_venture'
         ? (preview ? preview.totalCost : Infinity) : item.cost;
       const short = cost > s.player.gold;
@@ -874,7 +879,8 @@ window.FB = window.FB || {};
       if (first) first.focus();
     }, 0);
     const reopen = opts.kind === 'trade_venture'
-      ? function () { UI.showTradeVentureMarkets(opts.stake, opts.source); }
+      ? function () { UI.showTradeVentureMarkets(opts.stake, opts.source,
+        opts.goodId); }
       : function () { UI.showTravelDestinations(opts.purpose); };
     mobileNavPush('travel-picker',
       function () { closeTravelPicker(true); },
@@ -907,15 +913,18 @@ window.FB = window.FB || {};
     }
     const stakes = FB.tradeVentureStakes();
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally.')) +
+      'Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Dispatching remains available during the travel cooldown. Accompanying requires ordinary travel eligibility.')) +
       '</p></div><div class="gm-list">';
     for (let i = 0; i < stakes.length; i++) {
       const stake = stakes[i];
-      const affordable = markets.some(function (market) {
-        const preview = FB.tradeVenturePreview(s, stake, market.destinationId);
-        return preview && preview.totalCost <= s.player.gold;
+      const affordable = FB.tradeVentureGoods(s, stake).some(function (good) {
+        return good.available && markets.some(function (market) {
+          const preview = FB.tradeVenturePreview(s, stake,
+            market.destinationId, good.id);
+          return preview && preview.totalCost <= s.player.gold;
+        });
       });
       h += '<button class="actionbtn" data-venture-stake="' + stake + '"' +
         (affordable ? '' : ' disabled') + '>⚖ ' +
@@ -931,15 +940,48 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-venture-stake]').forEach(function (button) {
       button.addEventListener('click', function () {
         const stake = parseInt(button.dataset.ventureStake, 10);
-        UI.closeModal();
-        UI.showTradeVentureMarkets(stake, source);
+        UI.showTradeVentureGoods(stake, source);
       });
     });
     $('venture-setup-back').addEventListener('click',
       source === 'finance' ? UI.showFinance : UI.showTravelPurposes);
   };
 
-  UI.showTradeVentureMarkets = function (stake, source) {
+  UI.showTradeVentureGoods = function (stake, source) {
+    const s = FB.state;
+    const goods = FB.tradeVentureGoods(s, stake);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose what the household buys at the origin market. The same quantity is carried to the destination; losses can destroy goods, but favorable outcomes cannot create extra stock.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < goods.length; i++) {
+      const good = goods[i];
+      h += '<button class="actionbtn" data-venture-good="' + esc(good.id) + '"' +
+        (good.available ? '' : ' disabled') + '>' + esc((good.def.icon || '') +
+          ' ' + FB.dataText(s, s.player.charId, 'marketGood', good.id,
+            good.def, 'name', {})) + '<span class="adesc">' + esc(FB.T(
+          '{quantity} units at {price}× local price; {stock} units are in stock.', {
+            quantity:Math.round(good.quantity * 10) / 10,
+            price:good.price,
+            stock:good.stock
+          })) + (good.available ? '' : ' · ' + esc(FB.T('insufficient local stock'))) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="venture-good-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Choose a commodity'), h);
+    document.querySelectorAll('[data-venture-good]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.closeModal();
+        UI.showTradeVentureMarkets(stake, source,
+          button.getAttribute('data-venture-good'));
+      });
+    });
+    $('venture-good-back').addEventListener('click', function () {
+      UI.showTradeVentureSetup(source);
+    });
+  };
+
+  UI.showTradeVentureMarkets = function (stake, source, goodId) {
     const s = FB.state;
     const eligible = FB.tradeVentureEligible(s, 'dispatch');
     if (eligible !== true) { UI.toast(eligible); return; }
@@ -947,14 +989,20 @@ window.FB = window.FB || {};
       UI.toast(FB.T('That stake is not available.'));
       return;
     }
+    if (!FBDATA.marketGoods || !FBDATA.marketGoods[goodId]) {
+      UI.toast(FB.T('Choose a commodity first.'));
+      UI.showTradeVentureGoods(stake, source);
+      return;
+    }
     showDestinationPicker({
       kind:'trade_venture',
       purpose:'trade',
       stake:stake,
+      goodId:goodId,
       source:source,
       choices:FB.tradeVentureMarkets(s),
       title:FB.T('Choose a market for your venture'),
-      cancelAction:function () { UI.showTradeVentureSetup(source); }
+      cancelAction:function () { UI.showTradeVentureGoods(stake, source); }
     });
   };
 
@@ -990,7 +1038,8 @@ window.FB = window.FB || {};
     if (selectedButton && !center) selectedButton.scrollIntoView({block:'nearest'});
     const pr = FB.world.byId[pid];
     const preview = SH.travelPicker.kind === 'trade_venture'
-      ? FB.tradeVenturePreview(FB.state, SH.travelPicker.stake, pid) : null;
+      ? FB.tradeVenturePreview(FB.state, SH.travelPicker.stake, pid,
+        SH.travelPicker.goodId) : null;
     const cost = SH.travelPicker.kind === 'trade_venture'
       ? (preview ? preview.totalCost : Infinity) : item.cost;
     const affordable = cost <= FB.state.player.gold;
@@ -1023,7 +1072,7 @@ window.FB = window.FB || {};
       const value = strategy.bands[i].multiplier;
       if (values.indexOf(value) < 0) values.push(value);
     }
-    return FB.T('Possible stake returns: {returns}.', {
+    return FB.T('Possible outcome multipliers on the live arrival value: {returns}.', {
       returns:values.map(function (value) {
         return FB.T('{amount}×', { amount:value });
       }).join(' · ')
@@ -1035,7 +1084,7 @@ window.FB = window.FB || {};
     const item = SH.travelPicker.selected;
     const s = FB.state;
     const preview = FB.tradeVenturePreview(
-      s, SH.travelPicker.stake, item.destinationId);
+      s, SH.travelPicker.stake, item.destinationId, SH.travelPicker.goodId);
     if (!preview) {
       UI.toast(FB.T('That venture is no longer available.'));
       return;
@@ -1045,7 +1094,7 @@ window.FB = window.FB || {};
     const boldRisk = Math.round(preview.strategies.bold.lossChance * 100);
     const modifier = Math.round(preview.modifiers.total * 1000) / 10;
     const accompany = FB.tradeVentureCanStart(
-      s, 'accompany', preview.stake, preview.destinationId);
+      s, 'accompany', preview.stake, preview.destinationId, preview.goodId);
     const personalDays = preview.roundTripDays +
       (FBDATA.balance.travelMinStayDays || 90);
     const currentBoldChance = Math.round(FB.namedChance(s, 'travel_trade') * 100);
@@ -1054,6 +1103,16 @@ window.FB = window.FB || {};
         destination:pr.name
       })) + '</b></p>' +
       kv('Stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
+      kv('Commodity', esc((FBDATA.marketGoods[preview.goodId].icon || '') + ' ' +
+        FB.dataText(s, s.player.charId, 'marketGood', preview.goodId,
+          FBDATA.marketGoods[preview.goodId], 'name', {}))) +
+      kv('Origin purchase', esc(FB.T('{quantity} units at {price}×', {
+        quantity:Math.round(preview.quantity * 10) / 10,
+        price:preview.originPrice
+      }))) +
+      kv('Current destination price', esc(FB.T('{price}×', {
+        price:preview.destinationPrice
+      }))) +
       kv('Route overhead', esc(FB.T('{money:amount}', { amount:preview.overhead }))) +
       kv('Total paid now', esc(FB.T('{money:amount}', { amount:preview.totalCost }))) +
       kv('Road', esc(FB.T('{legs} county legs · {days} days each way', {
@@ -1091,20 +1150,22 @@ window.FB = window.FB || {};
         }) + ' ' + FB.T(
           'Cautious returns 1.2×; bold returns 2.5× on success or 0.3× on failure.')
         : accompany) + '</span></button>' +
+      '<button class="actionbtn" id="venture-market-details">⚖ ' +
+      esc(FB.T('Inspect destination market')) + '</button>' +
       '<button class="actionbtn" id="venture-review-back">' +
       esc(FB.T('Back to markets')) + '</button></div>';
     openModal(FB.T('Review your venture'), h,
       {dismissable:false, historyBack:true});
     $('venture-dispatch-cautious').addEventListener('click', function () {
       if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
-          'cautious', SH.travelPicker.source)) return;
+          'cautious', SH.travelPicker.source, preview.goodId)) return;
       UI.cancelTravelPicker(true);
       UI.closeModal();
       UI.refresh();
     });
     $('venture-dispatch-bold').addEventListener('click', function () {
       if (!FB.startTradeVenture(s, preview.stake, preview.destinationId,
-          'bold', SH.travelPicker.source)) return;
+          'bold', SH.travelPicker.source, preview.goodId)) return;
       UI.cancelTravelPicker(true);
       UI.closeModal();
       UI.refresh();
@@ -1113,12 +1174,16 @@ window.FB = window.FB || {};
       $('venture-accompany').addEventListener('click', function () {
         if (!FB.travelStart(s, 'trade', preview.destinationId,
             preview.destinationRealm, {
-              kind:'trade_venture', stake:preview.stake
+              kind:'trade_venture', stake:preview.stake,
+              goodId:preview.goodId
             })) return;
         UI.cancelTravelPicker(true);
         UI.closeModal();
       });
     }
+    $('venture-market-details').addEventListener('click', function () {
+      UI.showMarket(preview.destinationId, preview.goodId);
+    });
     $('venture-review-back').addEventListener('click', function () {
       UI.closeModal();
       const selected = document.querySelector('.travel-destination.selected');
@@ -3282,6 +3347,182 @@ window.FB = window.FB || {};
     });
   };
 
+  /* ================= county commodity market ================= */
+  function marketShockSourceText(source) {
+    if (source === 'war_disruption') return FB.T('War disruption');
+    if (source === 'lean_harvest') return FB.T('Lean harvest');
+    if (source === 'pestilence') return FB.T('Pestilence');
+    if (source === 'plague_recovery') return FB.T('Recovery');
+    if (source === 'market_disruption') return FB.T('Market disruption');
+    return String(source || FB.T('Market disruption')).replace(/_/g, ' ');
+  }
+
+  function marketSignedPercent(value) {
+    const amount = Math.round((Number(value) || 0) * 100);
+    return (amount > 0 ? '+' : '') + amount + '%';
+  }
+
+  UI.showMarket = function (pid, goodId) {
+    const s = FB.state;
+    const pr = s && FB.world.byId[pid];
+    const goodIds = Object.keys(FBDATA.marketGoods || {});
+    goodIds.sort(function (a, b) {
+      const ao = Number(FBDATA.marketGoods[a].order) || 0;
+      const bo = Number(FBDATA.marketGoods[b].order) || 0;
+      return ao - bo || (a < b ? -1 : a > b ? 1 : 0);
+    });
+    goodId = FBDATA.marketGoods && FBDATA.marketGoods[goodId]
+      ? goodId : goodIds[0];
+    const market = pr && FB.marketCounty ? FB.marketCounty(s, pid) : null;
+    if (!market || !market.goods[goodId]) return;
+    const good = FBDATA.marketGoods[goodId];
+    const row = market.goods[goodId];
+    const trend = row.trend > 0.005 ? FB.T('▲ rising') :
+      row.trend < -0.005 ? FB.T('▼ falling') : FB.T('● steady');
+    function amount(value) {
+      return value === null || value === undefined ? FB.T('Updates next season') :
+        String(Math.round(value * 10) / 10);
+    }
+    let options = '';
+    for (let i = 0; i < goodIds.length; i++) {
+      const id = goodIds[i];
+      const def = FBDATA.marketGoods[id];
+      options += '<option value="' + esc(id) + '"' +
+        (id === goodId ? ' selected' : '') + '>' +
+        esc((def.icon || '') + ' ' + dt(s, 'marketGood', id, def, 'name')) +
+        '</option>';
+    }
+    let h = '<div class="gm-body-text market-sheet"><label for="market-sheet-good">' +
+      esc(FB.T('Market basket')) + '</label> <select id="market-sheet-good">' +
+      options + '</select><p>' + esc(dt(s, 'marketGood', goodId, good, 'desc')) +
+      '</p></div>' +
+      kv('Local price', esc(FB.T('{price}× · {trend}', {
+        price:row.price, trend:trend
+      }))) +
+      kv('Stock', esc(amount(row.stock))) +
+      kv('Production this season', esc(amount(row.production))) +
+      kv('Demand this season', esc(amount(row.demand))) +
+      kv('Imports / exports', esc(FB.T('{imports} / {exports}', {
+        imports:amount(row.imports), exports:amount(row.exports)
+      }))) +
+      kv('Last net flow', esc(amount(row.netFlow))) +
+      kv('Your household demand', esc(amount(row.household))) +
+      kv('Your enterprise output', esc(amount(row.enterprise)));
+    h += '<div class="gm-body-text"><h4>' + esc(FB.T('Historical endowments')) +
+      '</h4>';
+    if (market.endowments.entries.length) {
+      for (let i = 0; i < market.endowments.entries.length; i++) {
+        const entry = market.endowments.entries[i];
+        const endowment = FBDATA.marketEndowmentTypes[entry.id];
+        const effects = [];
+        for (const effectGood in (endowment.production || {})) {
+          effects.push(FB.T('+{percent}% {good} production', {
+            percent:Math.round(endowment.production[effectGood] * 100),
+            good:guildMonopolyGoodName(s, effectGood)
+          }));
+        }
+        for (const effectGood in (endowment.flow || {})) {
+          effects.push(FB.T('+{percent}% {good} flow capacity', {
+            percent:Math.round(endowment.flow[effectGood] * 100),
+            good:guildMonopolyGoodName(s, effectGood)
+          }));
+        }
+        h += '<p><b>' + esc((entry.icon || '') + ' ' +
+          dt(s, 'marketEndowment', entry.id, endowment, 'name')) + '</b><br>' +
+          esc(dt(s, 'marketEndowment', entry.id, endowment, 'desc')) +
+          (effects.length ? '<br><span class="hint">' + esc(effects.join(' · ')) +
+            '</span>' : '') + '</p>';
+      }
+    } else h += '<p>' + esc(FB.T('No authored regional advantage applies here.')) + '</p>';
+    h += '</div>';
+    if (market.shocks.length) {
+      h += '<div class="gm-body-text"><h4>' + esc(FB.T('Active disruptions')) + '</h4>';
+      for (let i = 0; i < market.shocks.length; i++) {
+        const shock = market.shocks[i];
+        const shockGood = shock.goodId && FBDATA.marketGoods[shock.goodId]
+          ? guildMonopolyGoodName(s, shock.goodId) : FB.T('All market baskets');
+        h += '<p>⚠ ' + esc(FB.T(
+          '{source} · {good} · production {production} · demand {demand} · flow {flow} · {seasons} seasons remain', {
+          source:marketShockSourceText(shock.source), good:shockGood,
+          production:marketSignedPercent(shock.production),
+          demand:marketSignedPercent(shock.demand),
+          flow:marketSignedPercent(shock.flow), seasons:shock.remaining
+        })) + '</p>';
+      }
+      h += '</div>';
+    }
+    const ventures = FB.activeTradeVentures ? FB.activeTradeVentures(s) : [];
+    const matchingVentures = ventures.filter(function (venture) {
+      return venture.goodId === goodId && (venture.originId === pid ||
+        venture.destinationId === pid);
+    });
+    if (matchingVentures.length) {
+      h += '<div class="gm-body-text"><h4>' + esc(FB.T('Active ventures')) + '</h4>';
+      for (let i = 0; i < matchingVentures.length; i++) {
+        const venture = matchingVentures[i];
+        const destination = FB.world.byId[venture.destinationId];
+        h += '<p>🧭 ' + esc(FB.T(
+          '{quantity} units bound for {destination} · bought at {price}× · {days} days remain', {
+          quantity:Math.round(venture.quantity * 10) / 10,
+          destination:destination ? destination.name : venture.destinationId,
+          price:venture.originPrice,
+          days:Math.max(0, (Number(venture.dueTurn) || s.turn) - s.turn)
+        })) + '</p>';
+      }
+      h += '</div>';
+    }
+    const charters = [];
+    if (FB.guildMonopolyActive) {
+      for (const slot of ['incoming','outgoing']) {
+        const charter = FB.guildMonopolyActive(s, slot);
+        const charterCounty = charter && (charter.originId ||
+          (charter.scope === 'province' ? charter.scopeId : null));
+        if (charter && (!charter.goodId || charter.goodId === goodId) &&
+            (!charterCounty || charterCounty === pid ||
+             charter.destinationId === pid)) charters.push(charter);
+      }
+    }
+    if (charters.length) {
+      h += '<div class="gm-body-text"><h4>' + esc(FB.T('Charter terms')) + '</h4>';
+      for (let i = 0; i < charters.length; i++) {
+        const charter = charters[i];
+        const charterDestination = charter.destinationId &&
+          FB.world.byId[charter.destinationId];
+        h += '<p>📜 ' + esc(FB.T(
+          '{mode} privilege{destination} · {days} days remain · +{enterprise}% matching enterprise profit · +{tax}% tax · {opinion} popular opinion', {
+          mode:!charter.mode ? FB.T('Broad {profession}', {
+            profession:FB.dataParam('career', charter.profession, 'name', 'lower')
+          }) : charter.mode === 'corridor' ? FB.T('Corridor') :
+            charter.mode === 'craft' ? FB.T('Craft') : FB.T('Local exchange'),
+          destination:charterDestination ? FB.T(' to {destination}', {
+            destination:charterDestination.name
+          }) : '',
+          days:FB.guildMonopolyRemainingDays(s, charter),
+          enterprise:Math.round(charter.enterpriseBonus * 100),
+          tax:Math.round(charter.taxBonus * 100),
+          opinion:charter.popularOpinion > 0 ? '+' + charter.popularOpinion :
+            charter.popularOpinion
+        })) + '</p>';
+      }
+      h += '</div>';
+    }
+    if (pid === s.player.provinceId && s.player.marketHardship &&
+        s.player.marketHardship.active) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'Household hardship: {percent}% of necessities went unfunded last season; {seasons} provision-short seasons in succession.', {
+          percent:Math.round(s.player.marketHardship.unpaidShare * 100),
+          seasons:s.player.marketHardship.provisionSeasons
+        })) + '</div>';
+    }
+    h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Done')) + '</button></div>';
+    openModal(FB.T('{county} market', { county:pr.name }), h);
+    $('market-sheet-good').addEventListener('change', function () {
+      UI.showMarket(pid, this.value);
+    });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
   /* ================= bounded market auction ================= */
   UI.showAuctionVenuePicker = function (venues) {
     const s = FB.state;
@@ -3489,7 +3730,7 @@ window.FB = window.FB || {};
         fort:fortName(s, currentLevel + 1)
       })) + '</b><span class="adesc">' + esc(FB.T(
         '{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}', {
-          cost:next.cost, seasons:next.seasons, upkeep:next.upkeep,
+          cost:status ? status.cost : next.cost, seasons:next.seasons, upkeep:next.upkeep,
           garrison:next.garrison, technology:fortRequirementNames(s, next)
         })) + '</span></div>';
       if (own && status && status.ok) {
@@ -3498,7 +3739,7 @@ window.FB = window.FB || {};
             fort:fortName(s, currentLevel + 1)
           })) + '<span class="adesc">' + esc(FB.T(
             'Pay {money:cost} now; completes in {seasons} seasons.', {
-              cost:next.cost, seasons:next.seasons
+              cost:status ? status.cost : next.cost, seasons:next.seasons
             })) + '</span></button>';
       } else if (own && status && status.reason === 'technology' &&
           status.missingTech.length) {
@@ -3683,7 +3924,9 @@ window.FB = window.FB || {};
       h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
         esc(FB.T('🏗 Raise a building…')) + '</button></div>';
     }
-    h += '<div class="gm-footer"><button class="btn" id="settlement-guide">' +
+    h += '<div class="gm-footer"><button class="btn" id="settlement-market">' +
+      esc(FB.T('County market')) +
+      '</button><button class="btn" id="settlement-guide">' +
       esc(FB.T('Guide: settlements and development')) +
       '</button><button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
@@ -3691,6 +3934,9 @@ window.FB = window.FB || {};
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
+    $('settlement-market').addEventListener('click', function () {
+      UI.showMarket(pid, FB.map.marketGood || 'provisions');
+    });
     document.querySelectorAll('[data-fort-start]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showFortProject(pid, idx, Number(button.dataset.fortStart));
@@ -5788,7 +6034,121 @@ window.FB = window.FB || {};
      sheet is the profession picker; the second repeats every frozen term
      before the deed spends its day. Generic action buttons keep number-key
      selection and the narrow mobile sheet behavior. */
-  UI.showGuildMonopolyGrant = function (profession) {
+  function guildMonopolyGoodName(s, id) {
+    const def = FBDATA.marketGoods[id];
+    return (def.icon || '') + ' ' + dt(s, 'marketGood', id, def, 'name');
+  }
+
+  function guildMonopolyCorridorPicker(profession, goodId, petition) {
+    const s = FB.state;
+    const markets = FB.tradeVentureMarkets(s);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route.')) +
+      '</p></div><div class="gm-list">';
+    for (let i = 0; i < markets.length; i++) {
+      const market = markets[i];
+      const pr = FB.world.byId[market.destinationId];
+      h += '<button class="actionbtn" data-charter-destination="' +
+        esc(market.destinationId) + '">' + esc(pr ? pr.name : market.destinationId) +
+        '<span class="adesc">' + esc(FB.T('{legs} county legs · {days} days each way', {
+          legs:market.legs, days:market.days
+        })) + '</span></button>';
+    }
+    h += '</div><button class="btn" id="gm-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Choose a chartered corridor'), h);
+    document.querySelectorAll('[data-charter-destination]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const pid = button.getAttribute('data-charter-destination');
+        let selected = null;
+        for (let i = 0; i < markets.length; i++) {
+          if (markets[i].destinationId === pid) selected = markets[i];
+        }
+        if (!selected) return;
+        const spec = {
+          mode:'corridor', goodId:goodId,
+          originId:s.player.provinceId,
+          destinationId:pid,
+          route:selected.route.slice()
+        };
+        if (petition) queueGuildMonopolyPetition(spec);
+        else UI.showGuildMonopolyGrant(profession, spec);
+      });
+    });
+    $('gm-back').addEventListener('click', function () {
+      if (petition) UI.showGuildMonopolyPetition();
+      else UI.showGuildMonopolyGrant(profession);
+    });
+  }
+
+  function guildMonopolyScopePicker(profession, petition) {
+    const s = FB.state;
+    const craftGoods = { wares:1, materials:1, transport:1 };
+    let h = '<div class="gm-body-text"><p>' + esc(profession === 'craftsman'
+      ? FB.T('Choose the workshop output protected by this local craft privilege.')
+      : FB.T('Choose a commodity and whether the privilege covers local exchange or one exact corridor.')) +
+      '</p></div><div class="gm-list">';
+    for (const goodId in FBDATA.marketGoods) {
+      if (profession === 'craftsman' && !craftGoods[goodId]) continue;
+      if (profession === 'craftsman') {
+        h += '<button class="actionbtn" data-charter-local="' + goodId + '">' +
+          esc(guildMonopolyGoodName(s, goodId)) + '<span class="adesc">' +
+          esc(FB.T('Matching local workshop output only.')) + '</span></button>';
+      } else {
+        h += '<button class="actionbtn" data-charter-local="' + goodId + '">' +
+          esc(guildMonopolyGoodName(s, goodId) + ' — ' + FB.T('Local exchange')) +
+          '<span class="adesc">' + esc(FB.T('Merchant enterprises in the household county.')) +
+          '</span></button><button class="actionbtn" data-charter-corridor="' +
+          goodId + '">' + esc(guildMonopolyGoodName(s, goodId) + ' — ' +
+            FB.T('One corridor')) + '<span class="adesc">' + esc(FB.T(
+            'Choose a destination; the exact route gains capacity and venture returns.')) +
+          '</span></button>';
+      }
+    }
+    h += '</div><button class="btn" id="gm-back">' + esc(FB.T('Back')) + '</button>';
+    openModal(FB.T('Define the monopoly'), h);
+    document.querySelectorAll('[data-charter-local]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const spec = {
+          mode:profession === 'craftsman' ? 'craft' : 'local',
+          goodId:button.getAttribute('data-charter-local'),
+          originId:s.player.provinceId
+        };
+        if (petition) queueGuildMonopolyPetition(spec);
+        else UI.showGuildMonopolyGrant(profession, spec);
+      });
+    });
+    document.querySelectorAll('[data-charter-corridor]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        guildMonopolyCorridorPicker(profession,
+          button.getAttribute('data-charter-corridor'), petition);
+      });
+    });
+    $('gm-back').addEventListener('click', function () {
+      if (petition) UI.closeModal();
+      else UI.showGuildMonopolyGrant();
+    });
+  }
+
+  function queueGuildMonopolyPetition(spec) {
+    const s = FB.state;
+    const ctx = FB.guildMonopolyPetitionContext(s, spec);
+    if (!ctx) return false;
+    s.player.cooldowns = s.player.cooldowns || {};
+    s.player.cooldowns.petition_monopoly = s.turn;
+    if (s.player.flags) s.player.flags.tut_deed = 1;
+    UI.closeModal();
+    FB.queueEvent(s, 'guild_monopoly_petition', ctx);
+    if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
+    return true;
+  }
+
+  UI.showGuildMonopolyPetition = function () {
+    const status = FB.guildMonopolyPetitionStatus(FB.state, true);
+    if (!status.ready) { UI.toast(status.reason); return; }
+    guildMonopolyScopePicker(status.career.profession, true);
+  };
+
+  UI.showGuildMonopolyGrant = function (profession, spec) {
     const s = FB.state;
     const status = FB.guildMonopolyIssueStatus(s);
     if (!status.ready) {
@@ -5831,6 +6191,10 @@ window.FB = window.FB || {};
       $('gm-cancel').addEventListener('click', UI.closeModal);
       return;
     }
+    if (!spec || !spec.mode || !spec.goodId) {
+      guildMonopolyScopePicker(profession, false);
+      return;
+    }
 
     const advocate = FB.householdWorkers(s).filter(function (c) {
       if (c.id === s.player.charId || c.dead) return false;
@@ -5855,7 +6219,14 @@ window.FB = window.FB || {};
           enterprise:Math.round(status.terms.enterpriseBonus * 100),
           opinion:status.terms.popularOpinion > 0
             ? '+' + status.terms.popularOpinion : status.terms.popularOpinion
-        })) + '</p><p class="hint">' + esc(FB.T(
+        })) + '</p><p>' + esc(spec.mode === 'corridor'
+          ? FB.T('{good} trade on the corridor to {destination} gains distribution capacity and qualifying venture returns.', {
+            good:guildMonopolyGoodName(s, spec.goodId),
+            destination:FB.world.byId[spec.destinationId].name
+          })
+          : FB.T('The privilege applies to {good} in the local county.', {
+            good:guildMonopolyGoodName(s, spec.goodId)
+          })) + '</p><p class="hint">' + esc(FB.T(
           'The charter spends the day and cannot be renewed, revoked, or replaced before it ends. It ends early only if the dynasty loses landed authority.')) +
       '</p></div><button class="btn primary" id="gm-confirm-monopoly">' +
       esc(FB.T('Grant the {profession} monopoly', {
@@ -5869,12 +6240,12 @@ window.FB = window.FB || {};
       historyBackRender:function () { UI.showGuildMonopolyGrant(); }
     });
     $('gm-confirm-monopoly').addEventListener('click', function () {
-      if (!FB.issueGuildMonopoly(FB.state, profession)) return;
+      if (!FB.issueGuildMonopoly(FB.state, profession, spec)) return;
       UI.closeModal();
       if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
     });
     $('gm-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showGuildMonopolyGrant(); });
+      modalHistoryBack(function () { UI.showGuildMonopolyGrant(profession); });
     });
   };
 
@@ -8940,8 +9311,16 @@ window.FB = window.FB || {};
         level:level, name:householdStandardLevelName(s, id, level)
       })
       : FB.T('Baseline');
+    const upkeepParts = level && active && FB.householdStandardsUpkeepParts
+      ? FB.householdStandardsUpkeepParts(s) : null;
+    let quotedUpkeep = current ? Number(current.upkeep) || 0 : 0;
+    if (upkeepParts) {
+      for (let i = 0; i < upkeepParts.lines.length; i++) {
+        if (upkeepParts.lines[i].id === id) quotedUpkeep = upkeepParts.lines[i].amount;
+      }
+    }
     const upkeep = level && active && current
-      ? FB.T('{money:amount}/season', { amount:Number(current.upkeep) || 0 })
+      ? FB.T('{money:amount}/season', { amount:quotedUpkeep })
       : level ? FB.T('None while dormant') : FB.T('No upkeep');
     const effect = level && active
       ? householdStandardLevelDesc(s, id, level)
@@ -8957,8 +9336,14 @@ window.FB = window.FB || {};
   }
 
   function householdStandardUpgradeChoice(s, id, level, next, availability) {
-    const setup = assetSummaryValue(assetMoneyCost(next.cost,
-      s.player.gold >= (Number(next.cost) || 0)), '');
+    const standardDef = FBDATA.householdStandards[id];
+    const nextCost = FB.householdStandardUpgradeCost ?
+      FB.householdStandardUpgradeCost(s, id) : Number(next.cost) || 0;
+    const nextUpkeep = FB.marketCostQuote ? FB.marketCostQuote(s,
+      Number(next.upkeep) || 0, next.marketBasket || standardDef.marketBasket,
+      s.player.provinceId) : Number(next.upkeep) || 0;
+    const setup = assetSummaryValue(assetMoneyCost(nextCost,
+      s.player.gold >= nextCost), '');
     return '<button class="actionbtn household-standard-choice" ' +
       'id="household-standard-upgrade"' +
       (availability === true ? '' : ' disabled') + '>' +
@@ -8975,7 +9360,7 @@ window.FB = window.FB || {};
       esc(setup.text) + '</b></span><span><small>' +
       esc(FB.T('Recurring cost')) + '</small><b>' +
       esc(FB.T('{money:amount}/season', {
-        amount:Number(next.upkeep) || 0
+        amount:nextUpkeep
       })) + '</b></span></span>' +
       (availability === true ? '' :
         '<span class="adesc household-standard-choice-blocked">' +
@@ -9052,7 +9437,17 @@ window.FB = window.FB || {};
           effect:householdStandardLevelDesc(s, id, level + 1)
         })
         : FB.T('No maintained improvement'));
-    const short = next && s.player.gold < (Number(next.cost) || 0);
+    const nextCost = next && FB.householdStandardUpgradeCost ?
+      FB.householdStandardUpgradeCost(s, id) : next ? Number(next.cost) || 0 : 0;
+    const upkeepParts = active && FB.householdStandardsUpkeepParts ?
+      FB.householdStandardsUpkeepParts(s) : null;
+    let currentUpkeep = current ? Number(current.upkeep) || 0 : 0;
+    if (upkeepParts) {
+      for (let i = 0; i < upkeepParts.lines.length; i++) {
+        if (upkeepParts.lines[i].id === id) currentUpkeep = upkeepParts.lines[i].amount;
+      }
+    }
+    const short = next && s.player.gold < nextCost;
     return '<button class="actionbtn household-entry household-standard' +
       (level && active ? ' household-entry-active' : '') +
       (level && !active ? ' household-entry-dormant' : '') +
@@ -9062,13 +9457,13 @@ window.FB = window.FB || {};
         name:householdStandardName(s, id),
         status:status,
         effect:effect,
-        cost:next ? FB.money(Number(next.cost) || 0) : FB.T('Completed'),
+        cost:next ? FB.money(nextCost) : FB.T('Completed'),
         costLabel:next
           ? (short ? FB.T('not enough money') : FB.T('Next setup'))
           : FB.T('Highest level reached'),
         recurring:active && current
           ? FB.T('{money:amount}/season', {
-            amount:Number(current.upkeep) || 0
+            amount:currentUpkeep
           })
           : level ? FB.T('Dormant') : FB.T('No upkeep'),
         unaffordable:short
@@ -9103,7 +9498,8 @@ window.FB = window.FB || {};
       '</p><div class="household-catalogue-list">';
     const available = FB.holdingAvailable(s);
     for (const t of available) {
-      const short = s.player.gold < t.def.cost;
+      const cost = FB.holdingCost ? FB.holdingCost(s, t.id) : t.def.cost;
+      const short = s.player.gold < cost;
       h += '<button class="actionbtn household-entry household-property-entry" ' +
         'data-holding="' + esc(t.id) + '"' +
         (short ? ' disabled' : '') + '>' +
@@ -9113,7 +9509,7 @@ window.FB = window.FB || {};
           status:dt(s, 'holding', t.id, t.def, 'desc'),
           effect:holdingEffectText(t.def) +
             (t.def.pledge === false ? ' · ' + holdingTransferRule(t.def) : ''),
-          cost:FB.money(t.def.cost),
+          cost:FB.money(cost),
           costLabel:short ? FB.T('not enough money') : FB.T('Setup cost'),
           recurring:FB.T('No upkeep'),
           unaffordable:short
@@ -9278,13 +9674,18 @@ window.FB = window.FB || {};
     }
     const preview = householdStandardPreview(s, id, level + 1);
     const netAfter = preview.net;
-    const projected = s.player.gold - (Number(next.cost) || 0) + netAfter;
+    const setupCost = FB.householdStandardUpgradeCost ?
+      FB.householdStandardUpgradeCost(s, id) : Number(next.cost) || 0;
+    const recurringCost = FB.marketCostQuote ? FB.marketCostQuote(s,
+      Number(next.upkeep) || 0, next.marketBasket || def.marketBasket,
+      s.player.provinceId) : Number(next.upkeep) || 0;
+    const projected = s.player.gold - setupCost + netAfter;
     let h = '<div class="gm-body-text">' +
       assetEffectSummary({
         owner:FB.T('Household dynasty'),
         scope:householdStandardScope(s, def),
-        setupCost:assetMoneyCost(next.cost, true),
-        recurringCost:assetSeasonalMoneyCost(next.upkeep),
+        setupCost:assetMoneyCost(setupCost, true),
+        recurringCost:assetSeasonalMoneyCost(recurringCost),
         effect:householdStandardLevelDesc(s, id, level + 1),
         transferRule:householdStandardTransferRule(),
         expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
@@ -9299,7 +9700,7 @@ window.FB = window.FB || {};
         '</p>' : '') + '</div><div class="gm-list">' +
       '<button class="actionbtn" id="household-standard-confirm">' +
       esc(FB.T('Pay {money:cost} and establish {name}', {
-        cost:Number(next.cost) || 0,
+        cost:setupCost,
         name:householdStandardLevelName(s, id, level + 1)
       })) + '</button><button class="actionbtn" id="household-standard-cancel">' +
       esc(FB.T('Back')) + '</button></div>';
@@ -9380,7 +9781,7 @@ window.FB = window.FB || {};
   UI.showLandMarket = function () {
     const s = FB.state;
     const p = s.player;
-    const cost = FB.landPlotCost();
+    const cost = FB.landPlotCost(s);
     const max = FBDATA.balance.landPlotMaxSettlement ||
       FBDATA.balance.manorPlotRequirement;
     const settlements = FB.settlementsOf(s, p.provinceId);

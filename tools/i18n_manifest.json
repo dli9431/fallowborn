@@ -12183,7 +12183,7 @@
       ],
       "location": "data/events_paths.js",
       "source": {
-        "text": "Before {grantor}, you petition for exclusive privilege across your whole profession. The charter would last {years} years and add {enterprisePercent}% profit to every matching staffed family enterprise."
+        "text": "Before {grantor}, you petition for the commodity privilege you have defined. The charter would last {years} years and add {enterprisePercent}% profit to qualifying staffed family enterprises."
       }
     },
     "event.guild_monopoly_petition.title.default": {
@@ -33543,6 +33543,246 @@
         "text": "Watch and Ward"
       }
     },
+    "marketEndowment.fisheries.desc.default": {
+      "context": "marketEndowment fisheries, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Durable coastal, river, or lake fisheries enlarge the food supply."
+      }
+    },
+    "marketEndowment.fisheries.name.default": {
+      "context": "marketEndowment fisheries, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Fisheries"
+      }
+    },
+    "marketEndowment.grain.desc.default": {
+      "context": "marketEndowment grain, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Deep arable soils and established grain husbandry raise local provisions."
+      }
+    },
+    "marketEndowment.grain.name.default": {
+      "context": "marketEndowment grain, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Grain country"
+      }
+    },
+    "marketEndowment.horse_breeding.desc.default": {
+      "context": "marketEndowment horse_breeding, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Open grazing and established breeding supply remounts, pack animals, and draft power."
+      }
+    },
+    "marketEndowment.horse_breeding.name.default": {
+      "context": "marketEndowment horse_breeding, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Horse-breeding country"
+      }
+    },
+    "marketEndowment.luxury_entrepot.desc.default": {
+      "context": "marketEndowment luxury_entrepot, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "A long-distance exchange center distributes valuable imports without creating them locally."
+      }
+    },
+    "marketEndowment.luxury_entrepot.name.default": {
+      "context": "marketEndowment luxury_entrepot, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Luxury entrepôt"
+      }
+    },
+    "marketEndowment.metalworking.desc.default": {
+      "context": "marketEndowment metalworking, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Accessible ores, fuel, and established smithing raise the supply of worked metal."
+      }
+    },
+    "marketEndowment.metalworking.name.default": {
+      "context": "marketEndowment metalworking, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Metalworking resources"
+      }
+    },
+    "marketEndowment.pastoral.desc.default": {
+      "context": "marketEndowment pastoral, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Herding supplies meat, dairy, hides, draft animals, and pack stock."
+      }
+    },
+    "marketEndowment.pastoral.name.default": {
+      "context": "marketEndowment pastoral, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Pastoral economy"
+      }
+    },
+    "marketEndowment.salt_trade.desc.default": {
+      "context": "marketEndowment salt_trade, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Salterns or brine works preserve food and make provisions easier to move."
+      }
+    },
+    "marketEndowment.salt_trade.name.default": {
+      "context": "marketEndowment salt_trade, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Salt trade"
+      }
+    },
+    "marketEndowment.timber.desc.default": {
+      "context": "marketEndowment timber, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Managed woodland supplies construction timber, fuel, carts, ships, and barrels."
+      }
+    },
+    "marketEndowment.timber.name.default": {
+      "context": "marketEndowment timber, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Timber country"
+      }
+    },
+    "marketEndowment.wine_oil.desc.default": {
+      "context": "marketEndowment wine_oil, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Mediterranean vines and olives supply ordinary calories and valued exports."
+      }
+    },
+    "marketEndowment.wine_oil.name.default": {
+      "context": "marketEndowment wine_oil, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Wine and oil country"
+      }
+    },
+    "marketEndowment.wool_textiles.desc.default": {
+      "context": "marketEndowment wool_textiles, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Pasture, spinning, weaving, dyeing, and finishing sustain a textile advantage."
+      }
+    },
+    "marketEndowment.wool_textiles.name.default": {
+      "context": "marketEndowment wool_textiles, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Wool and textiles"
+      }
+    },
+    "marketGood.luxuries.desc.default": {
+      "context": "marketGood luxuries, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Fine cloth, wine, spices, plate, pigments, and prestigious imports."
+      }
+    },
+    "marketGood.luxuries.name.default": {
+      "context": "marketGood luxuries, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Luxuries"
+      }
+    },
+    "marketGood.materials.desc.default": {
+      "context": "marketGood materials, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Timber, worked metal, stone, lime, and construction supplies."
+      }
+    },
+    "marketGood.materials.name.default": {
+      "context": "marketGood materials, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Materials"
+      }
+    },
+    "marketGood.provisions.desc.default": {
+      "context": "marketGood provisions, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Grain, fish, livestock products, oil, and ordinary drink."
+      }
+    },
+    "marketGood.provisions.name.default": {
+      "context": "marketGood provisions, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Provisions"
+      }
+    },
+    "marketGood.transport.desc.default": {
+      "context": "marketGood transport, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Draft animals, remounts, carts, barrels, rope, and carriage."
+      }
+    },
+    "marketGood.transport.name.default": {
+      "context": "marketGood transport, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Transport"
+      }
+    },
+    "marketGood.wares.desc.default": {
+      "context": "marketGood wares, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Cloth, pottery, leatherwork, vessels, and household furnishings."
+      }
+    },
+    "marketGood.wares.name.default": {
+      "context": "marketGood wares, name, faith branch default.",
+      "glossary": [],
+      "location": "data/markets.js",
+      "source": {
+        "text": "Wares"
+      }
+    },
     "modifier.conquered_without_right.desc.default": {
       "context": "modifier conquered_without_right, desc, faith branch default.",
       "glossary": [],
@@ -36702,6 +36942,32 @@
       "location": "js/actions.js",
       "source": {
         "text": "⚖ The council of {province} adopts {motion} for one year."
+      }
+    },
+    "news.market.hardship_escalated": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "seasons"
+      ],
+      "location": "js/market.js",
+      "source": {
+        "text": "⚠ Household scarcity deepens after {seasons} short seasons; resident health is now at greater risk."
+      }
+    },
+    "news.market.hardship_recovered": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/market.js",
+      "source": {
+        "text": "🍞 The household table is fully supplied again; the season of want has ended."
+      }
+    },
+    "news.market.hardship_started": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [],
+      "location": "js/market.js",
+      "source": {
+        "text": "🥣 The household cannot fully fund its necessities; rationing and makeshift economies begin."
       }
     },
     "news.match.policy_no_recommendation": {
@@ -46391,6 +46657,16 @@
         "text": "Buy productive property; further copies of one kind cost more."
       }
     },
+    "src.00373d3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "● steady"
+      }
+    },
     "src.003797d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47805,6 +48081,16 @@
         "text": "Keep your coin and the host you already have."
       }
     },
+    "src.0405705f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Durable coastal, river, or lake fisheries enlarge the food supply."
+      }
+    },
     "src.041f1c58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48364,6 +48650,16 @@
       ],
       "source": {
         "text": "Responsibility is a slower way to die."
+      }
+    },
+    "src.0545697f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Cloth, pottery, leatherwork, vessels, and household furnishings."
       }
     },
     "src.054b466b": {
@@ -50084,6 +50380,16 @@
         "text": "Arles"
       }
     },
+    "src.08d8a66a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Market disruption"
+      }
+    },
     "src.08d9fa82": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51548,16 +51854,6 @@
         "text": "Autumn"
       }
     },
-    "src.0c0ceeae": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Possible stake returns: {returns}."
-      }
-    },
     "src.0c0d0108": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51686,6 +51982,16 @@
       ],
       "source": {
         "text": "Career specialization"
+      }
+    },
+    "src.0c9c494e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a commodity"
       }
     },
     "src.0c9e7216": {
@@ -52630,6 +52936,16 @@
         "text": "🕯 {name}, betrothed to your granddaughter {child}, has died before the wedding."
       }
     },
+    "src.0eabbe65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Local exchange"
+      }
+    },
     "src.0eaca6bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53152,6 +53468,16 @@
       ],
       "source": {
         "text": "Worth about {money:gold}."
+      }
+    },
+    "src.1013205a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose what the household buys at the origin market. The same quantity is carried to the destination; losses can destroy goods, but favorable outcomes cannot create extra stock."
       }
     },
     "src.10182c06": {
@@ -54326,6 +54652,16 @@
       ],
       "source": {
         "text": "A stranger of real accomplishment in diplomacy."
+      }
+    },
+    "src.12a676f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "▼ falling"
       }
     },
     "src.12a73271": {
@@ -55649,6 +55985,16 @@
         "text": "Use only letters, spaces, hyphens, and apostrophes."
       }
     },
+    "src.155b0967": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Wine and oil country"
+      }
+    },
     "src.15601488": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55760,6 +56106,16 @@
       ],
       "source": {
         "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet."
+      }
+    },
+    "src.1596b885": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Local price"
       }
     },
     "src.1597adc7": {
@@ -57101,6 +57457,16 @@
         "text": "Seasonal revenue"
       }
     },
+    "src.186f6213": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Open grazing and established breeding supply remounts, pack animals, and draft power."
+      }
+    },
     "src.187d748a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57490,6 +57856,16 @@
       ],
       "source": {
         "text": "The Young Hawk"
+      }
+    },
+    "src.197307f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Last net flow"
       }
     },
     "src.19753c61": {
@@ -58272,6 +58648,16 @@
       ],
       "source": {
         "text": "Technology prerequisite cycle reaches"
+      }
+    },
+    "src.1b3243e0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the workshop output protected by this local craft privilege."
       }
     },
     "src.1b371063": {
@@ -59404,6 +59790,16 @@
       ],
       "source": {
         "text": "The Market Charter"
+      }
+    },
+    "src.1e1b0e97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "local craft output"
       }
     },
     "src.1e2f6d81": {
@@ -61065,6 +61461,16 @@
         "text": "Group enterprises"
       }
     },
+    "src.21ae5652": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market endowments name unknown county"
+      }
+    },
     "src.21bfe90b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61153,6 +61559,16 @@
       ],
       "source": {
         "text": "The succession war can no longer be declared."
+      }
+    },
+    "src.21e8b04e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route."
       }
     },
     "src.2200426a": {
@@ -61688,6 +62104,16 @@
         "text": "Registan"
       }
     },
+    "src.2334a527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Current destination price"
+      }
+    },
     "src.23358605": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61836,6 +62262,18 @@
       ],
       "source": {
         "text": "Letters of Credit"
+      }
+    },
+    "src.236c1c81": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "js/ui_panels.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "County market"
       }
     },
     "src.236d6558": {
@@ -64438,6 +64876,16 @@
         "text": "Was carried away in a raid and bound to the land."
       }
     },
+    "src.2990ff8b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Demand this season"
+      }
+    },
     "src.29984523": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65108,6 +65556,16 @@
         "text": "The reeve arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger."
       }
     },
+    "src.2af99026": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Recovery"
+      }
+    },
     "src.2affd4d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65376,16 +65834,6 @@
       ],
       "source": {
         "text": "Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
-      }
-    },
-    "src.2b7e3395": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally."
       }
     },
     "src.2b805de7": {
@@ -66301,6 +66749,16 @@
         "text": "Ask the lord to value a settled household over ready silver."
       }
     },
+    "src.2d878f5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Mediterranean vines and olives supply ordinary calories and valued exports."
+      }
+    },
     "src.2d8ee837": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66661,6 +67119,16 @@
         "text": "🕸 A {plot} against {target} fails without revealing its author."
       }
     },
+    "src.2ec0f422": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Metalworking resources"
+      }
+    },
     "src.2ec5ddf7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66999,6 +67467,16 @@
       ],
       "source": {
         "text": "Mecklenburg"
+      }
+    },
+    "src.2f7ee0dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Active disruptions"
       }
     },
     "src.2f82b20d": {
@@ -69857,6 +70335,16 @@
         "text": "Diagnose, prescribe, and tend the sick. (Learning pays; qualified care protects the household)"
       }
     },
+    "src.369139f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Commodity"
+      }
+    },
     "src.36952ccb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70105,6 +70593,16 @@
       ],
       "source": {
         "text": "Last annual movement"
+      }
+    },
+    "src.3731e4a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a chartered corridor"
       }
     },
     "src.37357b76": {
@@ -70911,6 +71409,16 @@
       ],
       "source": {
         "text": "{friend} catches you alone at dusk, glancing over a shoulder. “You have enemies, and I hear things. Watch your back — and take this. You would do the same for me.”"
+      }
+    },
+    "src.393d125d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Grain, fish, livestock products, oil, and ordinary drink."
       }
     },
     "src.3942687f": {
@@ -72863,16 +73371,6 @@
         "text": "{childname} was acknowledged by the house of {late}."
       }
     },
-    "src.3e0df6b9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Wartime scarcity for household necessities"
-      }
-    },
     "src.3e1b7bea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74472,6 +74970,17 @@
       ],
       "source": {
         "text": "Courage is sometimes measured by the spoonful."
+      }
+    },
+    "src.41dd099d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "Market basket"
       }
     },
     "src.41de154d": {
@@ -76542,6 +77051,16 @@
         "text": "In force"
       }
     },
+    "src.4622107d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Horse-breeding country"
+      }
+    },
     "src.463e7eaa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76782,6 +77301,7 @@
       "glossary": [],
       "location": [
         "js/armies.js",
+        "js/market.js",
         "js/travel.js"
       ],
       "source": {
@@ -77539,6 +78059,16 @@
         "text": "Open the Bishopric"
       }
     },
+    "src.4869bd71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market endowment duchies must be an object."
+      }
+    },
     "src.48768f96": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78121,6 +78651,16 @@
       ],
       "source": {
         "text": "Thar Desert"
+      }
+    },
+    "src.4a25a737": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Corridor"
       }
     },
     "src.4a25c599": {
@@ -79759,6 +80299,16 @@
       ],
       "source": {
         "text": "age {needed} (now {current})"
+      }
+    },
+    "src.4e5376d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Luxury entrepôt"
       }
     },
     "src.4e576d4f": {
@@ -82297,6 +82847,16 @@
         "text": "No current benefit"
       }
     },
+    "src.53dee557": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "A long-distance exchange center distributes valuable imports without creating them locally."
+      }
+    },
     "src.53ead555": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82377,6 +82937,16 @@
         "text": "The chartered guild"
       }
     },
+    "src.54266772": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market good"
+      }
+    },
     "src.542cc7a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82425,6 +82995,16 @@
       ],
       "source": {
         "text": "Public standards make bargains and dues easier to compare."
+      }
+    },
+    "src.54395aa7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Matching local workshop output only."
       }
     },
     "src.54400261": {
@@ -84403,6 +84983,16 @@
         "text": "Travel to cultivate…"
       }
     },
+    "src.58daa4a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "must be an object."
+      }
+    },
     "src.58e1898f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84463,6 +85053,16 @@
         "text": "Clear list search"
       }
     },
+    "src.58fc1e20": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{percent}% {good} production"
+      }
+    },
     "src.5900e91d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84481,6 +85081,16 @@
       ],
       "source": {
         "text": "Guild Standing {standing} · +{gain} per active vocational year · maximum {maximum}"
+      }
+    },
+    "src.590f308d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Fine cloth, wine, spices, plate, pigments, and prestigious imports."
       }
     },
     "src.5910a2d9": {
@@ -85510,6 +86120,16 @@
         "text": "Costly honesty carries across the sea; their factors answer with a market compact."
       }
     },
+    "src.5b778165": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{good} market disruption in {county} for {seasons} seasons"
+      }
+    },
     "src.5b81778b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86487,6 +87107,16 @@
         "text": "Lincoln"
       }
     },
+    "src.5dc75b56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Grain country"
+      }
+    },
     "src.5dd22cc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86978,6 +87608,16 @@
       ],
       "source": {
         "text": "Tutoring assignment"
+      }
+    },
+    "src.5eecd4ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{percent}% {good} flow capacity"
       }
     },
     "src.5efb695f": {
@@ -87681,16 +88321,6 @@
       ],
       "source": {
         "text": "Endured captivity."
-      }
-    },
-    "src.60605b76": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_paths.js"
-      ],
-      "source": {
-        "text": "Before {grantor}, you petition for exclusive privilege across your whole profession. The charter would last {years} years and add {enterprisePercent}% profit to every matching staffed family enterprise."
       }
     },
     "src.60622afa": {
@@ -88617,6 +89247,16 @@
         "text": "Describe the bug or your idea, then"
       }
     },
+    "src.6267bcb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Pasture, spinning, weaving, dyeing, and finishing sustain a textile advantage."
+      }
+    },
     "src.626ff4bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89459,6 +90099,16 @@
         "text": "Well-wishers bring gifts to the new couple — a lamb, a bolt of cloth, a few coins pressed into your palm."
       }
     },
+    "src.648a23c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Wares"
+      }
+    },
     "src.649669a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89771,6 +90421,16 @@
       ],
       "source": {
         "text": "Twisted iron and steel bars combine toughness with a hard edge."
+      }
+    },
+    "src.656d7bd3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Market lens"
       }
     },
     "src.656e71f3": {
@@ -90514,6 +91174,16 @@
         "text": "Declare war on {realm} for the office of {title}. The prize is their capital, {capital}: breach it by siege and the Caliphate passes to your realm. A fort adds siege work, minimum force, and attrition. No land changes hands — the loser keeps their kingdom, but not the office."
       }
     },
+    "src.67218cd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Salt trade"
+      }
+    },
     "src.6723ac77": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90732,6 +91402,16 @@
       ],
       "source": {
         "text": "Le Puy"
+      }
+    },
+    "src.67c7f535": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stock"
       }
     },
     "src.67c978e4": {
@@ -91044,6 +91724,16 @@
         "text": "💍 {name} enters your household as your fifth wife."
       }
     },
+    "src.687adf5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "▲ rising"
+      }
+    },
     "src.687be1fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91303,6 +91993,16 @@
       ],
       "source": {
         "text": "Remember the disgraces too."
+      }
+    },
+    "src.6936c59c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{quantity} units bound for {destination} · bought at {price}× · {days} days remain"
       }
     },
     "src.69420081": {
@@ -92070,6 +92770,16 @@
         "text": "The Treasurer lays two petitions beside the accounts. Guild masters ask for fixed tolls and protected stalls; their rivals offer ready silver for the same privileges without the inconvenient limits. The seal can make either bargain law."
       }
     },
+    "src.6ad2dcfb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Fisheries"
+      }
+    },
     "src.6ad2f1cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92458,6 +93168,16 @@
       ],
       "source": {
         "text": "Good coin if the buyers are hungry."
+      }
+    },
+    "src.6bcb9466": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Corridor to {destination}"
       }
     },
     "src.6bdba9c8": {
@@ -93760,6 +94480,16 @@
       ],
       "source": {
         "text": "🕊 Send an envoy…"
+      }
+    },
+    "src.6eb43ad2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Timber, worked metal, stone, lime, and construction supplies."
       }
     },
     "src.6eba4cfc": {
@@ -95075,6 +95805,16 @@
         "text": "Available"
       }
     },
+    "src.72429799": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "🍞 The household table is fully supplied again; the season of want has ended."
+      }
+    },
     "src.724629c8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95604,6 +96344,16 @@
       ],
       "source": {
         "text": "Tolls, stalls, and strangers’ silver."
+      }
+    },
+    "src.7336af99": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Pastoral economy"
       }
     },
     "src.733a3587": {
@@ -96749,6 +97499,16 @@
         "text": "The sergeant’s stick teaches quickly."
       }
     },
+    "src.75a7d4a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Production this season"
+      }
+    },
     "src.75ab2a0c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97406,7 +98166,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/economy.js"
+        "data/economy.js",
+        "data/markets.js"
       ],
       "source": {
         "text": "Luxuries"
@@ -97816,7 +98577,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/traits.js"
+        "data/traits.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Pestilence"
@@ -98151,6 +98913,16 @@
       ],
       "source": {
         "text": "Only an independent king or emperor may offer a defensive alliance."
+      }
+    },
+    "src.796108bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Imports / exports"
       }
     },
     "src.796b5474": {
@@ -98525,6 +99297,16 @@
         "text": "Learned scholar"
       }
     },
+    "src.7a0ef8bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "one corridor"
+      }
+    },
     "src.7a195982": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98533,6 +99315,16 @@
       ],
       "source": {
         "text": "Provoke a border incident and sour Standing without declaring a free war."
+      }
+    },
+    "src.7a345864": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Lean harvest"
       }
     },
     "src.7a3a6bd1": {
@@ -99096,6 +99888,16 @@
       ],
       "source": {
         "text": "Endure it."
+      }
+    },
+    "src.7b88e045": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "local exchange"
       }
     },
     "src.7b8c69d1": {
@@ -99669,6 +100471,16 @@
       ],
       "source": {
         "text": "Courtship"
+      }
+    },
+    "src.7d00018b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Charter terms"
       }
     },
     "src.7d00734a": {
@@ -100722,6 +101534,16 @@
         "text": "Straps, rivets, and wheels leave sounder than they arrived."
       }
     },
+    "src.7f300d7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "War disruption"
+      }
+    },
     "src.7f308d45": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101061,6 +101883,16 @@
       ],
       "source": {
         "text": "They say a serf who reaches a town and lives there a year and a day is free. The road is long, the law is against you — but the door stands open tonight."
+      }
+    },
+    "src.7fcc2081": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Deep arable soils and established grain husbandry raise local provisions."
       }
     },
     "src.7fdf2c48": {
@@ -101614,6 +102446,16 @@
         "text": "{have} of {total} kingdom"
       }
     },
+    "src.80fcbe23": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Draft animals, remounts, carts, barrels, rope, and carriage."
+      }
+    },
     "src.81016e65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101702,6 +102544,26 @@
       ],
       "source": {
         "text": "End the war now with a smaller prestige loss than abandoning it unilaterally."
+      }
+    },
+    "src.8129c97e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Merchant enterprises in the household county."
+      }
+    },
+    "src.812af2b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Define the monopoly"
       }
     },
     "src.81353024": {
@@ -101813,6 +102675,16 @@
       ],
       "source": {
         "text": "Clergy marriage"
+      }
+    },
+    "src.8172595f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "One corridor"
       }
     },
     "src.81771fda": {
@@ -103411,6 +104283,16 @@
         "text": "Send the officer onward, quietly."
       }
     },
+    "src.84cf9b6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Origin purchase"
+      }
+    },
     "src.84d24df7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103856,7 +104738,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/economy.js"
+        "data/economy.js",
+        "data/markets.js"
       ],
       "source": {
         "text": "Transport"
@@ -104704,6 +105587,16 @@
         "text": "Vote the subsidy, and give generously. ({money:20})"
       }
     },
+    "src.87bce6e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "The origin market cannot supply that quantity of {good}."
+      }
+    },
     "src.87bd7c5b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105431,10 +106324,21 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/market.js",
         "js/technology.js"
       ],
       "source": {
         "text": "must be an array."
+      }
+    },
+    "src.8954c885": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Wool and textiles"
       }
     },
     "src.8956b129": {
@@ -106883,6 +107787,16 @@
         "text": "Safe service is service nonetheless."
       }
     },
+    "src.8c69c4cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a destination; the exact route gains capacity and venture returns."
+      }
+    },
     "src.8c6bc0a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106961,6 +107875,16 @@
       ],
       "source": {
         "text": "Seasonal host logistics: {money:amount}"
+      }
+    },
+    "src.8c983e7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{price}×"
       }
     },
     "src.8c99344e": {
@@ -107304,6 +108228,16 @@
         "text": "Perhaps they pass by. Perhaps."
       }
     },
+    "src.8d655e05": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{mode} privilege{destination} · {days} days remain · +{enterprise}% matching enterprise profit · +{tax}% tax · {opinion} popular opinion"
+      }
+    },
     "src.8d69dd5b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107402,6 +108336,16 @@
       ],
       "source": {
         "text": "Organized Sappers"
+      }
+    },
+    "src.8d9d5059": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/mods.js"
+      ],
+      "source": {
+        "text": "market engine is unavailable."
       }
     },
     "src.8da5ce48": {
@@ -107722,6 +108666,16 @@
       ],
       "source": {
         "text": "Stand for election"
+      }
+    },
+    "src.8e53d003": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Broad {profession}"
       }
     },
     "src.8e573c84": {
@@ -109213,6 +110167,16 @@
         "text": "Download complete banks before going offline. Browser storage can still be cleared by the browser or by clearing site data."
       }
     },
+    "src.91d2c4f8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{good} · {mode}"
+      }
+    },
     "src.91dac4d2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109904,6 +110868,16 @@
         "text": "Devotional Pendant"
       }
     },
+    "src.94083099": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{county} market"
+      }
+    },
     "src.9408f4b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -110052,6 +111026,16 @@
       ],
       "source": {
         "text": "needs {prestige} prestige"
+      }
+    },
+    "src.949a8a4f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Historical endowments"
       }
     },
     "src.949c8338": {
@@ -111312,6 +112296,16 @@
         "text": "Declare independence!"
       }
     },
+    "src.977362f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Unfunded household necessities last season: {percent}%"
+      }
+    },
     "src.977b0392": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112449,6 +113443,16 @@
         "text": "Music download failed."
       }
     },
+    "src.9a10c134": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{source} · {good} · production {production} · demand {demand} · flow {flow} · {seasons} seasons remain"
+      }
+    },
     "src.9a11e1b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112517,6 +113521,16 @@
       ],
       "source": {
         "text": "{beneficiary} · sponsored by {claimant} · as vassal of {realm}"
+      }
+    },
+    "src.9a36415a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a commodity first."
       }
     },
     "src.9a390d36": {
@@ -113943,6 +114957,16 @@
         "text": "Accepted a mediated peace with a rival."
       }
     },
+    "src.9d11b6a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "all counties"
+      }
+    },
     "src.9d14ccc7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -114944,6 +115968,16 @@
       ],
       "source": {
         "text": "Riders train to maneuver and loose arrows as a coordinated arm."
+      }
+    },
+    "src.9f645aea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Salterns or brine works preserve food and make provisions easier to move."
       }
     },
     "src.9f67e507": {
@@ -116662,6 +117696,16 @@
         "text": "A plausible denial may keep both pride and peace."
       }
     },
+    "src.a3536b91": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Market"
+      }
+    },
     "src.a3583899": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117666,6 +118710,16 @@
         "text": "{building} ×{count}"
       }
     },
+    "src.a587f24b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market endowments name unknown duchy"
+      }
+    },
     "src.a589279c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118377,6 +119431,16 @@
       ],
       "source": {
         "text": "Came home from the liege’s war."
+      }
+    },
+    "src.a720296c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Timber country"
       }
     },
     "src.a7230813": {
@@ -119162,6 +120226,16 @@
       ],
       "source": {
         "text": "🕊 The pact with {realm} is renewed for another year."
+      }
+    },
+    "src.a8eee7b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{quantity} units at {price}×"
       }
     },
     "src.a8f81a62": {
@@ -120611,6 +121685,16 @@
         "text": "Bohemia"
       }
     },
+    "src.acf07fde": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market duchy"
+      }
+    },
     "src.acf2f570": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120759,6 +121843,16 @@
       ],
       "source": {
         "text": "A balanced settlement of ordinary rents and military service."
+      }
+    },
+    "src.ad226d9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The privilege applies to {good} in the local county."
       }
     },
     "src.ad240ffa": {
@@ -122349,6 +123443,16 @@
         "text": "⚖ The crown calls in the light coin and restores its weight at a cost of {money:cost}."
       }
     },
+    "src.b09f4656": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Herding supplies meat, dairy, hides, draft animals, and pack stock."
+      }
+    },
     "src.b0a0169d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123060,6 +124164,16 @@
         "text": "Take it by right of hunger — success changes abstract supply, not live troops."
       }
     },
+    "src.b23b7a2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market endowment"
+      }
+    },
     "src.b23b9e72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123330,6 +124444,16 @@
         "text": "The market catches the trick and remembers your face."
       }
     },
+    "src.b2e5e8a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "marketGoods must define at least one basket."
+      }
+    },
     "src.b2f12539": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123469,6 +124593,16 @@
       ],
       "source": {
         "text": "Support or opposition is pledged for this vote."
+      }
+    },
+    "src.b3113321": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_paths.js"
+      ],
+      "source": {
+        "text": "Before {grantor}, you petition for the commodity privilege you have defined. The charter would last {years} years and add {enterprisePercent}% profit to qualifying staffed family enterprises."
       }
     },
     "src.b326dbca": {
@@ -124181,6 +125315,16 @@
       ],
       "source": {
         "text": "Press on for {target}."
+      }
+    },
+    "src.b4ad6c9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "▼ cheap · ● steady · ▲ dear"
       }
     },
     "src.b4ad746e": {
@@ -125004,6 +126148,16 @@
       ],
       "source": {
         "text": "Gyulafehérvár"
+      }
+    },
+    "src.b6ba9fd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Possible outcome multipliers on the live arrival value: {returns}."
       }
     },
     "src.b6c03d53": {
@@ -126038,6 +127192,16 @@
         "text": "Spend {money:gold} once this year to build one authority."
       }
     },
+    "src.b8f994f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your enterprise output"
+      }
+    },
     "src.b8fe16fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126096,6 +127260,16 @@
       ],
       "source": {
         "text": "Cowardice, some say. Sense, say your bones."
+      }
+    },
+    "src.b91e6ee5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "marketGoods must be an object."
       }
     },
     "src.b92d59f6": {
@@ -126697,6 +127871,16 @@
       ],
       "source": {
         "text": "Soomra Sindh"
+      }
+    },
+    "src.bac3302d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{imports} / {exports}"
       }
     },
     "src.bac3b439": {
@@ -128668,6 +129852,16 @@
         "text": "Be seen without devouring every host’s stores."
       }
     },
+    "src.bfffc18d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Local market prices for household necessities"
+      }
+    },
     "src.c0002983": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129878,6 +131072,16 @@
       ],
       "source": {
         "text": "Took ill over winter."
+      }
+    },
+    "src.c2744c97": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "⚠ Household scarcity deepens after {seasons} short seasons; resident health is now at greater risk."
       }
     },
     "src.c2768fab": {
@@ -132055,6 +133259,16 @@
         "text": "The Papacy cannot be restored from this world state."
       }
     },
+    "src.c7824211": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "marketEndowments must be an object."
+      }
+    },
     "src.c7852dd0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132466,6 +133680,17 @@
         "text": "A sudden illness, the neighbors say. The house mourns, and none mourn louder than you."
       }
     },
+    "src.c85e2b77": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js",
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "All market baskets"
+      }
+    },
     "src.c860762b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132785,6 +134010,16 @@
       ],
       "source": {
         "text": "Choose an action"
+      }
+    },
+    "src.c932d976": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "to {destination}"
       }
     },
     "src.c93b265d": {
@@ -135887,6 +137122,16 @@
         "text": "“Come and take it,” he answers, and rides home to raise his spears."
       }
     },
+    "src.d1153b3d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{good} trade on the corridor to {destination} gains distribution capacity and qualifying venture returns."
+      }
+    },
     "src.d1263d52": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136740,6 +137985,16 @@
         "text": "Several kingdoms answer to an imperial crown."
       }
     },
+    "src.d3203115": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Market…"
+      }
+    },
     "src.d325ed67": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137040,6 +138295,16 @@
         "text": "reserved from grants"
       }
     },
+    "src.d3ccdb89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Materials"
+      }
+    },
     "src.d3ce49a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137329,6 +138594,16 @@
       ],
       "source": {
         "text": "Download size"
+      }
+    },
+    "src.d479f050": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a commodity and whether the privilege covers local exchange or one exact corridor."
       }
     },
     "src.d4885b7e": {
@@ -138223,6 +139498,16 @@
         "text": "Unknown lot"
       }
     },
+    "src.d6bf62e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Provisions"
+      }
+    },
     "src.d6c15bc0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138673,6 +139958,16 @@
         "text": "attacker"
       }
     },
+    "src.d7931e54": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Price symbols: down cheap, dot steady, up dear"
+      }
+    },
     "src.d796ee70": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138721,6 +140016,16 @@
       ],
       "source": {
         "text": "⚖ {realm} recognizes {pope} after a bargain over patronage."
+      }
+    },
+    "src.d7ac1e5e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Inspect local prices, stocks, historical endowments, ventures, and charters."
       }
     },
     "src.d7acc196": {
@@ -138772,6 +140077,16 @@
       ],
       "source": {
         "text": "You now hold territorial land and its county-level obligations."
+      }
+    },
+    "src.d7d78401": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market county"
       }
     },
     "src.d7de51bb": {
@@ -138852,6 +140167,16 @@
       ],
       "source": {
         "text": "the Duchy of {name}"
+      }
+    },
+    "src.d803c949": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "That commodity is not available."
       }
     },
     "src.d804b3ca": {
@@ -139104,6 +140429,16 @@
         "text": "Issuer: {issuer}"
       }
     },
+    "src.d88e645f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Updates next season"
+      }
+    },
     "src.d88f83a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139142,6 +140477,16 @@
       ],
       "source": {
         "text": "🧭 The household dispatches {money:stake} to {destination}; {money:overhead} pays the road."
+      }
+    },
+    "src.d8ab9850": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No authored regional advantage applies here."
       }
     },
     "src.d8b57123": {
@@ -139263,6 +140608,16 @@
       ],
       "source": {
         "text": "His cousin sits on the moot. The stone stays."
+      }
+    },
+    "src.d8fadd1f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{quantity} units at {price}× local price; {stock} units are in stock."
       }
     },
     "src.d8fb68c7": {
@@ -139487,6 +140842,16 @@
         "text": "unknown residence"
       }
     },
+    "src.d9762f6e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "names unknown endowment"
+      }
+    },
     "src.d97e2502": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139658,6 +141023,16 @@
         "text": "In the field at {place}"
       }
     },
+    "src.d9e53851": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Managed woodland supplies construction timber, fuel, carts, ships, and barrels."
+      }
+    },
     "src.d9e886be": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139827,6 +141202,16 @@
       ],
       "source": {
         "text": "Finish the commission yourself."
+      }
+    },
+    "src.da352c38": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/markets.js"
+      ],
+      "source": {
+        "text": "Accessible ores, fuel, and established smithing raise the supply of worked metal."
       }
     },
     "src.da376d49": {
@@ -140392,6 +141777,16 @@
         "text": "See the whole family drawn as a tree"
       }
     },
+    "src.dbd2be2b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "insufficient local stock"
+      }
+    },
     "src.dbd4ea6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140400,6 +141795,16 @@
       ],
       "source": {
         "text": "Use the name to steady the new men."
+      }
+    },
+    "src.dbda7566": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your household demand"
       }
     },
     "src.dbde076e": {
@@ -141574,6 +142979,16 @@
         "text": "Your landed realm cannot be handed over intact."
       }
     },
+    "src.de94c1e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "has an invalid bonus."
+      }
+    },
     "src.de96913b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141762,6 +143177,16 @@
       ],
       "source": {
         "text": "Aberdeen"
+      }
+    },
+    "src.defcb23a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Household hardship: {percent}% of necessities went unfunded last season; {seasons} provision-short seasons in succession."
       }
     },
     "src.df00df9b": {
@@ -143483,6 +144908,16 @@
         "text": "Birka"
       }
     },
+    "src.e2e2318d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Active ventures"
+      }
+    },
     "src.e2e38654": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143832,6 +145267,16 @@
       ],
       "source": {
         "text": "Send them to the village inn."
+      }
+    },
+    "src.e3f3cf8e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "market endowment counties must be an object."
       }
     },
     "src.e3fe5f32": {
@@ -144656,6 +146101,16 @@
       ],
       "source": {
         "text": "Treason heard and kept is treason half-owned."
+      }
+    },
+    "src.e5c310b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "marketEndowmentTypes must be an object."
       }
     },
     "src.e5c36164": {
@@ -146269,6 +147724,16 @@
         "text": "Granted by events or campaign state"
       }
     },
+    "src.e8f3fee7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally."
+      }
+    },
     "src.e8f97364": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146909,6 +148374,16 @@
       ],
       "source": {
         "text": "Your word carries. The charge is dropped, and {friend} will not forget it."
+      }
+    },
+    "src.eac82041": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "🥣 The household cannot fully fund its necessities; rationing and makeshift economies begin."
       }
     },
     "src.eac952f1": {
@@ -148366,6 +149841,16 @@
       ],
       "source": {
         "text": "Attempt {examination}"
+      }
+    },
+    "src.ee85e8e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Inspect destination market"
       }
     },
     "src.ee8e5814": {
@@ -150082,6 +151567,16 @@
         "text": "Collect the full tithe."
       }
     },
+    "src.f25e1b95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{price}× · {trend}"
+      }
+    },
     "src.f25fb90a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -151421,6 +152916,16 @@
         "text": "de jure kingdoms"
       }
     },
+    "src.f5827008": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": " to {destination}"
+      }
+    },
     "src.f588d092": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152375,6 +153880,16 @@
         "text": "Lower rank"
       }
     },
+    "src.f7fabe9e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{good} supply in {county} improves for {seasons} seasons"
+      }
+    },
     "src.f7fc4cf7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153306,6 +154821,16 @@
       ],
       "source": {
         "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle."
+      }
+    },
+    "src.fa16dcb2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "names unknown good"
       }
     },
     "src.fa262b54": {
@@ -154884,6 +156409,16 @@
       ],
       "source": {
         "text": "Grain at Sword-Season Prices"
+      }
+    },
+    "src.fdf2cd9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "is malformed."
       }
     },
     "src.fdf6495d": {
@@ -160431,6 +161966,16 @@
         "text": " (including ~{men} from {ally})"
       }
     },
+    "ui: to {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": " to {destination}"
+      }
+    },
     "ui: {days} days remain.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -160839,6 +162384,28 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "+{percent}% personal tax"
+      }
+    },
+    "ui:+{percent}% {good} flow capacity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good",
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "+{percent}% {good} flow capacity"
+      }
+    },
+    "ui:+{percent}% {good} production": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good",
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "+{percent}% {good} production"
       }
     },
     "ui:+{rate} Standing each ordinary day together.": {
@@ -161914,6 +163481,14 @@
         "text": "Active courtship"
       }
     },
+    "ui:Active disruptions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Active disruptions"
+      }
+    },
     "ui:Active local consequences": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -161936,6 +163511,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Active scheme"
+      }
+    },
+    "ui:Active ventures": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Active ventures"
       }
     },
     "ui:Active war": {
@@ -162185,6 +163768,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "All family enterprises are staffed."
+      }
+    },
+    "ui:All market baskets": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "All market baskets"
       }
     },
     "ui:All political attention is assigned. Set another court to Neutral before choosing a new direction here.": {
@@ -164085,6 +165676,16 @@
         "text": "Bring your piety to the {temple} and ask for grace."
       }
     },
+    "ui:Broad {profession}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Broad {profession}"
+      }
+    },
     "ui:Build a complete proposal that skips reserved counties and keeps your capital and home county.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164662,6 +166263,14 @@
         "text": "Character name"
       }
     },
+    "ui:Charter terms": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Charter terms"
+      }
+    },
     "ui:Cheapest available first": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164815,6 +166424,38 @@
         "text": "Choose a Recipient"
       }
     },
+    "ui:Choose a chartered corridor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a chartered corridor"
+      }
+    },
+    "ui:Choose a commodity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a commodity"
+      }
+    },
+    "ui:Choose a commodity and whether the privilege covers local exchange or one exact corridor.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a commodity and whether the privilege covers local exchange or one exact corridor."
+      }
+    },
+    "ui:Choose a commodity first.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a commodity first."
+      }
+    },
     "ui:Choose a daily focus.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164831,6 +166472,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose a destination for {purpose}"
+      }
+    },
+    "ui:Choose a destination; the exact route gains capacity and venture returns.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a destination; the exact route gains capacity and venture returns."
       }
     },
     "ui:Choose a developed market on the map or from the list. The stake and route overhead are charged separately.": {
@@ -165069,12 +166718,12 @@
         "text": "Choose the Target"
       }
     },
-    "ui:Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally.": {
+    "ui:Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Choose the capital to commit. You will select a developed market next, then decide whether to dispatch the venture or accompany it personally."
+        "text": "Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally."
       }
     },
     "ui:Choose the exact land named in the vow.": {
@@ -165099,6 +166748,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the market whose auction you will attend. Opening a lot starts the attendance cooldown, but the bidding itself resolves at once."
+      }
+    },
+    "ui:Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route."
       }
     },
     "ui:Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.": {
@@ -165135,12 +166792,28 @@
         "text": "Choose the strongest available instruction costing no more than {money:amount} each season."
       }
     },
+    "ui:Choose the workshop output protected by this local craft privilege.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the workshop output protected by this local craft privilege."
+      }
+    },
     "ui:Choose up to two qualified bishops. One family appointment per pontificate is tolerated; later relatives cost authority and Curial opinion.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose up to two qualified bishops. One family appointment per pontificate is tolerated; later relatives cost authority and Curial opinion."
+      }
+    },
+    "ui:Choose what the household buys at the origin market. The same quantity is carried to the destination; losses can destroy goods, but favorable outcomes cannot create extra stock.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose what the household buys at the origin market. The same quantity is carried to the destination; losses can destroy goods, but favorable outcomes cannot create extra stock."
       }
     },
     "ui:Choose what this vassal chiefly provides. Service and tenure are separate and cannot be renegotiated after the grant.": {
@@ -165718,6 +167391,24 @@
         "text": "Controls hostile movement through this county"
       }
     },
+    "ui:Corridor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Corridor"
+      }
+    },
+    "ui:Corridor to {destination}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Corridor to {destination}"
+      }
+    },
     "ui:Cost: {cost} gold · Current gold: {gold}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -165910,6 +167601,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "County levy — {county}"
+      }
+    },
+    "ui:County market": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "County market"
       }
     },
     "ui:County of {name}": {
@@ -166589,6 +168288,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Defensive ally"
+      }
+    },
+    "ui:Define the monopoly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Define the monopoly"
       }
     },
     "ui:Demand canonical investiture": {
@@ -169736,6 +171443,14 @@
         "text": "Hiring still uses an office’s authoritative eligibility, entry pay, and confirmation."
       }
     },
+    "ui:Historical endowments": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Historical endowments"
+      }
+    },
     "ui:Historical places and growth derived from county development.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169934,6 +171649,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "Household faith and learned service"
+      }
+    },
+    "ui:Household hardship: {percent}% of necessities went unfunded last season; {seasons} provision-short seasons in succession.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent",
+        "seasons"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Household hardship: {percent}% of necessities went unfunded last season; {seasons} provision-short seasons in succession."
       }
     },
     "ui:Household head": {
@@ -170389,6 +172115,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Inspect county development and buildings."
+      }
+    },
+    "ui:Inspect destination market": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Inspect destination market"
+      }
+    },
+    "ui:Inspect local prices, stocks, historical endowments, ventures, and charters.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Inspect local prices, stocks, historical endowments, ventures, and charters."
       }
     },
     "ui:Inspect religious advancement.": {
@@ -170939,6 +172681,14 @@
         "text": "Lead a contingent for {ruler}. Win a real field battle before the host disperses and earn a barony in your own lifetime."
       }
     },
+    "ui:Lean harvest": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Lean harvest"
+      }
+    },
     "ui:Leans: {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -171379,6 +173129,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Local authority"
+      }
+    },
+    "ui:Local exchange": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Local exchange"
+      }
+    },
+    "ui:Local market prices for household necessities": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Local market prices for household necessities"
       }
     },
     "ui:Local ordinance": {
@@ -171964,6 +173730,30 @@
         "text": "Map filter: {mode} (R)"
       }
     },
+    "ui:Market basket": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Market basket"
+      }
+    },
+    "ui:Market disruption": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Market disruption"
+      }
+    },
+    "ui:Market…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Market…"
+      }
+    },
     "ui:Marriage previews show which parent supplies each identity.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172084,6 +173874,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Matching household work and enterprises"
+      }
+    },
+    "ui:Matching local workshop output only.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Matching local workshop output only."
       }
     },
     "ui:Materializes this royal child only after you choose the action.": {
@@ -172228,6 +174026,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Merchant advance"
+      }
+    },
+    "ui:Merchant enterprises in the household county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Merchant enterprises in the household county."
       }
     },
     "ui:Minimum acceptable station": {
@@ -172973,6 +174779,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "No auction is available."
+      }
+    },
+    "ui:No authored regional advantage applies here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No authored regional advantage applies here."
       }
     },
     "ui:No autobuild": {
@@ -174705,6 +176519,14 @@
         "text": "One campaign approach"
       }
     },
+    "ui:One corridor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "One corridor"
+      }
+    },
     "ui:One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176068,6 +177890,14 @@
         "text": "Personally at war with {realm}."
       }
     },
+    "ui:Pestilence": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pestilence"
+      }
+    },
     "ui:Petition for a Fief": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176457,14 +178287,14 @@
         "text": "Position"
       }
     },
-    "ui:Possible stake returns: {returns}.": {
+    "ui:Possible outcome multipliers on the live arrival value: {returns}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "returns"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Possible stake returns: {returns}."
+        "text": "Possible outcome multipliers on the live arrival value: {returns}."
       }
     },
     "ui:Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family.": {
@@ -177514,6 +179344,14 @@
       "location": "js/events.js",
       "source": {
         "text": "Recover from {ailment}"
+      }
+    },
+    "ui:Recovery": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Recovery"
       }
     },
     "ui:Recurring cost": {
@@ -181355,6 +183193,14 @@
         "text": "That character cannot receive a visit."
       }
     },
+    "ui:That commodity is not available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "That commodity is not available."
+      }
+    },
     "ui:That county cannot become a capital.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182570,6 +184416,16 @@
         "text": "The organized opposition"
       }
     },
+    "ui:The origin market cannot supply that quantity of {good}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "The origin market cannot supply that quantity of {good}."
+      }
+    },
     "ui:The people and institutions tied to this household, and what each tie currently does.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182616,6 +184472,16 @@
       "location": "js/actions.js",
       "source": {
         "text": "The post-marriage residence decision is unavailable."
+      }
+    },
+    "ui:The privilege applies to {good} in the local county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The privilege applies to {good} in the local county."
       }
     },
     "ui:The privilege lies outside your present territorial authority.": {
@@ -184113,6 +185979,16 @@
         "text": "Unequip it before selling, gifting, or pledging it."
       }
     },
+    "ui:Unfunded household necessities last season: {percent}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Unfunded household necessities last season: {percent}%"
+      }
+    },
     "ui:Unique items: {count}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -184294,6 +186170,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Up to +{standing} Standing; recipient access determines the exact value. Each recipient can receive one cash or item gift every {days} days. (spends the day)"
+      }
+    },
+    "ui:Updates next season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Updates next season"
       }
     },
     "ui:Use Deeds to build money, reputation, and a route to freedom.": {
@@ -184692,6 +186576,14 @@
         "text": "War begins only after the existing cause selection is confirmed."
       }
     },
+    "ui:War disruption": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "War disruption"
+      }
+    },
     "ui:War enemy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184766,14 +186658,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep."
-      }
-    },
-    "ui:Wartime scarcity for household necessities": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "Wartime scarcity for household necessities"
       }
     },
     "ui:Wartime service opens an extraordinary audience; class distance leaves influence at {percent}% of its usual strength.": {
@@ -186522,6 +188406,14 @@
         "text": "aid"
       }
     },
+    "ui:all counties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/events.js",
+      "source": {
+        "text": "all counties"
+      }
+    },
     "ui:also above": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -187208,6 +189100,14 @@
         "text": "independent"
       }
     },
+    "ui:insufficient local stock": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "insufficient local stock"
+      }
+    },
     "ui:its current wearer": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -187270,6 +189170,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "local confirmation"
+      }
+    },
+    "ui:local craft output": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "local craft output"
+      }
+    },
+    "ui:local exchange": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "local exchange"
       }
     },
     "ui:lord": {
@@ -187567,6 +189483,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "one captive"
+      }
+    },
+    "ui:one corridor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "one corridor"
       }
     },
     "ui:one leverage record": {
@@ -189159,6 +191083,16 @@
         "text": "{counties} objective counties{holy}"
       }
     },
+    "ui:{county} market": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{county} market"
+      }
+    },
     "ui:{count}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -189929,6 +191863,52 @@
         "text": "{from}–{to}"
       }
     },
+    "ui:{good} market disruption in {county} for {seasons} seasons": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "good",
+        "seasons"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "{good} market disruption in {county} for {seasons} seasons"
+      }
+    },
+    "ui:{good} supply in {county} improves for {seasons} seasons": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "good",
+        "seasons"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "{good} supply in {county} improves for {seasons} seasons"
+      }
+    },
+    "ui:{good} trade on the corridor to {destination} gains distribution capacity and qualifying venture returns.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "good"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{good} trade on the corridor to {destination} gains distribution capacity and qualifying venture returns."
+      }
+    },
+    "ui:{good} · {mode}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good",
+        "mode"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{good} · {mode}"
+      }
+    },
     "ui:{grantor} must hold at least 40 Standing toward you; currently {standing}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -190217,6 +192197,17 @@
         "text": "{icon} {name} — Raise Next"
       }
     },
+    "ui:{imports} / {exports}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "exports",
+        "imports"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{imports} / {exports}"
+      }
+    },
     "ui:{incoming} moves here from {enterprise}, replacing {outgoing}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -190470,6 +192461,21 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{men} men-at-arms"
+      }
+    },
+    "ui:{mode} privilege{destination} · {days} days remain · +{enterprise}% matching enterprise profit · +{tax}% tax · {opinion} popular opinion": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "destination",
+        "enterprise",
+        "mode",
+        "opinion",
+        "tax"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{mode} privilege{destination} · {days} days remain · +{enterprise}% matching enterprise profit · +{tax}% tax · {opinion} popular opinion"
       }
     },
     "ui:{modifier} in {province} — {duration}; {upkeep}{effects}{transfer}": {
@@ -191543,6 +193549,27 @@
         "text": "{prestige} prestige."
       }
     },
+    "ui:{price}×": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "price"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{price}×"
+      }
+    },
+    "ui:{price}× · {trend}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "price",
+        "trend"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{price}× · {trend}"
+      }
+    },
     "ui:{profession} Monopoly": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -191627,6 +193654,42 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{purpose} · {phase} · {location} → {destination}"
+      }
+    },
+    "ui:{quantity} units at {price}×": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "price",
+        "quantity"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{quantity} units at {price}×"
+      }
+    },
+    "ui:{quantity} units at {price}× local price; {stock} units are in stock.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "price",
+        "quantity",
+        "stock"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{quantity} units at {price}× local price; {stock} units are in stock."
+      }
+    },
+    "ui:{quantity} units bound for {destination} · bought at {price}× · {days} days remain": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "destination",
+        "price",
+        "quantity"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{quantity} units bound for {destination} · bought at {price}× · {days} days remain"
       }
     },
     "ui:{rank} rank": {
@@ -192237,6 +194300,21 @@
         "text": "{slot}: {item}"
       }
     },
+    "ui:{source} · {good} · production {production} · demand {demand} · flow {flow} · {seasons} seasons remain": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "demand",
+        "flow",
+        "good",
+        "production",
+        "seasons",
+        "source"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{source} · {good} · production {production} · demand {demand} · flow {flow} · {seasons} seasons remain"
+      }
+    },
     "ui:{specialization}: {years} vocational years, {requirements}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -192831,6 +194909,30 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "⏮ Previous"
+      }
+    },
+    "ui:▲ rising": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "▲ rising"
+      }
+    },
+    "ui:▼ falling": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "▼ falling"
+      }
+    },
+    "ui:● steady": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "● steady"
       }
     },
     "ui:★ {realm}": {

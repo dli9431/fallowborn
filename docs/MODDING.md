@@ -160,6 +160,9 @@ A JSON mod is one object with any of these keys:
   "schooling": { "id": { ... } },
   "enterprises": { "id": { ... } },
   "householdStandards": { "id": { ... } },
+  "marketGoods": { "id": { ... } },
+  "marketEndowmentTypes": { "id": { ... } },
+  "marketEndowments": { "duchies": { ... }, "counties": { ... } },
   "travelPurposes": { "id": { ... } },
   "travelSites": [ ... ],
   "finance":    {
@@ -802,7 +805,12 @@ a fresh exact instance, while random finds use `custom: "loot_item"`) ·
 effect leaves the player at zero health) ·
 `pricePressure: n` with optional `pricePressureYears: n` and
 `pricePressureSource: "stable_id"` (a saved annual price-index shock; positive raises
-pressure, negative lowers it) ·
+pressure, negative lowers it; the core harvest/disease sources route to material
+market shocks instead) ·
+`marketShock: {"id":"stable_id","provinceId":"home|context|county_id",
+"goodId":"optional_good_id","production":-0.3,"demand":0.1,"flow":-0.2,
+"severe":true,"seasons":2}` (a saved seasonal county-commodity shock; omit
+`provinceId` for a world-wide effect and omit `goodId` for every basket) ·
 `log: "chronicle text"` ·
 `worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
 handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
@@ -1749,6 +1757,86 @@ productive property:
   `no_eligible_worker`, `eligible_workers_locked`, or `allocated_higher_yield`.
   Applying a preview requires its current signature and therefore rejects stale plans.
 
+## County commodity markets
+
+`FBDATA.marketGoods`, `FBDATA.marketEndowmentTypes`, and
+`FBDATA.marketEndowments` live in `data/markets.js`. Runtime mods use the matching
+top-level keys. Each supplied table is a **complete atomic replacement**, not a merge:
+
+```json
+{
+  "marketGoods": {
+    "provisions": {
+      "name": "Provisions", "icon": "🍞", "order": 0,
+      "desc": "Food and ordinary drink."
+    }
+  },
+  "marketEndowmentTypes": {
+    "grain": {
+      "name": "Grain country", "icon": "🌾",
+      "production": { "provisions": 0.25 },
+      "flow": {},
+      "desc": "Arable country raises local food supply."
+    }
+  },
+  "marketEndowments": {
+    "duchies": { "d_ile": ["grain"] },
+    "counties": {
+      "london": { "add": ["luxury_entrepot"], "suppress": [] }
+    }
+  }
+}
+```
+
+- Goods ids are the saved vector identities. `order` determines mechanical and UI
+  vector order; `name` and `desc` are structured localized data fields.
+- An endowment type may define finite `production` and `flow` fractions from 0 through 2,
+  keyed by goods id. Regional rows use stable duchy/county ids and known endowment ids.
+  Duchy tags apply first; a county's `suppress` removes them and `add` then contributes
+  exceptional tags. Production bonuses add but clamp at
+  `balance.marketProductionBonusCap` (core 0.40).
+- Before applying any supplied market table, the loader validates all three effective
+  tables together. Unknown goods, types, duchies, or counties and malformed arrays/maps
+  reject the mod before definitions or save state change. After a valid complete
+  replacement, `state.market.goods` remaps stock, price, and flow arrays by stable id;
+  removed baskets disappear and new baskets begin at price 1 with a two-season reserve.
+- `marketBasket:{"provisions":0.7,"wares":0.3}` is optional on tangible holdings,
+  items, enterprises, buildings, household-standard definitions or levels, and other
+  callers of `FB.marketCostQuote`. Weights are relative and need not sum to 1. Unknown
+  ids are ignored; no valid positive weight means multiplier 1, preserving untagged mod
+  content. One-time purchases pass `"up"` rounding; recurring upkeep does not.
+- A runtime/event market shock accepts stable `id`, optional `provinceId`/`goodId`,
+  signed `production`, `demand`, and `flow` fractions, `severe`, and `remaining` or
+  `seasons`. Fractions normalize to -1…2, invalid ids are rejected, and reusing an id
+  replaces rather than stacks the shock. In event data `provinceId:"home"` targets the
+  household county and `"context"` resolves the queued location.
+- Market tunables are `marketReserveSeasons`, `marketEdgeCapacity`,
+  `marketStockScale`, `marketProductionBonusCap`, `marketPriceSeasonMove`,
+  `marketPriceNormalMin/Max`, `marketPriceCrisisMin/Max`,
+  `marketHardshipMortalityStep/Cap`, and `marketCorridorCapacityBonus` /
+  `marketCorridorReturnBonus`. `marketFlowPasses` documents the core value 2, but the
+  engine deliberately always runs exactly two synchronous passes.
+
+Guild-monopoly save records remain engine-owned contracts. Existing broad records need
+no changes. Optional typed fields are:
+
+```json
+{
+  "mode": "craft|local|corridor",
+  "goodId": "wares",
+  "originId": "london",
+  "destinationId": "bruges",
+  "route": ["kent", "bruges"]
+}
+```
+
+`craft` is valid only for a Craft profession and wares/materials/transport output;
+`local` and `corridor` are valid only for Trade. A corridor requires a real contiguous
+route ending at `destinationId`. Malformed optional fields on a loaded legacy record are
+discarded while its broad frozen contract survives. New issue/petition calls reject an
+invalid typed scope before charging, granting, or replacing a slot. Exact `contractId`
+remains the intrigue identity. See `docs/designs/markets.md`.
+
 ## Overland travel
 
 `FBDATA.travelPurposes` and `FBDATA.travelSites` live in `data/travel.js`;
@@ -1875,7 +1963,9 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   Duration is the larger of `timing.minimumDays` and
   `timing.preparationDays + round-trip route days`.
 - Each ordered outcome band applies when the formation-adjusted roll is below
-  `below`; the final band omits `below`. `multiplier` is applied to the stake.
+  `below`; the final band omits `below`. For a commodity venture, `multiplier` applies
+  to purchased quantity at the live destination price, while delivered stock is capped
+  at the original quantity. A legacy record without `goodId` applies it to the stake.
   Formation snapshots every modifier and the selected bands into the investment.
 - Stewardship contributes `skill / stewardshipDivisor`; merchant/craft guild
   privilege contributes `(FB.guildIncomeMultiplier - 1) / guildDivisor`; a
@@ -2800,10 +2890,10 @@ no longer read; older mods that set it must migrate to `skillMasteryThreshold` a
 `skillMasteryPower`.
 `focusSkillGainRate` (default 0.75) multiplies only the authored seasonal skill-training
 chances of daily focuses before they are converted to daily rolls.
-`wartimeNecessitiesSurcharge` (default 0.25) is the fraction of station upkeep plus
-resident-family provisions added each season while the sovereign returned by
-`FB.playerRealmId` is at war. It does not multiply retainers, schooling, buildings, or
-other authored costs.
+The removed `wartimeNecessitiesSurcharge` and `priceWarPressure` keys are ignored.
+Army provisions demand, hostile-county market shocks, and live local prices now express
+wartime scarcity; mercenary contracts and the other fixed-real-gold boundaries remain
+unmultiplied.
 `levyPerMartial` grows the player's levy by that fraction per point of the ruler's martial
 skill (traits and carried items included), on top of the per-development base, building
 `levy` bonuses, and the `levy` tech multiplier.

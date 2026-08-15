@@ -10,7 +10,7 @@ FBDATA.events.push(
 /* ================= CRAFT & TRADE ================= */
 { id:'guild_monopoly_petition', title:'A Monopoly Petition',
   trigger:{ never:true },
-  text:'Before {grantor}, you petition for exclusive privilege across your whole profession. The charter would last {years} years and add {enterprisePercent}% profit to every matching staffed family enterprise.',
+  text:'Before {grantor}, you petition for the commodity privilege you have defined. The charter would last {years} years and add {enterprisePercent}% profit to qualifying staffed family enterprises.',
   options:[
     { label:'Pay {money:25} for the seal.', require:{ goldMin:25 },
       desc:'Spend {money:25}; the charter is guaranteed.',

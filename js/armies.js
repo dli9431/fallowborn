@@ -311,9 +311,25 @@ window.FB = window.FB || {};
     const contracted = state.player.war && state.player.war.mercCos;
     const companies = contracted || Math.ceil((units.mercs || 0) / companySize);
     const parts = hostUpkeepParts(units, companies);
+    if (FB.marketCostQuote) {
+      const pid = host.at || state.player.provinceId;
+      parts.base = FB.marketCostQuote(state, parts.base,
+        { provisions:0.55, materials:0.25, transport:0.20 }, pid);
+      parts.levy = FB.marketCostQuote(state, parts.levy,
+        { provisions:0.75, materials:0.20, transport:0.05 }, pid);
+      parts.archers = FB.marketCostQuote(state, parts.archers,
+        { provisions:0.60, materials:0.30, transport:0.10 }, pid);
+      parts.cavalry = FB.marketCostQuote(state, parts.cavalry,
+        { provisions:0.35, materials:0.10, transport:0.55 }, pid);
+      parts.retinue = FB.marketCostQuote(state, parts.retinue,
+        { provisions:0.45, materials:0.35, transport:0.20 }, pid);
+      parts.total = parts.base + parts.levy + parts.archers +
+        parts.cavalry + parts.retinue + parts.mercenaries;
+    }
     const rate = FB.campaignHostModBonus
       ? FB.campaignHostModBonus(state, 'supplyUse') : 0;
-    parts.campaignModifier = parts.total * rate;
+    const nonContract = parts.total - parts.mercenaries;
+    parts.campaignModifier = nonContract * rate;
     parts.total = Math.max(0, parts.total + parts.campaignModifier);
     return parts;
   };

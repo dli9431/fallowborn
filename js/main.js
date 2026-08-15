@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.130.2';
+  FB.VERSION = '1.131.0';
   FB.CHANGELOG = [
+    { v: '1.131.0', date: '2026-08-14', changes: [
+      'County commodity markets now connect local scarcity, historical endowments, trade ventures, and guild charters through the Market lens.'
+    ] },
     { v: '1.130.2', date: '2026-08-14', changes: [
       'The barber sheet now keeps its controls usable on short phone screens.'
     ] },
@@ -2148,6 +2151,7 @@ window.FB = window.FB || {};
        march daily — and that is all. No focus, upkeep, mortality, births,
        events, or autosaves; nothing personal ever reaches the watcher. */
     if (G.observe) {
+      if (seasonBoundary && FB.marketSeason) FB.marketSeason(s);
       if (seasonBoundary && FB.intrigueSeason) FB.intrigueSeason(s);
       if (seasonBoundary && FB.techSeason) FB.techSeason(s, false);
       if (seasonBoundary && newYear) FB.worldTick(s);
@@ -2164,19 +2168,23 @@ window.FB = window.FB || {};
     if (seasonBoundary) {
       if (FB.intrigueSeason) FB.intrigueSeason(s);
       if (p.dead) return 'dead';
-      const upkeep = FB.householdUpkeep(s);
+      if (FB.marketSeason) FB.marketSeason(s);
       const income = p.tier >= 3 ? FB.playerTax(s) : 0;
       const buildingUpkeep = p.tier >= 3
         ? FB.buildingBonus(s, 'upkeep') + (FB.fortUpkeep ? FB.fortUpkeep(s) : 0)
         : 0;
       const modifierUpkeep = FB.modifierUpkeep ? FB.modifierUpkeep(s, 'gold') : 0;
       FB.enterpriseList(s); // migrate legacy business holdings before either income path reads them
-      /* Settle ordinary household income together; livelihoodSeason clamps the
-         combined result once, so family wages really can meet family costs. */
-      p.gold += income - upkeep - buildingUpkeep - modifierUpkeep +
+      /* Income is credited before necessities are settled. This lets family
+         wages meet the table and leaves any unfunded share as hardship rather
+         than silently discarding which obligation went unpaid. */
+      p.gold += income - buildingUpkeep - modifierUpkeep +
         FB.holdingBonus(s, 'gold') + FB.landYield(s) + FB.itemBonus(s, 'gold') +
         (FB.positionBonus ? FB.positionBonus(s, 'gold') : 0);
       FB.livelihoodSeason(s);
+      if (FB.marketSettleHouseholdNecessities) {
+        FB.marketSettleHouseholdNecessities(s);
+      } else p.gold = Math.max(0, p.gold - FB.householdUpkeep(s));
       if (FB.papacySeason) FB.papacySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
@@ -2647,6 +2655,9 @@ window.FB = window.FB || {};
     q -= FB.techBonus(s, 'health') + FB.holdingBonus(s, 'health') + FB.itemBonus(s, 'health'); // physicians, hearth gardens, remedies
     q -= standardMortality;
     if (!s.player.travel) q -= medicalProtection;
+    if (!s.player.travel && FB.marketMortalityPressure) {
+      q += FB.marketMortalityPressure(s);
+    }
     q = FB.clamp(q, 0.002, 0.6);
     if (age > 90 || FB.chance(q)) {
       G.die(FB.msg('legend.death.age', {
@@ -2702,6 +2713,10 @@ window.FB = window.FB || {};
       if (maintainedHousehold[c.id]) cq -= standardMortality;
       if (medicalProtection && FB.isHouseholdCharacter(s, c.id)) {
         cq -= medicalProtection;
+      }
+      if (FB.marketMortalityPressure && FB.isHouseholdCharacter(s, c.id) &&
+          (!FB.characterResidence || FB.characterResidence(s, c) === p.provinceId)) {
+        cq += FB.marketMortalityPressure(s);
       }
       if (FB.chance(FB.clamp(cq, 0.002, 0.6))) {
         const wasSpouse = c.id === me.spouseId || c.spouseId === me.id;

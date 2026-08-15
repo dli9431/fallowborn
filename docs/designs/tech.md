@@ -296,6 +296,15 @@ auctioned county title rights require Notarial Contracts. Formal Market Charter 
 in guild stories reuse the existing Urban Markets plus Authenticated Seals decision instead
 of creating a parallel unlock.
 
+County commodity markets add three prospective decisions. `county_goods_markets` is
+soft: ordinary exchange and scarcity apply everywhere, while the existing Urban Markets
+and Trade Houses knowledge improves distribution. `commodity_ventures` is none because
+choosing the carried basket expands the existing venture without creating a separately
+advanced action. `chartered_trade_corridors` is hard on Guild Charters: exact-route
+protection is a formal privilege, while ordinary commodity ventures remain visible and
+available. Already issued typed or legacy charters keep their frozen terms if the
+effective sovereign later loses the innovation. See [markets.md](markets.md).
+
 Fortifications add four hard prospective reviews, one per independently gateable tier.
 `fort_construction` uses Ringworks and leaves an unfortified settlement as the fallback;
 `towered_stronghold_upgrade` uses Flanking Castle Towers and leaves the Ringwork;
@@ -344,5 +353,5 @@ Runtime mods are normalized before validation: `branch` becomes `domain`, scalar
 lock. Existing `cultures` and `notCultures` restrictions remain supported.
 
 Related: [state-and-saves.md](state-and-saves.md), [development.md](development.md),
-[war.md](war.md), [finance.md](finance.md), [time.md](time.md),
+[war.md](war.md), [finance.md](finance.md), [markets.md](markets.md), [time.md](time.md),
 [ui.md](ui.md), and [mods.md](mods.md).

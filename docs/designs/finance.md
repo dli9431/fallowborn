@@ -1,10 +1,12 @@
 # Coin & Credit
 
 **Gold remains constant-purchasing-power game gold.** `state.economy.price` is the
-nominal coin needed to buy one gold of goods. Once each spring
+nominal coin needed to buy one gold of obligations and is distinct from the
+county commodity prices in [markets.md](markets.md). Once each spring
 `FB.financeYear` evolves a slow, bounded, mean-reverting price index and revalues
-only the liquid purse by `oldPrice / newPrice`. Authored costs, wages, rewards,
-holdings, buildings, and items keep their familiar gold values. The annual
+only the liquid purse by `oldPrice / newPrice`. Contracts, wages, rewards, and
+other real-gold obligations keep their authored values; tangible local purchases
+apply their county market quote independently. The annual
 revaluation runs after the completed winter ledger, so it appears immediately
 as **Coin and prices this year** and is included in the following measured
 season net.
@@ -18,18 +20,17 @@ purse or a contract, so affordability and settlement use the original values.
 `FB.ensureEconomy` lazily creates JSON-safe price, shock, loan, partnership,
 self-founded venture, default, and stable-id state. Old version-3 saves therefore begin at a price
 index of 1 on their next annual tick; no past inflation is reconstructed.
-`FB.addPricePressure(state, amount, years, source)` adds deterministic saved
-shocks. Lean harvests and pestilence add scarcity/disruption pressure, plague
-recovery eases it, war in the player's sovereign realm adds annual pressure,
-and sovereign coinage adds explicit monetary shocks. Ordinary variation and
+`FB.addPricePressure(state, amount, years, source)` retains deterministic saved
+nominal shocks for coinage and compatibility. New lean-harvest, pestilence, and
+recovery calls are routed to saved county market shocks; war scarcity is also a
+county production/demand/flow effect. Sovereign coinage remains an explicit
+monetary shock. Existing nominal shocks in old saves age out normally. Ordinary variation and
 investment outcomes use the saved `FB.rng` stream only. `lastYear` and stored investment resolutions
 prevent reloads from applying or rolling an outcome twice.
 
-War also has an immediate seasonal price. While `FB.playerRealmAtWar(state)` is true,
-`FB.householdUpkeepParts` adds `wartime`, equal by default to 25% of the station base
-plus resident-family provisions. Retainer contracts, schooling, buildings, and other
-authored charges are not multiplied. This is computed on demand, so peace removes the
-surcharge without a save field.
+There is no fixed wartime-necessities surcharge. Raised and hostile armies create
+food demand, while occupation creates saved production and flow disruption. Their
+effects emerge through the local provisions price and fade when the shocks expire.
 
 **Contracts state exact terms.** Pledged loans, merchant advances, and loans
 against revenues grant base gold now and record a fixed face value. A nominal
@@ -39,7 +40,7 @@ debasement may instead demand a real, weight-denominated contract whose due
 value does not move. `FB.reliableGoldIncome` is the shared numeric seasonal net
 used by the gold ledger and credit capacity; windfalls, sales, other loans, and
 unmatured investments never count. Its recurring costs include resident-family upkeep,
-active maintained household standards, retainer contracts, wartime household scarcity,
+active maintained household standards, retainer contracts, local household scarcity,
 the live raised host's base/levy/archer/cavalry/retinue/mercenary logistics, and the disclosed
 fees of current schooling arrangements. The same components are itemized by
 `FB.incomeBreakdown`, with maintained standards separate from basic household and family
@@ -141,23 +142,26 @@ opening/increment ratios, rival range, cooldown, and round cap live in `FBDATA.b
 There are no bidder purses, stock lists, clocks, or daily auction work.
 
 **Self-founded ventures are separate household investments.** Any adult tier-1/2
-protagonist may choose a configured stake, select a reachable development-4+ market,
-and pay route overhead separately from the invested capital. Maintained transport may
-reduce the overhead and route time but never the stake. The household may have one
-active self-founded venture by default regardless of its passive partnership count.
+protagonist may choose a configured stake, buy one commodity basket, select a reachable
+development-4+ market, and pay route overhead separately from the invested capital.
+The stake buys `stake / originPrice` units and removes them from origin stock.
+Maintained transport may reduce the overhead and route time but never the stake. The
+household may have one active self-founded venture by default regardless of its passive
+partnership count.
 
-A venture dispatched from home records the destination, exact route, cautious/bold
-strategy, stake, overhead, due turn, outcome bands, and a formation-time modifier
+A venture dispatched from home records the commodity, quantity, origin quote,
+destination, exact route, cautious/bold strategy, stake, overhead, due turn, outcome bands, and a formation-time modifier
 snapshot. Its duration is `max(90, 30 + round-trip route days)`. Stewardship, merchant
 or craft guild privilege, a Trading House, national trade knowledge, and destination
 development improve its eventual roll; route length adds risk. Positive household
 bonuses are capped before the destination and route adjustments. `FB.financeDay`
 resolves the record on its exact due day, stores the one seeded roll and payout before
-publishing the result, and pays the current household head. Promotion and succession
-therefore do not cancel or retarget it.
+publishing the result, and pays the current household head at the live destination
+price. Delivered stock is capped at the purchased quantity even when the monetary
+outcome is exceptional. Promotion and succession therefore do not cancel or retarget it.
 
-An accompanied venture is stored only inside `player.travel`. Its selected stake and
-separate overhead are charged at departure, while the existing road encounters,
+An accompanied venture is stored only inside `player.travel`. Its selected commodity,
+quantity, stake, and separate overhead are frozen at departure, while the existing road encounters,
 destination stay, cautious return, bold Stewardship bargain, return journey, and
 settlement rules remain the travel system’s responsibility. The old ten-gold direct
 `FB.travelStart("trade")` compatibility path remains valid for mods, but the core UI
@@ -169,13 +173,21 @@ The owned-venture API is `FB.tradeVentureStakes`, `FB.tradeVentureEligible`,
 `FB.resolveTradeVenture`. `FB.financeActivePartnerships` and
 `FB.financeActiveTradeVentures` keep the two investment capacities explicit.
 
+Guild monopolies may remain legacy profession-wide records or carry a typed scope.
+Craft privileges match one local Workshop basket. Merchant privileges cover local
+exchange or one exact saved corridor; a corridor improves matching distribution,
+endpoint merchant returns, and exact-route commodity ventures. Numeric fees, taxes,
+opinion, authority, and duration remain frozen, and the unchanged exact `contractId`
+continues to identify intrigue targets. New corridor grants require `guild_charters`;
+ordinary commodity ventures are the visible fallback.
+
 Independent Kings and Emperors may debase the coin once every five years for
 seigniorage. The action previews the exact grant and price shock, damages
 prestige, popular trust, council relations, and future terms, and never rewrites
 signed contracts. A later costly recoinage applies negative price pressure and
 restores lender confidence gradually.
 
-Tunables live in `FBDATA.balance`; contract and venture terms live in `FBDATA.finance`
+Finance tunables live in `FBDATA.balance`; contract and venture terms live in `FBDATA.finance`
 (`data/economy.js`) and may be overridden by runtime mods. The Finance sheet is
 a no-day-cost deed and keeps the nearest deadline at the top on narrow screens.
 Routine checks remain silent; signing, repayment, arrears, default, inheritance,
@@ -183,7 +195,8 @@ investment resolution, material price movement, debasement, and recoinage use
 durable Chronicle message descriptors. Finance actions and notices use the broadly
 supported money-bag icon rather than the unsupported coin glyph.
 
-Related: [time.md](time.md) for tick order, [state-and-saves.md](state-and-saves.md)
+Related: [markets.md](markets.md) for local commodities and tangible-price boundaries,
+[time.md](time.md) for tick order, [state-and-saves.md](state-and-saves.md)
 for persistence, [holdings.md](holdings.md) for pledged property, and
 [ui.md](ui.md) for the Finance sheet.
 

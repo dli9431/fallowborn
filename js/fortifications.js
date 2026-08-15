@@ -269,7 +269,9 @@ window.FB = window.FB || {};
     }
     var def = levelDef(result.targetLevel);
     if (!def) { result.reason = 'maximum'; return result; }
-    result.cost = def.cost;
+    result.cost = realmId === 'player' && FB.marketCostQuote ?
+      FB.marketCostQuote(state, def.cost,
+        { materials:0.80, transport:0.15, wares:0.05 }, pid, 'up') : def.cost;
     result.seasons = def.seasons;
     result.completeTurn = (Number(state.turn) || 0) + def.seasons * 90;
     for (var i = 0; i < def.requiresTech.length; i++) {

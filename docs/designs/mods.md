@@ -174,6 +174,18 @@ ranges, but should use the exact-instance APIs in `js/items.js` rather than muta
 `player.items` or `c.items`. Mod effects may grant a definition through `giveItem`; the
 subsystem creates an instance automatically when that definition is repeatable.
 
+County market definitions are three atomic top-level values: `marketGoods`,
+`marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
+table; it is validated together with the two effective companion tables before any of
+the three mutates. Unknown basket, endowment, duchy, or county ids and malformed bonus
+maps reject the mod, leaving both definitions and save state unchanged. This atomic rule
+prevents a partial replacement from changing saved vector meaning. Saved
+`state.market.goods` remaps valid complete replacements by stable id. Tangible
+definitions may opt into local prices with a `marketBasket` weight map; omission
+preserves multiplier 1. The full schemas and typed guild-monopoly compatibility fields
+are documented in `docs/MODDING.md` and their engine semantics in
+[markets.md](markets.md).
+
 Related: `docs/MODDING.md` is the full mod authoring reference.
 
 Religious-head overlays may add or replace `head.greatHolyWar`. Activation validates

@@ -156,6 +156,18 @@ window.FBDATA = window.FBDATA || {};
       rare_auction_invitations:{
         mode:'none',
         rationale:'The rare invitation is an alternate route into the same cooldown-controlled auction, not a separate advanced market institution.'
+      },
+      county_goods_markets:{
+        mode:'soft', tech:['urban_markets','trade_houses'],
+        rationale:'Ordinary local exchange is universal; established markets and trade houses improve distribution capacity without blocking access.'
+      },
+      commodity_ventures:{
+        mode:'none',
+        rationale:'Selecting a commodity expands the existing venture and does not create a separately advanced form of exchange.'
+      },
+      chartered_trade_corridors:{
+        mode:'hard', tech:['guild_charters'], fallback:'ordinary_commodity_ventures',
+        rationale:'Exclusive route protection depends on formal guild charters while ordinary commodity ventures remain visible and available.'
       }
     }
   };

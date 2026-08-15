@@ -174,6 +174,40 @@ window.FBMODS = window.FBMODS || [];
   }
 
   M.apply = function (mod) {
+    if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
+        own(mod, 'marketEndowments')) {
+      const marketGoods = own(mod, 'marketGoods')
+        ? mod.marketGoods : FBDATA.marketGoods;
+      const marketTypes = own(mod, 'marketEndowmentTypes')
+        ? mod.marketEndowmentTypes : FBDATA.marketEndowmentTypes;
+      const marketRegions = own(mod, 'marketEndowments')
+        ? mod.marketEndowments : FBDATA.marketEndowments;
+      const marketGeography = {
+        provinces:(FBDATA.provinces || []).slice(),
+        duchies:{}
+      };
+      for (const duchyId in (FBDATA.duchies || {})) {
+        marketGeography.duchies[duchyId] = FBDATA.duchies[duchyId];
+      }
+      if (Array.isArray(mod.provinces)) {
+        for (let i = 0; i < mod.provinces.length; i++) {
+          marketGeography.provinces.push(mod.provinces[i]);
+        }
+      }
+      for (const duchyId in (mod.duchies || {})) {
+        marketGeography.duchies[duchyId] = mod.duchies[duchyId];
+      }
+      const marketFaults = FB.validateMarketData
+        ? FB.validateMarketData(marketGoods, marketTypes, marketRegions,
+          marketGeography)
+        : ['market engine is unavailable.'];
+      if (marketFaults.length) throw new Error(marketFaults.join(' '));
+      if (own(mod, 'marketGoods')) FBDATA.marketGoods = marketGoods;
+      if (own(mod, 'marketEndowmentTypes')) {
+        FBDATA.marketEndowmentTypes = marketTypes;
+      }
+      if (own(mod, 'marketEndowments')) FBDATA.marketEndowments = marketRegions;
+    }
     const legacyWorldKeys = [
       'provinces','realms','empires','kingdoms','duchies','straits',
       'crossingClasses','scripted','bounds','land','seas'

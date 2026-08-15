@@ -78,6 +78,11 @@ resulting seasonal yield, completed cluster/manor progress, and remaining purse.
 reviewed starting count and full affordability, then buys the batch atomically and
 writes one Chronicle entry. It never substitutes for the existing one-plot purchase.
 
+Land clearing and tangible holding purchases use their authored `marketBasket` at the
+home county's live commodity quote and round upward to whole gold. The manor threshold,
+inheritance, income, and collateral value remain real quantities rather than being
+repriced. Untagged mod holdings retain a market multiplier of one.
+
 Related: [development.md](development.md) for the tier-3+ equivalent (buildings),
 [realms.md](realms.md) for tiers.
 

@@ -448,6 +448,8 @@ window.FBDATA = window.FBDATA || {};
           ailment: FBDATA.ailments, culture: FBDATA.cultures, religion: FBDATA.religions,
           career: FBDATA.careers, position: FBDATA.positions, schooling: FBDATA.schooling,
           enterprise: FBDATA.enterprises, householdStandard:FBDATA.householdStandards,
+          marketGood:FBDATA.marketGoods,
+          marketEndowment:FBDATA.marketEndowmentTypes,
           localCouncilMotion:FBDATA.localCouncilMotions,
           feudalServiceCharter:FBDATA.feudalServiceCharters,
           travelPurpose: FBDATA.travelPurposes,

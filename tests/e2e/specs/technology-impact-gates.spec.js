@@ -148,9 +148,12 @@ test('the prospective review ledger and every gate schema validate together',
       'auction_item_lots',
       'auction_title_rights',
       'bounded_market_auctions',
+      'chartered_trade_corridors',
+      'commodity_ventures',
       'concentric_fortress_upgrade',
       'confirmation_of_great_offices',
       'consent_of_estates',
+      'county_goods_markets',
       'direct_vassal_charter_of_liberties',
       'estates_scutage',
       'formal_confirmation_of_custom',
@@ -168,9 +171,10 @@ test('the prospective review ledger and every gate schema validate together',
       'towered_stronghold_upgrade'
     ]);
     expect(Object.values(result.modes)).toEqual([
-      'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',
-      'hard', 'hard', 'hard', 'hard', 'none', 'hard', 'hard', 'hard',
-      'none', 'hard', 'none', 'hard', 'hard', 'hard'
+      'none', 'none', 'hard', 'none', 'hard', 'none', 'hard', 'hard',
+      'hard', 'soft', 'hard', 'hard', 'hard', 'hard', 'hard', 'none',
+      'hard', 'hard', 'hard', 'none', 'hard', 'none', 'hard', 'hard',
+      'hard'
     ]);
     expect(result.coreErrors).toEqual([]);
     expect(result.reviewErrors.some(function (error) {

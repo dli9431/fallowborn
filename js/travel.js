@@ -232,26 +232,36 @@ window.FB = window.FB || {};
     const base = Math.ceil(2 + legs * 2 * 0.25);
     const mult = state && FB.householdStandardEffects
       ? FB.householdStandardEffects(state).travelCost : 1;
-    return Math.ceil(base * mult);
+    const raw = base * mult;
+    return state && FB.marketCostQuote ? FB.marketCostQuote(state, raw,
+      { provisions:0.65, transport:0.35 }, state.player.provinceId, 'up') : Math.ceil(raw);
   };
 
   FB.travelCostSnapshot = function (purposeId, routeOrLegs, state) {
     const def = purpose(purposeId);
     const legs = typeof routeOrLegs === 'number'
       ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
-    const base = Math.ceil(2 + legs * 2 * 0.25) + ((def && def.cost) || 0);
+    const supplies = Math.ceil(2 + legs * 2 * 0.25);
+    const fee = (def && def.cost) || 0;
     const mult = state ? travelStandardEffectsSnapshot(state).travelCost : 1;
-    return Math.ceil(base * mult);
+    const quoted = state && FB.marketCostQuote ? FB.marketCostQuote(state,
+      supplies * mult, { provisions:0.65, transport:0.35 },
+      state.player.provinceId, 'up') : Math.ceil(supplies * mult);
+    return quoted + fee;
   };
 
   FB.travelCost = function (purposeId, routeOrLegs, state) {
     const def = purpose(purposeId);
     const legs = typeof routeOrLegs === 'number'
       ? routeOrLegs : ((routeOrLegs && routeOrLegs.length) || 0);
-    const base = Math.ceil(2 + legs * 2 * 0.25) + ((def && def.cost) || 0);
+    const supplies = Math.ceil(2 + legs * 2 * 0.25);
+    const fee = (def && def.cost) || 0;
     const mult = state && FB.householdStandardEffects
       ? FB.householdStandardEffects(state).travelCost : 1;
-    return Math.ceil(base * mult);
+    const quoted = state && FB.marketCostQuote ? FB.marketCostQuote(state,
+      supplies * mult, { provisions:0.65, transport:0.35 },
+      state.player.provinceId, 'up') : Math.ceil(supplies * mult);
+    return quoted + fee;
   };
 
   /* ================= GIFT COURIERS =================
@@ -914,16 +924,22 @@ window.FB = window.FB || {};
         purposeId === 'trade' && FB.tradeVenturePreview &&
         FB.tradeVentureCanStart) {
       const stake = Math.floor(Number(venturePayload.stake) || 0);
+      const goodId = venturePayload.goodId || null;
       if (FB.tradeVentureCanStart(
-          state, 'accompany', stake, choice.destinationId) !== true) {
+          state, 'accompany', stake, choice.destinationId, goodId) !== true) {
         return false;
       }
-      const preview = FB.tradeVenturePreview(state, stake, choice.destinationId);
+      const preview = FB.tradeVenturePreview(state, stake, choice.destinationId,
+        goodId);
       if (!preview) return false;
       overhead = preview.overhead;
       upfront = preview.totalCost;
       venture = {
         kind:'trade_venture',
+        goodId:preview.goodId,
+        originId:preview.originId,
+        originPrice:preview.originPrice,
+        quantity:preview.quantity,
         stake:preview.stake,
         overhead:preview.overhead,
         destinationId:preview.destinationId,
@@ -931,6 +947,8 @@ window.FB = window.FB || {};
         startedTurn:state.turn,
         status:'active'
       };
+      if (preview.goodId && !FB.marketTakeStock(state, preview.originId,
+          preview.goodId, preview.quantity)) return false;
     }
     if (state.player.gold < upfront) return false;
     p.gold -= upfront;
@@ -1710,7 +1728,23 @@ window.FB = window.FB || {};
         FB.travelCapstoneDone(state);
         return false;
       }
-      const payout = Math.round(venture.stake * multiplier * 100) / 100;
+      let payout;
+      if (venture.goodId && isFinite(Number(venture.quantity)) &&
+          FB.marketPrice) {
+        const livePrice = FB.marketPrice(state, venture.destinationId,
+          venture.goodId);
+        const charter = FB.marketCharterReturnBonus ?
+          FB.marketCharterReturnBonus(state, venture.goodId,
+            venture.originId, venture.destinationId, venture.route) : 0;
+        payout = Math.round(venture.quantity * livePrice * multiplier *
+          (1 + charter) * 100) / 100;
+        venture.arrivalPrice = livePrice;
+        venture.charterBonus = charter;
+        venture.deliveredQuantity = venture.quantity * Math.min(1,
+          Math.max(0, multiplier));
+        if (FB.marketDeliverStock) FB.marketDeliverStock(state,
+          venture.destinationId, venture.goodId, venture.deliveredQuantity);
+      } else payout = Math.round(venture.stake * multiplier * 100) / 100;
       venture.outcome = outcome;
       venture.multiplier = multiplier;
       venture.payout = payout;

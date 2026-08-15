@@ -52,16 +52,20 @@ privilege sheet and survives county transfer for exactly as long as this record 
 
 The institution-content tranche adds seven bounded county definitions:
 
+The pre-existing `open_storehouses` modifier also adds 15% provisions production while
+its lord-funded stores are active, and `covert_sabotage` now reduces all production by
+15% and market-flow capacity by 10% alongside its fiscal and levy effects.
+
 - `market_charter` — +8% county tax, −8% construction cost, and 1 gold seasonal
-  upkeep for 1,440 days;
+  upkeep plus 15% market-flow capacity for 1,440 days;
 - `contested_tolls` — −10% county tax and +25% harmful `unrest` exposure for
-  720 days;
+  720 days, with 20% less market-flow capacity;
 - `levy_exemption` — −12% county levy and +6 effective Common Voice for
   1,080 days;
 - `muster_burden` — +15% county levy, −6 effective Common Voice, and +15%
   harmful `unrest` exposure for 540 days;
-- `roads_patrolled` — +4% county tax, −20% harmful `unrest` exposure, and
-  1 gold seasonal upkeep for 720 days;
+- `roads_patrolled` — +4% county tax, −20% harmful `unrest` exposure, 12% more
+  market-flow capacity, and 1 gold seasonal upkeep for 720 days;
 - `settlement_grudge` — −7 effective Common Voice and +25% harmful `unrest`
   exposure for 900 days.
 - `tax_concession` — −8% county tax, +6 effective Common Voice, and −10%
@@ -111,6 +115,9 @@ Supported county keys are:
   player's own counties.
 - `levy`: fractional base county levy before technology, Martial, and domain adjustments.
 - `buildingCost`: fractional construction-cost multiplier in the affected county.
+- `marketProduction`: fractional adjustment to every basket produced in the county.
+- `marketProvisions`: fractional adjustment to provisions production only.
+- `marketFlow`: fractional adjustment to the county side of each adjacent market edge.
 - `commonVoice`: flat effective Common Voice while the county is one of
   `FB.modifierCounties`.
 - Event tags such as `famine` and `unrest`: fractional scaling of harmful tagged-event

@@ -156,8 +156,9 @@ FBDATA.events.push(
     pagan:'It came with the traders, they say. First the fever, then the marks, then the pyres. The pestilence has reached {province}.' },
   options:[
     { label:'{god} preserve us.', desc:'There is little to do now but bar the door and pray.',
-      effects:{ setFlag:'plague_here', piety:3, pricePressure:0.025,
-        pricePressureYears:3, pricePressureSource:'pestilence',
+      effects:{ setFlag:'plague_here', piety:3,
+        marketShock:{ id:'pestilence', source:'pestilence', provinceId:'home',
+          production:-0.18, demand:-0.10, flow:-0.30, severe:true, seasons:12 },
         log:'Pestilence reached {province}.' } }
   ]},
 { id:'pestilence_rages', title:'The Dying Time',
@@ -186,8 +187,9 @@ FBDATA.events.push(
   trigger:{ flags:['plague_here'], chance:0.3 }, wartime:true, childhood:true, weight:10,
   text:'A season passes with no new graves. Thin, wary, the survivors of {province} step into the sun and count who remains.',
   options:[ { label:'It is over.', desc:'Count the living and begin again.',
-    effects:{ clearFlag:'plague_here', piety:5, pricePressure:-0.01,
-      pricePressureYears:2, pricePressureSource:'plague_recovery',
+    effects:{ clearFlag:'plague_here', piety:5,
+      marketShock:{ id:'pestilence', source:'plague_recovery',
+        provinceId:'home', production:0.10, flow:0.15, seasons:8 },
       log:'The pestilence ended.' } } ]},
 { id:'comet', title:'A Hairy Star',
   trigger:{ chance:0.03 }, childhood:true, weight:3, cooldown:60,

@@ -4024,7 +4024,7 @@ window.FB = window.FB || {};
      deltas come from before/after state so clamps and soft caps are reported
      as they actually landed. */
   const EVENT_EFFECT_KEYS = [
-    'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource',
+    'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource','marketShock',
     'prestige','piety','guildStanding','warService','health','ailment','skills','addTrait',
     'addTraitOnce','removeTrait','traitProgress','setFlag','setFlag2','clearFlag',
     'clearFlag2','clearHarvestFlags','opinion','rivalContact','rivalHeat',
@@ -4355,6 +4355,25 @@ window.FB = window.FB || {};
       amount:fx.pricePressure, years:fx.pricePressureYears || 1,
       reward:fx.pricePressure < 0
     }));
+    if (fx.marketShock && typeof fx.marketShock === 'object') {
+      let shockProvince = fx.marketShock.provinceId || null;
+      if (shockProvince === 'home') shockProvince = p.provinceId;
+      else if (shockProvince === 'context') {
+        shockProvince = ctx.locationId || ctx.provinceId || p.provinceId;
+      }
+      out.push(impact('market', {
+        seasons:fx.marketShock.remaining || fx.marketShock.seasons || 1,
+        provinceId:shockProvince,
+        goodId:fx.marketShock.goodId || null,
+        production:Number(fx.marketShock.production) || 0,
+        demand:Number(fx.marketShock.demand) || 0,
+        flow:Number(fx.marketShock.flow) || 0,
+        severe:fx.marketShock.severe === true,
+        reward:(Number(fx.marketShock.production) || 0) +
+          (Number(fx.marketShock.flow) || 0) -
+          (Number(fx.marketShock.demand) || 0) > 0
+      }));
+    }
     if (fx.addTrait || fx.addTraitOnce) out.push(impact('trait', {
       action:'add', id:fx.addTrait || fx.addTraitOnce,
       reward:true
@@ -5234,6 +5253,21 @@ window.FB = window.FB || {};
         change:numberText(amount), years:record.years
       });
     }
+    if (record.type === 'market') {
+      const marketGood = record.goodId && FBDATA.marketGoods &&
+        FBDATA.marketGoods[record.goodId];
+      const goodName = marketGood ? FB.dataText(state, state.player.charId,
+        'marketGood', record.goodId, marketGood, 'name', {}) : FB.T('All market baskets');
+      const marketProvince = record.provinceId && FB.world.byId[record.provinceId];
+      const countyName = marketProvince ? marketProvince.name : FB.T('all counties');
+      return record.reward
+        ? FB.T('{good} supply in {county} improves for {seasons} seasons', {
+          good:goodName, county:countyName, seasons:record.seasons
+        })
+        : FB.T('{good} market disruption in {county} for {seasons} seasons', {
+          good:goodName, county:countyName, seasons:record.seasons
+        });
+    }
     if (record.type === 'rivalHeat') return FB.T('Rivalry heat {change}', {
       change:numberText(amount)
     });
@@ -5342,6 +5376,7 @@ window.FB = window.FB || {};
     let appliedResearch = 0;
     let appliedGuildStanding = 0;
     let appliedPricePressure = false;
+    let appliedMarketShock = false;
     const p = state.player;
     const me = state.chars[p.charId];
     /* Freeze semantic context before a custom outcome can end a war, move
@@ -5385,6 +5420,21 @@ window.FB = window.FB || {};
       appliedPricePressure = FB.addPricePressure(state, fx.pricePressure,
         fx.pricePressureYears || 1,
         fx.pricePressureSource || 'event');
+    }
+    if (fx.marketShock && typeof fx.marketShock === 'object' &&
+        FB.addMarketShock) {
+      const marketShock = {};
+      for (const key in fx.marketShock) {
+        if (Object.prototype.hasOwnProperty.call(fx.marketShock, key)) {
+          marketShock[key] = fx.marketShock[key];
+        }
+      }
+      if (marketShock.provinceId === 'context') {
+        marketShock.provinceId = ctx.locationId || ctx.provinceId || p.provinceId;
+      } else if (marketShock.provinceId === 'home') {
+        marketShock.provinceId = p.provinceId;
+      }
+      appliedMarketShock = FB.addMarketShock(state, marketShock);
     }
     if (fx.prestige) p.prestige = Math.max(0, p.prestige + fx.prestige);
     if (fx.piety) p.piety = Math.max(0, p.piety + fx.piety);
@@ -5693,6 +5743,18 @@ window.FB = window.FB || {};
     if (appliedPricePressure) ledger.push(impact('price', {
       amount:fx.pricePressure,
       years:fx.pricePressureYears || 1,
+      resolved:true
+    }));
+    if (appliedMarketShock) ledger.push(impact('market', {
+      seasons:appliedMarketShock.remaining,
+      provinceId:appliedMarketShock.provinceId,
+      goodId:appliedMarketShock.goodId,
+      production:appliedMarketShock.production,
+      demand:appliedMarketShock.demand,
+      flow:appliedMarketShock.flow,
+      severe:appliedMarketShock.severe,
+      reward:appliedMarketShock.production + appliedMarketShock.flow -
+        appliedMarketShock.demand > 0,
       resolved:true
     }));
     if (fx.worldNews) ledger.push(impact('worldNews', { resolved:true }));

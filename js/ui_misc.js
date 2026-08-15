@@ -2119,6 +2119,30 @@ window.FB = window.FB || {};
       else FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
+    $('btn-marketlens').addEventListener('click', function () {
+      UI.setMarketLens(!FB.map.marketGood);
+    });
+    const marketGood = $('market-lens-good');
+    if (marketGood) {
+      let marketOptions = '';
+      for (const id in FBDATA.marketGoods) {
+        const def = FBDATA.marketGoods[id];
+        marketOptions += '<option value="' + id + '">' +
+          esc((def.icon || '') + ' ' + FB.T(def.name)) + '</option>';
+      }
+      marketGood.innerHTML = marketOptions;
+      marketGood.value = 'provisions';
+      marketGood.addEventListener('change', function () {
+        FB.map.marketGood = marketGood.value;
+        FB.map.request();
+      });
+    }
+    $('market-lens-details').addEventListener('click', function () {
+      if (FB.ui.showMarket && FB.state) {
+        FB.ui.showMarket(FB.map.selected || FB.state.player.provinceId,
+          FB.map.marketGood || 'provisions');
+      }
+    });
     $('travel-picker-cancel').addEventListener('click', function () {
       UI.cancelTravelPicker(false);
     });

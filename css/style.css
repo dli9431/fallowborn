@@ -323,6 +323,12 @@ body.travel-picking #timebtns { visibility: hidden; }
 #maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
 .hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; }
 .hudbtn.on { opacity: 1; box-shadow: 0 0 0 2px #ffd24a inset; }
+.market-lens-controls { position: absolute; left: 10px; top: 10px; z-index: 3; display: flex;
+  align-items: center; gap: 6px; padding: 7px; border: 1px solid rgba(255,255,255,.28);
+  border-radius: 6px; background: rgba(20,25,31,.92); color: #f5ead0; }
+.market-lens-controls label { font-size: 12px; font-weight: bold; }
+.market-lens-controls select, .market-lens-controls .btn { min-height: 40px; }
+.market-lens-controls.hidden { display: none; }
 .music-now-playing-controls {
   position: absolute; z-index: 31; left: 50%; bottom: 10px;
   transform: translateX(-50%); max-width: min(70%, 480px);
@@ -2271,6 +2277,9 @@ textarea.modjson, textarea.savetext {
   .building-county-picker select { min-height: 48px; }
   .hudbtn { width: 46px; height: 46px; font-size: 22px; }
   #maphud { right: max(10px, env(safe-area-inset-right)); }
+  .market-lens-controls { left: max(8px, env(safe-area-inset-left)); top: 8px;
+    max-width: calc(100% - 76px); flex-wrap: wrap; }
+  .market-lens-controls select, .market-lens-controls .btn { min-height: 44px; }
   .music-now-playing-controls {
     right: max(8px, env(safe-area-inset-right)); left: auto;
     bottom: max(8px, env(safe-area-inset-bottom));

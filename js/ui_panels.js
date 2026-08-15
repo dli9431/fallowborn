@@ -2420,6 +2420,22 @@ window.FB = window.FB || {};
           days:FB.guildMonopolyRemainingDays(s, monopoly)
         })
       ] : [FB.T('None')];
+      if (active && monopoly.goodId && FBDATA.marketGoods[monopoly.goodId]) {
+        const good = FBDATA.marketGoods[monopoly.goodId];
+        meta.push(FB.T('{good} · {mode}', {
+          good:(good.icon || '') + ' ' +
+            dt(s, 'marketGood', monopoly.goodId, good, 'name'),
+          mode:monopoly.mode === 'corridor' ? FB.T('one corridor') :
+            monopoly.mode === 'craft' ? FB.T('local craft output') :
+            FB.T('local exchange')
+        }));
+        if (monopoly.mode === 'corridor') {
+          const destination = FB.world.byId[monopoly.destinationId];
+          meta.push(FB.T('Corridor to {destination}', {
+            destination:destination ? destination.name : monopoly.destinationId
+          }));
+        }
+      }
       if (active && monopoly.scope === 'province') {
         const province = FB.world.byId[monopoly.scopeId];
         meta.push(FB.T('Local to {province}', {
@@ -2616,6 +2632,10 @@ window.FB = window.FB || {};
     }
     sortReadableRows(tradeRows);
     let tradeSummary =
+      '<button class="actionbtn" id="network-market">⚖ ' +
+      esc(FB.T('Market…')) + '<span class="adesc">' +
+      esc(FB.T('Inspect local prices, stocks, historical endowments, ventures, and charters.')) +
+      '</span></button>' +
       '<button class="actionbtn" id="network-work">🧰 ' +
       esc(FB.T('Work & Enterprises…')) + '<span class="adesc">' +
       esc(FB.T(
@@ -3071,6 +3091,10 @@ window.FB = window.FB || {};
     if (workButton) workButton.addEventListener('click', UI.showLivelihoods);
     const financeButton = $('network-finance');
     if (financeButton) financeButton.addEventListener('click', UI.showFinance);
+    const marketButton = $('network-market');
+    if (marketButton) marketButton.addEventListener('click', function () {
+      UI.showMarket(s.player.provinceId, FB.map.marketGood || 'provisions');
+    });
     const privilegesButton = $('network-privileges');
     if (privilegesButton) {
       privilegesButton.addEventListener('click', function () {
@@ -3422,7 +3446,7 @@ window.FB = window.FB || {};
   };
 
   /* ---------- map filters: what a selection highlights ---------- */
-  let mapMode = 'realm'; // 'realm' | 'mine' | 'liege' | 'duchy' | 'kingdom'
+  let mapMode = 'realm'; // realm | mine | liege | duchy | kingdom | market
 
   /* is pid held by the player or by one of the player's vassals? */
   function inPlayerRealm(s, pid) {
@@ -3445,6 +3469,7 @@ window.FB = window.FB || {};
   function mapGroupOf(pid) {
     const s = FB.state;
     if (!s) return null;
+    if (mapMode === 'market') return 'market:' + pid;
     if (mapMode === 'mine') return inPlayerRealm(s, pid) ? 'player' : null;
     if (mapMode === 'liege') return inLiegeRealm(s, pid) ? 'liege' : null;
     // de jure modes: the whole duchy/kingdom lights up, wherever it lies;
@@ -3461,7 +3486,50 @@ window.FB = window.FB || {};
     return inPlayerRealm(s, pid) ? 'player' : (s.owner[pid] || null);
   }
 
-  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms' };
+  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', market:'Market' };
+
+  function marketLensControls(active) {
+    const controls = $('market-lens-controls');
+    const button = $('btn-marketlens');
+    if (controls) controls.classList.toggle('hidden', !active);
+    if (button) button.classList.toggle('on', active);
+    const selector = $('market-lens-good');
+    if (selector && active) {
+      const ids = Object.keys(FBDATA.marketGoods || {});
+      ids.sort(function (a, b) {
+        const ao = Number(FBDATA.marketGoods[a].order) || 0;
+        const bo = Number(FBDATA.marketGoods[b].order) || 0;
+        return ao - bo || (a < b ? -1 : a > b ? 1 : 0);
+      });
+      let options = '';
+      for (let i = 0; i < ids.length; i++) {
+        const def = FBDATA.marketGoods[ids[i]];
+        options += '<option value="' + esc(ids[i]) + '">' +
+          esc((def.icon || '') + ' ' +
+            dt(FB.state, 'marketGood', ids[i], def, 'name')) + '</option>';
+      }
+      selector.innerHTML = options;
+      if (!FB.map.marketGood || !FBDATA.marketGoods[FB.map.marketGood]) {
+        FB.map.marketGood = ids[0] || null;
+      }
+      selector.value = FB.map.marketGood;
+    }
+    if (FB.map && !active) FB.map.marketGood = null;
+  }
+
+  UI.setMarketLens = function (active) {
+    if (!FB.state) return;
+    mapMode = active === false ? 'realm' : 'market';
+    marketLensControls(mapMode === 'market');
+    const btn = $('btn-mapmode');
+    if (btn) {
+      btn.classList.toggle('on', mapMode !== 'realm');
+      btn.title = FB.T('Map filter: {mode} (R)', { mode:FB.T(MAPMODES[mapMode]) });
+      btn.setAttribute('aria-label', btn.title);
+    }
+    FB.map.select(FB.map.selected || FB.state.player.provinceId, mapGroupOf);
+    FB.map.request();
+  };
 
   /* the player's strongest claim among the de jure titles of one level
      (most counties held, ties to the smallest title) — for the filter toast */
@@ -3486,13 +3554,14 @@ window.FB = window.FB || {};
   UI.cycleMapMode = function () {
     const s = FB.state;
     if (!s) return;
-    const order = ['realm', 'mine', 'liege', 'duchy', 'kingdom'];
+    const order = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'market'];
     let next = order[(order.indexOf(mapMode) + 1) % order.length];
     if (next === 'liege' && !s.player.liege) {
       UI.toast('🗺 You answer to no one — no liege to show.');
       next = order[(order.indexOf(next) + 1) % order.length];
     }
     mapMode = next;
+    marketLensControls(mapMode === 'market');
     const btn = $('btn-mapmode');
     if (btn) {
       btn.classList.toggle('on', mapMode !== 'realm');
@@ -3834,6 +3903,8 @@ window.FB = window.FB || {};
       : '';
     let h = '<div class="panelh">' + esc(pr.name) +
       (homeLabel ? ' ' + esc(homeLabel) : '') + '</div>';
+    h += '<button class="btn small" id="county-market">⚖ ' +
+      esc(FB.T('County market')) + '</button>';
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     if (selA) {
       const selPr = FB.world.byId[selA.at];
@@ -4140,6 +4211,10 @@ window.FB = window.FB || {};
     bindFaithDetails(box);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
+    const countyMarket = $('county-market');
+    if (countyMarket) countyMarket.addEventListener('click', function () {
+      UI.showMarket(pid, FB.map.marketGood || 'provisions');
+    });
     const relocate = $('btn-relocate-capital');
     if (relocate) relocate.addEventListener('click', function () {
       UI.showCapitalRelocation(pid);

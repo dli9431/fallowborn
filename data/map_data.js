@@ -1152,7 +1152,6 @@ FBDATA.balance = {
   householdUpkeep: [1,1,2,4,6,9,14,20], // base seasonal cost of maintaining the player's station
   householdMemberUpkeep: [0.1,0.25,0.5], // extra resident: under 6, age 6-15, adult
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
-  wartimeNecessitiesSurcharge: 0.25, // added to base household upkeep + family provisions while the player's realm is at war
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
   rankAccessInfluenceMult: 0.5, // each station beyond ordinary one-rank reach halves cultivation and gift Standing
@@ -1197,7 +1196,7 @@ FBDATA.balance = {
   buildingRepeatCostGrowth: 1.5, // a building's 2nd/3rd/… copy in the same county costs cost × this^(copies standing)
   /* coin, credit, and fixed-term financial contracts (js/economy.js) */
   pricePressurePersistence: 0.55, priceRandomPressure: 0.015,
-  priceWarPressure: 0.01, priceMeanReversion: 0.04,
+  priceMeanReversion: 0.04,
   priceAnnualMin: -0.03, priceAnnualMax: 0.04,
   priceShockMin: -0.12, priceShockMax: 0.15,
   priceMin: 0.5, priceMax: 3,

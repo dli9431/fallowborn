@@ -184,9 +184,11 @@ saves migrate in place (`FB.hostUnits`): their men count as levy but the hired c
 **A raised host has composition-based seasonal logistics.**
 `FB.playerHostUpkeepParts(state)` returns
 `{base, levy, archers, cavalry, retinue, mercenaries, campaignModifier, total}` from the
-live player host:
-2 gold for the camp, then 0.5 per 100 levy, 1 per 100 archers, and 2 per 100
-cavalry or men-at-arms. Hired companies retain their 4-gold contract each. The live unit counts
+live player host. The camp and levy/archer/cavalry/retinue components are tangible
+provisions/materials/transport baskets quoted in the host's current county: their base
+amounts are 2 gold for the camp, then 0.5 per 100 levy, 1 per 100 archers, and 2 per 100
+cavalry or men-at-arms. Hired companies retain their fixed 4-gold contract each and are
+excluded from commodity and campaign-supply multipliers. The live unit counts
 mean a great levy, defensive reinforcements, daily reinforcement, battle casualties,
 and re-mustering all change the non-mercenary bill without stored economic state.
 A missing host returns all zeroes, so a shattered or disbanded host costs nothing until
@@ -194,6 +196,11 @@ it is raised again. The season boundary charges the same bill for ordinary and s
 great holy-war hosts and clamps an underfunded purse to zero without disbanding the host.
 `campaignModifier` is zero for ordinary-war-only hosts and records the signed supply
 adjustment for a player host serving in a great holy war.
+
+Every field army adds local provisions demand to the quarterly county market. A hostile
+host also refreshes a saved severe shock that lowers local production and adjacency-flow
+capacity; after the host leaves, the shock ages out normally. This replaces the former
+flat sovereign-war surcharge on household necessities. See [markets.md](markets.md).
 
 **Ordinary player wars retain a compact campaign-feedback ledger.** The active
 `player.war` object stores at most eight battle records (outcome, field/abstract mode,

@@ -74,6 +74,12 @@ price. County gates (`devMin`, `coastal`, `terrains`) are joined by data-driven 
 ordinary buildings remain limited by their own definitions. Fortifications use the
 separate county rule below.
 
+The repeat-copy curve produces a stable real-gold base quote. Construction then applies
+the definition's `marketBasket` against the target county's live market and rounds upward;
+fortification tiers use a materials-heavy construction basket in the same way. Seasonal
+building and fort upkeep remains a fixed agreement. Untagged mod buildings retain a
+market multiplier of one.
+
 Events still gate on `buildings` / `notBuildings` triggers demesne-wide (`FB.hasBuilding`).
 `state.buildings` is keyed by province id, so conquest moves buildings and ruins with the
 land.

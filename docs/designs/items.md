@@ -83,6 +83,12 @@ references. Unique objects already owned are removed from random pools rather th
 duplicated. The Man-at-Arms starts in a Plain Ash Spear and Padded Jack; the Hedge Knight
 starts with a Well-made Broad Sword and Plain Round Shield.
 
+An item's authored value remains its stable real-gold base. A purchased market offer
+passes that base through the item's optional `marketBasket` and the current county quote,
+then rounds upward to whole gold. Loot, gifts, transfers, sale values, collateral, and
+other contracts do not use local commodity scarcity. Untagged mod items retain a market
+multiplier of one.
+
 Item cards render the exact object and show actual quality-adjusted effects, value,
 wearer, and legal actions. Their shared asset/effect row distinguishes armory or
 character ownership, equip-slot scope, no recurring cost, worn-only power,

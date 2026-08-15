@@ -586,7 +586,11 @@ Guild monopoly state is additive and keeps save format 3.
 `FB.ensureGuildMonopolies`; either slot is `null` or a plain JSON record. Each record
 freezes its Craft/Trade profession, grantor and recipient identity, province/liege/landed
 scope, tier, start/end turns, duration, enterprise bonus, ruler fee, tax bonus, and
-popular-opinion change. Balance changes therefore affect only future grants. Both slots
+popular-opinion change. Optional `mode`, `goodId`, `originId`, `destinationId`, and
+`route` fields narrow a new record to local craft output, local exchange, or one exact
+trade corridor. Missing optional fields preserve the old broad profession-wide behavior;
+malformed optional scope degrades to that legacy behavior without losing the frozen
+contract. Balance changes therefore affect only future grants. Both slots
 survive succession and promotion. Exact-day expiry and scope invalidation clear a slot
 once and write a durable localized Chronicle descriptor; permanent relocation ends a
 province-scoped incoming charter, direct-liege change ends a liege-scoped one, and loss
@@ -698,11 +702,22 @@ already-resolved investment outcomes without a save-version bump. An older save 
 price 1 and is first revalued on its next annual tick; no historical inflation is invented.
 Self-founded dispatched ventures reuse `economy.investments` with
 `kind:"trade_venture"` and save their destination, route, strategy, stake, overhead,
-exact due turn/date, captured modifiers and outcome bands, plus the sole raw/adjusted
+commodity id, origin quote, purchased quantity, exact due turn/date, captured modifiers
+and outcome bands, plus the sole raw/adjusted
 roll, multiplier, payout, status, and resolution turn once mature. Active records
 survive succession and promotion and pay whichever household head is current on the
 exact due day. Passive `kind:"trade_partnership"` capacity and season-boundary
 resolution remain separate.
+
+County-market state is additive at save format 3. `FB.ensureMarket` lazily supplies
+`state.market:{goods,lastTurn,counties,shocks}`. `goods` is the saved stable-id order;
+each county is the compact `[stock[],smoothedPrice[],lastNetFlow[]]` vector record and
+each shock is a normalized JSON-only production/demand/flow record with remaining
+seasons. Restore remaps vectors by goods id, drops removed baskets and invalid shock
+references, and initializes newly added baskets at a two-season reserve and price 1.
+No production report, rendered route, overlay, endowment resolution, demand breakdown,
+or adjacency cache is serialized. Missing market state therefore self-heals without RNG
+or a save-version migration. See [markets.md](markets.md).
 
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set,
 [i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries,

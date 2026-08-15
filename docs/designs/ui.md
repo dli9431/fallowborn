@@ -255,8 +255,8 @@ layouts.
 The topbar resources (money/prestige/piety) are real buttons: hover shows the
 instant `#tooltip` with the per-season source breakdown (`FB.incomeBreakdown`
 in js/actions.js — focus, rents, vassal dues, buildings, household holdings,
-treasures, station upkeep, resident-family provisions, maintained standards, wartime
-necessities, raised-host logistics by component, and school fees), tap or click opens
+treasures, station upkeep, resident-family provisions, maintained standards, local-market
+adjustments and hardship, raised-host logistics by component, and school fees), tap or click opens
 the same rows as a small modal
 (`UI.showStatModal`), and keyboard users Tab to them with native Enter/Space
 activation. The money button uses `FB.money`: compact formatting for its visible
@@ -341,6 +341,15 @@ vassals, landed tax and levy, and the directly held county names. Settings owns 
 Map section with the browser-local realm-map color and fill-opacity controls. They set the
 focus outline and the independent player realm's displayed political fill without mutating
 saved political state; lowering opacity reveals terrain while keeping the outline clear.
+The map also exposes a keyboard/touch **Market** lens with one native basket selector.
+County fill shows the selected basket's local price and every sufficiently zoomed county
+repeats the meaning with `▼`/`●`/`▲`, so scarcity never relies on color alone. Only the
+player's active ventures and corridor charters draw patterned routes, bounded to four;
+the simulated adjacency-flow graph is never rendered. The lens, county/settlement sheets,
+venture review, and Network → Trade & Guild all open the same county Market sheet.
+Its selector, textual trend, stock and seasonal report, named endowments, disruptions,
+ventures, charters, and hardship duplicate every canvas meaning for keyboard, touch,
+screen-reader, and color-vision access. See [markets.md](markets.md).
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
 navigation, and opens a numbered compatible-armory list over the still-visible equipment
 sheet; no drag-and-drop path is required.

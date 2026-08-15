@@ -112,9 +112,13 @@ Time passes **day by day** (90-day seasons, 360-day years).
    Warhorses, and productive holdings remain a separate buy-once property section.
    **Coin & Credit** is a no-day-cost household ledger: borrow against reliable income or
    named collateral, repay early, and commit merchant coin to four-season trade
-   partnerships. Prices can raise or lower the purchasing power of idle coin and fixed
-   nominal debts; holdings, buildings, items, and all familiar authored prices stay in base
-   gold. Miss one loan deadline and its face grows; miss the extension and the disclosed
+   partnerships. Nominal coin prices can raise or lower the purchasing power of idle coin
+   and fixed nominal debts. Separately, every county keeps seasonal stocks and local prices
+   for provisions, wares, materials, transport, and luxuries; tangible purchases and
+   household necessities use those local quotes while wages, taxes, contracts, and service
+   fees stay fixed in real gold. Open the **Market** map lens or a county sheet to compare
+   price symbols, stocks, historical endowments, disruptions, and your routes. Miss one loan
+   deadline and its face grows; miss the extension and the disclosed
    pledge or revenue assignment is enforced. Debt passes to heirs.
    Adult freeholders and gentry can **🧭 Take to the road…** for pilgrimage, trade,
    study, or paid service; barons and higher may travel for pilgrimage or study.
@@ -186,8 +190,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    ordinary membership to guildmaster, and landing does not erase a person's learned
    occupation. Once the sovereign nation completes **Guild Charters**, a guildmaster with
    60 guild standing and 40 Standing with the grantor can petition the local lord or a landed vassal's direct
-   liege for a profession-wide monopoly. Baron and greater rulers can grant one local Craft
-   or Trade monopoly instead. Incoming and outgoing charters can coexist, matching enterprise
+   liege for a commodity-specific monopoly. Baron and greater rulers can grant one local
+   Craft output, local Trade exchange, or exact trade-corridor monopoly instead. Chartered
+   corridors improve distribution and matching venture returns; ordinary commodity ventures
+   remain available without one. Incoming and outgoing charters can coexist, matching enterprise
    bonuses add together up to +50%, and **Network → Trade & Guild** shows their terms and
    remaining days. A charter cannot be renewed or revoked early.
    Reading and writing also open three scarce learned careers: Administration, Medicine,

@@ -37,16 +37,18 @@ repeatable; pilgrimage retains its once-per-life rule.
 wastelands and counties without culture/religion, while authored straits remain
 ordinary valid adjacency. The unmodified cost is
 `ceil(2 + roundTripLegs × 0.25) + purpose.cost`. `FB.travelCost` retains that
-two-argument compatibility path; passing the optional state applies the active maintained
-transport multiplier to the complete cost and rounds up. `FB.travelLegDays(state)` is the
+two-argument compatibility path. Passing the optional state applies the active maintained
+transport multiplier and the origin county's provisions/transport market quote to the
+route supplies, then adds the purpose's fixed service fee without multiplying it.
+`FB.travelLegDays(state)` is the
 shared preview/departure helper: a leg takes `balance.travelLegDays` (three by default),
 or the active transport level's three, two, or one days. The current protagonist's
 grouped `travel.legDays` trait effect is then added and the result is clamped to at
 least one day. Roadwise supplies −1 day, so it changes only journeys whose departure
 snapshot is taken after the trait is earned.
-`FB.travelRouteOverhead` applies the same transport multiplier to the route portion
-alone. Self-founded ventures use that helper so their selected 10/20/50-gold stake is
-always charged in full. `FB.developedMarketDestinations` supplies the same reachable
+`FB.travelRouteOverhead` applies the same transport multiplier and market quote to the
+route supplies alone. Self-founded ventures use that helper so their selected
+10/20/50-gold stake is always charged in full. `FB.developedMarketDestinations` supplies the same reachable
 map/list choices to Finance and Travel without applying the personal travel cooldown.
 
 Arrival begins a destination stay rather than an immediate return-or-settle choice.
@@ -201,10 +203,12 @@ the household home does not move, and the former protagonist and wedding spouse
 receive explicit residence in the destination county.
 
 An accompanied self-founded venture adds only `travel.venture`: its kind, selected
-stake, separately paid overhead, destination/route snapshot, status, and irreversible
-settlement fields. No matching finance investment record is created. The normal trade
-capstone scales its former 12/25/3-gold outcomes from the selected stake (1.2× cautious,
-2.5× bold success, 0.3× bold failure). Turning back before arrival, death, succession,
+commodity, origin quote, purchased quantity, stake, separately paid overhead,
+destination/route snapshot, status, and irreversible settlement fields. No matching
+finance investment record is created. The normal trade capstone multiplies the quantity
+by the live arrival price and its former 1.2× cautious, 2.5× bold-success, or 0.3×
+bold-failure outcome; delivered stock never exceeds the purchased quantity. A legacy
+travel venture without commodity fields retains its fixed-stake payout. Turning back before arrival, death, succession,
 imprisonment, personal war, or leaving tiers 1–2 discards or cancels this travel-owned
 record without a refund or later payout.
 

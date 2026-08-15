@@ -327,6 +327,13 @@ actual clamp-aware deltas. Resolution suppresses transient effect toasts, not th
 Chronicle messages, and adds one `kind:"choice"` entry containing the event/option/outcome
 descriptors plus the complete player-facing impact ledger.
 
+`marketShock:{id?,provinceId?,goodId?,production?,demand?,flow?,seasons?,severe?}` is the
+declarative bridge from authored harvest, disease, war, and local-disruption stories into
+county markets. `provinceId` may use `home` or `context`; omitted goods affect every basket.
+The preview and resolution receipt disclose the affected county, basket, direction, and
+duration. Application stores only the normalized, locale-neutral shock record; it does not
+consume RNG or bake rendered prose into the save.
+
 Declarative effects are formatted by the engine. A custom option effect also registers
 `FB.eventImpactAdapters[customId]` with pure `preview(state, ctx, event, effects)` and
 post-resolution `report(state, captured, ctx, event, effects)` functions; `capture` is an

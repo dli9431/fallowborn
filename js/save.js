@@ -572,6 +572,7 @@ window.FB = window.FB || {};
        old inventories and grows exact instances/loadouts additively here. */
     if (FB.ensureItems) FB.ensureItems(FB.state);
     if (FB.ensureHouseholdStandards) FB.ensureHouseholdStandards(FB.state);
+    if (FB.ensureMarket) FB.ensureMarket(FB.state);
     if (FB.ensureEducationPolicy) FB.ensureEducationPolicy(FB.state, true);
     if (FB.ensureMatchPolicy) FB.ensureMatchPolicy(FB.state, true);
     if (FB.ensureTraitProgress) FB.ensureTraitProgress(FB.state);

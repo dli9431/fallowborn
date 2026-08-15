@@ -1824,10 +1824,14 @@ window.FB = window.FB || {};
     const info = definitionOf(defId);
     const ref = info.ordinary ? FB.createItemInstance(state, defId) : defId;
     const item = rawResolved(state, ref);
+    const location = FB.travelLocation && FB.travelLocation(state);
+    const price = FB.marketCostQuote ? FB.marketCostQuote(state, item.value,
+      info.def.marketBasket, location ? location.id : state.player.provinceId,
+      'up') : item.value;
     state.player.itemOffer = {
       ref:ref,
       id:defId,
-      price:item.value
+      price:price
     };
     FB.queueEvent(state, 'item_offer', offerClass ? { offerClass:offerClass } : {});
     return ref;

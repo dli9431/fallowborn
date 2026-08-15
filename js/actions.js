@@ -1117,6 +1117,7 @@ window.FB = window.FB || {};
     run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
 
   { id: 'petition_monopoly', label: '📜 Petition for a guild monopoly', cd: 360,
+    noConsume:true, deferCooldown:true,
     requiresTech:'guild_charters',
     desc: function (s) {
       const status = FB.guildMonopolyPetitionStatus(s, true);
@@ -1138,8 +1139,9 @@ window.FB = window.FB || {};
       return status.ready ? true : status.reason;
     },
     run: function (s) {
-      const ctx = FB.guildMonopolyPetitionContext(s);
-      if (ctx) FB.queueEvent(s, 'guild_monopoly_petition', ctx);
+      if (FB.ui && FB.ui.showGuildMonopolyPetition) {
+        FB.ui.showGuildMonopolyPetition();
+      }
     } },
 
   { id: 'buy_freedom', label: '⛓ Buy your freedom',
@@ -1165,14 +1167,14 @@ window.FB = window.FB || {};
         'Bought freedom from serfdom!', {}));
     } },
   { id: 'buy_land', label: '🌾 Buy a plot of land…', noConsume: true,
-    desc: function () {
+    desc: function (s) {
       return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
-        { gold: FB.landPlotCost() });
+        { gold: FB.landPlotCost(s) });
     },
     show: function (s) { return s.player.tier === 1 && adult(s); },
     can: function (s) {
       if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
-      if (s.player.gold < FB.landPlotCost()) return FB.T('Not enough money.');
+      if (s.player.gold < FB.landPlotCost(s)) return FB.T('Not enough money.');
       return true;
     },
     run: function () {
@@ -3011,7 +3013,18 @@ window.FB = window.FB || {};
       add('prestige', FB.T('Household luxuries'),
         FB.householdStandardEffect(state, 'prestige'));
     }
-    add('gold', FB.T('Wartime scarcity for household necessities'), -upkeep.wartime);
+    if (upkeep.marketAdjustment) {
+      add('gold', FB.T('Local market prices for household necessities'),
+        -upkeep.marketAdjustment);
+    }
+    if (state.player.marketHardship && state.player.marketHardship.active) {
+      lines.gold.push({
+        label:FB.T('Unfunded household necessities last season: {percent}%', {
+          percent:Math.round(state.player.marketHardship.unpaidShare * 100)
+        }),
+        amount:0
+      });
+    }
     if (FB.modifierUpkeepEntries) {
       for (const entry of FB.modifierUpkeepEntries(state, 'gold')) {
         const def = FBDATA.modifiers[entry.id];
@@ -4914,13 +4927,21 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.holdingCost = function (state, id) {
+    const def = FBDATA.holdings[id];
+    if (!def) return 0;
+    return FB.marketCostQuote ? FB.marketCostQuote(state, def.cost,
+      def.marketBasket, state.player.provinceId, 'up') : def.cost;
+  };
+
   FB.buyHolding = function (state, id) {
     const def = FBDATA.holdings[id];
     const done = FB.holdingList(state);
     if (!def || def.eventOnly || done.indexOf(id) >= 0) return;
     if (def.req && done.indexOf(def.req) < 0) return;
-    if (state.player.gold < def.cost) return;
-    state.player.gold -= def.cost;
+    const cost = FB.holdingCost(state, id);
+    if (state.player.gold < cost) return;
+    state.player.gold -= cost;
     done.push(id);
     FB.news(state, FB.msg('news.action.holding_bought',
       '🏠 {holding} now belongs to the household.', { holding: FB.dataParam('holding', id) }));
@@ -4930,8 +4951,13 @@ window.FB = window.FB || {};
      Repeatable family plots belong to one stable derived settlement and pass
      to heirs. Contiguous holdings are worked more efficiently; five plots in
      one place may be declared a manor and raise the family into the gentry. */
-  FB.landPlotCost = function () {
-    return FBDATA.balance.landPlotCost || FBDATA.balance.farmCost || 120;
+  FB.landPlotCost = function (state, quantity) {
+    const plots = Math.max(1, Math.floor(Number(quantity) || 1));
+    const raw = (FBDATA.balance.landPlotCost ||
+      FBDATA.balance.farmCost || 120) * plots;
+    return state && FB.marketCostQuote ? FB.marketCostQuote(state, raw, {
+      materials:0.45, transport:0.35, provisions:0.20
+    }, state.player.provinceId, 'up') : raw;
   };
 
   FB.landPlots = function (state) {
@@ -5037,7 +5063,7 @@ window.FB = window.FB || {};
     const count = FB.landCountAt(state, p.provinceId, settlement);
     const plots = need - count;
     if (plots <= 1) return null;
-    const totalCost = FB.landPlotCost() * plots;
+    const totalCost = FB.landPlotCost(state, plots);
     return {
       provinceId:p.provinceId,
       settlement:settlement,
@@ -5077,7 +5103,7 @@ window.FB = window.FB || {};
     const available = FB.landAvailable(state);
     let site = null;
     for (const item of available) if (item.settlement === settlement) site = item;
-    const cost = FB.landPlotCost();
+    const cost = FB.landPlotCost(state);
     if (!site || state.player.gold < cost) return false;
     state.player.gold -= cost;
     FB.landPlots(state).push({
@@ -5241,7 +5267,8 @@ window.FB = window.FB || {};
     c *= Math.max(0, 1 +
       (FB.modBonus ? FB.modBonus(state, 'buildingCost', pid) : 0));
     if (state.player.flags.mason_visit) c *= 0.75;
-    return Math.round(c);
+    return FB.marketCostQuote ? FB.marketCostQuote(state, c,
+      def.marketBasket, pid, 'up') : Math.round(c);
   };
 
   FB.canBuildAt = function (state, pid, idx, id) {
@@ -6305,7 +6332,7 @@ window.FB = window.FB || {};
     if (!status.shown || !status.can) return;
     const a = status.action;
     if (a) {
-      if (a.cd !== undefined) {
+      if (a.cd !== undefined && !a.deferCooldown) {
         state.player.cooldowns = state.player.cooldowns || {};
         state.player.cooldowns[id] = state.turn;
       }

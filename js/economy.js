@@ -1512,7 +1512,10 @@ window.FB = window.FB || {};
       if (!FB.householdStandardActive(state, id)) continue;
       const level = FB.householdStandardLevel(state, id);
       const current = table[id].levels && table[id].levels[level - 1];
-      const amount = current ? Number(current.upkeep) || 0 : 0;
+      const raw = current ? Number(current.upkeep) || 0 : 0;
+      const amount = raw && FB.marketCostQuote ? FB.marketCostQuote(state, raw,
+        current.marketBasket || table[id].marketBasket,
+        state.player.provinceId) : raw;
       if (!amount) continue;
       lines.push({ id:id, def:table[id], level:level, levelDef:current, amount:amount });
       total += amount;
@@ -1548,10 +1551,20 @@ window.FB = window.FB || {};
     if (def.kind === 'work' && !FB.householdStandardWorkerEligible(state, id)) {
       return FB.T('No eligible household worker currently practices this profession.');
     }
-    if (state.player.gold + 0.0001 < (Number(next.cost) || 0)) {
-      return FB.T('Not enough money: requires {money:cost}.', { cost:Number(next.cost) || 0 });
+    const cost = FB.householdStandardUpgradeCost(state, id);
+    if (state.player.gold + 0.0001 < cost) {
+      return FB.T('Not enough money: requires {money:cost}.', { cost:cost });
     }
     return true;
+  };
+
+  FB.householdStandardUpgradeCost = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    if (!def || !Array.isArray(def.levels)) return 0;
+    const next = def.levels[FB.householdStandardLevel(state, id)];
+    const raw = next ? Number(next.cost) || 0 : 0;
+    return raw && FB.marketCostQuote ? FB.marketCostQuote(state, raw,
+      next.marketBasket || def.marketBasket, state.player.provinceId, 'up') : raw;
   };
 
   FB.buyHouseholdStandard = function (state, id) {
@@ -1559,7 +1572,7 @@ window.FB = window.FB || {};
     const def = FBDATA.householdStandards[id];
     const oldLevel = FB.householdStandardLevel(state, id);
     const next = def.levels[oldLevel];
-    state.player.gold -= Number(next.cost) || 0;
+    state.player.gold -= FB.householdStandardUpgradeCost(state, id);
     FB.ensureHouseholdStandards(state)[id] = oldLevel + 1;
     FB.news(state, FB.msg('news.household_standard.bought',
       '🏠 The household establishes {level} for {standard}.', {
@@ -1932,9 +1945,9 @@ window.FB = window.FB || {};
 
   /* The old station-only upkeep remains the base cost. Extra resident family
      members add food, clothing, and quarters at the standard their station is
-     expected to maintain. War in the player's sovereign realm makes those
-     necessities dearer without changing retainers, schooling, or other
-     authored costs. Married descendants have their own households. */
+     expected to maintain. Local commodity scarcity quotes these tangible
+     necessities; contracts such as schooling and retainer pay stay in real
+     gold. Married descendants have their own households. */
   FB.householdUpkeepParts = function (state) {
     const p = state.player;
     const baseScale = FBDATA.balance.householdUpkeep || [1,1,2,4,6,9,14,20];
@@ -1950,13 +1963,15 @@ window.FB = window.FB || {};
       family += (age < 6 ? memberScale[0] : age < 16 ? memberScale[1] : memberScale[2]) * mult;
       residents++;
     }
-    const scarcityRate = FBDATA.balance.wartimeNecessitiesSurcharge === undefined
-      ? 0.25 : FBDATA.balance.wartimeNecessitiesSurcharge;
-    const wartime = FB.playerRealmAtWar && FB.playerRealmAtWar(state)
-      ? (base + family) * scarcityRate : 0;
+    const raw = base + family;
+    const total = FB.marketCostQuote ? FB.marketCostQuote(state, raw, {
+      provisions:0.65, wares:0.2, materials:0.1, luxuries:0.05
+    }, p.provinceId) : raw;
+    const provisionsDue = FB.marketCostQuote ? FB.marketCostQuote(state,
+      raw * 0.65, { provisions:1 }, p.provinceId) : raw * 0.65;
     return {
-      base:base, family:family, wartime:wartime, residents:residents,
-      total:base + family + wartime
+      base:base, family:family, wartime:0, residents:residents,
+      provisionsDue:provisionsDue, marketAdjustment:total - raw, total:total
     };
   };
 
@@ -2815,12 +2830,14 @@ window.FB = window.FB || {};
     return false;
   };
 
-  FB.enterpriseCost = function (state, type) {
+  FB.enterpriseCost = function (state, type, provinceId) {
     const def = FBDATA.enterprises[type];
     let copies = 0;
     for (const e of FB.enterpriseList(state)) if (e.type === type) copies++;
-    return Math.round(def.cost * Math.pow(FBDATA.balance.enterpriseRepeatCostGrowth || 1.35, copies) *
-      FB.techCostFactor(state, 'enterprise'));
+    const raw = def.cost * Math.pow(FBDATA.balance.enterpriseRepeatCostGrowth || 1.35, copies) *
+      FB.techCostFactor(state, 'enterprise');
+    return FB.marketCostQuote ? FB.marketCostQuote(state, raw, def.marketBasket,
+      provinceId || state.player.provinceId, 'up') : Math.round(raw);
   };
 
   FB.enterpriseWorkers = function (state, type) {
@@ -2906,7 +2923,7 @@ window.FB = window.FB || {};
         settlement:settlement
       });
       out.push({
-        id:id, def:def, cost:FB.enterpriseCost(state, id),
+        id:id, def:def, cost:FB.enterpriseCost(state, id, provinceId),
         workers:workers, techLocked:techLocked
       });
     }
@@ -3447,7 +3464,7 @@ window.FB = window.FB || {};
     amount *= FB.guildIncomeMultiplier(career);
     amount *= 1 + FB.positionBonus(state, 'enterprise');
     amount *= FB.householdWorkMultiplier(state, career.profession);
-    amount *= 1 + FB.guildMonopolyEnterpriseBonus(state, career.profession);
+    amount *= 1 + FB.guildMonopolyEnterpriseBonus(state, career.profession, e);
     const specialization = FB.careerSpecialization(state, worker);
     const enterpriseFx = specialization && specialization.fx &&
       specialization.fx.enterprise;
@@ -4115,6 +4132,40 @@ window.FB = window.FB || {};
     return isFinite(number) ? number : fallback;
   }
 
+  function monopolyTypedSpec(state, profession, source) {
+    if (!source || !source.mode) return null;
+    const mode = source.mode;
+    const goodId = source.goodId;
+    if (!FBDATA.marketGoods || !FBDATA.marketGoods[goodId]) return false;
+    if ((profession === 'craftsman' && mode !== 'craft') ||
+        (profession === 'merchant' && mode !== 'local' && mode !== 'corridor')) {
+      return false;
+    }
+    if (mode === 'craft' && ['wares','materials','transport'].indexOf(goodId) < 0) {
+      return false;
+    }
+    const originId = source.originId || state.player.provinceId;
+    if (!FB.world.byId[originId] || FB.world.byId[originId].wasteland) return false;
+    if (mode !== 'corridor') return {
+      mode:mode, goodId:goodId, originId:originId,
+      destinationId:null, route:null
+    };
+    const destinationId = source.destinationId;
+    const route = Array.isArray(source.route) ? source.route.slice() : null;
+    if (!destinationId || !FB.world.byId[destinationId] ||
+        FB.world.byId[destinationId].wasteland || !route || !route.length ||
+        route[route.length - 1] !== destinationId) return false;
+    for (let i = 0; i < route.length; i++) {
+      if (!FB.world.byId[route[i]] || FB.world.byId[route[i]].wasteland) return false;
+      const prior = i ? route[i - 1] : originId;
+      if (!FB.world.adj[prior] || !FB.world.adj[prior][route[i]]) return false;
+    }
+    return {
+      mode:mode, goodId:goodId, originId:originId,
+      destinationId:destinationId, route:route
+    };
+  }
+
   FB.guildMonopolyTerms = function (tier) {
     tier = Math.floor(finiteNumber(tier, 0));
     const table = FBDATA.balance.guildMonopolyTerms || {};
@@ -4132,7 +4183,7 @@ window.FB = window.FB || {};
     };
   };
 
-  function normalizeMonopolyRecord(record, slot) {
+  function normalizeMonopolyRecord(record, slot, state) {
     if (!record || typeof record !== 'object' || Array.isArray(record)) return null;
     const profession = monopolyProfession(record.profession);
     const startTurn = Math.round(finiteNumber(record.startTurn, -1));
@@ -4144,6 +4195,12 @@ window.FB = window.FB || {};
         record.scope === 'liege' ? 'liege' : null)
       : 'landed';
     if (!scope) return null;
+    const typed = record.mode ? monopolyTypedSpec(state, profession, record) : null;
+    const mode = typed && typed.mode || null;
+    const goodId = typed && typed.goodId || null;
+    const originId = typed && typed.originId || null;
+    const destinationId = typed && typed.destinationId || null;
+    const route = typed && typed.route || null;
     return {
       contractId:String(record.contractId ||
         ('guild_monopoly:' + slot + ':' + startTurn + ':' + profession)),
@@ -4168,7 +4225,12 @@ window.FB = window.FB || {};
       enterpriseBonus:FB.clamp(finiteNumber(record.enterpriseBonus, 0), 0, 0.5),
       rulerFee:Math.max(0, finiteNumber(record.rulerFee, 0)),
       taxBonus:FB.clamp(finiteNumber(record.taxBonus, 0), 0, 0.5),
-      popularOpinion:FB.clamp(finiteNumber(record.popularOpinion, 0), -100, 100)
+      popularOpinion:FB.clamp(finiteNumber(record.popularOpinion, 0), -100, 100),
+      mode:mode,
+      goodId:goodId,
+      originId:originId,
+      destinationId:destinationId,
+      route:route
     };
   }
 
@@ -4176,8 +4238,8 @@ window.FB = window.FB || {};
     const p = state.player;
     let slots = p.guildMonopolies;
     if (!slots || typeof slots !== 'object' || Array.isArray(slots)) slots = {};
-    slots.incoming = normalizeMonopolyRecord(slots.incoming, 'incoming');
-    slots.outgoing = normalizeMonopolyRecord(slots.outgoing, 'outgoing');
+    slots.incoming = normalizeMonopolyRecord(slots.incoming, 'incoming', state);
+    slots.outgoing = normalizeMonopolyRecord(slots.outgoing, 'outgoing', state);
     p.guildMonopolies = slots;
     return slots;
   };
@@ -4378,11 +4440,13 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.guildMonopolyPetitionContext = function (state) {
+  FB.guildMonopolyPetitionContext = function (state, spec) {
     const status = FB.guildMonopolyPetitionStatus(state, true);
     if (!status.ready) return null;
     const grantor = status.grantor, terms = status.terms;
-    return {
+    const typed = monopolyTypedSpec(state, status.career.profession, spec);
+    if (typed === false) return null;
+    const context = {
       profession:status.career.profession,
       grantorKind:grantor.kind,
       grantorId:grantor.id,
@@ -4403,6 +4467,14 @@ window.FB = window.FB || {};
       taxPercent:Math.round(terms.taxBonus * 100),
       popularOpinion:terms.popularOpinion
     };
+    if (typed) {
+      context.mode = typed.mode;
+      context.goodId = typed.goodId;
+      context.originId = typed.originId;
+      context.destinationId = typed.destinationId;
+      context.route = typed.route;
+    }
+    return context;
   };
 
   function monopolyTermsFromContext(ctx) {
@@ -4447,7 +4519,12 @@ window.FB = window.FB || {};
       enterpriseBonus:terms.enterpriseBonus,
       rulerFee:terms.rulerFee,
       taxBonus:terms.taxBonus,
-      popularOpinion:terms.popularOpinion
+      popularOpinion:terms.popularOpinion,
+      mode:identity.mode || null,
+      goodId:identity.goodId || null,
+      originId:identity.originId || null,
+      destinationId:identity.destinationId || null,
+      route:Array.isArray(identity.route) ? identity.route.slice() : null
     };
   }
 
@@ -4456,6 +4533,8 @@ window.FB = window.FB || {};
     const profession = monopolyProfession(ctx && ctx.profession);
     const terms = monopolyTermsFromContext(ctx || {});
     if (slots.incoming || !profession || !terms) return false;
+    const typed = monopolyTypedSpec(state, profession, ctx);
+    if (typed === false) return false;
     slots.incoming = monopolyRecord(state, profession, terms, {
       grantorKind:ctx.grantorKind === 'realm' ? 'realm' : 'local',
       grantorId:ctx.grantorId || null,
@@ -4464,7 +4543,12 @@ window.FB = window.FB || {};
       recipientKind:'household',
       scope:ctx.scope === 'liege' ? 'liege' : 'province',
       scopeId:ctx.scopeId || (ctx.scope === 'liege'
-        ? state.player.liege : state.player.provinceId)
+        ? state.player.liege : state.player.provinceId),
+      mode:typed && typed.mode,
+      goodId:typed && typed.goodId,
+      originId:typed && typed.originId,
+      destinationId:typed && typed.destinationId,
+      route:typed && typed.route
     });
     FB.news(state, FB.msg('news.guild_monopoly.incoming_granted',
       '📜 {grantor} grants the household a {profession} monopoly for {years} years.',
@@ -4508,10 +4592,12 @@ window.FB = window.FB || {};
     return { ready:true, terms:terms };
   };
 
-  FB.issueGuildMonopoly = function (state, profession) {
+  FB.issueGuildMonopoly = function (state, profession, options) {
     profession = monopolyProfession(profession);
     const status = FB.guildMonopolyIssueStatus(state);
     if (!profession || !status.ready) return false;
+    const typed = monopolyTypedSpec(state, profession, options);
+    if (typed === false) return false;
     const slots = FB.ensureGuildMonopolies(state);
     const advocate = monopolyAdvocate(state, profession);
     slots.outgoing = monopolyRecord(state, profession, status.terms, {
@@ -4523,7 +4609,12 @@ window.FB = window.FB || {};
       advocateId:advocate ? advocate.id : null,
       advocateName:advocate ? FB.fullName(advocate) : '',
       scope:'landed',
-      scopeId:'player'
+      scopeId:'player',
+      mode:typed && typed.mode,
+      goodId:typed && typed.goodId,
+      originId:typed && typed.originId,
+      destinationId:typed && typed.destinationId,
+      route:typed && typed.route
     });
     state.player.gold += status.terms.rulerFee;
     state.player.pop = FB.clamp((state.player.pop || 0) +
@@ -4538,13 +4629,38 @@ window.FB = window.FB || {};
     return slots.outgoing;
   };
 
-  FB.guildMonopolyEnterpriseBonus = function (state, profession) {
+  FB.guildMonopolyEnterpriseBonus = function (state, profession, enterprise) {
     profession = monopolyProfession(profession);
     if (!profession) return 0;
     let total = 0;
     for (const slot of ['incoming', 'outgoing']) {
       const record = FB.guildMonopolyActive(state, slot);
-      if (record && record.profession === profession) total += record.enterpriseBonus;
+      if (!record || record.profession !== profession) continue;
+      if (!record.mode) {
+        total += record.enterpriseBonus;
+        continue;
+      }
+      if (!enterprise) continue;
+      if (record.mode === 'craft') {
+        if (enterprise.type !== 'workshop_business') continue;
+        const worker = enterprise.workerId && state.chars[enterprise.workerId];
+        const career = worker && FB.careerOf(state, worker);
+        const produced = career && career.specialization === 'smith' ? 'materials' :
+          career && career.specialization === 'cooper' ? 'transport' : 'wares';
+        if (produced === record.goodId) total += record.enterpriseBonus;
+      } else if (record.mode === 'local') {
+        if ((enterprise.type === 'market_stall_business' ||
+            enterprise.type === 'trade_house_business') &&
+            enterprise.provinceId === (record.originId || state.player.provinceId)) {
+          total += record.enterpriseBonus;
+        }
+      } else if (record.mode === 'corridor' &&
+          (enterprise.type === 'market_stall_business' ||
+           enterprise.type === 'trade_house_business') &&
+          (enterprise.provinceId === record.originId ||
+           enterprise.provinceId === record.destinationId)) {
+        total += record.enterpriseBonus;
+      }
     }
     return Math.min(0.5, total);
   };
@@ -4760,8 +4876,24 @@ window.FB = window.FB || {};
     amount = Number(amount);
     years = Math.max(1, Math.floor(Number(years) || 1));
     if (!isFinite(amount) || !amount) return false;
+    source = String(source || 'event');
+    if (FB.addMarketShock && (source === 'lean_harvest' ||
+        source === 'pestilence' || source === 'plague_recovery')) {
+      const recovery = source === 'plague_recovery';
+      return FB.addMarketShock(state, {
+        id:source + ':' + state.player.provinceId + ':' + state.turn,
+        source:source,
+        provinceId:state.player.provinceId,
+        goodId:source === 'lean_harvest' ? 'provisions' : null,
+        production:recovery ? 0.10 : source === 'lean_harvest' ? -0.30 : -0.18,
+        demand:source === 'pestilence' ? -0.10 : 0,
+        flow:recovery ? 0.15 : source === 'pestilence' ? -0.30 : -0.12,
+        severe:!recovery,
+        remaining:years * 4
+      });
+    }
     FB.ensureEconomy(state).shocks.push({
-      amount:amount, years:years, source:String(source || 'event')
+      amount:amount, years:years, source:source
     });
     return true;
   };
@@ -5355,6 +5487,28 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.tradeVentureGoods = function (state, stake) {
+    const out = [];
+    const goods = FBDATA.marketGoods || {};
+    const county = FB.marketCounty ? FB.marketCounty(state,
+      state.player.provinceId) : null;
+    for (const id in goods) {
+      const price = FB.marketPrice ? FB.marketPrice(state,
+        state.player.provinceId, id) : 1;
+      const quantity = Math.max(0, Number(stake) || 0) / price;
+      const stock = county && county.goods[id] ? county.goods[id].stock : Infinity;
+      out.push({
+        id:id, def:goods[id], price:price, quantity:quantity,
+        stock:stock, available:stock + 0.0001 >= quantity
+      });
+    }
+    out.sort(function (a, b) {
+      return (Number(a.def.order) || 0) - (Number(b.def.order) || 0) ||
+        (a.id < b.id ? -1 : 1);
+    });
+    return out;
+  };
+
   FB.activeTradeVentures = function (state) {
     const out = FB.financeActiveTradeVentures(state).slice();
     const travel = state && state.player && state.player.travel;
@@ -5471,12 +5625,23 @@ window.FB = window.FB || {};
     };
   }
 
-  FB.tradeVenturePreview = function (state, stake, destinationId) {
+  FB.tradeVenturePreview = function (state, stake, destinationId, goodId) {
     const def = tradeVentureDef();
     stake = Math.floor(Number(stake) || 0);
     if (!def || FB.tradeVentureStakes().indexOf(stake) < 0) return null;
     const market = tradeVentureMarket(state, destinationId);
     if (!market) return null;
+    const commodity = goodId && FBDATA.marketGoods && FBDATA.marketGoods[goodId];
+    const originId = state.player.provinceId;
+    const originPrice = commodity && FB.marketPrice ?
+      FB.marketPrice(state, originId, goodId) : 1;
+    const destinationPrice = commodity && FB.marketPrice ?
+      FB.marketPrice(state, destinationId, goodId) : 1;
+    const quantity = commodity ? stake / originPrice : null;
+    const originMarket = commodity && FB.marketCounty ?
+      FB.marketCounty(state, originId) : null;
+    const originStock = originMarket && originMarket.goods[goodId] ?
+      originMarket.goods[goodId].stock : Infinity;
     const mods = def.modifiers || {};
     const c = state.chars[state.player.charId];
     const career = currentCareer(state);
@@ -5519,6 +5684,13 @@ window.FB = window.FB || {};
     const dueTurn = state.turn + Math.ceil(durationDays);
     return {
       stake:stake,
+      goodId:commodity ? goodId : null,
+      originId:originId,
+      originPrice:originPrice,
+      destinationPrice:destinationPrice,
+      quantity:quantity,
+      originStock:originStock,
+      stockAvailable:!commodity || originStock + 0.0001 >= quantity,
       destinationId:market.destinationId,
       destinationRealm:market.destinationRealm || null,
       route:market.route.slice(),
@@ -5551,14 +5723,22 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.tradeVentureCanStart = function (state, mode, stake, destinationId) {
+  FB.tradeVentureCanStart = function (state, mode, stake, destinationId, goodId) {
     const eligible = FB.tradeVentureEligible(state, mode);
     if (eligible !== true) return eligible;
-    const preview = FB.tradeVenturePreview(state, stake, destinationId);
+    const preview = FB.tradeVenturePreview(state, stake, destinationId, goodId);
     if (!preview) return FB.T('That stake or market is not available.');
     if (state.player.gold + 0.000001 < preview.totalCost) {
       return FB.T('The stake and route overhead cost {money:cost}; you have {money:gold}.', {
         cost:preview.totalCost, gold:Math.floor(state.player.gold)
+      });
+    }
+    if (goodId && !preview.goodId) return FB.T('That commodity is not available.');
+    if (!preview.stockAvailable) {
+      return FB.T('The origin market cannot supply that quantity of {good}.', {
+        good:FB.dataText ? FB.dataText(state, state.player.charId,
+          'marketGood', goodId, FBDATA.marketGoods[goodId], 'name', {}) :
+          FBDATA.marketGoods[goodId].name
       });
     }
     if (mode === 'accompany') {
@@ -5574,17 +5754,21 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.startTradeVenture = function (state, stake, destinationId, strategy, source) {
+  FB.startTradeVenture = function (state, stake, destinationId, strategy, source, goodId) {
     if (strategy !== 'cautious' && strategy !== 'bold') return null;
-    if (FB.tradeVentureCanStart(state, 'dispatch', stake, destinationId) !== true) {
+    if (FB.tradeVentureCanStart(state, 'dispatch', stake, destinationId, goodId) !== true) {
       return null;
     }
-    const preview = FB.tradeVenturePreview(state, stake, destinationId);
+    const preview = FB.tradeVenturePreview(state, stake, destinationId, goodId);
     const selected = preview.strategies[strategy];
     const e = FB.ensureEconomy(state);
     const inv = {
       id:e.nextId++,
       kind:'trade_venture',
+      goodId:preview.goodId,
+      originId:preview.originId,
+      originPrice:preview.originPrice,
+      quantity:preview.quantity,
       destinationId:preview.destinationId,
       destinationRealm:preview.destinationRealm,
       route:preview.route.slice(),
@@ -5603,6 +5787,8 @@ window.FB = window.FB || {};
       source:String(source || 'finance'),
       status:'active'
     };
+    if (preview.goodId && !FB.marketTakeStock(state, preview.originId,
+        preview.goodId, preview.quantity)) return null;
     e.investments.push(inv);
     state.player.gold -= preview.totalCost;
     const destination = FB.world.byId[preview.destinationId];
@@ -5714,15 +5900,29 @@ window.FB = window.FB || {};
         break;
       }
     }
-    const payout = Math.round(
-      inv.stake * Math.max(0, Number(selected.multiplier) || 0) * 100) / 100;
+    const outcomeMultiplier = Math.max(0, Number(selected.multiplier) || 0);
+    let payout;
+    if (inv.goodId && isFinite(Number(inv.quantity)) && FB.marketPrice) {
+      const livePrice = FB.marketPrice(state, inv.destinationId, inv.goodId);
+      const charter = FB.marketCharterReturnBonus ? FB.marketCharterReturnBonus(
+        state, inv.goodId, inv.originId, inv.destinationId, inv.route) : 0;
+      payout = Math.round(inv.quantity * livePrice * outcomeMultiplier *
+        (1 + charter) * 100) / 100;
+      inv.arrivalPrice = livePrice;
+      inv.charterBonus = charter;
+      inv.deliveredQuantity = inv.quantity * Math.min(1, outcomeMultiplier);
+      if (FB.marketDeliverStock) FB.marketDeliverStock(state, inv.destinationId,
+        inv.goodId, inv.deliveredQuantity);
+    } else {
+      payout = Math.round(inv.stake * outcomeMultiplier * 100) / 100;
+    }
     const outcome = String(selected.outcome || 'profit');
     /* Commit the sole seeded roll and its result before touching the purse or
        publishing the Chronicle entry. Reloads cannot reroll or double-pay. */
     inv.roll = roll;
     inv.adjustedRoll = adjustedRoll;
     inv.outcome = outcome;
-    inv.multiplier = Number(selected.multiplier) || 0;
+    inv.multiplier = outcomeMultiplier;
     inv.payout = payout;
     inv.status = 'resolved';
     inv.resolvedTurn = state.turn;
@@ -5779,10 +5979,8 @@ window.FB = window.FB || {};
     e.shocks = remain;
     const random = FB.rf(-(B.priceRandomPressure || 0.015),
       B.priceRandomPressure || 0.015);
-    const war = FB.playerRealmAtWar && FB.playerRealmAtWar(state)
-      ? (B.priceWarPressure || 0.01) : 0;
     e.pressure = e.pressure * (B.pricePressurePersistence || 0.55) +
-      random + war + shock;
+      random + shock;
     const raw = e.pressure + (1 - e.price) * (B.priceMeanReversion || 0.04);
     const minRate = shock ? (B.priceShockMin || -0.12) : (B.priceAnnualMin || -0.03);
     const maxRate = shock ? (B.priceShockMax || 0.15) : (B.priceAnnualMax || 0.04);

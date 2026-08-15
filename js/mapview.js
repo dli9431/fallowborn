@@ -26,6 +26,7 @@ window.FB = window.FB || {};
     groupOutline: null, selectedOutline: null,
     groupOutlineSmooth: null, selectedOutlineSmooth: null,
     onTap: null, dirty: true,
+    marketGood: null,
     visibleSites: [], _sitePool: [], _labelRects: [], _rectCount: 0,
     pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1
   };
@@ -315,6 +316,9 @@ window.FB = window.FB || {};
       }
     }
     ctx.restore();
+    if (M.marketGood && FB.state && FB.renderMarketOverlay) {
+      FB.renderMarketOverlay(ctx, M.marketGood, sx, sy, z);
+    }
   }
 
   /* ---------- selection highlight ----------
@@ -768,6 +772,9 @@ window.FB = window.FB || {};
     if (FB.state && FB.renderArmies) FB.renderArmies(ctx, toScreen, z, M.dpr);
     // overland journeys: valid destination rings, route, and traveler
     if (FB.state && FB.renderTravel) FB.renderTravel(ctx, toScreen, z, M.dpr);
+    if (M.marketGood && FB.state && FB.renderMarketRoutes) {
+      FB.renderMarketRoutes(ctx, M.marketGood, toScreen, z, M.dpr);
+    }
 
     // player home marker
     if (M.playerProv) {
