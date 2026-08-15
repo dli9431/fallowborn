@@ -1608,7 +1608,9 @@ window.FB = window.FB || {};
     const skillLinks = $('tab-char').querySelectorAll('[data-guide-skill]');
     for (let i = 0; i < skillLinks.length; i++) {
       skillLinks[i].addEventListener('click', function () {
-        UI.showGuideEntry('skill-' + skillLinks[i].dataset.guideSkill);
+        UI.showGuideEntry('skill-' + skillLinks[i].dataset.guideSkill, {
+          closeToGame:true
+        });
       });
     }
     const sef = $('self-edufocus');
@@ -1831,7 +1833,8 @@ window.FB = window.FB || {};
       '</div></div></div>';
   };
 
-  UI.charCardHtml = function (s, c, clickable, groupedTraits) {
+  UI.charCardHtml = function (s, c, clickable, groupedTraits, options) {
+    options = options || {};
     const rel = FB.religionOf(c.religion, s), cul = FB.cultureOf(c.culture);
     const house = c.dyn ? FB.crestTag(c.dyn, 18, 21) : ''; // a house bears arms
     let sk = '';
@@ -1899,10 +1902,32 @@ window.FB = window.FB || {};
         marital: maritalText(s, c),
         standing: standingText(standing)
       });
-    return '<div class="charcard"' + (clickable ? ' data-cid="' + c.id + '" title="' +
+    const displayName = options.namePrefix
+      ? FB.T('{title} {name}', {
+        title:options.namePrefix, name:FB.fullName(c)
+      })
+      : FB.fullName(c);
+    const portrait = options.mapHome
+      ? '<button type="button" class="character-card-portrait-button" ' +
+        'data-character-home="' + esc(c.id) + '" aria-label="' +
+        esc(FB.T('Center map on {name}’s home county', {
+          name:FB.fullName(c)
+        })) + '" title="' + esc(FB.T('Center map on {name}’s home county', {
+          name:FB.fullName(c)
+        })) + '">' + FB.faceTag(c, 72, 82) + '</button>'
+      : FB.faceTag(c, 72, 82);
+    const skillsGuide = options.skillsGuide
+      ? '<button type="button" class="character-skills-guide" ' +
+        'aria-label="' + esc(FB.T('What do these skills affect?')) +
+        '" title="' + esc(FB.T('What do these skills affect?')) +
+        '"><span aria-hidden="true">i</span></button>'
+      : '';
+    return '<div class="charcard' + (options.cardClass
+      ? ' ' + esc(options.cardClass) : '') + '"' +
+      (clickable ? ' data-cid="' + c.id + '" title="' +
       esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
-      FB.faceTag(c, 72, 82) +
-      '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
+      portrait +
+      '<div><div class="ccname">' + esc(displayName) + house + '</div>' +
       '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
       esc(FB.T('{sex} of {age}', {
         sex: FB.T(c.sex === 'f' ? 'Woman' : 'Man'),
@@ -1918,7 +1943,8 @@ window.FB = window.FB || {};
         '<span class="' + standingClass(standing) + '">' +
         esc(standingSummary) + '</span>') +
         esc(fert) + '</div>' +
-      '<div class="ccskills">' + esc(sk) + '</div>' +
+      '<div class="ccskills' + (skillsGuide ? ' ccskills-guide' : '') + '">' +
+        '<span>' + esc(sk) + '</span>' + skillsGuide + '</div>' +
       '<div>' + (tr || '<span class="cmeta">' + esc(FB.T('No notable traits.')) + '</span>') + '</div>' +
       (itc ? '<div>' + itc + '</div>' : '') + '</div></div>';
   };

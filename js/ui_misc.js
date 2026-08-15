@@ -1183,8 +1183,12 @@ window.FB = window.FB || {};
     const blocked = !enabled && action.blockedReason
       ? action.blockedReason : '';
     const consequence = action.consequence || '';
-    const visibleDetail = blocked === detail ? '' : detail;
-    const accessibleParts = [action.label, detail, blocked, consequence]
+    /* A blocking reason replaces the normal cost/effect copy. Showing all
+       three makes unavailable rows harder to scan and repeats the same gate. */
+    const visibleDetail = blocked ? '' : detail;
+    const visibleConsequence = blocked ? '' : consequence;
+    const accessibleParts = [action.label, visibleDetail, blocked,
+      visibleConsequence]
       .filter(function (part, index, parts) {
         return !!part && parts.indexOf(part) === index;
       });
@@ -1201,8 +1205,8 @@ window.FB = window.FB || {};
       (blocked ? '<span class="adesc interaction-blocked">' +
         esc(FB.T('Unavailable: {reason}', { reason:blocked })) +
         '</span>' : '') +
-      (consequence ? '<span class="adesc interaction-consequence">' +
-        esc(consequence) + '</span>' : '') +
+      (visibleConsequence ? '<span class="adesc interaction-consequence">' +
+        esc(visibleConsequence) + '</span>' : '') +
       '</button>';
   }
   UI.interactionActionRow = interactionActionRow;
@@ -1212,7 +1216,7 @@ window.FB = window.FB || {};
     let h = '<section class="interaction-card" data-interaction-kind="' +
       esc(model.target.kind) + '" data-interaction-target="' +
       esc(model.target.id) + '">';
-    if (model.context && model.context.length) {
+    if (model.showContext !== false && model.context && model.context.length) {
       h += '<div class="interaction-context" role="list" aria-label="' +
         esc(FB.T('Identity and context')) + '">';
       for (const row of model.context) {

@@ -56,3 +56,28 @@ test('major information sheets expose contextual Guide routes', async function (
   await expect(page.locator('#household-guide')).toHaveAttribute(
     'aria-label', 'Guide: careers and household work');
 });
+
+test('Self skill Guide links close back to Self on desktop and phones',
+  async function ({ page }) {
+    var skill = page.locator('#tab-char [data-guide-skill="dip"]');
+    await expect(skill).toBeVisible();
+    await skill.click();
+    await expect(page.locator('[data-guide-entry="skill-dip"]')).toHaveAttribute(
+      'aria-expanded', 'true');
+    await page.locator('#guide-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(skill).toBeVisible();
+
+    await page.setViewportSize({ width:390, height:844 });
+    await page.locator('#tb-portrait').click();
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    skill = page.locator('#tab-char [data-guide-skill="dip"]');
+    await expect(skill).toBeVisible();
+    await skill.click();
+    await expect(page.locator('[data-guide-entry="skill-dip"]')).toHaveAttribute(
+      'aria-expanded', 'true');
+    await page.locator('#guide-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    await expect(skill).toBeVisible();
+  });

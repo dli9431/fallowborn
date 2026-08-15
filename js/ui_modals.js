@@ -5457,6 +5457,7 @@ window.FB = window.FB || {};
     }).join(', ');
     const model = {
       target:{ kind:'realm', id:rid },
+      showContext:false,
       context:[
         { label:FB.T('Realm'), value:FB.L(realm.name) },
         { label:FB.T('Political relationship'),
@@ -5907,37 +5908,94 @@ window.FB = window.FB || {};
     };
   }
 
-  /* The living court beside the ruler: the consort and whichever heirs carry
-     a record. Faces are painted through FB.faceTag and the one FB.paintFaces
-     pass this modal already runs, and the list is bounded by the same
-     six-member cap the succession snapshot uses. */
-  function realmCourtStripHtml(s, rid) {
+  /* The living court beside a royal character. Faces are painted through
+     FB.faceTag and the one FB.paintFaces pass this modal already runs. The
+     list is bounded by the same six-member cap the succession snapshot uses.
+     Omitting the displayed character makes the strip a compact local
+     navigator: a consort sees their spouse and children, while the ruler sees
+     their consort and children. */
+  function realmCourtStripHtml(s, rid, subjectId) {
     const rows = [];
+    const realm = s.realms[rid];
+    const ruler = interactionRealmRulerCharacter(s, rid);
     const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
-    if (consort) rows.push({ c:consort, rel:FB.T('Consort') });
     const succession = s.realms[rid] && s.realms[rid].succession;
-    for (const member of realmFamilySnapshot(s, rid)) {
+    const family = realmFamilySnapshot(s, rid);
+    const childIds = {};
+    for (const member of family) {
+      if (member.charId) childIds[member.charId] = 1;
+    }
+    function parentRelation(parent, fallback) {
+      if (!subjectId || subjectId === parent.id) return fallback;
+      if (ruler && consort && subjectId === ruler.id &&
+          parent.id === consort.id) return fallback;
+      if (ruler && consort && subjectId === consort.id &&
+          parent.id === ruler.id) {
+        return FB.T(parent.sex === 'f' ? 'Wife' : 'Husband');
+      }
+      return FB.T(parent.sex === 'f' ? 'Mother' : 'Father');
+    }
+    if (ruler && ruler.id !== subjectId) {
+      rows.push({
+        c:ruler,
+        rel:parentRelation(ruler, FB.T('Ruler')),
+        ruler:true,
+        role:'ruler'
+      });
+    }
+    if (consort && consort.id !== subjectId) {
+      rows.push({
+        c:consort,
+        rel:parentRelation(consort, FB.T('Consort')),
+        role:'consort'
+      });
+    }
+    for (const member of family) {
       const c = member.charId && s.chars[member.charId];
-      if (!c || c.dead) continue;
+      if (!c || c.dead || c.id === subjectId) continue;
       rows.push({
         c:c,
+        heir:succession && succession.heirId === member.id,
+        role:'child',
         rel:succession && succession.heirId === member.id
-          ? FB.T('Heir') : FB.T(c.sex === 'f' ? 'Daughter' : 'Son')
+          ? FB.T('Heir')
+          : (subjectId && childIds[subjectId]
+            ? FB.T(c.sex === 'f' ? 'Sister' : 'Brother')
+            : FB.T(c.sex === 'f' ? 'Daughter' : 'Son'))
       });
     }
     if (!rows.length) return '';
     let h = '<div class="court-strip" role="list" aria-label="' +
-      esc(FB.T('The court')) + '">';
+      esc(FB.T('Ruler’s family')) + '">';
     for (const row of rows) {
-      h += '<button type="button" class="ftchip" role="listitem" data-cid="' +
-        esc(row.c.id) + '" title="' + esc(FB.fullName(row.c)) + '">' +
+      const title = FB.realmFamilyTitle(s, realm, row.c, row.role);
+      const name = FB.T('{title} {name}', { title:title, name:row.c.name });
+      const fullName = FB.T('{title} {name}', {
+        title:title, name:FB.fullName(row.c)
+      });
+      h += '<button type="button" class="ftchip' +
+        (row.ruler ? ' realm-ruler-chip' : '') +
+        (row.heir ? ' realm-heir-chip' : '') + '" role="listitem" ' +
+        'data-realm-family-cid="' + esc(row.c.id) + '" aria-label="' +
+        esc(FB.T('Open {name}’s character sheet', {
+          name:fullName
+        })) + '" title="' + esc(fullName) + '">' +
         FB.faceTag(row.c, 50, 57) +
-        '<span class="fname">' + esc(row.c.name) + '</span>' +
+        '<span class="fname">' + esc(name) + '</span>' +
         '<span class="frel">' + esc(FB.T('{relation} · age {age}', {
           relation:row.rel, age:FB.ageOf(row.c, s.date.year)
         })) + '</span></button>';
     }
     return h + '</div>';
+  }
+
+  function bindCharacterSkillsGuides(root) {
+    const buttons = root.querySelectorAll('.character-skills-guide');
+    for (let i = 0; i < buttons.length; i++) {
+      buttons[i].addEventListener('click', function () {
+        UI.showGuide({ category:'skills' });
+      });
+    }
   }
 
   function showRealmInteractionSheet(rid, returnContext, replaceView) {
@@ -5956,7 +6014,12 @@ window.FB = window.FB || {};
        character card every other view uses. The crest header remains for the
        cases that genuinely have no person behind them. */
     const header = rulerCharacter
-      ? UI.charCardHtml(s, rulerCharacter)
+      ? UI.charCardHtml(s, rulerCharacter, false, true, {
+        cardClass:'realm-ruler-card',
+        namePrefix:FB.realmRankTitle(s, realm),
+        mapHome:true,
+        skillsGuide:true
+      })
       : '<div class="charcard">' +
         '<canvas id="liegecrest" class="pface" width="56" height="64"></canvas>' +
         '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
@@ -5964,7 +6027,7 @@ window.FB = window.FB || {};
           name:realm.ruler.name
         })) + '</div><div class="ccmeta">' + esc(FB.L(realm.name)) +
         '</div></div></div>';
-    let h = header + realmCourtStripHtml(s, rid) + interactionCardHtml(model) +
+    let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
@@ -5979,6 +6042,26 @@ window.FB = window.FB || {};
       });
     if ($('liegecrest')) FB.drawCrest($('liegecrest'), rid);
     FB.paintFaces($('gm-body'), s);
+    bindCharacterSkillsGuides($('gm-body'));
+    const rulerPortrait = $('gm-body').querySelector(
+      '.realm-ruler-card [data-character-home]');
+    if (rulerPortrait && rulerCharacter) {
+      rulerPortrait.addEventListener('click', function () {
+        const home = FB.homeOf(s, rulerCharacter);
+        if (home) FB.map.centerOn(home, FB.map.zoom);
+      });
+    }
+    const familyButtons = $('gm-body').querySelectorAll(
+      '[data-realm-family-cid]');
+    for (let i = 0; i < familyButtons.length; i++) {
+      familyButtons[i].addEventListener('click', function () {
+        UI.showCharModal(familyButtons[i].getAttribute(
+          'data-realm-family-cid'), {
+          view:'realm', realmId:rid, returnContext:returnContext,
+          realmFamily:true
+        }, true);
+      });
+    }
     wireInteractionCard(model, function (action) {
       if (action.route === 'ruler-gift') {
         UI.showRulerGiftModal(rid, realmGiftReturnView(rid, returnContext));
@@ -15296,30 +15379,84 @@ window.FB = window.FB || {};
   }
   UI.characterInteractionCard = buildCharacterInteractionCard;
 
-  function showCharacterInteractionSheet(cid, returnContext) {
+  function royalCourtCharacterContext(s, cid, returnContext) {
+    if (!returnContext || !returnContext.realmFamily ||
+        returnContext.view !== 'realm' ||
+        !returnContext.realmId || !s.realms[returnContext.realmId]) return null;
+    const rid = returnContext.realmId;
+    const ruler = interactionRealmRulerCharacter(s, rid);
+    const consort = FB.realmConsortCharacter && FB.realmConsortCharacter(s, rid);
+    if (ruler && ruler.id === cid) {
+      return { rid:rid, ruler:ruler, role:'ruler' };
+    }
+    if (consort && consort.id === cid) {
+      return { rid:rid, ruler:ruler, role:'consort' };
+    }
+    for (const member of realmFamilySnapshot(s, rid)) {
+      if (member.charId === cid) {
+        return { rid:rid, ruler:ruler, role:'child' };
+      }
+    }
+    return null;
+  }
+
+  function bindRealmFamilyNavigation(root, returnContext) {
+    const familyButtons = root.querySelectorAll('[data-realm-family-cid]');
+    for (let i = 0; i < familyButtons.length; i++) {
+      familyButtons[i].addEventListener('click', function () {
+        UI.showCharModal(familyButtons[i].getAttribute(
+          'data-realm-family-cid'), returnContext, true);
+      });
+    }
+  }
+
+  function bindCharacterHome(root, s, c) {
+    const portrait = root.querySelector('[data-character-home]');
+    if (!portrait) return;
+    portrait.addEventListener('click', function () {
+      const home = FB.homeOf(s, c);
+      if (home) FB.map.centerOn(home, FB.map.zoom);
+    });
+  }
+
+  function showCharacterInteractionSheet(cid, returnContext, replaceView) {
     const s = FB.state;
     const c = s && s.chars[cid];
     const model = s && buildCharacterInteractionCard(s, cid);
     if (!s || !c || !model) return;
-    let h = UI.charCardHtml(s, c, false, true) +
-      '<button type="button" class="btn small character-skills-guide" ' +
-      'id="character-skills-guide">' +
-      esc(FB.T('What do these skills affect?')) + '</button>';
+    const royalCourt = royalCourtCharacterContext(s, cid, returnContext);
+    if (royalCourt) model.showContext = false;
+    const cardOptions = { skillsGuide:true, mapHome:true };
+    if (royalCourt) {
+      cardOptions.namePrefix = FB.realmFamilyTitle(s,
+        s.realms[royalCourt.rid], c, royalCourt.role);
+    }
+    if (royalCourt && royalCourt.ruler && royalCourt.ruler.id === c.id) {
+      cardOptions.cardClass = 'realm-ruler-card';
+    }
+    let h = UI.charCardHtml(s, c, false, true, cardOptions);
+    if (royalCourt) h += realmCourtStripHtml(s, royalCourt.rid, c.id);
     if (!c.dead) h += interactionCardHtml(model);
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
-      esc(returnContext ? FB.T('Back') : FB.T('Close')) +
+      esc(royalCourt || !returnContext ? FB.T('Close') : FB.T('Back')) +
       '</button></div>';
-    openModal(FB.fullName(c), h, {
+    const modalTitle = cardOptions.namePrefix
+      ? FB.T('{title} {name}', {
+        title:cardOptions.namePrefix, name:FB.fullName(c)
+      })
+      : FB.fullName(c);
+    openModal(modalTitle, h, {
       modalClass:'fullsheet-modal interaction-modal character-interaction-modal',
-      historyView:!!returnContext,
+      historyView:!!returnContext && !royalCourt,
+      replaceView:!!replaceView,
       historyBackRender:function () {
         interactionReturn(returnContext);
       }
     });
     FB.paintFaces($('gm-body'), s);
-    $('character-skills-guide').addEventListener('click', function () {
-      UI.showGuide({ category:'skills' });
-    });
+    bindCharacterSkillsGuides($('gm-body'));
+    if (royalCourt) bindRealmFamilyNavigation($('gm-body'), returnContext);
+    if (cardOptions.mapHome) bindCharacterHome($('gm-body'), s, c);
     if (!c.dead) {
       const me = s.chars[s.player.charId];
       function actThen(fn) {
@@ -15549,7 +15686,7 @@ window.FB = window.FB || {};
       });
     }
     $('cm-close').addEventListener('click', function () {
-      if (returnContext) {
+      if (returnContext && !royalCourt) {
         modalHistoryBack(function () {
           interactionReturn(returnContext);
         });
@@ -15559,8 +15696,8 @@ window.FB = window.FB || {};
     });
   }
 
-  UI.showCharModal = function (cid, returnContext) {
-    return showCharacterInteractionSheet(cid, returnContext);
+  UI.showCharModal = function (cid, returnContext, replaceView) {
+    return showCharacterInteractionSheet(cid, returnContext, replaceView);
   };
 
   UI.showEquipmentModal = function (cid, exitMode, returnContext) {
@@ -19203,12 +19340,14 @@ window.FB = window.FB || {};
     }
   };
 
-  UI.showGuideEntry = function (id) {
+  UI.showGuideEntry = function (id, options) {
     const entry = guideEntries(FB.state).filter(function (candidate) {
       return candidate.id === id;
     })[0];
-    if (!entry) return UI.showGuide();
-    UI.showGuide({ entry:entry.id });
+    if (!entry) return UI.showGuide(options);
+    options = options || {};
+    options.entry = entry.id;
+    UI.showGuide(options);
   };
 
   UI.showLegacyHelp = function () {

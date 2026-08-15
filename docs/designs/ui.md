@@ -282,6 +282,17 @@ entry opens the character sheet. Each row states realm, political relationship, 
 Martial, and the player-relative Standing. Generated local characters appear only as a
 defensive fallback when no political ruler can be resolved.
 
+The realm-ruler sheet leads with the ruler's titled character card, rather than a
+duplicate fact grid. Its larger skill line carries the same compact Skills Guide icon as
+an ordinary character sheet. Every character-sheet portrait centers the map on that
+character's home county without dismissing the sheet. A decorated ruler portrait frame and a quieter heir
+portrait frame make the line of succession legible at a glance. The ruler's bounded consort-and-children
+portrait bar becomes the royal family's local navigator: opening a consort or child
+keeps their matching portrait bar beneath their card (a consort sees spouse and children),
+omits the repeated context grid, and uses Close rather than Back. Selecting another
+portrait replaces the card in place, so court browsing never needs a stack of return
+screens.
+
 **Portrait-heavy panels retain unchanged markup.** Self, Kin, Network, and Land keep a
 module-local record of the state reference, locale, and unlocalized HTML used for their
 last insertion. An identical refresh preserves the existing nodes and listeners, skips
@@ -804,7 +815,9 @@ roles, careers, family and inheritance scope, settlements, technology, travel, i
 war, and government. The Technology category and its generated catalogue appear only
 while the current protagonist is a landed ruler. Search indexes titles, aliases, key terms, and generated technology
 effects/unlocks. Career and technology entries read live definitions; current
-resource and settlement entries read live state. Self/character skills, Work,
+resource and settlement entries read live state. Self skill links close back to the
+existing Self panel or phone drawer; character-sheet links restore their source modal.
+Self/character skills, Work,
 Technology, settlement, travel, inheritance, Governance, and the conquest picker
 deep-link to the relevant entry. The War entry explains recognized claims, explicit
 aggression costs, siege requirements, and the difference between field victory and
@@ -1056,7 +1069,9 @@ materialize a character, start travel, send an envoy, or declare war.
 `interactionActionRow` renders every action as a native button with a stable
 semantic id and accessible name. Detail text states exact cost, duration,
 Standing effect, cooldown, and replacement consequence supplied by the owning
-system. Clicking routes to the existing action or confirmation, which
+system. An unavailable row shows its authoritative blocking reason alone,
+rather than repeating its normal detail and consequence text. Clicking routes
+to the existing action or confirmation, which
 revalidates its own gate.
 
 Focused household management is also derived from the shared authority boundary.

@@ -40,6 +40,12 @@ through sheets, gifts, marriage, and succession. Personal and political Standing
 synchronized score while the character reigns. The typed facade routes that person
 through the realm backing store, so character and realm interactions cannot diverge.
 
+Court names show rank without creating an additional title record. A consort receives
+the ruler's temporal rank in their own sexed form (for example Duke/Duchess), while a
+count or duke's children use Lord/Lady and royal or imperial children use
+Prince/Princess. These are display-only courtesy styles; they do not alter succession,
+station, or realm rank.
+
 **The consort is a succession member with `role: 'consort'`.** One is seeded per
 uncommitted ruler generation, of the opposite sex to the ruler and of a plausible age.
 An adult pair is married through the ordinary spouse fields so `FB.spousesOf` reports

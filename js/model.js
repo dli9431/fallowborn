@@ -2171,18 +2171,37 @@ window.FB = window.FB || {};
 
   /* An AI realm ruler's style: "Emir Yusuf", "High King Ragnarr". Rank and
      sex select the effective title array inherited by the realm's faith. */
-  FB.realmRankTitle = function (state, realm) {
-    const headed = FB.religionsHeadedBy(state, realm.id);
-    if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
+  function realmTemporalRankTitle(state, realm, sex) {
     const pr = FB.world && FB.world.byId[realm.capital];
     const stored = state && state.realms && state.realms[realm.id];
     const religionId = realm.religion ||
       (stored && FB.realmReligionId
         ? FB.realmReligionId(state, realm.id) : null) ||
       (pr ? pr.religion : 'catholic');
-    const sex = realm.ruler && realm.ruler.sex === 'f' ? 'f' : 'm';
     return renderRankTitle(rankTitleRecord(state, religionId, sex,
       FB.clamp((realm.rank || 3) + 3, 4, 7)));
+  }
+
+  FB.realmRankTitle = function (state, realm) {
+    const headed = FB.religionsHeadedBy(state, realm.id);
+    if (headed.length) return FB.religiousHeadTitle(state, headed[0]);
+    const sex = realm.ruler && realm.ruler.sex === 'f' ? 'f' : 'm';
+    return realmTemporalRankTitle(state, realm, sex);
+  };
+
+  /* A court spouse shares the ruler's temporal rank; children use the
+     historical English courtesy styles available without inventing a second,
+     unsaved rank. Kings and emperors have princes/princesses, while the
+     children of counts and dukes are lords/ladies. */
+  FB.realmFamilyTitle = function (state, realm, character, role) {
+    if (!realm || !character) return '';
+    if (role === 'ruler') return FB.realmRankTitle(state, realm);
+    if (role === 'consort') {
+      return realmTemporalRankTitle(state, realm, character.sex);
+    }
+    const royal = (realm.rank || 1) >= 3;
+    if (royal) return FB.T(character.sex === 'f' ? 'Princess' : 'Prince');
+    return FB.T(character.sex === 'f' ? 'Lady' : 'Lord');
   };
 
   /* words for text templating */

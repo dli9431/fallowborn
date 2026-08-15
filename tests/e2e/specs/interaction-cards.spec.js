@@ -154,6 +154,20 @@ test('character cards use the shared grammar and authoritative blocked reasons',
     await expect(page.locator(
       '[data-interaction-action="gift.character"]')).toHaveAttribute(
       'aria-label', /Standing/);
+    await expect(page.locator(
+      '.character-interaction-modal [data-character-home]')).toHaveCount(1);
+
+    var blockedRow = await page.evaluate(function () {
+      return FB.ui.interactionActionRow({
+        id:'test.blocked', label:'Unavailable test',
+        detail:'Normal helper text.', enabled:false,
+        blockedReason:'A blocking reason.',
+        consequence:'Normal consequence text.'
+      });
+    });
+    expect(blockedRow).toContain('Unavailable: A blocking reason.');
+    expect(blockedRow).not.toContain('Normal helper text.');
+    expect(blockedRow).not.toContain('Normal consequence text.');
   });
 
 test('personal attention, courtship, friendship, and rivalry variants stay distinct',
@@ -471,6 +485,135 @@ test('materialized rulers share Standing, keep one gift path, and render without
     expect(result.stateSame).toBe(true);
     expect(result.rngSame).toBe(true);
     expect(result.uidSame).toBe(true);
+  });
+
+test('realm ruler sheets foreground the titled ruler and linked court',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    var setup = await page.evaluate(function () {
+      var s = FB.state;
+      var rid = null;
+      Object.keys(s.realms).some(function (id) {
+        var realm = s.realms[id];
+        if (id === 'player' || !realm || !realm.alive || !realm.ruler) {
+          return false;
+        }
+        FB.ensureRealmCourtForDisplay(s, id);
+        var consort = FB.realmConsortCharacter(s, id);
+        var family = FB.realmFamilySnapshot(s, id).filter(function (member) {
+          return member.charId && s.chars[member.charId] &&
+            !s.chars[member.charId].dead;
+        });
+        var succession = s.realms[id].succession;
+        var heir = family.filter(function (member) {
+          return succession && succession.heirId === member.id;
+        })[0];
+        if (!consort || !family.length || !heir) return false;
+        rid = id;
+        return true;
+      });
+      if (!rid) throw new Error('Expected a materialized royal household.');
+      FB.ui.showLiegeModal(rid);
+      var realm = s.realms[rid];
+      var ruler = FB.realmRulerCharacterSnapshot(s, rid);
+      var consort = FB.realmConsortCharacter(s, rid);
+      var childIds = FB.realmFamilySnapshot(s, rid).map(function (member) {
+        return member.charId;
+      }).filter(function (id) { return !!id; });
+      var child = s.chars[childIds[0]];
+      return {
+        rid:rid,
+        rulerId:ruler.id,
+        rulerName:FB.fullName(ruler),
+        consortId:consort.id,
+        consortHome:FB.homeOf(s, consort),
+        childIds:childIds,
+        childTitledName:FB.T('{title} {name}', {
+          title:FB.realmFamilyTitle(s, realm, child, 'child'), name:child.name
+        }),
+        titledName:FB.T('{title} {name}', {
+          title:FB.realmRankTitle(s, realm), name:FB.fullName(ruler)
+        }),
+        home:FB.homeOf(s, ruler)
+      };
+    });
+
+    var sheet = page.locator('.realm-interaction-modal');
+    await expect(sheet.locator('.realm-ruler-card .ccname')).toContainText(
+      setup.titledName);
+    await expect(sheet.locator('.realm-ruler-card')).toHaveCount(1);
+    await expect(sheet.locator('.realm-heir-chip')).toHaveCount(1);
+    await expect(sheet.locator('.interaction-context')).toHaveCount(0);
+    await expect(sheet.locator('.realm-ruler-card .character-skills-guide'))
+      .toHaveAttribute('aria-label', 'What do these skills affect?');
+    expect(await sheet.locator('.realm-ruler-card .ccskills').evaluate(
+      function (line) { return parseFloat(getComputedStyle(line).fontSize); }
+    )).toBeGreaterThan(12);
+
+    await sheet.locator('.realm-ruler-card .character-skills-guide').click();
+    await expect(page.locator('#guide-category')).toHaveValue('skills');
+    await page.locator('#guide-close').click();
+    await expect(sheet).toBeVisible();
+
+    await page.evaluate(function () {
+      FB.map._rulerPortraitCenterOriginal = FB.map.centerOn;
+      FB.map.centerOn = function (pid) {
+        FB.map._lastRulerPortraitCenter = pid;
+        return FB.map._rulerPortraitCenterOriginal.apply(this, arguments);
+      };
+    });
+    await sheet.locator('[data-character-home]').click();
+    expect(await page.evaluate(function () {
+      var centered = FB.map._lastRulerPortraitCenter;
+      FB.map.centerOn = FB.map._rulerPortraitCenterOriginal;
+      delete FB.map._rulerPortraitCenterOriginal;
+      delete FB.map._lastRulerPortraitCenter;
+      return centered;
+    })).toBe(setup.home);
+
+    var familyButton = sheet.locator('[data-realm-family-cid="' +
+      setup.consortId + '"]');
+    await expect(familyButton).toBeVisible();
+    var familyName = await familyButton.getAttribute('title');
+    await familyButton.click();
+    var familySheet = page.locator('.character-interaction-modal');
+    await expect(familySheet).toBeVisible();
+    await expect(page.locator('#gm-title')).toContainText(familyName);
+    await expect(familySheet.locator('.interaction-context')).toHaveCount(0);
+    await expect(familySheet.locator('.court-strip')).toBeVisible();
+    await expect(familySheet.locator('#cm-close')).toHaveText('Close');
+    await expect(familySheet.loc('.charcard .ccname')).toContainText(familyName);
+    await expect(familySheet.loc('[data-realm-family-cid="' +
+      setup.childIds[0] + '"] .fname')).toContainText(setup.childTitledName);
+    for (var i = 0; i < setup.childIds.length; i++) {
+      await expect(familySheet.locator('[data-realm-family-cid="' +
+        setup.childIds[i] + '"]')).toBeVisible();
+    }
+
+    await page.evaluate(function () {
+      FB.map._familyPortraitCenterOriginal = FB.map.centerOn;
+      FB.map.centerOn = function (pid) {
+        FB.map._lastFamilyPortraitCenter = pid;
+        return FB.map._familyPortraitCenterOriginal.apply(this, arguments);
+      };
+    });
+    await familySheet.locator('[data-character-home]').click();
+    expect(await page.evaluate(function () {
+      var centered = FB.map._lastFamilyPortraitCenter;
+      FB.map.centerOn = FB.map._familyPortraitCenterOriginal;
+      delete FB.map._familyPortraitCenterOriginal;
+      delete FB.map._lastFamilyPortraitCenter;
+      return centered;
+    })).toBe(setup.consortHome);
+
+    await familySheet.locator('[data-realm-family-cid="' +
+      setup.rulerId + '"]').click();
+    await expect(page.locator('#gm-title')).toContainText(setup.rulerName);
+    await expect(familySheet.locator('.realm-ruler-card')).toHaveCount(1);
+    await expect(familySheet.locator('.interaction-context')).toHaveCount(0);
+    await expect(familySheet.locator('#cm-close')).toHaveText('Close');
+    await page.locator('#cm-close').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
 test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
