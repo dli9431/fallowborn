@@ -367,7 +367,9 @@ the desktop grid's `aria-pressed` state, and the mobile current-value announceme
 events, funds, and a changed appearance, deducts gold once, consumes no day, then returns to
 Equipment. The visible Back control and browser Back both return to the same Equipment sheet
 without mutation. On narrow screens the stationary preview stacks above the independently
-scrolling cycling controls without horizontal overflow.
+scrolling cycling controls without horizontal overflow. Short phone viewports compact the
+preview beside its quote and keep both footer actions on one row so the cycling pane retains
+usable height.
 Each owned item card has a **Protect from automatic equipment changes** checkbox. Protected
 armory items are omitted from Equip Best and succession, protected worn items keep their
 assignment when possible, and the hand pair is preserved together if either hand is

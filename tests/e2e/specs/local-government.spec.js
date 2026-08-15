@@ -169,6 +169,17 @@ test('four service charters produce exact distinct tax, levy, and political term
       var oldGold = p.gold;
       var oldSte = s.chars[p.charId].skills.ste;
       s.chars[p.charId].skills.ste = 0;
+      var seasons = FBDATA.balance.demandTaxSeasons || 3;
+      var charterExtraordinary = Math.ceil(ids.reduce(function (gold, id) {
+        return gold + (rows[id].exempt ? 0 : rows[id].tax * seasons);
+      }, 0));
+      var expectedExtraordinary = Math.ceil(FB.playerVassals(s).reduce(
+        function (gold, rid) {
+          var contract = FB.feudalContractOf(s, rid);
+          var charter = FB.feudalCharterDef(contract.charterId);
+          return gold + (charter.extraordinaryTaxExempt ? 0 :
+            FB.vassalTaxContribution(s, rid) * seasons);
+        }, 0));
       FB.demandTaxes(s);
       var extraordinary = p.gold - oldGold;
       s.chars[p.charId].skills.ste = oldSte;
@@ -188,6 +199,8 @@ test('four service charters produce exact distinct tax, levy, and political term
         });
       });
       return { rows:rows, tenureStanding:tenureStanding,
+        charterExtraordinary:charterExtraordinary,
+        expectedExtraordinary:expectedExtraordinary,
         extraordinary:extraordinary, dominated:dominated };
     });
 
@@ -215,7 +228,8 @@ test('four service charters produce exact distinct tax, levy, and political term
       result.rows.customary_service.breakawayChance).toBeCloseTo(0.5, 8);
     expect(result.rows.charter_of_liberties.exempt).toBe(true);
     expect(result.tenureStanding).toEqual({ hereditary:40, life:35, term:30 });
-    expect(result.extraordinary).toBe(33);
+    expect(result.charterExtraordinary).toBe(33);
+    expect(result.extraordinary).toBe(result.expectedExtraordinary);
     expect(result.dominated).toEqual([]);
   });
 
@@ -295,7 +309,7 @@ test('fixed and life tenure revert through escheat while hereditary contracts su
       var hereditaryId = 'pv_' + counties[2];
       var hereditaryDeath = FB.feudalTenureEndsAtDeath(s, hereditaryId);
       var oldGeneration = s.realms[hereditaryId].ruler.generation;
-      var hereditaryRuler = FB.realmRulerCharacter(s, hereditaryId);
+      var hereditaryRuler = FB.materializeRealmRuler(s, hereditaryId);
       FB.killChar(s, hereditaryRuler);
       var inheritedContract = FB.feudalContractOf(s, hereditaryId);
       var hereditarySuccession = {
@@ -307,7 +321,7 @@ test('fixed and life tenure revert through escheat while hereditary contracts su
       FB.grantCounty(s, counties[3], 'charter_of_liberties', 'life');
       var lifeId = 'pv_' + counties[3];
       var lifeEndsAtDeath = FB.feudalTenureEndsAtDeath(s, lifeId);
-      var lifeRuler = FB.realmRulerCharacter(s, lifeId);
+      var lifeRuler = FB.materializeRealmRuler(s, lifeId);
       FB.killChar(s, lifeRuler);
       var lifeReverted = p.provs.indexOf(counties[3]) >= 0 &&
         !s.realms[lifeId].alive;

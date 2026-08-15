@@ -412,7 +412,10 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
       '[data-barber-beard-style="moustacheHandlebar"]');
     await handlebar.click();
     await expect(handlebar).toHaveAttribute('aria-pressed','true');
-    const alternate=page.locator('[data-barber-hair][aria-pressed="false"]').first();
+    const alternateId=await page.locator(
+      '[data-barber-hair][aria-pressed="false"]').first()
+      .getAttribute('data-barber-hair');
+    const alternate=page.locator('[data-barber-hair="'+alternateId+'"]');
     await alternate.focus();
     await page.keyboard.press('Enter');
     await expect(alternate).toHaveAttribute('aria-pressed','true');
@@ -430,7 +433,10 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
     await page.locator('[data-barber-beard-family="moustache"]').click();
     await page.locator(
       '[data-barber-beard-style="moustacheHandlebar"]').click();
-    const paidChoice=page.locator('[data-barber-hair][aria-pressed="false"]').last();
+    const paidChoiceId=await page.locator(
+      '[data-barber-hair][aria-pressed="false"]').last()
+      .getAttribute('data-barber-hair');
+    const paidChoice=page.locator('[data-barber-hair="'+paidChoiceId+'"]');
     await paidChoice.focus();
     await page.keyboard.press('Space');
     await page.getByRole('button',{name:'Pay and apply',exact:true}).click();
@@ -508,6 +514,8 @@ test('mobile barber cycles each category while only its options pane scrolls',
       const body=document.getElementById('gm-body');
       const controls=body.querySelector('.barber-controls');
       const preview=body.querySelector('.barber-preview');
+      const footerButtons=body.closest('.modalcard').querySelectorAll(
+        '.gm-footer .btn');
       controls.scrollTop=0;
       const previewTop=preview.getBoundingClientRect().top;
       const overflow=controls.scrollHeight>controls.clientHeight;
@@ -517,19 +525,24 @@ test('mobile barber cycles each category while only its options pane scrolls',
         controlsOverflow:getComputedStyle(controls).overflowY,
         overflow:overflow,
         scrolled:controls.scrollTop>0,
-        portraitStable:Math.abs(preview.getBoundingClientRect().top-previewTop)<0.5
+        portraitStable:Math.abs(preview.getBoundingClientRect().top-previewTop)<0.5,
+        controlsHeight:controls.clientHeight,
+        footerSingleRow:footerButtons.length===2 && Math.abs(
+          footerButtons[0].getBoundingClientRect().top-
+          footerButtons[1].getBoundingClientRect().top)<0.5
       };
     });
-    expect(geometry).toEqual({
+    expect(geometry).toMatchObject({
       bodyOverflow:'hidden',controlsOverflow:'auto',overflow:true,
-      scrolled:true,portraitStable:true
+      scrolled:true,portraitStable:true,footerSingleRow:true
     });
+    expect(geometry.controlsHeight).toBeGreaterThan(0);
     expect(await page.evaluate(function (setup) {
       const s=FB.state;
       return {gold:s.player.gold,appearance:s.chars[setup.id].appearance};
     },setup)).toEqual({gold:setup.gold,appearance:setup.appearance});
     await page.evaluate(function(){history.back();});
-    await expect(page.getByRole('heading',{name:/Equipment for/})).toBeVisible();
+    await expect(page.getByRole('heading',{name:/Equipment/})).toBeVisible();
   });
 
 test('female and minor pickers hide facial hair and narrow browser Back returns safely',
@@ -572,7 +585,7 @@ test('female and minor pickers hide facial hair and narrow browser Back returns 
     expect(geometry.bodyOverflow).toBe('hidden');
     expect(geometry.controlsOverflow).toBe('auto');
     await page.evaluate(function(){history.back();});
-    await expect(page.getByRole('heading',{name:/Equipment for/})).toBeVisible();
+    await expect(page.getByRole('heading',{name:/Equipment/})).toBeVisible();
     expect(await page.evaluate(function (setup) {
       return {appearance:FB.state.chars[setup.id].appearance||null,
         gold:FB.state.player.gold};

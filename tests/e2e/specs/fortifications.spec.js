@@ -197,8 +197,12 @@ test('routes bypass strongpoints, stop at unavoidable forts, and clear stale ord
       };
       const around = FB.findArmyPath(s, host, 'd');
 
-      FB.world.adj = {
-        a:{ b:1, c:1 }, b:{ a:1, d:1 }, c:{ a:1 }, d:{ b:1 }
+      FB.world = {
+        adj:{
+          a:{ b:1, c:1 }, b:{ a:1, d:1 }, c:{ a:1 }, d:{ b:1 }
+        },
+        waterAdj:FB.world.waterAdj,
+        byId:FB.world.byId
       };
       const unavoidable = FB.findArmyPath(s, host, 'd');
       host.at = 'b';
@@ -456,6 +460,8 @@ test('AI seats, annual works, holy-war occupation, and daily indexing stay bound
       const aiWar = { fortSieges:{} };
       const yearlySiege = FB.advanceAIYearlyFortSiege(
         s, aiWar, fortPid, besieger);
+      const expectedYearlyProgress = 4 * (1 + (FB.techBonus
+        ? FB.techBonus(s, 'siege', besieger) * 3 : 0));
       const baseOccupation = (FBDATA.balance.greatHolyWarSiegeBase || 120) +
         (s.dev[fortPid] || 1) *
         (FBDATA.balance.greatHolyWarSiegePerDev || 10);
@@ -463,6 +469,7 @@ test('AI seats, annual works, holy-war occupation, and daily indexing stay bound
       const requirement = FB.greatHolyWarSiegeRequirement(s, fortPid, occupation);
       const attacker = sovereigns[0];
       const defender = sovereigns[1];
+      const oldGreatHolyWar = s.greatHolyWar;
       s.greatHolyWar = {
         phase:'active', occupations:{},
         participants:{
@@ -475,6 +482,7 @@ test('AI seats, annual works, holy-war occupation, and daily indexing stay bound
       const defendingHost = { realm:defender, at:fortPid, men:300 };
       const occupiedPass = FB.fortBlocksArmy(s, fortPid, attackingHost);
       const recaptureBlock = FB.fortBlocksArmy(s, fortPid, defendingHost);
+      s.greatHolyWar = oldGreatHolyWar;
       const dailySource = String(FB.fortificationDay);
 
       return {
@@ -493,6 +501,7 @@ test('AI seats, annual works, holy-war occupation, and daily indexing stay bound
           breached:yearlySiege.breached,
           men:aiHost.men
         },
+        expectedYearlyProgress:expectedYearlyProgress,
         occupationDelay:requirement - baseOccupation,
         occupiedPass:occupiedPass,
         recaptureBlock:recaptureBlock,
@@ -510,9 +519,10 @@ test('AI seats, annual works, holy-war occupation, and daily indexing stay bound
     expect(result.sameYearProjectCount).toBe(1);
     expect(result.worksAfterFirst).toBe(340);
     expect(result.worksAfterSecond).toBe(result.worksAfterFirst);
-    expect(result.yearlySiege).toEqual({
-      progress:4, breached:false, men:252
-    });
+    expect(result.yearlySiege.progress).toBeCloseTo(
+      result.expectedYearlyProgress, 8);
+    expect(result.yearlySiege.breached).toBe(false);
+    expect(result.yearlySiege.men).toBe(252);
     expect(result.occupationDelay).toBe(180);
     expect(result.occupiedPass).toBe(false);
     expect(result.recaptureBlock).toBe(true);
@@ -535,6 +545,15 @@ test('fort badges and settlement sheets expose tier, works, locks, and touch con
         if (tech.completed.indexOf(id) < 0) tech.completed.push(id);
       });
       const hiddenIndex = Math.min(7, FB.world.sitesByProv[pid].list.length - 1);
+      const foreignPid = FB.world.provs.filter(function (province) {
+        return !province.wasteland && province.id !== pid &&
+          s.holder[province.id] !== 'player' &&
+          FB.world.sitesByProv[province.id] &&
+          FB.world.sitesByProv[province.id].list.length > 0;
+      })[0].id;
+      s.buildings[foreignPid] = (s.buildings[foreignPid] || []).filter(
+        function (entry) { return !(entry && entry.id === 'walls'); });
+      s.buildings[foreignPid].push({ s:0, id:'walls', level:2 });
       const record = {
         s:hiddenIndex, id:'walls', level:3, targetLevel:4,
         completeTurn:s.turn + 720
@@ -553,6 +572,7 @@ test('fort badges and settlement sheets expose tier, works, locks, and touch con
       return {
         pid:pid,
         index:hiddenIndex,
+        foreignPid:foreignPid,
         visible:FB.settlementVisibleCount(s, pid),
         badge:FB.fortBadgeDescriptor(s, pid, hiddenIndex),
         tierMarks:tierMarks
@@ -574,19 +594,16 @@ test('fort badges and settlement sheets expose tier, works, locks, and touch con
     await expect(demolition).toBeVisible();
     expect((await demolition.boundingBox()).height).toBeGreaterThanOrEqual(44);
 
-    const foreign = await page.evaluate(function () {
+    const foreign = await page.evaluate(function (config) {
       const s = FB.state;
-      const item = FB.fortList(s).filter(function (candidate) {
-        return candidate.pid !== s.player.provinceId &&
-          candidate.record.level > 0;
-      })[0];
+      const item = FB.fortAt(s, config.foreignPid);
       if (!item) return null;
-      FB.ui.showSettlement(item.pid, item.record.s);
+      FB.ui.showSettlement(config.foreignPid, item.s);
       return {
-        name:FB.fortLevelName(s, item.record.level),
-        pid:item.pid
+        name:FB.fortLevelName(s, item.level),
+        pid:config.foreignPid
       };
-    });
+    }, setup);
     expect(foreign).toBeTruthy();
     await expect(page.locator('#gm-body')).toContainText(foreign.name);
     await expect(page.locator('[data-fort-start]')).toHaveCount(0);

@@ -2505,6 +2505,7 @@ textarea.modjson, textarea.savetext {
     gap: 14px;
   }
   .barber-preview { width: min(68vw, 220px); }
+  .barber-modal .gm-footer .btn { flex: 1 1 140px; width: auto; }
   .item-card .itemart { width: 112px; height: 112px; }
   .person-assignment-head {
     display: grid; grid-template-columns: 18px 34px minmax(0, 1fr);
@@ -2548,6 +2549,22 @@ textarea.modjson, textarea.savetext {
   .enterprise-staffing-comparison { grid-template-columns: 1fr; }
   .enterprise-staffing-head { align-items: flex-start; flex-direction: column; gap: 5px; }
   .enterprise-staffing-status { max-width: 100%; text-align: left; }
+}
+
+@media (max-width: 600px) and (max-height: 600px) {
+  .barber-preview-wrap {
+    display: grid; grid-template-columns: minmax(96px, 112px) minmax(0, 1fr);
+    grid-template-rows: auto auto; align-items: center; gap: 7px 10px;
+  }
+  .barber-preview {
+    grid-column: 1; grid-row: 1 / span 2; width: 100%;
+  }
+  .barber-quote {
+    grid-column: 2; grid-row: 1; margin-top: 0; text-align: left;
+  }
+  .barber-preview-wrap .progressnote {
+    grid-column: 2; grid-row: 2; margin-top: 0;
+  }
 }
 
 @media (max-width: 380px) {

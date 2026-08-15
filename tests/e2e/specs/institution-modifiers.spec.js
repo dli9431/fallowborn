@@ -413,6 +413,7 @@ test('county modifier ledgers refresh, persist, transfer, remove, and expire aut
       var buildingId = Object.keys(FBDATA.buildings)[0];
       var before = {
         tax:FB.playerTax(s),
+        exactTax:FB.playerTaxParts(s).total,
         levy:FB.playerLevy(s),
         building:FB.buildCost(s, setup.homeId, buildingId),
         voice:FB.popEffective(s),
@@ -431,6 +432,7 @@ test('county modifier ledgers refresh, persist, transfer, remove, and expire aut
       })[0];
       var after = {
         tax:FB.playerTax(s),
+        exactTax:FB.playerTaxParts(s).total,
         levy:FB.playerLevy(s),
         building:FB.buildCost(s, setup.homeId, buildingId),
         voice:FB.popEffective(s),
@@ -509,7 +511,7 @@ test('county modifier ledgers refresh, persist, transfer, remove, and expire aut
       };
     }, ids);
 
-    expect(result.after.tax).toBeGreaterThan(result.before.tax);
+    expect(result.after.exactTax).toBeGreaterThan(result.before.exactTax);
     expect(result.after.levy).toBeLessThan(result.before.levy);
     expect(result.after.building).toBeLessThan(result.before.building);
     expect(result.after.voice).toBe(result.before.voice + 6);
