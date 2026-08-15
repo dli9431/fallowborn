@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.1';
+  FB.VERSION = '1.133.2';
   FB.CHANGELOG = [
+    { v: '1.133.2', date: '2026-08-15', changes: [
+      'Modal controls and Work selectors now use a more compact, consistent presentation.'
+    ] },
     { v: '1.133.1', date: '2026-08-15', changes: [
       'Enterprise catalogues now show exact availability requirements, while idle family businesses explain their staffing problems.'
     ] },

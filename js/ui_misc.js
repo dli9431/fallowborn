@@ -1775,6 +1775,33 @@ window.FB = window.FB || {};
     for (const token of next) gm.classList.add(token);
   }
 
+  function modalGuideConfig(guide) {
+    if (!guide || !guide.entry) return null;
+    return {
+      id:guide.id || '', entry:String(guide.entry),
+      label:guide.label || FB.T('Guide')
+    };
+  }
+
+  function setModalGuide(guide) {
+    const heading = $('gm-title').parentNode;
+    const existing = heading.querySelector('.modal-guide-button');
+    if (existing) heading.removeChild(existing);
+    if (!guide) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'modal-guide-button';
+    if (guide.id) button.id = guide.id;
+    button.setAttribute('aria-label', guide.label);
+    button.title = guide.label;
+    button.dataset.modalGuide = guide.entry;
+    button.textContent = 'i';
+    button.addEventListener('click', function () {
+      if (UI.showGuideEntry) UI.showGuideEntry(guide.entry);
+    });
+    heading.appendChild(button);
+  }
+
   function captureModalView(view) {
     const body = $('gm-body');
     view.title = $('gm-title').textContent;
@@ -1787,6 +1814,7 @@ window.FB = window.FB || {};
     view.modalClass = UI._gmModalClass || '';
     view.noFocus = !!(genericNavSnapshot && genericNavSnapshot.noFocus);
     view.token = genericNavSnapshot && genericNavSnapshot.token;
+    view.guide = modalGuideConfig(genericNavSnapshot && genericNavSnapshot.guide);
     view.focus = document.activeElement && $('genmodal').contains(document.activeElement)
       ? document.activeElement : null;
     while (body.firstChild) view.body.appendChild(body.firstChild);
@@ -1797,6 +1825,7 @@ window.FB = window.FB || {};
     const body = $('gm-body');
     while (body.firstChild) body.removeChild(body.firstChild);
     $('gm-title').textContent = view.title;
+    setModalGuide(view.guide);
     body.appendChild(view.body);
     body.scrollTop = view.scrollTop || 0;
     setModalClasses(gm, view.modalClass);
@@ -1810,7 +1839,8 @@ window.FB = window.FB || {};
       returnAction:view.returnAction,
       modalClass:view.modalClass,
       noFocus:view.noFocus,
-      token:view.token
+      token:view.token,
+      guide:modalGuideConfig(view.guide)
     };
     gm.classList.remove('hidden');
     setTimeout(function () {
@@ -1981,6 +2011,8 @@ window.FB = window.FB || {};
     setModalClasses(gm, opts && opts.modalClass);
     $('gm-title').textContent = FB.translateKnown(title);
     FB.localizeTree($('gm-title'));
+    const guide = modalGuideConfig(opts && opts.guide);
+    setModalGuide(guide);
     $('gm-body').innerHTML = bodyHtml;
     normalizeModalFooter($('gm-body'));
     FB.localizeTree($('gm-body'));
@@ -2012,7 +2044,8 @@ window.FB = window.FB || {};
         ? retainedNavigation.returnAction : UI._gmReturnAction,
       modalClass:UI._gmModalClass,
       noFocus:!!(opts && opts.noFocus),
-      token:currentViewToken
+      token:currentViewToken,
+      guide:guide
     };
     if (previousView) {
       const currentView = {};

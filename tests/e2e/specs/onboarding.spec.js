@@ -346,8 +346,12 @@ test('panel intro sheets open once, deep-link to the Guide, and yield to the pre
     await page.locator('#sidetabs .tab[data-tab="network"]').click();
     await expect(page.getByRole('heading', {
       name: 'The Network tab', exact: true })).toBeVisible();
-    // the deep-link opens the real Guide, not a copy
-    await page.locator('#panel-intro-guide').click();
+    // the header info icon opens the real Guide, not a copy
+    const introGuide = page.locator('#genmodal .gm-heading > #panel-intro-guide');
+    await expect(introGuide).toHaveClass(/modal-guide-button/);
+    await expect(page.locator('#genmodal .gm-footer #panel-intro-guide'))
+      .toHaveCount(0);
+    await introGuide.click();
     await expect(page.locator('#guide-controls')).toBeVisible();
     await page.evaluate(function () { FB.ui.closeModal(); });
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);

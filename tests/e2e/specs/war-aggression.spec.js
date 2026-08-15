@@ -407,6 +407,9 @@ test('the Guide exposes aggression through search and the conquest picker',
       exact:true
     });
     await expect(guideButton).toBeVisible();
+    await expect(guideButton).toHaveClass(/modal-guide-button/);
+    await expect(page.locator('#genmodal .gm-heading > #war-guide')).toHaveCount(1);
+    await expect(page.locator('#genmodal .gm-footer #war-guide')).toHaveCount(0);
     await guideButton.click();
     result = page.locator('[data-guide-entry="war"]');
     await expect(result).toHaveAttribute('aria-expanded', 'true');

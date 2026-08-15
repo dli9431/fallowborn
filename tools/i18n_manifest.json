@@ -77904,6 +77904,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -108887,16 +108888,6 @@
       ],
       "source": {
         "text": "Your standing and your silver are on the scales now."
-      }
-    },
-    "src.8e234dbb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Rename house…"
       }
     },
     "src.8e28a074": {
@@ -171755,62 +171746,6 @@
         "text": "Guide their ambition…"
       }
     },
-    "ui:Guide: government": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: government"
-      }
-    },
-    "ui:Guide: inheritance": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: inheritance"
-      }
-    },
-    "ui:Guide: settlements and development": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: settlements and development"
-      }
-    },
-    "ui:Guide: technology": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: technology"
-      }
-    },
-    "ui:Guide: travel": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: travel"
-      }
-    },
-    "ui:Guide: war": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: war"
-      }
-    },
-    "ui:Guide: work and family scope": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Guide: work and family scope"
-      }
-    },
     "ui:Guild Standing may improve": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172275,6 +172210,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Hostile faiths"
+      }
+    },
+    "ui:House": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "House"
       }
     },
     "ui:House founder": {
@@ -179800,14 +179743,6 @@
         "text": "Reach the wedding county before deciding where to live."
       }
     },
-    "ui:Read more in the Guide": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Read more in the Guide"
-      }
-    },
     "ui:Ready": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180419,14 +180354,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Rename house"
-      }
-    },
-    "ui:Rename house…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Rename house…"
       }
     },
     "ui:Renew the vow": {

@@ -1505,6 +1505,14 @@ window.FB = window.FB || {};
     const titleCount = titles.high.length + titles.counties.length;
     const items = FB.itemList(s);
     const standardSummary = householdStandardsSummary(s);
+    const houseRow = me.dyn
+      ? '<div class="kv dynasty-house-row"><span>' + esc(FB.T('House')) +
+        '</span><span class="dynasty-house-value"><b>' + esc(me.dyn) +
+        '</b><button type="button" class="panel-inline-icon-button" ' +
+        'id="self-rename-house" aria-label="' + esc(FB.T('Rename house')) +
+        '" title="' + esc(FB.T('Rename house')) + '"><span aria-hidden="true">&#x270e;</span>' +
+        '</button></span></div>'
+      : kv('House', esc('—'));
     let h =
       '<div class="panelh self-name">' + esc(FB.fullName(me)) + '</div>' +
       '<div class="self-overview"><div class="self-portrait-tools">' +
@@ -1539,12 +1547,8 @@ window.FB = window.FB || {};
       dynasticStatusRows(s, me) +
       selfSectionHtml('possessions', 'Possessions', items.length, itemChips(s, items)) +
       panelh('Dynasty') +
-      kv('House', esc(me.dyn || '—')) +
-      kv('Generation', (s.generation || 1)) +
-      (me.dyn
-        ? '<button class="btn small" id="self-rename-house">✏ ' +
-          esc(FB.T('Rename house…')) + '</button>'
-        : '');
+      houseRow +
+      kv('Generation', (s.generation || 1));
     h += panelh('Livelihood') + livelihoodNote(s, me);
     if (FB.hasBishopric && FB.hasBishopric(s, me)) {
       h += '<button class="actionbtn" id="self-bishopric">⛪ ' +
@@ -1641,7 +1645,7 @@ window.FB = window.FB || {};
       '<div class="evname"><label>' + esc(FB.T('House name')) + ' ' +
       '<input id="rename-house-name" type="text" maxlength="20"></label></div>' +
       '<p class="adesc" id="rename-house-err" role="alert"></p>' +
-      '<div class="modal-actions">' +
+      '<div class="gm-footer">' +
       '<button class="btn primary" data-rename-house="confirm">' +
       esc(FB.T('Rename')) + '</button>' +
       '<button class="btn" data-rename-house="cancel">' +

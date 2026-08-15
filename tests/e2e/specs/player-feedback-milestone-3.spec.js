@@ -294,6 +294,75 @@ test('enterprise groups and sorts persist and share their order with Household P
     });
 
     const group = page.locator('[data-enterprise-group]');
+    const workGuide = page.locator('#genmodal .gm-heading > #work-guide');
+    await expect(workGuide).toHaveClass(/modal-guide-button/);
+    await expect(workGuide).toHaveText('i');
+    await expect(workGuide).toHaveAttribute(
+      'aria-label', 'Guide: work and family scope');
+    await expect(page.locator('#genmodal .gm-footer #work-guide')).toHaveCount(0);
+    const guideChrome = await workGuide.evaluate(function (button) {
+      const title = document.getElementById('gm-title').getBoundingClientRect();
+      const icon = button.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      return {
+        alignItems:style.alignItems,
+        border:style.borderTopWidth,
+        centerOffset:Math.abs((icon.top + icon.height / 2) -
+          (title.top + title.height / 2)),
+        display:style.display,
+        justifyContent:style.justifyContent,
+        titleAlignItems:getComputedStyle(document.getElementById('gm-title')).alignItems,
+        titleDisplay:getComputedStyle(document.getElementById('gm-title')).display,
+        titleTransform:getComputedStyle(document.getElementById('gm-title')).transform,
+        titleMarginBottom:getComputedStyle(document.getElementById('gm-title')).marginBottom,
+        titleRowMarginBottom:getComputedStyle(document.querySelector('.gm-heading')).marginBottom
+      };
+    });
+    expect(guideChrome.border).toBe('1px');
+    expect(guideChrome.centerOffset).toBeLessThanOrEqual(2);
+    expect(guideChrome.display).toBe('inline-flex');
+    expect(guideChrome.alignItems).toBe('center');
+    expect(guideChrome.justifyContent).toBe('center');
+    expect(guideChrome.titleDisplay).toBe('flex');
+    expect(guideChrome.titleAlignItems).toBe('center');
+    expect(guideChrome.titleTransform).toBe('matrix(1, 0, 0, 1, 0, 2)');
+    expect(guideChrome.titleMarginBottom).toBe('0px');
+    expect(guideChrome.titleRowMarginBottom).toBe('10px');
+    const dropdowns = page.locator(
+      '[data-enterprise-view-controls="work"] .enterprise-view-select');
+    await expect(dropdowns).toHaveCount(2);
+    const dropdownStyles = await dropdowns.evaluateAll(function (nodes) {
+      return nodes.map(function (wrapper) {
+        const select = wrapper.querySelector('select');
+        const style = getComputedStyle(select);
+        return {
+          arrow:getComputedStyle(wrapper, '::after').content,
+          background:style.backgroundImage,
+          borderColor:style.borderTopColor,
+          borderRadius:style.borderTopLeftRadius,
+          height:Math.round(select.getBoundingClientRect().height),
+          paddingRight:style.paddingRight
+        };
+      });
+    });
+    expect(dropdownStyles).toEqual([
+      {
+        arrow:'"▾"',
+        background:'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))',
+        borderColor:'rgb(138, 110, 52)',
+        borderRadius:'6px',
+        height:42,
+        paddingRight:'34px'
+      },
+      {
+        arrow:'"▾"',
+        background:'linear-gradient(rgb(59, 48, 32), rgb(42, 34, 24))',
+        borderColor:'rgb(138, 110, 52)',
+        borderRadius:'6px',
+        height:42,
+        paddingRight:'34px'
+      }
+    ]);
     await group.selectOption('category');
     await expect(page.locator(
       '[data-list-section="family-enterprises-category-farmer"]')).toBeVisible();

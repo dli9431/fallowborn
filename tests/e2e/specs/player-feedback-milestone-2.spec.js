@@ -214,11 +214,18 @@ test('the role orientation is a focused sheet with a Guide deep link',
       };
     })).toEqual({ seen:true, repeated:false });
 
-    // the complete orientation stays one tap away as an inline Guide entry
+    // the complete orientation stays one tap away from the header info icon
     await page.evaluate(function () {
       FB.ui.showRoleOrientation('role-tier-1');
     });
-    await page.locator('#orientation-guide').click();
+    const orientationGuide = page.locator(
+      '#genmodal .gm-heading > #orientation-guide');
+    await expect(orientationGuide).toHaveClass(/modal-guide-button/);
+    await expect(orientationGuide).toHaveAttribute(
+      'aria-label', 'Read more in the Guide');
+    await expect(page.locator('#genmodal .gm-footer #orientation-guide'))
+      .toHaveCount(0);
+    await orientationGuide.click();
     await expect(page.getByRole('heading', {
       name:'Guide', exact:true
     })).toBeVisible();
@@ -234,6 +241,25 @@ test('the role orientation is a focused sheet with a Guide deep link',
       FB.ui.showGuide();
     });
     await expect(page.locator('#genmodal')).toHaveClass(/guide-modal/);
+    const guideChrome = await page.locator('#guide-controls').evaluate(function (controls) {
+      const search = document.getElementById('guide-search');
+      const footer = document.querySelector('#gm-body .gm-footer');
+      const controlStyle = getComputedStyle(controls);
+      const footerStyle = getComputedStyle(footer);
+      return {
+        footerBackground:footerStyle.backgroundImage,
+        footerBorder:footerStyle.borderTopWidth,
+        searchInset:Math.round(search.getBoundingClientRect().left -
+          controls.getBoundingClientRect().left),
+        toolbarPaddingLeft:controlStyle.paddingLeft,
+        toolbarPaddingRight:controlStyle.paddingRight
+      };
+    });
+    expect(guideChrome.footerBackground).toBe('none');
+    expect(guideChrome.footerBorder).toBe('1px');
+    expect(guideChrome.searchInset).toBe(2);
+    expect(guideChrome.toolbarPaddingLeft).toBe('2px');
+    expect(guideChrome.toolbarPaddingRight).toBe('2px');
     const guideEntryCount = await page.locator('[data-guide-entry]').count();
     await expect(page.locator('[data-guide-more-info]'))
       .toHaveCount(guideEntryCount);

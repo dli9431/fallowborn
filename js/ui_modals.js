@@ -105,6 +105,10 @@ window.FB = window.FB || {};
   const wireEquipmentButtons = SH.wireEquipmentButtons;
   const wireInteractionCard = SH.wireInteractionCard;
 
+  function guideModalOption(id, entry, label) {
+    return { id:id, entry:entry, label:FB.T(label) };
+  }
+
   let eventOpen = false;
   let pendingEvents = [];
   let auctionOpenAfterEvents = false;
@@ -788,11 +792,11 @@ window.FB = window.FB || {};
           ? FB.T('{count} destinations in reach.', {count:destinations.length})
           : FB.T('No qualifying destination can be reached.')) + '</span></button>';
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="travel-guide">' +
-      esc(FB.T('Guide: travel')) +
-      '</button><button class="btn" id="travel-purpose-cancel">' +
+    h += '</div><div class="gm-footer"><button class="btn" id="travel-purpose-cancel">' +
       esc(FB.T('Cancel')) + '</button></div>';
-    openModal('🧭 Take to the road…', h);
+    openModal('🧭 Take to the road…', h, {
+      guide:guideModalOption('travel-guide', 'travel', 'Guide: travel')
+    });
     document.querySelectorAll('[data-travel-purpose]').forEach(function (button) {
       button.addEventListener('click', function () {
         const purposeId = button.getAttribute('data-travel-purpose');
@@ -803,9 +807,6 @@ window.FB = window.FB || {};
         UI.closeModal();
         UI.showTravelDestinations(purposeId);
       });
-    });
-    $('travel-guide').addEventListener('click', function () {
-      UI.showGuideEntry('travel');
     });
     $('travel-purpose-cancel').addEventListener('click', UI.closeModal);
   };
@@ -2709,13 +2710,12 @@ window.FB = window.FB || {};
     }
     h += '</div><div class="hint large-list-no-results" id="war-target-empty" hidden>' +
       esc(FB.T('No war target matches the current search and filters.')) +
-      '</div><div class="gm-footer"><button class="btn" id="war-guide">' +
-      esc(FB.T('Guide: war')) +
-      '</button><button class="btn" id="gm-cancel">' +
+      '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Think better of it')) +
       '</button></div>';
     openModal(FB.T('Choose Your Conquest'), h, {
       historyView:!!returnContext,
+      guide:guideModalOption('war-guide', 'war', 'Guide: war'),
       historyBackRender:function () {
         interactionReturn(returnContext);
       }
@@ -2799,9 +2799,6 @@ window.FB = window.FB || {};
           mobileNavClosedAll('modal-view', true);
         }
       });
-    });
-    $('war-guide').addEventListener('click', function () {
-      UI.showGuideEntry('war');
     });
     $('gm-cancel').addEventListener('click', function () {
       if (returnContext) {
@@ -3963,11 +3960,12 @@ window.FB = window.FB || {};
     h += '<div class="gm-footer">' +
       (idx === 0 ? '<button class="btn" id="settlement-market">' +
         esc(FB.T('County market')) + '</button>' : '') +
-      '<button class="btn" id="settlement-guide">' +
-      esc(FB.T('Guide: settlements and development')) +
-      '</button><button class="btn" id="gm-cancel">' +
+      '<button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
-    openModal(SETT_ICON[st.kind] + ' ' + st.name, h);
+    openModal(SETT_ICON[st.kind] + ' ' + st.name, h, {
+      guide:guideModalOption('settlement-guide', 'settlements-development',
+        'Guide: settlements and development')
+    });
     if (canRaise) {
       $('gm-raise').addEventListener('click', function () { UI.showBuildings(pid, idx); });
     }
@@ -3984,9 +3982,6 @@ window.FB = window.FB || {};
       button.addEventListener('click', function () {
         UI.showTechDetail(button.dataset.fortTech);
       });
-    });
-    $('settlement-guide').addEventListener('click', function () {
-      UI.showGuideEntry('settlements-development');
     });
     document.querySelectorAll('[data-demolish]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -7719,11 +7714,11 @@ window.FB = window.FB || {};
       '<h4>' + esc(FB.T('Political actions')) + '</h4>' +
       governanceActionGroups(s, summary) + '</section></div>' +
       '<div class="gm-footer"><button type="button" class="btn" ' +
-      'id="governance-guide">' + esc(FB.T('Guide: government')) +
-      '</button><button type="button" class="btn" ' +
       'id="governance-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('🏛 Governance'), h, {
-      modalClass:'fullsheet-modal governance-modal'
+      modalClass:'fullsheet-modal governance-modal',
+      guide:guideModalOption('governance-guide', 'government',
+        'Guide: government')
     });
     const sectionButtons = document.querySelectorAll(
       '[data-governance-section]');
@@ -7899,9 +7894,6 @@ window.FB = window.FB || {};
           UI.showPrivileges('governance');
         });
       });
-    $('governance-guide').addEventListener('click', function () {
-      UI.showGuideEntry('government');
-    });
     $('governance-close').addEventListener('click', UI.closeModal);
     if (sectionId) {
       setTimeout(function () {
@@ -11078,24 +11070,29 @@ window.FB = window.FB || {};
     return h;
   }
 
+  function enterpriseViewSelectHtml(attribute, options) {
+    return '<span class="enterprise-view-select"><select ' + attribute + '>' +
+      options + '</select></span>';
+  }
+
   function enterpriseViewControlsHtml(prefix, includeGroup) {
     const view = largeListViews.work;
     let h = '<div class="enterprise-view-controls" data-enterprise-view-controls="' +
       esc(prefix) + '">';
     if (includeGroup) {
-      h += '<label><span>' + esc(FB.T('Group enterprises')) + '</span><select ' +
-        'data-enterprise-group><option value="none"' +
+      h += '<label><span>' + esc(FB.T('Group enterprises')) + '</span>' +
+        enterpriseViewSelectHtml('data-enterprise-group', '<option value="none"' +
         (view.enterpriseGroup === 'none' ? ' selected' : '') + '>' +
         esc(FB.T('No grouping')) + '</option><option value="category"' +
         (view.enterpriseGroup === 'category' ? ' selected' : '') + '>' +
         esc(FB.T('Farming, Craft, and Trade')) +
         '</option><option value="settlement"' +
         (view.enterpriseGroup === 'settlement' ? ' selected' : '') + '>' +
-        esc(FB.T('Settlement')) + '</option></select></label>';
+        esc(FB.T('Settlement')) + '</option>') + '</label>';
     }
-    h += '<label><span>' + esc(FB.T('Enterprise order')) + '</span><select ' +
-      'data-enterprise-sort>' + enterpriseSortOptions(view.enterpriseSort) +
-      '</select></label></div>';
+    h += '<label><span>' + esc(FB.T('Enterprise order')) + '</span>' +
+      enterpriseViewSelectHtml('data-enterprise-sort',
+        enterpriseSortOptions(view.enterpriseSort)) + '</label></div>';
     return h;
   }
 
@@ -11760,13 +11757,13 @@ window.FB = window.FB || {};
       { id:'idle', label:FB.T('Idle') },
       { id:'unavailable', label:FB.T('Unavailable') }
     ]);
-    h += '<div class="gm-footer"><button class="btn" id="work-guide">' +
-      esc(FB.T('Guide: work and family scope')) +
-      '</button><button class="btn" id="gm-cancel">' +
+    h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
     const modalOptions = householdPlanHistoryOptions(returnContext) || {};
     modalOptions.modalClass = 'large-list-modal work-list-modal';
     modalOptions.replaceView = !!replaceView;
+    modalOptions.guide = guideModalOption('work-guide', 'family-scopes',
+      'Guide: work and family scope');
     openModal(FB.T('🧰 Work & Enterprises'), h, modalOptions);
     FB.paintFaces($('gm-body'), s);
     initLargeListSurface('work', { restoreFocus:true });
@@ -11794,9 +11791,6 @@ window.FB = window.FB || {};
         UI.showEnterpriseStaffingPreview(returnContext);
       });
     }
-    $('work-guide').addEventListener('click', function () {
-      UI.showGuideEntry('family-scopes');
-    });
     $('gm-cancel').addEventListener('click', function () {
       finishHouseholdPlanReturn(returnContext, UI.closeModal);
     });
@@ -14204,11 +14198,12 @@ window.FB = window.FB || {};
     if (lastDomain !== null) h += '</section>';
     h += '</div><div class="tech-empty hidden" id="tech-empty">' +
       esc(FB.T('No technologies match these filters.')) +
-      '</div><div class="gm-footer"><button class="btn" id="tech-guide">' +
-      esc(FB.T('Guide: technology')) +
-      '</button><button class="btn" id="gm-cancel">' +
+      '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal(FB.T('Technology'), h, { modalClass:'fullsheet-modal technology-modal' });
+    openModal(FB.T('Technology'), h, {
+      modalClass:'fullsheet-modal technology-modal',
+      guide:guideModalOption('tech-guide', 'technology', 'Guide: technology')
+    });
     $('tech-status').value = techCatalogueView.status;
 
     function applyFilters() {
@@ -14241,9 +14236,6 @@ window.FB = window.FB || {};
     });
     const autoButton = $('tech-auto');
     if (autoButton) autoButton.addEventListener('click', UI.showTechAutomation);
-    $('tech-guide').addEventListener('click', function () {
-      UI.showGuideEntry('technology');
-    });
     $('gm-cancel').addEventListener('click', UI.closeModal);
     applyFilters();
   };
@@ -14360,12 +14352,14 @@ window.FB = window.FB || {};
       h += '<button class="btn primary" id="tech-advocate">' +
         esc(FB.T('Advocate · {money:20} · Standing −15')) + '</button>';
     }
-    h += '<button class="btn" id="tech-detail-guide">' +
-      esc(FB.T('Guide: technology')) +
-      '</button><button class="btn" id="tech-back">' + esc(FB.T('Back')) +
+    h += '<button class="btn" id="tech-back">' + esc(FB.T('Back')) +
       '</button></div>';
     openModal(def.icon + ' ' + dt(s, 'tech', id, def, 'name'), h,
-      { modalClass:'fullsheet-modal technology-modal' });
+      {
+        modalClass:'fullsheet-modal technology-modal',
+        guide:guideModalOption('tech-detail-guide', 'technology',
+          'Guide: technology')
+      });
     document.querySelectorAll('[data-tech-jump]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showTechDetail(button.dataset.techJump);
@@ -14392,9 +14386,6 @@ window.FB = window.FB || {};
         UI.refresh();
         UI.showTechDetail(id);
       }
-    });
-    $('tech-detail-guide').addEventListener('click', function () {
-      UI.showGuideEntry('technology');
     });
     $('tech-back').addEventListener('click', UI.showTech);
   };
@@ -17119,13 +17110,11 @@ window.FB = window.FB || {};
           esc(FB.fullName(row.character)) + '</b><span>' +
           esc(heirEligibilityText(s, row)) + '</span></div>';
       }
-      empty += '<div class="gm-footer"><button class="btn" id="heir-guide">' +
-        esc(FB.T('Guide: inheritance')) +
-        '</button><button class="btn" id="hp-close">' +
+      empty += '<div class="gm-footer"><button class="btn" id="hp-close">' +
         esc(FB.T('Close')) + '</button></div>';
-      openModal(FB.T('📜 Name Your Heir'), empty);
-      $('heir-guide').addEventListener('click', function () {
-        UI.showGuideEntry('inheritance');
+      openModal(FB.T('📜 Name Your Heir'), empty, {
+        guide:guideModalOption('heir-guide', 'inheritance',
+          'Guide: inheritance')
       });
       $('hp-close').addEventListener('click', UI.closeModal);
       return;
@@ -17159,11 +17148,11 @@ window.FB = window.FB || {};
           esc(heirEligibilityText(s, row)) + '</span></div>';
       }
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="heir-guide">' +
-      esc(FB.T('Guide: inheritance')) +
-      '</button><button class="btn" id="hp-close">' +
+    h += '</div><div class="gm-footer"><button class="btn" id="hp-close">' +
       esc(FB.T('Decide later')) + '</button></div>';
-    openModal(FB.T('📜 Name Your Heir'), h);
+    openModal(FB.T('📜 Name Your Heir'), h, {
+      guide:guideModalOption('heir-guide', 'inheritance', 'Guide: inheritance')
+    });
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-namedheir]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -17176,9 +17165,6 @@ window.FB = window.FB || {};
         UI.closeModal();
       });
     });
-    $('heir-guide').addEventListener('click', function () {
-      UI.showGuideEntry('inheritance');
-    });
     $('hp-close').addEventListener('click', UI.closeModal);
   };
 
@@ -17188,9 +17174,7 @@ window.FB = window.FB || {};
     if (!s || !FB.game || !FB.game.retirePreview) return false;
     const me = s.chars[s.player.charId];
     const preview = FB.game.retirePreview();
-    const footer = '<div class="gm-footer"><button class="btn" id="retire-guide">' +
-      esc(FB.T('Guide: inheritance')) +
-      '</button><button class="btn" id="retire-close">' +
+    const footer = '<div class="gm-footer"><button class="btn" id="retire-close">' +
       esc(FB.T('Decide later')) + '</button></div>';
 
     if (!preview.eligible) {
@@ -17200,9 +17184,9 @@ window.FB = window.FB || {};
         blocked += '<p>• ' + esc(reason) + '</p>';
       }
       blocked += '</div>';
-      openModal(FB.T('👴 Hand over the house'), blocked + footer);
-      $('retire-guide').addEventListener('click', function () {
-        UI.showGuideEntry('inheritance');
+      openModal(FB.T('👴 Hand over the house'), blocked + footer, {
+        guide:guideModalOption('retire-guide', 'inheritance',
+          'Guide: inheritance')
       });
       $('retire-close').addEventListener('click', UI.closeModal);
       return true;
@@ -17236,7 +17220,10 @@ window.FB = window.FB || {};
           heirEligibilityText(s, reviewById[c.id])) + '</span></button>';
     }
     h += '</div>';
-    openModal(FB.T('👴 Hand over the house'), h + footer);
+    openModal(FB.T('👴 Hand over the house'), h + footer, {
+      guide:guideModalOption('retire-guide', 'inheritance',
+        'Guide: inheritance')
+    });
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-retire-heir]').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -17247,9 +17234,6 @@ window.FB = window.FB || {};
           UI.showRetirement();
         }
       });
-    });
-    $('retire-guide').addEventListener('click', function () {
-      UI.showGuideEntry('inheritance');
     });
     $('retire-close').addEventListener('click', UI.closeModal);
     return true;
@@ -18695,15 +18679,14 @@ window.FB = window.FB || {};
       roleOrientationBody(def) +
       '<div class="gm-footer">' +
       '<button class="btn primary" id="orientation-continue">' +
-      esc(FB.T('Continue')) + '</button>' +
-      '<button class="btn" id="orientation-guide">' +
-      esc(FB.T('Read more in the Guide')) + '</button></div>',
-      { historyView:true });
+      esc(FB.T('Continue')) + '</button></div>',
+      {
+        historyView:true,
+        guide:guideModalOption('orientation-guide', def.guideId,
+          'Read more in the Guide')
+      });
     $('orientation-continue').addEventListener('click', function () {
       modalHistoryBack(function () { UI.closeModal(); });
-    });
-    $('orientation-guide').addEventListener('click', function () {
-      UI.showGuideEntry(def.guideId);
     });
     return true;
   };
@@ -18769,15 +18752,14 @@ window.FB = window.FB || {};
       '</div><ol>' + hints + '</ol></div>' +
       '<div class="gm-footer">' +
       '<button class="btn primary" id="panel-intro-continue">' +
-      esc(FB.T('Continue')) + '</button>' +
-      '<button class="btn" id="panel-intro-guide">' +
-      esc(FB.T('Read more in the Guide')) + '</button></div>',
-      { historyView:true });
+      esc(FB.T('Continue')) + '</button></div>',
+      {
+        historyView:true,
+        guide:guideModalOption('panel-intro-guide', def.guideId,
+          'Read more in the Guide')
+      });
     $('panel-intro-continue').addEventListener('click', function () {
       modalHistoryBack(function () { UI.closeModal(); });
-    });
-    $('panel-intro-guide').addEventListener('click', function () {
-      UI.showGuideEntry(def.guideId);
     });
     return true;
   };
@@ -19070,19 +19052,18 @@ window.FB = window.FB || {};
         esc(FB.T('More info')) + '</a></div>';
       h += '</div></div>';
     }
-    /* entered from another dialog (a context modal or the menu): offer a
-       Back button that returns to it; Close always dismisses the guide */
+    /* Entered from another dialog, Close returns to that context; a Guide
+       opened directly still uses its ordinary close destination. */
     const fromModal = !$('genmodal').classList.contains('hidden');
-    let backView = null;
     h += '</div><div class="tech-empty hidden" id="guide-empty">' +
       esc(FB.T('No guide entries match this search.')) +
       '</div><div class="gm-footer">' +
-      (fromModal ? '<button class="btn" id="guide-back">' + esc(FB.T('Back')) + '</button>' : '') +
       '<button class="btn" id="guide-close">' +
       esc(FB.T('Close')) + '</button></div>';
+    let backView = null;
     if (fromModal && !mobileNavEnsure()) {
       /* no mobile history layer will capture the context dialog, so its
-         live nodes (listeners and all) move aside; Back restores them */
+         live nodes (listeners and all) move aside; Close restores them */
       backView = {};
       captureModalView(backView);
     }
@@ -19132,14 +19113,13 @@ window.FB = window.FB || {};
         UI.showTechDetail(button.dataset.guideTech);
       });
     });
-    if (fromModal) {
-      $('guide-back').addEventListener('click', function () {
+    $('guide-close').addEventListener('click', function () {
+      if (fromModal) {
         if (backView) restoreModalView(backView);
         else modalHistoryBack(function () { UI.closeModal(); });
-      });
-    }
-    $('guide-close').addEventListener('click', function () {
-      if (options.closeToGame || fromModal) {
+        return;
+      }
+      if (options.closeToGame) {
         UI.closeModal();
         return;
       }

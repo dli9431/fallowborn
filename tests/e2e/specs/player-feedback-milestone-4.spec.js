@@ -812,10 +812,30 @@ test.describe('house renaming', function () {
 
       const renameButton = page.locator('#self-rename-house');
       await expect(renameButton).toBeVisible();
+      await expect(renameButton).toHaveAccessibleName('Rename house');
+      await expect(renameButton).toHaveAttribute('title', 'Rename house');
+      await expect(page.locator('.dynasty-house-row #self-rename-house')).toHaveCount(1);
+      const renameButtonStyle = await renameButton.evaluate(function (button) {
+        const style = getComputedStyle(button);
+        return {
+          alignItems:style.alignItems,
+          border:style.borderTopWidth,
+          display:style.display,
+          justifyContent:style.justifyContent
+        };
+      });
+      expect(renameButtonStyle).toEqual({
+        alignItems:'center', border:'1px', display:'inline-flex', justifyContent:'center'
+      });
       await renameButton.click();
       await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
       const input = page.locator('#rename-house-name');
       await expect(input).toHaveValue(oldDyn);
+      await expect(page.locator('#gm-body .modal-actions')).toHaveCount(0);
+      await expect(page.locator('#gm-body .gm-footer [data-rename-house="confirm"]'))
+        .toHaveCount(1);
+      await expect(page.locator('#gm-body .gm-footer [data-rename-house="cancel"]'))
+        .toHaveCount(1);
 
       /* an invalid name keeps the dialog open and explains itself */
       await input.fill('Ada2');

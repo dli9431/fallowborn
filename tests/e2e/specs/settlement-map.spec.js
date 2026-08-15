@@ -716,23 +716,33 @@ test('the guide returns to the context modal on Back and dismisses on Close',
       return FB.settlementsOf(FB.state, id)[0].name;
     }, pid);
     await expect(page.locator('#gm-title')).toContainText(name);
+    const guide = page.locator('#genmodal .gm-heading > #settlement-guide');
+    await expect(guide).toHaveClass(/modal-guide-button/);
+    await expect(guide).toHaveText('i');
+    await expect(guide).toHaveAttribute(
+      'aria-label', 'Guide: settlements and development');
+    await expect(page.locator('#genmodal .gm-footer #settlement-guide')).toHaveCount(0);
 
-    /* entering the guide from the sheet offers a Back button that restores
-       the sheet — live nodes, listeners and all */
-    await page.locator('#settlement-guide').click();
+    /* closing the guide returns to the sheet with its live nodes, listeners,
+       and header help control restored */
+    await guide.click();
     await expect(page.locator('#gm-title')).toContainText('Guide');
-    await expect(page.locator('#guide-back')).toHaveCount(1);
-    await page.locator('#guide-back').click();
+    await expect(page.locator('#guide-back')).toHaveCount(0);
+    await page.locator('#guide-close').click();
     await expect(page.locator('#gm-title')).toContainText(name);
+    await expect(page.locator('#genmodal .gm-heading > #settlement-guide'))
+      .toBeVisible();
     /* the restored sheet's own buttons still work */
     await page.locator('#gm-cancel').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
-    /* Close dismisses the guide outright — it never reopens the menu */
+    /* Close consistently returns to the source sheet. */
     await page.evaluate(function (id) { FB.ui.showSettlement(id, 0); }, pid);
     await page.locator('#settlement-guide').click();
     await expect(page.locator('#gm-title')).toContainText('Guide');
     await page.locator('#guide-close').click();
+    await expect(page.locator('#gm-title')).toContainText(name);
+    await page.locator('#gm-cancel').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 

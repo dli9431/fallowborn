@@ -95,6 +95,11 @@ control in a `.gm-footer`. `UI.openModal` normalizes legacy loose Close/Done/Can
 buttons into that footer while leaving substantive choices in the scrolling body. Footer
 controls are centered, 200 px wide, and at least 52 px high on every layout; multiple
 controls wrap as equal-sized rows rather than changing width.
+Compact in-panel edits, such as House rename, sit inline beside the value they change as a
+small bordered icon button with an accessible localized name and tooltip; the icon is
+decorative and the button expands to the 44 px touch target on compact layouts. Its modal
+form keeps only Rename/Cancel-style terminal controls in the shared sticky `.gm-footer`,
+never in an ad-hoc action row in the scrolling body.
 
 **Responsive layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). From the 821 px desktop breakpoint through 1440 px, the
@@ -135,15 +140,18 @@ so dead entries do not accumulate. This uses only the game's own frame history a
 reaches into an embed's parent page. Android consumes physical Back to leave itch's
 browser-owned iframe fullscreen before it traverses that history, so nested equipment
 pickers show a sticky in-game Back control on embedded mobile layouts; it invokes the same
-owned history entry and keeps fullscreen active. Generic dialogs do not add a shared header
-control and instead rely on their modal-specific visible controls. Direct play on
+owned history entry and keeps fullscreen active. A dialog with contextual Guide help puts a
+compact, accessible info icon beside its optically vertically centered title; it retains the exact Guide destination. Closing
+the Guide restores its originating dialog, while footers remain for terminal modal controls only. Direct play on
 `play.fallowborn.com` continues to use device Back normally. Entries carry UI descriptors
 only; gameplay actions and mandatory event decisions are never made undoable. If the History
 API is unavailable or rejects an entry, all existing visible controls remain the fallback.
 
 Every generic modal uses a flex-column card with a scrolling `#gm-body` and a sticky,
 centered `.gm-footer`, so its terminal controls remain at the bottom middle while long
-content scrolls behind them. Two families break only the bottom-sheet framing: the Changelog
+content ends at the footer's opaque, bordered cutoff rather than fading behind it. Search
+and select controls inside a sticky modal toolbar keep a small horizontal inset, so their
+focus border never visually merges with the card edge. Two families break only the bottom-sheet framing: the Changelog
 (`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
 and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
 Action buttons never flex-shrink inside these columns, so wrapped descriptions and expanded
@@ -221,7 +229,8 @@ including when every enterprise there is unavailable.
 The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-only
 former calling. Career changes, guild steps, and personal enterprise assignment are
 removed while household occupations, religious-office advancement, and business
-staffing remain available. Each staffed enterprise has a saved **Lock this worker to
+staffing remain available. Its Group enterprises and Enterprise order selectors use the
+same parchment treatment as the Market basket picker. Each staffed enterprise has a saved **Lock this worker to
 this enterprise** checkbox; locked pairings are marked in both this sheet and Household
 Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦** opens a
 no-day static review of the maximum-yield result across all unlocked assignments. The
