@@ -30,7 +30,6 @@ window.FB = window.FB || {};
   const equipmentSheetHtml = SH.equipmentSheetHtml;
   const esc = SH.esc;
   const eventChoiceUsesDisclosure = SH.eventChoiceUsesDisclosure;
-  const firstMissingTech = SH.firstMissingTech;
   const fmtAmt = SH.fmtAmt;
   const focusShortcutTarget = SH.focusShortcutTarget;
   const foreignPolicyStanceText = SH.foreignPolicyStanceText;
@@ -11008,14 +11007,7 @@ window.FB = window.FB || {};
   }
 
   function enterpriseProblemState(s, enterprise) {
-    const worker = enterprise.workerId && s.chars[enterprise.workerId];
-    const eligible = FB.enterpriseWorkersFor(s, enterprise);
-    let valid = false;
-    for (const candidate of eligible) {
-      if (worker && !worker.dead && candidate.id === worker.id) valid = true;
-    }
-    if (valid) return 'staffed';
-    return eligible.length ? 'idle' : 'blocked';
+    return FB.enterpriseStaffingStatus(s, enterprise).state;
   }
 
   function sortedEnterpriseRecords(s, source) {
@@ -11634,16 +11626,10 @@ window.FB = window.FB || {};
     for (const e of enterprises) {
       const def = FBDATA.enterprises[e.type];
       if (!def) continue;
-      const worker = e.workerId && s.chars[e.workerId] && !s.chars[e.workerId].dead ?
-        s.chars[e.workerId] : null;
-      const eligible = FB.enterpriseWorkersFor(s, e);
-      const remote = e.provinceId !== s.player.provinceId;
-      let validWorker = false;
-      for (const candidate of eligible) {
-        if (worker && candidate.id === worker.id) validWorker = true;
-      }
-      const unresolved = !worker || !validWorker;
-      const blocked = unresolved && !eligible.length;
+      const staffing = FB.enterpriseStaffingStatus(s, e);
+      const worker = staffing.currentWorker;
+      const unresolved = !staffing.staffed;
+      const blocked = staffing.blocked;
       const attention = unresolved;
       let state = 'staffed';
       let stateLabel = FB.T('Staffed');
@@ -11659,24 +11645,12 @@ window.FB = window.FB || {};
         stateLabel = FB.T('Blocked');
         blockedEnterprises++;
         idleEnterprises++;
-        workerText = remote
-          ? FB.T('No resident worker in {place}; it remains owned but idle.', {
-            place:enterprisePlace(s, e)
-          })
-          : (worker
-            ? FB.T('{name} is no longer eligible; no replacement is available.', {
-              name:worker.name
-            })
-            : FB.T('No eligible worker is available.'));
+        workerText = staffing.reason;
       } else {
         state = 'idle';
         stateLabel = FB.T('Idle');
         idleEnterprises++;
-        workerText = worker
-          ? FB.T('{name} is no longer eligible; choose a replacement.', {
-            name:worker.name
-          })
-          : FB.T('Idle — eligible workers are available.');
+        workerText = staffing.reason;
       }
       const liveYield = FB.enterpriseYield(s, e);
       enterpriseGold += liveYield;
@@ -11733,10 +11707,15 @@ window.FB = window.FB || {};
     }
     const settlements = FB.settlementsOf(s, s.player.provinceId);
     for (let i = 0; i < settlements.length; i++) {
-      if (!FB.enterpriseAvailable(s, i, true).length) continue;
+      const catalogue = FB.enterpriseCatalogue(s, s.player.provinceId, i);
+      let available = 0;
+      for (const option of catalogue) if (option.ready) available++;
       enterpriseFooter += '<button class="actionbtn" data-enterprise-settlement="' + i + '">🏪 ' +
         esc(FB.T('Open an enterprise in {settlement}…', { settlement:settlements[i].name })) +
-        '<span class="adesc">' + esc(FB.T('Buy productive property; further copies of one kind cost more.')) +
+        '<span class="adesc">' + esc(FB.T(
+          '{available} available now · {unavailable} unavailable. Review every enterprise and its requirements.', {
+            available:available, unavailable:catalogue.length - available
+          })) +
         '</span></button>';
     }
     const enterpriseSections = [];
@@ -13228,61 +13207,204 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showEnterpriseMarket = function (settlement, returnContext) {
+  function enterprisePurchaseGuidance(blocker) {
+    if (!blocker) return '';
+    if (blocker.code === 'occupied') {
+      return FB.T('Choose another settlement if you want another copy.');
+    }
+    if (blocker.code === 'development') {
+      return FB.T('Raise this county’s development to meet the requirement.');
+    }
+    if (blocker.code === 'coastal' || blocker.code === 'terrain') {
+      return FB.T('This enterprise needs a different kind of county.');
+    }
+    if (blocker.code === 'technology') {
+      return FB.T('The sovereign nation must complete the missing technology.');
+    }
+    if (blocker.code === 'funds') {
+      return FB.T('Obtain the remaining gold, then return to this settlement.');
+    }
+    return '';
+  }
+
+  function enterprisePurchaseState(status) {
+    if (!status.ready) {
+      return {
+        label:FB.T('Unavailable'),
+        detail:status.primary ? status.primary.reason : FB.T('Requirements are not met.'),
+        className:'blocked'
+      };
+    }
+    if (status.warnings.length) {
+      return {
+        label:FB.T('Can buy — will be idle'),
+        detail:status.warnings[0].reason,
+        className:'warning'
+      };
+    }
+    return {
+      label:FB.T('Ready'),
+      detail:FB.T('{count} eligible household workers.', {
+        count:status.workers.length
+      }),
+      className:'ready'
+    };
+  }
+
+  function enterprisePurchaseOptionHtml(s, status) {
+    const def = status.def;
+    const state = enterprisePurchaseState(status);
+    const name = dt(s, 'enterprise', status.id, def, 'name');
+    const preview = {
+      type:status.id, provinceId:status.provinceId,
+      settlement:status.settlement
+    };
+    const action = status.ready
+      ? ' data-enterprise-buy="' + esc(status.id) + '"'
+      : ' data-enterprise-explain="' + esc(status.id) +
+        '" data-enterprise-available="false" aria-label="' + esc(FB.T(
+          'Review requirements for {enterprise}. Unavailable: {reason}', {
+            enterprise:name, reason:state.detail
+          })) + '"';
+    return '<button type="button" class="actionbtn enterprise-purchase-option ' +
+      state.className + '"' + action + '>' +
+      '<span class="enterprise-purchase-head"><span>' +
+      esc(FB.T('{icon} {name}', { icon:def.icon, name:name })) +
+      '</span><span class="enterprise-purchase-state">' +
+      esc(state.label) + '</span></span>' +
+      '<span class="adesc enterprise-purchase-desc">' +
+      esc(dt(s, 'enterprise', status.id, def, 'desc')) + '</span>' +
+      '<span class="adesc enterprise-purchase-reason">' +
+      esc(state.detail) + '</span>' + (!status.ready
+        ? '<span class="adesc enterprise-purchase-review">' +
+          esc(FB.T('Select to review every requirement.')) + '</span>' : '') +
+      assetEffectSummary({
+        compact:true,
+        owner:FB.T('Household dynasty'),
+        scope:enterprisePlace(s, preview),
+        setupCost:assetMoneyCost(status.cost, status.shortfall <= 0.000001),
+        recurringCost:enterpriseRecurringCost(),
+        effect:enterpriseEffectText(s, preview, def, true),
+        transferRule:enterpriseTransferRule(),
+        expiry:FB.T('No fixed end')
+      }) + '</button>';
+  }
+
+  UI.showEnterpriseRequirements = function (type, settlement, returnContext) {
+    const s = FB.state;
+    const status = FB.enterprisePurchaseStatus(
+      s, type, s.player.provinceId, settlement);
+    if (!status.def) return;
+    const name = dt(s, 'enterprise', type, status.def, 'name');
+    const place = status.site ? status.site.name : FB.T('Unknown place');
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Review every current requirement for {enterprise} in {settlement}.', {
+        enterprise:name, settlement:place
+      })) + '</p></div>';
+    if (status.ready) {
+      const readyState = enterprisePurchaseState(status);
+      h += '<div class="enterprise-requirement-summary ' +
+        readyState.className + '"><b>' + esc(readyState.label) +
+        '</b><span>' + esc(readyState.detail) + '</span></div>';
+    } else {
+      h += '<div class="enterprise-requirement-summary blocked"><b>' +
+        esc(FB.T('Unavailable now')) + '</b><span>' + esc(FB.T(
+          '{count} requirements are not met.', {
+            count:status.blockers.length
+          })) + '</span></div><div class="enterprise-requirement-list">';
+      for (const blocker of status.blockers) {
+        const guidance = enterprisePurchaseGuidance(blocker);
+        h += '<div class="enterprise-requirement-row" data-enterprise-blocker="' +
+          esc(blocker.code) + '"><b>' + esc(blocker.reason) + '</b>' +
+          (guidance ? '<span>' + esc(guidance) + '</span>' : '') + '</div>';
+      }
+      h += '</div>';
+    }
+    if (status.warnings.length) {
+      h += '<div class="enterprise-requirement-warning"><b>' +
+        esc(FB.T('Staffing warning')) + '</b><span>' +
+        esc(status.warnings[0].reason) + '</span>' +
+        (status.warnings[0].guidance ? '<span>' +
+          esc(status.warnings[0].guidance) + '</span>' : '') + '</div>';
+    }
+    for (const blocker of status.blockers) {
+      if (blocker.code !== 'technology' || !FB.techUiRelevant(s)) continue;
+      for (const techId of (blocker.techIds || [])) {
+        h += '<button type="button" class="actionbtn tech-locked-link" ' +
+          'data-enterprise-requirement-tech="' + esc(techId) + '">' +
+          esc(FB.T('Open technology: {technology}', {
+            technology:technologyName(s, techId)
+          })) + '</button>';
+      }
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="enterprise-requirements-back">' + esc(FB.T('Back')) +
+      '</button></div>';
+    openModal(FB.T('{enterprise} requirements', { enterprise:name }), h, {
+      historyView:true
+    });
+    document.querySelectorAll('[data-enterprise-requirement-tech]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showTechDetail(button.dataset.enterpriseRequirementTech);
+        });
+      });
+    $('enterprise-requirements-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showEnterpriseMarket(settlement, returnContext);
+        setTimeout(function () {
+          const row = document.querySelector('[data-enterprise-explain="' +
+            type + '"]');
+          if (row) row.focus();
+        }, 0);
+      });
+    });
+  };
+
+  UI.showEnterpriseMarket = function (settlement, returnContext, replaceView) {
     const s = FB.state;
     const sts = FB.settlementsOf(s, s.player.provinceId);
     const place = sts[settlement] ? sts[settlement].name : '?';
+    const catalogue = FB.enterpriseCatalogue(
+      s, s.player.provinceId, settlement);
+    let available = 0;
+    for (const status of catalogue) if (status.ready) available++;
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'One enterprise of each kind may stand in a settlement. It earns only while an eligible household member works there.')) +
-      '</p></div><div class="gm-list">';
-    for (const item of FB.enterpriseAvailable(s, settlement, true)) {
-      const short = s.player.gold < item.cost;
-      const preview = {
-        provinceId:s.player.provinceId,
-        settlement:settlement
-      };
-      if (item.techLocked) {
-        const techId = firstMissingTech(s, item.def.requiresTech);
-        const canReviewTechnology = FB.techUiRelevant(s);
-        h += '<button class="actionbtn tech-locked-link"' +
-          (canReviewTechnology
-            ? ' data-enterprise-tech="' + esc(techId) + '"'
-            : ' disabled') + '>' +
-          esc(FB.T('{icon} {name}', {
-            icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name')
-          })) + '<span class="adesc">' +
-          esc(dt(s, 'enterprise', item.id, item.def, 'desc')) + ' ' +
-          esc(techRequirementText(s, item.def.requiresTech)) +
-          (canReviewTechnology
-            ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
-          '</span></button>';
-        continue;
-      }
-      h += '<button class="actionbtn" data-enterprise-buy="' + item.id + '"' +
-        (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name}', {
-          icon:item.def.icon, name:dt(s, 'enterprise', item.id, item.def, 'name')
-        })) + '<span class="adesc">' + esc(dt(s, 'enterprise', item.id, item.def, 'desc')) +
-        ' ' + esc(item.workers.length
-          ? FB.T('{count} eligible household workers.', { count:item.workers.length })
-          : FB.T('No eligible worker yet — it would stand idle.')) +
-        '</span>' + assetEffectSummary({
-          compact:true,
-          owner:FB.T('Household dynasty'),
-          scope:enterprisePlace(s, preview),
-          setupCost:assetMoneyCost(item.cost, !short),
-          recurringCost:enterpriseRecurringCost(),
-          effect:enterpriseEffectText(s, preview, item.def, true),
-          transferRule:enterpriseTransferRule(),
-          expiry:FB.T('No fixed end')
-        }) + '</button>';
+      '</p></div><div class="enterprise-catalogue-summary">' +
+      kv('Available now', esc(String(available))) +
+      kv('Unavailable', esc(String(catalogue.length - available))) +
+      '</div><div class="gm-list">';
+    let showingBlocked = false;
+    if (available) {
+      h += '<div class="panelh enterprise-catalogue-group">' +
+        esc(FB.T('Available now')) + '</div>';
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    for (const status of catalogue) {
+      if (!status.ready && !showingBlocked) {
+        showingBlocked = true;
+        h += '<div class="panelh enterprise-catalogue-group">' +
+          esc(FB.T('Unavailable here')) + '</div>';
+      }
+      h += enterprisePurchaseOptionHtml(s, status);
+    }
+    h += '</div><button class="btn" id="gm-cancel">' +
+      esc(FB.T('Back')) + '</button>';
+    const modalOptions = livelihoodsHistoryOptions(returnContext);
+    modalOptions.replaceView = !!replaceView;
     openModal(FB.T('Enterprise in {settlement}', { settlement:place }), h,
-      livelihoodsHistoryOptions(returnContext));
+      modalOptions);
     document.querySelectorAll('[data-enterprise-buy]').forEach(function (b) {
       b.addEventListener('click', function () {
-        if (!FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) return;
+        const live = FB.enterprisePurchaseStatus(s,
+          b.dataset.enterpriseBuy, s.player.provinceId, settlement);
+        if (!live.ready ||
+            !FB.buyEnterprise(s, b.dataset.enterpriseBuy, settlement)) {
+          UI.toast(
+            'Enterprise requirements changed. Review the updated status.');
+          UI.showEnterpriseMarket(settlement, returnContext, true);
+          return;
+        }
         UI.closeModal();
         FB.game.passDay({ skipFocus:true });
         resumeManagementAfterDay(returnContext, function () {
@@ -13290,9 +13412,10 @@ window.FB = window.FB || {};
         });
       });
     });
-    document.querySelectorAll('[data-enterprise-tech]').forEach(function (b) {
+    document.querySelectorAll('[data-enterprise-explain]').forEach(function (b) {
       b.addEventListener('click', function () {
-        UI.showTechDetail(b.dataset.enterpriseTech);
+        UI.showEnterpriseRequirements(
+          b.dataset.enterpriseExplain, settlement, returnContext);
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -13307,6 +13430,8 @@ window.FB = window.FB || {};
     for (const item of FB.enterpriseList(s)) if (item.uid === uid) e = item;
     if (!e || !FBDATA.enterprises[e.type]) return;
     const def = FBDATA.enterprises[e.type];
+    const staffing = FB.enterpriseStaffingStatus(s, e);
+    const eligibleWorkers = staffing.eligibleWorkers;
     function enterpriseLabel(item) {
       const itemDef = item && FBDATA.enterprises[item.type];
       if (!itemDef) return FB.T('Unknown enterprise');
@@ -13347,8 +13472,15 @@ window.FB = window.FB || {};
       }
       return parts.length ? parts.join(' ') : FB.T('No one is displaced.');
     }
-    let h = '<div class="gm-body-text"><p>' + esc(dt(s, 'enterprise', e.type, def, 'desc')) +
-      '</p>' + assetEffectSummary({
+    const staffingLabel = staffing.state === 'staffed'
+      ? FB.T('Staffed') : (staffing.state === 'idle'
+        ? FB.T('Idle — worker available') : FB.T('Blocked from staffing'));
+    let h = '<div class="gm-body-text"><p>' +
+      esc(dt(s, 'enterprise', e.type, def, 'desc')) + '</p>' +
+      '<div class="enterprise-management-status ' + staffing.state + '"><b>' +
+      esc(staffingLabel) + '</b><span>' + esc(staffing.reason) + '</span>' +
+      (staffing.guidance ? '<span class="enterprise-management-guidance">' +
+        esc(staffing.guidance) + '</span>' : '') + '</div>' + assetEffectSummary({
         owner:FB.T('Household dynasty'),
         scope:enterprisePlace(s, e),
         setupCost:FB.T('Paid on purchase'),
@@ -13365,7 +13497,12 @@ window.FB = window.FB || {};
         ? FB.T('The staffing assistant will preserve this pairing. Manual changes may still replace it.')
         : FB.T('Assign a worker before locking this enterprise.')) +
       '</span></label><div class="gm-list">';
-    for (const c of FB.enterpriseWorkersFor(s, e)) {
+    if (!eligibleWorkers.length) {
+      h += '<div class="enterprise-worker-empty"><b>' +
+        esc(FB.T('No worker can be assigned yet.')) + '</b><span>' +
+        esc(staffing.guidance) + '</span></div>';
+    }
+    for (const c of eligibleWorkers) {
       const current = workerAssignment(c.id);
       const preview = {
         type:e.type, provinceId:e.provinceId, settlement:e.settlement,
@@ -13475,10 +13612,12 @@ window.FB = window.FB || {};
     return labels[row.status] || labels.unchanged;
   }
 
-  function enterpriseStaffingReason(row) {
+  function enterpriseStaffingReason(s, row) {
     if (row.unresolvedReason === 'no_eligible_worker') {
-      return FB.T(
-        'No household worker meets this enterprise’s career and guild requirements.');
+      return FB.enterpriseStaffingStatus(s, {
+        uid:row.uid, type:row.type, provinceId:row.provinceId,
+        settlement:row.settlement, workerId:row.currentWorkerId
+      }).reason;
     }
     if (row.unresolvedReason === 'eligible_workers_locked') {
       return FB.T('Every eligible worker is locked to another enterprise.');
@@ -13535,7 +13674,7 @@ window.FB = window.FB || {};
         name:current.name
       });
     }
-    return enterpriseStaffingReason(row);
+    return enterpriseStaffingReason(s, row);
   }
 
   UI.showEnterpriseStaffingPreview = function (returnContext, notice) {
@@ -13566,7 +13705,7 @@ window.FB = window.FB || {};
       const current = row.currentWorkerId && s.chars[row.currentWorkerId];
       const proposed = row.proposedWorkerId && s.chars[row.proposedWorkerId];
       const reason = row.status === 'unresolved'
-        ? enterpriseStaffingReason(row) : '';
+        ? enterpriseStaffingReason(s, row) : '';
       const change = enterpriseStaffingChange(s, row, rowByUid);
       h += '<div class="enterprise-staffing-row ' +
         (row.status === 'unresolved' ? 'unresolved' :

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.0';
+  FB.VERSION = '1.133.1';
   FB.CHANGELOG = [
+    { v: '1.133.1', date: '2026-08-15', changes: [
+      'Enterprise catalogues now show exact availability requirements, while idle family businesses explain their staffing problems.'
+    ] },
     { v: '1.133.0', date: '2026-08-15', changes: [
       'Settings → Accessibility now offers separate colors for main and helper text, with brighter defaults throughout the interface.',
       'Market controls, side panels, and the mobile map HUD now stay clear and readable across compact layouts.'

@@ -907,6 +907,72 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   grid-column: 2; color: var(--helper-text-color); font-size: 12px; line-height: 1.35;
 }
 .enterprise-worker-lock.disabled { opacity: .58; cursor: default; }
+.enterprise-catalogue-summary {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px; margin: 8px 0 12px;
+}
+.enterprise-catalogue-summary .kv { margin: 0; }
+.enterprise-catalogue-group { margin-top: 5px; }
+.enterprise-purchase-option { position: relative; }
+.enterprise-purchase-option.blocked {
+  border-style: dashed; border-color: #704737; opacity: 1;
+}
+.enterprise-purchase-option.warning { border-color: #8a6b31; }
+.enterprise-purchase-option.ready { border-color: #566d3b; }
+.enterprise-purchase-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 10px; min-width: 0; margin-bottom: 3px;
+}
+.enterprise-purchase-head > span:first-child {
+  min-width: 0; color: var(--main-text-color); font-weight: bold;
+  overflow-wrap: anywhere;
+}
+.enterprise-purchase-state {
+  flex: 0 1 auto; max-width: 48%; padding: 2px 6px;
+  border: 1px solid #6b603f; border-radius: 999px;
+  color: #b9c98a; font-size: 11px; text-align: right;
+  overflow-wrap: anywhere;
+}
+.enterprise-purchase-option.blocked .enterprise-purchase-state,
+.enterprise-purchase-option.blocked .enterprise-purchase-reason {
+  color: #d09a78; border-color: #704737;
+}
+.enterprise-purchase-option.warning .enterprise-purchase-state,
+.enterprise-purchase-option.warning .enterprise-purchase-reason {
+  color: #e0bd79; border-color: #8a6b31;
+}
+.enterprise-purchase-reason { margin-top: 4px; font-weight: bold; }
+.enterprise-purchase-review { margin-top: 2px; }
+.enterprise-requirement-summary,
+.enterprise-requirement-warning,
+.enterprise-management-status,
+.enterprise-worker-empty {
+  display: flex; flex-direction: column; gap: 3px;
+  margin: 0 0 10px; padding: 10px 12px;
+  border: 1px solid #55452a; border-radius: 8px; background: #211b12;
+}
+.enterprise-requirement-summary.ready,
+.enterprise-management-status.staffed { border-color: #566d3b; }
+.enterprise-requirement-summary.warning,
+.enterprise-requirement-warning,
+.enterprise-management-status.idle { border-color: #8a6b31; }
+.enterprise-requirement-summary.blocked,
+.enterprise-management-status.blocked,
+.enterprise-worker-empty { border-color: #704737; }
+.enterprise-requirement-summary span,
+.enterprise-requirement-warning span,
+.enterprise-management-status span,
+.enterprise-worker-empty span {
+  color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
+}
+.enterprise-requirement-list { display: grid; gap: 8px; margin-bottom: 10px; }
+.enterprise-requirement-row {
+  display: flex; flex-direction: column; gap: 3px; padding: 9px 10px;
+  border-left: 3px solid #704737; background: #241d15;
+}
+.enterprise-requirement-row b { color: #d09a78; font-size: 13px; }
+.enterprise-requirement-row span,
+.enterprise-management-guidance { color: var(--helper-text-color); font-size: 12px; }
 .enterprise-staffing-hint { margin: 8px 0; }
 .enterprise-staffing-modal .modalcard { width: min(96vw, 820px); }
 .enterprise-staffing-notice {

@@ -206,6 +206,18 @@ from scenarios goes back to the bookmark list without wiring another set
 of map listeners.
 
 Hover-only affordances need a tap path (item chips toast their description).
+The enterprise catalogue shows every known enterprise for the selected settlement rather
+than hiding geography-, development-, ownership-, technology-, or money-blocked choices.
+Purchasable rows come first. Every row carries a compact Ready, Can buy—will be idle, or
+Unavailable state and its primary explanation. An unavailable row remains a native,
+keyboard- and touch-activatable button whose action is to open a compact requirements
+sheet; it never attempts a purchase. That sheet lists every simultaneous blocker with
+current and required values, links to missing technology when the player's role can inspect
+it, and returns to the exact live catalogue view. A ready row still buys directly, while a
+no-worker warning remains non-blocking and states that the property will produce nothing
+until staffed. The Work sheet always exposes each household settlement's catalogue entry,
+including when every enterprise there is unavailable.
+
 The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-only
 former calling. Career changes, guild steps, and personal enterprise assignment are
 removed while household occupations, religious-office advancement, and business
@@ -215,6 +227,11 @@ Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦*
 no-day static review of the maximum-yield result across all unlocked assignments. The
 review shows current/proposed totals, every kept or changed pairing, and every unresolved
 enterprise with its eligibility, lock-contention, or higher-yield-allocation reason.
+Owned enterprise rows and management sheets consume `FB.enterpriseStaffingStatus`: their
+compact text and detail view therefore agree on remote residence, missing vocation,
+missing guild rank, and reassignment availability. A management sheet with no candidate
+shows an explicit empty state and the next useful step instead of an unexplained blank
+list.
 The enterprise and retainer managers also expose a person-level **Keep out of automatic
 staffing** reservation. Reserved workers are visibly marked in candidate cards; an assigned
 one stays where they are in the batch review, while an idle one is omitted.

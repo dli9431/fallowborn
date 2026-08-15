@@ -2833,7 +2833,13 @@ window.FB = window.FB || {};
   FB.enterpriseCost = function (state, type, provinceId) {
     const def = FBDATA.enterprises[type];
     let copies = 0;
-    for (const e of FB.enterpriseList(state)) if (e.type === type) copies++;
+    const player = state.player || {};
+    for (const e of (player.enterprises || [])) if (e.type === type) copies++;
+    /* Count an unmigrated legacy holding without mutating it; enterpriseList
+       will canonicalize the record when a write path next needs the list. */
+    for (const holding of (player.holdings || [])) {
+      if (LEGACY_ENTERPRISES[holding] === type) copies++;
+    }
     const raw = def.cost * Math.pow(FBDATA.balance.enterpriseRepeatCostGrowth || 1.35, copies) *
       FB.techCostFactor(state, 'enterprise');
     return FB.marketCostQuote ? FB.marketCostQuote(state, raw, def.marketBasket,
@@ -2862,6 +2868,275 @@ window.FB = window.FB || {};
     return FB.enterpriseWorkers(state, enterprise.type).filter(function (c) {
       return FB.characterResidence(state, c) === enterprise.provinceId;
     });
+  };
+
+  function enterpriseDefinitionName(state, type, def) {
+    return def ? FB.dataText(state, state.player.charId, 'enterprise', type,
+      def, 'name', {}) : type;
+  }
+
+  function enterpriseCareerName(state, profession) {
+    const def = FBDATA.careers[profession];
+    return def ? FB.dataText(state, state.player.charId, 'career', profession,
+      def, 'name', {}) : profession;
+  }
+
+  function enterpriseTerrainName(id) {
+    return FB.terrainName ? FB.terrainName(id) : String(id || '');
+  }
+
+  function enterpriseStaffingBlock(state, enterprise, def) {
+    const province = FB.world.byId[enterprise.provinceId];
+    const home = FB.world.byId[state.player.provinceId];
+    if (enterprise.provinceId !== state.player.provinceId) {
+      return {
+        code:'remote',
+        reason:FB.T('No eligible household worker lives in {province}.', {
+          province:province ? province.name : FB.T('this county')
+        }),
+        guidance:FB.T(
+          'Only a resident household worker can operate it. Move the household back to this county or leave the enterprise idle.')
+      };
+    }
+    const residents = [];
+    for (const c of FB.householdWorkers(state)) {
+      if (c.id === state.player.charId && state.player.tier >= 3) continue;
+      if (FB.familyOfficeRecord && FB.familyOfficeRecord(state, c.id)) continue;
+      if (FB.ageOf(c, state.date.year) < 16 ||
+          FB.characterResidence(state, c) !== enterprise.provinceId) continue;
+      const career = FB.careerOf(state, c);
+      if (career && career.profession === def.profession) residents.push(c);
+    }
+    const profession = enterpriseCareerName(state, def.profession);
+    if (def.guildRank && residents.length) {
+      const rank = FB.guildTitle({ guildRank:def.guildRank });
+      return {
+        code:'guild_rank',
+        reason:FB.T('A resident {profession} must hold {rank} rank.', {
+          profession:profession, rank:rank
+        }),
+        guidance:FB.T(
+          'Advance an eligible household worker through the guild, then assign that worker here.')
+      };
+    }
+    if (home && province && home.id === province.id) {
+      return {
+        code:'profession',
+        reason:FB.T(
+          'No adult resident household member is eligible for {profession} work.', {
+          profession:profession
+        }),
+        guidance:FB.T(
+          'Assign or train an eligible household member in this occupation, then return to choose that worker.')
+      };
+    }
+    return {
+      code:'no_resident_worker',
+      reason:FB.T('No eligible household worker resides in this county.'),
+      guidance:FB.T(
+        'Only an adult resident with the required occupation and guild rank can operate this enterprise.')
+    };
+  }
+
+  /* One authoritative, read-only explanation for an owned enterprise. UI
+     surfaces may differ, but they must not independently guess why the
+     property is staffed, idle, or blocked. */
+  FB.enterpriseStaffingStatus = function (state, enterprise) {
+    const def = enterprise && FBDATA.enterprises[enterprise.type];
+    if (!state || !state.player || !enterprise || !def) {
+      return {
+        state:'blocked', staffed:false, blocked:true, eligibleWorkers:[],
+        currentWorker:null, code:'unknown',
+        reason:FB.T('This enterprise is not recognized.'),
+        guidance:FB.T('Leave it idle until its definition is available again.')
+      };
+    }
+    const eligible = FB.enterpriseWorkersFor(state, enterprise);
+    const current = enterprise.workerId && state.chars[enterprise.workerId] &&
+      !state.chars[enterprise.workerId].dead
+      ? state.chars[enterprise.workerId] : null;
+    let valid = false;
+    for (const candidate of eligible) {
+      if (current && candidate.id === current.id) {
+        valid = true;
+        break;
+      }
+    }
+    if (valid) {
+      return {
+        state:'staffed', staffed:true, blocked:false,
+        eligibleWorkers:eligible, currentWorker:current, code:'staffed',
+        reason:FB.T('Worked by {name}.', { name:current.name }), guidance:''
+      };
+    }
+    if (eligible.length) {
+      let unassigned = false;
+      for (const candidate of eligible) {
+        if (!workerBusy(state, candidate.id)) {
+          unassigned = true;
+          break;
+        }
+      }
+      return {
+        state:'idle', staffed:false, blocked:false,
+        eligibleWorkers:eligible, currentWorker:current,
+        code:unassigned ? 'worker_available' : 'worker_reassignment',
+        reason:current
+          ? FB.T('{name} is no longer eligible; choose a replacement.', {
+            name:current.name
+          })
+          : (unassigned
+            ? FB.T('Eligible resident workers are available.')
+            : FB.T(
+              'Eligible workers exist, but each currently works another enterprise.')),
+        guidance:unassigned
+          ? FB.T('Choose a worker below to begin earning seasonal income.')
+          : FB.T(
+            'Choosing a worker below will leave that worker’s current enterprise idle.')
+      };
+    }
+    const block = enterpriseStaffingBlock(state, enterprise, def);
+    return {
+      state:'blocked', staffed:false, blocked:true,
+      eligibleWorkers:eligible, currentWorker:current, code:block.code,
+      reason:block.reason, guidance:block.guidance
+    };
+  };
+
+  /* Purchase status deliberately reports every simultaneous blocker. The
+     first entry is the compact reason; the complete list belongs in the
+     requirements sheet. opts.ignoreTech is reserved for a grandfathered
+     auction lot and opts.checkFunds=false for compatibility catalogues. */
+  FB.enterprisePurchaseStatus = function (state, type, provinceId, settlement, opts) {
+    opts = opts || {};
+    const def = FBDATA.enterprises[type];
+    const blockers = [];
+    const warnings = [];
+    const p = state && state.player;
+    const pr = p && FB.world.byId[provinceId];
+    settlement = Math.max(0, Math.floor(Number(settlement) || 0));
+    const site = pr && FB.settlementsOf(state, provinceId)[settlement];
+    if (!def) {
+      blockers.push({
+        code:'unknown', reason:FB.T('This enterprise is not recognized.')
+      });
+    }
+    if (!p || !pr || !site) {
+      blockers.push({
+        code:'invalid_site', reason:FB.T('This settlement is not available.')
+      });
+    }
+    const cost = def
+      ? (opts.price === undefined
+        ? FB.enterpriseCost(state, type, provinceId)
+        : Math.max(0, Number(opts.price) || 0))
+      : 0;
+    let occupied = false;
+    if (def && p) {
+      for (const enterprise of (p.enterprises || [])) {
+        if (enterprise.type === type && enterprise.provinceId === provinceId &&
+            enterprise.settlement === settlement) {
+          occupied = true;
+          break;
+        }
+      }
+      if (occupied) {
+        blockers.push({
+          code:'occupied',
+          reason:FB.T('One {enterprise} already stands in this settlement.', {
+            enterprise:enterpriseDefinitionName(state, type, def)
+          })
+        });
+      }
+    }
+    if (def && p && pr) {
+      const currentDevelopment = state.dev[provinceId] || 1;
+      if (def.devMin && currentDevelopment < def.devMin) {
+        blockers.push({
+          code:'development', current:currentDevelopment, required:def.devMin,
+          reason:FB.T(
+            'Needs county development {required}; currently {current}.', {
+              required:def.devMin, current:currentDevelopment
+            })
+        });
+      }
+      if (def.coastal && !pr.coastal) {
+        blockers.push({
+          code:'coastal',
+          reason:FB.T('Only a coastal county can support this enterprise.')
+        });
+      }
+      if (def.terrains && def.terrains.indexOf(pr.terrain) < 0) {
+        const allowed = def.terrains.map(function (id) {
+          return enterpriseTerrainName(id);
+        });
+        blockers.push({
+          code:'terrain', current:pr.terrain, allowed:def.terrains.slice(),
+          reason:FB.T('Requires {terrains}; this county is {terrain}.', {
+            terrains:allowed.join(', '), terrain:enterpriseTerrainName(pr.terrain)
+          })
+        });
+      }
+    }
+    const tech = def && def.requiresTech
+      ? FB.techRequirementStatus(state, def.requiresTech)
+      : { ready:true, requirements:[], missing:[] };
+    if (def && !tech.ready && !opts.ignoreTech) {
+      blockers.push({
+        code:'technology', techIds:tech.missing.slice(),
+        reason:FB.techRequirementReason(state, def.requiresTech)
+      });
+    }
+    const funds = p ? Number(p.gold) || 0 : 0;
+    const shortfall = Math.max(0, cost - funds);
+    if (def && p && opts.checkFunds !== false && shortfall > 0.000001) {
+      blockers.push({
+        code:'funds', cost:cost, current:funds, shortfall:shortfall,
+        reason:FB.T(
+          'Costs {money:cost}; you have {money:current} ({money:shortfall} short).', {
+            cost:cost, current:funds, shortfall:shortfall
+          })
+      });
+    }
+    const workers = def && p && pr && site ? FB.enterpriseWorkersFor(state, {
+      type:type, provinceId:provinceId, settlement:settlement
+    }) : [];
+    if (def && pr && site && !workers.length) {
+      const staffing = FB.enterpriseStaffingStatus(state, {
+        type:type, provinceId:provinceId, settlement:settlement,
+        workerId:null
+      });
+      warnings.push({
+        code:'no_worker',
+        reason:FB.T(
+          '{reason} You can still buy it, but it will stand idle.', {
+            reason:staffing.reason
+          }),
+        guidance:staffing.guidance
+      });
+    }
+    return {
+      id:type, def:def || null, provinceId:provinceId, settlement:settlement,
+      site:site || null, cost:cost, funds:funds, shortfall:shortfall,
+      workers:workers, techLocked:!tech.ready, missingTech:tech.missing.slice(),
+      occupied:occupied, blockers:blockers, warnings:warnings,
+      primary:blockers[0] || null, ready:blockers.length === 0
+    };
+  };
+
+  FB.enterpriseCatalogue = function (state, provinceId, settlement) {
+    const rows = [];
+    let index = 0;
+    for (const id in FBDATA.enterprises) {
+      const status = FB.enterprisePurchaseStatus(
+        state, id, provinceId, settlement);
+      status.index = index++;
+      rows.push(status);
+    }
+    rows.sort(function (a, b) {
+      return Number(b.ready) - Number(a.ready) || a.index - b.index;
+    });
+    return rows;
   };
 
   FB.enterpriseRelocationImpact = function (state, destinationId) {
@@ -2901,30 +3176,16 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[provinceId];
     if (!pr || !FB.settlementsOf(state, provinceId)[settlement]) return [];
     const out = [];
-    const standing = FB.enterpriseList(state);
     for (const id in FBDATA.enterprises) {
-      const def = FBDATA.enterprises[id];
-      const techLocked = !!(def.requiresTech &&
-        !FB.techRequirementMet(state, def.requiresTech));
-      if (techLocked && !includeTechLocked) continue;
-      if (def.devMin && (state.dev[provinceId] || 1) < def.devMin) continue;
-      if (def.coastal && (!pr || !pr.coastal)) continue;
-      if (def.terrains && (!pr || def.terrains.indexOf(pr.terrain) < 0)) continue;
-      let occupied = false;
-      for (const e of standing) {
-        if (e.type === id && e.provinceId === provinceId && e.settlement === settlement) {
-          occupied = true; break;
-        }
-      }
-      if (occupied) continue; // one of a kind per settlement; copies may stand elsewhere
-      const workers = FB.enterpriseWorkersFor(state, {
-        type:id,
-        provinceId:provinceId,
-        settlement:settlement
-      });
+      const status = FB.enterprisePurchaseStatus(state, id, provinceId,
+        settlement, {
+          ignoreTech:!!includeTechLocked,
+          checkFunds:false
+        });
+      if (!status.ready) continue;
       out.push({
-        id:id, def:def, cost:FB.enterpriseCost(state, id, provinceId),
-        workers:workers, techLocked:techLocked
+        id:id, def:status.def, cost:status.cost,
+        workers:status.workers, techLocked:status.techLocked
       });
     }
     return out;
@@ -2944,20 +3205,20 @@ window.FB = window.FB || {};
       auctionLot && auctionLot.kind === 'enterprise' &&
       auctionLot.type === type && auctionLot.provinceId === provinceId &&
       auctionLot.settlement === settlement);
-    const avail = FB.enterpriseAvailable(state, provinceId, settlement,
-      grandfatheredAuction);
-    let item = null;
-    for (const a of avail) if (a.id === type) { item = a; break; }
-    const price = opts.price === undefined ? item && item.cost :
-      Math.max(0, Number(opts.price) || 0);
-    if (!item || state.player.gold + 0.000001 < price) return false;
+    const status = FB.enterprisePurchaseStatus(state, type, provinceId,
+      settlement, {
+        ignoreTech:grandfatheredAuction,
+        price:opts.price
+      });
+    const price = status.cost;
+    if (!status.ready) return false;
     state.player.gold = Math.max(0, state.player.gold - price);
     const e = {
       uid:'enterprise_' + FB.uid(), type:type, provinceId:provinceId,
       settlement:settlement, workerId:null
     };
     FB.enterpriseList(state).push(e);
-    for (const worker of item.workers) {
+    for (const worker of status.workers) {
       if (!workerBusy(state, worker.id)) {
         FB.assignEnterprise(state, e.uid, worker.id);
         break;

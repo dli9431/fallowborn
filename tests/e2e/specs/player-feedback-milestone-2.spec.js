@@ -40,11 +40,20 @@ test('technology search discovers unlocks and locked links follow role access',
       FB.ui.showEnterpriseMarket(0);
     });
     const lockedWorkshop = page.locator(
-      '[data-enterprise-tech="horizontal_loom"]');
+      '[data-enterprise-explain="workshop_business"]');
     await expect(lockedWorkshop).toBeVisible();
     await expect(lockedWorkshop).toContainText('Workshop');
     await expect(lockedWorkshop).toContainText('Requires Horizontal Loom');
+    await expect(lockedWorkshop).toHaveAttribute(
+      'data-enterprise-available', 'false');
+    await expect(lockedWorkshop).toBeEnabled();
     await lockedWorkshop.click();
+    await expect(page.getByRole('heading', { name:'Workshop requirements' }))
+      .toBeVisible();
+    await expect(page.locator('[data-enterprise-blocker="technology"]'))
+      .toContainText('Requires Horizontal Loom');
+    await page.locator(
+      '[data-enterprise-requirement-tech="horizontal_loom"]').click();
     await expect(page.getByRole('heading', { name:/Horizontal Loom/ }))
       .toBeVisible();
 
@@ -52,14 +61,124 @@ test('technology search discovers unlocks and locked links follow role access',
       FB.state.player.tier = 1;
       FB.ui.showEnterpriseMarket(0);
     });
-    const commonWorkshop = page.locator('.tech-locked-link', {
-      hasText:'Workshop'
-    });
-    await expect(commonWorkshop).toBeDisabled();
+    const commonWorkshop = page.locator(
+      '[data-enterprise-explain="workshop_business"]');
+    await expect(commonWorkshop).toBeEnabled();
+    await expect(commonWorkshop).toHaveAttribute(
+      'data-enterprise-available', 'false');
     await expect(commonWorkshop).toContainText('Requires Horizontal Loom');
-    await expect(commonWorkshop).not.toContainText('Open the technology entry');
-    await expect(page.locator('[data-enterprise-tech="horizontal_loom"]'))
+    await commonWorkshop.click();
+    await expect(page.locator('[data-enterprise-blocker="technology"]'))
+      .toContainText('Requires Horizontal Loom');
+    await expect(page.locator(
+      '[data-enterprise-requirement-tech="horizontal_loom"]'))
       .toHaveCount(0);
+  });
+
+test('enterprise catalogue keeps blocked choices explainable and idle warnings actionable',
+  async function ({ page }) {
+    const fixture = await page.evaluate(function () {
+      const s = FB.state;
+      const home = s.player.provinceId;
+      FBDATA.enterprises.idle_purchase_fixture = {
+        name:'Unstaffed Store', icon:'house', cost:1,
+        profession:'merchant', yield:1,
+        desc:'A fixture that can be bought without a qualified worker.'
+      };
+      s.player.gold = 50;
+      s.dev[home] = 1;
+      s.player.enterprises = [];
+      for (const worker of FB.householdWorkers(s)) {
+        worker.career = {
+          profession:'farmer', rank:'journeyman', experience:3,
+          startedYear:s.date.year - 3, guildRank:'none',
+          guildStanding:0, chosen:true
+        };
+      }
+      const technology = FB.realmTechRecord(s, FB.techRealmId(s));
+      technology.completed = technology.completed.filter(function (id) {
+        return id !== 'horizontal_loom';
+      });
+      FB.ui.showLivelihoods();
+      return {
+        count:Object.keys(FBDATA.enterprises).length,
+        settlements:FB.settlementsOf(s, home).length,
+        gold:s.player.gold,
+        turn:s.turn
+      };
+    });
+
+    await expect(page.locator('[data-enterprise-settlement]'))
+      .toHaveCount(fixture.settlements);
+    await page.locator('[data-enterprise-settlement="0"]').click();
+    const options = page.locator(
+      '[data-enterprise-buy], [data-enterprise-explain]');
+    await expect(options).toHaveCount(fixture.count);
+    const ordering = await options.evaluateAll(function (nodes) {
+      return nodes.map(function (node) {
+        return node.classList.contains('blocked') ? 'blocked' : 'available';
+      });
+    });
+    const firstBlocked = ordering.indexOf('blocked');
+    expect(firstBlocked).toBeGreaterThan(0);
+    expect(ordering.slice(firstBlocked).every(function (state) {
+      return state === 'blocked';
+    })).toBe(true);
+
+    const blockedWorkshop = page.locator(
+      '[data-enterprise-explain="workshop_business"]');
+    await expect(blockedWorkshop).toContainText('Unavailable');
+    await expect(blockedWorkshop).toContainText('Needs county development');
+    await blockedWorkshop.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('heading', { name:'Workshop requirements' }))
+      .toBeVisible();
+    await expect(page.locator('[data-enterprise-blocker="development"]'))
+      .toBeVisible();
+    await expect(page.locator('[data-enterprise-blocker="technology"]'))
+      .toBeVisible();
+    await expect(page.locator('[data-enterprise-blocker="funds"]'))
+      .toContainText('short');
+    expect(await page.evaluate(function () {
+      return { gold:FB.state.player.gold, turn:FB.state.turn };
+    })).toEqual({ gold:fixture.gold, turn:fixture.turn });
+
+    await page.locator('#enterprise-requirements-back').click();
+    await expect(blockedWorkshop).toBeFocused();
+
+    const idlePurchase = page.locator(
+      '[data-enterprise-buy="idle_purchase_fixture"]');
+    await expect(idlePurchase).toContainText('Can buy — will be idle');
+    await expect(idlePurchase).toContainText('eligible for Trade work');
+    await expect(idlePurchase).toContainText('it will stand idle');
+    await page.evaluate(function () {
+      FB.state.player.gold = 0;
+    });
+    await idlePurchase.click();
+    await expect(page.locator('#toasts'))
+      .toContainText('Enterprise requirements changed');
+    expect(await page.evaluate(function () {
+      return {
+        acquired:FB.state.player.enterprises.some(function (entry) {
+          return entry.type === 'idle_purchase_fixture';
+        }),
+        turn:FB.state.turn
+      };
+    })).toEqual({ acquired:false, turn:fixture.turn });
+
+    await page.evaluate(function () {
+      FB.state.player.gold = 50;
+      FB.ui.showEnterpriseMarket(0, undefined, true);
+    });
+    await page.locator('[data-enterprise-buy="idle_purchase_fixture"]').click();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        const enterprise = FB.state.player.enterprises.filter(function (entry) {
+          return entry.type === 'idle_purchase_fixture';
+        })[0];
+        return enterprise ? enterprise.workerId : 'missing';
+      });
+    }).toBeNull();
   });
 
 test('the role orientation is a focused sheet with a Guide deep link',

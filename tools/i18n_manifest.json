@@ -46647,16 +46647,6 @@
         "text": "Enough to impress, not enough to beggar."
       }
     },
-    "src.00335ebe": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Buy productive property; further copies of one kind cost more."
-      }
-    },
     "src.00373d3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -50400,6 +50390,16 @@
         "text": "Burn it before anyone reads it."
       }
     },
+    "src.08db1fc8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Idle — worker available"
+      }
+    },
     "src.08dbc0e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51715,6 +51715,16 @@
         "text": "Promise a benefice"
       }
     },
+    "src.0bca3294": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Ready"
+      }
+    },
     "src.0bca4656": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52483,6 +52493,16 @@
       ],
       "source": {
         "text": "After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime."
+      }
+    },
+    "src.0d78846c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The sovereign nation must complete the missing technology."
       }
     },
     "src.0d821b5f": {
@@ -55085,6 +55105,16 @@
         "text": "{days} outbound travel days, {money:cost}, and at least {stay} days in residence; Standing advances only while together."
       }
     },
+    "src.137491a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only a resident household worker can operate it. Move the household back to this county or leave the enterprise idle."
+      }
+    },
     "src.13793ab5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56247,6 +56277,16 @@
       ],
       "source": {
         "text": "Move the burden to a neighbor and live with the village’s memory."
+      }
+    },
+    "src.15d92cce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Requirements are not met."
       }
     },
     "src.15dd952a": {
@@ -58420,6 +58460,16 @@
         "text": "The Guild Bench"
       }
     },
+    "src.1a78e375": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Choosing a worker below will leave that worker’s current enterprise idle."
+      }
+    },
     "src.1a78f578": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58809,6 +58859,16 @@
       ],
       "source": {
         "text": "100 men-at-arms join the current host, adding about {money:2} to seasonal logistics."
+      }
+    },
+    "src.1ba57068": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No eligible household worker lives in {province}."
       }
     },
     "src.1baa4378": {
@@ -59721,6 +59781,16 @@
       ],
       "source": {
         "text": "Send relief home. ({money:8})"
+      }
+    },
+    "src.1df4a547": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Staffing warning"
       }
     },
     "src.1df97089": {
@@ -63108,16 +63178,6 @@
       ],
       "source": {
         "text": "The motion has already been called to a vote."
-      }
-    },
-    "src.254b2976": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{name} is no longer eligible; no replacement is available."
       }
     },
     "src.256502d4": {
@@ -67400,6 +67460,16 @@
         "text": "No living household relationships are recorded."
       }
     },
+    "src.2f3ece6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "One {enterprise} already stands in this settlement."
+      }
+    },
     "src.2f415261": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68816,6 +68886,16 @@
         "text": "Name your heir plainly, now."
       }
     },
+    "src.32bb1057": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "This enterprise is not recognized."
+      }
+    },
     "src.32c5b4e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68835,6 +68915,16 @@
       ],
       "source": {
         "text": "not advancing toward +{threshold}"
+      }
+    },
+    "src.32ce59cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Choose a worker below to begin earning seasonal income."
       }
     },
     "src.32df7a61": {
@@ -69478,6 +69568,16 @@
         "text": "Poetry has its place; so does a good grip. He recants, wheezing."
       }
     },
+    "src.343309ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Obtain the remaining gold, then return to this settlement."
+      }
+    },
     "src.343434ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70000,6 +70100,16 @@
       ],
       "source": {
         "text": "New loyal vassal"
+      }
+    },
+    "src.35708155": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Unavailable here"
       }
     },
     "src.3571ab18": {
@@ -70594,6 +70704,16 @@
       ],
       "source": {
         "text": "Requires {money:gold} in nomination expenses."
+      }
+    },
+    "src.3716456c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "This settlement is not available."
       }
     },
     "src.371a59c9": {
@@ -71841,6 +71961,16 @@
       ],
       "source": {
         "text": "Manual construction remains available here."
+      }
+    },
+    "src.3a2233d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open technology: {technology}"
       }
     },
     "src.3a2f0d1e": {
@@ -73510,6 +73640,16 @@
       ],
       "source": {
         "text": "Accept with thanks."
+      }
+    },
+    "src.3e726a06": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raise this county’s development to meet the requirement."
       }
     },
     "src.3e77ce7e": {
@@ -75767,6 +75907,16 @@
         "text": "Kingdom of Scotland"
       }
     },
+    "src.438061e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Select to review every requirement."
+      }
+    },
     "src.43862778": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76459,6 +76609,16 @@
         "text": "{office} · {trait} · Standing {standing}"
       }
     },
+    "src.44e2e753": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Worked by {name}."
+      }
+    },
     "src.44e84d3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76599,6 +76759,16 @@
       ],
       "source": {
         "text": "Town Council of {province}"
+      }
+    },
+    "src.452e89fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No eligible household worker resides in this county."
       }
     },
     "src.452f90ed": {
@@ -77419,6 +77589,16 @@
         "text": "Makes training and work in {content} available."
       }
     },
+    "src.46c6e459": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{available} available now · {unavailable} unavailable. Review every enterprise and its requirements."
+      }
+    },
     "src.46cb6f67": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -77998,6 +78178,16 @@
       ],
       "source": {
         "text": "{name} (you)"
+      }
+    },
+    "src.4810b448": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only an adult resident with the required occupation and guild rank can operate this enterprise."
       }
     },
     "src.4812abab": {
@@ -85830,16 +86020,6 @@
         "text": "Soldiering"
       }
     },
-    "src.5a8765dd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No resident worker in {place}; it remains owned but idle."
-      }
-    },
     "src.5a9506a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92671,6 +92851,16 @@
         "text": "{name} (household tutor)"
       }
     },
+    "src.6a69086b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No worker can be assigned yet."
+      }
+    },
     "src.6a7484dc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94613,16 +94803,6 @@
         "text": "Public patience and abstract supply recover; live troops remain."
       }
     },
-    "src.6ee7b6da": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No household worker meets this enterprise’s career and guild requirements."
-      }
-    },
     "src.6eec4916": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94682,6 +94862,16 @@
       ],
       "source": {
         "text": "Instruction"
+      }
+    },
+    "src.6f066b7f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Costs {money:cost}; you have {money:current} ({money:shortfall} short)."
       }
     },
     "src.6f18d6b5": {
@@ -98946,6 +99136,16 @@
         "text": "Accept the burden of judgment."
       }
     },
+    "src.793b8f94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{enterprise} requirements"
+      }
+    },
     "src.794981f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100464,6 +100664,16 @@
         "text": "Take up guest quarters."
       }
     },
+    "src.7cd51315": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Review requirements for {enterprise}. Unavailable: {reason}"
+      }
+    },
     "src.7cd941c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101373,6 +101583,16 @@
       ],
       "source": {
         "text": "Alania"
+      }
+    },
+    "src.7ec0ba65": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Unavailable now"
       }
     },
     "src.7ecabf74": {
@@ -107607,6 +107827,16 @@
         "text": "Build support before an election."
       }
     },
+    "src.8bd79a12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "A resident {profession} must hold {rank} rank."
+      }
+    },
     "src.8bda025d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109060,6 +109290,16 @@
         "text": "Back to Household Plan"
       }
     },
+    "src.8edffc12": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Assign or train an eligible household member in this occupation, then return to choose that worker."
+      }
+    },
     "src.8ee03a08": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109401,6 +109641,16 @@
       ],
       "source": {
         "text": "Taifa of Valencia"
+      }
+    },
+    "src.8f80493c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Advance an eligible household worker through the guild, then assign that worker here."
       }
     },
     "src.8f8ed790": {
@@ -110096,16 +110346,6 @@
       ],
       "source": {
         "text": "Scarborough"
-      }
-    },
-    "src.9145e3f8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Idle — eligible workers are available."
       }
     },
     "src.915ce25a": {
@@ -111923,6 +112163,16 @@
       ],
       "source": {
         "text": "Set labor in place of the fine."
+      }
+    },
+    "src.962d1d60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Needs county development {required}; currently {current}."
       }
     },
     "src.962d2790": {
@@ -114589,6 +114839,16 @@
         "text": "Withdraw from the {campaign}?"
       }
     },
+    "src.9c1260c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This enterprise needs a different kind of county."
+      }
+    },
     "src.9c154426": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116130,6 +116390,16 @@
       ],
       "source": {
         "text": "Through kin and gossip you are introduced to {suitor}. There is a certain promise in the meeting — and marriage is how fortunes are made."
+      }
+    },
+    "src.9f78cba8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Eligible resident workers are available."
       }
     },
     "src.9f7f439b": {
@@ -120620,6 +120890,16 @@
         "text": "The first rope parts and whips your hands raw."
       }
     },
+    "src.a9766a9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No adult resident household member is eligible for {profession} work."
+      }
+    },
     "src.a978e8bd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121917,6 +122197,16 @@
         "text": "{chance}% yearly chance; no sitting is currently pending"
       }
     },
+    "src.ad001522": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose another settlement if you want another copy."
+      }
+    },
     "src.ad02144d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122248,6 +122538,16 @@
       ],
       "source": {
         "text": ": invalid source reference."
+      }
+    },
+    "src.adb71a51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "this county"
       }
     },
     "src.adbd7302": {
@@ -122596,7 +122896,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/economy.js"
       ],
       "source": {
         "text": "{name} is no longer eligible; choose a replacement."
@@ -122982,6 +123282,16 @@
         "text": "Riding with the liege’s host"
       }
     },
+    "src.af89644d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Only a coastal county can support this enterprise."
+      }
+    },
     "src.af8f208e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123203,6 +123513,16 @@
       ],
       "source": {
         "text": "Greedy"
+      }
+    },
+    "src.affcbe9a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Review every current requirement for {enterprise} in {settlement}."
       }
     },
     "src.b000c786": {
@@ -123644,6 +123964,16 @@
       ],
       "source": {
         "text": "No post-marriage residence decision is pending."
+      }
+    },
+    "src.b0b1699c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Enterprise requirements changed. Review the updated status."
       }
     },
     "src.b0b59500": {
@@ -124134,6 +124464,16 @@
       ],
       "source": {
         "text": "Confirm sanctuary from the levy."
+      }
+    },
+    "src.b1d1002d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "{reason} You can still buy it, but it will stand idle."
       }
     },
     "src.b1d130e9": {
@@ -132921,6 +133261,16 @@
         "text": "Items from the family armory"
       }
     },
+    "src.c6bee177": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Leave it idle until its definition is available again."
+      }
+    },
     "src.c6bfea9b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133641,6 +133991,16 @@
       ],
       "source": {
         "text": "Constantine"
+      }
+    },
+    "src.c7f4add2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Can buy — will be idle"
       }
     },
     "src.c7fff844": {
@@ -139191,6 +139551,16 @@
         "text": "Bedford"
       }
     },
+    "src.d5b8efe4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Eligible workers exist, but each currently works another enterprise."
+      }
+    },
     "src.d5ba8266": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139199,6 +139569,16 @@
       ],
       "source": {
         "text": "Service of {name}"
+      }
+    },
+    "src.d5c96d99": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "Requires {terrains}; this county is {terrain}."
       }
     },
     "src.d5d1082d": {
@@ -141457,16 +141837,6 @@
       ],
       "source": {
         "text": "A charter buys patience without pretending that a grant has already occurred."
-      }
-    },
-    "src.da7145b7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No eligible worker yet — it would stand idle."
       }
     },
     "src.da794abd": {
@@ -145933,6 +146303,16 @@
       ],
       "source": {
         "text": "The current fort project must finish first."
+      }
+    },
+    "src.e503cc5d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} requirements are not met."
       }
     },
     "src.e5070891": {
@@ -150808,16 +151188,6 @@
       ],
       "source": {
         "text": "Work beside them until the fire is beaten."
-      }
-    },
-    "src.f02ef6bc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No eligible worker is available."
       }
     },
     "src.f0345857": {
@@ -163245,6 +163615,17 @@
         "text": "A required national technology has not been completed."
       }
     },
+    "ui:A resident {profession} must hold {rank} rank.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession",
+        "rank"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "A resident {profession} must hold {rank} rank."
+      }
+    },
     "ui:A sacred office forbids this marriage.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -163815,6 +164196,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill."
+      }
+    },
+    "ui:Advance an eligible household worker through the guild, then assign that worker here.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Advance an eligible household worker through the guild, then assign that worker here."
       }
     },
     "ui:Advocate · {money:20} · Standing −15": {
@@ -164747,6 +165136,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Assign a worker before locking this enterprise."
+      }
+    },
+    "ui:Assign or train an eligible household member in this occupation, then return to choose that worker.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Assign or train an eligible household member in this occupation, then return to choose that worker."
       }
     },
     "ui:Assign personal attention for +{rate} Standing each ordinary day together. This costs no day.": {
@@ -165715,6 +166112,14 @@
         "text": "Blocked"
       }
     },
+    "ui:Blocked from staffing": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Blocked from staffing"
+      }
+    },
     "ui:Blocked now": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -165983,14 +166388,6 @@
         "text": "Buy Out a Neighbor"
       }
     },
-    "ui:Buy productive property; further copies of one kind cost more.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Buy productive property; further copies of one kind cost more."
-      }
-    },
     "ui:Buy remaining plots here…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166136,6 +166533,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Campaign supply modifiers"
+      }
+    },
+    "ui:Can buy — will be idle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Can buy — will be idle"
       }
     },
     "ui:Cancel": {
@@ -166785,6 +167190,14 @@
         "text": "Choose a valid hairstyle and facial-hair combination."
       }
     },
+    "ui:Choose a worker below to begin earning seasonal income.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Choose a worker below to begin earning seasonal income."
+      }
+    },
     "ui:Choose an Accomplice": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166839,6 +167252,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose another officer…"
+      }
+    },
+    "ui:Choose another settlement if you want another copy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose another settlement if you want another copy."
       }
     },
     "ui:Choose both a key and an action for every shortcut.": {
@@ -167131,6 +167552,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Choose…"
+      }
+    },
+    "ui:Choosing a worker below will leave that worker’s current enterprise idle.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Choosing a worker below will leave that worker’s current enterprise idle."
       }
     },
     "ui:Chronicle filter": {
@@ -167691,6 +168120,18 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Costs {money:cost}; chance about {chance}%; success creates {days} days of non-aggression."
+      }
+    },
+    "ui:Costs {money:cost}; you have {money:current} ({money:shortfall} short).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:current",
+        "money:shortfall"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Costs {money:cost}; you have {money:current} ({money:shortfall} short)."
       }
     },
     "ui:Costs {money:gold} and {piety} piety; the church decides after you spend the day.": {
@@ -169418,6 +169859,14 @@
         "text": "Eligible resident children and grandchildren are reviewed now and each New Year."
       }
     },
+    "ui:Eligible resident workers are available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Eligible resident workers are available."
+      }
+    },
     "ui:Eligible teacher": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169448,6 +169897,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Eligible worker"
+      }
+    },
+    "ui:Eligible workers exist, but each currently works another enterprise.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Eligible workers exist, but each currently works another enterprise."
       }
     },
     "ui:Eligible workers produce more total yield in the assignments shown elsewhere.": {
@@ -172027,12 +172484,12 @@
         "text": "Idle"
       }
     },
-    "ui:Idle — eligible workers are available.": {
+    "ui:Idle — worker available": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Idle — eligible workers are available."
+        "text": "Idle — worker available"
       }
     },
     "ui:If failed": {
@@ -172999,6 +173456,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Leave it idle"
+      }
+    },
+    "ui:Leave it idle until its definition is available again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Leave it idle until its definition is available again."
       }
     },
     "ui:Leave the auction": {
@@ -174741,6 +175206,17 @@
         "text": "Needs attention"
       }
     },
+    "ui:Needs county development {required}; currently {current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "required"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Needs county development {required}; currently {current}."
+      }
+    },
     "ui:Needs {prestige} prestige": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -174980,6 +175456,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No active war or banner service."
+      }
+    },
+    "ui:No adult resident household member is eligible for {profession} work.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "profession"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No adult resident household member is eligible for {profession} work."
       }
     },
     "ui:No adult successor can take over the house.": {
@@ -175240,6 +175726,24 @@
         "text": "No eligible household worker currently practices this profession."
       }
     },
+    "ui:No eligible household worker lives in {province}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No eligible household worker lives in {province}."
+      }
+    },
+    "ui:No eligible household worker resides in this county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No eligible household worker resides in this county."
+      }
+    },
     "ui:No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175254,22 +175758,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No eligible settlement"
-      }
-    },
-    "ui:No eligible worker is available.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No eligible worker is available."
-      }
-    },
-    "ui:No eligible worker yet — it would stand idle.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No eligible worker yet — it would stand idle."
       }
     },
     "ui:No enterprise assignment": {
@@ -175486,14 +175974,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No household wage; appointment lowers crown authority by 2."
-      }
-    },
-    "ui:No household worker meets this enterprise’s career and guild requirements.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No household worker meets this enterprise’s career and guild requirements."
       }
     },
     "ui:No immediate gold expense": {
@@ -175981,16 +176461,6 @@
         "text": "No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12."
       }
     },
-    "ui:No resident worker in {place}; it remains owned but idle.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "place"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No resident worker in {place}; it remains owned but idle."
-      }
-    },
     "ui:No safe proposal is available. Unreserve enough non-seat counties or grant land manually.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176237,6 +176707,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No war target matches the current search and filters."
+      }
+    },
+    "ui:No worker can be assigned yet.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No worker can be assigned yet."
       }
     },
     "ui:Nomination blocked": {
@@ -176548,6 +177026,14 @@
         "text": "Obligations"
       }
     },
+    "ui:Obtain the remaining gold, then return to this settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Obtain the remaining gold, then return to this settlement."
+      }
+    },
     "ui:Occupation": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176818,6 +177304,16 @@
         "text": "One year · 4 seasons"
       }
     },
+    "ui:One {enterprise} already stands in this settlement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "One {enterprise} already stands in this settlement."
+      }
+    },
     "ui:Ongoing commitments": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176848,6 +177344,14 @@
       "location": "js/events.js",
       "source": {
         "text": "Only a brother or sister can receive this exceptional approach."
+      }
+    },
+    "ui:Only a coastal county can support this enterprise.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only a coastal county can support this enterprise."
       }
     },
     "ui:Only a count or greater ruler can entrust you with a field command.": {
@@ -176898,6 +177402,14 @@
         "text": "Only a recommendation marker and Chronicle notice will be created. Open the ordinary match picker to make any pledge."
       }
     },
+    "ui:Only a resident household worker can operate it. Move the household back to this county or leave the enterprise idle.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only a resident household worker can operate it. Move the household back to this county or leave the enterprise idle."
+      }
+    },
     "ui:Only a sovereign may offer a foreign peace pact.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176944,6 +177456,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Only an adult may attend an auction."
+      }
+    },
+    "ui:Only an adult resident with the required occupation and guild rank can operate this enterprise.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Only an adult resident with the required occupation and guild rank can operate this enterprise."
       }
     },
     "ui:Only an independent king or emperor may claim the Caliphate.": {
@@ -177178,6 +177698,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Open technology detail"
+      }
+    },
+    "ui:Open technology: {technology}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "technology"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open technology: {technology}"
       }
     },
     "ui:Open the Bishopric": {
@@ -179125,6 +179655,14 @@
         "text": "Raise my banner"
       }
     },
+    "ui:Raise this county’s development to meet the requirement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raise this county’s development to meet the requirement."
+      }
+    },
     "ui:Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -179268,6 +179806,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Read more in the Guide"
+      }
+    },
+    "ui:Ready": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Ready"
       }
     },
     "ui:Ready in {days} days.": {
@@ -180083,6 +180629,14 @@
         "text": "Required for legitimacy"
       }
     },
+    "ui:Requirements are not met.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Requirements are not met."
+      }
+    },
     "ui:Requires +40 Standing and a net player trait score of +1. Current score: {score}. Their response chance is {chance}%.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -180540,6 +181094,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Requires {technology}."
+      }
+    },
+    "ui:Requires {terrains}; this county is {terrain}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "terrain",
+        "terrains"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Requires {terrains}; this county is {terrain}."
       }
     },
     "ui:Requires: {requirements}. This becomes the vocation’s permanent title.": {
@@ -181112,6 +181677,17 @@
         "text": "Review every Governance section."
       }
     },
+    "ui:Review every current requirement for {enterprise} in {settlement}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise",
+        "settlement"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Review every current requirement for {enterprise} in {settlement}."
+      }
+    },
     "ui:Review every currently eligible descendant before saving these limits.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -181166,6 +181742,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Review only · no pledge has been made"
+      }
+    },
+    "ui:Review requirements for {enterprise}. Unavailable: {reason}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise",
+        "reason"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Review requirements for {enterprise}. Unavailable: {reason}"
       }
     },
     "ui:Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience.": {
@@ -181950,6 +182537,14 @@
         "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
       }
     },
+    "ui:Select to review every requirement.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Select to review every requirement."
+      }
+    },
     "ui:Selected by household policy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182633,6 +183228,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Staffing state"
+      }
+    },
+    "ui:Staffing warning": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Staffing warning"
       }
     },
     "ui:Staffs {work}": {
@@ -184953,6 +185556,14 @@
         "text": "The social ladder runs Serf, Freeholder, Gentry, Baron, Count, Duke, King, and Emperor. Rank controls authority and access; it does not erase a livelihood or religious vocation."
       }
     },
+    "ui:The sovereign nation must complete the missing technology.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The sovereign nation must complete the missing technology."
+      }
+    },
     "ui:The staffing assistant will preserve this pairing. Manual changes may still replace it.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185435,6 +186046,22 @@
         "text": "This enterprise"
       }
     },
+    "ui:This enterprise is not recognized.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "This enterprise is not recognized."
+      }
+    },
+    "ui:This enterprise needs a different kind of county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This enterprise needs a different kind of county."
+      }
+    },
     "ui:This enterprise’s staffing lock will be cleared.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185767,6 +186394,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "This school does not teach the chosen focus."
+      }
+    },
+    "ui:This settlement is not available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "This settlement is not available."
       }
     },
     "ui:This standard is already at its highest level.": {
@@ -186130,6 +186765,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Unavailable during an unresolved event"
+      }
+    },
+    "ui:Unavailable here": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Unavailable here"
+      }
+    },
+    "ui:Unavailable now": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Unavailable now"
       }
     },
     "ui:Unavailable saved action": {
@@ -187271,6 +187922,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Work outfits"
+      }
+    },
+    "ui:Worked by {name}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "Worked by {name}."
       }
     },
     "ui:Worked by {name}{lock}": {
@@ -190401,6 +191062,14 @@
         "text": "their realm"
       }
     },
+    "ui:this county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "this county"
+      }
+    },
     "ui:this family": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -191053,6 +191722,17 @@
         "text": "{authority}/100 · {band}"
       }
     },
+    "ui:{available} available now · {unavailable} unavailable. Review every enterprise and its requirements.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "available",
+        "unavailable"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{available} available now · {unavailable} unavailable. Review every enterprise and its requirements."
+      }
+    },
     "ui:{award} · {weight} weighted claim": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -191586,6 +192266,16 @@
         "text": "{count} possible"
       }
     },
+    "ui:{count} requirements are not met.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} requirements are not met."
+      }
+    },
     "ui:{count} seats are vacant or inactive": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -191977,6 +192667,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{enterprise} in {place}"
+      }
+    },
+    "ui:{enterprise} requirements": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enterprise"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{enterprise} requirements"
       }
     },
     "ui:{enterprise} · 🔒 locked": {
@@ -193355,19 +194055,9 @@
       "glossary": [
         "name"
       ],
-      "location": "js/ui_modals.js",
+      "location": "js/economy.js",
       "source": {
         "text": "{name} is no longer eligible; choose a replacement."
-      }
-    },
-    "ui:{name} is no longer eligible; no replacement is available.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "name"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "{name} is no longer eligible; no replacement is available."
       }
     },
     "ui:{name} is old enough to lay down the headship. Choose the adult successor who continues the family’s story.": {
@@ -194120,6 +194810,16 @@
       "location": "js/actions.js",
       "source": {
         "text": "{realm}: {completed} completed · {active}/{slots} active research."
+      }
+    },
+    "ui:{reason} You can still buy it, but it will stand idle.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "reason"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "{reason} You can still buy it, but it will stand idle."
       }
     },
     "ui:{relationship} · age {age}": {

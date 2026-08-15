@@ -153,6 +153,16 @@ Enterprise definitions may carry simple `tags`; a worker's active career special
 can apply its declared bonus only when one of those tags matches. The specialty remains
 live career data rather than a copied property of the enterprise instance.
 
+`FB.enterprisePurchaseStatus` is the authoritative, read-only purchase explanation. It
+reports every current blocker (site occupancy, development, geography, national
+technology, and money) plus the non-blocking warning that a purchase would stand idle.
+`FB.enterpriseStaffingStatus` likewise distinguishes staffed property, property with a
+worker available directly or through reassignment, remote property, missing vocational
+workers, and missing guild rank. `FB.enterpriseAvailable` remains the compatibility
+projection used by auctions and mods; acquisition revalidates the full status before it
+spends coin. These status APIs do not change enterprise eligibility or auction
+grandfathering.
+
 A settlement building can be demolished without a refund. Demolition is permanent: the
 entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
 occupy that settlement slot. One-time development, Common Voice, and prestige already granted
