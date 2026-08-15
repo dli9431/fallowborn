@@ -179,7 +179,8 @@ test('four service charters produce exact distinct tax, levy, and political term
           var charter = FB.feudalCharterDef(contract.charterId);
           return gold + (charter.extraordinaryTaxExempt ? 0 :
             FB.vassalTaxContribution(s, rid) * seasons);
-        }, 0));
+        }, 0) * (1 + FB.skillOf(s.chars[p.charId], 'ste') *
+          (FBDATA.balance.demandTaxPerSte || 0)));
       FB.demandTaxes(s);
       var extraordinary = p.gold - oldGold;
       s.chars[p.charId].skills.ste = oldSte;
@@ -280,12 +281,11 @@ test('fixed and life tenure revert through escheat while hereditary contracts su
       var declinedRenewal = term.renewal;
 
       var subordinate = 'tenure_subordinate';
-      s.realms[subordinate] = {
+      FB.makeVassalRealm(s, {
         id:subordinate, name:'Lesser Fee', capital:counties[1], rank:1,
-        liege:termId, alive:true,
-        ruler:{ name:'Osric', sex:'m', culture:'anglo_saxon', age:30,
-          mar:5, generation:1 }
-      };
+        liege:termId, culture:FB.world.byId[counties[1]].culture
+      });
+      FB.ensureRealmCourt(s, subordinate);
       p.provs.splice(p.provs.indexOf(counties[1]), 1);
       s.owner[counties[1]] = 'player';
       s.holder[counties[1]] = subordinate;
@@ -326,7 +326,7 @@ test('fixed and life tenure revert through escheat while hereditary contracts su
       var lifeReverted = p.provs.indexOf(counties[3]) >= 0 &&
         !s.realms[lifeId].alive;
       var saved = JSON.parse(FB.save.serialize());
-      var savedRng = saved.rng;
+      var savedRng = saved.rng >>> 0;
       delete saved.state.realms[hereditaryId].feudalContract;
       FB.save.restore(saved);
       var legacy = FB.feudalContractOf(FB.state, hereditaryId);
