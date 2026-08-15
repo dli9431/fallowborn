@@ -2372,7 +2372,7 @@ window.FB = window.FB || {};
       esc(socialAttentionSummary(s)) + '</div>';
     if (!friend) {
       connectionsSummary += '<div class="hint">' + esc(FB.T(
-        'No one is yet named as your friend. Cultivate a contact’s Standing, then call them friend from their sheet.')) +
+        'No friend yet. Cultivate a contact, then name them from their sheet.')) +
         '</div>';
     }
 
@@ -2671,7 +2671,7 @@ window.FB = window.FB || {};
     }
     if (!guildCount) {
       tradeSummary += '<div class="hint">' + esc(FB.T(
-        'No managed household worker currently belongs to a guild.')) + '</div>';
+        'No household guild members.')) + '</div>';
     }
     if (FB.tradeInvestmentStakes) {
       const stakes = FB.tradeInvestmentStakes(s);
@@ -3021,7 +3021,7 @@ window.FB = window.FB || {};
       })) + '</div>';
     if (!realmRows.length) {
       realmSummary += '<div class="hint">' + esc(FB.T(
-        'No personal host yet. Land, military positions, and sworn service will appear here.')) +
+        'No personal host.')) +
         '</div>';
     }
 
@@ -3032,7 +3032,7 @@ window.FB = window.FB || {};
         FB.tutorialLife && FB.tutorialLife(s) &&
         !connectionRows.length && !tradeRows.length && !realmRows.length) {
       intro += '<div class="hint">' + esc(FB.T(
-        '🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here.')) + '</div>';
+        '🌱 No ties yet.')) + '</div>';
     }
     const markup = intro + largeListSurfaceHtml('network', [
       {
@@ -3040,7 +3040,7 @@ window.FB = window.FB || {};
         title:FB.T('Household'),
         summary:householdSummary,
         rows:householdRows,
-        empty:FB.T('No living household relationships are recorded.')
+        empty:FB.T('No household members.')
       },
       {
         id:'connections',
@@ -3048,28 +3048,28 @@ window.FB = window.FB || {};
         title:FB.T('Connections'),
         summary:connectionsSummary,
         rows:connectionRows,
-        empty:FB.T('No named personal connections are recorded.')
+        empty:FB.T('No named connections.')
       },
       {
         id:'trade',
         title:FB.T('Trade & Guild'),
         summary:tradeSummary,
         rows:tradeRows,
-        empty:FB.T('No trade, guild, enterprise, or office tie is recorded.')
+        empty:FB.T('No trade or guild ties.')
       },
       {
         id:'politics',
         title:FB.T('Political blocs'),
         summary:politicalSummary,
         rows:politicalRows,
-        empty:FB.T('No political court applies to the current household.')
+        empty:FB.T('No political court.')
       },
       {
         id:'realm',
         title:FB.T('Realm'),
         summary:realmSummary,
         rows:realmRows,
-        empty:FB.T('No political or military tie is recorded.')
+        empty:FB.T('No realm ties.')
       }
     ], [
       { id:'all', label:FB.T('All') },

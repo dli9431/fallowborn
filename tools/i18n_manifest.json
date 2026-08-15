@@ -48331,16 +48331,6 @@
         "text": "👴 Hand over the house"
       }
     },
-    "src.0476e19d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border."
-      }
-    },
     "src.0478725c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48722,6 +48712,16 @@
         "text": "Grazed fallow returns manure and fertility to worked land."
       }
     },
+    "src.056248e4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🌱 No ties yet."
+      }
+    },
     "src.056c1b2a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48730,6 +48730,16 @@
       ],
       "source": {
         "text": "Yesterday’s battles teach tomorrow’s."
+      }
+    },
+    "src.0572f536": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No backed ventures."
       }
     },
     "src.05733b0c": {
@@ -52155,16 +52165,6 @@
         "text": "Used for {claimant}"
       }
     },
-    "src.0cfb2192": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No hostile personal scheme is currently eligible."
-      }
-    },
     "src.0cff5b48": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52626,6 +52626,16 @@
         "text": "Off"
       }
     },
+    "src.0dd26381": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: careers and household work"
+      }
+    },
     "src.0de01606": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52835,6 +52845,16 @@
       ],
       "source": {
         "text": "🏛 The Estates…"
+      }
+    },
+    "src.0e56975c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No named connections."
       }
     },
     "src.0e59d14d": {
@@ -54101,6 +54121,16 @@
       ],
       "source": {
         "text": "🏳 Abandon to title"
+      }
+    },
+    "src.11927fe9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Outfits improve matching work and go dormant without an eligible worker."
       }
     },
     "src.119825f2": {
@@ -55706,16 +55736,6 @@
         "text": "Let familiarity grow through attention rather than display."
       }
     },
-    "src.1497f759": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No self-founded venture is active."
-      }
-    },
     "src.149ff6b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55724,6 +55744,16 @@
       ],
       "source": {
         "text": "Lethal risk to {target}"
+      }
+    },
+    "src.14aa970c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Plots, leverage, and captivity"
       }
     },
     "src.14b16288": {
@@ -55986,16 +56016,6 @@
         "text": "The Great Disputation"
       }
     },
-    "src.151ec801": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count."
-      }
-    },
     "src.15373b1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56066,16 +56086,6 @@
       ],
       "source": {
         "text": "County of"
-      }
-    },
-    "src.1577eeac": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat."
       }
     },
     "src.1579f98c": {
@@ -56641,6 +56651,16 @@
         "text": "Unchanged"
       }
     },
+    "src.167a6146": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: resources and reputation"
+      }
+    },
     "src.167d7af0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56832,16 +56852,6 @@
         "text": "Compel as accomplice"
       }
     },
-    "src.16e6658b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No hostile intrigue affairs are active."
-      }
-    },
     "src.16f420bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56910,6 +56920,16 @@
       ],
       "source": {
         "text": "Reserved from the staffing assistant; manual choice remains available"
+      }
+    },
+    "src.1714f2d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No household worker yet."
       }
     },
     "src.172009a2": {
@@ -57234,6 +57254,16 @@
         "text": "{constituency} currently demands {privilege}."
       }
     },
+    "src.17cf4138": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: resources and credit"
+      }
+    },
     "src.17dc123d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57446,6 +57476,16 @@
       ],
       "source": {
         "text": "💰 The house of {house} pays the full portion: {money:gold}."
+      }
+    },
+    "src.18512f6c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Idle — assign an eligible worker."
       }
     },
     "src.18521d69": {
@@ -59001,6 +59041,16 @@
         "text": "Could lift an ox. The ox sends no condolences."
       }
     },
+    "src.1c0ce19b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No loan offer fits this household."
+      }
+    },
     "src.1c116770": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59271,6 +59321,16 @@
         "text": "Swore an oath of brotherhood."
       }
     },
+    "src.1cbc177d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No buildings yet in {settlement}."
+      }
+    },
     "src.1cc26497": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59380,16 +59440,6 @@
       ],
       "source": {
         "text": "How to choose between options:"
-      }
-    },
-    "src.1ce2792b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No political or military tie is recorded."
       }
     },
     "src.1cf3b416": {
@@ -61252,16 +61302,6 @@
         "text": "Converted to the local faith."
       }
     },
-    "src.2120d851": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Choose a subject for each empty eligible slot, or leave every child for manual selection."
-      }
-    },
     "src.2120e7c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61732,16 +61772,6 @@
         "text": "Guide: war"
       }
     },
-    "src.2234c7a4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at Standing 60+, carrying {money:25}; either offer uses the same envoy odds."
-      }
-    },
     "src.2236c5a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61863,6 +61893,16 @@
       ],
       "source": {
         "text": "Learning {value}"
+      }
+    },
+    "src.22770218": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No vassal is free to appoint."
       }
     },
     "src.228cf2d8": {
@@ -62967,16 +63007,6 @@
       ],
       "source": {
         "text": "Stay as their guest."
-      }
-    },
-    "src.24d3a8dd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No lender will advance more while revenues are in default."
       }
     },
     "src.24d5c4af": {
@@ -64847,16 +64877,6 @@
         "text": "A Knife Between Companies"
       }
     },
-    "src.29477599": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged."
-      }
-    },
     "src.2947a65e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66178,16 +66198,6 @@
         "text": "Reject the charter and keep every old claim alive."
       }
     },
-    "src.2c37099d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests."
-      }
-    },
     "src.2c3a2874": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67450,16 +67460,6 @@
         "text": "The Host Disbands"
       }
     },
-    "src.2f3c03d9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No living household relationships are recorded."
-      }
-    },
     "src.2f3ece6b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68406,6 +68406,16 @@
         "text": "Proposal under a recognized rite"
       }
     },
+    "src.316564b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "education schooling tutor child descendant match assistant policy household plan"
+      }
+    },
     "src.3165e04d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -68694,16 +68704,6 @@
       ],
       "source": {
         "text": "Review domain cleanup…"
-      }
-    },
-    "src.321bdcfb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_topbar.js"
-      ],
-      "source": {
-        "text": "No steady sources yet — deeds and events still move it."
       }
     },
     "src.32224622": {
@@ -71441,16 +71441,6 @@
         "text": "{name} dies in {year} AD, aged {age} — taken by sickness."
       }
     },
-    "src.39067876": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No one is yet named as your friend. Cultivate a contact’s Standing, then call them friend from their sheet."
-      }
-    },
     "src.39071b39": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71620,6 +71610,16 @@
       ],
       "source": {
         "text": "🔑 World seed:"
+      }
+    },
+    "src.3951e511": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{liege}’s Estates vote by bloc. Influence sets the tally; uncertain blocs follow their interests."
       }
     },
     "src.39539d19": {
@@ -75707,6 +75707,16 @@
         "text": "A lord’s wager, loudly made — the stands will remember either way."
       }
     },
+    "src.43146404": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the target for this plot. It remains attached through discovery and resolution."
+      }
+    },
     "src.4318715c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76840,6 +76850,16 @@
       ],
       "source": {
         "text": "Open Estates management…"
+      }
+    },
+    "src.45456fbf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Defaults block new loans."
       }
     },
     "src.455123b5": {
@@ -78179,6 +78199,16 @@
       ],
       "source": {
         "text": "{name} (you)"
+      }
+    },
+    "src.480cc758": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Education focus, instruction, work, and matches are managed from Household Plan. Each picker shows its requirements, chance, cost, and any danger before you commit."
       }
     },
     "src.4810b448": {
@@ -80573,16 +80603,6 @@
         "text": "Gather two more witnesses."
       }
     },
-    "src.4e58b76b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically."
-      }
-    },
     "src.4e5eb73e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82666,6 +82686,26 @@
         "text": "A hasty repair fails inspection. They take food in place of payment."
       }
     },
+    "src.52b243ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Education policy fills only unchosen eligible options. It reserves no money and never changes a manual choice."
+      }
+    },
+    "src.52b48fe2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: resources and markets"
+      }
+    },
     "src.52b5ae87": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83618,16 +83658,6 @@
       ],
       "source": {
         "text": "Edessa"
-      }
-    },
-    "src.5533df5c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No named personal connections are recorded."
       }
     },
     "src.553532ed": {
@@ -84714,6 +84744,16 @@
         "text": "Cork"
       }
     },
+    "src.57986ad4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No career is available under current household rules."
+      }
+    },
     "src.579aa7e4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84872,6 +84912,16 @@
       ],
       "source": {
         "text": "📜 Petition for a barony"
+      }
+    },
+    "src.57ecb18a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Open a row for its effect, ownership, upkeep, and lapse terms."
       }
     },
     "src.57efb27f": {
@@ -85205,6 +85255,16 @@
         "text": "A local cadet"
       }
     },
+    "src.5892ec2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+."
+      }
+    },
     "src.58cad766": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85534,6 +85594,16 @@
       ],
       "source": {
         "text": "A gift courier is already traveling for this ruler."
+      }
+    },
+    "src.5997a1fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A plot uses your daily focus until it resolves. Its target, method, chance, cost, duration, and exposure are shown before you commit."
       }
     },
     "src.59a6a514": {
@@ -87044,6 +87114,16 @@
         "text": "Technology domain"
       }
     },
+    "src.5cefbc4e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No personal host."
+      }
+    },
     "src.5cf95c37": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87297,16 +87377,6 @@
       ],
       "source": {
         "text": "Carmarthen"
-      }
-    },
-    "src.5d881fdb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person."
       }
     },
     "src.5d9c0b53": {
@@ -87880,6 +87950,16 @@
       ],
       "source": {
         "text": "your spouse"
+      }
+    },
+    "src.5f058588": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No political court."
       }
     },
     "src.5f0a2170": {
@@ -89999,16 +90079,6 @@
         "text": "local confirmation"
       }
     },
-    "src.638e3a31": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No unseated vassal remains to raise — grant land to loyal men, and offices will follow."
-      }
-    },
     "src.63966ee4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91536,16 +91606,6 @@
         "text": "You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you."
       }
     },
-    "src.67713967": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No managed household worker currently belongs to a guild."
-      }
-    },
     "src.67726b4f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92345,6 +92405,16 @@
       ],
       "source": {
         "text": "Not eligible: marriage joins the household but does not make a spouse a blood successor."
+      }
+    },
+    "src.6965b734": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Living standards benefit the whole resident household."
       }
     },
     "src.6966f8e6": {
@@ -93983,6 +94053,16 @@
         "text": "Ink and Vellum"
       }
     },
+    "src.6ced29fc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Officers strengthen the crown; a powerful council can restrain it."
+      }
+    },
     "src.6cfbcf47": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94514,16 +94594,6 @@
         "text": "This character has already completed a trade journey to that market."
       }
     },
-    "src.6e1f1155": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No trade, guild, enterprise, or office tie is recorded."
-      }
-    },
     "src.6e36f21e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94843,16 +94913,6 @@
       ],
       "source": {
         "text": "Once-in-a-life moments and story events — but never one that could cost you your life, name an heir, accept a title, or declare independence. Those are always shown."
-      }
-    },
-    "src.6efbc039": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No income while idle; assign an eligible household worker"
       }
     },
     "src.6effe3ff": {
@@ -96608,6 +96668,16 @@
         "text": "Tolls, stalls, and strangers’ silver."
       }
     },
+    "src.7333608a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Methods change speed, chance, cost, and exposure. Forceful methods use Martial."
+      }
+    },
     "src.7336af99": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97980,6 +98050,16 @@
       ],
       "source": {
         "text": "A Letter Between Courts"
+      }
+    },
+    "src.764a3c1f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No active venture."
       }
     },
     "src.764c8a2f": {
@@ -99739,16 +99819,6 @@
         "text": "Carry it to the {temple}."
       }
     },
-    "src.7a854906": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No political court applies to the current household."
-      }
-    },
     "src.7a86f33a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100128,16 +100198,6 @@
       ],
       "source": {
         "text": "not occupied"
-      }
-    },
-    "src.7b78a1a4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No coin is backing another merchant’s venture."
       }
     },
     "src.7b816a4f": {
@@ -101223,6 +101283,16 @@
       ],
       "source": {
         "text": "Send them to the lord’s court."
+      }
+    },
+    "src.7de9d5ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Considers schools, home lessons, and known tutors — never a new personal master."
       }
     },
     "src.7df04136": {
@@ -103673,6 +103743,16 @@
         "text": "Risk blood for a larger share of the campaign’s honor."
       }
     },
+    "src.82faf38d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Upbringing and descendant matches"
+      }
+    },
     "src.82fcabc2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104994,6 +105074,16 @@
       ],
       "source": {
         "text": "New extraordinary aids require the Estates’ consent."
+      }
+    },
+    "src.85896d5a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No eligible personal scheme."
       }
     },
     "src.8590fa9b": {
@@ -107588,6 +107678,16 @@
         "text": "Sleep beneath your cloak."
       }
     },
+    "src.8b44b096": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No regional endowment."
+      }
+    },
     "src.8b4eb89e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108388,6 +108488,16 @@
       ],
       "source": {
         "text": "Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)"
+      }
+    },
+    "src.8d0088e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Each direction uses attention and changes Standing every season."
       }
     },
     "src.8d0a2163": {
@@ -113020,6 +113130,16 @@
         "text": "Short pain, then peace — for a coin."
       }
     },
+    "src.98225f25": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_topbar.js"
+      ],
+      "source": {
+        "text": "No steady income yet."
+      }
+    },
     "src.982555b8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113543,6 +113663,16 @@
       ],
       "source": {
         "text": "{points}/2 points"
+      }
+    },
+    "src.9962af61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Captivity blocks travel, marriage, new offices, and plots. Ransom, mercy, and leverage actions always show their terms before they act."
       }
     },
     "src.9970f304": {
@@ -114798,16 +114928,6 @@
       ],
       "source": {
         "text": "You must first bleed in your liege’s wars (service {needed}+, now {current})."
-      }
-    },
-    "src.9c0928b2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No career choice is currently available under the existing age, station, faith, and household rules."
       }
     },
     "src.9c0c1e5e": {
@@ -116333,6 +116453,16 @@
         "text": "A Lord’s Long Look"
       }
     },
+    "src.9f606afd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Set defaults for unchosen education. Existing choices stay."
+      }
+    },
     "src.9f60cba6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116965,6 +117095,16 @@
         "text": "Chaste"
       }
     },
+    "src.a0e58120": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: upbringing and matches"
+      }
+    },
     "src.a0e8d78f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117388,6 +117528,16 @@
         "text": "Money remaining after purchase"
       }
     },
+    "src.a1bf2599": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Hostile plots choose a target and method first. An accomplice may improve the plan, but a refusal can expose it."
+      }
+    },
     "src.a1c9b264": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117739,6 +117889,16 @@
         "text": "Nothing. So savor the days that remain."
       }
     },
+    "src.a26702b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: plots and intrigue"
+      }
+    },
     "src.a2682472": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117787,16 +117947,6 @@
       ],
       "source": {
         "text": "Yield the seed grain."
-      }
-    },
-    "src.a292c7e2": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
       }
     },
     "src.a296f599": {
@@ -119956,16 +120106,6 @@
         "text": "Keep moving."
       }
     },
-    "src.a768267f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No practiced household profession currently has a relevant outfit."
-      }
-    },
     "src.a76e05d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120590,6 +120730,16 @@
         "text": "The War Lets You Go"
       }
     },
+    "src.a8cef7e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose a target. Personal plots stay in your realm; sabotage reaches one border."
+      }
+    },
     "src.a8cfcf07": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121182,6 +121332,16 @@
         "text": "Keep your gifts"
       }
     },
+    "src.aa7f3e29": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No staffing changes."
+      }
+    },
     "src.aa855fde": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121487,16 +121647,6 @@
         "text": "Grand Emir"
       }
     },
-    "src.ab81dd68": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Political attention is assigned, not spent. Each active direction changes Standing with that court every season and remains in force until you change it."
-      }
-    },
     "src.ab87e0ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121515,6 +121665,16 @@
       ],
       "source": {
         "text": "Endorse the shrine."
+      }
+    },
+    "src.ab950222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No household members."
       }
     },
     "src.ab957d47": {
@@ -122591,6 +122751,16 @@
         "text": "First to charge is first remembered."
       }
     },
+    "src.adec4d4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: social and religious roles"
+      }
+    },
     "src.adf0a7d8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122759,6 +122929,16 @@
       ],
       "source": {
         "text": "Flee before judgment."
+      }
+    },
+    "src.ae53ab8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Fill empty choices, or leave them manual."
       }
     },
     "src.ae54c1dc": {
@@ -124045,16 +124225,6 @@
       ],
       "source": {
         "text": "Vassals, domain capacity, de jure duchy rights, councils, and national technology matter together."
-      }
-    },
-    "src.b0df4f5b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No household member is currently old enough to work or train."
       }
     },
     "src.b0e25fd3": {
@@ -125574,6 +125744,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "js/model.js"
       ],
       "source": {
@@ -127766,6 +127937,16 @@
         "text": "Accept a fair charter and help enforce it. ({money:10})"
       }
     },
+    "src.b93c9501": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Plots take your focus; leverage creates one decisive demand."
+      }
+    },
     "src.b93faa71": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128496,16 +128677,6 @@
       ],
       "source": {
         "text": "Small enough to be modest, bright enough to be noticed."
-      }
-    },
-    "src.bb074402": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No active household obligations."
       }
     },
     "src.bb0863b0": {
@@ -129278,6 +129449,16 @@
       ],
       "source": {
         "text": "Context"
+      }
+    },
+    "src.bd32c28a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Limits new arrangements only; it reserves no money."
       }
     },
     "src.bd409d41": {
@@ -131917,16 +132098,6 @@
       ],
       "source": {
         "text": "Chichester"
-      }
-    },
-    "src.c3202711": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No offer fits the household’s income, collateral, or current obligations."
       }
     },
     "src.c3224894": {
@@ -134888,16 +135059,6 @@
         "text": "Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor."
       }
     },
-    "src.ca4b55cf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details."
-      }
-    },
     "src.ca4ee790": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135109,6 +135270,16 @@
         "text": "The house was blessed."
       }
     },
+    "src.cafeeaf2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No realm ties."
+      }
+    },
     "src.caff4129": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135307,16 +135478,6 @@
       ],
       "source": {
         "text": "💰 Seasonal revenue ~{money:gold} · 🛡 levy ~{men} men"
-      }
-    },
-    "src.cb96e131": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No buildings stand in {settlement} yet."
       }
     },
     "src.cb970717": {
@@ -136048,6 +136209,16 @@
       ],
       "source": {
         "text": "Vacancy"
+      }
+    },
+    "src.ccdc3a8f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No household guild members."
       }
     },
     "src.ccdc4a3c": {
@@ -137224,6 +137395,16 @@
       ],
       "source": {
         "text": "The purse changes hands. Your enemy names the injury answered, and the witnesses bind you both to peace."
+      }
+    },
+    "src.d0156538": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "plot scheme intrigue leverage captive ransom sabotage exposure accomplice"
       }
     },
     "src.d02b533f": {
@@ -138827,16 +139008,6 @@
       ],
       "source": {
         "text": "Ordered claims"
-      }
-    },
-    "src.d3d7bdca": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No personal host yet. Land, military positions, and sworn service will appear here."
       }
     },
     "src.d3e76802": {
@@ -141011,16 +141182,6 @@
       ],
       "source": {
         "text": "🧭 The household dispatches {money:stake} to {destination}; {money:overhead} pays the road."
-      }
-    },
-    "src.d8ab9850": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No authored regional advantage applies here."
       }
     },
     "src.d8b57123": {
@@ -145017,6 +145178,16 @@
         "text": "🎓 {tutor} takes charge of {name}’s lessons."
       }
     },
+    "src.e1fd709d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Match recommendations spend nothing and make no pledge. You can review, change, or reserve every descendant for manual choices."
+      }
+    },
     "src.e1ff3665": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145380,6 +145551,16 @@
       ],
       "source": {
         "text": "The allied live troops remain and abstract supply improves."
+      }
+    },
+    "src.e2c5131b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No friend yet. Cultivate a contact, then name them from their sheet."
       }
     },
     "src.e2c7095a": {
@@ -145911,16 +146092,6 @@
       ],
       "source": {
         "text": ": settlement site"
-      }
-    },
-    "src.e4264699": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution."
       }
     },
     "src.e42a2552": {
@@ -147347,6 +147518,16 @@
         "text": "⛓ {pope} refuses absolution to {target}; the sentence remains."
       }
     },
+    "src.e7313018": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt."
+      }
+    },
     "src.e73ed77d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -148035,16 +148216,6 @@
       ],
       "source": {
         "text": "What the Old Folk Remember"
-      }
-    },
-    "src.e863cb67": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here."
       }
     },
     "src.e86e02f9": {
@@ -149722,6 +149893,16 @@
         "text": "definition must be an object."
       }
     },
+    "src.eccfd6cb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No active intrigue."
+      }
+    },
     "src.ecd150dd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150859,6 +151040,16 @@
         "text": "occupied by the attacking camp"
       }
     },
+    "src.ef856e6d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No active obligations."
+      }
+    },
     "src.ef860a72": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150917,16 +151108,6 @@
       ],
       "source": {
         "text": "Receive the civic delegation."
-      }
-    },
-    "src.efa6a4f8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "There are no staffing changes to apply."
       }
     },
     "src.efa77a48": {
@@ -151601,16 +151782,6 @@
         "text": "A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
       }
     },
-    "src.f0ff7994": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery."
-      }
-    },
     "src.f1044ba9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152019,16 +152190,6 @@
       ],
       "source": {
         "text": "Labored on the lord’s works."
-      }
-    },
-    "src.f20883d1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial."
       }
     },
     "src.f20a2607": {
@@ -153109,6 +153270,16 @@
         "text": "Revoking before the protected term ends is unlawful and organizes opposition."
       }
     },
+    "src.f4c3cff9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Guide: family and household scope"
+      }
+    },
     "src.f4d65a36": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153468,6 +153639,16 @@
       ],
       "source": {
         "text": " to {destination}"
+      }
+    },
+    "src.f584ecf9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Plots use your daily focus. Each day risks discovery."
       }
     },
     "src.f588d092": {
@@ -154574,6 +154755,16 @@
         "text": "{name} (your wife)"
       }
     },
+    "src.f8823b49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No trade or guild ties."
+      }
+    },
     "src.f88c97a9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -155437,6 +155628,16 @@
         "text": "research education tutoring careers examinations trade guild religion papal medicine knowledge literacy"
       }
     },
+    "src.fa50409e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Set each child’s education yourself, or use policies that fill only empty choices."
+      }
+    },
     "src.fa55888a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -155715,6 +155916,16 @@
       ],
       "source": {
         "text": "Settle the Wasteland"
+      }
+    },
+    "src.faf3d076": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No matching outfit."
       }
     },
     "src.fafc4eef": {
@@ -156157,16 +156368,6 @@
       ],
       "source": {
         "text": "Ask for exceptional levy"
-      }
-    },
-    "src.fbf28c29": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown."
       }
     },
     "src.fbfa083c": {
@@ -163424,7 +163625,7 @@
         "text": "A new named character enters the chronicle in this office."
       }
     },
-    "ui:A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at Standing 60+, carrying {money:25}; either offer uses the same envoy odds.": {
+    "ui:A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "money:10",
@@ -163432,7 +163633,7 @@
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at Standing 60+, carrying {money:25}; either offer uses the same envoy odds."
+        "text": "A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+."
       }
     },
     "ui:A peace envoy must address a living sovereign court.": {
@@ -163495,12 +163696,12 @@
         "text": "A pledge is recorded"
       }
     },
-    "ui:A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.": {
+    "ui:A plot uses your daily focus until it resolves. Its target, method, chance, cost, duration, and exposure are shown before you commit.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery."
+        "text": "A plot uses your daily focus until it resolves. Its target, method, chance, cost, duration, and exposure are shown before you commit."
       }
     },
     "ui:A preferred domain is chosen first; if none is eligible, automation uses the cheapest eligible technology from another domain.": {
@@ -165836,6 +166037,14 @@
         "text": "Begin"
       }
     },
+    "ui:Begin a Plot": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Begin a Plot"
+      }
+    },
     "ui:Begin a courtship before making a proposal.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166600,14 +166809,6 @@
         "text": "Cannot use this slot"
       }
     },
-    "ui:Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count."
-      }
-    },
     "ui:Capital": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -166622,6 +166823,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Captive"
+      }
+    },
+    "ui:Captivity blocks travel, marriage, new offices, and plots. Ransom, mercy, and leverage actions always show their terms before they act.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Captivity blocks travel, marriage, new offices, and plots. Ransom, mercy, and leverage actions always show their terms before they act."
       }
     },
     "ui:Cardinal": {
@@ -167157,20 +167366,20 @@
         "text": "Choose a subject"
       }
     },
-    "ui:Choose a subject for each empty eligible slot, or leave every child for manual selection.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Choose a subject for each empty eligible slot, or leave every child for manual selection."
-      }
-    },
     "ui:Choose a target": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose a target"
+      }
+    },
+    "ui:Choose a target. Personal plots stay in your realm; sabotage reaches one border.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose a target. Personal plots stay in your realm; sabotage reaches one border."
       }
     },
     "ui:Choose a valid hairstyle and facial-hair combination.": {
@@ -167305,14 +167514,6 @@
         "text": "Choose long-range diplomatic and research priorities."
       }
     },
-    "ui:Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border."
-      }
-    },
     "ui:Choose one tactic for this ballot. Every elector’s current lean is shown below; the saved ballot may still vary.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167393,14 +167594,6 @@
         "text": "Choose the one exact trade corridor protected by the charter. Ordinary commodity ventures remain available on every route."
       }
     },
-    "ui:Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution."
-      }
-    },
     "ui:Choose the profession that receives exclusive local privilege. One outgoing charter may exist at a time, alongside any incoming charter held by the household.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167425,6 +167618,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the strongest available instruction costing no more than {money:amount} each season."
+      }
+    },
+    "ui:Choose the target for this plot. It remains attached through discovery and resolution.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the target for this plot. It remains attached through discovery and resolution."
       }
     },
     "ui:Choose the workshop output protected by this local craft privilege.": {
@@ -167907,6 +168108,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Consider for household service…"
+      }
+    },
+    "ui:Considers schools, home lessons, and known tutors — never a new personal master.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Considers schools, home lessons, and known tutors — never a new personal master."
       }
     },
     "ui:Consolidate a kingdom and independence.": {
@@ -168413,6 +168622,14 @@
         "text": "Creates this vassal’s existing one-year levy promise."
       }
     },
+    "ui:Credit uses reliable income, eligible collateral, standing allowance, and current debt.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Credit uses reliable income, eligible collateral, standing allowance, and current debt."
+      }
+    },
     "ui:Crown authority": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -168895,6 +169112,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Default focus: {focus}"
+      }
+    },
+    "ui:Defaults block new loans.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Defaults block new loans."
       }
     },
     "ui:Defeated": {
@@ -169656,12 +169881,12 @@
         "text": "Dynastically relevant proposal"
       }
     },
-    "ui:Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details.": {
+    "ui:Each direction uses attention and changes Standing every season.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details."
+        "text": "Each direction uses attention and changes Standing every season."
       }
     },
     "ui:Each realm may have one ally; the compact ends when either ruler changes.": {
@@ -169746,12 +169971,28 @@
         "text": "Education Policy"
       }
     },
+    "ui:Education focus, instruction, work, and matches are managed from Household Plan. Each picker shows its requirements, chance, cost, and any danger before you commit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Education focus, instruction, work, and matches are managed from Household Plan. Each picker shows its requirements, chance, cost, and any danger before you commit."
+      }
+    },
     "ui:Education is managed for the household head and descendants": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Education is managed for the household head and descendants"
+      }
+    },
+    "ui:Education policy fills only unchosen eligible options. It reserves no money and never changes a manual choice.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Education policy fills only unchosen eligible options. It reserves no money and never changes a manual choice."
       }
     },
     "ui:Effect": {
@@ -170790,6 +171031,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Fields at {settlement}"
+      }
+    },
+    "ui:Fill empty choices, or leave them manual.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Fill empty choices, or leave them manual."
       }
     },
     "ui:Fill research slots automatically": {
@@ -172212,6 +172461,14 @@
         "text": "Hostile faiths"
       }
     },
+    "ui:Hostile plots choose a target and method first. An accomplice may improve the plan, but a refusal can expose it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Hostile plots choose a target and method first. An accomplice may improve the plan, but a refusal can expose it."
+      }
+    },
     "ui:House": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172425,6 +172682,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Idle"
+      }
+    },
+    "ui:Idle — assign an eligible worker.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Idle — assign an eligible worker."
       }
     },
     "ui:Idle — worker available": {
@@ -172860,6 +173125,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Interests"
+      }
+    },
+    "ui:Intrigue": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Intrigue"
       }
     },
     "ui:Intrigue Affairs": {
@@ -173670,6 +173943,14 @@
         "text": "Likely"
       }
     },
+    "ui:Limits new arrangements only; it reserves no money.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Limits new arrangements only; it reserves no money."
+      }
+    },
     "ui:Limits the dowry written into a recommended pledge. Leave blank for no limit.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173728,12 +174009,12 @@
         "text": "Living standards"
       }
     },
-    "ui:Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person.": {
+    "ui:Living standards benefit the whole resident household.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person."
+        "text": "Living standards benefit the whole resident household."
       }
     },
     "ui:Loan against revenues": {
@@ -174517,6 +174798,14 @@
         "text": "Match"
       }
     },
+    "ui:Match recommendations spend nothing and make no pledge. You can review, change, or reserve every descendant for manual choices.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Match recommendations spend nothing and make no pledge. You can review, change, or reserve every descendant for manual choices."
+      }
+    },
     "ui:Match their occupation to an available household office.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174699,6 +174988,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Merchant enterprises in the household county."
+      }
+    },
+    "ui:Methods change speed, chance, cost, and exposure. Forceful methods use Martial.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Methods change speed, chance, cost, and exposure. Forceful methods use Martial."
       }
     },
     "ui:Minimum acceptable station": {
@@ -175369,12 +175666,20 @@
         "text": "No active defenses until construction completes"
       }
     },
-    "ui:No active household obligations.": {
+    "ui:No active intrigue.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "No active household obligations."
+        "text": "No active intrigue."
+      }
+    },
+    "ui:No active obligations.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No active obligations."
       }
     },
     "ui:No active privilege is recorded.": {
@@ -175391,6 +175696,14 @@
       "location": "js/papacy.js",
       "source": {
         "text": "No active sentence from the recognized obedience."
+      }
+    },
+    "ui:No active venture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No active venture."
       }
     },
     "ui:No active war or banner service.": {
@@ -175467,14 +175780,6 @@
         "text": "No auction is available."
       }
     },
-    "ui:No authored regional advantage applies here.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No authored regional advantage applies here."
-      }
-    },
     "ui:No autobuild": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175491,22 +175796,30 @@
         "text": "No awards have yet been settled."
       }
     },
-    "ui:No buildings stand in {settlement} yet.": {
+    "ui:No backed ventures.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No backed ventures."
+      }
+    },
+    "ui:No buildings yet in {settlement}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "settlement"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "No buildings stand in {settlement} yet."
+        "text": "No buildings yet in {settlement}."
       }
     },
-    "ui:No career choice is currently available under the existing age, station, faith, and household rules.": {
+    "ui:No career is available under current household rules.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "No career choice is currently available under the existing age, station, faith, and household rules."
+        "text": "No career is available under current household rules."
       }
     },
     "ui:No character in the bounded tree matches that name.": {
@@ -175523,14 +175836,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No choice recorded"
-      }
-    },
-    "ui:No coin is backing another merchant’s venture.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No coin is backing another merchant’s venture."
       }
     },
     "ui:No compact": {
@@ -175695,6 +176000,14 @@
         "text": "No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown."
       }
     },
+    "ui:No eligible personal scheme.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No eligible personal scheme."
+      }
+    },
     "ui:No eligible settlement": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175815,6 +176128,14 @@
         "text": "No focus selected"
       }
     },
+    "ui:No friend yet. Cultivate a contact, then name them from their sheet.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No friend yet. Cultivate a contact, then name them from their sheet."
+      }
+    },
     "ui:No further permanent holding is available for this station and profession.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175855,20 +176176,12 @@
         "text": "No guild favor is available."
       }
     },
-    "ui:No hostile intrigue affairs are active.": {
+    "ui:No household guild members.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
-        "text": "No hostile intrigue affairs are active."
-      }
-    },
-    "ui:No hostile personal scheme is currently eligible.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No hostile personal scheme is currently eligible."
+        "text": "No household guild members."
       }
     },
     "ui:No household is ready to trade.": {
@@ -175879,12 +176192,12 @@
         "text": "No household is ready to trade."
       }
     },
-    "ui:No household member is currently old enough to work or train.": {
+    "ui:No household members.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
-        "text": "No household member is currently old enough to work or train."
+        "text": "No household members."
       }
     },
     "ui:No household office": {
@@ -175919,20 +176232,20 @@
         "text": "No household wage; appointment lowers crown authority by 2."
       }
     },
+    "ui:No household worker yet.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No household worker yet."
+      }
+    },
     "ui:No immediate gold expense": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "No immediate gold expense"
-      }
-    },
-    "ui:No income while idle; assign an eligible household worker": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No income while idle; assign an eligible household worker"
       }
     },
     "ui:No instruction chance until a focus is chosen": {
@@ -175959,14 +176272,6 @@
         "text": "No lawful heir is living."
       }
     },
-    "ui:No lender will advance more while revenues are in default.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No lender will advance more while revenues are in default."
-      }
-    },
     "ui:No limit": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175989,14 +176294,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No living foreign sovereign is currently affected."
-      }
-    },
-    "ui:No living household relationships are recorded.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No living household relationships are recorded."
       }
     },
     "ui:No living lawful heir can continue the family’s story.": {
@@ -176023,6 +176320,14 @@
         "text": "No living local liege can make the appointment."
       }
     },
+    "ui:No loan offer fits this household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No loan offer fits this household."
+      }
+    },
     "ui:No lost kingdom is currently eligible.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176047,20 +176352,20 @@
         "text": "No maintained improvement."
       }
     },
-    "ui:No managed household worker currently belongs to a guild.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No managed household worker currently belongs to a guild."
-      }
-    },
     "ui:No match arranged": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "No match arranged"
+      }
+    },
+    "ui:No matching outfit.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No matching outfit."
       }
     },
     "ui:No mechanical effect": {
@@ -176119,12 +176424,12 @@
         "text": "No motion is pending; current allegiances and ordinary Estates forecasts are shown below."
       }
     },
-    "ui:No named personal connections are recorded.": {
+    "ui:No named connections.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "No named personal connections are recorded."
+        "text": "No named connections."
       }
     },
     "ui:No neighboring hostile realm can be reached from your border.": {
@@ -176169,28 +176474,12 @@
         "text": "No occupation"
       }
     },
-    "ui:No offer fits the household’s income, collateral, or current obligations.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No offer fits the household’s income, collateral, or current obligations."
-      }
-    },
     "ui:No one is displaced.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "No one is displaced."
-      }
-    },
-    "ui:No one is yet named as your friend. Cultivate a contact’s Standing, then call them friend from their sheet.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No one is yet named as your friend. Cultivate a contact’s Standing, then call them friend from their sheet."
       }
     },
     "ui:No one of note.": {
@@ -176244,12 +176533,12 @@
         "text": "No personal audience. Cultivate a {station} intermediary to +{standing} Standing; each warm intermediary opens the next station."
       }
     },
-    "ui:No personal host yet. Land, military positions, and sworn service will appear here.": {
+    "ui:No personal host.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "No personal host yet. Land, military positions, and sworn service will appear here."
+        "text": "No personal host."
       }
     },
     "ui:No personal-attention assignment is available.": {
@@ -176260,20 +176549,20 @@
         "text": "No personal-attention assignment is available."
       }
     },
-    "ui:No political court applies to the current household.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No political court applies to the current household."
-      }
-    },
     "ui:No political court applies to the current position.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "No political court applies to the current position."
+      }
+    },
+    "ui:No political court.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No political court."
       }
     },
     "ui:No political deed applies to the current position.": {
@@ -176284,28 +176573,12 @@
         "text": "No political deed applies to the current position."
       }
     },
-    "ui:No political or military tie is recorded.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No political or military tie is recorded."
-      }
-    },
     "ui:No post-marriage residence decision is pending.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "No post-marriage residence decision is pending."
-      }
-    },
-    "ui:No practiced household profession currently has a relevant outfit.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No practiced household profession currently has a relevant outfit."
       }
     },
     "ui:No prerequisites.": {
@@ -176364,6 +176637,14 @@
         "text": "No realm is sworn directly to you. Counties held in your own hand appear under Domain."
       }
     },
+    "ui:No realm ties.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No realm ties."
+      }
+    },
     "ui:No recognized ground has been recorded.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176396,6 +176677,14 @@
         "text": "No refund; repurchase later at full setup cost"
       }
     },
+    "ui:No regional endowment.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No regional endowment."
+      }
+    },
     "ui:No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176418,14 +176707,6 @@
       "location": "js/events.js",
       "source": {
         "text": "No seasonal upkeep"
-      }
-    },
-    "ui:No self-founded venture is active.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No self-founded venture is active."
       }
     },
     "ui:No separate gameplay unlock is authored.": {
@@ -176508,12 +176789,20 @@
         "text": "No special prerequisite."
       }
     },
-    "ui:No steady sources yet — deeds and events still move it.": {
+    "ui:No staffing changes.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No staffing changes."
+      }
+    },
+    "ui:No steady income yet.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_topbar.js",
       "source": {
-        "text": "No steady sources yet — deeds and events still move it."
+        "text": "No steady income yet."
       }
     },
     "ui:No such election tactic is available.": {
@@ -176532,12 +176821,12 @@
         "text": "No technologies match these filters."
       }
     },
-    "ui:No trade, guild, enterprise, or office tie is recorded.": {
+    "ui:No trade or guild ties.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "No trade, guild, enterprise, or office tie is recorded."
+        "text": "No trade or guild ties."
       }
     },
     "ui:No trait modifier": {
@@ -176570,14 +176859,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No unseated vassal is available for this office."
-      }
-    },
-    "ui:No unseated vassal remains to raise — grant land to loyal men, and offices will follow.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No unseated vassal remains to raise — grant land to loyal men, and offices will follow."
       }
     },
     "ui:No upkeep": {
@@ -176626,6 +176907,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No valid political court is available."
+      }
+    },
+    "ui:No vassal is free to appoint.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No vassal is free to appoint."
       }
     },
     "ui:No visible royal child": {
@@ -177147,6 +177436,14 @@
         "text": "Office: {offices}"
       }
     },
+    "ui:Officers strengthen the crown; a powerful council can restrain it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Officers strengthen the crown; a powerful council can restrain it."
+      }
+    },
     "ui:Offline copy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -177549,6 +177846,14 @@
         "text": "Open Royal Council management…"
       }
     },
+    "ui:Open a row for its effect, ownership, upkeep, and lapse terms.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Open a row for its effect, ownership, upkeep, and lapse terms."
+      }
+    },
     "ui:Open an enterprise in {settlement}…": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -177890,6 +178195,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Out of reach"
+      }
+    },
+    "ui:Outfits improve matching work and go dormant without an eligible worker.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Outfits improve matching work and go dormant without an eligible worker."
       }
     },
     "ui:Outgoing monopoly": {
@@ -178870,6 +179183,30 @@
         "text": "Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor."
       }
     },
+    "ui:Plots take your focus; leverage creates one decisive demand.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Plots take your focus; leverage creates one decisive demand."
+      }
+    },
+    "ui:Plots use your daily focus. Each day risks discovery.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Plots use your daily focus. Each day risks discovery."
+      }
+    },
+    "ui:Plots, leverage, and captivity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Plots, leverage, and captivity"
+      }
+    },
     "ui:Pointed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178910,14 +179247,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Political attention"
-      }
-    },
-    "ui:Political attention is assigned, not spent. Each active direction changes Standing with that court every season and remains in force until you change it.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Political attention is assigned, not spent. Each active direction changes Standing with that court every season and remains in force until you change it."
       }
     },
     "ui:Political attention requires an independent county or greater realm.": {
@@ -179333,14 +179662,6 @@
       "location": "js/events.js",
       "source": {
         "text": "Profession becomes {profession}"
-      }
-    },
-    "ui:Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat."
       }
     },
     "ui:Progress toward a trait": {
@@ -182152,14 +182473,6 @@
         "text": "Schemer warning — affected Council seats: {count}."
       }
     },
-    "ui:Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically."
-      }
-    },
     "ui:Scope": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182627,12 +182940,20 @@
         "text": "Set a daily focus"
       }
     },
-    "ui:Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged.": {
+    "ui:Set defaults for unchosen education. Existing choices stay.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged."
+        "text": "Set defaults for unchosen education. Existing choices stay."
+      }
+    },
+    "ui:Set each child’s education yourself, or use policies that fill only empty choices.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Set each child’s education yourself, or use policies that fill only empty choices."
       }
     },
     "ui:Set foreign-policy direction…": {
@@ -184506,14 +184827,6 @@
         "text": "The candidate must hold a current guild-officer term."
       }
     },
-    "ui:The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises."
-      }
-    },
     "ui:The capital can no longer be moved.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184884,14 +185197,6 @@
         "text": "The great holy war must be resolved before retiring."
       }
     },
-    "ui:The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown."
-      }
-    },
     "ui:The great offices have not formed yet. Open the Council to establish them.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185099,14 +185404,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The match assistant will omit this person from future recommendations. Manual matching remains available."
-      }
-    },
-    "ui:The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial."
       }
     },
     "ui:The motion has already been called to a vote.": {
@@ -185699,14 +185996,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Their response chance"
-      }
-    },
-    "ui:There are no staffing changes to apply.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "There are no staffing changes to apply."
       }
     },
     "ui:There is no compatible object in the armory.": {
@@ -187023,6 +187312,14 @@
         "text": "Up to +{standing} Standing; recipient access determines the exact value. Each recipient can receive one cash or item gift every {days} days. (spends the day)"
       }
     },
+    "ui:Upbringing and descendant matches": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Upbringing and descendant matches"
+      }
+    },
     "ui:Updates next season": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -187638,16 +187935,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed."
-      }
-    },
-    "ui:When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "liege"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests."
       }
     },
     "ui:Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.": {
@@ -193366,6 +193653,16 @@
         "text": "{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead"
       }
     },
+    "ui:{liege}’s Estates vote by bloc. Influence sets the tally; uncertain blocs follow their interests.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "liege"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{liege}’s Estates vote by bloc. Influence sets the tally; uncertain blocs follow their interests."
+      }
+    },
     "ui:{marital} · Standing {standing}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -196058,12 +196355,12 @@
         "text": "🌱 Courtship and marriage live in the Deeds tab, under Life & Family — a spouse is the first deed of a dynasty."
       }
     },
-    "ui:🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here.": {
+    "ui:🌱 No ties yet.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "🌱 No ties yet — work a guild trade, serve your lord, or court a neighbor, and the people you meet will gather here."
+        "text": "🌱 No ties yet."
       }
     },
     "ui:🌱 fertility {percent}%": {

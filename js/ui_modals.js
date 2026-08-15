@@ -3436,7 +3436,7 @@ window.FB = window.FB || {};
           (effects.length ? '<br><span class="hint">' + esc(effects.join(' · ')) +
             '</span>' : '') + '</p>';
       }
-    } else h += '<p>' + esc(FB.T('No authored regional advantage applies here.')) + '</p>';
+    } else h += '<p>' + esc(FB.T('No regional endowment.')) + '</p>';
     h += '</div>';
     if (market.shocks.length) {
       h += '<div class="gm-body-text"><h4>' + esc(FB.T('Active disruptions')) + '</h4>';
@@ -3519,7 +3519,9 @@ window.FB = window.FB || {};
     }
     h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
-    openModal(FB.T('{county} market', { county:pr.name }), h);
+    openModal(FB.T('{county} market', { county:pr.name }), h, {
+      guide:guideModalOption('market-guide', 'resources', 'Guide: resources and markets')
+    });
     const marketMenu = $('market-sheet-good');
     const marketOptions = document.querySelectorAll('.market-sheet-option');
     marketMenu.addEventListener('keydown', function (event) {
@@ -3922,7 +3924,7 @@ window.FB = window.FB || {};
         }
       }
     } else {
-      h += '<p class="hint">' + esc(FB.T('No buildings stand in {settlement} yet.',
+      h += '<p class="hint">' + esc(FB.T('No buildings yet in {settlement}.',
         { settlement: st.name })) + '</p>';
     }
     if (!FB.fortAt(s, pid) && own) {
@@ -4012,7 +4014,7 @@ window.FB = window.FB || {};
   UI.showPlots = function () {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
-      'A plot claims your daily focus until it is ready to spring — and every day of weaving risks discovery.')) +
+      'Plots use your daily focus. Each day risks discovery.')) +
       '</p><div class="gm-list">';
     for (const t of FB.plotAvailable(s)) {
       h += '<button class="actionbtn" data-plot="' + esc(t.id) + '">' +
@@ -4021,7 +4023,9 @@ window.FB = window.FB || {};
         esc(FB.T('({days} days’ weaving, roughly)', { days: t.def.need })) + '</span></button>';
     }
     h += '</div><button class="btn" id="gm-cancel">Not now</button>';
-    openModal('Begin a Plot', h);
+    openModal(FB.T('Begin a Plot'), h, {
+      guide:guideModalOption('plot-guide', 'intrigue', 'Guide: plots and intrigue')
+    });
     document.querySelectorAll('[data-plot]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const def = FBDATA.plots[btn.dataset.plot];
@@ -4045,7 +4049,7 @@ window.FB = window.FB || {};
     }
     const targets = FB.plotTargetOptions(s, def);
     let h = '<p class="hint">' + esc(FB.T(
-      'Choose the person, realm, contract, or institution this plot concerns. Stable ids keep that exact target attached through discovery and resolution.')) +
+      'Choose the target for this plot. It remains attached through discovery and resolution.')) +
       '</p><div class="gm-list">';
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i];
@@ -4060,7 +4064,9 @@ window.FB = window.FB || {};
         '</button>';
     }
     h += '</div><button class="btn" id="gm-back">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Choose the Target'), h);
+    openModal(FB.T('Choose the Target'), h, {
+      guide:guideModalOption('plot-target-guide', 'intrigue', 'Guide: plots and intrigue')
+    });
     document.querySelectorAll('[data-plot-target]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const target = targets[Number(btn.dataset.plotTarget)];
@@ -4133,7 +4139,7 @@ window.FB = window.FB || {};
       });
     }
     let h = '<p class="hint">' + esc(FB.T(
-      'Choose one exact target. Personal schemes stay inside your sovereign realm; sabotage may also cross one shared county border.')) +
+      'Choose a target. Personal plots stay in your realm; sabotage reaches one border.')) +
       '</p><div class="large-list-search"><label for="intrigue-target-search">' +
       esc(FB.T('Search targets')) + '</label><div><input type="search" ' +
       'id="intrigue-target-search" autocomplete="off" spellcheck="false" ' +
@@ -4151,7 +4157,9 @@ window.FB = window.FB || {};
     h += intrigueBackButton('intrigue-target-back');
     openModal(FB.T('Choose the Target'), h, {
       modalClass:'fullsheet-modal intrigue-modal', historyView:true,
-      historyBackRender:UI.showPlots
+      historyBackRender:UI.showPlots,
+      guide:guideModalOption('intrigue-target-guide', 'intrigue',
+        'Guide: plots and intrigue')
     });
     const search = $('intrigue-target-search');
     const clear = $('intrigue-target-clear');
@@ -4190,7 +4198,7 @@ window.FB = window.FB || {};
   UI.showIntrigueMethods = function (plotId, context, returnCharacterId) {
     const s = FB.state, methods = FB.intrigueMethodOptions(s, plotId, context);
     let h = '<p class="hint">' + esc(FB.T(
-      'The method changes speed, success, cost, and yearly exposure. Forceful methods also use Martial.')) +
+      'Methods change speed, chance, cost, and exposure. Forceful methods use Martial.')) +
       '</p><div class="gm-list">';
     for (let i = 0; i < methods.length; i++) {
       const item = methods[i];
@@ -4211,7 +4219,9 @@ window.FB = window.FB || {};
     };
     openModal(FB.T('Choose the Method'), h, {
       modalClass:'fullsheet-modal intrigue-modal', historyView:true,
-      historyBackRender:back
+      historyBackRender:back,
+      guide:guideModalOption('intrigue-method-guide', 'intrigue',
+        'Guide: plots and intrigue')
     });
     document.querySelectorAll('[data-intrigue-method]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -4265,7 +4275,9 @@ window.FB = window.FB || {};
     };
     openModal(FB.T('Choose an Accomplice'), h, {
       modalClass:'fullsheet-modal intrigue-modal', historyView:true,
-      historyBackRender:back
+      historyBackRender:back,
+      guide:guideModalOption('intrigue-accomplice-guide', 'intrigue',
+        'Guide: plots and intrigue')
     });
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-intrigue-accomplice]').forEach(function (button) {
@@ -4328,7 +4340,9 @@ window.FB = window.FB || {};
     };
     openModal(FB.T('Confirm the Scheme'), h, {
       modalClass:'fullsheet-modal intrigue-modal', historyView:true,
-      historyBackRender:back
+      historyBackRender:back,
+      guide:guideModalOption('intrigue-review-guide', 'intrigue',
+        'Guide: plots and intrigue')
     });
     FB.paintFaces($('gm-body'), s);
     $('intrigue-confirm').addEventListener('click', function () {
@@ -4360,7 +4374,9 @@ window.FB = window.FB || {};
     h += '</div>' + intrigueBackButton('intrigue-character-back');
     openModal(FB.T('Plot against {name}', { name:FB.fullName(c) }), h, {
       modalClass:'fullsheet-modal intrigue-modal', historyView:true,
-      historyBackRender:function () { UI.showCharModal(characterId); }
+      historyBackRender:function () { UI.showCharModal(characterId); },
+      guide:guideModalOption('intrigue-character-guide', 'intrigue',
+        'Guide: plots and intrigue')
     });
     FB.paintFaces($('gm-body'), s);
     document.querySelectorAll('[data-character-scheme]').forEach(function (button) {
@@ -4459,11 +4475,13 @@ window.FB = window.FB || {};
         (!FB.canUseIntrigueLeverage(s, me.id, 'expose') ? ' disabled' : '') + '>' +
         esc(FB.T('Expose political foothold')) + '</button></div></section>';
     }
-    if (!h) h = '<p class="hint">' + esc(FB.T('No hostile intrigue affairs are active.')) + '</p>';
+    if (!h) h = '<p class="hint">' + esc(FB.T('No active intrigue.')) + '</p>';
     h += '<div class="gm-footer"><button type="button" class="btn" id="intrigue-assets-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Intrigue Affairs'), h, {
-      modalClass:'fullsheet-modal intrigue-modal'
+      modalClass:'fullsheet-modal intrigue-modal',
+      guide:guideModalOption('intrigue-affairs-guide', 'intrigue',
+        'Guide: plots and intrigue')
     });
     FB.paintFaces($('gm-body'), s);
     if ($('intrigue-abandon')) $('intrigue-abandon').addEventListener('click', function () {
@@ -4494,7 +4512,7 @@ window.FB = window.FB || {};
   UI.showEnvoys = function (focusRealmId, returnContext) {
     const s = FB.state;
     let h = '<p class="hint">' + esc(FB.T(
-      'A peace envoy carries {money:10} in gifts. Kings and emperors may instead offer one defensive alliance at Standing 60+, carrying {money:25}; either offer uses the same envoy odds.')) +
+      'A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+.')) +
       '</p><div class="gm-list">';
     const focusedEnvoy = focusRealmId && FB.envoyStatus
       ? FB.envoyStatus(s, focusRealmId) : null;
@@ -4554,7 +4572,8 @@ window.FB = window.FB || {};
       historyView:!!returnContext,
       historyBackRender:function () {
         interactionReturn(returnContext);
-      }
+      },
+      guide:guideModalOption('envoy-guide', 'government', 'Guide: government')
     });
     document.querySelectorAll('[data-envoy]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -4587,7 +4606,7 @@ window.FB = window.FB || {};
     const targets = FB.foreignPolicyTargets(s);
     const used = FB.foreignPolicyUsed(s);
     let h = '<p class="hint">' + esc(FB.T(
-      'Political attention is assigned, not spent. Each active direction changes Standing with that court every season and remains in force until you change it.')) +
+      'Each direction uses attention and changes Standing every season.')) +
       '</p><div class="progressnote">' + esc(FB.T(
         'Political attention: {used} of {capacity} assigned.', {
           used: used, capacity: capacity
@@ -4608,7 +4627,9 @@ window.FB = window.FB || {};
           })) + '</span></button>';
     }
     h += '</div><button class="btn gm-footer" id="gm-cancel">' + esc(FB.T('Done')) + '</button>';
-    openModal(FB.T('Foreign Policy'), h);
+    openModal(FB.T('Foreign Policy'), h, {
+      guide:guideModalOption('foreign-policy-guide', 'government', 'Guide: government')
+    });
     document.querySelectorAll('[data-policy-target]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         UI.showForeignPolicyStance(btn.dataset.policyTarget);
@@ -4663,7 +4684,9 @@ window.FB = window.FB || {};
       historyView:!!returnContext,
       historyBackRender:function () {
         interactionReturn(returnContext);
-      }
+      },
+      guide:guideModalOption('foreign-policy-detail-guide', 'government',
+        'Guide: government')
     });
     document.querySelectorAll('[data-policy-stance]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -8328,7 +8351,7 @@ window.FB = window.FB || {};
     }
     const B = FBDATA.balance;
     let h = '<p class="hint">' + esc(FB.T(
-      'The great officers of the crown lend their strength to yours — but magnates have tempers, and the council weighs every act of the crown.')) + '</p>';
+      'Officers strengthen the crown; a powerful council can restrain it.')) + '</p>';
     const activeElection = FB.activeCouncilElection &&
       FB.activeCouncilElection(s);
     if (activeElection) {
@@ -8431,7 +8454,7 @@ window.FB = window.FB || {};
             }, vid === recommended);
           }
         } else {
-          h += '<div class="cmeta">' + esc(FB.T('No unseated vassal remains to raise — grant land to loyal men, and offices will follow.')) + '</div>';
+          h += '<div class="cmeta">' + esc(FB.T('No vassal is free to appoint.')) + '</div>';
         }
       }
     }
@@ -8447,6 +8470,8 @@ window.FB = window.FB || {};
         }
       } : {};
     councilOptions.replaceView = !!replaceView;
+    councilOptions.guide = guideModalOption('council-guide', 'government',
+      'Guide: government');
     openModal(FB.T('The Royal Council'), h, councilOptions);
     for (const seat of FB.councilSeats()) {
       const cv = $('crest_' + seat.id);
@@ -8616,7 +8641,7 @@ window.FB = window.FB || {};
     const policies = FB.policyList ? FB.policyList() : [];
     const forecasts = politics && politics.forecasts ? politics.forecasts : {};
     let h = '<p class="hint">' + esc(FB.T(
-      'When {liege} summons the Estates, each political bloc votes with one voice. Influence decides the tally; uncertain blocs resolve from their visible interests.',
+      '{liege}’s Estates vote by bloc. Influence sets the tally; uncertain blocs follow their interests.',
       { liege: liege.name })) + '</p>';
     h += kv('The liege’s aid', esc(FB.T(
       '{pct}% of your noble revenue', {
@@ -8737,6 +8762,8 @@ window.FB = window.FB || {};
       historyBackRender:function () { UI.showGovernance('institution'); }
     } : {};
     if (replaceView) modalOptions.replaceView = true;
+    modalOptions.guide = guideModalOption('estates-guide', 'government',
+      'Guide: government');
     openModal(FB.T('The Estates'), h, modalOptions);
     $('estates-liege-card').addEventListener('click', function () {
       UI.showLiegeModal(s.player.liege, {
@@ -9001,20 +9028,20 @@ window.FB = window.FB || {};
       }))) +
       kv('Defaults remembered', esc(e.defaults)) +
       '<p class="hint">' + esc(FB.T(
-        'Capacity comes from reliable income, eligible collateral, and a capped allowance for standing, less current obligations. Windfalls and new loans do not count.')) +
+        'Credit uses reliable income, eligible collateral, standing allowance, and current debt.')) +
       '</p></div>';
 
     h += panelh('Loans');
     if (!loans.length) {
-      h += '<div class="progressnote">' + esc(FB.T('No active household obligations.')) + '</div>';
+      h += '<div class="progressnote">' + esc(FB.T('No active obligations.')) + '</div>';
     }
     h += '<div class="gm-list"><button class="actionbtn" id="finance-borrow"' +
       (offers.length ? '' : ' disabled') + '>📜 ' + esc(FB.T('Seek a loan…')) +
       '<span class="adesc">' + esc(offers.length
         ? financeOfferCountText(s, offers.length)
         : (FB.financeHasDefault(s)
-          ? FB.T('No lender will advance more while revenues are in default.')
-          : FB.T('No offer fits the household’s income, collateral, or current obligations.'))) +
+          ? FB.T('Defaults block new loans.')
+          : FB.T('No loan offer fits this household.'))) +
       '</span></button></div>';
 
     h += panelh('Your trade venture');
@@ -9039,7 +9066,7 @@ window.FB = window.FB || {};
       }
     } else {
       h += '<div class="progressnote">' +
-        esc(FB.T('No self-founded venture is active.')) + '</div>';
+        esc(FB.T('No active venture.')) + '</div>';
     }
     h += '<div class="gm-list"><button class="actionbtn" id="finance-own-venture"' +
       (ventureEligible === true ? '' : ' disabled') + '>⚖ ' +
@@ -9059,7 +9086,7 @@ window.FB = window.FB || {};
       }
     } else {
       h += '<div class="progressnote">' +
-        esc(FB.T('No coin is backing another merchant’s venture.')) + '</div>';
+        esc(FB.T('No backed ventures.')) + '</div>';
     }
     if (stakes.length) {
       h += '<div class="gm-list">';
@@ -9094,7 +9121,10 @@ window.FB = window.FB || {};
 
     h += '<div class="gm-footer"><button class="btn" id="finance-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal(FB.T('💰 Coin & Credit'), h, { modalClass:'fullsheet-modal' });
+    openModal(FB.T('💰 Coin & Credit'), h, {
+      modalClass:'fullsheet-modal',
+      guide:guideModalOption('finance-guide', 'resources', 'Guide: resources and credit')
+    });
     $('finance-close').addEventListener('click', UI.closeModal);
     const borrow = $('finance-borrow');
     if (borrow) borrow.addEventListener('click', UI.showFinanceBorrow);
@@ -9588,7 +9618,7 @@ window.FB = window.FB || {};
       kv('Projected purse after one season', '<span class="' +
         (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
       '</div><p class="household-intro">' + esc(FB.T(
-        'Each improvement replaces the previous level’s upkeep. Open a row for its full ownership, effect, succession, and lapse details.')) +
+        'Open a row for its effect, ownership, upkeep, and lapse terms.')) +
       '</p>' + (projected < 0 ? '<p class="household-warning op-bad">' + esc(FB.T(
         'The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.')) +
         '</p>' : '');
@@ -9597,7 +9627,7 @@ window.FB = window.FB || {};
       'aria-labelledby="household-living-title"><h4 id="household-living-title">' +
       esc(FB.T('Living standards')) +
       '</h4><p class="household-section-hint">' + esc(FB.T(
-        'Living standards benefit the whole resident household — the head, resident family, and hired retainers — not any one person.')) +
+        'Living standards benefit the whole resident household.')) +
       '</p><div class="household-catalogue-list">';
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
@@ -9608,7 +9638,7 @@ window.FB = window.FB || {};
       'id="household-outfits" aria-labelledby="household-outfits-title">' +
       '<h4 id="household-outfits-title">' + esc(FB.T('Work outfits')) +
       '</h4><p class="household-section-hint">' + esc(FB.T(
-        'Profession outfits improve matching focus work, household earnings, religious yield, and staffed enterprises. They go dormant without an eligible worker; soldier outfits do not affect combat.')) +
+        'Outfits improve matching work and go dormant without an eligible worker.')) +
       '</p><div class="household-catalogue-list">';
     let outfits = 0;
     for (const id of FB.householdStandardIds()) {
@@ -9621,13 +9651,15 @@ window.FB = window.FB || {};
     }
     if (!outfits) {
       h += '<div class="household-empty">' + esc(FB.T(
-        'No practiced household profession currently has a relevant outfit.')) + '</div>';
+        'No matching outfit.')) + '</div>';
     }
     h += '</div></section>' + permanentHoldingsHtml(s) +
       '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Done')) + '</button></div>';
     openModal(FB.T('🏠 Household standards & property'), h, {
-      modalClass:'fullsheet-modal household-modal'
+      modalClass:'fullsheet-modal household-modal',
+      guide:guideModalOption('household-guide', 'careers',
+        'Guide: careers and household work')
     });
     document.querySelectorAll('[data-household-standard]').forEach(function (button) {
       button.addEventListener('click', function () {
@@ -10463,7 +10495,7 @@ window.FB = window.FB || {};
     const matchPolicyExpenses = [
       matchDowrySummary, matchGoldSummary, matchPrestigeSummary
     ].join(' · ');
-    let h = '<div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
+    let h = '<div class="household-plan-content"><div class="gm-body-text household-plan-intro"><p>' + esc(FB.T(
       'Every living person managed by the household is shown here — including unwed siblings living under your roof, who take work and equipment but keep their own education and matches. Select an available cell to open its existing detailed controls.')) +
       '</p></div><div class="household-policy-summary education-policy-summary"><div><strong>' +
       esc(FB.T('Education Policy')) + '</strong><span>' +
@@ -10512,7 +10544,7 @@ window.FB = window.FB || {};
         ? '<div class="hint enterprise-staffing-hint">' +
           esc(FB.T('All family enterprises are staffed.')) + '</div>'
         : '') +
-      '<div class="gm-footer">' +
+      '</div><div class="gm-footer">' +
       (idleEnterprises
         ? '<button type="button" class="btn" id="household-plan-staff-enterprises">' +
           esc(FB.T('Staff all idle enterprises…')) + '</button>'
@@ -10521,7 +10553,9 @@ window.FB = window.FB || {};
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('📋 Household Plan'), h, {
       modalClass:'fullsheet-modal household-plan-modal',
-      replaceView:!!replaceView
+      replaceView:!!replaceView,
+      guide:guideModalOption('household-plan-guide', 'family-scopes',
+        'Guide: family and household scope')
     });
     FB.paintFaces($('gm-body'), s);
     wireEnterpriseViewControls('household', function () {
@@ -10597,23 +10631,23 @@ window.FB = window.FB || {};
   function showEducationPolicyConfig(value) {
     const draft = educationPolicyDraft(value);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Set defaults for empty education choices. Existing manual and policy-selected choices stay unchanged.')) +
+      'Set defaults for unchosen education. Existing choices stay.')) +
       '</p></div><div class="education-policy-form">' +
       '<label class="education-policy-field" for="education-policy-focus"><span>' +
       esc(FB.T('Default education focus')) + '</span><select id="education-policy-focus">' +
       educationPolicyFocusOptions(draft.focus) + '</select><small>' +
-      esc(FB.T('Choose a subject for each empty eligible slot, or leave every child for manual selection.')) +
+      esc(FB.T('Fill empty choices, or leave them manual.')) +
       '</small></label><label class="autorow education-policy-check">' +
       '<input type="checkbox" id="education-policy-instruction"' +
       (draft.instructionMode === 'best' ? ' checked' : '') + '> ' +
       esc(FB.T('Choose the strongest available instruction automatically')) +
       '<span class="adesc">' + esc(FB.T(
-        'Schools, the Noble Academy, home lessons, and already-known tutors are considered. A personal master is never hired automatically.')) +
+        'Considers schools, home lessons, and known tutors — never a new personal master.')) +
       '</span></label><label class="education-policy-field" for="education-policy-cap"><span>' +
       esc(FB.T('Seasonal fee cap per child')) +
       '</span><input type="number" id="education-policy-cap" min="0" step="0.25" inputmode="decimal" value="' +
       esc(draft.feeCap) + '"><small>' + esc(FB.T(
-        'The cap limits a new arrangement only. It does not reserve money or cancel an existing arrangement if its fee later rises.')) +
+        'Limits new arrangements only; it reserves no money.')) +
       '</small></label></div><div class="gm-footer">' +
       '<button type="button" class="btn primary" id="education-policy-preview">' +
       esc(FB.T('Preview policy')) + '</button>' +
@@ -10622,7 +10656,9 @@ window.FB = window.FB || {};
     openModal(FB.T('🎓 Household Education Policy'), h, {
       historyView:true,
       modalClass:'fullsheet-modal education-policy-modal',
-      historyBackRender:function () { UI.showHouseholdPlan(); }
+      historyBackRender:function () { UI.showHouseholdPlan(); },
+      guide:guideModalOption('education-policy-guide', 'upbringing',
+        'Guide: upbringing and matches')
     });
     function syncCap() {
       const enabled = $('education-policy-instruction').checked;
@@ -10699,7 +10735,9 @@ window.FB = window.FB || {};
     openModal(FB.T('🎓 Preview Education Policy'), h, {
       historyView:true,
       modalClass:'fullsheet-modal education-policy-modal',
-      historyBackRender:function () { showEducationPolicyConfig(draft); }
+      historyBackRender:function () { showEducationPolicyConfig(draft); },
+      guide:guideModalOption('education-preview-guide', 'upbringing',
+        'Guide: upbringing and matches')
     });
     $('education-policy-save').addEventListener('click', function () {
       FB.setEducationPolicy(s, draft);
@@ -10807,7 +10845,9 @@ window.FB = window.FB || {};
     openModal(FB.T('💍 Descendant Match Assistant'), h, {
       historyView:true,
       modalClass:'fullsheet-modal match-policy-modal',
-      historyBackRender:function () { UI.showHouseholdPlan(); }
+      historyBackRender:function () { UI.showHouseholdPlan(); },
+      guide:guideModalOption('match-policy-guide', 'upbringing',
+        'Guide: upbringing and matches')
     });
     function syncFields() {
       const enabled = $('match-policy-enabled').checked;
@@ -10943,7 +10983,9 @@ window.FB = window.FB || {};
     openModal(FB.T('💍 Preview Match Recommendations'), h, {
       historyView:true,
       modalClass:'fullsheet-modal match-policy-modal',
-      historyBackRender:function () { showMatchPolicyConfig(draft); }
+      historyBackRender:function () { showMatchPolicyConfig(draft); },
+      guide:guideModalOption('match-preview-guide', 'upbringing',
+        'Guide: upbringing and matches')
     });
     $('match-policy-save').addEventListener('click', function () {
       FB.setMatchPolicy(s, draft);
@@ -10978,7 +11020,7 @@ window.FB = window.FB || {};
     }
     const worker = enterprise.workerId && s.chars[enterprise.workerId];
     if (!worker || worker.dead) {
-      return FB.T('No income while idle; assign an eligible household worker');
+      return FB.T('Idle — assign an eligible worker.');
     }
     return FB.T(
       'About {money:amount} each season while worked by {name}; shown in Money each season', {
@@ -11542,7 +11584,7 @@ window.FB = window.FB || {};
         stateLabel = landedSelf ? FB.T('Former calling') : FB.T('Unavailable');
         detail = landedSelf
           ? FB.T('A landed ruler keeps this calling as life history.')
-          : FB.T('No career choice is currently available under the existing age, station, faith, and household rules.');
+          : FB.T('No career is available under current household rules.');
         workUnavailable++;
       } else {
         workAssigned++;
@@ -11745,7 +11787,7 @@ window.FB = window.FB || {};
       title:FB.T('Household work'),
       summary:workSummary,
       rows:workModels,
-      empty:FB.T('No household member is currently old enough to work or train.')
+        empty:FB.T('No household worker yet.')
     }].concat(enterpriseSections);
     h += '<div class="enterprise-list-summary">' + enterpriseSummary + '</div>' +
       enterpriseViewControlsHtml('work', true) +
@@ -12812,7 +12854,8 @@ window.FB = window.FB || {};
     h += '<div class="modal-actions"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Papacy and College'), h, {
-      modalClass:'fullsheet-modal papacy-modal'
+      modalClass:'fullsheet-modal papacy-modal',
+      guide:guideModalOption('papacy-guide', 'roles', 'Guide: social and religious roles')
     });
 
     document.querySelectorAll('[data-papacy-obedience]').forEach(function (b) {
@@ -13739,7 +13782,7 @@ window.FB = window.FB || {};
       if (!result.ok) {
         UI.showEnterpriseStaffingPreview(returnContext, result.reason === 'stale'
           ? FB.T('Household staffing changed after this review. A fresh plan is shown; review it before applying.')
-          : FB.T('There are no staffing changes to apply.'));
+          : FB.T('No staffing changes.'));
         return;
       }
       UI.refresh();
@@ -14775,7 +14818,7 @@ window.FB = window.FB || {};
         blockedReason:s.player.plot
           ? FB.T('Your one plot slot is already occupied.')
           : (plotterCaptive ? FB.T('A captive cannot hold a plot.') :
-            FB.T('No hostile personal scheme is currently eligible.')),
+            FB.T('No eligible personal scheme.')),
         consequence:FB.T('The scheme occupies the Scheming focus until it ends.'),
         route:'intrigue-plot'
       });
@@ -17335,7 +17378,9 @@ window.FB = window.FB || {};
       stat === 'prestige' ? FB.T('⭐ Prestige each season') :
       FB.religionOf(me.religion, s).icon + ' ' + FB.T('Piety each season');
     openModal(title, statBreakdownHtml(stat) +
-      '<button class="btn" id="stat-close">Close</button>');
+      '<button class="btn" id="stat-close">Close</button>', {
+        guide:guideModalOption('stat-guide', 'resources', 'Guide: resources and reputation')
+      });
     $('stat-close').addEventListener('click', UI.closeModal);
   };
 
@@ -18454,12 +18499,14 @@ window.FB = window.FB || {};
       inheritance:'docs/designs/characters.md#succession-and-inheritance',
       'child-identity':
         'docs/designs/marriage.md#child-culture-faith-and-house',
+      upbringing:'docs/designs/marriage.md#marriage--child-matches',
       'exceptional-sibling-courtship':
         'docs/designs/marriage.md#exceptional-sibling-courtship',
       'settlements-development':
         'docs/designs/development.md#settlements-and-development',
       technology:'docs/designs/tech.md#research-slots-reserve-and-completion',
       travel:'docs/designs/travel.md#data-and-destinations',
+      intrigue:'docs/designs/piety-intrigue-diplomacy.md#expanded-hostile-intrigue',
       war:'docs/designs/war.md#causes-and-defensive-alliances',
       government:'docs/README.md#the-feudal-ladder',
       'role-monk':'docs/README.md#the-religious-ladder',
@@ -18894,6 +18941,13 @@ window.FB = window.FB || {};
         FB.T('Collateral births take culture and faith from the managed family parent. Their house follows the father: a son keeps his house, while a daughter’s child normally belongs to her spouse’s house.'),
         FB.T('These identity rules do not change the child’s recorded mother and father.')
       ]), 'birth culture religion faith dynasty house father mother collateral protagonist marriage');
+    add('upbringing', 'family', FB.T('Upbringing and descendant matches'),
+      FB.T('Set each child’s education yourself, or use policies that fill only empty choices.'),
+      guideBody([
+        FB.T('Education focus, instruction, work, and matches are managed from Household Plan. Each picker shows its requirements, chance, cost, and any danger before you commit.'),
+        FB.T('Education policy fills only unchosen eligible options. It reserves no money and never changes a manual choice.'),
+        FB.T('Match recommendations spend nothing and make no pledge. You can review, change, or reserve every descendant for manual choices.')
+      ]), 'education schooling tutor child descendant match assistant policy household plan');
     add('exceptional-sibling-courtship', 'family',
       FB.T('Exceptional sibling courtship'),
       FB.T('A rare player-only route uses traits, one irreversible approach, and severe social or religious costs.'),
@@ -18951,6 +19005,13 @@ window.FB = window.FB || {};
         FB.T('Travel uses settled county adjacency and authored straits. Purpose, destination, route length, cost, and current eligibility are shown before departure.'),
         FB.T('A journey has outbound, stay, and return phases. The Deeds commitment row shows its current state, and some purposes add decisions while away.')
       ]), 'journey road destination purpose pilgrimage trade court marriage route');
+    add('intrigue', 'intrigue', FB.T('Plots, leverage, and captivity'),
+      FB.T('Plots take your focus; leverage creates one decisive demand.'),
+      guideBody([
+        FB.T('A plot uses your daily focus until it resolves. Its target, method, chance, cost, duration, and exposure are shown before you commit.'),
+        FB.T('Hostile plots choose a target and method first. An accomplice may improve the plan, but a refusal can expose it.'),
+        FB.T('Captivity blocks travel, marriage, new offices, and plots. Ransom, mercy, and leverage actions always show their terms before they act.')
+      ]), 'plot scheme intrigue leverage captive ransom sabotage exposure accomplice');
     add('war', 'war', FB.T('War, claims, and conquest'),
       FB.T('Recognized rights avoid aggression penalties; land changes hands only through siege.'),
       guideBody([
@@ -18972,7 +19033,7 @@ window.FB = window.FB || {};
   const guideView = { query:'', category:'all', entry:'' };
   const GUIDE_CATEGORIES = [
     'all', 'basics', 'skills', 'resources', 'roles', 'careers',
-    'family', 'settlements', 'technology', 'travel', 'war', 'government'
+    'family', 'settlements', 'technology', 'travel', 'intrigue', 'war', 'government'
   ];
   function guideCategoryName(id) {
     const names = {
@@ -18986,6 +19047,7 @@ window.FB = window.FB || {};
       settlements:FB.T('Settlements'),
       technology:FB.T('Technology'),
       travel:FB.T('Travel'),
+      intrigue:FB.T('Intrigue'),
       war:FB.T('War'),
       government:FB.T('Government')
     };

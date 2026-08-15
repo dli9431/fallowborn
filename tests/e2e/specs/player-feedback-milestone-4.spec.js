@@ -412,6 +412,53 @@ test.describe('sibling and collateral-household agency', function () {
       await page.locator('#household-plan-close').click();
     });
 
+  test('Household Plan keeps Close below its scrolling ledger',
+    async function ({ page }) {
+      await page.setViewportSize({ width:390, height:740 });
+      await startDeterministicGame(page);
+      await page.evaluate(function () {
+        const s = FB.state;
+        const me = s.chars[s.player.charId];
+        for (let i = 0; i < 4; i++) {
+          const child = FB.makeCharacter(s, {
+            name:'Ledger child ' + i, sex:i % 2 ? 'f' : 'm',
+            culture:me.culture, religion:me.religion,
+            born:s.date.year - 12, motherId:me.id, dyn:me.dyn, traitsN:0
+          });
+          child.health = 8;
+          me.childrenIds.push(child.id);
+        }
+        FB.touchFamily();
+        FB.ui.showHouseholdPlan();
+      });
+
+      const layout = await page.evaluate(function () {
+        const card = document.querySelector('#genmodal .modalcard');
+        const ledger = document.querySelector('.household-plan-content');
+        const footer = document.querySelector('#genmodal .gm-footer');
+        const cardRect = card.getBoundingClientRect();
+        const ledgerRect = ledger.getBoundingClientRect();
+        const footerRect = footer.getBoundingClientRect();
+        ledger.scrollTop = ledger.scrollHeight;
+        const lastRow = ledger.querySelector('.household-plan-table tbody tr:last-child');
+        const lastRowRect = lastRow.getBoundingClientRect();
+        return {
+          ledgerScrolls:ledger.scrollHeight > ledger.clientHeight,
+          footerBelowLedger:footerRect.top >= ledgerRect.bottom - 1,
+          footerAtCardBottom:Math.abs(footerRect.bottom - cardRect.bottom) <= 1,
+          finalRowClear:lastRowRect.bottom <= ledgerRect.bottom + 1
+        };
+      });
+
+      expect(layout).toEqual({
+        ledgerScrolls:true,
+        footerBelowLedger:true,
+        footerAtCardBottom:true,
+        finalRowClear:true
+      });
+      await page.locator('#household-plan-close').click();
+    });
+
   test('a manageable sibling remains an eligible heir',
     async function ({ page }) {
       await startDeterministicGame(page);

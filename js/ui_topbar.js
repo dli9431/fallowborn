@@ -60,7 +60,7 @@ window.FB = window.FB || {};
     }
     if (!bd.lines.length) {
       h += '<div class="bd-note">' +
-        esc(FB.T('No steady sources yet — deeds and events still move it.')) + '</div>';
+        esc(FB.T('No steady income yet.')) + '</div>';
     } else {
       h += '<div class="bd-row bd-total"><span>' + esc(FB.T('Each season')) + '</span>' +
         '<span class="bd-amt ' + (bd.total > 0 ? 'op-good' : bd.total < 0 ? 'op-bad' : '') + '">' +

@@ -160,6 +160,15 @@ Ordinary modals (including event, settlement, and resource dialogs), the nested 
 picker, and the travel destination picker float above the device's bottom safe area with a
 complete rounded frame. Only deliberate full-screen sheets and the Self/Kin drawer meet the
 bottom edge.
+
+**Readability is a layout budget.** The standard UI body starts at 16 px; actions, modal
+copy, cards, and Guide entries use a readable 15 px-or-larger role, while supporting labels
+and metadata remain at least 12 px. Narrow layouts preserve or increase these roles rather
+than shrinking text to fit. Prefer a compact label or one-sentence state over explanatory
+empty prose. Keep the immediate cost, gate, or consequence beside an action; put durable
+rules, background, and exceptions behind the modal's contextual Guide icon (or an existing
+tap-safe tooltip). This keeps the first screen scannable without hiding information from
+desktop, keyboard, or touch players.
 Desktop scroll containers share narrow, rounded bronze thumbs over transparent tracks so
 panels, sheets, lists, and modals retain the parchment styling without prominent scrollbars.
 Modal-owned scroll bodies keep a small content gutter before that track so prose, sliders,
@@ -791,8 +800,8 @@ always dismisses the guide outright rather than dropping to the menu. Expanding 
 entry reveals its complete
 guidance in place without replacing the search and result screen. Entries cover basics,
 skills, resources,
-roles, careers, family and inheritance scope, settlements, technology, travel, and
-war and government. The Technology category and its generated catalogue appear only
+roles, careers, family and inheritance scope, settlements, technology, travel, intrigue,
+war, and government. The Technology category and its generated catalogue appear only
 while the current protagonist is a landed ruler. Search indexes titles, aliases, key terms, and generated technology
 effects/unlocks. Career and technology entries read live definitions; current
 resource and settlement entries read live state. Self/character skills, Work,
@@ -919,7 +928,8 @@ buttons that retain modal focus, number shortcuts, Tab/Enter/Space, minimum touc
 and browser-history Back. Picker cancellation and no-day changes re-render the plan, while
 day-spending career, retainer, enterprise-purchase, religious-office, and match choices
 advance the day and then rebuild the originating plan or person manager beneath any queued
-event. Its sticky footer also offers the enterprise-staffing preview
+event. Its bottom-pinned footer is outside the ledger's own scroll pane and also offers the
+enterprise-staffing preview
 whenever an enterprise is idle, and a successful no-day apply returns to this authoritative
 table rather than the intermediate Work & Enterprises sheet.
 
