@@ -18,6 +18,38 @@ fallback (Venice's lagoon islands). Adjacency, coastal flags, and centroids are
 derived from the corrected raster. Changing `FBDATA.provinces` (authored as compact rows in
 `data/counties.js`) reshapes the map automatically.
 
+## County communities
+
+A settled bookmark province has one principal culture and faith in its existing
+`culture` and `religion` fields. It may also carry an ordered `communities` array of
+`{culture, religion}` pairs. The first entry is always the principal population and
+must repeat those two province fields; later entries are other historically grounded
+local identities. `FB.provinceCommunities(province)` is the normalized read interface:
+it returns the authored order, or a one-entry principal fallback when the optional
+field is absent. Bookmark validation rejects an empty/non-array field, repeated pairs,
+unknown cultures, invalid or unassignable faiths, and a first entry that disagrees with
+the province.
+
+New Game presents each pair as one coupled community choice. Changing counties resets
+the choice to that county's principal entry, while returning to the same county keeps
+the previous selection. The selected pair supplies names and the culture and faith of
+the protagonist, parents, patronymic grandparents, siblings, and any starting spouse
+and children. It is preserved in a non-principal start code rather than in a new save
+field; the generated character records remain authoritative after play begins. County
+selection and the Land panel show every authored pair in order.
+
+The model is deliberately static. Communities have no percentages, conversion,
+migration, unrest, revolt, or daily/seasonal demographic work. Existing county,
+realm, title, intrigue, advancement, and war mechanics continue to read only the
+principal province identity. They already provide the route by which a character from
+another local community can gain power beneath or displace a foreign ruler. The 98
+core bookmark-county records and their evidence are listed in
+[county-communities.md](../research/county-communities.md).
+
+Technology impact: `county_community_identity` is `none`. Selecting an existing local
+identity is baseline character creation, not an advanced capability that research
+could credibly gate.
+
 **Settlements are derived, not stored.** Two identities exist. The settlement *slot* —
 the zero-based index inside one county — remains the canonical saved reference for
 buildings, plots, manors, and enterprises. The physical *site* is a stable snake-case
@@ -125,6 +157,10 @@ other. Activation validates the table and every list (slug form, coordinate rang
 existing site references, at most eight entries, no repeated site or name within a
 county, no site assigned to two counties in one bookmark, none on a wasteland) before
 raster compilation checks county membership.
+
+It may independently carry the ordered `communities` list described above. Community
+identity is bookmark-local even when a county id endures across dates; changing one
+bookmark's list never mutates the other bookmark's array.
 
 `straits` remain exact two-county adjacency pairs used by every reachability consumer.
 The optional `crossingClasses` bookmark object annotates canonical `countyA|countyB`

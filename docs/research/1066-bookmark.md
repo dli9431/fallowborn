@@ -69,8 +69,12 @@ source claim.
   especially approximate. Where no secure individual ruler for an authored tribal
   polity was available, a conventional, representative, or later-attested name is used
   and should not be read as a firm identification.
-- County culture and faith are one dominant tag. Mixed settlement, elite/popular
-  difference, local rites, and confessional minorities remain below the data model.
+- Selected counties carry ordered, static culture-and-faith communities for character
+  creation; the curated 1066 set and sources are recorded in
+  [county-communities.md](county-communities.md). The first pair remains the principal
+  county identity used by simulation. The model does not claim population shares and
+  still leaves local rites, conversion, migration, unrest, and demographic change
+  below its scope.
 - Development is a relative **1–10 gameplay index**, informed by urban, agricultural,
   and trade importance. It is not a population estimate. The 1066 values generally
   raise established towns and core farming regions from their 867 baseline without

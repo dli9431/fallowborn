@@ -45,6 +45,19 @@ window.FB = window.FB || {};
     return out;
   };
 
+  /* Every settled county has at least its principal culture/faith pair.
+     Authored community arrays stay ordered and are copied into a normalized
+     projection so UI callers never need to special-case the optional field. */
+  FB.provinceCommunities = function (province) {
+    if (!province || province.wasteland) return [];
+    var source = Array.isArray(province.communities) && province.communities.length
+      ? province.communities
+      : [{ culture:province.culture, religion:province.religion }];
+    return source.map(function (entry) {
+      return { culture:entry.culture, religion:entry.religion };
+    });
+  };
+
   function topDefinitionRealm(realms, rid) {
     var cur = rid, seen = {};
     while (cur && realms[cur] && realms[cur].liege) {
@@ -157,7 +170,41 @@ window.FB = window.FB || {};
 
     for (var pvi = 0; pvi < provinces.length; pvi++) {
       var pr = provinces[pvi];
-      if (!pr || !pr.id || pr.wasteland) continue;
+      if (!pr || !pr.id) continue;
+      if (pr.communities !== undefined && pr.communities !== null) {
+        if (pr.wasteland) {
+          fault('wasteland ' + pr.id + ' declares communities.');
+        } else if (!Array.isArray(pr.communities) || !pr.communities.length) {
+          fault('province ' + pr.id + ' communities must be a non-empty array.');
+        } else {
+          var seenCommunities = {};
+          for (var pci = 0; pci < pr.communities.length; pci++) {
+            var community = pr.communities[pci] || {};
+            var where = 'province ' + pr.id + ' community ' + pci;
+            if (!FBDATA.cultures[community.culture]) {
+              fault(where + ' has invalid culture ' + community.culture + '.');
+            }
+            if (!FB.faithExists(community.religion, null) ||
+                !FB.faithAssignable(community.religion, null)) {
+              fault(where + ' has invalid or unassignable faith ' +
+                community.religion + '.');
+            }
+            var communityKey = community.culture + '|' + community.religion;
+            if (seenCommunities[communityKey]) {
+              fault('province ' + pr.id + ' repeats community ' +
+                community.culture + '/' + community.religion + '.');
+            }
+            seenCommunities[communityKey] = 1;
+          }
+          var principalCommunity = pr.communities[0] || {};
+          if (principalCommunity.culture !== pr.culture ||
+              principalCommunity.religion !== pr.religion) {
+            fault('province ' + pr.id +
+              ' principal community must match its culture and religion.');
+          }
+        }
+      }
+      if (pr.wasteland) continue;
       if (!realms[pr.realm]) fault('province ' + pr.id + ' has invalid realm ' + pr.realm + '.');
       if (!pr.duchy || !duchies[pr.duchy]) fault('province ' + pr.id + ' has invalid duchy ' + pr.duchy + '.');
       if (!FBDATA.cultures[pr.culture]) fault('province ' + pr.id + ' has invalid culture ' + pr.culture + '.');
@@ -506,6 +553,7 @@ window.FB = window.FB || {};
         terrain: p.terrain || 'farmland', culture: p.culture, religion: p.religion,
         realm0: p.realm || null, dev0: p.dev || 1, duchy: p.duchy || null,
         settlements: p.settlements || null,
+        communities: p.communities ? FB.provinceCommunities(p) : null,
         sx: Math.round(FB.lonToX(p.x)), sy: Math.round(FB.latToY(p.y)),
         cx: 0, cy: 0, area: 0, coastal: false
       };

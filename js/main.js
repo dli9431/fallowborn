@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.131.0';
+  FB.VERSION = '1.132.0';
   FB.CHANGELOG = [
+    { v: '1.132.0', date: '2026-08-14', changes: [
+      'Counties can now contain multiple cultural and religious communities, with a local identity chosen for the starting family during character creation.'
+    ] },
     { v: '1.131.0', date: '2026-08-14', changes: [
       'County commodity markets now connect local scarcity, historical endowments, trade ventures, and guild charters through the Market lens.'
     ] },
@@ -1176,9 +1179,9 @@ window.FB = window.FB || {};
      string before initPolitics and character generation draw on it — see
      docs/designs/seeds.md. Two shareable forms:
      - world seed: any text normalized to A-Z0-9 (fresh ones are base36)
-     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET[-SETTLEMENT]]
+     - start code: SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET[-SETTLEMENT[-CULTURE.RELIGION]]]
        (a birthplace settlement slot rides as an eighth part, always behind an
-       explicit preset part)
+       explicit preset part; a non-principal community rides as a ninth part)
        (legacy five-part codes imply bookmark 867; the family preset part is
        omitted for the standard start) */
 
@@ -1187,9 +1190,36 @@ window.FB = window.FB || {};
     return ((Date.now() ^ (Math.random() * 0xffffffff)) >>> 0).toString(36).toUpperCase();
   }
 
-  function seedCode(seed, bookmarkId, scenId, provId, sex, name, presetId, settlementIdx) {
+  function provinceCommunity(province, cultureId, religionId) {
+    const communities = FB.provinceCommunities(province);
+    for (const community of communities) {
+      if (community.culture === cultureId && community.religion === religionId) {
+        return community;
+      }
+    }
+    return communities[0] || null;
+  }
+
+  function communityLabel(community) {
+    const culture = FB.cultureOf(community.culture);
+    const religion = FB.religionOf(community.religion);
+    return FB.renderKey('culture.' + community.culture + '.name.default',
+      { text:culture.name }, {}) + ' · ' +
+      FB.renderKey('religion.' + community.religion + '.name.default',
+        { text:religion.name }, {});
+  }
+
+  function seedCode(seed, bookmarkId, scenId, provId, sex, name, presetId,
+      settlementIdx, cultureId, religionId, province) {
     const n = (name || '').replace(/-/g, '').replace(/\s+/g, '_');
     const code = seed + '-' + bookmarkId + '-' + scenId + '-' + provId + '-' + sex + '-' + n;
+    const nonPrincipal = province &&
+      (cultureId !== province.culture || religionId !== province.religion);
+    if (nonPrincipal) {
+      return code + '-' + (presetId && presetId !== 'standard' ? presetId : 'standard') +
+        '-' + (settlementIdx > 0 ? settlementIdx : 0) + '-' +
+        cultureId + '.' + religionId;
+    }
     /* a chosen birthplace beyond the county seat adds an eighth part — the
        settlement slot — and always spells the preset part before it so the
        split stays aligned. The standard family start at the county seat takes
@@ -1203,7 +1233,7 @@ window.FB = window.FB || {};
   }
 
   /* parse what a player pasted: a full start code, a bare world seed, or an
-     error to show inline. Five- through eight-part shapes must validate as
+     error to show inline. Five- through nine-part shapes must validate as
      codes — silently falling back to a bare seed would hand them another
      world. */
   function parseSeedInput(raw) {
@@ -1212,7 +1242,7 @@ window.FB = window.FB || {};
     const parts = txt.split('-');
     if (parts.length >= 5) {
       const bad = 'That start code doesn’t parse — check it was copied whole.';
-      if (parts.length < 5 || parts.length > 8) return { error: bad };
+      if (parts.length < 5 || parts.length > 9) return { error: bad };
       const seed = parts[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
       const legacy = parts.length === 5;
       const bookmarkId = legacy ? '867' : parts[1].toLowerCase();
@@ -1240,22 +1270,36 @@ window.FB = window.FB || {};
       }
       /* an optional seventh part names a starting-family preset; an eighth
          (which always carries an explicit preset part before it) is the
-         birthplace settlement slot — validated as a number here and clamped
-         to the county's visible settlements once the bookmark is active */
+         birthplace settlement slot. A ninth names one exact authored county
+         community. The slot is validated as a number here and clamped to the
+         county's visible settlements once the bookmark is active. */
       let familyPreset = 'standard';
       if (!legacy && parts.length >= 7) {
         familyPreset = parts[6].toLowerCase();
         if (!familyPresetById(familyPreset)) return { error: bad };
       }
       let settlementIdx = 0;
-      if (!legacy && parts.length === 8) {
+      if (!legacy && parts.length >= 8) {
         if (!/^\d+$/.test(parts[7])) return { error: bad };
         settlementIdx = parseInt(parts[7], 10);
+      }
+      let cultureId = prov.culture, religionId = prov.religion;
+      if (!legacy && parts.length === 9) {
+        const identity = parts[8].toLowerCase().split('.');
+        if (identity.length !== 2 || !identity[0] || !identity[1] ||
+            !Array.isArray(prov.communities)) return { error: bad };
+        const authored = prov.communities.filter(function (community) {
+          return community.culture === identity[0] &&
+            community.religion === identity[1];
+        })[0];
+        if (!authored) return { error: bad };
+        cultureId = authored.culture;
+        religionId = authored.religion;
       }
       return {
         seed:seed, bookmarkId:bookmarkId, scenario:scen,
         provinceId:prov.id, sex:sex, name:name, familyPreset:familyPreset,
-        settlementIdx:settlementIdx
+        settlementIdx:settlementIdx, culture:cultureId, religion:religionId
       };
     }
     const bare = txt.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -1382,7 +1426,7 @@ window.FB = window.FB || {};
       '<span class="adesc">A new seed is rolled — choose which age will be yours to shape.</span></button>' +
       '</div>' +
       '<div class="gm-body-text" style="margin-top:10px"><p>…or play a start someone shared:</p></div>' +
-      '<input id="ng-seed" type="text" maxlength="96" placeholder="' +
+      '<input id="ng-seed" type="text" maxlength="128" placeholder="' +
       FB.esc(FB.T('Paste a start code or world seed')) + '">' +
       '<div id="ng-seed-err" class="hint"></div>' +
       '<div class="gm-list">' +
@@ -1404,12 +1448,11 @@ window.FB = window.FB || {};
         G.pending = {
           seed:r.seed, bookmarkId:r.bookmarkId, scenario:r.scenario,
           provinceId:r.provinceId, sex:r.sex, name:r.name,
-          familyPreset:r.familyPreset, settlementIdx:r.settlementIdx
+          familyPreset:r.familyPreset, settlementIdx:r.settlementIdx,
+          culture:r.culture, religion:r.religion,
+          communityProvinceId:r.provinceId
         };
         activatePendingBookmark(r.bookmarkId, function () {
-          const pr = FB.world.byId[r.provinceId];
-          G.pending.culture = pr.culture;
-          G.pending.religion = pr.religion;
           G.pending.settlementIdx = clampSettlementIdx(r.provinceId, r.settlementIdx);
           showChargen();
         });
@@ -1568,9 +1611,13 @@ window.FB = window.FB || {};
       FB.ui.toast('No one is born in {province}. Pick a settled land.', { province: pr.name });
       return false;
     }
+    const sameCommunityCounty = G.pending.communityProvinceId === pr.id;
     G.pending.provinceId = pr.id;
-    G.pending.culture = pr.culture;
-    G.pending.religion = pr.religion;
+    const preserved = sameCommunityCounty
+      ? provinceCommunity(pr, G.pending.culture, G.pending.religion) : null;
+    G.pending.culture = preserved ? preserved.culture : pr.culture;
+    G.pending.religion = preserved ? preserved.religion : pr.religion;
+    G.pending.communityProvinceId = pr.id;
     G.pending.settlementIdx = 0; // a new county restarts the birthplace pick
     G.pickStage = 'settlement';
     FB.map.select(pr.id);
@@ -1613,15 +1660,14 @@ window.FB = window.FB || {};
     }
     const pr = FB.world.byId[G.pending.provinceId];
     const realm = FBDATA.realms.filter(function (r) { return r.id === pr.realm0; })[0];
-    const culture = FB.cultureOf(pr.culture);
-    const religion = FB.religionOf(pr.religion);
+    const communities = FB.provinceCommunities(pr);
     el.innerHTML = '<b>' + FB.esc(FB.L(pr.name)) + '</b> — ' +
       FB.esc(realm ? FB.L(realm.name) : FB.T('independent')) + ' · ' +
-      FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
-        { text: culture.name }, {})) + ' · ' +
-      FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
-        { text: religion.name }, {})) + ' · ' + FB.esc(FB.terrainName(pr.terrain)) +
-      '<br>' + FB.esc(FB.T(
+      FB.esc(FB.terrainName(pr.terrain)) + '<br>' +
+      FB.esc(FB.T('Communities: {communities}', {
+        communities:communities.map(communityLabel).join(' → ')
+      })) + '<br>' +
+      FB.esc(FB.T(
         'Now tap the settlement you were born in — or begin in the county seat.'));
     /* the same settlements as focusable buttons: keyboard access, and a
        reliable target where markers crowd together on a small screen */
@@ -1659,6 +1705,48 @@ window.FB = window.FB || {};
     }
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
     $('cg-name').value = G.pending.name || FB.randomName(G.pending.culture, sex);
+    /* Culture and faith are chosen as one authored county community. The
+       pending pair survives a trip back to the same county; pickProvince
+       restores the principal pair when the county actually changes. */
+    const pr = FB.world.byId[G.pending.provinceId];
+    const communities = FB.provinceCommunities(pr);
+    const currentCommunity = provinceCommunity(
+      pr, G.pending.culture, G.pending.religion);
+    G.pending.culture = currentCommunity.culture;
+    G.pending.religion = currentCommunity.religion;
+    const communityBox = $('cg-community');
+    communityBox.setAttribute('role', 'radiogroup');
+    communityBox.setAttribute('aria-label', FB.T('Choose your community'));
+    communityBox.innerHTML = '<div class="hint">' +
+      FB.esc(FB.T('Choose your community')) + '</div>';
+    communities.forEach(function (community, index) {
+      const label = document.createElement('label');
+      label.className = 'radio cgfamily-card';
+      label.innerHTML = '<input type="radio" name="cg-community" value="' + index + '">' +
+        '<span><b>' + FB.esc(communityLabel(community)) + '</b></span>';
+      communityBox.appendChild(label);
+    });
+    let wantedCommunity = 0;
+    for (let ci = 0; ci < communities.length; ci++) {
+      if (communities[ci].culture === currentCommunity.culture &&
+          communities[ci].religion === currentCommunity.religion) {
+        wantedCommunity = ci;
+        break;
+      }
+    }
+    communityBox.querySelector(
+      'input[name=cg-community][value="' + wantedCommunity + '"]').checked = true;
+    communityBox.querySelectorAll('input[name=cg-community]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        const selected = communities[parseInt(radio.value, 10)] || communities[0];
+        G.pending.culture = selected.culture;
+        G.pending.religion = selected.religion;
+        const selectedSex = document.querySelector('input[name=cg-sex]:checked').value;
+        $('cg-name').value = FB.randomName(selected.culture, selectedSex);
+        G.pending.name = null;
+        updateCgSummary();
+      });
+    });
     /* the starting-family preset picker, rebuilt per visit so a shared start
        code's preset (or a pick made before stepping Back) survives */
     const famBox = $('cg-family');
@@ -1691,12 +1779,20 @@ window.FB = window.FB || {};
     return (r && familyPresetById(r.value)) || G.FAMILY_PRESETS[0];
   }
 
+  function selectedCommunity() {
+    const pr = FB.world.byId[G.pending.provinceId];
+    const communities = FB.provinceCommunities(pr);
+    const radio = document.querySelector('input[name=cg-community]:checked');
+    const index = radio ? parseInt(radio.value, 10) : -1;
+    return communities[index] ||
+      provinceCommunity(pr, G.pending.culture, G.pending.religion);
+  }
+
   function updateCgSummary() {
     const bookmark = FB.activeBookmark;
     const preset = selectedFamilyPreset();
     const pr = FB.world.byId[G.pending.provinceId];
-    const culture = FB.cultureOf(pr.culture);
-    const religion = FB.religionOf(pr.religion);
+    const community = selectedCommunity();
     /* a birthplace beyond the county seat is named in the summary; the seat
        itself keeps the long-standing one-line form */
     const settIdx = G.pending.settlementIdx | 0;
@@ -1709,10 +1805,7 @@ window.FB = window.FB || {};
       : FB.T('{scenario} in {province}', {
           scenario: FB.L(G.pending.scenario.name), province: FB.L(pr.name)
         })) + '</b><br>' +
-      FB.esc(FB.renderKey('culture.' + pr.culture + '.name.default',
-        { text: culture.name }, {})) + ' · ' +
-      FB.esc(FB.renderKey('religion.' + pr.religion + '.name.default',
-        { text: religion.name }, {})) + ' · ' +
+      FB.esc(communityLabel(community)) + ' · ' +
       FB.esc(FB.T('beginning in {year} AD, aged {age}, {situation}.', {
         year: bookmark.date.year,
         age: preset.age || FBDATA.balance.startAge,
@@ -1739,8 +1832,11 @@ window.FB = window.FB || {};
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
     const settIdx = clampSettlementIdx(provId, G.pending.settlementIdx);
+    const community = selectedCommunity();
+    const cultureId = community.culture;
+    const religionId = community.religion;
     const sex = document.querySelector('input[name=cg-sex]:checked').value;
-    const name = ($('cg-name').value || '').trim() || FB.randomName(pr.culture, sex);
+    const name = ($('cg-name').value || '').trim() || FB.randomName(cultureId, sex);
     const preset = selectedFamilyPreset();
     G.pending.name = null; G.pending.sex = null; // a shared code's pre-fill is spent
     G.pending.familyPreset = null;
@@ -1748,7 +1844,8 @@ window.FB = window.FB || {};
 
     const state = {
       v: 2,
-      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name, preset.id, settIdx),
+      seed: seedCode(seedStr, bookmark.id, sc.id, provId, sex, name, preset.id,
+        settIdx, cultureId, religionId, pr),
       start: start,
       date: { year:start.year, season:start.season, day:start.day },
       turn: 0, generation: 1, slotDays: [],
@@ -1813,12 +1910,12 @@ window.FB = window.FB || {};
     scheduleSlots(state);
 
     const me = FB.makeCharacter(state, {
-      name: name, sex: sex, culture: pr.culture, religion: pr.religion,
+      name: name, sex: sex, culture: cultureId, religion: religionId,
       born: start.year - (preset.age || FBDATA.balance.startAge),
       quality: sc.tier >= 2 ? 2 : 0, traitsN: 2
     });
     me.health = 8;
-    me.dyn = FB.dynastyName(pr.culture, me.name, pr.name, me.sex);
+    me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex);
     if (sc.mar) me.skills.mar = Math.max(0, me.skills.mar + sc.mar);
     state.player.charId = me.id;
     state.player.houseFounderId = me.id;
@@ -1840,11 +1937,11 @@ window.FB = window.FB || {};
 
     // parents — the first rung of the kin tree
     const dad = FB.makeCharacter(state, {
-      sex: 'm', culture: pr.culture, religion: pr.religion,
+      sex: 'm', culture: cultureId, religion: religionId,
       born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn
     });
     const mom = FB.makeCharacter(state, {
-      sex: 'f', culture: pr.culture, religion: pr.religion,
+      sex: 'f', culture: cultureId, religion: religionId,
       born: me.born - FB.ri(20, 34), role: 'parent'
     });
     dad.health = 8; mom.health = 8;
@@ -1854,14 +1951,14 @@ window.FB = window.FB || {};
 
     /* Patronymic starts record the father whose name each byname actually
        carries. The house id remains stable even though personal bynames vary. */
-    if (FB.cultureOf(pr.culture).dyn === 'patronym') {
+    if (FB.cultureOf(cultureId).dyn === 'patronym') {
       const granddad = FB.makeCharacter(state, {
-        sex:'m', culture:pr.culture, religion:pr.religion,
+        sex:'m', culture:cultureId, religion:religionId,
         born:dad.born - FB.ri(20, 40), role:'grandparent',
         quality:1, dyn:me.dyn, byname:''
       });
       const grandmom = FB.makeCharacter(state, {
-        sex:'f', culture:pr.culture, religion:pr.religion,
+        sex:'f', culture:cultureId, religion:religionId,
         born:dad.born - FB.ri(18, 34), role:'grandparent'
       });
       granddad.health = 8; grandmom.health = 8;
@@ -1876,7 +1973,7 @@ window.FB = window.FB || {};
     const nSib = FB.ri(1, 2);
     for (let i = 0; i < nSib; i++) {
       const sib = FB.makeCharacter(state, {
-        culture: pr.culture, religion: pr.religion,
+        culture: cultureId, religion: religionId,
         born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
         role: 'sibling', dyn: me.dyn,
         fatherId:dad.id, motherId:mom.id
@@ -1892,7 +1989,7 @@ window.FB = window.FB || {};
     if (preset.id !== 'standard') {
       const spouse = FB.makeCharacter(state, {
         sex: me.sex === 'm' ? 'f' : 'm',
-        culture: pr.culture, religion: pr.religion,
+        culture: cultureId, religion: religionId,
         born: me.born - FB.ri(preset.spouseAge[0], preset.spouseAge[1]),
         role: 'spouse'
       });
@@ -1906,7 +2003,7 @@ window.FB = window.FB || {};
       for (let k = 0; k < nKids; k++) {
         const minChildAge = k === 0 ? Math.min(preset.eldestMin, oldestChild) : 1;
         const child = FB.makeCharacter(state, {
-          culture: pr.culture, religion: pr.religion,
+          culture: cultureId, religion: religionId,
           born: start.year - FB.ri(minChildAge, oldestChild),
           dyn: me.dyn, // children of the playable line carry the house name
           fatherId: me.sex === 'm' ? me.id : spouse.id,
@@ -1950,7 +2047,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.life.chronicle_begins',
       '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
       { dynasty: me.dyn, province: pr.name, year: state.date.year }));
-    const introGroup = FB.religionOf(pr.religion).group;
+    const introGroup = FB.religionOf(religionId).group;
     let introPath = 'intro';
     if (introGroup === 'muslim' && sc.intro_muslim) introPath = 'intro_muslim';
     else if (introGroup === 'christian' && sex === 'f' && sc.intro_f) {

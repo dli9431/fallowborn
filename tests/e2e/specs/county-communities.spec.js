@@ -1,0 +1,428 @@
+'use strict';
+
+/* Static county communities: both bookmark manifests, schema validation,
+   character creation, county/Land display, and start-code compatibility.
+   Authored per docs/designs/provinces.md; NOT run by the authoring agent
+   (owner runs the harness). */
+
+const { test, expect } = require('../support/fixture');
+const { openGame } = require('../support/game');
+
+const EXPECTED = {
+  '867':{
+    iona:'gaelic.catholic>norse.norse_pagan',
+    man:'norse.norse_pagan>gaelic.catholic',
+    lewis:'norse.norse_pagan>gaelic.catholic',
+    dublin:'norse.norse_pagan>gaelic.catholic',
+    york:'english.catholic>norse.norse_pagan',
+    scarborough:'english.catholic>norse.norse_pagan',
+    cordoba:'andalusi.sunni>iberian.catholic',
+    sevilla:'andalusi.sunni>iberian.catholic',
+    toledo:'andalusi.sunni>iberian.catholic',
+    granada:'andalusi.sunni>iberian.catholic',
+    valencia:'andalusi.sunni>iberian.catholic',
+    zaragoza:'andalusi.sunni>iberian.catholic',
+    merida:'andalusi.sunni>iberian.catholic',
+    palermo:'arabic.sunni>greek.orthodox',
+    messina:'greek.orthodox>arabic.sunni',
+    novgorod:'slavic.slavic_pagan>norse.norse_pagan',
+    ladoga:'slavic.slavic_pagan>norse.norse_pagan',
+    kiev:'slavic.slavic_pagan>norse.norse_pagan',
+    tunis:'berber.sunni>arabic.sunni',
+    kairouan:'berber.sunni>arabic.sunni',
+    split:'italian.catholic>slavic.catholic',
+    zadar:'italian.catholic>slavic.catholic',
+    kotor:'italian.catholic>slavic.orthodox',
+    tbilisi:'georgian.orthodox>arabic.sunni',
+    edinburgh:'english.catholic>gaelic.catholic',
+    glasgow:'brezhon.catholic>gaelic.catholic',
+    dumbarton:'brezhon.catholic>gaelic.catholic',
+    rennes:'brezhon.catholic>frankish.catholic',
+    nantes:'brezhon.catholic>frankish.catholic',
+    thessaloniki:'greek.orthodox>slavic.orthodox',
+    serres:'greek.orthodox>slavic.orthodox',
+    serdica:'slavic.orthodox>greek.orthodox',
+    philippopolis:'slavic.orthodox>greek.orthodox',
+    caesarea:'greek.orthodox>armenian.eastern',
+    sebasteia:'greek.orthodox>armenian.eastern'
+  },
+  '1066':{
+    iona:'gaelic.catholic>norse.catholic',
+    man:'norse.catholic>gaelic.catholic',
+    lewis:'norse.catholic>gaelic.catholic',
+    dublin:'gaelic.catholic>norse.catholic',
+    wexford:'gaelic.catholic>norse.catholic',
+    cork:'gaelic.catholic>norse.catholic',
+    limerick:'gaelic.catholic>norse.catholic',
+    york:'english.catholic>norse.catholic',
+    scarborough:'english.catholic>norse.catholic',
+    lincoln:'english.catholic>norse.catholic',
+    stamford:'english.catholic>norse.catholic',
+    norwich:'english.catholic>norse.catholic',
+    ipswich:'english.catholic>norse.catholic',
+    cordoba:'andalusi.sunni>iberian.catholic',
+    sevilla:'andalusi.sunni>iberian.catholic',
+    toledo:'andalusi.sunni>iberian.catholic',
+    granada:'andalusi.sunni>iberian.catholic',
+    valencia:'andalusi.sunni>iberian.catholic',
+    zaragoza:'andalusi.sunni>iberian.catholic',
+    merida:'andalusi.sunni>iberian.catholic',
+    palermo:'arabic.sunni>greek.orthodox',
+    siracusa:'arabic.sunni>greek.orthodox',
+    messina:'greek.orthodox>arabic.sunni>italian.catholic',
+    bari:'italian.catholic>greek.orthodox',
+    taranto:'greek.orthodox>italian.catholic',
+    brindisi:'greek.orthodox>italian.catholic',
+    reggio:'greek.orthodox>italian.catholic',
+    cosenza:'greek.orthodox>italian.catholic',
+    tunis:'berber.sunni>arabic.sunni',
+    kairouan:'berber.sunni>arabic.sunni',
+    split:'slavic.catholic>italian.catholic',
+    zadar:'slavic.catholic>italian.catholic',
+    kotor:'slavic.orthodox>italian.catholic',
+    szekesfehervar:'magyar.catholic>slavic.catholic',
+    moson:'magyar.catholic>slavic.catholic',
+    sirmium:'slavic.catholic>magyar.catholic',
+    osijek:'slavic.catholic>magyar.catholic',
+    tbilisi:'georgian.orthodox>arabic.sunni',
+    van:'armenian.eastern>turkic.sunni',
+    ani:'armenian.eastern>turkic.sunni',
+    kars:'armenian.eastern>turkic.sunni',
+    dvin:'armenian.eastern>turkic.sunni',
+    rayy:'persian.sunni>turkic.sunni',
+    hamadan:'persian.sunni>turkic.sunni',
+    isfahan:'persian.sunni>turkic.sunni',
+    merv:'persian.sunni>turkic.sunni',
+    nishapur:'persian.sunni>turkic.sunni',
+    herat:'persian.sunni>turkic.sunni',
+    bukhara:'persian.sunni>turkic.sunni',
+    samarkand:'persian.sunni>turkic.sunni',
+    edinburgh:'english.catholic>gaelic.catholic',
+    glasgow:'brezhon.catholic>gaelic.catholic',
+    dumbarton:'brezhon.catholic>gaelic.catholic',
+    rennes:'frankish.catholic>brezhon.catholic',
+    nantes:'frankish.catholic>brezhon.catholic',
+    thessaloniki:'greek.orthodox>slavic.orthodox',
+    serres:'greek.orthodox>slavic.orthodox',
+    serdica:'slavic.orthodox>greek.orthodox',
+    philippopolis:'slavic.orthodox>greek.orthodox',
+    caesarea:'greek.orthodox>armenian.eastern',
+    sebasteia:'armenian.eastern>greek.orthodox',
+    tarsos:'greek.orthodox>armenian.eastern>arabic.sunni',
+    adana:'greek.orthodox>armenian.eastern>arabic.sunni'
+  }
+};
+
+test.beforeEach(async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+});
+
+async function useStartCode(page, code) {
+  await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#ng-seed').fill(code);
+  await page.locator('#ng-seed').press('Enter');
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+}
+
+async function reachIonaCommunityPicker(page) {
+  await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#ng-fresh').click();
+  await page.locator('#bookmarklist .scencard').nth(1).click();
+  await page.getByRole('button', { name:/Free Farmer/ }).click();
+  await page.evaluate(function () {
+    FB.game.pickProvince(FB.world.byId.iona);
+    FB.game.pickSettlement({ pid:'iona', index:0 });
+  });
+  await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+}
+
+test('both bookmark manifests validate and expose every curated record in order',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const out = { errors:{}, manifests:{}, counts:{} };
+      ['867', '1066'].forEach(function (bookmarkId) {
+        const bookmark = FB.bookmark(bookmarkId);
+        out.errors[bookmarkId] = FB.validateBookmark(bookmark);
+        out.manifests[bookmarkId] = {};
+        bookmark.provinces.forEach(function (province) {
+          if (!province.communities) return;
+          out.manifests[bookmarkId][province.id] = province.communities.map(
+            function (community) {
+              return community.culture + '.' + community.religion;
+            }).join('>');
+        });
+        out.counts[bookmarkId] = Object.keys(out.manifests[bookmarkId]).length;
+      });
+      const iona867 = FB.bookmark('867').provinces.filter(function (province) {
+        return province.id === 'iona';
+      })[0];
+      const iona1066 = FB.bookmark('1066').provinces.filter(function (province) {
+        return province.id === 'iona';
+      })[0];
+      out.ionaArraysAliased = iona867.communities === iona1066.communities;
+      return out;
+    });
+
+    expect(result.errors['867']).toEqual([]);
+    expect(result.errors['1066']).toEqual([]);
+    expect(result.manifests).toEqual(EXPECTED);
+    expect(result.counts).toEqual({ '867':35, '1066':63 });
+    expect(result.counts['867'] + result.counts['1066']).toBe(98);
+    expect(result.ionaArraysAliased).toBe(false);
+  });
+
+test('community schema faults are actionable and ordinary counties normalize to one pair',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      function definitionWith(pid, communities) {
+        const source = FB.bookmark('867');
+        const definition = {};
+        for (const key in source) definition[key] = source[key];
+        definition.provinces = source.provinces.map(function (province) {
+          if (province.id !== pid) return province;
+          const copy = {};
+          for (const key in province) copy[key] = province[key];
+          copy.communities = communities;
+          return copy;
+        });
+        return definition;
+      }
+      const wastelandId = FB.bookmark('867').provinces.filter(function (province) {
+        return province.wasteland;
+      })[0].id;
+      const cases = {
+        empty:definitionWith('london', []),
+        notList:definitionWith('london', { culture:'english', religion:'catholic' }),
+        duplicate:definitionWith('london', [
+          { culture:'english', religion:'catholic' },
+          { culture:'english', religion:'catholic' }
+        ]),
+        culture:definitionWith('london', [
+          { culture:'missing_culture', religion:'catholic' }
+        ]),
+        faith:definitionWith('london', [
+          { culture:'english', religion:'christian' }
+        ]),
+        principal:definitionWith('london', [
+          { culture:'norse', religion:'norse_pagan' }
+        ]),
+        wasteland:definitionWith(wastelandId, [
+          { culture:'english', religion:'catholic' }
+        ])
+      };
+      const errors = {};
+      for (const id in cases) errors[id] = FB.validateBookmark(cases[id]).join('\n');
+      const london = FB.bookmark('867').provinces.filter(function (province) {
+        return province.id === 'london';
+      })[0];
+      const fallback = FB.provinceCommunities(london);
+      fallback[0].culture = 'norse';
+      return {
+        errors:errors,
+        authored:london.communities,
+        fallbackLength:fallback.length,
+        fallbackReligion:fallback[0].religion,
+        provinceCulture:london.culture,
+        secondRead:FB.provinceCommunities(london)
+      };
+    });
+
+    expect(result.errors.empty).toContain('communities must be a non-empty array');
+    expect(result.errors.notList).toContain('communities must be a non-empty array');
+    expect(result.errors.duplicate).toContain('repeats community english/catholic');
+    expect(result.errors.culture).toContain('has invalid culture missing_culture');
+    expect(result.errors.faith).toContain('has invalid or unassignable faith christian');
+    expect(result.errors.principal)
+      .toContain('principal community must match its culture and religion');
+    expect(result.errors.wasteland).toContain('wasteland');
+    expect(result.errors.wasteland).toContain('declares communities');
+    expect(result.authored).toBeUndefined();
+    expect(result.fallbackLength).toBe(1);
+    expect(result.fallbackReligion).toBe('catholic');
+    expect(result.provinceCulture).toBe('english');
+    expect(result.secondRead).toEqual([
+      { culture:'english', religion:'catholic' }
+    ]);
+  });
+
+test('1066 Iona creates a Gaelic Catholic household beneath its Norse ruler and shows both communities',
+  async function ({ page }) {
+    await useStartCode(page,
+      'HOUSEHOLD-1066-farmer-iona-f-Mor-established');
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await expect(page.locator('#orientation-continue')).toBeVisible();
+    await page.locator('#orientation-continue').click();
+
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const me = state.chars[state.player.charId];
+      const ids = {};
+      function add(id) { if (id && state.chars[id]) ids[id] = 1; }
+      add(me.id); add(me.fatherId); add(me.motherId); add(me.spouseId);
+      me.childrenIds.forEach(add);
+      const father = state.chars[me.fatherId], mother = state.chars[me.motherId];
+      if (father) {
+        add(father.fatherId); add(father.motherId);
+        father.childrenIds.forEach(add);
+      }
+      if (mother) mother.childrenIds.forEach(add);
+      const identities = Object.keys(ids).map(function (id) {
+        return state.chars[id].culture + '.' + state.chars[id].religion;
+      });
+      const county = FB.world.byId.iona;
+      const realm = state.realms[state.owner.iona];
+      FB.ui.showTab('prov');
+      return {
+        identityCount:identities.length,
+        identities:identities,
+        county:county.culture + '.' + county.religion,
+        ruler:realm.ruler.culture,
+        owner:state.owner.iona,
+        communityOrder:FB.provinceCommunities(county).map(function (community) {
+          return community.culture + '.' + community.religion;
+        })
+      };
+    });
+
+    expect(result.identityCount).toBeGreaterThanOrEqual(6);
+    expect(result.identities.every(function (identity) {
+      return identity === 'gaelic.catholic';
+    })).toBe(true);
+    expect(result.county).toBe('gaelic.catholic');
+    expect(result.ruler).toBe('norse');
+    expect(result.owner).not.toBe('player');
+    expect(result.communityOrder).toEqual([
+      'gaelic.catholic', 'norse.catholic'
+    ]);
+    await expect(page.locator('#tab-prov')).toContainText('Communities');
+    await expect(page.locator('#tab-prov')).toContainText('Gaelic');
+    await expect(page.locator('#tab-prov')).toContainText('Norse');
+    const landText = await page.locator('#tab-prov').innerText();
+    expect(landText.lastIndexOf('Gaelic')).toBeLessThan(landText.lastIndexOf('Norse'));
+  });
+
+test('community choices use culture-sensitive names and survive Back to the same county',
+  async function ({ page }) {
+    await reachIonaCommunityPicker(page);
+    const choices = page.locator('input[name=cg-community]');
+    await expect(choices).toHaveCount(2);
+    await expect(page.locator('#cg-community')).toContainText('Gaelic');
+    await expect(page.locator('#cg-community')).toContainText('Norse');
+    await choices.nth(1).check();
+    const norseName = await page.locator('#cg-name').inputValue();
+    expect(await page.evaluate(function (name) {
+      return FBDATA.cultures.norse.male.indexOf(name) >= 0;
+    }, norseName)).toBe(true);
+
+    await page.locator('#btn-cg-back').click();
+    await expect(page.locator('#pickinfo')).toContainText('Gaelic');
+    await expect(page.locator('#pickinfo')).toContainText('Norse');
+    const pickText = await page.locator('#pickinfo').innerText();
+    expect(pickText.indexOf('Gaelic')).toBeLessThan(pickText.indexOf('Norse'));
+    await page.locator('#btn-pick-random').click();
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await expect(page.locator('input[name=cg-community]').nth(1)).toBeChecked();
+  });
+
+test('a newly selected county resets the pending identity to its principal community',
+  async function ({ page }) {
+    await reachIonaCommunityPicker(page);
+    await page.locator('input[name=cg-community]').nth(1).check();
+    await page.locator('#btn-cg-back').click();
+    await page.locator('#btn-pick-back').click();
+    await page.evaluate(function () {
+      FB.game.pickProvince(FB.world.byId.edinburgh);
+      FB.game.pickSettlement({ pid:'edinburgh', index:0 });
+    });
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await expect(page.locator('input[name=cg-community]').first()).toBeChecked();
+    expect(await page.evaluate(function () {
+      return FB.game.pending.culture + '.' + FB.game.pending.religion;
+    })).toBe('english.catholic');
+  });
+
+test('a non-principal start spells the standard and county-seat placeholders',
+  async function ({ page }) {
+    const code = 'CADENCE-1066-farmer-iona-m-Olaf-standard-0-norse.catholic';
+    await useStartCode(page, code);
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    expect(await page.evaluate(function () { return FB.state.seed; })).toBe(code);
+  });
+
+test('a non-principal ninth-part identity shapes an established family and round-trips',
+  async function ({ page }) {
+    const code = 'CADENCE-1066-farmer-iona-m-Olaf-established-0-norse.catholic';
+    await useStartCode(page, code);
+    await expect(page.locator('input[name=cg-community]').nth(1)).toBeChecked();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    const result = await page.evaluate(function () {
+      const me = FB.state.chars[FB.state.player.charId];
+      const family = {};
+      function add(id) { if (id && FB.state.chars[id]) family[id] = 1; }
+      add(me.id); add(me.fatherId); add(me.motherId); add(me.spouseId);
+      me.childrenIds.forEach(add);
+      const father = FB.state.chars[me.fatherId];
+      const mother = FB.state.chars[me.motherId];
+      if (father) {
+        add(father.fatherId); add(father.motherId);
+        father.childrenIds.forEach(add);
+      }
+      if (mother) mother.childrenIds.forEach(add);
+      return {
+        seed:FB.state.seed,
+        identity:me.culture + '.' + me.religion,
+        settlement:FB.state.player.homeSettlement,
+        familyIdentities:Object.keys(family).map(function (id) {
+          const member = FB.state.chars[id];
+          return member.culture + '.' + member.religion;
+        })
+      };
+    });
+    expect(result.seed).toBe(code);
+    expect(result.identity).toBe('norse.catholic');
+    expect(result.settlement).toBe(0);
+    expect(result.familyIdentities.length).toBeGreaterThanOrEqual(8);
+    expect(result.familyIdentities.every(function (identity) {
+      return identity === 'norse.catholic';
+    })).toBe(true);
+  });
+
+test('a ninth-part identity not authored for that bookmark county is rejected',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-seed').fill(
+      'CADENCE-1066-farmer-iona-m-Olaf-standard-0-gaelic.orthodox');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
+    await expect(page.locator('#chargen:not(.hidden)')).toHaveCount(0);
+    await page.locator('#ng-seed-err').evaluate(function (element) {
+      element.textContent = '';
+    });
+    await page.locator('#ng-seed').fill(
+      'CADENCE-1066-farmer-london-m-Edgar-standard-0-english.catholic');
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#ng-seed-err')).toContainText('doesn’t parse');
+  });
+
+test('legacy five-part and current six-, seven-, and eight-part codes remain accepted',
+  async function ({ page }, testInfo) {
+    const codes = [
+      'CADENCE-farmer-london-f-Ada',
+      'CADENCE-867-farmer-london-f-Ada',
+      'CADENCE-867-farmer-london-f-Ada-established',
+      'CADENCE-867-farmer-london-f-Ada-standard-1'
+    ];
+    for (let i = 0; i < codes.length; i++) {
+      if (i) await openGame(page, testInfo);
+      await useStartCode(page, codes[i]);
+      await expect(page.locator('#cg-name')).toHaveValue('Ada');
+      await expect(page.locator('input[name=cg-community]')).toHaveCount(1);
+      expect(await page.evaluate(function () {
+        return FB.game.pending.culture + '.' + FB.game.pending.religion;
+      })).toBe('english.catholic');
+    }
+  });

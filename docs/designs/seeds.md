@@ -19,7 +19,7 @@ first.
 - **World seed** — any text normalized to `A-Z0-9` (`FB.hashSeed` in `js/util.js` hashes
   it to a uint32). Same political world; scenario/province/name stay the player's own
   picks. Fresh starts get a random 7-char base36 one.
-- **Start code** — `SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET[-SETTLEMENT]]`
+- **Start code** — `SEED-BOOKMARK-SCENARIO-PROVINCE-SEX-NAME[-FAMILYPRESET[-SETTLEMENT[-CULTURE.RELIGION]]]`
   (for example,
   `K7F29QZ-1066-serf-kent-m-aelfric`). Names encode spaces as `_` and drop dashes so
   the six-part split stays unambiguous. The optional seventh part names a
@@ -30,16 +30,24 @@ first.
   screen (see [provinces.md](provinces.md)); it always spells the preset part
   before it (`standard` when the family start is standard), and a start at the
   county seat (slot 0, the default) adds no parts at all.
+  A non-principal county community adds a ninth `CULTURE.RELIGION` part. It
+  always spells both preceding optional positions, using `standard` and `0`
+  when the family preset and county seat are otherwise defaults. Principal
+  community starts retain their existing five- through eight-part spelling. For
+  example, a Norse Catholic family at Iona's county seat may spell
+  `K7F29QZ-1066-serf-iona-m-olaf-standard-0-norse.catholic`.
   This
   is what `state.seed` stores (built in `G.start` from the picks actually taken, name
   edits included) and what the ☰ menu shows; pasting one into New Game lands on a
   pre-filled character screen.
 
-Parsing (`parseSeedInput` in `js/main.js`): a six-, seven-, or eight-part shape
+Parsing (`parseSeedInput` in `js/main.js`): a six-, seven-, eight-, or nine-part shape
 must fully
 validate (known bookmark, scenario, settled province in that bookmark, `m`/`f`,
-1–20-char name, for seven parts a known family-preset id, and for eight parts an
-all-digits settlement slot) or it is rejected
+1–20-char name, for seven or more parts a known family-preset id, and for eight or
+more parts an all-digits settlement slot). A ninth part must be one exact culture/faith pair
+authored in that bookmark county's `communities` list; a fallback-only county or an
+unknown pair is rejected. Any invalid code is rejected
 with an inline error—a mistyped code must never silently
 become a different world. A parsed settlement slot is *clamped* to the county's
 visible settlements once the bookmark is active (`clampSettlementIdx`), so an
@@ -55,10 +63,11 @@ parameter, no draw) and then draws its spouse and children on the shared stream 
 a fixed order *after* the parents and siblings every start shares. The `standard`
 preset performs no draw the historical start did not, so a six-part code's stream
 is bit-for-bit what it always was, and the seventh part alone decides whether the
-extra draws happen. The birthplace settlement slot is likewise a pure parameter —
-it steers state (the farmer's starting plot, `player.homeSettlement`) and draws
-nothing — so it rides the same rule. Identical seed + identical picks — preset
-included — remains
+extra draws happen. The birthplace settlement slot and county-community identity
+are likewise pure parameters: the slot steers state (the farmer's starting plot,
+`player.homeSettlement`) while the community selects which culture's names are drawn.
+The start is still re-seeded immediately beforehand. Identical seed + identical picks —
+preset and community included — remains
 an identical start.
 
 ## Scoped sub-streams

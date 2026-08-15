@@ -515,6 +515,137 @@ window.FBDATA = window.FBDATA || {};
     return out;
   }
 
+  /* County communities are static bookmark data, not a population model.
+     The first pair is the principal county identity and is copied back onto
+     culture/religion so every existing world mechanic keeps using it. */
+  function communityList() {
+    var out = [];
+    for (var i = 0; i < arguments.length; i += 2) {
+      out.push({ culture:arguments[i], religion:arguments[i + 1] });
+    }
+    return out;
+  }
+
+  function applyCommunityManifest(provinces, manifest) {
+    var byId = {};
+    for (var i = 0; i < provinces.length; i++) byId[provinces[i].id] = provinces[i];
+    for (var id in manifest) {
+      if (!Object.prototype.hasOwnProperty.call(manifest, id)) continue;
+      var province = byId[id];
+      if (!province) throw new Error('data/bookmarks.js: community county missing ' + id);
+      var source = manifest[id];
+      province.communities = source.map(function (entry) {
+        return { culture:entry.culture, religion:entry.religion };
+      });
+      province.culture = province.communities[0].culture;
+      province.religion = province.communities[0].religion;
+    }
+  }
+
+  var COMMUNITIES_867 = {
+    iona:communityList('gaelic','catholic','norse','norse_pagan'),
+    man:communityList('norse','norse_pagan','gaelic','catholic'),
+    lewis:communityList('norse','norse_pagan','gaelic','catholic'),
+    dublin:communityList('norse','norse_pagan','gaelic','catholic'),
+    york:communityList('english','catholic','norse','norse_pagan'),
+    scarborough:communityList('english','catholic','norse','norse_pagan'),
+    cordoba:communityList('andalusi','sunni','iberian','catholic'),
+    sevilla:communityList('andalusi','sunni','iberian','catholic'),
+    toledo:communityList('andalusi','sunni','iberian','catholic'),
+    granada:communityList('andalusi','sunni','iberian','catholic'),
+    valencia:communityList('andalusi','sunni','iberian','catholic'),
+    zaragoza:communityList('andalusi','sunni','iberian','catholic'),
+    merida:communityList('andalusi','sunni','iberian','catholic'),
+    palermo:communityList('arabic','sunni','greek','orthodox'),
+    messina:communityList('greek','orthodox','arabic','sunni'),
+    novgorod:communityList('slavic','slavic_pagan','norse','norse_pagan'),
+    ladoga:communityList('slavic','slavic_pagan','norse','norse_pagan'),
+    kiev:communityList('slavic','slavic_pagan','norse','norse_pagan'),
+    tunis:communityList('berber','sunni','arabic','sunni'),
+    kairouan:communityList('berber','sunni','arabic','sunni'),
+    split:communityList('italian','catholic','slavic','catholic'),
+    zadar:communityList('italian','catholic','slavic','catholic'),
+    kotor:communityList('italian','catholic','slavic','orthodox'),
+    tbilisi:communityList('georgian','orthodox','arabic','sunni'),
+    edinburgh:communityList('english','catholic','gaelic','catholic'),
+    glasgow:communityList('brezhon','catholic','gaelic','catholic'),
+    dumbarton:communityList('brezhon','catholic','gaelic','catholic'),
+    rennes:communityList('brezhon','catholic','frankish','catholic'),
+    nantes:communityList('brezhon','catholic','frankish','catholic'),
+    thessaloniki:communityList('greek','orthodox','slavic','orthodox'),
+    serres:communityList('greek','orthodox','slavic','orthodox'),
+    serdica:communityList('slavic','orthodox','greek','orthodox'),
+    philippopolis:communityList('slavic','orthodox','greek','orthodox'),
+    caesarea:communityList('greek','orthodox','armenian','eastern'),
+    sebasteia:communityList('greek','orthodox','armenian','eastern')
+  };
+
+  var COMMUNITIES_1066 = {
+    iona:communityList('gaelic','catholic','norse','catholic'),
+    man:communityList('norse','catholic','gaelic','catholic'),
+    lewis:communityList('norse','catholic','gaelic','catholic'),
+    dublin:communityList('gaelic','catholic','norse','catholic'),
+    wexford:communityList('gaelic','catholic','norse','catholic'),
+    cork:communityList('gaelic','catholic','norse','catholic'),
+    limerick:communityList('gaelic','catholic','norse','catholic'),
+    york:communityList('english','catholic','norse','catholic'),
+    scarborough:communityList('english','catholic','norse','catholic'),
+    lincoln:communityList('english','catholic','norse','catholic'),
+    stamford:communityList('english','catholic','norse','catholic'),
+    norwich:communityList('english','catholic','norse','catholic'),
+    ipswich:communityList('english','catholic','norse','catholic'),
+    cordoba:communityList('andalusi','sunni','iberian','catholic'),
+    sevilla:communityList('andalusi','sunni','iberian','catholic'),
+    toledo:communityList('andalusi','sunni','iberian','catholic'),
+    granada:communityList('andalusi','sunni','iberian','catholic'),
+    valencia:communityList('andalusi','sunni','iberian','catholic'),
+    zaragoza:communityList('andalusi','sunni','iberian','catholic'),
+    merida:communityList('andalusi','sunni','iberian','catholic'),
+    palermo:communityList('arabic','sunni','greek','orthodox'),
+    siracusa:communityList('arabic','sunni','greek','orthodox'),
+    messina:communityList('greek','orthodox','arabic','sunni','italian','catholic'),
+    bari:communityList('italian','catholic','greek','orthodox'),
+    taranto:communityList('greek','orthodox','italian','catholic'),
+    brindisi:communityList('greek','orthodox','italian','catholic'),
+    reggio:communityList('greek','orthodox','italian','catholic'),
+    cosenza:communityList('greek','orthodox','italian','catholic'),
+    tunis:communityList('berber','sunni','arabic','sunni'),
+    kairouan:communityList('berber','sunni','arabic','sunni'),
+    split:communityList('slavic','catholic','italian','catholic'),
+    zadar:communityList('slavic','catholic','italian','catholic'),
+    kotor:communityList('slavic','orthodox','italian','catholic'),
+    szekesfehervar:communityList('magyar','catholic','slavic','catholic'),
+    moson:communityList('magyar','catholic','slavic','catholic'),
+    sirmium:communityList('slavic','catholic','magyar','catholic'),
+    osijek:communityList('slavic','catholic','magyar','catholic'),
+    tbilisi:communityList('georgian','orthodox','arabic','sunni'),
+    van:communityList('armenian','eastern','turkic','sunni'),
+    ani:communityList('armenian','eastern','turkic','sunni'),
+    kars:communityList('armenian','eastern','turkic','sunni'),
+    dvin:communityList('armenian','eastern','turkic','sunni'),
+    rayy:communityList('persian','sunni','turkic','sunni'),
+    hamadan:communityList('persian','sunni','turkic','sunni'),
+    isfahan:communityList('persian','sunni','turkic','sunni'),
+    merv:communityList('persian','sunni','turkic','sunni'),
+    nishapur:communityList('persian','sunni','turkic','sunni'),
+    herat:communityList('persian','sunni','turkic','sunni'),
+    bukhara:communityList('persian','sunni','turkic','sunni'),
+    samarkand:communityList('persian','sunni','turkic','sunni'),
+    edinburgh:communityList('english','catholic','gaelic','catholic'),
+    glasgow:communityList('brezhon','catholic','gaelic','catholic'),
+    dumbarton:communityList('brezhon','catholic','gaelic','catholic'),
+    rennes:communityList('frankish','catholic','brezhon','catholic'),
+    nantes:communityList('frankish','catholic','brezhon','catholic'),
+    thessaloniki:communityList('greek','orthodox','slavic','orthodox'),
+    serres:communityList('greek','orthodox','slavic','orthodox'),
+    serdica:communityList('slavic','orthodox','greek','orthodox'),
+    philippopolis:communityList('slavic','orthodox','greek','orthodox'),
+    caesarea:communityList('greek','orthodox','armenian','eastern'),
+    sebasteia:communityList('armenian','eastern','greek','orthodox'),
+    tarsos:communityList('greek','orthodox','armenian','eastern','arabic','sunni'),
+    adana:communityList('greek','orthodox','armenian','eastern','arabic','sunni')
+  };
+
   var empires1066 = copyMap(FBDATA.empires);
   var kingdoms1066 = copyMap(FBDATA.kingdoms);
   var duchies1066 = copyMap(FBDATA.duchies);
@@ -551,6 +682,10 @@ window.FBDATA = window.FBDATA || {};
     abyssinia_1066:['northeast_african','caucasian']
   });
 
+  var provinces1066 = FBDATA.provinces.map(province1066);
+  applyCommunityManifest(FBDATA.provinces, COMMUNITIES_867);
+  applyCommunityManifest(provinces1066, COMMUNITIES_1066);
+
   var bookmark867 = {
     id:'867',
     name:'The Viking Age',
@@ -573,7 +708,7 @@ window.FBDATA = window.FBDATA || {};
     desc:'Harold wears England’s crown; Normandy and Norway have not yet crossed the sea.',
     date:{ year:1066, season:0, day:1 },
     religiousHeads:{ catholic:'papacy_1066', sunni:'abbasid_1066' },
-    provinces:FBDATA.provinces.map(province1066),
+    provinces:provinces1066,
     realms:REALMS_1066,
     duchies:duchies1066,
     kingdoms:kingdoms1066,

@@ -153,6 +153,7 @@ test('the prospective review ledger and every gate schema validate together',
       'concentric_fortress_upgrade',
       'confirmation_of_great_offices',
       'consent_of_estates',
+      'county_community_identity',
       'county_goods_markets',
       'direct_vassal_charter_of_liberties',
       'estates_scutage',
@@ -172,7 +173,7 @@ test('the prospective review ledger and every gate schema validate together',
     ]);
     expect(Object.values(result.modes)).toEqual([
       'none', 'none', 'hard', 'none', 'hard', 'none', 'hard', 'hard',
-      'hard', 'soft', 'hard', 'hard', 'hard', 'hard', 'hard', 'none',
+      'hard', 'none', 'soft', 'hard', 'hard', 'hard', 'hard', 'hard', 'none',
       'hard', 'hard', 'hard', 'none', 'hard', 'none', 'hard', 'hard',
       'hard'
     ]);

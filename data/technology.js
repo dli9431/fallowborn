@@ -124,6 +124,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Immediate household bidding is broad market play; individual lot families keep their own requirements.'
       },
+      county_community_identity:{
+        mode:'none',
+        rationale:'Choosing an authored local culture and faith is baseline character identity, not a capability enabled by research.'
+      },
       auction_item_lots:{
         mode:'none',
         rationale:'Fine and famed household goods need no additional innovation beyond access to the auction itself.'

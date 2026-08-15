@@ -113,7 +113,10 @@ leftmost figures on narrow screens, and the date is hidden in the tighter landsc
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
 
-The Land tab groups realm, county, and development facts into compact cards. Short facts
+The Land tab groups realm, county, and development facts into compact cards. A county
+with authored communities keeps its principal Culture and Faith rows and adds the full
+ordered culture-and-faith list, so the political baseline and every available local
+start identity are both visible. Short facts
 use aligned label and value columns on desktop, while explanatory values such as alliances,
 de jure paths, and development history use a full-width stacked row. Narrow and short
 layouts stack every Land fact with its label above the value, keeping long translations and
@@ -190,7 +193,10 @@ cards. Selecting one activates its world before the province picker is shown, so
 preview owner colors, county details, headings, era help, Observe mode, and character
 birth year all read the same active definition. Tapping a settled birthplace or choosing
 **Random Province** proceeds directly to character creation; there is no redundant Next
-step. Returning from scenarios goes back to the bookmark list without wiring another set
+step. The province pick bar lists all authored communities, and character creation uses
+native coupled culture-and-faith radio choices in the same authored order. A new county
+selects its principal pair; Back to the same county preserves the chosen pair. Returning
+from scenarios goes back to the bookmark list without wiring another set
 of map listeners.
 
 Hover-only affordances need a tap path (item chips toast their description).

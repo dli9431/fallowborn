@@ -407,10 +407,13 @@ world. The latter begins after Harold Godwinson's coronation and before the Norw
 and Norman invasions; those invasion chains are not yet scripted.
 
 **Sharing a start (seeds):** New Game offers a **Fresh start** or **🔑 Use this seed**.
-Paste a friend's full six-part start code to begin with their exact bookmark, world,
-scenario, province, and
-character — the character screen comes pre-filled, so you can check the details before
-committing. Old five-part codes still select 867. A bare word or code preserves the
+Paste a friend's full start code to begin with their exact bookmark, world,
+scenario, province, character, family preset, birthplace settlement, and—where a
+county has more than one—the chosen culture-and-faith community. Six-part principal
+starts keep their compact spelling; optional preset, settlement, and community fields
+extend the code to as many as nine parts. The character screen comes pre-filled, so
+you can check the details before committing. Old five-part codes still select 867. A
+bare word or code preserves the
 random world seed but lets you choose the bookmark and other details. Your own start
 code waits in the ☰ menu once your story begins —
 tap it to copy and share. Codes reproduce exactly only on the same game version and mod

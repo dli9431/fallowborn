@@ -3986,7 +3986,7 @@ window.FB = window.FB || {};
     } else {
       const rid = s.owner[pid];
       const realm = s.realms[rid];
-      const rel = FB.religionOf(pr.religion, s), cul = FB.cultureOf(pr.culture);
+      const communities = FB.provinceCommunities(pr);
       const B = FBDATA.balance;
       const myRealm = rid === 'player';
       const realmMen = realm ? (myRealm ? FB.realmDefensiveStrength(s, 'player') :
@@ -4061,6 +4061,13 @@ window.FB = window.FB || {};
         })), true) : '') +
         landKv('Culture', esc(cultureName(s, pr.culture))) +
         landKv('Faith', faithDetailsLink(s, pr.religion)) +
+        (communities.length > 1 ? landKv('Communities',
+          communities.map(function (community) {
+            const faith = FB.religionOf(community.religion, s);
+            return esc(cultureName(s, community.culture)) + ' · ' +
+              esc((faith ? faith.icon + ' ' : '') +
+                religionName(s, community.religion));
+          }).join('<br>'), true) : '') +
         landKv('Terrain', esc(terrainName(pr.terrain)) +
           (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         landKv('Province levy', '~' + esc(menText(s,

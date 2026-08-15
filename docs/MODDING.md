@@ -343,6 +343,15 @@ province objects; mods merge full objects as before:
   initialize fresh games only; an existing save's `state.dev` values remain
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
+- `communities` — optional ordered culture-and-faith pairs for a settled county, e.g.
+  `"communities": [{ "culture": "gaelic", "religion": "catholic" },
+  { "culture": "norse", "religion": "norse_pagan" }]`. The first record is
+  the principal population and must exactly repeat the province's `culture` and
+  `religion`; existing county mechanics continue to use those principal fields.
+  Later records are static identities available during character creation. Lists
+  may not be empty or contain a repeated pair, and every culture and assignable
+  faith must exist. Counties without the field normalize to their single principal
+  pair through `FB.provinceCommunities(province)`.
 - `settlements` — optional ordered list of up to eight historical settlement
   presentations for this county, e.g.
   `"settlements": [{ "site": "praha", "name": "Prague", "kind": "town" }]`.
@@ -2093,6 +2102,15 @@ property between named places even though the numeric save remains valid — app
 slots or deliberately replace the presentation of an existing index. A mod that
 supplies neither `settlementSites` nor `settlements` gets deterministic generated sites
 and keeps its current settlement names and indices.
+
+**County communities.** The same complete bookmark province may carry the optional
+ordered `communities` list shown in *Adding a province*. It replaces that county's
+community list for the bookmark; there is no cross-bookmark merge by entry. Activation
+rejects empty or non-array values, duplicate culture/faith pairs, unknown cultures,
+invalid or unassignable faiths, lists on wasteland, and principal entries that disagree
+with the province's `culture`/`religion`. The list is character-start identity only:
+mods should not infer population shares, conversion, migration, or demographic ticks
+from its order.
 
 ## Items
 
