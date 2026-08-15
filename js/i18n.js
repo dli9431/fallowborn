@@ -584,8 +584,13 @@ window.FBDATA = window.FBDATA || {};
     return cur;
   }
   function displayParams(state, viewer, source, ctx) {
-    if (FB.textParams) return FB.textParams(state, viewer, source, ctx, false);
-    return ctx || {};
+    const params = FB.textParams
+      ? FB.textParams(state, viewer, source, ctx, false) : (ctx || {});
+    /* Event and data text are rendered directly as well as through durable
+       messages. Resolve typed data parameters on this path too; otherwise a
+       live event turns a descriptor such as {$data:'privilege',...} into
+       "[object Object]" before the modal can display it. */
+    return displayMessageParams(params, { state:state, viewer:viewer });
   }
   function renderSource(state, viewer, key, source, ctx) {
     if (source === undefined || source === null) return '';

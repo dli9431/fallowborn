@@ -352,7 +352,7 @@ test('numeric property at pre-feature indices resolves in the settlement sheet',
     await expect(body).not.toContainText('farms 1 plots');
     await expect(body).not.toContainText('manor stands here');
     await expect(body).not.toContainText('operates here');
-    await expect(body).toContainText('No buildings stand');
+    await expect(body).toContainText('No buildings');
 
     /* Escape and keyboard Back behavior stay consistent */
     await page.keyboard.press('Escape');
@@ -1095,9 +1095,9 @@ test('a legacy mod without site data keeps deterministic generated settlements',
       expect(rec.authored).toBe(false);
       expect(rec.site).toMatch(/^generated__london__\d+$/);
     }
-    /* slots beyond the replaced head keep the same deterministic names and
-       indices the pre-feature build would have used */
-    for (let i = 1; i < before.length; i++) {
+    /* generated slots keep the same deterministic names and indices the
+       pre-feature build would have used */
+    for (let i = 0; i < before.length; i++) {
       expect(result.visible[i]).toEqual(before[i]);
     }
 

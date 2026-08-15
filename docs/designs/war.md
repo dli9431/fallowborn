@@ -117,6 +117,10 @@ stable realm-id order and removes later overlaps and hosts no longer attached to
 `FB.playerRealmAtWar(state)` resolves the sovereign returned by `FB.playerRealmId` through
 that same test. Economic effects therefore follow the war of the realm the household
 belongs to, including a liege's war, rather than only the protagonist's personal campaign.
+`FB.warOpponents(state, realmId)` is the companion read-only presentation lookup: it returns
+the opposing sovereign in an ordinary war or the valid sovereigns in the other great-holy-war
+camp. War notices and lock explanations use those ids to name both sides instead of reporting
+an unspecified conflict.
 
 Alliances are defensive abstractions, not extra war parties. `state.alliances` stores
 canonical realm pairs with their source and both ruler-generation stamps, and each realm

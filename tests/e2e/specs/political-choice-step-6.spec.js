@@ -313,6 +313,29 @@ test('mistreatment creates bounded demands and refusal organizes opposition',
     expect(result.noImmediateWar).toBe(true);
   });
 
+test('collective demand events render their structured privilege names',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const event = FB.eventById('collective_privilege_demand');
+      const ctx = FB.eventContext(s, {
+        constituency:'guild',
+        privilege:FB.dataParam('privilege', 'market_charter', 'name')
+      });
+      return {
+        title:FB.eventText(s, s.player.charId, event, 'title', ctx),
+        text:FB.eventText(s, s.player.charId, event, 'text', ctx),
+        grant:FB.eventText(s, s.player.charId, event, 'options.0.label', ctx)
+      };
+    });
+
+    expect(result.title).toBe('A Demand for Market Charter');
+    expect(result.text).toContain('The guild benches speak with one voice.');
+    expect(result.text).toContain('demand Market Charter:');
+    expect(result.grant).toBe('Grant Market Charter.');
+    expect(result.title + result.text + result.grant).not.toContain('[object Object]');
+  });
+
 test('election and privilege sheets expose constituencies, terms, and revocation',
   async function ({ page }) {
     await page.evaluate(function () {

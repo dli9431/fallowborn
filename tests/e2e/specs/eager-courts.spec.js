@@ -201,7 +201,7 @@ test('a consort never enters the line of succession',
     })).toEqual([]);
   });
 
-test('eager loading and the realm sheet share one bounded family order',
+test('eager loading and the ruler character sheet share one bounded family order',
   async function ({ page }) {
     expect(await page.evaluate(function () {
       const s = FB.state;
@@ -1062,7 +1062,7 @@ test('a save-load-forward run matches an uninterrupted one',
     })).toEqual({ same:true, rngRestored:true });
   });
 
-test('the realm sheet shows a ruler card and a court strip', async function ({ page }) {
+test('a realm link opens the ruler character sheet with its court strip', async function ({ page }) {
   const opened = await page.evaluate(function () {
     let rid = null;
     for (const id in FB.state.realms) {
@@ -1075,15 +1075,15 @@ test('the realm sheet shows a ruler card and a court strip', async function ({ p
     return rid;
   });
   expect(opened).not.toBeNull();
-  await expect(page.locator('.realm-interaction-modal .charcard')).toBeVisible();
-  await expect(page.locator('.realm-interaction-modal .court-strip')).toBeVisible();
+  await expect(page.locator('.character-interaction-modal .charcard')).toBeVisible();
+  await expect(page.locator('.character-interaction-modal .court-strip')).toBeVisible();
   /* Faces, not crests: a living realm never falls back to the crest header. */
   expect(await page.locator(
-    '.realm-interaction-modal canvas.pface[data-cid]').count()).toBeGreaterThan(1);
+    '.character-interaction-modal canvas.pface[data-cid]').count()).toBeGreaterThan(1);
   expect(await page.locator('#liegecrest').count()).toBe(0);
 });
 
-test('the realm sheet materializes a ruler-only court on first open',
+test('a ruler character sheet materializes its court on first open',
   async function ({ page }) {
     const report = await page.evaluate(function () {
       const s = FB.state;
@@ -1135,9 +1135,9 @@ test('the realm sheet materializes a ruler-only court on first open',
       rngUnchanged:true,
       uidUnchanged:true
     });
-    await expect(page.locator('.realm-interaction-modal .court-strip')).toBeVisible();
+    await expect(page.loc('.character-interaction-modal .court-strip')).toBeVisible();
     expect(await page.locator(
-      '.realm-interaction-modal canvas.pface[data-cid]').count())
+      '.character-interaction-modal canvas.pface[data-cid]').count())
       .toBe(report.expectedFaces);
   });
 

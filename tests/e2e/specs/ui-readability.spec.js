@@ -42,7 +42,7 @@ test('phone UI keeps body, action, helper, and modal-help text readable',
     await expect(page.locator('[data-guide-entry="intrigue"]')).toHaveAttribute(
       'aria-expanded', 'true');
     await expect(page.locator('#guide-entry-detail-intrigue')).toContainText(
-      'Plots take your focus');
+      'A plot uses your daily focus');
   });
 
 test('major information sheets expose contextual Guide routes', async function ({ page }) {

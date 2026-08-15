@@ -2664,7 +2664,7 @@ window.FB = window.FB || {};
       });
       const adjacent = warCauseIsAdjacent(s, cause);
       const rank = realm ? realm.rank || 0 : 0;
-      const blockedReason = FB.warCauseBlockedReason(cause);
+      const blockedReason = FB.warCauseBlockedReason(s, cause);
       const search = [pr.name, realm ? realm.name : '', rulerName]
         .concat(territory).join(' ').toLocaleLowerCase();
       models.push({
@@ -5330,6 +5330,14 @@ window.FB = window.FB || {};
     return FB.realmFamilySnapshot ? FB.realmFamilySnapshot(s, rid) : [];
   }
 
+  function realmMusterText(s, rid) {
+    const men = rid === 'player'
+      ? FB.playerLevy(s) : FB.aiBaseHost(s, rid);
+    return FB.T('Realm muster: ~{troops}', {
+      troops:menText(s, men)
+    });
+  }
+
   function realmCultivationPreview(s, rid, rulerCharacter) {
     const realm = s.realms[rid];
     const destinationId = realm && realm.capital;
@@ -5521,14 +5529,16 @@ window.FB = window.FB || {};
       model.commitments.push({
         id:'war',
         label:FB.T('Active war'),
-        detail:FB.T('This realm is your current war enemy.'),
+        detail:FB.warStatusText(s, rid),
+        detailHtml:FB.warStatusLinkHtml(s, rid),
         urgent:true
       });
     } else if (FB.isRealmAtWar(s, rid)) {
       model.commitments.push({
         id:'foreign-war',
         label:FB.T('Current war'),
-        detail:FB.T('This ruler is at war with another realm.'),
+        detail:FB.warStatusText(s, rid),
+        detailHtml:FB.warStatusLinkHtml(s, rid),
         urgent:true
       });
     }
@@ -5762,7 +5772,7 @@ window.FB = window.FB || {};
           }),
         enabled:!cause.blocked,
         blockedReason:FB.warCauseBlockedReason
-          ? FB.warCauseBlockedReason(cause) : null,
+          ? FB.warCauseBlockedReason(s, cause) : null,
         consequence:cause.sacrilegious
           ? FB.T(
             'A separate condemnation confirmation appears before war can begin.')
@@ -5787,21 +5797,6 @@ window.FB = window.FB || {};
         domId:'rm-governance'
       });
     }
-    if (rulerCharacter) {
-      addInteractionAction(model, {
-        id:'management.personal-character',
-        group:'management',
-        label:FB.T('Personal character…'),
-        detail:FB.T(
-          'Open personal traits, family, courtship, rivalry, and household dealings.'),
-        enabled:true,
-        blockedReason:null,
-        consequence:FB.T('Political gifts remain on this ruler path.'),
-        route:'personal-character',
-        domId:'rm-character'
-      });
-    }
-
     const me = s.chars[p.charId];
     const chain = p.liege ? FB.liegeChain(s, p.liege) : [];
     const royalNeighbor = FB.isPlayerSovereign(s) && s.realms.player &&
@@ -6017,6 +6012,7 @@ window.FB = window.FB || {};
       ? UI.charCardHtml(s, rulerCharacter, false, true, {
         cardClass:'realm-ruler-card',
         namePrefix:FB.realmRankTitle(s, realm),
+        realmMuster:realmMusterText(s, rid),
         mapHome:true,
         skillsGuide:true
       })
@@ -6025,7 +6021,9 @@ window.FB = window.FB || {};
         '<div><div class="ccname">' + esc(FB.T('{title} {name}', {
           title:FB.realmRankTitle(s, realm),
           name:realm.ruler.name
-        })) + '</div><div class="ccmeta">' + esc(FB.L(realm.name)) +
+        })) + '</div><div class="ccmeta realm-ruler-muster">' +
+        esc(realmMusterText(s, rid)) + '</div><div class="ccmeta">' +
+        esc(FB.L(realm.name)) +
         '</div></div></div>';
     let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
@@ -6043,6 +6041,25 @@ window.FB = window.FB || {};
     if ($('liegecrest')) FB.drawCrest($('liegecrest'), rid);
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
+    const warRealmLinks = $('gm-body').querySelectorAll('[data-war-realm]');
+    for (let i = 0; i < warRealmLinks.length; i++) {
+      warRealmLinks[i].addEventListener('click', function (event) {
+        event.stopPropagation();
+        const linkedRealm = warRealmLinks[i].dataset.warRealm;
+        if (!s.realms[linkedRealm]) return;
+        if (linkedRealm === rid) {
+          const capital = s.realms[linkedRealm].capital;
+          if (capital) {
+            UI.closeModal();
+            UI.selectProvince(capital);
+          }
+          return;
+        }
+        UI.showLiegeModal(linkedRealm, {
+          view:'realm', realmId:rid, returnContext:returnContext
+        }, true);
+      });
+    }
     const rulerPortrait = $('gm-body').querySelector(
       '.realm-ruler-card [data-character-home]');
     if (rulerPortrait && rulerCharacter) {
@@ -6079,13 +6096,6 @@ window.FB = window.FB || {};
             returnContext:returnContext
           });
         }
-      } else if (action.route === 'personal-character') {
-        if (!rulerCharacter) return;
-        UI.showCharModal(rulerCharacter.id, {
-          view:'realm',
-          realmId:rid,
-          returnContext:returnContext
-        });
       } else if (action.route === 'foreign-policy') {
         UI.showForeignPolicyStance(rid, {
           view:'realm',
@@ -6163,9 +6173,19 @@ window.FB = window.FB || {};
     });
   }
 
-  /* The realm sheet remains the primary view for an AI ruler. Cultivation
-     can materialize that ruler into an ordinary character sheet as needed. */
+  /* A realm link opens its ruler's one character sheet. The older realm-only
+     surface remains a defensive fallback for incomplete legacy state only. */
   UI.showLiegeModal = function (rid, returnContext, replaceView) {
+    const s = FB.state;
+    if (!s || !s.realms || !s.realms[rid]) return;
+    if (rid !== 'player' && FB.ensureRealmCourtForDisplay) {
+      FB.ensureRealmCourtForDisplay(s, rid);
+    }
+    const ruler = rid === 'player'
+      ? s.chars[s.player.charId]
+      : (interactionRealmRulerCharacter(s, rid) ||
+        (FB.materializeRealmRuler && FB.materializeRealmRuler(s, rid)));
+    if (ruler) return UI.showCharModal(ruler.id, returnContext, replaceView);
     return showRealmInteractionSheet(rid, returnContext, replaceView);
   };
 
@@ -7347,7 +7367,15 @@ window.FB = window.FB || {};
     } else if (summary.servingLiegeWar) {
       constraint = FB.T('Serving in the direct liege’s host.');
     } else if (FB.playerRealmAtWar(s)) {
-      constraint = FB.T('The realm is at war; you are not personally serving.');
+      const opponents = FB.warOpponentNames(s, summary.playerRealmId);
+      const realm = playerRealm ? playerRealm.name : FB.T('Your realm');
+      constraint = opponents
+        ? FB.T('{realm} is at war with {opponents}; you are not personally serving.', {
+          realm:realm, opponents:opponents
+        })
+        : FB.T('{realm} is at war with an unrecorded opponent; you are not personally serving.', {
+          realm:realm
+        });
     }
     let h = kv('Current title', esc(FB.styledTitle(s))) +
       kv('Player realm', esc(playerRealm
@@ -14737,6 +14765,7 @@ window.FB = window.FB || {};
       ? FB.T('Your household') : FB.T('Known character'));
     const model = {
       target:{ kind:'character', id:c.id },
+      showContext:false,
       context:[
         { label:FB.T('Relationship'), value:relation },
         { label:FB.T('Residence'), value:residence
@@ -15241,19 +15270,6 @@ window.FB = window.FB || {};
       }
     }
 
-    if (reigningRealmId) {
-      addInteractionAction(model, {
-        id:'management.realm-court',
-        group:'management',
-        label:FB.T('Realm and court…'),
-        detail:FB.T(
-          'Open political office, capital, diplomacy, war, succession, and ruler gifts.'),
-        enabled:true,
-        blockedReason:null,
-        consequence:FB.T('Personal Standing is shared with that ruler card.'),
-        route:'realm'
-      });
-    }
     if (household) {
       addInteractionAction(model, {
         id:'management.equipment',
@@ -15375,6 +15391,16 @@ window.FB = window.FB || {};
         route:'match'
       });
     }
+    if (reigningRealmId) {
+      const realmModel = buildRealmInteractionCard(s, reigningRealmId);
+      if (realmModel) {
+        model.realmId = reigningRealmId;
+        model.commitments = realmModel.commitments.filter(function (item) {
+          return item.id !== 'war' && item.id !== 'foreign-war';
+        }).concat(model.commitments);
+        for (const action of realmModel.actions) model.actions.push(action);
+      }
+    }
     return model;
   }
   UI.characterInteractionCard = buildCharacterInteractionCard;
@@ -15419,11 +15445,47 @@ window.FB = window.FB || {};
     });
   }
 
+  function realmWarNoticeHtml(s, rid) {
+    if (!rid || !FB.isRealmAtWar(s, rid)) return '';
+    return '<div class="progressnote warnote character-current-war" ' +
+      'data-current-war="' + esc(rid) + '"><b>' +
+      esc(FB.T('Current war')) + '</b><br>⚔ ' +
+      FB.warStatusLinkHtml(s, rid) + '</div>';
+  }
+
+  function bindWarRealmLinks(root, s, rid, cid, returnContext) {
+    const links = root.querySelectorAll('[data-war-realm]');
+    for (let i = 0; i < links.length; i++) {
+      links[i].addEventListener('click', function (event) {
+        event.stopPropagation();
+        const linkedRealm = links[i].dataset.warRealm;
+        if (!s.realms[linkedRealm]) return;
+        if (linkedRealm === rid) {
+          const capital = s.realms[linkedRealm].capital;
+          if (capital) {
+            UI.closeModal();
+            UI.selectProvince(capital);
+          }
+          return;
+        }
+        UI.showLiegeModal(linkedRealm, {
+          view:'character', characterId:cid, returnContext:returnContext
+        }, true);
+      });
+    }
+  }
+
   function showCharacterInteractionSheet(cid, returnContext, replaceView) {
     const s = FB.state;
     const c = s && s.chars[cid];
-    const model = s && buildCharacterInteractionCard(s, cid);
-    if (!s || !c || !model) return;
+    if (!s || !c) return;
+    const initialRealmId = FB.realmIdForRulerCharacter &&
+      FB.realmIdForRulerCharacter(s, c);
+    if (initialRealmId && FB.ensureRealmCourtForDisplay) {
+      FB.ensureRealmCourtForDisplay(s, initialRealmId);
+    }
+    const model = buildCharacterInteractionCard(s, cid);
+    if (!model) return;
     const royalCourt = royalCourtCharacterContext(s, cid, returnContext);
     if (royalCourt) model.showContext = false;
     const cardOptions = { skillsGuide:true, mapHome:true };
@@ -15434,8 +15496,20 @@ window.FB = window.FB || {};
     if (royalCourt && royalCourt.ruler && royalCourt.ruler.id === c.id) {
       cardOptions.cardClass = 'realm-ruler-card';
     }
+    if (model.realmId && s.realms[model.realmId]) {
+      const realm = s.realms[model.realmId];
+      cardOptions.namePrefix = FB.realmRankTitle(s, realm);
+      cardOptions.realmMuster = realmMusterText(s, model.realmId);
+      cardOptions.cardClass = 'realm-ruler-card';
+    }
+    const courtRealmId = model.realmId || (royalCourt && royalCourt.rid);
+    const familyContext = courtRealmId ? {
+      view:'realm', realmId:courtRealmId, returnContext:returnContext,
+      realmFamily:true
+    } : null;
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
-    if (royalCourt) h += realmCourtStripHtml(s, royalCourt.rid, c.id);
+    if (model.realmId) h += realmWarNoticeHtml(s, model.realmId);
+    if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
     if (!c.dead) h += interactionCardHtml(model);
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
       esc(royalCourt || !returnContext ? FB.T('Close') : FB.T('Back')) +
@@ -15455,7 +15529,10 @@ window.FB = window.FB || {};
     });
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
-    if (royalCourt) bindRealmFamilyNavigation($('gm-body'), returnContext);
+    if (familyContext) bindRealmFamilyNavigation($('gm-body'), familyContext);
+    if (model.realmId) {
+      bindWarRealmLinks($('gm-body'), s, model.realmId, c.id, returnContext);
+    }
     if (cardOptions.mapHome) bindCharacterHome($('gm-body'), s, c);
     if (!c.dead) {
       const me = s.chars[s.player.charId];
@@ -15623,15 +15700,96 @@ window.FB = window.FB || {};
           actThen(function () {
             FB.queueEvent(s, 'rival_mediation', {});
           });
-        } else if (action.route === 'realm') {
-          const rid = FB.realmIdForRulerCharacter(s, c);
-          if (rid) {
-            UI.showLiegeModal(rid, {
-              view:'character',
-              characterId:c.id,
-              returnContext:returnContext
+        } else if (action.route === 'ruler-gift') {
+          const realmReturn = {
+            view:'character', characterId:c.id, returnContext:returnContext
+          };
+          if (model.realmId) {
+            UI.showRulerGiftModal(model.realmId,
+              realmGiftReturnView(model.realmId, realmReturn));
+          }
+        } else if (action.route === 'cultivate-ruler') {
+          if (!model.realmId) return;
+          const presence = FB.socialAttentionPresence(s, c);
+          if (presence.status === 'active') {
+            if (!FB.socialAttentionAssign(s, c)) return;
+            UI.showCharModal(c.id, returnContext, true);
+            UI.refresh();
+          } else {
+            UI.showSocialVisit(c.id, {
+              returnRealmId:model.realmId,
+              returnContext:{
+                view:'character', characterId:c.id,
+                returnContext:returnContext
+              }
             });
           }
+        } else if (action.route === 'foreign-policy') {
+          if (!model.realmId) return;
+          UI.showForeignPolicyStance(model.realmId, {
+            view:'character', characterId:c.id, returnContext:returnContext
+          });
+        } else if (action.route === 'envoy' ||
+            action.route === 'envoy-alliance') {
+          if (!model.realmId) return;
+          UI.showEnvoys(model.realmId, {
+            view:'character', characterId:c.id, returnContext:returnContext
+          });
+        } else if (action.route === 'instant') {
+          if (!model.realmId) return;
+          const status = FB.instantStatus(s, action.actionId);
+          FB.runInstant(s, action.actionId, {
+            returnContext:{
+              view:'character', characterId:c.id,
+              returnContext:returnContext
+            }
+          });
+          if (status.action && !status.action.noConsume && !UI.eventsBusy()) {
+            UI.showCharModal(c.id, returnContext, true);
+          }
+        } else if (action.route === 'vassal-levy') {
+          if (!model.realmId || !FB.callVassalLevyFavor(s, model.realmId)) return;
+          FB.game.passDay({ skipFocus:true });
+          UI.showCharModal(c.id, returnContext, true);
+          mobileNavClosedAll('modal-view', true);
+          UI.refresh();
+        } else if (action.route === 'council') {
+          if (!model.realmId) return;
+          UI.showCouncil(null, {
+            view:'character', characterId:c.id, returnContext:returnContext
+          });
+        } else if (action.route === 'war') {
+          if (!model.realmId) return;
+          UI.showWarTargets(model.realmId, {
+            view:'character', characterId:c.id, returnContext:returnContext
+          });
+        } else if (action.route === 'governance') {
+          UI.showGovernance('position');
+        } else if (action.route === 'royal-courtship') {
+          if (!model.realmId) return;
+          const royalChild = FB.materializeRoyalChild(s, model.realmId,
+            action.memberId);
+          if (!royalChild || !FB.canCourt(s, royalChild)) return;
+          const presence = FB.socialAttentionPresence(s, royalChild);
+          if (presence.status !== 'active') {
+            UI.showSocialVisit(royalChild.id, {
+              courtship:true,
+              returnRealmId:model.realmId,
+              returnContext:{
+                view:'character', characterId:c.id,
+                returnContext:returnContext
+              }
+            });
+            return;
+          }
+          UI.closeModal();
+          if (!FB.beginCourtship(s, royalChild)) return;
+          FB.news(s, FB.msg('news.social.royal_courting_begins',
+            '🌷 You begin courting {name} of {realm}.', {
+              name:FB.fullName(royalChild),
+              realm:s.realms[model.realmId].name
+            }));
+          FB.game.passDay({ skipFocus:true });
         } else if (action.route === 'equipment') {
           UI.showEquipmentModal(c.id, 'character', returnContext);
         } else if (action.route === 'career') {

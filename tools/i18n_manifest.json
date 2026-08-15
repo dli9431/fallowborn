@@ -46717,16 +46717,6 @@
         "text": "Status"
       }
     },
-    "src.00629bb1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Open personal traits, family, courtship, rivalry, and household dealings."
-      }
-    },
     "src.00648cd6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -47679,6 +47669,16 @@
         "text": "This castellany is an appointed office inside the home county; no county is held directly in your hand."
       }
     },
+    "src.02be31a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Realm muster: ~{troops}"
+      }
+    },
     "src.02cc3d14": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48510,16 +48510,6 @@
       ],
       "source": {
         "text": "Bamburgh"
-      }
-    },
-    "src.04c112d9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "This realm is already at war."
       }
     },
     "src.04dd8ffa": {
@@ -54985,16 +54975,6 @@
         "text": "Lowers Standing by 12 and spends the day."
       }
     },
-    "src.132198bc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Open the authoritative ruler and realm sheet"
-      }
-    },
     "src.1322adb8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56487,17 +56467,6 @@
       ],
       "source": {
         "text": "Rotary stones grind grain more steadily than saddle querns."
-      }
-    },
-    "src.164a9046": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js",
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "At war with another realm"
       }
     },
     "src.164c58c4": {
@@ -61181,16 +61150,6 @@
         "text": "Useful names are learned over wine."
       }
     },
-    "src.20ca1808": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Personal character…"
-      }
-    },
     "src.20d00b97": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63318,6 +63277,16 @@
       ],
       "source": {
         "text": "🏅 {name} is admitted among the masters."
+      }
+    },
+    "src.25a40283": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "See the ruler of {realm}"
       }
     },
     "src.25ae03b8": {
@@ -72583,6 +72552,16 @@
         "text": "The masters call it presumption and make certain the market hears."
       }
     },
+    "src.3b480d1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "At war with {realm} — policy is suspended"
+      }
+    },
     "src.3b497542": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80683,16 +80662,6 @@
         "text": "Sweat is the surest inheritance."
       }
     },
-    "src.4e805789": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "You are already at war."
-      }
-    },
     "src.4e865057": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82098,16 +82067,6 @@
         "text": "🕊 Exhaustion ends the war with nothing gained."
       }
     },
-    "src.5194b09b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Personal Standing is shared with that ruler card."
-      }
-    },
     "src.51a55806": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82198,16 +82157,6 @@
       ],
       "source": {
         "text": "It is no longer songs. Headmen from a dozen villages meet in barns, and a disgraced captain drills them at night. Your bailiff names it plainly: a league, sworn against your house."
-      }
-    },
-    "src.51be7bb5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "You are committed to a great holy war."
       }
     },
     "src.51c05e89": {
@@ -83688,16 +83637,6 @@
       ],
       "source": {
         "text": "A lean purse now for a fatter animal in winter."
-      }
-    },
-    "src.5537534e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The realm is at war; you are not personally serving."
       }
     },
     "src.55389fe2": {
@@ -85695,16 +85634,6 @@
       ],
       "source": {
         "text": "Access"
-      }
-    },
-    "src.59bb2061": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "Peace pact until {year} AD · at war elsewhere"
       }
     },
     "src.59c22a07": {
@@ -90057,6 +89986,17 @@
       ],
       "source": {
         "text": "Admit the objective must wait."
+      }
+    },
+    "src.636e55f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "{realm} is at war with an unrecorded opponent."
       }
     },
     "src.6374ca60": {
@@ -96308,6 +96248,16 @@
         "text": "A deliberate cooling of relations; the generation-bound compact ends cleanly."
       }
     },
+    "src.7278100f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Open this ruler’s character sheet"
+      }
+    },
     "src.72846d41": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97289,16 +97239,6 @@
       ],
       "source": {
         "text": "Screw Wine Press"
-      }
-    },
-    "src.7483b594": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "This ruler is at war with another realm."
       }
     },
     "src.748572f3": {
@@ -98734,6 +98674,17 @@
       ],
       "source": {
         "text": "Boulogne"
+      }
+    },
+    "src.78032e06": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "This realm"
       }
     },
     "src.7804d8cc": {
@@ -100535,6 +100486,17 @@
         "text": "Side part"
       }
     },
+    "src.7c2078dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "{realm} is at war with {opponents}."
+      }
+    },
     "src.7c24c551": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102078,16 +102040,6 @@
         "text": "Accepting one cash or item gift spends the day."
       }
     },
-    "src.7f6153b8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "At war with another realm."
-      }
-    },
     "src.7f644e0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103168,6 +103120,16 @@
       ],
       "source": {
         "text": "War enemy"
+      }
+    },
+    "src.81a5982d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{realm} is at war with {opponents}; you are not personally serving."
       }
     },
     "src.81aa9432": {
@@ -105709,16 +105671,6 @@
       ],
       "source": {
         "text": "Seasonal tax contribution"
-      }
-    },
-    "src.871d02c1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "At war — policy is suspended"
       }
     },
     "src.87255f4c": {
@@ -111262,6 +111214,16 @@
         "text": "Refuse the petition."
       }
     },
+    "src.93aec327": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Select a ruler for their character sheet and dealings."
+      }
+    },
     "src.93b4f1a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116105,16 +116067,6 @@
         "text": "0 ? Math.min(value, threshold) : value; } return progress; }; /* Progress is current-protagonist state. It stops at the catalog threshold; crossing that threshold grants once and writes a locale-neutral Chronicle descriptor. A later event-driven removal may reset the counter. */ FB.noteTraitProgress = function (state, traitId, amount) { if (!state || !state.player) return false; const def = FBDATA.traits[traitId]; const threshold = def && def.earn && Number(def.earn.threshold); if (!isFinite(threshold) || threshold"
       }
     },
-    "src.9e8fc480": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Realm and court…"
-      }
-    },
     "src.9e933ab9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120358,16 +120310,6 @@
         "text": "Samandar"
       }
     },
-    "src.a7e8fc45": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "⚔ This realm is at war."
-      }
-    },
     "src.a7f032f1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122569,6 +122511,16 @@
       ],
       "source": {
         "text": "Fled into sanctuary; the lands were seized behind you."
+      }
+    },
+    "src.ad32ec32": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Peace pact until {year} AD · {war}"
       }
     },
     "src.ad3819c4": {
@@ -125019,16 +124971,6 @@
         "text": "Courtesy and confidence can turn a school exercise into reputation."
       }
     },
-    "src.b29af2ad": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Political gifts remain on this ruler path."
-      }
-    },
     "src.b2a71c85": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125388,16 +125330,6 @@
       ],
       "source": {
         "text": "You take a blade through the arm and give better than you get — two flee, one dies on the floorboards, and the conspiracy dies with him. You rule from a sickbed for a season, but you rule."
-      }
-    },
-    "src.b3520e85": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Open political office, capital, diplomacy, war, succession, and ruler gifts."
       }
     },
     "src.b3544dea": {
@@ -137701,16 +137633,6 @@
         "text": "20) return { ok:false, reason:'long' }; if (!houseNameCharsOk(nm)) return { ok:false, reason:'chars' }; return { ok:true, name:nm }; }; /* A house is just the c.dyn string its members share, so a rename rewrites every character carrying the old string — the same membership rule FB.dynastyNameSet uses — plus the player realm identity when it was derived from the house. Personal names and bynames are untouched, and chronicle or legend text already written keeps the old name. Heraldry is seeded from the dyn string, so the coat of arms is redrawn. */ FB.renameHouse = function (state, newName) { const me = state && state.player && state.chars && state.chars[state.player.charId]; if (!me || !me.dyn) return { ok:false, reason:'nohouse' }; const oldDyn = me.dyn; const check = FB.validateHouseName(newName, oldDyn); if (!check.ok) return check; const nm = check.name; for (const id in state.chars) { const c = state.chars[id]; if (c && c.dyn === oldDyn) c.dyn = nm; } const realm = state.realms && state.realms.player; if (realm) { if (realm.name === 'Realm of ' + oldDyn) realm.name = 'Realm of ' + nm; if (realm.dynasty === oldDyn) realm.dynasty = nm; } FB.touchFamily(); FB.news(state, FB.msg('news.house.renamed', '👑 The house of {old} is henceforth known as {dynasty}.', { old:oldDyn, dynasty:nm })); return { ok:true, name:nm, old:oldDyn }; }; /* ---------- character factory ---------- opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN} opts.id installs a caller-derived identity instead of drawing the next sequential uid. Court records use it so the same succession member always resolves to the same character id, whether it was created at world creation or at the moment a player first opened the realm. */ FB.makeCharacter = function (state, opts) { const sex = opts.sex || (FB.chance(0.5) ? 'm' : 'f'); const c = { id: opts.id || FB.uid(), name: opts.name || FB.randomName(opts.culture, sex, opts.dyn ? FB.dynastyNameSet(state, opts.dyn) : null), sex: sex, culture: opts.culture, religion: opts.religion, born: opts.born, dead: false, dyn: opts.dyn || null, role: opts.role || null, traits: opts.traits || [], skills: {}, opinion: opts.opinion !== undefined ? opts.opinion : 0, fertility: FB.rf(0.7, 1.3), station: opts.station !== undefined ? opts.station : null, spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null, childrenIds: [] }; /* Explicit opinion remains an exact authored total. A newly encountered neutral character instead begins at the current directional faith baseline, and the marker lets later schisms rebase only that component. */ const playerCharacter = state && state.player && state.chars && state.chars[state.player.charId]; if (playerCharacter && playerCharacter.id !== c.id && FB.faithRelationBaseline) { const faithBase = FB.faithRelationBaseline( state, c.religion, playerCharacter.religion); c.faithStandingBase = faithBase; if (opts.opinion === undefined) c.opinion = faithBase; } if (Object.prototype.hasOwnProperty.call(opts, 'byname')) { c.byname = opts.byname; } else if (state && FB.cultureOf(c.culture).dyn === 'patronym' && c.fatherId && state.chars[c.fatherId]) { c.byname = FB.patronym(state.chars[c.fatherId].name, c.sex); } const q = opts.quality || 0; for (const s of SKILLS) c.skills[s] = Math.max(0, FB.ri(0, 6) + q); if (!opts.traits) { const pool = Object.keys(FBDATA.traits).filter(function (t) { return !FBDATA.traits[t].noRandom; }); const n = opts.traitsN !== undefined ? opts.traitsN : FB.ri(1, 3); for (let i = 0; i"
       }
     },
-    "src.d0868b0c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "This realm is your current war enemy."
-      }
-    },
     "src.d08b2612": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140057,16 +139979,6 @@
         "text": "An Evening at Court"
       }
     },
-    "src.d64f9c8f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
-      }
-    },
     "src.d6511a6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -142354,6 +142266,16 @@
       ],
       "source": {
         "text": "Under the ruined top layer: silk, barely touched."
+      }
+    },
+    "src.db70f936": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{realm} is at war with an unrecorded opponent; you are not personally serving."
       }
     },
     "src.db77d21c": {
@@ -165633,28 +165555,14 @@
         "text": "At the destination you must stay and find local work for at least {days} days before returning home."
       }
     },
-    "ui:At war with another realm": {
+    "ui:At war with {realm} — policy is suspended": {
       "context": "Explicit UI localization call.",
-      "glossary": [],
+      "glossary": [
+        "realm"
+      ],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "At war with another realm"
-      }
-    },
-    "ui:At war with another realm.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "At war with another realm."
-      }
-    },
-    "ui:At war — policy is suspended": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_misc.js",
-      "source": {
-        "text": "At war — policy is suspended"
+        "text": "At war with {realm} — policy is suspended"
       }
     },
     "ui:Attach the vacant Sunni office to your realm. Requires {prestige} prestige and a demesne of {counties} counties, and spends {piety} piety.": {
@@ -177964,28 +177872,12 @@
         "text": "Open in Land"
       }
     },
-    "ui:Open personal traits, family, courtship, rivalry, and household dealings.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Open personal traits, family, courtship, rivalry, and household dealings."
-      }
-    },
     "ui:Open political blocs in Governance…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
         "text": "Open political blocs in Governance…"
-      }
-    },
-    "ui:Open political office, capital, diplomacy, war, succession, and ruler gifts.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Open political office, capital, diplomacy, war, succession, and ruler gifts."
       }
     },
     "ui:Open realm and demesne details for {rank}": {
@@ -178072,14 +177964,6 @@
         "text": "Open the authoritative character sheet"
       }
     },
-    "ui:Open the authoritative ruler and realm sheet": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Open the authoritative ruler and realm sheet"
-      }
-    },
     "ui:Open the authoritative view of your political position, domain, obligations, vassals, institution, and realm actions.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178126,6 +178010,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Open this realm ruler’s sheet"
+      }
+    },
+    "ui:Open this ruler’s character sheet": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Open this ruler’s character sheet"
       }
     },
     "ui:Open your character sheet": {
@@ -178687,14 +178579,15 @@
         "text": "Peace pact until {year} AD"
       }
     },
-    "ui:Peace pact until {year} AD · at war elsewhere": {
+    "ui:Peace pact until {year} AD · {war}": {
       "context": "Explicit UI localization call.",
       "glossary": [
+        "war",
         "year"
       ],
       "location": "js/ui_misc.js",
       "source": {
-        "text": "Peace pact until {year} AD · at war elsewhere"
+        "text": "Peace pact until {year} AD · {war}"
       }
     },
     "ui:Peace pact with {realm}": {
@@ -178941,14 +178834,6 @@
         "text": "Person"
       }
     },
-    "ui:Personal Standing is shared with that ruler card.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Personal Standing is shared with that ruler card."
-      }
-    },
     "ui:Personal ambition": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178971,14 +178856,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Personal attention improves one chosen relationship a little each day."
-      }
-    },
-    "ui:Personal character…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Personal character…"
       }
     },
     "ui:Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.": {
@@ -179370,14 +179247,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Political blocs"
-      }
-    },
-    "ui:Political gifts remain on this ruler path.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Political gifts remain on this ruler path."
       }
     },
     "ui:Political position": {
@@ -180190,14 +180059,6 @@
         "text": "Realm Ruler"
       }
     },
-    "ui:Realm and court…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Realm and court…"
-      }
-    },
     "ui:Realm fill opacity": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180212,6 +180073,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Realm highlight color"
+      }
+    },
+    "ui:Realm muster: ~{troops}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "troops"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Realm muster: ~{troops}"
       }
     },
     "ui:Realm name": {
@@ -182731,6 +182602,16 @@
         "text": "See the chronicle"
       }
     },
+    "ui:See the ruler of {realm}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "See the ruler of {realm}"
+      }
+    },
     "ui:See the whole family drawn as a tree": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182861,12 +182742,12 @@
         "text": "Seeking a Match"
       }
     },
-    "ui:Select a ruler for their realm sheet; select yourself for your character sheet.": {
+    "ui:Select a ruler for their character sheet and dealings.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Select a ruler for their realm sheet; select yourself for your character sheet."
+        "text": "Select a ruler for their character sheet and dealings."
       }
     },
     "ui:Select to review every requirement.": {
@@ -185700,14 +185581,6 @@
         "text": "The purse cannot cover this stake and any reachable route."
       }
     },
-    "ui:The realm is at war; you are not personally serving.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The realm is at war; you are not personally serving."
-      }
-    },
     "ui:The recorded offense must be remedied, or a penance accepted.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -186616,28 +186489,20 @@
         "text": "This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming."
       }
     },
+    "ui:This realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "This realm"
+      }
+    },
     "ui:This realm already has one defensive ally.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/actions.js",
       "source": {
         "text": "This realm already has one defensive ally."
-      }
-    },
-    "ui:This realm is already at war.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "This realm is already at war."
-      }
-    },
-    "ui:This realm is your current war enemy.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "This realm is your current war enemy."
       }
     },
     "ui:This relationship cannot become a formal friendship.": {
@@ -186662,14 +186527,6 @@
       "location": "js/world.js",
       "source": {
         "text": "This ruler has already moved the capital once."
-      }
-    },
-    "ui:This ruler is at war with another realm.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "This ruler is at war with another realm."
       }
     },
     "ui:This ruler is not your direct vassal.": {
@@ -188337,14 +188194,6 @@
         "text": "You are already at war with this realm."
       }
     },
-    "ui:You are already at war.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "You are already at war."
-      }
-    },
     "ui:You are already traveling home.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188359,14 +188208,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "You are backing another merchant, not leading this venture. This is profit-and-loss sharing, not a fixed loan. The stake leaves now; at maturity it may be lost, partly recovered, or returned with profit. The outcome is resolved once."
-      }
-    },
-    "ui:You are committed to a great holy war.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/actions.js",
-      "source": {
-        "text": "You are committed to a great holy war."
       }
     },
     "ui:You are leading your ruler’s contingent in the field. Win a battle before the host disperses.": {
@@ -195025,6 +194866,48 @@
         "text": "{realm} (bound to defend)"
       }
     },
+    "ui:{realm} is at war with an unrecorded opponent.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "{realm} is at war with an unrecorded opponent."
+      }
+    },
+    "ui:{realm} is at war with an unrecorded opponent; you are not personally serving.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{realm} is at war with an unrecorded opponent; you are not personally serving."
+      }
+    },
+    "ui:{realm} is at war with {opponents}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "opponents",
+        "realm"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "{realm} is at war with {opponents}."
+      }
+    },
+    "ui:{realm} is at war with {opponents}; you are not personally serving.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "opponents",
+        "realm"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{realm} is at war with {opponents}; you are not personally serving."
+      }
+    },
     "ui:{realm} {direction}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -196304,14 +196187,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "⚔ Hosts in the field here:"
-      }
-    },
-    "ui:⚔ This realm is at war.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "⚔ This realm is at war."
       }
     },
     "ui:⚙ Enterprise staffing preview": {

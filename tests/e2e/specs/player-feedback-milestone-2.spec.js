@@ -234,7 +234,11 @@ test('the role orientation is a focused sheet with a Guide deep link',
     await expect(page.locator('#guide-entry-detail-role-tier-1'))
       .toContainText('Good first actions');
     await page.getByRole('button', { name:'Close', exact:true }).click();
-    // Guide close dismisses the guide outright — no menu detour
+    await expect(page.getByRole('heading', {
+      name:'Freeholder', exact:true
+    })).toBeVisible();
+    await page.locator('#orientation-continue').click();
+    // Guide Close restores the orientation that opened it.
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
     await page.evaluate(function () {

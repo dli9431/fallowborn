@@ -123,7 +123,8 @@ async function configureAggressionWar(page) {
       enemyId:enemyId,
       enemyName:s.realms[enemyId].name,
       vassalId:vassalId,
-      foreignId:foreignId
+      foreignId:foreignId,
+      foreignCountyId:foreignCountyId
     };
   });
 }
@@ -313,6 +314,120 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
     expect(result.hostileBreakaway).toBeGreaterThan(
       result.baseBreakaway);
     expect(result.standingsRecorded).toBe(true);
+  });
+
+test('war status names every opposing realm', async function ({ page }, testInfo) {
+  await startWarGame(page, testInfo);
+  var ids = await configureAggressionWar(page);
+  var result = await page.evaluate(function (setup) {
+    var s = FB.state;
+    var cause = FB.warCauses(s, false, true).filter(function (item) {
+      return item.target === setup.targetId;
+    })[0];
+    FB.startPlayerWar(s, cause, { confirmAggression:true });
+    var playerOpponents = FB.warOpponents(s, 'player');
+    var enemyOpponents = FB.warOpponents(s, setup.enemyId);
+    var playerStatus = FB.warStatusText(s, 'player');
+    FB.endPlayerWar(s);
+    s.realms[setup.foreignId].war = { enemy:setup.enemyId };
+    var foreignOpponents = FB.warOpponents(s, setup.foreignId);
+    var enemyForeignOpponents = FB.warOpponents(s, setup.enemyId);
+    var foreignStatus = FB.warStatusText(s, setup.foreignId);
+    s.realms[setup.foreignId].war = null;
+    s.greatHolyWar = {
+      id:'war-status-labels', phase:'active',
+      participants:{
+        attackers:[{ realm:'player', sovereign:true }],
+        defenders:[
+          { realm:setup.enemyId, sovereign:true },
+          { realm:setup.foreignId, sovereign:true }
+        ]
+      }
+    };
+    return {
+      playerOpponents:playerOpponents,
+      enemyOpponents:enemyOpponents,
+      playerRealmName:s.realms[FB.playerRealmId(s)].name,
+      playerStatus:playerStatus,
+      foreignOpponents:foreignOpponents,
+      enemyForeignOpponents:enemyForeignOpponents,
+      foreignStatus:foreignStatus,
+      holyWarOpponents:FB.warOpponents(s, 'player'),
+      holyWarStatus:FB.warStatusText(s, 'player'),
+      holyWarLock:FB.warLockedReason(s)
+    };
+  }, ids);
+
+  expect(result.playerOpponents).toEqual([ids.enemyId]);
+  expect(result.enemyOpponents).toEqual(['player']);
+  expect(result.playerStatus).toBe(
+    result.playerRealmName + ' is at war with ' + ids.enemyName + '.');
+  expect(result.foreignOpponents).toEqual([ids.enemyId]);
+  expect(result.enemyForeignOpponents).toEqual([ids.foreignId]);
+  expect(result.foreignStatus).toBe('Blue Crown is at war with Red March.');
+  expect(result.holyWarOpponents).toEqual([ids.enemyId, ids.foreignId]);
+  expect(result.holyWarStatus).toBe(result.playerRealmName +
+    ' is at war with Red March, Blue Crown.');
+  expect(result.holyWarLock).toBe(result.holyWarStatus);
+});
+
+test('war notices lead unified ruler sheets and the Land tab',
+  async function ({ page }, testInfo) {
+    await startWarGame(page, testInfo);
+    var ids = await configureAggressionWar(page);
+    var setup = await page.evaluate(function (data) {
+      var s = FB.state;
+      s.realms[data.foreignId].war = { enemy:data.enemyId };
+      FB.ui.showLiegeModal(data.foreignId);
+      return {
+        muster:FB.T('Realm muster: ~{troops}', {
+          troops:FB.ui._shared.menText(s,
+            FB.aiBaseHost(s, data.foreignId))
+        }),
+        foreignRuler:s.realms[data.foreignId].ruler.name,
+        enemyRuler:s.realms[data.enemyId].ruler.name
+      };
+    }, ids);
+
+    var sheet = page.locator('.character-interaction-modal');
+    await expect(sheet.locator('.realm-ruler-card .realm-ruler-muster'))
+      .toHaveText(setup.muster);
+    await expect(sheet.locator(
+      '[data-current-war] [data-war-realm]'))
+      .toHaveCount(2);
+    await expect(sheet.locator(
+      '#gm-body > .charcard + [data-current-war]')).toBeVisible();
+    await sheet.locator('[data-war-realm="' + ids.enemyId + '"]').click();
+    await expect(sheet.locator('.realm-ruler-card .ccname')).toContainText(
+      setup.enemyRuler);
+
+    await page.evaluate(function (data) {
+      FB.ui.closeModal();
+      FB.ui.showLiegeModal(data.foreignId);
+    }, ids);
+    await sheet.locator('[data-war-realm="' + ids.foreignId + '"]').click();
+    expect(await page.evaluate(function () {
+      return FB.map.selected;
+    })).toBe(ids.foreignCountyId);
+
+    await expect(page.locator('#tab-prov [data-war-realm]')).toHaveCount(2);
+    await expect(page.locator(
+      '#tab-prov > .panelh + .land-current-war')).toBeVisible();
+    await page.locator(
+      '#tab-prov [data-war-realm="' + ids.foreignId + '"]').click();
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-card .ccname')).toContainText(
+      setup.foreignRuler);
+
+    await page.evaluate(function (data) {
+      FB.ui.closeModal();
+      FB.ui.selectProvince(data.foreignCountyId);
+    }, ids);
+    await page.locator(
+      '#tab-prov [data-war-realm="' + ids.enemyId + '"]').click();
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-card .ccname')).toContainText(
+      setup.enemyRuler);
   });
 
 test('aggressive conquest grants no victory prestige and burdens the county',

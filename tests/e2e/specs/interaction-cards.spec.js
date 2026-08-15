@@ -458,11 +458,14 @@ test('materialized rulers share Standing, keep one gift path, and render without
         characterGift:character.actions.filter(function (action) {
           return action.group === 'gift';
         }).length,
-        realmLink:character.actions.some(function (action) {
+        separateRealmAction:character.actions.some(function (action) {
           return action.id === 'management.realm-court';
         }),
-        personalLink:realm.actions.some(function (action) {
+        separateCharacterAction:realm.actions.some(function (action) {
           return action.id === 'management.personal-character';
+        }),
+        mergedRealmGift:character.actions.some(function (action) {
+          return action.id === 'gift.ruler';
         }),
         portraitStateSame:portraitStateSame,
         stateChangedKeys:stateChangedKeys,
@@ -476,9 +479,10 @@ test('materialized rulers share Standing, keep one gift path, and render without
     expect(result.realmStanding).toBe(52);
     expect(result.characterStanding).toBe(52);
     expect(result.realmGift).toBe(1);
-    expect(result.characterGift).toBe(0);
-    expect(result.realmLink).toBe(true);
-    expect(result.personalLink).toBe(true);
+    expect(result.characterGift).toBe(1);
+    expect(result.separateRealmAction).toBe(false);
+    expect(result.separateCharacterAction).toBe(false);
+    expect(result.mergedRealmGift).toBe(true);
     expect(result.portraitStateSame).toBe(true);
     expect(result.stateChangedKeys).toEqual([]);
     expect(result.stateFirstDiff).toBeNull();
@@ -487,7 +491,7 @@ test('materialized rulers share Standing, keep one gift path, and render without
     expect(result.uidSame).toBe(true);
   });
 
-test('realm ruler sheets foreground the titled ruler and linked court',
+test('ruler character sheets foreground the titled ruler and linked court',
   async function ({ page }, testInfo) {
     await startInteractionGame(page, testInfo);
     var setup = await page.evaluate(function () {
@@ -538,7 +542,7 @@ test('realm ruler sheets foreground the titled ruler and linked court',
       };
     });
 
-    var sheet = page.locator('.realm-interaction-modal');
+    var sheet = page.locator('.character-interaction-modal');
     await expect(sheet.locator('.realm-ruler-card .ccname')).toContainText(
       setup.titledName);
     await expect(sheet.locator('.realm-ruler-card')).toHaveCount(1);
@@ -614,6 +618,13 @@ test('realm ruler sheets foreground the titled ruler and linked court',
     await expect(familySheet.locator('#cm-close')).toHaveText('Close');
     await page.locator('#cm-close').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    await page.evaluate(function (cid) {
+      FB.ui.showCharModal(cid);
+    }, setup.consortId);
+    await expect(page.locator(
+      '.character-interaction-modal .interaction-context')).toHaveCount(0);
+    await page.locator('#cm-close').click();
   });
 
 test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
@@ -673,8 +684,8 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
 
     await page.locator('[data-council-realm]').click();
     await expect(page.locator(
-      '.realm-interaction-modal .interaction-card')).toBeVisible();
-    await page.locator('#gm-cancel').click();
+      '.character-interaction-modal .interaction-card')).toBeVisible();
+    await page.locator('#cm-close').click();
     await expect(page.getByRole('heading', {
       name:'The Royal Council', exact:true
     })).toBeVisible();
@@ -684,16 +695,15 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
       FB.ui.showLiegeModal(ids.rid);
       return ruler.id;
     }, setup);
-    await page.locator(
-      '[data-interaction-action="management.personal-character"]').click();
     await expect(page.locator(
       '.character-interaction-modal .interaction-card')).toBeVisible();
     await expect(page.getByRole('heading', {
       name:/Narrow Witness/
     })).toBeVisible();
-    await page.locator('#cm-close').click();
     await expect(page.locator(
-      '.realm-interaction-modal .interaction-card')).toBeVisible();
+      '[data-interaction-action="relationship.hostility.insult"]')).toBeVisible();
+    await expect(page.locator(
+      '[data-interaction-action="feudal.council"]')).toBeVisible();
     expect(rulerId).toBeTruthy();
 
     await page.locator(
@@ -703,7 +713,7 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
     })).toBeVisible();
     await page.locator('#gm-cancel').click();
     await expect(page.locator(
-      '.realm-interaction-modal .interaction-card')).toBeVisible();
+      '.character-interaction-modal .interaction-card')).toBeVisible();
 
     await page.evaluate(function (ids) {
       FB.ui.showLiegeModal(ids.rid, {
@@ -711,7 +721,7 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
         section:'vassals'
       });
     }, setup);
-    await page.locator('#gm-cancel').click();
+    await page.locator('#cm-close').click();
     await expect(page.getByRole('heading', {
       name:'🏛 Governance', exact:true
     })).toBeVisible();
@@ -720,7 +730,7 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
       FB.ui.showLiegeModal(ids.rid);
     }, setup);
     var geometry = await page.locator(
-      '.realm-interaction-modal .modalcard').evaluate(function (card) {
+      '.character-interaction-modal .modalcard').evaluate(function (card) {
       var rect = card.getBoundingClientRect();
       var actions = Array.prototype.slice.call(
         card.querySelectorAll('[data-interaction-action]'));
@@ -758,12 +768,12 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
       });
     }).toBe(true);
 
-    await page.locator('#gm-cancel').click();
+    await page.locator('#cm-close').click();
     await page.evaluate(function (ids) {
       FB.ui.showTab('network', { history:false });
       FB.ui.showLiegeModal(ids.rid);
     }, setup);
-    await page.locator('#gm-cancel').click();
+    await page.locator('#cm-close').click();
     await expect(page.locator(
       '#sidetabs .tab[data-tab="network"]')).toHaveClass(/active/);
 
@@ -779,7 +789,7 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
       FB.ui.showTab('actions', { history:false });
       FB.ui.showLiegeModal(ids.rid);
     }, setup);
-    await page.locator('#gm-cancel').click();
+    await page.locator('#cm-close').click();
     await expect(page.locator(
       '#sidetabs .tab[data-tab="actions"]')).toHaveClass(/active/);
 
@@ -801,8 +811,8 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
     }, setup);
     await page.locator('#estates-liege-card').click();
     await expect(page.locator(
-      '.realm-interaction-modal .interaction-card')).toBeVisible();
-    await page.locator('#gm-cancel').click();
+      '.character-interaction-modal .interaction-card')).toBeVisible();
+    await page.locator('#cm-close').click();
     await expect(page.getByRole('heading', {
       name:'The Estates', exact:true
     })).toBeVisible();

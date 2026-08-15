@@ -173,6 +173,34 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  /* A pre-settlement-site legacy mod replaces a whole province record and may
+     therefore omit its new optional presentation list. Preserve the previous
+     slot labels privately so world compilation can keep old saves and their
+     numeric property references legible, while still generating fresh sites. */
+  function retainLegacySettlementPresentation(replacements) {
+    if (!Array.isArray(replacements)) return;
+    for (const replacement of replacements) {
+      if (!replacement || own(replacement, 'settlements')) continue;
+      let previous = null;
+      for (const province of (FBDATA.provinces || [])) {
+        if (province && province.id === replacement.id) {
+          previous = province;
+          break;
+        }
+      }
+      const entries = previous &&
+        (previous._legacySettlementPresentation || previous.settlements);
+      if (!Array.isArray(entries)) continue;
+      Object.defineProperty(replacement, '_legacySettlementPresentation', {
+        configurable:true,
+        value:entries.map(function (entry) {
+          return { name:entry.name, kind:entry.kind };
+        }),
+        writable:true
+      });
+    }
+  }
+
   M.apply = function (mod) {
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {
@@ -238,7 +266,10 @@ window.FBMODS = window.FBMODS || [];
     }
     if (changesLegacyWorld && !supplies1066) legacyBookmarkLimited = true;
     if (mod.events) mergeById(FBDATA.events, mod.events, 'id');
-    if (mod.provinces) mergeById(FBDATA.provinces, mod.provinces, 'id');
+    if (mod.provinces) {
+      retainLegacySettlementPresentation(mod.provinces);
+      mergeById(FBDATA.provinces, mod.provinces, 'id');
+    }
     if (mod.realms) mergeById(FBDATA.realms, mod.realms, 'id');
     if (mod.empires) for (const k in mod.empires) FBDATA.empires[k] = mod.empires[k];
     if (mod.kingdoms) for (const k in mod.kingdoms) FBDATA.kingdoms[k] = mod.kingdoms[k];

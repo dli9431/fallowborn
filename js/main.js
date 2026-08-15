@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.5';
+  FB.VERSION = '1.133.6';
   FB.CHANGELOG = [
+    { v: '1.133.6', date: '2026-08-15', changes: [
+      'Ruler sheets now combine realm and personal dealings, with linked war notices and each realm’s muster.',
+      'Settlement sites stay clear of coasts, and legacy mods retain their named settlement slots.'
+    ] },
     { v: '1.133.5', date: '2026-08-15', changes: [
       'Religious offices now respect their historical holder requirements, while secular succession remains distinct.'
     ] },

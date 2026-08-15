@@ -644,9 +644,66 @@ window.FB = window.FB || {};
     }
     return text;
   }
+  FB.warOpponentNames = function (s, rid) {
+    const ids = FB.warOpponents ? FB.warOpponents(s, rid) : [];
+    return ids.map(function (id) {
+      const realm = s.realms[id];
+      return realm ? realm.name : id;
+    }).join(', ');
+  };
+  function warStatusRealmId(s, rid) {
+    return rid === 'player' && (!s.realms.player || !s.realms.player.alive)
+      ? FB.playerRealmId(s) : FB.topRealm(s, rid);
+  }
+  FB.warStatusText = function (s, rid) {
+    const realmId = warStatusRealmId(s, rid);
+    const realm = realmId && s.realms[realmId];
+    const name = realm ? realm.name : realmId || FB.T('This realm');
+    const opponents = FB.warOpponentNames(s, rid);
+    return opponents
+      ? FB.T('{realm} is at war with {opponents}.', {
+        realm:name, opponents:opponents
+      })
+      : FB.T('{realm} is at war with an unrecorded opponent.', { realm:name });
+  };
+  FB.warStatusLinkHtml = function (s, rid) {
+    const realmId = warStatusRealmId(s, rid);
+    const realm = realmId && s.realms[realmId];
+    const opponents = FB.warOpponents ? FB.warOpponents(s, rid) : [];
+    if (!realm) return esc(FB.warStatusText(s, rid));
+    const tokens = [];
+    function tokenFor(id) {
+      const token = '[[war-realm-' + tokens.length + ']]';
+      tokens.push({ id:id, token:token });
+      return token;
+    }
+    const realmToken = tokenFor(realmId);
+    const opponentTokens = opponents.map(tokenFor);
+    const text = opponentTokens.length
+      ? FB.T('{realm} is at war with {opponents}.', {
+        realm:realmToken, opponents:opponentTokens.join(', ')
+      })
+      : FB.T('{realm} is at war with an unrecorded opponent.', {
+        realm:realmToken
+      });
+    let html = esc(text);
+    for (const entry of tokens) {
+      const linkedRealm = s.realms[entry.id];
+      if (!linkedRealm) continue;
+      const link = '<button type="button" class="linklike war-realm-link" ' +
+        'data-war-realm="' + esc(entry.id) + '" title="' +
+        esc(FB.T('See the ruler of {realm}', { realm:linkedRealm.name })) +
+        '">' + esc(linkedRealm.name) + '</button>';
+      html = html.split(entry.token).join(link);
+    }
+    return html;
+  };
   function foreignPolicyStatusText(s, rid) {
     if (s.player.war && s.player.war.enemy === rid) {
-      return FB.T('At war — policy is suspended');
+      const realm = s.realms[rid];
+      return FB.T('At war with {realm} — policy is suspended', {
+        realm:realm ? realm.name : rid
+      });
     }
     if (FB.areAllied(s, 'player', rid)) {
       return FB.T('Defensive allies - neither realm may attack the other');
@@ -654,10 +711,12 @@ window.FB = window.FB || {};
     if (s.pacts && s.pacts[rid] > s.turn) {
       const year = FB.dateAtTurn(s, s.pacts[rid]).year;
       return FB.isRealmAtWar(s, rid)
-        ? FB.T('Peace pact until {year} AD · at war elsewhere', { year: year })
+        ? FB.T('Peace pact until {year} AD · {war}', {
+          year:year, war:FB.warStatusText(s, rid)
+        })
         : FB.T('Peace pact until {year} AD', { year: year });
     }
-    if (FB.isRealmAtWar(s, rid)) return FB.T('At war with another realm');
+    if (FB.isRealmAtWar(s, rid)) return FB.warStatusText(s, rid);
     return FB.T('No pact or war');
   }
 
@@ -1238,11 +1297,13 @@ window.FB = window.FB || {};
       h += '<div class="interaction-commitments" role="list" aria-label="' +
         esc(FB.T('Current commitments and urgent state')) + '">';
       for (const commitment of model.commitments) {
+        const detail = commitment.detailHtml === undefined
+          ? esc(commitment.detail) : commitment.detailHtml;
         h += '<div class="interaction-commitment' +
           (commitment.urgent ? ' urgent' : '') +
           '" role="listitem" data-interaction-commitment="' +
           esc(commitment.id) + '"><b>' + esc(commitment.label) +
-          '</b><span>' + esc(commitment.detail) + '</span></div>';
+          '</b><span>' + detail + '</span></div>';
       }
       h += '</div>';
     }
@@ -1791,6 +1852,7 @@ window.FB = window.FB || {};
     const heading = $('gm-title').parentNode;
     const existing = heading.querySelector('.modal-guide-button');
     if (existing) heading.removeChild(existing);
+    heading.classList.remove('has-modal-guide');
     if (!guide) return;
     const button = document.createElement('button');
     button.type = 'button';
@@ -1803,6 +1865,7 @@ window.FB = window.FB || {};
     button.addEventListener('click', function () {
       if (UI.showGuideEntry) UI.showGuideEntry(guide.entry);
     });
+    heading.classList.add('has-modal-guide');
     heading.appendChild(button);
   }
 

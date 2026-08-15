@@ -277,14 +277,18 @@ places, never inside a settlement name, so each link stays readable.
 The Land tab's **Notable folk** list is ruler-first: it shows the county holder, all of
 that holder's direct vassal realms, then every liege through the sovereign, without a
 row cap or duplicates. Every entry is a native focusable row with the reigning
-character's procedural portrait. AI entries open the realm-ruler sheet; a protagonist
-entry opens the character sheet. Each row states realm, political relationship, age,
+character's procedural portrait and opens that ruler's character sheet. Each row states
+realm, political relationship, age,
 Martial, and the player-relative Standing. Generated local characters appear only as a
 defensive fallback when no political ruler can be resolved.
 
-The realm-ruler sheet leads with the ruler's titled character card, rather than a
-duplicate fact grid. Its larger skill line carries the same compact Skills Guide icon as
-an ordinary character sheet. Every character-sheet portrait centers the map on that
+Every reigning ruler uses the standard character sheet, rather than a duplicate
+realm-ruler sheet. Their title, **Realm muster** line, court, political actions, and
+personal actions share that one sheet; the muster names the current approximate troops
+the realm can raise. An active war is the first notice under the card, and the Land tab
+places the same notice directly below its county heading. The larger skill line carries
+the same compact Skills Guide icon as an ordinary character sheet. Every
+character-sheet portrait centers the map on that
 character's home county without dismissing the sheet. A decorated ruler portrait frame and a quieter heir
 portrait frame make the line of succession legible at a glance. The ruler's bounded consort-and-children
 portrait bar becomes the royal family's local navigator: opening a consort or child
@@ -554,12 +558,12 @@ picker show its destination, phase, and remaining ETA and disable another gift.
 
 All counterpart sheets use the shared Standing presentation: a clamped signed value,
 the Hostile/Guarded/Neutral/Favorable/Warm band, and the same positive/neutral/negative
-colors. Character and ruler sheets add a context note explaining whether the score
-affects personal, feudal, or diplomatic consequences. A materialized ruler resolves
-through the realm target, so the character sheet, realm sheet, Council, Estates, and
-gift interfaces cannot display different values. Living character and ruler context rows
-also state whether access is direct, personal, brokered, extraordinary, or blocked, and a
-blocked action names the station of intermediary still needed.
+colors. The character card already carries identity and rank, so its interaction card
+starts with Standing and commitments rather than repeating an identity grid. A
+materialized ruler resolves through the realm target, so the unified character sheet,
+Council, Estates, and gift interfaces cannot display different values. Standing explains
+whether it affects personal, feudal, or diplomatic consequences, and a blocked action
+names the station of intermediary still needed.
 
 The no-day-cost **Coin & Credit** deed opens a full-screen-capable Finance sheet. It is
 listed for every free station; a serf sees it only once the sheet holds
@@ -1055,9 +1059,10 @@ Related: [items.md](items.md) for the item card's hover/tap duality.
 
 ## Character and realm interaction cards
 
-One target now has one detail-and-action surface. Character rows open the
-personal sheet; realm and political-ruler rows open the realm sheet. Both use
-the shared interaction-card renderer and the fixed group order: current
+One target now has one detail-and-action surface. Character, realm, and
+political-ruler rows open the same character sheet; a reigning ruler merges
+their realm and personal actions there. It uses the shared interaction-card
+renderer and the fixed group order: current
 commitments, relationship/attention, gifts, travel, diplomacy, feudal actions,
 hostility/war, then focused management. Empty groups disappear, while a
 progression-relevant blocked action remains visible with its authoritative
@@ -1079,19 +1084,16 @@ Focused household management is also derived from the shared authority boundary.
 actions for a reigning ruler or local lord even when that character is a spouse or cultivated
 contact; the owning mutations revalidate the same exclusion.
 
-Every living AI reigning ruler has a materialized character record. The realm
-sheet therefore begins with the standard full character card and a bounded
-court strip for the current consort and displayed heirs; each court member is
-a native character-sheet button, and all faces use the shared portrait
-pipeline. A crest-only header remains a defensive fallback for malformed or
-temporarily incomplete state.
-
-The ruler still keeps two deliberately separate sheets. The realm sheet owns
-office, realm faith, capital, succession, courier gifts, diplomacy, feudal
-dealings, and war. The character sheet owns personal traits, courtship,
-rivalry, and household dealings. Typed Standing resolves to the same value on
-both. Reciprocal **Personal character** and **Realm and court** links preserve
-the distinction, and the personal sheet omits a duplicate gift action.
+Every living AI reigning ruler has a materialized character record. Their
+single character sheet carries a bounded court strip for the current consort
+and displayed heirs; each court member is a native character-sheet button, and
+all faces use the shared portrait pipeline. A crest-only realm fallback remains
+only for malformed or temporarily incomplete state. Realm office, faith,
+capital, succession, courier gifts, diplomacy, feudal dealings, and war appear
+alongside personal traits, courtship, rivalry, and household dealings. Typed
+Standing is shared. War notices render both realm names as links: in Land they
+open the named ruler's character sheet, while a ruler-sheet link opens the
+opposing ruler or returns to the current realm's capital county.
 
 Modal return context records only the originating view, not simulation state.
 Governance, Council, Estates, Household Plan, and card-to-card routes reconstruct the exact

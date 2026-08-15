@@ -2101,7 +2101,7 @@ smoothed waterline. Reordering a published mod's settlement list can move saved
 property between named places even though the numeric save remains valid — append new
 slots or deliberately replace the presentation of an existing index. A mod that
 supplies neither `settlementSites` nor `settlements` gets deterministic generated sites
-and keeps its current settlement names and indices.
+and keeps its current settlement names, kinds, and indices.
 
 **County communities.** The same complete bookmark province may carry the optional
 ordered `communities` list shown in *Adding a province*. It replaces that county's

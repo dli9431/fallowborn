@@ -45,8 +45,8 @@ an optional top-level `settlementSites` object merges by site id into
 presentation lists ride inside the atomic bookmark provinces (or a legacy 867
 `provinces` replacement, which already replaces the whole same-id record). Missing
 physical data or invalid presentation data fails bookmark validation; a mod supplying
-neither field receives deterministic generated sites and keeps its current names and
-indices. See the Settlements section of `docs/MODDING.md`.
+neither field receives deterministic generated sites and keeps its current names,
+kinds, and indices. See the Settlements section of `docs/MODDING.md`.
 
 **Bundled mods** (`mods/*.js`) register
 `{id, name, desc, data}` into `window.FBMODS` via a script tag after the data files; the

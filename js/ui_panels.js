@@ -1928,6 +1928,8 @@ window.FB = window.FB || {};
       esc(FB.T('Open their sheet and your dealings with them')) + '"' : '') + '>' +
       portrait +
       '<div><div class="ccname">' + esc(displayName) + house + '</div>' +
+      (options.realmMuster ? '<div class="ccmeta realm-ruler-muster">' +
+        esc(options.realmMuster) + '</div>' : '') +
       '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
       esc(FB.T('{sex} of {age}', {
         sex: FB.T(c.sex === 'f' ? 'Woman' : 'Man'),
@@ -2157,7 +2159,7 @@ window.FB = window.FB || {};
       '<button type="button" class="actionbtn large-list-target-button" data-liege="' +
       esc(record.rid) + '" data-list-focus-key="realm-target-' +
       esc(record.rid) + '" title="' +
-      esc(FB.T('Open the authoritative ruler and realm sheet')) + '">' +
+      esc(FB.T('Open this ruler’s character sheet')) + '">' +
       '<span class="large-list-row-copy"><span class="large-list-row-title">' +
       esc(r ? r.name : record.rid) + '</span><span class="adesc">' +
       esc(record.meta.join(' · ')) + '</span></span>' +
@@ -3944,7 +3946,10 @@ window.FB = window.FB || {};
 
   function renderProv() {
     const s = FB.state;
-    const pid = selectedProv || s.player.provinceId;
+    /* Map selection is the authoritative current county. `selectedProv` is
+       retained for callers that select through this UI, but map controls and
+       integrations may select directly through FB.map.select(). */
+    const pid = (FB.map && FB.map.selected) || selectedProv || s.player.provinceId;
     const pr = FB.world.byId[pid];
     const box = $('tab-prov');
     if (!pr) { replacePanelMarkup('land', box, ''); return; }
@@ -3955,6 +3960,12 @@ window.FB = window.FB || {};
       : '';
     let h = '<div class="panelh">' + esc(pr.name) +
       (homeLabel ? ' ' + esc(homeLabel) : '') + '</div>';
+    const selectedRealmId = !pr.wasteland && s.owner[pid];
+    const selectedRealm = selectedRealmId && s.realms[selectedRealmId];
+    if (selectedRealm && FB.isRealmAtWar(s, selectedRealmId)) {
+      h += '<div class="progressnote warnote land-current-war">' +
+        '⚔ ' + FB.warStatusLinkHtml(s, selectedRealmId) + '</div>';
+    }
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     if (selA) {
       const selPr = FB.world.byId[selA.at];
@@ -4212,10 +4223,6 @@ window.FB = window.FB || {};
           '🛡 They can field ~{theirs} — you can field ~{yours}.',
           { theirs: menText(s, realmMen), yours: menText(s, FB.playerLevy(s)) })) + '</div>';
       }
-      if (realm && FB.isRealmAtWar(s, rid)) {
-        h += '<div class="progressnote warnote">' +
-          esc(FB.T('⚔ This realm is at war.')) + '</div>';
-      }
       const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
       if (hostsHere.length) {
         h += '<div class="progressnote warnote">' + esc(FB.T('⚔ Hosts in the field here:')) +
@@ -4236,7 +4243,7 @@ window.FB = window.FB || {};
       if (rulers.length) {
         for (const ruler of rulers) h += landRulerRow(s, ruler);
         h += '<div class="hint" style="margin:4px 0 0">' +
-          esc(FB.T('Select a ruler for their realm sheet; select yourself for your character sheet.')) +
+          esc(FB.T('Select a ruler for their character sheet and dealings.')) +
           '</div>';
       } else {
         /* Defensive fallback for malformed saves or exceptional settled
@@ -4279,6 +4286,11 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('#tab-prov .settlink').forEach(function (btn) {
       btn.addEventListener('click', function () { FB.map.centerOn(pid); UI.showSettlement(pid, +btn.dataset.sett); });
+    });
+    document.querySelectorAll('#tab-prov [data-war-realm]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        UI.showLiegeModal(btn.dataset.warRealm);
+      });
     });
   }
 

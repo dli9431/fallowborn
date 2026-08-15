@@ -553,6 +553,7 @@ window.FB = window.FB || {};
         terrain: p.terrain || 'farmland', culture: p.culture, religion: p.religion,
         realm0: p.realm || null, dev0: p.dev || 1, duchy: p.duchy || null,
         settlements: p.settlements || null,
+        legacySettlementPresentation:p._legacySettlementPresentation || null,
         communities: p.communities ? FB.provinceCommunities(p) : null,
         sx: Math.round(FB.lonToX(p.x)), sy: Math.round(FB.latToY(p.y)),
         cx: 0, cy: 0, area: 0, coastal: false
@@ -936,6 +937,45 @@ window.FB = window.FB || {};
       }
       if (!clash) return { x: nx, y: ny };
     }
+    /* Concave coasts and narrow peninsulas can leave the direct centroid ray
+       outside this county even though the same land fragment has a clear
+       inland cell nearby. Search that fragment only: the walk may never jump
+       a sea gap or another county, which preserves deliberate islands such as
+       Venice. Prefer an uncrowded point, but keeping the emblem on land wins
+       over the small inter-site clearance when the fragment is constrained. */
+    var radius = SETTLEMENT_SNAP_MAX;
+    var width = radius * 2 + 1;
+    var seen = new Uint8Array(width * width);
+    var qx = [x], qy = [y], qd = [0], head = 0, crowded = null;
+    seen[radius * width + radius] = 1;
+    while (head < qx.length) {
+      var cx = qx[head], cy = qy[head], distance = qd[head];
+      head++;
+      if (seaClearCell(world, cx, cy)) {
+        var occupied = false;
+        for (var ci = 0; ci < placed.length; ci++) {
+          var cdx = cx - placed[ci].x, cdy = cy - placed[ci].y;
+          if (cdx * cdx + cdy * cdy < 9) { occupied = true; break; }
+        }
+        if (!occupied) return { x:cx, y:cy };
+        if (!crowded) crowded = { x:cx, y:cy };
+      }
+      if (distance >= radius) continue;
+      for (var oy = -1; oy <= 1; oy++) {
+        for (var ox = -1; ox <= 1; ox++) {
+          if (!ox && !oy) continue;
+          var tx = cx + ox, ty = cy + oy;
+          var rx = tx - x, ry = ty - y;
+          if (Math.abs(rx) > radius || Math.abs(ry) > radius ||
+              tx < 0 || ty < 0 || tx >= world.W || ty >= world.H) continue;
+          var seenIndex = (ry + radius) * width + rx + radius;
+          if (seen[seenIndex] || world.grid[ty * world.W + tx] !== pr.idx + 1) continue;
+          seen[seenIndex] = 1;
+          qx.push(tx); qy.push(ty); qd.push(distance + 1);
+        }
+      }
+    }
+    if (crowded) return crowded;
     return { x: x, y: y };
   }
 
@@ -1003,6 +1043,10 @@ window.FB = window.FB || {};
       var pr = world.provs[pi];
       if (pr.wasteland) continue;
       var authored = pr.settlements || [];
+      /* A legacy province replacement may deliberately omit site data. It
+         still inherits the former slot labels, while all physical records are
+         freshly generated and remain explicitly unauthored. */
+      var legacyPresentation = pr.legacySettlementPresentation || [];
       var records = [];
       var placed = [], seenNames = {}, forcedCount = 0;
       for (var ai = 0; ai < authored.length; ai++) {
@@ -1040,11 +1084,18 @@ window.FB = window.FB || {};
         });
       }
       for (var gi = authored.length; gi < SETTLEMENT_MAX_SLOTS; gi++) {
-        var h = strHash(pr.id + ':' + gi);
-        var name = FB.settlementName(pr.culture, h);
-        while (seenNames[name]) {
-          h = (h * 31 + 7) >>> 0;
+        var legacy = legacyPresentation[gi];
+        var name = legacy && typeof legacy.name === 'string' && !seenNames[legacy.name]
+          ? legacy.name : null;
+        var kind = legacy && (legacy.kind === 'village' || legacy.kind === 'town' ||
+          legacy.kind === 'city') ? legacy.kind : 'village';
+        if (!name) {
+          var h = strHash(pr.id + ':' + gi);
           name = FB.settlementName(pr.culture, h);
+          while (seenNames[name]) {
+            h = (h * 31 + 7) >>> 0;
+            name = FB.settlementName(pr.culture, h);
+          }
         }
         seenNames[name] = 1;
         var pt = generatedSitePoint(world, pr, gi, placed);
@@ -1056,7 +1107,7 @@ window.FB = window.FB || {};
         records.push({
           pid: pr.id, pidx: pr.idx, index: gi,
           site: 'generated__' + pr.id + '__' + gi,
-          name: name, kind: 'village',
+          name: name, kind: kind,
           x: pt.x, y: pt.y, authored: false, snap: 0
         });
       }
@@ -4276,6 +4327,41 @@ window.FB = window.FB || {};
       if (rr.alive && rr.war && FB.topRealm(state, rr.war.enemy) === realmId) return true;
     }
     return false;
+  };
+
+  /* Read-only counterpart lookup for war notices. Ordinary wars have one
+     opposing sovereign; a great holy war returns every valid sovereign in the
+     other camp. Callers receive stable realm ids and own all presentation. */
+  FB.warOpponents = function (state, realmId) {
+    if (!state || !state.realms || !realmId) return [];
+    const out = [];
+    function add(id) {
+      const sovereign = id && FB.topRealm(state, id);
+      if (sovereign && out.indexOf(sovereign) < 0) out.push(sovereign);
+    }
+    if (FB.greatHolyWarEnemies) {
+      const holyEnemies = FB.greatHolyWarEnemies(state, realmId) || [];
+      for (let i = 0; i < holyEnemies.length; i++) add(holyEnemies[i]);
+      if (out.length) return out;
+    }
+    const sovereign = realmId === 'player' && !state.realms.player
+      ? FB.playerRealmId(state) : FB.topRealm(state, realmId);
+    if (!sovereign) return out;
+    const playerWar = state.player && state.player.war;
+    if (playerWar) {
+      const playerRealm = FB.playerRealmId(state);
+      const enemyRealm = FB.topRealm(state, playerWar.enemy);
+      if (sovereign === playerRealm || sovereign === 'player') add(enemyRealm);
+      if (sovereign === enemyRealm) add(playerRealm);
+    }
+    const ownRealm = state.realms[sovereign];
+    if (ownRealm && ownRealm.war) add(ownRealm.war.enemy);
+    for (const id in state.realms) {
+      const realm = state.realms[id];
+      if (realm && realm.alive && realm.war &&
+          FB.topRealm(state, realm.war.enemy) === sovereign) add(id);
+    }
+    return out;
   };
 
   /* War reaches the household through the sovereign realm the player answers

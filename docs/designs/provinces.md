@@ -85,8 +85,9 @@ during play. Authored coordinates project into the declared county's raster, sna
 to the nearest in-county cell when the simplified boundary requires it (displacement
 beyond 45 world px is an activation error), then keeps a two-cell land margin from
 the sea: a coastal-edge cell leaves the emblem hanging over the smoothed coastline,
-so the point walks toward the county centroid to the first in-county cell with clear
-land around it (the original cell stands for islets and one-cell coastal strips). Generated slots keep the legacy plain-hash
+so the point first walks toward the county centroid and then, where a concave coast
+blocks that ray, searches its own connected county fragment for clear land (the
+original cell stands only for islets and one-cell coastal strips). Generated slots keep the legacy plain-hash
 culture naming exactly (`FB.settlementName`, `FBDATA.settlementNames` in cultures.js)
 and take deterministic in-county points that spread across the county — each slot
 draws its own hash-derived angle and radius band scaled to the county, keeping a few

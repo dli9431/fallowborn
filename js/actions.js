@@ -859,7 +859,7 @@ window.FB = window.FB || {};
         const cause = FB.caliphateWarCause(s);
         if (!cause) return FB.T('The sitting Caliph cannot be contested from this world state.');
         const blocked = diplomacyBlocksWar(s, cause.enemy);
-        if (blocked === 'war') return FB.T('At war with another realm');
+        if (blocked === 'war') return activeWarReason(s, cause.enemy);
         if (blocked === 'alliance') return FB.T('Your defensive alliance forbids an attack on the Caliph’s realm.');
         if (blocked === 'pact') return FB.T('A sworn peace pact protects the Caliph’s realm.');
         return true;
@@ -1659,7 +1659,7 @@ window.FB = window.FB || {};
     },
     can: function (s) {
       const sovereign = FB.topRealm(s, s.player.liege);
-      if (sovereign && FB.isRealmAtWar(s, sovereign)) return FB.T('At war with another realm');
+      if (sovereign && FB.isRealmAtWar(s, sovereign)) return activeWarReason(s, sovereign);
       return s.player.prestige >= 200 ? true
         : FB.T('You need at least 200 prestige to rally men to your banner (now {current}).',
           { current: Math.round(s.player.prestige) });
@@ -4847,7 +4847,7 @@ window.FB = window.FB || {};
     } else if (FB.allianceSnapshot(state, rid)) {
       status.reason = FB.T('This realm already has one defensive ally.');
     } else if (realm.war || FB.isRealmAtWar(state, rid)) {
-      status.reason = FB.T('This realm is already at war.');
+      status.reason = activeWarReason(state, rid);
     } else if (standing < status.standingRequired) {
       status.reason = FB.T(
         'Requires {needed} Standing; currently {current}.', {
@@ -5715,9 +5715,31 @@ window.FB = window.FB || {};
     });
   };
 
-  FB.warCauseBlockedReason = function (cause) {
+  function activeWarReason(state, realmId) {
+    const sovereign = realmId === 'player' && (!state.realms.player ||
+        !state.realms.player.alive)
+      ? FB.playerRealmId(state) : FB.topRealm(state, realmId);
+    const realm = sovereign && state.realms[sovereign];
+    const opponents = FB.warOpponents ? FB.warOpponents(state, realmId) : [];
+    const names = opponents.map(function (id) {
+      const opponent = state.realms[id];
+      return opponent ? opponent.name : id;
+    }).join(', ');
+    if (names) {
+      return FB.T('{realm} is at war with {opponents}.', {
+        realm:realm ? realm.name : sovereign || FB.T('This realm'),
+        opponents:names
+      });
+    }
+    return FB.T('{realm} is at war with an unrecorded opponent.', {
+      realm:realm ? realm.name : sovereign || FB.T('This realm')
+    });
+  }
+
+  FB.warCauseBlockedReason = function (state, cause) {
+    if (!cause) { cause = state; state = FB.state; }
     if (!cause || !cause.blocked) return '';
-    if (cause.blocked === 'war') return FB.T('At war with another realm.');
+    if (cause.blocked === 'war') return activeWarReason(state, cause.enemy);
     if (cause.blocked === 'alliance') {
       return FB.T('Your defensive alliance forbids an attack on this realm.');
     }
@@ -5734,18 +5756,18 @@ window.FB = window.FB || {};
   };
 
   FB.warLockedReason = function (state) {
-    if (state.player.war) return FB.T('You are already at war.');
+    if (state.player.war) return activeWarReason(state, 'player');
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, 'player')) {
-      return FB.T('You are committed to a great holy war.');
+      return activeWarReason(state, 'player');
     }
     const playerRealm = FB.playerRealmId(state);
     if (playerRealm && FB.isRealmAtWar(state, playerRealm)) {
-      return FB.T('At war with another realm');
+      return activeWarReason(state, playerRealm);
     }
     const all = FB.warCauses(state, true);
     let allianceBlocked = false, pactBlocked = false;
     for (const cause of all) {
-      if (cause.blocked === 'war') return FB.T('At war with another realm');
+      if (cause.blocked === 'war') return activeWarReason(state, cause.enemy);
       if (cause.blocked === 'alliance') allianceBlocked = true;
       if (cause.blocked === 'pact') pactBlocked = true;
     }

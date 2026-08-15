@@ -1270,6 +1270,8 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 .gm-heading, .equip-picker-heading { display: flex; gap: 8px; }
 .gm-heading { align-items: center; margin-bottom: 10px; }
+.gm-heading.has-modal-guide { display: block; }
+.gm-heading.has-modal-guide::after { content: ''; display: block; clear: both; }
 .equip-picker-heading { align-items: flex-start; }
 .gm-heading h3, .equip-picker-heading h3 { flex: 1 1 auto; min-width: 0; }
 .gm-heading h3 {
@@ -1286,6 +1288,10 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   flex: 0 0 34px; width: 34px; min-height: 34px; height: 34px;
   font: bold italic 22px/1 Georgia, serif;
 }
+.gm-heading.has-modal-guide h3 { float: left; width: calc(100% - 42px); }
+.gm-heading.has-modal-guide .modal-guide-button {
+  margin-left: 8px; vertical-align: top; transform: translateY(2px);
+}
 .panel-inline-icon-button {
   flex: 0 0 28px; width: 28px; min-height: 28px; height: 28px;
   font: 18px/1 Georgia, serif;
@@ -1298,6 +1304,7 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 .equip-picker-history-back { display: none; flex: 0 0 auto; white-space: nowrap; }
 .modalcard h3 { color: #e0c060; margin-bottom: 10px; font-size: 20px; }
+.modalcard .gm-heading h3 { margin-bottom: 0; }
 .evtext { color: var(--main-text-color); margin-bottom: 14px; font-size: 16px; }
 .evname { display: flex; gap: 8px; align-items: center; justify-content: center; margin-bottom: 12px; }
 .evname label { display: flex; gap: 8px; align-items: center; color: var(--main-text-color); font-size: 14px; }
@@ -1409,13 +1416,15 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   .modal-guide-button, .panel-inline-icon-button, .character-skills-guide {
     flex-basis: 44px; width: 44px; min-height: 44px; height: 44px; font-size: 22px;
   }
+  .gm-heading.has-modal-guide h3 { width: calc(100% - 52px); min-height: 44px; }
 }
 
 .dynasty-house-row { align-items: center; gap: 8px; }
 .dynasty-house-value {
-  display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-width: 0;
+  display: block; min-width: 0; text-align: right;
 }
 .dynasty-house-value b { min-width: 0; overflow-wrap: anywhere; text-align: right; }
+.dynasty-house-value .panel-inline-icon-button { margin-left: 6px; vertical-align: middle; }
 
 /* Shared large-list grammar for Work & Enterprises and Network. Counts and
    attention stay in the section button while routine rows disclose gradually. */
@@ -1798,6 +1807,9 @@ textarea.modjson, textarea.savetext {
 .ccskills-guide { display: flex; align-items: center; gap: 5px; }
 .ccskills-guide > span { min-width: 0; }
 .realm-ruler-card .ccskills { font-size: 14px; line-height: 1.3; }
+.realm-ruler-card .realm-ruler-muster {
+  color: #e0c060; font-size: 13px; line-height: 1.35;
+}
 .realm-ruler-card .character-card-portrait-button {
   position: relative; padding: 4px; border: 1px solid #c6a243; border-radius: 8px;
   background: linear-gradient(135deg, #342a16, #241d15 62%);
