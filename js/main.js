@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.4';
+  FB.VERSION = '1.133.5';
   FB.CHANGELOG = [
+    { v: '1.133.5', date: '2026-08-15', changes: [
+      'Religious offices now respect their historical holder requirements, while secular succession remains distinct.'
+    ] },
     { v: '1.133.4', date: '2026-08-15', changes: [
       'Realm ruler sheets now use linked family portraits, courtesy titles, and map-centering character portraits.',
       'Unavailable actions now show their blocking reason without repeated helper text.'

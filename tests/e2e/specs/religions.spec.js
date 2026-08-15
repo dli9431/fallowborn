@@ -48,6 +48,79 @@ test('legacy religion heads and title tables compile through compatibility alias
     });
   });
 
+test('sex-gated central offices vacate without blocking secular succession',
+  async function ({ page }, testInfo) {
+    primaryFileOnly(testInfo);
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      var s = FB.state;
+      var rid = s.religiousHeads.sunni;
+      var realm = rid && s.realms[rid];
+      var succession = realm && realm.succession;
+      var heirId = succession && succession.order[0];
+      var heir = heirId && FB.materializeRoyalChild(s, rid, heirId);
+      var member = heirId && succession.members[heirId];
+      if (!realm || !heir || !member) return { skipped:true };
+
+      /* Make the first heir a woman without changing the realm's ordinary
+         dynastic order. The temporal crown should still pass to her. */
+      member.sex = 'f';
+      heir.sex = 'f';
+      succession.order = [heirId];
+      succession.heirId = heirId;
+      var advanced = FB.advanceRealmSuccession(s, rid);
+      var ruler = FB.realmRulerCharacterSnapshot(s, rid);
+
+      var me = s.chars[s.player.charId];
+      var oldPlayerRealm = s.realms.player;
+      var oldTier = s.player.tier;
+      var oldReligion = me.religion;
+      var oldSex = me.sex;
+      s.realms.player = {
+        id:'player', alive:true, liege:null, ruler:{ sex:'f' }
+      };
+      s.player.tier = 6;
+      me.religion = 'sunni';
+      me.sex = 'f';
+      var femaleClaim = FB.caliphateWarClaimantEligible(s);
+      s.realms.player.ruler.sex = 'm';
+      me.sex = 'm';
+      var maleClaim = FB.caliphateWarClaimantEligible(s);
+      s.realms.player = oldPlayerRealm;
+      s.player.tier = oldTier;
+      me.religion = oldReligion;
+      me.sex = oldSex;
+
+      return {
+        skipped:false,
+        catholicPolicy:FB.religionOf('catholic', s).head.holderSex,
+        sunniPolicy:FB.religionOf('sunni', s).head.holderSex,
+        advanced:!!advanced,
+        temporalSuccessor:ruler && ruler.id === heir.id && ruler.sex,
+        officeVacant:s.religiousHeads.sunni === null,
+        noOfficeSnapshot:FB.religiousHeadSnapshot(s, 'sunni') === null,
+        noCaliphStyle:FB.realmRankTitle(s, realm) !== 'Caliph',
+        cannotReassign:!FB.assignReligiousHead(s, 'sunni', rid),
+        femaleClaim:femaleClaim,
+        maleClaim:maleClaim
+      };
+    });
+
+    expect(result.skipped).toBe(false);
+    expect(result.catholicPolicy).toBe('m');
+    expect(result.sunniPolicy).toBe('m');
+    expect(result.advanced).toBe(true);
+    expect(result.temporalSuccessor).toBe('f');
+    expect(result.officeVacant).toBe(true);
+    expect(result.noOfficeSnapshot).toBe(true);
+    expect(result.noCaliphStyle).toBe(true);
+    expect(result.cannotReassign).toBe(true);
+    expect(result.femaleClaim).toBe(false);
+    expect(result.maleClaim).toBe(true);
+  });
+
 test('faith definitions inherit doctrines and support directional relations',
   async function ({ page }, testInfo) {
     primaryFileOnly(testInfo);

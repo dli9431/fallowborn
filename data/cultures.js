@@ -126,7 +126,7 @@ FBDATA.religions = {
       systems:{ papacy:true },
       roles:{ bishop:'Bishop', cardinal:'Cardinal' },
       head:{
-        officeId:'catholic', realm:'papacy', title:'Pope',
+        officeId:'catholic', realm:'papacy', title:'Pope', holderSex:'m',
         recovery:'grant_seat', seat:'roma', restoredRank:3,
         sameFaithWar:'sacrilege',
         greatHolyWar:{
@@ -168,7 +168,7 @@ FBDATA.religions = {
     relationToParent:'schismatic', icon:'☪',
     properties:{
       head:{
-        officeId:'sunni', realm:'abbasid', title:'Caliph', recovery:'claim',
+        officeId:'sunni', realm:'abbasid', title:'Caliph', holderSex:'m', recovery:'claim',
         claimCounties:[['baghdad'],['mecca','medina']], sameFaithWar:'ordinary',
         greatHolyWar:{
           name:'Jihad',

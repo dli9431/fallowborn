@@ -2501,6 +2501,7 @@ spelling. For example:
         "officeId": "catholic",
         "realm": "papacy",
         "title": "Pope",
+        "holderSex": "m",
         "recovery": "grant_seat",
         "seat": "roma",
         "restoredRank": 3,
@@ -2524,6 +2525,12 @@ retained only as a compatibility fallback for old mods and saved title snapshots
 When a mod supplies one of the historical `titles.christian|muslim|pagan|jewish`
 or `_f` keys, the loader also mirrors it into that root's effective `rankTitles`,
 preserving title-only mods. New mods should edit the faith property directly.
+
+`properties.head.holderSex` is optional and accepts `"m"` or `"f"`. When
+set, only a realm whose current ruler has that sex may hold or claim the office.
+An ineligible temporal successor retains the realm, while the office becomes a
+vacancy for its normal recovery rule; use this for historically sex-restricted
+central offices rather than imposing a blanket succession restriction on a faith.
 
 `relationToParent` is `in_fold`, `schismatic`, or `hostile`, or a directional object
 `{"childView":"in_fold","parentView":"schismatic"}`. A scalar applies both ways.

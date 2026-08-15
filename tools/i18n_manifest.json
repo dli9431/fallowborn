@@ -75626,6 +75626,16 @@
         "text": "You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise."
       }
     },
+    "src.42ed73de": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Sunni law reserves the Caliphate for a male ruler."
+      }
+    },
     "src.42edc01f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120680,6 +120690,16 @@
       ],
       "source": {
         "text": "outside assent"
+      }
+    },
+    "src.a8b05beb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "head.holderSex must be m or f when supplied."
       }
     },
     "src.a8b0686d": {
@@ -184045,6 +184065,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
+      }
+    },
+    "ui:Sunni law reserves the Caliphate for a male ruler.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Sunni law reserves the Caliphate for a male ruler."
       }
     },
     "ui:Supply": {

@@ -381,6 +381,13 @@ eligible realm, the explicit vacancy persists. `FB.canRestoreReligiousHead`,
 `FB.religiousHeadRecoveryTick` are the shared policy surface; callers do not match
 Papacy/Caliphate realm names.
 
+The Caliphate's `head.holderSex:'m'` applies to its occupant, not to the
+Abbasid realm's secular inheritance. A woman can therefore inherit the realm
+under the game's normal male-preference dynasty rule, but the Caliphate becomes
+an explicit vacancy at once; she is styled by her temporal rank and cannot
+claim or contest the Sunni office. The same data-driven safeguard also covers
+the Papacy, alongside its separate all-male electoral rules.
+
 A sitting Caliph is the one office that can also be taken by force. A sovereign Sunni
 player king or emperor gains a `caliphate` succession-war cause against the holder's
 sovereign realm (`FB.caliphateWarCause`; no shared border required — the stake is the

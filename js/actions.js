@@ -845,6 +845,10 @@ window.FB = window.FB || {};
     },
     can: function (s) {
       if (!FB.isPlayerSovereign(s)) return FB.T('Only an independent king or emperor may claim the Caliphate.');
+      if (!(FB.religiousHeadHolderEligible &&
+          FB.religiousHeadHolderEligible(s, 'sunni', 'player'))) {
+        return FB.T('Sunni law reserves the Caliphate for a male ruler.');
+      }
       if (!FB.religiousHeadVacancy(s, 'sunni')) {
         const playerRealm = FB.playerRealmId(s);
         if (s.player.war ||
@@ -5419,6 +5423,8 @@ window.FB = window.FB || {};
     const p = state.player;
     const c = state.chars[p.charId];
     return !!(c && !c.dead && FB.faithOfficeId(c.religion, state) === 'sunni' &&
+      FB.religiousHeadHolderEligible &&
+      FB.religiousHeadHolderEligible(state, 'sunni', 'player') &&
       p.tier >= 6 &&
       FB.isPlayerSovereign(state));
   };

@@ -1648,6 +1648,8 @@ window.FB = window.FB || {};
     if (!meta || meta.recovery !== 'claim' ||
         !FB.religiousHeadVacancy(state, religionId) ||
         !realm || !realm.alive || realm.liege ||
+        !(FB.religiousHeadHolderEligible &&
+          FB.religiousHeadHolderEligible(state, religionId, rid)) ||
         !FB.faithInFold(state, FB.realmReligionId(state, rid), religionId) ||
         !FB.controlsReligiousHeadClaim(state, religionId, rid)) {
       return false;
@@ -3352,6 +3354,10 @@ window.FB = window.FB || {};
     }
     makeHeirIfEmpty(state, r, s);
     FB.refreshRealmSuccession(state, rid);
+    /* A temporal crown can pass to a woman even when the realm also held a
+       sex-gated central religious office. Revalidate immediately so the
+       office becomes a vacancy instead of styling her as its holder. */
+    if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(state);
     FB.repairAlliances(state);
     if (!opts.repair && FB.noteDiplomaticSuccession &&
         !(c && c.id === state.player.charId)) {

@@ -42,7 +42,8 @@ The initial property vocabulary is intentionally extensible rather than a closed
 - `roles` for monastic, priestly, episcopal, cardinal, abbatial, and qadi titles,
   plus `clergyMarriage`;
 - `systems` capability flags such as `papacy`;
-- optional `head` metadata, including great holy wars.
+- optional `head` metadata, including a stable office, holder-sex eligibility,
+  recovery, and great holy wars.
 
 Engine code reads these through `FB.religionOf`, `FB.faithValue`, and capability helpers,
 not by switching on ids or broad groups. `FB.faithValue` also reports the ancestor that
@@ -94,6 +95,15 @@ vacancies are keyed by that office id, not by every inheriting child. Catholic c
 can therefore recognize the same Roman office without creating duplicate Popes, and a
 child can opt out with `head:null`. The core office ids remain `catholic` and `sunni`, so
 existing version-3 saves retain their exact keys and assignments.
+
+`head.holderSex` is an optional `m` or `f` eligibility rule for the person
+reigning in the office's temporal realm. It is intentionally narrower than
+dynastic succession: an ineligible successor may still inherit the secular
+realm, but the central office immediately becomes vacant. The seeded Catholic
+Papacy and Sunni Caliphate both declare `holderSex:'m'`; Papal election also
+independently filters its candidates. This models the medieval legal and
+institutional exclusion from those offices without turning every Christian or
+Muslim secular succession into a universal agnatic law.
 
 Campaign-founded faiths use a stricter default than authored definitions. Doctrine still
 inherits through the graph, but central-office allegiance does not: a record carrying

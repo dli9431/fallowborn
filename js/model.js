@@ -331,6 +331,10 @@ window.FB = window.FB || {};
       if (rel.head !== undefined && rel.head !== null) {
         if (!plainObject(rel.head) || typeof rel.head.officeId !== 'string' ||
             !rel.head.officeId) fault(id, 'head needs a stable officeId.');
+        else if (rel.head.holderSex !== undefined &&
+            rel.head.holderSex !== 'm' && rel.head.holderSex !== 'f') {
+          fault(id, 'head.holderSex must be m or f when supplied.');
+        }
       }
     }
     return { raw:raw, resolved:resolved, errors:errors };
@@ -676,6 +680,28 @@ window.FB = window.FB || {};
     return office ? office.religionId : null;
   };
 
+  /* Some central offices attach to the temporal realm but retain a personal
+     eligibility rule. The restriction is deliberately office data rather
+     than a general succession rule: a woman may inherit the realm without
+     becoming Pope or Caliph. */
+  function religiousHeadHolderEligible(state, office, realmId) {
+    const requiredSex = office && office.head && office.head.holderSex;
+    if (!requiredSex) return true;
+    const realm = state && state.realms && state.realms[realmId];
+    if (!realm || !realm.alive) return false;
+    const player = realmId === 'player' && state.player && state.chars &&
+      state.chars[state.player.charId];
+    const sex = player && player.sex || realm.ruler && realm.ruler.sex;
+    return sex === requiredSex;
+  }
+
+  FB.religiousHeadHolderEligible = function (state, religionId, realmId) {
+    const rel = FB.religionOf(religionId, state);
+    const officeId = rel && rel.head && rel.head.officeId;
+    const office = officeId && religiousOfficeDefinitions(state)[officeId];
+    return !!(office && religiousHeadHolderEligible(state, office, realmId));
+  };
+
   function bookmarkReligiousHead(state, religionId) {
     var bookmark = null;
     if (state && state.start && FB.bookmark) bookmark = FB.bookmark(state.start.id);
@@ -730,7 +756,8 @@ window.FB = window.FB || {};
       }
       const assigned = state.religiousHeads[officeId];
       if (assigned !== null && state.realms &&
-          (!state.realms[assigned] || !state.realms[assigned].alive)) {
+          (!state.realms[assigned] || !state.realms[assigned].alive ||
+           !religiousHeadHolderEligible(state, office, assigned))) {
         const bookmarkDefault = bookmarkReligiousHead(state, religionId);
         /* Older 1066 saves were seeded with the global 867 ids even though
            those realm records never existed in their bookmark. Repair only
@@ -777,7 +804,9 @@ window.FB = window.FB || {};
     const rel = FB.religionOf(religionId, state);
     const officeId = rel && rel.head && rel.head.officeId;
     const realm = state && state.realms && state.realms[realmId];
-    if (!state || !rel || !officeId || !realm || !realm.alive) return false;
+    const office = officeId && religiousOfficeDefinitions(state)[officeId];
+    if (!state || !rel || !officeId || !realm || !realm.alive ||
+        !religiousHeadHolderEligible(state, office, realmId)) return false;
     FB.ensureReligiousHeads(state);
     state.religiousHeads[officeId] = realmId;
     delete state.religiousHeadVacancies[officeId];
@@ -838,7 +867,9 @@ window.FB = window.FB || {};
     if (!Object.prototype.hasOwnProperty.call(heads, officeId)) return null;
     const rid = heads[officeId];
     const realm = rid !== null && state.realms ? state.realms[rid] : null;
-    return realm && realm.alive ? realm : null;
+    const office = officeId && religiousOfficeDefinitions(state)[officeId];
+    return realm && realm.alive &&
+      religiousHeadHolderEligible(state, office, rid) ? realm : null;
   };
 
   FB.religiousHeadSnapshot = function (state, religionId) {
@@ -865,7 +896,9 @@ window.FB = window.FB || {};
         realm = state.realms[rid];
       }
     }
-    return realm && realm.alive ? realm : null;
+    const office = officeId && religiousOfficeDefinitions(state)[officeId];
+    return realm && realm.alive &&
+      religiousHeadHolderEligible(state, office, rid) ? realm : null;
   };
 
   FB.religionsHeadedBy = function (state, realmId) {
