@@ -11648,13 +11648,7 @@ window.FB = window.FB || {};
     }
     const s = FB.state;
     const me = s.chars[s.player.charId];
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      s.player.tier >= 3
-        ? 'Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season.'
-        : 'The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season.')) +
-      '</p><p class="hint">' + esc(FB.T(
-        'This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.')) +
-      '</p></div>';
+    let h = '';
     const enterprises = sortedEnterpriseRecords(s, FB.enterpriseList(s).slice());
     const assignments = {};
     for (const enterprise of enterprises) {
