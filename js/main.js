@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.7';
+  FB.VERSION = '1.133.8';
   FB.CHANGELOG = [
+    { v: '1.133.8', date: '2026-08-15', changes: [
+      'The map HUD music overlay is now compact and scroll-free on mobile devices.'
+    ] },
     { v: '1.133.7', date: '2026-08-15', changes: [
       'The map HUD now features a dedicated music overlay with quick access to soundtrack controls.',
       'The Work & Enterprises view is streamlined with a collapsible filters and sorting section.'

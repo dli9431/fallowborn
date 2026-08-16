@@ -439,16 +439,19 @@ body.travel-picking #timebtns { visibility: hidden; }
   background: rgba(30,24,16,.96); border: 1px solid #806936;
   border-radius: 10px; box-shadow: 0 6px 24px rgba(0,0,0,.5);
 }
-.music-track-header { margin-bottom: 8px; }
+.music-overlay-close {
+  position: absolute; top: 8px; right: 8px; width: 26px; height: 26px;
+  min-width: 26px; min-height: 26px; padding: 0; line-height: 1;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+}
+.music-track-header { margin-bottom: 8px; padding-right: 28px; }
 .music-track-title { display: block; font-size: 15px; color: #f0d170; }
 .music-track-bank { font-size: 12px; color: var(--helper-text-color); margin-top: 2px; }
 .music-track-kvs { display: grid; gap: 4px; margin: 8px 0; font-size: 13px; }
 .music-track-kvs .kv { justify-content: space-between; }
-.music-overlay-footer { margin-top: 8px; text-align: right; }
-.music-overlay-footer .btn { min-width: 70px; }
 .music-track-actions {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
-  margin: 12px 0;
+  margin: 10px 0 0;
 }
 .music-track-actions .btn { width: 100%; }
 .music-track-navigation {
@@ -2883,6 +2886,50 @@ textarea.modjson, textarea.savetext {
     padding: 16px;
     border: 2px solid #7a6234; border-radius: 14px;
   }
+  .music-controls {
+    overflow: hidden; padding: 8px 10px;
+    border-radius: 8px;
+  }
+  .music-overlay-close {
+    top: 5px; right: 5px; width: 22px; height: 22px;
+    min-width: 22px; min-height: 22px; font-size: 12px;
+  }
+  .music-track-header {
+    margin-bottom: 3px; padding-right: 24px;
+  }
+  .music-track-title {
+    font-size: 13px; line-height: 1.2;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .music-track-bank {
+    font-size: 11px; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .music-track-kvs {
+    display: flex; flex-wrap: wrap; gap: 2px 10px;
+    margin: 3px 0; font-size: 11px;
+  }
+  .music-track-kvs .kv {
+    display: inline-flex; gap: 4px; justify-content: flex-start;
+  }
+  .music-track-kvs .kv-secondary {
+    display: none;
+  }
+  .music-track-actions {
+    margin: 4px 0 0; gap: 4px;
+  }
+  .music-track-actions .btn {
+    padding: 3px 6px; font-size: 11px; min-height: 28px;
+  }
+  .music-track-navigation {
+    gap: 4px;
+  }
+  .music-track-navigation .btn {
+    padding-inline: 4px; font-size: 11px;
+  }
+  .music-overlay-footer {
+    display: none;
+  }
 }
 
 @media (max-width: 600px) {
@@ -3045,6 +3092,7 @@ textarea.modjson, textarea.savetext {
 @media (max-width: 480px) and (orientation: portrait) {
   .music-controls {
     left: 8px; top: 8px; max-width: calc(100% - 66px);
+    overflow: hidden;
   }
   #toasts { max-width: 40%; }
 }

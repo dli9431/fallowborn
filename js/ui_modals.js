@@ -18125,14 +18125,15 @@ window.FB = window.FB || {};
     const music = FB.music;
     const track = music && music.current();
     if (!music || !track || !music.enabled()) {
-      let emptyHtml = '<div class="music-track-header"><b class="music-track-title">' + esc(FB.T('Music')) + '</b></div>' +
+      let emptyHtml = '<button type="button" class="btn small music-overlay-close" id="music-close" aria-label="' + esc(FB.T('Close')) + '">✕</button>' +
+        '<div class="music-track-header"><b class="music-track-title">' + esc(FB.T('Music')) + '</b></div>' +
         '<p class="hint" style="margin:6px 0 10px;">' +
         esc(FB.T(music && !music.enabled() ? 'Music is currently turned off in Settings.' : 'No soundtrack song is playing.')) +
         '</p><div class="music-track-actions">';
       if (music && !music.enabled()) {
         emptyHtml += '<button class="btn primary" id="music-turn-on">' + esc(FB.T('Play music')) + '</button>';
       }
-      emptyHtml += '<button class="btn" id="music-close">' + esc(FB.T('Close')) + '</button></div>';
+      emptyHtml += '</div>';
       root.innerHTML = emptyHtml;
       const turnOn = $('music-turn-on');
       if (turnOn) {
@@ -18157,16 +18158,17 @@ window.FB = window.FB || {};
     const rating = music.rating(track.id);
     const paused = music.isPaused();
 
-    let h = '<div class="music-track-header">' +
+    let h = '<button type="button" class="btn small music-overlay-close" id="music-close" aria-label="' + esc(FB.T('Close')) + '">✕</button>' +
+      '<div class="music-track-header">' +
       '<b class="music-track-title">' + esc(track.title) + '</b>' +
       '<div class="music-track-bank hint">' + esc(music.bankLabel(bank)) + '</div>' +
       '</div>' +
       '<div class="music-track-kvs">' +
       '<div class="kv"><span>' + esc(FB.T('Length')) + '</span><b>' +
       esc(music.formatDuration(track.duration)) + '</b></div>' +
-      '<div class="kv"><span>' + esc(FB.T('Download size')) + '</span><b>' +
+      '<div class="kv kv-secondary"><span>' + esc(FB.T('Download size')) + '</span><b>' +
       esc(music.formatBytes(track.bytes)) + '</b></div>' +
-      '<div class="kv"><span>' + esc(FB.T('Average bitrate')) + '</span><b>' +
+      '<div class="kv kv-secondary"><span>' + esc(FB.T('Average bitrate')) + '</span><b>' +
       esc(Math.round((track.bitrate || 0) / 1000) + ' kbps Opus') + '</b></div>' +
       '<div class="kv"><span>' + esc(FB.T('Offline copy')) + '</span><b id="music-cache-status">' +
       esc(FB.T('Checking…')) + '</b></div>' +
@@ -18189,8 +18191,7 @@ window.FB = window.FB || {};
         '<button class="btn' + (rating === -1 ? ' primary' : '') + '" id="music-down">' +
         esc(FB.T('👎 Dislike')) + '</button>';
     }
-    h += '</div><div class="music-overlay-footer"><button class="btn" id="music-close">' +
-      esc(FB.T('Close')) + '</button></div>';
+    h += '</div>';
 
     root.innerHTML = h;
 

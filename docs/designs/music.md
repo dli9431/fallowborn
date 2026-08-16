@@ -78,7 +78,8 @@ element. The controls stay hidden during loading, gameplay, or when the soundtra
 
 A dedicated music button on the map HUD rail opens the music controls overlay directly over the map.
 The overlay provides full playback controls, track details, repeat, and preferences, and closes when
-clicking anywhere else across the UI. By default, leaving the game
+clicking anywhere else across the UI. On mobile and compact screens, technical metrics are hidden and
+the layout condenses into a single scroll-free card fitting within shallow map views. By default, leaving the game
 window or tab pauses playback, and returning resumes only music that was playing before focus was
 lost. Settings can instead keep both the title theme and gameplay soundtrack playing while the tab,
 window, or screen is inactive. This preference bypasses only the automatic focus-loss pause; it
