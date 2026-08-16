@@ -660,6 +660,8 @@ test('context banks, playback controls, and listening history stay consistent',
     })).toBe(false);
     await page.evaluate(function () { FB.ui.closeModal(); });
 
+    await musicBtn.click();
+    await expect(musicControls).toBeVisible();
     await quickToggle.click();
     expect(await page.evaluate(function () {
       window.dispatchEvent(new Event('blur'));

@@ -548,6 +548,10 @@ window.FB = window.FB || {};
   }
 
   function renderActiveTab() {
+    /* The game chrome can be shown with no life behind it (title-screen and
+       soundtrack harnesses drive it directly): every tab render dereferences
+       the state, so with none there is nothing to paint. */
+    if (!FB.state) return;
     if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
       if (SH.activeTab === 'prov') renderProv(); else renderLog();
       return;

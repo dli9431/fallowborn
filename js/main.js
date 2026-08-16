@@ -9,7 +9,7 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.12';
+  FB.VERSION = '1.133.13';
   FB.CHANGELOG = [
     { v: '1.133.12', date: '2026-08-15', changes: [
       'A settlement holding your buildings, enterprises, or home no longer vanishes from the map when county development declines.',
