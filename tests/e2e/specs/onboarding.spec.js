@@ -431,3 +431,23 @@ test('a mid-checklist save from the single-track version keeps its progress',
     expect(status.steps[0].done).toBe(true);
     expect(status.done).toBe(1);
   });
+
+test('unlanded rank details modal shows settlement, county ruler, and station context instead of noble demesne counts',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const rank = page.locator('#self-rank-details');
+    await expect(rank).toBeVisible();
+    await rank.click();
+
+    await expect(page.getByRole('heading', { name:'Station & home', exact:true }))
+      .toBeVisible();
+    await expect(page.locator('#gm-body .kv:has(span:text-is("Settlement")) b'))
+      .toBeVisible();
+    await expect(page.locator('#gm-body .kv:has(span:text-is("County ruler")) b'))
+      .toBeVisible();
+    await expect(page.locator('#gm-body .panelh')).toContainText('Home');
+    await expect(page.locator('#gm-body')).not.toContainText('Held directly');
+    await expect(page.locator('#gm-body')).not.toContainText('Direct demesne');
+    await expect(page.locator('#gm-body')).not.toContainText('Path:');
+    await page.locator('#rank-details-close').click();
+  });

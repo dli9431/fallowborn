@@ -1288,8 +1288,11 @@ window.FB = window.FB || {};
 
   function rankDetailsLink(s) {
     const rank = FB.styledTitle(s);
+    const landed = s.player.tier >= 3;
     return '<button type="button" class="linklike" id="self-rank-details" ' +
-      'aria-label="' + esc(FB.T('Open realm and demesne details for {rank}', {
+      'aria-label="' + esc(FB.T(landed
+        ? 'Open realm and demesne details for {rank}'
+        : 'Open station and home details for {rank}', {
         rank:rank
       })) + '">' + esc(rank) + '</button>';
   }
@@ -1453,48 +1456,107 @@ window.FB = window.FB || {};
   UI.showRankDetails = function () {
     const s = FB.state;
     if (!s || !s.player) return;
-    const direct = (s.player.provs || []).slice();
-    const playerRealm = s.realms.player && s.realms.player.alive
-      ? s.realms.player : null;
-    const realm = playerRealm ? FB.realmTerritory(s, 'player').slice() : [];
-    const cap = FB.domainCap(s);
-    const seatId = playerRealm && playerRealm.capital
-      ? playerRealm.capital : s.player.provinceId;
-    const seat = seatId && FB.world.byId[seatId];
-    const countyNames = direct.map(function (pid) {
-      const province = FB.world.byId[pid];
-      return province ? FB.L(province.name) : pid;
-    });
-    const vassals = FB.playerVassals(s);
     const landed = s.player.tier >= 3;
-    let h = kv('Rank', esc(FB.styledTitle(s))) +
-      kv('Seat', esc(seat ? FB.L(seat.name) : FB.T('None'))) +
-      kv('Held directly', esc(FB.T('{held} of {cap} counties', {
-        held:direct.length, cap:cap
-      }))) +
-      kv('Realm-wide territory', esc(countyCountText(s, realm.length))) +
-      kv('Direct vassals', esc(String(vassals.length)));
+    let h = '';
+
     if (landed) {
-      h += kv('Seasonal tax', esc(FB.T('about {money:gold}', {
-        gold:FB.playerTax(s)
-      }))) +
+      const direct = (s.player.provs || []).slice();
+      const playerRealm = s.realms.player && s.realms.player.alive
+        ? s.realms.player : null;
+      const realm = playerRealm ? FB.realmTerritory(s, 'player').slice() : [];
+      const cap = FB.domainCap(s);
+      const seatId = playerRealm && playerRealm.capital
+        ? playerRealm.capital : s.player.provinceId;
+      const seat = seatId && FB.world.byId[seatId];
+      const countyNames = direct.map(function (pid) {
+        const province = FB.world.byId[pid];
+        return province ? FB.L(province.name) : pid;
+      });
+      const vassals = FB.playerVassals(s);
+
+      h += kv('Rank', esc(FB.styledTitle(s))) +
+        kv('Seat', esc(seat ? FB.L(seat.name) : FB.T('None'))) +
+        kv('Held directly', esc(FB.T('{held} of {cap} counties', {
+          held:direct.length, cap:cap
+        }))) +
+        kv('Realm-wide territory', esc(countyCountText(s, realm.length))) +
+        kv('Direct vassals', esc(String(vassals.length))) +
+        kv('Seasonal tax', esc(FB.T('about {money:gold}', {
+          gold:FB.playerTax(s)
+        }))) +
         kv('Available levy', esc(FB.T('about {men}', {
           men:menText(s, FB.playerLevy(s))
-        })));
-    }
-    h += '<div class="panelh">' + esc(FB.T('Direct demesne')) + '</div>' +
-      '<p class="adesc">' + esc(countyNames.length
-        ? countyNames.join(' · ')
-        : FB.T('No counties are held directly.')) + '</p>';
-    if (direct.length > cap) {
-      h += '<div class="progressnote warnote">' + esc(FB.T(
-        'Over the domain limit by {count}; direct tax and levy are reduced.', {
-          count:direct.length - cap
-        })) + '</div>';
+        }))) +
+        '<div class="panelh">' + esc(FB.T('Direct demesne')) + '</div>' +
+        '<p class="adesc">' + esc(countyNames.length
+          ? countyNames.join(' · ')
+          : FB.T('No counties are held directly.')) + '</p>';
+      if (direct.length > cap) {
+        h += '<div class="progressnote warnote">' + esc(FB.T(
+          'Over the domain limit by {count}; direct tax and levy are reduced.', {
+            count:direct.length - cap
+          })) + '</div>';
+      }
+    } else {
+      const settIdx = s.player.homeSettlement || 0;
+      const settlements = FB.settlementsOf(s, s.player.provinceId);
+      const homeSett = settlements[settIdx] || settlements[0];
+      const settName = homeSett ? homeSett.name : FB.T('Unknown');
+      const kindName = SH.settlementKindName && homeSett && homeSett.kind
+        ? SH.settlementKindName(homeSett.kind) : '';
+      const province = FB.world.byId[s.player.provinceId];
+      const provinceName = province ? FB.L(province.name) : s.player.provinceId;
+      const countyOwnerId = s.owner[s.player.provinceId];
+      const countyRealm = countyOwnerId && s.realms[countyOwnerId];
+      const countyRuler = countyRealm ? s.chars[countyRealm.ruler] : null;
+      const rulerDesc = countyRuler
+        ? FB.fullName(countyRuler) + (countyRealm ? ' (' + countyRealm.name + ')' : '')
+        : (countyRealm ? countyRealm.name : FB.T('None'));
+
+      h += kv('Station', esc(FB.styledTitle(s))) +
+        kv('Settlement', esc(kindName
+          ? FB.T('{settlement} ({kind})', { settlement:settName, kind:kindName })
+          : settName)) +
+        kv('County', esc(provinceName)) +
+        kv('County ruler', esc(rulerDesc));
+      if (s.player.liege && s.player.liege !== countyOwnerId) {
+        const liegeRealm = s.realms[s.player.liege];
+        const liegeRuler = liegeRealm ? s.chars[liegeRealm.ruler] : null;
+        const liegeDesc = liegeRuler
+          ? FB.fullName(liegeRuler) + (liegeRealm ? ' (' + liegeRealm.name + ')' : '')
+          : (liegeRealm ? liegeRealm.name : s.player.liege);
+        h += kv('Liege lord', esc(liegeDesc));
+      }
+
+      h += '<div class="panelh">' + esc(FB.T('Home')) + '</div>';
+      let homeInfo = '';
+      if (s.player.tier === 0) {
+        homeInfo = FB.T('Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor.', {
+          settlement:settName,
+          kind:kindName ? kindName.toLowerCase() : FB.T('village'),
+          county:provinceName,
+          ruler:rulerDesc
+        });
+      } else if (s.player.tier === 1) {
+        homeInfo = FB.T('Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}.', {
+          settlement:settName,
+          kind:kindName ? kindName.toLowerCase() : FB.T('settlement'),
+          county:provinceName,
+          ruler:rulerDesc
+        });
+      } else {
+        homeInfo = FB.T('Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}.', {
+          settlement:settName,
+          kind:kindName ? kindName.toLowerCase() : FB.T('settlement'),
+          county:provinceName,
+          ruler:rulerDesc
+        });
+      }
+      h += '<p class="adesc">' + esc(homeInfo) + '</p>';
     }
     h += '<div class="gm-footer"><button class="btn" id="rank-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal(FB.T('Realm & demesne'), h);
+    openModal(FB.T(landed ? 'Realm & demesne' : 'Station & home'), h);
     $('rank-details-close').addEventListener('click', UI.closeModal);
   };
 

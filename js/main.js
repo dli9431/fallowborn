@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.10';
+  FB.VERSION = '1.133.11';
   FB.CHANGELOG = [
+    { v: '1.133.11', date: '2026-08-15', changes: [
+      'Rank details for serfs and commoners now present their home settlement, local ruler, and station context.'
+    ] },
     { v: '1.133.10', date: '2026-08-15', changes: [
       'Event toasts on mobile now expand to use available screen width alongside map controls.'
     ] },

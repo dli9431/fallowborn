@@ -393,9 +393,11 @@ test('filters, search, collapse, Back, and narrow rendering do not mutate play s
     await page.evaluate(function () {
       FB.ui.showLivelihoods();
     });
-    await page.getByRole('button', {
-      name:'Needs attention', exact:true
-    }).click();
+    const filterToggle = page.locator('[data-list-toggle="filters"]');
+    if (await filterToggle.count()) {
+      await filterToggle.click();
+    }
+    await page.locator('#gm-body [data-list-filter="attention"]').click();
     await page.locator('[data-list-toggle="family-enterprises"]').click();
     await page.locator('#work-list-search').fill('Routine Worker 01');
     await page.locator('#gm-cancel').click();
@@ -403,7 +405,7 @@ test('filters, search, collapse, Back, and narrow rendering do not mutate play s
     await page.evaluate(function () {
       FB.ui.showTab('network', { history:false });
     });
-    await page.getByRole('button', { name:'Needs attention', exact:true }).click();
+    await page.locator('#sidebody [data-list-filter="attention"]').click();
     await page.locator('[data-list-toggle="trade"]').click();
     await page.locator('#network-list-search').fill(
       'Alexandria Extremely-Long Connection Name');
@@ -418,9 +420,8 @@ test('filters, search, collapse, Back, and narrow rendering do not mutate play s
     await expect(page.locator('.character-interaction-modal')).toBeVisible();
     await page.locator('#cm-close').click();
     await expect(networkTarget).toBeFocused();
-    await expect(page.getByRole('button', {
-      name:'Needs attention', exact:true
-    })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('#sidebody [data-list-filter="attention"]'))
+      .toHaveAttribute('aria-pressed', 'true');
     await expect(page.locator('#network-list-search')).toHaveValue(
       'Alexandria Extremely-Long Connection Name');
     await expect(page.locator(
@@ -457,6 +458,10 @@ test('visible number-key order ignores filtered Work rows and search typing stay
     await page.evaluate(function () {
       FB.ui.showLivelihoods();
     });
+    const filterToggle = page.locator('[data-list-toggle="filters"]');
+    if (await filterToggle.count()) {
+      await filterToggle.click();
+    }
 
     await page.locator('#work-list-search').fill('Routine Worker 14');
     await page.locator('#work-list-search').press('n');

@@ -2690,7 +2690,6 @@ textarea.modjson, textarea.savetext {
   .event-receipt-toast {
     width: 100%;
   }
-  .music-track-actions { grid-template-columns: 1fr; }
   .kv { font-size: 15px; padding: 4px 0; }
   .land-section { padding: 9px 10px 10px; }
   .land-kv, .land-section .land-settlements {
@@ -3083,7 +3082,8 @@ textarea.modjson, textarea.savetext {
 
 @media (max-width: 480px) and (orientation: portrait) {
   .music-controls {
-    left: 8px; top: 8px; max-width: calc(100% - 66px);
+    left: 8px; top: 8px; width: min(290px, calc(100% - 66px));
+    max-width: calc(100% - 66px);
     overflow: hidden;
   }
 }

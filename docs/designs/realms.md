@@ -520,6 +520,11 @@ Once every 360 days the officeholder may bring a motion with the visible seeded 
 Works adds 1 gold per season, and Watch and Ward adds 30 retinue; only one ordinance
 is active and it expires after 360 days.
 
+**Unlanded station details.** Clicking the Rank row on the Self panel for serfs, freeholders,
+and gentry opens a dedicated *Station & home* modal rather than the noble *Realm & demesne*
+sheet. It contextualizes their home settlement, local county and sovereign ruler, station rights and
+duties, and path to elevation, leaving demesne limits and vassal counts to landed rulers (tier 3+).
+
 **Inside a realm, counties also change hands without war.** A vassal house carries a
 `favor` standing at its liege's court (−100…100, drifting yearly in `FB.worldTick`).
 The Deeds tab offers three intra-realm paths to a neighbor's county, all following the
