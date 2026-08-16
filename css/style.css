@@ -2878,18 +2878,18 @@ textarea.modjson, textarea.savetext {
     border: 2px solid #7a6234; border-radius: 14px;
   }
   .music-controls {
-    overflow: hidden; padding: 8px 10px;
+    overflow: hidden; padding: 6px 8px;
     border-radius: 8px;
   }
   .music-overlay-close {
-    top: 5px; right: 5px; width: 22px; height: 22px;
-    min-width: 22px; min-height: 22px; font-size: 12px;
+    top: 4px; right: 4px; width: 20px; height: 20px;
+    min-width: 20px; min-height: 20px; font-size: 11px;
   }
   .music-track-header {
-    margin-bottom: 3px; padding-right: 24px;
+    margin-bottom: 2px; padding-right: 22px;
   }
   .music-track-title {
-    font-size: 13px; line-height: 1.2;
+    font-size: 12px; line-height: 1.2;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .music-track-bank {
@@ -2897,26 +2897,27 @@ textarea.modjson, textarea.savetext {
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .music-track-kvs {
-    display: flex; flex-wrap: wrap; gap: 2px 10px;
-    margin: 3px 0; font-size: 11px;
+    display: flex; flex-wrap: wrap; gap: 2px 8px;
+    margin: 2px 0; font-size: 11px;
   }
   .music-track-kvs .kv {
     display: inline-flex; gap: 4px; justify-content: flex-start;
+    padding: 0; font-size: 11px;
   }
   .music-track-kvs .kv-secondary {
     display: none;
   }
   .music-track-actions {
-    margin: 4px 0 0; gap: 4px;
+    margin: 3px 0 0; gap: 3px;
   }
   .music-track-actions .btn {
-    padding: 3px 6px; font-size: 11px; min-height: 28px;
+    padding: 2px 4px; font-size: 11px; min-height: 26px;
   }
   .music-track-navigation {
-    gap: 4px;
+    gap: 3px;
   }
   .music-track-navigation .btn {
-    padding-inline: 4px; font-size: 11px;
+    padding-inline: 4px; font-size: 11px; min-height: 26px;
   }
   .music-overlay-footer {
     display: none;

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.15';
+  FB.VERSION = '1.133.16';
   FB.CHANGELOG = [
+    { v: '1.133.16', date: '2026-08-16', changes: [
+      'The mobile music overlay has been refined to fit comfortably in shallow map views without overlapping active notifications.'
+    ] },
     { v: '1.133.15', date: '2026-08-16', changes: [
       'De jure title promotion progress notes in the Land panel now only appear for titles where you hold an active stake.'
     ] },
