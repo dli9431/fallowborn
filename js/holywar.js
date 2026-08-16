@@ -1223,6 +1223,7 @@ window.FB = window.FB || {};
         occupation.occupiedBy = present.attackers.slice().sort(function (a, b) {
           return b.men - a.men || (a.realm < b.realm ? -1 : 1);
         })[0].realm;
+        if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, pid);
         campaign.resolve = FB.clamp(campaign.resolve +
           B('greatHolyWarOccupationResolve', 5), -100, 100);
         shareOccupationContribution(state, campaign, present.attackers,
@@ -1234,6 +1235,7 @@ window.FB = window.FB || {};
       } else {
         occupation.occupied = false;
         occupation.occupiedBy = null;
+        if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, pid);
         campaign.resolve = FB.clamp(campaign.resolve -
           B('greatHolyWarOccupationResolve', 5), -100, 100);
         shareOccupationContribution(state, campaign, present.defenders,

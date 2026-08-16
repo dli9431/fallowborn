@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.134.0';
+  FB.VERSION = '1.134.1';
   FB.CHANGELOG = [
+    { v: '1.134.1', date: '2026-08-16', changes: [
+      'Directly held counties now gain economic development from productive buildings and lose it to demolition or completed sieges, while AI-governed counties retain yearly drift.',
+      'Older saves restore directly held development once from bookmark values and standing buildings.'
+    ] },
     { v: '1.134.0', date: '2026-08-16', changes: [
       'Added a map search overlay to quickly find and jump to any settlement, county, duchy, or kingdom.',
       'Map controls now fit compact viewports, and ruler gift sheets return directly to their source.'
@@ -1931,6 +1935,7 @@ window.FB = window.FB || {};
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
         warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        developmentBaselineMigration: 1,
         militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
@@ -2180,6 +2185,7 @@ window.FB = window.FB || {};
         provinceId: home.id, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         faithStandingMigration:0, realmStandingFaithBases:{},
         warService: 0, liegeGrants: 0, gentryGeneration: null,
+        developmentBaselineMigration: 1,
         militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},

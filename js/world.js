@@ -4654,22 +4654,141 @@ window.FB = window.FB || {};
     return 0;
   };
 
-  /* One county's yearly development drift: ±1, biased upward, clamped to the
-     technology-lifted ceiling. A decline in the player's own demesne is
-     announced — settlement reveals scale with development, so a silent slide
-     reads as a vanished village. */
-  FB.devDriftCounty = function (state, pid) {
-    const before = state.dev[pid];
-    state.dev[pid] = FB.clamp(before + (FB.chance(0.7) ? 1 : -1), 1,
-      FB.devCap(state, pid));
-    if (state.dev[pid] >= before) return;
-    if (FB.demesne(state).indexOf(pid) < 0) return;
+  /* Development changes have one clamp and feedback boundary. Positive
+     changes stop at the current technology-lifted cap; losses remove only
+     their stated amount even if conquest has since lowered that cap. */
+  let developmentChangeState = null;
+  let developmentChangeTurn = -1;
+  let developmentChanged = {};
+
+  function developmentChangesFor(state) {
+    if (developmentChangeState !== state || developmentChangeTurn !== state.turn) {
+      developmentChangeState = state;
+      developmentChangeTurn = state.turn;
+      developmentChanged = {};
+    }
+    return developmentChanged;
+  }
+
+  FB.playerDirectlyHoldsCounty = function (state, pid) {
+    const p = state && state.player;
+    return !!(p && Array.isArray(p.provs) && p.provs.indexOf(pid) >= 0);
+  };
+
+  /* Saves from before player development became condition-driven retain only
+     the result of their old random drift. Rebuild direct counties once from
+     the bookmark plus standing development buildings, and freeze each old
+     building's actual contribution for exact demolition later. */
+  FB.migratePlayerDevelopment = function (state) {
+    const p = state && state.player;
+    if (!p || p.developmentBaselineMigration === 1) return false;
+    p.developmentBaselineMigration = 1;
+    if (!state.dev || !Array.isArray(p.provs)) return false;
+    let changed = false;
+    for (const pid of p.provs) {
+      const pr = FB.world && FB.world.byId && FB.world.byId[pid];
+      if (!pr) continue;
+      const cap = Math.max(1, Number(FB.devCap(state, pid)) || 10);
+      let target = Math.max(1, Number(pr.dev0) || 1);
+      const list = state.buildings && state.buildings[pid];
+      if (Array.isArray(list)) {
+        for (let i = 0; i < list.length; i++) {
+          let record = list[i];
+          const id = typeof record === 'string' ? record : record && record.id;
+          const def = id && FBDATA.buildings[id];
+          const delta = def ? Number(def.dev) : 0;
+          if (!def || !isFinite(delta) || !delta ||
+              (typeof record !== 'string' && record.ruined)) continue;
+          const before = target;
+          if (delta > 0) {
+            if (target < cap) target = Math.min(cap, target + delta);
+          } else {
+            target = Math.max(1, target + delta);
+          }
+          if (typeof record === 'string') {
+            record = list[i] = { s:0, id:id };
+          }
+          record.devGranted = target - before;
+        }
+      }
+      if (state.dev[pid] !== target) {
+        state.dev[pid] = target;
+        changed = true;
+      }
+    }
+    if (changed) {
+      FB.invalidateRealmCache();
+      if (FB.map && FB.map.request) FB.map.request();
+    }
+    return changed;
+  };
+
+  FB.changeCountyDevelopment = function (state, pid, amount, cause) {
+    if (!state || !state.dev || state.dev[pid] === undefined) return 0;
+    const delta = Number(amount);
+    if (!isFinite(delta) || !delta) return 0;
+    const before = Number(state.dev[pid]);
+    if (!isFinite(before)) return 0;
+    let after = before;
+    if (delta > 0) {
+      const cap = Math.max(1, Number(FB.devCap(state, pid)) || 10);
+      if (before < cap) after = Math.min(cap, before + delta);
+    } else {
+      after = Math.max(1, before + delta);
+    }
+    if (cause !== 'ai_drift') developmentChangesFor(state)[pid] = 1;
+    if (after === before) return 0;
+    state.dev[pid] = after;
+    FB.invalidateRealmCache();
+    if (FB.map && FB.map.request) FB.map.request();
+    if (after >= before) return after - before;
+    if (!FB.playerDirectlyHoldsCounty(state, pid) &&
+        (!state.player || state.player.provinceId !== pid)) return after - before;
     const pr = FB.world.byId[pid];
-    FB.news(state, FB.msg('news.world.development_declined',
-      '📉 Hard times in {province} — development falls to {development}.', {
-        province: pr ? pr.name : pid,
-        development: state.dev[pid]
-      }));
+    const params = {
+      province:pr ? pr.name : pid,
+      development:after
+    };
+    if (cause === 'siege') {
+      FB.news(state, FB.msg('news.world.development_siege_damage',
+        '⚔ War damage in {province} lowers development to {development}.', params));
+    } else if (cause === 'demolition') {
+      FB.news(state, FB.msg('news.world.development_infrastructure_lost',
+        '🏚 Lost infrastructure in {province} lowers development to {development}.',
+        params));
+    } else {
+      FB.news(state, FB.msg('news.world.development_declined',
+        '📉 Hard times in {province} - development falls to {development}.',
+        params));
+    }
+    return after - before;
+  };
+
+  FB.damageCountyDevelopment = function (state, pid) {
+    return FB.changeCountyDevelopment(state, pid, -1, 'siege');
+  };
+
+  /* AI-governed counties retain the old rare seeded drift so the wider world
+     still changes without an ordinary AI building planner. Direct player
+     counties are condition-driven and consume no drift roll. */
+  FB.aiDevDriftCounty = function (state, pid) {
+    if (FB.playerDirectlyHoldsCounty(state, pid)) return 0;
+    return FB.changeCountyDevelopment(state, pid,
+      FB.chance(0.7) ? 1 : -1, 'ai_drift');
+  };
+
+  FB.aiDevelopmentYear = function (state) {
+    if (!state || !state.dev) return;
+    const direct = {};
+    const p = state && state.player;
+    if (p && Array.isArray(p.provs)) {
+      for (const pid of p.provs) direct[pid] = 1;
+    }
+    const changed = developmentChangesFor(state);
+    for (const pid in state.dev) {
+      if (direct[pid] || changed[pid]) continue;
+      if (FB.chance(0.04)) FB.aiDevDriftCounty(state, pid);
+    }
   };
 
   FB.worldTick = function (state) {
@@ -4830,6 +4949,7 @@ window.FB = window.FB || {};
             siegeDef ? Number(siegeDef.siegeDelay) || 0 : 0);
         }
         if (taken) {
+          if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, taken);
           FB.transferProvince(state, taken, winner);
           war.captures = (war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
@@ -5007,10 +5127,7 @@ window.FB = window.FB || {};
 
     if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
 
-    // development drift (tech can lift the ceiling for the player's lands)
-    for (const pid in state.dev) {
-      if (FB.chance(0.04)) FB.devDriftCounty(state, pid);
-    }
+    FB.aiDevelopmentYear(state);
   };
 
   /* ================= PLAYER WAR (seasonal) ================= */
@@ -5537,6 +5654,7 @@ window.FB = window.FB || {};
       const claimantRealm = FB.playerRealmId(state);
       if (claimantRealm &&
           FB.assignReligiousHead(state, 'sunni', claimantRealm)) {
+        FB.damageCountyDevelopment(state, pid);
         p.prestige += FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100);
         FB.news(state, FB.msg('news.religion.head_seized',
           '☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate.', {
@@ -5557,6 +5675,7 @@ window.FB = window.FB || {};
       const enemy = state.realms[w.enemy];
       const me = state.chars[p.charId];
       if (enemy && enemy.alive && FB.absorbRealm(state, w.enemy, me)) {
+        FB.damageCountyDevelopment(state, pid);
         if (me && me.restorationRight && me.restorationRight.realmId === w.enemy) {
           delete me.restorationRight;
         }
@@ -5581,6 +5700,7 @@ window.FB = window.FB || {};
       if (w.casus && w.casus.type === 'aggression' && FB.addModifier) {
         FB.addModifier(state, 'conquered_without_right', pid);
       }
+      FB.damageCountyDevelopment(state, pid);
       FB.news(state, FB.msg('news.war.conquest',
         '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
       p.prestige += FB.warPrestigeReward(w, 'conquest');
@@ -5636,6 +5756,7 @@ window.FB = window.FB || {};
       if (!breached || !status.breached || w.enemyTarget !== lost) lost = null;
     }
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
+      FB.damageCountyDevelopment(state, lost);
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));

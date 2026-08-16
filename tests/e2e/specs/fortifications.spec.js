@@ -300,21 +300,25 @@ test('sieges enforce force, attrition, decay, snapshots, and breach-only transfe
       FB.invalidateFortIndex();
       s.owner[target] = enemy;
       s.holder[target] = enemy;
+      s.dev[target] = 5;
       p.war = {
         enemy:enemy, target:target, wins:0, losses:0, seasons:0,
         defending:false, siege:0, casus:{ type:'conquest', target:target }
       };
       const blockedCapture = FB.warCapture(s);
+      const developmentWhileBlocked = s.dev[target];
       const targetStatus = FB.fortSiegeStatus(s, target, {}, 0);
       p.war.siegeFortLevel = targetStatus.level;
       p.war.siege = targetStatus.required;
       const captured = FB.warCapture(s);
+      const developmentAfterCapture = s.dev[target];
       const intactAfterCapture = FB.fortAt(s, target).level;
 
       s.realms[enemy].alive = true;
       s.owner[target] = 'player';
       s.holder[target] = 'player';
       p.provs = [target];
+      s.dev[target] = 5;
       p.war = {
         enemy:enemy, target:null, wins:0, losses:0, seasons:0,
         defending:true, enemyTarget:target, enemySiege:0,
@@ -325,10 +329,12 @@ test('sieges enforce force, attrition, decay, snapshots, and breach-only transfe
       const cessionBlocked = FB.fns.prison_can_cede(s);
       delete p.flags.in_prison;
       const heldWithoutBreach = FB.warLoseProvince(s, target, false);
+      const developmentWhileHeld = s.dev[target];
       const defenseStatus = FB.fortSiegeStatus(s, target, {}, 0);
       p.war.enemySiegeFortLevel = defenseStatus.level;
       p.war.enemySiege = defenseStatus.required;
       const lostAfterBreach = FB.warLoseProvince(s, target, true);
+      const developmentAfterLoss = s.dev[target];
 
       s.owner[target] = enemy;
       s.holder[target] = enemy;
@@ -350,12 +356,16 @@ test('sieges enforce force, attrition, decay, snapshots, and breach-only transfe
         snapshot:{ level:snapshot.fortLevel, required:afterUpgrade.required },
         localDefense:localDefense,
         blockedCapture:blockedCapture,
+        developmentWhileBlocked:developmentWhileBlocked,
         captured:captured,
+        developmentAfterCapture:developmentAfterCapture,
         intactAfterCapture:intactAfterCapture,
         submissionBlocked:submissionBlocked,
         cessionBlocked:cessionBlocked,
         heldWithoutBreach:heldWithoutBreach,
+        developmentWhileHeld:developmentWhileHeld,
         lostAfterBreach:lostAfterBreach,
+        developmentAfterLoss:developmentAfterLoss,
         decayed:decayed
       };
     });
@@ -369,12 +379,16 @@ test('sieges enforce force, attrition, decay, snapshots, and breach-only transfe
     expect(result.snapshot).toEqual({ level:2, required:5 });
     expect(result.localDefense).toBe(0.2);
     expect(result.blockedCapture).toBe(false);
+    expect(result.developmentWhileBlocked).toBe(5);
     expect(result.captured).toBe(true);
+    expect(result.developmentAfterCapture).toBe(4);
     expect(result.intactAfterCapture).toBe(1);
     expect(result.submissionBlocked).toBe(false);
     expect(result.cessionBlocked).toBe(false);
     expect(result.heldWithoutBreach).toBe(false);
+    expect(result.developmentWhileHeld).toBe(5);
     expect(result.lostAfterBreach).toBe(true);
+    expect(result.developmentAfterLoss).toBe(4);
     expect(result.decayed).toBe(1);
   });
 

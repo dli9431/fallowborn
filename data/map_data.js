@@ -669,8 +669,10 @@ FBDATA.titles = {
    same building in the same county costs ×balance.buildingRepeatCostGrowth) ·
    siting: devMin, coastal, terrains (county gates), homeOnly, maxCounty,
    maxDemesne · ongoing: tax, piety & upkeep per season, levy men · one-time
-   on completion: dev, pop (popular opinion), prestige. state.buildings[pid]
-   holds { s: settlement index, id, ruined? } entries. The 'walls' id is the
+   on completion: dev, pop (popular opinion), prestige. A completed `dev`
+   effect saves its actual applied amount for exact demolition reversal.
+   state.buildings[pid] holds
+   { s: settlement index, id, devGranted?, ruined? } entries. The 'walls' id is the
    settlement-scoped fortification record described by FBDATA.forts below;
    fortifications have their own construction, maintenance, garrison, map,
    movement, and siege rules.
@@ -678,7 +680,7 @@ FBDATA.titles = {
    (professional men-at-arms — few, hard to kill), archers (bowmen) —
    all three join the host's composition at muster (see docs/designs/war.md). */
 FBDATA.buildings = {
-  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2, requiresTech:'undershot_watermill',
+  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2, dev:1, requiresTech:'undershot_watermill',
     desc:'Grinds the valley’s grain for a fee.' },
   granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1, requiresTech:'warehouses',
     desc:'Grain laid up against the hungry years.' },
@@ -686,11 +688,11 @@ FBDATA.buildings = {
     desc:'Trade crosses where the ford once drowned it.' },
   walls:   { name:'Fortification', icon:'🏰', maxCounty:1, fort:true,
     desc:'A county strongpoint that blocks hostile passage until its defenses are breached.' },
-  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, requiresTech:'urban_markets',
+  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, dev:1, requiresTech:'urban_markets',
     desc:'Tolls, stalls, and strangers’ silver.' },
   temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, requiresTech:'lime_mortar',
     desc:'Stone raised toward heaven — and remembered on earth.' },
-  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, requiresTech:'harbor_works',
+  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, dev:1, requiresTech:'harbor_works',
     desc:'Every tide brings someone who owes you a toll.' },
   library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1, requiresTech:'paper_scholarship',
     desc:'Shelves of knowledge — and the people who argue over it. (+1 national research per season)' },

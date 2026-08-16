@@ -5574,7 +5574,7 @@ window.FB = window.FB || {};
     }
     if (fx.devUp) {
       const pid = (p.provs && p.provs[0]) || p.provinceId;
-      state.dev[pid] = FB.clamp((state.dev[pid] || 1) + fx.devUp, 1, FB.devCap(state, pid));
+      FB.changeCountyDevelopment(state, pid, fx.devUp, 'event');
     }
     if (fx.research) appliedResearch = FB.addResearch(state, fx.research) || 0;
     if (fx.addModifier && FB.addModifier) {

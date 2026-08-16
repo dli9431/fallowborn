@@ -296,6 +296,14 @@ steps also extend the bilateral war exhaustion limit. AI border wars likewise ca
 abstractly transfer the county: only a pinned qualifying host applies four seasonal
 pulses in the yearly pass, and abandoned AI work decays four steps.
 
+A completed military capture or objective siege lowers the affected county's development
+by one through `FB.damageCountyDevelopment`. This applies once to ordinary player and AI
+conquest, once to a successful restoration or religious-office objective, and once whenever
+great holy-war occupation flips to attackers or back to defenders. Merely entering the
+county, beginning or abandoning siege work, accepting submission, or ceding land as ransom
+causes no development loss. The damage is separate from fort survival: the strongpoint and
+its in-flight construction still pass intact with the land.
+
 The strongpoint protects political control, not every field and village. Hostile armies
 inside the county can still cause devastation and outside-the-walls events. Stores,
 surrender terms, repairs, garrison characters, and settlement-interior combat remain

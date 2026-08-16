@@ -1336,13 +1336,26 @@ a province:
   from ordinary building pickers, repeat pricing, Raise Next, and autobuild.
 
 Built buildings live in `state.buildings` keyed by **province id**, each entry shaped
-`{ s: settlementIndex, id, ruined? }` — conquest takes them with the land, and they pass to heirs
-with it. (Saves old enough to hold bare id strings are migrated in place by `FB.builtIn`
-into the head settlement, `s: 0`.) `ruined:true` is created by permanent demolition: the
-entry keeps occupying its slot and counting toward repeat prices, but supplies no benefit,
-upkeep, or event requirement. Events can gate options or triggers on standing buildings
+`{ s: settlementIndex, id, devGranted?, ruined? }` - conquest takes them with the land, and they pass to heirs
+with it. `FB.builtIn` projects old bare id strings into the head settlement (`s: 0`)
+without mutating them during reads; a later write in that county persists canonical
+objects. `ruined:true` is created by permanent demolition: the entry keeps occupying its
+slot and counting toward repeat prices, but supplies no benefit, upkeep, or event
+requirement. Events can gate options or triggers on standing buildings
 via `buildings` / `notBuildings` (the famine event's granary option, for example) — those
 read demesne-wide through `FB.hasBuilding`.
+
+For new construction with a one-time `dev` effect, `devGranted` freezes the amount that
+actually fit below the county ceiling. Demolition reverses that exact amount. A missing
+field on an older building is normally treated as zero so a current definition cannot
+impose a retroactive loss on an old save. The one-time player-development migration is the
+exception: counties directly held when the old save first loads are reset to bookmark
+development plus every standing building's current `dev` effect, and those buildings gain
+the corresponding `devGranted`. Ruins and AI-held counties are ignored. Player-direct
+counties do not receive yearly random development drift; AI-governed counties retain it.
+The built-in `dev:1` set is Watermill, Stone Bridge, Market Square, and Harbor. Granaries,
+religious, learning, and military buildings use their own effects rather than contributing
+economic development automatically.
 
 ### Strategic fortifications
 

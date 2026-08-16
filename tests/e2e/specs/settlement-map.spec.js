@@ -1,8 +1,8 @@
 'use strict';
 
 /* Settlement sites and the detailed map: data/validation contract, determinism,
-   save/property compatibility, development-decline anchors and the decline
-   chronicle entry, the universal settlement sheet, and marker rendering/tap
+   save/property compatibility, condition-driven development and settlement
+   anchors, the universal settlement sheet, and marker rendering/tap
    precedence. Authored per docs/plans/historical-settlements-
    detailed-map.md; NOT run by the authoring agent (owner runs the harness). */
 
@@ -398,7 +398,7 @@ test('a valid demesne sheet retains construction and demolition controls',
     await page.keyboard.press('Escape');
   });
 
-/* ---------- development decline and settlement anchors ---------- */
+/* ---------- condition-driven development and settlement anchors ---------- */
 
 test('development decline never conceals an anchored settlement',
   async function ({ page }, testInfo) {
@@ -466,76 +466,207 @@ test('development decline never conceals an anchored settlement',
     expect(result.grown).toBeGreaterThan(result.base);
   });
 
-test('a development decline in the demesne is announced in the chronicle',
+test('yearly development drift skips direct counties but continues under AI rulers',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     await page.evaluate(function () { FB.game.setPaused(true); });
 
     const result = await page.evaluate(function () {
       const s = FB.state;
-      const pid = s.player.provinceId;
-      let foreign = null;
+      const p = s.player;
+      const pid = p.provinceId;
+      let governed = null;
       for (const pr of FB.world.provs) {
         if (pr.wasteland || pr.id === pid) continue;
         const holder = (s.holder && s.holder[pr.id]) || s.owner[pr.id];
-        if (holder && holder !== 'player') { foreign = pr.id; break; }
+        if (holder && holder !== 'player') { governed = pr.id; break; }
       }
-      const savedDev = s.dev[pid], savedForeignDev = s.dev[foreign];
+      const savedDev = s.dev;
+      const savedProvs = p.provs;
       const realChance = FB.chance;
-      const out = { provinceName:FB.world.byId[pid].name };
+      const out = {};
       try {
+        p.provs = [pid];
+        s.dev = {};
         s.dev[pid] = 5;
-        s.dev[foreign] = 5;
-        /* direction roll fails: both counties decline one step, but only the
-           demesne county is announced */
-        FB.chance = function () { return false; };
-        const logBefore = s.log.length;
-        FB.devDriftCounty(s, pid);
-        FB.devDriftCounty(s, foreign);
-        out.demesneDev = s.dev[pid];
-        out.foreignDev = s.dev[foreign];
-        out.entries = s.log.slice(logBefore).filter(function (e) {
-          return e.msg && e.msg.key === 'news.world.development_declined';
-        }).map(function (e) {
-          return {
-            province:e.msg.params.province,
-            development:e.msg.params.development
-          };
-        });
-        /* an upward roll raises development without any entry */
-        FB.chance = function () { return true; };
-        const upBefore = s.log.length;
-        FB.devDriftCounty(s, pid);
-        out.risenDev = s.dev[pid];
-        out.upEntries = s.log.slice(upBefore).filter(function (e) {
-          return e.msg && e.msg.key === 'news.world.development_declined';
-        }).length;
-        /* clamped at the floor: no effective decline, no entry */
-        s.dev[pid] = 1;
-        FB.chance = function () { return false; };
-        const floorBefore = s.log.length;
-        FB.devDriftCounty(s, pid);
-        out.floorDev = s.dev[pid];
-        out.floorEntries = s.log.slice(floorBefore).filter(function (e) {
-          return e.msg && e.msg.key === 'news.world.development_declined';
-        }).length;
+        s.dev[governed] = 5;
+        let calls = [];
+        FB.chance = function (chance) { calls.push(chance); return true; };
+        FB.aiDevelopmentYear(s);
+        out.direct = s.dev[pid];
+        out.governed = s.dev[governed];
+        out.directYearCalls = calls;
+
+        p.provs = [];
+        s.dev = {};
+        s.dev[pid] = 5;
+        calls = [];
+        FB.aiDevelopmentYear(s);
+        out.returnedToAi = s.dev[pid];
+        out.aiYearCalls = calls;
+
+        FB.damageCountyDevelopment(s, pid);
+        calls = [];
+        FB.aiDevelopmentYear(s);
+        out.damageNotRerolled = s.dev[pid];
+        out.damageYearCalls = calls;
       } finally {
         FB.chance = realChance;
-        s.dev[pid] = savedDev;
-        s.dev[foreign] = savedForeignDev;
+        s.dev = savedDev;
+        p.provs = savedProvs;
       }
       return out;
     });
 
-    expect(result.demesneDev).toBe(4);
-    expect(result.foreignDev).toBe(4);
-    expect(result.entries).toEqual([{
-      province:result.provinceName, development:4
-    }]);
-    expect(result.risenDev).toBe(5);
-    expect(result.upEntries).toBe(0);
-    expect(result.floorDev).toBe(1);
-    expect(result.floorEntries).toBe(0);
+    expect(result.direct).toBe(5);
+    expect(result.governed).toBe(6);
+    expect(result.directYearCalls).toEqual([0.04, 0.7]);
+    expect(result.returnedToAi).toBe(6);
+    expect(result.aiYearCalls).toEqual([0.04, 0.7]);
+    expect(result.damageNotRerolled).toBe(5);
+    expect(result.damageYearCalls).toEqual([]);
+  });
+
+test('legacy direct development is rebuilt once from bookmark and standing buildings',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const result = await page.evaluate(function () {
+      const data = JSON.parse(FB.save.serialize());
+      const s = data.state;
+      const p = s.player;
+      let pid = null;
+      let risenPid = null;
+      let aiPid = null;
+      for (const pr of FB.world.provs) {
+        if (pr.wasteland) continue;
+        if (!pid && pr.dev0 <= 8) pid = pr.id;
+        else if (!risenPid && pr.dev0 <= 8) risenPid = pr.id;
+        else if (!aiPid) aiPid = pr.id;
+        if (pid && risenPid && aiPid) break;
+      }
+      p.provs = [pid, risenPid];
+      delete p.developmentBaselineMigration;
+      s.dev[pid] = 1;
+      s.dev[risenPid] = 10;
+      s.dev[aiPid] = 9;
+      s.buildings[pid] = [
+        'bridge',
+        { s:1, id:'mill' },
+        { s:2, id:'harbor', ruined:true }
+      ];
+
+      FB.save.restore(data);
+      const restored = FB.state;
+      const first = {
+        development:restored.dev[pid],
+        risenDevelopment:restored.dev[risenPid],
+        aiDevelopment:restored.dev[aiPid],
+        marker:restored.player.developmentBaselineMigration,
+        records:restored.buildings[pid]
+      };
+      restored.dev[pid] = 2;
+      const changedAgain = FB.migratePlayerDevelopment(restored);
+      return {
+        bookmark:FB.world.byId[pid].dev0,
+        risenBookmark:FB.world.byId[risenPid].dev0,
+        first:first,
+        changedAgain:changedAgain,
+        afterSecondCall:restored.dev[pid]
+      };
+    });
+
+    expect(result.first.development).toBe(result.bookmark + 2);
+    expect(result.first.risenDevelopment).toBe(result.risenBookmark);
+    expect(result.first.aiDevelopment).toBe(9);
+    expect(result.first.marker).toBe(1);
+    expect(result.first.records).toEqual([
+      { s:0, id:'bridge', devGranted:1 },
+      { s:1, id:'mill', devGranted:1 },
+      { s:2, id:'harbor', ruined:true }
+    ]);
+    expect(result.changedAgain).toBe(false);
+    expect(result.afterSecondCall).toBe(2);
+  });
+
+test('building development reverses on demolition without inventing legacy loss',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const pid = p.provinceId;
+      p.tier = 4;
+      p.provs = [pid];
+      p.gold = 10000;
+      s.owner[pid] = 'player';
+      s.holder[pid] = 'player';
+      s.buildings[pid] = [];
+      FB.foundPlayerRealm(s);
+      const technology = FB.realmTechRecord(s, FB.techRealmId(s));
+      const requirement = FBDATA.buildings.market.requiresTech;
+      if (technology.completed.indexOf(requirement) < 0) {
+        technology.completed.push(requirement);
+      }
+
+      s.dev[pid] = 5;
+      const raised = FB.build(s, pid, 0, 'market');
+      const record = FB.builtIn(s, pid)[0];
+      const afterRaise = s.dev[pid];
+      const demolished = FB.demolishBuilding(s, pid, 0, 'market');
+      const afterDemolition = s.dev[pid];
+      const demolitionNews = s.log.filter(function (entry) {
+        return entry.msg &&
+          entry.msg.key === 'news.world.development_infrastructure_lost';
+      }).length;
+
+      s.buildings[pid] = [];
+      const cap = FB.devCap(s, pid);
+      s.dev[pid] = cap;
+      FB.build(s, pid, 0, 'market');
+      const cappedRecord = FB.builtIn(s, pid)[0];
+      FB.demolishBuilding(s, pid, 0, 'market');
+      const afterCappedDemolition = s.dev[pid];
+
+      s.buildings[pid] = [{ s:0, id:'market' }];
+      s.dev[pid] = 5;
+      FB.demolishBuilding(s, pid, 0, 'market');
+
+      const developmentBuildings = Object.keys(FBDATA.buildings).filter(function (id) {
+        return FBDATA.buildings[id].dev;
+      }).sort();
+
+      return {
+        raised:raised,
+        granted:record.devGranted,
+        afterRaise:afterRaise,
+        demolished:demolished,
+        afterDemolition:afterDemolition,
+        demolitionNews:demolitionNews,
+        cappedGranted:cappedRecord.devGranted,
+        afterCappedDemolition:afterCappedDemolition,
+        cap:cap,
+        legacyAfterDemolition:s.dev[pid],
+        developmentBuildings:developmentBuildings
+      };
+    });
+
+    expect(result).toEqual({
+      raised:true,
+      granted:1,
+      afterRaise:6,
+      demolished:true,
+      afterDemolition:5,
+      demolitionNews:1,
+      cappedGranted:0,
+      afterCappedDemolition:result.cap,
+      cap:result.cap,
+      legacyAfterDemolition:5,
+      developmentBuildings:['bridge', 'harbor', 'market', 'mill']
+    });
   });
 
 /* ---------- map markers and input ---------- */

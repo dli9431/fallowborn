@@ -8,8 +8,9 @@ ranking of later fame. The 1–10 scale reads: 1–2 sparse frontier; 3 ordinary
 established county; 4 productive or significant center; 5–6 major regional
 center; 7–9 exceptional metropolis or irrigated core; and 10 world-leading
 center. The authored `dev` in `FBDATA.provinces` initializes `state.dev` only
-for a fresh game. Loaded saves keep their stored `state.dev` values, including
-development gained or lost during play.
+for a fresh game. Loaded saves normally keep their stored `state.dev` values,
+including development gained or lost during play. The sole compatibility
+exception is the one-time player migration described below.
 
 The Land tab labels this county value **Economic development** and shows the
 effective sovereign's separate 0–10 **Technological development** rating beside
@@ -49,11 +50,20 @@ An authored `d.dev` is labeled as immediate county development when raised.
 Technology `fx.devCap` is labeled as the development ceiling above the base of 10
 for every county in the nation that owns it, not as current development.
 
+Four built-in productive and trade buildings contribute one economic development each:
+Watermill, Stone Bridge, Market Square, and Harbor. Granaries provide resilience and famine
+protection instead; Libraries contribute national research; Great Temples remain religious
+and social institutions; and keeps, fortifications, barracks, and archery grounds remain
+military assets. Thus one fully built inland settlement contributes +3 development, while
+a coastal settlement contributes +4. Every copy is still subject to the county's
+development ceiling.
+
 Buildings are **per-settlement**: each of a province's 2–8 settlement slots
 (`FB.settlementsOf` — stable indices that grow with development and never conceal
 a slot the player has invested in, presented from
 the compiled authored/generated site records) may hold one copy of
-each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries.
+each building. `state.buildings[pid]` holds
+`{ s: settlementIndex, id, devGranted?, ruined? }` entries.
 `FB.builtIn` is a read-only projection: it neither creates empty county arrays nor
 rewrites old saves while a UI or derived calculation reads them. Bare ids from old saves
 project into the head settlement (`s: 0`) and are persisted in canonical form on the next
@@ -166,8 +176,11 @@ grandfathering.
 
 A settlement building can be demolished without a refund. Demolition is permanent: the
 entry gains `ruined:true`, loses every ongoing bonus and upkeep charge, and continues to
-occupy that settlement slot. One-time development, Common Voice, and prestige already granted
-when it was raised are not reversed.
+occupy that settlement slot. New construction records the exact applied `dev` amount as
+`devGranted`, including zero when the county was already at its ceiling. Demolition reverses
+only that recorded development. After the bounded legacy repair below, any building record
+still missing the additive field is grandfathered at zero rather than inventing a loss.
+One-time Common Voice and prestige are not reversed.
 
 Related: [tech.md](tech.md) for the development cap (`FB.devCap`), [war.md](war.md) for
 fort movement, battles, and sieges.
@@ -178,14 +191,41 @@ the 867 and 1066 snapshots can value the same enduring county differently withou
 pre-building holdings, granting technologies, or changing the building rules.
 After initialization, development lives only in state and advances normally.
 
-**Yearly drift moves every county.** `FB.worldTick` gives each county a 4% chance of
-a ±1 development step (70/30 upward), clamped to its technology-lifted ceiling
-(`FB.devDriftCounty`). A step down in the player's demesne posts a
-`news.world.development_declined` chronicle entry naming the county and the new
-value — settlement reveals scale with development ([provinces.md](provinces.md)), so
-a silent slide would read as a vanished village. Anchored slots — a standing
-building, a family enterprise, or the player's home settlement — stay visible
-regardless.
+**Player development is condition-driven; AI land retains drift.** Counties listed in
+`player.provs` never receive yearly random drift. Their development changes through
+explicit building `dev`, demolition of that recorded contribution, event effects, and
+military damage. Every other county, including land governed by the player's AI vassals,
+keeps the old 4% yearly chance of a ±1 step with a 70/30 upward bias
+(`FB.aiDevelopmentYear` / `FB.aiDevDriftCounty`). A county switches rules immediately
+when it enters or leaves the player's direct holdings. Explicit development changes in
+the same turn suppress that county's AI drift roll, so a siege cannot be randomly undone
+at the end of its resolution.
+
+`FB.changeCountyDevelopment` is the shared clamp and feedback boundary. Positive change
+stops at the current technology-lifted ceiling; a loss removes only its stated amount,
+even when conquest has lowered the county's current ceiling. Construction saves the
+amount actually applied, which prevents a building raised at the ceiling from causing a
+later phantom loss.
+
+Every completed military capture costs the county one development. Ordinary player and
+AI conquests apply the loss once when control changes; a great holy-war occupation or
+recapture applies it once when the occupation flips. A successful restoration or
+religious-office objective siege damages its besieged target even when its settlement
+absorbs broader territory or transfers no land. An army merely entering a county, an
+unfinished or abandoned siege, and peaceful transfer paths such as inheritance, grants,
+submission, ransom cession, and scripted history cause no development loss. Relevant
+player declines post a cause-specific Chronicle entry. Settlement reveals still scale with
+development ([provinces.md](provinces.md)); anchored slots - a standing building, family
+enterprise, fort, or the player's home settlement - stay visible regardless.
+
+Older saves cannot identify which individual changes came from the former random drift.
+On their first load after this rule change, every county currently listed in `player.provs`
+is therefore rebuilt deterministically as its bookmark development plus the `dev` effects
+of its standing buildings, using the current county ceiling. Ruins do not contribute.
+The same pass records the amount each legacy development building actually supplied, so
+later demolition reverses it exactly. AI-held counties are not recalculated. New games and
+migrated saves carry `player.developmentBaselineMigration:1`, making this repair one-time;
+later event, construction, demolition, and military changes remain saved normally.
 
 County modifiers are applied at their local boundaries. `levy` adjusts the county's base
 levy before technology, Martial, and domain changes and appears as a named composition

@@ -551,10 +551,18 @@ than gaining a child. A missing `lineParentId` from an older save is captured fr
 the outgoing protagonist during succession and otherwise falls back to a recorded
 parent. A dead or missing mother ends the pregnancy on the next daily birth tick.
 
-`state.buildings[pid]` entries are shaped `{ s: settlementIndex, id, ruined? }`
+`state.buildings[pid]` entries are shaped
+`{ s: settlementIndex, id, devGranted?, ruined? }`
 (per-settlement buildings — see [development.md](development.md)); `ruined:true` is an
 optional backwards-compatible tombstone that occupies the slot but provides no bonus and
-charges no upkeep. Saves old enough to hold bare id
+charges no upkeep. New construction with a definition-level `dev` effect saves the exact
+amount actually applied in `devGranted`, including zero at the county ceiling. Demolition
+reverses only a finite nonzero saved amount. A one-time compatibility pass recalculates
+counties currently in `player.provs` from their bookmark development plus standing
+building `dev` effects and reconstructs those buildings' `devGranted` values. It records
+`player.developmentBaselineMigration:1` so later loads preserve all subsequent changes.
+Missing `devGranted` outside that bounded migration remains grandfathered as zero, so an
+AI county acquired later never invents a retroactive development loss. Saves old enough to hold bare id
 strings are NOT rejected: `FB.builtIn` projects them into the head settlement (`s: 0`)
 without mutating state during reads, and the next construction or demolition in that
 county persists the canonical object entries. This remains a no-version-bump

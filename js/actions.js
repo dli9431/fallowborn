@@ -5173,8 +5173,9 @@ window.FB = window.FB || {};
   /* ================= demesne buildings =================
      One of each PER SETTLEMENT of a province (settlements are derived and
      stable — FB.settlementsOf), raisable in ANY province the player holds.
-     state.buildings maps province id -> [{ s: settlement index, id }], so
-     conquest takes them with the land. Bonuses keep summing demesne-wide. */
+     state.buildings maps province id ->
+     [{ s: settlement index, id, devGranted?, ruined? }], so conquest takes
+     them with the land. Bonuses keep summing demesne-wide. */
   FB.demesne = function (state) {
     const p = state.player;
     return (p.provs && p.provs.length) ? p.provs : [p.provinceId];
@@ -5330,8 +5331,12 @@ window.FB = window.FB || {};
     const done = builtInForWrite(state, pid);
     state.player.gold -= cost;
     delete state.player.flags.mason_visit; // the mason's discount is spent
-    done.push({ s: idx, id: id });
-    if (def.dev) state.dev[pid] = FB.clamp((state.dev[pid] || 1) + def.dev, 1, FB.devCap(state, pid));
+    const record = { s: idx, id: id };
+    done.push(record);
+    if (def.dev) {
+      record.devGranted = FB.changeCountyDevelopment(state, pid, def.dev,
+        'building');
+    }
     const fx = {};
     if (def.pop) fx.popularOpinion = def.pop;
     if (def.prestige) fx.prestige = def.prestige;
@@ -5353,7 +5358,12 @@ window.FB = window.FB || {};
     const done = FB.builtIn(state, pid);
     for (let i = 0; i < done.length; i++) {
       if (done[i].id === id && done[i].s === idx && !done[i].ruined) {
-        builtInForWrite(state, pid)[i].ruined = true;
+        const record = builtInForWrite(state, pid)[i];
+        record.ruined = true;
+        const granted = Number(record.devGranted);
+        if (isFinite(granted) && granted) {
+          FB.changeCountyDevelopment(state, pid, -granted, 'demolition');
+        }
         return true;
       }
     }

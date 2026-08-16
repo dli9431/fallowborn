@@ -16,6 +16,61 @@ test.beforeEach(async function ({ page }, testInfo) {
   await injectHolyWarHarness(page);
 });
 
+test('completed holy-war occupations damage development once per transition',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-file',
+      'The occupation transition runs once against file mode.');
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = 'jerusalem';
+      const campaign = FBTEST.makeGreatHolyWar({
+        phase:'active',
+        objectiveCounties:['jerusalem', 'acre', 'damascus'],
+        capturedCounties:[]
+      });
+      campaign.resolve = 0;
+      s.dev[pid] = 5;
+      s.buildings[pid] = [];
+      FB.invalidateFortIndex();
+      const occupation = campaign.occupations[pid];
+      occupation.fortLevel = 0;
+      occupation.progressCamp = 'attackers';
+      occupation.progress = FB.greatHolyWarSiegeRequirement(
+        s, pid, occupation) - 1;
+      s.armies = [{
+        id:'occupation-attacker', realm:'west_francia', at:pid, men:10000,
+        units:{ levy:10000, arch:0, cav:0, ret:0, mercs:0 }
+      }];
+      FB.greatHolyWarTick(s);
+      const afterOccupation = {
+        occupied:occupation.occupied,
+        development:s.dev[pid]
+      };
+
+      occupation.fortLevel = 0;
+      occupation.progressCamp = 'defenders';
+      occupation.progress = FB.greatHolyWarSiegeRequirement(
+        s, pid, occupation) - 1;
+      s.armies = [{
+        id:'occupation-defender', realm:'abbasid', at:pid, men:10000,
+        units:{ levy:10000, arch:0, cav:0, ret:0, mercs:0 }
+      }];
+      FB.greatHolyWarTick(s);
+      return {
+        afterOccupation:afterOccupation,
+        afterRecapture:{
+          occupied:occupation.occupied,
+          development:s.dev[pid]
+        }
+      };
+    });
+
+    expect(result).toEqual({
+      afterOccupation:{ occupied:true, development:4 },
+      afterRecapture:{ occupied:false, development:3 }
+    });
+  });
+
 test('preparation, service, succession, renewal, and withdrawal states restore',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',

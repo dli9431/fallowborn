@@ -38455,7 +38455,29 @@
       ],
       "location": "js/world.js",
       "source": {
-        "text": "📉 Hard times in {province} — development falls to {development}."
+        "text": "📉 Hard times in {province} - development falls to {development}."
+      }
+    },
+    "news.world.development_infrastructure_lost": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "development",
+        "province"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "🏚 Lost infrastructure in {province} lowers development to {development}."
+      }
+    },
+    "news.world.development_siege_damage": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "development",
+        "province"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "⚔ War damage in {province} lowers development to {development}."
       }
     },
     "news.world.duchy_claim": {
@@ -59619,6 +59641,16 @@
       ],
       "source": {
         "text": "⚖ The debt is paid to the last penny; the writ is burned."
+      }
+    },
+    "src.1d79c629": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "📉 Hard times in {province} - development falls to {development}."
       }
     },
     "src.1d7f9104": {
@@ -126821,6 +126853,16 @@
         "text": "Member ruler traits"
       }
     },
+    "src.b654736c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "⚔ War damage in {province} lowers development to {development}."
+      }
+    },
     "src.b65f9bd3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138217,16 +138259,6 @@
       ],
       "source": {
         "text": "An emergency subsidy can only be moved while the liege is at war."
-      }
-    },
-    "src.d1a078c6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "📉 Hard times in {province} — development falls to {development}."
       }
     },
     "src.d1aa3c6c": {
@@ -156962,6 +156994,16 @@
       ],
       "source": {
         "text": "Heroism the whole road will remember — if you live."
+      }
+    },
+    "src.fcfe2998": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "🏚 Lost infrastructure in {province} lowers development to {development}."
       }
     },
     "src.fd052e3d": {
