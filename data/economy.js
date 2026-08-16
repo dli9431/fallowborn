@@ -570,6 +570,12 @@ FBDATA.finance = {
       destinationDevelopmentCap:0.08,
       routeRiskPerLeg:0.006,
       routeRiskCap:0.12
+    },
+    returnCargo:{
+      ladingFeeRate:0.10,
+      cautiousMultiplier:1.20,
+      boldSuccessMultiplier:2.25,
+      boldFailureMultiplier:0.35
     }
   }
 };

@@ -1191,6 +1191,222 @@ window.FB = window.FB || {};
     });
   }
 
+  UI.showReturnCargoPrompt = function () {
+    const s = FB.state;
+    const t = s && s.player && s.player.travel;
+    if (!t) return;
+    const dest = FB.world.byId[t.destinationId || t.currentId];
+    const home = FB.world.byId[t.homeId];
+    const destName = dest ? dest.name : '?';
+    const homeName = home ? home.name : '?';
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Your business in {destination} is concluded. Before taking the road home, would you like to purchase a return cargo from this market to transport and sell in {home}, or return unladen?', {
+        destination:destName,
+        home:homeName
+      })) + '</p><p class="hint">' + esc(FB.T(
+        'Returning with cargo allows you to profit from price differences between {destination} and {home}, but carries road risk.', {
+          destination:destName,
+          home:homeName
+        })) + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="return-cargo-load">📦 ' +
+      esc(FB.T('Buy return cargo…')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Select commodities from {destination} to sell in {home}.', {
+          destination:destName,
+          home:homeName
+        })) + '</span></button>' +
+      '<button class="actionbtn" id="return-cargo-unladen">↩ ' +
+      esc(FB.T('Return unladen (empty-handed)')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Travel home without cargo. No investment at risk on the return road.')) +
+      '</span></button>' +
+      '<button class="actionbtn" id="return-cargo-cancel">' +
+      esc(FB.T('Stay longer')) + '</button></div>';
+    openModal(FB.T('Prepare for the road home'), h, { historyBack:true });
+    $('return-cargo-load').addEventListener('click', function () {
+      UI.closeModal();
+      UI.showReturnCargoSetup();
+    });
+    $('return-cargo-unladen').addEventListener('click', function () {
+      UI.closeModal();
+      if (FB.travelTurnBack) FB.travelTurnBack(s);
+      UI.refresh();
+    });
+    $('return-cargo-cancel').addEventListener('click', function () {
+      UI.closeModal();
+    });
+  };
+
+  UI.showReturnCargoSetup = function () {
+    const s = FB.state;
+    const eligible = FB.tradeVentureReturnEligible ? FB.tradeVentureReturnEligible(s) : true;
+    if (eligible !== true) { UI.toast(eligible); return; }
+    const t = s.player.travel;
+    const dest = FB.world.byId[t.destinationId || t.currentId];
+    const home = FB.world.byId[t.homeId];
+    const destName = dest ? dest.name : '?';
+    const homeName = home ? home.name : '?';
+    const stakes = FB.tradeVentureStakes();
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.', {
+        destination:destName,
+        home:homeName
+      })) + '</p><p class="hint">' + esc(FB.T(
+        'A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return.', {
+          home:homeName
+        })) + '</p></div><div class="gm-list">';
+    for (let i = 0; i < stakes.length; i++) {
+      const stake = stakes[i];
+      const goods = FB.tradeVentureReturnGoods(s, stake);
+      const affordable = goods.some(function (good) {
+        const preview = FB.tradeVentureReturnPreview(s, stake, good.id);
+        return preview && preview.stockAvailable && preview.totalCost <= s.player.gold;
+      });
+      h += '<button class="actionbtn" data-return-stake="' + stake + '"' +
+        (affordable ? '' : ' disabled') + '>⚖ ' +
+        esc(FB.T('Invest {money:stake} in return cargo…', { stake:stake })) +
+        '<span class="adesc">' + esc(affordable
+          ? FB.T('{count} commodity baskets available in {destination}.', {
+            count:goods.filter(function (g) { return g.available; }).length,
+            destination:destName
+          })
+          : FB.T('Insufficient gold or destination stock for this stake.')) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="return-setup-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Load return cargo'), h);
+    document.querySelectorAll('[data-return-stake]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const stake = parseInt(button.dataset.returnStake, 10);
+        UI.showReturnCargoGoods(stake);
+      });
+    });
+    $('return-setup-back').addEventListener('click', function () {
+      UI.closeModal();
+    });
+  };
+
+  UI.showReturnCargoGoods = function (stake) {
+    const s = FB.state;
+    const t = s.player.travel;
+    if (!t) return;
+    const dest = FB.world.byId[t.destinationId || t.currentId];
+    const home = FB.world.byId[t.homeId];
+    const destName = dest ? dest.name : '?';
+    const homeName = home ? home.name : '?';
+    const goods = FB.tradeVentureReturnGoods(s, stake);
+    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'Select a commodity to buy in {destination} and transport back to {home}.', {
+        destination:destName,
+        home:homeName
+      })) + '</p></div><div class="gm-list">';
+    for (let i = 0; i < goods.length; i++) {
+      const good = goods[i];
+      const preview = FB.tradeVentureReturnPreview(s, stake, good.id);
+      const canAfford = preview && preview.totalCost <= s.player.gold;
+      const enabled = good.available && canAfford;
+      const ratio = Math.round(good.priceRatio * 100);
+      h += '<button class="actionbtn" data-return-good="' + esc(good.id) + '"' +
+        (enabled ? '' : ' disabled') + '>' + esc((good.def.icon || '') +
+          ' ' + FB.dataText(s, s.player.charId, 'marketGood', good.id,
+            good.def, 'name', {})) + '<span class="adesc">' + esc(FB.T(
+          '{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison).', {
+            quantity:Math.round(good.quantity * 10) / 10,
+            destPrice:good.destPrice,
+            dest:destName,
+            homePrice:good.homePrice,
+            home:homeName,
+            ratio:ratio
+          })) + (good.available ? (canAfford ? '' : ' · ' + esc(FB.T('cannot afford total cost'))) : ' · ' + esc(FB.T('insufficient local stock'))) +
+        '</span></button>';
+    }
+    h += '</div><div class="gm-footer"><button class="btn" id="return-good-back">' +
+      esc(FB.T('Back')) + '</button></div>';
+    openModal(FB.T('Choose return cargo'), h);
+    document.querySelectorAll('[data-return-good]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const goodId = button.getAttribute('data-return-good');
+        UI.reviewReturnCargoChoice(stake, goodId);
+      });
+    });
+    $('return-good-back').addEventListener('click', function () {
+      UI.showReturnCargoSetup();
+    });
+  };
+
+  UI.reviewReturnCargoChoice = function (stake, goodId) {
+    const s = FB.state;
+    const preview = FB.tradeVentureReturnPreview(s, stake, goodId);
+    if (!preview) {
+      UI.toast(FB.T('That return cargo is no longer available.'));
+      return;
+    }
+    const dest = FB.world.byId[preview.destId];
+    const home = FB.world.byId[preview.homeId];
+    const destName = dest ? dest.name : '?';
+    const homeName = home ? home.name : '?';
+    const goodDef = FBDATA.marketGoods[preview.goodId];
+    const goodName = (goodDef.icon || '') + ' ' +
+      FB.dataText(s, s.player.charId, 'marketGood', preview.goodId, goodDef, 'name', {});
+    const boldChance = Math.round(preview.boldChance * 100);
+
+    let h = '<div class="gm-body-text">' +
+      '<p><b>' + esc(FB.T('Return Cargo: {good}', { good:goodName })) + '</b></p>' +
+      kv('Purchase market', esc(destName)) +
+      kv('Selling market (Home)', esc(homeName)) +
+      kv('Return stake', esc(FB.T('{money:amount}', { amount:preview.stake }))) +
+      kv('Lading fee (10%)', esc(FB.T('{money:amount}', { amount:preview.ladingFee }))) +
+      kv('Total paid now', esc(FB.T('{money:amount}', { amount:preview.totalCost }))) +
+      kv('Purchase price', esc(FB.T('{price}× in {dest}', { price:preview.destPrice, dest:destName }))) +
+      kv('Current home price', esc(FB.T('{price}× in {home}', { price:preview.homePrice, home:homeName }))) +
+      kv('Quantity purchased', esc(FB.T('{quantity} units', { quantity:Math.round(preview.quantity * 10) / 10 }))) +
+      kv('Estimated cautious payout', esc(FB.T('{money:amount}', { amount:preview.estimatedPayoutCautious }))) +
+      kv('Estimated bold payout', esc(FB.T('{money:success} on success / {money:failure} on failure', {
+        success:preview.estimatedPayoutBoldSuccess,
+        failure:preview.estimatedPayoutBoldFailure
+      }))) +
+      '<p class="hint">' + esc(FB.T(
+        'Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin.', {
+          home:homeName, chance:boldChance
+        })) + '</p></div><div class="gm-list">' +
+      '<button class="actionbtn" id="return-load-cautious">🧭 ' +
+      esc(FB.T('Load cautiously')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin.')) +
+      '</span></button>' +
+      '<button class="actionbtn" id="return-load-bold">⚖ ' +
+      esc(FB.T('Load boldly')) +
+      '<span class="adesc">' + esc(FB.T(
+        'Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage.', {
+          chance:boldChance
+        })) + '</span></button>' +
+      '<button class="actionbtn" id="return-review-back">' +
+      esc(FB.T('Back to goods')) + '</button></div>';
+
+    openModal(FB.T('Review return cargo'), h, { dismissable:false, historyBack:true });
+
+    $('return-load-cautious').addEventListener('click', function () {
+      if (!FB.loadTradeVentureReturn(s, preview.stake, preview.goodId, 'cautious')) return;
+      UI.closeModal();
+      UI.toast(FB.T('Return cargo loaded. It will be sold upon your return to {home}.', {
+        home:homeName
+      }));
+      UI.refresh();
+    });
+    $('return-load-bold').addEventListener('click', function () {
+      if (!FB.loadTradeVentureReturn(s, preview.stake, preview.goodId, 'bold')) return;
+      UI.closeModal();
+      UI.toast(FB.T('Return cargo loaded boldly. It will be sold upon your return to {home}.', {
+        home:homeName
+      }));
+      UI.refresh();
+    });
+    $('return-review-back').addEventListener('click', function () {
+      UI.showReturnCargoGoods(preview.stake);
+    });
+  };
+
   function reviewTravelChoice() {
     if (!SH.travelPicker || !SH.travelPicker.selected) return;
     if (SH.travelPicker.kind === 'trade_venture') {

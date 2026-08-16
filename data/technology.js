@@ -172,6 +172,10 @@ window.FBDATA = window.FBDATA || {};
       chartered_trade_corridors:{
         mode:'hard', tech:['guild_charters'], fallback:'ordinary_commodity_ventures',
         rationale:'Exclusive route protection depends on formal guild charters while ordinary commodity ventures remain visible and available.'
+      },
+      trade_venture_return_cargo:{
+        mode:'none',
+        rationale:'Baseline return cargo is an ordinary merchant commodity purchase at destination markets available to any accompanied trade traveler.'
       }
     }
   };
