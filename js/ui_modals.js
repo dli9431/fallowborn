@@ -3265,6 +3265,18 @@ window.FB = window.FB || {};
     if (d.dev) fx.push(FB.T('+{amount} development when raised', { amount: d.dev }));
     if (d.pop) fx.push(FB.T('+{amount} popular opinion when raised', { amount: d.pop }));
     if (d.prestige) fx.push(FB.T('+{amount} prestige when raised', { amount: d.prestige }));
+    if (d.populationCapacity) fx.push(FB.T('+{percent}% population capacity', {
+      percent: Math.round(d.populationCapacity * 100)
+    }));
+    if (d.populationCrisisProtection) fx.push(FB.T('+{percent}% crisis protection', {
+      percent: Math.round(d.populationCrisisProtection * 100)
+    }));
+    if (d.populationFamineProtection) fx.push(FB.T('+{percent}% famine protection', {
+      percent: Math.round(d.populationFamineProtection * 100)
+    }));
+    if (d.migrationAttraction) fx.push(FB.T('+{amount} migration attraction', {
+      amount: d.migrationAttraction
+    }));
     if (id === 'granary') fx.push(FB.T('Unlocks granary choices during famine'));
     return fx;
   }

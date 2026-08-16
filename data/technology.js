@@ -196,6 +196,46 @@ window.FBDATA = window.FBDATA || {};
       trade_venture_return_cargo:{
         mode:'none',
         rationale:'Baseline return cargo is an ordinary merchant commodity purchase at destination markets available to any accompanied trade traveler.'
+      },
+      building_university:{
+        mode:'hard', tech:['universities'], fallback:'library',
+        rationale:'Corporate university centers require organized universities knowledge; ordinary libraries remain available.'
+      },
+      building_cathedral:{
+        mode:'hard', tech:['ribbed_vaulting'], fallback:'temple',
+        rationale:'Monumental Gothic cathedrals and great mosques require ribbed vaulting; ordinary great temples remain available.'
+      },
+      building_guildhall:{
+        mode:'hard', tech:['guild_charters'], fallback:'market',
+        rationale:'Civic guildhalls require formal guild charters; ordinary markets remain available.'
+      },
+      building_arsenal:{
+        mode:'hard', tech:['dry_docks'], fallback:'harbor',
+        rationale:'Naval arsenals require dry dock engineering; ordinary harbors remain available.'
+      },
+      building_foundry:{
+        mode:'hard', tech:['blast_furnace'], fallback:'barracks',
+        rationale:'Foundry works require blast furnace technology; ordinary barracks and smiths remain available.'
+      },
+      building_windmill:{
+        mode:'soft', tech:['windmill'],
+        rationale:'Windmills expand mechanical milling to ridge and plain settlements while watermills remain available.'
+      },
+      building_hospital:{
+        mode:'soft', tech:['hospitals'],
+        rationale:'Endowed hospital buildings expand crisis and epidemic protection.'
+      },
+      building_exchange:{
+        mode:'hard', tech:['bills_of_exchange'], fallback:'market',
+        rationale:'Merchant exchanges require bills of exchange and international credit; ordinary markets remain available.'
+      },
+      late_medieval_warfare_gear:{
+        mode:'soft', tech:['plate_armor','gunpowder_artillery'],
+        rationale:'Plate harness and early bombards enhance battlefield shock and siege capability without replacing the unit taxonomy.'
+      },
+      late_medieval_crafts_commerce:{
+        mode:'soft', tech:['spinning_wheel','marine_insurance','deep_shaft_mining'],
+        rationale:'Spinning wheels, marine insurance, and deep mining improve productivity and risk management across late-game economies.'
       }
     }
   };
@@ -430,7 +470,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','islamic'], unlocks:['rule:fulling_mill'], fx:{ trade:0.015 } });
   add('windmill','Post Windmill','🌬','crafts',[850,1200],[1030,1240],['water_power'],
     'A rotating mill body turns sails toward the wind.',
-    { leaders:['persianate','islamic','latin'], unlocks:['rule:wind_power'], fx:{ costs:{ enterprise:-0.015 } }, confidence:'medium', sources:['GIES','HILL'] });
+    { leaders:['persianate','islamic','latin'], unlocks:['rule:wind_power','building:windmill'], fx:{ costs:{ enterprise:-0.015 } }, confidence:'medium', sources:['GIES','HILL'] });
   add('powered_mills','Powered Mills','⚙','crafts',[700,1200],[980,1240],['overshot_waterwheel'],
     'Specialized gearing applies water and wind power beyond grain grinding.',
     { leaders:['islamic','byzantine','latin'], reqAny:['trip_hammer','windmill'], unlocks:['rule:powered_industry'], fx:{ costs:{ build:-0.04, enterprise:-0.04 }, devCap:1 } });
@@ -439,10 +479,19 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','byzantine','latin'], unlocks:['rule:treadle_weaving'], fx:{ trade:0.015 } });
   add('blast_furnace','Early Blast Furnace','🔥','crafts',[1150,1350],[1260,1400],['improved_furnaces','water_power'],
     'Water-powered bellows sustain temperatures that produce liquid iron.',
-    { leaders:['latin'], unlocks:['rule:cast_iron'], fx:{ costs:{ build:-0.01, training:-0.02 } }, confidence:'medium', sources:['SINGER','GIES'] });
+    { leaders:['latin'], unlocks:['rule:cast_iron','building:foundry'], fx:{ costs:{ build:-0.01, training:-0.02 } }, confidence:'medium', sources:['SINGER','GIES'] });
   add('mechanical_clock','Mechanical Escapement','🕰','crafts',[1270,1330],[1300,1420],['bell_casting','improved_furnaces'],
     'Weight-driven mechanisms divide motion into regular measured beats.',
     { leaders:['latin'], unlocks:['rule:mechanical_timekeeping'], fx:{ research:0.25 }, confidence:'medium', sources:['CIPOLLA','LANDES'] });
+  add('ribbed_vaulting','Ribbed Vaulting','🏛','crafts',[1080,1350],[1150,1350],['lime_mortar','geometry'],
+    'Skeletal stone ribs concentrate vault loads, enabling taller walls and expansive stained glass.',
+    { leaders:['latin','byzantine'], unlocks:['building:cathedral','rule:monumental_masonry'], fx:{ devCap:1, costs:{ build:-0.025 } }, sources:['GIES','SINGER'] });
+  add('spinning_wheel','Spinning Wheel','🧶','crafts',[1000,1350],[1150,1350],['spindle_whorl','horizontal_loom'],
+    'Continuous belt-driven spindles multiply yarn output for weaving workshops.',
+    { leaders:['islamic','persianate','latin'], unlocks:['rule:spun_yarn_trade'], fx:{ trade:0.02, costs:{ enterprise:-0.02 } }, sources:['SINGER','GIES'] });
+  add('deep_shaft_mining','Deep-Shaft Mining','⛏','crafts',[1100,1400],[1200,1400],['bloomery_iron','water_power'],
+    'Timber-shored shafts, windlasses, and gravity drainage adits open deeper ore veins.',
+    { leaders:['latin','persianate'], unlocks:['rule:deep_mining'], fx:{ tax:0.015, trade:0.01 }, sources:['GIES','SINGER'] });
 
   /* Commerce, transport, and infrastructure — 24. */
   add('road_surveys','Surveyed Roads','🛣','commerce',[-500,500],[500,720],[],
@@ -498,7 +547,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','persianate','latin'], unlocks:['rule:letters_of_credit'], fx:{ finance:0.02 } });
   add('bills_of_exchange','Bills of Exchange','📃','commerce',[1100,1300],[1200,1330],['letters_of_credit','commercial_arithmetic'],
     'Transferable paper combines payment, exchange, and short-term credit.',
-    { leaders:['latin','islamic'], unlocks:['rule:bills_of_exchange'], fx:{ finance:0.025 } });
+    { leaders:['latin','islamic'], unlocks:['rule:bills_of_exchange','building:exchange'], fx:{ finance:0.025 } });
+  add('marine_insurance','Marine Insurance','📜','commerce',[1250,1450],[1300,1450],['sea_loans','notarial_contracts'],
+    'Underwritten policies separate sea hazard risk from loan capital and merchant voyages.',
+    { leaders:['latin','islamic'], unlocks:['rule:marine_insurance'], fx:{ finance:0.025 }, sources:['SPUFFORD','LOPEZ'] });
   add('mint_assay','Mint Assaying','🪙','commerce',[800,1150],[940,1170],['standardized_coinage','weights_measures'],
     'Touchstones, balances, and cupellation test the fineness of coin.',
     { leaders:['islamic','byzantine','latin'], unlocks:['rule:mint_assay'], fx:{ finance:0.015 } });
@@ -560,7 +612,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','byzantine','persianate'], unlocks:['rule:astrolabe'], fx:{ research:0.15 } });
   add('hospitals','Endowed Hospitals','🏥','learning',[650,1100],[800,1120],['herbals'],
     'Endowed institutions gather wards, practitioners, medicines, and teaching.',
-    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:hospitals'], fx:{ health:0.002, populationCrisisProtection:0.03 } });
+    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:hospitals','building:hospital'], fx:{ health:0.002, populationCrisisProtection:0.03 } });
   add('physicians','Court Physicians','🌿','learning',[700,1100],[850,1130],['herbals','scriptoria'],
     'Rulers retain learned practitioners for diagnosis, regimen, and treatment.',
     { leaders:['islamic','persianate','byzantine'], unlocks:['rule:court_physicians'], fx:{ health:0.003 } });
@@ -575,7 +627,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','byzantine','latin'], unlocks:['research_slot:2','schooling:master'], fx:{ research:0.25 } });
   add('universities',{ default:'Universities', muslim:'Madrasas and Colleges' },'🎓','learning',[1000,1250],[1100,1270],['scholarly_networks','paper_scholarship'],
     'Corporate schools secure teachers, curricula, privileges, and durable communities.',
-    { leaders:['islamic','latin'], unlocks:['research_slot:3'], fx:{ research:0.35, education:0.03 }, sources:['RASHDALL','MAKDISI'] });
+    { leaders:['islamic','latin'], unlocks:['research_slot:3','building:university'], fx:{ research:0.35, education:0.03 }, sources:['RASHDALL','MAKDISI'] });
   add('scholastic_method','Scholastic Method','❓','learning',[1050,1250],[1150,1280],['universities','translation_schools'],
     'Ordered questions and disputation expose contradictions and sharpen argument.',
     { leaders:['latin','islamic'], unlocks:['rule:scholastic_method'], fx:{ research:0.2, education:0.02 } });
@@ -637,7 +689,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','byzantine'], unlocks:['rule:itinerant_justice'], fx:{ tax:0.01 } });
   add('guild_charters','Guild Charters','📯','governance',[900,1200],[1030,1220],['merchant_guilds','written_law'],
     'Public charters define corporate privileges and monopolies: guildmasters may petition a superior, while barons and greater rulers may grant one local Craft or Trade monopoly.',
-    { leaders:['latin','byzantine','islamic'], unlocks:['rule:guild_charters'], fx:{ costs:{ enterprise:-0.04, training:-0.03 } } });
+    { leaders:['latin','byzantine','islamic'], unlocks:['rule:guild_charters','building:guildhall'], fx:{ costs:{ enterprise:-0.04, training:-0.03 } } });
   add('authenticated_seals','Authenticated Seals','🕯','governance',[750,1100],[900,1120],['diplomatic_correspondence'],
     'Recognized seals authenticate commands and agreements without the issuer present.',
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:documentary_seals'], fx:{ finance:0.01 } });
@@ -769,6 +821,12 @@ window.FBDATA = window.FBDATA || {};
   add('gunpowder_knowledge','Gunpowder Knowledge','💥','warfare',[1200,1320],[1270,1380],['algebra','distillation'],
     'Recipes for saltpeter mixtures open a new field of incendiary and explosive experiment.',
     { leaders:['islamic','persianate'], unlocks:['rule:gunpowder_experiment'], confidence:'medium', sources:['NEEDHAM','DEVRIES'] });
+  add('plate_armor','Plate Armor','🛡','warfare',[1250,1450],[1300,1450],['mail_hauberks','blast_furnace'],
+    'Articulated steel plates provide formidable protection against lance, sword, and missile.',
+    { leaders:['latin','byzantine'], unlocks:['rule:plate_harness'], fx:{ battle:0.02, units:{ ret:20 }, aiUnits:{ ret:0.02 } }, sources:['DEVRIES','BACHRACH'] });
+  add('gunpowder_artillery','Gunpowder Artillery','💥','warfare',[1280,1450],[1320,1450],['gunpowder_knowledge','bell_casting'],
+    'Cast bronze and wrought-iron bombards project heavy balls against fortifications.',
+    { leaders:['islamic','persianate','latin'], unlocks:['rule:siege_bombards'], fx:{ siege:0.06 }, sources:['NEEDHAM','DEVRIES'] });
 
   /* Seafaring and navigation — 18. */
   add('mortise_tenon_shipbuilding','Mortise-and-Tenon Shipbuilding','⛵','seafaring',[-1000,600],[480,650],[],
@@ -824,5 +882,5 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['latin','islamic'], unlocks:['rule:portolan_charts'], fx:{ seaMovement:0.02 }, confidence:'medium', sources:['UNGER','CAMPBELL'] });
   add('dry_docks','Graving Docks','⚓','seafaring',[900,1250],[1070,1280],['harbor_works','stone_bridgebuilding'],
     'Drainable basins expose hulls for inspection and major repair.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['rule:dry_docks'], fx:{ seaMovement:0.01 } });
+    { leaders:['byzantine','islamic','latin'], unlocks:['rule:dry_docks','building:arsenal'], fx:{ seaMovement:0.01 } });
 })();

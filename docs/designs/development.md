@@ -50,14 +50,15 @@ An authored `d.dev` is labeled as immediate county development when raised.
 Technology `fx.devCap` is labeled as the development ceiling above the base of 10
 for every county in the nation that owns it, not as current development.
 
-Four built-in productive and trade buildings contribute one economic development each:
-Watermill, Stone Bridge, Market Square, and Harbor. Granaries provide resilience and famine
-protection instead (+35% famine protection); Libraries contribute national research; Great Temples remain religious
-and social institutions (+10% crisis protection); Watermills (+5%) and Harbors (+3%) expand county carrying capacity;
-Bridges (+1) and Markets (+2) increase migration attraction; and keeps, fortifications, barracks, and archery grounds remain
-military assets. Thus one fully built inland settlement contributes +3 development, while
-a coastal settlement contributes +4. Every copy is still subject to the county's
-development ceiling.
+Built-in productive and trade buildings contribute economic development when raised:
+Watermills, Post Windmills, Stone Bridges, Market Squares, Harbors, Cathedrals, Civic Guildhalls,
+Naval Arsenals, and Merchant Exchanges each supply +1 development. Granaries provide resilience and famine
+protection instead (+35% famine protection); Libraries (+1) and Universities (+2) contribute national research;
+Great Temples (+10%) and Cathedrals (+15%) provide religious prestige and crisis protection; Endowed Hospitals
+mitigate epidemics (+10% crisis protection, +5% famine protection); Watermills (+5%), Post Windmills (+5%), and Harbors (+3%)
+expand county carrying capacity; Bridges (+1), Markets (+2), and Exchanges (+3) increase migration attraction; and
+keeps, fortifications, barracks, archery grounds, foundries, and naval arsenals reinforce territorial defense and field forces.
+Every copy is still subject to the county's development ceiling.
 
 Buildings are **per-settlement**: each of a province's 2–8 settlement slots
 (`FB.settlementsOf` — stable indices that grow with development and never conceal
@@ -139,16 +140,17 @@ completion overflow remain reserve. Completed national technology may raise `FB.
 above 10 and applies signed building-cost modifiers through `FB.techCostFactor`;
 development and buildings themselves remain county state.
 
-Buildings may declare `requiresTech`. The built-in mill, granary, bridge, market,
-temple, harbor, library, keep, barracks, and archery butts use graph entries as discrete
+Buildings may declare `requiresTech`. The built-in mill, windmill, granary, bridge, market,
+exchange, temple, cathedral, hospital, library, university, guildhall, harbor, arsenal, foundry, keep, barracks, and archery butts use graph entries as discrete
 construction unlocks. The building picker and `FB.canBuildAt` enforce the requirement,
 while existing buildings remain with their land after conquest even if the new sovereign
 lacks the knowledge.
 
 **Non-revenue buildings cost upkeep.** Granaries, Bridges, Temples, Libraries, and
-Archery Butts cost 1 gold each season; Keeps cost 2 and Barracks 3 (a barracks’ paid
-men-at-arms are the dearest of all to keep). Mills, Markets, and Harbors directly fund themselves
-and have no separate upkeep. The seasonal charge applies only while the building stands in
+Archery Butts cost 1 gold each season; Keeps and Hospitals cost 2; Barracks, Universities, and Cathedrals cost 3;
+and Foundries and Arsenals cost 2–3 (reflecting maintenance of heavy workshops and permanent naval yards).
+Mills, Windmills, Markets, Civic Guildhalls, and Merchant Exchanges generate net revenue and have no separate upkeep.
+The seasonal charge applies only while the building stands in
 the player's demesne and is itemized in `FB.incomeBreakdown`. Automation will not add an
 upkeep-bearing building unless the current steady seasonal balance covers it.
 

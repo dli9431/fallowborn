@@ -4810,13 +4810,23 @@ window.FB = window.FB || {};
     }
 
     const buildingPriority = [
-      'mill',    // Watermill: +1 dev, +2 tax, +5% pop capacity
-      'market',  // Market Square: +1 dev, +3 tax, +2 attraction
-      'harbor',  // Harbor: +1 dev, +4 tax, +3% capacity, +2 attraction (coastal)
-      'granary', // Granary: 35% famine protection
-      'bridge',  // Stone Bridge: +1 dev, +1 attraction
-      'temple',  // Great Temple: +2 piety, 10% crisis protection
-      'library'  // Library: +1 national research
+      'cathedral', // Cathedral / Great Mosque: +4 piety, +15 prestige, +1 dev, 15% crisis protection (dev 7+)
+      'university',// University: +2 national research, +10 prestige (dev 7+)
+      'guildhall', // Civic Guildhall: +4 tax, +1 dev, +15 retinue (dev 5+)
+      'arsenal',   // Naval Arsenal: +5 tax, +1 dev, +20 retinue (coastal, dev 5+)
+      'foundry',   // Foundry: +3 tax, +30 retinue (dev 6+)
+      'exchange',  // Merchant Exchange: +6 tax, +1 dev, +3 attraction (dev 6+)
+      'hospital',  // Endowed Hospital: +1 piety, 10% crisis protection (dev 5+)
+      'mill',      // Watermill: +1 dev, +2 tax, +5% pop capacity
+      'windmill',  // Post Windmill: +1 dev, +2 tax, +5% pop capacity
+      'market',    // Market Square: +1 dev, +3 tax, +2 attraction
+      'harbor',    // Harbor: +1 dev, +4 tax, +3% capacity, +2 attraction (coastal)
+      'granary',   // Granary: 35% famine protection
+      'bridge',    // Stone Bridge: +1 dev, +1 attraction
+      'temple',    // Great Temple: +2 piety, 10% crisis protection
+      'library',   // Library: +1 national research
+      'keep',      // Stone Keep: +60 levy, +20 retinue (dev 5+)
+      'barracks'   // Barracks: +40 retinue (dev 6+)
     ];
 
     const realmIds = Object.keys(state.realms);

@@ -804,6 +804,22 @@
         "text": "Archery Butts"
       }
     },
+    "building.arsenal.desc.default": {
+      "context": "building arsenal, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Enclosed basins, roperies, and slips for outfitting warships and armed merchantmen. (+20 men-at-arms)"
+      }
+    },
+    "building.arsenal.name.default": {
+      "context": "building arsenal, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Naval Arsenal"
+      }
+    },
     "building.barracks.desc.default": {
       "context": "building barracks, desc, faith branch default.",
       "glossary": [],
@@ -836,6 +852,78 @@
         "text": "Stone Bridge"
       }
     },
+    "building.cathedral.desc.default": {
+      "context": "building cathedral, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Soaring vaults and stained glass raised to God — a monumental beacon across the land."
+      }
+    },
+    "building.cathedral.name.default": {
+      "context": "building cathedral, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Cathedral"
+      }
+    },
+    "building.cathedral.name.muslim": {
+      "context": "building cathedral, name, faith branch muslim.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Great Friday Mosque"
+      }
+    },
+    "building.cathedral.name.pagan": {
+      "context": "building cathedral, name, faith branch pagan.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Grand Sanctuary"
+      }
+    },
+    "building.exchange.desc.default": {
+      "context": "building exchange, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A bustling bourse where distant traders balance bills of exchange and settle international coin."
+      }
+    },
+    "building.exchange.name.default": {
+      "context": "building exchange, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Merchant Exchange"
+      }
+    },
+    "building.exchange.name.muslim": {
+      "context": "building exchange, name, faith branch muslim.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Caravan Bourse"
+      }
+    },
+    "building.foundry.desc.default": {
+      "context": "building foundry, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Water-driven bellows and heavy finery hearths working molten iron and bronze. (+30 men-at-arms)"
+      }
+    },
+    "building.foundry.name.default": {
+      "context": "building foundry, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Foundry and Forge Works"
+      }
+    },
     "building.granary.desc.default": {
       "context": "building granary, desc, faith branch default.",
       "glossary": [],
@@ -852,6 +940,30 @@
         "text": "Granary"
       }
     },
+    "building.guildhall.desc.default": {
+      "context": "building guildhall, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The sworn council hall of civic magistrates, guilds, and urban defense. (+15 men-at-arms)"
+      }
+    },
+    "building.guildhall.name.default": {
+      "context": "building guildhall, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Civic Guildhall"
+      }
+    },
+    "building.guildhall.name.italian": {
+      "context": "building guildhall, name, faith branch italian.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Palazzo Comunale"
+      }
+    },
     "building.harbor.desc.default": {
       "context": "building harbor, desc, faith branch default.",
       "glossary": [],
@@ -866,6 +978,30 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Harbor"
+      }
+    },
+    "building.hospital.desc.default": {
+      "context": "building hospital, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Endowed wards and herbal dispensaries tending the sick, poor, and plague-stricken."
+      }
+    },
+    "building.hospital.name.default": {
+      "context": "building hospital, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Endowed Hospital"
+      }
+    },
+    "building.hospital.name.muslim": {
+      "context": "building hospital, name, faith branch muslim.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Bimaristan"
       }
     },
     "building.keep.desc.default": {
@@ -958,6 +1094,30 @@
         "text": "Great {temple}"
       }
     },
+    "building.university.desc.default": {
+      "context": "building university, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A corporate community of masters and scholars granting recognized degrees. (+2 national research per season)"
+      }
+    },
+    "building.university.name.default": {
+      "context": "building university, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "University"
+      }
+    },
+    "building.university.name.muslim": {
+      "context": "building university, name, faith branch muslim.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Madrasa and College"
+      }
+    },
     "building.walls.desc.default": {
       "context": "building walls, desc, faith branch default.",
       "glossary": [],
@@ -972,6 +1132,22 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Fortification"
+      }
+    },
+    "building.windmill.desc.default": {
+      "context": "building windmill, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A timber mill rotating with the breeze to grind grain on ridges and open plains."
+      }
+    },
+    "building.windmill.name.default": {
+      "context": "building windmill, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Post Windmill"
       }
     },
     "career.administration.desc.default": {
@@ -50045,6 +50221,16 @@
         "text": "The prior’s faction outvotes yours. You remain a brother among brothers."
       }
     },
+    "src.07ce0d89": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "University"
+      }
+    },
     "src.07cf2a91": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51789,6 +51975,16 @@
       ],
       "source": {
         "text": "The grain jar echoes. Your household chews bark-bread and watches the snow."
+      }
+    },
+    "src.0b7dcb87": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Soaring vaults and stained glass raised to God — a monumental beacon across the land."
       }
     },
     "src.0b84bb48": {
@@ -54458,6 +54654,16 @@
       ],
       "source": {
         "text": "A witnessed remission eases collection after an extraordinary burden."
+      }
+    },
+    "src.11f6a8b0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Plate Armor"
       }
     },
     "src.11f8b8b3": {
@@ -58385,6 +58591,16 @@
         "text": "Pay off the debt."
       }
     },
+    "src.19dc93e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{percent}% population capacity"
+      }
+    },
     "src.19e31d29": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59256,6 +59472,16 @@
         "text": "The old kingdoms stand divided while raiders, caliphs, and emperors contend."
       }
     },
+    "src.1c18be9f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Grand Sanctuary"
+      }
+    },
     "src.1c1d2733": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -59886,6 +60112,16 @@
       ],
       "source": {
         "text": "Open the technology entry."
+      }
+    },
+    "src.1da73d82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Deep-Shaft Mining"
       }
     },
     "src.1da94000": {
@@ -65202,6 +65438,16 @@
         "text": "Name {target}, and nothing beyond it."
       }
     },
+    "src.29864c5f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{percent}% famine protection"
+      }
+    },
     "src.298c008a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67705,6 +67951,16 @@
         "text": "Siege Engineering"
       }
     },
+    "src.2f22204f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Cathedral"
+      }
+    },
     "src.2f2c4e27": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69501,6 +69757,16 @@
       ],
       "source": {
         "text": "another household member"
+      }
+    },
+    "src.338058af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The sworn council hall of civic magistrates, guilds, and urban defense. (+15 men-at-arms)"
       }
     },
     "src.33836973": {
@@ -72638,6 +72904,16 @@
         "text": "Judaism"
       }
     },
+    "src.3ad9f523": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Caravan Bourse"
+      }
+    },
     "src.3adaecae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75446,6 +75722,16 @@
       ],
       "source": {
         "text": "Pen the flock and wait for spring."
+      }
+    },
+    "src.41b7959e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Articulated steel plates provide formidable protection against lance, sword, and missile."
       }
     },
     "src.41be9407": {
@@ -83526,6 +83812,16 @@
         "text": "Downloading {done}/{total} · {bytes}/{size}"
       }
     },
+    "src.53fa2ff0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Palazzo Comunale"
+      }
+    },
     "src.53ff9035": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -89884,6 +90180,16 @@
         "text": "A stranger of real accomplishment in stewardship."
       }
     },
+    "src.623887ff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Bimaristan"
+      }
+    },
     "src.62441616": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91203,6 +91509,16 @@
         "text": "Trade & Guild"
       }
     },
+    "src.6571900c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Madrasa and College"
+      }
+    },
     "src.6581198f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91411,6 +91727,16 @@
       ],
       "source": {
         "text": "🏛 Govern the demesne"
+      }
+    },
+    "src.6620e4c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A timber mill rotating with the breeze to grind grain on ridges and open plains."
       }
     },
     "src.66216c8e": {
@@ -92012,6 +92338,16 @@
       ],
       "source": {
         "text": "Accept the failed vote."
+      }
+    },
+    "src.674f98e1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Endowed Hospital"
       }
     },
     "src.67567298": {
@@ -93120,6 +93456,16 @@
         "text": "Bound to the Land"
       }
     },
+    "src.69ae096d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Water-driven bellows and heavy finery hearths working molten iron and bronze. (+30 men-at-arms)"
+      }
+    },
     "src.69b2b137": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93629,6 +93975,16 @@
       ],
       "source": {
         "text": "Pay without a word. ({money:4})"
+      }
+    },
+    "src.6ae18eeb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Ribbed Vaulting"
       }
     },
     "src.6ae47b67": {
@@ -96567,6 +96923,16 @@
         "text": "Stewards and secretaries, all day. The great remain unseen."
       }
     },
+    "src.71f76687": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Timber-shored shafts, windlasses, and gravity drainage adits open deeper ore veins."
+      }
+    },
     "src.71fcf6e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98000,6 +98366,16 @@
         "text": "Plot against…"
       }
     },
+    "src.74f07259": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Great Friday Mosque"
+      }
+    },
     "src.74f0b0d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98680,6 +99056,16 @@
       ],
       "source": {
         "text": "Great Sahara"
+      }
+    },
+    "src.769a13e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Merchant Exchange"
       }
     },
     "src.769b3c95": {
@@ -101005,6 +101391,16 @@
         "text": "Let every magnate watch what becomes of plotters."
       }
     },
+    "src.7c0e0e76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A corporate community of masters and scholars granting recognized degrees. (+2 national research per season)"
+      }
+    },
     "src.7c0e15c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102356,6 +102752,16 @@
       ],
       "source": {
         "text": "Bilyar"
+      }
+    },
+    "src.7f0aa116": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Gunpowder Artillery"
       }
     },
     "src.7f0df09a": {
@@ -112875,6 +113281,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/map_data.js",
         "data/technology.js"
       ],
       "source": {
@@ -116876,6 +117283,16 @@
       ],
       "source": {
         "text": "Exeter"
+      }
+    },
+    "src.9eca7d05": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Cast bronze and wrought-iron bombards project heavy balls against fortifications."
       }
     },
     "src.9ece61e6": {
@@ -121155,6 +121572,16 @@
         "text": "Herbad"
       }
     },
+    "src.a8627d70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Spinning Wheel"
+      }
+    },
     "src.a8630a55": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122178,6 +122605,16 @@
       ],
       "source": {
         "text": "A crown may define the customs it inherits."
+      }
+    },
+    "src.aac7846f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Continuous belt-driven spindles multiply yarn output for weaving workshops."
       }
     },
     "src.aad4b76c": {
@@ -127840,6 +128277,16 @@
         "text": "The door gives. So does your lip. They take what the writ allows, and a little dignity besides."
       }
     },
+    "src.b72d9467": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Marine Insurance"
+      }
+    },
     "src.b73c1483": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133448,6 +133895,16 @@
         "text": "Kyzylkum"
       }
     },
+    "src.c4a076d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Underwritten policies separate sea hazard risk from loan capital and merchant voyages."
+      }
+    },
     "src.c4acaa95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134601,6 +135058,16 @@
         "text": "Lives openly in a union forbidden by most neighbors."
       }
     },
+    "src.c7219737": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/technology.js"
+      ],
+      "source": {
+        "text": "Skeletal stone ribs concentrate vault loads, enabling taller walls and expansive stained glass."
+      }
+    },
     "src.c7330e60": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135362,6 +135829,16 @@
       ],
       "source": {
         "text": "Raised to Grand Qadi!"
+      }
+    },
+    "src.c8bcb9ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Foundry and Forge Works"
       }
     },
     "src.c8bf2a1d": {
@@ -136146,6 +136623,16 @@
       ],
       "source": {
         "text": "Strong backs are sometimes in demand."
+      }
+    },
+    "src.cafcc968": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Endowed wards and herbal dispensaries tending the sick, poor, and plague-stricken."
       }
     },
     "src.cafebc6f": {
@@ -139999,6 +140486,16 @@
         "text": "Bought recognition for the house’s style."
       }
     },
+    "src.d3f6eefd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Civic Guildhall"
+      }
+    },
     "src.d3fb319a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141640,6 +142137,16 @@
       ],
       "source": {
         "text": "You may move the capital only to a county held directly in your own hand."
+      }
+    },
+    "src.d79da382": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A bustling bourse where distant traders balance bills of exchange and settle international coin."
       }
     },
     "src.d7a1bce1": {
@@ -147196,6 +147703,16 @@
         "text": "Carried an emergency war subsidy in the estates."
       }
     },
+    "src.e4794096": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{percent}% crisis protection"
+      }
+    },
     "src.e47c2319": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147385,6 +147902,16 @@
       ],
       "source": {
         "text": "{days}-day grace remaining before a creditor may seek a writ, a court order to seize property."
+      }
+    },
+    "src.e4cb73c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Enclosed basins, roperies, and slips for outfitting warships and armed merchantmen. (+20 men-at-arms)"
       }
     },
     "src.e4d06b46": {
@@ -156688,6 +157215,16 @@
         "text": "The existing deed revalidates its gates and spends the day."
       }
     },
+    "src.fa404cd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Naval Arsenal"
+      }
+    },
     "src.fa46cc6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159640,6 +160177,22 @@
         "text": "Recorded Customary Law"
       }
     },
+    "tech.deep_shaft_mining.desc.default": {
+      "context": "tech deep_shaft_mining, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Timber-shored shafts, windlasses, and gravity drainage adits open deeper ore veins."
+      }
+    },
+    "tech.deep_shaft_mining.name.default": {
+      "context": "tech deep_shaft_mining, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Deep-Shaft Mining"
+      }
+    },
     "tech.dhow_construction.desc.default": {
       "context": "tech dhow_construction, desc, faith branch default.",
       "glossary": [],
@@ -159942,6 +160495,22 @@
       "location": "data/technology.js",
       "source": {
         "text": "Guild Charters"
+      }
+    },
+    "tech.gunpowder_artillery.desc.default": {
+      "context": "tech gunpowder_artillery, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Cast bronze and wrought-iron bombards project heavy balls against fortifications."
+      }
+    },
+    "tech.gunpowder_artillery.name.default": {
+      "context": "tech gunpowder_artillery, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Gunpowder Artillery"
       }
     },
     "tech.gunpowder_knowledge.desc.default": {
@@ -160424,6 +160993,22 @@
         "text": "Manuscript Codex"
       }
     },
+    "tech.marine_insurance.desc.default": {
+      "context": "tech marine_insurance, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Underwritten policies separate sea hazard risk from loan capital and merchant voyages."
+      }
+    },
+    "tech.marine_insurance.name.default": {
+      "context": "tech marine_insurance, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Marine Insurance"
+      }
+    },
     "tech.mariners_compass.desc.default": {
       "context": "tech mariners_compass, desc, faith branch default.",
       "glossary": [],
@@ -160856,6 +161441,22 @@
         "text": "Court Physicians"
       }
     },
+    "tech.plate_armor.desc.default": {
+      "context": "tech plate_armor, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Articulated steel plates provide formidable protection against lance, sword, and missile."
+      }
+    },
+    "tech.plate_armor.name.default": {
+      "context": "tech plate_armor, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Plate Armor"
+      }
+    },
     "tech.portolan_charts.desc.default": {
       "context": "tech portolan_charts, desc, faith branch default.",
       "glossary": [],
@@ -160982,6 +161583,22 @@
       "location": "data/technology.js",
       "source": {
         "text": "Representative Estates"
+      }
+    },
+    "tech.ribbed_vaulting.desc.default": {
+      "context": "tech ribbed_vaulting, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Skeletal stone ribs concentrate vault loads, enabling taller walls and expansive stained glass."
+      }
+    },
+    "tech.ribbed_vaulting.name.default": {
+      "context": "tech ribbed_vaulting, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Ribbed Vaulting"
       }
     },
     "tech.ringworks.desc.default": {
@@ -161342,6 +161959,22 @@
       "location": "data/technology.js",
       "source": {
         "text": "Spindle and Distaff"
+      }
+    },
+    "tech.spinning_wheel.desc.default": {
+      "context": "tech spinning_wheel, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Continuous belt-driven spindles multiply yarn output for weaving workshops."
+      }
+    },
+    "tech.spinning_wheel.name.default": {
+      "context": "tech spinning_wheel, name, faith branch default.",
+      "glossary": [],
+      "location": "data/technology.js",
+      "source": {
+        "text": "Spinning Wheel"
       }
     },
     "tech.square_sail.desc.default": {
@@ -164221,6 +164854,16 @@
         "text": "+{money:amount}/season"
       }
     },
+    "ui:+{percent}% crisis protection": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "+{percent}% crisis protection"
+      }
+    },
     "ui:+{percent}% enterprise profit": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -164231,6 +164874,16 @@
         "text": "+{percent}% enterprise profit"
       }
     },
+    "ui:+{percent}% famine protection": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "+{percent}% famine protection"
+      }
+    },
     "ui:+{percent}% personal tax": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -164239,6 +164892,16 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "+{percent}% personal tax"
+      }
+    },
+    "ui:+{percent}% population capacity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "+{percent}% population capacity"
       }
     },
     "ui:+{percent}% {good} flow capacity": {

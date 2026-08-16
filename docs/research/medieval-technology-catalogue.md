@@ -59,7 +59,7 @@ moment of invention.
 | `rabbit_warrens` — Managed Warrens | 1050…1300 | 1160…1340; Latin | improved_husbandry | `practice:warrens` | medium; ASTILL/HOFFMANN |
 | `marling` — Marling | 1050…1300 | 1160…1340; Latin | heavy_plough, manuring | `practice:marling` | high; ASTILL/WHITE |
 
-### Crafts, materials, and industry (30)
+### Crafts, materials, and industry (33)
 
 | ID and name | Attested | Base adoption; leading traditions | Prerequisites | Gameplay hook | Confidence; sources |
 |---|---:|---|---|---|---|
@@ -88,13 +88,16 @@ moment of invention.
 | `bell_casting` — Large Bell Casting | 750…1100 | 900…1120; Latin/Byzantine | lost_wax_casting, improved_furnaces | `practice:large_bronze_casting` | high; GIES/SINGER |
 | `stone_sawing` — Water-Powered Stone Sawing | 600…1100 | 820…1120; Byzantine/Islamic | water_power, lime_mortar | `rule:powered_stonework` | high; GIES/SINGER |
 | `fulling_mill` — Fulling Mill | 950…1200 | 1050…1230; Latin/Islamic | trip_hammer, horizontal_loom | `rule:fulling_mill` | high; GIES/SINGER |
-| `windmill` — Post Windmill | 850…1200 | 1030…1240; Persianate/Islamic/Latin | water_power | `rule:wind_power` | medium; GIES/HILL |
+| `windmill` — Post Windmill | 850…1200 | 1030…1240; Persianate/Islamic/Latin | water_power | `building:windmill` | medium; GIES/HILL |
 | `powered_mills` — Powered Mills | 700…1200 | 980…1240; Islamic/Byzantine/Latin | overshot_waterwheel, any(trip_hammer/windmill) | `rule:powered_industry` | high; GIES/SINGER |
 | `treadle_loom` — Treadle Loom | 1000…1250 | 1120…1280; Islamic/Byzantine/Latin | horizontal_loom | `rule:treadle_weaving` | high; GIES/SINGER |
-| `blast_furnace` — Early Blast Furnace | 1150…1350 | 1260…1400; Latin | improved_furnaces, water_power | `rule:cast_iron` | medium; SINGER/GIES |
+| `blast_furnace` — Early Blast Furnace | 1150…1350 | 1260…1400; Latin | improved_furnaces, water_power | `building:foundry` | medium; SINGER/GIES |
 | `mechanical_clock` — Mechanical Escapement | 1270…1330 | 1300…1420; Latin | bell_casting, improved_furnaces | `rule:mechanical_timekeeping` | medium; CIPOLLA/LANDES |
+| `ribbed_vaulting` — Ribbed Vaulting | 1080…1350 | 1150…1350; Latin/Byzantine | lime_mortar, geometry | `building:cathedral` | high; GIES/SINGER |
+| `spinning_wheel` — Spinning Wheel | 1000…1350 | 1150…1350; Islamic/Persianate/Latin | spindle_whorl, horizontal_loom | `rule:spun_yarn_trade` | high; SINGER/GIES |
+| `deep_shaft_mining` — Deep-Shaft Mining | 1100…1400 | 1200…1400; Latin/Persianate | bloomery_iron, water_power | `rule:deep_mining` | high; GIES/SINGER |
 
-### Commerce, transport, and infrastructure (24)
+### Commerce, transport, and infrastructure (25)
 
 | ID and name | Attested | Base adoption; leading traditions | Prerequisites | Gameplay hook | Confidence; sources |
 |---|---:|---|---|---|---|
@@ -115,7 +118,8 @@ moment of invention.
 | `notarial_contracts` — Notarial Contracts | 800…1150 | 950…1170; Byzantine/Islamic/Latin | diplomatic_correspondence, market_tolls | `rule:notarial_contracts` | high; LOPEZ/SPUFFORD |
 | `sea_loans` — Maritime Loans | 750…1150 | 930…1180; Byzantine/Islamic/Latin | notarial_contracts, warehouses | `rule:maritime_credit` | high; LOPEZ/SPUFFORD |
 | `letters_of_credit` — Letters of Credit | 900…1200 | 1040…1220; Islamic/Persianate/Latin | notarial_contracts, merchant_guilds | `rule:letters_of_credit` | high; LOPEZ/SPUFFORD |
-| `bills_of_exchange` — Bills of Exchange | 1100…1300 | 1200…1330; Latin/Islamic | letters_of_credit, commercial_arithmetic | `rule:bills_of_exchange` | high; LOPEZ/SPUFFORD |
+| `bills_of_exchange` — Bills of Exchange | 1100…1300 | 1200…1330; Latin/Islamic | letters_of_credit, commercial_arithmetic | `building:exchange` | high; LOPEZ/SPUFFORD |
+| `marine_insurance` — Marine Insurance | 1250…1450 | 1300…1450; Latin/Islamic | sea_loans, notarial_contracts | `rule:marine_insurance` | high; SPUFFORD/LOPEZ |
 | `mint_assay` — Mint Assaying | 800…1150 | 940…1170; Islamic/Byzantine/Latin | standardized_coinage, weights_measures | `rule:mint_assay` | high; LOPEZ/SPUFFORD |
 | `paved_causeways` — Paved Causeways | 850…1200 | 1010…1230; Byzantine/Latin/Islamic | road_surveys, stone_bridgebuilding | `rule:paved_routes` | high; LOPEZ/SPUFFORD |
 | `postal_relays` — Mounted Relay Posts | 700…1150 | 900…1170; Steppe/Persianate/Islamic/Byzantine | pack_saddles, road_surveys | `rule:relay_posts` | high; LOPEZ/SPUFFORD |
@@ -140,12 +144,12 @@ moment of invention.
 | `paper_scholarship` — Paper Scholarship | 750…1050 | 830…1080; Islamic/Persianate | paper_making, scriptoria | `building:library` | high; GRANT/LINDBERG |
 | `algebra` — Algebraic Methods | 800…1100 | 850…1100; Islamic/Persianate | arithmetic, translation_schools | `rule:algebra` | high; GRANT/RASHED |
 | `astrolabe` — Planispheric Astrolabe | 600…1000 | 760…1030; Islamic/Byzantine/Persianate | geometry, astronomical_observation | `rule:astrolabe` | high; GRANT/LINDBERG |
-| `hospitals` — Endowed Hospitals | 650…1100 | 800…1120; Byzantine/Islamic/Persianate | herbals | `rule:hospitals` | high; GRANT/LINDBERG |
+| `hospitals` — Endowed Hospitals | 650…1100 | 800…1120; Byzantine/Islamic/Persianate | herbals | `building:hospital` | high; GRANT/LINDBERG |
 | `physicians` — Court Physicians | 700…1100 | 850…1130; Islamic/Persianate/Byzantine | herbals, scriptoria | `rule:court_physicians` | high; GRANT/LINDBERG |
 | `medical_canons` — Medical Canons | 850…1150 | 980…1170; Islamic/Persianate | translation_schools, physicians | `rule:medical_canons` | high; PORMANN/GRANT |
 | `optics` — Geometrical Optics | 900…1200 | 1020…1220; Islamic/Persianate | geometry, translation_schools | `rule:optics` | high; LINDBERG/GRANT |
 | `scholarly_networks` — Scholarly Networks | 750…1150 | 930…1160; Islamic/Byzantine/Latin | scriptoria | `research_slot:2` | high; GRANT/LINDBERG |
-| `universities` — Universities / Madrasas and Colleges | 1000…1250 | 1100…1270; Islamic/Latin | scholarly_networks, paper_scholarship | `research_slot:3` | high; RASHDALL/MAKDISI |
+| `universities` — Universities / Madrasas and Colleges | 1000…1250 | 1100…1270; Islamic/Latin | scholarly_networks, paper_scholarship | `building:university` | high; RASHDALL/MAKDISI |
 | `scholastic_method` — Scholastic Method | 1050…1250 | 1150…1280; Latin/Islamic | universities, translation_schools | `rule:scholastic_method` | high; GRANT/LINDBERG |
 | `legal_studies` — Professional Legal Studies | 1000…1250 | 1120…1280; Latin/Byzantine/Islamic | universities, written_law | `rule:legal_studies` | high; GRANT/LINDBERG |
 | `anatomy_texts` — Illustrated Anatomy Texts | 1050…1300 | 1180…1320; Islamic/Persianate/Latin | medical_canons, paper_scholarship | `rule:anatomy_texts` | high; GRANT/LINDBERG |
@@ -170,7 +174,7 @@ moment of invention.
 | `manorial_courts` — Manorial Courts | 750…1100 | 900…1110; Latin | land_registers, feudal_oaths | `rule:manorial_courts` | high; BLOCH/BERMAN |
 | `customary_law` — Recorded Customary Law | 800…1150 | 950…1170; Latin/Slavic/Nordic | written_law | `rule:recorded_custom` | high; BLOCH/BERMAN |
 | `royal_judges` — Itinerant Royal Judges | 900…1200 | 1030…1220; Latin/Byzantine | customary_law, diplomatic_correspondence | `rule:itinerant_justice` | high; BLOCH/BERMAN |
-| `guild_charters` — Guild Charters | 900…1200 | 1030…1220; Latin/Byzantine/Islamic | merchant_guilds, written_law | `rule:guild_charters` | high; BLOCH/BERMAN |
+| `guild_charters` — Guild Charters | 900…1200 | 1030…1220; Latin/Byzantine/Islamic | merchant_guilds, written_law | `building:guildhall` | high; BLOCH/BERMAN |
 | `authenticated_seals` — Authenticated Seals | 750…1100 | 900…1120; Byzantine/Islamic/Latin | diplomatic_correspondence | `rule:documentary_seals` | high; BLOCH/BERMAN |
 | `royal_catalogue` — Royal Catalogue | 950…1200 | 1080…1230; Byzantine/Latin/Islamic | authenticated_seals, land_registers | `rule:royal_archive` | high; BLOCH/BERMAN |
 | `exchequer_accounts` — Exchequer Accounts | 1050…1250 | 1140…1280; Latin/Islamic | tax_assessment, commercial_arithmetic | `rule:exchequer` | high; BLOCH/BERMAN |
@@ -183,7 +187,7 @@ moment of invention.
 | `representative_estates` — Representative Estates | 1150…1350 | 1260…1380; Latin | urban_communes, feudal_oaths | `rule:representative_estates` | high; BLOCH/BERMAN |
 | `royal_chancery` — Royal Chancery | 1000…1250 | 1120…1280; Byzantine/Latin/Islamic | royal_catalogue, authenticated_seals | `career:administration` | high; BLOCH/BERMAN |
 
-### Warfare and fortification (32)
+### Warfare and fortification (34)
 
 | ID and name | Attested | Base adoption; leading traditions | Prerequisites | Gameplay hook | Confidence; sources |
 |---|---:|---|---|---|---|
@@ -219,6 +223,8 @@ moment of invention.
 | `fortified_gates` — Advanced Gate Defenses | 850…1200 | 1010…1230; Byzantine/Islamic/Latin | castle_towers | `rule:fortified_gates` | high; DEVRIES/BACHRACH |
 | `logistics_magazines` — Military Magazines | 900…1250 | 1050…1280; Byzantine/Islamic/Persianate | warehouses, tax_assessment | `rule:military_magazines` | high; DEVRIES/BACHRACH |
 | `gunpowder_knowledge` — Gunpowder Knowledge | 1200…1320 | 1270…1380; Islamic/Persianate | algebra, distillation | `rule:gunpowder_experiment` | medium; NEEDHAM/DEVRIES |
+| `plate_armor` — Plate Armor | 1250…1450 | 1300…1450; Latin/Byzantine | mail_hauberks, blast_furnace | `rule:plate_harness` | high; DEVRIES/BACHRACH |
+| `gunpowder_artillery` — Gunpowder Artillery | 1280…1450 | 1320…1450; Islamic/Persianate/Latin | gunpowder_knowledge, bell_casting | `rule:siege_bombards` | medium; NEEDHAM/DEVRIES |
 
 ### Seafaring and navigation (18)
 
@@ -241,19 +247,17 @@ moment of invention.
 | `sternpost_rudder` — Sternpost Rudder | 1050…1250 | 1150…1280; Latin/Islamic | clinker_shipbuilding | `rule:sternpost_rudder` | high; UNGER/PRYOR |
 | `mariners_compass` — Mariner’s Compass | 1050…1250 | 1160…1280; Islamic/Latin | celestial_navigation | `rule:mariners_compass` | medium; UNGER/NEEDHAM |
 | `portolan_charts` — Portolan Charts | 1200…1320 | 1270…1380; Latin/Islamic | naval_logbooks, mariners_compass | `rule:portolan_charts` | medium; UNGER/CAMPBELL |
-| `dry_docks` — Graving Docks | 900…1250 | 1070…1280; Byzantine/Islamic/Latin | harbor_works, stone_bridgebuilding | `rule:dry_docks` | high; UNGER/PRYOR |
+| `dry_docks` — Graving Docks | 900…1250 | 1070…1280; Byzantine/Islamic/Latin | harbor_works, stone_bridgebuilding | `building:arsenal` | high; UNGER/PRYOR |
 
 ## Candidate backlog
 
-These 33 researched candidates are not live. Their omission is a design/content decision,
+These 27 researched candidates are not live. Their omission is a design/content decision,
 not a claim that they were unimportant.
 
 | Candidate | Region and period | Summary and likely dependencies | Why excluded for now | Sources |
 |---|---|---|---|---|
 | Horseshoeing | Eurasia, c. 500–1000 | Nailed shoes protect hooves; `iron_weaponry` + `horse_collar`. | Archaeological chronology is uneven and its current benefit overlaps horse draft. | WHITE/ASTILL |
-| Spinning wheel | Islamic/Persianate and Latin worlds, c. 1000–1300 | Mechanized spinning; `spindle_whorl` + `horizontal_loom`. | Transmission dates are disputed and the textile chain is already dense. | SINGER/GIES |
 | Treadwheel crane | Byzantine and Latin cities, c. 900–1300 | Human-powered lifting for large works; `geometry` + `cooperage`. | Needs a construction-capacity mechanic rather than another build discount. | SINGER/GIES |
-| Ribbed vaulting | Latin West, c. 1000–1200 | Concentrated masonry loads; `lime_mortar` + `geometry`. | Major architecture is represented as buildings, not construction subtypes. | GIES/SINGER |
 | Flying buttress | Latin West, c. 1100–1250 | External supports enable taller masonry; `ribbed_vaulting`. | Depends on the omitted architecture branch and cathedral content. | GIES/SINGER |
 | Sugar refining | Islamic Mediterranean, c. 700–1200 | Mills and boiling refine cane juice; `irrigation_channels` + `powered_mills`. | The economy lacks regional crop and luxury-processing chains. | HILL/SINGER |
 | Silk reeling workshops | Byzantine/Islamic worlds, c. 500–1200 | Specialized reeling and weaving; `horizontal_loom`. | Silk supply and court-industry mechanics are not yet modeled. | SINGER/LOPEZ |
@@ -268,11 +272,7 @@ not a claim that they were unimportant.
 | Greek-fire apparatus | Byzantine Mediterranean, c. 670–1200 | Projectors deliver incendiary mixtures; `distillation` + `naval_levies`. | `incendiary_weapons` intentionally avoids claiming a recoverable secret recipe. | PRYOR/DEVRIES |
 | Cog construction | North and Baltic seas, c. 900–1300 | Broad cargo hull with high sides; `clinker_shipbuilding` + `sternpost_rudder`. | No hull-class roster; `knarrs` and rudders cover the present trade hooks. | UNGER/PRYOR |
 | Magnetic declination tables | Islamic/Latin navigation, c. 1200–1400 | Correct compass bearings against observed variation; `mariners_compass` + `naval_logbooks`. | Evidence and useful adoption are mostly beyond the core period. | CAMPBELL/UNGER |
-| Plate armor | Latin West, c. 1250–1400 | Rigid plates supplement and replace mail; `mail_hauberks` + `improved_furnaces`. | Most adoption falls after 1300 and would need equipment-quality content. | DEVRIES/BACHRACH |
-| Gunpowder artillery | Eurasia, c. 1280–1350 | Powder propels projectiles from tubes; `gunpowder_knowledge` + `bell_casting`. | Campaigns continue past 1300, but artillery requires a separate siege transition. | NEEDHAM/DEVRIES |
 | Paper currency | East/Central Asia, c. 900–1300 | State-backed paper instruments circulate value; `paper_making` + `tax_assessment`. | Outside-map institutional origin and incompatible with the current coin-price model. | NEEDHAM/SPUFFORD |
-| Marine insurance | Mediterranean, c. 1200–1400 | Risk is priced separately from maritime credit; `sea_loans` + `notarial_contracts`. | The current partnership outcome table bundles risk and finance. | DE_ROOVER/LOPEZ |
-| Ore mining and drainage adits | Central and northern Europe, c. 950–1300 | Shafts, galleries, windlasses, and gravity drains extend systematic metal extraction; `bloomery_iron` + `water_power`. | The economy begins with finished materials and has no mines, ore deposits, extraction enterprises, or raw-material prices. | RAMMELSBERG/SINGER |
 | Tide mills | Atlantic Europe, c. 600–1300 | Impounded tides drive horizontal waterwheels; `water_power` + `harbor_works`. | The single mill building does not distinguish river, tidal, or other power sites. | MCERLEAN/GIES |
 | Organized salterns | European and Mediterranean coasts and brine districts, ancient–1300 | Evaporation ponds, brine hearths, and open pans produce salt at settlement scale; `wheel_thrown_pottery` + `cooperage`. | Salt is a historical provisions/flow endowment, but not a distinct commodity or producible enterprise. | SALTERNS/HOFFMANN |
 | Stained-glass workshops | Latin and Byzantine worlds, c. 800–1300 | Colored sheet glass, vitreous paint, lead cames, and solder form monumental windows; `glassblowing` + `lime_mortar`. | Buildings have no decoration, fabric, or monument-prestige upgrade layer. | THEOPHILUS/GIES |

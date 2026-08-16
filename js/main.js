@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.135.1';
+  FB.VERSION = '1.136.0';
   FB.CHANGELOG = [
+    { v: '1.136.0', date: '2026-08-16', changes: [
+      'Added 8 late-medieval settlement buildings and 6 historical technologies, expanding high-development cities with universities, cathedrals, guildhalls, arsenals, and foundries.'
+    ] },
     { v: '1.135.1', date: '2026-08-16', changes: [
       'Accompanied trade ventures can now purchase return cargo at destination markets to bring home and sell at live local prices.'
     ] },

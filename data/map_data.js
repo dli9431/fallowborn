@@ -701,7 +701,23 @@ FBDATA.buildings = {
   barracks:{ name:'Barracks', icon:'🛡', cost:120, upkeep:3, devMin:6, retinue:40, requiresTech:'martial_drill',
     desc:'A drill-yard and paid men who fight for wages, not for forty days. (+40 men-at-arms)' },
   archery_butts: { name:'Archery Butts', icon:'🏹', cost:70, upkeep:1, archers:50, requiresTech:'crossbows',
-    desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' }
+    desc:'Every village lad at the marks of a Sunday, by law and by habit. (+50 archers)' },
+  university: { name:{ default:'University', muslim:'Madrasa and College' }, icon:'🎓', cost:180, upkeep:3, devMin:7, maxDemesne:1, research:2, prestige:10, pop:5, migrationAttraction:2, requiresTech:'universities',
+    desc:'A corporate community of masters and scholars granting recognized degrees. (+2 national research per season)' },
+  cathedral: { name:{ default:'Cathedral', muslim:'Great Friday Mosque', pagan:'Grand Sanctuary' }, icon:'⛪', cost:240, upkeep:3, devMin:7, maxCounty:1, piety:4, prestige:15, pop:10, dev:1, populationCrisisProtection:0.15, requiresTech:'ribbed_vaulting',
+    desc:'Soaring vaults and stained glass raised to God — a monumental beacon across the land.' },
+  guildhall: { name:{ default:'Civic Guildhall', italian:'Palazzo Comunale' }, icon:'🏛', cost:120, upkeep:2, devMin:5, maxCounty:1, tax:4, dev:1, migrationAttraction:1, retinue:15, requiresTech:'guild_charters',
+    desc:'The sworn council hall of civic magistrates, guilds, and urban defense. (+15 men-at-arms)' },
+  arsenal: { name:'Naval Arsenal', icon:'⚓', cost:140, upkeep:3, coastal:true, devMin:5, maxCounty:1, tax:5, dev:1, retinue:20, requiresTech:'dry_docks',
+    desc:'Enclosed basins, roperies, and slips for outfitting warships and armed merchantmen. (+20 men-at-arms)' },
+  foundry: { name:'Foundry and Forge Works', icon:'🔥', cost:130, upkeep:2, devMin:6, maxCounty:1, tax:3, retinue:30, requiresTech:'blast_furnace',
+    desc:'Water-driven bellows and heavy finery hearths working molten iron and bronze. (+30 men-at-arms)' },
+  windmill: { name:'Post Windmill', icon:'🌬', cost:45, maxCounty:2, tax:2, dev:1, populationCapacity:0.05, requiresTech:'windmill',
+    desc:'A timber mill rotating with the breeze to grind grain on ridges and open plains.' },
+  hospital: { name:{ default:'Endowed Hospital', muslim:'Bimaristan' }, icon:'🏥', cost:90, upkeep:2, devMin:5, maxCounty:1, piety:1, pop:5, populationCrisisProtection:0.10, populationFamineProtection:0.05, requiresTech:'hospitals',
+    desc:'Endowed wards and herbal dispensaries tending the sick, poor, and plague-stricken.' },
+  exchange: { name:{ default:'Merchant Exchange', muslim:'Caravan Bourse' }, icon:'💰', cost:160, upkeep:1, devMin:6, maxCounty:1, tax:6, dev:1, migrationAttraction:3, requiresTech:'bills_of_exchange',
+    desc:'A bustling bourse where distant traders balance bills of exchange and settle international coin.' }
 };
 
 /* County strongpoints reuse the settlement-scoped `walls` building id but
