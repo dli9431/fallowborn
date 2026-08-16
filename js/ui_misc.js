@@ -2276,6 +2276,13 @@ window.FB = window.FB || {};
     $('btn-marketlens').addEventListener('click', function () {
       UI.setMarketLens(!FB.map.marketGood);
     });
+    const btnFind = $('btn-find');
+    if (btnFind) {
+      btnFind.addEventListener('click', function () {
+        if (UI.toggleFindOverlay) UI.toggleFindOverlay();
+      });
+    }
+    if (UI.initFindOverlayEvents) UI.initFindOverlayEvents();
     const marketGood = $('market-lens-good');
     if (marketGood) {
       let marketOptions = '';

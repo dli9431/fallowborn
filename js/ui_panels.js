@@ -3619,6 +3619,9 @@ window.FB = window.FB || {};
   UI.setMarketLens = function (active) {
     if (!FB.state) return;
     mapMode = active === false ? 'realm' : 'market';
+    if (mapMode === 'market' && UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
+      UI.setFindOverlay(false);
+    }
     marketLensControls(mapMode === 'market');
     const btn = $('btn-mapmode');
     if (btn) {

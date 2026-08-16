@@ -55,10 +55,12 @@ window.FB = window.FB || {};
     }
     const first = controls[0], last = controls[controls.length - 1];
     const active = document.activeElement;
-    if (e.shiftKey && (active === first || !modal.contains(active))) {
+    if (e.shiftKey && (active === first || active === modal ||
+        !modal.contains(active))) {
       e.preventDefault();
       last.focus();
-    } else if (!e.shiftKey && (active === last || !modal.contains(active))) {
+    } else if (!e.shiftKey && (active === last || active === modal ||
+        !modal.contains(active))) {
       e.preventDefault();
       first.focus();
     }
@@ -84,10 +86,12 @@ window.FB = window.FB || {};
     }
     const first = controls[0], last = controls[controls.length - 1];
     const active = document.activeElement;
-    if (e.shiftKey && (active === first || !modal.contains(active))) {
+    if (e.shiftKey && (active === first || active === modal ||
+        !modal.contains(active))) {
       e.preventDefault();
       last.focus();
-    } else if (!e.shiftKey && (active === last || !modal.contains(active))) {
+    } else if (!e.shiftKey && (active === last || active === modal ||
+        !modal.contains(active))) {
       e.preventDefault();
       first.focus();
     }
@@ -282,9 +286,19 @@ window.FB = window.FB || {};
         // Space/E pause toggles, a repeated one-way skip is harmless and useful).
         if (FB.state && !FB.ui.eventsBusy()) { FB.game.setPaused(true); FB.game.skipAhead(); }
         return;
+      case '?': case '/':
+        if (FB.state && FB.ui.toggleFindOverlay && !FB.ui.eventsBusy()) {
+          e.preventDefault();
+          FB.ui.toggleFindOverlay();
+        }
+        return;
       case '[': if (FB.state) FB.ui.cycleTab(-1); return;
       case ']': if (FB.state) FB.ui.cycleTab(1); return;
       case 'Escape': case 'm': case 'M':
+        if (FB.state && k === 'Escape' && FB.ui.isFindOverlayOpen && FB.ui.isFindOverlayOpen()) {
+          FB.ui.setFindOverlay(false);
+          return;
+        }
         if (FB.state && k === 'Escape' && FB.ui.isMusicOverlayOpen && FB.ui.isMusicOverlayOpen()) {
           FB.ui.setMusicOverlay(false);
           return;

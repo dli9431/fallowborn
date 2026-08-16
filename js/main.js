@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.16';
+  FB.VERSION = '1.134.0';
   FB.CHANGELOG = [
+    { v: '1.134.0', date: '2026-08-16', changes: [
+      'Added a map search overlay to quickly find and jump to any settlement, county, duchy, or kingdom.',
+      'Map controls now fit compact viewports, and ruler gift sheets return directly to their source.'
+    ] },
     { v: '1.133.16', date: '2026-08-16', changes: [
       'The mobile music overlay has been refined to fit comfortably in shallow map views without overlapping active notifications.'
     ] },

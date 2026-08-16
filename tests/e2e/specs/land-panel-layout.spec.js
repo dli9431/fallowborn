@@ -85,6 +85,7 @@ test('desktop sidebars scale evenly while preserving the center map',
   async function ({ page }) {
     async function measure(width) {
       await page.setViewportSize({ width:width, height:935 });
+      await waitForUiRefresh(page);
       return page.locator('#main').evaluate(function (main) {
         const left = document.getElementById('left').getBoundingClientRect();
         const map = document.getElementById('mapwrap').getBoundingClientRect();
@@ -127,8 +128,11 @@ test('desktop sidebars scale evenly while preserving the center map',
 test('De jure title promotion progress notes only appear for titles where the player holds a stake',
   async function ({ page }) {
     const panel = page.locator('#tab-prov');
-    // The player's starting demesne in London (Essex / England / Britannia)
+    // Grant player a county holding in London (Essex / England / Britannia)
     await page.evaluate(function () {
+      FB.state.player.tier = 4;
+      FB.state.player.provs = ['london'];
+      FB.state.holder.london = 'player';
       FB.ui.selectProvince('london');
     });
     await waitForUiRefresh(page);

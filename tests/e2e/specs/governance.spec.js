@@ -997,6 +997,15 @@ test('Governance county and grant flows return to Domain while Council reservati
           return s.council.seats[seatId] === reservedRealm;
         });
       FB.councilAppoint(s, 'constable', reservedRealm);
+      var originalRuler = FB.realmRulerCharacterSnapshot(
+        s, ids.vassalId);
+      if (!originalRuler && FB.ensureRealmCourtForDisplay) {
+        originalRuler = FB.ensureRealmCourtForDisplay(
+          s, ids.vassalId);
+      }
+      if (!originalRuler && FB.materializeRealmRuler) {
+        originalRuler = FB.materializeRealmRuler(s, ids.vassalId);
+      }
       FB.ui.showGovernance('domain');
       return {
         countyId:p.provinceId,
@@ -1004,7 +1013,12 @@ test('Governance county and grant flows return to Domain while Council reservati
         reservedRealm:reservedRealm,
         automaticallySeated:automaticallySeated,
         manualHolder:s.council.seats.constable,
-        originalVassal:ids.vassalId
+        originalVassal:ids.vassalId,
+        originalVassalTitle:FB.T('{title} {name}', {
+          title:FB.realmRankTitle(s, s.realms[ids.vassalId]),
+          name:originalRuler ? FB.fullName(originalRuler) :
+            s.realms[ids.vassalId].ruler.name
+        })
       };
     }, setup);
 
@@ -1052,13 +1066,15 @@ test('Governance county and grant flows return to Domain while Council reservati
 
     await page.locator('#governance-vassals [data-governance-realm="' +
       result.originalVassal + '"]').first().click();
-    await expect(page.locator('#gm-title')).toContainText('Realm Ruler');
-    await expect(page.locator('#gm-cancel')).toHaveText('Back');
+    await expect(page.locator('#gm-title')).toHaveText(
+      result.originalVassalTitle);
+    await expect(page.locator('#cm-close')).toHaveText('Back');
     await page.locator('[data-interaction-action="gift.ruler"]').click();
     await expect(page.locator('#gm-title')).toContainText('Offer a gift');
     await page.locator('#gm-cancel').click();
-    await expect(page.locator('#gm-title')).toContainText('Realm Ruler');
-    await page.locator('#gm-cancel').click();
+    await expect(page.locator('#gm-title')).toHaveText(
+      result.originalVassalTitle);
+    await page.locator('#cm-close').click();
     await expect(page.locator('#governance-vassals')).toBeVisible();
 
     await page.evaluate(function () {
@@ -1280,6 +1296,7 @@ test('Governance tabs show one compact desktop surface at a time',
     await page.evaluate(function () {
       FB.ui.showGovernance('vassals');
     });
+    await waitForUiRefresh(page);
 
     const tabs = page.locator('.governance-nav [role="tab"]');
     await expect(tabs).toHaveCount(7);

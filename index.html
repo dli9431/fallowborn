@@ -443,6 +443,16 @@
               >
                 &#9878;
               </button>
+              <button
+                id="btn-find"
+                class="btn hudbtn"
+                title="Find location (?)"
+                aria-label="Find location (?)"
+                data-i18n-title="Find location (?)"
+                data-i18n-aria-label="Find location (?)"
+              >
+                ?
+              </button>
             </div>
             <div id="market-lens-controls" class="market-lens-controls hidden">
               <div class="market-lens-picker">
@@ -491,6 +501,55 @@
                   Review journey
                 </button>
               </div>
+            </div>
+            <div
+              id="map-finder"
+              class="map-finder hidden"
+              role="dialog"
+              aria-label="Find on map"
+              data-i18n-aria-label="Find on map"
+            >
+              <div class="map-finder-header">
+                <div class="map-finder-input-wrap">
+                  <span class="map-finder-icon" aria-hidden="true">&#128269;</span>
+                  <input
+                    type="search"
+                    id="map-finder-input"
+                    class="map-finder-input"
+                    placeholder="Find settlement, county, duchy, kingdom…"
+                    data-i18n-placeholder="Find settlement, county, duchy, kingdom…"
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-autocomplete="list"
+                    aria-controls="map-finder-results"
+                  />
+                  <button
+                    type="button"
+                    class="btn small map-finder-clear hidden"
+                    id="map-finder-clear"
+                    aria-label="Clear search"
+                    data-i18n-aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  class="btn small map-finder-close"
+                  id="map-finder-close"
+                  aria-label="Close"
+                  data-i18n-aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <div
+                id="map-finder-results"
+                class="map-finder-results"
+                role="listbox"
+                aria-label="Search results"
+                data-i18n-aria-label="Search results"
+              ></div>
             </div>
             <div id="music-controls" class="music-controls hidden" role="region" aria-label="Music controls"></div>
             <div id="toasts"></div>

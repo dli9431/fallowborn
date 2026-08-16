@@ -1,7 +1,7 @@
 'use strict';
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame, startDeterministicGame, waitForUiRefresh } = require('../support/game');
 const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
 
 test.beforeEach(async function ({ page }, testInfo) {
@@ -603,6 +603,7 @@ test('the Market lens stays contained on compact desktops and tablets',
 
     async function measure(width, height) {
       await page.setViewportSize({ width:width, height:height });
+      await waitForUiRefresh(page);
       await expect(page.locator('#market-lens-controls')).toBeVisible();
       return page.locator('#market-lens-controls').evaluate(function (controls) {
         const map = document.getElementById('mapwrap').getBoundingClientRect();
@@ -682,6 +683,7 @@ test('the Market lens stays contained on compact desktops and tablets',
 test('the Market lens and sheet are keyboard/touch accessible and storage stays bounded',
   async function ({ page }) {
     await page.setViewportSize({ width:390, height:844 });
+    await waitForUiRefresh(page);
     await page.locator('#btn-marketlens').focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('#market-lens-controls')).toBeVisible();

@@ -184,7 +184,10 @@ test('institution catalog is complete and every county modifier has a core grant
         buildingCost:1,
         commonVoice:1,
         famine:1,
-        unrest:1
+        unrest:1,
+        marketFlow:1,
+        marketProvisions:1,
+        marketProduction:1
       };
       var grants = {};
       var crossLinks = {};

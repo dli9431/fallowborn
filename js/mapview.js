@@ -115,12 +115,27 @@ window.FB = window.FB || {};
     M.viewY = (FB.world.H - el.height / M.zoom) / 2;
   };
 
-  M.centerOn = function (provId, zoomTo) {
+  M.centerOn = function (provId, zoomTo, forceZoom) {
     const pr = FB.world.byId[provId];
     if (!pr) return;
-    if (zoomTo) M.zoom = Math.max(M.zoom, zoomTo);
+    if (zoomTo) {
+      M.zoom = forceZoom ? zoomTo : Math.max(M.zoom, zoomTo);
+      M.zoom = Math.max(M.minZoom, Math.min(M.maxZoom, M.zoom));
+    }
     M.viewX = pr.cx - M.canvas.width / M.zoom / 2;
     M.viewY = pr.cy - M.canvas.height / M.zoom / 2;
+    clampView();
+    M.request();
+  };
+
+  M.centerOnXY = function (x, y, zoomTo, forceZoom) {
+    if (typeof x !== 'number' || typeof y !== 'number') return;
+    if (zoomTo) {
+      M.zoom = forceZoom ? zoomTo : Math.max(M.zoom, zoomTo);
+      M.zoom = Math.max(M.minZoom, Math.min(M.maxZoom, M.zoom));
+    }
+    M.viewX = x - M.canvas.width / M.zoom / 2;
+    M.viewY = y - M.canvas.height / M.zoom / 2;
     clampView();
     M.request();
   };

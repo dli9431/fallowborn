@@ -1135,7 +1135,7 @@ test('a ruler character sheet materializes its court on first open',
       rngUnchanged:true,
       uidUnchanged:true
     });
-    await expect(page.loc('.character-interaction-modal .court-strip')).toBeVisible();
+    await expect(page.locator('.character-interaction-modal .court-strip')).toBeVisible();
     expect(await page.locator(
       '.character-interaction-modal canvas.pface[data-cid]').count())
       .toBe(report.expectedFaces);

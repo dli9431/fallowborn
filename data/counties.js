@@ -47,7 +47,7 @@ const COUNTIES = [
 ['avila','Ávila',-4.7,40.65,'d_salamanca','iberian','catholic','hills',1,'asturias'],
 ['caceres','Cáceres',-6.35,39.45,'d_salamanca','iberian','catholic','hills',1,'asturias'],
 /* Navarra */
-['pamplona','Pamplona',-1.65,42.8,'d_navarra','iberian','catholic','mountains',3,'navarra'],
+['pamplona','Pamplona',-1.65,42.8,'d_navarra','basque','catholic','mountains',3,'navarra'],
 ['logrono','Logroño',-2.45,42.45,'d_navarra','iberian','catholic','hills',2,'navarra'],
 ['aragon','Aragon',-0.55,42.55,'d_navarra','iberian','catholic','mountains',1,'navarra'],
 /* Córdoba */

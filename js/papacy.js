@@ -44,10 +44,9 @@ window.FB = window.FB || {};
   }
 
   function romanRealmId(state) {
-    FB.ensureReligiousHeads(state);
-    var rid = state.religiousHeads.catholic;
-    var realm = rid && state.realms && state.realms[rid];
-    return realm && realm.alive ? rid : null;
+    var realm = FB.religiousHeadSnapshot
+      ? FB.religiousHeadSnapshot(state, 'catholic') : null;
+    return realm ? realm.id : null;
   }
 
   function realmSovereign(state, rid) {

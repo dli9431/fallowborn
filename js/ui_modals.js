@@ -15695,12 +15695,12 @@ window.FB = window.FB || {};
             FB.queueEvent(s, 'rival_mediation', {});
           });
         } else if (action.route === 'ruler-gift') {
-          const realmReturn = {
-            view:'character', characterId:c.id, returnContext:returnContext
-          };
           if (model.realmId) {
-            UI.showRulerGiftModal(model.realmId,
-              realmGiftReturnView(model.realmId, realmReturn));
+            UI.showRulerGiftModal(model.realmId, {
+              kind:'character-card',
+              characterId:c.id,
+              returnContext:returnContext || null
+            });
           }
         } else if (action.route === 'cultivate-ruler') {
           if (!model.realmId) return;
@@ -18241,6 +18241,9 @@ window.FB = window.FB || {};
       if (UI.setMarketLens && FB.map && FB.map.marketGood) {
         UI.setMarketLens(false);
       }
+      if (UI.setFindOverlay && UI.isFindOverlayOpen && UI.isFindOverlayOpen()) {
+        UI.setFindOverlay(false);
+      }
       UI.renderMusicOverlay();
     }
   };
@@ -18415,6 +18418,418 @@ window.FB = window.FB || {};
       modalHistoryBack(function () { UI.showSettings(); });
     });
   };
+
+  /* ================= location finder ================= */
+  let locationIndexCache = null;
+  let locationIndexWorldKey = null;
+
+  UI.resetLocationSearchCache = function () {
+    locationIndexCache = null;
+    locationIndexWorldKey = null;
+  };
+
+  function buildLocationSearchIndex() {
+    if (!FB.world || !FB.world.provs) return [];
+    const worldKey = (FB.activeBookmarkId || '') + ':' + (FB.world.provs ? FB.world.provs.length : 0);
+    if (locationIndexCache && locationIndexWorldKey === worldKey) {
+      return locationIndexCache;
+    }
+    const entries = [];
+
+    // 1. Kingdoms
+    if (FBDATA.kingdoms) {
+      for (const kid in FBDATA.kingdoms) {
+        const k = FBDATA.kingdoms[kid];
+        const counties = FB.kingdomCounties ? FB.kingdomCounties(kid) : [];
+        let sumX = 0, sumY = 0, count = 0;
+        for (let i = 0; i < counties.length; i++) {
+          const pr = FB.world.byId[counties[i]];
+          if (pr && !pr.wasteland) { sumX += pr.cx; sumY += pr.cy; count++; }
+        }
+        if (count === 0) continue;
+        const empName = k.empire && FBDATA.empires && FBDATA.empires[k.empire] ? FBDATA.empires[k.empire].name : '';
+        entries.push({
+          type:'kingdom',
+          typeLabel:FB.T('Kingdom'),
+          icon:'👑',
+          id:'k:' + kid,
+          name:k.name,
+          context:empName ? FB.T('Kingdom in {empire}', { empire:empName }) : FB.T('Kingdom · {count} counties', { count:count }),
+          x:sumX / count,
+          y:sumY / count,
+          zoom:1.3,
+          firstCounty:counties[0] || null,
+          search:(k.name + ' ' + (empName || '') + ' kingdom').toLowerCase(),
+          priority:4
+        });
+      }
+    }
+
+    // 2. Duchies
+    if (FBDATA.duchies) {
+      for (const did in FBDATA.duchies) {
+        const d = FBDATA.duchies[did];
+        const counties = FB.duchyCounties ? FB.duchyCounties(did) : [];
+        let sumX = 0, sumY = 0, count = 0;
+        for (let i = 0; i < counties.length; i++) {
+          const pr = FB.world.byId[counties[i]];
+          if (pr && !pr.wasteland) { sumX += pr.cx; sumY += pr.cy; count++; }
+        }
+        if (count === 0) continue;
+        const kName = d.kingdom && FBDATA.kingdoms && FBDATA.kingdoms[d.kingdom] ? FBDATA.kingdoms[d.kingdom].name : '';
+        entries.push({
+          type:'duchy',
+          typeLabel:FB.T('Duchy'),
+          icon:'⚜',
+          id:'d:' + did,
+          name:d.name,
+          context:kName ? FB.T('Duchy in {kingdom}', { kingdom:kName }) : FB.T('Duchy · {count} counties', { count:count }),
+          x:sumX / count,
+          y:sumY / count,
+          zoom:2.0,
+          firstCounty:counties[0] || null,
+          search:(d.name + ' ' + (kName || '') + ' duchy').toLowerCase(),
+          priority:3
+        });
+      }
+    }
+
+    // 3. Counties
+    if (FB.world && FB.world.provs) {
+      for (let i = 0; i < FB.world.provs.length; i++) {
+        const pr = FB.world.provs[i];
+        if (pr.wasteland) continue;
+        const d = pr.duchy && FBDATA.duchies && FBDATA.duchies[pr.duchy];
+        const dName = d ? d.name : '';
+        const kName = d && d.kingdom && FBDATA.kingdoms && FBDATA.kingdoms[d.kingdom] ? FBDATA.kingdoms[d.kingdom].name : '';
+        let ctx = FB.T('County');
+        if (dName && kName) ctx = FB.T('County in {duchy}, {kingdom}', { duchy:dName, kingdom:kName });
+        else if (dName) ctx = FB.T('County in {duchy}', { duchy:dName });
+        entries.push({
+          type:'county',
+          typeLabel:FB.T('County'),
+          icon:'📜',
+          id:'c:' + pr.id,
+          provId:pr.id,
+          name:pr.name,
+          context:ctx,
+          x:pr.cx,
+          y:pr.cy,
+          zoom:3.2,
+          search:(pr.name + ' ' + (dName || '') + ' ' + (kName || '') + ' county').toLowerCase(),
+          priority:2
+        });
+      }
+    }
+
+    // 4. Settlements
+    if (FB.world && FB.world.sites) {
+      for (let i = 0; i < FB.world.sites.length; i++) {
+        const site = FB.world.sites[i];
+        const pr = FB.world.byId[site.pid];
+        if (!pr || pr.wasteland) continue;
+        const d = pr.duchy && FBDATA.duchies && FBDATA.duchies[pr.duchy];
+        const dName = d ? d.name : '';
+        const kName = d && d.kingdom && FBDATA.kingdoms && FBDATA.kingdoms[d.kingdom] ? FBDATA.kingdoms[d.kingdom].name : '';
+        const kindIcon = site.kind === 'city' ? '🏙' : (site.kind === 'town' ? '🏘' : '🏡');
+        entries.push({
+          type:'settlement',
+          typeLabel:FB.T('Settlement'),
+          icon:kindIcon,
+          id:'s:' + site.pid + ':' + site.index,
+          provId:site.pid,
+          settIndex:site.index,
+          name:site.name,
+          authored:!!site.authored,
+          context:FB.T('Settlement in {county}', { county:pr.name }) + (dName ? ' · ' + dName : ''),
+          x:site.x,
+          y:site.y,
+          zoom:14.0,
+          search:(site.name + ' ' + pr.name + ' ' + (dName || '') + ' ' + (kName || '') + ' settlement').toLowerCase(),
+          priority:site.authored ? 1.5 : 1
+        });
+      }
+    }
+
+    locationIndexCache = entries;
+    locationIndexWorldKey = worldKey;
+    return entries;
+  }
+
+  function matchLocationSearch(query) {
+    const entries = buildLocationSearchIndex();
+    const q = (query || '').trim().toLowerCase();
+    if (!q) {
+      const featured = [];
+      if (FB.state && FB.state.player && FB.state.player.provinceId) {
+        const pid = FB.state.player.provinceId;
+        for (let i = 0; i < entries.length; i++) {
+          if (entries[i].provId === pid && entries[i].type === 'county') {
+            featured.push(entries[i]);
+            break;
+          }
+        }
+        for (let i = 0; i < entries.length && featured.length < 3; i++) {
+          if (entries[i].provId === pid && entries[i].type === 'settlement') {
+            featured.push(entries[i]);
+          }
+        }
+      }
+      for (let i = 0; i < entries.length && featured.length < 12; i++) {
+        if (entries[i].type === 'kingdom' && featured.indexOf(entries[i]) < 0) {
+          featured.push(entries[i]);
+        }
+      }
+      return featured;
+    }
+
+    const results = [];
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const n = entry.name.toLowerCase();
+      const s = entry.search;
+      let score = 0;
+
+      if (n === q) {
+        score = 2000;
+      } else if (n.indexOf(q) === 0) {
+        score = 1000 + (30 - Math.min(30, n.length));
+      } else if (n.indexOf(' ' + q) >= 0 || n.indexOf('-' + q) >= 0) {
+        score = 600 + (30 - Math.min(30, n.length));
+      } else if (n.indexOf(q) > 0) {
+        score = 300 + (30 - Math.min(30, n.length));
+      } else if (s.indexOf(q) >= 0) {
+        score = 100;
+      }
+
+      if (score > 0) {
+        score += entry.priority * 10;
+        results.push({ entry:entry, score:score });
+      }
+    }
+
+    results.sort(function (a, b) {
+      return (b.score - a.score) || (a.entry.name < b.entry.name ? -1 : 1);
+    });
+
+    const out = [];
+    for (let i = 0; i < results.length && i < 30; i++) {
+      out.push(results[i].entry);
+    }
+    return out;
+  }
+
+  function highlightMatch(text, query) {
+    if (!query || !query.trim()) return esc(text);
+    const q = query.trim();
+    const idx = text.toLowerCase().indexOf(q.toLowerCase());
+    if (idx < 0) return esc(text);
+    const before = text.slice(0, idx);
+    const match = text.slice(idx, idx + q.length);
+    const after = text.slice(idx + q.length);
+    return esc(before) + '<mark>' + esc(match) + '</mark>' + esc(after);
+  }
+
+  let findSelectedIndex = -1;
+  let currentFindResults = [];
+  let findOverlayEventsInitialized = false;
+
+  UI.isFindOverlayOpen = function () {
+    const el = $('map-finder');
+    return !!(el && !el.classList.contains('hidden'));
+  };
+
+  UI.setFindOverlay = function (visible) {
+    const overlay = $('map-finder');
+    const button = $('btn-find');
+    if (!overlay) return;
+    if (visible) {
+      if (UI.setMusicOverlay && UI.isMusicOverlayOpen && UI.isMusicOverlayOpen()) {
+        UI.setMusicOverlay(false);
+      }
+      if (UI.setMarketLens && FB.map && FB.map.marketGood) {
+        UI.setMarketLens(false);
+      }
+      overlay.classList.remove('hidden');
+      if (button) {
+        button.classList.add('on');
+        button.setAttribute('aria-pressed', 'true');
+      }
+      const input = $('map-finder-input');
+      if (input) {
+        input.value = '';
+        UI.renderFindResults('');
+        setTimeout(function () { input.focus(); }, 10);
+      }
+    } else {
+      overlay.classList.add('hidden');
+      if (button) {
+        button.classList.remove('on');
+        button.setAttribute('aria-pressed', 'false');
+      }
+    }
+  };
+
+  UI.toggleFindOverlay = function () {
+    UI.setFindOverlay(!UI.isFindOverlayOpen());
+  };
+
+  UI.selectFindResult = function (entry) {
+    if (!entry) return;
+    UI.setFindOverlay(false);
+    if (FB.map) {
+      FB.map.centerOnXY(entry.x, entry.y, entry.zoom, true);
+    }
+    if (entry.provId) {
+      UI.selectProvince(entry.provId);
+    } else if (entry.firstCounty) {
+      UI.selectProvince(entry.firstCounty);
+    }
+    const button = $('btn-find');
+    if (button) button.focus();
+  };
+
+  function updateFindSelection(idx) {
+    findSelectedIndex = idx;
+    const container = $('map-finder-results');
+    if (!container) return;
+    const buttons = container.querySelectorAll('.map-finder-item');
+    buttons.forEach(function (btn, i) {
+      const isSel = i === idx;
+      btn.classList.toggle('selected', isSel);
+      btn.setAttribute('aria-selected', isSel ? 'true' : 'false');
+      if (isSel) {
+        btn.scrollIntoView({ block:'nearest' });
+      }
+    });
+  }
+
+  UI.renderFindResults = function (query) {
+    const container = $('map-finder-results');
+    const clearBtn = $('map-finder-clear');
+    if (!container) return;
+    const q = (query || '').trim();
+    if (clearBtn) {
+      clearBtn.classList.toggle('hidden', !q);
+    }
+    const results = matchLocationSearch(q);
+    currentFindResults = results;
+    findSelectedIndex = results.length > 0 ? 0 : -1;
+
+    if (!results.length) {
+      container.innerHTML = '<div class="map-finder-empty">' +
+        esc(FB.T('No locations found matching "{query}".', { query:q })) +
+        '</div>';
+      return;
+    }
+
+    let h = '';
+    for (let i = 0; i < results.length; i++) {
+      const item = results[i];
+      h += '<button type="button" class="map-finder-item' + (i === 0 ? ' selected' : '') +
+        '" data-find-idx="' + i + '" role="option" aria-selected="' + (i === 0 ? 'true' : 'false') + '">' +
+        '<span class="map-finder-badge" aria-hidden="true">' + item.icon + '</span>' +
+        '<span class="map-finder-info">' +
+        '<span class="map-finder-name">' + highlightMatch(item.name, q) + '</span>' +
+        '<span class="map-finder-context">' + esc(item.context) + '</span>' +
+        '</span>' +
+        '<span class="map-finder-type">' + esc(item.typeLabel) + '</span>' +
+        '</button>';
+    }
+    container.innerHTML = h;
+
+    const buttons = container.querySelectorAll('.map-finder-item');
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const idx = parseInt(btn.dataset.findIdx, 10);
+        if (currentFindResults[idx]) {
+          UI.selectFindResult(currentFindResults[idx]);
+        }
+      });
+      btn.addEventListener('mouseenter', function () {
+        const idx = parseInt(btn.dataset.findIdx, 10);
+        updateFindSelection(idx);
+      });
+    });
+  };
+
+  function handleOutsideFindInteraction(event) {
+    if (!UI.isFindOverlayOpen || !UI.isFindOverlayOpen()) return;
+    const overlay = $('map-finder');
+    const button = $('btn-find');
+    const target = event.target;
+    if (!target) return;
+    if (overlay && (overlay === target || overlay.contains(target))) return;
+    if (button && (button === target || button.contains(target))) return;
+    UI.setFindOverlay(false);
+  }
+
+  document.addEventListener('pointerdown', handleOutsideFindInteraction, true);
+  document.addEventListener('click', handleOutsideFindInteraction, true);
+
+  UI.initFindOverlayEvents = function () {
+    const input = $('map-finder-input');
+    const clearBtn = $('map-finder-clear');
+    const closeBtn = $('map-finder-close');
+    if (!input || findOverlayEventsInitialized) return;
+    findOverlayEventsInitialized = true;
+    if (input) {
+      input.addEventListener('input', function () {
+        UI.renderFindResults(input.value);
+      });
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (currentFindResults.length > 0) {
+            const next = (findSelectedIndex + 1) % currentFindResults.length;
+            updateFindSelection(next);
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (currentFindResults.length > 0) {
+            const prev = (findSelectedIndex - 1 + currentFindResults.length) % currentFindResults.length;
+            updateFindSelection(prev);
+          }
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          if (findSelectedIndex >= 0 && currentFindResults[findSelectedIndex]) {
+            UI.selectFindResult(currentFindResults[findSelectedIndex]);
+          } else if (currentFindResults.length > 0) {
+            UI.selectFindResult(currentFindResults[0]);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          UI.setFindOverlay(false);
+          const btn = $('btn-find');
+          if (btn) btn.focus();
+        }
+      });
+    }
+    if (clearBtn) {
+      clearBtn.addEventListener('click', function () {
+        if (input) {
+          input.value = '';
+          UI.renderFindResults('');
+          input.focus();
+        }
+      });
+    }
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        UI.setFindOverlay(false);
+        const btn = $('btn-find');
+        if (btn) btn.focus();
+      });
+    }
+  };
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', UI.initFindOverlayEvents);
+    } else {
+      UI.initFindOverlayEvents();
+    }
+  }
 
   /* ================= settings ================= */
   UI.showSettings = function () {

@@ -326,8 +326,8 @@ button.stat:active { filter: brightness(1.35); } /* press feedback on touch */
 .travel-destination .adesc { display: block; color: var(--helper-text-color); font-size: 13px; margin-top: 2px; }
 body.travel-picking #timebtns { visibility: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
-#maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 6px; }
-.hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; }
+#maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; z-index: 4; }
+.hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; flex: 0 0 auto; }
 .hudbtn.on { opacity: 1; box-shadow: 0 0 0 2px #ffd24a inset; }
 .market-lens-controls {
   position: absolute; left: 10px; top: 10px; z-index: 3;
@@ -431,7 +431,87 @@ body.travel-picking #timebtns { visibility: hidden; }
 .market-sheet-option.selected {
   background: #40341f; color: #f0d170; font-weight: bold;
 }
-.market-sheet > p { margin-bottom: 8px; color: var(--helper-text-color); line-height: 1.4; }
+.map-finder {
+  position: absolute; z-index: 31; left: 10px; top: 10px;
+  width: min(340px, calc(100% - 70px)); max-height: calc(100% - 20px);
+  display: flex; flex-direction: column; padding: 10px;
+  background: linear-gradient(180deg, rgba(37,31,23,.97), rgba(22,25,29,.97));
+  border: 1px solid #806936; border-radius: 9px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.52), inset 0 1px rgba(255,236,181,.05);
+  color: var(--main-text-color);
+}
+.map-finder-header {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.map-finder-input-wrap {
+  position: relative; flex: 1 1 auto; display: flex; align-items: center; min-width: 0;
+}
+.map-finder-icon {
+  position: absolute; left: 9px; pointer-events: none;
+  font-size: 13px; opacity: .7; line-height: 1;
+}
+.map-finder-input {
+  width: 100%; min-height: 36px; padding: 6px 28px 6px 28px;
+  border: 1px solid #775f32; border-radius: 6px;
+  background: #201a13; color: var(--main-text-color);
+  font-family: inherit; font-size: 13px; outline: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
+}
+.map-finder-input:focus {
+  border-color: #ffd24a; box-shadow: 0 0 0 1px #ffd24a, inset 0 1px 3px rgba(0,0,0,.35);
+}
+.map-finder-clear {
+  position: absolute; right: 5px; width: 22px; height: 22px; min-width: 22px; min-height: 22px;
+  padding: 0; font-size: 11px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; opacity: .7; cursor: pointer; color: var(--main-text-color);
+}
+.map-finder-clear:hover { opacity: 1; }
+.map-finder-close {
+  width: 32px; height: 32px; min-width: 32px; min-height: 32px; padding: 0;
+  font-size: 14px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.map-finder-results {
+  margin-top: 8px; overflow-y: auto; max-height: 320px;
+  display: flex; flex-direction: column; gap: 4px; padding-right: 2px;
+}
+.map-finder-item {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  padding: 7px 9px; text-align: left;
+  border: 1px solid #55452a; border-radius: 6px;
+  background: #272017; color: var(--main-text-color);
+  cursor: pointer; font-family: inherit; font-size: 13px; line-height: 1.3;
+  transition: background .12s, border-color .12s;
+}
+.map-finder-item:hover, .map-finder-item:focus-visible, .map-finder-item.selected {
+  background: #3a2f1d; border-color: #d0ad50; outline: none;
+}
+.map-finder-badge {
+  flex-shrink: 0; font-size: 14px; width: 22px; height: 22px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px; background: rgba(0,0,0,.28);
+}
+.map-finder-info {
+  display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto;
+}
+.map-finder-name {
+  font-weight: bold; color: var(--main-text-color);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.map-finder-name mark {
+  background: transparent; color: #ffd24a; text-decoration: underline; font-weight: bold;
+}
+.map-finder-context {
+  font-size: 11px; color: var(--helper-text-color);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px;
+}
+.map-finder-type {
+  font-size: 10px; color: #c09d4e; text-transform: uppercase; letter-spacing: .04em;
+  margin-left: auto; flex-shrink: 0; padding-left: 4px;
+}
+.map-finder-empty {
+  padding: 14px 10px; text-align: center; font-size: 13px; color: var(--helper-text-color);
+}
 .music-controls {
   position: absolute; z-index: 31; left: 10px; top: 10px;
   width: min(320px, calc(100% - 70px)); max-height: calc(100% - 20px);
@@ -487,11 +567,13 @@ body.travel-picking #timebtns { visibility: hidden; }
 
 #side {
   flex: 0 0 340px; display: flex; flex-direction: column;
-  background: #201a12; border-left: 2px solid #55452a; min-height: 0;
+  background: #201a12; border-left: 2px solid #55452a;
+  min-width: 0; min-height: 0;
 }
 #left {
   flex: 0 0 290px; display: flex; flex-direction: column;
-  background: #201a12; border-right: 2px solid #55452a; min-height: 0;
+  background: #201a12; border-right: 2px solid #55452a;
+  min-width: 0; min-height: 0;
 }
 #lefttabs { display: flex; flex: 0 0 auto; }
 #leftbody { flex: 1 1 auto; overflow-y: auto; padding: 10px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
@@ -1926,7 +2008,7 @@ textarea.modjson, textarea.savetext {
   display: grid;
   grid-template-columns: minmax(150px, .85fr) minmax(390px, 2.25fr)
     minmax(190px, 1fr);
-  gap: 12px; align-items: start; margin: 0; padding: 6px 2px;
+  gap: 12px; align-items: start; margin: 0; padding: 4px 2px;
   border: 0; border-bottom: 1px solid #493c27;
   border-radius: 0; background: transparent;
 }
@@ -1959,7 +2041,7 @@ textarea.modjson, textarea.savetext {
   margin-top: 4px; color: var(--helper-text-color); font-size: 10px; line-height: 1.3;
 }
 .governance-inline-actions {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
   gap: 5px; margin: 0;
 }
 .governance-inline-actions .btn {
@@ -2649,8 +2731,14 @@ textarea.modjson, textarea.savetext {
   .btn.small { min-height: 40px; min-width: 44px; }
   .political-motion-row .btn.small { min-height: 44px; }
   .building-county-picker select { min-height: 48px; }
-  .hudbtn { width: 46px; height: 46px; font-size: 22px; }
-  #maphud { right: max(10px, env(safe-area-inset-right)); }
+  .hudbtn {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    font-size: 20px;
+  }
+  #maphud {
+    right: max(4px, env(safe-area-inset-right)); top: 2px; gap: 2px;
+    max-height: calc(100% - 4px);
+  }
   .market-lens-controls {
     left: max(8px, env(safe-area-inset-left)); top: 8px;
     grid-template-columns: minmax(0, 1fr); width: min(300px, calc(100% - 76px));
@@ -2678,6 +2766,10 @@ textarea.modjson, textarea.savetext {
   .market-sheet-picker {
     grid-template-columns: minmax(0, 1fr); gap: 4px; margin-bottom: 10px;
   }
+  .map-finder-input, .map-finder-clear, .map-finder-close {
+    min-height: 44px;
+  }
+  .map-finder-clear, .map-finder-close { min-width: 44px; }
   .market-sheet-dropdown summary, .market-sheet-option,
   .enterprise-view-controls .enterprise-view-select select {
     min-height: 44px; font-size: 14px;
@@ -3056,19 +3148,31 @@ textarea.modjson, textarea.savetext {
     justify-content: space-between; padding-top: 4px;
   }
   #main { display: flex; flex-direction: column; }
-  #mapwrap { order: 0; flex: 0 0 42%; min-height: 180px; }
+  #mapwrap { order: 0; flex: 0 0 42%; min-height: 324px; }
   #panels {
     order: 1; display: flex; flex: 1 1 auto; min-height: 0;
     border-top: 2px solid #55452a;
   }
   #side { flex: 1 1 auto; min-width: 0; border: none; }
+  #maphud {
+    top: 2px; right: max(2px, env(safe-area-inset-right)); gap: 2px;
+  }
+  .hudbtn {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    font-size: 20px;
+  }
+  .music-controls, .map-finder {
+    left: 8px; top: 8px; width: min(300px, calc(100% - 66px));
+    max-width: calc(100% - 66px);
+    max-height: calc(100% - 16px);
+  }
 }
 
 /* Keep the phone HUD as one right-hand rail. Tighter spacing preserves the
    44px touch floor while leaving room for playback on shallow maps. */
-@media (max-width: 480px) and (orientation: portrait), (max-height: 360px) {
+@media (max-width: 480px) and (orientation: portrait) {
   #maphud {
-    display: flex; flex-direction: column;
+    display: flex; flex-direction: column; flex-wrap: nowrap;
     top: 2px; right: max(2px, env(safe-area-inset-right)); gap: 2px;
   }
   .hudbtn {
@@ -3076,17 +3180,86 @@ textarea.modjson, textarea.savetext {
     font-size: 20px;
   }
   .market-lens-controls {
-    width: min(300px, calc(100% - 56px));
-    max-width: calc(100% - 56px);
+    left: max(8px, env(safe-area-inset-left)); top: 8px;
+    width: min(292px, calc(100% - 66px));
+    max-width: calc(100% - 66px);
   }
-}
-
-@media (max-width: 480px) and (orientation: portrait) {
-  .music-controls {
+  .music-controls, .map-finder {
     left: 8px; top: 8px; width: min(290px, calc(100% - 66px));
     max-width: calc(100% - 66px);
     overflow: hidden;
   }
+}
+
+@media (max-width: 380px) and (orientation: portrait) {
+  #maphud {
+    top: 2px; right: max(2px, env(safe-area-inset-right)); gap: 2px;
+  }
+  .hudbtn {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    font-size: 20px;
+  }
+  .market-lens-controls {
+    left: max(4px, env(safe-area-inset-left)); top: 4px;
+    width: min(260px, calc(100% - 46px));
+    max-width: calc(100% - 46px);
+  }
+  .music-controls, .map-finder {
+    left: 4px; top: 4px; width: min(260px, calc(100% - 46px));
+    max-width: calc(100% - 46px);
+    max-height: calc(100% - 8px);
+  }
+}
+
+@media (max-width: 330px) and (orientation: portrait) {
+  #maphud {
+    top: 2px; right: max(2px, env(safe-area-inset-right)); gap: 2px;
+  }
+  .hudbtn {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    font-size: 20px;
+  }
+  .market-lens-controls {
+    left: max(3px, env(safe-area-inset-left)); top: 2px;
+    width: min(240px, calc(100% - 38px));
+    max-width: calc(100% - 38px);
+  }
+  .music-controls, .map-finder {
+    left: 3px; top: 2px; width: min(240px, calc(100% - 38px));
+    max-width: calc(100% - 38px);
+    max-height: calc(100% - 4px);
+  }
+}
+
+@media (max-height: 480px) and (orientation: landscape) {
+  #maphud {
+    display: grid; grid-template-columns: repeat(2, 44px);
+    top: 3px; right: max(4px, env(safe-area-inset-right)); gap: 2px;
+  }
+  .hudbtn {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+    font-size: 20px;
+  }
+  .market-lens-controls {
+    left: max(8px, env(safe-area-inset-left)); top: 8px;
+    width: min(300px, calc(100% - 112px));
+    max-width: calc(100% - 112px); padding: 7px; gap: 6px;
+  }
+  .map-finder {
+    left: max(8px, env(safe-area-inset-left)); top: 8px;
+    width: min(300px, calc(100% - 112px));
+    max-width: calc(100% - 112px); max-height: calc(100% - 16px);
+    padding: 7px;
+  }
+  .map-finder-results { max-height: 160px; }
+}
+
+@media (max-height: 360px), (max-width: 480px) and (max-height: 680px) and (orientation: portrait) {
+  .map-finder-results { max-height: 120px; }
+}
+
+@media (max-height: 300px) {
+  .map-finder-results { max-height: 90px; }
 }
 
 /* landscape phones: map left, panel column right */

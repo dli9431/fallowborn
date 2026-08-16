@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 async function startWarGame(page, testInfo) {
@@ -377,6 +378,11 @@ test('war notices lead unified ruler sheets and the Land tab',
     var ids = await configureAggressionWar(page);
     var setup = await page.evaluate(function (data) {
       var s = FB.state;
+      s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};
+      s.player.panelIntrosSeen.prov = 1;
+      s.player.roleOrientationsSeen =
+        s.player.roleOrientationsSeen || {};
+      s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
       s.realms[data.foreignId].war = { enemy:data.enemyId };
       FB.ui.showLiegeModal(data.foreignId);
       return {
@@ -405,7 +411,9 @@ test('war notices lead unified ruler sheets and the Land tab',
       FB.ui.closeModal();
       FB.ui.showLiegeModal(data.foreignId);
     }, ids);
+    await waitForUiRefresh(page);
     await sheet.locator('[data-war-realm="' + ids.foreignId + '"]').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     expect(await page.evaluate(function () {
       return FB.map.selected;
     })).toBe(ids.foreignCountyId);
@@ -423,6 +431,7 @@ test('war notices lead unified ruler sheets and the Land tab',
       FB.ui.closeModal();
       FB.ui.selectProvince(data.foreignCountyId);
     }, ids);
+    await waitForUiRefresh(page);
     await page.locator(
       '#tab-prov [data-war-realm="' + ids.enemyId + '"]').click();
     await expect(page.locator(

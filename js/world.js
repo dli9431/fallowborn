@@ -1228,6 +1228,7 @@ window.FB = window.FB || {};
     dejureCounties = null;
     kingdomCountyLists = {};
     rc = { turn: -1, dirty: true, provs: null, strength: null, held: null };
+    if (FB.ui && FB.ui.resetLocationSearchCache) FB.ui.resetLocationSearchCache();
   };
 
   FB.initPolitics = function (state) {

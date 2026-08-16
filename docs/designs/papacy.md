@@ -200,5 +200,8 @@ Without a lawful dynasty successor, the ordinary game-over path remains.
 head realm's ruler as incumbent, generates a date-appropriate starter College, seeds
 regnal counts, and preserves the incumbent until death. Save/load can occur during a
 vacancy, ballot, name choice, schism, sanction, or policy dispute without special handling.
+Its Roman-office lookup uses the non-mutating religious-head snapshot, so status and
+character-sheet reads do not install a missing legacy office map; save/load and world-tick
+repair remain the mutation boundaries.
 Character-keyed sanction grounds are removed in `FB.papacyCharacterDied`; the sanction
 cannot outlive its target and the grounds table does not accumulate stale court ids.

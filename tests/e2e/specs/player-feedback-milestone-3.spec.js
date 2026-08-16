@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 test.beforeEach(async function ({ page }, testInfo) {
@@ -292,6 +293,7 @@ test('enterprise groups and sorts persist and share their order with Household P
       FB.ui.showLivelihoods();
       return { before:before };
     });
+    await waitForUiRefresh(page);
 
     const group = page.locator('[data-enterprise-group]');
     const workGuide = page.locator('#genmodal .gm-heading > #work-guide');
@@ -328,6 +330,11 @@ test('enterprise groups and sorts persist and share their order with Household P
     expect(guideChrome.titleTransform).toBe('matrix(1, 0, 0, 1, 0, 2)');
     expect(guideChrome.titleMarginBottom).toBe('0px');
     expect(guideChrome.titleRowMarginBottom).toBe('10px');
+    const filtersToggle = page.locator(
+      '#genmodal [data-list-toggle="filters"]');
+    await expect(filtersToggle).toHaveAttribute('aria-expanded', 'false');
+    await filtersToggle.click();
+    await expect(filtersToggle).toHaveAttribute('aria-expanded', 'true');
     const dropdowns = page.locator(
       '[data-enterprise-view-controls="work"] .enterprise-view-select');
     await expect(dropdowns).toHaveCount(2);
@@ -388,11 +395,13 @@ test('enterprise groups and sorts persist and share their order with Household P
 
     await page.locator('[data-enterprise="enterprise_craft_sort"]').click();
     await page.locator('#gm-cancel').click();
+    await waitForUiRefresh(page);
     await expect(page.locator('[data-enterprise-sort]')).toHaveValue('value');
     expect(await page.evaluate(function () { return JSON.stringify(FB.state); }))
       .toBe(fixture.before);
 
     await page.evaluate(function () { FB.ui.showHouseholdPlan(); });
+    await waitForUiRefresh(page);
     await expect(page.locator('[data-enterprise-view-controls="household"] ' +
       '[data-enterprise-sort]')).toHaveValue('value');
     await page.locator('[data-enterprise-view-controls="household"] ' +
@@ -400,6 +409,7 @@ test('enterprise groups and sorts persist and share their order with Household P
     await expect(page.locator('[data-enterprise-view-controls="household"] ' +
       '[data-enterprise-sort]')).toHaveValue('yield');
     await page.evaluate(function () { FB.ui.showLivelihoods(null, true); });
+    await waitForUiRefresh(page);
     await expect(page.locator('[data-enterprise-view-controls="work"] ' +
       '[data-enterprise-sort]')).toHaveValue('yield');
   });

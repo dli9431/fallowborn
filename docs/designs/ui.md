@@ -195,6 +195,16 @@ and native music buttons retain 44-pixel minimum
 touch targets. Settings keeps focus-loss pausing as the default and
 offers an opt-in background-playback checkbox for inactive tabs, windows, and locked screens.
 
+The map HUD also exposes a **Find location** overlay, with `?` as its desktop
+shortcut. Its local, cached index covers settlements, counties, duchies, and
+kingdoms in the active bookmark; choosing a result selects its county and
+centers the map at a scale appropriate to the result type. Arrow keys move
+through matches, Enter chooses one, and Escape returns focus to the HUD button.
+The overlay and Market lens are mutually exclusive so their controls never
+compete for the map corner. Portrait maps reserve enough height to keep the
+seven 44-pixel HUD targets in one rail; shallow landscape maps use a compact
+two-column HUD cluster while preserving the same touch floor.
+
 Surface-specific browser behavior is centralized in `FB.platform`, initialized by
 `js/util.js` before boot. Its current `isPlay` flag is true only for the HTTPS
 `play.fallowborn.com` origin; `file://`, local test servers, and itch-owned embeds remain false.
@@ -1103,6 +1113,8 @@ visit, foreign-policy, envoy,
 alliance, and war sheets participate in that same history contract. Both card
 types use the full-sheet mobile layout, sticky footer, focus containment,
 number-key action behavior, and expansion-safe text wrapping.
+A gift opened from a unified ruler character sheet returns to that sheet without
+inserting a duplicate character-card entry before its original source surface.
 
 ## Great holy-war presentation
 

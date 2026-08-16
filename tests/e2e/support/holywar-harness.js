@@ -24,9 +24,13 @@
   }
 
   function makePlayerHead(state) {
+    var playerCharacter = state.chars[state.player.charId];
+    if (playerCharacter) playerCharacter.sex = 'm';
     if (!state.realms.player || !state.realms.player.alive) {
       FB.foundPlayerRealm(state);
     }
+    if (state.realms.player.ruler) state.realms.player.ruler.sex = 'm';
+    state.religiousHeads = state.religiousHeads || {};
     state.religiousHeads.catholic = 'player';
   }
 

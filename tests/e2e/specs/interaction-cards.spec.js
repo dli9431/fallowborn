@@ -3,7 +3,8 @@
 const { test, expect } = require('../support/fixture');
 const {
   openGame,
-  startDeterministicGame
+  startDeterministicGame,
+  waitForUiRefresh
 } = require('../support/game');
 
 async function startInteractionGame(page, testInfo) {
@@ -377,6 +378,7 @@ test('materialized rulers share Standing, keep one gift path, and render without
       })[0];
       FB.ensureRealmSuccession(s, rid);
       var ruler = FB.materializeRealmRuler(s, rid);
+      FB.ensureRealmCourtForDisplay(s, rid);
       FB.adjustStanding(s, { kind:'realm', id:rid },
         47 - FB.standingOf(s, { kind:'realm', id:rid }),
         'test:shared_card_standing');
@@ -541,6 +543,7 @@ test('ruler character sheets foreground the titled ruler and linked court',
         home:FB.homeOf(s, ruler)
       };
     });
+    await waitForUiRefresh(page);
 
     var sheet = page.locator('.character-interaction-modal');
     await expect(sheet.locator('.realm-ruler-card .ccname')).toContainText(
@@ -586,8 +589,8 @@ test('ruler character sheets foreground the titled ruler and linked court',
     await expect(familySheet.locator('.interaction-context')).toHaveCount(0);
     await expect(familySheet.locator('.court-strip')).toBeVisible();
     await expect(familySheet.locator('#cm-close')).toHaveText('Close');
-    await expect(familySheet.loc('.charcard .ccname')).toContainText(familyName);
-    await expect(familySheet.loc('[data-realm-family-cid="' +
+    await expect(familySheet.locator('.charcard .ccname')).toContainText(familyName);
+    await expect(familySheet.locator('[data-realm-family-cid="' +
       setup.childIds[0] + '"] .fname')).toContainText(setup.childTitledName);
     for (var i = 0; i < setup.childIds.length; i++) {
       await expect(familySheet.locator('[data-realm-family-cid="' +

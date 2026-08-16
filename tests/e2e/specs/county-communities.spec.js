@@ -497,7 +497,7 @@ test('867 Pamplona initializes with Basque Catholic primary identity and Iberian
         communities: FB.provinceCommunities(pamplona).map(function (c) {
           return c.culture + '.' + c.religion;
         }),
-        rulerCulture: FB.state.realms.navarra ? FB.state.realms.navarra.ruler.culture : null
+        rulerCulture: (FB.state && FB.state.realms && FB.state.realms.navarra) ? FB.state.realms.navarra.ruler.culture : null
       };
     });
     expect(info.culture).toBe('basque');
