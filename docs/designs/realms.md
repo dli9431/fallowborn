@@ -651,10 +651,11 @@ jure counties and demands ≥ max(2, ⌈n/2⌉) held, a kingdom ⌈n/2⌉, an em
 majorities. Every empire therefore has at least two de jure kingdoms; Italia is divided
 between Italy and Sicily, with Benevento, Apulia, Calabria, and Sicily belonging to the
 latter. Wastelands and colonies settled on them have no de jure duchy, so they count
-toward no title. The province panel spells out have/need for the tapped county (and flags
-lands that feed no title) under a row labeled "De jure (rightful liege)" — How to Play
-glosses the term in plain language — and the 🗺/R map filter has de jure duchy and
-kingdom modes that name the player's strongest claim.
+toward no title. The province panel displays the de jure hierarchy under a row
+labeled "De jure (rightful liege)" (and flags lands that feed no title), and spells out
+have/need progress notes for any title level where the player holds a stake (`have > 0`)
+— How to Play glosses the term in plain language — and the 🗺/R map filter has de jure duchy
+and kingdom modes that name the player's strongest claim.
 
 **A lord holds only so much in his own hand.** Tier dignity counts every county the
 player's *realm* controls — held directly or by a vassal beneath him in the chain

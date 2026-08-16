@@ -3714,46 +3714,53 @@ window.FB = window.FB || {};
 
   /* what the tapped county feeds: have/need toward its duke, king, emperor —
      the same rules checkTierPromotions promotes by. Shown only to landed
-     players; a landless dreamer has no claim to weigh */
+     players with an active stake in that title (have > 0); a landless dreamer or
+     uninvolved foreigner has no claim to weigh */
   function dejureNotes(s, dj) {
     const indep = FB.isPlayerSovereign(s);
     let out = '';
     function note(text) { return '<div class="progressnote">' + esc(text) + '</div>'; }
     const dp = FB.duchyProgress(s, dj.duchy), dname = FBDATA.duchies[dj.duchy].name;
-    if (!dp.titled) {
-      out += note(FB.T('⚜ {name} is one county alone — no duke’s title to claim.',
-        { name: dname }));
-    } else if (dp.have >= dp.need) {
-      out += note(FB.T('⚜ {name}: you hold the majority, {held}.',
-        { name: dname, held: ofCountiesText(s, dp.have, dp.total) }));
-    } else {
-      out += note(FB.T('⚜ {name}: you hold {held} — {need} make the duke.',
-        { name: dname, held: ofCountiesText(s, dp.have, dp.total), need: dp.need }));
+    if (dp.have > 0) {
+      if (!dp.titled) {
+        out += note(FB.T('⚜ {name} is one county alone — no duke’s title to claim.',
+          { name: dname }));
+      } else if (dp.have >= dp.need) {
+        out += note(FB.T('⚜ {name}: you hold the majority, {held}.',
+          { name: dname, held: ofCountiesText(s, dp.have, dp.total) }));
+      } else {
+        out += note(FB.T('⚜ {name}: you hold {held} — {need} make the duke.',
+          { name: dname, held: ofCountiesText(s, dp.have, dp.total), need: dp.need }));
+      }
     }
     if (dj.kingdom) {
       const kp = FB.kingdomProgress(s, dj.kingdom), kname = FBDATA.kingdoms[dj.kingdom].name;
-      if (kp.have >= kp.need) {
-        out += note(indep
-          ? FB.T('👑 {name}: you hold the majority, {held}.',
-            { name: kname, held: ofCountiesText(s, kp.have, kp.total) })
-          : FB.T('👑 {name}: you hold the majority, {held} — independence would make you its king.',
-            { name: kname, held: ofCountiesText(s, kp.have, kp.total) }));
-      } else {
-        out += note(FB.T('👑 {name}: you hold {held} — {need} and independence make the king.',
-          { name: kname, held: ofCountiesText(s, kp.have, kp.total), need: kp.need }));
+      if (kp.have > 0) {
+        if (kp.have >= kp.need) {
+          out += note(indep
+            ? FB.T('👑 {name}: you hold the majority, {held}.',
+              { name: kname, held: ofCountiesText(s, kp.have, kp.total) })
+            : FB.T('👑 {name}: you hold the majority, {held} — independence would make you its king.',
+              { name: kname, held: ofCountiesText(s, kp.have, kp.total) }));
+        } else {
+          out += note(FB.T('👑 {name}: you hold {held} — {need} and independence make the king.',
+            { name: kname, held: ofCountiesText(s, kp.have, kp.total), need: kp.need }));
+        }
       }
     }
     if (dj.empire) {
       const ep = FB.empireProgress(s, dj.empire), ename = FBDATA.empires[dj.empire].name;
-      if (ep.have >= ep.need) {
-        out += note(indep
-          ? FB.T('🦅 {name}: you rule {share} — the imperial majority.',
-            { name: ename, share: ofKingdomsText(s, ep.have, ep.total) })
-          : FB.T('🦅 {name}: you rule {share} — independence would make you its emperor.',
-            { name: ename, share: ofKingdomsText(s, ep.have, ep.total) }));
-      } else {
-        out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence make the emperor.',
-          { name: ename, share: ofKingdomsText(s, ep.have, ep.total), need: ep.need }));
+      if (ep.have > 0) {
+        if (ep.have >= ep.need) {
+          out += note(indep
+            ? FB.T('🦅 {name}: you rule {share} — the imperial majority.',
+              { name: ename, share: ofKingdomsText(s, ep.have, ep.total) })
+            : FB.T('🦅 {name}: you rule {share} — independence would make you its emperor.',
+              { name: ename, share: ofKingdomsText(s, ep.have, ep.total) }));
+        } else {
+          out += note(FB.T('🦅 {name}: you rule {share} — {need} and independence make the emperor.',
+            { name: ename, share: ofKingdomsText(s, ep.have, ep.total), need: ep.need }));
+        }
       }
     }
     return out;

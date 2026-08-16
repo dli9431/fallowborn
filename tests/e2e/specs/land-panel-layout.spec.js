@@ -123,3 +123,34 @@ test('desktop sidebars scale evenly while preserving the center map',
       expect(layout.sideOverflow).toBeLessThanOrEqual(1);
     }
   });
+
+test('De jure title promotion progress notes only appear for titles where the player holds a stake',
+  async function ({ page }) {
+    const panel = page.locator('#tab-prov');
+    // The player's starting demesne in London (Essex / England / Britannia)
+    await page.evaluate(function () {
+      FB.ui.selectProvince('london');
+    });
+    await waitForUiRefresh(page);
+    await expect(panel).toContainText('De jure (rightful liege)');
+    await expect(panel).toContainText('Essex');
+    await expect(panel).toContainText('England');
+    // Should show Essex and England progress since player holds London (have > 0)
+    await expect(panel).toContainText('make the duke');
+    await expect(panel).toContainText('make the king');
+
+    // Select a distant foreign county in France (Limoges in Poitou / Aquitaine / Francia)
+    await page.evaluate(function () {
+      FB.ui.selectProvince('limoges');
+    });
+    await waitForUiRefresh(page);
+    await expect(panel).toContainText('De jure (rightful liege)');
+    await expect(panel).toContainText('Poitou');
+    await expect(panel).toContainText('Aquitaine');
+    await expect(panel).toContainText('Francia');
+    // Progress notes must NOT appear when player holds 0 counties in that title
+    await expect(panel).not.toContainText('make the duke');
+    await expect(panel).not.toContainText('make the king');
+    await expect(panel).not.toContainText('make the emperor');
+  });
+
