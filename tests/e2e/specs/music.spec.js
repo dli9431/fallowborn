@@ -564,8 +564,17 @@ test('context banks, playback controls, and listening history stay consistent',
     await quickToggle.click();
     await expect(quickToggle).toHaveText('⏸ Pause');
 
-    // Clicking anywhere else in the UI closes the music overlay
-    await page.locator('#map').click({ position:{ x:200, y:200 } });
+    // Clicking anywhere else in the UI closes the music overlay — aim at the
+    // map's center: the open overlay occupies the map's top-left corner and
+    // the HUD buttons its top-right, so a fixed corner point can land on
+    // either of them instead of the canvas.
+    const mapBox = await page.locator('#map').boundingBox();
+    await page.locator('#map').click({
+      position:{
+        x:Math.round(mapBox.width / 2),
+        y:Math.round(mapBox.height / 2)
+      }
+    });
     await expect(musicControls).toBeHidden();
     await expect(musicBtn).toHaveAttribute('aria-pressed', 'false');
 

@@ -151,6 +151,11 @@ async function makeLargeListFixture(page) {
       FB.careerOf(s, workers[k]);
     }
     FB.ui.characterInteractionCard(s, shared.id);
+    /* Resolving the canonical lord role is an intentional one-time repair —
+       FB.getRole restores the character's role tag on first read. Settle it
+       in the fixture so the state-purity test below measures only accidental
+       mutations from filters, search, collapse, and navigation. */
+    FB.getRole(s, 'lord', false);
     p.roleOrientationsSeen = p.roleOrientationsSeen || {};
     p.roleOrientationsSeen['role-tier-' + p.tier] = 1;
     FB.ui.refresh();
