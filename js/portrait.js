@@ -255,19 +255,19 @@ window.FB = window.FB || {};
   FB.PORTRAIT_BEARD_CUTS = APPEARANCE_BEARD_CUTS.slice();
   var CULTURE_TONE = {
     norse:.3,english:.5,german:.5,frankish:.6,slavic:.7,baltic:.65,
-    gaelic:.4,brezhon:.5,magyar:.8,iberian:1.3,italian:1.2,greek:1.3,
+    gaelic:.4,brezhon:.5,magyar:.8,iberian:1.3,basque:1.2,italian:1.2,greek:1.3,
     armenian:1.4,georgian:1.35,turkic:1.5,andalusi:1.9,arabic:2.2,
     berber:2.3,persian:2,nubian:3.7
   };
   var CULTURE_FAIR = {
     norse:.68,english:.48,german:.55,frankish:.42,slavic:.46,baltic:.5,
-    gaelic:.4,brezhon:.42,magyar:.32,iberian:.08,italian:.1,greek:.07,
+    gaelic:.4,brezhon:.42,magyar:.32,iberian:.08,basque:.1,italian:.1,greek:.07,
     armenian:.05,georgian:.06,turkic:.05,andalusi:.04,arabic:.02,
     berber:.02,persian:.03,nubian:.01
   };
   var CULTURE_RED = {
     norse:.18,english:.1,german:.07,frankish:.07,slavic:.05,baltic:.06,
-    gaelic:.34,brezhon:.2,magyar:.05
+    gaelic:.34,brezhon:.2,magyar:.05,basque:.05
   };
   var TONE_RGB = [[241,205,175],[219,172,128],[184,132,92],
     [136,92,62],[94,63,47]];

@@ -18,11 +18,34 @@ const EXPECTED = {
     scarborough:'english.catholic>norse.norse_pagan',
     cordoba:'andalusi.sunni>iberian.catholic',
     sevilla:'andalusi.sunni>iberian.catholic',
+    ecija:'andalusi.sunni>iberian.catholic',
+    niebla:'andalusi.sunni>iberian.catholic',
     toledo:'andalusi.sunni>iberian.catholic',
     granada:'andalusi.sunni>iberian.catholic',
-    valencia:'andalusi.sunni>iberian.catholic',
-    zaragoza:'andalusi.sunni>iberian.catholic',
+    malaga:'andalusi.sunni>iberian.catholic',
+    almeria:'andalusi.sunni>iberian.catholic',
+    badajoz:'andalusi.sunni>iberian.catholic',
     merida:'andalusi.sunni>iberian.catholic',
+    evora:'andalusi.sunni>iberian.catholic',
+    lisboa:'andalusi.sunni>iberian.catholic',
+    santarem:'andalusi.sunni>iberian.catholic',
+    coimbra:'andalusi.sunni>iberian.catholic',
+    silves:'andalusi.sunni>iberian.catholic',
+    beja:'andalusi.sunni>iberian.catholic',
+    valencia:'andalusi.sunni>iberian.catholic',
+    murcia:'andalusi.sunni>iberian.catholic',
+    denia:'andalusi.sunni>iberian.catholic',
+    tortosa:'andalusi.sunni>iberian.catholic',
+    tarragona:'andalusi.sunni>iberian.catholic',
+    lerida:'andalusi.sunni>iberian.catholic',
+    zaragoza:'andalusi.sunni>iberian.catholic',
+    huesca:'andalusi.sunni>iberian.catholic',
+    tudela:'andalusi.sunni>iberian.catholic',
+    pamplona:'basque.catholic>iberian.catholic',
+    alava:'iberian.catholic>basque.catholic',
+    logrono:'iberian.catholic>basque.catholic',
+    aragon:'iberian.catholic>basque.catholic',
+    bayonne:'frankish.catholic>basque.catholic',
     palermo:'arabic.sunni>greek.orthodox',
     messina:'greek.orthodox>arabic.sunni',
     novgorod:'slavic.slavic_pagan>norse.norse_pagan',
@@ -62,11 +85,34 @@ const EXPECTED = {
     ipswich:'english.catholic>norse.catholic',
     cordoba:'andalusi.sunni>iberian.catholic',
     sevilla:'andalusi.sunni>iberian.catholic',
+    ecija:'andalusi.sunni>iberian.catholic',
+    niebla:'andalusi.sunni>iberian.catholic',
     toledo:'andalusi.sunni>iberian.catholic',
-    granada:'andalusi.sunni>iberian.catholic',
-    valencia:'andalusi.sunni>iberian.catholic',
-    zaragoza:'andalusi.sunni>iberian.catholic',
+    granada:'andalusi.sunni>berber.sunni>iberian.catholic',
+    malaga:'andalusi.sunni>iberian.catholic',
+    almeria:'andalusi.sunni>iberian.catholic',
+    badajoz:'andalusi.sunni>berber.sunni>iberian.catholic',
     merida:'andalusi.sunni>iberian.catholic',
+    evora:'andalusi.sunni>iberian.catholic',
+    lisboa:'andalusi.sunni>iberian.catholic',
+    santarem:'andalusi.sunni>iberian.catholic',
+    coimbra:'andalusi.sunni>iberian.catholic',
+    silves:'andalusi.sunni>iberian.catholic',
+    beja:'andalusi.sunni>iberian.catholic',
+    valencia:'andalusi.sunni>iberian.catholic',
+    murcia:'andalusi.sunni>iberian.catholic',
+    denia:'andalusi.sunni>iberian.catholic',
+    tortosa:'andalusi.sunni>iberian.catholic',
+    tarragona:'andalusi.sunni>iberian.catholic',
+    lerida:'andalusi.sunni>iberian.catholic',
+    zaragoza:'andalusi.sunni>iberian.catholic',
+    huesca:'andalusi.sunni>iberian.catholic',
+    tudela:'andalusi.sunni>iberian.catholic',
+    pamplona:'basque.catholic>iberian.catholic',
+    alava:'iberian.catholic>basque.catholic',
+    logrono:'iberian.catholic>basque.catholic',
+    aragon:'iberian.catholic>basque.catholic',
+    bayonne:'frankish.catholic>basque.catholic',
     palermo:'arabic.sunni>greek.orthodox',
     siracusa:'arabic.sunni>greek.orthodox',
     messina:'greek.orthodox>arabic.sunni>italian.catholic',
@@ -166,8 +212,8 @@ test('both bookmark manifests validate and expose every curated record in order'
     expect(result.errors['867']).toEqual([]);
     expect(result.errors['1066']).toEqual([]);
     expect(result.manifests).toEqual(EXPECTED);
-    expect(result.counts).toEqual({ '867':35, '1066':63 });
-    expect(result.counts['867'] + result.counts['1066']).toBe(98);
+    expect(result.counts).toEqual({ '867':58, '1066':86 });
+    expect(result.counts['867'] + result.counts['1066']).toBe(144);
     expect(result.ionaArraysAliased).toBe(false);
   });
 
@@ -426,3 +472,54 @@ test('legacy five-part and current six-, seven-, and eight-part codes remain acc
       })).toBe('english.catholic');
     }
   });
+
+test('867 Pamplona initializes with Basque Catholic primary identity and Iberian Catholic secondary community',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-fresh').click();
+    await page.locator('#bookmarklist .scencard').first().click();
+    await page.getByRole('button', { name:/Free Farmer/ }).click();
+    await page.evaluate(function () {
+      FB.game.pickProvince(FB.world.byId.pamplona);
+      FB.game.pickSettlement({ pid:'pamplona', index:0 });
+    });
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    const choices = page.locator('input[name=cg-community]');
+    await expect(choices).toHaveCount(2);
+    await expect(page.locator('#cg-community')).toContainText('Basque');
+    await expect(page.locator('#cg-community')).toContainText('Iberian');
+
+    const info = await page.evaluate(function () {
+      const pamplona = FB.world.byId.pamplona;
+      return {
+        culture: pamplona.culture,
+        religion: pamplona.religion,
+        communities: FB.provinceCommunities(pamplona).map(function (c) {
+          return c.culture + '.' + c.religion;
+        }),
+        rulerCulture: FB.state.realms.navarra ? FB.state.realms.navarra.ruler.culture : null
+      };
+    });
+    expect(info.culture).toBe('basque');
+    expect(info.religion).toBe('catholic');
+    expect(info.communities).toEqual(['basque.catholic', 'iberian.catholic']);
+  });
+
+test('1066 Granada provides Andalusi, Berber, and Iberian community options',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-fresh').click();
+    await page.locator('#bookmarklist .scencard').nth(1).click();
+    await page.getByRole('button', { name:/Free Farmer/ }).click();
+    await page.evaluate(function () {
+      FB.game.pickProvince(FB.world.byId.granada);
+      FB.game.pickSettlement({ pid:'granada', index:0 });
+    });
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    const choices = page.locator('input[name=cg-community]');
+    await expect(choices).toHaveCount(3);
+    await expect(page.locator('#cg-community')).toContainText('Andalusi');
+    await expect(page.locator('#cg-community')).toContainText('Berber');
+    await expect(page.locator('#cg-community')).toContainText('Iberian');
+  });
+

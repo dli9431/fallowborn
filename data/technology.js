@@ -23,7 +23,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techTraditions = {
     latin:{
       name:'Latin West',
-      cultures:['frankish','german','english','gaelic','brezhon','iberian','italian'],
+      cultures:['frankish','german','english','gaelic','brezhon','iberian','italian','basque'],
       religions:['catholic']
     },
     byzantine:{

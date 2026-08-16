@@ -6,8 +6,8 @@ the arrow preserves authored display order, the first pair is the principal coun
 identity, and later pairs make other grounded local starts available. No percentage,
 conversion, migration, unrest, or demographic change is implied.
 
-The detailed manifest contains 98 bookmark-county records: 35 in 867 and 63 in
-1066, spanning 17 regional groupings. County ids remain stable even when the principal
+The detailed manifest contains 144 bookmark-county records: 58 in 867 and 86 in
+1066, spanning 18 regional groupings. County ids remain stable even when the principal
 identity changes between bookmarks.
 
 ## Manifest
@@ -22,7 +22,12 @@ identity changes between bookmarks.
 | 1066 | Dublin, Wexford, Cork, Limerick | Gaelic/Catholic → Norse/Catholic |
 | 867 | York, Scarborough | English/Catholic → Norse/Norse Pagan |
 | 1066 | York, Scarborough, Lincoln, Stamford, Norwich, Ipswich | English/Catholic → Norse/Catholic |
-| Both | Córdoba, Sevilla, Toledo, Granada, Valencia, Zaragoza, Mérida | Andalusi/Sunni → Iberian/Catholic |
+| 867 | Córdoba, Sevilla, Écija, Niebla, Toledo, Granada, Málaga, Almería, Badajoz, Mérida, Évora, Lisboa, Santarém, Coimbra, Silves, Beja, Valencia, Murcia, Denia, Tortosa, Tarragona, Lérida, Zaragoza, Huesca, Tudela | Andalusi/Sunni → Iberian/Catholic |
+| 1066 | Córdoba, Sevilla, Écija, Niebla, Toledo, Málaga, Almería, Mérida, Évora, Lisboa, Santarém, Coimbra, Silves, Beja, Valencia, Murcia, Denia, Tortosa, Tarragona, Lérida, Zaragoza, Huesca, Tudela | Andalusi/Sunni → Iberian/Catholic |
+| 1066 | Granada, Badajoz | Andalusi/Sunni → Berber/Sunni → Iberian/Catholic |
+| Both | Pamplona | Basque/Catholic → Iberian/Catholic |
+| Both | Álava, Logroño, Aragon | Iberian/Catholic → Basque/Catholic |
+| Both | Bayonne | Frankish/Catholic → Basque/Catholic |
 | 867 | Palermo | Arab/Sunni → Greek/Orthodox |
 | 867 | Messina | Greek/Orthodox → Arab/Sunni |
 | 1066 | Palermo, Siracusa | Arab/Sunni → Greek/Orthodox |
@@ -59,8 +64,14 @@ Romance communities; it does not assert a modern national identity.
 ## Evidence and editorial use
 
 - The Iberian secondary Catholic identity represents Mozarab communities documented
-  throughout al-Andalus; it is not a claim that every selected county had the same
-  share or legal position. See the review of *The Formation of al-Andalus, Part 1:
+  throughout al-Andalus, including Garb al-Andalus (Coimbra, Santarém, Silves, Lisbon),
+  the Upper March (Ebro valley), and southern Andalusia.
+- In 1066 al-Andalus, the Zirid Taifa of Granada and Aftasid Taifa of Badajoz feature
+  Berber communities alongside the Andalusi and Mozarab populations.
+- Basque (`basque`) is modeled as an independent ethnolinguistic culture centered in
+  Pamplona (the Kingdom of Navarre), with coexisting Basque and Romance communities
+  across Álava, Logroño (La Rioja), northern Aragon, and Bayonne (Gascony).
+  See the review of *The Formation of al-Andalus, Part 1:
   History and Society* in [The Medieval Review](https://scholarworks.iu.edu/journals/index.php/tmr/article/view/16918).
 - The east-Breton reversal between 867 and 1066 follows the documented growth of
   Frankish political and cultural influence without erasing Brythonic communities.

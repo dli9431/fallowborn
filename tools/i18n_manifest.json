@@ -1518,6 +1518,14 @@
         "text": "Baltic"
       }
     },
+    "culture.basque.name.default": {
+      "context": "culture basque, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Basque"
+      }
+    },
     "culture.berber.name.default": {
       "context": "culture berber, name, faith branch default.",
       "glossary": [],
@@ -116779,6 +116787,16 @@
       ],
       "source": {
         "text": "You wake to shouting and an orange glow. Fire is eating through the workshop quarter, leaping thatch to thatch."
+      }
+    },
+    "src.9ffbd942": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Basque"
       }
     },
     "src.9fffdf72": {

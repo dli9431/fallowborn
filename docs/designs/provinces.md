@@ -42,7 +42,7 @@ The model is deliberately static. Communities have no percentages, conversion,
 migration, unrest, revolt, or daily/seasonal demographic work. Existing county,
 realm, title, intrigue, advancement, and war mechanics continue to read only the
 principal province identity. They already provide the route by which a character from
-another local community can gain power beneath or displace a foreign ruler. The 98
+another local community can gain power beneath or displace a foreign ruler. The 144
 core bookmark-county records and their evidence are listed in
 [county-communities.md](../research/county-communities.md).
 

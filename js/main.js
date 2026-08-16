@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.13';
+  FB.VERSION = '1.133.14';
   FB.CHANGELOG = [
+    { v: '1.133.14', date: '2026-08-16', changes: [
+      'Added Basque culture and expanded Mozarab, Berber, and Basque starting communities across Spain in both bookmarks.'
+    ] },
+    { v: '1.133.13', date: '2026-08-15', changes: [
+      'Guard tab rendering when no active life is loaded.'
+    ] },
     { v: '1.133.12', date: '2026-08-15', changes: [
       'A settlement holding your buildings, enterprises, or home no longer vanishes from the map when county development declines.',
       'A development decline in your own counties is now reported in the Chronicle.'
