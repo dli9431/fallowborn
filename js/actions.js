@@ -667,7 +667,49 @@ window.FB = window.FB || {};
         : (s.player.travel && s.player.travel.phase !== 'return'
           ? true : FB.T('Already returning home.'));
     },
-    run: function (s) { if (FB.travelTurnBack) FB.travelTurnBack(s); } },
+    run: function (s) {
+      const t = s.player.travel;
+      if (t && t.phase === 'arrived' && t.purpose === 'trade' &&
+          !t.returnVenture && FB.ui && FB.ui.showReturnCargoPrompt) {
+        FB.ui.showReturnCargoPrompt();
+        return;
+      }
+      if (FB.travelTurnBack) FB.travelTurnBack(s);
+    } },
+  { id: 'travel_return_cargo', label: '📦 Buy return cargo…', noConsume: true,
+    desc: function (s) {
+      const t = s.player.travel;
+      if (t && t.returnVenture) {
+        const good = FBDATA.marketGoods[t.returnVenture.goodId];
+        const goodName = good ? (good.icon || '') + ' ' + (FB.dataText ? FB.dataText(s, s.player.charId, 'marketGood', t.returnVenture.goodId, good, 'name', {}) : good.name) : t.returnVenture.goodId;
+        return FB.T('Loaded with {quantity} units of {good} to sell in {home}.', {
+          quantity: Math.round(t.returnVenture.quantity * 10) / 10,
+          good: goodName,
+          home: FB.world.byId[t.homeId] ? FB.world.byId[t.homeId].name : t.homeId
+        });
+      }
+      return FB.T('Purchase local commodities in this market to transport and sell in your home county on the road back.');
+    },
+    show: function (s) {
+      const t = s.player.travel;
+      return !!(t && t.phase === 'arrived' && t.purpose === 'trade');
+    },
+    can: function (s) {
+      const t = s.player.travel;
+      if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') {
+        return FB.T('You must reach a trade venture market first.');
+      }
+      if (t.returnVenture) {
+        return FB.T('You have already loaded return cargo for the journey home.');
+      }
+      if (FB.tradeVentureReturnEligible) {
+        return FB.tradeVentureReturnEligible(s);
+      }
+      return true;
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showReturnCargoSetup) FB.ui.showReturnCargoSetup();
+    } },
   { id: 'travel_marriage_residence', label: '💍 Stay after marriage…', noConsume: true,
     desc: function () {
       return FB.T('Reconsider abdication and residence in the wedding county before this journey ends.');
@@ -6310,7 +6352,7 @@ window.FB = window.FB || {};
     const out = [];
     for (const a of FB.instants) {
       if (state.player.travel &&
-        ['travel_turn_back', 'travel_marriage_residence',
+        ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
           'travel_settle_here'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
       const status = FB.instantStatus(state, a.id);

@@ -5773,9 +5773,16 @@ window.FB = window.FB || {};
   FB.activeTradeVentures = function (state) {
     const out = FB.financeActiveTradeVentures(state).slice();
     const travel = state && state.player && state.player.travel;
-    if (travel && travel.venture && travel.venture.kind === 'trade_venture' &&
-        travel.venture.status === 'active') {
-      out.push(travel.venture);
+    if (travel) {
+      if (travel.venture && travel.venture.kind === 'trade_venture' &&
+          travel.venture.status === 'active') {
+        out.push(travel.venture);
+      }
+      if (travel.returnVenture &&
+          travel.returnVenture.kind === 'trade_venture_return' &&
+          travel.returnVenture.status === 'active') {
+        out.push(travel.returnVenture);
+      }
     }
     return out;
   };
@@ -6060,6 +6067,248 @@ window.FB = window.FB || {};
         destination:destination ? destination.name : preview.destinationId
       }));
     return inv;
+  };
+
+  FB.tradeVentureReturnEligible = function (state) {
+    if (!state || !state.player) return FB.T('No traveler is ready to trade.');
+    const p = state.player;
+    const t = p.travel;
+    if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') {
+      return FB.T('You must reach a trade venture market first.');
+    }
+    if (t.returnVenture) {
+      return FB.T('You have already loaded return cargo for the journey home.');
+    }
+    if (p.flags && p.flags.in_prison) {
+      return FB.T('A prisoner cannot organize return cargo.');
+    }
+    if (FB.atWarPersonally(state)) {
+      return FB.T('You cannot purchase return cargo while personally at war.');
+    }
+    return true;
+  };
+
+  FB.tradeVentureReturnGoods = function (state, stake) {
+    const out = [];
+    const t = state && state.player && state.player.travel;
+    if (!t) return out;
+    const goods = FBDATA.marketGoods || {};
+    const destId = t.destinationId || t.currentId;
+    const homeId = t.homeId;
+    const destCounty = FB.marketCounty ? FB.marketCounty(state, destId) : null;
+    for (const id in goods) {
+      const destPrice = FB.marketPrice ? FB.marketPrice(state, destId, id) : 1;
+      const homePrice = FB.marketPrice ? FB.marketPrice(state, homeId, id) : 1;
+      const quantity = Math.max(0, Number(stake) || 0) / destPrice;
+      const stock = destCounty && destCounty.goods[id] ? destCounty.goods[id].stock : Infinity;
+      out.push({
+        id:id,
+        def:goods[id],
+        destPrice:destPrice,
+        homePrice:homePrice,
+        priceRatio:destPrice > 0 ? homePrice / destPrice : 1,
+        quantity:quantity,
+        stock:stock,
+        available:stock + 0.0001 >= quantity
+      });
+    }
+    out.sort(function (a, b) {
+      return (Number(a.def.order) || 0) - (Number(b.def.order) || 0) ||
+        (a.id < b.id ? -1 : 1);
+    });
+    return out;
+  };
+
+  FB.tradeVentureReturnPreview = function (state, stake, goodId) {
+    const def = tradeVentureDef();
+    stake = Math.floor(Number(stake) || 0);
+    if (!def || FB.tradeVentureStakes().indexOf(stake) < 0) return null;
+    const t = state && state.player && state.player.travel;
+    if (!t || t.phase !== 'arrived' || t.purpose !== 'trade') return null;
+    const destId = t.destinationId || t.currentId;
+    const homeId = t.homeId;
+    const commodity = goodId && FBDATA.marketGoods && FBDATA.marketGoods[goodId];
+    if (!commodity) return null;
+    const destPrice = FB.marketPrice ? FB.marketPrice(state, destId, goodId) : 1;
+    const homePrice = FB.marketPrice ? FB.marketPrice(state, homeId, goodId) : 1;
+    const quantity = stake / destPrice;
+    const destCounty = FB.marketCounty ? FB.marketCounty(state, destId) : null;
+    const destStock = destCounty && destCounty.goods[goodId] ? destCounty.goods[goodId].stock : Infinity;
+    const retDef = def.returnCargo || {};
+    const ladingRate = tradeVentureNumber(retDef.ladingFeeRate, 0.10);
+    const ladingFee = Math.round(stake * ladingRate * 100) / 100;
+    const totalCost = stake + ladingFee;
+    const cautiousMult = tradeVentureNumber(retDef.cautiousMultiplier, 1.20);
+    const boldSuccessMult = tradeVentureNumber(retDef.boldSuccessMultiplier, 2.25);
+    const boldFailureMult = tradeVentureNumber(retDef.boldFailureMultiplier, 0.35);
+    const boldChance = FB.namedChance ? FB.namedChance(state, 'travel_trade') : 0.60;
+    const charterBonus = FB.marketCharterReturnBonus ? FB.marketCharterReturnBonus(
+      state, goodId, destId, homeId, t.outboundRoute) : 0;
+    const baseUnitReturnCautious = homePrice * cautiousMult * (1 + charterBonus);
+    const baseUnitReturnBoldSuccess = homePrice * boldSuccessMult * (1 + charterBonus);
+    const baseUnitReturnBoldFailure = homePrice * boldFailureMult * (1 + charterBonus);
+
+    return {
+      stake:stake,
+      goodId:goodId,
+      destId:destId,
+      homeId:homeId,
+      destPrice:destPrice,
+      homePrice:homePrice,
+      priceRatio:destPrice > 0 ? homePrice / destPrice : 1,
+      quantity:quantity,
+      destStock:destStock,
+      stockAvailable:destStock + 0.0001 >= quantity,
+      ladingFee:ladingFee,
+      totalCost:totalCost,
+      charterBonus:charterBonus,
+      cautiousMultiplier:cautiousMult,
+      boldSuccessMultiplier:boldSuccessMult,
+      boldFailureMultiplier:boldFailureMult,
+      boldChance:boldChance,
+      estimatedPayoutCautious:Math.round(quantity * baseUnitReturnCautious * 100) / 100,
+      estimatedPayoutBoldSuccess:Math.round(quantity * baseUnitReturnBoldSuccess * 100) / 100,
+      estimatedPayoutBoldFailure:Math.round(quantity * baseUnitReturnBoldFailure * 100) / 100
+    };
+  };
+
+  FB.tradeVentureCanLoadReturn = function (state, stake, goodId) {
+    const eligible = FB.tradeVentureReturnEligible(state);
+    if (eligible !== true) return eligible;
+    const preview = FB.tradeVentureReturnPreview(state, stake, goodId);
+    if (!preview) return FB.T('That return cargo is not available.');
+    if (state.player.gold + 0.000001 < preview.totalCost) {
+      return FB.T('The return stake and lading fee cost {money:cost}; you have {money:gold}.', {
+        cost:preview.totalCost, gold:Math.floor(state.player.gold)
+      });
+    }
+    if (!preview.stockAvailable) {
+      return FB.T('The market cannot supply that quantity of {good}.', {
+        good:FB.dataText ? FB.dataText(state, state.player.charId,
+          'marketGood', goodId, FBDATA.marketGoods[goodId], 'name', {}) :
+          FBDATA.marketGoods[goodId].name
+      });
+    }
+    return true;
+  };
+
+  FB.loadTradeVentureReturn = function (state, stake, goodId, strategy) {
+    if (strategy !== 'cautious' && strategy !== 'bold') return null;
+    if (FB.tradeVentureCanLoadReturn(state, stake, goodId) !== true) return null;
+    const preview = FB.tradeVentureReturnPreview(state, stake, goodId);
+    if (!preview) return null;
+    const t = state.player.travel;
+    if (!t) return null;
+    if (!FB.marketTakeStock(state, preview.destId, preview.goodId, preview.quantity)) {
+      return null;
+    }
+    state.player.gold -= preview.totalCost;
+    const ret = {
+      kind:'trade_venture_return',
+      goodId:preview.goodId,
+      originId:preview.destId,
+      destinationId:preview.homeId,
+      destPrice:preview.destPrice,
+      homePrice:preview.homePrice,
+      quantity:preview.quantity,
+      stake:preview.stake,
+      ladingFee:preview.ladingFee,
+      totalCost:preview.totalCost,
+      strategy:strategy,
+      charterBonus:preview.charterBonus,
+      loadedTurn:state.turn,
+      status:'active'
+    };
+    t.returnVenture = ret;
+    const dest = FB.world.byId[preview.destId];
+    const goodDef = FBDATA.marketGoods[preview.goodId];
+    const goodName = goodDef ? (FB.dataText ? FB.dataText(state, state.player.charId, 'marketGood', preview.goodId, goodDef, 'name', {}) : goodDef.name) : preview.goodId;
+    FB.news(state, FB.msg('news.travel.trade_return_cargo_loaded',
+      '🧭 Loaded {quantity} units of {good} in {destination} for the return journey ({money:stake} stake, {money:fee} lading fee).', {
+        quantity:Math.round(preview.quantity * 10) / 10,
+        good:goodName,
+        destination:dest ? dest.name : preview.destId,
+        stake:preview.stake,
+        fee:preview.ladingFee
+      }));
+    return ret;
+  };
+
+  FB.resolveReturnTradeVenture = function (state, travel) {
+    if (!travel || !travel.returnVenture || travel.returnVenture.status !== 'active') {
+      return false;
+    }
+    const ret = travel.returnVenture;
+    const def = tradeVentureDef();
+    const retDef = (def && def.returnCargo) || {};
+    const cautiousMult = tradeVentureNumber(retDef.cautiousMultiplier, 1.20);
+    const boldSuccessMult = tradeVentureNumber(retDef.boldSuccessMultiplier, 2.25);
+    const boldFailureMult = tradeVentureNumber(retDef.boldFailureMultiplier, 0.35);
+
+    let outcome, multiplier;
+    if (ret.strategy === 'cautious') {
+      outcome = 'cautious';
+      multiplier = cautiousMult;
+    } else {
+      const boldChance = FB.namedChance ? FB.namedChance(state, 'travel_trade') : 0.60;
+      const roll = FB.rng();
+      ret.roll = roll;
+      if (roll < boldChance) {
+        outcome = 'bold_success';
+        multiplier = boldSuccessMult;
+      } else {
+        outcome = 'bold_failure';
+        multiplier = boldFailureMult;
+      }
+    }
+
+    const homeId = travel.homeId;
+    const liveHomePrice = FB.marketPrice ? FB.marketPrice(state, homeId, ret.goodId) : 1;
+    const charter = FB.marketCharterReturnBonus ? FB.marketCharterReturnBonus(
+      state, ret.goodId, ret.originId, homeId, travel.outboundRoute) : 0;
+    const payout = Math.round(ret.quantity * liveHomePrice * multiplier *
+      (1 + charter) * 100) / 100;
+    const deliveredQuantity = ret.quantity * Math.min(1, Math.max(0, multiplier));
+
+    ret.arrivalPrice = liveHomePrice;
+    ret.charterBonus = charter;
+    ret.deliveredQuantity = deliveredQuantity;
+    ret.outcome = outcome;
+    ret.multiplier = multiplier;
+    ret.payout = payout;
+    ret.status = 'resolved';
+    ret.resolvedTurn = state.turn;
+
+    if (FB.marketDeliverStock) {
+      FB.marketDeliverStock(state, homeId, ret.goodId, deliveredQuantity);
+    }
+    state.player.gold += payout;
+
+    const me = state.chars[state.player.charId];
+    if (me && payout > ret.totalCost && FB.gainSkill) {
+      FB.gainSkill(me, 'ste', 1);
+    }
+
+    const home = FB.world.byId[homeId];
+    const goodDef = FBDATA.marketGoods[ret.goodId];
+    const goodName = goodDef ? (FB.dataText ? FB.dataText(state, state.player.charId, 'marketGood', ret.goodId, goodDef, 'name', {}) : goodDef.name) : ret.goodId;
+
+    FB.news(state, FB.msg('news.travel.trade_return_cargo_settled', {
+      forms: {
+        select:'value', param:'outcome', cases:{
+          bold_failure:'🌊 The return cargo of {good} suffered spoilage and loss on the road home; {money:payout} is salvaged at {home}.',
+          cautious:'🧭 Returned safely to {home} and sold the return cargo of {good} for {money:payout}.',
+          bold_success:'✨ The return cargo of {good} found a hungry market in {home}, returning {money:payout}.',
+          other:'🧭 The return cargo of {good} is sold at {home} for {money:payout}.'
+        }
+      }
+    }, {
+      outcome:outcome,
+      payout:payout,
+      good:goodName,
+      home:home ? home.name : homeId
+    }));
+    return payout;
   };
 
   FB.tradeInvestmentStakes = function (state) {

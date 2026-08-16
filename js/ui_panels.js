@@ -79,7 +79,7 @@ window.FB = window.FB || {};
     debase_coinage:'realm',
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', intrigue_assets:'life', take_road:'life', travel_turn_back:'life',
-    travel_marriage_residence:'life', travel_settle_here:'life',
+    travel_return_cargo:'life', travel_marriage_residence:'life', travel_settle_here:'life',
     seek_blessing:'faith', seek_absolution:'faith', papacy:'faith',
     bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
     convene_synod:'faith', extraordinary_tithe:'faith',
@@ -377,6 +377,22 @@ window.FB = window.FB || {};
           ? FB.T('accompanied venture cancelled')
           : FB.T('{money:stake} accompanied venture at risk', {
             stake:travel.venture.stake
+          })));
+    }
+    if (travel.returnVenture) {
+      const rGood = FBDATA.marketGoods[travel.returnVenture.goodId];
+      const rGoodName = rGood
+        ? dt(s, 'marketGood', travel.returnVenture.goodId, rGood, 'name')
+        : travel.returnVenture.goodId;
+      status += ' · ' + (travel.returnVenture.status === 'resolved'
+        ? FB.T('return cargo sold: {money:payout}', {
+          payout:travel.returnVenture.payout || 0
+        })
+        : (travel.returnVenture.status === 'cancelled'
+          ? FB.T('return cargo cancelled')
+          : FB.T('return cargo: {quantity} units of {good}', {
+            quantity:Math.round(travel.returnVenture.quantity * 10) / 10,
+            good:rGoodName
           })));
     }
     return status;
@@ -810,6 +826,7 @@ window.FB = window.FB || {};
           } else if (commitment === 'travel') {
             revealActionControl('life',
               '[data-action-id="travel_turn_back"], ' +
+              '[data-action-id="travel_return_cargo"], ' +
               '[data-action-id="travel_marriage_residence"], ' +
               '[data-action-id="travel_settle_here"]');
           } else if (commitment === 'finance') {

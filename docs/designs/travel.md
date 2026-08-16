@@ -87,7 +87,9 @@ home/destination/current county ids, optional service realm, phase
 (`outbound`, `arrived`, or `return`), remaining and original routes, visited
 counties, leg clock, departure turn/cost, encounter counts, seen cultures/events,
 and additive destination-stay fields (`stayStartTurn`, `nextWorkTurn`, `workEvents`,
-and last work event). A targeted journey also saves optional `targetCharId`, whether
+and last work event). Accompanied trade ventures also save an optional `venture` child for outbound cargo
+and an optional `returnVenture` child (`kind`, `goodId`, `stake`, `ladingFee`, `quantity`, `strategy`, `status`)
+when cargo is loaded at the destination market before returning. A targeted journey also saves optional `targetCharId`, whether
 departure initiated courtship, and a reigning-ruler realm/generation stamp when
 applicable. A qualifying destination wedding adds
 `marriageResidence:{spouseId,destinationId,promptPending}`. This child is

@@ -163,17 +163,23 @@ publishing the result, and pays the current household head at the live destinati
 price. Delivered stock is capped at the purchased quantity even when the monetary
 outcome is exceptional. Promotion and succession therefore do not cancel or retarget it.
 
-An accompanied venture is stored only inside `player.travel`. Its selected commodity,
+An accompanied venture is stored inside `player.travel`. Its selected commodity,
 quantity, stake, and separate overhead are frozen at departure, while the existing road encounters,
 destination stay, cautious return, bold Stewardship bargain, return journey, and
-settlement rules remain the travel system’s responsibility. The old ten-gold direct
-`FB.travelStart("trade")` compatibility path remains valid for mods, but the core UI
+settlement rules remain the travel system’s responsibility. While at the destination market,
+the traveler may purchase a return cargo from local market stock using discrete stake brackets
+(10, 20, or 50 gold) plus a 10% lading fee, selecting a cautious or bold return strategy.
+Upon arriving home, the return cargo is sold in the home county at live market prices, delivering
+goods into local inventory and awarding profits based on the chosen strategy and price difference.
+The old ten-gold direct `FB.travelStart("trade")` compatibility path remains valid for mods, but the core UI
 routes Trade Venture through the stake-and-market setup.
 
 The owned-venture API is `FB.tradeVentureStakes`, `FB.tradeVentureEligible`,
 `FB.tradeVentureMarkets`, `FB.tradeVenturePreview`, `FB.tradeVentureCanStart`,
-`FB.startTradeVenture`, `FB.activeTradeVentures`, `FB.tradeVentureActive`, and
-`FB.resolveTradeVenture`. `FB.financeActivePartnerships` and
+`FB.startTradeVenture`, `FB.activeTradeVentures`, `FB.tradeVentureActive`,
+`FB.resolveTradeVenture`, `FB.tradeVentureReturnEligible`, `FB.tradeVentureReturnGoods`,
+`FB.tradeVentureReturnPreview`, `FB.tradeVentureCanLoadReturn`, `FB.loadTradeVentureReturn`,
+and `FB.resolveReturnTradeVenture`. `FB.financeActivePartnerships` and
 `FB.financeActiveTradeVentures` keep the two investment capacities explicit.
 
 Guild monopolies may remain legacy profession-wide records or carry a typed scope.

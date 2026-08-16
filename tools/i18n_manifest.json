@@ -556,6 +556,14 @@
         "text": "💍 Stay after marriage…"
       }
     },
+    "action.travel_return_cargo.label.default": {
+      "context": "action travel_return_cargo, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "📦 Buy return cargo…"
+      }
+    },
     "action.travel_settle_here.label.default": {
       "context": "action travel_settle_here, visible label.",
       "glossary": [],
@@ -37889,6 +37897,41 @@
         "text": "🧭 The household settles in {destination}."
       }
     },
+    "news.travel.trade_return_cargo_loaded": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "destination",
+        "good",
+        "money:fee",
+        "money:stake",
+        "quantity"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "🧭 Loaded {quantity} units of {good} in {destination} for the return journey ({money:stake} stake, {money:fee} lading fee)."
+      }
+    },
+    "news.travel.trade_return_cargo_settled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "good",
+        "home",
+        "money:payout"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "forms": {
+          "cases": {
+            "bold_failure": "🌊 The return cargo of {good} suffered spoilage and loss on the road home; {money:payout} is salvaged at {home}.",
+            "bold_success": "✨ The return cargo of {good} found a hungry market in {home}, returning {money:payout}.",
+            "cautious": "🧭 Returned safely to {home} and sold the return cargo of {good} for {money:payout}.",
+            "other": "🧭 The return cargo of {good} is sold at {home} for {money:payout}."
+          },
+          "param": "outcome",
+          "select": "value"
+        }
+      }
+    },
     "news.travel.trade_venture_cancelled": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -50684,6 +50727,16 @@
         "text": "Receive now"
       }
     },
+    "src.0968ed57": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Purchase price"
+      }
+    },
     "src.096acd3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -51786,6 +51839,16 @@
       ],
       "source": {
         "text": "Promise a benefice"
+      }
+    },
+    "src.0ba0e569": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Load cautiously"
       }
     },
     "src.0bca3294": {
@@ -54537,6 +54600,16 @@
         "text": "Manage household occupations, apprenticeships, workers, and family businesses."
       }
     },
+    "src.124436b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "return cargo cancelled"
+      }
+    },
     "src.124593cd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56047,6 +56120,16 @@
       ],
       "source": {
         "text": "Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service."
+      }
+    },
+    "src.14fd69c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "That return cargo is not available."
       }
     },
     "src.14fd79f8": {
@@ -57849,6 +57932,16 @@
       ],
       "source": {
         "text": "Your saga spanned {years} years and {generations} generation."
+      }
+    },
+    "src.18fdd655": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🌊 The return cargo of {good} suffered spoilage and loss on the road home; {money:payout} is salvaged at {home}."
       }
     },
     "src.1901bec0": {
@@ -60527,6 +60620,16 @@
         "text": "Almoravid Confederation"
       }
     },
+    "src.1f4f1fd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{price}× in {dest}"
+      }
+    },
     "src.1f5a9860": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61684,6 +61787,16 @@
         "text": "market endowments name unknown county"
       }
     },
+    "src.21af01d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} commodity baskets available in {destination}."
+      }
+    },
     "src.21bfe90b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62065,6 +62178,16 @@
       ],
       "source": {
         "text": "Muezzin"
+      }
+    },
+    "src.22b4750d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Invest {money:stake} in return cargo…"
       }
     },
     "src.22b5e28e": {
@@ -63390,6 +63513,16 @@
       ],
       "source": {
         "text": "Fund his work. ({money:10})"
+      }
+    },
+    "src.2597af3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Load boldly"
       }
     },
     "src.259ba5ba": {
@@ -65627,6 +65760,16 @@
       ],
       "source": {
         "text": "{station} or higher"
+      }
+    },
+    "src.2ab15a32": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "The market cannot supply that quantity of {good}."
       }
     },
     "src.2ab2ef1f": {
@@ -68536,6 +68679,16 @@
       ],
       "source": {
         "text": "Remove all music"
+      }
+    },
+    "src.3156bc34": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Select a commodity to buy in {destination} and transport back to {home}."
       }
     },
     "src.3165181c": {
@@ -71774,6 +71927,16 @@
         "text": "Beg your liege’s aid. ({money:20})"
       }
     },
+    "src.395a0491": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Return stake"
+      }
+    },
     "src.395b63ce": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71983,6 +72146,16 @@
       ],
       "source": {
         "text": "Madrasas and Colleges"
+      }
+    },
+    "src.39c64e95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Quantity purchased"
       }
     },
     "src.39c6fe27": {
@@ -74105,6 +74278,16 @@
       ],
       "source": {
         "text": "Volodymyr"
+      }
+    },
+    "src.3f28da49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Review return cargo"
       }
     },
     "src.3f2a0dda": {
@@ -77001,6 +77184,16 @@
       ],
       "source": {
         "text": "{action} — {reason}"
+      }
+    },
+    "src.453c89a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your business in {destination} is concluded. Before taking the road home, would you like to purchase a return cargo from this market to transport and sell in {home}, or return unladen?"
       }
     },
     "src.453dd45c": {
@@ -84517,6 +84710,16 @@
         "text": "has an invalid date."
       }
     },
+    "src.56bc2417": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Return unladen (empty-handed)"
+      }
+    },
     "src.56c91b4e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84737,6 +84940,16 @@
         "text": "Raises monastic output by 15%."
       }
     },
+    "src.573155bd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That return cargo is no longer available."
+      }
+    },
     "src.57344272": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84806,6 +85019,16 @@
       ],
       "source": {
         "text": "Look to your own hearth."
+      }
+    },
+    "src.574f6905": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Back to goods"
       }
     },
     "src.57595d4c": {
@@ -85407,6 +85630,16 @@
       ],
       "source": {
         "text": "A pact envoy costs {money:10}. Kings and emperors may offer a {money:25} alliance at Standing 60+."
+      }
+    },
+    "src.58be3c35": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Prepare for the road home"
       }
     },
     "src.58cad766": {
@@ -87375,6 +87608,16 @@
       ],
       "source": {
         "text": "Take up a livelihood"
+      }
+    },
+    "src.5d37d043": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage."
       }
     },
     "src.5d3e7a5f": {
@@ -89742,6 +89985,16 @@
         "text": "Pasture, spinning, weaving, dyeing, and finishing sustain a textile advantage."
       }
     },
+    "src.6267d8a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "return cargo sold: {money:payout}"
+      }
+    },
     "src.626ff4bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90351,6 +90604,17 @@
       ],
       "source": {
         "text": "The household currently leaves each child’s focus for manual choice."
+      }
+    },
+    "src.63e2efe4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "You must reach a trade venture market first."
       }
     },
     "src.63e6658b": {
@@ -91217,6 +91481,16 @@
       ],
       "source": {
         "text": "Travel with a lean household. ({money:10})"
+      }
+    },
+    "src.664f0dc5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Lading fee (10%)"
       }
     },
     "src.6651850d": {
@@ -92400,6 +92674,16 @@
         "text": "Take wealth and renown, but remain gentry."
       }
     },
+    "src.68fca28c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin."
+      }
+    },
     "src.68fdd27c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93295,6 +93579,16 @@
       ],
       "source": {
         "text": "The Treasurer lays two petitions beside the accounts. Guild masters ask for fixed tolls and protected stalls; their rivals offer ready silver for the same privileges without the inconvenient limits. The seal can make either bargain law."
+      }
+    },
+    "src.6ad0ee4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "return cargo: {quantity} units of {good}"
       }
     },
     "src.6ad2dcfb": {
@@ -95340,6 +95634,16 @@
       ],
       "source": {
         "text": "Requires the first seasonal pay of {money:pay}."
+      }
+    },
+    "src.6f930672": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Return Cargo: {good}"
       }
     },
     "src.6fadd3d2": {
@@ -98680,6 +98984,26 @@
         "text": "They take patience for weakness and demand more, emboldened."
       }
     },
+    "src.773c6a33": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "No traveler is ready to trade."
+      }
+    },
+    "src.774a6c46": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Travel home without cargo. No investment at risk on the return road."
+      }
+    },
     "src.7751bbd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98879,6 +99203,16 @@
       ],
       "source": {
         "text": "Defeat at {place}"
+      }
+    },
+    "src.77e1cfc1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{quantity} units"
       }
     },
     "src.77e3740b": {
@@ -104653,6 +104987,16 @@
         "text": "War begins only after the existing cause selection is confirmed."
       }
     },
+    "src.84553907": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "You cannot purchase return cargo while personally at war."
+      }
+    },
     "src.845595a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105446,6 +105790,16 @@
         "text": "A ruler cannot forever look backward."
       }
     },
+    "src.85d5e4c9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stay longer"
+      }
+    },
     "src.85d6b4c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105798,6 +106152,17 @@
         "text": "Who Stands Nearest"
       }
     },
+    "src.86d15b80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js",
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "You have already loaded return cargo for the journey home."
+      }
+    },
     "src.86d5e0b5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105916,6 +106281,16 @@
       ],
       "source": {
         "text": "Seasonal tax contribution"
+      }
+    },
+    "src.871eb106": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Purchase market"
       }
     },
     "src.87255f4c": {
@@ -106636,6 +107011,16 @@
       ],
       "source": {
         "text": "A young hawk sits restless upon your glove, all hunger, fear, and sharp attention. The falconer waits to see whether you command or merely clutch."
+      }
+    },
+    "src.8897ea45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Selling market (Home)"
       }
     },
     "src.88bdda1e": {
@@ -115320,6 +115705,16 @@
         "text": "Honor their confidence."
       }
     },
+    "src.9c3f330b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Loaded with {quantity} units of {good} to sell in {home}."
+      }
+    },
     "src.9c52fe2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115738,6 +116133,16 @@
       ],
       "source": {
         "text": "The toll doubles while the cudgels remain persuasive."
+      }
+    },
+    "src.9d1570fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 Loaded {quantity} units of {good} in {destination} for the return journey ({money:stake} stake, {money:fee} lading fee)."
       }
     },
     "src.9d182261": {
@@ -117112,6 +117517,16 @@
       ],
       "source": {
         "text": "The lord’s stores are full, the nights are long, and hunger keeps no law."
+      }
+    },
+    "src.a0457f38": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "The return stake and lading fee cost {money:cost}; you have {money:gold}."
       }
     },
     "src.a048c4d9": {
@@ -118960,6 +119375,16 @@
         "text": "Thin ranks"
       }
     },
+    "src.a408c750": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Insufficient gold or destination stock for this stake."
+      }
+    },
     "src.a409e477": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120034,6 +120459,16 @@
       ],
       "source": {
         "text": "Road dust, parish bells, crowded porches: the diocese waits to see what kind of bishop has come among it."
+      }
+    },
+    "src.a678ae1c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Current home price"
       }
     },
     "src.a67cb7a7": {
@@ -121853,6 +122288,16 @@
       ],
       "source": {
         "text": "Realm & demesne"
+      }
+    },
+    "src.ab35f4ce": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Estimated bold payout"
       }
     },
     "src.ab35fb27": {
@@ -123812,6 +124257,16 @@
       ],
       "source": {
         "text": "{days} days living and working here"
+      }
+    },
+    "src.afa5b80c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return."
       }
     },
     "src.afb0f553": {
@@ -126775,6 +127230,16 @@
         "text": "Send them in search of another banner."
       }
     },
+    "src.b5d45fc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "📦 Buy return cargo…"
+      }
+    },
     "src.b5dd4399": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126933,6 +127398,16 @@
       ],
       "source": {
         "text": "📈 Your learning improves ({value})."
+      }
+    },
+    "src.b640090a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose return cargo"
       }
     },
     "src.b6426ab4": {
@@ -127866,6 +128341,16 @@
       ],
       "source": {
         "text": "A defensive alliance requires another sovereign king or emperor."
+      }
+    },
+    "src.b8762fb6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "✨ The return cargo of {good} found a hungry market in {home}, returning {money:payout}."
       }
     },
     "src.b87a1554": {
@@ -129614,6 +130099,16 @@
         "text": "Every answer opens another contradiction. {rival}’s political footing gives way before the watching court."
       }
     },
+    "src.bccffea1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Load return cargo"
+      }
+    },
     "src.bcd28d18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130510,6 +131005,16 @@
         "text": "An alliance envoy requires {money:25} in gifts."
       }
     },
+    "src.bf1b2dcf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{price}× in {home}"
+      }
+    },
     "src.bf1d56d2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130708,6 +131213,16 @@
       ],
       "source": {
         "text": "Fee unpaid · term paused"
+      }
+    },
+    "src.bfb1985d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Return cargo loaded boldly. It will be sold upon your return to {home}."
       }
     },
     "src.bfb48627": {
@@ -132413,6 +132928,16 @@
         "text": "Chichester"
       }
     },
+    "src.c31d0077": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Buy return cargo…"
+      }
+    },
     "src.c3224894": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132841,6 +133366,16 @@
       ],
       "source": {
         "text": "plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant"
+      }
+    },
+    "src.c472dde4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Estimated cautious payout"
       }
     },
     "src.c479e807": {
@@ -135563,6 +136098,16 @@
         "text": "Mansura"
       }
     },
+    "src.cad17608": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 Returned safely to {home} and sold the return cargo of {good} for {money:payout}."
+      }
+    },
     "src.cadaf63d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136553,6 +137098,16 @@
         "text": "Minimum station: {station}"
       }
     },
+    "src.ccbb6ab1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Return cargo loaded. It will be sold upon your return to {home}."
+      }
+    },
     "src.cccf0196": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137199,6 +137754,16 @@
         "text": "Regular estate courts order local custom, labor, and minor disputes."
       }
     },
+    "src.ce4c635e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "🧭 The return cargo of {good} is sold at {home} for {money:payout}."
+      }
+    },
     "src.ce5bcc08": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137567,6 +138132,16 @@
       ],
       "source": {
         "text": "This person is no longer eligible."
+      }
+    },
+    "src.cf5c2d1e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Purchase local commodities in this market to transport and sell in your home county on the road back."
       }
     },
     "src.cf5f94e2": {
@@ -139214,6 +139789,16 @@
         "text": "Your copies are precise and sought after. Scholars speak your name."
       }
     },
+    "src.d391cfe6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison)."
+      }
+    },
     "src.d39c19ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139462,6 +140047,16 @@
       ],
       "source": {
         "text": "{marital} · Standing {standing}"
+      }
+    },
+    "src.d4250f6e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin."
       }
     },
     "src.d4261f5d": {
@@ -142736,6 +143331,16 @@
         "text": "Exceptional sibling approach"
       }
     },
+    "src.dba4bfa3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}."
+      }
+    },
     "src.dba766a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -144286,6 +144891,16 @@
       ],
       "source": {
         "text": "Lying awake, you wonder: does {god} see you at all? Has any of it mattered?"
+      }
+    },
+    "src.df0b7589": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Select commodities from {destination} to sell in {home}."
       }
     },
     "src.df110394": {
@@ -147833,6 +148448,16 @@
         "text": "Stubborn, surefooted, profitable."
       }
     },
+    "src.e709830c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "A prisoner cannot organize return cargo."
+      }
+    },
     "src.e7121aea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149846,6 +150471,16 @@
       ],
       "source": {
         "text": "Response where the union is taboo"
+      }
+    },
+    "src.ebb404cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Returning with cargo allows you to profit from price differences between {destination} and {home}, but carries road risk."
       }
     },
     "src.ebb5dcde": {
@@ -152345,6 +152980,16 @@
       ],
       "source": {
         "text": "Spurn him grandly. You have outgrown the blushing boy from the muster line."
+      }
+    },
+    "src.f14dcbd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{money:success} on success / {money:failure} on failure"
       }
     },
     "src.f14fb8c9": {
@@ -154998,6 +155643,16 @@
       ],
       "source": {
         "text": "Teaching {students}"
+      }
+    },
+    "src.f7e6e33f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "cannot afford total cost"
       }
     },
     "src.f7f3e180": {
@@ -164056,6 +164711,16 @@
         "text": "A manor-sized holding is assembled here."
       }
     },
+    "ui:A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A modest 10% lading fee covers pack supplies and handling. The cargo will be sold in {home} upon your return."
+      }
+    },
     "ui:A motion is already being campaigned before the Estates.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -164189,6 +164854,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "A prisoner cannot organize a trade venture."
+      }
+    },
+    "ui:A prisoner cannot organize return cargo.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "A prisoner cannot organize return cargo."
       }
     },
     "ui:A proposal becomes available at +{threshold} Standing.": {
@@ -166300,6 +166973,14 @@
         "text": "Back to equipment"
       }
     },
+    "ui:Back to goods": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Back to goods"
+      }
+    },
     "ui:Back to household": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167037,6 +167718,14 @@
         "text": "Buy remaining plots here…"
       }
     },
+    "ui:Buy return cargo…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Buy return cargo…"
+      }
+    },
     "ui:Buy your first land plot": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167306,6 +167995,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Careers, training, and work"
+      }
+    },
+    "ui:Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Careful packing and cautious transport. Delivers return cargo reliably at 1.20× margin."
       }
     },
     "ui:Cash and item gifts share this recipient’s cooldown. Ready in {days} days.": {
@@ -167973,6 +168670,14 @@
         "text": "Choose one tactic for this ballot. Every elector’s current lean is shown below; the saved ballot may still vary."
       }
     },
+    "ui:Choose return cargo": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose return cargo"
+      }
+    },
     "ui:Choose the Method": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -167987,6 +168692,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the Target"
+      }
+    },
+    "ui:Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the capital to commit for cargo on the journey home. You will purchase goods at local market prices in {destination} to transport and sell in {home}."
       }
     },
     "ui:Choose the capital to commit. You will buy a commodity next, select a developed market, then decide whether to dispatch the venture or accompany it personally.": {
@@ -173639,6 +174355,14 @@
         "text": "Instruction raises yearly learning chances; paid lessons charge each season."
       }
     },
+    "ui:Insufficient gold or destination stock for this stake.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Insufficient gold or destination stock for this stake."
+      }
+    },
     "ui:Insult them publicly": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173693,6 +174417,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Intrigue finds secrets, hides intentions, and anticipates hostile schemes."
+      }
+    },
+    "ui:Invest {money:stake} in return cargo…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:stake"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Invest {money:stake} in return cargo…"
       }
     },
     "ui:Invest {money:stake}…": {
@@ -174573,6 +175307,42 @@
         "text": "Living standards benefit the whole resident household."
       }
     },
+    "ui:Load boldly": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Load boldly"
+      }
+    },
+    "ui:Load cautiously": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Load cautiously"
+      }
+    },
+    "ui:Load return cargo": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Load return cargo"
+      }
+    },
+    "ui:Loaded with {quantity} units of {good} to sell in {home}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good",
+        "home",
+        "quantity"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Loaded with {quantity} units of {good} to sell in {home}."
+      }
+    },
     "ui:Loan against revenues": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175416,6 +176186,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Maximum immediate gold expenditure"
+      }
+    },
+    "ui:Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Maximum lading and rapid pace ({chance}% success). Returns 2.25× on success or 0.35× on spoilage."
       }
     },
     "ui:Maximum prestige requirement": {
@@ -177409,6 +178189,14 @@
       "location": "js/travel.js",
       "source": {
         "text": "No travel purpose is available."
+      }
+    },
+    "ui:No traveler is ready to trade.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "No traveler is ready to trade."
       }
     },
     "ui:No unilateral revocation path": {
@@ -179935,6 +180723,14 @@
         "text": "Prepare for Cardinal eligibility when available."
       }
     },
+    "ui:Prepare for the road home": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Prepare for the road home"
+      }
+    },
     "ui:Prerequisites": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180400,6 +181196,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Provoke direction"
+      }
+    },
+    "ui:Purchase local commodities in this market to transport and sell in your home county on the road back.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Purchase local commodities in this market to transport and sell in your home county on the road back."
       }
     },
     "ui:Pursue a county through right, petition, or war.": {
@@ -182290,6 +183094,16 @@
         "text": "Retirement waits until age {age}."
       }
     },
+    "ui:Return Cargo: {good}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Return Cargo: {good}"
+      }
+    },
     "ui:Return along the saved route after the required residence. You may remain as a guest as long as you like.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182312,6 +183126,37 @@
       "location": "js/actions.js",
       "source": {
         "text": "Return along the saved route after the required visit. You may remain together as long as you like."
+      }
+    },
+    "ui:Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "chance",
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Return cargo is carried on the road home and sold in {home} upon your arrival. Cautious delivery guarantees safe arrival; bold delivery tests your Stewardship ({chance}% success) for a greater margin."
+      }
+    },
+    "ui:Return cargo loaded boldly. It will be sold upon your return to {home}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Return cargo loaded boldly. It will be sold upon your return to {home}."
+      }
+    },
+    "ui:Return cargo loaded. It will be sold upon your return to {home}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Return cargo loaded. It will be sold upon your return to {home}."
       }
     },
     "ui:Return from campaign before retiring.": {
@@ -182344,6 +183189,25 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Return to title"
+      }
+    },
+    "ui:Return unladen (empty-handed)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Return unladen (empty-handed)"
+      }
+    },
+    "ui:Returning with cargo allows you to profit from price differences between {destination} and {home}, but carries road risk.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Returning with cargo allows you to profit from price differences between {destination} and {home}, but carries road risk."
       }
     },
     "ui:Revenue assigned to lenders": {
@@ -182550,6 +183414,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Review requirements for {enterprise}. Unavailable: {reason}"
+      }
+    },
+    "ui:Review return cargo": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Review return cargo"
       }
     },
     "ui:Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience.": {
@@ -183336,12 +184208,34 @@
         "text": "Seeking a Match"
       }
     },
+    "ui:Select a commodity to buy in {destination} and transport back to {home}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Select a commodity to buy in {destination} and transport back to {home}."
+      }
+    },
     "ui:Select a ruler for their character sheet and dealings.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
         "text": "Select a ruler for their character sheet and dealings."
+      }
+    },
+    "ui:Select commodities from {destination} to sell in {home}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Select commodities from {destination} to sell in {home}."
       }
     },
     "ui:Select to review every requirement.": {
@@ -184375,6 +185269,14 @@
         "text": "Stay in {destination} after the wedding?"
       }
     },
+    "ui:Stay longer": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stay longer"
+      }
+    },
     "ui:Stay sworn": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185036,6 +185938,22 @@
       "location": "js/travel.js",
       "source": {
         "text": "That recipient cannot receive a gift."
+      }
+    },
+    "ui:That return cargo is no longer available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That return cargo is no longer available."
+      }
+    },
+    "ui:That return cargo is not available.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "That return cargo is not available."
       }
     },
     "ui:That ruler cannot receive a gift.": {
@@ -185959,6 +186877,16 @@
         "text": "The manor is forfeited and the house falls to Freeholder."
       }
     },
+    "ui:The market cannot supply that quantity of {good}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "The market cannot supply that quantity of {good}."
+      }
+    },
     "ui:The marriage doctrine of this era does not recognize this match.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -186215,6 +187143,17 @@
       "location": "js/travel.js",
       "source": {
         "text": "The return journey has already begun."
+      }
+    },
+    "ui:The return stake and lading fee cost {money:cost}; you have {money:gold}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:cost",
+        "money:gold"
+      ],
+      "location": "js/economy.js",
+      "source": {
+        "text": "The return stake and lading fee cost {money:cost}; you have {money:gold}."
       }
     },
     "ui:The reviewed domain grants have been applied.": {
@@ -187384,6 +188323,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Travel and journeys"
+      }
+    },
+    "ui:Travel home without cargo. No investment at risk on the return road.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Travel home without cargo. No investment at risk on the return road."
       }
     },
     "ui:Travel to begin courtship…": {
@@ -188888,6 +189835,14 @@
         "text": "You cannot leave while personally at war."
       }
     },
+    "ui:You cannot purchase return cargo while personally at war.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "You cannot purchase return cargo while personally at war."
+      }
+    },
     "ui:You cannot travel, marry, hold a plot, or take a new office while confined.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188922,6 +189877,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "You gain {piety} piety and {prestige} prestige, recover {standing} Standing with Catholic rulers, and any excommunication is cleared."
+      }
+    },
+    "ui:You have already loaded return cargo for the journey home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "You have already loaded return cargo for the journey home."
       }
     },
     "ui:You have no direct vassals, so no direct-vassal Standing changes now.": {
@@ -189023,6 +189986,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "You must hold Roma personally."
+      }
+    },
+    "ui:You must reach a trade venture market first.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/economy.js",
+      "source": {
+        "text": "You must reach a trade venture market first."
       }
     },
     "ui:You need Martial {needed} to be entrusted with an army (now {current}).": {
@@ -189260,6 +190231,17 @@
       "location": "js/actions.js",
       "source": {
         "text": "Your Standing with your liege must be {needed} or more (now {current})."
+      }
+    },
+    "ui:Your business in {destination} is concluded. Before taking the road home, would you like to purchase a return cargo from this market to transport and sell in {home}, or return unladen?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "destination",
+        "home"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your business in {destination} is concluded. Before taking the road home, would you like to purchase a return cargo from this market to transport and sell in {home}, or return unladen?"
       }
     },
     "ui:Your campaign service": {
@@ -190389,6 +191371,14 @@
         "text": "campaign supply use"
       }
     },
+    "ui:cannot afford total cost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "cannot afford total cost"
+      }
+    },
     "ui:capital": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -191424,6 +192414,35 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "resolve {resolve} · {days} days before the deadline"
+      }
+    },
+    "ui:return cargo cancelled": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "return cargo cancelled"
+      }
+    },
+    "ui:return cargo sold: {money:payout}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:payout"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "return cargo sold: {money:payout}"
+      }
+    },
+    "ui:return cargo: {quantity} units of {good}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "good",
+        "quantity"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "return cargo: {quantity} units of {good}"
       }
     },
     "ui:returning home": {
@@ -192924,6 +193943,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}."
+      }
+    },
+    "ui:{count} commodity baskets available in {destination}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "destination"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} commodity baskets available in {destination}."
       }
     },
     "ui:{count} constituencies · {weight} weighted votes": {
@@ -194647,6 +195677,17 @@
         "text": "{money:stake} invested · resolves {date}"
       }
     },
+    "ui:{money:success} on success / {money:failure} on failure": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:failure",
+        "money:success"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{money:success} on success / {money:failure} on failure"
+      }
+    },
     "ui:{motion} campaign · {days} days remain.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -195382,6 +196423,28 @@
         "text": "{price}×"
       }
     },
+    "ui:{price}× in {dest}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "dest",
+        "price"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{price}× in {dest}"
+      }
+    },
+    "ui:{price}× in {home}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "home",
+        "price"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{price}× in {home}"
+      }
+    },
     "ui:{price}× · {trend}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -195479,6 +196542,16 @@
         "text": "{purpose} · {phase} · {location} → {destination}"
       }
     },
+    "ui:{quantity} units": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "quantity"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{quantity} units"
+      }
+    },
     "ui:{quantity} units at {price}×": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -195513,6 +196586,21 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{quantity} units bound for {destination} · bought at {price}× · {days} days remain"
+      }
+    },
+    "ui:{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "dest",
+        "destPrice",
+        "home",
+        "homePrice",
+        "quantity",
+        "ratio"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison)."
       }
     },
     "ui:{rank} rank": {

@@ -1239,6 +1239,10 @@ window.FB = window.FB || {};
     const t = p.travel;
     if (!t) return;
     clearQueued(state);
+    if (t.returnVenture && t.returnVenture.status === 'active' &&
+        FB.resolveReturnTradeVenture) {
+      FB.resolveReturnTradeVenture(state, t);
+    }
     p.travel = null;
     FB.news(state, FB.msg('news.travel.returned',
       '🧭 Returned home to {home}.', {home:FB.world.byId[t.homeId].name}));
@@ -1666,9 +1670,13 @@ window.FB = window.FB || {};
     if (!p || !p.travel) return false;
     clearQueued(state);
     const t = p.travel;
+    if (t.returnVenture && t.returnVenture.status === 'active') {
+      t.returnVenture.status = 'cancelled';
+      t.returnVenture.cancelledTurn = state.turn;
+    }
     p.travel = null;
     if (!silent) {
-      if (t.venture && t.venture.status === 'active') {
+      if ((t.venture && t.venture.status === 'active') || (t.returnVenture && t.returnVenture.status === 'cancelled')) {
         FB.news(state, FB.msg('news.travel.trade_venture_cancelled',
           '🧭 The accompanied venture ends without a payout. The household remains at {home}.', {
             home:FB.world.byId[t.homeId].name

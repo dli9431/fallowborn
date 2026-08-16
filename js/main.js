@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.135.0';
+  FB.VERSION = '1.135.1';
   FB.CHANGELOG = [
+    { v: '1.135.1', date: '2026-08-16', changes: [
+      'Accompanied trade ventures can now purchase return cargo at destination markets to bring home and sell at live local prices.'
+    ] },
     { v: '1.135.0', date: '2026-08-16', changes: [
       'Counties now simulate population growth, carrying capacity, and land migration, scaling tax yields, levies, and market demand.',
       'Land rents and feudal tier progression scale with active settlements, while peaceful AI rulers construct buildings based on technology.'
