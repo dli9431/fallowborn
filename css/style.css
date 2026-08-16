@@ -2682,21 +2682,13 @@ textarea.modjson, textarea.savetext {
   .enterprise-view-controls .enterprise-view-select select {
     min-height: 44px; font-size: 14px;
   }
-  .music-now-playing-controls {
-    right: max(8px, env(safe-area-inset-right)); left: auto;
-    bottom: max(8px, env(safe-area-inset-bottom));
-    transform: none; max-width: min(42%, 184px); gap: 4px;
-  }
-  .music-now-playing {
-    min-height: 44px; gap: 0; padding-inline: 8px; font-size: 11px;
-  }
-  .music-now-playing span:first-child { display: none; }
-  .music-now-playing-toggle {
-    flex-basis: 44px; width: 44px; height: 44px; font-size: 14px;
-  }
   #toasts {
     left: max(10px, env(safe-area-inset-left));
-    bottom: max(10px, env(safe-area-inset-bottom)); max-width: 50%;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    max-width: calc(100% - 60px);
+  }
+  .event-receipt-toast {
+    width: 100%;
   }
   .music-track-actions { grid-template-columns: 1fr; }
   .kv { font-size: 15px; padding: 4px 0; }
@@ -3094,7 +3086,6 @@ textarea.modjson, textarea.savetext {
     left: 8px; top: 8px; max-width: calc(100% - 66px);
     overflow: hidden;
   }
-  #toasts { max-width: 40%; }
 }
 
 /* landscape phones: map left, panel column right */

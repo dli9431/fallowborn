@@ -372,9 +372,12 @@ test('event result toasts stay in the bottom-left map toast region',
         parentId:element.parentNode.id,
         leftGap:toastRect.left - mapRect.left,
         bottomGap:mapRect.bottom - toastRect.bottom,
+        toastWidth:Math.round(toastRect.width),
+        mapWidth:Math.round(mapRect.width),
         insideMap:toastRect.top >= mapRect.top &&
           toastRect.right <= mapRect.right &&
           toastRect.bottom <= mapRect.bottom,
+        clearsRightButtons:toastRect.right <= mapRect.right - 44,
         clearsPanels:toastRect.bottom <= panelsRect.top + 1
       };
     });
@@ -383,7 +386,9 @@ test('event result toasts stay in the bottom-left map toast region',
     expect(placement.leftGap).toBeLessThanOrEqual(11);
     expect(placement.bottomGap).toBeGreaterThanOrEqual(9);
     expect(placement.bottomGap).toBeLessThanOrEqual(11);
+    expect(placement.toastWidth).toBeGreaterThanOrEqual(placement.mapWidth - 70);
     expect(placement.insideMap).toBe(true);
+    expect(placement.clearsRightButtons).toBe(true);
     expect(placement.clearsPanels).toBe(true);
   });
 

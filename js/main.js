@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.9';
+  FB.VERSION = '1.133.10';
   FB.CHANGELOG = [
+    { v: '1.133.10', date: '2026-08-15', changes: [
+      'Event toasts on mobile now expand to use available screen width alongside map controls.'
+    ] },
     { v: '1.133.9', date: '2026-08-15', changes: [
       'The Work & Enterprises modal has been decluttered by removing redundant explanatory text blocks.'
     ] },
