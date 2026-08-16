@@ -1238,5 +1238,10 @@ FBDATA.balance = {
   populationFactorMin: 0.50,
   populationFactorMax: 1.50,
   populationDemandFactorMin: 0.60,
-  populationDemandFactorMax: 1.60
+  populationDemandFactorMax: 1.60,
+  /* settlement fiscal contributions & AI construction */
+  settlementVillageTax: 0.75,
+  settlementTownTax: 2.0,
+  settlementCityTax: 4.5,
+  aiMaxBuildingsPerYear: 1
 };

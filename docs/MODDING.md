@@ -2815,6 +2815,11 @@ normal composition quality, siege strength, reinforcement, and logistics immedia
 but are not saved anywhere outside that exact host.
 
 `data/map_data.js` ends with `FBDATA.balance`: every economy/war/mortality knob in one place.
+Settlement fiscal output and AI construction tuning uses:
+`settlementVillageTax` (0.75g/season),
+`settlementTownTax` (2.00g/season),
+`settlementCityTax` (4.50g/season), and
+`aiMaxBuildingsPerYear` (1 building per AI realm annually).
 Player-capital relocation uses three signed/core numeric keys:
 `capitalRelocationPrestigeCost` (200),
 `capitalRelocationPopularOpinion` (-15), and
