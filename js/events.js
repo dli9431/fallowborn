@@ -4034,7 +4034,7 @@ window.FB = window.FB || {};
     'marry','clearSuitor','adoptChild','killChild','killRole','kinslayer',
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
-    'worldNews','log','custom','deathProvenance'
+    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate'
   ];
   FB.eventPreviewEffectKeys = {};
   for (let effectKeyIndex = 0; effectKeyIndex < EVENT_EFFECT_KEYS.length;
@@ -4404,6 +4404,15 @@ window.FB = window.FB || {};
     if (fx.devUp) out.push(impact('development', {
       amount:fx.devUp, reward:fx.devUp > 0
     }));
+    if (fx.populationLoss !== undefined || fx.populationLossRate !== undefined) {
+      out.push(impact('population', {
+        action:'loss',
+        loss:fx.populationLoss,
+        rate:fx.populationLossRate,
+        cause:fx.cause || 'event',
+        cost:true
+      }));
+    }
     if (fx.addModifier) {
       const addSpec = modifierSpec(fx.addModifier);
       const modifierDef = addSpec && FBDATA.modifiers && FBDATA.modifiers[addSpec.id];
@@ -5201,6 +5210,16 @@ window.FB = window.FB || {};
       if (concealedGain) return FB.T('County development may rise');
       return FB.T('County development {change}', { change:numberText(amount) });
     }
+    if (record.type === 'population') {
+      if (record.rate !== undefined) {
+        return FB.T('Population loss ({rate}%)', {
+          rate: Math.round(Math.abs(Number(record.rate) || 0) * 100)
+        });
+      }
+      return FB.T('Population loss (−{amount})', {
+        amount: Math.abs(Number(record.loss) || 0)
+      });
+    }
     if (record.type === 'landPlot') {
       return FB.T('Land plots {change}', { change:numberText(amount) });
     }
@@ -5575,6 +5594,36 @@ window.FB = window.FB || {};
     if (fx.devUp) {
       const pid = (p.provs && p.provs[0]) || p.provinceId;
       FB.changeCountyDevelopment(state, pid, fx.devUp, 'event');
+    }
+    if (fx.populationLoss !== undefined || fx.populationLossRate !== undefined) {
+      const targetPid = fx.provinceId || ctx.locationId || ctx.provinceId || p.provinceId;
+      if (targetPid && FB.changeCountyPopulation) {
+        let crisisProt = 0;
+        let famineProt = 0;
+        if (FB.countyBuildingCrisisProtection) crisisProt += FB.countyBuildingCrisisProtection(state, targetPid);
+        if (FB.countyBuildingFamineProtection) famineProt += FB.countyBuildingFamineProtection(state, targetPid);
+        const owner = (state.owner && state.owner[targetPid]) || null;
+        let techCrisisProt = FB.techBonus ? FB.techBonus(state, 'populationCrisisProtection', owner) : 0;
+        techCrisisProt = FB.clamp(techCrisisProt, 0, 0.10);
+        crisisProt += techCrisisProt;
+
+        let protection = 0;
+        if (fx.cause === 'famine') {
+          protection = Math.min(0.60, crisisProt + famineProt);
+        } else {
+          protection = Math.min(0.30, crisisProt);
+        }
+
+        if (fx.populationLossRate !== undefined) {
+          const baseLossRate = Number(fx.populationLossRate);
+          const effectiveRate = -Math.abs(baseLossRate) * (1 - protection);
+          FB.changeCountyPopulationRate(state, targetPid, effectiveRate, fx.cause || 'event');
+        } else if (fx.populationLoss !== undefined) {
+          const baseLoss = Number(fx.populationLoss);
+          const effectiveLoss = -Math.round(Math.abs(baseLoss) * (1 - protection));
+          FB.changeCountyPopulation(state, targetPid, effectiveLoss, fx.cause || 'event');
+        }
+      }
     }
     if (fx.research) appliedResearch = FB.addResearch(state, fx.research) || 0;
     if (fx.addModifier && FB.addModifier) {

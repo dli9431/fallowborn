@@ -111,6 +111,18 @@ window.FB = window.FB || {};
       if (!province || !province.id) { fault('province at index ' + pi + ' has no id.'); continue; }
       if (provinceIds[province.id]) fault('duplicate province id ' + province.id + '.');
       provinceIds[province.id] = province;
+      if (province.population0 !== undefined) {
+        if (typeof province.population0 !== 'number' || !isFinite(province.population0) ||
+            province.population0 <= 0 || Math.floor(province.population0) !== province.population0) {
+          fault('province ' + province.id + ': population0 must be a positive integer.');
+        }
+      }
+      if (province.populationCapacity0 !== undefined) {
+        if (typeof province.populationCapacity0 !== 'number' || !isFinite(province.populationCapacity0) ||
+            province.populationCapacity0 <= 0 || Math.floor(province.populationCapacity0) !== province.populationCapacity0) {
+          fault('province ' + province.id + ': populationCapacity0 must be a positive integer.');
+        }
+      }
     }
     for (var ri = 0; ri < realmsList.length; ri++) {
       var realm = realmsList[ri];
@@ -4796,6 +4808,7 @@ window.FB = window.FB || {};
     FB.ensureDynasticState(state);
     FB.checkAllCrownRecognition(state);
     if (FB.fortAIYear) FB.fortAIYear(state);
+    if (FB.populationYear) FB.populationYear(state);
     if (FB.papacyYearly) FB.papacyYearly(state);
     if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
     /* Family deaths invalidate the live index. This read-only snapshot stays
@@ -4950,6 +4963,7 @@ window.FB = window.FB || {};
         }
         if (taken) {
           if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, taken);
+          if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, taken, 'ai_conquest');
           FB.transferProvince(state, taken, winner);
           war.captures = (war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
@@ -5655,6 +5669,7 @@ window.FB = window.FB || {};
       if (claimantRealm &&
           FB.assignReligiousHead(state, 'sunni', claimantRealm)) {
         FB.damageCountyDevelopment(state, pid);
+        if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
         p.prestige += FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100);
         FB.news(state, FB.msg('news.religion.head_seized',
           '☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate.', {
@@ -5676,6 +5691,7 @@ window.FB = window.FB || {};
       const me = state.chars[p.charId];
       if (enemy && enemy.alive && FB.absorbRealm(state, w.enemy, me)) {
         FB.damageCountyDevelopment(state, pid);
+        if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
         if (me && me.restorationRight && me.restorationRight.realmId === w.enemy) {
           delete me.restorationRight;
         }
@@ -5701,6 +5717,7 @@ window.FB = window.FB || {};
         FB.addModifier(state, 'conquered_without_right', pid);
       }
       FB.damageCountyDevelopment(state, pid);
+      if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
       FB.news(state, FB.msg('news.war.conquest',
         '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
       p.prestige += FB.warPrestigeReward(w, 'conquest');
@@ -5757,6 +5774,7 @@ window.FB = window.FB || {};
     }
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
       FB.damageCountyDevelopment(state, lost);
+      if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, lost, 'war_loss');
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));

@@ -2080,6 +2080,7 @@ window.FB = window.FB || {};
     }
 
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensurePopulationState) FB.ensurePopulationState(state);
 
     if (sc.tier >= 3) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
@@ -2225,6 +2226,7 @@ window.FB = window.FB || {};
     });
     state.player.charId = me.id;
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
     }

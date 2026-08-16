@@ -793,6 +793,8 @@ unless the definition explicitly includes `properties.head`) ·
 `observer` defaults to `"$current"`, either id may use `"$founded"`, and reciprocal is
 either `true` for the same reverse status or an explicit reverse status) ·
 `declareIndependence` · `devUp` ·
+`populationLoss: n` (flat civilian loss in the target county; mitigated by crisis/famine building & tech protections) ·
+`populationLossRate: rate` (fractional civilian loss, e.g. `0.05` for 5%; mitigated by crisis/famine protections) ·
 `pickHeir: true` (opens the eligible-heir picker; automation names the first heir in line;
 either result grants 8 prestige and records the choice) · `research: n` (points added to
 the effective sovereign nation's shared research pool; divided among active projects or
@@ -1331,6 +1333,9 @@ a province:
   the host as those classes, fighting at their own quality (see `balance.quality*` and
   docs/designs/war.md).
 - One-time on completion: `dev`, `pop` (popular opinion), `prestige`.
+- Demographic modifiers: `populationCapacity` (fractional carrying capacity boost, e.g. `0.05`),
+  `populationFamineProtection` (mitigates famine losses, e.g. `0.35`), `populationCrisisProtection`
+  (mitigates general crisis losses, e.g. `0.10`), `migrationAttraction` (integer migration attraction bonus, e.g. `1` or `2`).
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
 - The `walls` id is reserved for the strategic fortification system below. It is excluded
   from ordinary building pickers, repeat pricing, Raise Next, and autobuild.

@@ -52,8 +52,9 @@ for every county in the nation that owns it, not as current development.
 
 Four built-in productive and trade buildings contribute one economic development each:
 Watermill, Stone Bridge, Market Square, and Harbor. Granaries provide resilience and famine
-protection instead; Libraries contribute national research; Great Temples remain religious
-and social institutions; and keeps, fortifications, barracks, and archery grounds remain
+protection instead (+35% famine protection); Libraries contribute national research; Great Temples remain religious
+and social institutions (+10% crisis protection); Watermills (+5%) and Harbors (+3%) expand county carrying capacity;
+Bridges (+1) and Markets (+2) increase migration attraction; and keeps, fortifications, barracks, and archery grounds remain
 military assets. Thus one fully built inland settlement contributes +3 development, while
 a coastal settlement contributes +4. Every copy is still subject to the county's
 development ceiling.

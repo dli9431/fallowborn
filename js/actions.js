@@ -2348,7 +2348,8 @@ window.FB = window.FB || {};
 
   function countyTaxBase(state, pid, rate) {
     const local = FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0;
-    return (state.dev[pid] || 1) * rate * Math.max(0, 1 + local);
+    const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
+    return (state.dev[pid] || 1) * popFactor * rate * Math.max(0, 1 + local);
   }
 
   /* One direct vassal's exact seasonal tax source. The settlement tax ledger
@@ -2460,7 +2461,8 @@ window.FB = window.FB || {};
   function domainCountyLevyBase(state, pid) {
     const modifier = FB.modBonus
       ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
-    return (state.dev[pid] || 1) * FBDATA.balance.levyPerDev * modifier;
+    const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
+    return (state.dev[pid] || 1) * popFactor * FBDATA.balance.levyPerDev * modifier;
   }
 
   /* The cleanup preview compares base county tax and levy plus direct-vassal
@@ -3901,7 +3903,8 @@ window.FB = window.FB || {};
     for (const pid of FB.realmHeldCounties(state, rid)) {
       const modifier = FB.modBonus
         ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
-      amount += (state.dev[pid] || 1) * B.levyPerDev * modifier * rate;
+      const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
+      amount += (state.dev[pid] || 1) * popFactor * B.levyPerDev * modifier * rate;
     }
     return amount;
   };

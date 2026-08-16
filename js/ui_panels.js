@@ -4209,7 +4209,7 @@ window.FB = window.FB || {};
         landKv('Terrain', esc(terrainName(pr.terrain)) +
           (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
         landKv('Province levy', '~' + esc(menText(s,
-          (s.dev[pid] || 1) * B.levyPerDev *
+          (s.dev[pid] || 1) * (FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pid) : 1) * B.levyPerDev *
           (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1))));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
@@ -4243,6 +4243,30 @@ window.FB = window.FB || {};
         (realm && FB.techUiRelevant(s) ? landKv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
         landMarketCard(s, pid) +
+        '</section>';
+      const pop = FB.countyPopulation ? FB.countyPopulation(s, pid) : 0;
+      const popCap = FB.countyPopulationCapacity ? FB.countyPopulationCapacity(s, pid) : 0;
+      const popRec = s.population && s.population.counties && s.population.counties[pid];
+      const natDelta = popRec ? (popRec.natural || 0) : 0;
+      const migDelta = popRec ? (popRec.migration || 0) : 0;
+      const lossDelta = popRec ? (popRec.losses || 0) : 0;
+      const netDelta = natDelta + migDelta + lossDelta;
+      const netText = (netDelta > 0 ? '+' : '') + netDelta.toLocaleString();
+      const breakdownText = FB.T('{natural} natural, {migration} migration, {losses} losses', {
+        natural: (natDelta >= 0 ? '+' : '') + natDelta.toLocaleString(),
+        migration: (migDelta >= 0 ? '+' : '') + migDelta.toLocaleString(),
+        losses: (lossDelta >= 0 ? '+' : '') + lossDelta.toLocaleString()
+      });
+      const capPct = popCap > 0 ? Math.round((pop / popCap) * 100) : 100;
+      const capText = popCap.toLocaleString() + ' (' + capPct + '%)';
+      const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pid) : 1.0;
+      const popFactorText = 'x' + popFactor.toFixed(2);
+
+      h += '<section class="land-section"><h3 class="land-section-title">' +
+        esc(FB.T('Population')) + '</h3>' +
+        landKv('County population', pop.toLocaleString() + ' (' + esc(FB.T('Factor {factor}', { factor: popFactorText })) + ')') +
+        landKv('Carrying capacity', esc(capText)) +
+        landKv('Annual change', esc(netText + ' (' + breakdownText + ')'), true) +
         '</section>';
       const countyModifiers = FB.countyModifierRecords
         ? FB.countyModifierRecords(s, pid) : [];

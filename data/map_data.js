@@ -680,19 +680,19 @@ FBDATA.titles = {
    (professional men-at-arms — few, hard to kill), archers (bowmen) —
    all three join the host's composition at muster (see docs/designs/war.md). */
 FBDATA.buildings = {
-  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2, dev:1, requiresTech:'undershot_watermill',
+  mill:    { name:'Watermill', icon:'⚙', cost:40, tax:2, dev:1, populationCapacity:0.05, requiresTech:'undershot_watermill',
     desc:'Grinds the valley’s grain for a fee.' },
-  granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1, requiresTech:'warehouses',
+  granary: { name:'Granary', icon:'🌾', cost:40, upkeep:1, maxDemesne:1, populationFamineProtection:0.35, requiresTech:'warehouses',
     desc:'Grain laid up against the hungry years.' },
-  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10, requiresTech:'stone_bridgebuilding',
+  bridge:  { name:'Stone Bridge', icon:'🌉', cost:50, upkeep:1, dev:1, pop:10, migrationAttraction:1, requiresTech:'stone_bridgebuilding',
     desc:'Trade crosses where the ford once drowned it.' },
   walls:   { name:'Fortification', icon:'🏰', maxCounty:1, fort:true,
     desc:'A county strongpoint that blocks hostile passage until its defenses are breached.' },
-  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, dev:1, requiresTech:'urban_markets',
+  market:  { name:'Market Square', icon:'⚖', cost:60, devMin:4, tax:3, dev:1, migrationAttraction:2, requiresTech:'urban_markets',
     desc:'Tolls, stalls, and strangers’ silver.' },
-  temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, requiresTech:'lime_mortar',
+  temple:  { name:'Great {temple}', icon:'🛐', cost:70, upkeep:1, piety:2, pop:5, populationCrisisProtection:0.10, requiresTech:'lime_mortar',
     desc:'Stone raised toward heaven — and remembered on earth.' },
-  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, dev:1, requiresTech:'harbor_works',
+  harbor:  { name:'Harbor', icon:'⚓', cost:80, coastal:true, tax:4, dev:1, populationCapacity:0.03, migrationAttraction:2, requiresTech:'harbor_works',
     desc:'Every tide brings someone who owes you a toll.' },
   library: { name:{ default:'Library', muslim:'House of Wisdom' }, icon:'📚', cost:80, upkeep:1, devMin:4, research:1, requiresTech:'paper_scholarship',
     desc:'Shelves of knowledge — and the people who argue over it. (+1 national research per season)' },
@@ -1212,5 +1212,31 @@ FBDATA.balance = {
   focusSkillGainRate: 0.75, // multiplier on every daily focus's skill-training chance
   skillSoftCap: 20, // past this, skill gains must beat a (softCap/current)^2 roll
   skillMasteryThreshold: 40, // at and beyond this, skill gains face a second power-law penalty
-  skillMasteryPower: 8 // exponent applied to (masteryThreshold/current)
+  skillMasteryPower: 8, // exponent applied to (masteryThreshold/current)
+  /* county population & lightweight demographics (js/population.js) */
+  populationFloor: 1000,
+  populationByDevelopment: [6000, 10000, 16000, 24000, 35000, 49000, 67000, 90000, 120000, 155000],
+  populationTerrainFactors: {
+    farmland: 1.00,
+    forest: 0.85,
+    hills: 0.80,
+    steppe: 0.75,
+    marsh: 0.65,
+    desert: 0.55
+  },
+  populationGrowthRate: 0.020,
+  populationCapacityBaselineRatio: 0.85,
+  populationMaxBuildingCapacityBonus: 0.40,
+  populationMaxTechCapacityBonus: 0.35,
+  populationMaxFamineProtection: 0.60,
+  populationMaxDiseaseProtection: 0.30,
+  populationSiegeProtectionByFortTier: [0, 0.10, 0.20, 0.35, 0.50],
+  populationHostileCaptureLossRate: 0.02,
+  populationChronicleLossThreshold: 0.02,
+  populationMigrationRate: 0.002,
+  populationMigrationMaxOutflow: 0.01,
+  populationFactorMin: 0.50,
+  populationFactorMax: 1.50,
+  populationDemandFactorMin: 0.60,
+  populationDemandFactorMax: 1.60
 };
