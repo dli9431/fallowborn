@@ -38439,6 +38439,17 @@
         "text": "🔥 The raiders take {asset} and burn what they cannot carry."
       }
     },
+    "news.world.development_declined": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "development",
+        "province"
+      ],
+      "location": "js/world.js",
+      "source": {
+        "text": "📉 Hard times in {province} — development falls to {development}."
+      }
+    },
     "news.world.duchy_claim": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -50060,6 +50071,16 @@
         "text": "envoy compact"
       }
     },
+    "src.083507ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Open station and home details for {rank}"
+      }
+    },
     "src.0835cc26": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53731,6 +53752,16 @@
         "text": "Church Patron"
       }
     },
+    "src.107de927": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "{section}: {action} section."
+      }
+    },
     "src.10bcfdd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55604,6 +55635,16 @@
       ],
       "source": {
         "text": "💰 The crown debases the coinage and takes {money:gold} in seigniorage. Prices and confidence suffer."
+      }
+    },
+    "src.144980c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}."
       }
     },
     "src.144d910f": {
@@ -64916,16 +64957,6 @@
         "text": " · 🔒 lock recorded"
       }
     },
-    "src.2957a2d3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Household work"
-      }
-    },
     "src.295da6d1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66356,6 +66387,16 @@
       ],
       "source": {
         "text": "The existing proposal event decides the answer."
+      }
+    },
+    "src.2c7f49ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Filters & sorting"
       }
     },
     "src.2c82164a": {
@@ -69839,6 +69880,16 @@
       ],
       "source": {
         "text": "Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds."
+      }
+    },
+    "src.34df3530": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor."
       }
     },
     "src.34f00e0f": {
@@ -77753,6 +77804,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_panels.js",
         "js/events.js"
       ],
       "source": {
@@ -82770,6 +82822,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_panels.js",
         "js/keys.js",
         "js/ui_modals.js"
       ],
@@ -85973,7 +86026,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "index.html",
         "js/music.js"
       ],
       "source": {
@@ -88169,6 +88221,16 @@
       ],
       "source": {
         "text": "Adds national research slot {slot}."
+      }
+    },
+    "src.5f866ed9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Music is currently turned off in Settings."
       }
     },
     "src.5f872403": {
@@ -92367,6 +92429,16 @@
         "text": "Not eligible: marriage joins the household but does not make a spouse a blood successor."
       }
     },
+    "src.6963e3a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{settlement} ({kind})"
+      }
+    },
     "src.6965b734": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94262,6 +94334,16 @@
       ],
       "source": {
         "text": "Bathe alone, sleep in your shirt, trust no one. Caution over glory."
+      }
+    },
+    "src.6d82c78a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Work & Enterprises"
       }
     },
     "src.6d83ec8b": {
@@ -98403,16 +98485,6 @@
       ],
       "source": {
         "text": "Steady hands, steady coin."
-      }
-    },
-    "src.7728506c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "Open music controls"
       }
     },
     "src.772b9a81": {
@@ -103284,16 +103356,6 @@
         "text": "Dice with the veterans."
       }
     },
-    "src.8208db79": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The household’s work feeds the purse. Apprentices learn until sixteen; staffed enterprises pay each season."
-      }
-    },
     "src.8209c0ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106978,16 +107040,6 @@
         "text": "has invalid or unassignable faith"
       }
     },
-    "src.89d491fe": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Your former calling remains part of your story, but the household now performs the daily work. Apprentices learn until sixteen; staffed enterprises pay each season."
-      }
-    },
     "src.89dd9fa4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107622,16 +107674,6 @@
         "text": "The council has concluded and every award now takes effect."
       }
     },
-    "src.8b2bcea1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/music.js"
-      ],
-      "source": {
-        "text": "Now playing: {song}. Open music controls."
-      }
-    },
     "src.8b2ced34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108091,16 +108133,6 @@
       ],
       "source": {
         "text": "Mariner’s Compass"
-      }
-    },
-    "src.8c3524b4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
       }
     },
     "src.8c400180": {
@@ -108628,7 +108660,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "settlement"
@@ -119794,7 +119827,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Settlement"
@@ -120572,6 +120606,16 @@
       ],
       "source": {
         "text": "Atil"
+      }
+    },
+    "src.a89967b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Music controls"
       }
     },
     "src.a899f472": {
@@ -135914,6 +135958,16 @@
         "text": "Pay {money:gold} to be struck from the serf-roll."
       }
     },
+    "src.cc4e3243": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "County ruler"
+      }
+    },
     "src.cc501424": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136204,6 +136258,16 @@
       ],
       "source": {
         "text": "Vacancy"
+      }
+    },
+    "src.ccd2d9c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}."
       }
     },
     "src.ccdc3a8f": {
@@ -138023,6 +138087,16 @@
       ],
       "source": {
         "text": "An emergency subsidy can only be moved while the liege is at war."
+      }
+    },
+    "src.d1a078c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "📉 Hard times in {province} — development falls to {development}."
       }
     },
     "src.d1aa3c6c": {
@@ -144054,7 +144128,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Station"
@@ -149449,6 +149524,16 @@
         "text": "Bark liquors turn hides into durable leather."
       }
     },
+    "src.ebb68fa4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Liege lord"
+      }
+    },
     "src.ebbb50ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149857,6 +149942,16 @@
       ],
       "source": {
         "text": "👁 Observing"
+      }
+    },
+    "src.ecc5d5cc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Station & home"
       }
     },
     "src.eccae53c": {
@@ -171047,6 +171142,14 @@
         "text": "Filter list"
       }
     },
+    "ui:Filters & sorting": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Filters & sorting"
+      }
+    },
     "ui:Final equipment worn by the deceased": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172387,6 +172490,14 @@
         "text": "Holds this county · sovereign"
       }
     },
+    "ui:Home": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Home"
+      }
+    },
     "ui:Home instruction": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172614,14 +172725,6 @@
       "location": "js/actions.js",
       "source": {
         "text": "Household upkeep"
-      }
-    },
-    "ui:Household work": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Household work"
       }
     },
     "ui:Household {profession} monopoly": {
@@ -177203,16 +177306,6 @@
         "text": "Novice"
       }
     },
-    "ui:Now playing: {song}. Open music controls.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "song"
-      ],
-      "location": "js/music.js",
-      "source": {
-        "text": "Now playing: {song}. Open music controls."
-      }
-    },
     "ui:Now tap the settlement you were born in — or begin in the county seat.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -177878,16 +177971,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Open political blocs in Governance…"
-      }
-    },
-    "ui:Open realm and demesne details for {rank}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "rank"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Open realm and demesne details for {rank}"
       }
     },
     "ui:Open slot": {
@@ -180041,14 +180124,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Realm"
-      }
-    },
-    "ui:Realm & demesne": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Realm & demesne"
       }
     },
     "ui:Realm Ruler": {
@@ -186405,14 +186480,6 @@
         "text": "This journey is open to freeholders and gentry."
       }
     },
-    "ui:This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "This list covers the playable head, resident spouses and descendants, unwed siblings living with the household, and hired household retainers. Visible relatives living outside the managed household cannot be assigned here. Each unavailable row names the age, station, faith, or household rule that blocks it."
-      }
-    },
     "ui:This nominee cannot stand again for {days} days.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -188025,6 +188092,14 @@
         "text": "Won — the candidate begins the recorded fixed term."
       }
     },
+    "ui:Work & Enterprises": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Work & Enterprises"
+      }
+    },
     "ui:Work & Enterprises lists only assignable members of the managed household. A visible relative elsewhere is family, but is not household labor.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188813,6 +188888,19 @@
         "text": "Your friend"
       }
     },
+    "ui:Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "kind",
+        "ruler",
+        "settlement"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Your gentle household resides in {settlement}, a {kind} in the county of {county}, holding local estate and standing under {ruler}."
+      }
+    },
     "ui:Your home county already holds a market charter.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188928,6 +189016,32 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Your household is personally free and can accumulate durable property and local influence."
+      }
+    },
+    "ui:Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "kind",
+        "ruler",
+        "settlement"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Your household lives in {settlement}, a {kind} in the county of {county}. As serfs, you are bound to the soil under {ruler} and owe customary dues and labor."
+      }
+    },
+    "ui:Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county",
+        "kind",
+        "ruler",
+        "settlement"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}."
       }
     },
     "ui:Your household survives under another lord’s authority.": {
@@ -190850,7 +190964,7 @@
     "ui:settlement": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "settlement"
       }
@@ -191331,6 +191445,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "venture settled: {money:payout} returned"
+      }
+    },
+    "ui:village": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "village"
       }
     },
     "ui:war": {
@@ -195317,6 +195439,17 @@
         "text": "{season}, {year}"
       }
     },
+    "ui:{section}: {action} section.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "action",
+        "section"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "{section}: {action} section."
+      }
+    },
     "ui:{section}: {total}; {attention}. {action} section.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -195350,6 +195483,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{served}/{seasons} seasons · not yet mustered"
+      }
+    },
+    "ui:{settlement} ({kind})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "kind",
+        "settlement"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{settlement} ({kind})"
       }
     },
     "ui:{settlement} — {count}/{max} plots": {

@@ -1449,6 +1449,7 @@ def translate_inventory(inv: Inventory, code: str, cache_path: Path) -> dict[str
         cache_path.write_text(
             json.dumps(cache, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
+            newline="\n",
         )
 
     leaves: dict[str, str] = {}
@@ -1662,6 +1663,7 @@ def command_extract(args: argparse.Namespace) -> int:
         )
         + "\n",
         encoding="utf-8",
+        newline="\n",
     )
     report = {
         "schema": CATALOG_SCHEMA,
@@ -1674,7 +1676,9 @@ def command_extract(args: argparse.Namespace) -> int:
         ),
     }
     report_path = I18N / "i18n-coverage.json"
-    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    report_path.write_text(
+        json.dumps(report, indent=2) + "\n", encoding="utf-8", newline="\n"
+    )
     human_path = I18N / "i18n-coverage.md"
     human_path.write_text(
         "# i18n extraction coverage\n\n"
@@ -1689,6 +1693,7 @@ def command_extract(args: argparse.Namespace) -> int:
         "mod-authored text without a matching catalog, legacy rendered save text, "
         "and the changelog.\n",
         encoding="utf-8",
+        newline="\n",
     )
     print(
         f"wrote {path.relative_to(ROOT)} and "

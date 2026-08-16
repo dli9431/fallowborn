@@ -1,8 +1,9 @@
 'use strict';
 
 /* Settlement sites and the detailed map: data/validation contract, determinism,
-   save/property compatibility, the universal settlement sheet, and marker
-   rendering/tap precedence. Authored per docs/plans/historical-settlements-
+   save/property compatibility, development-decline anchors and the decline
+   chronicle entry, the universal settlement sheet, and marker rendering/tap
+   precedence. Authored per docs/plans/historical-settlements-
    detailed-map.md; NOT run by the authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
@@ -395,6 +396,146 @@ test('a valid demesne sheet retains construction and demolition controls',
     await expect(page.locator('#gm-body [data-demolish]')).toHaveCount(0);
     await expect(page.locator('#gm-raise')).toHaveCount(0);
     await page.keyboard.press('Escape');
+  });
+
+/* ---------- development decline and settlement anchors ---------- */
+
+test('development decline never conceals an anchored settlement',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId; // the CADENCE start is london
+      const info = FB.world.sitesByProv[pid];
+      const savedDev = s.dev[pid];
+      const savedBuildings = s.buildings[pid];
+      const savedEnterprises = s.player.enterprises;
+      const savedHome = s.player.homeSettlement;
+      const out = { pid:pid };
+      try {
+        s.dev[pid] = 1; // below every reveal threshold
+        const base = FB.settlementVisibleCount(s, pid);
+        out.base = base;
+        out.slotCount = info.list.length;
+        const hidden = info.list[base]; // the first concealed slot
+        out.startHidden = !FB.siteVisible(s, hidden);
+
+        /* a standing building anchors its slot; a ruin releases it */
+        s.buildings[pid] = [{ s:base, id:'mill' }];
+        out.buildingKeeps = FB.siteVisible(s, hidden);
+        s.buildings[pid][0].ruined = true;
+        out.ruinReleases = !FB.siteVisible(s, hidden);
+        s.buildings[pid] = [];
+
+        /* a family enterprise anchors its slot; selling releases it */
+        const enterpriseType = Object.keys(FBDATA.enterprises)[0];
+        s.player.enterprises = [{
+          uid:'e2e_anchor', type:enterpriseType, provinceId:pid,
+          settlement:base, workerId:null
+        }];
+        out.enterpriseKeeps = FB.siteVisible(s, hidden);
+        s.player.enterprises = [];
+        out.enterpriseReleases = !FB.siteVisible(s, hidden);
+
+        /* the player's own home anchors its slot */
+        s.player.homeSettlement = base;
+        out.homeKeeps = FB.siteVisible(s, hidden);
+
+        /* growth still scales past every anchor */
+        s.dev[pid] = 9;
+        out.grown = FB.settlementVisibleCount(s, pid);
+      } finally {
+        s.dev[pid] = savedDev;
+        if (savedBuildings === undefined) delete s.buildings[pid];
+        else s.buildings[pid] = savedBuildings;
+        s.player.enterprises = savedEnterprises;
+        s.player.homeSettlement = savedHome;
+      }
+      return out;
+    });
+
+    expect(result.slotCount).toBeGreaterThan(result.base);
+    expect(result.startHidden).toBe(true);
+    expect(result.buildingKeeps).toBe(true);
+    expect(result.ruinReleases).toBe(true);
+    expect(result.enterpriseKeeps).toBe(true);
+    expect(result.enterpriseReleases).toBe(true);
+    expect(result.homeKeeps).toBe(true);
+    expect(result.grown).toBeGreaterThan(result.base);
+  });
+
+test('a development decline in the demesne is announced in the chronicle',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () { FB.game.setPaused(true); });
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const pid = s.player.provinceId;
+      let foreign = null;
+      for (const pr of FB.world.provs) {
+        if (pr.wasteland || pr.id === pid) continue;
+        const holder = (s.holder && s.holder[pr.id]) || s.owner[pr.id];
+        if (holder && holder !== 'player') { foreign = pr.id; break; }
+      }
+      const savedDev = s.dev[pid], savedForeignDev = s.dev[foreign];
+      const realChance = FB.chance;
+      const out = { provinceName:FB.world.byId[pid].name };
+      try {
+        s.dev[pid] = 5;
+        s.dev[foreign] = 5;
+        /* direction roll fails: both counties decline one step, but only the
+           demesne county is announced */
+        FB.chance = function () { return false; };
+        const logBefore = s.log.length;
+        FB.devDriftCounty(s, pid);
+        FB.devDriftCounty(s, foreign);
+        out.demesneDev = s.dev[pid];
+        out.foreignDev = s.dev[foreign];
+        out.entries = s.log.slice(logBefore).filter(function (e) {
+          return e.msg && e.msg.key === 'news.world.development_declined';
+        }).map(function (e) {
+          return {
+            province:e.msg.params.province,
+            development:e.msg.params.development
+          };
+        });
+        /* an upward roll raises development without any entry */
+        FB.chance = function () { return true; };
+        const upBefore = s.log.length;
+        FB.devDriftCounty(s, pid);
+        out.risenDev = s.dev[pid];
+        out.upEntries = s.log.slice(upBefore).filter(function (e) {
+          return e.msg && e.msg.key === 'news.world.development_declined';
+        }).length;
+        /* clamped at the floor: no effective decline, no entry */
+        s.dev[pid] = 1;
+        FB.chance = function () { return false; };
+        const floorBefore = s.log.length;
+        FB.devDriftCounty(s, pid);
+        out.floorDev = s.dev[pid];
+        out.floorEntries = s.log.slice(floorBefore).filter(function (e) {
+          return e.msg && e.msg.key === 'news.world.development_declined';
+        }).length;
+      } finally {
+        FB.chance = realChance;
+        s.dev[pid] = savedDev;
+        s.dev[foreign] = savedForeignDev;
+      }
+      return out;
+    });
+
+    expect(result.demesneDev).toBe(4);
+    expect(result.foreignDev).toBe(4);
+    expect(result.entries).toEqual([{
+      province:result.provinceName, development:4
+    }]);
+    expect(result.risenDev).toBe(5);
+    expect(result.upEntries).toBe(0);
+    expect(result.floorDev).toBe(1);
+    expect(result.floorEntries).toBe(0);
   });
 
 /* ---------- map markers and input ---------- */

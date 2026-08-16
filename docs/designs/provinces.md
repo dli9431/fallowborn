@@ -129,7 +129,11 @@ optional eighth start-code part ([seeds.md](seeds.md)). The go-into-town deed qu
 token); options are require-gated by station.
 
 A fort keeps its exact settlement visible even when later development loss would hide
-that slot under the normal reveal thresholds. `mapview.js` draws one additional badge
+that slot under the normal reveal thresholds. The same landmark rule protects the
+player's stake in a county: any standing building, any family enterprise, and the
+player's home settlement each floor the visible count at their slot
+(`FB.settlementVisibleCount`), so development decline can never make an invested or
+home settlement vanish; ruins and sold enterprises release the anchor. `mapview.js` draws one additional badge
 over the existing settlement emblem rather than a second marker or altered site-art
 cache: a shield-like outline plus one to four repeated marks encodes tier without color,
 and a crossed corner encodes active construction. `FB.fortBadgeDescriptor` is the

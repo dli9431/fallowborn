@@ -3623,6 +3623,33 @@ window.FB = window.FB || {};
     return (dev >= 3) + (dev >= 5) + (dev >= 7) + (dev >= 9);
   }
 
+  /* Highest player-enterprise settlement floor per county, cached on the
+     enterprise list's identity and length: a settlement assignment is fixed
+     at founding, so only an append or a removal can move the floor. */
+  let enterpriseAnchorCache = null;
+  function enterpriseAnchors(state) {
+    const list = state && state.player ? state.player.enterprises : null;
+    if (!list || !list.length) {
+      enterpriseAnchorCache = null;
+      return null;
+    }
+    if (enterpriseAnchorCache && enterpriseAnchorCache.list === list &&
+        enterpriseAnchorCache.length === list.length) {
+      return enterpriseAnchorCache.map;
+    }
+    const map = {};
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (!e || !e.provinceId) continue;
+      const floor = (e.settlement | 0) + 1;
+      if (!map[e.provinceId] || map[e.provinceId] < floor) {
+        map[e.provinceId] = floor;
+      }
+    }
+    enterpriseAnchorCache = { list:list, length:list.length, map:map };
+    return map;
+  }
+
   FB.settlementVisibleCount = function (state, pid) {
     const info = FB.world && FB.world.sitesByProv ? FB.world.sitesByProv[pid] : null;
     if (!info) return 0;
@@ -3635,6 +3662,27 @@ window.FB = window.FB || {};
     if (state && FB.fortAt) {
       const fort = FB.fortAt(state, pid);
       if (fort && !fort.ruined) visible = Math.max(visible, (fort.s | 0) + 1);
+    }
+    /* Player investments anchor their settlement the same way: any standing
+       building (only counties something was built in carry a list at all,
+       so this scan never runs for ordinary AI land), any family enterprise,
+       and the player's own home settlement. */
+    if (state) {
+      const built = state.buildings && state.buildings[pid];
+      if (built) {
+        for (let bi = 0; bi < built.length; bi++) {
+          const b = built[bi];
+          if (b && typeof b === 'object' && !b.ruined) {
+            visible = Math.max(visible, (b.s | 0) + 1);
+          }
+        }
+      }
+      const anchors = enterpriseAnchors(state);
+      if (anchors && anchors[pid]) visible = Math.max(visible, anchors[pid]);
+      const p = state.player;
+      if (p && pid === p.provinceId && typeof p.homeSettlement === 'number') {
+        visible = Math.max(visible, (p.homeSettlement | 0) + 1);
+      }
     }
     return Math.min(SETTLEMENT_MAX_SLOTS, visible);
   };
@@ -4605,6 +4653,24 @@ window.FB = window.FB || {};
     return 0;
   };
 
+  /* One county's yearly development drift: ±1, biased upward, clamped to the
+     technology-lifted ceiling. A decline in the player's own demesne is
+     announced — settlement reveals scale with development, so a silent slide
+     reads as a vanished village. */
+  FB.devDriftCounty = function (state, pid) {
+    const before = state.dev[pid];
+    state.dev[pid] = FB.clamp(before + (FB.chance(0.7) ? 1 : -1), 1,
+      FB.devCap(state, pid));
+    if (state.dev[pid] >= before) return;
+    if (FB.demesne(state).indexOf(pid) < 0) return;
+    const pr = FB.world.byId[pid];
+    FB.news(state, FB.msg('news.world.development_declined',
+      '📉 Hard times in {province} — development falls to {development}.', {
+        province: pr ? pr.name : pid,
+        development: state.dev[pid]
+      }));
+  };
+
   FB.worldTick = function (state) {
     const B = FBDATA.balance;
     FB.ensureDynasticState(state);
@@ -4942,7 +5008,7 @@ window.FB = window.FB || {};
 
     // development drift (tech can lift the ceiling for the player's lands)
     for (const pid in state.dev) {
-      if (FB.chance(0.04)) state.dev[pid] = FB.clamp(state.dev[pid] + (FB.chance(0.7) ? 1 : -1), 1, FB.devCap(state, pid));
+      if (FB.chance(0.04)) FB.devDriftCounty(state, pid);
     }
   };
 

@@ -50,7 +50,8 @@ Technology `fx.devCap` is labeled as the development ceiling above the base of 1
 for every county in the nation that owns it, not as current development.
 
 Buildings are **per-settlement**: each of a province's 2–8 settlement slots
-(`FB.settlementsOf` — stable indices that only grow with development, presented from
+(`FB.settlementsOf` — stable indices that grow with development and never conceal
+a slot the player has invested in, presented from
 the compiled authored/generated site records) may hold one copy of
 each building. `state.buildings[pid]` holds `{ s: settlementIndex, id, ruined? }` entries.
 `FB.builtIn` is a read-only projection: it neither creates empty county arrays nor
@@ -176,6 +177,15 @@ fort movement, battles, and sieges.
 the 867 and 1066 snapshots can value the same enduring county differently without
 pre-building holdings, granting technologies, or changing the building rules.
 After initialization, development lives only in state and advances normally.
+
+**Yearly drift moves every county.** `FB.worldTick` gives each county a 4% chance of
+a ±1 development step (70/30 upward), clamped to its technology-lifted ceiling
+(`FB.devDriftCounty`). A step down in the player's demesne posts a
+`news.world.development_declined` chronicle entry naming the county and the new
+value — settlement reveals scale with development ([provinces.md](provinces.md)), so
+a silent slide would read as a vanished village. Anchored slots — a standing
+building, a family enterprise, or the player's home settlement — stay visible
+regardless.
 
 County modifiers are applied at their local boundaries. `levy` adjusts the county's base
 levy before technology, Martial, and domain changes and appears as a named composition
