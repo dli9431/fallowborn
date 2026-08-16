@@ -74,14 +74,20 @@ automatically uses Playwright's last-failed selection on the next run. This make
 repair loop `test:all` -> edit the failure -> `test:changed`; no spec name is required. A setup
 error, invalid state file, or interrupted run does not activate the focused retry path.
 
-After a successful `test:all` or `test:changed`, the wrapper records a synthetic Git commit in
-the ignored `tests/e2e/.last-tested-commit` file. Its tree captures the exact contents of every
-tracked file that the run started with, including staged and unstaged edits, without modifying
-the real index or branch history. When no failed-test retry is pending, Playwright selects
-affected test files between that snapshot and the current tree. New untracked files remain
-affected until committed. If the marker does not exist or its local synthetic commit is no
-longer available, `test:changed` stops and asks the owner to establish a baseline with
-`npm run test:all`.
+After a successful `test:all` or `test:changed`, the wrapper records the tested baseline in the
+ignored `tests/e2e/.last-tested-commit` file. A clean tracked working tree records `HEAD`
+directly. When tracked files have edits, the wrapper records a synthetic Git commit whose tree
+captures the staged and unstaged contents the run started with, without modifying the real
+index or branch history. It stages only paths the real index reports as changed, and the
+repository `.gitattributes` policy canonicalizes text to LF so Windows and Unix checkouts
+produce the same snapshot tree. Before staging, line-ending-only paths are discarded with Git's
+`--ignore-cr-at-eol` comparison, including when real content changed elsewhere. A clean-tree
+invariant rejects a mismatched snapshot instead of silently recording line-ending noise.
+
+When no failed-test retry is pending, Playwright selects affected test files between that
+baseline and the current tree. New untracked files remain affected until committed. If the
+marker does not exist or its local synthetic commit is no longer available, `test:changed`
+stops and asks the owner to establish a baseline with `npm run test:all`.
 
 Playwright's changed mode does not isolate only newly added `test(...)` blocks inside an existing
 specification; the affected specification runs as a whole. A changed shared test helper can make

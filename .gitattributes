@@ -1,0 +1,18 @@
+# Keep repository text deterministic across Windows and Unix checkouts. Git
+# stores text as LF; the explicit script exceptions retain native Windows EOLs.
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Authored binary assets must never pass through text normalization.
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.opus binary
+*.png binary
+*.ttf binary
+*.webp binary
+*.woff binary
+*.woff2 binary
