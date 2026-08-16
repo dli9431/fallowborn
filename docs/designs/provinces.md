@@ -211,3 +211,15 @@ your own province focuses your realm, demesne + vassals; a foreign one focuses i
 sovereign's), **Mine** (only your realm), **Liege** (your liege's whole sub-realm),
 **De jure duchies**, and **De jure kingdoms** (the historical de jure groupings).
 Membership walks `FB.liegeChain` over `state.holder` for the realm-based modes.
+
+## County population & lightweight demographics
+
+Each inhabited county tracks an integer civilian population record in `state.population.counties[pid]` (`js/population.js`).
+- **Baseline opening population**: Authored in bookmark province `population0`, or derived from deterministic fallback:
+  `pop0 = Math.max(1000, Math.round((populationByDevelopment[dev0 - 1] * terrainFactor) / 100) * 100)`.
+- **Carrying capacity**: Authored in bookmark province `populationCapacity0`, or derived from `cap0 = Math.max(pop0, Math.round((pop0 / 0.85) / 100) * 100)`.
+  Adjusted by county buildings (Watermill +5%, Harbor +3%, max +40%) and national technology (`crop_rotation`, `heavy_plough`, `three_field`, etc., max +35%).
+- **Annual simulation pass**: Zero-RNG logistic natural growth bounded by pressure $(1 - P / K)$ within $[-1\%, +2\%]$, and conserved land migration across non-hostile borders when attraction differential $\ge 2$.
+- **Economic & military factor**: $\text{clamp}(\sqrt{P / P_0}, 0.50, 1.50)$ scales county tax base, direct & vassal levies, and market household demand.
+- **War & siege mitigation**: Hostile captures cause $-2\%$ population loss, mitigated by fortification strongpoints ($0\%, 10\%, 20\%, 35\%, 50\%$ for fort tiers 0–4).
+- **Settlement allocation**: On-demand display projection weights sites (village 1, town 3, city 7 + 1 per economic building), summing exactly to total county population.

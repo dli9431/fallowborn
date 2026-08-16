@@ -3840,10 +3840,14 @@ window.FB = window.FB || {};
       })) + '</p></div>';
     const done = [];
     for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
+    const settPop = FB.settlementPopulation ? FB.settlementPopulation(s, pid, idx) : 0;
+    const B = FBDATA.balance || {};
+    const kindTax = st.kind === 'city' ? (B.settlementCityTax || 4.5) : (st.kind === 'town' ? (B.settlementTownTax || 2.0) : (B.settlementVillageTax || 0.75));
     h += '<div class="gm-body-text settlement-development-summary">' +
       '<p><b>' + esc(FB.T('County development: {current} / {cap}', {
         current:(s.dev[pid] || 1), cap:FB.devCap(s, pid)
-      })) + '</b></p><p>' + esc(settlementDevelopmentText(s, pid)) +
+      })) + ' · ' + esc(FB.T('Population: ~{pop}', { pop:settPop.toLocaleString() })) +
+      ' · ' + esc(FB.T('Dues: +{tax}g/season', { tax:(Math.round(kindTax * 100) / 100) })) + '</b></p><p>' + esc(settlementDevelopmentText(s, pid)) +
       '</p><p class="hint">' + esc(bookmarkDevelopmentText(s, pid)) +
       '</p></div>';
     /* household property in the exact slot — read directly so opening a
@@ -13982,7 +13986,9 @@ window.FB = window.FB || {};
       movement:FB.T('overland army movement speed'),
       seaMovement:FB.T('sea-crossing speed'),
       education:FB.T('education success chance'),
-      finance:FB.T('credit capacity'), trade:FB.T('merchant and craft income')
+      finance:FB.T('credit capacity'), trade:FB.T('merchant and craft income'),
+      populationCapacity:FB.T('county population capacity'),
+      populationCrisisProtection:FB.T('crisis population protection')
     };
     for (const key in percentKeys) {
       if (!fx[key]) continue;
@@ -13992,6 +13998,9 @@ window.FB = window.FB || {};
         effect:percentKeys[key]
       }));
     }
+    if (fx.migrationAttraction) out.push(FB.T('+{amount} migration attraction', {
+      amount: fx.migrationAttraction
+    }));
     if (fx.devCap) out.push(FB.T(
       '+{amount} to every county’s development ceiling in the nation, above the base of 10', {
         amount:fx.devCap

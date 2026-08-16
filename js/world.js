@@ -111,6 +111,18 @@ window.FB = window.FB || {};
       if (!province || !province.id) { fault('province at index ' + pi + ' has no id.'); continue; }
       if (provinceIds[province.id]) fault('duplicate province id ' + province.id + '.');
       provinceIds[province.id] = province;
+      if (province.population0 !== undefined) {
+        if (typeof province.population0 !== 'number' || !isFinite(province.population0) ||
+            province.population0 <= 0 || Math.floor(province.population0) !== province.population0) {
+          fault('province ' + province.id + ': population0 must be a positive integer.');
+        }
+      }
+      if (province.populationCapacity0 !== undefined) {
+        if (typeof province.populationCapacity0 !== 'number' || !isFinite(province.populationCapacity0) ||
+            province.populationCapacity0 <= 0 || Math.floor(province.populationCapacity0) !== province.populationCapacity0) {
+          fault('province ' + province.id + ': populationCapacity0 must be a positive integer.');
+        }
+      }
     }
     for (var ri = 0; ri < realmsList.length; ri++) {
       var realm = realmsList[ri];
@@ -4768,26 +4780,101 @@ window.FB = window.FB || {};
     return FB.changeCountyDevelopment(state, pid, -1, 'siege');
   };
 
-  /* AI-governed counties retain the old rare seeded drift so the wider world
-     still changes without an ordinary AI building planner. Direct player
-     counties are condition-driven and consume no drift roll. */
-  FB.aiDevDriftCounty = function (state, pid) {
-    if (FB.playerDirectlyHoldsCounty(state, pid)) return 0;
-    return FB.changeCountyDevelopment(state, pid,
-      FB.chance(0.7) ? 1 : -1, 'ai_drift');
-  };
-
-  FB.aiDevelopmentYear = function (state) {
-    if (!state || !state.dev) return;
-    const direct = {};
-    const p = state && state.player;
-    if (p && Array.isArray(p.provs)) {
-      for (const pid of p.provs) direct[pid] = 1;
-    }
+  /* AI-governed counties construct tangible settlement buildings during peace.
+     Prioritizes productive economic anchors (mills, markets, harbors, bridges)
+     and civic resilience (granaries, temples, libraries). Direct player
+     counties use the player's own construction deeds. */
+  FB.aiBuildingsYear = function (state) {
+    if (!state || !state.realms || !state.dev) return;
+    const maxPerYear = (FBDATA.balance && FBDATA.balance.aiMaxBuildingsPerYear) || 1;
     const changed = developmentChangesFor(state);
-    for (const pid in state.dev) {
-      if (direct[pid] || changed[pid]) continue;
-      if (FB.chance(0.04)) FB.aiDevDriftCounty(state, pid);
+
+    const contested = {};
+    const armies = state.armies || [];
+    for (let i = 0; i < armies.length; i++) {
+      const armyPid = armies[i].at;
+      const armyHolder = (state.holder && state.holder[armyPid]) || state.owner[armyPid];
+      const armyController = !armyHolder ? null : armyHolder === 'player' ? 'player' :
+        (FB.topRealm ? FB.topRealm(state, armyHolder) : armyHolder);
+      if (armyController && FB.armiesHostile &&
+          FB.armiesHostile(state, armies[i], { realm: armyController })) {
+        contested[armyPid] = true;
+      }
+    }
+    const campaign = state.greatHolyWar;
+    const occupations = campaign && campaign.occupations || {};
+    for (const opid in occupations) {
+      if (occupations[opid] && (occupations[opid].progress || occupations[opid].occupied)) {
+        contested[opid] = true;
+      }
+    }
+
+    const buildingPriority = [
+      'mill',    // Watermill: +1 dev, +2 tax, +5% pop capacity
+      'market',  // Market Square: +1 dev, +3 tax, +2 attraction
+      'harbor',  // Harbor: +1 dev, +4 tax, +3% capacity, +2 attraction (coastal)
+      'granary', // Granary: 35% famine protection
+      'bridge',  // Stone Bridge: +1 dev, +1 attraction
+      'temple',  // Great Temple: +2 piety, 10% crisis protection
+      'library'  // Library: +1 national research
+    ];
+
+    const realmIds = Object.keys(state.realms);
+    for (let ri = 0; ri < realmIds.length; ri++) {
+      const rid = realmIds[ri];
+      if (rid === 'player') continue;
+      const realm = state.realms[rid];
+      if (!realm || !realm.alive) continue;
+
+      const held = FB.realmHeldCounties(state, rid);
+      if (!held.length) continue;
+
+      let builtThisYear = 0;
+      const sortedCounties = held.slice().sort(function (a, b) {
+        if (a === realm.capital) return -1;
+        if (b === realm.capital) return 1;
+        const devA = Number(state.dev[a]) || 1;
+        const devB = Number(state.dev[b]) || 1;
+        return devA - devB;
+      });
+
+      for (let ci = 0; ci < sortedCounties.length; ci++) {
+        if (builtThisYear >= maxPerYear) break;
+        const pid = sortedCounties[ci];
+        if (contested[pid] || changed[pid]) continue;
+        const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
+        if (!pr || pr.wasteland) continue;
+
+        const settlements = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+        if (!settlements.length) continue;
+
+        let chosen = null;
+        for (let bi = 0; bi < buildingPriority.length; bi++) {
+          const bid = buildingPriority[bi];
+          const bdef = FBDATA.buildings && FBDATA.buildings[bid];
+          if (!bdef) continue;
+
+          for (let sIdx = 0; sIdx < settlements.length; sIdx++) {
+            if (FB.aiCanBuildAt && FB.aiCanBuildAt(state, rid, pid, sIdx, bid)) {
+              chosen = { pid: pid, s: sIdx, id: bid, def: bdef };
+              break;
+            }
+          }
+          if (chosen) break;
+        }
+
+        if (chosen) {
+          state.buildings = state.buildings || {};
+          const list = state.buildings[chosen.pid] = state.buildings[chosen.pid] || [];
+          const record = { s: chosen.s, id: chosen.id };
+          list.push(record);
+          if (chosen.def.dev) {
+            record.devGranted = FB.changeCountyDevelopment(state, chosen.pid,
+              chosen.def.dev, 'ai_construction');
+          }
+          builtThisYear++;
+        }
+      }
     }
   };
 
@@ -4796,6 +4883,7 @@ window.FB = window.FB || {};
     FB.ensureDynasticState(state);
     FB.checkAllCrownRecognition(state);
     if (FB.fortAIYear) FB.fortAIYear(state);
+    if (FB.populationYear) FB.populationYear(state);
     if (FB.papacyYearly) FB.papacyYearly(state);
     if (FB.greatHolyWarYearly) FB.greatHolyWarYearly(state);
     /* Family deaths invalidate the live index. This read-only snapshot stays
@@ -4950,6 +5038,7 @@ window.FB = window.FB || {};
         }
         if (taken) {
           if (FB.damageCountyDevelopment) FB.damageCountyDevelopment(state, taken);
+          if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, taken, 'ai_conquest');
           FB.transferProvince(state, taken, winner);
           war.captures = (war.captures || 0) + 1;
           const pv = FB.world.byId[taken];
@@ -5127,7 +5216,7 @@ window.FB = window.FB || {};
 
     if (FB.rulerAgencyYearly) FB.rulerAgencyYearly(state, familyLinks);
 
-    FB.aiDevelopmentYear(state);
+    FB.aiBuildingsYear(state);
   };
 
   /* ================= PLAYER WAR (seasonal) ================= */
@@ -5655,6 +5744,7 @@ window.FB = window.FB || {};
       if (claimantRealm &&
           FB.assignReligiousHead(state, 'sunni', claimantRealm)) {
         FB.damageCountyDevelopment(state, pid);
+        if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
         p.prestige += FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100);
         FB.news(state, FB.msg('news.religion.head_seized',
           '☪ The office of {title} passes to your realm by right of conquest — {realm} keeps its lands, but not the Caliphate.', {
@@ -5676,6 +5766,7 @@ window.FB = window.FB || {};
       const me = state.chars[p.charId];
       if (enemy && enemy.alive && FB.absorbRealm(state, w.enemy, me)) {
         FB.damageCountyDevelopment(state, pid);
+        if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
         if (me && me.restorationRight && me.restorationRight.realmId === w.enemy) {
           delete me.restorationRight;
         }
@@ -5701,6 +5792,7 @@ window.FB = window.FB || {};
         FB.addModifier(state, 'conquered_without_right', pid);
       }
       FB.damageCountyDevelopment(state, pid);
+      if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, pid, 'conquest');
       FB.news(state, FB.msg('news.war.conquest',
         '🏰 {province} is yours by conquest!', { province: FB.world.byId[pid].name }));
       p.prestige += FB.warPrestigeReward(w, 'conquest');
@@ -5757,6 +5849,7 @@ window.FB = window.FB || {};
     }
     if (lost && p.provs && p.provs.indexOf(lost) >= 0) {
       FB.damageCountyDevelopment(state, lost);
+      if (FB.damageCountyPopulation) FB.damageCountyPopulation(state, lost, 'war_loss');
       FB.transferProvince(state, lost, w.enemy);
       FB.news(state, FB.msg('news.war.province_lost',
         '🏚 {province} is torn from your grasp.', { province: FB.world.byId[lost].name }));

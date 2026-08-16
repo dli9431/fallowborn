@@ -52,8 +52,9 @@ for every county in the nation that owns it, not as current development.
 
 Four built-in productive and trade buildings contribute one economic development each:
 Watermill, Stone Bridge, Market Square, and Harbor. Granaries provide resilience and famine
-protection instead; Libraries contribute national research; Great Temples remain religious
-and social institutions; and keeps, fortifications, barracks, and archery grounds remain
+protection instead (+35% famine protection); Libraries contribute national research; Great Temples remain religious
+and social institutions (+10% crisis protection); Watermills (+5%) and Harbors (+3%) expand county carrying capacity;
+Bridges (+1) and Markets (+2) increase migration attraction; and keeps, fortifications, barracks, and archery grounds remain
 military assets. Thus one fully built inland settlement contributes +3 development, while
 a coastal settlement contributes +4. Every copy is still subject to the county's
 development ceiling.
@@ -191,15 +192,19 @@ the 867 and 1066 snapshots can value the same enduring county differently withou
 pre-building holdings, granting technologies, or changing the building rules.
 After initialization, development lives only in state and advances normally.
 
-**Player development is condition-driven; AI land retains drift.** Counties listed in
-`player.provs` never receive yearly random drift. Their development changes through
-explicit building `dev`, demolition of that recorded contribution, event effects, and
-military damage. Every other county, including land governed by the player's AI vassals,
-keeps the old 4% yearly chance of a ±1 step with a 70/30 upward bias
-(`FB.aiDevelopmentYear` / `FB.aiDevDriftCounty`). A county switches rules immediately
-when it enters or leaves the player's direct holdings. Explicit development changes in
-the same turn suppress that county's AI drift roll, so a siege cannot be randomly undone
-at the end of its resolution.
+**Development is condition-driven for player and AI alike.** Direct player counties develop
+through explicit construction deeds, demographic growth, and military damage. AI realms and
+vassals evaluate their held counties annually (`FB.aiBuildingsYear`), constructing tangible
+settlement buildings (Watermills, Market Squares, Harbors, Stone Bridges, Granaries, Temples,
+Libraries) during peacetime based on sovereign technology, geography, and priorities. Buildings
+grant permanent development, unlock and promote settlements, expand carrying capacity, and
+persist in `state.buildings` across conquest. Unfinished sieges or contested borders block new
+construction.
+
+Every visible settlement slot (`FB.settlementsOf`) contributes to the county's fiscal output
+(Villages 0.75g, Towns 2.0g, Cities 4.5g per season), scaled by the sovereign's demographic
+factor (`FB.countyPopulationFactor`). Thus, county land rents naturally scale with urban growth,
+development, population, and infrastructure.
 
 `FB.changeCountyDevelopment` is the shared clamp and feedback boundary. Positive change
 stops at the current technology-lifted ceiling; a loss removes only its stated amount,

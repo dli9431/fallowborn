@@ -2346,9 +2346,35 @@ window.FB = window.FB || {};
     }
   };
 
+  FB.countySettlementTax = function (state, pid) {
+    const B = FBDATA.balance || {};
+    const villageRate = Number(B.settlementVillageTax !== undefined ? B.settlementVillageTax : 0.75);
+    const townRate = Number(B.settlementTownTax !== undefined ? B.settlementTownTax : 2.0);
+    const cityRate = Number(B.settlementCityTax !== undefined ? B.settlementCityTax : 4.5);
+    let sum = 0;
+    const settlements = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+    for (let i = 0; i < settlements.length; i++) {
+      const k = settlements[i].kind;
+      if (k === 'city') sum += cityRate;
+      else if (k === 'town') sum += townRate;
+      else sum += villageRate;
+    }
+    return sum;
+  };
+
   function countyTaxBase(state, pid, rate) {
+    const B = FBDATA.balance || {};
+    const baseRate = Number(B.taxPerDev || 1.5);
+    const dev = (state.dev && state.dev[pid]) || 1;
+    const rateRatio = baseRate > 0 ? (rate / baseRate) : 1;
+    const devTax = dev * rate;
+    const settTax = FB.countySettlementTax(state, pid) * rateRatio;
+    let total = devTax + settTax;
+    if (FB.countyPopulationFactor) {
+      total *= FB.countyPopulationFactor(state, pid);
+    }
     const local = FB.modBonus ? FB.modBonus(state, 'tax', pid) : 0;
-    return (state.dev[pid] || 1) * rate * Math.max(0, 1 + local);
+    return total * Math.max(0, 1 + local);
   }
 
   /* One direct vassal's exact seasonal tax source. The settlement tax ledger
@@ -2460,7 +2486,8 @@ window.FB = window.FB || {};
   function domainCountyLevyBase(state, pid) {
     const modifier = FB.modBonus
       ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
-    return (state.dev[pid] || 1) * FBDATA.balance.levyPerDev * modifier;
+    const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
+    return (state.dev[pid] || 1) * popFactor * FBDATA.balance.levyPerDev * modifier;
   }
 
   /* The cleanup preview compares base county tax and levy plus direct-vassal
@@ -3901,7 +3928,8 @@ window.FB = window.FB || {};
     for (const pid of FB.realmHeldCounties(state, rid)) {
       const modifier = FB.modBonus
         ? Math.max(0, 1 + FB.modBonus(state, 'levy', pid)) : 1;
-      amount += (state.dev[pid] || 1) * B.levyPerDev * modifier * rate;
+      const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
+      amount += (state.dev[pid] || 1) * popFactor * B.levyPerDev * modifier * rate;
     }
     return amount;
   };
@@ -5289,6 +5317,26 @@ window.FB = window.FB || {};
     if (def.homeOnly && FB.homeProv(state) !== pid) return false;
     if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
     if (def.maxDemesne && FB.buildingCount(state, id, false) >= def.maxDemesne) return false;
+    return true;
+  };
+
+  FB.aiCanBuildAt = function (state, rid, pid, idx, id) {
+    const def = FBDATA.buildings[id];
+    const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
+    if (!def || def.fort || !pr || pr.wasteland) return false;
+    const sts = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
+    if (!sts[idx]) return false;
+    if (def.requiresTech && FB.techRequirementMet &&
+        !FB.techRequirementMet(state, def.requiresTech, rid)) return false;
+    const done = FB.builtIn(state, pid);
+    for (let i = 0; i < done.length; i++) {
+      if (done[i].id === id && done[i].s === idx && !done[i].ruined) return false;
+    }
+    const dev = (state.dev && state.dev[pid]) || 1;
+    if (def.devMin && dev < def.devMin) return false;
+    if (def.coastal && !pr.coastal) return false;
+    if (def.terrains && def.terrains.indexOf(pr.terrain) < 0) return false;
+    if (def.maxCounty && FB.buildingCountIn(state, pid, id, false) >= def.maxCounty) return false;
     return true;
   };
 

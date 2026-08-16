@@ -85,6 +85,10 @@
 
   function baseDemand(state, pid, ids) {
     const base = countyBase(state, pid);
+    const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
+    const minDemandFactor = balance('populationDemandFactorMin', 0.60);
+    const maxDemandFactor = balance('populationDemandFactorMax', 1.60);
+    const clampedPopFactor = FB.clamp(popFactor, minDemandFactor, maxDemandFactor);
     const luxury = 0.045 + Math.min(0.075, base.dev * 0.006);
     const ratios = {
       provisions:1,
@@ -94,7 +98,7 @@
       luxuries:luxury
     };
     const out = [];
-    for (let i = 0; i < ids.length; i++) out.push(base.amount * (ratios[ids[i]] || 0.1));
+    for (let i = 0; i < ids.length; i++) out.push(base.amount * clampedPopFactor * (ratios[ids[i]] || 0.1));
     return out;
   }
 

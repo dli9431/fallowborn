@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.134.1';
+  FB.VERSION = '1.135.0';
   FB.CHANGELOG = [
+    { v: '1.135.0', date: '2026-08-16', changes: [
+      'Counties now simulate population growth, carrying capacity, and land migration, scaling tax yields, levies, and market demand.',
+      'Land rents and feudal tier progression scale with active settlements, while peaceful AI rulers construct buildings based on technology.'
+    ] },
     { v: '1.134.1', date: '2026-08-16', changes: [
       'Directly held counties now gain economic development from productive buildings and lose it to demolition or completed sieges, while AI-governed counties retain yearly drift.',
       'Older saves restore directly held development once from bookmark values and standing buildings.'
@@ -2080,6 +2084,7 @@ window.FB = window.FB || {};
     }
 
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensurePopulationState) FB.ensurePopulationState(state);
 
     if (sc.tier >= 3) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
@@ -2225,6 +2230,7 @@ window.FB = window.FB || {};
     });
     state.player.charId = me.id;
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
+    if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
     }

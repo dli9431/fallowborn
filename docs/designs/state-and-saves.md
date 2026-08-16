@@ -7,6 +7,13 @@ normalizes old bare ids, converts legacy Walls to level 3, adds four seasons of 
 maintenance only when the player already holds them, and performs the one-time AI-seat
 seed behind `state.fortMigration`. No rendered fort, project, or siege prose is saved.
 
+County population is additive save-format-3 data (`state.population = { schema: 1, lastYear, counties: { [pid]: { count, natural, migration, losses } } }`).
+`FB.ensurePopulationState` lazily backfills older saves or fresh game states without a save-version bump:
+- Baseline populations scale proportionally with current development and standing building capacity bonuses.
+- Restored records clamp to carrying capacity and enforce `populationFloor` (1000).
+- Annual simulation records `natural`, `migration`, and `losses` per county.
+- No transient calculations, edge allocations, or prose strings enter serialized state.
+
 Fort lookup caches (`byCounty`, `bySite`, active projects) are module-private derived
 state. Repair or an external data merge rebuilds them; construction, demolition, and
 completion update them in place. They never enter serialization. AI realms add the

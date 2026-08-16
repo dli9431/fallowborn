@@ -305,6 +305,12 @@ protection is a formal privilege, while ordinary commodity ventures remain visib
 available. Already issued typed or legacy charters keep their frozen terms if the
 effective sovereign later loses the innovation. See [markets.md](markets.md).
 
+County population and demographics adds `county_population_demographics` as soft: baseline
+population simulation, carrying capacity, natural growth, and migration operate without technology,
+while agricultural innovations (`crop_rotation`, `heavy_plough`, `three_field`, etc., up to +35% capacity),
+medical innovations (`herbals`, `hospitals`, `medical_canons`, up to +10% crisis protection),
+and transport innovations (`road_surveys`, `paved_causeways`, up to +3 migration attraction) improve demographic performance.
+
 Fortifications add four hard prospective reviews, one per independently gateable tier.
 `fort_construction` uses Ringworks and leaves an unfortified settlement as the fallback;
 `towered_stronghold_upgrade` uses Flanking Castle Towers and leaves the Ringwork;

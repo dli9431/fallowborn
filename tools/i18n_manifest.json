@@ -37305,6 +37305,18 @@
         }
       }
     },
+    "news.population.severe_losses": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "losses",
+        "percent",
+        "province"
+      ],
+      "location": "js/population.js",
+      "source": {
+        "text": "🏚 Heavy civilian losses in {province} (−{losses} people, {percent}%)."
+      }
+    },
     "news.privilege.revoked_unlawfully": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [],
@@ -47982,6 +47994,16 @@
         "text": "Review venture"
       }
     },
+    "src.038cf1c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "crisis population protection"
+      }
+    },
     "src.0395045d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54064,6 +54086,16 @@
         "text": "Good material becomes expensive scrap. The widow says nothing."
       }
     },
+    "src.113639f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{amount} migration attraction"
+      }
+    },
     "src.11495b94": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55795,6 +55827,16 @@
       ],
       "source": {
         "text": "Answer with a counter-plot."
+      }
+    },
+    "src.14909efb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Factor {factor}"
       }
     },
     "src.14937ae0": {
@@ -66007,6 +66049,16 @@
         "text": "Governance sections"
       }
     },
+    "src.2b81772c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Population loss (−{amount})"
+      }
+    },
     "src.2b81e976": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72942,6 +72994,16 @@
       ],
       "source": {
         "text": "🛡 They can field ~{theirs} — you can field ~{yours}."
+      }
+    },
+    "src.3c3adae1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{natural} natural, {migration} migration, {losses} losses"
       }
     },
     "src.3c41141f": {
@@ -88181,6 +88243,16 @@
       ],
       "source": {
         "text": "The Lord’s Harvest First"
+      }
+    },
+    "src.5f490599": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Population: ~{pop}"
       }
     },
     "src.5f4c223d": {
@@ -104060,6 +104132,16 @@
         "text": "Wife"
       }
     },
+    "src.8358a4c2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "County population"
+      }
+    },
     "src.835a5866": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -104780,6 +104862,16 @@
       ],
       "source": {
         "text": "Allow automatic Council appointment"
+      }
+    },
+    "src.84a7255c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/population.js"
+      ],
+      "source": {
+        "text": "🏚 Heavy civilian losses in {province} (−{losses} people, {percent}%)."
       }
     },
     "src.84aa0ab1": {
@@ -111548,6 +111640,16 @@
         "text": "Events pause the days until you choose an answer."
       }
     },
+    "src.9453a449": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Population loss ({rate}%)"
+      }
+    },
     "src.946cef71": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -113176,6 +113278,16 @@
       ],
       "source": {
         "text": "Story-specific consequence"
+      }
+    },
+    "src.97f39d60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": ": populationCapacity0 must be a positive integer."
       }
     },
     "src.97f4a666": {
@@ -131717,6 +131829,16 @@
         "text": "Minsk"
       }
     },
+    "src.c1fb99b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Dues: +{tax}g/season"
+      }
+    },
     "src.c1fc9cef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132359,6 +132481,16 @@
       ],
       "source": {
         "text": "Person"
+      }
+    },
+    "src.c3712aea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Annual change"
       }
     },
     "src.c3756bce": {
@@ -142974,6 +143106,16 @@
         "text": "Loose your own falcon first."
       }
     },
+    "src.dc8724ea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "county population capacity"
+      }
+    },
     "src.dc875f46": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147291,6 +147433,16 @@
         "text": "⚔ Taken in the raid: {item}."
       }
     },
+    "src.e63bf0a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": ": population0 must be a positive integer."
+      }
+    },
     "src.e63cffc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147719,6 +147871,16 @@
       ],
       "source": {
         "text": "sibling brother sister courtship incest forbidden xwedodah scandal traits consent exposure child health"
+      }
+    },
+    "src.e71ce5d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Population"
       }
     },
     "src.e71d77c1": {
@@ -152283,6 +152445,16 @@
       ],
       "source": {
         "text": "Périgueux"
+      }
+    },
+    "src.f17b330c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Carrying capacity"
       }
     },
     "src.f1867dfd": {
@@ -163144,6 +163316,16 @@
         "text": "+{amount} domain capacity"
       }
     },
+    "ui:+{amount} migration attraction": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "+{amount} migration attraction"
+      }
+    },
     "ui:+{amount} national research each season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -170175,6 +170357,16 @@
         "text": "Duchy · {count} counties"
       }
     },
+    "ui:Dues: +{tax}g/season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "tax"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Dues: +{tax}g/season"
+      }
+    },
     "ui:Duke": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -171178,6 +171370,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Facial hair style"
+      }
+    },
+    "ui:Factor {factor}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "factor"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Factor {factor}"
       }
     },
     "ui:Faith": {
@@ -179651,6 +179853,44 @@
       "location": "js/papacy.js",
       "source": {
         "text": "Pope {name}"
+      }
+    },
+    "ui:Population": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Population"
+      }
+    },
+    "ui:Population loss ({rate}%)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "rate"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Population loss ({rate}%)"
+      }
+    },
+    "ui:Population loss (−{amount})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/events.js",
+      "source": {
+        "text": "Population loss (−{amount})"
+      }
+    },
+    "ui:Population: ~{pop}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "pop"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Population: ~{pop}"
       }
     },
     "ui:Position": {
@@ -190229,6 +190469,14 @@
         "text": "county levy"
       }
     },
+    "ui:county population capacity": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "county population capacity"
+      }
+    },
     "ui:county tax": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -190259,6 +190507,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "credit capacity"
+      }
+    },
+    "ui:crisis population protection": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "crisis population protection"
       }
     },
     "ui:cultivated connection": {
@@ -194763,6 +195019,18 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{name}: {votes}"
+      }
+    },
+    "ui:{natural} natural, {migration} migration, {losses} losses": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "losses",
+        "migration",
+        "natural"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{natural} natural, {migration} migration, {losses} losses"
       }
     },
     "ui:{needed} piety (now {current})": {

@@ -52,6 +52,7 @@ window.FBDATA = window.FBDATA || {};
     tax:0.35, levy:0.35, battle:0.15, devCap:4, health:0.03,
     research:5, domain:2, siege:0.35, movement:0.25, seaMovement:0.40,
     education:0.20, finance:0.30, trade:0.30,
+    populationCapacity:0.35, populationCrisisProtection:0.10, migrationAttraction:3,
     costFloor:{ build:0.55, enterprise:0.55, training:0.65 },
     units:{ levy:250, arch:200, cav:160, ret:160 },
     aiUnits:{ arch:0.20, cav:0.20, ret:0.20 }
@@ -66,6 +67,25 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      county_population_demographics:{
+        mode:'soft',
+        tech:[
+          'crop_rotation','manuring','irrigation_channels','seed_selection',
+          'heavy_plough','open_field_system','three_field','water_meadows',
+          'improved_husbandry','legume_rotation','herbals','hospitals',
+          'medical_canons','road_surveys','paved_causeways'
+        ],
+        rationale:'Demographic capacity, attraction, and crisis resilience improve with agricultural, medical, and transport innovations, while baseline population functions without them.'
+      },
+      settlement_dynamic_rents:{
+        mode:'soft',
+        tech:[
+          'undershot_watermill','urban_markets','harbor_works','stone_bridgebuilding',
+          'currency_minting','centralized_taxation','written_accounts','scutage',
+          'heavy_plough','three_field'
+        ],
+        rationale:'Baseline land rents and settlement values function universally, while agricultural innovations expand demographic carrying capacity, commerce tech unlocks advanced settlement buildings, and fiscal tech scales realm taxation.'
+      },
       estates_scutage:{
         mode:'hard', tech:['scutage'], fallback:'customary_service',
         rationale:'Advanced cash substitution for customary military service.'
@@ -257,16 +277,16 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:ard_tillage'], fx:{ tax:0.005 } });
   add('crop_rotation','Two-Course Rotation','🌿','agriculture',[-400,600],[-100,400],['scratch_plough'],
     'Alternating crop and fallow protects exhausted soil.',
-    { leaders:TRADITIONS, unlocks:['practice:crop_rotation'], fx:{ tax:0.005 } });
+    { leaders:TRADITIONS, unlocks:['practice:crop_rotation'], fx:{ tax:0.005, populationCapacity:0.01 } });
   add('fallowing','Managed Fallow','🌱','agriculture',[-500,500],[-150,350],[],
     'Grazed fallow returns manure and fertility to worked land.',
     { leaders:TRADITIONS, unlocks:['practice:managed_fallow'], fx:{ tax:0.005 } });
   add('manuring','Systematic Manuring','🐂','agriculture',[-300,600],[500,720],['fallowing'],
     'Dung is gathered and spread where its fertility is most useful.',
-    { leaders:TRADITIONS, unlocks:['practice:manuring'], fx:{ tax:0.005 } });
+    { leaders:TRADITIONS, unlocks:['practice:manuring'], fx:{ tax:0.005, populationCapacity:0.01 } });
   add('irrigation_channels','Irrigation Channels','💧','agriculture',[-1000,600],[-500,350],[],
     'Maintained channels carry water beyond the riverbank.',
-    { leaders:['islamic','persianate','byzantine','northeast_african'], unlocks:['practice:irrigation'], fx:{ tax:0.005 } });
+    { leaders:['islamic','persianate','byzantine','northeast_african'], unlocks:['practice:irrigation'], fx:{ tax:0.005, populationCapacity:0.02 } });
   add('olive_press','Lever Oil Press','🏺','agriculture',[-500,500],[500,680],[],
     'Lever and screw presses extract more oil from each harvest.',
     { leaders:['byzantine','islamic','latin','northeast_african'], unlocks:['enterprise:press_business'] });
@@ -287,34 +307,34 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','caucasian','islamic','northeast_african'], unlocks:['practice:terracing'] });
   add('seed_selection','Seed Selection','🌱','agriculture',[500,900],[600,850],['crop_rotation'],
     'Households reserve seed from the healthiest and most reliable plants.',
-    { leaders:['byzantine','islamic','persianate'], unlocks:['practice:seed_selection'], fx:{ tax:0.01 } });
+    { leaders:['byzantine','islamic','persianate'], unlocks:['practice:seed_selection'], fx:{ tax:0.01, populationCapacity:0.02 } });
   add('haymaking','Stored Hay','🌿','agriculture',[550,900],[650,900],['iron_sickles'],
     'Cut and dried grass carries more animals through winter.',
     { leaders:['latin','slavic','nordic'], unlocks:['practice:haymaking'], fx:{ levy:0.01 } });
   add('heavy_plough','Heavy Plough','🌾','agriculture',[650,900],[760,1030],['ard_plough','iron_sickles'],
     'Iron shares and mouldboards turn the wet, deep clays of northern fields.',
-    { leaders:['slavic','latin','nordic'], unlocks:['practice:heavy_tillage'], fx:{ tax:0.025 } });
+    { leaders:['slavic','latin','nordic'], unlocks:['practice:heavy_tillage'], fx:{ tax:0.025, populationCapacity:0.02 } });
   add('open_field_system','Open-Field Organization','🧺','agriculture',[650,1000],[800,1080],['crop_rotation','heavy_plough'],
     'Scattered strips and common decisions coordinate ploughing and pasture.',
-    { leaders:['latin','slavic'], unlocks:['practice:open_fields'], fx:{ tax:0.015 } });
+    { leaders:['latin','slavic'], unlocks:['practice:open_fields'], fx:{ tax:0.015, populationCapacity:0.02 } });
   add('horse_collar','Horse Collar','🐴','agriculture',[600,1000],[800,1080],['ox_yokes'],
     'A rigid collar lets a horse pull hard without pressure on its throat.',
     { leaders:['steppe','byzantine','latin'], unlocks:['rule:horse_draft'], fx:{ movement:0.02 } });
   add('three_field','Three-Field Rotation','🌱','agriculture',[750,1100],[900,1180],['crop_rotation','open_field_system'],
     'Winter crop, spring crop, and fallow distribute labor and risk.',
-    { leaders:['latin','byzantine'], unlocks:['practice:three_field'], fx:{ tax:0.025, devCap:1 } });
+    { leaders:['latin','byzantine'], unlocks:['practice:three_field'], fx:{ tax:0.025, devCap:1, populationCapacity:0.03 } });
   add('water_meadows','Managed Water Meadows','💧','agriculture',[900,1200],[1010,1240],['irrigation_channels','haymaking'],
     'Controlled winter flooding brings early grass and heavier hay.',
-    { leaders:['latin','byzantine'], unlocks:['practice:water_meadows'], fx:{ tax:0.015 } });
+    { leaders:['latin','byzantine'], unlocks:['practice:water_meadows'], fx:{ tax:0.015, populationCapacity:0.02 } });
   add('improved_husbandry','Improved Husbandry','🐂','agriculture',[900,1250],[1040,1280],['haymaking','seed_selection'],
     'Deliberate feeding, culling, and breeding make herds more dependable.',
-    { leaders:['latin','byzantine','islamic'], unlocks:['practice:husbandry'], fx:{ tax:0.015 } });
+    { leaders:['latin','byzantine','islamic'], unlocks:['practice:husbandry'], fx:{ tax:0.015, populationCapacity:0.02 } });
   add('selective_stockbreeding','Selective Stockbreeding','🐑','agriculture',[1050,1300],[1160,1340],['improved_husbandry'],
     'Breeders keep lines for wool, milk, traction, or hardiness.',
     { leaders:['latin','islamic'], unlocks:['practice:selective_breeding'], fx:{ tax:0.015 } });
   add('legume_rotation','Legume Rotation','🫘','agriculture',[950,1250],[1080,1300],['three_field'],
     'Beans and peas restore soil while feeding people and animals.',
-    { leaders:['islamic','byzantine','latin'], unlocks:['practice:legume_rotation'], fx:{ tax:0.015 } });
+    { leaders:['islamic','byzantine','latin'], unlocks:['practice:legume_rotation'], fx:{ tax:0.015, populationCapacity:0.02 } });
   add('grafting_manuals','Grafting Manuals','🌳','agriculture',[850,1200],[980,1240],['seed_selection'],
     'Written grafting practice preserves valued fruit varieties.',
     { leaders:['islamic','byzantine','persianate'], unlocks:['practice:grafting'] });
@@ -423,7 +443,7 @@ window.FBDATA = window.FBDATA || {};
   /* Commerce, transport, and infrastructure — 24. */
   add('road_surveys','Surveyed Roads','🛣','commerce',[-500,500],[500,720],[],
     'Measured grades, drainage, and chosen alignments make roads durable.',
-    { leaders:TRADITIONS, unlocks:['rule:surveyed_roads'], fx:{ movement:0.005 } });
+    { leaders:TRADITIONS, unlocks:['rule:surveyed_roads'], fx:{ movement:0.005, migrationAttraction:0.5 } });
   add('stone_bridgebuilding','Stone Bridgebuilding','🌉','commerce',[-500,600],[520,760],['lime_mortar'],
     'Masonry piers and arches carry roads over dangerous crossings.',
     { leaders:TRADITIONS, unlocks:['building:bridge'] });
@@ -480,7 +500,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','byzantine','latin'], unlocks:['rule:mint_assay'], fx:{ finance:0.015 } });
   add('paved_causeways','Paved Causeways','🛣','commerce',[850,1200],[1010,1230],['road_surveys','stone_bridgebuilding'],
     'Raised and drained roadbeds keep important routes usable in wet seasons.',
-    { leaders:['byzantine','latin','islamic'], unlocks:['rule:paved_routes'], fx:{ movement:0.025 } });
+    { leaders:['byzantine','latin','islamic'], unlocks:['rule:paved_routes'], fx:{ movement:0.025, migrationAttraction:1.0 } });
   add('postal_relays','Mounted Relay Posts','📯','commerce',[700,1150],[900,1170],['pack_saddles','road_surveys'],
     'Fresh mounts and prepared stations carry official news rapidly.',
     { leaders:['steppe','persianate','islamic','byzantine'], unlocks:['rule:relay_posts'], fx:{ movement:0.02 } });
@@ -512,7 +532,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['practice:geometry'], fx:{ research:0.1 } });
   add('herbals','Materia Medica','🌿','learning',[-400,600],[-50,430],[],
     'Catalogues of substances preserve recipes and warnings for healers.',
-    { leaders:TRADITIONS, unlocks:['practice:herbal_medicine','career:physician'], fx:{ health:0.001 } });
+    { leaders:TRADITIONS, unlocks:['practice:herbal_medicine','career:physician'], fx:{ health:0.001, populationCrisisProtection:0.01 } });
   add('surgical_instruments','Surgical Instruments','🩺','learning',[-300,600],[520,740],['bloomery_iron'],
     'Purpose-made probes, knives, forceps, and cauteries support manual treatment.',
     { leaders:TRADITIONS, unlocks:['practice:surgery'] });
@@ -536,13 +556,13 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['islamic','byzantine','persianate'], unlocks:['rule:astrolabe'], fx:{ research:0.15 } });
   add('hospitals','Endowed Hospitals','🏥','learning',[650,1100],[800,1120],['herbals'],
     'Endowed institutions gather wards, practitioners, medicines, and teaching.',
-    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:hospitals'], fx:{ health:0.002 } });
+    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:hospitals'], fx:{ health:0.002, populationCrisisProtection:0.03 } });
   add('physicians','Court Physicians','🌿','learning',[700,1100],[850,1130],['herbals','scriptoria'],
     'Rulers retain learned practitioners for diagnosis, regimen, and treatment.',
     { leaders:['islamic','persianate','byzantine'], unlocks:['rule:court_physicians'], fx:{ health:0.003 } });
   add('medical_canons','Medical Canons','📚','learning',[850,1150],[980,1170],['translation_schools','physicians'],
     'Large synthetic medical works organize theory, substances, and practice.',
-    { leaders:['islamic','persianate'], unlocks:['rule:medical_canons'], fx:{ health:0.003 }, sources:['PORMANN','GRANT'] });
+    { leaders:['islamic','persianate'], unlocks:['rule:medical_canons'], fx:{ health:0.003, populationCrisisProtection:0.02 }, sources:['PORMANN','GRANT'] });
   add('optics','Geometrical Optics','🔍','learning',[900,1200],[1020,1220],['geometry','translation_schools'],
     'Experiment and geometry explain reflection, refraction, and vision.',
     { leaders:['islamic','persianate'], unlocks:['rule:optics'], fx:{ research:0.15 }, sources:['LINDBERG','GRANT'] });

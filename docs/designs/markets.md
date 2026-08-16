@@ -135,7 +135,7 @@ price 1, invalid shock references are discarded, and no RNG is consumed.
 Once per 90-day season, `FB.marketSeason`:
 
 1. Computes county production and demand from terrain, coast, development,
-   settlement weight, buildings, effective-sovereign trade technology,
+   settlement weight, county population factor (`clamp(sqrt(P / P0), 0.60, 1.60)`), buildings, effective-sovereign trade technology,
    modifiers, endowments, armies, and saved shocks.
 2. Adds exact resident-player-household demand and staffed family-enterprise
    output. No synthetic AI households are materialized.

@@ -166,8 +166,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `data/music_catalog.js`, then the event packs (including
   `events_intrigue.js` after tournament events and before ruler-agency events).
 - Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
-  model → music → portrait → siteart → world → settlement → holywar → modifiers →
-  economy → papacy → armies → travel → mapview → events → items → actions → intrigue →
+  model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
+  economy → market → papacy → armies → travel → mapview → events → items → actions → intrigue →
   technology → council → agency → politics → parliament → institutions →
   ui (ui_misc → ui_panels → ui_topbar → ui_modals) → keys → save → mods →
   main`. The four `ui_*.js` files are one system split for size: `ui_misc.js` loads first
@@ -277,6 +277,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
 - `js/mapview.js` — canvas map rendering, pan/zoom, input.
 - `js/events.js` — event trigger/effect interpreter.
 - `js/economy.js` — livelihoods, enterprises, prices, loans, and trade partnerships.
+- `js/population.js` — county population, carrying capacity, natural growth, conserved migration, demographic modifiers.
 - `js/actions.js` — focuses and one-shot deeds (the Deeds tab).
 - `js/intrigue.js` — hostile schemes, accomplices, AI intrigue, evidence hearings,
   captivity, leverage, and conduct.
