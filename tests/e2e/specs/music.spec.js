@@ -827,8 +827,6 @@ test('context banks, playback controls, and listening history stay consistent',
         const hudBox = hud.getBoundingClientRect();
         const hudButtons = Array.from(hud.querySelectorAll('.hudbtn'));
         const firstHudButton = hudButtons[0].getBoundingClientRect();
-        const toastBox = document.querySelector('#toasts .toast:last-child')
-          .getBoundingClientRect();
         return {
           leftInset:Math.round(controlBox.left - map.left),
           topInset:Math.round(controlBox.top - map.top),
@@ -844,7 +842,6 @@ test('context banks, playback controls, and listening history stay consistent',
             return previous.bottom <= button.getBoundingClientRect().top;
           }),
           hudButtonOrder:hudButtons.map(function (b) { return b.id; }),
-          clearsToast:toastBox.top >= controlBox.bottom || controlBox.left >= toastBox.right,
           clearsHud:controlBox.right <= hudBox.left
         };
       });
@@ -859,9 +856,20 @@ test('context banks, playback controls, and listening history stay consistent',
       hudButtonHeight:44,
       hudButtonsVertical:true,
       hudButtonOrder:['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens'],
-      clearsToast:true,
       clearsHud:true
     });
+    /* Toast clearance is asserted on the settled layout: measured in the same
+       breath as the viewport resize, the map strip can still be mid-reflow
+       and report a frame where the toast and the overlay overlap. */
+    await expect.poll(function () {
+      return page.locator('#music-controls').evaluate(function (controls) {
+        const controlBox = controls.getBoundingClientRect();
+        const toast = document.querySelector('#toasts .toast:last-child');
+        if (!toast) return false;
+        const toastBox = toast.getBoundingClientRect();
+        return toastBox.top >= controlBox.bottom || controlBox.left >= toastBox.right;
+      });
+    }).toBe(true);
     expect(mobileOverlay.controlsWidth).toBeLessThanOrEqual(300);
   });
 
