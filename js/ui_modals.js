@@ -11895,21 +11895,21 @@ window.FB = window.FB || {};
     }
     const workSections = [{
       id:'household-work',
-      title:FB.T('Household work'),
+      title:FB.T('Work & Enterprises'),
       summary:workSummary,
       rows:workModels,
         empty:FB.T('No household worker yet.')
     }].concat(enterpriseSections);
-    h += '<div class="enterprise-list-summary">' + enterpriseSummary + '</div>' +
-      enterpriseViewControlsHtml('work', true) +
-      largeListSurfaceHtml('work', workSections, [
+    h += largeListSurfaceHtml('work', workSections, [
       { id:'all', label:FB.T('All') },
       { id:'attention', label:FB.T('Needs attention') },
       { id:'assigned', label:FB.T('Assigned') },
       { id:'staffed', label:FB.T('Staffed') },
       { id:'idle', label:FB.T('Idle') },
       { id:'unavailable', label:FB.T('Unavailable') }
-    ]);
+    ], {
+      controlsHtml: enterpriseViewControlsHtml('work', true)
+    });
     h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
     const modalOptions = householdPlanHistoryOptions(returnContext) || {};
@@ -18114,21 +18114,54 @@ window.FB = window.FB || {};
   UI.showShortcutSettings = function () { showShortcutSettings(false); };
 
   /* ================= music ================= */
-  UI.showMusicTrack = function (replaceView) {
+  UI.isMusicOverlayOpen = function () {
+    const controls = $('music-controls');
+    return !!(controls && !controls.classList.contains('hidden'));
+  };
+
+  UI.renderMusicOverlay = function () {
+    const root = $('music-controls');
+    if (!root) return;
     const music = FB.music;
     const track = music && music.current();
-    if (!music || !track) {
-      UI.toast('No soundtrack song is playing.');
+    if (!music || !track || !music.enabled()) {
+      let emptyHtml = '<div class="music-track-header"><b class="music-track-title">' + esc(FB.T('Music')) + '</b></div>' +
+        '<p class="hint" style="margin:6px 0 10px;">' +
+        esc(FB.T(music && !music.enabled() ? 'Music is currently turned off in Settings.' : 'No soundtrack song is playing.')) +
+        '</p><div class="music-track-actions">';
+      if (music && !music.enabled()) {
+        emptyHtml += '<button class="btn primary" id="music-turn-on">' + esc(FB.T('Play music')) + '</button>';
+      }
+      emptyHtml += '<button class="btn" id="music-close">' + esc(FB.T('Close')) + '</button></div>';
+      root.innerHTML = emptyHtml;
+      const turnOn = $('music-turn-on');
+      if (turnOn) {
+        turnOn.addEventListener('click', function () {
+          music.setEnabled(true);
+          UI.renderMusicOverlay();
+        });
+      }
+      const closeBtn = $('music-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          UI.setMusicOverlay(false);
+        });
+      }
       return;
     }
+
     const bank = music.currentBank() || (music.banks().filter(function (candidate) {
       return candidate.id === track.bankId;
     })[0] || null);
     const preferred = music.isPreferred(track.id);
     const rating = music.rating(track.id);
     const paused = music.isPaused();
-    let h = '<div class="gm-body-text"><p><b>' + esc(track.title) + '</b></p>' +
-      '<p>' + esc(music.bankLabel(bank)) + '</p></div>' +
+
+    let h = '<div class="music-track-header">' +
+      '<b class="music-track-title">' + esc(track.title) + '</b>' +
+      '<div class="music-track-bank hint">' + esc(music.bankLabel(bank)) + '</div>' +
+      '</div>' +
+      '<div class="music-track-kvs">' +
       '<div class="kv"><span>' + esc(FB.T('Length')) + '</span><b>' +
       esc(music.formatDuration(track.duration)) + '</b></div>' +
       '<div class="kv"><span>' + esc(FB.T('Download size')) + '</span><b>' +
@@ -18137,6 +18170,7 @@ window.FB = window.FB || {};
       esc(Math.round((track.bitrate || 0) / 1000) + ' kbps Opus') + '</b></div>' +
       '<div class="kv"><span>' + esc(FB.T('Offline copy')) + '</span><b id="music-cache-status">' +
       esc(FB.T('Checking…')) + '</b></div>' +
+      '</div>' +
       '<div class="music-track-actions">' +
       '<div class="music-track-navigation">' +
       '<button class="btn" id="music-previous"' +
@@ -18155,48 +18189,94 @@ window.FB = window.FB || {};
         '<button class="btn' + (rating === -1 ? ' primary' : '') + '" id="music-down">' +
         esc(FB.T('👎 Dislike')) + '</button>';
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="music-close">' +
+    h += '</div><div class="music-overlay-footer"><button class="btn" id="music-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal('Music', h, {
-      historyView:!replaceView,
-      replaceView:!!replaceView,
-      modalClass:'music-track-modal'
-    });
+
+    root.innerHTML = h;
+
     music.isTrackCached(track, function (cached) {
       const status = $('music-cache-status');
       if (status && music.current() && music.current().id === track.id) {
         status.textContent = FB.T(cached ? 'Cached' : 'Not cached');
       }
     });
+
     $('music-previous').addEventListener('click', function () {
-      if (music.previous()) UI.showMusicTrack(true);
+      if (music.previous()) UI.renderMusicOverlay();
     });
     $('music-playback').addEventListener('click', function () {
-      if (music.togglePlayback()) UI.showMusicTrack(true);
+      if (music.togglePlayback()) UI.renderMusicOverlay();
     });
     $('music-next').addEventListener('click', function () {
-      if (music.next()) UI.showMusicTrack(true);
+      if (music.next()) UI.renderMusicOverlay();
     });
     $('music-prefer').addEventListener('click', function () {
       music.togglePreferred(track.id);
-      UI.showMusicTrack(true);
+      UI.renderMusicOverlay();
     });
     $('music-repeat').addEventListener('click', function () {
       music.setRepeat(!music.isRepeating());
-      UI.showMusicTrack(true);
+      UI.renderMusicOverlay();
     });
     if ($('music-up')) {
       $('music-up').addEventListener('click', function () {
         music.rate(track.id, 1);
-        UI.showMusicTrack(true);
+        UI.renderMusicOverlay();
       });
       $('music-down').addEventListener('click', function () {
         music.rate(track.id, -1);
-        UI.showMusicTrack(true);
+        UI.renderMusicOverlay();
       });
     }
-    $('music-close').addEventListener('click', UI.closeModal);
+    $('music-close').addEventListener('click', function () {
+      UI.setMusicOverlay(false);
+    });
   };
+
+  UI.setMusicOverlay = function (active) {
+    const controls = $('music-controls');
+    const button = $('btn-music');
+    const visible = active === undefined ? !UI.isMusicOverlayOpen() : !!active;
+    if (controls) controls.classList.toggle('hidden', !visible);
+    if (button) {
+      button.classList.toggle('on', visible);
+      button.setAttribute('aria-pressed', visible ? 'true' : 'false');
+    }
+    if (visible) {
+      if (UI.setMarketLens && FB.map && FB.map.marketGood) {
+        UI.setMarketLens(false);
+      }
+      UI.renderMusicOverlay();
+    }
+  };
+
+  UI.toggleMusicOverlay = function () {
+    UI.setMusicOverlay(!UI.isMusicOverlayOpen());
+  };
+
+  UI.updateMusicOverlay = function () {
+    if (UI.isMusicOverlayOpen()) {
+      UI.renderMusicOverlay();
+    }
+  };
+
+  UI.showMusicTrack = function () {
+    UI.setMusicOverlay(true);
+  };
+
+  function handleOutsideMusicInteraction(event) {
+    if (!UI.isMusicOverlayOpen || !UI.isMusicOverlayOpen()) return;
+    const controls = $('music-controls');
+    const button = $('btn-music');
+    const target = event.target;
+    if (!target) return;
+    if (controls && (controls === target || controls.contains(target))) return;
+    if (button && (button === target || button.contains(target))) return;
+    UI.setMusicOverlay(false);
+  }
+
+  document.addEventListener('pointerdown', handleOutsideMusicInteraction, true);
+  document.addEventListener('click', handleOutsideMusicInteraction, true);
 
   UI.showMusicDownloads = function (replaceView) {
     const music = FB.music;

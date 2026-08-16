@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.133.6';
+  FB.VERSION = '1.133.7';
   FB.CHANGELOG = [
+    { v: '1.133.7', date: '2026-08-15', changes: [
+      'The map HUD now features a dedicated music overlay with quick access to soundtrack controls.',
+      'The Work & Enterprises view is streamlined with a collapsible filters and sorting section.'
+    ] },
     { v: '1.133.6', date: '2026-08-15', changes: [
       'Ruler sheets now combine realm and personal dealings, with linked war notices and each realm’s muster.',
       'Settlement sites stay clear of coasts, and legacy mods retain their named settlement slots.'
@@ -2401,6 +2405,7 @@ window.FB = window.FB || {};
   G.HELPER_TEXT_COLOR_DEFAULT = '#c9b991';
   G.uiPrefs = {
     commitmentsCollapsed:false,
+    workFiltersCollapsed:true,
     hideBeginnerHints:false,
     mainTextColor:G.MAIN_TEXT_COLOR_DEFAULT,
     helperTextColor:G.HELPER_TEXT_COLOR_DEFAULT,
@@ -2424,6 +2429,11 @@ window.FB = window.FB || {};
           storedUiPrefs, 'commitmentsCollapsed')
           ? !!storedUiPrefs.commitmentsCollapsed
           : !!storedUiPrefs.hideOngoingCommitments;
+      G.uiPrefs.workFiltersCollapsed =
+        Object.prototype.hasOwnProperty.call(
+          storedUiPrefs, 'workFiltersCollapsed')
+          ? !!storedUiPrefs.workFiltersCollapsed
+          : true;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
       if (typeof storedUiPrefs.mainTextColor === 'string' &&
           /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.mainTextColor)) {

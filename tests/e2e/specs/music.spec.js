@@ -501,19 +501,26 @@ test('context banks, playback controls, and listening history stay consistent',
     expect(context.folkTrackIds).toContain(context.immediateGame.track);
     await expect(page.locator('#btn-title-music')).toBeHidden();
 
-    const quickToggle = page.locator('#music-now-playing-toggle');
+    const musicBtn = page.locator('#btn-music');
+    await expect(musicBtn).toBeVisible();
+    await expect(musicBtn).toHaveAttribute('aria-label', 'Music');
+    await expect(musicBtn).toHaveAttribute('title', 'Music');
+    expect(await page.locator('#maphud .hudbtn').evaluateAll(function (buttons) {
+      return buttons.map(function (b) { return b.id; });
+    })).toEqual(['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens']);
+
+    const musicControls = page.locator('#music-controls');
+    await expect(musicControls).toBeHidden();
+
+    await musicBtn.click();
+    await expect(musicControls).toBeVisible();
+    await expect(musicBtn).toHaveAttribute('aria-pressed', 'true');
+    await expect(musicBtn).toHaveClass(/on/);
+
+    const quickToggle = page.locator('#music-playback');
     await expect(quickToggle).toBeVisible();
-    await expect(quickToggle).toHaveAttribute('aria-label', 'Pause music');
+    await expect(quickToggle).toHaveText('⏸ Pause');
     await expect(quickToggle).toHaveAttribute('aria-pressed', 'true');
-    expect(await page.locator('.music-now-playing-controls').evaluate(function (controls) {
-      const title = controls.querySelector('#music-now-playing').getBoundingClientRect();
-      const toggle = controls.querySelector('#music-now-playing-toggle').getBoundingClientRect();
-      return {
-        toggleToRight:toggle.left >= title.right,
-        toggleWidth:toggle.width,
-        toggleHeight:toggle.height
-      };
-    })).toEqual({ toggleToRight:true, toggleWidth:34, toggleHeight:34 });
 
     await expect.poll(function () {
       return page.evaluate(function () {
@@ -542,7 +549,7 @@ test('context banks, playback controls, and listening history stay consistent',
     });
 
     await quickToggle.click();
-    await expect(quickToggle).toHaveAttribute('aria-label', 'Play music');
+    await expect(quickToggle).toHaveText('▶ Play');
     await expect(quickToggle).toHaveAttribute('aria-pressed', 'false');
     expect(await page.evaluate(function () {
       return {
@@ -555,7 +562,18 @@ test('context banks, playback controls, and listening history stay consistent',
     })).toEqual({ paused:true, anyPlaying:false, choice:'on' });
 
     await quickToggle.click();
-    await expect(quickToggle).toHaveAttribute('aria-label', 'Pause music');
+    await expect(quickToggle).toHaveText('⏸ Pause');
+
+    // Clicking anywhere else in the UI closes the music overlay
+    await page.locator('#map').click({ position:{ x:200, y:200 } });
+    await expect(musicControls).toBeHidden();
+    await expect(musicBtn).toHaveAttribute('aria-pressed', 'false');
+
+    await musicBtn.click();
+    await expect(musicControls).toBeVisible();
+    await page.locator('#sidetabs [data-tab="prov"]').click();
+    await expect(musicControls).toBeHidden();
+    await expect(musicBtn).toHaveAttribute('aria-pressed', 'false');
     expect(await page.evaluate(function () {
       window.dispatchEvent(new Event('blur'));
       return {
@@ -787,32 +805,23 @@ test('context banks, playback controls, and listening history stay consistent',
 
     await page.setViewportSize({ width:390, height:740 });
     await page.evaluate(function () {
+      FB.ui.setMusicOverlay(true);
       FB.ui.toast('A long map notification stays clear of the compact music controls.');
     });
-    const mobileNowPlaying = await page.locator('.music-now-playing-controls').evaluate(
+    const mobileOverlay = await page.locator('#music-controls').evaluate(
       function (controls) {
         const map = document.getElementById('mapwrap').getBoundingClientRect();
         const controlBox = controls.getBoundingClientRect();
         const hud = document.getElementById('maphud');
         const hudBox = hud.getBoundingClientRect();
-        const marketButtonBox = document.getElementById('btn-marketlens')
-          .getBoundingClientRect();
         const hudButtons = Array.from(hud.querySelectorAll('.hudbtn'));
         const firstHudButton = hudButtons[0].getBoundingClientRect();
-        const title = controls.querySelector('#music-now-playing');
-        const titleBox = title.getBoundingClientRect();
-        const toggleBox = controls.querySelector(
-          '#music-now-playing-toggle').getBoundingClientRect();
         const toastBox = document.querySelector('#toasts .toast:last-child')
           .getBoundingClientRect();
         return {
-          rightInset:Math.round(map.right - controlBox.right),
-          bottomInset:Math.round(map.bottom - controlBox.bottom),
+          leftInset:Math.round(controlBox.left - map.left),
+          topInset:Math.round(controlBox.top - map.top),
           controlsWidth:Math.round(controlBox.width),
-          titleFont:parseFloat(getComputedStyle(title).fontSize),
-          titleHeight:Math.round(titleBox.height),
-          toggleWidth:Math.round(toggleBox.width),
-          toggleHeight:Math.round(toggleBox.height),
           hudDirection:getComputedStyle(hud).flexDirection,
           hudGap:parseFloat(getComputedStyle(hud).rowGap),
           hudButtonWidth:Math.round(firstHudButton.width),
@@ -822,31 +831,25 @@ test('context banks, playback controls, and listening history stay consistent',
             const previous = hudButtons[index - 1].getBoundingClientRect();
             return previous.bottom <= button.getBoundingClientRect().top;
           }),
-          clearsToast:toastBox.right <= controlBox.left,
-          marketButtonClearsControls:marketButtonBox.right <= controlBox.left ||
-            marketButtonBox.bottom <= controlBox.top || marketButtonBox.top >= controlBox.bottom,
-          clearsHud:controlBox.right <= hudBox.left ||
-            controlBox.bottom <= hudBox.top || controlBox.top >= hudBox.bottom
+          hudButtonOrder:hudButtons.map(function (b) { return b.id; }),
+          clearsToast:toastBox.top >= controlBox.bottom || controlBox.left >= toastBox.right,
+          clearsHud:controlBox.right <= hudBox.left
         };
       });
-    expect(mobileNowPlaying).toEqual({
-      rightInset:8,
-      bottomInset:8,
+    expect(mobileOverlay).toEqual({
+      leftInset:8,
+      topInset:8,
       controlsWidth:expect.any(Number),
-      titleFont:11,
-      titleHeight:44,
-      toggleWidth:44,
-      toggleHeight:44,
       hudDirection:'column',
       hudGap:2,
       hudButtonWidth:44,
       hudButtonHeight:44,
       hudButtonsVertical:true,
+      hudButtonOrder:['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens'],
       clearsToast:true,
-      marketButtonClearsControls:true,
       clearsHud:true
     });
-    expect(mobileNowPlaying.controlsWidth).toBeLessThanOrEqual(164);
+    expect(mobileOverlay.controlsWidth).toBeLessThanOrEqual(300);
   });
 
 test('a downloaded faith theme remains cached while another bank still uses it',

@@ -753,7 +753,12 @@ window.FB = window.FB || {};
   function largeListSectionState(surface, sectionId) {
     const view = largeListViews[surface];
     if (!view.sections[sectionId]) {
-      view.sections[sectionId] = { collapsed:false, showAll:false };
+      const defaultCollapsed = sectionId === 'filters'
+        ? (FB.game && FB.game.uiPrefs && FB.game.uiPrefs.workFiltersCollapsed !== undefined
+            ? !!FB.game.uiPrefs.workFiltersCollapsed
+            : true)
+        : false;
+      view.sections[sectionId] = { collapsed:defaultCollapsed, showAll:false };
     }
     return view.sections[sectionId];
   }
@@ -827,7 +832,7 @@ window.FB = window.FB || {};
     return h;
   }
 
-  function largeListSurfaceHtml(surface, sections, filters) {
+  function largeListSurfaceHtml(surface, sections, filters, options) {
     let total = 0;
     for (const section of sections) total += (section.rows || []).length;
     const view = largeListViews[surface];
@@ -844,12 +849,16 @@ window.FB = window.FB || {};
       }
     }
     const large = total > LARGE_LIST_THRESHOLD;
-    let h = '<div class="large-list-surface" data-large-list-surface="' +
-      esc(surface) + '" data-large-list="' + (large ? 'true' : 'false') + '">' +
-      '<div class="large-list-toolbar">';
+    const opts = options || {};
+    const controlsHtml = opts.controlsHtml || '';
+    const collapsibleFilters = opts.collapsibleFilters !== undefined
+      ? !!opts.collapsibleFilters
+      : (surface === 'work');
+
+    let toolbarHtml = '';
     if (large) {
       const searchId = surface + '-list-search';
-      h += '<div class="large-list-search"><label for="' + searchId + '">' +
+      toolbarHtml += '<div class="large-list-search"><label for="' + searchId + '">' +
         esc(FB.T('Search this list')) + '</label><div>' +
         '<input type="search" id="' + searchId + '" value="' +
         esc(view.search) + '" autocomplete="off" spellcheck="false" ' +
@@ -861,15 +870,50 @@ window.FB = window.FB || {};
         esc(FB.T('Clear list search')) + '">' + esc(FB.T('Clear')) +
         '</button></div></div>';
     }
-    h += '<div class="large-list-filters" role="group" aria-label="' +
-      esc(FB.T('Filter list')) + '">';
-    for (const filter of filters) {
-      h += '<button type="button" class="btn small" data-list-filter="' +
-        esc(filter.id) + '" data-list-focus-key="filter-' + esc(filter.id) +
-        '" aria-pressed="' + (view.filter === filter.id) + '">' +
-        esc(filter.label) + '</button>';
+    if (filters && filters.length) {
+      toolbarHtml += '<div class="large-list-filters" role="group" aria-label="' +
+        esc(FB.T('Filter list')) + '">';
+      for (const filter of filters) {
+        toolbarHtml += '<button type="button" class="btn small" data-list-filter="' +
+          esc(filter.id) + '" data-list-focus-key="filter-' + esc(filter.id) +
+          '" aria-pressed="' + (view.filter === filter.id) + '">' +
+          esc(filter.label) + '</button>';
+      }
+      toolbarHtml += '</div>';
     }
-    h += '</div></div>';
+
+    let h = '<div class="large-list-surface" data-large-list-surface="' +
+      esc(surface) + '" data-large-list="' + (large ? 'true' : 'false') + '">';
+
+    if (collapsibleFilters) {
+      const state = largeListSectionState(surface, 'filters');
+      const isCollapsed = !!state.collapsed;
+      const headingId = surface + '-list-heading-filters';
+      const bodyId = surface + '-list-body-filters';
+      const filtersTitle = FB.T('Filters & sorting');
+      const ariaLabel = FB.T('{section}: {action} section.', {
+        section:filtersTitle,
+        action:isCollapsed ? FB.T('Expand') : FB.T('Collapse')
+      });
+      h += '<section class="large-list-section large-list-filters-section" data-list-section="filters">' +
+        '<h4 id="' + headingId + '" tabindex="-1" data-list-focus-key="heading-filters">' +
+        '<button type="button" class="large-list-section-toggle large-list-filters-toggle" ' +
+        'data-list-toggle="filters" data-list-focus-key="toggle-filters" ' +
+        'aria-expanded="' + (!isCollapsed) + '" aria-controls="' + bodyId + '" ' +
+        'aria-label="' + esc(ariaLabel) + '">' +
+        '<span class="large-list-section-title">⚙ ' + esc(filtersTitle) + '</span>' +
+        '<span class="large-list-section-caret" aria-hidden="true">' + (isCollapsed ? '▸' : '▾') + '</span>' +
+        '</button></h4>' +
+        '<div class="large-list-section-body large-list-filters-body" id="' + bodyId + '"' +
+        (isCollapsed ? ' hidden' : '') + ' aria-labelledby="' + headingId + '">' +
+        (controlsHtml || '') +
+        (toolbarHtml ? '<div class="large-list-toolbar">' + toolbarHtml + '</div>' : '') +
+        '</div></section>';
+    } else {
+      if (controlsHtml) h += controlsHtml;
+      if (toolbarHtml) h += '<div class="large-list-toolbar">' + toolbarHtml + '</div>';
+    }
+
     for (const section of sections) h += largeListSectionHtml(surface, section);
     return h + '</div>';
   }
@@ -1044,6 +1088,10 @@ window.FB = window.FB || {};
         const sectionId = toggles[i].getAttribute('data-list-toggle');
         const state = largeListSectionState(surface, sectionId);
         state.collapsed = !state.collapsed;
+        if (sectionId === 'filters' && FB.game && FB.game.uiPrefs) {
+          FB.game.uiPrefs.workFiltersCollapsed = state.collapsed;
+          try { localStorage.setItem('fb_ui', JSON.stringify(FB.game.uiPrefs)); } catch (e) {}
+        }
         applyLargeListView(root);
       });
     }
@@ -2219,6 +2267,12 @@ window.FB = window.FB || {};
       else FB.map.centerOn(FB.state.player.provinceId, 2.2);
     });
     $('btn-mapmode').addEventListener('click', UI.cycleMapMode);
+    const btnMusic = $('btn-music');
+    if (btnMusic) {
+      btnMusic.addEventListener('click', function () {
+        if (UI.toggleMusicOverlay) UI.toggleMusicOverlay();
+      });
+    }
     $('btn-marketlens').addEventListener('click', function () {
       UI.setMarketLens(!FB.map.marketGood);
     });
@@ -2642,4 +2696,4 @@ window.FB = window.FB || {};
   SH.terrainName = terrainName;
   SH.traitGroupedEffects = traitGroupedEffects;
   SH.wireInteractionCard = wireInteractionCard;
-})();
+})();

@@ -543,26 +543,8 @@ window.FB = window.FB || {};
   };
 
   function updateNowPlaying() {
-    const button = document.getElementById('music-now-playing');
-    const toggle = document.getElementById('music-now-playing-toggle');
-    const title = document.getElementById('music-now-playing-title');
-    if (!button || !title) return;
-    const gameplayTrack = currentTrack && mode === 'game';
-    const hidden = !gameplayTrack || !enabled();
-    button.classList.toggle('hidden', hidden);
-    if (toggle) toggle.classList.toggle('hidden', hidden);
-    if (gameplayTrack) {
-      title.textContent = currentTrack.title;
-      button.setAttribute('aria-label', FB.T('Now playing: {song}. Open music controls.', {
-        song:currentTrack.title
-      }));
-      if (toggle) {
-        const label = FB.T(playbackPaused ? 'Play music' : 'Pause music');
-        toggle.textContent = playbackPaused ? '▶' : '⏸';
-        toggle.setAttribute('aria-label', label);
-        toggle.setAttribute('aria-pressed', playbackPaused ? 'false' : 'true');
-        toggle.title = label;
-      }
+    if (FB.ui && typeof FB.ui.updateMusicOverlay === 'function') {
+      FB.ui.updateMusicOverlay();
     }
   }
 

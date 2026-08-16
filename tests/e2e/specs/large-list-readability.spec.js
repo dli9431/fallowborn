@@ -177,6 +177,22 @@ test('small Work roster keeps all ordinary rows visible without search',
 
     await expect(page.locator('[data-large-list-surface="work"]')).toBeVisible();
     await expect(page.locator('#work-list-search')).toHaveCount(0);
+    await expect(page.locator('.enterprise-list-summary')).toHaveCount(0);
+    await expect(page.locator('.gm-body-text')).toHaveCount(0);
+
+    const filterSection = page.locator('[data-list-section="filters"]');
+    await expect(filterSection).toBeVisible();
+    const filterToggle = page.locator('[data-list-toggle="filters"]');
+    await expect(filterToggle).toHaveAttribute('aria-expanded', 'false');
+    const filterBody = page.locator('.large-list-filters-body');
+    await expect(filterBody).toBeHidden();
+
+    await filterToggle.click();
+    await expect(filterToggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(filterBody).toBeVisible();
+    await expect(page.locator('[data-enterprise-group]')).toBeVisible();
+    await expect(page.locator('[data-enterprise-sort]')).toBeVisible();
+
     var smallRows = await page.locator(
       '[data-list-section="household-work"] [data-large-list-row]').count();
     var visibleRows = await page.locator(
@@ -200,6 +216,8 @@ test('large Work roster counts choices, orders attention, and preserves exact en
       FB.ui.showLivelihoods();
     });
 
+    await expect(page.locator('[data-list-section="filters"]')).toBeVisible();
+    await page.locator('[data-list-toggle="filters"]').click();
     await expect(page.locator('#work-list-search')).toBeVisible();
     await expect(page.locator(
       '[data-list-section="household-work"] .large-list-section-count'))

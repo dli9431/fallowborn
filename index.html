@@ -384,6 +384,16 @@
             <canvas id="map"></canvas>
             <div id="maphud">
               <button
+                id="btn-music"
+                class="btn hudbtn"
+                title="Music"
+                aria-label="Music"
+                data-i18n-title="Music"
+                data-i18n-aria-label="Music"
+              >
+                &#9835;
+              </button>
+              <button
                 id="btn-zoomin"
                 class="btn hudbtn"
                 title="Zoom in"
@@ -482,28 +492,7 @@
                 </button>
               </div>
             </div>
-            <div class="music-now-playing-controls">
-              <button
-                id="music-now-playing"
-                class="music-now-playing hidden"
-                type="button"
-                aria-label="Open music controls"
-                data-i18n-aria-label="Open music controls"
-              >
-                <span aria-hidden="true">&#9835;</span>
-                <span id="music-now-playing-title"></span>
-              </button>
-              <button
-                id="music-now-playing-toggle"
-                class="music-now-playing-toggle hidden"
-                type="button"
-                aria-label="Pause music"
-                aria-pressed="true"
-                title="Pause music"
-              >
-                &#9208;
-              </button>
-            </div>
+            <div id="music-controls" class="music-controls hidden" role="region" aria-label="Music controls"></div>
             <div id="toasts"></div>
           </div>
           <!-- #panels is invisible on desktop (display:contents) and becomes a

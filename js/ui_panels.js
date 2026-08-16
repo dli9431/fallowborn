@@ -3525,6 +3525,7 @@ window.FB = window.FB || {};
     const button = $('btn-marketlens');
     if (controls) controls.classList.toggle('hidden', !active);
     if (button) button.classList.toggle('on', active);
+    if (active && UI.setMusicOverlay) UI.setMusicOverlay(false);
     const selector = $('market-lens-good');
     if (selector && active) {
       const ids = Object.keys(FBDATA.marketGoods || {});
