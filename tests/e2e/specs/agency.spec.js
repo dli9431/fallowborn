@@ -480,7 +480,7 @@ test('AI royal offers revalidate exact managed kin, ruler generation, and dowry'
         dowry:terms.amount, playerPays:terms.subjectPays ? 'yes' : 'no'
       };
       s.player.gold = 500;
-      s.player.tier = FB.stationOf(partner) - 2;
+      s.player.tier = FB.stationOf(partner) - 1;
       s.player.prestige = FB.kinMatchPrestigeNeed(s, partner);
       var valid = FB.fns.agency_marriage_context_valid(s, ctx);
       var stale = {};
