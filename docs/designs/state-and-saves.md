@@ -68,13 +68,15 @@ on the turn as well as on an explicit stamp the family writers bump, so a writer
 forgets `FB.touchFamily` costs a card that is stale until tomorrow rather than one that
 is wrong forever.
 
-The version-3 wire form omits only reconstructible court fields: member `childIds`
-(rebuilt from canonical `parentId`), a derived member-to-character id, true/null member
-defaults, and false/null/empty-children defaults on royal characters. It also writes national
-`exposed` as the technologies not already in `completed`, because completion already
-implies exposure. `S.restore` expands all of these before the ordinary ensure chain, so
-live `FB.state` keeps its explicit object shape and uncompressed older version-3 saves
-pass through unchanged. The replacer never mutates the running state.
+The version-3 wire form omits only reconstructible fields. Object-map keys supply realm,
+character, and court-member ids; canonical member `parentId` rebuilds `childIds`; and
+death years distinguish dead members from the omitted live default. Common null, zero,
+true, health-8, and empty-array/object defaults are restored explicitly. A building with
+an omitted settlement index belongs to the head settlement (`s:0`), matching the legacy
+projection. National `exposed` contains only technologies not already in `completed`,
+because completion implies exposure, and empty technology work containers are recreated.
+`S.restore` expands the full live shape before the ordinary ensure chain, so uncompressed
+older version-3 saves pass through unchanged. The replacer never mutates running state.
 
 **The ensure chain on load is not RNG-protected, and court materialization consumes
 randomness.** `S.restore` sets the saved RNG state and then runs the whole chain; only

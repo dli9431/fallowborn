@@ -7,6 +7,7 @@ window.FB = window.FB || {};
   const S = {};
   FB.save = S;
   const PREFIX = 'fb_';
+  let serializingBuildingRecords = null;
 
   function own(o, key) {
     return Object.prototype.hasOwnProperty.call(o, key);
@@ -18,6 +19,27 @@ window.FB = window.FB || {};
       own(o, 'charId'));
   }
 
+  function characterRecord(o) {
+    return !!(o && typeof o.id === 'string' && own(o, 'born') &&
+      own(o, 'sex') && own(o, 'culture'));
+  }
+
+  function realmRecord(o) {
+    return !!(o && typeof o.id === 'string' && typeof o.name === 'string' &&
+      own(o, 'capital') && own(o, 'ruler') && own(o, 'alive'));
+  }
+
+  function buildingRecord(o) {
+    return !!(o && serializingBuildingRecords &&
+      serializingBuildingRecords.has(o));
+  }
+
+  function realmTechRecord(o) {
+    return !!(o && Array.isArray(o.completed) && Array.isArray(o.exposed) &&
+      Array.isArray(o.active) && o.progress && typeof o.progress === 'object' &&
+      own(o, 'reserve'));
+  }
+
   /* Keep live state explicit, but do not pay for values the restore boundary
      can reconstruct exactly. The member tree's parentId is canonical, derived
      character ids come from member ids, and completed technology already
@@ -26,9 +48,15 @@ window.FB = window.FB || {};
   function saveReplacer(key, value) {
     const holder = this;
     if (royalMemberRecord(holder)) {
+      if (key === 'id') return undefined;
       if (key === 'childIds') return undefined;
       if (key === 'alive' && value === true) return undefined;
+      if (key === 'alive' && value === false && own(holder, 'died')) {
+        return undefined;
+      }
       if (key === 'role' && value === null) return undefined;
+      if (key === 'parentId' && value === null) return undefined;
+      if (key === 'charId' && value === null) return undefined;
       if (key === 'charId' && value ===
           'ro_' + holder.id.slice('royal_'.length)) {
         const c = FB.state && FB.state.chars && FB.state.chars[value];
@@ -37,21 +65,50 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (holder && holder.royalLine) {
+    if (holder && (holder.royalLine || characterRecord(holder))) {
+      if (key === 'id') return undefined;
       if (key === 'childrenIds' && Array.isArray(value) && !value.length) {
+        return undefined;
+      }
+      if (key === 'traits' && Array.isArray(value) && !value.length) {
         return undefined;
       }
       if (key === 'dead' && value === false) return undefined;
       if (key === 'role' && value === null) return undefined;
+      if (key === 'dyn' && value === null) return undefined;
+      if (key === 'station' && value === null) return undefined;
+      if (key === 'opinion' && value === 0) return undefined;
+      if (key === 'fertility' && value === 1) return undefined;
+      if (key === 'health' && value === 8) return undefined;
       if ((key === 'fatherId' || key === 'motherId' || key === 'spouseId') &&
           value === null) return undefined;
     }
-    if (key === 'exposed' && Array.isArray(value) && holder &&
-        Array.isArray(holder.completed) && Array.isArray(holder.active) &&
-        holder.progress && own(holder, 'reserve')) {
-      return value.filter(function (id) {
+    if (realmRecord(holder)) {
+      if (key === 'id') return undefined;
+      if (key === 'alive' && value === true) return undefined;
+      if (key === 'liege' && value === null) return undefined;
+      if (key === 'aggression' && value === 0) return undefined;
+      if (key === 'war' && value === null) return undefined;
+      if (key === 'op' && value === 0) return undefined;
+    }
+    if (buildingRecord(holder) && key === 's' && value === 0) {
+      return undefined;
+    }
+    if (key === 'devGranted' && value === true) return undefined;
+    if (realmTechRecord(holder)) {
+      if (key === 'reserve' && value === 0) return undefined;
+      if ((key === 'active' || key === 'completed') &&
+          Array.isArray(value) && !value.length) return undefined;
+      if ((key === 'progress' || key === 'priorities') && value &&
+          typeof value === 'object' && !Object.keys(value).length) {
+        return undefined;
+      }
+    }
+    if (key === 'exposed' && Array.isArray(value) && realmTechRecord(holder)) {
+      const remaining = value.filter(function (id) {
         return holder.completed.indexOf(id) < 0;
       });
+      return remaining.length ? remaining : undefined;
     }
     return value;
   }
@@ -65,24 +122,58 @@ window.FB = window.FB || {};
     const chars = state.chars || {};
     for (const id in chars) {
       const c = chars[id];
-      if (!c || !c.royalLine) continue;
+      if (!c) continue;
+      if (!own(c, 'id')) c.id = id;
       if (!own(c, 'dead')) c.dead = false;
       if (!own(c, 'role')) c.role = null;
+      if (!own(c, 'dyn')) c.dyn = null;
+      if (!own(c, 'station')) c.station = null;
+      if (!own(c, 'opinion')) c.opinion = 0;
+      if (!own(c, 'fertility')) c.fertility = 1;
+      if (!own(c, 'health')) c.health = 8;
       if (!own(c, 'fatherId')) c.fatherId = null;
       if (!own(c, 'motherId')) c.motherId = null;
       if (!own(c, 'spouseId')) c.spouseId = null;
+      if (!Array.isArray(c.traits)) c.traits = [];
       if (!Array.isArray(c.childrenIds)) c.childrenIds = [];
+    }
+    const realmTech = state.realmTech || {};
+    for (const rid in realmTech) {
+      const record = realmTech[rid];
+      if (!record) continue;
+      if (!Array.isArray(record.completed)) record.completed = [];
+      if (!Array.isArray(record.exposed)) record.exposed = [];
+      if (!Array.isArray(record.active)) record.active = [];
+      if (!own(record, 'reserve')) record.reserve = 0;
+      if (!record.progress || typeof record.progress !== 'object') record.progress = {};
+      if (!record.priorities || typeof record.priorities !== 'object') {
+        record.priorities = {};
+      }
+      for (const id of record.completed) {
+        if (record.exposed.indexOf(id) < 0) record.exposed.push(id);
+      }
     }
     const realms = state.realms || {};
     for (const rid in realms) {
-      const succession = realms[rid] && realms[rid].succession;
+      const realm = realms[rid];
+      if (!realm) continue;
+      if (!own(realm, 'id')) realm.id = rid;
+      if (!own(realm, 'alive')) realm.alive = true;
+      if (!own(realm, 'liege')) realm.liege = null;
+      if (!own(realm, 'aggression')) realm.aggression = 0;
+      if (!own(realm, 'war')) realm.war = null;
+      if (!own(realm, 'op')) realm.op = 0;
+      const succession = realm.succession;
       const members = succession && succession.members;
       if (!members) continue;
       for (const id in members) {
         const member = members[id];
         if (!member) continue;
-        if (!own(member, 'alive')) member.alive = true;
+        if (!own(member, 'id')) member.id = id;
+        if (!own(member, 'alive')) member.alive = !own(member, 'died');
         if (!own(member, 'role')) member.role = null;
+        if (!own(member, 'parentId')) member.parentId = null;
+        if (!own(member, 'charId')) member.charId = null;
         if (!Array.isArray(member.childIds)) member.childIds = [];
       }
       for (const id in members) {
@@ -98,13 +189,15 @@ window.FB = window.FB || {};
             c.royalLine.memberId === id) member.charId = charId;
       }
     }
-    const realmTech = state.realmTech || {};
-    for (const rid in realmTech) {
-      const record = realmTech[rid];
-      if (!record || !Array.isArray(record.completed) ||
-          !Array.isArray(record.exposed)) continue;
-      for (const id of record.completed) {
-        if (record.exposed.indexOf(id) < 0) record.exposed.push(id);
+    const buildings = state.buildings || {};
+    for (const pid in buildings) {
+      const list = buildings[pid];
+      if (!Array.isArray(list)) continue;
+      for (let i = 0; i < list.length; i++) {
+        const record = list[i];
+        if (record && typeof record === 'object' && !own(record, 's')) {
+          record.s = 0;
+        }
       }
     }
     return state;
@@ -122,8 +215,8 @@ window.FB = window.FB || {};
      accept the uncompressed legacy forms. */
 
   function lzCompress(input, bitsPerChar, charFromInt) {
-    const dictionary = {};
-    const fresh = {};
+    const dictionary = Object.create(null);
+    const fresh = Object.create(null);
     const data = [];
     let w = '';
     let enlargeIn = 2;
@@ -150,7 +243,7 @@ window.FB = window.FB || {};
        1 for 16-bit); afterwards phrases emit their dictionary code. Each
        emission narrows the headroom until the code width grows one bit. */
     function writeSymbol(symbol) {
-      if (own(fresh, symbol)) {
+      if (fresh[symbol] !== undefined) {
         const code = symbol.charCodeAt(0);
         if (code < 256) {
           writeBits(numBits, 0);
@@ -177,12 +270,12 @@ window.FB = window.FB || {};
 
     for (let ii = 0; ii < input.length; ii++) {
       const c = input.charAt(ii);
-      if (!own(dictionary, c)) {
+      if (dictionary[c] === undefined) {
         dictionary[c] = dictSize++;
         fresh[c] = true;
       }
       const wc = w + c;
-      if (own(dictionary, wc)) {
+      if (dictionary[wc] !== undefined) {
         w = wc;
       } else {
         writeSymbol(w);
@@ -354,19 +447,34 @@ window.FB = window.FB || {};
 
   S.serialize = function () {
     const s = FB.state;
-    return JSON.stringify({
-      v: 3,
-      rng: FB.getRngState(),
-      uid: FB.getUidCounter(),
-      mods: FB.mods.sig(), // which world this life belongs to
-      state: s,
-      meta: {
-        name: FB.fullName(s.chars[s.player.charId]),
-        titleData: FB.titleSnapshot(s),
-        year: s.date.year,
-        season: s.date.season
+    serializingBuildingRecords = new WeakSet();
+    const buildings = s.buildings || {};
+    for (const pid in buildings) {
+      const list = buildings[pid];
+      if (!Array.isArray(list)) continue;
+      for (let i = 0; i < list.length; i++) {
+        if (list[i] && typeof list[i] === 'object') {
+          serializingBuildingRecords.add(list[i]);
+        }
       }
-    }, saveReplacer);
+    }
+    try {
+      return JSON.stringify({
+        v: 3,
+        rng: FB.getRngState(),
+        uid: FB.getUidCounter(),
+        mods: FB.mods.sig(), // which world this life belongs to
+        state: s,
+        meta: {
+          name: FB.fullName(s.chars[s.player.charId]),
+          titleData: FB.titleSnapshot(s),
+          year: s.date.year,
+          season: s.date.season
+        }
+      }, saveReplacer);
+    } finally {
+      serializingBuildingRecords = null;
+    }
   };
 
   /* the quota case deserves its own message: the life has outgrown the

@@ -1,10 +1,16 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/actions.js',
   'js/armies.js',
-  'js/world.js',
+  'js/holywar.js',
+  'js/model.js',
+  'js/politics.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
-  'data/events_war.js'
+  'js/world.js',
+  'data/events_war.js',
+  'data/map_data.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -324,6 +330,7 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
   });
 
 test('war status names every opposing realm', async function ({ page }, testInfo) {
+  test.slow();
   await startWarGame(page, testInfo);
   var ids = await configureAggressionWar(page);
   var result = await page.evaluate(function (setup) {
@@ -351,6 +358,10 @@ test('war status names every opposing realm', async function ({ page }, testInfo
         ]
       }
     };
+    var holyWarOpponents = FB.warOpponents(s, 'player');
+    var holyWarStatus = FB.warStatusText(s, 'player');
+    var holyWarLock = FB.warLockedReason(s);
+    s.greatHolyWar = null;
     return {
       playerOpponents:playerOpponents,
       enemyOpponents:enemyOpponents,
@@ -359,9 +370,9 @@ test('war status names every opposing realm', async function ({ page }, testInfo
       foreignOpponents:foreignOpponents,
       enemyForeignOpponents:enemyForeignOpponents,
       foreignStatus:foreignStatus,
-      holyWarOpponents:FB.warOpponents(s, 'player'),
-      holyWarStatus:FB.warStatusText(s, 'player'),
-      holyWarLock:FB.warLockedReason(s)
+      holyWarOpponents:holyWarOpponents,
+      holyWarStatus:holyWarStatus,
+      holyWarLock:holyWarLock
     };
   }, ids);
 
