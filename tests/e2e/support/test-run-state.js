@@ -156,6 +156,53 @@ function fallbackBaseline(startDir) {
   return git(['merge-base', 'HEAD', upstream], gitRoot);
 }
 
+function overlayBaselinePaths(startDir, baseline, sourceCommit, filePaths) {
+  const gitRoot = git(['rev-parse', '--show-toplevel'], startDir);
+  const normalizedPaths = [];
+  const seen = Object.create(null);
+  filePaths.forEach(function (filePath) {
+    const absolute = path.isAbsolute(filePath)
+      ? path.resolve(filePath)
+      : path.resolve(gitRoot, filePath);
+    const relative = path.relative(gitRoot, absolute);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error('Baseline overlay path must stay inside the repository: ' + filePath);
+    }
+    const normalized = relative.split(path.sep).join('/');
+    if (seen[normalized]) return;
+    seen[normalized] = true;
+    normalizedPaths.push(normalized);
+  });
+  if (!normalizedPaths.length) return baseline;
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fallowborn-test-overlay-'));
+  const indexPath = path.join(tempDir, 'index');
+  const indexEnv = Object.assign({}, process.env, { GIT_INDEX_FILE:indexPath });
+
+  try {
+    git(['read-tree', baseline], gitRoot, indexEnv);
+    git(['reset', '-q', sourceCommit, '--'].concat(normalizedPaths), gitRoot, indexEnv);
+    const tree = git(['write-tree'], gitRoot, indexEnv);
+    const baselineTree = git(['rev-parse', baseline + '^{tree}'], gitRoot);
+    if (tree === baselineTree) return baseline;
+
+    const commitEnv = Object.assign({}, indexEnv, {
+      GIT_AUTHOR_NAME:'Fallowborn test runner',
+      GIT_AUTHOR_EMAIL:'tests@fallowborn.invalid',
+      GIT_AUTHOR_DATE:'946684800 +0000',
+      GIT_COMMITTER_NAME:'Fallowborn test runner',
+      GIT_COMMITTER_EMAIL:'tests@fallowborn.invalid',
+      GIT_COMMITTER_DATE:'946684800 +0000'
+    });
+    return git([
+      'commit-tree', tree, '-p', baseline,
+      '-m', 'Fallowborn changed-test comparison baseline'
+    ], gitRoot, commitEnv);
+  } finally {
+    fs.rmSync(tempDir, { recursive:true, force:true });
+  }
+}
+
 function baselineRef(startDir, scope) {
   const normalizedScope = String(scope || 'matrix');
   if (!/^[a-z0-9][a-z0-9-]*$/.test(normalizedScope)) {
@@ -208,6 +255,7 @@ module.exports = {
   git:git,
   gitRaw:gitRaw,
   hasMeaningfulWorkingTreeChange:hasMeaningfulWorkingTreeChange,
+  overlayBaselinePaths:overlayBaselinePaths,
   readLastRun:readLastRun,
   recordBaseline:recordBaseline,
   recordSuccessfulScopes:recordSuccessfulScopes,

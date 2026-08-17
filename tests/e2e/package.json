@@ -7,7 +7,7 @@
     "check": "node support/check-js.js",
     "test": "npm run test:all",
     "test:all": "npm run test:server && node support/run-selected-tests.js all --state-scope=matrix --record-state-scope=fast-chromium-served",
-    "test:changed": "npm run test:server && node support/run-selected-tests.js changed --state-scope=fast-chromium-served --project=chromium-served --pass-with-no-tests && node support/run-selected-tests.js changed --state-scope=matrix --project=chromium-file --project=firefox-served --project=webkit-served --pass-with-no-tests",
+    "test:changed": "npm run test:server && node support/run-selected-tests.js changed --bounded-runtime-dependencies --state-scope=fast-chromium-served --project=chromium-served --pass-with-no-tests && node support/run-selected-tests.js changed --bounded-runtime-dependencies --state-scope=matrix --project=chromium-file --project=firefox-served --project=webkit-served --pass-with-no-tests",
     "test:fast": "npm run test:server && node support/run-selected-tests.js changed --state-scope=fast-chromium-served --project=chromium-served --pass-with-no-tests",
     "test:fast:all": "npm run test:server && node support/run-selected-tests.js all --state-scope=fast-chromium-served --project=chromium-served",
     "test:chromium": "npm run test:server && playwright test --project=chromium-file --project=chromium-served",

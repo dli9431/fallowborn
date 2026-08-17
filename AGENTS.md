@@ -39,9 +39,9 @@ From `tests/e2e/`:
   baseline is reused by `test:changed` for the Chromium-served slice.
 - `npm run test:fast:all` runs the full Chromium-served suite without advancing the Chromium-file,
   Firefox-served, or WebKit-served baseline.
-- `npm run test:changed` automatically reruns preceding Playwright failures, or runs affected test
-  files in two slices: Chromium-served from the shared fast baseline, then the other three projects
-  from their matrix baseline.
+- `npm run test:changed` automatically reruns preceding Playwright failures, or runs directly
+  edited/new specs plus the boot and determinism runtime canaries in two slices: Chromium-served
+  from the shared fast baseline, then the other three projects from their matrix baseline.
 - `npm run test:all` runs the server regression and every configured browser project.
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
 - `npm test` is an alias for `npm run test:all`.
@@ -51,8 +51,10 @@ When adding or updating a specification, register its shipped JS, data, and CSS 
 focused; directory-wide declarations are reserved for intentional canaries such as boot and
 determinism. Import shared journeys directly from the relevant leaf module under `support/game/`
 instead of recreating a common barrel module. These dependency edges are metadata for
-Playwright's changed-file analyzer only: never import or execute game scripts in Node. Baseline,
-line-ending, and helper-authoring details are documented in `docs/TESTS.md`.
+Playwright's changed-file analyzer only: `test:fast` uses the full graph, while `test:changed`
+bounds it to the whole-runtime canaries and directly changed test code. Never import or execute
+game scripts in Node. Baseline, line-ending, and helper-authoring details are documented in
+`docs/TESTS.md`.
 
 These commands are for owner-initiated manual runs. AI coding agents must author or update
 relevant tests, but must not install test browsers or dependencies and must not execute

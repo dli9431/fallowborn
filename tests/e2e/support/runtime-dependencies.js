@@ -5,6 +5,10 @@ const path = require('path');
 const { cc } = require('playwright/lib/common');
 
 const gameRoot = path.resolve(__dirname, '..', '..', '..');
+const boundedRuntimeCanaries = {
+  'boot.spec.js':true,
+  'determinism.spec.js':true
+};
 
 function filesUnder(target) {
   const stat = fs.statSync(target);
@@ -34,7 +38,13 @@ function resolveRuntimePath(relativePath) {
   return filesUnder(absolute);
 }
 
+function shouldRegisterRuntimeDependencies(testFile, bounded) {
+  return !bounded || !!boundedRuntimeCanaries[path.basename(testFile)];
+}
+
 function dependsOnRuntime(testFile, relativePaths) {
+  const bounded = process.env.FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES === '1';
+  if (!shouldRegisterRuntimeDependencies(testFile, bounded)) return;
   const dependencies = [];
   relativePaths.forEach(function (relativePath) {
     dependencies.push.apply(dependencies, resolveRuntimePath(relativePath));
@@ -44,5 +54,6 @@ function dependsOnRuntime(testFile, relativePaths) {
 
 module.exports = {
   dependsOnRuntime:dependsOnRuntime,
-  resolveRuntimePath:resolveRuntimePath
+  resolveRuntimePath:resolveRuntimePath,
+  shouldRegisterRuntimeDependencies:shouldRegisterRuntimeDependencies
 };

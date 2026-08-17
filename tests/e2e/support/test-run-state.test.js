@@ -52,6 +52,58 @@ test('changed selection uses the tracked baseline when no retryable failure exis
   assert.equal(testRunState.readLastRun(statePath), null);
 });
 
+test('comparison baselines overlay selection rules without hiding runtime edits',
+  function (t) {
+    const repository = temporaryDirectory(t, 'fallowborn-comparison-baseline-');
+    const configPath = path.join(repository, 'tests', 'e2e', 'playwright.config.js');
+    const selectorPath = path.join(
+      repository, 'tests', 'e2e', 'support', 'runtime-dependencies.js');
+    const runtimePath = path.join(repository, 'js', 'main.js');
+
+    testRunState.git(['init', '--quiet'], repository);
+    fs.mkdirSync(path.dirname(configPath), { recursive:true });
+    fs.mkdirSync(path.dirname(selectorPath), { recursive:true });
+    fs.mkdirSync(path.dirname(runtimePath), { recursive:true });
+    fs.writeFileSync(configPath, 'old project scopes\n', 'utf8');
+    fs.writeFileSync(selectorPath, 'old selection rules\n', 'utf8');
+    fs.writeFileSync(runtimePath, 'old runtime\n', 'utf8');
+    testRunState.git(['add', '.'], repository);
+    testRunState.git([
+      '-c', 'user.name=Fallowborn Tests',
+      '-c', 'user.email=tests@fallowborn.invalid',
+      'commit', '--quiet', '-m', 'Initial fixture'
+    ], repository);
+    const baseline = testRunState.git(['rev-parse', 'HEAD'], repository);
+
+    fs.writeFileSync(configPath, 'bounded project scopes\n', 'utf8');
+    fs.writeFileSync(selectorPath, 'bounded selection rules\n', 'utf8');
+    fs.writeFileSync(runtimePath, 'new runtime\n', 'utf8');
+    testRunState.git(['add', '.'], repository);
+    testRunState.git([
+      '-c', 'user.name=Fallowborn Tests',
+      '-c', 'user.email=tests@fallowborn.invalid',
+      'commit', '--quiet', '-m', 'Current fixture'
+    ], repository);
+    const current = testRunState.git(['rev-parse', 'HEAD'], repository);
+    const comparison = testRunState.overlayBaselinePaths(
+      repository, baseline, current, [configPath, selectorPath]);
+
+    assert.notEqual(comparison, baseline);
+    assert.equal(testRunState.git([
+      'show', comparison + ':tests/e2e/playwright.config.js'
+    ], repository), 'bounded project scopes');
+    assert.equal(testRunState.git([
+      'show', comparison + ':tests/e2e/support/runtime-dependencies.js'
+    ], repository), 'bounded selection rules');
+    assert.equal(testRunState.git([
+      'show', comparison + ':js/main.js'
+    ], repository), 'old runtime');
+    assert.equal(testRunState.git([
+      'diff', '--name-only', comparison, current
+    ], repository), 'js/main.js');
+    assert.equal(testRunState.git(['rev-parse', comparison + '^'], repository), baseline);
+  });
+
 test('working-tree snapshots include tracked edits without touching the real index', function (t) {
   const repository = temporaryDirectory(t, 'fallowborn-test-repository-');
   const markerPath = path.join(repository, '.last-tested-commit');
@@ -359,9 +411,11 @@ test('changed command reuses fast Chromium coverage and isolates the other proje
   const changedSteps = scripts['test:changed'].split(' && ');
 
   assert.equal(changedSteps.length, 3);
+  assert.match(changedSteps[1], /--bounded-runtime-dependencies/);
   assert.match(changedSteps[1], /--state-scope=fast-chromium-served/);
   assert.match(changedSteps[1], /--project=chromium-served/);
   assert.match(changedSteps[2], /--state-scope=matrix/);
+  assert.match(changedSteps[2], /--bounded-runtime-dependencies/);
   assert.match(changedSteps[2], /--project=chromium-file/);
   assert.match(changedSteps[2], /--project=firefox-served/);
   assert.match(changedSteps[2], /--project=webkit-served/);

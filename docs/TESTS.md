@@ -48,7 +48,7 @@ npm run test:fast
 # Fast Chromium-only full suite
 npm run test:fast:all
 
-# Rerun preceding failures, or affected tests in each bounded browser coverage slice
+# Rerun preceding failures, or edited specs plus canaries in each browser slice
 npm run test:changed
 
 # Run the server regression and every configured browser project
@@ -107,6 +107,19 @@ baseline and the current tree. New untracked files remain affected until committ
 does not exist or its recorded baseline commit is unavailable, the runner uses the current
 branch's upstream merge base when one exists. This includes committed local work on an ahead
 branch. A repository without an upstream falls back to `HEAD`, selecting its uncommitted changes.
+For changed-test selection only, the wrapper overlays the current `playwright.config.js` and
+`support/runtime-dependencies.js` onto the comparison baseline. Selection-rule edits therefore
+take effect immediately without making every importing specification look affected; `test:all`
+remains the authoritative full check for configuration changes, while the server regression
+statically guards the bounded project lists and dependency modes.
+
+`test:fast` uses every specification's focused runtime dependency declarations and is the broader
+incremental regression command. `test:changed` deliberately bounds those declarations: directly
+edited or newly added specifications and changed shared test helpers still select their tests,
+while `boot.spec.js` and `determinism.spec.js` retain their whole-runtime canary dependencies.
+This prevents edits to monolithic runtime files such as `ui_modals.js` from scheduling hundreds of
+otherwise unchanged specifications in the quick browser matrix. The same implementation and test
+must still land together, and `test:all` remains the authoritative complete matrix.
 
 ### Establishing or refreshing a baseline
 
@@ -166,11 +179,14 @@ real browser page; `dependsOnRuntime(...)` is dependency metadata only.
 
 Playwright's changed mode does not isolate only newly added `test(...)` blocks inside an existing
 specification; the affected specification runs as a whole. A changed shared test helper can make
-every importing specification affected. Changes to the universal fixture, page contract, or
-Playwright configuration legitimately affect the whole suite. Feature helpers live in leaf modules
-under `support/game/`; specifications import those modules directly so an unrelated helper change
-does not fan out through a barrel file. The automatic last-failed path deliberately favors a fast
-repair loop after a failure; run `test:all` for the authoritative whole-suite result.
+every importing specification affected. Changes to the universal fixture or page contract
+legitimately affect the whole suite. Project-configuration changes use the current scopes without
+joining Playwright's affected-file set, as described above. In bounded `test:changed` runs, ordinary
+runtime declarations do not join that set; use `test:fast` for the full dependency-driven slice.
+Feature helpers live in leaf modules under `support/game/`; specifications import those modules
+directly so an unrelated helper change does not fan out through a barrel file. The automatic
+last-failed path deliberately favors a fast repair loop after a failure; run `test:all` for the
+authoritative whole-suite result.
 
 Playwright starts and stops the test server automatically. Tests run headlessly unless a
 Playwright command-line option requests another mode.

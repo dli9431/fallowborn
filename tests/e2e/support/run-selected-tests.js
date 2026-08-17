@@ -8,8 +8,13 @@ const testRunState = require('./test-run-state');
 const testRoot = path.resolve(__dirname, '..');
 const mode = process.argv[2];
 let stateScope = 'matrix';
+let boundedRuntimeDependencies = false;
 const recordedStateScopes = [];
 const extraArgs = process.argv.slice(3).filter(function (argument) {
+  if (argument === '--bounded-runtime-dependencies') {
+    boundedRuntimeDependencies = true;
+    return false;
+  }
   if (argument.indexOf('--state-scope=') === 0) {
     stateScope = argument.slice('--state-scope='.length);
     return false;
@@ -28,6 +33,7 @@ if ((mode !== 'all' && mode !== 'changed') ||
     })) {
   console.error(
     'Usage: node support/run-selected-tests.js <all|changed> ' +
+    '[--bounded-runtime-dependencies] ' +
     '[--state-scope=<scope>] [--record-state-scope=<scope>] ' +
     '[Playwright arguments]');
   process.exit(2);
@@ -70,6 +76,22 @@ if (mode === 'changed') {
       }
       console.log('No valid test baseline recorded; falling back to ' + baseline + '.');
     }
+    try {
+      const comparisonBaseline = testRunState.overlayBaselinePaths(
+        testRoot, baseline, snapshot.commit,
+        [
+          path.join(testRoot, 'playwright.config.js'),
+          path.join(testRoot, 'support', 'runtime-dependencies.js')
+        ]);
+      if (comparisonBaseline !== baseline) {
+        console.log(
+          'Using the current changed-test selection rules and project scopes.');
+      }
+      baseline = comparisonBaseline;
+    } catch (error) {
+      console.error('Cannot prepare the changed-test comparison baseline: ' + error.message);
+      process.exit(2);
+    }
     playwrightArgs.push('--only-changed=' + baseline);
   }
 }
@@ -77,8 +99,13 @@ if (mode === 'changed') {
 playwrightArgs.push('--last-failed-file=' + lastRunPath);
 playwrightArgs.push.apply(playwrightArgs, extraArgs);
 
+const childEnv = Object.assign({}, process.env, {
+  FB_BOUNDED_CHANGED_RUNTIME_DEPENDENCIES:
+    boundedRuntimeDependencies ? '1' : '0'
+});
 const result = childProcess.spawnSync(process.execPath, playwrightArgs, {
   cwd:testRoot,
+  env:childEnv,
   stdio:'inherit'
 });
 

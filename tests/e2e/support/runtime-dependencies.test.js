@@ -7,7 +7,8 @@ const { cc } = require('playwright/lib/common');
 
 const {
   dependsOnRuntime,
-  resolveRuntimePath
+  resolveRuntimePath,
+  shouldRegisterRuntimeDependencies
 } = require('./runtime-dependencies');
 
 test('runtime dependency declarations participate in Playwright changed-file selection',
@@ -27,6 +28,18 @@ test('runtime dependency directories expand to their shipped files', function ()
   assert.ok(dependencies.length > 1);
   assert.ok(dependencies.includes(resolveRuntimePath('js/main.js')[0]));
   assert.ok(dependencies.includes(resolveRuntimePath('js/world.js')[0]));
+});
+
+test('bounded changed selection keeps only the whole-runtime canaries', function () {
+  const specs = path.resolve(__dirname, '..', 'specs');
+  assert.equal(shouldRegisterRuntimeDependencies(
+    path.join(specs, 'boot.spec.js'), true), true);
+  assert.equal(shouldRegisterRuntimeDependencies(
+    path.join(specs, 'determinism.spec.js'), true), true);
+  assert.equal(shouldRegisterRuntimeDependencies(
+    path.join(specs, 'raiding-mechanic.spec.js'), true), false);
+  assert.equal(shouldRegisterRuntimeDependencies(
+    path.join(specs, 'raiding-mechanic.spec.js'), false), true);
 });
 
 test('runtime dependencies cannot escape the game root', function () {
