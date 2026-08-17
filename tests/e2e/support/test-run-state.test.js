@@ -106,6 +106,11 @@ test('clean snapshots reuse HEAD despite cached-clean CRLF working files', funct
   testRunState.git(['init', '--quiet'], repository);
   testRunState.git(['config', 'core.autocrlf', 'true'], repository);
   fs.writeFileSync(trackedPath, 'first\r\nsecond\r\n', 'utf8');
+  // Keep the index entry outside Git's racily-clean timestamp window. Without
+  // this, fast filesystems may rehash the file after the config change and
+  // expose the CRLF bytes instead of exercising the cached-clean path.
+  const cachedMtime = new Date('2000-01-01T00:00:00Z');
+  fs.utimesSync(trackedPath, cachedMtime, cachedMtime);
   testRunState.git(['add', 'tracked.js'], repository);
   testRunState.git([
     '-c', 'user.name=Fallowborn Tests',
