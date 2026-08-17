@@ -1679,6 +1679,31 @@ window.FB = window.FB || {};
         FB.ui.showWarTargets(null, options && options.returnContext);
       }
     } },
+  { id: 'raid_expedition', label: '⚔ Launch a raid…', noConsume: true,
+    desc: function () {
+      return FB.T('Cross border or sea to plunder foreign wealth, livestock, goods, and thralls without a formal war.');
+    },
+    show: function (s) {
+      return FB.canRaid ? FB.canRaid(s) : false;
+    },
+    can: function (s) {
+      if (s.player.flags && s.player.flags.in_prison) return FB.T('You are imprisoned.');
+      if (s.player.raidCooldownUntil && s.player.raidCooldownUntil > s.turn) {
+        return FB.T('Your raiders are resting ({days} days remain).', {
+          days: Math.max(1, s.player.raidCooldownUntil - s.turn)
+        });
+      }
+      const targets = FB.raidTargets ? FB.raidTargets(s) : [];
+      if (!targets.length) {
+        return FB.T('No foreign target counties are within reach of your raiders.');
+      }
+      return true;
+    },
+    run: function (s, options) {
+      if (FB.ui && FB.ui.showRaidTargets) {
+        FB.ui.showRaidTargets(options && options.returnContext);
+      }
+    } },
   { id: 'abandon_claim', label: '📜 Abandon fabricated claim', noConsume: true,
     desc: function (s) {
       const claim = FB.fabricatedClaimOf(s);
@@ -5926,6 +5951,349 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.action.claim_abandoned',
       '📜 You abandon the claim to {province}.', { province: pr ? pr.name : '' }));
     return true;
+  };
+
+  /* =========================================================================
+     RAIDING MECHANICS (FB.canRaid, FB.raidRange, FB.raidTargets,
+     FB.calculateRaidSpoils, FB.executeRaid)
+     ========================================================================= */
+
+  FB.canRaid = function (state, charId) {
+    if (!state || !state.player) return false;
+    const cid = charId || state.player.charId;
+    const c = state.chars && state.chars[cid];
+    if (!c) return false;
+    const currentYear = (state.date && state.date.year) || 867;
+    if (FB.ageOf(c, currentYear) < 16) return false;
+    if (state.player.flags && state.player.flags.in_prison) return false;
+    if (state.player.tier < 1) return false;
+
+    const cult = c.culture;
+    const traditions = (FBDATA.raidingTraditions && FBDATA.raidingTraditions.cultures) ||
+      ['norse', 'magyar', 'turkic', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'];
+    if (traditions.indexOf(cult) >= 0) return true;
+
+    const faith = c.religion;
+    const faiths = (FBDATA.raidingTraditions && FBDATA.raidingTraditions.faiths) ||
+      ['norse_pagan', 'tengri', 'baltic_pagan', 'slavic_pagan'];
+    if (faiths.indexOf(faith) >= 0) return true;
+    if (FB.faithGroup && FB.faithGroup(faith, state) === 'pagan') return true;
+
+    const realmId = FB.playerRealmId ? FB.playerRealmId(state) : null;
+    const r = realmId && state.realms && state.realms[realmId];
+    if (r) {
+      if (r.culture && traditions.indexOf(r.culture) >= 0) return true;
+      if (r.religion && (faiths.indexOf(r.religion) >= 0 || (FB.faithGroup && FB.faithGroup(r.religion, state) === 'pagan'))) return true;
+    }
+    return false;
+  };
+
+  FB.raidRange = function (state, charId) {
+    let range = (FBDATA.balance && FBDATA.balance.raidBaseRange) || 2;
+    const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+
+    if (FB.hasTech && FB.hasTech(state, 'longships', realmId)) {
+      range += (FBDATA.balance && FBDATA.balance.raidLongshipRange) || 4;
+    }
+    if (FB.hasTech && FB.hasTech(state, 'coastal_piloting', realmId)) range += 1;
+    if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) range += 1;
+    if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) range += 1;
+    if (FB.hasTech && (FB.hasTech(state, 'cavalry_saddles', realmId) || FB.hasTech(state, 'stirrups', realmId))) range += 1;
+
+    return range;
+  };
+
+  FB.raidTargets = function (state, charId) {
+    const out = [];
+    if (!FB.canRaid(state, charId) || !FB.world || !FB.world.byId) return out;
+    const p = state.player;
+    const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+    const realmId = playerRealm;
+    const maxRange = FB.raidRange(state, charId);
+    const hasLongships = FB.hasTech && FB.hasTech(state, 'longships', realmId);
+
+    const startPids = [];
+    if (p.provs && p.provs.length) {
+      for (let i = 0; i < p.provs.length; i++) startPids.push(p.provs[i]);
+    } else if (p.provinceId) {
+      startPids.push(p.provinceId);
+    }
+    if (!startPids.length) return out;
+
+    const visited = {};
+    const dist = {};
+    const queue = [];
+    for (let i = 0; i < startPids.length; i++) {
+      const sp = startPids[i];
+      visited[sp] = true;
+      dist[sp] = 0;
+      queue.push(sp);
+    }
+
+    let head = 0;
+    while (head < queue.length) {
+      const cur = queue[head++];
+      const d = dist[cur];
+      if (d >= maxRange) continue;
+
+      const neighbors = [];
+      const adj = FB.world.adj && FB.world.adj[cur];
+      if (adj) {
+        for (const nb in adj) neighbors.push(nb);
+      }
+      const water = FB.world.waterAdj && FB.world.waterAdj[cur];
+      if (water) {
+        for (const nb in water) {
+          if (neighbors.indexOf(nb) < 0) neighbors.push(nb);
+        }
+      }
+      if (hasLongships && FB.world.byId[cur] && FB.world.byId[cur].coastal) {
+        const curPr = FB.world.byId[cur];
+        for (let j = 0; j < FB.world.provs.length; j++) {
+          const pr = FB.world.provs[j];
+          if (!pr.coastal || pr.id === cur || pr.wasteland) continue;
+          const dx = pr.sx - curPr.sx, dy = pr.sy - curPr.sy;
+          const sqDist = dx * dx + dy * dy;
+          if (sqDist <= 28000 && neighbors.indexOf(pr.id) < 0) {
+            neighbors.push(pr.id);
+          }
+        }
+      }
+
+      for (let i = 0; i < neighbors.length; i++) {
+        const nxt = neighbors[i];
+        if (visited[nxt]) continue;
+        visited[nxt] = true;
+        dist[nxt] = d + 1;
+        queue.push(nxt);
+      }
+    }
+
+    for (const pid in dist) {
+      if (dist[pid] === 0) continue;
+      const pr = FB.world.byId[pid];
+      if (!pr || pr.wasteland) continue;
+      const enemyRealm = state.owner && state.owner[pid];
+      if (!enemyRealm || enemyRealm === playerRealm || enemyRealm === 'player') continue;
+      if (state.holder && state.holder[pid] === 'player') continue;
+      if (state.pacts && state.pacts[enemyRealm] && state.pacts[enemyRealm] > state.turn) continue;
+      if (FB.areAllied && FB.areAllied(state, playerRealm, enemyRealm)) continue;
+
+      const r = state.realms && state.realms[enemyRealm];
+      const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+      const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
+      const dev = (state.dev && state.dev[pid]) || pr.dev0 || pr.dev || 1;
+      const pop = FB.countyPopulation ? FB.countyPopulation(state, pid) : 5000;
+      const endowments = FB.marketEndowments ? FB.marketEndowments(state, pid) : [];
+      const buildings = FB.builtIn ? FB.builtIn(state, pid).filter(function (b) { return !b.ruined; }) : [];
+
+      let wealthScore = dev * 10 + buildings.length * 8 + endowments.length * 15;
+      if (pr.coastal) wealthScore += 10;
+
+      let hazardScore = fortLevel * 25;
+      if (r && r.rank) hazardScore += r.rank * 5;
+
+      out.push({
+        pid: pid,
+        name: pr.name,
+        terrain: pr.terrain,
+        coastal: !!pr.coastal,
+        distance: dist[pid],
+        realmId: enemyRealm,
+        realmName: r ? r.name : enemyRealm,
+        rulerName: r && r.ruler ? r.ruler.name : FB.T('Local Lord'),
+        fortLevel: fortLevel,
+        fortName: fort && !fort.ruined ? (FBDATA.fortifications && FBDATA.fortifications[fort.id] ? FBDATA.fortifications[fort.id].name : FB.T('Fort')) : FB.T('Unfortified'),
+        dev: dev,
+        pop: pop,
+        endowments: endowments,
+        buildingCount: buildings.length,
+        wealthScore: wealthScore,
+        hazardScore: hazardScore
+      });
+    }
+
+    out.sort(function (a, b) {
+      return (b.wealthScore - b.hazardScore * 0.5) - (a.wealthScore - a.hazardScore * 0.5) ||
+        (a.distance - b.distance) || (a.name < b.name ? -1 : 1);
+    });
+
+    return out;
+  };
+
+  FB.calculateRaidSpoils = function (state, targetPid, strategy, charId) {
+    const pr = FB.world.byId[targetPid];
+    const dev = (state.dev && state.dev[targetPid]) || (pr && (pr.dev0 || pr.dev)) || 1;
+    const pop = FB.countyPopulation ? FB.countyPopulation(state, targetPid) : 6000;
+    const fort = FB.fortAt ? FB.fortAt(state, targetPid) : null;
+    const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
+    const endowments = FB.marketEndowments ? FB.marketEndowments(state, targetPid) : [];
+    const buildings = FB.builtIn ? FB.builtIn(state, targetPid).filter(function (b) { return !b.ruined; }) : [];
+
+    const cid = charId || state.player.charId;
+    const c = state.chars && state.chars[cid];
+    const mar = FB.skillOf ? FB.skillOf(c, 'mar') : 10;
+
+    const isSack = strategy === 'sack';
+    const mult = isSack ? 1.35 : 0.65;
+
+    let baseGold = Math.round((dev * 7 + mar * 2 + (isSack ? 30 : 12)) * mult);
+    if (buildings.length) baseGold += Math.round(buildings.length * 6 * mult);
+    if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0) {
+      baseGold += Math.round(20 * mult);
+    }
+    if (fortLevel > 0) {
+      const fortDampener = Math.max(0.40, 1 - fortLevel * (isSack ? 0.12 : 0.20));
+      baseGold = Math.round(baseGold * fortDampener);
+    }
+    baseGold = Math.max(8, baseGold);
+
+    const goods = { provisions:0, wares:0, materials:0, transport:0, luxuries:0 };
+    goods.provisions = Math.round((10 + dev * 2) * mult);
+    if (endowments.indexOf('grain') >= 0 || endowments.indexOf('pastoral') >= 0 || endowments.indexOf('fisheries') >= 0) {
+      goods.provisions += Math.round(12 * mult);
+    }
+    if (endowments.indexOf('wool_textiles') >= 0) goods.wares += Math.round(8 * mult);
+    else goods.wares += Math.round(4 * mult);
+    if (endowments.indexOf('timber') >= 0 || endowments.indexOf('metalworking') >= 0) {
+      goods.materials += Math.round(10 * mult);
+    } else goods.materials += Math.round(3 * mult);
+    if (endowments.indexOf('horse_breeding') >= 0 || endowments.indexOf('pastoral') >= 0) {
+      goods.transport += Math.round(6 * mult);
+    }
+    if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0 || isSack) {
+      goods.luxuries += Math.round((isSack ? 3 : 1) * mult);
+    }
+
+    const popRate = isSack ? 0.045 : 0.018;
+    const popLoss = Math.max(40, Math.round(pop * popRate));
+    const captives = Math.max(15, Math.round(popLoss * 0.45));
+
+    const ruinedBuildingIds = [];
+    if (isSack && buildings.length) {
+      const ruinChance = Math.max(0.15, 0.45 - fortLevel * 0.08);
+      for (let i = 0; i < buildings.length; i++) {
+        if (FB.chance(ruinChance)) {
+          ruinedBuildingIds.push(buildings[i].id);
+        }
+      }
+    }
+
+    let devLoss = false;
+    if (isSack && dev >= 3 && fortLevel <= 1 && FB.chance(0.20)) {
+      devLoss = true;
+    }
+
+    let casualties = 0;
+    let wounded = false;
+    if (isSack) {
+      const hazardBase = fortLevel * 15 + 5;
+      const martialSave = Math.min(25, mar * 1.5);
+      const netHazard = Math.max(5, hazardBase - martialSave);
+      if (FB.chance(netHazard / 100)) {
+        casualties = Math.round(FB.ri(5, 20) * (1 + fortLevel * 0.5));
+        if (FB.chance(0.25)) wounded = true;
+      }
+    }
+
+    return {
+      targetPid: targetPid,
+      strategy: strategy,
+      gold: baseGold,
+      prestige: Math.round(isSack ? 15 + dev * 2 : 8),
+      goods: goods,
+      popLoss: popLoss,
+      captives: captives,
+      ruinedBuildings: ruinedBuildingIds,
+      devLoss: devLoss,
+      casualties: casualties,
+      wounded: wounded
+    };
+  };
+
+  FB.executeRaid = function (state, targetPid, strategy, charId, captiveChoice) {
+    const spoils = FB.calculateRaidSpoils(state, targetPid, strategy, charId);
+    const p = state.player;
+    const pr = FB.world.byId[targetPid];
+    const targetRid = state.owner && state.owner[targetPid];
+    const homePid = p.provinceId || (p.provs && p.provs[0]);
+
+    p.gold = (Number(p.gold) || 0) + spoils.gold;
+    p.prestige = (Number(p.prestige) || 0) + spoils.prestige;
+
+    if (FB.changeCountyPopulation) {
+      FB.changeCountyPopulation(state, targetPid, -spoils.popLoss, 'raid_losses');
+    }
+
+    captiveChoice = captiveChoice || 'settle';
+    if (captiveChoice === 'settle') {
+      if (FB.changeCountyPopulation && homePid) {
+        FB.changeCountyPopulation(state, homePid, spoils.captives, 'raid_captives');
+      }
+    } else if (captiveChoice === 'bond') {
+      p.bondedWorkers = (p.bondedWorkers || 0) + Math.max(1, Math.round(spoils.captives / 25));
+    } else if (captiveChoice === 'ransom') {
+      const extraGold = Math.round(spoils.captives * 0.25);
+      p.gold += extraGold;
+      p.prestige += 10;
+      spoils.ransomGold = extraGold;
+    }
+
+    if (spoils.ruinedBuildings.length && state.buildings && state.buildings[targetPid]) {
+      const bList = state.buildings[targetPid];
+      for (let i = 0; i < bList.length; i++) {
+        if (spoils.ruinedBuildings.indexOf(bList[i].id) >= 0) {
+          bList[i].ruined = true;
+        }
+      }
+    }
+
+    if (spoils.devLoss && state.dev && state.dev[targetPid] > 1) {
+      state.dev[targetPid] = Math.max(1, state.dev[targetPid] - 1);
+    }
+
+    if (FB.addMarketShock) {
+      FB.addMarketShock(state, {
+        pid: targetPid,
+        source: 'raid_devastation',
+        severe: true,
+        production: strategy === 'sack' ? -0.35 : -0.20,
+        demand: 0.15,
+        flow: -0.25,
+        seasons: (FBDATA.balance && FBDATA.balance.raidMarketShockSeasons) || 4
+      });
+    }
+
+    if (targetRid && targetRid !== 'player' && FB.adjustStanding) {
+      const penalty = (FBDATA.balance && FBDATA.balance.raidStandingPenalty) || -25;
+      FB.adjustStanding(state, { kind:'realm', id:targetRid }, penalty, 'deed:raid_expedition');
+    }
+
+    if (spoils.wounded && state.chars && state.chars[p.charId]) {
+      const me = state.chars[p.charId];
+      if (FB.addTrait) FB.addTrait(me, 'wounded');
+    }
+
+    const cdDays = (FBDATA.balance && FBDATA.balance.raidCooldownDays) || 180;
+    p.raidCooldownUntil = state.turn + cdDays;
+
+    if (FB.chronicle) {
+      FB.chronicle(state, 'raid_completed', {
+        provinceId: targetPid,
+        gold: spoils.gold,
+        captives: spoils.captives
+      });
+    }
+    if (FB.news) {
+      FB.news(state, FB.msg('news.raid.success',
+        '⚔ Your raid on {province} returns victorious: {money:gold} gold, provisions, and {captives} captives.', {
+          province: pr ? pr.name : targetPid,
+          gold: spoils.gold,
+          captives: spoils.captives
+        }));
+    }
+
+    return spoils;
   };
 
   FB.fns.fabricate_claim_success = function (state, ctx) {

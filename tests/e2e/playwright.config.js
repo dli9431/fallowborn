@@ -1,6 +1,27 @@
 const { defineConfig } = require('@playwright/test');
 
 const servedOrigin = 'http://127.0.0.1:4173';
+const fileProjectTests = [
+  '**/boot.spec.js',
+  '**/determinism.spec.js',
+  '**/eager-courts.spec.js',
+  '**/family-growth.spec.js',
+  '**/holywar-adapter.spec.js',
+  '**/holywar-lifecycle.spec.js',
+  '**/holywar-ui.spec.js',
+  '**/journeys.spec.js',
+  '**/player-feedback-milestone-4.spec.js',
+  '**/religions.spec.js',
+  '**/ruler-titles.spec.js',
+  '**/settlement-engine.spec.js',
+  '**/settlement-real-data.spec.js',
+  '**/simulation.spec.js'
+];
+const compatibilityProjectTests = [
+  '**/boot.spec.js',
+  '**/holywar-accessibility.spec.js',
+  '**/journeys.spec.js'
+];
 const firefoxUse = {
   browserName: 'firefox',
   baseURL: servedOrigin
@@ -43,7 +64,8 @@ module.exports = defineConfig({
   },
   projects: [
     {
-      name: 'chromium-file'
+      name: 'chromium-file',
+      testMatch: fileProjectTests
     },
     {
       name: 'chromium-served',
@@ -53,10 +75,12 @@ module.exports = defineConfig({
     },
     {
       name: 'firefox-served',
+      testMatch: compatibilityProjectTests,
       use: firefoxUse
     },
     {
       name: 'webkit-served',
+      testMatch: compatibilityProjectTests,
       use: {
         browserName: 'webkit',
         baseURL: servedOrigin

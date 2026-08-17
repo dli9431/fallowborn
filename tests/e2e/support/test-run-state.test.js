@@ -368,3 +368,34 @@ test('changed command reuses fast Chromium coverage and isolates the other proje
   assert.doesNotMatch(changedSteps[2], /--project=chromium-served(?:\s|$)/);
   assert.match(scripts['test:all'], /--record-state-scope=fast-chromium-served/);
 });
+
+test('browser projects keep the full affected suite on primary served Chromium', function () {
+  const config = require('../playwright.config');
+  const projects = {};
+  config.projects.forEach(function (project) {
+    projects[project.name] = project;
+  });
+
+  assert.equal(projects['chromium-served'].testMatch, undefined);
+  assert.deepEqual(projects['firefox-served'].testMatch, [
+    '**/boot.spec.js',
+    '**/holywar-accessibility.spec.js',
+    '**/journeys.spec.js'
+  ]);
+  assert.deepEqual(
+    projects['webkit-served'].testMatch,
+    projects['firefox-served'].testMatch);
+
+  const specsDirectory = path.resolve(__dirname, '..', 'specs');
+  const explicitFileSpecs = fs.readdirSync(specsDirectory)
+    .filter(function (file) { return file.endsWith('.spec.js'); })
+    .filter(function (file) {
+      return fs.readFileSync(path.join(specsDirectory, file), 'utf8')
+        .indexOf('chromium-file') >= 0;
+    });
+  const configuredFileSpecs = projects['chromium-file'].testMatch.map(function (pattern) {
+    return path.basename(pattern);
+  });
+  assert.deepEqual(configuredFileSpecs.slice().sort(),
+    explicitFileSpecs.concat(['journeys.spec.js']).sort());
+});

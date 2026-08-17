@@ -48,7 +48,7 @@ npm run test:fast
 # Fast Chromium-only full suite
 npm run test:fast:all
 
-# Rerun preceding failures, or tests affected in each browser coverage slice
+# Rerun preceding failures, or affected tests in each bounded browser coverage slice
 npm run test:changed
 
 # Run the server regression and every configured browser project
@@ -87,7 +87,10 @@ After a successful test run, the wrapper records the tested baseline in the matc
 `fast-chromium-served` baseline advanced by `test:fast`, while Chromium-file, Firefox-served, and
 WebKit-served use the `matrix` baseline. A successful full `test:all` refreshes both baselines.
 Fast runs therefore contribute their Chromium-served coverage to the next changed matrix without
-claiming coverage for the other three projects. Each commit is anchored under a scope- and
+claiming coverage for the other three projects. Those projects are deliberately bounded in
+`playwright.config.js`: Chromium-file contains the direct-file canaries and file-only contracts,
+while Firefox and WebKit contain the representative compatibility smoke tests. They do not repeat
+the complete functional suite owned by Chromium-served. Each commit is anchored under a scope- and
 worktree-specific `refs/fallowborn/test-baselines/...` reference so another worktree cannot replace
 its synthetic baseline and Git garbage collection cannot prune it. Failure to create the anchor
 fails baseline recording instead of silently promising persistence. A clean tracked working tree
@@ -209,11 +212,13 @@ artificial gameplay test.
 - Opens the repository's real `index.html` through a `file://` URL.
 - Exercises the script order and relative asset loading used by the downloadable game.
 - Is the primary target for the determinism canary and bounded simulation smoke test.
-- Runs slot tests when Chromium permits storage for the file origin.
+- Runs the direct-file canaries and every explicitly file-only specification, including slot tests
+  when Chromium permits storage for the file origin.
 
 `chromium-served`
 
 - Opens the unchanged repository at `http://127.0.0.1:4173/`.
+- Runs the complete functional specification suite once.
 - Uses the small allowlisted server in `tests/e2e/support/static-server.js`.
 - Runs the complete origin-backed `localStorage` contract.
 - Detects HTTP asset failures and response errors that a file URL cannot represent.
@@ -222,8 +227,8 @@ artificial gameplay test.
 
 - Run the same unchanged served game in Firefox and WebKit.
 - May be run manually after Chromium when the owner wants a staged compatibility check.
-- Cover clean boot, ordinary player journeys, and the representative settlement-council
-  keyboard and responsive-layout contract.
+- Run a bounded smoke slice covering clean boot, ordinary player journeys, and the representative
+  settlement-council keyboard and responsive-layout contract.
 - Keep direct `file://` determinism and bounded simulation canaries on Chromium, where they
   provide one stable primary baseline without tripling the slowest cases.
 

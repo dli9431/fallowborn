@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.138.4';
+  FB.VERSION = '1.139.0';
   FB.CHANGELOG = [
+    { v: '1.139.0', date: '2026-08-17', changes: [
+      'Eligible cultures and pagan faiths can now launch peacetime raiding expeditions from the Deeds tab to plunder target provinces and seize captives.'
+    ] },
     { v: '1.138.4', date: '2026-08-17', changes: [
       'AI rulers now respect social station when offering marriages, preventing royal proposals to distant commoner households.'
     ] },

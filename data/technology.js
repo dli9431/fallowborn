@@ -236,6 +236,22 @@ window.FBDATA = window.FBDATA || {};
       late_medieval_crafts_commerce:{
         mode:'soft', tech:['spinning_wheel','marine_insurance','deep_shaft_mining'],
         rationale:'Spinning wheels, marine insurance, and deep mining improve productivity and risk management across late-game economies.'
+      },
+      overseas_raiding:{
+        mode:'hard', tech:['longships'], fallback:'coastal_and_border_raiding',
+        rationale:'Trans-oceanic and upriver inland raiding requires specialized clinker longships, while baseline coastal and overland border reaving operates with basic transport.'
+      },
+      mounted_raiding:{
+        mode:'soft', tech:['cavalry_saddles','stirrups','mounted_archery'],
+        rationale:'Cavalry innovations expand overland raiding range, speed, and carry capacity.'
+      },
+      raiding_navigation:{
+        mode:'soft', tech:['coastal_piloting','celestial_navigation','mariners_compass'],
+        rationale:'Navigational arts extend maximum raid range across sea zones and reduce expedition hazards.'
+      },
+      raiding_party_scale:{
+        mode:'soft', tech:['shield_walls','martial_drill','professional_retinues','logistics_magazines'],
+        rationale:'Martial and logistics innovations improve raiding host discipline against garrisons and increase plunder capacity.'
       }
     }
   };

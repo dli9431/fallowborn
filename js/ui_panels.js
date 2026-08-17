@@ -88,6 +88,7 @@ window.FB = window.FB || {};
     withdraw_great_holy_war:'faith', give_alms:'faith', hold_feast:'faith',
     great_holy_war_status:'war', great_holy_war_settlement:'war',
     send_envoy:'war', foreign_policy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
+    raid_expedition:'war',
     declare_independence:'war', pay_homage:'war', appeal_lord:'war',
     swear_fealty:'war'
   };

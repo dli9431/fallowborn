@@ -1259,5 +1259,22 @@ FBDATA.balance = {
   settlementVillageTax: 0.75,
   settlementTownTax: 2.0,
   settlementCityTax: 4.5,
-  aiMaxBuildingsPerYear: 1
+  aiMaxBuildingsPerYear: 1,
+  /* historical raiding expeditions (js/actions.js & js/world.js) */
+  raidBaseRange: 2,
+  raidLongshipRange: 4,
+  raidCooldownDays: 180,
+  raidStandingPenalty: -25,
+  raidDevLossChance: 0.20,
+  raidBuildingRuinChance: 0.35,
+  raidMarketShockSeasons: 4,
+  raidPopLossRate: 0.04,
+  raidCaptiveRate: 0.40,
+  aiRaidChance: 0.12
+};
+
+FBDATA.raidingTraditions = {
+  cultures: ['norse', 'magyar', 'turkic', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'],
+  faiths: ['norse_pagan', 'tengri', 'baltic_pagan', 'slavic_pagan'],
+  faithGroups: ['pagan']
 };
