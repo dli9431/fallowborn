@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.136.1';
+  FB.VERSION = '1.136.2';
   FB.CHANGELOG = [
+    { v: '1.136.2', date: '2026-08-16', changes: [
+      'AI rulers no longer build over player-held holdings, and save compaction keeps long campaigns within browser storage limits.'
+    ] },
     { v: '1.136.1', date: '2026-08-16', changes: [
       'Sovereign realm checks now tolerate partially initialized player state, preventing setup-time errors.'
     ] },
@@ -3139,7 +3142,8 @@ window.FB = window.FB || {};
        family stops growing — no new kinspouses, no new babies. The automatic
        counterpart of p.flags.noChildren's "the house is full enough". Sealed
        betrothals below still wed: they join two existing records. */
-    const familyFull = FB.familySize(s) >= (FBDATA.balance.familyMaxChars || 4000);
+    const familyFull = FB.familySize(s) >=
+      (FBDATA.balance.familyMaxChars !== undefined ? FBDATA.balance.familyMaxChars : 4000);
     const kin = FB.kinOf(s);
     const all = [];
     for (const g of ['parents', 'grandparents', 'siblings', 'children', 'grandchildren',

@@ -4853,20 +4853,38 @@ window.FB = window.FB || {};
         if (builtThisYear >= maxPerYear) break;
         const pid = sortedCounties[ci];
         if (contested[pid] || changed[pid]) continue;
+        if (FB.playerDirectlyHoldsCounty && FB.playerDirectlyHoldsCounty(state, pid)) continue;
         const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
         if (!pr || pr.wasteland) continue;
 
         const settlements = FB.settlementsOf ? FB.settlementsOf(state, pid) : [];
         if (!settlements.length) continue;
 
+        const done = FB.builtIn ? FB.builtIn(state, pid) : [];
+        const existingAt = Object.create(null);
+        const countIn = Object.create(null);
+        for (let di = 0; di < done.length; di++) {
+          if (!done[di].ruined) {
+            existingAt[done[di].s + ':' + done[di].id] = 1;
+            countIn[done[di].id] = (countIn[done[di].id] || 0) + 1;
+          }
+        }
+        const dev = (state.dev && state.dev[pid]) || 1;
+
         let chosen = null;
         for (let bi = 0; bi < buildingPriority.length; bi++) {
           const bid = buildingPriority[bi];
           const bdef = FBDATA.buildings && FBDATA.buildings[bid];
-          if (!bdef) continue;
+          if (!bdef || bdef.fort) continue;
+          if (bdef.devMin && dev < bdef.devMin) continue;
+          if (bdef.coastal && !pr.coastal) continue;
+          if (bdef.terrains && bdef.terrains.indexOf(pr.terrain) < 0) continue;
+          if (bdef.maxCounty && (countIn[bid] || 0) >= bdef.maxCounty) continue;
+          if (bdef.requiresTech && FB.techRequirementMet &&
+              !FB.techRequirementMet(state, bdef.requiresTech, rid)) continue;
 
           for (let sIdx = 0; sIdx < settlements.length; sIdx++) {
-            if (FB.aiCanBuildAt && FB.aiCanBuildAt(state, rid, pid, sIdx, bid)) {
+            if (!existingAt[sIdx + ':' + bid]) {
               chosen = { pid: pid, s: sIdx, id: bid, def: bdef };
               break;
             }
