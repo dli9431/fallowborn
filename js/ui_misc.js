@@ -1803,6 +1803,55 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* ================= first-time player tips =================
+     Short, useful lessons for a brand-new player, told once ever per install:
+     a day-by-day drip of UI orientation on the first natural days (fired from
+     the day ticker), plus contextual one-liners fired from engine choke points
+     the first time a situation occurs. Fired tips are recorded in the
+     browser-local uiPrefs.tipsSeen, so no save ever re-teaches them. The layer
+     falls silent under its own Settings switch (hideTips), under the wider
+     guide-hints switch (hideBeginnerHints), or when the install was
+     grandfathered in with an existing save (tipsGrandfathered). */
+  const DRIP_TIPS = [
+    { id:'drip-autosave', text:'💡 The chronicle autosaves as the days pass — Continue on the title screen picks a life back up.' },
+    { id:'drip-menu', text:'💡 The menu (Esc or ☰) holds Save & Load, Settings, and the Guide — the Guide explains every system in depth.' },
+    { id:'drip-speed', text:'💡 The pace of the days is yours — − and + (or Settings) slow and quicken the flow; slow down when much is happening.' },
+    { id:'drip-deeds', text:'💡 The Deeds tab (D) is where things get done — a daily focus that repeats, and one-shot deeds that spend the day.' },
+    { id:'drip-self', text:'💡 The Self tab (S) is your character — skills, traits, and belongings.' },
+    { id:'drip-kin', text:'💡 The Kin tab (K) is your family — spouse, children, and kin; tap a child to guide their education.' },
+    { id:'drip-land', text:'💡 The Land tab (L) looks at any county up close — buy plots, and manage what you hold.' },
+    { id:'drip-network', text:'💡 The Network tab (N) lists the ties around your household — connections, retainers, guilds, and courts — and what each tie currently does.' },
+    { id:'drip-chronicle', text:'💡 The Chronicle tab (C) remembers the story — every piece of news and every choice you make.' },
+    { id:'drip-topbar', text:'💡 The top bar keeps the date, the flow of days, and your stats — hover or tap gold, prestige, piety, or voice for a breakdown.' },
+    { id:'drip-toasts', text:'💡 These corner notes fade on their own — tap one to dismiss it sooner.' },
+    { id:'drip-heir', text:'💡 Death is not the end here — a spouse and children (Kin tab) are how the chronicle outlives a life.' },
+    { id:'drip-settings', text:'💡 When the teaching grows old, Settings → Guidance can quiet these tips and the other beginner help.' }
+  ];
+
+  UI.tipDue = function (id) {
+    const s = FB.state;
+    if (!s || !s.player || FB.game.observe) return false;
+    const prefs = FB.game.uiPrefs;
+    if (!prefs || prefs.hideTips || prefs.hideBeginnerHints ||
+        prefs.tipsGrandfathered) return false;
+    if (!prefs.tipsSeen) prefs.tipsSeen = {};
+    if (prefs.tipsSeen[id]) return false;
+    prefs.tipsSeen[id] = 1;
+    if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
+    return true;
+  };
+  UI.maybeTip = function (id, text, params) {
+    if (!UI.tipDue(id)) return false;
+    UI.toast(text, params);
+    return true;
+  };
+  UI.dailyTip = function () {
+    for (const tip of DRIP_TIPS) {
+      if (UI.maybeTip(tip.id, tip.text)) return true;
+    }
+    return false;
+  };
+
   /* ================= map politics hookup ================= */
   /* Rebuilding the map base image is the priciest paint in the game, and one
      world tick can transfer several provinces — coalesce to a single rebuild

@@ -5146,6 +5146,10 @@ window.FB = window.FB || {};
             '🔥 {realm} declares war upon YOU!', { realm: r.name }));
           FB.warFooting(state);
           FB.queueEvent(state, 'war_defense_muster', {});
+          if (FB.ui && FB.ui.maybeTip) {
+            FB.ui.maybeTip('war-declared',
+              '💡 War has come! The muster raises your host — follow the fighting on the map and keep the household safe.');
+          }
         }
       }
     }
@@ -5179,6 +5183,10 @@ window.FB = window.FB || {};
             defending: true, casus: { type: 'independence' } };
           FB.warFooting(state);
           FB.queueEvent(state, 'war_defense_muster', {});
+          if (FB.ui && FB.ui.maybeTip) {
+            FB.ui.maybeTip('war-declared',
+              '💡 War has come! The muster raises your host — follow the fighting on the map and keep the household safe.');
+          }
         }
       } else if (tr && tr.alive && !tr.war) {
         tr.war = { enemy: id, years: 0, captures: 0,
@@ -5699,6 +5707,10 @@ window.FB = window.FB || {};
     if (p.flags.home_burned) { delete p.flags.home_burned; p.flags.home_burned2 = 1; }
     else p.flags.home_burned = 1;
     FB.queueEvent(state, 'devastation_raiders', {});
+    if (FB.ui && FB.ui.maybeTip) {
+      FB.ui.maybeTip('home-burned',
+        '💡 Raiders burn the land — devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away.');
+    }
     /* after the second burning the lord's steward makes his offer — but only
        a freeholder has a freedom left to sell */
     if (p.flags.home_burned2 && p.tier === 1) {

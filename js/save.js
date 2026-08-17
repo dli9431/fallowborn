@@ -485,6 +485,20 @@ window.FB = window.FB || {};
 
   S.hasAuto = function () { return !!S.read('auto'); };
 
+  /* existence probe for callers that must not pay for a decode (the first-time
+     tips upgrade path): true when the autosave or any manual slot holds bytes */
+  S.hasAnySave = function () {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k === PREFIX + 'auto' || (k && k.indexOf(PREFIX + 'slot') === 0)) {
+          if (localStorage.getItem(k)) return true;
+        }
+      }
+    } catch (e) { /* storage refused — treat as no save */ }
+    return false;
+  };
+
   S.bookmarkOf = function (data) {
     const start = data && data.state && data.state.start;
     return start && start.id ? String(start.id) : '867';

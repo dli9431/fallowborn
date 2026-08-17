@@ -868,6 +868,10 @@ window.FB = window.FB || {};
         playerPays:pair.terms.subjectPays ? 'yes' : 'no',
         aimId:FB.rulerAimSnapshot(state, chosen.rid).id
       });
+      if (FB.ui && FB.ui.maybeTip) {
+        FB.ui.maybeTip('marriage-offer',
+          '💡 A marriage offer! Weigh the house, the dowry, and the standing — a good match is the surest ladder.');
+      }
     } else {
       FB.queueEvent(state, 'ruler_overture', {
         realmId:chosen.rid, rulerGeneration:rulerGeneration(realm2),

@@ -1002,6 +1002,10 @@
     if (!prior.active) {
       FB.news(state, FB.msg('news.market.hardship_started',
         '🥣 The household cannot fully fund its necessities; rationing and makeshift economies begin.', {}));
+      if (FB.ui && FB.ui.maybeTip) {
+        FB.ui.maybeTip('hardship',
+          '💡 Coin runs short — a steadier livelihood (Deeds tab) or a loan from the Coin & credit ledger can bridge a lean season.');
+      }
     } else if (!provisionsFunded && (seasons === 2 || seasons === 4)) {
       FB.news(state, FB.msg('news.market.hardship_escalated',
         '⚠ Household scarcity deepens after {seasons} short seasons; resident health is now at greater risk.', {
