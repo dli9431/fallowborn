@@ -307,11 +307,14 @@ test('recordBaseline updates a scoped persistent ref', function (t) {
     head);
 });
 
-test('fast and matrix baselines use independent markers and refs', function (t) {
+test('a successful full matrix refreshes both coverage-slice baselines', function (t) {
   const repository = temporaryDirectory(t, 'fallowborn-scoped-baseline-');
   const trackedPath = path.join(repository, 'tracked.txt');
   const matrixMarker = path.join(repository, '.last-tested-commit.matrix');
   const fastMarker = path.join(repository, '.last-tested-commit.fast-chromium-served');
+  const matrixRun = path.join(repository, '.last-test-run.matrix.json');
+  const fastRun = path.join(
+    repository, '.last-test-run.fast-chromium-served.json');
 
   testRunState.git(['init', '--quiet'], repository);
   fs.writeFileSync(trackedPath, 'content\n', 'utf8');
@@ -323,11 +326,45 @@ test('fast and matrix baselines use independent markers and refs', function (t) 
   ], repository);
   const head = testRunState.git(['rev-parse', 'HEAD'], repository);
 
-  const matrixRef = testRunState.recordBaseline(matrixMarker, head, 'matrix');
-  const fastRef = testRunState.recordBaseline(
-    fastMarker, head, 'fast-chromium-served');
+  fs.writeFileSync(matrixRun, JSON.stringify({
+    status:'failed', failedTests:['matrix-test']
+  }), 'utf8');
+  fs.writeFileSync(fastRun, JSON.stringify({
+    status:'failed', failedTests:['fast-test']
+  }), 'utf8');
 
+  const recorded = testRunState.recordSuccessfulScopes(repository, head, [
+    'matrix', 'fast-chromium-served', 'matrix'
+  ]);
+  const matrixRef = recorded[0].ref;
+  const fastRef = recorded[1].ref;
+
+  assert.deepEqual(recorded.map(function (entry) { return entry.scope; }), [
+    'matrix', 'fast-chromium-served'
+  ]);
   assert.notEqual(matrixRef, fastRef);
   assert.equal(fs.readFileSync(matrixMarker, 'utf8'), head + '\n');
   assert.equal(fs.readFileSync(fastMarker, 'utf8'), head + '\n');
+  assert.deepEqual(testRunState.readLastRun(matrixRun), {
+    status:'passed', failedTests:[]
+  });
+  assert.deepEqual(testRunState.readLastRun(fastRun), {
+    status:'passed', failedTests:[]
+  });
+});
+
+test('changed command reuses fast Chromium coverage and isolates the other projects', function () {
+  const packagePath = path.resolve(__dirname, '..', 'package.json');
+  const scripts = JSON.parse(fs.readFileSync(packagePath, 'utf8')).scripts;
+  const changedSteps = scripts['test:changed'].split(' && ');
+
+  assert.equal(changedSteps.length, 3);
+  assert.match(changedSteps[1], /--state-scope=fast-chromium-served/);
+  assert.match(changedSteps[1], /--project=chromium-served/);
+  assert.match(changedSteps[2], /--state-scope=matrix/);
+  assert.match(changedSteps[2], /--project=chromium-file/);
+  assert.match(changedSteps[2], /--project=firefox-served/);
+  assert.match(changedSteps[2], /--project=webkit-served/);
+  assert.doesNotMatch(changedSteps[2], /--project=chromium-served(?:\s|$)/);
+  assert.match(scripts['test:all'], /--record-state-scope=fast-chromium-served/);
 });

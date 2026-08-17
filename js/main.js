@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.138.0';
+  FB.VERSION = '1.138.1';
   FB.CHANGELOG = [
+    { v: '1.138.1', date: '2026-08-17', changes: [
+      'Character creation now keeps family choices concise, hides redundant community choices, and leaves the final card focused on the shareable world seed.',
+      'Title music controls now yield the corner to Back on phone-sized birthplace and character screens.'
+    ] },
     { v: '1.138.0', date: '2026-08-17', changes: [
       'Beginner lessons now appear as coachmarks that point at the control they teach and wait for you, with Back and Next paging through the tour.'
     ] },
@@ -1240,20 +1244,17 @@ window.FB = window.FB || {};
      never player-edited; every preset keeps the protagonist an adult (>= 16)
      and leaves siblings and/or children behind as heirs. */
   G.FAMILY_PRESETS = [
-    { id: 'standard', name: 'A Youth of Sixteen',
-      diff: 'the scenario’s own difficulty',
-      desc: 'Unmarried, your parents and siblings beside you — the whole road ahead.',
-      situation: 'unmarried, your parents and siblings beside you',
+    { id: 'standard', name: 'Youth',
+      diff: 'age 16 · the whole road ahead',
+      desc: 'Unmarried. Your parents and siblings are beside you.',
       age: 0 }, // 0 = FBDATA.balance.startAge
-    { id: 'established', name: 'An Established Household',
-      diff: 'a head start — the succession is secured early, fewer years remain',
-      desc: 'Thirty years old and married, with young children already in the cradle.',
-      situation: 'with a spouse and young children',
+    { id: 'established', name: 'Established',
+      diff: 'age 30 · a head start, fewer years left',
+      desc: 'Married, with young children in the cradle.',
       age: 30, spouseAge: [-4, 4], children: [1, 2], eldestMin: 1 },
-    { id: 'elder', name: 'An Elder of the Family',
-      diff: 'the hardest — an adult heir from day one, but a short remaining runway',
-      desc: 'Forty-eight years old and married, with grown children ready to inherit.',
-      situation: 'with a spouse and grown children',
+    { id: 'elder', name: 'Elder',
+      diff: 'age 48 · an adult heir, little time left',
+      desc: 'Married, with grown children ready to inherit.',
       age: 48, spouseAge: [-4, 4], children: [2, 3], eldestMin: 16 }
   ];
 
@@ -1778,7 +1779,6 @@ window.FB = window.FB || {};
   }
 
   function showChargen() {
-    const bookmark = FB.activeBookmark;
     /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
        and disables the other; any other scenario leaves both free */
     const scenSex = G.pending.scenario && G.pending.scenario.sex;
@@ -1802,38 +1802,45 @@ window.FB = window.FB || {};
     G.pending.culture = currentCommunity.culture;
     G.pending.religion = currentCommunity.religion;
     const communityBox = $('cg-community');
-    communityBox.setAttribute('role', 'radiogroup');
-    communityBox.setAttribute('aria-label', FB.T('Choose your community'));
-    communityBox.innerHTML = '<div class="hint">' +
-      FB.esc(FB.T('Choose your community')) + '</div>';
-    communities.forEach(function (community, index) {
-      const label = document.createElement('label');
-      label.className = 'radio cgfamily-card';
-      label.innerHTML = '<input type="radio" name="cg-community" value="' + index + '">' +
-        '<span><b>' + FB.esc(communityLabel(community)) + '</b></span>';
-      communityBox.appendChild(label);
-    });
-    let wantedCommunity = 0;
-    for (let ci = 0; ci < communities.length; ci++) {
-      if (communities[ci].culture === currentCommunity.culture &&
-          communities[ci].religion === currentCommunity.religion) {
-        wantedCommunity = ci;
-        break;
-      }
-    }
-    communityBox.querySelector(
-      'input[name=cg-community][value="' + wantedCommunity + '"]').checked = true;
-    communityBox.querySelectorAll('input[name=cg-community]').forEach(function (radio) {
-      radio.addEventListener('change', function () {
-        const selected = communities[parseInt(radio.value, 10)] || communities[0];
-        G.pending.culture = selected.culture;
-        G.pending.religion = selected.religion;
-        const selectedSex = document.querySelector('input[name=cg-sex]:checked').value;
-        $('cg-name').value = FB.randomName(selected.culture, selectedSex);
-        G.pending.name = null;
-        updateCgSummary();
+    /* the community choice only exists when the county actually holds more
+       than one — a single-community county has nothing to ask */
+    communityBox.classList.toggle('hidden', communities.length < 2);
+    if (communities.length > 1) {
+      communityBox.setAttribute('role', 'radiogroup');
+      communityBox.setAttribute('aria-label', FB.T('Choose your community'));
+      communityBox.innerHTML = '<div class="hint">' +
+        FB.esc(FB.T('Choose your community')) + '</div>';
+      communities.forEach(function (community, index) {
+        const label = document.createElement('label');
+        label.className = 'radio cgfamily-card';
+        label.innerHTML = '<input type="radio" name="cg-community" value="' + index + '">' +
+          '<span><b>' + FB.esc(communityLabel(community)) + '</b></span>';
+        communityBox.appendChild(label);
       });
-    });
+      let wantedCommunity = 0;
+      for (let ci = 0; ci < communities.length; ci++) {
+        if (communities[ci].culture === currentCommunity.culture &&
+            communities[ci].religion === currentCommunity.religion) {
+          wantedCommunity = ci;
+          break;
+        }
+      }
+      communityBox.querySelector(
+        'input[name=cg-community][value="' + wantedCommunity + '"]').checked = true;
+      communityBox.querySelectorAll('input[name=cg-community]').forEach(function (radio) {
+        radio.addEventListener('change', function () {
+          const selected = communities[parseInt(radio.value, 10)] || communities[0];
+          G.pending.culture = selected.culture;
+          G.pending.religion = selected.religion;
+          const selectedSex = document.querySelector('input[name=cg-sex]:checked').value;
+          $('cg-name').value = FB.randomName(selected.culture, selectedSex);
+          G.pending.name = null;
+          updateCgSummary();
+        });
+      });
+    } else {
+      communityBox.innerHTML = '';
+    }
     /* the starting-family preset picker, rebuilt per visit so a shared start
        code's preset (or a pick made before stepping Back) survives */
     const famBox = $('cg-family');
@@ -1854,9 +1861,6 @@ window.FB = window.FB || {};
         updateCgSummary();
       });
     });
-    $('cg-era-hint').textContent = FB.T(
-      'Playing a woman in {year} is a harder road: some doors open only by marriage, others only by defiance.',
-      { year:bookmark.date.year });
     updateCgSummary();
     FB.ui.showScreen('chargen');
   }
@@ -1876,28 +1880,9 @@ window.FB = window.FB || {};
   }
 
   function updateCgSummary() {
-    const bookmark = FB.activeBookmark;
-    const preset = selectedFamilyPreset();
-    const pr = FB.world.byId[G.pending.provinceId];
-    const community = selectedCommunity();
-    /* a birthplace beyond the county seat is named in the summary; the seat
-       itself keeps the long-standing one-line form */
-    const settIdx = G.pending.settlementIdx | 0;
-    const sett = settIdx > 0 ? FB.settlementsOf(null, pr.id)[settIdx] : null;
-    $('cg-summary').innerHTML = '<b>' + FB.esc(sett
-      ? FB.T('{scenario} in {settlement}, {province}', {
-          scenario: FB.L(G.pending.scenario.name), settlement: sett.name,
-          province: FB.L(pr.name)
-        })
-      : FB.T('{scenario} in {province}', {
-          scenario: FB.L(G.pending.scenario.name), province: FB.L(pr.name)
-        })) + '</b><br>' +
-      FB.esc(communityLabel(community)) + ' · ' +
-      FB.esc(FB.T('beginning in {year} AD, aged {age}, {situation}.', {
-        year: bookmark.date.year,
-        age: preset.age || FBDATA.balance.startAge,
-        situation: FB.L(preset.situation)
-      })) + '<br>' + FB.esc(FB.T('🔑 World seed:')) + ' <b>' +
+    /* the bottom card holds only the start seed — the scenario, birthplace,
+       and community already say themselves on the cards above */
+    $('cg-summary').innerHTML = FB.esc(FB.T('🔑 World seed:')) + ' <b>' +
       FB.esc(G.pending.seed || '') + '</b> — ' +
       FB.esc(FB.T('once your story begins, the ☰ menu holds the full start code to share.'));
   }

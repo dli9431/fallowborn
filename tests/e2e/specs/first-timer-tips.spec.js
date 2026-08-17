@@ -532,8 +532,15 @@ test('an install with an existing save is grandfathered out of tips',
       return page.evaluate(function () { return FB.save.hasAnySave(); });
     }).toBe(true);
 
-    // an upgrade arrives with prefs that predate the tips layer
-    await page.evaluate(function () { localStorage.removeItem('fb_ui'); });
+    // an upgrade arrives with prefs that predate the tips layer: the tips
+    // keys are absent, but the choices the player already made in earlier
+    // versions (the boot music question, say) are still on record
+    await page.evaluate(function () {
+      const prefs = JSON.parse(localStorage.getItem('fb_ui')) || {};
+      delete prefs.tipsSeen;
+      delete prefs.tipsGrandfathered;
+      localStorage.setItem('fb_ui', JSON.stringify(prefs));
+    });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await expect.poll(async function () {

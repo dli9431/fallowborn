@@ -48,7 +48,7 @@ npm run test:fast
 # Fast Chromium-only full suite
 npm run test:fast:all
 
-# Rerun preceding failures, or tests affected since the last successful snapshot (all browsers)
+# Rerun preceding failures, or tests affected in each browser coverage slice
 npm run test:changed
 
 # Run the server regression and every configured browser project
@@ -74,41 +74,45 @@ npm run test:file
 npm run test:served
 ```
 
-Every wrapped Playwright run writes its result and failed-test ids to an ignored scoped file:
-`.last-test-run.matrix.json` for the all-browser commands and
-`.last-test-run.fast-chromium-served.json` for the fast commands. A failure is retried only within
-the same scope, so a Chromium-only repair run cannot consume or replace a Firefox, WebKit, or
-file-origin failure. This makes the ordinary repair loop `test:fast` -> edit the failure ->
-`test:fast`; no spec name is required. A setup error, invalid state file, or interrupted run does
-not activate the focused retry path.
+Every wrapped Playwright run writes its result and failed-test ids to an ignored coverage-slice
+file. `.last-test-run.fast-chromium-served.json` is shared by `test:fast` and the Chromium-served
+portion of `test:changed`; `.last-test-run.matrix.json` covers the Chromium-file, Firefox-served,
+and WebKit-served portion. A failure is retried only within its slice, so a Chromium-served repair
+run cannot consume or replace a compatibility-browser or file-origin failure. This makes the
+ordinary repair loop `test:fast` -> edit the failure -> `test:fast`; no spec name is required. A
+setup error, invalid state file, or interrupted run does not activate the focused retry path.
 
 After a successful test run, the wrapper records the tested baseline in the matching ignored
-`.last-tested-commit.<scope>` file. Fast and matrix runs therefore cannot advance one another's
-coverage. Each commit is anchored under a scope- and worktree-specific
-`refs/fallowborn/test-baselines/...` reference so another worktree cannot replace its synthetic
-baseline and Git garbage collection cannot prune it. Failure to create the anchor fails baseline
-recording instead of silently promising persistence. A clean tracked working tree records `HEAD`
-directly. When tracked files have edits, the wrapper records a synthetic Git commit whose tree
-captures the staged and unstaged contents the run started with, without modifying the real index
-or branch history. It stages only paths the real index reports as changed, and the repository
-`.gitattributes` policy canonicalizes text to LF so Windows and Unix checkouts produce the same
-snapshot tree. Before staging, line-ending-only paths are discarded with Git's
+`.last-tested-commit.<scope>` file. `test:changed` runs two slices: Chromium-served uses the same
+`fast-chromium-served` baseline advanced by `test:fast`, while Chromium-file, Firefox-served, and
+WebKit-served use the `matrix` baseline. A successful full `test:all` refreshes both baselines.
+Fast runs therefore contribute their Chromium-served coverage to the next changed matrix without
+claiming coverage for the other three projects. Each commit is anchored under a scope- and
+worktree-specific `refs/fallowborn/test-baselines/...` reference so another worktree cannot replace
+its synthetic baseline and Git garbage collection cannot prune it. Failure to create the anchor
+fails baseline recording instead of silently promising persistence. A clean tracked working tree
+records `HEAD` directly. When tracked files have edits, the wrapper records a synthetic Git commit
+whose tree captures the staged and unstaged contents the run started with, without modifying the
+real index or branch history. It stages only paths the real index reports as changed, and the
+repository `.gitattributes` policy canonicalizes text to LF so Windows and Unix checkouts produce
+the same snapshot tree. Before staging, line-ending-only paths are discarded with Git's
 `--ignore-cr-at-eol` comparison, including when real content changed elsewhere. A clean-tree
 invariant rejects a mismatched snapshot instead of silently recording line-ending noise.
 
-When no failed-test retry is pending, Playwright selects affected test files between that
-baseline and the current tree. New untracked files remain affected until committed. If the
-marker does not exist or its recorded baseline commit is unavailable, the runner uses the current
+When no failed-test retry is pending, Playwright selects affected test files between that slice's
+baseline and the current tree. New untracked files remain affected until committed. If a marker
+does not exist or its recorded baseline commit is unavailable, the runner uses the current
 branch's upstream merge base when one exists. This includes committed local work on an ahead
 branch. A repository without an upstream falls back to `HEAD`, selecting its uncommitted changes.
 
 ### Establishing or refreshing a baseline
 
 `npm run test:all` always runs the complete configured matrix. When it succeeds, it records the
-current tracked-worktree snapshot as the `matrix` baseline; there is no marker, report, cache, or
-reference to delete first. Use this command for the initial authoritative baseline and whenever a
-deliberate full rerun is wanted. `npm run test:fast:all` does the same for the independent
-`fast-chromium-served` scope without advancing matrix coverage.
+current tracked-worktree snapshot as both the `matrix` and `fast-chromium-served` baselines; there
+is no marker, report, cache, or reference to delete first. Use this command for the initial
+authoritative baseline and whenever a deliberate full rerun is wanted. `npm run test:fast:all`
+refreshes only `fast-chromium-served`; that coverage is then reused by `test:changed`, while the
+other three projects continue selecting changes from their older `matrix` baseline.
 
 If `test:server` or another pre-Playwright support regression fails, no successful Playwright
 baseline is recorded or advanced. Fix the support failure, rerun `npm run test:server` for quick

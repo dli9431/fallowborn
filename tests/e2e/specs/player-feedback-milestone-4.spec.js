@@ -584,17 +584,19 @@ test.describe('starting-family presets', function () {
         .toBeChecked();
     });
 
-  test('the character screen picker updates the summary and the start code',
+  test('the character screen picker shows each preset and feeds the start code',
     async function ({ page }) {
       await page.getByRole('button', { name:'New Game', exact:true }).click();
       await page.locator('#ng-seed').fill(START_CODE);
       await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-      await expect(page.locator('#cg-summary')).toContainText('aged 16');
+      // the bottom card holds only the start seed
+      await expect(page.locator('#cg-summary')).toContainText('World seed');
+      await expect(page.locator('#cg-summary')).toContainText('CADENCE');
 
       await page.locator('input[name=cg-family][value="elder"]').check();
-      await expect(page.locator('#cg-summary')).toContainText('aged 48');
-      await expect(page.locator('#cg-summary'))
+      await expect(page.locator('#cg-family')).toContainText('age 48');
+      await expect(page.locator('#cg-family'))
         .toContainText('grown children');
 
       await page.getByRole('button', {

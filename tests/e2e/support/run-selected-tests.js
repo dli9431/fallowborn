@@ -8,17 +8,28 @@ const testRunState = require('./test-run-state');
 const testRoot = path.resolve(__dirname, '..');
 const mode = process.argv[2];
 let stateScope = 'matrix';
+const recordedStateScopes = [];
 const extraArgs = process.argv.slice(3).filter(function (argument) {
-  if (argument.indexOf('--state-scope=') !== 0) return true;
-  stateScope = argument.slice('--state-scope='.length);
-  return false;
+  if (argument.indexOf('--state-scope=') === 0) {
+    stateScope = argument.slice('--state-scope='.length);
+    return false;
+  }
+  if (argument.indexOf('--record-state-scope=') === 0) {
+    recordedStateScopes.push(argument.slice('--record-state-scope='.length));
+    return false;
+  }
+  return true;
 });
 
 if ((mode !== 'all' && mode !== 'changed') ||
-    !/^[a-z0-9][a-z0-9-]*$/.test(stateScope)) {
+    !/^[a-z0-9][a-z0-9-]*$/.test(stateScope) ||
+    recordedStateScopes.some(function (scope) {
+      return !/^[a-z0-9][a-z0-9-]*$/.test(scope);
+    })) {
   console.error(
     'Usage: node support/run-selected-tests.js <all|changed> ' +
-    '[--state-scope=<scope>] [Playwright arguments]');
+    '[--state-scope=<scope>] [--record-state-scope=<scope>] ' +
+    '[Playwright arguments]');
   process.exit(2);
 }
 
@@ -77,13 +88,17 @@ if (result.error) {
 }
 if (result.status !== 0) process.exit(result.status === null ? 1 : result.status);
 
-let baselineRef;
+let baselines;
 try {
-  baselineRef = testRunState.recordBaseline(markerPath, snapshot.commit, stateScope);
+  baselines = testRunState.recordSuccessfulScopes(
+    testRoot, snapshot.commit, [stateScope].concat(recordedStateScopes));
 } catch (error) {
   console.error('Tests passed, but the successful baseline could not be recorded: ' + error.message);
   process.exit(2);
 }
-console.log(
-  'Recorded successful tracked-worktree test baseline: ' + snapshot.commit +
-  ' (HEAD ' + snapshot.head + ', scope ' + stateScope + ', ref ' + baselineRef + ')');
+baselines.forEach(function (baseline) {
+  console.log(
+    'Recorded successful tracked-worktree test baseline: ' + snapshot.commit +
+    ' (HEAD ' + snapshot.head + ', scope ' + baseline.scope +
+    ', ref ' + baseline.ref + ')');
+});

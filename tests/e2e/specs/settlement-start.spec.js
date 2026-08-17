@@ -66,13 +66,15 @@ test('a tapped settlement becomes the birthplace and lands in state and the star
     await expect(page.locator('#btn-pick-random'))
       .toContainText('Begin in ' + wanted[0]);
 
-    // pick the second settlement; chargen names it
+    // pick the second settlement; it becomes the pending birthplace slot
     const pid = await page.evaluate(function () {
       return FB.game.pending.provinceId;
     });
     await buttons.nth(1).click();
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-    await expect(page.locator('#cg-summary')).toContainText(wanted[1]);
+    expect(await page.evaluate(function () {
+      return FB.game.pending.settlementIdx;
+    })).toBe(1);
 
     await beginAndDismiss(page);
     const after = await page.evaluate(function () {
@@ -117,11 +119,9 @@ test('Back walks the stages and the county seat remains the default start',
     }).toBe('settlement');
     await page.locator('#btn-pick-random').click(); // "Begin in {seat}"
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
-    const countyName = await page.evaluate(function () {
-      return FB.L(FB.world.byId[FB.game.pending.provinceId].name);
-    });
-    await expect(page.locator('#cg-summary'))
-      .toContainText('Free Farmer in ' + countyName);
+    expect(await page.evaluate(function () {
+      return FB.game.pending.settlementIdx;
+    })).toBe(0);
 
     await beginAndDismiss(page);
     const after = await page.evaluate(function () {
@@ -146,10 +146,6 @@ test('a start code carries the birthplace settlement',
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await expect(page.locator('#cg-name')).toHaveValue('Ada');
 
-    const settName = await page.evaluate(function () {
-      return FB.settlementsOf(null, 'london')[1].name;
-    });
-    await expect(page.locator('#cg-summary')).toContainText(settName);
     expect(await page.evaluate(function () {
       return FB.game.pending.settlementIdx;
     })).toBe(1);

@@ -914,13 +914,16 @@ test('compaction never runs retroactively over a loaded save',
         if (!succession || !succession.members) continue;
         for (const id in succession.members) {
           const m = succession.members[id];
-          const charId = m.charId || FB.courtCharacterId(m.id);
+          /* Serialized member and character records no longer repeat their
+             map key as an id property - the restore boundary re-derives it -
+             so fish in this snapshot by the keys themselves. */
+          const charId = m.charId || FB.courtCharacterId(id);
           const c = data.state.chars[charId];
           if (!c || id === succession.rulerMemberId || m.role === 'consort') continue;
           m.alive = false;
           c.dead = true;
           c.died = data.state.date.year;
-          planted = c.id;
+          planted = charId;
           break;
         }
         if (planted) break;

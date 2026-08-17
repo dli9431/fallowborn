@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/main.js',
   'js/population.js',
   'js/world.js',
   'js/ui_panels.js',
@@ -357,6 +358,7 @@ test('1066 Iona creates a Gaelic Catholic household beneath its Norse ruler and 
 test('community choices use culture-sensitive names and survive Back to the same county',
   async function ({ page }) {
     await reachIonaCommunityPicker(page);
+    await expect(page.locator('#cg-community')).toBeVisible();
     const choices = page.locator('input[name=cg-community]');
     await expect(choices).toHaveCount(2);
     await expect(page.locator('#cg-community')).toContainText('Gaelic');
@@ -471,7 +473,9 @@ test('legacy five-part and current six-, seven-, and eight-part codes remain acc
       if (i) await openGame(page, testInfo);
       await useStartCode(page, codes[i]);
       await expect(page.locator('#cg-name')).toHaveValue('Ada');
-      await expect(page.locator('input[name=cg-community]')).toHaveCount(1);
+      // a single-community county has nothing to ask — the picker stays hidden
+      await expect(page.locator('#cg-community')).toBeHidden();
+      await expect(page.locator('input[name=cg-community]')).toHaveCount(0);
       expect(await page.evaluate(function () {
         return FB.game.pending.culture + '.' + FB.game.pending.religion;
       })).toBe('english.catholic');

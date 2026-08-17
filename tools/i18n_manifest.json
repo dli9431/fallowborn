@@ -49166,16 +49166,6 @@
         "text": "Requires 200 prestige; currently {current}."
       }
     },
-    "src.05b5bae9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "beginning in {year} AD, aged {age}, {situation}."
-      }
-    },
     "src.05b68ba5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52916,6 +52906,16 @@
       ],
       "source": {
         "text": "A peace envoy must address a living sovereign court."
+      }
+    },
+    "src.0dc27139": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Unmarried. Your parents and siblings are beside you."
       }
     },
     "src.0dc48142": {
@@ -57474,6 +57474,16 @@
         "text": "War Condemnation"
       }
     },
+    "src.1777d175": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "age 16 · the whole road ahead"
+      }
+    },
     "src.17799bc7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57503,16 +57513,6 @@
       ],
       "source": {
         "text": "Left for dead; the house was cast down in the night."
-      }
-    },
-    "src.177c3fe7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "the scenario’s own difficulty"
       }
     },
     "src.177dfb5a": {
@@ -59902,16 +59902,6 @@
       ],
       "source": {
         "text": "Carlisle"
-      }
-    },
-    "src.1d27b380": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "An Elder of the Family"
       }
     },
     "src.1d2e14bb": {
@@ -65878,16 +65868,6 @@
         "text": "Independence & foreign contact"
       }
     },
-    "src.2a8d9657": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "with a spouse and young children"
-      }
-    },
     "src.2a90ace1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66216,6 +66196,16 @@
       ],
       "source": {
         "text": "war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_harry war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win"
+      }
+    },
+    "src.2b26e790": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Youth"
       }
     },
     "src.2b2f9af8": {
@@ -75352,7 +75342,8 @@
       "glossary": [],
       "location": [
         "data/cultures.js",
-        "data/map_data.js"
+        "data/map_data.js",
+        "js/main.js"
       ],
       "source": {
         "text": "Elder"
@@ -77773,16 +77764,6 @@
         "text": "Patience, whispers, and a long knife. Occupies your focus until sprung."
       }
     },
-    "src.45b5ec70": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "A Youth of Sixteen"
-      }
-    },
     "src.45d0c4a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79194,6 +79175,16 @@
       ],
       "source": {
         "text": "{sex} of {age}"
+      }
+    },
+    "src.491881f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Married, with young children in the cradle."
       }
     },
     "src.491920f5": {
@@ -81011,16 +81002,6 @@
       ],
       "source": {
         "text": "The Envoy at the Lower Bench"
-      }
-    },
-    "src.4dca6cc9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "unmarried, your parents and siblings beside you"
       }
     },
     "src.4dcf1668": {
@@ -94537,16 +94518,6 @@
         "text": "Bureaucratic Offices"
       }
     },
-    "src.6c2eaf2d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Thirty years old and married, with young children already in the cradle."
-      }
-    },
     "src.6c3a3c9b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97993,16 +97964,6 @@
       ],
       "source": {
         "text": "👑 Invested, you answer now to {realm}."
-      }
-    },
-    "src.74185486": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "the hardest — an adult heir from day one, but a short remaining runway"
       }
     },
     "src.741b2fbf": {
@@ -105330,6 +105291,16 @@
       ],
       "source": {
         "text": "Climbing the ladder"
+      }
+    },
+    "src.8400f486": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "age 48 · an adult heir, little time left"
       }
     },
     "src.8407bec1": {
@@ -125900,16 +125871,6 @@
         "text": "Let your back purchase what the wedding promised."
       }
     },
-    "src.b1e28066": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Unmarried, your parents and siblings beside you — the whole road ahead."
-      }
-    },
     "src.b1f16c57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128307,16 +128268,6 @@
         "text": "Your riders return laden, leaving mirrored smoke on their horizon."
       }
     },
-    "src.b720b0aa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "with a spouse and grown children"
-      }
-    },
     "src.b7233000": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129672,16 +129623,6 @@
         "text": "{completed} completed · {exposed} exposed"
       }
     },
-    "src.ba391986": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Playing a woman in {year} is a harder road: some doors open only by marriage, others only by defiance."
-      }
-    },
     "src.ba43eaf7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130892,7 +130833,8 @@
       "glossary": [],
       "location": [
         "data/papacy.js",
-        "js/ui_panels.js"
+        "js/ui_panels.js",
+        "js/main.js"
       ],
       "source": {
         "text": "Established"
@@ -133012,16 +132954,6 @@
       ],
       "source": {
         "text": "🎒 Plunder: {item}."
-      }
-    },
-    "src.c24a1e67": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "{scenario} in {settlement}, {province}"
       }
     },
     "src.c2552e33": {
@@ -137857,16 +137789,6 @@
         "text": "Carving provinces…"
       }
     },
-    "src.cd239d95": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "a head start — the succession is secured early, fewer years remain"
-      }
-    },
     "src.cd245f10": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138050,16 +137972,6 @@
       ],
       "source": {
         "text": "House name"
-      }
-    },
-    "src.cd8f436c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Forty-eight years old and married, with grown children ready to inherit."
       }
     },
     "src.cd916b02": {
@@ -139202,16 +139114,6 @@
       ],
       "source": {
         "text": "🎁 You give {item} to {ruler} of {realm}. (Standing {opinion})"
-      }
-    },
-    "src.d0d09cd9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "An Established Household"
       }
     },
     "src.d0dc9f17": {
@@ -143648,16 +143550,6 @@
         "text": "Technology caps have unknown key"
       }
     },
-    "src.dae5bd36": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "{scenario} in {province}"
-      }
-    },
     "src.daeb5bf5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145762,6 +145654,16 @@
         "text": "Son of the emir’s house"
       }
     },
+    "src.dfb9e1c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Married, with grown children ready to inherit."
+      }
+    },
     "src.dfba3e4e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147730,6 +147632,16 @@
       ],
       "source": {
         "text": "+{men} {unit}"
+      }
+    },
+    "src.e45c8761": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "age 30 · a head start, fewer years left"
       }
     },
     "src.e46712ab": {
@@ -149934,16 +149846,6 @@
       ],
       "source": {
         "text": "📖 {name} completes {item}, a work for the family to preserve."
-      }
-    },
-    "src.e88554dc": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "Playing a woman is a harder road: some doors open only by marriage, others only by defiance."
       }
     },
     "src.e886d8e0": {
@@ -181139,16 +181041,6 @@
         "text": "Playable line: the current protagonist and the eligible successor you can continue as. The chronicle, family property, enterprises, contracts, role-orientation history, and most money survive; prestige, piety, and Common Voice are reduced. Personal Standing, courtship, plots, attention, cooldowns, and the named-heir choice reset for the new life."
       }
     },
-    "ui:Playing a woman in {year} is a harder road: some doors open only by marriage, others only by defiance.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "year"
-      ],
-      "location": "js/main.js",
-      "source": {
-        "text": "Playing a woman in {year} is a harder road: some doors open only by marriage, others only by defiance."
-      }
-    },
     "ui:Pledged loan": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -191920,18 +191812,6 @@
         "text": "battle power"
       }
     },
-    "ui:beginning in {year} AD, aged {age}, {situation}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "age",
-        "situation",
-        "year"
-      ],
-      "location": "js/main.js",
-      "source": {
-        "text": "beginning in {year} AD, aged {age}, {situation}."
-      }
-    },
     "ui:best: {skill} {value}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -197645,29 +197525,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{save} · 🧩 another world — its mods are not the ones active now"
-      }
-    },
-    "ui:{scenario} in {province}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "province",
-        "scenario"
-      ],
-      "location": "js/main.js",
-      "source": {
-        "text": "{scenario} in {province}"
-      }
-    },
-    "ui:{scenario} in {settlement}, {province}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "province",
-        "scenario",
-        "settlement"
-      ],
-      "location": "js/main.js",
-      "source": {
-        "text": "{scenario} in {settlement}, {province}"
       }
     },
     "ui:{school} · {tutor}": {

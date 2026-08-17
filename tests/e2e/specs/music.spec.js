@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/music.js',
   'js/main.js',
+  'js/ui_misc.js',
+  'css/style.css',
   'data/music_catalog.js'
 ]);
 
@@ -920,4 +922,58 @@ test('a downloaded faith theme remains cached while another bank still uses it',
     });
 
     expect(result).toEqual({ afterOneRemoval:true, afterLastRemoval:false });
+  });
+
+/* On phone-sized screens the birthplace ("Where were you born?") and character
+   ("Who are you?") screens put their Back button in the bottom-left corner the
+   title music controls occupy — the controls hide there and return on larger
+   viewports and on screens outside that flow. */
+test('phone-sized birthplace and character screens yield the corner to Back',
+  async function ({ page }, testInfo) {
+    test.skip(!testInfo.project.name.endsWith('-served'),
+      'Synthetic soundtrack responses require the served-origin project.');
+    await page.addInitScript(function () {
+      HTMLMediaElement.prototype.canPlayType = function () { return 'probably'; };
+      localStorage.setItem('fb_ui', JSON.stringify({
+        musicChoice:'off', musicOfflineBanks:{}, musicPreferred:{}, musicRatings:{}
+      }));
+    });
+    await routeSyntheticSoundtrack(page);
+    await page.setViewportSize({ width:390, height:844 });
+    await openGame(page, testInfo);
+
+    const controls = page.locator('#title-music-controls');
+    await expect(controls).toBeVisible();
+
+    // title → New Game → fresh seed → first bookmark → Free Farmer → birthplace
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-fresh').click();
+    await page.locator('#bookmarklist .scencard').first().click();
+    await page.getByRole('button', { name:/Free Farmer/ }).click();
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await expect(controls).toBeHidden();
+
+    // take the county seat straight into the character screen
+    await page.getByRole('button', { name:'Random Province', exact:true }).click();
+    await page.locator('#btn-pick-random').click(); // "Begin in {seat}"
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await expect(controls).toBeHidden();
+
+    // the same screen on a desktop-sized viewport keeps the controls
+    await page.setViewportSize({ width:1280, height:800 });
+    await expect(controls).toBeVisible();
+    await page.setViewportSize({ width:390, height:844 });
+    await expect(controls).toBeHidden();
+
+    // Back walks settlement → county → scenario list; only the last leaves
+    // the flow and returns the controls
+    await page.locator('#btn-cg-back').click();
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await expect(controls).toBeHidden();
+    await page.locator('#btn-pick-back').click();
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await expect(controls).toBeHidden();
+    await page.locator('#btn-pick-back').click();
+    await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
+    await expect(controls).toBeVisible();
   });

@@ -227,10 +227,12 @@ preview owner colors, county details, headings, era help, Observe mode, and char
 birth year all read the same active definition. Tapping a settled birthplace or choosing
 **Random Province** proceeds directly to character creation; there is no redundant Next
 step. The province pick bar lists all authored communities, and character creation uses
-native coupled culture-and-faith radio choices in the same authored order. A new county
-selects its principal pair; Back to the same county preserves the chosen pair. Returning
-from scenarios goes back to the bookmark list without wiring another set
-of map listeners.
+native coupled culture-and-faith radio choices in the same authored order when more than one
+community is present. A single-community county omits that redundant picker and selects its
+principal pair; Back to the same county preserves the chosen pair. Family cards carry their own
+age and household summaries, while the final card shows only the world seed and points to the full
+shareable start code in the in-game menu. Returning from scenarios goes back to the bookmark list
+without wiring another set of map listeners.
 
 Hover-only affordances need a tap path (item chips toast their description).
 The enterprise catalogue shows every known enterprise for the selected settlement rather

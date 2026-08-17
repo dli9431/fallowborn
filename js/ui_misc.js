@@ -1670,6 +1670,11 @@ window.FB = window.FB || {};
       el.classList.remove('asbar');
     }
     $('game').classList.toggle('hidden', id !== null);
+    /* the birthplace and character screens put their Back button in the
+       bottom-left corner the title music controls occupy — CSS hides the
+       controls there on phone-sized screens */
+    document.body.classList.toggle('ng-back-corner',
+      id === 'pickprov' || id === 'chargen');
     if (FB.music && FB.music.refreshTitleToggle) FB.music.refreshTitleToggle();
     if (id && id !== 'loading') {
       setTimeout(function () {

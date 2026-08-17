@@ -74,7 +74,8 @@ choice as on, so later visits autoplay the title theme. The adjacent next contro
 the three title themes in catalog order and wraps at the end; while paused it changes the theme
 that will play on resume without enabling music. Enabling music from a newly loaded silent
 preference starts the selected intro normally. Entering gameplay releases any paused title
-element. The controls stay hidden during loading, gameplay, or when the soundtrack cannot play.
+element. The controls stay hidden during loading, gameplay, or when the soundtrack cannot play,
+and on phone-sized birthplace and character screens, whose Back button takes the same corner.
 
 A dedicated music button on the map HUD rail opens the music controls overlay directly over the map.
 The overlay provides full playback controls, track details, repeat, and preferences, and closes when

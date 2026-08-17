@@ -176,6 +176,29 @@ function recordBaseline(markerPath, commit, scope) {
   return ref;
 }
 
+function recordSuccessfulScopes(testRoot, commit, scopes) {
+  const recorded = [];
+  const seen = Object.create(null);
+  scopes.forEach(function (scope) {
+    if (seen[scope]) return;
+    seen[scope] = true;
+    const markerPath = path.join(testRoot, '.last-tested-commit.' + scope);
+    recorded.push({
+      scope:scope,
+      ref:recordBaseline(markerPath, commit, scope)
+    });
+  });
+  recorded.forEach(function (entry) {
+    const lastRunPath = path.join(
+      testRoot, '.last-test-run.' + entry.scope + '.json');
+    fs.writeFileSync(lastRunPath, JSON.stringify({
+      status:'passed',
+      failedTests:[]
+    }, null, 2) + '\n', 'utf8');
+  });
+  return recorded;
+}
+
 module.exports = {
   assertCleanSnapshotMatchesHead:assertCleanSnapshotMatchesHead,
   baselineRef:baselineRef,
@@ -187,6 +210,7 @@ module.exports = {
   hasMeaningfulWorkingTreeChange:hasMeaningfulWorkingTreeChange,
   readLastRun:readLastRun,
   recordBaseline:recordBaseline,
+  recordSuccessfulScopes:recordSuccessfulScopes,
   trackedWorkingTreePaths:trackedWorkingTreePaths,
   validateBaseline:validateBaseline
 };

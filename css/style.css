@@ -175,6 +175,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .title-music-toggle:hover { filter: brightness(1.2); }
 .title-music-toggle:focus-visible { outline: 2px solid #e0c060; outline-offset: 2px; }
 
+/* the birthplace and character screens put their Back button in the same
+   bottom-left corner — yield the corner on phone-sized screens */
+@media (max-width: 820px), (max-height: 520px) {
+  body.ng-back-corner .title-music-controls { display: none; }
+}
+
 .btn {
   background: #33291d; color: var(--main-text-color); border: 1px solid #66522f; border-radius: 6px;
   padding: 9px 14px; font-size: 15px; cursor: pointer; min-height: 40px;
