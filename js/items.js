@@ -13,7 +13,9 @@ window.FB = window.FB || {};
   const QUALITY_STEP = { plain:0, well:1, masterwork:2 };
   const QUALITY_VALUE = { plain:1, well:2, masterwork:4 };
   const RARITY_WEIGHT = { common:6, fine:3, famed:1 };
-  const RARITY_RANK = { common:0, fine:1, famed:2 };
+  /* legendary is a display tier for gated artifacts only: every legendary
+     definition is unique + eventOnly, so it never enters a weighted pool. */
+  const RARITY_RANK = { common:0, fine:1, famed:2, legendary:3 };
   const PEDDLER_ROLES = ['serf', 'commoner', 'gentry', 'lord', 'crowned'];
   let ensuredState = null;
   let ensuringState = null;
@@ -1535,7 +1537,7 @@ window.FB = window.FB || {};
     if (item && item.ordinary) {
       tier = { plain:0, well:1, masterwork:2 }[item.quality] || 0;
     } else {
-      tier = { common:0, fine:1, famed:2 }[def && def.rarity] || 0;
+      tier = { common:0, fine:1, famed:2, legendary:2 }[def && def.rarity] || 0;
     }
     return values[tier] === undefined ? [4, 8, 12][tier] : values[tier];
   };
@@ -1550,6 +1552,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.item.sold',
       '💰 Sold: {item} for {money:gold}.',
       { item:FB.itemParam(state, ref, true), gold:gold }));
+    artifactDeparted(state, ref);
     return true;
   };
 
@@ -1631,15 +1634,18 @@ window.FB = window.FB || {};
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'character', cid);
     if (delivery && delivery.foreign) {
-      return FB.dispatchGiftDelivery(state, {
+      const dispatched = FB.dispatchGiftDelivery(state, {
         recipientKind:'character',
         recipientId:cid,
         giftKind:'item',
         itemRef:ref,
         effect:boost
       });
+      if (dispatched) artifactDeparted(state, ref);
+      return dispatched;
     }
     if (!FB.transferItem(state, ref, cid)) return false;
+    artifactDeparted(state, ref);
     const standing = FB.adjustStanding(state,
       { kind:'character', id:c.id }, boost, 'gift:item');
     if (FB.noteSocialGift) FB.noteSocialGift(state, cid);
@@ -1661,16 +1667,19 @@ window.FB = window.FB || {};
     const delivery = FB.giftDeliveryPreview &&
       FB.giftDeliveryPreview(state, 'ruler', rid);
     if (delivery && delivery.foreign) {
-      return FB.dispatchGiftDelivery(state, {
+      const dispatched = FB.dispatchGiftDelivery(state, {
         recipientKind:'ruler',
         recipientId:rid,
         giftKind:'item',
         itemRef:ref,
         effect:boost
       });
+      if (dispatched) artifactDeparted(state, ref);
+      return dispatched;
     }
     const itemParam = FB.itemParam(state, ref, true);
     if (!FB.destroyItem(state, ref, { force:true })) return false;
+    artifactDeparted(state, ref);
     const standing = FB.adjustStanding(state, { kind:'realm', id:rid },
       boost, 'gift:item');
     if (FB.noteRulerGift) FB.noteRulerGift(state, rid);
@@ -1876,6 +1885,305 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.item.issued', '🎒 {item} is yours now.',
       { item:FB.itemParam(state, ref, true) }));
     return ref;
+  };
+
+  /* ---------- the market stall shop ----------
+     Town and city settlement visits open a small seasonal stock of ordinary
+     gear. The stock is saved state, rerolled through the seeded RNG only when
+     the season, county, or settlement kind changes; unsold materialized
+     offers are discarded exactly like a declined peddler offer. Prices pass
+     the county market quote and the always-available convenience ratio.
+     Selling reuses FB.sellItem's flat ratio and posts no extra day. */
+  function shopSeasonKey(state) {
+    const d = (state && state.date) || {};
+    return (Number(d.year) || 0) * 4 + (Number(d.season) || 0);
+  }
+
+  function shopHasMarketTech(state) {
+    return !!(FB.hasTech && FB.hasTech(state, 'urban_markets'));
+  }
+
+  function shopQualityRoll(odds) {
+    const plain = Math.max(0, odds && odds.plain || 0);
+    const well = Math.max(0, odds && odds.well || 0);
+    const master = Math.max(0, odds && odds.masterwork || 0);
+    let roll = FB.rng() * Math.max(1, plain + well + master);
+    if (roll < plain) return 'plain';
+    roll -= plain;
+    return roll < well ? 'well' : 'masterwork';
+  }
+
+  FB.shopStock = function (state, pid, kind) {
+    FB.ensureItems(state);
+    if (!state || !state.player || (kind !== 'town' && kind !== 'city')) return null;
+    const bal = FBDATA.balance || {};
+    const key = shopSeasonKey(state);
+    const old = state.player.shopStock;
+    if (old && old.pid === pid && old.kind === kind && old.seasonKey === key) {
+      return old;
+    }
+    if (old) {
+      for (let i = 0; i < (old.offers || []).length; i++) {
+        const ref = old.offers[i] && old.offers[i].ref;
+        if (ref && own(state.itemInstances, ref) && !FB.itemOwner(state, ref)) {
+          delete state.itemInstances[ref];
+        }
+      }
+    }
+    const sizes = bal.shopStockSize || { town:[4, 6], city:[6, 9] };
+    const range = sizes[kind] || sizes.town || [4, 6];
+    const lo = Math.max(1, Number(range[0]) || 1);
+    const hi = Math.max(lo, Number(range[1]) || lo);
+    let size = FB.ri(lo, hi);
+    const tech = shopHasMarketTech(state);
+    if (tech) size += Math.max(0, Number(bal.shopStockTechBonus) || 0);
+    const odds = (tech && bal.shopQualityOddsTech) || bal.shopQualityOdds ||
+      { plain:55, well:32, masterwork:13 };
+    const pool = [];
+    for (const id in FBDATA.items) {
+      const info = definitionOf(id);
+      if (info && info.ordinary && !info.eventOnly) pool.push(id);
+    }
+    pool.sort(); /* stable pool order keeps the seeded roll load-order independent */
+    const ratio = bal.shopPriceRatio === undefined ? 1.1 : Number(bal.shopPriceRatio);
+    const offers = [];
+    const used = {};
+    let usedCount = 0;
+    while (offers.length < size && usedCount < pool.length) {
+      const defId = FB.pick(pool);
+      if (used[defId]) continue;
+      used[defId] = 1;
+      usedCount++;
+      const ref = FB.createItemInstance(state, defId, { quality:shopQualityRoll(odds) });
+      if (!ref) continue;
+      const item = rawResolved(state, ref);
+      if (!item) continue;
+      const quoted = FB.marketCostQuote ? FB.marketCostQuote(state, item.value,
+        item.def.marketBasket, pid, 'up') : item.value;
+      offers.push({ ref:ref, price:Math.max(1, Math.ceil(quoted * ratio)) });
+    }
+    const record = { pid:pid, kind:kind, seasonKey:key, offers:offers };
+    state.player.shopStock = record;
+    return record;
+  };
+
+  FB.buyShopItem = function (state, pid, kind, ref) {
+    const stock = FB.shopStock(state, pid, kind);
+    if (!stock) return null;
+    let at = -1;
+    for (let i = 0; i < stock.offers.length; i++) {
+      if (stock.offers[i].ref === ref) { at = i; break; }
+    }
+    if (at < 0) return null;
+    const offer = stock.offers[at];
+    const item = rawResolved(state, ref);
+    if (!item || FB.itemOwner(state, ref)) return null;
+    if ((Number(state.player.gold) || 0) < offer.price) return null;
+    stock.offers.splice(at, 1);
+    state.player.gold -= offer.price;
+    FB.transferItem(state, ref, 'armory', { force:true });
+    FB.news(state, FB.msg('news.item.bought', '🎒 Bought: {item}.',
+      { item:FB.itemParam(state, ref, true) }));
+    return ref;
+  };
+
+  FB.shopSellables = function (state) {
+    FB.ensureItems(state);
+    const bal = FBDATA.balance || {};
+    const ratio = bal.itemSellRatio === undefined ? 0.5 : Number(bal.itemSellRatio);
+    const out = [];
+    const refs = state.player.items || [];
+    for (let i = 0; i < refs.length; i++) {
+      const ref = refs[i];
+      const item = rawResolved(state, ref);
+      if (!item) continue;
+      if (loanPledgesRef(state, ref) || assignmentForRaw(state, ref)) continue;
+      out.push({ ref:ref, price:Math.round(item.value * ratio) });
+    }
+    return out;
+  };
+
+  /* ---------- legendary and sacred artifacts ----------
+     Gated unique objects: `artifact` on the definition declares the faith,
+     culture, and de jure region of the HOME county under which the rumor can
+     surface. A found artifact is stamped once per save in state.artifacts
+     (additive, lazily ensured — no save-version bump); loss is derived from
+     FB.itemOwner instead of a second stamp, so an object that leaves the
+     family by any door never re-enters a pool. */
+  FB.ensureArtifacts = function (state) {
+    state.artifacts = state.artifacts || {};
+    return state.artifacts;
+  };
+
+  function artifactGate(state, defId) {
+    const def = FBDATA.items && FBDATA.items[defId];
+    const gate = def && def.artifact;
+    if (!gate || !state || !state.player) return false;
+    const me = state.chars && state.chars[state.player.charId];
+    if (!me || me.dead) return false;
+    const groups = gate.religionGroups || [];
+    if (groups.length) {
+      let faithOk = false;
+      for (let i = 0; i < groups.length; i++) {
+        if (FB.faithIsA(me.religion, groups[i], state)) { faithOk = true; break; }
+      }
+      if (!faithOk) return false;
+    }
+    if (gate.cultures && gate.cultures.length &&
+        gate.cultures.indexOf(me.culture) < 0) return false;
+    if ((gate.kingdoms && gate.kingdoms.length) ||
+        (gate.empires && gate.empires.length)) {
+      const dj = FB.dejureOf ? FB.dejureOf(state.player.provinceId) : {};
+      const kingOk = !!(gate.kingdoms && gate.kingdoms.length &&
+        gate.kingdoms.indexOf(dj.kingdom) >= 0);
+      const empOk = !!(gate.empires && gate.empires.length &&
+        gate.empires.indexOf(dj.empire) >= 0);
+      if (!kingOk && !empOk) return false;
+    }
+    return true;
+  }
+
+  FB.artifactEligible = function (state, defId) {
+    FB.ensureArtifacts(state);
+    if (state.artifacts[defId]) return false;
+    return artifactGate(state, defId);
+  };
+
+  FB.artifactStatus = function (state, defId) {
+    FB.ensureArtifacts(state);
+    if (!state.artifacts[defId]) {
+      return artifactGate(state, defId) ? 'available' : 'dormant';
+    }
+    const owner = FB.itemOwner(state, defId);
+    if (!owner) return 'gone';
+    if (owner.kind === 'armory' || owner.kind === 'delivery') return 'held';
+    if (owner.kind === 'character') {
+      return FB.isHouseholdCharacter(state, owner.id) ? 'held' : 'lost';
+    }
+    return 'lost';
+  };
+
+  FB.artifactRumorContexts = function (state) {
+    const out = [];
+    for (const id in FBDATA.items) {
+      if (own(FBDATA.items, id) && FB.artifactEligible(state, id)) {
+        out.push({ artifact:id });
+      }
+    }
+    out.sort(function (a, b) {
+      return a.artifact < b.artifact ? -1 : (a.artifact > b.artifact ? 1 : 0);
+    });
+    return out;
+  };
+
+  FB.artifactHeldContexts = function (state) {
+    const out = [];
+    FB.ensureArtifacts(state);
+    for (const id in state.artifacts) {
+      if (own(state.artifacts, id) &&
+          FB.artifactStatus(state, id) === 'held') {
+        out.push({ artifact:id });
+      }
+    }
+    out.sort(function (a, b) {
+      return a.artifact < b.artifact ? -1 : (a.artifact > b.artifact ? 1 : 0);
+    });
+    return out;
+  };
+
+  FB.artifactOfferingCost = function (state, defId) {
+    const def = FBDATA.items && FBDATA.items[defId];
+    if (!def) return 0;
+    const bal = FBDATA.balance || {};
+    const ratio = bal.artifactOfferingRatio === undefined
+      ? 1.5 : Number(bal.artifactOfferingRatio);
+    return Math.max(1, Math.ceil((Number(def.value) || 0) * ratio));
+  };
+
+  /* Alienating a sacred object of your own faith costs standing with the
+     devout. Called from the deliberate exit doors (sale, gifts) — never from
+     FB.transferItem, which also serves intra-household moves, and never for
+     involuntary loss such as a raid. */
+  function artifactDeparted(state, ref) {
+    const item = rawResolved(state, ref);
+    const gate = item && item.def && item.def.artifact;
+    if (!gate || !gate.sacred) return false;
+    const me = state.chars && state.chars[state.player.charId];
+    if (!me) return false;
+    const groups = gate.religionGroups || [];
+    let matches = !groups.length;
+    for (let i = 0; i < groups.length; i++) {
+      if (FB.faithIsA(me.religion, groups[i], state)) { matches = true; break; }
+    }
+    if (!matches) return false;
+    state.player.piety = Math.max(0, (Number(state.player.piety) || 0) - 8);
+    state.player.pop = FB.clamp((Number(state.player.pop) || 0) - 4, -100, 100);
+    FB.news(state, FB.msg('news.item.sacred_departed',
+      '🕯 The devout mutter: {item} has left a faithful house. (Piety {piety})',
+      { item:FB.itemParam(state, ref, true), piety:-8 }));
+    return true;
+  }
+
+  FB.fns = FB.fns || {};
+  FB.fns.open_item_shop = function (state, ctx, ev) {
+    const kind = ev && ev.id === 'visit_city' ? 'city' : 'town';
+    const pid = state.player.provinceId;
+    const stock = FB.shopStock(state, pid, kind);
+    if (!stock || !stock.offers.length) {
+      FB.news(state, FB.msg('news.item.nothing_new',
+        '🎒 Nothing is offered that you do not already own.', {}));
+      return false;
+    }
+    if (FB.ui && FB.ui.deferItemShopOpen) FB.ui.deferItemShopOpen(pid, kind);
+    return true;
+  };
+  FB.fns.artifact_rumor_pursue = function (state, ctx) {
+    const defId = ctx && ctx.artifact;
+    if (!FB.artifactEligible(state, defId)) return false;
+    FB.queueEvent(state, 'artifact_trial', {
+      artifact:defId,
+      artifactprice:FB.artifactOfferingCost(state, defId)
+    });
+    return true;
+  };
+  FB.fns.artifact_trial_valid = function (state, ctx) {
+    return !!(ctx && ctx.artifact && FB.artifactEligible(state, ctx.artifact));
+  };
+  FB.fns.artifact_can_afford = function (state, ctx) {
+    return !!(ctx && ctx.artifact) && (Number(state.player.gold) || 0) >=
+      FB.artifactOfferingCost(state, ctx.artifact);
+  };
+  FB.fns.artifact_is_sacred = function (state, ctx) {
+    const def = ctx && FBDATA.items && FBDATA.items[ctx.artifact];
+    return !!(def && def.artifact && def.artifact.sacred);
+  };
+  FB.fns.artifact_offering = function (state, ctx) {
+    const defId = ctx && ctx.artifact;
+    const cost = FB.artifactOfferingCost(state, defId);
+    if (!cost || (Number(state.player.gold) || 0) < cost) return false;
+    if (!FB.fns.artifact_grant(state, ctx)) return false;
+    state.player.gold -= cost;
+    return true;
+  };
+  FB.fns.artifact_grant = function (state, ctx) {
+    const defId = ctx && ctx.artifact;
+    if (!FB.artifactEligible(state, defId)) return false;
+    const ref = FB.grantItem(state, defId);
+    if (!ref) return false;
+    FB.ensureArtifacts(state)[defId] = { found:state.turn };
+    FB.news(state, FB.msg('news.item.artifact_claimed',
+      '✨ {item} passes into your family’s keeping.',
+      { item:FB.itemParam(state, ref, true) }));
+    return true;
+  };
+  FB.fns.artifact_seize = function (state, ctx) {
+    const defId = ctx && ctx.artifact;
+    if (!defId || FB.artifactStatus(state, defId) !== 'held') return false;
+    FB.destroyItem(state, defId, { force:true });
+    FB.news(state, FB.msg('news.item.artifact_seized',
+      '⚖ {item} passes out of your family’s keeping, and out of reach.',
+      { item:FB.itemParam(state, defId, true) }));
+    return true;
   };
 
   FB.fns = FB.fns || {};

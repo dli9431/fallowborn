@@ -1,5 +1,15 @@
 # Game state & saves
 
+The item shop and legendary artifacts are additive save-format-3 data, both lazily
+ensured without a version bump. `state.player.shopStock` holds the current seasonal
+stall record (`{pid, kind, seasonKey, offers:[{ref, price}]}`); its materialized
+ordinary offers live in `state.itemInstances` like any exact instance, and unsold ones
+are discarded when the stock rerolls. `state.artifacts` maps a claimed artifact's
+definition id to `{found: turn}` and deliberately survives succession, giving each
+legendary object its once-per-save guarantee; whether a claimed artifact is held, lost,
+or gone is derived from `FB.itemOwner` at read time, so no second stamp can disagree
+with actual ownership.
+
 Fortifications are additive save-format-3 data. A county's settlement-scoped `walls`
 record is `{s,id:'walls',level,targetLevel?,completeTurn?,maintenanceGraceUntil?,ruined?}`;
 active siege records independently snapshot that level as `fortLevel`. `FB.repairForts`

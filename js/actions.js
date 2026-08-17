@@ -4622,6 +4622,14 @@ window.FB = window.FB || {};
      authored story, so eligibility checks never consume RNG. */
   FB.eventContextOptions = function (state, selector) {
     if (selector === 'historic_raider') return historicRaidContexts(state);
+    /* Artifact selectors stay available to every station: a serf can hear the
+       same rumor a king hears, and a stolen relic matters at any rank. */
+    if (selector === 'artifact_rumors') {
+      return FB.artifactRumorContexts ? FB.artifactRumorContexts(state) : [];
+    }
+    if (selector === 'artifact_held') {
+      return FB.artifactHeldContexts ? FB.artifactHeldContexts(state) : [];
+    }
     const out = [];
     if (!FB.isPlayerSovereign(state)) return out;
     if (selector === 'foreign_policy_improve' ||

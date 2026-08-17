@@ -199,6 +199,32 @@ window.FB = window.FB || {};
       }
       ctx.strokeStyle = base; ctx.lineWidth = 9;
       ctx.beginPath(); ctx.moveTo(-16, 25); ctx.lineTo(17, 25); ctx.stroke();
+    } else if (kind === 'axe') {
+      ctx.strokeStyle = base; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(0, 47); ctx.stroke();
+      ctx.fillStyle = metal; ctx.strokeStyle = '#292521'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -40); ctx.quadraticCurveTo(26, -36, 27, -14);
+      ctx.quadraticCurveTo(26, -2, 0, 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = polish; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(4, -32); ctx.quadraticCurveTo(20, -29, 22, -15); ctx.stroke();
+      ctx.strokeStyle = '#241d18'; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(-5, -40); ctx.lineTo(5, -40); ctx.stroke();
+    } else if (kind === 'bow') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(-14, -44); ctx.quadraticCurveTo(16, 0, -14, 44); ctx.stroke();
+      ctx.strokeStyle = accent; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(-14, -44); ctx.lineTo(-14, 44); ctx.stroke();
+      ctx.strokeStyle = metal; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(4, 0); ctx.stroke();
+      ctx.fillStyle = metal;
+      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(2, -4); ctx.lineTo(2, 4);
+      ctx.closePath(); ctx.fill();
+    } else if (kind === 'staff') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(0, -46); ctx.lineTo(0, 48); ctx.stroke();
+      ctx.strokeStyle = accent; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, -40, 6, 0, Math.PI * 2); ctx.stroke();
     } else {
       ctx.fillStyle = base; ctx.strokeStyle = metal; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.arc(0, 0, 27, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
