@@ -558,25 +558,30 @@ window.FB = window.FB || {};
 
   /* A ruler's initiative does not require the player's audience chain, but it
      cannot erase the class limits on an arranged match. Compare the royal
-     partner with the player's house: a gap of three stations is unreachable,
-     and a smaller upward match requires the same prestige as descendant
-     matchmaking. The yearly selector and queued-event validator share this
-     status so a later loss of station or prestige invalidates a stale offer. */
-  FB.agencyMarriageOfferStatus = function (state, partner) {
+     partner with the player's house and candidate: a gap of two or more
+     stations is unreachable, and an otherwise eligible one-station upward match
+     requires the same 20 prestige as descendant matchmaking. The yearly
+     selector and queued-event validator share this status so a later loss of
+     station or prestige invalidates a stale offer. */
+  FB.agencyMarriageOfferStatus = function (state, partner, target) {
     var playerStation = state && state.player
       ? FB.playerStation(state) : 0;
+    var targetStation = target
+      ? Math.max(FB.stationOf(target), playerStation)
+      : playerStation;
     var partnerStation = partner ? FB.stationOf(partner) : 0;
-    var stationGap = Math.max(0, partnerStation - playerStation);
+    var stationGap = Math.max(0, partnerStation - targetStation);
     var prestigeNeed = partner && FB.kinMatchPrestigeNeed
       ? FB.kinMatchPrestigeNeed(state, partner) : stationGap * 20;
     var reason = !state || !state.player || !partner
-      ? 'invalid' : (stationGap >= 3 ? 'station' :
+      ? 'invalid' : (stationGap >= 2 ? 'station' :
         (Number(state.player.prestige || 0) + 0.0001 < prestigeNeed
           ? 'prestige' : null));
     return {
       ready:!reason,
       reason:reason,
       playerStation:playerStation,
+      targetStation:targetStation,
       partnerStation:partnerStation,
       stationGap:stationGap,
       prestigeNeed:prestigeNeed
@@ -616,7 +621,7 @@ window.FB = window.FB || {};
         if (target.sex === other.sex || target.religion !== other.religion ||
             FB.closeMarriageKinSnapshot &&
               FB.closeMarriageKinSnapshot(state, target, other)) continue;
-        if (!FB.agencyMarriageOfferStatus(state, other).ready) continue;
+        if (!FB.agencyMarriageOfferStatus(state, other, target).ready) continue;
         var terms = FB.marriageTerms(state, target, other);
         var score = relevance.score +
           FB.standingOf(state, { kind:'realm', id:rid }) +
@@ -938,7 +943,7 @@ window.FB = window.FB || {};
     if (!FB.fns.agency_ruler_context_valid(state, ctx)) return false;
     var target = state.chars[ctx.studentId];
     var partner = state.chars[ctx.partnerId];
-    var offerStatus = FB.agencyMarriageOfferStatus(state, partner);
+    var offerStatus = FB.agencyMarriageOfferStatus(state, partner, target);
     return !!(target && partner &&
       FB.ageOf(target, state.date.year) >= 12 &&
       FB.ageOf(partner, state.date.year) >= 12 &&

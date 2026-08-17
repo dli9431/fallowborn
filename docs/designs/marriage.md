@@ -49,9 +49,9 @@ peace, or crown consolidation. The candidate on the player's side is drawn only
 from managed family, never arbitrary visible kin; both people must be at least
 twelve, uncommitted, opposite-sex under the modeled doctrine, exact-faith
 compatible, and outside the close-kin gate. Before the proposing court scores a
-pair, two hard house-rank gates apply to the royal partner: a match three or more
-stations above the player's house is unreachable, and an otherwise eligible
-upward match requires 20 prestige per station. The proposing court then weighs
+pair, two hard house-rank gates apply to the royal partner: a match two or more
+stations above the player's house or candidate is unreachable, and an otherwise eligible
+one-station upward match requires 20 prestige. The proposing court then weighs
 realm Standing, additional player prestige and station, the family member's
 station and Diplomacy, and the ruler's dynastic aim. The queued context freezes
 exact character ids, ruler generation, payer, and dowry; resolution revalidates

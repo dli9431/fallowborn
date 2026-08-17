@@ -349,7 +349,7 @@ test('AI royal offers hard-gate a lowborn sibling by station and prestige',
       };
       s.player.tier = 0;
       s.player.prestige = 999;
-      var stationBlocked = FB.agencyMarriageOfferStatus(s, partner);
+      var stationBlocked = FB.agencyMarriageOfferStatus(s, partner, sibling);
       var stationContext = FB.fns.agency_marriage_context_valid(s, ctx);
       s.eventQueue = [];
       for (var agencyRid in s.agency.rulerAims) {
@@ -365,14 +365,31 @@ test('AI royal offers hard-gate a lowborn sibling by station and prestige',
         return item.id === 'ruler_marriage_offer';
       });
 
-      s.player.tier = FB.stationOf(partner) - 2;
+      s.player.tier = 1;
+      s.player.prestige = 999;
+      var freemanBlocked = FB.agencyMarriageOfferStatus(s, partner, sibling);
+      var freemanContext = FB.fns.agency_marriage_context_valid(s, ctx);
+      s.eventQueue = [];
+      for (agencyRid in s.agency.rulerAims) {
+        delete s.agency.rulerAims[agencyRid].lastApproachYear;
+      }
+      delete s.agency.lastPlayerApproachYear;
+      originalChance = FB.chance;
+      FB.chance = function () { return true; };
+      FB.rulerAgencyYearly(s);
+      FB.chance = originalChance;
+      var queuedFreemanMarriage = s.eventQueue.some(function (item) {
+        return item.id === 'ruler_marriage_offer';
+      });
+
+      s.player.tier = FB.stationOf(partner) - 1;
       var prestigeNeed = FB.kinMatchPrestigeNeed(s, partner);
       s.player.prestige = prestigeNeed - 1;
-      var prestigeBlocked = FB.agencyMarriageOfferStatus(s, partner);
+      var prestigeBlocked = FB.agencyMarriageOfferStatus(s, partner, sibling);
       var prestigeContext = FB.fns.agency_marriage_context_valid(s, ctx);
 
       s.player.prestige = prestigeNeed;
-      var ready = FB.agencyMarriageOfferStatus(s, partner);
+      var ready = FB.agencyMarriageOfferStatus(s, partner, sibling);
       var readyContext = FB.fns.agency_marriage_context_valid(s, ctx);
       s.player.prestige = prestigeNeed - 1;
       var staleContext = FB.fns.agency_marriage_context_valid(s, ctx);
@@ -383,6 +400,10 @@ test('AI royal offers hard-gate a lowborn sibling by station and prestige',
         stationGap:stationBlocked.stationGap,
         stationContext:stationContext,
         queuedSerfMarriage:queuedSerfMarriage,
+        freemanReason:freemanBlocked.reason,
+        freemanGap:freemanBlocked.stationGap,
+        freemanContext:freemanContext,
+        queuedFreemanMarriage:queuedFreemanMarriage,
         prestigeReason:prestigeBlocked.reason,
         prestigeNeed:prestigeNeed,
         prestigeContext:prestigeContext,
@@ -398,8 +419,12 @@ test('AI royal offers hard-gate a lowborn sibling by station and prestige',
     expect(result.stationGap).toBeGreaterThanOrEqual(3);
     expect(result.stationContext).toBe(false);
     expect(result.queuedSerfMarriage).toBe(false);
+    expect(result.freemanReason).toBe('station');
+    expect(result.freemanGap).toBeGreaterThanOrEqual(2);
+    expect(result.freemanContext).toBe(false);
+    expect(result.queuedFreemanMarriage).toBe(false);
     expect(result.prestigeReason).toBe('prestige');
-    expect(result.prestigeNeed).toBe(40);
+    expect(result.prestigeNeed).toBe(20);
     expect(result.prestigeContext).toBe(false);
     expect(result.ready).toBe(true);
     expect(result.readyContext).toBe(true);
