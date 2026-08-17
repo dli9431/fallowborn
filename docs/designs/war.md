@@ -586,3 +586,34 @@ rising, or a great-holy-war call. An already-running war continues because captu
 not erase realm obligations or campaign state. While an AI sovereign remains captive,
 its projected base host is multiplied by `0.8`; escape, ransom, release, captor death,
 or captor succession removes that penalty.
+
+## Raiding expeditions
+
+Historical cultures (`norse`, `magyar`, `turkic`, `berber`, `andalusi`, `arabic`,
+`baltic`, `gaelic`, `brezhon`) and pagan faiths (`norse_pagan`, `tengri`, `baltic_pagan`,
+`slavic_pagan`, and all pagan traditions) possess the ability to launch raiding expeditions
+against foreign counties (`FB.canRaid`, `FB.raidTargets`, `FB.calculateRaidSpoils`, `FB.executeRaid`).
+
+Raiding does not declare a formal conquest war, nor does it occupy land permanently:
+
+- **Expedition Range**: Overland baseline is 2 legs. `longships` unlocks deep overseas and
+  upriver naval raiding (+4 legs and cross-water navigation). Navigational arts
+  (`coastal_piloting`, `celestial_navigation`, `mariners_compass`) and cavalry saddles extend
+  operational reach.
+- **Expedition Strategies**:
+  - *Swift Skirmish*: Rapid hit-and-run against rural settlements and herds. Minimizes
+    casualty risks against fortifications; yields modest provisions, livestock, and coin.
+  - *Deep Sack*: Full assault on core settlements, markets, and shrines. High gold bullion,
+    luxuries, and captives; risks defender resistance/casualties against stone castles and
+    inflicts severe devastation.
+- **Multi-System Impact**:
+  - *Fortifications*: Fort tier (`FB.fortAt`) resists assaults, lowers base plunder extraction,
+    and inflicts casualties on reckless sacks.
+  - *Buildings & Development*: Deep sacks have a chance to ruin standing settlement buildings
+    (`state.buildings[pid]`) and reduce county development (`state.dev[pid]`).
+  - *Population & Captives*: Drains target county population and yields captives. Captives may
+    be settled as free/serf population in the raider's home county, bonded as household laborers
+    (+workforce), or ransomed for gold.
+  - *Market System*: Hauls away commodities matching the target's endowments and applies a
+    severe 4-season market shock (`FB.addMarketShock`), disrupting victim production.
+  - *Diplomacy*: Reduces Standing with the victim sovereign by 25 and leaves retaliatory grievances.

@@ -321,6 +321,17 @@ opens the exact missing technology, and never disables an existing fort or in-fl
 project when allegiance later changes. Technology detail reverse discovery scans
 `FBDATA.fortLevels` alongside ordinary content consumers.
 
+Raiding expeditions add four technology reviews. `overseas_raiding` is hard on `longships`:
+deep trans-oceanic and upriver inland raids into distant water basins require shallow-draft
+longships, while baseline overland and coastal border reaving operates with basic transport.
+`mounted_raiding` is soft on `cavalry_saddles`, `stirrups`, and `mounted_archery`: cavalry
+innovations expand overland raiding range, speed, and carry payload. `raiding_navigation` is soft
+on `coastal_piloting`, `celestial_navigation`, and `mariners_compass`: navigational arts extend
+maximum raid range across sea zones and reduce expedition hazards. `raiding_party_scale` is soft
+on `shield_walls`, `martial_drill`, `professional_retinues`, and `logistics_magazines`: martial
+and logistics innovations improve raiding host discipline against garrisons and increase plunder
+carry capacity. See [war.md](war.md).
+
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
 composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,

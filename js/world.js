@@ -3581,6 +3581,80 @@ window.FB = window.FB || {};
     return !!(r && r.alive && !r.liege);
   };
 
+  FB.aiRaidTick = function (state, rid, r, B) {
+    if (!state || !r || !r.alive || r.liege || FB.isRealmAtWar(state, rid)) return;
+    const cult = r.culture || (r.ruler && r.ruler.culture);
+    const faith = r.religion || (r.ruler && r.ruler.religion);
+    const traditions = (FBDATA.raidingTraditions && FBDATA.raidingTraditions.cultures) ||
+      ['norse', 'magyar', 'turkic', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'];
+    const isRaider = (cult && traditions.indexOf(cult) >= 0) ||
+      (faith && ((FBDATA.raidingTraditions && FBDATA.raidingTraditions.faiths && FBDATA.raidingTraditions.faiths.indexOf(faith) >= 0) ||
+        (FB.faithGroup && FB.faithGroup(faith, state) === 'pagan')));
+    if (!isRaider) return;
+
+    const baseChance = (B && B.aiRaidChance) || 0.12;
+    if (!FB.chance(baseChance * (0.5 + 0.5 * (r.aggression || 1)))) return;
+
+    const ownProvs = FB.realmProvinces ? FB.realmProvinces(state, rid) : [];
+    if (!ownProvs.length) return;
+
+    const targets = [];
+    const maxRange = (cult === 'norse' || (FB.hasTech && FB.hasTech(state, 'longships', rid))) ? 5 : 2;
+    for (let i = 0; i < ownProvs.length; i++) {
+      const op = ownProvs[i];
+      const adj = FB.world.adj && FB.world.adj[op];
+      if (adj) {
+        for (const nb in adj) {
+          const owner = state.owner && state.owner[nb];
+          if (owner && owner !== rid && owner !== 'player' && targets.indexOf(nb) < 0 && FB.world.byId[nb] && !FB.world.byId[nb].wasteland) {
+            targets.push(nb);
+          }
+        }
+      }
+      if (maxRange > 2 && FB.world.byId[op] && FB.world.byId[op].coastal) {
+        const curPr = FB.world.byId[op];
+        for (let j = 0; j < FB.world.provs.length; j++) {
+          const pr = FB.world.provs[j];
+          if (!pr.coastal || pr.id === op || pr.wasteland) continue;
+          const owner = state.owner && state.owner[pr.id];
+          if (!owner || owner === rid || owner === 'player') continue;
+          const dx = pr.sx - curPr.sx, dy = pr.sy - curPr.sy;
+          if (dx * dx + dy * dy <= 28000 && targets.indexOf(pr.id) < 0) {
+            targets.push(pr.id);
+          }
+        }
+      }
+    }
+
+    if (!targets.length) return;
+    const targetPid = targets[Math.floor(FB.rng() * targets.length)];
+    const targetPr = FB.world.byId[targetPid];
+    if (!targetPr) return;
+
+    const pop = FB.countyPopulation ? FB.countyPopulation(state, targetPid) : 5000;
+    const popLoss = Math.max(30, Math.round(pop * 0.03));
+    if (FB.changeCountyPopulation) {
+      FB.changeCountyPopulation(state, targetPid, -popLoss, 'raid_losses');
+    }
+    if (FB.addMarketShock) {
+      FB.addMarketShock(state, {
+        pid: targetPid,
+        source: 'raid_devastation',
+        severe: true,
+        production: -0.25,
+        demand: 0.10,
+        seasons: 4
+      });
+    }
+
+    const homeRealm = state.owner && state.owner[state.player.provinceId];
+    if (FB.game.observe || rid === homeRealm || targetPid === state.player.provinceId) {
+      FB.news(state, FB.msg('news.world.ai_raid',
+        '⚔ Raiders from {attacker} pillage the settlements of {province}!',
+        { attacker: r.name, province: targetPr.name }));
+    }
+  };
+
   /* ================= settlements =================
      Each settled county exposes 2-4 settlement slots through the compiled
      site records (see compilation above): authored presentations first, then
@@ -5170,6 +5244,9 @@ window.FB = window.FB || {};
               '#mapwrap');
           }
         }
+      }
+      if (!r.war && !FB.isRealmAtWar(state, id) && FB.aiRaidTick) {
+        FB.aiRaidTick(state, id, r, B);
       }
     }
 

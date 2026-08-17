@@ -264,3 +264,12 @@ The public engine surface is `FB.ensureMarket`, `FB.marketSeason`,
 `FB.marketCounty`, `FB.marketPrice`, `FB.marketCostQuote`,
 `FB.marketHouseholdDemand`, `FB.marketEnterpriseOutput`,
 `FB.marketEndowments`, `FB.addMarketShock`, and `FB.marketRouteLines`.
+
+## Raiding and market shocks
+
+Raiding expeditions extract commodities directly from a victim county based on its local
+endowments: provisions from grain/pastoral/fisheries, wares from textiles, materials from
+timber/metalworking, and luxuries from entrepôts and fine vineyards. Successful raids inflict a
+severe 4-season `market_shock` (`FB.addMarketShock`), reducing local production (−35% on a deep
+sack, −20% on a skirmish) and restricting inter-county flows (−25%), resulting in immediate local
+scarcity, hardship, and price surges in the victim province.
