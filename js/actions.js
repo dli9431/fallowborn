@@ -5998,7 +5998,7 @@ window.FB = window.FB || {};
     if (FB.hasTech && FB.hasTech(state, 'coastal_piloting', realmId)) range += 1;
     if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) range += 1;
     if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) range += 1;
-    if (FB.hasTech && (FB.hasTech(state, 'cavalry_saddles', realmId) || FB.hasTech(state, 'stirrups', realmId))) range += 1;
+    if (FB.hasTech && (FB.hasTech(state, 'mounted_archery', realmId) || FB.hasTech(state, 'cavalry_lances', realmId))) range += 1;
 
     return range;
   };
@@ -6084,7 +6084,8 @@ window.FB = window.FB || {};
       const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
       const dev = (state.dev && state.dev[pid]) || pr.dev0 || pr.dev || 1;
       const pop = FB.countyPopulation ? FB.countyPopulation(state, pid) : 5000;
-      const endowments = FB.marketEndowments ? FB.marketEndowments(state, pid) : [];
+      const endowmentObj = FB.marketEndowments ? FB.marketEndowments(state, pid) : null;
+      const endowments = (endowmentObj && Array.isArray(endowmentObj.tags)) ? endowmentObj.tags : (Array.isArray(endowmentObj) ? endowmentObj : []);
       const buildings = FB.builtIn ? FB.builtIn(state, pid).filter(function (b) { return !b.ruined; }) : [];
 
       let wealthScore = dev * 10 + buildings.length * 8 + endowments.length * 15;
@@ -6127,7 +6128,8 @@ window.FB = window.FB || {};
     const pop = FB.countyPopulation ? FB.countyPopulation(state, targetPid) : 6000;
     const fort = FB.fortAt ? FB.fortAt(state, targetPid) : null;
     const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
-    const endowments = FB.marketEndowments ? FB.marketEndowments(state, targetPid) : [];
+    const endowmentObj = FB.marketEndowments ? FB.marketEndowments(state, targetPid) : null;
+    const endowments = (endowmentObj && Array.isArray(endowmentObj.tags)) ? endowmentObj.tags : (Array.isArray(endowmentObj) ? endowmentObj : []);
     const buildings = FB.builtIn ? FB.builtIn(state, targetPid).filter(function (b) { return !b.ruined; }) : [];
 
     const cid = charId || state.player.charId;

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.139.0';
+  FB.VERSION = '1.139.1';
   FB.CHANGELOG = [
+    { v: '1.139.1', date: '2026-08-17', changes: [
+      'Raid target evaluation and spoils calculation now handle market endowments correctly, and cavalry raid reach is tuned to period mounted innovations.'
+    ] },
     { v: '1.139.0', date: '2026-08-17', changes: [
       'Eligible cultures and pagan faiths can now launch peacetime raiding expeditions from the Deeds tab to plunder target provinces and seize captives.'
     ] },

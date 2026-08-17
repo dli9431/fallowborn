@@ -242,7 +242,7 @@ window.FBDATA = window.FBDATA || {};
         rationale:'Trans-oceanic and upriver inland raiding requires specialized clinker longships, while baseline coastal and overland border reaving operates with basic transport.'
       },
       mounted_raiding:{
-        mode:'soft', tech:['cavalry_saddles','stirrups','mounted_archery'],
+        mode:'soft', tech:['mounted_archery','cavalry_lances'],
         rationale:'Cavalry innovations expand overland raiding range, speed, and carry capacity.'
       },
       raiding_navigation:{
