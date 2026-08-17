@@ -80,7 +80,7 @@ test('an eager-court save stays within the storage budget and reloads whole',
     await openGame(page, testInfo);
     await startDeterministicGame(page);
 
-    expect(await page.evaluate(function () {
+    const result = await page.evaluate(function () {
       const elapsedYears = 60;
       for (let year = 0; year < elapsedYears; year++) {
         FB.state.date.year++;
@@ -106,27 +106,27 @@ test('an eager-court save stays within the storage budget and reloads whole',
         recordsSurviveRoundTrip:
           !!reread && Object.keys(reread.state.chars).length === records
       };
-    }).then(function (result) {
-      return {
-        stored:result.stored,
-        rereadable:result.rereadable,
-        longCampaign:result.elapsedYears === 60,
-        recordsSurviveRoundTrip:result.recordsSurviveRoundTrip,
-        /* Court population is bound by the map, so this is a flat ceiling and
-           not a figure that should drift upward with campaign length. The
-           county-market state has its own 64 KB cap; 1.6 MB preserves a
-           narrow combined serialization margin. */
-        courtRecordsPresent:result.courtRecords > 100,
-        withinBudget:result.bytes < COMPLETE_SAVE_BUDGET
-      };
-    })).toEqual({
+    });
+
+    expect({
+      stored:result.stored,
+      rereadable:result.rereadable,
+      longCampaign:result.elapsedYears === 60,
+      recordsSurviveRoundTrip:result.recordsSurviveRoundTrip,
+      courtRecordsPresent:result.courtRecords > 100
+    }).toEqual({
       stored:true,
       rereadable:true,
       longCampaign:true,
       recordsSurviveRoundTrip:true,
-      courtRecordsPresent:true,
-      withinBudget:true
+      courtRecordsPresent:true
     });
+    /* Court population is bound by the map, so this is a flat ceiling and not
+       a figure that should drift upward with campaign length. The county-market
+       state has its own 64 KB cap; 1.6 MB preserves a narrow combined
+       serialization margin. Keep the byte assertion direct so a regression
+       reports its exact payload instead of only a derived false boolean. */
+    expect(result.bytes).toBeLessThan(COMPLETE_SAVE_BUDGET);
   });
 
 test('save compaction rehydrates court links and technology exposure',
@@ -176,40 +176,100 @@ test('save compaction rehydrates court links and technology exposure',
       }
       if (!sample || !emptyChildCharId || !techSample) return { skipped:true };
 
+      const liveRealm = s.realms[sample.rid];
+      const liveMember = liveRealm.succession.members[sample.memberId];
+      const liveChar = s.chars[sample.charId];
+      const deadMemberId = 'royal_e2e_compact_dead';
+      liveRealm.alive = true;
+      liveRealm.liege = null;
+      liveRealm.aggression = 0;
+      liveRealm.war = null;
+      liveRealm.op = 0;
+      liveMember.alive = true;
+      liveChar.health = 8;
+      liveRealm.succession.members[deadMemberId] = {
+        id:deadMemberId, name:'Recorded Ancestor', sex:'m', born:800,
+        alive:false, parentId:null, childIds:[], charId:null, died:850
+      };
+      const liveTech = s.realmTech[techSample.rid];
+      liveTech.active = [];
+      liveTech.progress = {};
+      liveTech.priorities = {};
+      const buildingPid = liveRealm.capital;
+      const building = { s:0, id:'granary' };
+      s.buildings[buildingPid] = s.buildings[buildingPid] || [];
+      s.buildings[buildingPid].push(building);
+
       const payload = JSON.parse(FB.save.serialize());
+      const rawRealm = payload.state.realms[sample.rid];
       const rawSuccession = payload.state.realms[sample.rid].succession;
       const rawMember = rawSuccession.members[sample.memberId];
+      const rawDeadMember = rawSuccession.members[deadMemberId];
       const rawChar = payload.state.chars[sample.charId];
       const rawEmptyChildChar = payload.state.chars[emptyChildCharId];
       const rawTech = payload.state.realmTech[techSample.rid];
+      const rawBuilding = payload.state.buildings[buildingPid]
+        [payload.state.buildings[buildingPid].length - 1];
       const own = Object.prototype.hasOwnProperty;
-      const compact = !own.call(rawMember, 'charId') &&
+      const compact = !own.call(rawRealm, 'id') &&
+        !own.call(rawRealm, 'alive') &&
+        !own.call(rawRealm, 'liege') &&
+        !own.call(rawRealm, 'aggression') &&
+        !own.call(rawRealm, 'war') &&
+        !own.call(rawRealm, 'op') &&
+        !own.call(rawMember, 'id') &&
+        !own.call(rawMember, 'charId') &&
         !own.call(rawMember, 'childIds') &&
         !own.call(rawMember, 'alive') &&
         !own.call(rawMember, 'role') &&
+        !own.call(rawDeadMember, 'id') &&
+        !own.call(rawDeadMember, 'alive') &&
+        !own.call(rawDeadMember, 'parentId') &&
+        !own.call(rawDeadMember, 'charId') &&
+        !own.call(rawChar, 'id') &&
         !own.call(rawChar, 'dead') &&
         !own.call(rawChar, 'role') &&
         !own.call(rawChar, 'fatherId') &&
         !own.call(rawChar, 'motherId') &&
+        !own.call(rawChar, 'health') &&
         !own.call(rawEmptyChildChar, 'childrenIds') &&
+        !own.call(rawTech, 'active') &&
+        !own.call(rawTech, 'progress') &&
+        !own.call(rawTech, 'priorities') &&
         rawTech.completed.indexOf(techSample.id) >= 0 &&
-        rawTech.exposed.indexOf(techSample.id) < 0;
+        (!rawTech.exposed || rawTech.exposed.indexOf(techSample.id) < 0) &&
+        !own.call(rawBuilding, 's');
 
       FB.save.restore(payload);
-      const restoredMember = FB.state.realms[sample.rid]
-        .succession.members[sample.memberId];
+      const restoredRealm = FB.state.realms[sample.rid];
+      const restoredMember = restoredRealm.succession.members[sample.memberId];
+      const restoredDeadMember = restoredRealm.succession.members[deadMemberId];
       const restoredChar = FB.state.chars[sample.charId];
       const restoredEmptyChildChar = FB.state.chars[emptyChildCharId];
       const restoredTech = FB.state.realmTech[techSample.rid];
+      const restoredBuilding = FB.state.buildings[buildingPid]
+        [FB.state.buildings[buildingPid].length - 1];
       const restoredRuler = FB.realmRulerCharacterSnapshot(
         FB.state, sample.rid);
       return {
         skipped:false,
         compact:compact,
-        member:!!restoredMember && restoredMember.charId === sample.charId &&
+        realm:!!restoredRealm && restoredRealm.id === sample.rid &&
+          restoredRealm.alive === true && restoredRealm.liege === null &&
+          restoredRealm.aggression === 0 && restoredRealm.war === null &&
+          restoredRealm.op === 0,
+        member:!!restoredMember && restoredMember.id === sample.memberId &&
+          restoredMember.charId === sample.charId &&
           restoredMember.alive === true && restoredMember.role === null &&
           restoredMember.childIds.length === sample.childCount,
-        character:!!restoredChar && restoredChar.dead === false &&
+        deadMember:!!restoredDeadMember &&
+          restoredDeadMember.id === deadMemberId &&
+          restoredDeadMember.alive === false &&
+          restoredDeadMember.parentId === null &&
+          restoredDeadMember.charId === null &&
+          restoredDeadMember.childIds.length === 0,
+        character:!!restoredChar && restoredChar.id === sample.charId &&
+          restoredChar.dead === false && restoredChar.health === 8 &&
           restoredChar.role === null && restoredChar.fatherId === null &&
           restoredChar.motherId === null &&
           !!restoredEmptyChildChar &&
@@ -217,15 +277,23 @@ test('save compaction rehydrates court links and technology exposure',
           restoredEmptyChildChar.childrenIds.length === 0,
         ruler:!!restoredRuler && restoredRuler.id === sample.charId,
         exposure:!!restoredTech &&
-          restoredTech.exposed.indexOf(techSample.id) >= 0
+          restoredTech.exposed.indexOf(techSample.id) >= 0 &&
+          Array.isArray(restoredTech.active) &&
+          Object.keys(restoredTech.progress).length === 0 &&
+          Object.keys(restoredTech.priorities).length === 0,
+        building:!!restoredBuilding && restoredBuilding.s === 0 &&
+          restoredBuilding.id === 'granary'
       };
     })).toEqual({
       skipped:false,
       compact:true,
+      realm:true,
       member:true,
+      deadMember:true,
       character:true,
       ruler:true,
-      exposure:true
+      exposure:true,
+      building:true
     });
   });
 

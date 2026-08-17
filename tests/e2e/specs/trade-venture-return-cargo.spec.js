@@ -110,7 +110,7 @@ test('loading return cargo takes destination stock, deducts gold, and resolves o
         currentId: 'bruges',
         phase: 'arrived',
         remainingRoute: [],
-        outboundRoute: ['london', 'kent', 'bruges'],
+        outboundRoute: ['kent', 'bruges'],
         visited: ['london', 'kent', 'bruges'],
         legDaysLeft: 0,
         legDays: 3,
@@ -139,7 +139,7 @@ test('loading return cargo takes destination stock, deducts gold, and resolves o
 
       const loaded = FB.loadTradeVentureReturn(s, 20, 'wares', 'cautious');
       const goldAfterLoad = s.player.gold;
-      const destStockAfterLoad = destCountyBefore.goods.wares.stock;
+      const destStockAfterLoad = FB.marketCounty(s, 'bruges').goods.wares.stock;
 
       // Start return journey
       FB.travelReturn(s);
@@ -153,7 +153,7 @@ test('loading return cargo takes destination stock, deducts gold, and resolves o
       }
 
       const goldAfterArrival = s.player.gold;
-      const homeStockAfterArrival = homeCountyBefore.goods.wares.stock;
+      const homeStockAfterArrival = FB.marketCounty(s, 'london').goods.wares.stock;
       const travelEnded = s.player.travel === null;
 
       return {
