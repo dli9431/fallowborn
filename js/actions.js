@@ -5995,8 +5995,8 @@ window.FB = window.FB || {};
     if (FB.hasTech && FB.hasTech(state, 'longships', realmId)) {
       range += (FBDATA.balance && FBDATA.balance.raidLongshipRange) || 4;
     }
-    if (FB.hasTech && FB.hasTech(state, 'coastal_piloting', realmId)) range += 1;
     if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) range += 1;
+    if (FB.hasTech && FB.hasTech(state, 'naval_logbooks', realmId)) range += 1;
     if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) range += 1;
     if (FB.hasTech && (FB.hasTech(state, 'mounted_archery', realmId) || FB.hasTech(state, 'cavalry_lances', realmId))) range += 1;
 

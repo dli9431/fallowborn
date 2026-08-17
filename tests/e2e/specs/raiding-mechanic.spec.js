@@ -111,8 +111,8 @@ test('technology tree extends raid reach and unlocks deep overseas raiding',
       var longshipRange = FB.raidRange(s);
 
       // Complete navigation techs
-      record.completed.push('coastal_piloting');
       record.completed.push('celestial_navigation');
+      record.completed.push('naval_logbooks');
       record.completed.push('mariners_compass');
       var navRange = FB.raidRange(s);
 

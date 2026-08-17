@@ -246,7 +246,7 @@ window.FBDATA = window.FBDATA || {};
         rationale:'Cavalry innovations expand overland raiding range, speed, and carry capacity.'
       },
       raiding_navigation:{
-        mode:'soft', tech:['coastal_piloting','celestial_navigation','mariners_compass'],
+        mode:'soft', tech:['celestial_navigation','naval_logbooks','mariners_compass'],
         rationale:'Navigational arts extend maximum raid range across sea zones and reduce expedition hazards.'
       },
       raiding_party_scale:{

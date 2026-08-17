@@ -324,9 +324,9 @@ project when allegiance later changes. Technology detail reverse discovery scans
 Raiding expeditions add four technology reviews. `overseas_raiding` is hard on `longships`:
 deep trans-oceanic and upriver inland raids into distant water basins require shallow-draft
 longships, while baseline overland and coastal border reaving operates with basic transport.
-`mounted_raiding` is soft on `cavalry_saddles`, `stirrups`, and `mounted_archery`: cavalry
-innovations expand overland raiding range, speed, and carry payload. `raiding_navigation` is soft
-on `coastal_piloting`, `celestial_navigation`, and `mariners_compass`: navigational arts extend
+`mounted_raiding` is soft on `mounted_archery` and `cavalry_lances`: cavalry innovations expand
+overland raiding range, speed, and carry payload. `raiding_navigation` is soft on
+`celestial_navigation`, `naval_logbooks`, and `mariners_compass`: navigational arts extend
 maximum raid range across sea zones and reduce expedition hazards. `raiding_party_scale` is soft
 on `shield_walls`, `martial_drill`, `professional_retinues`, and `logistics_magazines`: martial
 and logistics innovations improve raiding host discipline against garrisons and increase plunder

@@ -12,7 +12,7 @@ window.FB = window.FB || {};
   FB.VERSION = '1.139.1';
   FB.CHANGELOG = [
     { v: '1.139.1', date: '2026-08-17', changes: [
-      'Raid target evaluation and spoils calculation now handle market endowments correctly, and cavalry raid reach is tuned to period mounted innovations.'
+      'Raid target evaluation and spoils calculation now handle market endowments correctly, and naval navigation and cavalry raid reach are tuned to period innovations.'
     ] },
     { v: '1.139.0', date: '2026-08-17', changes: [
       'Eligible cultures and pagan faiths can now launch peacetime raiding expeditions from the Deeds tab to plunder target provinces and seize captives.'

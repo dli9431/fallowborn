@@ -598,7 +598,7 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
 
 - **Expedition Range**: Overland baseline is 2 legs. `longships` unlocks deep overseas and
   upriver naval raiding (+4 legs and cross-water navigation). Navigational arts
-  (`coastal_piloting`, `celestial_navigation`, `mariners_compass`) and cavalry innovations
+  (`celestial_navigation`, `naval_logbooks`, `mariners_compass`) and cavalry innovations
   (`mounted_archery`, `cavalry_lances`) extend operational reach.
 - **Expedition Strategies**:
   - *Swift Skirmish*: Rapid hit-and-run against rural settlements and herds. Minimizes
