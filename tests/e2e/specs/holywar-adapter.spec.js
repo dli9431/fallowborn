@@ -1,11 +1,15 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/holywar.js',
+  'js/world.js',
+  'data/events_world.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  injectHolyWarHarness,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { injectHolyWarHarness } = require('../support/game/holywar-harness');
 
 test.beforeEach(async function ({ page }, testInfo) {
   test.skip(testInfo.project.name !== 'chromium-file',

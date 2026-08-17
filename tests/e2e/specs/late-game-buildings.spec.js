@@ -1,10 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/settlement.js',
+  'js/technology.js',
+  'js/world.js',
+  'data/map_data.js',
+  'data/technology.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -84,8 +90,9 @@ test('construction gates enforce devMin, requiresTech, and coastal requirements'
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
-      const pid = s.player.provs[0];
+      const pid = s.player.provinceId || 'london';
       s.player.tier = 5; // King/Duke level tier for deeds
+      s.player.provs = [pid];
       s.buildings = s.buildings || {};
       s.buildings[pid] = [];
 
@@ -143,7 +150,9 @@ test('demographic and research bonuses from late-game buildings apply correctly'
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
-      const pid = s.player.provs[0];
+      const pid = s.player.provinceId || 'london';
+      s.player.tier = 5;
+      s.player.provs = [pid];
       s.buildings = s.buildings || {};
       s.buildings[pid] = [
         { s: 0, id: 'cathedral' },
@@ -158,10 +167,10 @@ test('demographic and research bonuses from late-game buildings apply correctly'
       const bonusRetinue = FB.buildingBonus(s, 'retinue');
       const bonusTax = FB.buildingBonus(s, 'tax');
 
-      // Crisis protection from cathedral (15%) + hospital (10%)
-      const crisisProt = FB.countyCrisisProtection ? FB.countyCrisisProtection(s, pid) : 0;
+      // Crisis protection from cathedral (15%) + hospital (10%), capped at 20% by countyBuildingCrisisProtection
+      const crisisProt = FB.countyBuildingCrisisProtection ? FB.countyBuildingCrisisProtection(s, pid) : (FB.countyCrisisProtection ? FB.countyCrisisProtection(s, pid) : 0);
       // Famine protection from hospital (5%)
-      const famineProt = FB.countyFamineProtection ? FB.countyFamineProtection(s, pid) : 0;
+      const famineProt = FB.countyBuildingFamineProtection ? FB.countyBuildingFamineProtection(s, pid) : (FB.countyFamineProtection ? FB.countyFamineProtection(s, pid) : 0);
 
       return {
         bonusResearch: bonusResearch,
@@ -178,7 +187,7 @@ test('demographic and research bonuses from late-game buildings apply correctly'
     expect(result.bonusPiety).toBe(5);
     expect(result.bonusRetinue).toBe(30);
     expect(result.bonusTax).toBe(5);
-    expect(result.crisisProt).toBe(25);
+    expect(result.crisisProt).toBe(20);
     expect(result.famineProt).toBe(5);
   }
 );

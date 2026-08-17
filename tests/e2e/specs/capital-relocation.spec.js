@@ -1,11 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/actions.js',
+  'js/mapview.js',
+  'js/world.js',
+  'js/ui_modals.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startCapitalRealm(page, testInfo, options) {
   await openGame(page, testInfo);

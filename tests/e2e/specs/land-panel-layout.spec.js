@@ -1,11 +1,17 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/economy.js',
+  'js/population.js',
+  'js/ui_panels.js',
+  'js/world.js',
+  'css/style.css'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -21,10 +27,12 @@ test.beforeEach(async function ({ page }, testInfo) {
 test('Land facts use readable desktop columns and stack on compact layouts',
   async function ({ page }) {
     const panel = page.locator('#tab-prov');
-    await expect(panel.locator('.land-section')).toHaveCount(3);
+    await expect(panel.locator('.land-section')).toHaveCount(4);
     await expect(panel.getByRole('heading', { name:'Realm', exact:true }))
       .toBeVisible();
     await expect(panel.getByRole('heading', { name:'County', exact:true }))
+      .toBeVisible();
+    await expect(panel.getByRole('heading', { name:'Population', exact:true }))
       .toBeVisible();
     await expect(panel.getByRole('heading', { name:'Development', exact:true }))
       .toBeVisible();

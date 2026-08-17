@@ -1,7 +1,14 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/model.js',
+  'js/world.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 async function startWithCode(page, code, name) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();

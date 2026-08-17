@@ -6,15 +6,24 @@ const path = require('path');
 const testRunState = require('./test-run-state');
 
 const testRoot = path.resolve(__dirname, '..');
-const markerPath = path.join(testRoot, '.last-tested-commit');
-const lastRunPath = path.join(testRoot, '.last-test-run.json');
 const mode = process.argv[2];
-const extraArgs = process.argv.slice(3);
+let stateScope = 'matrix';
+const extraArgs = process.argv.slice(3).filter(function (argument) {
+  if (argument.indexOf('--state-scope=') !== 0) return true;
+  stateScope = argument.slice('--state-scope='.length);
+  return false;
+});
 
-if (mode !== 'all' && mode !== 'changed') {
-  console.error('Usage: node support/run-selected-tests.js <all|changed>');
+if ((mode !== 'all' && mode !== 'changed') ||
+    !/^[a-z0-9][a-z0-9-]*$/.test(stateScope)) {
+  console.error(
+    'Usage: node support/run-selected-tests.js <all|changed> ' +
+    '[--state-scope=<scope>] [Playwright arguments]');
   process.exit(2);
 }
+
+const markerPath = path.join(testRoot, '.last-tested-commit.' + stateScope);
+const lastRunPath = path.join(testRoot, '.last-test-run.' + stateScope + '.json');
 
 let snapshot;
 try {
@@ -34,23 +43,21 @@ if (mode === 'changed') {
     console.log('Previous Playwright run failed; rerunning its failed tests.');
     playwrightArgs.push('--last-failed');
   } else {
-    if (!fs.existsSync(markerPath)) {
-      console.error(
-        'No successful test baseline exists. Run "npm run test:all" once first.');
-      process.exit(2);
+    let baseline = null;
+    if (fs.existsSync(markerPath)) {
+      const recorded = fs.readFileSync(markerPath, 'utf8').trim();
+      if (/^[0-9a-f]{40}$/i.test(recorded) && testRunState.validateBaseline(testRoot, recorded)) {
+        baseline = recorded;
+      }
     }
-    const baseline = fs.readFileSync(markerPath, 'utf8').trim();
-    if (!/^[0-9a-f]{40}$/i.test(baseline)) {
-      console.error(
-        'The test baseline is invalid. Delete .last-tested-commit and run ' +
-        '"npm run test:all" again.');
-      process.exit(2);
-    }
-    if (!testRunState.validateBaseline(testRoot, baseline)) {
-      console.error(
-        'The recorded test baseline is unavailable in this clone. Run ' +
-        '"npm run test:all" to establish a new baseline.');
-      process.exit(2);
+    if (!baseline) {
+      try {
+        baseline = testRunState.fallbackBaseline(testRoot);
+      } catch (error) {
+        console.error('Cannot determine a safe changed-test fallback baseline: ' + error.message);
+        process.exit(2);
+      }
+      console.log('No valid test baseline recorded; falling back to ' + baseline + '.');
     }
     playwrightArgs.push('--only-changed=' + baseline);
   }
@@ -70,7 +77,13 @@ if (result.error) {
 }
 if (result.status !== 0) process.exit(result.status === null ? 1 : result.status);
 
-testRunState.recordBaseline(markerPath, snapshot.commit);
+let baselineRef;
+try {
+  baselineRef = testRunState.recordBaseline(markerPath, snapshot.commit, stateScope);
+} catch (error) {
+  console.error('Tests passed, but the successful baseline could not be recorded: ' + error.message);
+  process.exit(2);
+}
 console.log(
   'Recorded successful tracked-worktree test baseline: ' + snapshot.commit +
-  ' (HEAD ' + snapshot.head + ')');
+  ' (HEAD ' + snapshot.head + ', scope ' + stateScope + ', ref ' + baselineRef + ')');

@@ -1,7 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/mapview.js',
+  'js/ui_panels.js',
+  'js/ui_topbar.js',
+  'css/style.css'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame, waitForUiRefresh } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);

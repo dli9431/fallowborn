@@ -1,10 +1,15 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/armies.js',
+  'js/events.js',
+  'js/ui_modals.js',
+  'data/events_war.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 async function startCampaignGame(page, testInfo) {
   await openGame(page, testInfo);

@@ -1,10 +1,13 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/technology.js',
+  'data/technology.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -124,6 +127,8 @@ test('the prospective review ledger and every gate schema validate together',
         baseline:FBDATA.techImpactReviews.baselineVersion,
         featureIds:featureIds,
         modes:modes,
+        settlementDynamicRentTech:
+          FBDATA.techImpactReviews.features.settlement_dynamic_rents.tech.slice(),
         coreErrors:coreErrors,
         reviewErrors:reviewErrors,
         optionErrors:optionErrors,
@@ -148,6 +153,14 @@ test('the prospective review ledger and every gate schema validate together',
       'auction_item_lots',
       'auction_title_rights',
       'bounded_market_auctions',
+      'building_arsenal',
+      'building_cathedral',
+      'building_exchange',
+      'building_foundry',
+      'building_guildhall',
+      'building_hospital',
+      'building_university',
+      'building_windmill',
       'chartered_trade_corridors',
       'commodity_ventures',
       'concentric_fortress_upgrade',
@@ -155,6 +168,7 @@ test('the prospective review ledger and every gate schema validate together',
       'consent_of_estates',
       'county_community_identity',
       'county_goods_markets',
+      'county_population_demographics',
       'direct_vassal_charter_of_liberties',
       'estates_scutage',
       'formal_confirmation_of_custom',
@@ -166,16 +180,26 @@ test('the prospective review ledger and every gate schema validate together',
       'guild_maritime_factor_path',
       'guild_smith_path',
       'guild_weaver_path',
+      'late_medieval_crafts_commerce',
+      'late_medieval_warfare_gear',
       'rare_auction_invitations',
+      'settlement_dynamic_rents',
       'stone_castle_upgrade',
       'tournament_jousting',
-      'towered_stronghold_upgrade'
+      'towered_stronghold_upgrade',
+      'trade_venture_return_cargo'
     ]);
     expect(Object.values(result.modes)).toEqual([
-      'none', 'none', 'hard', 'none', 'hard', 'none', 'hard', 'hard',
-      'hard', 'none', 'soft', 'hard', 'hard', 'hard', 'hard', 'hard', 'none',
-      'hard', 'hard', 'hard', 'none', 'hard', 'none', 'hard', 'hard',
-      'hard'
+      'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard', 'hard',
+      'soft', 'hard', 'soft', 'hard', 'none', 'hard', 'hard', 'hard', 'none',
+      'soft', 'soft', 'hard', 'hard', 'hard', 'hard', 'hard', 'none', 'hard',
+      'hard', 'hard', 'none', 'hard', 'soft', 'soft', 'none', 'soft', 'hard',
+      'hard', 'hard', 'none'
+    ]);
+    expect(result.settlementDynamicRentTech).toEqual([
+      'undershot_watermill', 'urban_markets', 'harbor_works',
+      'stone_bridgebuilding', 'standardized_coinage', 'tax_assessment',
+      'exchequer_accounts', 'scutage', 'heavy_plough', 'three_field'
     ]);
     expect(result.coreErrors).toEqual([]);
     expect(result.reviewErrors.some(function (error) {

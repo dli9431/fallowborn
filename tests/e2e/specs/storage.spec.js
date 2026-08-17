@@ -1,11 +1,14 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/save.js',
+  'js/ui_modals.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  START_CODE,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
 const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
 
 test('served origin provides persistent storage for save slots',

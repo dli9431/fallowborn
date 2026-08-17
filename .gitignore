@@ -20,7 +20,9 @@ test-results/
 playwright-report/
 blob-report/
 .last-tested-commit
+.last-tested-commit.*
 .last-test-run.json
+.last-test-run.*.json
 
 # Python bytecode (from the i18n tooling: tools/i18n_catalog.py)
 __pycache__/

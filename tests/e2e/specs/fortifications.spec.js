@@ -1,10 +1,19 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/armies.js',
+  'js/fortifications.js',
+  'js/ui_modals.js',
+  'data/map_data.js',
+  'data/technology.js'
+]);
 
 /* Strategic fortifications. These tests are authored for the owner-run
    Playwright harness and deliberately do not execute in the authoring flow. */
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 test.use({
   viewport:{ width:390, height:844 },

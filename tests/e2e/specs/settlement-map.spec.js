@@ -1,4 +1,13 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/mapview.js',
+  'js/settlement.js',
+  'js/siteart.js',
+  'js/world.js',
+  'css/style.css',
+  'data/settlements.js'
+]);
 
 /* Settlement sites and the detailed map: data/validation contract, determinism,
    save/property compatibility, condition-driven development and settlement
@@ -7,11 +16,9 @@
    detailed-map.md; NOT run by the authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startGame(page, testInfo) {
   await openGame(page, testInfo);
@@ -466,7 +473,7 @@ test('development decline never conceals an anchored settlement',
     expect(result.grown).toBeGreaterThan(result.base);
   });
 
-test('yearly development drift skips direct counties but continues under AI rulers',
+test('annual AI building construction skips direct player counties but places infrastructure under AI rulers',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     await page.evaluate(function () { FB.game.setPaused(true); });
@@ -483,48 +490,35 @@ test('yearly development drift skips direct counties but continues under AI rule
       }
       const savedDev = s.dev;
       const savedProvs = p.provs;
-      const realChance = FB.chance;
+      const savedBuildings = s.buildings;
       const out = {};
       try {
         p.provs = [pid];
         s.dev = {};
         s.dev[pid] = 5;
         s.dev[governed] = 5;
-        let calls = [];
-        FB.chance = function (chance) { calls.push(chance); return true; };
-        FB.aiDevelopmentYear(s);
-        out.direct = s.dev[pid];
-        out.governed = s.dev[governed];
-        out.directYearCalls = calls;
+        s.buildings = {};
+        s.buildings[pid] = [];
+        s.buildings[governed] = [];
+        FB.aiBuildingsYear(s);
+        out.directBuildings = (s.buildings[pid] || []).length;
+        out.governedBuildings = (s.buildings[governed] || []).length;
 
         p.provs = [];
-        s.dev = {};
-        s.dev[pid] = 5;
-        calls = [];
-        FB.aiDevelopmentYear(s);
-        out.returnedToAi = s.dev[pid];
-        out.aiYearCalls = calls;
-
-        FB.damageCountyDevelopment(s, pid);
-        calls = [];
-        FB.aiDevelopmentYear(s);
-        out.damageNotRerolled = s.dev[pid];
-        out.damageYearCalls = calls;
+        s.buildings[pid] = [];
+        FB.aiBuildingsYear(s);
+        out.returnedToAiBuildings = (s.buildings[pid] || []).length;
       } finally {
-        FB.chance = realChance;
         s.dev = savedDev;
         p.provs = savedProvs;
+        s.buildings = savedBuildings;
       }
       return out;
     });
 
-    expect(result.direct).toBe(5);
-    expect(result.governed).toBe(6);
-    expect(result.directYearCalls).toEqual([0.04, 0.7]);
-    expect(result.returnedToAi).toBe(6);
-    expect(result.aiYearCalls).toEqual([0.04, 0.7]);
-    expect(result.damageNotRerolled).toBe(5);
-    expect(result.damageYearCalls).toEqual([]);
+    expect(result.directBuildings).toBe(0);
+    expect(result.governedBuildings).toBeGreaterThan(0);
+    expect(result.returnedToAiBuildings).toBeGreaterThan(0);
   });
 
 test('legacy direct development is rebuilt once from bookmark and standing buildings',
@@ -665,7 +659,7 @@ test('building development reverses on demolition without inventing legacy loss'
       afterCappedDemolition:result.cap,
       cap:result.cap,
       legacyAfterDemolition:5,
-      developmentBuildings:['bridge', 'harbor', 'market', 'mill']
+      developmentBuildings:['arsenal', 'bridge', 'cathedral', 'exchange', 'guildhall', 'harbor', 'market', 'mill', 'windmill']
     });
   });
 

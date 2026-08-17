@@ -1,4 +1,12 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/events.js',
+  'js/model.js',
+  'js/world.js',
+  'data/events_noble.js',
+  'data/events_world.js'
+]);
 
 /* The way down (docs/designs/descent.md): title lapse, the loser's homage,
    felony & attainder, capture & ransom, distraint & debt bondage, and
@@ -6,10 +14,8 @@
    deterministic context. */
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 async function startGame(page, testInfo) {
   await openGame(page, testInfo);

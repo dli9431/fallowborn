@@ -1,7 +1,13 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/music.js',
+  'js/main.js',
+  'data/music_catalog.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, targetUrl } = require('../support/game');
+const { openGame, targetUrl } = require('../support/game/navigation');
 
 const tracks = [
   ['christian-anglo_saxon-folk-hammer-and-lute', 'Hammer And Lute',

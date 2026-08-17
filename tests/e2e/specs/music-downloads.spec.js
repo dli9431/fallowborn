@@ -1,4 +1,10 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/music.js',
+  'js/ui_modals.js',
+  'data/music_catalog.js'
+]);
 
 /* Music offline downloads: progress shows inside the downloads dialog while
    it is open and on a floating chip when it is not; a finished download
@@ -7,11 +13,9 @@
    no bytes travel. NOT run by the authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startGame(page, testInfo) {
   await openGame(page, testInfo);

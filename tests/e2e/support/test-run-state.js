@@ -1,6 +1,7 @@
 'use strict';
 
 const childProcess = require('child_process');
+const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -142,14 +143,45 @@ function validateBaseline(startDir, baseline) {
   }
 }
 
-function recordBaseline(markerPath, commit) {
+function fallbackBaseline(startDir) {
+  const gitRoot = git(['rev-parse', '--show-toplevel'], startDir);
+  let upstream;
+  try {
+    upstream = git([
+      'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'
+    ], gitRoot);
+  } catch (_error) {
+    return git(['rev-parse', 'HEAD'], gitRoot);
+  }
+  return git(['merge-base', 'HEAD', upstream], gitRoot);
+}
+
+function baselineRef(startDir, scope) {
+  const normalizedScope = String(scope || 'matrix');
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(normalizedScope)) {
+    throw new Error('Invalid test baseline scope: ' + normalizedScope);
+  }
+  const gitRoot = git(['rev-parse', '--show-toplevel'], startDir);
+  const rawGitDir = git(['rev-parse', '--git-dir'], gitRoot);
+  const gitDir = path.resolve(gitRoot, rawGitDir);
+  const worktreeId = crypto.createHash('sha1').update(gitDir).digest('hex').slice(0, 12);
+  return 'refs/fallowborn/test-baselines/' + worktreeId + '/' + normalizedScope;
+}
+
+function recordBaseline(markerPath, commit, scope) {
+  const gitRoot = git(['rev-parse', '--show-toplevel'], path.dirname(markerPath));
+  const ref = baselineRef(gitRoot, scope);
+  git(['update-ref', ref, commit], gitRoot);
   fs.writeFileSync(markerPath, commit + '\n', 'utf8');
+  return ref;
 }
 
 module.exports = {
   assertCleanSnapshotMatchesHead:assertCleanSnapshotMatchesHead,
+  baselineRef:baselineRef,
   changedSelection:changedSelection,
   createWorkingTreeSnapshot:createWorkingTreeSnapshot,
+  fallbackBaseline:fallbackBaseline,
   git:git,
   gitRaw:gitRaw,
   hasMeaningfulWorkingTreeChange:hasMeaningfulWorkingTreeChange,

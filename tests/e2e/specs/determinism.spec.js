@@ -1,12 +1,18 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'index.html',
+  'css',
+  'js',
+  'data'
+]);
 
-const { test, expect, attachPageDiagnostic, installPageGuards } =
-  require('../support/fixture');
-const {
-  injectBrowserHarness,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { test, expect } = require('../support/fixture');
+const { attachPageDiagnostic } = require('../support/game-diagnostic');
+const { installPageGuards } = require('../support/page-contract');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 async function runScript(page, testInfo) {
   await openGame(page, testInfo);

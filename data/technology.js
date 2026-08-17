@@ -81,7 +81,7 @@ window.FBDATA = window.FBDATA || {};
         mode:'soft',
         tech:[
           'undershot_watermill','urban_markets','harbor_works','stone_bridgebuilding',
-          'currency_minting','centralized_taxation','written_accounts','scutage',
+          'standardized_coinage','tax_assessment','exchequer_accounts','scutage',
           'heavy_plough','three_field'
         ],
         rationale:'Baseline land rents and settlement values function universally, while agricultural innovations expand demographic carrying capacity, commerce tech unlocks advanced settlement buildings, and fiscal tech scales realm taxation.'

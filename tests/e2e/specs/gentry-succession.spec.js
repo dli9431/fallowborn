@@ -1,4 +1,11 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/model.js',
+  'js/world.js',
+  'js/ui_modals.js'
+]);
 
 /* Gentry establishment across succession (docs/designs/realms.md): a house
    that has just reached the gentry may not ordinarily petition for a barony until an
@@ -14,7 +21,8 @@
    fresh deterministic context. */
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);

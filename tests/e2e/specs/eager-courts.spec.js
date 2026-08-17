@@ -1,4 +1,11 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/model.js',
+  'js/world.js',
+  'data/bookmarks.js'
+]);
 
 /* Eager court characters for reigning realms.
 
@@ -8,15 +15,13 @@
    record count staying bound by the map rather than by elapsed years. Each of
    those fails silently in play and loudly only if asserted. */
 
-const { test, expect, attachPageDiagnostic, installPageGuards } =
-  require('../support/fixture');
+const { test, expect } = require('../support/fixture');
+const { attachPageDiagnostic } = require('../support/game-diagnostic');
+const { installPageGuards } = require('../support/page-contract');
 const nonCourtWorldFixture =
   require('../fixtures/pre-eager-courts-world.json');
-const {
-  START_CODE,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);

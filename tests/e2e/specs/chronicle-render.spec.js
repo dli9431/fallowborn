@@ -1,7 +1,14 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/i18n.js',
+  'js/messages.js',
+  'js/ui_panels.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 test('the chronicle grows by prepend and trims, identical to a full rebuild',
   async function ({ page }, testInfo) {

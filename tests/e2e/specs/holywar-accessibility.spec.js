@@ -1,12 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/holywar.js',
+  'js/ui_modals.js',
+  'css/style.css'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  injectHolyWarHarness,
-  openGame,
-  startDeterministicGame,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
+const { injectHolyWarHarness } = require('../support/game/holywar-harness');
 
 test('the council is keyboard-operable at desktop and mobile widths',
   async function ({ page }, testInfo) {

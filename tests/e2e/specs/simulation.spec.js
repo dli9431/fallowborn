@@ -1,11 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/model.js',
+  'js/world.js',
+  'js/events.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  injectBrowserHarness,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 test('a bounded simulation preserves game-state invariants',
   async function ({ page }, testInfo) {

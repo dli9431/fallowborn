@@ -1,11 +1,15 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/model.js',
+  'js/world.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  injectBrowserHarness,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { injectBrowserHarness } = require('../support/game/browser-harness');
 
 /* Guards docs/plans/family-record-growth.md: an extreme fertility multiplier
    must stay a probability (kinConceiveCap), and past familyMaxChars the wider
@@ -25,6 +29,7 @@ test('an extreme fertility trait no longer means a birth every year',
     await injectBrowserHarness(page);
 
     const result = await page.evaluate(function () {
+      FB.game.setPaused(true);
       const s = FB.state;
       const me = s.chars[s.player.charId];
       const year = s.date.year;
@@ -42,7 +47,8 @@ test('an extreme fertility trait no longer means a birth every year',
         const son = FB.makeCharacter(s, {
           sex:'m', culture:me.culture, religion:me.religion,
           born:year - 25, traits:['lustful'], traitsN:0,
-          dyn:me.dyn, motherId:me.id
+          dyn:me.dyn, fatherId:me.sex === 'm' ? me.id : null,
+          motherId:me.sex === 'f' ? me.id : null
         });
         son.health = 8;
         const wife = FB.makeCharacter(s, {
@@ -85,6 +91,7 @@ test('past familyMaxChars the wider family adds no records, betrothals still wed
     await injectBrowserHarness(page);
 
     const result = await page.evaluate(function () {
+      FB.game.setPaused(true);
       const s = FB.state;
       const me = s.chars[s.player.charId];
       const year = s.date.year;
@@ -96,7 +103,9 @@ test('past familyMaxChars the wider family adds no records, betrothals still wed
       function son() {
         const k = FB.makeCharacter(s, {
           sex:'m', culture:me.culture, religion:me.religion,
-          born:year - 25, traits:[], traitsN:0, dyn:me.dyn, motherId:me.id
+          born:year - 25, traits:[], traitsN:0, dyn:me.dyn,
+          fatherId:me.sex === 'm' ? me.id : null,
+          motherId:me.sex === 'f' ? me.id : null
         });
         k.health = 8;
         me.childrenIds.push(k.id);

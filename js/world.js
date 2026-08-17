@@ -4336,9 +4336,10 @@ window.FB = window.FB || {};
 
   FB.playerRealmId = function (state) {
     // the SOVEREIGN realm the player answers to (liege's top, own realm, or home)
-    if (state.realms.player && state.realms.player.alive) return FB.topRealm(state, 'player');
-    if (state.player.liege) return FB.topRealm(state, state.player.liege);
-    return state.owner[state.player.provinceId] || null;
+    if (!state) return null;
+    if (state.realms && state.realms.player && state.realms.player.alive) return FB.topRealm(state, 'player');
+    if (state.player && state.player.liege) return FB.topRealm(state, state.player.liege);
+    return (state.owner && state.player && state.owner[state.player.provinceId]) || null;
   };
 
   /* found a new holding on empty land: a bordering wasteland becomes a true

@@ -1,4 +1,11 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/population.js',
+  'js/world.js',
+  'js/ui_panels.js',
+  'js/ui_modals.js'
+]);
 
 /* Static county communities: both bookmark manifests, schema validation,
    character creation, county/Land display, and start-code compatibility.
@@ -6,7 +13,7 @@
    (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
 
 const EXPECTED = {
   '867':{

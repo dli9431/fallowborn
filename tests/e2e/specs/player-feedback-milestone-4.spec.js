@@ -1,7 +1,14 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/model.js',
+  'js/ui_modals.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame, START_CODE } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);

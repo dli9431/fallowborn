@@ -34,9 +34,13 @@ From `tests/e2e/`:
 - `npm run check` runs the fast `node --check` syntax gate.
 - `npm run test:server` runs the in-process server, offline-cache, and test-runner support
   regressions.
+- `npm run test:fast` reruns preceding Chromium-served failures, or Chromium-served specs
+  affected since that scope's last successful tracked-worktree snapshot.
+- `npm run test:fast:all` runs the full Chromium-served suite without advancing the independent
+  all-browser baseline.
 - `npm run test:changed` automatically reruns the preceding Playwright failures, or when the
   preceding run did not fail, runs test files affected since the last successful tracked-worktree
-  snapshot.
+  snapshot across the configured browser projects.
 - `npm run test:all` runs the server regression and every configured browser project.
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
 - `npm test` is an alias for `npm run test:all`.

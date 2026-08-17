@@ -1,12 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/ui_modals.js',
+  'data/bookmarks.js',
+  'data/events_tutorial.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame,
-  START_CODE,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -77,9 +81,9 @@ test('First steps flip from ordinary play and the track advances',
     await expect(page.locator('.tutorial-card')).toBeVisible();
 
     // letting the days flow flips its step through the real pause control
-    await page.evaluate(function () { FB.game.setPaused(false); });
-    await page.evaluate(function () { FB.game.setPaused(true); });
     let status = await page.evaluate(function () {
+      FB.game.setPaused(false);
+      FB.game.setPaused(true);
       FB.tutorialCheck(FB.state);
       return FB.tutorialStatus(FB.state);
     });

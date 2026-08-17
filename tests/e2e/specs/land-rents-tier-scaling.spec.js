@@ -1,11 +1,26 @@
-const { test, expect } = require('@playwright/test');
+'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/economy.js',
+  'js/population.js',
+  'js/settlement.js',
+  'js/world.js',
+  'data/map_data.js',
+  'data/technology.js'
+]);
 
-test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Construction', () => {
-  test('Baron seat baseline vs Count starting county land rents progression', async ({ page }) => {
-    await page.goto('index.html');
-    await page.waitForFunction(() => window.FB && window.FB.playerTaxParts && window.FB.countySettlementTax);
+const { test, expect } = require('../support/fixture');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
-    const rentComparison = await page.evaluate(() => {
+test.beforeEach(async function ({ page }, testInfo) {
+  await openGame(page, testInfo);
+  await startDeterministicGame(page);
+});
+
+test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Construction', function () {
+  test('Baron seat baseline vs Count starting county land rents progression', async function ({ page }) {
+    const rentComparison = await page.evaluate(function () {
       // 1. Baron (Tier 3) state with no held counties
       const stateBaron = {
         turn: 1,
@@ -54,7 +69,7 @@ test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Constru
       return {
         baronRentBase: baronTax.rentBase,
         countRentBase: countTax.rentBase,
-        yorkSettlementTax,
+        yorkSettlementTax: yorkSettlementTax,
         isCountHigher: countTax.rentBase > baronTax.rentBase
       };
     });
@@ -64,14 +79,12 @@ test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Constru
     expect(rentComparison.countRentBase).toBeGreaterThanOrEqual(9.0);
   });
 
-  test('Settlement building construction unlocks development and raises land rents', async ({ page }) => {
-    await page.goto('index.html');
-    await page.waitForFunction(() => window.FB && window.FB.playerTaxParts);
-
-    const progression = await page.evaluate(() => {
+  test('Settlement building construction unlocks development and raises land rents', async function ({ page }) {
+    const progression = await page.evaluate(function () {
       const state = {
         turn: 1,
         date: { year: 867 },
+        log: [],
         player: {
           charId: 'p1',
           tier: 4,
@@ -86,7 +99,10 @@ test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Constru
           player: { id: 'player', alive: true, liege: null }
         },
         buildings: { york: [] },
-        tech: { player: { undershot_watermill: 1 } }
+        realmTechMigration: 2,
+        realmTech: {
+          player: { completed: ['undershot_watermill', 'water_power'], active: [], exposed: [], progress: {} }
+        }
       };
 
       const taxBefore = FB.playerTaxParts(state).rentBase;
@@ -97,11 +113,11 @@ test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Constru
       const taxAfter = FB.playerTaxParts(state).rentBase;
 
       return {
-        built,
+        built: built,
         devBefore: 4,
-        devAfter,
-        taxBefore,
-        taxAfter
+        devAfter: devAfter,
+        taxBefore: taxBefore,
+        taxAfter: taxAfter
       };
     });
 
@@ -110,15 +126,13 @@ test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Constru
     expect(progression.taxAfter).toBeGreaterThan(progression.taxBefore);
   });
 
-  test('Duke and King demesne rents and vassal charter dues scale comfortably', async ({ page }) => {
-    await page.goto('index.html');
-    await page.waitForFunction(() => window.FB && window.FB.playerTaxParts && window.FB.vassalTaxContribution);
-
-    const feudalData = await page.evaluate(() => {
+  test('Duke and King demesne rents and vassal charter dues scale comfortably', async function ({ page }) {
+    const feudalData = await page.evaluate(function () {
       // Duke holding 2 counties and 2 vassal counts
       const stateDuke = {
         turn: 1,
         date: { year: 867 },
+        log: [],
         player: {
           charId: 'p1',
           tier: 5,
@@ -152,43 +166,42 @@ test.describe('Dynamic Land Rents, Feudal Tier Progression & AI Building Constru
     expect(feudalData.dukeTaxable).toBeGreaterThanOrEqual(20.0);
   });
 
-  test('AI Building Construction Planner places tangible infrastructure during peace', async ({ page }) => {
-    await page.goto('index.html');
-    await page.waitForFunction(() => window.FB && window.FB.aiBuildingsYear);
-
-    const aiResults = await page.evaluate(() => {
+  test('AI Building Construction Planner places tangible infrastructure during peace', async function ({ page }) {
+    const aiResults = await page.evaluate(function () {
       const state = {
         turn: 360,
         date: { year: 868 },
+        log: [],
         dev: {
-          wessex_seat: 3,
-          mercia_seat: 3
+          winchester: 3,
+          warwick: 3
         },
-        owner: { wessex_seat: 'wessex', mercia_seat: 'mercia' },
-        holder: { wessex_seat: 'wessex', mercia_seat: 'mercia' },
+        owner: { winchester: 'wessex', warwick: 'mercia' },
+        holder: { winchester: 'wessex', warwick: 'mercia' },
         realms: {
-          wessex: { id: 'wessex', alive: true, capital: 'wessex_seat', rank: 3 },
-          mercia: { id: 'mercia', alive: true, capital: 'mercia_seat', rank: 3 }
+          wessex: { id: 'wessex', alive: true, capital: 'winchester', rank: 3 },
+          mercia: { id: 'mercia', alive: true, capital: 'warwick', rank: 3 }
         },
         buildings: {
-          wessex_seat: [],
-          mercia_seat: []
+          winchester: [],
+          warwick: []
         },
         armies: [],
-        tech: {
-          wessex: { undershot_watermill: 1 },
-          mercia: { undershot_watermill: 1 }
+        realmTechMigration: 2,
+        realmTech: {
+          wessex: { completed: ['undershot_watermill', 'water_power'], active: [], exposed: [], progress: {} },
+          mercia: { completed: ['undershot_watermill', 'water_power'], active: [], exposed: [], progress: {} }
         }
       };
 
-      const devBeforeWessex = state.dev.wessex_seat;
+      const devBeforeWessex = state.dev.winchester;
       FB.aiBuildingsYear(state);
-      const devAfterWessex = state.dev.wessex_seat;
-      const bldgsWessex = state.buildings.wessex_seat;
+      const devAfterWessex = state.dev.winchester;
+      const bldgsWessex = state.buildings.winchester;
 
       return {
-        devBeforeWessex,
-        devAfterWessex,
+        devBeforeWessex: devBeforeWessex,
+        devAfterWessex: devAfterWessex,
         bldgsCount: bldgsWessex.length,
         firstBuildingId: bldgsWessex[0] ? bldgsWessex[0].id : null
       };

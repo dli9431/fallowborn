@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.136.0';
+  FB.VERSION = '1.136.1';
   FB.CHANGELOG = [
+    { v: '1.136.1', date: '2026-08-16', changes: [
+      'Sovereign realm checks now tolerate partially initialized player state, preventing setup-time errors.'
+    ] },
     { v: '1.136.0', date: '2026-08-16', changes: [
       'Added 8 late-medieval settlement buildings and 6 historical technologies, expanding high-development cities with universities, cathedrals, guildhalls, arsenals, and foundries.'
     ] },

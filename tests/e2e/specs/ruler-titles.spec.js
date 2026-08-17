@@ -1,10 +1,14 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/model.js',
+  'js/ui_modals.js',
+  'js/world.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 /* AI realm rulers must be styled with the female rank words from
    FBDATA.titles.<group>_f when the ruler is female (Sultana, not Sultan). */

@@ -1,7 +1,12 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/world.js',
+  'data/map_data.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
 
 /* The shore rule: nearest-seed assignment on the single Afro-Eurasian land
    polygon used to let a county win land across a carved sea wherever the far

@@ -42,7 +42,13 @@ npm run check
 # Server lifecycle, offline-cache, and test-runner support regressions
 npm run test:server
 
-# Rerun preceding failures, or tests affected since the last successful snapshot
+# Fast Chromium-only changed tests (rapid local iteration loop)
+npm run test:fast
+
+# Fast Chromium-only full suite
+npm run test:fast:all
+
+# Rerun preceding failures, or tests affected since the last successful snapshot (all browsers)
 npm run test:changed
 
 # Run the server regression and every configured browser project
@@ -68,31 +74,53 @@ npm run test:file
 npm run test:served
 ```
 
-Every wrapped Playwright run writes its result and failed-test ids to the ignored
-`tests/e2e/.last-test-run.json` file. When that result is a test failure, `test:changed`
-automatically uses Playwright's last-failed selection on the next run. This makes the ordinary
-repair loop `test:all` -> edit the failure -> `test:changed`; no spec name is required. A setup
-error, invalid state file, or interrupted run does not activate the focused retry path.
+Every wrapped Playwright run writes its result and failed-test ids to an ignored scoped file:
+`.last-test-run.matrix.json` for the all-browser commands and
+`.last-test-run.fast-chromium-served.json` for the fast commands. A failure is retried only within
+the same scope, so a Chromium-only repair run cannot consume or replace a Firefox, WebKit, or
+file-origin failure. This makes the ordinary repair loop `test:fast` -> edit the failure ->
+`test:fast`; no spec name is required. A setup error, invalid state file, or interrupted run does
+not activate the focused retry path.
 
-After a successful `test:all` or `test:changed`, the wrapper records the tested baseline in the
-ignored `tests/e2e/.last-tested-commit` file. A clean tracked working tree records `HEAD`
+After a successful test run, the wrapper records the tested baseline in the matching ignored
+`.last-tested-commit.<scope>` file. Fast and matrix runs therefore cannot advance one another's
+coverage. Each commit is anchored under a scope- and worktree-specific
+`refs/fallowborn/test-baselines/...` reference so another worktree cannot replace its synthetic
+baseline and Git garbage collection cannot prune it. Failure to create the anchor fails baseline
+recording instead of silently promising persistence. A clean tracked working tree records `HEAD`
 directly. When tracked files have edits, the wrapper records a synthetic Git commit whose tree
-captures the staged and unstaged contents the run started with, without modifying the real
-index or branch history. It stages only paths the real index reports as changed, and the
-repository `.gitattributes` policy canonicalizes text to LF so Windows and Unix checkouts
-produce the same snapshot tree. Before staging, line-ending-only paths are discarded with Git's
+captures the staged and unstaged contents the run started with, without modifying the real index
+or branch history. It stages only paths the real index reports as changed, and the repository
+`.gitattributes` policy canonicalizes text to LF so Windows and Unix checkouts produce the same
+snapshot tree. Before staging, line-ending-only paths are discarded with Git's
 `--ignore-cr-at-eol` comparison, including when real content changed elsewhere. A clean-tree
 invariant rejects a mismatched snapshot instead of silently recording line-ending noise.
 
 When no failed-test retry is pending, Playwright selects affected test files between that
 baseline and the current tree. New untracked files remain affected until committed. If the
-marker does not exist or its local synthetic commit is no longer available, `test:changed`
-stops and asks the owner to establish a baseline with `npm run test:all`.
+marker does not exist or its recorded baseline commit is unavailable, the runner uses the current
+branch's upstream merge base when one exists. This includes committed local work on an ahead
+branch. A repository without an upstream falls back to `HEAD`, selecting its uncommitted changes.
+
+Each specification declares its relevant shipped paths with
+`support/runtime-dependencies.js`. The helper registers exact external dependency edges with the
+pinned Playwright changed-file analyzer without importing or executing browser game scripts in
+Node. A declaration may name a directory; it expands to the shipped files currently beneath that
+directory. The boot and determinism canaries declare the complete JS, data, and CSS trees,
+providing a small served-origin and file-origin safety selection for a new or otherwise unmapped
+runtime file. Keep more focused declarations in the owning specifications so ordinary source
+edits select their relevant specs rather than the whole suite.
+
+Do not import game scripts into Node for dependency discovery. Game logic still runs inside the
+real browser page; `dependsOnRuntime(...)` is dependency metadata only.
 
 Playwright's changed mode does not isolate only newly added `test(...)` blocks inside an existing
 specification; the affected specification runs as a whole. A changed shared test helper can make
-every importing specification affected. The automatic last-failed path deliberately favors a
-fast repair loop after a failure; run `test:all` again for the authoritative whole-suite result.
+every importing specification affected. Changes to the universal fixture, page contract, or
+Playwright configuration legitimately affect the whole suite. Feature helpers live in leaf modules
+under `support/game/`; specifications import those modules directly so an unrelated helper change
+does not fan out through a barrel file. The automatic last-failed path deliberately favors a fast
+repair loop after a failure; run `test:all` for the authoritative whole-suite result.
 
 Playwright starts and stops the test server automatically. Tests run headlessly unless a
 Playwright command-line option requests another mode.
@@ -109,9 +137,6 @@ To run one specification or one named case:
 npx playwright test specs/boot.spec.js
 npx playwright test -g "export a life"
 ```
-
-Do not import game scripts into Node. Game logic runs inside the real browser page; Node handles
-orchestration, assertions, fixtures, and reporting.
 
 ## Main integration workflow
 
@@ -203,10 +228,11 @@ Specifications should import `test` and `expect` from `support/fixture.js`, not 
 `@playwright/test`. The shared fixture fails the test on page exceptions, console errors, failed
 requests, bad HTTP responses, or network traffic outside the expected local target.
 
-`support/game.js` owns common player journeys such as waiting for the title screen and starting
-the deterministic test life. Wait for visible screens or browser-observable state, never fixed
-sleeps. When a test calls the queued `FB.ui.refresh()` directly, use `waitForUiRefresh()` before
-interacting with the replaced controls.
+Leaf modules under `support/game/` own common player journeys such as navigation, deterministic
+game start, UI refresh waits, snapshots, and browser-harness injection. Import only the leaf helper
+a specification uses; do not recreate a shared barrel module. Wait for visible screens or
+browser-observable state, never fixed sleeps. When a test calls the queued `FB.ui.refresh()`
+directly, use `waitForUiRefresh()` before interacting with the replaced controls.
 
 On Windows only, the Firefox project disables Mozilla's content-process sandbox for its synthetic
 local test browser. Restricted Windows sessions can otherwise block Firefox from spawning a tab

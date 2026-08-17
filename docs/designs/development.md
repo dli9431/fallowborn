@@ -208,6 +208,11 @@ Every visible settlement slot (`FB.settlementsOf`) contributes to the county's f
 factor (`FB.countyPopulationFactor`). Thus, county land rents naturally scale with urban growth,
 development, population, and infrastructure.
 
+The `settlement_dynamic_rents` technology-impact decision is soft: baseline settlement rents
+always function, while agriculture, infrastructure, markets, Standardized Coinage, Regular Tax
+Assessment, Exchequer Accounts, and Scutage improve the systems that feed population, settlement
+value, and realm taxation.
+
 `FB.changeCountyDevelopment` is the shared clamp and feedback boundary. Positive change
 stops at the current technology-lifted ceiling; a loss removes only its stated amount,
 even when conquest has lowered the county's current ceiling. Construction saves the

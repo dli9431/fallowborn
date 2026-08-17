@@ -1,7 +1,15 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/armies.js',
+  'js/travel.js',
+  'js/world.js',
+  'data/map_data.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 test.use({
   viewport:{ width:390, height:844 },

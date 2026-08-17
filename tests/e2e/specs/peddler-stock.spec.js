@@ -1,7 +1,15 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/economy.js',
+  'js/market.js',
+  'js/ui_modals.js',
+  'data/economy.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 /* Peddler stock bands: FB.offerItem (the peddler's full table) rolls a rarity
    class from the customer's station band — each peddlerWealthShift purse

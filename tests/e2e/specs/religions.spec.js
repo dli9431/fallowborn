@@ -1,10 +1,14 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/model.js',
+  'js/ui_modals.js',
+  'js/world.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 function primaryFileOnly(testInfo) {
   test.skip(testInfo.project.name !== 'chromium-file',

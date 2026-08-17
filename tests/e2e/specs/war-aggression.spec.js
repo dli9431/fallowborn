@@ -1,15 +1,21 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/armies.js',
+  'js/world.js',
+  'js/ui_modals.js',
+  'data/events_war.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame,
-  waitForUiRefresh
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startWarGame(page, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
+  await page.evaluate(function () { FB.game.setPaused(true); });
 }
 
 async function configureAggressionWar(page) {

@@ -230,3 +230,99 @@ test('clean snapshot invariant rejects a mismatched tree', function (t) {
     testRunState.assertCleanSnapshotMatchesHead(repository, original, different);
   }, /clean tracked working tree produced a snapshot different from HEAD/i);
 });
+
+test('fallbackBaseline returns HEAD in a git repository', function (t) {
+  const repository = temporaryDirectory(t, 'fallowborn-fallback-baseline-');
+  const trackedPath = path.join(repository, 'tracked.txt');
+
+  testRunState.git(['init', '--quiet'], repository);
+  fs.writeFileSync(trackedPath, 'content\n', 'utf8');
+  testRunState.git(['add', 'tracked.txt'], repository);
+  testRunState.git([
+    '-c', 'user.name=Fallowborn Tests',
+    '-c', 'user.email=tests@fallowborn.invalid',
+    'commit', '--quiet', '-m', 'Initial fixture'
+  ], repository);
+  const head = testRunState.git(['rev-parse', 'HEAD'], repository);
+
+  assert.equal(testRunState.fallbackBaseline(repository), head);
+});
+
+test('fallbackBaseline uses the upstream merge base when local commits are ahead', function (t) {
+  const repository = temporaryDirectory(t, 'fallowborn-upstream-baseline-');
+  const trackedPath = path.join(repository, 'tracked.txt');
+
+  testRunState.git(['init', '--quiet'], repository);
+  fs.writeFileSync(trackedPath, 'base\n', 'utf8');
+  testRunState.git(['add', 'tracked.txt'], repository);
+  testRunState.git([
+    '-c', 'user.name=Fallowborn Tests',
+    '-c', 'user.email=tests@fallowborn.invalid',
+    'commit', '--quiet', '-m', 'Base fixture'
+  ], repository);
+  const base = testRunState.git(['rev-parse', 'HEAD'], repository);
+  const branch = testRunState.git(['branch', '--show-current'], repository);
+  testRunState.git(['update-ref', 'refs/heads/upstream-base', base], repository);
+  testRunState.git(['config', 'branch.' + branch + '.remote', '.'], repository);
+  testRunState.git([
+    'config', 'branch.' + branch + '.merge', 'refs/heads/upstream-base'
+  ], repository);
+
+  fs.writeFileSync(trackedPath, 'ahead\n', 'utf8');
+  testRunState.git(['add', 'tracked.txt'], repository);
+  testRunState.git([
+    '-c', 'user.name=Fallowborn Tests',
+    '-c', 'user.email=tests@fallowborn.invalid',
+    'commit', '--quiet', '-m', 'Ahead fixture'
+  ], repository);
+
+  assert.equal(testRunState.fallbackBaseline(repository), base);
+});
+
+test('recordBaseline updates a scoped persistent ref', function (t) {
+  const repository = temporaryDirectory(t, 'fallowborn-record-ref-');
+  const markerPath = path.join(repository, '.last-tested-commit.matrix');
+  const trackedPath = path.join(repository, 'tracked.txt');
+
+  testRunState.git(['init', '--quiet'], repository);
+  fs.writeFileSync(trackedPath, 'content\n', 'utf8');
+  testRunState.git(['add', 'tracked.txt'], repository);
+  testRunState.git([
+    '-c', 'user.name=Fallowborn Tests',
+    '-c', 'user.email=tests@fallowborn.invalid',
+    'commit', '--quiet', '-m', 'Initial fixture'
+  ], repository);
+  const head = testRunState.git(['rev-parse', 'HEAD'], repository);
+
+  const ref = testRunState.recordBaseline(markerPath, head, 'matrix');
+  assert.equal(fs.readFileSync(markerPath, 'utf8'), head + '\n');
+  assert.match(ref, /^refs\/fallowborn\/test-baselines\/[0-9a-f]{12}\/matrix$/);
+  assert.equal(
+    testRunState.git(['rev-parse', ref], repository),
+    head);
+});
+
+test('fast and matrix baselines use independent markers and refs', function (t) {
+  const repository = temporaryDirectory(t, 'fallowborn-scoped-baseline-');
+  const trackedPath = path.join(repository, 'tracked.txt');
+  const matrixMarker = path.join(repository, '.last-tested-commit.matrix');
+  const fastMarker = path.join(repository, '.last-tested-commit.fast-chromium-served');
+
+  testRunState.git(['init', '--quiet'], repository);
+  fs.writeFileSync(trackedPath, 'content\n', 'utf8');
+  testRunState.git(['add', 'tracked.txt'], repository);
+  testRunState.git([
+    '-c', 'user.name=Fallowborn Tests',
+    '-c', 'user.email=tests@fallowborn.invalid',
+    'commit', '--quiet', '-m', 'Initial fixture'
+  ], repository);
+  const head = testRunState.git(['rev-parse', 'HEAD'], repository);
+
+  const matrixRef = testRunState.recordBaseline(matrixMarker, head, 'matrix');
+  const fastRef = testRunState.recordBaseline(
+    fastMarker, head, 'fast-chromium-served');
+
+  assert.notEqual(matrixRef, fastRef);
+  assert.equal(fs.readFileSync(matrixMarker, 'utf8'), head + '\n');
+  assert.equal(fs.readFileSync(fastMarker, 'utf8'), head + '\n');
+});

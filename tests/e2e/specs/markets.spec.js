@@ -1,7 +1,17 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/economy.js',
+  'js/market.js',
+  'js/ui_modals.js',
+  'data/economy.js',
+  'data/markets.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame, startDeterministicGame, waitForUiRefresh } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 const COMPLETE_SAVE_BUDGET = 1.6 * 1024 * 1024;
 
 test.beforeEach(async function ({ page }, testInfo) {

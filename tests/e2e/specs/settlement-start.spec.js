@@ -1,4 +1,11 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/main.js',
+  'js/settlement.js',
+  'data/bookmarks.js',
+  'data/settlements.js'
+]);
 
 /* Birthplace settlement picking: the two-stage pick screen (county, then the
    settlement inside it), the chosen slot in new-game state, and the optional
@@ -6,7 +13,7 @@
    authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game');
+const { openGame } = require('../support/game/navigation');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);

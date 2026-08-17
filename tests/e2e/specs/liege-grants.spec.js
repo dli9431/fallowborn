@@ -1,4 +1,10 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/politics.js',
+  'js/world.js',
+  'js/ui_modals.js'
+]);
 
 /* Feudal patronage from the liege (docs/designs/realms.md): the petition for
    title grants land inside the realm — never the liege's seat, never his last
@@ -8,10 +14,8 @@
    engine level in a fresh deterministic context. */
 
 const { test, expect } = require('../support/fixture');
-const {
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
 
 async function startGame(page, testInfo) {
   await openGame(page, testInfo);

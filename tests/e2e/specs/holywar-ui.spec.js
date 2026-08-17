@@ -1,11 +1,16 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/holywar.js',
+  'js/ui_modals.js',
+  'js/ui_panels.js',
+  'css/style.css'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  injectHolyWarHarness,
-  openGame,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { startDeterministicGame } = require('../support/game/start');
+const { injectHolyWarHarness } = require('../support/game/holywar-harness');
 
 async function restoreBaseline(page, baseline) {
   await page.evaluate(function (serialized) {

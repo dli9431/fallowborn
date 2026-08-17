@@ -1,13 +1,17 @@
 'use strict';
+const { dependsOnRuntime } = require('../support/runtime-dependencies');
+dependsOnRuntime(__filename, [
+  'js/save.js',
+  'js/travel.js',
+  'js/ui_modals.js',
+  'data/events_travel.js'
+]);
 
 const { test, expect } = require('../support/fixture');
-const {
-  START_CODE,
-  lifeSnapshot,
-  openGame,
-  openMenu,
-  startDeterministicGame
-} = require('../support/game');
+const { openGame } = require('../support/game/navigation');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const { openMenu } = require('../support/game/ui');
+const { lifeSnapshot } = require('../support/game/snapshot');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
