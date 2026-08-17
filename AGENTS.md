@@ -45,6 +45,14 @@ From `tests/e2e/`:
 - `npm run test:chromium` runs the file and served-origin Chromium suite.
 - `npm test` is an alias for `npm run test:all`.
 
+When adding or updating a specification, register its shipped JS, data, and CSS inputs with
+`dependsOnRuntime(__filename, [...])` from `support/runtime-dependencies.js`. Keep declarations
+focused; directory-wide declarations are reserved for intentional canaries such as boot and
+determinism. Import shared journeys directly from the relevant leaf module under `support/game/`
+instead of recreating a common barrel module. These dependency edges are metadata for
+Playwright's changed-file analyzer only: never import or execute game scripts in Node. Baseline,
+line-ending, and helper-authoring details are documented in `docs/TESTS.md`.
+
 These commands are for owner-initiated manual runs. AI coding agents must author or update
 relevant tests, but must not install test browsers or dependencies and must not execute
 `npm run check`, Playwright, the static-server regression, runtime verification, or any other

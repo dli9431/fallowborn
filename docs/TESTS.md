@@ -102,6 +102,43 @@ marker does not exist or its recorded baseline commit is unavailable, the runner
 branch's upstream merge base when one exists. This includes committed local work on an ahead
 branch. A repository without an upstream falls back to `HEAD`, selecting its uncommitted changes.
 
+### Establishing or refreshing a baseline
+
+`npm run test:all` always runs the complete configured matrix. When it succeeds, it records the
+current tracked-worktree snapshot as the `matrix` baseline; there is no marker, report, cache, or
+reference to delete first. Use this command for the initial authoritative baseline and whenever a
+deliberate full rerun is wanted. `npm run test:fast:all` does the same for the independent
+`fast-chromium-served` scope without advancing matrix coverage.
+
+If `test:server` or another pre-Playwright support regression fails, no successful Playwright
+baseline is recorded or advanced. Fix the support failure, rerun `npm run test:server` for quick
+feedback if desired, and then rerun the original command. Existing baseline and last-run files may
+remain in place; the wrapper replaces their relevant state after a successful run.
+
+Deleting `.last-tested-commit.<scope>` is only an intentional request to forget that scope's
+recorded baseline. It is not routine cleanup. Without a valid marker, changed mode safely falls
+back to the upstream merge base, or to `HEAD` in a repository without an upstream.
+
+### Line endings and changed-test snapshots
+
+The root `.gitattributes` stores ordinary text as LF and reserves CRLF for `.bat` and `.cmd`
+files. An existing Windows checkout may nevertheless show `w/crlf` or `w/mixed` beside `i/lf` in
+`git ls-files --eol`: the working-tree bytes predate the policy or remain cached as clean, while
+the committed index form is already LF. This does not affect the browser runtime and does not
+require cleanup before a test run.
+
+Snapshot creation consults the real index first, ignores CR-at-EOL-only differences, and stages
+only paths with meaningful tracked changes into its temporary index. It never blanket-stages the
+checkout. Cached-clean CRLF or mixed working files therefore cannot become false changes merely
+because the snapshot uses a fresh index, while substantive edits in the same worktree remain
+included.
+
+An `i/mixed` entry means the committed blob itself still has mixed endings. It is valid input for
+the game and test harness, but a later edit may expose a noisy normalization diff. Normalize such
+content only as a deliberate housekeeping change from an otherwise clean worktree with
+`git add --renormalize .`, review the staged diff, and commit it separately. Renormalization is
+not required to establish a test baseline, and test-state files should not be deleted for it.
+
 Each specification declares its relevant shipped paths with
 `support/runtime-dependencies.js`. The helper registers exact external dependency edges with the
 pinned Playwright changed-file analyzer without importing or executing browser game scripts in
@@ -110,6 +147,12 @@ directory. The boot and determinism canaries declare the complete JS, data, and 
 providing a small served-origin and file-origin safety selection for a new or otherwise unmapped
 runtime file. Keep more focused declarations in the owning specifications so ordinary source
 edits select their relevant specs rather than the whole suite.
+
+The external-dependency hook comes from Playwright's internal CommonJS implementation rather
+than its public API. The harness pins Playwright to an exact version, and
+`support/runtime-dependencies.test.js` guards the dependency registration contract. Treat a
+Playwright version change as a test-runner change: review this helper and verify changed-file
+selection before accepting the upgrade.
 
 Do not import game scripts into Node for dependency discovery. Game logic still runs inside the
 real browser page; `dependsOnRuntime(...)` is dependency metadata only.
