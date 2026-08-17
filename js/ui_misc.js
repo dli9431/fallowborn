@@ -97,19 +97,21 @@ window.FB = window.FB || {};
   function settlementDevelopmentText(s, pid) {
     const status = FB.settlementDevelopment(s, pid);
     if (!status) return '';
-    if (status.next === null) {
-      return FB.T(
-        'Development {development} — the settlements have grown as far as the land allows.', {
-          development:status.development
-        });
-    }
     const changes = {
       head_town:FB.T('the first village becomes a town'),
       new_village:FB.T('an additional village appears'),
       second_town:FB.T('the second settlement becomes a town'),
       head_city:FB.T('the first settlement becomes a city')
     };
-    return FB.T('Next at development {threshold}: {change}.', {
+    if (status.next === null) {
+      return FB.T(
+        'Started at development {start}. The settlements have grown as far as the land allows.', {
+          start:status.bookmark,
+          development:status.development
+        });
+    }
+    return FB.T('Started at development {start}. Next at {threshold}: {change}.', {
+      start:status.bookmark,
       threshold:status.next,
       change:changes[status.change] || status.change
     });

@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/population.js',
+  'js/ui_misc.js',
   'js/ui_panels.js',
   'js/world.js',
   'css/style.css'
@@ -165,4 +166,39 @@ test('De jure title promotion progress notes only appear for titles where the pl
     await expect(panel).not.toContainText('make the king');
     await expect(panel).not.toContainText('make the emperor');
   });
+
+test('Development card folds starting development into settlement growth and population card omits factor and percent',
+  async function ({ page }) {
+    const panel = page.locator('#tab-prov');
+    await page.evaluate(function () {
+      FB.ui.selectProvince('dorset');
+    });
+    await waitForUiRefresh(page);
+
+    // Development section
+    await expect(panel).not.toContainText('Chronicle growth');
+    const settGrowth = panel.locator('.land-kv-detail').filter({
+      has:page.locator('span', { hasText:'Settlement growth' })
+    });
+    await expect(settGrowth).toBeVisible();
+    await expect(settGrowth.locator('b')).toContainText('Started at development');
+
+    // Population section
+    const popRow = panel.locator('.land-kv').filter({
+      has:page.locator('span', { hasText:'County population' })
+    });
+    const capRow = panel.locator('.land-kv').filter({
+      has:page.locator('span', { hasText:'Carrying capacity' })
+    });
+    await expect(popRow).toBeVisible();
+    await expect(capRow).toBeVisible();
+
+    const popText = await popRow.locator('b').textContent();
+    const capText = await capRow.locator('b').textContent();
+
+    expect(popText).not.toContain('Factor');
+    expect(popText).not.toContain('%');
+    expect(capText).not.toContain('%');
+  });
+
 

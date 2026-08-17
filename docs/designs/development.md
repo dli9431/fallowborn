@@ -24,9 +24,8 @@ each add one settlement, 4 promotes the head village to a town, 6 promotes the s
 settlement to a town, and 7 promotes the head settlement to a city. Authored settlement baselines
 (`data/settlements.js`) floor a slot's kind and an authored list can make a slot
 visible early; thresholds already satisfied that way are skipped rather than promised.
-The UI displays the next threshold and explicitly compares current state with the
-bookmark value so historical starting advantage is not described as growth achieved
-during play.
+The UI displays the starting development and next threshold together so historical starting
+advantage is not described as growth achieved during play.
 
 **Development is buildings.** Tier-3+ rulers raise named buildings (`FBDATA.buildings` in
 map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, picker in ui.js.

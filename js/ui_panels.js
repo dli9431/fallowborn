@@ -10,7 +10,6 @@ window.FB = window.FB || {};
   const SH = UI._shared;
   const $ = SH.$;
   const allianceText = SH.allianceText;
-  const bookmarkDevelopmentText = SH.bookmarkDevelopmentText;
   const countyCountText = SH.countyCountText;
   const cultureName = SH.cultureName;
   const dt = SH.dt;
@@ -4255,8 +4254,6 @@ window.FB = window.FB || {};
         landKv('Economic development',
           (s.dev[pid] || 1) + ' / ' + FB.devCap(s, pid)) +
         landKv('Settlement growth', esc(settlementDevelopmentText(s, pid)), true) +
-        landKv('Chronicle growth',
-          esc(bookmarkDevelopmentText(s, pid)), true) +
         (realm && FB.techUiRelevant(s) ? landKv('Technological development',
           techDevelopmentScore(s, rid) + ' / 10') : '') +
         landMarketCard(s, pid) +
@@ -4274,15 +4271,11 @@ window.FB = window.FB || {};
         migration: (migDelta >= 0 ? '+' : '') + migDelta.toLocaleString(),
         losses: (lossDelta >= 0 ? '+' : '') + lossDelta.toLocaleString()
       });
-      const capPct = popCap > 0 ? Math.round((pop / popCap) * 100) : 100;
-      const capText = popCap.toLocaleString() + ' (' + capPct + '%)';
-      const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pid) : 1.0;
-      const popFactorText = 'x' + popFactor.toFixed(2);
 
       h += '<section class="land-section"><h3 class="land-section-title">' +
         esc(FB.T('Population')) + '</h3>' +
-        landKv('County population', pop.toLocaleString() + ' (' + esc(FB.T('Factor {factor}', { factor: popFactorText })) + ')') +
-        landKv('Carrying capacity', esc(capText)) +
+        landKv('County population', esc(pop.toLocaleString())) +
+        landKv('Carrying capacity', esc(popCap.toLocaleString())) +
         landKv('Annual change', esc(netText + ' (' + breakdownText + ')'), true) +
         '</section>';
       const countyModifiers = FB.countyModifierRecords

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.138.2';
+  FB.VERSION = '1.138.3';
   FB.CHANGELOG = [
+    { v: '1.138.3', date: '2026-08-17', changes: [
+      'The Land tab now summarizes starting development directly in settlement growth and simplifies county population details.'
+    ] },
     { v: '1.138.2', date: '2026-08-17', changes: [
       'Music boot now avoids unsupported persistent-cache access on local hosted copies.'
     ] },
