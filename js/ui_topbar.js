@@ -26,7 +26,7 @@ window.FB = window.FB || {};
       if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
       if (FB.state && FB.music) FB.music.sync(FB.state);
       refreshNow();
-      if (UI.maybeShowRoleOrientation) UI.maybeShowRoleOrientation();
+      if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     });
   };
 

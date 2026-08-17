@@ -504,8 +504,6 @@ test.describe('starting-family presets', function () {
       name:'Your Story Begins', exact:true
     })).toBeVisible();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
-    await expect(page.locator('#orientation-continue')).toBeVisible();
-    await page.locator('#orientation-continue').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect.poll(function () {
       return page.evaluate(function () {
@@ -606,8 +604,6 @@ test.describe('starting-family presets', function () {
         name:'Your Story Begins', exact:true
       })).toBeVisible();
       await page.getByRole('button', { name:'Begin', exact:true }).click();
-      await expect(page.locator('#orientation-continue')).toBeVisible();
-      await page.locator('#orientation-continue').click();
       await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
       const shape = await familyShape(page);
       expect(shape.age).toBe(48);

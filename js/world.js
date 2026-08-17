@@ -5166,7 +5166,8 @@ window.FB = window.FB || {};
           FB.queueEvent(state, 'war_defense_muster', {});
           if (FB.ui && FB.ui.maybeTip) {
             FB.ui.maybeTip('war-declared',
-              '💡 War has come! The muster raises your host — follow the fighting on the map and keep the household safe.');
+              '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
+              '#mapwrap');
           }
         }
       }
@@ -5203,7 +5204,8 @@ window.FB = window.FB || {};
           FB.queueEvent(state, 'war_defense_muster', {});
           if (FB.ui && FB.ui.maybeTip) {
             FB.ui.maybeTip('war-declared',
-              '💡 War has come! The muster raises your host — follow the fighting on the map and keep the household safe.');
+              '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
+              '#mapwrap');
           }
         }
       } else if (tr && tr.alive && !tr.war) {
@@ -5727,7 +5729,8 @@ window.FB = window.FB || {};
     FB.queueEvent(state, 'devastation_raiders', {});
     if (FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('home-burned',
-        '💡 Raiders burn the land — devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away.');
+        '💡 Raiders burn the land: devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away.',
+        '#sidetabs .tab[data-tab="prov"]');
     }
     /* after the second burning the lord's steward makes his offer — but only
        a freeholder has a freedom left to sell */

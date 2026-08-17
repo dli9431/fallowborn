@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'data/bookmarks.js',
   'data/events_tutorial.js'
@@ -36,13 +37,15 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await expect(page.locator('#gm-body')).not.toContainText('Press Space');
     await page.getByRole('button', { name: 'Begin', exact: true }).click();
 
-    // a focused orientation sheet opens — never the whole Guide
-    await expect(page.getByRole('heading', { name: 'Freeholder', exact: true }))
-      .toBeVisible();
-    await expect(page.locator('#gm-body')).toContainText('Good first actions');
-    await expect(page.locator('#guide-controls')).toHaveCount(0);
-    await page.locator('#orientation-continue').click();
+    // no orientation sheet — the coachmark hints carry that teaching now
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // the map lesson waited out the intro sheets, then points at the lit map
+    const mapCoach = page.locator('.coachmark', { hasText:'Drag to pan' });
+    await expect(mapCoach).toBeVisible();
+    await expect(page.locator('#mapwrap')).toHaveClass(/coachmark-lit/);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
 
     // the First-steps checklist tops the Deeds tab; the start's focus
     // already counts, so a brand-new player sees one step done
@@ -70,6 +73,7 @@ test('a saved guide-hints setting suppresses new-life map and orientation popups
       name:'Your Story Begins', exact:true
     })).toBeVisible();
     await expect(page.locator('#toasts')).not.toContainText('Drag to pan');
+    await expect(page.locator('.coachmark')).toHaveCount(0);
     await page.getByRole('button', { name:'Begin', exact:true }).click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('.tutorial-card')).toHaveCount(0);
@@ -165,8 +169,6 @@ test('the guide-hints preference silences checklists, popups, and tutorial chapt
 
     const hintResult = await page.evaluate(function () {
       const suppressed = FB.ui.maybeHint('spec-hint', 'should not appear');
-      FB.state.player.roleOrientationsSeen = {};
-      const orientation = FB.ui.maybeShowRoleOrientation();
       delete FB.state.player.flags.tut_ev_welcome;
       FB.state.turn = 2;
       const queued = [];
@@ -179,7 +181,6 @@ test('the guide-hints preference silences checklists, popups, and tutorial chapt
       const second = FB.ui.maybeHint('spec-hint-2', 'appears once');
       return {
         suppressed:suppressed,
-        orientation:orientation,
         queued:queued,
         welcomeMarked:!!FB.state.player.flags.tut_ev_welcome,
         first:first,
@@ -188,12 +189,17 @@ test('the guide-hints preference silences checklists, popups, and tutorial chapt
     });
     expect(hintResult).toEqual({
       suppressed:false,
-      orientation:false,
       queued:[],
       welcomeMarked:true,
       first:true,
       second:false
     });
+
+    // the per-save hint shows as a coachmark that waits for its dismissal
+    await expect(page.locator('.coachmark', { hasText:'appears once' }))
+      .toHaveCount(1);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
 
     // a save without the tutorial stamp (every pre-feature life) never sees it
     await page.evaluate(function () {
@@ -331,10 +337,6 @@ test('tab nudges point at the next unfinished lesson',
 
     // opening the Kin tab stamps its step and clears its nudge
     await kinTab.click();
-    await expect(page.getByRole('heading', {
-      name: 'The Kin tab', exact: true })).toBeVisible();
-    await page.locator('#panel-intro-continue').click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await page.evaluate(function () { FB.ui.refresh(); });
     await waitForUiRefresh(page);
     await expect(kinTab).not.toHaveClass(/nudge/);
@@ -342,47 +344,6 @@ test('tab nudges point at the next unfinished lesson',
       return !!FB.state.player.flags.tut_kin_tab;
     });
     expect(stamped).toBe(true);
-  });
-
-test('panel intro sheets open once, deep-link to the Guide, and yield to the preference',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    await page.locator('#sidetabs .tab[data-tab="network"]').click();
-    await expect(page.getByRole('heading', {
-      name: 'The Network tab', exact: true })).toBeVisible();
-    // the header info icon opens the real Guide, not a copy
-    const introGuide = page.locator('#genmodal .gm-heading > #panel-intro-guide');
-    await expect(introGuide).toHaveClass(/modal-guide-button/);
-    await expect(page.locator('#genmodal .gm-footer #panel-intro-guide'))
-      .toHaveCount(0);
-    await introGuide.click();
-    await expect(page.locator('#guide-controls')).toBeVisible();
-    await page.evaluate(function () { FB.ui.closeModal(); });
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    const seen = await page.evaluate(function () {
-      return FB.state.player.panelIntrosSeen || {};
-    });
-    expect(seen.network).toBe(1);
-
-    // second visit: no sheet opens again
-    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
-    await page.locator('#sidetabs .tab[data-tab="network"]').click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-
-    // the preference suppresses unseen intros — and lifting it lets them through
-    await page.evaluate(function () {
-      FB.game.uiPrefs.hideBeginnerHints = true;
-    });
-    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await page.evaluate(function () {
-      FB.game.uiPrefs.hideBeginnerHints = false;
-    });
-    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
-    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
-    await expect(page.getByRole('heading', {
-      name: 'The Land tab', exact: true })).toBeVisible();
-    await page.locator('#panel-intro-continue').click();
   });
 
 test('beginner lines in the stat breakdown and empty Kin panel honor the preference',
@@ -406,7 +367,6 @@ test('beginner lines in the stat breakdown and empty Kin panel honor the prefere
       for (const id in s.chars) {
         if (s.chars[id].spouseId === me.id) s.chars[id].spouseId = null;
       }
-      s.player.panelIntrosSeen = { family:1 }; // keep the intro sheet out
       FB.ui.showTab('family');
     });
     await expect(page.locator('#tab-family')).toContainText(

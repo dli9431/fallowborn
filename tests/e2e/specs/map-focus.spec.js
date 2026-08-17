@@ -89,15 +89,8 @@ test('Self rank shows demesne details and Settings changes text and map presenta
       return FB.L(FB.world.byId[home].name);
     });
 
-    // Jumping straight to tier 5 opens the focused Duke orientation sheet.
-    // Dismiss it through its real Continue control before using the Self tab.
-    await expect(page.getByRole('heading', { name:'Duke', exact:true }))
-      .toBeVisible();
-    const dukeContinue = page.locator('#orientation-continue');
-    await expect(dukeContinue).toBeFocused();
-    await page.keyboard.press('Enter');
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-
+    // Jumping straight to tier 5 used to open the Duke orientation sheet —
+    // the coachmark hints carry that teaching now, so the Self tab is free
     const rank = page.locator('#self-rank-details');
     await expect(rank).toBeVisible();
     await expect(rank).toContainText('Duchess');

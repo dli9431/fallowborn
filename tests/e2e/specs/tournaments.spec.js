@@ -22,7 +22,6 @@ async function startTournamentGame(page, testInfo) {
     s.player.profession = 'noble';
     s.player.gold = 100;
     s.date.season = 0;
-    s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
     var technology = FB.realmTechRecord(s);
     if (technology.completed.indexOf('cavalry_lances') < 0) {
       technology.completed.push('cavalry_lances');

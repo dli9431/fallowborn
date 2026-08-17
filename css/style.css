@@ -40,7 +40,7 @@ button, .tab, .traitchip, .charrow, .toast {
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: 2px solid #e0c060; outline-offset: 1px;
 }
-.btn, .bigbtn, .actionbtn, .evopt, .tab, .kv, .hint, .toast, .gm-body-text {
+.btn, .bigbtn, .actionbtn, .evopt, .tab, .kv, .hint, .toast, .gm-body-text, .coachmark {
   overflow-wrap: anywhere;
 }
 /* press feedback on touch (hover never fires there) */
@@ -564,6 +564,47 @@ body.travel-picking #timebtns { visibility: hidden; }
 }
 .event-receipt-headline { display: block; margin-bottom: 6px; color: var(--main-text-color); }
 @keyframes toastin { from { opacity: 0; } to { opacity: 1; } }
+
+/* coachmarks: beginner lessons anchored to the control they teach. Each
+   stays open until dismissed, with its target lit; below the modal layer so
+   a dialog always wins the screen (the lesson simply waits for it). Only the
+   buttons take pointer input — a lesson never blocks the map or a panel
+   beneath it. */
+.coachmark {
+  position: fixed; z-index: 55; max-width: 300px;
+  background: rgba(30,24,16,.97); border: 1px solid #c9a24a; border-radius: 8px;
+  padding: 10px 12px; font-size: 14px; color: var(--main-text-color);
+  box-shadow: 0 6px 24px rgba(0,0,0,.58); animation: toastin .25s;
+  pointer-events: none;
+}
+.coachmark-text { margin-bottom: 8px; }
+.coachmark-actions { display: flex; gap: 7px; }
+.coachmark-actions button { pointer-events: auto; }
+/* Got it keeps the bottom-left; Back and Next group at the bottom-right. On
+   the final lesson (no Next) Got it takes the bottom-right slot. */
+.coachmark-dismiss + .coachmark-back,
+.coachmark-dismiss + .coachmark-next,
+.coachmark-back + .coachmark-dismiss { margin-left: auto; }
+/* the save lesson re-presents above the open menu sheet, beneath modals'
+   tooltip layer */
+.coachmark.overmodal { z-index: 70; }
+.coachmark-arrow {
+  position: absolute; width: 12px; height: 12px; margin-left: -6px;
+  background: rgba(30,24,16,.97); border: 1px solid #c9a24a;
+  transform: rotate(45deg);
+}
+.coachmark.arrow-top .coachmark-arrow { top: -7px; border-right: none; border-bottom: none; }
+.coachmark.arrow-bottom .coachmark-arrow { bottom: -7px; border-top: none; border-left: none; }
+.coachmark.noarrow { left: 10px; bottom: 10px; }
+.coachmark.noarrow .coachmark-arrow { display: none; }
+.coachmark-lit {
+  outline: 2px solid #c9a24a; outline-offset: 2px;
+  animation: coachlit 1.4s ease-in-out infinite;
+}
+@keyframes coachlit {
+  0%, 100% { outline-color: #c9a24a; }
+  50% { outline-color: rgba(201,162,74,.25); }
+}
 
 #side {
   flex: 0 0 340px; display: flex; flex-direction: column;
@@ -2778,6 +2819,10 @@ textarea.modjson, textarea.savetext {
     left: max(10px, env(safe-area-inset-left));
     bottom: max(10px, env(safe-area-inset-bottom));
     max-width: calc(100% - 60px);
+  }
+  .coachmark.noarrow {
+    left: max(10px, env(safe-area-inset-left));
+    bottom: max(10px, env(safe-area-inset-bottom));
   }
   .event-receipt-toast {
     width: 100%;

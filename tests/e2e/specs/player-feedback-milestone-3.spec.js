@@ -50,7 +50,6 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
     await page.evaluate(function () {
       FB.ui.closeModal();
       FB.state.player.tier = 0;
-      FB.state.player.roleOrientationsSeen['role-tier-0'] = 1;
       FB.state.player.focus = 'rest';
     });
     /* keys.js swallows shortcuts while #genmodal is open, and closeModal can
@@ -63,7 +62,6 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
       FB.state.player.tier = 1;
       FB.state.player.profession = 'farmer';
       FB.state.player.focus = 'rest';
-      FB.state.player.roleOrientationsSeen['role-tier-1'] = 1;
     });
     await page.keyboard.press('w');
     expect(await page.evaluate(function () { return FB.state.player.focus; }))

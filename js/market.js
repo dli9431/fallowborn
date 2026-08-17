@@ -1004,7 +1004,8 @@
         '🥣 The household cannot fully fund its necessities; rationing and makeshift economies begin.', {}));
       if (FB.ui && FB.ui.maybeTip) {
         FB.ui.maybeTip('hardship',
-          '💡 Coin runs short — a steadier livelihood (Deeds tab) or a loan from the Coin & credit ledger can bridge a lean season.');
+          '💡 Coin runs short. A steadier livelihood (Deeds tab) or a loan from the Coin & credit ledger can bridge a lean season.',
+          '#sidetabs .tab[data-tab="actions"]');
       }
     } else if (!provisionsFunded && (seasons === 2 || seasons === 4)) {
       FB.news(state, FB.msg('news.market.hardship_escalated',

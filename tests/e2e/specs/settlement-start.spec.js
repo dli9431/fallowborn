@@ -32,7 +32,7 @@ async function reachPickScreen(page) {
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
 }
 
-/* Begin Your Story → intro modal → the Freeholder orientation sheet */
+/* Begin Your Story → intro modal → Begin (no orientation sheet anymore) */
 async function beginAndDismiss(page) {
   await page.getByRole('button', { name: 'Begin Your Story', exact: true })
     .click({ timeout:30 * 1000 });
@@ -40,10 +40,6 @@ async function beginAndDismiss(page) {
   await expect(page.getByRole('heading', { name: 'Your Story Begins', exact: true }))
     .toBeVisible();
   await page.getByRole('button', { name: 'Begin', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Freeholder', exact: true }))
-    .toBeVisible();
-  await expect(page.locator('#orientation-continue')).toBeFocused();
-  await page.keyboard.press('Enter');
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 }
 

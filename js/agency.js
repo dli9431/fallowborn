@@ -870,7 +870,8 @@ window.FB = window.FB || {};
       });
       if (FB.ui && FB.ui.maybeTip) {
         FB.ui.maybeTip('marriage-offer',
-          '💡 A marriage offer! Weigh the house, the dowry, and the standing — a good match is the surest ladder.');
+          '💡 A marriage offer! Weigh the house, the dowry, and the standing. A good match is the surest ladder.',
+          '#lefttabs .tab[data-tab="family"]');
       }
     } else {
       FB.queueEvent(state, 'ruler_overture', {

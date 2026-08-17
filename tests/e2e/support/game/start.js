@@ -33,18 +33,8 @@ async function startDeterministicGame(page) {
   // handler without asking WebKit to establish pointer stability during the
   // first painted game frame.
   await page.keyboard.press('Enter');
-  // The CADENCE seed starts the Free Farmer scenario, tier 1: a focused
-  // Freeholder orientation sheet opens - never the whole Guide.
-  await expect(page.getByRole('heading', { name:'Freeholder', exact:true }))
-    .toBeVisible();
-  await expect(page.locator('#gm-body')).toContainText('Good first actions');
-  await expect(page.locator('#guide-controls')).toHaveCount(0);
-  const orientationContinue = page.locator('#orientation-continue');
-  await expect(orientationContinue).toBeFocused();
-  // Setup only needs to dismiss the focused sheet. The dedicated onboarding
-  // spec retains pointer coverage; Enter avoids a WebKit click-stability stall
-  // during the first painted game frame while using the real button handler.
-  await page.keyboard.press('Enter');
+  // Begin goes straight into the game now — the orientation sheet is gone;
+  // the coachmark hints carry that teaching.
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   await expect.poll(function () {
     return page.evaluate(function (startCode) {
@@ -52,6 +42,16 @@ async function startDeterministicGame(page) {
         FB.state.player && FB.state.chars[FB.state.player.charId]);
     }, START_CODE);
   }).toBe(true);
+  // A fresh life teaches the map as a coachmark once the intro sheets close;
+  // dismiss it so every spec starts from a clean table. A spec that pre-seeds
+  // the guide-hints switch off never gets one.
+  const mapCoach = page.locator('.coachmark', { hasText:'Drag to pan' });
+  const lessonUp = await mapCoach.waitFor({ state:'visible', timeout:800 })
+    .then(function () { return true; }, function () { return false; });
+  if (lessonUp) {
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+  }
 }
 
 module.exports = {

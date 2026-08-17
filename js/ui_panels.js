@@ -4600,8 +4600,6 @@ window.FB = window.FB || {};
     if (name === 'family' && FB.tutorialActive && FB.tutorialActive(FB.state)) {
       FB.state.player.flags.tut_kin_tab = 1;
     }
-    // a tutorial life gets one small intro sheet per major panel
-    if (UI.maybeShowPanelIntro) UI.maybeShowPanelIntro(name);
   }
 
   UI.cycleTab = function (dir) {

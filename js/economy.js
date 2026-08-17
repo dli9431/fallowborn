@@ -4202,7 +4202,8 @@ window.FB = window.FB || {};
     state.player.gold = Math.max(0, state.player.gold + gold);
     if (gold > 0 && FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-coin',
-        '💡 The season’s work has paid — gold funds land, gifts, loans, and the household table.');
+        '💡 The season’s work has paid. Gold funds land, gifts, loans, and the household table.',
+        '#tb-gold');
     }
     state.player.piety += FB.livelihoodPiety(state);
   };

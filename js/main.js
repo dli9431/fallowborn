@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.137.0';
+  FB.VERSION = '1.138.0';
   FB.CHANGELOG = [
+    { v: '1.138.0', date: '2026-08-17', changes: [
+      'Beginner lessons now appear as coachmarks that point at the control they teach and wait for you, with Back and Next paging through the tour.'
+    ] },
     { v: '1.137.0', date: '2026-08-17', changes: [
       'First-time tips introduce the interface and key milestones to brand-new players, with controls under Settings.',
       'AI rulers no longer build over player-held holdings.'
@@ -2127,7 +2130,9 @@ window.FB = window.FB || {};
     if (!state.player.flags.mapHintShown) {
       state.player.flags.mapHintShown = 1; // once per save: how to work the map
       if (!G.uiPrefs || !G.uiPrefs.hideBeginnerHints) {
-        FB.ui.toast('Drag to pan, scroll or pinch to zoom — tap a province for details. Zoom in to see county names.');
+        FB.ui.coachmark(
+          'Drag to pan, scroll or pinch to zoom. Tap a province for details. Zoom in to see county names.',
+          '#mapwrap', { dripIdx:-1 }); // the hint tour's first stop
       }
     }
     FB.news(state, FB.msg('news.life.chronicle_begins',
@@ -2143,7 +2148,7 @@ window.FB = window.FB || {};
     }
     const introHint = (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
       ? FB.T('The Deeds tab lists your daily focus and one-shot deeds.')
-      : FB.T('Watch the Deeds tab — your First steps are listed there.');
+      : FB.T('Watch the Deeds tab: your First steps are listed there.');
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
       FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
       '</p><p class="hint">' +
@@ -2151,7 +2156,6 @@ window.FB = window.FB || {};
       '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
     $('gm-go').addEventListener('click', function () {
       FB.ui.closeModal();
-      if (FB.ui.maybeShowRoleOrientation) FB.ui.maybeShowRoleOrientation();
     });
     FB.save.autosave();
     FB.save.warnIfBlocked();
@@ -2448,6 +2452,7 @@ window.FB = window.FB || {};
     for (let i = 0; i < 92; i++) {
       const r = G.passDay();
       if (r !== 'day') break;
+      if (G.paused) break; // a lesson popped mid-skip and stilled the days
     }
   };
 
@@ -2570,7 +2575,7 @@ window.FB = window.FB || {};
       if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
         G.uiPrefs.tipsGrandfathered = true;
       }
-    } catch (e2) { /* storage probe failed — leave tips on */ }
+    } catch (e2) { /* storage probe failed: leave tips on */ }
   }
   G.saveUiPrefs = function () {
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
@@ -2739,7 +2744,8 @@ window.FB = window.FB || {};
       FB.state.player.flags.tut_unpause = 1; // First steps: let the days flow
       if (FB.ui && FB.ui.maybeHint) {
         FB.ui.maybeHint('time-flow',
-          'The days now flow on their own — Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening.');
+          'The days now flow on their own. Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening.',
+          '#timebtns');
       }
     }
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
@@ -2755,6 +2761,7 @@ window.FB = window.FB || {};
       if (!$('genmodal').classList.contains('hidden')) return; // a dialog is open
       if (document.hidden) return;
       if (FB.ui.dailyTip) FB.ui.dailyTip(); // first-time tips: one drip per natural day
+      if (G.paused) return; // a fresh lesson just stilled the days
       G.passDay();
     }, G.SPEEDS[G.speedIdx]);
   }
@@ -3308,7 +3315,8 @@ window.FB = window.FB || {};
         FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
         if (FB.ui && FB.ui.maybeTip) {
           FB.ui.maybeTip('first-heir',
-            '💡 A child of the house! Heirs carry the chronicle forward — as they grow, their education is set from the Kin tab.');
+            '💡 A child of the house! Heirs carry the chronicle forward; as they grow, their education is set from the Kin tab.',
+            '#lefttabs .tab[data-tab="family"]');
         }
       }
       return;
@@ -3499,7 +3507,8 @@ window.FB = window.FB || {};
     const heirs = FB.heirsOf(s).slice(0, 4);
     if (heirs.length && FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('succession',
-        '💡 The chronicle continues — your heir inherits the household: gold, land, and debts carry over.');
+        '💡 The chronicle continues: your heir inherits the household; gold, land, and debts carry over.',
+        '#tb-portrait');
     }
     const deathTelemetry = {
       entry_type:telemetryEntryType,

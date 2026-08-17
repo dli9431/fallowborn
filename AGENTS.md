@@ -295,7 +295,7 @@ Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING
   captivity, leverage, and conduct.
 - `js/council.js` — the royal council (tier 6+): great officers, crown authority, council event customs.
 - `js/parliament.js` — the estates (vassal tiers 3–5): the liege's aid and scutage terms, yearly sessions, parliament event customs.
-- `js/ui_misc.js` — shared UI helpers, screens, toasts, the generic modal engine,
+- `js/ui_misc.js` — shared UI helpers, screens, toasts, hint coachmarks, the generic modal engine,
   mobile back navigation, boot wiring; owns `FB.ui._shared`.
 - `js/ui_panels.js` — the retained panels: Deeds, Self, Kin, Network, Land, Chronicle;
   tabs, drawers, the family tree.

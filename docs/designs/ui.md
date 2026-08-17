@@ -14,7 +14,7 @@ consecutively in this order and augment one `FB.ui` namespace:
 
 | File | Contents |
 | --- | --- |
-| `js/ui_misc.js` | Shared name/format/standing helpers, large-list surfaces, interaction cards, mobile back navigation, screens, toasts, the generic modal engine, boot wiring. Loads first and owns `FB.ui._shared`, the internal namespace the other three bind at load. |
+| `js/ui_misc.js` | Shared name/format/standing helpers, large-list surfaces, interaction cards, mobile back navigation, screens, toasts, hint coachmarks, the generic modal engine, boot wiring. Loads first and owns `FB.ui._shared`, the internal namespace the other three bind at load. |
 | `js/ui_panels.js` | The retained panels — Deeds, Self, Kin, Network, Land, Chronicle — plus tabs, drawers, and the family tree. |
 | `js/ui_topbar.js` | Top bar refresh: stats and per-season breakdowns, portrait, date, pause/skip controls. |
 | `js/ui_modals.js` | The event modal, autoresolve, and every dialog sheet: pickers, coin & credit, household, technology, character sheets, death, menu, settings, save/load, the Guide. |
@@ -605,7 +605,7 @@ The promotion-path note is new-player guidance rather than a mechanic. Settings 
 a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the
 whole beginner-guidance layer: the path note, tutorial checklist and scripted tutorial
-chain, tab nudges, initial map tip, panel intro and role-orientation sheets, empty-state
+chain, tab nudges, initial map tip, empty-state
 guidance lines, stat teaching lines, the contextual one-line hints below, and the
 first-time tips further below. The complete Guide remains available from the menu.
 
@@ -639,16 +639,63 @@ Around the checklist, the rest of the beginner layer for a tutorial life
 dots** mark the tab holding the next unfinished lesson (Deeds until the first deed,
 Kin until the first look); each topbar stat’s breakdown carries one teaching line,
 served by the shared renderer to both the desktop hover tooltip and the mobile tap
-sheet; the Kin and Network panels add a guidance line when they would otherwise be
-empty; and the first time the Land, Network, or Kin tab opens, a small **panel
-intro sheet** (`player.panelIntrosSeen`, cloned from the role orientations) offers
-a summary, three pointers, and a Guide deep-link.
+sheet; and the Kin and Network panels add a guidance line when they would otherwise
+be empty. (The older first-open **panel intro sheets** and tier/role **orientation
+sheets** were retired in favor of the coachmark lessons below; their content lives
+on as Guide entries.)
 
 Contextual hints (`UI.hintDue` / `UI.maybeHint` in `ui_misc.js`) deliver a single
 one-line lesson the first time its moment arrives — time controls on the first
 unpause, "events pause time" inside the first event modal — each recorded as a
 per-save `hint_*` flag so a life teaches it exactly once. The new-game intro modal
 keeps only the scenario flavor and a one-line pointer to the Deeds tab.
+
+A lesson fired to the screen shows as a **coachmark** (`UI.coachmark` in
+`ui_misc.js`), not a toast: corner toasts faded before a lesson could be read,
+so each coachmark is a tooltip anchored to the button or area it teaches (the
+time buttons, a tab, a topbar stat, the map), with that target lit by a pulsing
+outline. The player moves on with **Got it** (bottom-left), pages forward with
+**Next**, or rewinds with **Back** (the pair grouped bottom-right, Back left of
+Next); the final stop (the corner-notes lesson) drops Next and keeps Back
+beside one right-side Got it. Back rides on every lesson that has a stop behind
+it: the tour runs from the map lesson (stop zero) through the drip sequence,
+and a lesson outside the sequence (a contextual tip) borrows the tour's current
+position. Next stays shut until the lit control has had its touch (any tap or
+click inside it counts, keyboard activation included), so paging walks the
+interface for real; lessons with no safe touch (the pace of days: unpausing
+could pop an event mid-tour) are marked `freeNext` and skip the gate. A lesson
+can also widen what counts as the touch: `touchAlso` names a second control
+whose use counts — the Deeds and Self panes are open by default, so scrolling
+or tapping the pane arms Next without a tab tap — and `touchHover` counts the
+pointer moving over the lit control, for the top bar whose stat breakdowns
+show on hover. Paging
+and rewinding walk the orientation sequence positionally: a first showing
+records through the usual once-ever path (so the daily drip never re-teaches
+it), and a review showing records nothing. Nothing auto-fades, and only the
+buttons take pointer input, so a waiting lesson never blocks the map or a panel
+beneath it. A popping lesson also pauses a running game on the spot (the day
+ticker re-checks right after its daily drip, and an F-skip burst breaks on the
+pause), so a fresh event modal cannot bury it mid-read. One coachmark shows at
+a time; later lessons queue behind it, and while an event or dialog holds the
+screen a fired lesson waits its turn (pumped by `UI.refresh` and the modal
+close path) rather than fighting the modal. A missing or hidden target drops
+the arrow and rests by the toast corner, except targets with a natural
+revealer: on small layouts the Self/Kin tabs live in a drawer that a portrait
+tap exposes, so their lessons point at the topbar portrait instead
+(`COACH_ALT_TARGETS`), and paging or rewinding closes the full-screen drawer
+only when the next stop lives outside it (Self → Kin keeps it open, the lit
+tab exposed). The menu lessons (controls and guide, the ones anchored to ☰)
+cannot live under the menu sheet, which covers the whole screen on small
+layouts: when the sheet opens, the lesson re-presents above it at its own spot
+there (`overTarget`: the ⚙ Settings button or the ❓ How to play button), with
+its own over-sheet wording when one is authored (`overText`) and a free Next.
+The sheet closes when the tour steps outside it — an open sheet would block
+the lesson it left for (menu lessons chain above the open sheet) — and
+rewinding to a menu lesson reopens the sheet. If the sheet closes first, the lesson re-anchors to the menu
+button. Only a truly tall area (the map) is pointed at near its top edge;
+a short full-width bar (the mobile time controls) gets the ordinary
+above-or-below placement, so the lesson never covers the controls. Screen
+switches retire any lesson in flight.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` / `UI.dailyTip` in
 `ui_misc.js`) teach the interface itself to a brand-new player, once ever per
@@ -658,9 +705,11 @@ the day ticker — never during an F-skip burst, which does not pass through the
 ticker — and contextual one-liners fire from engine choke points the first time a
 situation occurs: the first wage, the first marriage offer, the first war declared
 on the player, the first child, the first land plot, the first burning of the home
-county, the first household hardship, and the first succession. Fired tips are
-recorded in the browser-local `uiPrefs.tipsSeen`, so no campaign ever re-teaches
-them. The layer has its own Settings switch, **Disable first-time tips**
+county, the first household hardship, and the first succession. Every tip
+carries the selector of the control or area it teaches and shows through the
+coachmark layer above. Fired tips are recorded in the browser-local
+`uiPrefs.tipsSeen`, so no campaign ever re-teaches them. The layer has its own
+Settings switch, **Disable first-time tips**
 (`uiPrefs.hideTips`), is also silenced by the wider **Disable guide hints** switch,
 and never starts on an install that already held a save when the layer first
 initialized — the upgrade case — decided once from `FB.save.hasAnySave()` when the
@@ -860,14 +909,11 @@ sections, while generated technology entries select the catalogue heading for th
 authored domain. These external links are optional; searching and reading the complete
 in-game Guide remains offline-capable.
 
-`player.roleOrientationsSeen` records one-time, per-save orientations for the current
-social tier and religious vocation/office. On first entry, a small focused sheet opens
-with that role's summary, new resources, recurring duties, and three suggested
-actions — never the whole Guide. Its **Read more in the Guide** button deep-links to
-the same complete orientation, which remains available as an inline Guide entry.
-Orientation checks run only when the game is visible and neither generic nor event
-modal is active, so they never replace a pending choice, and **Disable guide hints**
-suppresses them without marking the orientation as read.
+`player.roleOrientationsSeen` is a retired save field: the one-time per-save
+orientation sheets for the current social tier and religious vocation/office were
+dropped in favor of the coachmark lessons, and the same complete orientation
+remains available as an inline Guide entry. Old saves may still carry the field;
+nothing reads it now.
 
 Overland movement and sea-crossing speed use distinct effect labels, and a transport-tier
 technology states its concrete men-per-crossing-cycle capacity. A manual host order uses

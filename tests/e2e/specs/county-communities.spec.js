@@ -305,8 +305,6 @@ test('1066 Iona creates a Gaelic Catholic household beneath its Norse ruler and 
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
     await page.getByRole('button', { name:'Begin', exact:true }).click();
-    await expect(page.locator('#orientation-continue')).toBeVisible();
-    await page.locator('#orientation-continue').click();
 
     const result = await page.evaluate(function () {
       const state = FB.state;

@@ -1659,6 +1659,7 @@ window.FB = window.FB || {};
 
   /* ================= screens ================= */
   UI.showScreen = function (id) {
+    UI.coachmarkReset(); // a screen switch retires any lesson in flight
     if (id !== null && SH.travelPicker) {
       SH.closeTravelPicker(false);
       mobileNavClosed('travel-picker', true);
@@ -1784,6 +1785,394 @@ window.FB = window.FB || {};
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
   };
 
+  /* ================= coachmarks (lessons that point) =================
+     A beginner lesson shows as a coachmark: a tooltip anchored to the button
+     or area it teaches, with that target lit up, staying open until the
+     player dismisses it — the corner toasts faded before a lesson could sink
+     in. Next pages to the following orientation lesson and Back rewinds,
+     without waiting for the day — but Next stays shut until the lit control
+     has had its touch (lessons marked freeNext, like the pace of days, skip
+     the touch: unpausing could pop an event and break the tour; a lesson can
+     also widen its touch — touchAlso counts using an already-open pane like
+     Deeds or Self, touchHover counts hovering the lit control, like the top
+     bar whose breakdowns show on hover). The menu
+     lessons (controls, guide, save) re-present above the open menu
+     sheet at their own spot in it, since the sheet covers the whole screen
+     on small layouts. While an event or dialog holds the screen the lesson
+     waits its turn (pumped by UI.refresh and the modal close path), and one
+     coachmark shows at a time; later ones queue behind it. */
+  let coachQueue = [];
+  let coachEl = null;
+  let coachLit = null;
+  let coachNext = null;    // the Next button while its lesson is up
+  let coachTouch = null;   // the lit control still awaiting its touch
+  let coachTouchAlso = null; // a second control whose use also counts (touchAlso)
+  let coachItem = null;    // the lesson on screen, with its flags
+  let coachDripIdx = null; // its place in DRIP_TIPS, when it is one
+  let coachFirstItem = null;    // the map lesson — the tour's first stop (-1)
+  let coachLastTourIdx = null;  // the tour position most recently shown
+
+  function coachmarkBlocked(item) {
+    const game = $('game');
+    if (!game || game.classList.contains('hidden')) return true;
+    if (UI.eventsBusy && UI.eventsBusy()) return true; // an event trumps all
+    const ev = $('eventmodal');
+    if (ev && !ev.classList.contains('hidden')) return true;
+    const gm = $('genmodal');
+    const gmOpen = gm && !gm.classList.contains('hidden');
+    if (item && item.overModal) {
+      // an over-sheet lesson only has a stage while the menu sheet is open
+      return !(gmOpen && $('m-save'));
+    }
+    return gmOpen;
+  }
+
+  UI.coachmark = function (text, target, opts) {
+    const item = { text:text, target:target };
+    if (opts) for (const k in opts) item[k] = opts[k];
+    coachQueue.push(item);
+    UI.maybeShowCoachmark();
+  };
+  UI.maybeShowCoachmark = function () {
+    // an over-sheet lesson whose menu sheet went away re-anchors to ☰
+    if (coachEl && coachItem && coachItem.overModal && !$('m-save')) {
+      const stray = coachItem;
+      dismissCoachmark();
+      coachQueue.unshift(baseCoachItem(stray));
+    }
+    // a menu lesson waiting behind the open menu sheet goes straight above
+    // it (the sheet covers the whole screen on small layouts)
+    const gm = $('genmodal');
+    if (!coachEl && coachQueue.length && $('m-save') && gm &&
+        !gm.classList.contains('hidden')) {
+      const head = coachQueue[0];
+      if (head.overTarget && !head.overModal) {
+        coachQueue.shift();
+        coachQueue.unshift(overCoachItem(head));
+      }
+    }
+    if (coachEl || !coachQueue.length) return false;
+    if (coachmarkBlocked(coachQueue[0])) return false;
+    // a lesson stills the days while it is read, so a running game cannot
+    // bury it under a fresh event modal
+    if (FB.game && !FB.game.paused && !FB.game.observe && FB.game.setPaused) {
+      FB.game.setPaused(true);
+    }
+    showCoachmark(coachQueue.shift());
+    return true;
+  };
+
+  /* the over-sheet presentation of a menu lesson: anchored at its own spot
+     in the sheet with its over-sheet text, Next free (the touch already
+     happened), closing the sheet behind it on small layouts when the tour
+     walks on. baseText/baseTarget remember the ☰ presentation. */
+  function overCoachItem(item) {
+    return { text:(item.overText || item.text), target:item.overTarget,
+      dripIdx:item.dripIdx, overTarget:item.overTarget,
+      overText:item.overText || null, overModal:true, freeNext:true,
+      closeMenuOnNext:true, baseText:item.text, baseTarget:item.target };
+  }
+  function baseCoachItem(item) { // back from the over-sheet presentation
+    return { text:(item.baseText || item.text),
+      target:(item.baseTarget || item.target), dripIdx:item.dripIdx,
+      overTarget:item.overTarget, overText:item.overText || null };
+  }
+  UI.coachmarkReset = function () {
+    coachQueue = [];
+    coachFirstItem = null;
+    coachLastTourIdx = null;
+    dismissCoachmark();
+  };
+
+  function showCoachmark(item) {
+    coachItem = item;
+    coachDripIdx = (typeof item.dripIdx === 'number') ? item.dripIdx : null;
+    if (coachDripIdx === -1) coachFirstItem = item; // the map lesson itself
+    if (coachDripIdx !== null) coachLastTourIdx = coachDripIdx;
+    coachEl = document.createElement('div');
+    coachEl.className = 'coachmark' + (item.overModal ? ' overmodal' : '');
+    coachEl.setAttribute('role', 'status');
+    const arrow = document.createElement('div');
+    arrow.className = 'coachmark-arrow';
+    const textEl = document.createElement('div');
+    textEl.className = 'coachmark-text';
+    textEl.textContent = FB.T(item.text);
+    const actions = document.createElement('div');
+    actions.className = 'coachmark-actions';
+    const dismiss = document.createElement('button');
+    dismiss.type = 'button';
+    dismiss.className = 'btn small coachmark-dismiss';
+    dismiss.textContent = FB.T('Got it');
+    dismiss.addEventListener('click', dismissCoachmark);
+    const hasNext = hasNextLesson();
+    if (hasNext) actions.appendChild(dismiss); // bottom-left while paging
+    // Back rewinds one tour stop — every lesson that has one shows it
+    if (coachTourItem(coachBackIdx())) {
+      const back = document.createElement('button');
+      back.type = 'button';
+      back.className = 'btn small coachmark-back';
+      back.textContent = FB.T('Back');
+      back.addEventListener('click', rewindCoachmark);
+      actions.appendChild(back);
+    }
+    // paging: the next orientation lesson, without waiting for its day
+    if (hasNext) {
+      coachNext = document.createElement('button');
+      coachNext.type = 'button';
+      coachNext.className = 'btn small coachmark-next';
+      coachNext.textContent = FB.T('Next');
+      coachNext.addEventListener('click', advanceCoachmark);
+      actions.appendChild(coachNext); // bottom-right
+    } else {
+      actions.appendChild(dismiss); // the final lesson's one right-side Got it
+    }
+    coachEl.appendChild(arrow);
+    coachEl.appendChild(textEl);
+    coachEl.appendChild(actions);
+    document.body.appendChild(coachEl);
+    positionCoachmark(item.target);
+    // Next stays shut until the lit control has been touched — unless the
+    // lesson is marked freeNext (nothing safe to touch, e.g. the pace of
+    // days) or points at a zero-size corner with nothing to touch. A menu
+    // lesson listens for its ☰ touch either way: the touch opens the sheet
+    // the lesson re-presents above.
+    const wantsTouch = (coachNext && !item.freeNext) ||
+      (item.overTarget && !item.overModal);
+    if (coachLit && wantsTouch) {
+      const r = coachLit.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        if (coachNext && !item.freeNext) {
+          coachNext.disabled = true;
+          coachNext.title = FB.T('Try the highlighted control first');
+        }
+        coachTouch = coachLit;
+        coachTouch.addEventListener('pointerdown', coachTouched, true);
+        coachTouch.addEventListener('click', coachTouched, true);
+        // a hover lesson (the top bar) counts the pointer moving over the
+        // lit control as its touch — the breakdown it teaches shows on hover
+        if (item.touchHover) {
+          coachTouch.addEventListener('pointerenter', coachTouched, true);
+        }
+        // a lesson can name a second control whose use also counts: the
+        // Deeds pane is already open, so scrolling (wheel) or tapping it is
+        // the touch — the tab itself need not be tapped
+        const also = item.touchAlso && document.querySelector(item.touchAlso);
+        if (also) {
+          coachTouchAlso = also;
+          coachTouchAlso.addEventListener('pointerdown', coachTouched, true);
+          coachTouchAlso.addEventListener('click', coachTouched, true);
+          coachTouchAlso.addEventListener('wheel', coachTouched, true);
+        }
+      }
+    }
+  }
+
+  function hasNextLesson() {
+    if (tipsSilenced()) return false; // no paging into a silenced tour
+    if (coachDripIdx !== null) return coachDripIdx + 1 < DRIP_TIPS.length;
+    return !!nextLessonTip();
+  }
+
+  /* the tour position this lesson goes Back to: the previous drip lesson, or
+     the tour's current stop for a lesson outside the sequence (a contextual
+     tip borrows the position). The map lesson (-1) has none. */
+  function coachBackIdx() {
+    if (coachDripIdx !== null) return coachDripIdx - 1;
+    return coachLastTourIdx;
+  }
+  function coachTourItem(idx) {
+    if (idx === null || idx < -1) return null;
+    if (idx === -1) return coachFirstItem; // only if the map lesson showed
+    if (idx >= DRIP_TIPS.length) return null;
+    const tip = DRIP_TIPS[idx];
+    return { text:tip.text, target:tip.target, dripIdx:idx,
+      freeNext:tip.freeNext, overTarget:tip.overTarget,
+      overText:tip.overText || null, touchAlso:tip.touchAlso || null,
+      touchHover:tip.touchHover || null };
+  }
+
+  /* the lit control saw real use (capture, so taps on anything inside it
+     count, and keyboard activation arrives via click): Next opens up. The
+     listeners stay until the lesson closes — a menu lesson's follow-up needs
+     the click after the pointerdown. */
+  function coachTouched() {
+    if (coachNext) {
+      coachNext.disabled = false;
+      coachNext.removeAttribute('title');
+    }
+    // a menu lesson's touch opens the menu: re-present it above the sheet at
+    // its own spot there (checked after the click handlers ran)
+    if (coachItem && coachItem.overTarget && !coachItem.overModal) {
+      const item = coachItem;
+      setTimeout(function () {
+        if (coachItem !== item || !$('m-save')) return;
+        dismissCoachmark();
+        UI.coachmark(item.text, '#btn-menu', {
+          dripIdx:item.dripIdx, overTarget:item.overTarget,
+          overText:item.overText || null
+        }); // the queue converts it to its over-sheet presentation
+      }, 0);
+    }
+  }
+  function clearCoachTouch() {
+    if (coachTouch) {
+      coachTouch.removeEventListener('pointerdown', coachTouched, true);
+      coachTouch.removeEventListener('click', coachTouched, true);
+      coachTouch.removeEventListener('pointerenter', coachTouched, true);
+      coachTouch = null;
+    }
+    if (coachTouchAlso) {
+      coachTouchAlso.removeEventListener('pointerdown', coachTouched, true);
+      coachTouchAlso.removeEventListener('click', coachTouched, true);
+      coachTouchAlso.removeEventListener('wheel', coachTouched, true);
+      coachTouchAlso = null;
+    }
+  }
+
+  /* Next: close this lesson and open the following one on the spot — the next
+     in line after a drip lesson, else the first unlearned one. A paged lesson
+     goes through the usual maybeTip path, so the daily drip never re-teaches
+     it. */
+  function advanceCoachmark() {
+    let tip = null, idx = null;
+    if (coachDripIdx !== null && coachDripIdx + 1 < DRIP_TIPS.length) {
+      idx = coachDripIdx + 1;
+      tip = DRIP_TIPS[idx];
+    } else {
+      tip = nextLessonTip();
+      idx = tip ? DRIP_TIPS.indexOf(tip) : null;
+    }
+    const item = coachItem;
+    dismissCoachmark();
+    // the Self/Kin drawer covers the whole screen on small layouts — but keep
+    // it open when the next lesson lives inside it (Self → Kin), so the lit
+    // tab there is exposed
+    const nextInDrawer = !!(tip && tip.target &&
+      tip.target.indexOf('#lefttabs') === 0);
+    if (!nextInDrawer && SH.closeSelfDrawer) SH.closeSelfDrawer();
+    // an over-sheet lesson closes the menu sheet behind it when the next
+    // lesson lives outside it (an open sheet would just block that lesson);
+    // menu lessons chain above the open sheet
+    if (item && item.closeMenuOnNext && !(tip && tip.overTarget) &&
+        UI.closeModal) {
+      UI.closeModal();
+    }
+    if (tip) showDripTip(tip, idx);
+  }
+
+  /* Back: rewind one tour stop. A review showing — already recorded, so it
+     goes straight up, untouched and unrecorded. Rewinding to a menu lesson
+     reopens the sheet so the stop shows above it. */
+  function rewindCoachmark() {
+    const target = coachTourItem(coachBackIdx());
+    if (!target) return;
+    const item = coachItem;
+    dismissCoachmark();
+    const backInDrawer = target.target &&
+      target.target.indexOf('#lefttabs') === 0;
+    if (!backInDrawer && SH.closeSelfDrawer) SH.closeSelfDrawer();
+    if (target.overTarget) {
+      // a menu lesson's stage is the open sheet: bring it back up — closing
+      // the sheet only hides it, so a stale m-save cannot speak for it
+      const gm = $('genmodal');
+      const sheetUp = !!(gm && !gm.classList.contains('hidden') && $('m-save'));
+      if (!sheetUp && UI.showMenu) UI.showMenu();
+    } else if (item && item.overModal && UI.closeModal) {
+      UI.closeModal(); // rewinding out of the sheet to a lesson it would block
+    }
+    UI.coachmark(target.text, target.target, {
+      dripIdx:target.dripIdx, freeNext:target.freeNext,
+      overTarget:target.overTarget, overText:target.overText || null,
+      touchAlso:target.touchAlso || null,
+      touchHover:target.touchHover || null
+    });
+  }
+
+  function showDripTip(tip, idx) {
+    if (UI.maybeTip(tip.id, tip.text, tip.target)) return; // records it
+    // already taught → a review showing; silenced layers show nothing
+    if (tipsSilenced()) return;
+    UI.coachmark(tip.text, tip.target, {
+      dripIdx:idx, freeNext:tip.freeNext, overTarget:tip.overTarget,
+      overText:tip.overText || null, touchAlso:tip.touchAlso || null,
+      touchHover:tip.touchHover || null
+    });
+  }
+
+  /* Anchored under the target when it sits high on the screen, over it when
+     it sits low; a huge area (the map) is pointed at near its top edge, and
+     a missing or hidden target drops the arrow and rests by the toast
+     corner instead. */
+  function positionCoachmark(targetSel) {
+    const target = coachTargetEl(targetSel);
+    const rect = target ? target.getBoundingClientRect() : null;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    if (!rect) {
+      coachEl.classList.add('noarrow');
+      return;
+    }
+    coachLit = target;
+    target.classList.add('coachmark-lit');
+    const w = coachEl.offsetWidth, h = coachEl.offsetHeight;
+    // only a truly tall area (the map) is pointed at near its top edge; a
+    // full-width but short bar (the mobile time controls) gets the ordinary
+    // treatment, so the lesson sits above it pointing down, never over it
+    const huge = rect.height > vh * 0.45;
+    const ax = rect.left + rect.width / 2;
+    const below = huge || rect.top + rect.height / 2 < vh * 0.45;
+    const ay = huge ? rect.top + 56 : (below ? rect.bottom : rect.top);
+    const left = Math.max(8, Math.min(Math.round(ax - w / 2), vw - w - 8));
+    const top = Math.max(8,
+      Math.min(Math.round(below ? ay + 12 : ay - h - 12), vh - h - 8));
+    coachEl.style.left = left + 'px';
+    coachEl.style.top = top + 'px';
+    coachEl.classList.add(below ? 'arrow-top' : 'arrow-bottom');
+    const arrow = coachEl.querySelector('.coachmark-arrow');
+    arrow.style.left = Math.max(14, Math.min(Math.round(ax - left), w - 14)) + 'px';
+  }
+
+  /* On small layouts the Self/Kin tabs sit in a drawer that a portrait tap
+     exposes; when a lesson's target is off the screen that way, point at the
+     control that reveals it instead. */
+  const COACH_ALT_TARGETS = {
+    '#lefttabs .tab[data-tab="char"]':'#tb-portrait',
+    '#lefttabs .tab[data-tab="family"]':'#tb-portrait'
+  };
+  function coachTargetEl(targetSel) {
+    if (typeof targetSel !== 'string') return null;
+    const el = document.querySelector(targetSel);
+    if (coachTargetOnScreen(el)) return el;
+    const alt = COACH_ALT_TARGETS[targetSel];
+    const altEl = alt ? document.querySelector(alt) : null;
+    return coachTargetOnScreen(altEl) ? altEl : null;
+  }
+  function coachTargetOnScreen(el) {
+    if (!el) return false;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0 && r.top === 0 && r.left === 0) {
+      return false; // display:none (e.g. the closed Self/Kin drawer)
+    }
+    return r.bottom >= 0 && r.top <= window.innerHeight &&
+      r.right >= 0 && r.left <= window.innerWidth;
+  }
+
+  function dismissCoachmark() {
+    clearCoachTouch();
+    coachNext = null;
+    coachItem = null;
+    coachDripIdx = null;
+    if (coachEl && coachEl.parentNode) coachEl.parentNode.removeChild(coachEl);
+    coachEl = null;
+    if (coachLit) {
+      coachLit.classList.remove('coachmark-lit');
+      coachLit = null;
+    }
+    // a queued lesson follows once the screen settles
+    if (coachQueue.length) {
+      setTimeout(function () { UI.maybeShowCoachmark(); }, 250);
+    }
+  }
+
   /* ================= beginner hints (each fires once per save) =================
      One-line, just-in-time lessons delivered at the moment they first matter.
      The whole layer goes quiet when Settings hides beginner hints, and every
@@ -1797,9 +2186,9 @@ window.FB = window.FB || {};
     s.player.flags['hint_' + id] = 1;
     return true;
   };
-  UI.maybeHint = function (id, text, params) {
+  UI.maybeHint = function (id, text, target) {
     if (!UI.hintDue(id)) return false;
-    UI.toast(text, params);
+    UI.coachmark(text, target);
     return true;
   };
 
@@ -1807,47 +2196,76 @@ window.FB = window.FB || {};
      Short, useful lessons for a brand-new player, told once ever per install:
      a day-by-day drip of UI orientation on the first natural days (fired from
      the day ticker), plus contextual one-liners fired from engine choke points
-     the first time a situation occurs. Fired tips are recorded in the
+     the first time a situation occurs. Each lesson shows as a coachmark
+     pointing at the control or area it teaches (the target selectors below),
+     open until dismissed. Fired tips are recorded in the
      browser-local uiPrefs.tipsSeen, so no save ever re-teaches them. The layer
      falls silent under its own Settings switch (hideTips), under the wider
      guide-hints switch (hideBeginnerHints), or when the install was
      grandfathered in with an existing save (tipsGrandfathered). */
   const DRIP_TIPS = [
-    { id:'drip-autosave', text:'💡 The chronicle autosaves as the days pass — Continue on the title screen picks a life back up.' },
-    { id:'drip-menu', text:'💡 The menu (Esc or ☰) holds Save & Load, Settings, and the Guide — the Guide explains every system in depth.' },
-    { id:'drip-speed', text:'💡 The pace of the days is yours — − and + (or Settings) slow and quicken the flow; slow down when much is happening.' },
-    { id:'drip-deeds', text:'💡 The Deeds tab (D) is where things get done — a daily focus that repeats, and one-shot deeds that spend the day.' },
-    { id:'drip-self', text:'💡 The Self tab (S) is your character — skills, traits, and belongings.' },
-    { id:'drip-kin', text:'💡 The Kin tab (K) is your family — spouse, children, and kin; tap a child to guide their education.' },
-    { id:'drip-land', text:'💡 The Land tab (L) looks at any county up close — buy plots, and manage what you hold.' },
-    { id:'drip-network', text:'💡 The Network tab (N) lists the ties around your household — connections, retainers, guilds, and courts — and what each tie currently does.' },
-    { id:'drip-chronicle', text:'💡 The Chronicle tab (C) remembers the story — every piece of news and every choice you make.' },
-    { id:'drip-topbar', text:'💡 The top bar keeps the date, the flow of days, and your stats — hover or tap gold, prestige, piety, or voice for a breakdown.' },
-    { id:'drip-toasts', text:'💡 These corner notes fade on their own — tap one to dismiss it sooner.' },
-    { id:'drip-heir', text:'💡 Death is not the end here — a spouse and children (Kin tab) are how the chronicle outlives a life.' },
-    { id:'drip-settings', text:'💡 When the teaching grows old, Settings → Guidance can quiet these tips and the other beginner help.' }
+    { id:'drip-controls', target:'#btn-menu', overTarget:'#m-settings',
+      text:'💡 The game controls live in the Settings. The menu (Esc or ☰) opens the way to them.',
+      overText:'💡 Settings holds the game controls. The speed of the days is set here (on desktop, − and + change it at any time).' },
+    { id:'drip-guide', target:'#btn-menu', overTarget:'#m-help', text:'💡 ❓ How to play in the menu opens the Guide, every system explained in depth.' },
+    { id:'drip-speed', target:'#timebtns', freeNext:true, text:'💡 ▶ Play runs the game one day at a time, while ▶▶ fast forward leaps a full season. Slow or quicken the flow with − and + (or Settings).' },
+    { id:'drip-deeds', target:'#sidetabs .tab[data-tab="actions"]', touchAlso:'#tab-actions', text:'💡 The Deeds tab (D) is where things get done: a daily focus that repeats, and one-shot deeds that spend the day.' },
+    { id:'drip-self', target:'#lefttabs .tab[data-tab="char"]', touchAlso:'#tab-char', text:'💡 The Self tab (S) is your character: skills, traits, and belongings.' },
+    { id:'drip-kin', target:'#lefttabs .tab[data-tab="family"]', text:'💡 The Kin tab (K) is your family: spouse, children, and kin. Tap a child to guide their education.' },
+    { id:'drip-land', target:'#sidetabs .tab[data-tab="prov"]', text:'💡 The Land tab (L) looks at any county up close: buy plots, and manage what you hold.' },
+    { id:'drip-network', target:'#sidetabs .tab[data-tab="network"]', text:'💡 The Network tab (N) lists the ties around your household: connections, retainers, guilds, and courts, and what each tie currently does.' },
+    { id:'drip-chronicle', target:'#sidetabs .tab[data-tab="log"]', text:'💡 The Chronicle tab (C) remembers the story: every piece of news and every choice you make.' },
+    { id:'drip-topbar', target:'#tb-stats', touchHover:true, text:'💡 The top bar keeps the date, the flow of days, and your stats. Hover or tap gold, prestige, piety, or voice for a breakdown.' },
+    { id:'drip-toasts', target:'#toasts', text:'💡 These corner notes fade on their own. Tap one to dismiss it sooner.' }
   ];
 
-  UI.tipDue = function (id) {
+  /* the gates under which any first-time tip may fire at all */
+  function tipsSilenced() {
     const s = FB.state;
-    if (!s || !s.player || FB.game.observe) return false;
+    if (!s || !s.player || FB.game.observe) return true;
     const prefs = FB.game.uiPrefs;
     if (!prefs || prefs.hideTips || prefs.hideBeginnerHints ||
-        prefs.tipsGrandfathered) return false;
+        prefs.tipsGrandfathered) return true;
+    return false;
+  }
+  /* the next unlearned orientation lesson, looked up without consuming it */
+  function nextLessonTip() {
+    if (tipsSilenced()) return null;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    for (const tip of DRIP_TIPS) {
+      if (!seen[tip.id]) return tip;
+    }
+    return null;
+  }
+  UI.tipDue = function (id) {
+    if (tipsSilenced()) return false;
+    const prefs = FB.game.uiPrefs;
     if (!prefs.tipsSeen) prefs.tipsSeen = {};
     if (prefs.tipsSeen[id]) return false;
     prefs.tipsSeen[id] = 1;
     if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
     return true;
   };
-  UI.maybeTip = function (id, text, params) {
+  function dripEntryById(id) {
+    for (let i = 0; i < DRIP_TIPS.length; i++) {
+      if (DRIP_TIPS[i].id === id) return { tip:DRIP_TIPS[i], idx:i };
+    }
+    return null;
+  }
+  UI.maybeTip = function (id, text, target) {
     if (!UI.tipDue(id)) return false;
-    UI.toast(text, params);
+    const entry = dripEntryById(id);
+    UI.coachmark(text, target, entry ? {
+      dripIdx:entry.idx, freeNext:entry.tip.freeNext,
+      overTarget:entry.tip.overTarget, overText:entry.tip.overText || null,
+      touchAlso:entry.tip.touchAlso || null,
+      touchHover:entry.tip.touchHover || null
+    } : null);
     return true;
   };
   UI.dailyTip = function () {
     for (const tip of DRIP_TIPS) {
-      if (UI.maybeTip(tip.id, tip.text)) return true;
+      if (UI.maybeTip(tip.id, tip.text, tip.target)) return true;
     }
     return false;
   };
@@ -2252,7 +2670,7 @@ window.FB = window.FB || {};
     mobileNavClosedAll('modal-view', true);
     mobileNavClosed('generic-modal', false);
     setTimeout(function () {
-      if (UI.maybeShowRoleOrientation) UI.maybeShowRoleOrientation();
+      if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     }, 0);
   };
 

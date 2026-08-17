@@ -52577,16 +52577,6 @@
         "text": "Illicit sibling-courtship exposure"
       }
     },
-    "src.0d18e734": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Drag to pan, scroll or pinch to zoom — tap a province for details. Zoom in to see county names."
-      }
-    },
     "src.0d1b5618": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53107,6 +53097,16 @@
       ],
       "source": {
         "text": "Required for legitimacy"
+      }
+    },
+    "src.0e2fe723": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The top bar keeps the date, the flow of days, and your stats. Hover or tap gold, prestige, piety, or voice for a breakdown."
       }
     },
     "src.0e36721a": {
@@ -55507,16 +55507,6 @@
         "text": "Only a resident household worker can operate it. Move the household back to this county or leave the enterprise idle."
       }
     },
-    "src.13793ab5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Every county of the known world, up close: its settlement, its holder, and its development."
-      }
-    },
     "src.1379a4e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56416,6 +56406,16 @@
       ],
       "source": {
         "text": "The Great Disputation"
+      }
+    },
+    "src.152a7e82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Watch the Deeds tab: your First steps are listed there."
       }
     },
     "src.15373b1d": {
@@ -58681,16 +58681,6 @@
         "text": "The Levy Is Called"
       }
     },
-    "src.19fbe489": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Retainers serve the household for seasonal pay once you can keep them."
-      }
-    },
     "src.19fe48e8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60938,16 +60928,6 @@
         "text": "Physician"
       }
     },
-    "src.1f7eb835": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Connections form through deeds, work, guilds, and your lord’s court."
-      }
-    },
     "src.1f7fb257": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61197,16 +61177,6 @@
       ],
       "source": {
         "text": "Gunpowder Knowledge"
-      }
-    },
-    "src.201752a6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 These corner notes fade on their own — tap one to dismiss it sooner."
       }
     },
     "src.2017b6f0": {
@@ -61971,16 +61941,6 @@
       ],
       "source": {
         "text": "🤝 You and {name} now call one another friend."
-      }
-    },
-    "src.219d07e9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The Self tab (S) is your character — skills, traits, and belongings."
       }
     },
     "src.219d72b8": {
@@ -62844,16 +62804,6 @@
       ],
       "source": {
         "text": "Father"
-      }
-    },
-    "src.235426dd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The Network tab"
       }
     },
     "src.236044f6": {
@@ -65037,6 +64987,16 @@
         "text": "Roads waste time better spent governing."
       }
     },
+    "src.281cc976": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The days now flow on their own. Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening."
+      }
+    },
     "src.28217c7d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65446,16 +65406,6 @@
       ],
       "source": {
         "text": " · 🔒 lock recorded"
-      }
-    },
-    "src.295da6d1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The Kin tab"
       }
     },
     "src.29809af7": {
@@ -68192,16 +68142,6 @@
         "text": "Market Stall"
       }
     },
-    "src.2fa64059": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "💡 A child of the house! Heirs carry the chronicle forward — as they grow, their education is set from the Kin tab."
-      }
-    },
     "src.2fa8f9e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69588,16 +69528,6 @@
         "text": "You need at least 200 prestige to rally men to your banner (now {current})."
       }
     },
-    "src.3300e719": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/market.js"
-      ],
-      "source": {
-        "text": "💡 Coin runs short — a steadier livelihood (Deeds tab) or a loan from the Coin & credit ledger can bridge a lean season."
-      }
-    },
     "src.33039365": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69837,6 +69767,16 @@
       ],
       "source": {
         "text": "town"
+      }
+    },
+    "src.338f43b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 ❓ How to play in the menu opens the Guide, every system explained in depth."
       }
     },
     "src.33923358": {
@@ -71187,6 +71127,16 @@
         "text": "{amount} prestige each season"
       }
     },
+    "src.36dd527d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "btn small coachmark-back"
+      }
+    },
     "src.36df04f7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71767,6 +71717,16 @@
       ],
       "source": {
         "text": "Raise buildings automatically"
+      }
+    },
+    "src.3830876e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The game controls live in the Settings. The menu (Esc or ☰) opens the way to them."
       }
     },
     "src.38338cc1": {
@@ -74193,16 +74153,6 @@
         "text": "The Emir’s Justice"
       }
     },
-    "src.3dfeff5c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Courtship and marriage deeds live in the Deeds tab, under Life & Family."
-      }
-    },
     "src.3e039888": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76205,6 +76155,16 @@
         "text": "Won new lands from the liege."
       }
     },
+    "src.42b5e015": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Self tab (S) is your character: skills, traits, and belongings."
+      }
+    },
     "src.42ba673f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76747,16 +76707,6 @@
       ],
       "source": {
         "text": "How to Play"
-      }
-    },
-    "src.43d24512": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Read more in the Guide"
       }
     },
     "src.43d25c7d": {
@@ -79436,6 +79386,16 @@
         "text": "Current asset"
       }
     },
+    "src.49a2d9c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 These corner notes fade on their own. Tap one to dismiss it sooner."
+      }
+    },
     "src.49aa252b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80250,16 +80210,6 @@
         "text": "Fort garrisons retained"
       }
     },
-    "src.4bc1c9c8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "The days now flow on their own — Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening."
-      }
-    },
     "src.4bc76e18": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80590,6 +80540,16 @@
       ],
       "source": {
         "text": "📯 A courier leaves {home} carrying {item} for {recipient} in {destination}; the road should take {days} days."
+      }
+    },
+    "src.4c891c6a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Got it"
       }
     },
     "src.4c8ab2de": {
@@ -81021,16 +80981,6 @@
       ],
       "source": {
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
-      }
-    },
-    "src.4d90bb4a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The Land tab"
       }
     },
     "src.4d9e3b0a": {
@@ -81805,6 +81755,16 @@
       ],
       "source": {
         "text": "Work & Enterprises lists only assignable members of the managed household. A visible relative elsewhere is family, but is not household labor."
+      }
+    },
+    "src.4f77ac02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💡 A child of the house! Heirs carry the chronicle forward; as they grow, their education is set from the Kin tab."
       }
     },
     "src.4f77b7a7": {
@@ -84946,6 +84906,16 @@
         "text": "Waist"
       }
     },
+    "src.566d39f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "💡 Raiders burn the land: devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away."
+      }
+    },
     "src.5670d1b6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86659,6 +86629,16 @@
       ],
       "source": {
         "text": "Panjgur"
+      }
+    },
+    "src.5a427e79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Land tab (L) looks at any county up close: buy plots, and manage what you hold."
       }
     },
     "src.5a4ac0c8": {
@@ -88652,16 +88632,6 @@
       ],
       "source": {
         "text": "Tutoring assignment"
-      }
-    },
-    "src.5ee1b5c1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The Deeds tab (D) is where things get done — a daily focus that repeats, and one-shot deeds that spend the day."
       }
     },
     "src.5eecd4ad": {
@@ -93655,16 +93625,6 @@
       ],
       "source": {
         "text": "Once the sovereign nation completes"
-      }
-    },
-    "src.6a102c1a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "💡 Raiders burn the land — devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away."
       }
     },
     "src.6a17079e": {
@@ -103375,6 +103335,16 @@
         "text": "Hire a qualified local"
       }
     },
+    "src.800d469b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "💡 Coin runs short. A steadier livelihood (Deeds tab) or a loan from the Coin & credit ledger can bridge a lean season."
+      }
+    },
     "src.8017b634": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103554,16 +103524,6 @@
       ],
       "source": {
         "text": "Departure keeps your personal attention on {name}; progress resumes only once you arrive."
-      }
-    },
-    "src.8067eca0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The Network tab (N) lists the ties around your household — connections, retainers, guilds, and courts — and what each tie currently does."
       }
     },
     "src.80754c3c": {
@@ -105734,6 +105694,16 @@
         "text": "Warm the alliance at a domestic Common Voice cost."
       }
     },
+    "src.84bec334": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Drag to pan, scroll or pinch to zoom. Tap a province for details. Zoom in to see county names."
+      }
+    },
     "src.84cb1eb6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106344,16 +106314,6 @@
       ],
       "source": {
         "text": "Sell your neighbors’ names and see what coin buys."
-      }
-    },
-    "src.85faf812": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 Death is not the end here — a spouse and children (Kin tab) are how the chronicle outlives a life."
       }
     },
     "src.86081927": {
@@ -107429,6 +107389,16 @@
         "text": "{leader}’s rank attracts {house}."
       }
     },
+    "src.8857154a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "btn small coachmark-dismiss"
+      }
+    },
     "src.885b3daf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108425,16 +108395,6 @@
       ],
       "source": {
         "text": "The Pay Chest Is Light"
-      }
-    },
-    "src.8a929d45": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The Kin tab (K) is your family — spouse, children, and kin; tap a child to guide their education."
       }
     },
     "src.8a93bcee": {
@@ -109801,16 +109761,6 @@
         "text": "Rain comes before the last sheaf is beaten. At least the household ate."
       }
     },
-    "src.8d7b3a90": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Good to know"
-      }
-    },
     "src.8d7f44e9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -110913,16 +110863,6 @@
       ],
       "source": {
         "text": "Large Bell Casting"
-      }
-    },
-    "src.8fc09688": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "The people and institutions tied to your household — family, retainers, connections, guilds, and courts — and what each tie currently does."
       }
     },
     "src.8fc0e01d": {
@@ -114837,6 +114777,16 @@
         "text": "Captivity blocks travel, marriage, new offices, and plots. Ransom, mercy, and leverage actions always show their terms before they act."
       }
     },
+    "src.996517f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Network tab (N) lists the ties around your household: connections, retainers, guilds, and courts, and what each tie currently does."
+      }
+    },
     "src.9970f304": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117814,16 +117764,6 @@
       ],
       "source": {
         "text": "The Liege Demands an Aid"
-      }
-    },
-    "src.9faf39f1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The Chronicle tab (C) remembers the story — every piece of news and every choice you make."
       }
     },
     "src.9fb9f63e": {
@@ -121600,16 +121540,6 @@
         "text": "Terrain"
       }
     },
-    "src.a800668a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Land is bought plot by plot within a settlement — a cluster of plots makes a manor."
-      }
-    },
     "src.a80801ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124566,16 +124496,6 @@
         "text": "Local habits sharpen your judgment of people."
       }
     },
-    "src.af1ffd56": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Personal attention improves one chosen relationship a little each day."
-      }
-    },
     "src.af2a9117": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126010,16 +125930,6 @@
         "text": "· 🔒 lock recorded"
       }
     },
-    "src.b1fb2c14": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/world.js"
-      ],
-      "source": {
-        "text": "💡 War has come! The muster raises your host — follow the fighting on the map and keep the household safe."
-      }
-    },
     "src.b20681a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126671,16 +126581,6 @@
         "text": "kbps Opus"
       }
     },
-    "src.b358638b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The top bar keeps the date, the flow of days, and your stats — hover or tap gold, prestige, piety, or voice for a breakdown."
-      }
-    },
     "src.b35bb61a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127134,6 +127034,16 @@
         "text": "someone"
       }
     },
+    "src.b4541e21": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 Settings holds the game controls. The speed of the days is set here (on desktop, − and + change it at any time)."
+      }
+    },
     "src.b454846f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127212,6 +127122,16 @@
       ],
       "source": {
         "text": "Depart for {destination}"
+      }
+    },
+    "src.b470e423": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Try the highlighted control first"
       }
     },
     "src.b4766ca2": {
@@ -129862,16 +129782,6 @@
         "text": "Generous"
       }
     },
-    "src.ba973ff3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The menu (Esc or ☰) holds Save & Load, Settings, and the Guide — the Guide explains every system in depth."
-      }
-    },
     "src.ba979e1b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130161,16 +130071,6 @@
       ],
       "source": {
         "text": "Balanced frames let animals carry bulky loads over poor roads."
-      }
-    },
-    "src.bb954c71": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "💡 Your first plot of land! Plots yield every season and a cluster makes a manor — the Land tab manages them."
       }
     },
     "src.bba22c1c": {
@@ -130804,6 +130704,16 @@
       ],
       "source": {
         "text": "This barony is a territorial office inside the home county; no county is held directly in your hand."
+      }
+    },
+    "src.bd1cacf8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💡 The chronicle continues: your heir inherits the household; gold, land, and debts carry over."
       }
     },
     "src.bd229a78": {
@@ -133288,6 +133198,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_misc.js",
         "js/ui_modals.js",
         "index.html"
       ],
@@ -133745,16 +133656,6 @@
         "text": "Endure the judgment and remember."
       }
     },
-    "src.c3cfd7c7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Your household and wider family — spouse, children, and kin: the people who continue the chronicle when this life ends."
-      }
-    },
     "src.c3dfcf8a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133773,6 +133674,16 @@
       ],
       "source": {
         "text": "Open the purse. ({money:20})"
+      }
+    },
+    "src.c3ed7e5b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Chronicle tab (C) remembers the story: every piece of news and every choice you make."
       }
     },
     "src.c3f1b843": {
@@ -136382,6 +136293,16 @@
         "text": "Pay the gift."
       }
     },
+    "src.c9b024bc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💡 The season’s work has paid. Gold funds land, gifts, loans, and the household table."
+      }
+    },
     "src.c9b6d1c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137794,16 +137715,6 @@
       ],
       "source": {
         "text": "{relation} · age {age}"
-      }
-    },
-    "src.cce0ef55": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The Land tab (L) looks at any county up close — buy plots, and manage what you hold."
       }
     },
     "src.ccec04ec": {
@@ -140676,16 +140587,6 @@
         "text": "Broken in body, never once in complaint."
       }
     },
-    "src.d40051e8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/agency.js"
-      ],
-      "source": {
-        "text": "💡 A marriage offer! Weigh the house, the dowry, and the standing — a good match is the surest ladder."
-      }
-    },
     "src.d4020c95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140995,6 +140896,16 @@
       ],
       "source": {
         "text": "One pair of hands for your field, if the tally misses them."
+      }
+    },
+    "src.d4ec9342": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/agency.js"
+      ],
+      "source": {
+        "text": "💡 A marriage offer! Weigh the house, the dowry, and the standing. A good match is the surest ladder."
       }
     },
     "src.d4f434e8": {
@@ -141487,16 +141398,6 @@
       ],
       "source": {
         "text": "Available now: {action}"
-      }
-    },
-    "src.d62012a5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 When the teaching grows old, Settings → Guidance can quiet these tips and the other beginner help."
       }
     },
     "src.d62269dd": {
@@ -142965,7 +142866,6 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -144502,6 +144402,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -144556,6 +144457,16 @@
       ],
       "source": {
         "text": "Replace all three prospects without spending a day or resources."
+      }
+    },
+    "src.dcfe0205": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Deeds tab (D) is where things get done: a daily focus that repeats, and one-shot deeds that spend the day."
       }
     },
     "src.dcfeb62f": {
@@ -146142,16 +146053,6 @@
         "text": "Organized Naval Levies"
       }
     },
-    "src.e056d32f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The chronicle autosaves as the days pass — Continue on the title screen picks a life back up."
-      }
-    },
     "src.e05b41da": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146270,16 +146171,6 @@
       ],
       "source": {
         "text": "Manage active election — {office}"
-      }
-    },
-    "src.e0bc7fd6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/economy.js"
-      ],
-      "source": {
-        "text": "💡 The season’s work has paid — gold funds land, gifts, loans, and the household table."
       }
     },
     "src.e0c0bc62": {
@@ -146492,16 +146383,6 @@
         "text": "Place of origin"
       }
     },
-    "src.e11b696b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "💡 The chronicle continues — your heir inherits the household: gold, land, and debts carry over."
-      }
-    },
     "src.e11e9551": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146550,16 +146431,6 @@
       ],
       "source": {
         "text": "Khatib"
-      }
-    },
-    "src.e1367b09": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_misc.js"
-      ],
-      "source": {
-        "text": "💡 The pace of the days is yours — − and + (or Settings) slow and quicken the flow; slow down when much is happening."
       }
     },
     "src.e143112b": {
@@ -147963,16 +147834,6 @@
         "text": "Autoresolve war events"
       }
     },
-    "src.e47f5b5a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Once you hold land, your own counties are managed from this tab."
-      }
-    },
     "src.e4898197": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149335,6 +149196,16 @@
         "text": "Leave the cart and every heavy thing."
       }
     },
+    "src.e74cb534": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe."
+      }
+    },
     "src.e75527ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150335,16 +150206,6 @@
       ],
       "source": {
         "text": "No war target matches the current search and filters."
-      }
-    },
-    "src.e93d313e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Watch the Deeds tab — your First steps are listed there."
       }
     },
     "src.e941dd67": {
@@ -153399,6 +153260,16 @@
         "text": "Grandchildren"
       }
     },
+    "src.f0aafb0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Kin tab (K) is your family: spouse, children, and kin. Tap a child to guide their education."
+      }
+    },
     "src.f0b0a8ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153817,6 +153688,16 @@
       ],
       "source": {
         "text": "This county’s fort stands in another settlement."
+      }
+    },
+    "src.f161ccfb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💡 Your first plot of land! Plots yield every season and a cluster makes a manor. The Land tab manages them."
       }
     },
     "src.f1694e5d": {
@@ -155800,6 +155681,16 @@
         "text": "Revocation"
       }
     },
+    "src.f6500cd1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 ▶ Play runs the game one day at a time, while ▶▶ fast forward leaps a full season. Slow or quicken the flow with − and + (or Settings)."
+      }
+    },
     "src.f655858a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156982,6 +156873,16 @@
         "text": "Only one guild favor may be called each year."
       }
     },
+    "src.f9353453": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "btn small coachmark-next"
+      }
+    },
     "src.f93ad7fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156990,16 +156891,6 @@
       ],
       "source": {
         "text": "Accompany personally"
-      }
-    },
-    "src.f94c2677": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Tap a province on the map to inspect it here."
       }
     },
     "src.f9508f3f": {
@@ -159573,16 +159464,6 @@
       ],
       "source": {
         "text": "Hiring still uses an office’s authoritative eligibility, entry pay, and confirmation."
-      }
-    },
-    "src.ff7ca5c6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Without an heir, the story ends with this life."
       }
     },
     "src.ff93794e": {
@@ -170146,14 +170027,6 @@
         "text": "Connections"
       }
     },
-    "ui:Connections form through deeds, work, guilds, and your lord’s court.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Connections form through deeds, work, guilds, and your lord’s court."
-      }
-    },
     "ui:Conquered Without Right": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -170653,14 +170526,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Courtship"
-      }
-    },
-    "ui:Courtship and marriage deeds live in the Deeds tab, under Life & Family.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Courtship and marriage deeds live in the Deeds tab, under Life & Family."
       }
     },
     "ui:Courtship changes": {
@@ -172745,14 +172610,6 @@
         "text": "Events pause the days until you choose an answer."
       }
     },
-    "ui:Every county of the known world, up close: its settlement, its holder, and its development.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Every county of the known world, up close: its settlement, its holder, and its development."
-      }
-    },
     "ui:Every eligible worker is locked to another enterprise.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173805,12 +173662,12 @@
         "text": "Good first actions"
       }
     },
-    "ui:Good to know": {
+    "ui:Got it": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_misc.js",
       "source": {
-        "text": "Good to know"
+        "text": "Got it"
       }
     },
     "ui:Govern institutions, manage great vassals, defend the crown, and secure succession.": {
@@ -175722,14 +175579,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Known tie"
-      }
-    },
-    "ui:Land is bought plot by plot within a settlement — a cluster of plots makes a manor.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Land is bought plot by plot within a settlement — a cluster of plots makes a manor."
       }
     },
     "ui:Land is taken only by siege:": {
@@ -179731,14 +179580,6 @@
         "text": "On success: {result}"
       }
     },
-    "ui:Once you hold land, your own counties are managed from this tab.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Once you hold land, your own counties are managed from this tab."
-      }
-    },
     "ui:One campaign approach": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -181101,14 +180942,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Personal attention"
-      }
-    },
-    "ui:Personal attention improves one chosen relationship a little each day.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Personal attention improves one chosen relationship a little each day."
       }
     },
     "ui:Personal prestige, piety, and Common Voice are reduced by the ordinary succession rule. Personal offices such as a bishopric return to the Church, guild monopolies lapse, and courtship, plots, and personal standings end.": {
@@ -183941,14 +183774,6 @@
         "text": "Retainers are named, paid servants. Their office is separate from their occupation; two unpaid seasons or deeply hostile Standing ends service."
       }
     },
-    "ui:Retainers serve the household for seasonal pay once you can keep them.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Retainers serve the household for seasonal pay once you can keep them."
-      }
-    },
     "ui:Retire and continue as {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -186505,14 +186330,6 @@
         "text": "Take your seat in the settlement council or decide a final territorial grant."
       }
     },
-    "ui:Tap a child to set their education focus and schooling.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Tap a child to set their education focus and schooling."
-      }
-    },
     "ui:Tap a marked county or choose it from the list. Routes use settled counties and authored straits.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -186527,14 +186344,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Tap a person for their sheet — and your dealings with them."
-      }
-    },
-    "ui:Tap a province on the map to inspect it here.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Tap a province on the map to inspect it here."
       }
     },
     "ui:Tap the 🚩 on the map to give march orders.": {
@@ -186993,30 +186802,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The Farming work focus follows the family from Toil in the lord’s fields to Work your land after promotion. Unavailable actions keep their key and explain the current block."
-      }
-    },
-    "ui:The Kin tab": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The Kin tab"
-      }
-    },
-    "ui:The Land tab": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The Land tab"
-      }
-    },
-    "ui:The Network tab": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The Network tab"
       }
     },
     "ui:The Papacy cannot be restored from this world state.": {
@@ -187946,14 +187731,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "The people and institutions tied to this household, and what each tie currently does."
-      }
-    },
-    "ui:The people and institutions tied to your household — family, retainers, connections, guilds, and courts — and what each tie currently does.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "The people and institutions tied to your household — family, retainers, connections, guilds, and courts — and what each tie currently does."
       }
     },
     "ui:The petitioner must first make peace.": {
@@ -189326,6 +189103,14 @@
         "text": "Try for children"
       }
     },
+    "ui:Try the highlighted control first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Try the highlighted control first"
+      }
+    },
     "ui:Turning back refunds nothing.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -190219,12 +190004,12 @@
         "text": "Wartime service opens an extraordinary audience; class distance leaves influence at {percent}% of its usual strength."
       }
     },
-    "ui:Watch the Deeds tab — your First steps are listed there.": {
+    "ui:Watch the Deeds tab: your First steps are listed there.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "Watch the Deeds tab — your First steps are listed there."
+        "text": "Watch the Deeds tab: your First steps are listed there."
       }
     },
     "ui:Watches for schemes against you; your own plots weave faster": {
@@ -190459,14 +190244,6 @@
       "location": "js/events.js",
       "source": {
         "text": "Within ordinary social reach."
-      }
-    },
-    "ui:Without an heir, the story ends with this life.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Without an heir, the story ends with this life."
       }
     },
     "ui:Won — the candidate begins the recorded fixed term.": {
@@ -191420,14 +191197,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Your household"
-      }
-    },
-    "ui:Your household and wider family — spouse, children, and kin: the people who continue the chronicle when this life ends.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Your household and wider family — spouse, children, and kin: the people who continue the chronicle when this life ends."
       }
     },
     "ui:Your household is personally free and can accumulate durable property and local influence.": {

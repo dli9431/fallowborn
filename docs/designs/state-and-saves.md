@@ -791,12 +791,10 @@ records live at `state.greatHolyWar.modifiers`. After holy-war and ordinary-war 
 and collapses duplicate ids without migrating the save version. County records remain
 with their county through ownership changes. See [modifiers.md](modifiers.md).
 
-Role orientation history is a lazy additive player field:
-`player.roleOrientationsSeen = {orientationId:1}`. It contains no prose and belongs to
-the campaign household, so it survives protagonist succession and ordinary save/export
-round trips. Missing state means no orientation has been seen and requires no save-version
-migration. Manually replaying a Guide orientation records it as seen but never clears
-another entry.
+Role orientation history (`player.roleOrientationsSeen = {orientationId:1}`) is a
+retired field: the pop-up orientation sheets were superseded by the coachmark hint
+tour and removed, so nothing writes or reads it anymore. Saves that carry it load
+unchanged — it is inert data, and no migration is needed.
 
 Hostile intrigue is another additive save-format-3 extension. `FB.ensureIntrigue`
 lazily repairs `state.intrigue` with at most six generation-stamped `aiSchemes`, exact

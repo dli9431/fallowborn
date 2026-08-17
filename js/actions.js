@@ -5188,7 +5188,8 @@ window.FB = window.FB || {};
       { settlement:site.settlementName }));
     if (FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-plot',
-        '💡 Your first plot of land! Plots yield every season and a cluster makes a manor — the Land tab manages them.');
+        '💡 Your first plot of land! Plots yield every season and a cluster makes a manor. The Land tab manages them.',
+        '#sidetabs .tab[data-tab="prov"]');
     }
     return true;
   };
