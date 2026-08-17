@@ -109,6 +109,9 @@ Online playback fetches a complete track, verifies the response, stores it in th
 response. Gameplay reserves one additional shuffled track ahead, so at most the current and next
 song need live blob URLs. The service worker also treats full music requests as cache-first and
 bypasses Range requests. Old revisions are cleaned without deleting still-current music.
+Local development origins deliberately skip Cache Storage and use the ordinary fetch path; cache
+persistence is a release behavior, not a boot requirement, and some WebKit builds report handled
+localhost Cache API failures as page exceptions. `file://` continues to use direct asset paths.
 
 Only play.fallowborn.com exposes offline downloads. A player can download any complete bank or the
 entire soundtrack. A bank is marked complete only after all its tracks are cached. Offline

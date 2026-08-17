@@ -93,7 +93,12 @@ window.FB = window.FB || {};
   }
 
   function cacheAvailable() {
-    return !FB.platform.isFile && typeof window.caches !== 'undefined' &&
+    /* Cache Storage is release persistence, not a prerequisite for playback.
+       In particular, WebKit can surface an internal Cache API page exception
+       on localhost even when the rejected operation is handled. Keep local
+       development on the ordinary fetch path so boot remains fault-free. */
+    return !FB.platform.isFile && !FB.platform.isLocal &&
+      typeof window.caches !== 'undefined' &&
       typeof window.fetch === 'function';
   }
 

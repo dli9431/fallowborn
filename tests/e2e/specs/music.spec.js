@@ -894,6 +894,11 @@ test('a downloaded faith theme remains cached while another bank still uses it',
     await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
 
     const result = await page.evaluate(async function () {
+      /* This API is exposed only on the first-party release. The local harness
+         deliberately avoids Cache Storage during ordinary boot. */
+      FB.platform.name = 'play';
+      FB.platform.isLocal = false;
+      FB.platform.isPlay = true;
       function download(id) {
         return new Promise(function (resolve, reject) {
           FB.music.downloadBank(id, null, function (error) {
@@ -922,6 +927,30 @@ test('a downloaded faith theme remains cached while another bank still uses it',
     });
 
     expect(result).toEqual({ afterOneRemoval:true, afterLastRemoval:false });
+  });
+
+test('local served boot leaves Cache Storage idle',
+  async function ({ page }, testInfo) {
+    test.skip(!testInfo.project.name.endsWith('-served'),
+      'Cache Storage is available only on served origins.');
+    await page.addInitScript(function () {
+      window.__musicCacheOpenCalls = 0;
+      if (!window.caches || typeof window.caches.open !== 'function') return;
+      const open = window.caches.open.bind(window.caches);
+      window.caches.open = function () {
+        window.__musicCacheOpenCalls++;
+        return open.apply(null, arguments);
+      };
+    });
+    await routeSyntheticSoundtrack(page);
+    await openGame(page, testInfo);
+
+    expect(await page.evaluate(function () {
+      return {
+        local:FB.platform.isLocal,
+        cacheOpenCalls:window.__musicCacheOpenCalls
+      };
+    })).toEqual({ local:true, cacheOpenCalls:0 });
   });
 
 /* On phone-sized screens the birthplace ("Where were you born?") and character

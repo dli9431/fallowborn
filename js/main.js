@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.138.1';
+  FB.VERSION = '1.138.2';
   FB.CHANGELOG = [
+    { v: '1.138.2', date: '2026-08-17', changes: [
+      'Music boot now avoids unsupported persistent-cache access on local hosted copies.'
+    ] },
     { v: '1.138.1', date: '2026-08-17', changes: [
       'Character creation now keeps family choices concise, hides redundant community choices, and leaves the final card focused on the shareable world seed.',
       'Title music controls now yield the corner to Back on phone-sized birthplace and character screens.'
