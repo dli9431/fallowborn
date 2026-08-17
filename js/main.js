@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.136.2';
+  FB.VERSION = '1.137.0';
   FB.CHANGELOG = [
+    { v: '1.137.0', date: '2026-08-17', changes: [
+      'First-time tips introduce the interface and key milestones to brand-new players, with controls under Settings.',
+      'AI rulers no longer build over player-held holdings.'
+    ] },
     { v: '1.136.2', date: '2026-08-16', changes: [
       'Save compaction keeps long campaigns within browser storage limits.'
     ] },
@@ -2463,6 +2467,9 @@ window.FB = window.FB || {};
     commitmentsCollapsed:false,
     workFiltersCollapsed:true,
     hideBeginnerHints:false,
+    hideTips:false,
+    tipsSeen:{},
+    tipsGrandfathered:false,
     mainTextColor:G.MAIN_TEXT_COLOR_DEFAULT,
     helperTextColor:G.HELPER_TEXT_COLOR_DEFAULT,
     realmHighlightColor:'#e8dec4',
@@ -2477,6 +2484,7 @@ window.FB = window.FB || {};
     musicOfflineAll:false,
     actionBindings:{ q:'action:livelihoods' }
   };
+  let storedTipsLayer = false;
   try {
     const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
@@ -2491,6 +2499,14 @@ window.FB = window.FB || {};
           ? !!storedUiPrefs.workFiltersCollapsed
           : true;
       G.uiPrefs.hideBeginnerHints = !!storedUiPrefs.hideBeginnerHints;
+      G.uiPrefs.hideTips = !!storedUiPrefs.hideTips;
+      if (storedUiPrefs.tipsSeen && typeof storedUiPrefs.tipsSeen === 'object') {
+        G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
+      }
+      G.uiPrefs.tipsGrandfathered = !!storedUiPrefs.tipsGrandfathered;
+      storedTipsLayer = Object.prototype.hasOwnProperty.call(
+        storedUiPrefs, 'tipsSeen') ||
+        Object.prototype.hasOwnProperty.call(storedUiPrefs, 'tipsGrandfathered');
       if (typeof storedUiPrefs.mainTextColor === 'string' &&
           /^#[0-9a-fA-F]{6}$/.test(storedUiPrefs.mainTextColor)) {
         G.uiPrefs.mainTextColor = storedUiPrefs.mainTextColor.toLowerCase();
@@ -2545,6 +2561,17 @@ window.FB = window.FB || {};
       }
     }
   } catch (e) { /* keep defaults */ }
+  /* First-time tips belong to first-time players: an install that already
+     holds a save when the tips layer first initializes (an upgrade, not a
+     fresh player) never starts the lessons. Once decided either way the
+     stored tipsSeen/tipsGrandfathered keys keep this from re-deciding. */
+  if (!storedTipsLayer && !G.uiPrefs.tipsGrandfathered) {
+    try {
+      if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
+        G.uiPrefs.tipsGrandfathered = true;
+      }
+    } catch (e2) { /* storage probe failed — leave tips on */ }
+  }
   G.saveUiPrefs = function () {
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
@@ -2727,6 +2754,7 @@ window.FB = window.FB || {};
       if (FB.ui.eventsBusy()) return; // an event awaits your choice
       if (!$('genmodal').classList.contains('hidden')) return; // a dialog is open
       if (document.hidden) return;
+      if (FB.ui.dailyTip) FB.ui.dailyTip(); // first-time tips: one drip per natural day
       G.passDay();
     }, G.SPEEDS[G.speedIdx]);
   }
@@ -3118,7 +3146,8 @@ window.FB = window.FB || {};
        family stops growing — no new kinspouses, no new babies. The automatic
        counterpart of p.flags.noChildren's "the house is full enough". Sealed
        betrothals below still wed: they join two existing records. */
-    const familyFull = FB.familySize(s) >= (FBDATA.balance.familyMaxChars || 4000);
+    const familyFull = FB.familySize(s) >=
+      (FBDATA.balance.familyMaxChars !== undefined ? FBDATA.balance.familyMaxChars : 4000);
     const kin = FB.kinOf(s);
     const all = [];
     for (const g of ['parents', 'grandparents', 'siblings', 'children', 'grandchildren',
@@ -3277,6 +3306,10 @@ window.FB = window.FB || {};
         FB.touchFamily();
         if (FB.registerRoyalBirth) FB.registerRoyalBirth(s, baby, father, mother);
         FB.queueEvent(s, 'child_born_flavor', { childId:baby.id });
+        if (FB.ui && FB.ui.maybeTip) {
+          FB.ui.maybeTip('first-heir',
+            '💡 A child of the house! Heirs carry the chronicle forward — as they grow, their education is set from the Kin tab.');
+        }
       }
       return;
     }
@@ -3464,6 +3497,10 @@ window.FB = window.FB || {};
       FB.news(s, '☠ ' + causeText);
     }
     const heirs = FB.heirsOf(s).slice(0, 4);
+    if (heirs.length && FB.ui && FB.ui.maybeTip) {
+      FB.ui.maybeTip('succession',
+        '💡 The chronicle continues — your heir inherits the household: gold, land, and debts carry over.');
+    }
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,

@@ -19170,7 +19170,12 @@ window.FB = window.FB || {};
       '<label class="autorow"><input type="checkbox" id="set-hide-beginner-hints"' +
       (G.uiPrefs.hideBeginnerHints ? ' checked' : '') + '> <b>' +
       esc(FB.T('Disable guide hints')) + '</b><span class="adesc">' +
-      esc(FB.T('Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu.')) +
+      esc(FB.T('Stop beginner checklists, teaching toasts, panel introductions, role orientation popups, and first-time tips. The Guide remains available from the menu.')) +
+      '</span></label>' +
+      '<label class="autorow"><input type="checkbox" id="set-hide-tips"' +
+      (G.uiPrefs.hideTips ? ' checked' : '') + '> <b>' +
+      esc(FB.T('Disable first-time tips')) + '</b><span class="adesc">' +
+      esc(FB.T('Stop the short day-by-day and situational tips shown to brand-new players. The guide-hints switch above also silences them.')) +
       '</span></label>';
     if (desktopKeyboard) {
       const bindingCount = Object.keys(shortcutBindings()).length;
@@ -19303,6 +19308,10 @@ window.FB = window.FB || {};
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
       G.saveUiPrefs();
       if (FB.state && !G.observe) UI.refresh();
+    });
+    $('set-hide-tips').addEventListener('change', function () {
+      G.uiPrefs.hideTips = $('set-hide-tips').checked;
+      G.saveUiPrefs();
     });
     if ($('set-shortcuts')) {
       $('set-shortcuts').addEventListener('click', UI.showShortcutSettings);

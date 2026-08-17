@@ -61159,6 +61159,16 @@
         "text": "Vistulans"
       }
     },
+    "src.1fe2a553": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop beginner checklists, teaching toasts, panel introductions, role orientation popups, and first-time tips. The Guide remains available from the menu."
+      }
+    },
     "src.1ffa3f13": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61187,6 +61197,16 @@
       ],
       "source": {
         "text": "Gunpowder Knowledge"
+      }
+    },
+    "src.201752a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 These corner notes fade on their own — tap one to dismiss it sooner."
       }
     },
     "src.2017b6f0": {
@@ -61951,6 +61971,16 @@
       ],
       "source": {
         "text": "🤝 You and {name} now call one another friend."
+      }
+    },
+    "src.219d07e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Self tab (S) is your character — skills, traits, and belongings."
       }
     },
     "src.219d72b8": {
@@ -68162,6 +68192,16 @@
         "text": "Market Stall"
       }
     },
+    "src.2fa64059": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💡 A child of the house! Heirs carry the chronicle forward — as they grow, their education is set from the Kin tab."
+      }
+    },
     "src.2fa8f9e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69546,6 +69586,16 @@
       ],
       "source": {
         "text": "You need at least 200 prestige to rally men to your banner (now {current})."
+      }
+    },
+    "src.3300e719": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/market.js"
+      ],
+      "source": {
+        "text": "💡 Coin runs short — a steadier livelihood (Deeds tab) or a loan from the Coin & credit ledger can bridge a lean season."
       }
     },
     "src.33039365": {
@@ -88604,6 +88654,16 @@
         "text": "Tutoring assignment"
       }
     },
+    "src.5ee1b5c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Deeds tab (D) is where things get done — a daily focus that repeats, and one-shot deeds that spend the day."
+      }
+    },
     "src.5eecd4ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93595,6 +93655,16 @@
       ],
       "source": {
         "text": "Once the sovereign nation completes"
+      }
+    },
+    "src.6a102c1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "💡 Raiders burn the land — devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away."
       }
     },
     "src.6a17079e": {
@@ -103486,6 +103556,16 @@
         "text": "Departure keeps your personal attention on {name}; progress resumes only once you arrive."
       }
     },
+    "src.8067eca0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Network tab (N) lists the ties around your household — connections, retainers, guilds, and courts — and what each tie currently does."
+      }
+    },
     "src.80754c3c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106266,6 +106346,16 @@
         "text": "Sell your neighbors’ names and see what coin buys."
       }
     },
+    "src.85faf812": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 Death is not the end here — a spouse and children (Kin tab) are how the chronicle outlives a life."
+      }
+    },
     "src.86081927": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -107469,6 +107559,16 @@
         "text": "Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building."
       }
     },
+    "src.88c60045": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stop the short day-by-day and situational tips shown to brand-new players. The guide-hints switch above also silences them."
+      }
+    },
     "src.88c6946b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108325,6 +108425,16 @@
       ],
       "source": {
         "text": "The Pay Chest Is Light"
+      }
+    },
+    "src.8a929d45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Kin tab (K) is your family — spouse, children, and kin; tap a child to guide their education."
       }
     },
     "src.8a93bcee": {
@@ -117706,6 +117816,16 @@
         "text": "The Liege Demands an Aid"
       }
     },
+    "src.9faf39f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Chronicle tab (C) remembers the story — every piece of news and every choice you make."
+      }
+    },
     "src.9fb9f63e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125890,6 +126010,16 @@
         "text": "· 🔒 lock recorded"
       }
     },
+    "src.b1fb2c14": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "💡 War has come! The muster raises your host — follow the fighting on the map and keep the household safe."
+      }
+    },
     "src.b20681a1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126539,6 +126669,16 @@
       ],
       "source": {
         "text": "kbps Opus"
+      }
+    },
+    "src.b358638b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The top bar keeps the date, the flow of days, and your stats — hover or tap gold, prestige, piety, or voice for a breakdown."
       }
     },
     "src.b35bb61a": {
@@ -129722,6 +129862,16 @@
         "text": "Generous"
       }
     },
+    "src.ba973ff3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The menu (Esc or ☰) holds Save & Load, Settings, and the Guide — the Guide explains every system in depth."
+      }
+    },
     "src.ba979e1b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130011,6 +130161,16 @@
       ],
       "source": {
         "text": "Balanced frames let animals carry bulky loads over poor roads."
+      }
+    },
+    "src.bb954c71": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "💡 Your first plot of land! Plots yield every season and a cluster makes a manor — the Land tab manages them."
       }
     },
     "src.bba22c1c": {
@@ -137636,6 +137796,16 @@
         "text": "{relation} · age {age}"
       }
     },
+    "src.cce0ef55": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The Land tab (L) looks at any county up close — buy plots, and manage what you hold."
+      }
+    },
     "src.ccec04ec": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140506,6 +140676,16 @@
         "text": "Broken in body, never once in complaint."
       }
     },
+    "src.d40051e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/agency.js"
+      ],
+      "source": {
+        "text": "💡 A marriage offer! Weigh the house, the dowry, and the standing — a good match is the surest ladder."
+      }
+    },
     "src.d4020c95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141307,6 +141487,16 @@
       ],
       "source": {
         "text": "Available now: {action}"
+      }
+    },
+    "src.d62012a5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 When the teaching grows old, Settings → Guidance can quiet these tips and the other beginner help."
       }
     },
     "src.d62269dd": {
@@ -145952,6 +146142,16 @@
         "text": "Organized Naval Levies"
       }
     },
+    "src.e056d32f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The chronicle autosaves as the days pass — Continue on the title screen picks a life back up."
+      }
+    },
     "src.e05b41da": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146070,6 +146270,16 @@
       ],
       "source": {
         "text": "Manage active election — {office}"
+      }
+    },
+    "src.e0bc7fd6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/economy.js"
+      ],
+      "source": {
+        "text": "💡 The season’s work has paid — gold funds land, gifts, loans, and the household table."
       }
     },
     "src.e0c0bc62": {
@@ -146282,6 +146492,16 @@
         "text": "Place of origin"
       }
     },
+    "src.e11b696b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "💡 The chronicle continues — your heir inherits the household: gold, land, and debts carry over."
+      }
+    },
     "src.e11e9551": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146330,6 +146550,16 @@
       ],
       "source": {
         "text": "Khatib"
+      }
+    },
+    "src.e1367b09": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 The pace of the days is yours — − and + (or Settings) slow and quicken the flow; slow down when much is happening."
       }
     },
     "src.e143112b": {
@@ -147369,6 +147599,16 @@
       ],
       "source": {
         "text": "Athens"
+      }
+    },
+    "src.e397a4b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Disable first-time tips"
       }
     },
     "src.e39d28e4": {
@@ -156862,16 +157102,6 @@
       ],
       "source": {
         "text": "Work Between the Stalls"
-      }
-    },
-    "src.f9742227": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu."
       }
     },
     "src.f97c888e": {
@@ -171380,6 +171610,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Directed study"
+      }
+    },
+    "ui:Disable first-time tips": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Disable first-time tips"
       }
     },
     "ui:Disable guide hints": {
@@ -185993,12 +186231,12 @@
         "text": "Stewardship {value}"
       }
     },
-    "ui:Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu.": {
+    "ui:Stop beginner checklists, teaching toasts, panel introductions, role orientation popups, and first-time tips. The Guide remains available from the menu.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Stop beginner checklists, teaching toasts, panel introductions, and role orientation popups. The Guide remains available from the menu."
+        "text": "Stop beginner checklists, teaching toasts, panel introductions, role orientation popups, and first-time tips. The Guide remains available from the menu."
       }
     },
     "ui:Stop cultivating": {
@@ -186007,6 +186245,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Stop cultivating"
+      }
+    },
+    "ui:Stop the short day-by-day and situational tips shown to brand-new players. The guide-hints switch above also silences them.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Stop the short day-by-day and situational tips shown to brand-new players. The guide-hints switch above also silences them."
       }
     },
     "ui:Stops new conceptions; a child already on the way will still be born.": {

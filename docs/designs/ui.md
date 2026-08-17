@@ -606,8 +606,8 @@ a browser-local **Disable guide hints** preference (`fb_ui`) so experienced play
 remove it without changing progression or available deeds. The preference covers the
 whole beginner-guidance layer: the path note, tutorial checklist and scripted tutorial
 chain, tab nudges, initial map tip, panel intro and role-orientation sheets, empty-state
-guidance lines, stat teaching lines, and the contextual one-line hints below. The complete
-Guide remains available from the menu.
+guidance lines, stat teaching lines, the contextual one-line hints below, and the
+first-time tips further below. The complete Guide remains available from the menu.
 
 New lives created from this version on carry `player.flags.tutorial` and a
 `startGold` baseline, which put a dismissible tutorial checklist at the top of the
@@ -649,6 +649,24 @@ one-line lesson the first time its moment arrives — time controls on the first
 unpause, "events pause time" inside the first event modal — each recorded as a
 per-save `hint_*` flag so a life teaches it exactly once. The new-game intro modal
 keeps only the scenario flavor and a one-line pointer to the Deeds tab.
+
+First-time **player tips** (`UI.tipDue` / `UI.maybeTip` / `UI.dailyTip` in
+`ui_misc.js`) teach the interface itself to a brand-new player, once ever per
+install rather than once per save. A day-by-day drip of UI orientation (what each
+tab does, where saving and the day speed live) fires one tip per natural day from
+the day ticker — never during an F-skip burst, which does not pass through the
+ticker — and contextual one-liners fire from engine choke points the first time a
+situation occurs: the first wage, the first marriage offer, the first war declared
+on the player, the first child, the first land plot, the first burning of the home
+county, the first household hardship, and the first succession. Fired tips are
+recorded in the browser-local `uiPrefs.tipsSeen`, so no campaign ever re-teaches
+them. The layer has its own Settings switch, **Disable first-time tips**
+(`uiPrefs.hideTips`), is also silenced by the wider **Disable guide hints** switch,
+and never starts on an install that already held a save when the layer first
+initialized — the upgrade case — decided once from `FB.save.hasAnySave()` when the
+prefs load and kept as `uiPrefs.tipsGrandfathered`. The per-save `hint_*` layer
+above is unchanged: those are lessons a life may need again, while tips are lessons
+only the very first player needs.
 The Self sheet's faith block names the live religious head, the number of days its office
 has been vacant, or the branch's lack of a centralized office, and states excommunication
 separately from the trait chip. Faith names on Self and Land are focusable links to a

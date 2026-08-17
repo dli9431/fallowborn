@@ -41,6 +41,7 @@ test('an extreme fertility trait no longer means a birth every year',
       lustful.fert = 1e9;
       FBDATA.balance.mortalityBase = 0; // nobody dies mid-check
       s.player.flags.noChildren = 1; // isolate kin births from the household
+      me.born = year - 45;
       const wives = [];
       const couples = 12;
       for (let i = 0; i < couples; i++) {
@@ -60,6 +61,7 @@ test('an extreme fertility trait no longer means a birth every year',
         me.childrenIds.push(son.id);
         wives.push(wife.id);
       }
+      FB.touchFamily();
       const years = 2;
       try {
         FBTEST.advanceDays({
@@ -100,6 +102,7 @@ test('past familyMaxChars the wider family adds no records, betrothals still wed
       FBDATA.balance.familyMaxChars = 0; // the house is always "full"
       FBDATA.balance.mortalityBase = 0;
       s.player.flags.noChildren = 1;
+      me.born = year - 45;
       function son() {
         const k = FB.makeCharacter(s, {
           sex:'m', culture:me.culture, religion:me.religion,
@@ -119,6 +122,8 @@ test('past familyMaxChars the wider family adds no records, betrothals still wed
       });
       bride.health = 8;
       pledgedSon.betrothedId = bride.id;
+      bride.betrothedId = pledgedSon.id;
+      FB.touchFamily();
       const before = { family:FB.familySize(s) };
       try {
         FBTEST.advanceDays({

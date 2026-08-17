@@ -5186,6 +5186,10 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.action.land_bought',
       '🌾 The household buys another plot at {settlement}.',
       { settlement:site.settlementName }));
+    if (FB.ui && FB.ui.maybeTip) {
+      FB.ui.maybeTip('first-plot',
+        '💡 Your first plot of land! Plots yield every season and a cluster makes a manor — the Land tab manages them.');
+    }
     return true;
   };
 
