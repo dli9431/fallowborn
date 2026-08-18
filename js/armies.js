@@ -1,6 +1,7 @@
 /* Fallowborn — field armies: mustered hosts that march the map and fight
-   when they meet. One host per sovereign realm (levies with hired companies
-   folded in), raised while an ordinary or great holy war lasts. The player's
+   when they meet. A sovereign realm fields one main host while a war lasts
+   and may split off detachments (levies with hired companies folded in).
+   The player's
    host musters the moment war begins (FB.warFooting) and is ordered by
    tapping the map — or by the automated stances (G.auto.hosts: defensive /
    offensive), which steer only an idle host and always yield to a
@@ -16,6 +17,10 @@ window.FB = window.FB || {};
      state.armies: [{ id, realm ('player' or a sovereign realm id), men, size,
        units, at, from, moveLeft, path[], goal, broken, huntPrey, manual,
        holdManual }]
+       A realm may field several hosts: the largest is the primary host
+       (FB.hostOf) that rearm, muster, and de-muster rules key on; the rest
+       are detachments (FB.hostsOf lists them all). Detachments are ordinary
+       records here — no save-format change.
        `at` is the province the host stands in; `from` the one it left. While
        moveLeft > 0 the host is on the road toward path[0] and `at` advances
        only when the leg completes; the map marker stays on `at`. size is the
@@ -24,37 +29,123 @@ window.FB = window.FB || {};
        manual / holdManual (player host only) mark a hand-tapped route still
        playing out and a hand-given halt — the automated stances never touch
        either.
-       units: { levy, arch, cav, ret, mercs } — the host's composition (men is
-       always the total). Each class fights at its own quality
-       (balance.qualityLevy/Archer/Cavalry/Retinue/Merc); battle casualties fall
-       levy-first and men-at-arms last, and a resting host refills with fresh
-       levy only — the slain professionals are not replaced mid-war.
-     state.armyDown: { realmId: turn } — a destroyed host may muster again
-       only after balance.armyRearmDays.
+       units: { <classId>: men } — the host's composition, keyed by
+       FBDATA.unitClasses (data/units.js); men is always the total. Each class
+       fights at its own table quality, battle casualties fall in the table's
+       casualtyOrder (levy first, the heaviest professionals last), and a
+       resting host refills with fresh levy only — the slain professionals are
+       not replaced mid-war. Culture- and technology-gated classes
+       (FB.unitClassUnlocked) convert a share of the mustered levy.
+     state.armyDown: { realmId: turn } — a destroyed PRIMARY host may muster
+       again only after balance.armyRearmDays.
+     state.armyDetachmentDown: { realmId: turn } — a destroyed detachment
+       (any host but the primary) re-forms after the shorter
+       balance.detachmentRearmDays.
      state.armyDownSurvival: { realmId: { turn, frac } } — a costly raid's
        surviving strength fraction; rearmScale ramps from it (keyed to the
        down-turn) instead of the 0.15 shattered-host floor.
-     state.player.war.musterPool: { levy, arch, cav, ret } — the men a
+     state.player.war.musterPool: { <classId>: men } — the men a
        voluntary de-muster sent home; the war's next muster is capped at
        them, so a beaten player cannot re-raise a full levy. */
   FB.armiesEnsure = function (state) {
     if (!state.armies) state.armies = [];
     if (!state.armyDown) state.armyDown = {};
+    if (!state.armyDetachmentDown) state.armyDetachmentDown = {};
+    /* drop orphaned or invalid host records: a realm that no longer exists,
+       a host with no men left, or one standing on ground the world data
+       does not know (additive repair, no save-version bump) */
+    const byId = FB.world && FB.world.byId;
+    state.armies = state.armies.filter(function (a) {
+      if (!a || !a.realm) return false;
+      if (a.realm !== 'player' &&
+          !(state.realms && state.realms[a.realm])) return false;
+      if (!isFinite(Number(a.men)) || a.men <= 0) return false;
+      if (byId && !byId[a.at]) return false;
+      return true;
+    });
     /* hosts from before supply lines carry no supply field: repair in place
        (additive, no save-version bump) */
     for (const a of state.armies) FB.hostSupply(a);
   };
 
+  /* ---------- the unit-class table ----------
+     FBDATA.unitClasses (data/units.js) is the single source of truth for
+     composition keys, battle quality, upkeep, casualty order, counters, and
+     culture/technology gating. The five baseline classes remain the migration
+     baseline: any class missing from a saved units record defaults to 0. */
+
+  const FALLBACK_CLASSES = ['levy', 'arch', 'cav', 'ret', 'mercs'];
+
+  function unitClassTable() {
+    return (typeof FBDATA !== 'undefined' && FBDATA.unitClasses) || {};
+  }
+
+  FB.unitClassIds = function () {
+    const ids = Object.keys(unitClassTable());
+    return ids.length ? ids : FALLBACK_CLASSES.slice();
+  };
+
+  function unitClassDef(key) {
+    return unitClassTable()[key] || null;
+  }
+
+  function unitClassQuality(key) {
+    const def = unitClassDef(key);
+    const value = def && Number(def.quality);
+    return isFinite(value) && value > 0 ? value : 1;
+  }
+
+  /* classes a muster can field: everything but hired companies (mercs join
+     by contract, never from the levy rolls) */
+  function musteredClassIds() {
+    const ids = [];
+    for (const id of FB.unitClassIds()) {
+      const def = unitClassDef(id);
+      if (!def || !def.hired) ids.push(id);
+    }
+    return ids;
+  }
+
+  /* which classes a realm (undefined realmId = the player, keyed on the
+     player character's own culture) may field: culture gates, then the
+     technology requirement against the effective sovereign's knowledge */
+  function realmUnitCulture(state, realmId) {
+    if (realmId === undefined || realmId === null || realmId === 'player') {
+      const me = state && state.player && state.chars &&
+        state.chars[state.player.charId];
+      return me ? me.culture : null;
+    }
+    const realm = state.realms && state.realms[realmId];
+    if (realm && realm.ruler && realm.ruler.culture) return realm.ruler.culture;
+    const capital = realm && FB.world && FB.world.byId &&
+      FB.world.byId[realm.capital];
+    return capital ? capital.culture : null;
+  }
+
+  FB.unitClassUnlocked = function (state, classId, realmId) {
+    const def = unitClassDef(classId);
+    if (!def) return false;
+    if (def.cultures || def.notCultures) {
+      const culture = realmUnitCulture(state, realmId);
+      if (def.cultures && def.cultures.indexOf(culture) < 0) return false;
+      if (def.notCultures && def.notCultures.indexOf(culture) >= 0) return false;
+    }
+    if (def.requiresTech) {
+      if (!FB.techRequirementMet) return false;
+      if (!FB.techRequirementMet(state, def.requiresTech, realmId)) return false;
+    }
+    return true;
+  };
+
   /* a host's composition, migrating hosts from before levy tiers (their men
-     were all levy but the hired companies) */
+     were all levy but the hired companies); classes a save predates or a mod
+     removed default to 0 */
   FB.hostUnits = function (army) {
     if (!army.units) {
       const mercs = army.mercs || 0;
-      army.units = {
-        levy:Math.max(0, army.men - mercs), arch:0, cav:0, ret:0, mercs:mercs
-      };
+      army.units = { levy: Math.max(0, army.men - mercs), mercs: mercs };
     }
-    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+    for (const key of FB.unitClassIds()) {
       if (!isFinite(Number(army.units[key])) || Number(army.units[key]) < 0) {
         army.units[key] = 0;
       }
@@ -72,13 +163,15 @@ window.FB = window.FB || {};
   };
 
   function emptyUnitCounts() {
-    return { levy:0, arch:0, cav:0, ret:0, mercs:0 };
+    const out = {};
+    for (const key of FB.unitClassIds()) out[key] = 0;
+    return out;
   }
 
   function copyUnitCounts(units) {
     const out = emptyUnitCounts();
     units = units || {};
-    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+    for (const key of FB.unitClassIds()) {
       out[key] = Math.max(0, Math.round(Number(units[key]) || 0));
     }
     return out;
@@ -87,7 +180,8 @@ window.FB = window.FB || {};
   function unitCountTotal(units) {
     let total = 0;
     units = units || {};
-    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+    for (const key in units) {
+      if (key === 'total') continue; // applyHostLosses results carry one
       total += Math.max(0, Number(units[key]) || 0);
     }
     return total;
@@ -95,7 +189,19 @@ window.FB = window.FB || {};
 
   /* One casualty allocator owns battle and event losses. The number to lose
      may be seeded elsewhere, but class allocation is always deterministic:
-     levy, archers, mercenaries, cavalry, then men-at-arms. */
+     the table's casualtyOrder (levy first, the heaviest professionals last),
+     ties broken by class id. */
+  function casualtyOrderIds() {
+    return FB.unitClassIds().sort(function (a, b) {
+      const da = unitClassDef(a), db = unitClassDef(b);
+      const oa = da && isFinite(Number(da.casualtyOrder))
+        ? Number(da.casualtyOrder) : 100;
+      const ob = db && isFinite(Number(db.casualtyOrder))
+        ? Number(db.casualtyOrder) : 100;
+      return oa - ob || (a < b ? -1 : a > b ? 1 : 0);
+    });
+  }
+
   FB.applyHostLosses = function (army, lost) {
     const result = emptyUnitCounts();
     result.total = 0;
@@ -104,7 +210,7 @@ window.FB = window.FB || {};
     let remaining = Math.min(army.men,
       Math.max(0, Math.round(Number(lost) || 0)));
     const actual = remaining;
-    for (const key of ['levy', 'arch', 'mercs', 'cav', 'ret']) {
+    for (const key of casualtyOrderIds()) {
       if (remaining <= 0) break;
       const amount = Math.min(units[key] || 0, remaining);
       units[key] -= amount;
@@ -119,10 +225,44 @@ window.FB = window.FB || {};
   /* weighted battle quality of a composition: the average punch of one man */
   FB.compQuality = function (units, men) {
     if (!units || !men) return 1;
-    const bal = B();
-    return (units.levy * (bal.qualityLevy || 1) + units.arch * (bal.qualityArcher || 1) +
-      (units.cav || 0) * (bal.qualityCavalry || 1) +
-      units.ret * (bal.qualityRetinue || 1) + (units.mercs || 0) * (bal.qualityMerc || 1)) / men;
+    let sum = 0;
+    for (const key in units) {
+      sum += Math.max(0, Number(units[key]) || 0) * unitClassQuality(key);
+    }
+    return sum / men;
+  };
+
+  /* the composition readout shared by the Land tab host card and the war
+     ledger: one "{count} {class}" part per present class. The five baseline
+     classes keep their long-standing plural-form lines; unlocked classes
+     render their icon and table name. */
+  FB.unitClassParts = function (state, units) {
+    const legacyForms = {
+      levy:['fx.warstate.comp_levy', { one:'{count} levyman', other:'{count} levy' }],
+      arch:['fx.warstate.comp_archers', { one:'{count} archer', other:'{count} archers' }],
+      cav:['fx.warstate.comp_cavalry', { one:'{count} cavalryman', other:'{count} cavalry' }],
+      ret:['fx.warstate.comp_retinue', { one:'{count} man-at-arms', other:'{count} men-at-arms' }],
+      mercs:['fx.warstate.comp_mercs', { one:'{count} mercenary', other:'{count} mercenaries' }]
+    };
+    const parts = [];
+    for (const key of FB.unitClassIds()) {
+      const count = Math.max(0, Math.round(Number(units && units[key]) || 0));
+      if (!count) continue;
+      const legacy = legacyForms[key];
+      if (legacy) {
+        parts.push(FB.renderKey(legacy[0], {
+          forms:{ select:'plural', param:'count', cases:legacy[1] }
+        }, { count:count }));
+      } else {
+        const def = unitClassDef(key);
+        const name = def
+          ? FB.dataText(state, null, 'unitClass', key, def, 'name', {}) : key;
+        parts.push(FB.T('{count} {unit}', {
+          count:count, unit:(def && def.icon ? def.icon + ' ' : '') + name
+        }));
+      }
+    }
+    return parts;
   };
 
   /* ---------- terrain (docs/designs/war.md) ----------
@@ -142,6 +282,13 @@ window.FB = window.FB || {};
   }
 
   function terrainBattleFactor(terrain, key) {
+    /* a class's own terrainFactors row wins over the shared balance table */
+    const def = unitClassDef(key);
+    const own = def && def.terrainFactors;
+    if (own) {
+      const ownValue = Number(own[terrain]);
+      if (isFinite(ownValue)) return ownValue;
+    }
     const row = balanceTable('terrainBattleFactors')[terrain];
     const value = row && Number(row[key]);
     return isFinite(value) ? value : 1;
@@ -162,15 +309,13 @@ window.FB = window.FB || {};
      without a location */
   FB.compTerrainQuality = function (units, men, terrain) {
     if (!units || !men) return 1;
-    if (!terrain || !balanceTable('terrainBattleFactors')[terrain]) {
-      return FB.compQuality(units, men);
+    if (!terrain) return FB.compQuality(units, men);
+    let sum = 0;
+    for (const key in units) {
+      sum += Math.max(0, Number(units[key]) || 0) * unitClassQuality(key) *
+        terrainBattleFactor(terrain, key);
     }
-    const bal = B();
-    return (units.levy * (bal.qualityLevy || 1) * terrainBattleFactor(terrain, 'levy') +
-      units.arch * (bal.qualityArcher || 1) * terrainBattleFactor(terrain, 'arch') +
-      (units.cav || 0) * (bal.qualityCavalry || 1) * terrainBattleFactor(terrain, 'cav') +
-      units.ret * (bal.qualityRetinue || 1) * terrainBattleFactor(terrain, 'ret') +
-      (units.mercs || 0) * (bal.qualityMerc || 1) * terrainBattleFactor(terrain, 'mercs')) / men;
+    return sum / men;
   };
 
   /* the standing host's home-ground edge on defensive terrain */
@@ -180,25 +325,42 @@ window.FB = window.FB || {};
   }
 
   /* AI realms keep no buildings: their baseline professional core is joined
-     by nation-specific military technology. */
+     by nation-specific military technology and by the culture/technology
+     classes the realm qualifies for (keyed on capital culture and completed
+     techs). Returns { classId: fraction of the muster }; levy is the
+     remainder. */
   function aiFracs(state, rid) {
     const bal = B();
     const tech = FB.techAIUnits ? FB.techAIUnits(state, rid) : {};
-    let r = (bal.aiRetinueFrac || 0) + (tech.ret || 0);
-    let a = (bal.aiArcherFrac || 0) + (tech.arch || 0);
-    let c = tech.cav || 0;
-    const professional = r + a + c;
+    const fracs = {};
+    fracs.ret = (bal.aiRetinueFrac || 0) + (tech.ret || 0);
+    fracs.arch = (bal.aiArcherFrac || 0) + (tech.arch || 0);
+    for (const id of musteredClassIds()) {
+      if (id === 'levy') continue;
+      if (tech[id]) fracs[id] = (fracs[id] || 0) + tech[id];
+      const def = unitClassDef(id);
+      const share = def && Number(def.share);
+      if (share > 0 && !(fracs[id] > 0) &&
+          FB.unitClassUnlocked(state, id, rid)) {
+        fracs[id] = share;
+      }
+    }
+    let professional = 0;
+    for (const id in fracs) professional += fracs[id];
     if (professional > 0.9) {
       const scale = 0.9 / professional;
-      r *= scale; a *= scale; c *= scale;
+      for (const id in fracs) fracs[id] *= scale;
     }
-    return { ret:r, arch:a, cav:c };
+    return fracs;
   }
   FB.aiHostQuality = function (state, rid) {
-    const bal = B(), f = aiFracs(state, rid);
-    return (1 - f.ret - f.arch - f.cav) * (bal.qualityLevy || 1) +
-      f.arch * (bal.qualityArcher || 1) + f.cav * (bal.qualityCavalry || 1) +
-      f.ret * (bal.qualityRetinue || 1);
+    const f = aiFracs(state, rid);
+    let levyFrac = 1, sum = 0;
+    for (const id in f) {
+      levyFrac -= f[id];
+      sum += f[id] * unitClassQuality(id);
+    }
+    return Math.max(0, levyFrac) * unitClassQuality('levy') + sum;
   };
 
   function B() { return FBDATA.balance; }
@@ -209,10 +371,22 @@ window.FB = window.FB || {};
     return pr ? pr.name : '?';
   }
 
-  FB.hostOf = function (state, rid) {
+  /* every live host of a realm, in stable army order */
+  FB.hostsOf = function (state, rid) {
     FB.armiesEnsure(state);
-    for (const a of state.armies) if (a.realm === rid) return a;
-    return null;
+    const out = [];
+    for (const a of state.armies) if (a.realm === rid) out.push(a);
+    return out;
+  };
+
+  /* The primary host is a realm's largest — the main body that rearm,
+     muster, de-muster, and single-host legacy callers key on. A realm with
+     no host in the field still reads null. */
+  FB.hostOf = function (state, rid) {
+    const hosts = FB.hostsOf(state, rid);
+    let best = null;
+    for (const a of hosts) if (!best || a.men > best.men) best = a;
+    return best;
   };
   FB.playerHost = function (state) { return FB.hostOf(state, 'player'); };
 
@@ -347,53 +521,68 @@ window.FB = window.FB || {};
   function hostUpkeepParts(units, mercenaryCompanies) {
     const bal = B();
     const base = bal.hostLogisticsBase === undefined ? 2 : bal.hostLogisticsBase;
-    const levy = Math.max(0, Number(units.levy) || 0) / 100 *
-      (bal.hostLogisticsLevyPer100 === undefined ? 0.5 : bal.hostLogisticsLevyPer100);
-    const archers = Math.max(0, Number(units.arch) || 0) / 100 *
-      (bal.hostLogisticsArcherPer100 === undefined ? 1 : bal.hostLogisticsArcherPer100);
-    const cavalry = Math.max(0, Number(units.cav) || 0) / 100 *
-      (bal.hostLogisticsCavalryPer100 === undefined ? 2 : bal.hostLogisticsCavalryPer100);
-    const retinue = Math.max(0, Number(units.ret) || 0) / 100 *
-      (bal.hostLogisticsRetinuePer100 === undefined ? 2 : bal.hostLogisticsRetinuePer100);
+    const byClass = {};
+    let soldiers = 0;
+    for (const key of FB.unitClassIds()) {
+      const def = unitClassDef(key);
+      const per100 = def && isFinite(Number(def.upkeepPer100))
+        ? Number(def.upkeepPer100) : 0;
+      byClass[key] = Math.max(0, Number(units[key]) || 0) / 100 * per100;
+      soldiers += byClass[key];
+    }
     const mercenaries = Math.max(0, Number(mercenaryCompanies) || 0) *
       (bal.hostLogisticsMercenaryCompany === undefined
         ? 4 : bal.hostLogisticsMercenaryCompany);
     return {
-      base:base, levy:levy, archers:archers, cavalry:cavalry, retinue:retinue,
-      mercenaries:mercenaries,
-      total:base + levy + archers + cavalry + retinue + mercenaries
+      base:base, levy:byClass.levy || 0, archers:byClass.arch || 0,
+      cavalry:byClass.cav || 0, retinue:byClass.ret || 0,
+      mercenaries:mercenaries, byClass:byClass,
+      total:base + soldiers + mercenaries
     };
   }
 
-  /* Current seasonal cost of the live player host. A missing (disbanded or
-     shattered) host has no base logistics and therefore costs nothing. */
+  /* Current seasonal cost of the live player hosts. A missing (disbanded or
+     shattered) host has no base logistics and therefore costs nothing; each
+     fielded host — the main body and every detachment — pays its own camp
+     base, while hired companies are contracted once for the whole war. */
   FB.playerHostUpkeepParts = function (state) {
-    const host = FB.playerHost(state);
+    const hosts = FB.hostsOf(state, 'player');
+    const host = hosts.length ? FB.hostOf(state, 'player') : null;
     if (!host) {
       return {
         base:0, levy:0, archers:0, cavalry:0, retinue:0,
-        mercenaries:0, campaignModifier:0, total:0
+        mercenaries:0, byClass:{}, campaignModifier:0, total:0
       };
     }
-    const units = FB.hostUnits(host);
+    const units = emptyUnitCounts();
+    for (const h of hosts) {
+      const hu = FB.hostUnits(h);
+      for (const key of FB.unitClassIds()) units[key] += hu[key] || 0;
+    }
     const companySize = B().mercCompanySize || 150;
     const contracted = state.player.war && state.player.war.mercCos;
     const companies = contracted || Math.ceil((units.mercs || 0) / companySize);
     const parts = hostUpkeepParts(units, companies);
+    parts.base *= hosts.length; // every banner keeps its own camp
     if (FB.marketCostQuote) {
       const pid = host.at || state.player.provinceId;
       parts.base = FB.marketCostQuote(state, parts.base,
         { provisions:0.55, materials:0.25, transport:0.20 }, pid);
-      parts.levy = FB.marketCostQuote(state, parts.levy,
-        { provisions:0.75, materials:0.20, transport:0.05 }, pid);
-      parts.archers = FB.marketCostQuote(state, parts.archers,
-        { provisions:0.60, materials:0.30, transport:0.10 }, pid);
-      parts.cavalry = FB.marketCostQuote(state, parts.cavalry,
-        { provisions:0.35, materials:0.10, transport:0.55 }, pid);
-      parts.retinue = FB.marketCostQuote(state, parts.retinue,
-        { provisions:0.45, materials:0.35, transport:0.20 }, pid);
-      parts.total = parts.base + parts.levy + parts.archers +
-        parts.cavalry + parts.retinue + parts.mercenaries;
+      /* each class quotes its own provisions/materials/transport basket */
+      for (const key of FB.unitClassIds()) {
+        const def = unitClassDef(key);
+        const basket = def && def.basket;
+        if (!basket) continue;
+        parts.byClass[key] = FB.marketCostQuote(state, parts.byClass[key],
+          basket, pid);
+      }
+      parts.levy = parts.byClass.levy || 0;
+      parts.archers = parts.byClass.arch || 0;
+      parts.cavalry = parts.byClass.cav || 0;
+      parts.retinue = parts.byClass.ret || 0;
+      let soldiers = 0;
+      for (const key in parts.byClass) soldiers += parts.byClass[key];
+      parts.total = parts.base + soldiers + parts.mercenaries;
     }
     const rate = FB.campaignHostModBonus
       ? FB.campaignHostModBonus(state, 'supplyUse') : 0;
@@ -427,7 +616,7 @@ window.FB = window.FB || {};
   FB.notePlayerWarTroopLosses = function (state, losses) {
     const war = FB.ensurePlayerWarFeedback(state);
     if (!war || !losses) return;
-    for (const key of ['levy', 'arch', 'cav', 'ret', 'mercs']) {
+    for (const key of FB.unitClassIds()) {
       war.lossesByClass[key] += Math.max(0,
         Math.round(Number(losses[key]) || 0));
     }
@@ -589,10 +778,12 @@ window.FB = window.FB || {};
      muster, before a great levy, mercenaries, or defensive allies join it. */
   FB.playerMusterUpkeepParts = function (state) {
     const comp = FB.playerComposition(state);
-    const units = {
-      levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret, mercs:0
-    };
-    const men = units.levy + units.arch + units.cav + units.ret;
+    const units = emptyUnitCounts();
+    let men = 0;
+    for (const key of musteredClassIds()) {
+      units[key] = Math.max(0, Number(comp[key]) || 0);
+      men += units[key];
+    }
     const floor = B().armyMinMen || 40;
     if (men < floor) units.levy += floor - men;
     return hostUpkeepParts(units, 0);
@@ -730,10 +921,11 @@ window.FB = window.FB || {};
     if (!w && !greatHost) return null;
     const cs = B().mercCompanySize || 150;
     const comp = FB.playerComposition(state);
-    const units = {
-      levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
-      mercs: (w && w.mercCos || 0) * cs
-    };
+    const units = emptyUnitCounts();
+    for (const key of musteredClassIds()) {
+      units[key] = Math.max(0, Math.round(Number(comp[key]) || 0));
+    }
+    units.mercs = (w && w.mercCos || 0) * cs;
     if (w && w.mass) units.levy = Math.round(units.levy * (B().massLevyMult || 1.35)); // the great levy
     /* a voluntary de-muster sent only part of the standing host home: the
        war's next muster fields no more of each own class than returned
@@ -742,15 +934,14 @@ window.FB = window.FB || {};
     const limited = !!(w && w.musterPool);
     if (limited) {
       const pool = w.musterPool;
-      units.levy = Math.min(units.levy, pool.levy || 0);
-      units.arch = Math.min(units.arch, pool.arch || 0);
-      units.cav = Math.min(units.cav, pool.cav || 0);
-      units.ret = Math.min(units.ret, pool.ret || 0);
+      for (const key of musteredClassIds()) {
+        units[key] = Math.min(units[key], Math.max(0, Number(pool[key]) || 0));
+      }
     }
     const allied = w && w.defending && !w.alliedWithdrew && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
-    let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
+    let men = unitCountTotal(units);
     const floor = B().armyMinMen || 40;
     if (!limited && men < floor) { units.levy += floor - men; men = floor; }
     return {
@@ -764,7 +955,8 @@ window.FB = window.FB || {};
     if (!plan) return null;
     return {
       men:plan.men, minimum:plan.floor,
-      canRaise:plan.men >= plan.floor, limited:plan.limited
+      canRaise:plan.men >= plan.floor, limited:plan.limited,
+      units:copyUnitCounts(plan.units)
     };
   };
 
@@ -817,11 +1009,13 @@ window.FB = window.FB || {};
     men += allied.men;
     const f = aiFracs(state, rid);
     const base = men - allied.men;
-    const units = {
-      ret:Math.round(base * f.ret), arch:Math.round(base * f.arch),
-      cav:Math.round(base * f.cav), levy:0, mercs:0
-    };
-    units.levy = base - units.ret - units.arch - units.cav + allied.men;
+    const units = emptyUnitCounts();
+    let professional = 0;
+    for (const id in f) {
+      units[id] = Math.round(base * f[id]);
+      professional += units[id];
+    }
+    units.levy = base - professional + allied.men;
     const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
@@ -880,12 +1074,12 @@ window.FB = window.FB || {};
   function demusterPool(host, frac) {
     const u = FB.hostUnits(host);
     const allied = (host.allied && host.allied.men) || 0;
-    return {
-      levy: Math.max(0, Math.round((u.levy - allied) * frac)),
-      arch: Math.max(0, Math.round(u.arch * frac)),
-      cav: Math.max(0, Math.round((u.cav || 0) * frac)),
-      ret: Math.max(0, Math.round(u.ret * frac))
-    };
+    const pool = {};
+    for (const key of musteredClassIds()) {
+      pool[key] = Math.max(0, Math.round(
+        (key === 'levy' ? u.levy - allied : u[key]) * frac));
+    }
+    return pool;
   }
 
   /* preview for the deed description: { where, frac, men } at the host's
@@ -896,8 +1090,7 @@ window.FB = window.FB || {};
     if (!host) return null;
     const t = demusterTerms(state, host);
     const pool = demusterPool(host, t.frac);
-    return { where: t.where, frac: t.frac,
-      men: pool.levy + pool.arch + pool.cav + pool.ret };
+    return { where: t.where, frac: t.frac, men: unitCountTotal(pool) };
   };
 
   FB.demusterPlayerHost = function (state) {
@@ -912,8 +1105,145 @@ window.FB = window.FB || {};
     disband(state, host);
     FB.news(state, FB.msg('news.army.demusters',
       '🏳 The host de-musters at {province} — {men} men return to the muster rolls.',
-      { province: provName(at), men: pool.levy + pool.arch + pool.cav + pool.ret }));
+      { province: provName(at), men: unitCountTotal(pool) }));
     return true;
+  };
+
+  /* ---------- splitting & merging (docs/designs/war.md) ----------
+     A host standing still may divide: the detachment takes a men-share of
+     every class (largest-remainder, deterministic) and of the carried
+     supply, and stands beside the main body under its own orders. Two
+     friendly hosts of one realm sharing a province may merge back into one.
+     Splitting conserves men: nothing is mustered or sent home. */
+
+  /* carve targetMen out of the host as a new detachment record; the caller
+     checks the minimum-men rule first */
+  function splitOffHost(state, host, targetMen) {
+    const units = FB.hostUnits(host);
+    const beforeMen = host.men;
+    const beforeSize = host.size === undefined ? beforeMen : host.size;
+    const ratio = targetMen / beforeMen;
+    const part = emptyUnitCounts();
+    let taken = 0;
+    const remainders = [];
+    for (const key of FB.unitClassIds()) {
+      const exact = (units[key] || 0) * ratio;
+      const base = Math.min(units[key] || 0, Math.floor(exact));
+      part[key] = base;
+      taken += base;
+      remainders.push({ key:key, frac:exact - base });
+    }
+    remainders.sort(function (x, y) {
+      return y.frac - x.frac || (x.key < y.key ? -1 : x.key > y.key ? 1 : 0);
+    });
+    let changed = true;
+    while (taken < targetMen && changed) {
+      changed = false;
+      for (const entry of remainders) {
+        if (taken >= targetMen) break;
+        if (part[entry.key] < (units[entry.key] || 0)) {
+          part[entry.key]++;
+          taken++;
+          changed = true;
+        }
+      }
+    }
+    for (const key of FB.unitClassIds()) units[key] -= part[key];
+    const detachmentSize = Math.max(targetMen, Math.round(beforeSize * ratio));
+    const detachmentSupply = Math.round(FB.hostSupply(host) * ratio);
+    host.men = beforeMen - targetMen;
+    host.size = Math.max(host.men, beforeSize - detachmentSize);
+    host.supply = FB.clamp(FB.hostSupply(host) - detachmentSupply, 0, 100);
+    const detachment = {
+      id: FB.uid(), realm: host.realm, men: targetMen, size: detachmentSize,
+      units: part, at: host.at, from: host.at, moveLeft: 0, path: [],
+      goal: null, supply: detachmentSupply
+    };
+    /* allied spears and the enemy of a hunt stay with the main body */
+    state.armies.push(detachment);
+    requestMap();
+    return detachment;
+  }
+
+  FB.splitHostStatus = function (state, host) {
+    const min = B().armyMinMen || 40;
+    const none = { ok:false, targetMen:0, reason:'' };
+    if (!host || host.realm !== 'player') return none;
+    if (host.moveLeft > 0 || (host.path && host.path.length)) {
+      none.reason = FB.T('A host on the march must halt before it divides.');
+      return none;
+    }
+    if (host.men < min * 2) {
+      none.reason = FB.T('The host is too small to divide — each part must field at least {men} men.', {
+        men: min
+      });
+      return none;
+    }
+    return { ok:true, targetMen:Math.round(host.men / 2), reason:'' };
+  };
+
+  /* the player order on the selected host card: split off half the host */
+  FB.splitHost = function (state, host) {
+    const status = FB.splitHostStatus(state, host);
+    if (!status.ok) return null;
+    const detachment = splitOffHost(state, host, status.targetMen);
+    /* a fresh detachment stands until ordered — the automated stances never
+       claim a host the player has not steered */
+    detachment.holdManual = 1;
+    FB.news(state, FB.msg('news.army.host_splits',
+      '⚔ The host divides at {province} — {men} men under a second banner.',
+      { province: provName(host.at), men: detachment.men }));
+    return detachment;
+  };
+
+  /* the largest other host of the same realm standing with this one (both
+     halted) — the merge partner the host card offers */
+  FB.mergeableHost = function (state, host) {
+    if (!host) return null;
+    let best = null;
+    for (const a of state.armies || []) {
+      if (a === host || a.realm !== host.realm || a.at !== host.at) continue;
+      if (a.moveLeft > 0 || (a.path && a.path.length)) continue;
+      if (!best || a.men > best.men) best = a;
+    }
+    return best;
+  };
+
+  FB.mergeHosts = function (state, host, other) {
+    if (!host || !other || host === other ||
+        host.realm !== other.realm || host.at !== other.at) return null;
+    const survivor = other.men > host.men ? other : host;
+    const gone = survivor === host ? other : host;
+    const survivorMen = survivor.men, goneMen = gone.men;
+    const units = FB.hostUnits(survivor);
+    const goneUnits = FB.hostUnits(gone);
+    for (const key of FB.unitClassIds()) {
+      units[key] = (units[key] || 0) + (goneUnits[key] || 0);
+    }
+    survivor.men = survivorMen + goneMen;
+    survivor.size = Math.max(survivor.men,
+      (survivor.size === undefined ? survivorMen : survivor.size) +
+      (gone.size === undefined ? goneMen : gone.size));
+    /* the carried supply stocks pool */
+    survivor.supply = FB.clamp(Math.round(
+      (FB.hostSupply(survivor) * survivorMen +
+        FB.hostSupply(gone) * goneMen) / Math.max(1, survivor.men)), 0, 100);
+    if (gone.allied && gone.allied.men) {
+      if (survivor.allied && survivor.allied.ally === gone.allied.ally) {
+        survivor.allied.men += gone.allied.men;
+      } else if (!survivor.allied) {
+        survivor.allied = gone.allied;
+      }
+    }
+    disband(state, gone);
+    if (selId === gone.id) selId = survivor.id;
+    if (survivor.realm === 'player') {
+      FB.news(state, FB.msg('news.army.hosts_merge',
+        '⚔ The banners join at {province} — one host of {men} men.',
+        { province: provName(survivor.at), men: survivor.men }));
+    }
+    requestMap();
+    return survivor;
   };
 
   /* ---------- pathing (BFS over province adjacency) ----------
@@ -1386,23 +1716,132 @@ window.FB = window.FB || {};
     }
   }
 
+  /* ---------- encirclement & retreat (docs/designs/war.md) ----------
+     A host is cut off when no road home exists: every neighboring land
+     county is hostile-held, enemy-occupied, or barred by a hostile
+     unbreached fort, and every water crossing lies beyond one ferry cycle
+     of the host's sea transport. A host shattered while cut off is
+     destroyed outright and its leader stands a graver chance of capture
+     (balance.captureChanceEncircled); a merely beaten one has nowhere to
+     run and stands its ground. */
+
+  function realmHostileTo(state, army, ownerId) {
+    if (!ownerId) return false;
+    const controller = ownerId === 'player' ? 'player'
+      : (FB.topRealm ? FB.topRealm(state, ownerId) : ownerId);
+    if (!controller || controller === army.realm) return false;
+    return FB.armiesHostile(state, army, { realm: controller });
+  }
+
+  function enemyOccupied(state, army, pid) {
+    const campaign = state.greatHolyWar;
+    if (!campaign || campaign.phase !== 'active' ||
+        !campaign.occupations || !FB.greatHolyWarCamp) return false;
+    const occupation = campaign.occupations[pid];
+    if (!occupation || !(occupation.progress || occupation.occupied)) return false;
+    const camp = FB.greatHolyWarCamp(state, army.realm);
+    const holdingCamp = occupation.occupied ? 'attackers' : occupation.progressCamp;
+    return !!(camp && holdingCamp && camp !== holdingCamp);
+  }
+
+  FB.hostCutOff = function (state, army) {
+    if (!army || !FB.world || !FB.world.adj) return false;
+    const adj = FB.world.adj[army.at];
+    if (!adj) return false;
+    let sawNeighbor = false;
+    let memo = null;
+    for (const nb in adj) {
+      sawNeighbor = true;
+      if (FB.waterCrossing && FB.waterCrossing(army.at, nb)) {
+        /* the sea is a road out only when one ferry cycle can carry the host */
+        memo = memo || legQuoteMemo(state, army);
+        const quote = quoteFromMemo(memo, army.at, nb);
+        if (quote.effectiveCapacity >= Math.max(1, army.men)) return false;
+        continue;
+      }
+      if (FB.armyFriendlyProvince &&
+          FB.armyFriendlyProvince(state, army, nb)) return false;
+      if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, nb, army)) continue;
+      if (realmHostileTo(state, army, state.owner && state.owner[nb])) continue;
+      if (enemyOccupied(state, army, nb)) continue;
+      return false; // neutral or unclaimed ground remains a road out
+    }
+    return sawNeighbor;
+  };
+
+  /* where a beaten host can actually run: home while the road is clear,
+     else the nearest friendly county a legal march can reach (no hostile
+     unbreached fort on the road), else null — it stands its ground */
+  FB.armyRetreatGoal = function (state, army) {
+    const home = army.realm === 'player' ? playerHome(state)
+      : (state.realms[army.realm] ? state.realms[army.realm].capital : null);
+    if (home === army.at) return army.at; // beaten on home ground: it stands
+    if (home) {
+      const direct = findArmyPathFrom(state, army, army.at, home);
+      if (direct && !direct.blockedByFort) return home;
+    }
+    const adj = (FB.world && FB.world.adj) || {};
+    if (!adj[army.at]) return null;
+    const visited = {}; visited[army.at] = true;
+    let frontier = sortedNeighbors(adj, army.at).slice();
+    while (frontier.length) {
+      for (const pid of frontier) {
+        if (visited[pid]) continue;
+        visited[pid] = true;
+        if (!(FB.armyFriendlyProvince &&
+              FB.armyFriendlyProvince(state, army, pid))) continue;
+        if (FB.fortBlocksArmy && FB.fortBlocksArmy(state, pid, army)) continue;
+        const route = findArmyPathFrom(state, army, army.at, pid);
+        if (route && !route.blockedByFort) return pid;
+      }
+      const next = [];
+      for (const pid of frontier) {
+        for (const nb of sortedNeighbors(adj, pid)) {
+          if (!visited[nb]) next.push(nb);
+        }
+      }
+      frontier = next;
+    }
+    return null;
+  };
+
+  /* a host destroyed in the field: the primary host costs the realm its
+     full rearm wait; a lost detachment re-forms after the shorter
+     balance.detachmentRearmDays (tracked in state.armyDetachmentDown) */
+  function noteHostDestroyed(state, host) {
+    if (FB.hostOf(state, host.realm) === host) {
+      state.armyDown[host.realm] = state.turn;
+    } else {
+      state.armyDetachmentDown = state.armyDetachmentDown || {};
+      state.armyDetachmentDown[host.realm] = state.turn;
+    }
+  }
+
   /* what an AI host wants: run home when broken, hunt the nearest enemy
-     host, else march on the enemy's seat */
+     host, else march on the enemy's seat. A detachment (any host but the
+     realm's primary) leaves the hunting to the main body and makes for the
+     enemy seat or the holy-war goal — screening and besieging while the
+     main host fights. */
   function aiGoal(state, army, warring) {
     const r = state.realms[army.realm];
     if (!r) return army.at;
-    if (army.broken !== undefined && state.turn - army.broken < 40) return r.capital;
-    if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) return army.at;
-    let best = null, bd = Infinity;
-    const pa = FB.world.byId[army.at];
-    for (const o of state.armies) {
-      if (o === army || !FB.armiesHostile(state, army, o)) continue;
-      const pb = FB.world.byId[o.at];
-      if (!pa || !pb) continue;
-      const d = (pa.cx - pb.cx) * (pa.cx - pb.cx) + (pa.cy - pb.cy) * (pa.cy - pb.cy);
-      if (d < bd) { bd = d; best = o; }
+    if (army.broken !== undefined && state.turn - army.broken < 40) {
+      return FB.armyRetreatGoal(state, army) || army.at;
     }
-    if (best) return best.at;
+    if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, army)) return army.at;
+    const detachment = FB.hostOf(state, army.realm) !== army;
+    if (!detachment) {
+      let best = null, bd = Infinity;
+      const pa = FB.world.byId[army.at];
+      for (const o of state.armies) {
+        if (o === army || !FB.armiesHostile(state, army, o)) continue;
+        const pb = FB.world.byId[o.at];
+        if (!pa || !pb) continue;
+        const d = (pa.cx - pb.cx) * (pa.cx - pb.cx) + (pa.cy - pb.cy) * (pa.cy - pb.cy);
+        if (d < bd) { bd = d; best = o; }
+      }
+      if (best) return best.at;
+    }
     if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, army.realm) &&
         FB.greatHolyWarArmyGoal) {
       return FB.greatHolyWarArmyGoal(state, army.realm, army.at) || army.at;
@@ -1423,7 +1862,9 @@ window.FB = window.FB || {};
   function playerGoal(state, host, mode) {
     const p = state.player, w = p.war;
     const home = playerHome(state);
-    if (host.broken !== undefined && state.turn - host.broken < 40) return home;
+    if (host.broken !== undefined && state.turn - host.broken < 40) {
+      return FB.armyRetreatGoal(state, host) || host.at;
+    }
     if (FB.fortPinnedStatus && FB.fortPinnedStatus(state, host)) return host.at;
     if (!w && FB.playerGreatHolyWarHostActive &&
         FB.playerGreatHolyWarHostActive(state) && FB.greatHolyWarArmyGoal) {
@@ -1498,6 +1939,46 @@ window.FB = window.FB || {};
     return pw;
   }
 
+  /* Counter mechanics (docs/designs/war.md): each class's `counters` table
+     fights it above its quality against the named enemy classes. A side's
+     counter edge is the composition-weighted average of those multipliers
+     against the enemy's composition shares, capped by
+     balance.battleCounterMaxSwing so counters swing battles without
+     overwhelming numbers and martial. */
+  function battleCounterMultiplier(units, enemyUnits) {
+    units = units || {};
+    enemyUnits = enemyUnits || {};
+    const swing = B().battleCounterMaxSwing === undefined
+      ? 0.2 : B().battleCounterMaxSwing;
+    let enemyTotal = 0;
+    for (const key in enemyUnits) {
+      enemyTotal += Math.max(0, Number(enemyUnits[key]) || 0);
+    }
+    if (enemyTotal <= 0) return 1;
+    let bonus = 0, ownTotal = 0;
+    for (const key in units) {
+      const count = Math.max(0, Number(units[key]) || 0);
+      if (!count) continue;
+      ownTotal += count;
+      const counters = (unitClassDef(key) || {}).counters || {};
+      let per = 0;
+      for (const enemyKey in counters) {
+        const mult = Number(counters[enemyKey]);
+        if (!isFinite(mult)) continue;
+        per += (mult - 1) *
+          (Math.max(0, Number(enemyUnits[enemyKey]) || 0) / enemyTotal);
+      }
+      bonus += count * per;
+    }
+    if (ownTotal <= 0 || !bonus) return 1;
+    return 1 + FB.clamp(bonus / ownTotal, -Math.abs(swing), Math.abs(swing));
+  }
+
+  /* public surface for tests, tooling, and UI previews */
+  FB.armyBattleCounterMultiplier = function (units, enemyUnits) {
+    return battleCounterMultiplier(units, enemyUnits);
+  };
+
   /* public surface for tests, tooling, and UI previews */
   FB.armyBattlePower = function (state, army, pid) {
     return battlePower(state, army, pid);
@@ -1511,70 +1992,169 @@ window.FB = window.FB || {};
     if (rl && rl.war && rl.war.enemy === winnerSov) rl.war.fl = (rl.war.fl || 0) + 1;
   }
 
-  function resolveBattle(state, pid, a, b) {
-    /* the host holding the ground — standing, with no march in progress —
-       defends it and gains the terrain's home-ground bonus
+  /* the largest host of a side speaks for it (realm attribution, command
+     hooks, news names); ties break on id so the pick never depends on scan
+     order beyond the deterministic army list */
+  function leadHost(side) {
+    let lead = side[0];
+    for (let i = 1; i < side.length; i++) {
+      if (side[i].men > lead.men) lead = side[i];
+    }
+    return lead;
+  }
+
+  function sideMen(side) {
+    let men = 0;
+    for (const host of side) men += host.men;
+    return men;
+  }
+
+  function sideUnits(side) {
+    const pooled = emptyUnitCounts();
+    for (const host of side) {
+      const units = FB.hostUnits(host);
+      for (const key of FB.unitClassIds()) {
+        pooled[key] += Math.max(0, Number(units[key]) || 0);
+      }
+    }
+    return pooled;
+  }
+
+  function sideHasRealm(side, rid) {
+    for (const host of side) if (host.realm === rid) return true;
+    return false;
+  }
+
+  /* spread a side's casualties across its hosts in proportion to their men;
+     the lead host absorbs the rounding drift. Returns the pooled per-class
+     losses (with .total) for the war ledger. */
+  function spreadLosses(side, total) {
+    const aggregate = emptyUnitCounts();
+    aggregate.total = 0;
+    const men = sideMen(side);
+    if (!men || total <= 0) return aggregate;
+    let assigned = 0;
+    for (let i = 0; i < side.length; i++) {
+      const host = side[i];
+      const share = i === side.length - 1
+        ? total - assigned
+        : Math.round(total * host.men / men);
+      assigned += Math.max(0, share);
+      const losses = FB.applyHostLosses(host, Math.max(0, share));
+      for (const key of FB.unitClassIds()) aggregate[key] += losses[key] || 0;
+      aggregate.total += losses.total;
+    }
+    return aggregate;
+  }
+
+  /* One clash per province per day between two camps (docs/designs/war.md):
+     every unbroken host of each camp fights — side power is the sum of its
+     hosts' terrain-aware battle power, counter edges read the pooled
+     compositions, and losses spread across the side. The loser side's hosts
+     rout singly toward a reachable friendly county; a host ground below
+     balance.armyMinMen shatters, and one shattered while cut off
+     (FB.hostCutOff) is destroyed outright. */
+  function resolveBattle(state, pid, sideA, sideB) {
+    /* the camp holding the ground — every host standing, no march in
+       progress — defends it and gains the terrain's home-ground bonus
        (balance.terrainDefenseBonus); when both stand or both march, the
        saved coin picks the defender */
     const defense = terrainDefenseBonus(terrainOf(pid));
     let defender = null;
     if (defense > 0) {
-      const aStanding = !(a.moveLeft > 0) && !(a.path && a.path.length);
-      const bStanding = !(b.moveLeft > 0) && !(b.path && b.path.length);
-      defender = aStanding !== bStanding ? (aStanding ? a : b)
-        : (FB.rng() < 0.5 ? a : b);
+      const aStanding = sideA.every(function (h) {
+        return !(h.moveLeft > 0) && !(h.path && h.path.length);
+      });
+      const bStanding = sideB.every(function (h) {
+        return !(h.moveLeft > 0) && !(h.path && h.path.length);
+      });
+      defender = aStanding !== bStanding ? (aStanding ? sideA : sideB)
+        : (FB.rng() < 0.5 ? sideA : sideB);
     }
-    const sa = battlePower(state, a, pid) * (defender === a ? 1 + defense : 1) * FB.rf(0.75, 1.25);
-    const sb = battlePower(state, b, pid) * (defender === b ? 1 + defense : 1) * FB.rf(0.75, 1.25);
-    const winner = sa >= sb ? a : b, loser = sa >= sb ? b : a;
-    const winnerBefore = winner.men, loserBefore = loser.men;
+    const unitsA = sideUnits(sideA), unitsB = sideUnits(sideB);
+    let powerA = 0, powerB = 0;
+    for (const h of sideA) powerA += battlePower(state, h, pid);
+    for (const h of sideB) powerB += battlePower(state, h, pid);
+    const sa = powerA * battleCounterMultiplier(unitsA, unitsB) *
+      (defender === sideA ? 1 + defense : 1) * FB.rf(0.75, 1.25);
+    const sb = powerB * battleCounterMultiplier(unitsB, unitsA) *
+      (defender === sideB ? 1 + defense : 1) * FB.rf(0.75, 1.25);
+    const winnerSide = sa >= sb ? sideA : sideB;
+    const loserSide = sa >= sb ? sideB : sideA;
+    const winner = leadHost(winnerSide), loser = leadHost(loserSide);
+    const winnerBefore = sideMen(winnerSide), loserBefore = sideMen(loserSide);
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
     const ratio = FB.clamp(sl / sw, 0.3, 1); // a close fight costs the winner too
-    const winnerLoss = Math.round(winner.men * (B().battleWinLoss || 0.28) * ratio);
-    const winnerLosses = FB.applyHostLosses(winner, winnerLoss);
-    if (winner.men < 1) winner.men = 1;
-    const loserLoss = Math.round(loser.men * (B().battleLoseLoss || 0.62));
-    const loserLosses = FB.applyHostLosses(loser, loserLoss);
-    const pInvolved = winner.realm === 'player' || loser.realm === 'player';
-    // the beaten host routs for home — or disperses entirely
-    if (loser.men < (B().armyMinMen || 40)) {
-      disband(state, loser);
-      state.armyDown[loser.realm] = state.turn;
-    } else {
-      loser.broken = state.turn;
-      FB.orderArmy(state, loser, loser.realm === 'player' ? playerHome(state) : state.realms[loser.realm].capital);
+    const winnerLoss = Math.round(winnerBefore * (B().battleWinLoss || 0.28) * ratio);
+    const winnerLosses = spreadLosses(winnerSide, winnerLoss);
+    for (const h of winnerSide) if (h.men < 1) h.men = 1;
+    const loserLoss = Math.round(loserBefore * (B().battleLoseLoss || 0.62));
+    const loserLosses = spreadLosses(loserSide, loserLoss);
+    const pInvolved = sideHasRealm(winnerSide, 'player') ||
+      sideHasRealm(loserSide, 'player');
+    // the beaten camp routs for home — or disperses entirely
+    const minMen = B().armyMinMen || 40;
+    let playerShatteredCutOff = false;
+    for (const host of loserSide.slice()) {
+      if (host.men < minMen) {
+        const cutOff = FB.hostCutOff(state, host);
+        if (host.realm === 'player' && cutOff) playerShatteredCutOff = true;
+        if (cutOff && (host.realm === 'player' ||
+            (state.player.war && state.player.war.enemy === host.realm))) {
+          const name = host.realm === 'player'
+            ? null
+            : (state.realms[host.realm] ? state.realms[host.realm].name : '');
+          FB.news(state, host.realm === 'player'
+            ? FB.msg('news.army.host_destroyed_encircled',
+              '⚔ Cut off with no road home — the host at {province} is destroyed to a man.',
+              { province: provName(host.at) })
+            : FB.msg('news.army.enemy_destroyed_encircled',
+              '⚔ Cut off with no road home — the host of {realm} at {province} is destroyed to a man.',
+              { realm: name, province: provName(host.at) }));
+        }
+        noteHostDestroyed(state, host);
+        disband(state, host);
+      } else {
+        host.broken = state.turn;
+        const retreat = FB.armyRetreatGoal(state, host);
+        if (retreat && retreat !== host.at) FB.orderArmy(state, host, retreat);
+        else {
+          /* nowhere to run: a cut-off host stands its ground */
+          host.path = []; host.goal = null; host.moveLeft = 0;
+        }
+      }
     }
     if (winner.realm !== 'player') {
       FB.noteMilitaryCommandVictory(state, winner, loser, pid);
     }
     const greatBattle = FB.greatHolyWarBattle &&
-      FB.greatHolyWarBattle(state, pid, winner, loser, winnerLoss, loserLoss);
+      FB.greatHolyWarBattle(state, pid, winner, loser,
+        winnerLosses.total, loserLosses.total);
     if (greatBattle) {
       /* Coalition resolve and contribution are owned by holywar.js. An
          ordinary bilateral war (if malformed legacy state supplied one)
          must not also resolve this battle. */
     } else if (pInvolved) {
-      const won = winner.realm === 'player';
-      const steel = FB.hostUnits(winner.realm === 'player' ? winner : loser).ret > 0;
+      const won = sideHasRealm(winnerSide, 'player');
+      const playerSide = won ? winnerSide : loserSide;
+      const enemySide = won ? loserSide : winnerSide;
+      const steel = sideUnits(playerSide).ret > 0;
       /* The outcome handler may end the war immediately. Freeze the opposing
          realm on the queued battlefield event before that state disappears. */
       const enemyId = state.player.war && state.player.war.enemy ||
-        (won ? loser.realm : winner.realm);
+        leadHost(enemySide).realm;
       FB.queueEvent(state,
         (won ? 'field_battle_won' : 'field_battle_lost') + (steel ? '_steel' : ''),
         { pid:pid, enemyId:enemyId });
-      const playerArmy = won ? winner : loser;
-      const enemyArmy = won ? loser : winner;
-      const playerLosses = won ? winnerLosses : loserLosses;
-      const enemyLosses = won ? loserLosses : winnerLosses;
       const battleContext = { battleRecord:{
         turn:state.turn, outcome:won ? 'win' : 'loss', mode:'field', pid:pid,
         playerBefore:won ? winnerBefore : loserBefore,
-        playerAfter:playerArmy.men,
+        playerAfter:sideMen(playerSide),
         enemyBefore:won ? loserBefore : winnerBefore,
-        enemyAfter:enemyArmy.men,
-        playerLosses:playerLosses,
-        enemyLosses:enemyLosses
+        enemyAfter:sideMen(enemySide),
+        playerLosses:won ? winnerLosses : loserLosses,
+        enemyLosses:won ? loserLosses : winnerLosses,
+        encircled:playerShatteredCutOff
       }};
       if (won) FB.fns.war_win(state, battleContext);
       else FB.fns.war_loss(state, battleContext);
@@ -1697,10 +2277,10 @@ window.FB = window.FB || {};
       }
       requestMap();
       /* hunger finishes what battle would: a host ground below the minimum
-         disperses and waits out the same rearm clock as a shattering */
+         disperses — a shattered primary waits out the full rearm clock, a
+         lost detachment the shorter detachmentRearmDays */
       if (army.men < (bal.armyMinMen || 40)) {
-        state.armyDown = state.armyDown || {};
-        state.armyDown[army.realm] = state.turn;
+        noteHostDestroyed(state, army);
         if (army.realm === 'player') {
           FB.news(state, FB.msg('news.army.host_scatters',
             '🥀 Hunger scatters the starving host at {province} — the survivors slip home.',
@@ -1750,9 +2330,9 @@ window.FB = window.FB || {};
        mutates the pledge, the campaign, or the player's sovereignty */
     const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(state));
-    const hostByRealm = {};
+    const hostsByRealm = {};
     for (const a of state.armies) {
-      hostByRealm[a.realm] = a;
+      (hostsByRealm[a.realm] = hostsByRealm[a.realm] || []).push(a);
       if (a.allied && a.allied.men) {
         const current = FB.alliedReinforcement
           ? FB.alliedReinforcement(state, a.realm) : { ally: null, men: 0 };
@@ -1773,10 +2353,51 @@ window.FB = window.FB || {};
         sovereignIndex++) {
       const id = sovereignIds[sovereignIndex];
       const r = state.realms[id];
-      if (!warring[id] || hostByRealm[id]) continue;
+      if (!warring[id] || (hostsByRealm[id] && hostsByRealm[id].length)) continue;
       const down = state.armyDown[id];
       if (down !== undefined && state.turn - down < B().armyRearmDays) continue;
-      raiseAIHost(state, id);
+      const raised = raiseAIHost(state, id);
+      if (raised) hostsByRealm[id] = [raised];
+    }
+
+    /* strong aggressors divide their strength: a realm whose muster clears
+       balance.aiMultiHostStrength splits off a detachment (capped by
+       balance.aiMaxHosts) while it prosecutes an offensive war — the main
+       host hunts, the second banner screens and besieges. A destroyed
+       detachment re-forms only after balance.detachmentRearmDays. */
+    const aiMaxHosts = B().aiMaxHosts === undefined ? 2 : B().aiMaxHosts;
+    const multiStrength = B().aiMultiHostStrength === undefined
+      ? Infinity : B().aiMultiHostStrength;
+    const detachmentFrac = B().aiDetachmentFrac === undefined
+      ? 0.35 : B().aiDetachmentFrac;
+    const detachmentRearm = B().detachmentRearmDays === undefined
+      ? 25 : B().detachmentRearmDays;
+    const minMen = B().armyMinMen || 40;
+    for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
+        sovereignIndex++) {
+      const id = sovereignIds[sovereignIndex];
+      const r = state.realms[id];
+      const hosts = hostsByRealm[id];
+      if (!warring[id] || !hosts || hosts.length !== 1 ||
+          hosts.length >= aiMaxHosts) continue;
+      const offensive = !!(r.war && r.war.enemy) ||
+        (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, id) === 'attackers');
+      if (!offensive) continue;
+      const detachDown = (state.armyDetachmentDown || {})[id];
+      if (detachDown !== undefined &&
+          state.turn - detachDown < detachmentRearm) continue;
+      if (FB.aiBaseHost(state, id) < multiStrength) continue;
+      const primary = hosts[0];
+      if (primary.broken !== undefined) continue; // a routed host does not divide
+      const target = Math.round(primary.men * detachmentFrac);
+      if (target < minMen || primary.men - target < minMen) continue;
+      const detachment = splitOffHost(state, primary, target);
+      hosts.push(detachment);
+      if (state.player.war && state.player.war.enemy === id) {
+        FB.news(state, FB.msg('news.army.enemy_divides',
+          '🚩 {realm} divides its strength — a second host takes the field.',
+          { realm: r.name }));
+      }
     }
 
     // peace: hosts go home — this one rule covers every way a war can end
@@ -1798,7 +2419,8 @@ window.FB = window.FB || {};
     const autoHosts = FB.game.auto && FB.game.auto.hosts;
     // automated command re-raises a destroyed host once the rearm window passes
     if (autoHosts && autoHosts !== 'manual' &&
-        (p.war || playerGhwHost) && !hostByRealm['player']) {
+        (p.war || playerGhwHost) &&
+        !(hostsByRealm['player'] && hostsByRealm['player'].length)) {
       FB.raisePlayerHost(state);
     }
     for (const a of state.armies) {
@@ -1886,24 +2508,38 @@ window.FB = window.FB || {};
       supplyTickHost(state, a, supplyDistances);
     }
 
-    // battles: hostile hosts sharing a province (one clash per province per day)
+    /* battles: hostile camps sharing a province (one clash per province per
+       day). Hosts that are not mutually hostile fight as one side — the
+       same folding the allied reinforcement rule applies. */
     const byProv = {};
     for (const a of state.armies) (byProv[a.at] = byProv[a.at] || []).push(a);
     for (const pid in byProv) {
       const here = byProv[pid];
       if (here.length < 2) continue;
-      let pair = null;
-      for (let i = 0; i < here.length && !pair; i++) {
-        for (let j = i + 1; j < here.length; j++) {
-          /* rout grace: a freshly broken host is left to limp home — without
-             this, a host beaten on its own capital cannot flee (orderArmy
-             treats home as a halt) and the same battle re-fought daily */
-          if (here[i].broken !== undefined && state.turn - here[i].broken < B().armyRoutDays) continue;
-          if (here[j].broken !== undefined && state.turn - here[j].broken < B().armyRoutDays) continue;
-          if (FB.armiesHostile(state, here[i], here[j])) { pair = [here[i], here[j]]; break; }
+      const sides = [];
+      for (const host of here) {
+        /* rout grace: a freshly broken host is left to limp home — without
+           this, a host beaten on its own capital cannot flee (orderArmy
+           treats home as a halt) and the same battle re-fought daily */
+        if (host.broken !== undefined &&
+            state.turn - host.broken < B().armyRoutDays) continue;
+        let placed = null;
+        for (const side of sides) {
+          if (!FB.armiesHostile(state, side[0], host)) { placed = side; break; }
         }
+        if (placed) placed.push(host);
+        else sides.push([host]);
       }
-      if (pair) resolveBattle(state, pid, pair[0], pair[1]);
+      if (sides.length < 2) continue;
+      /* the two strongest camps meet; the rest stand clear of the fray.
+         Ties break on the lead host's id so the pick is deterministic. */
+      sides.sort(function (x, y) {
+        const byStrength = sideMen(y) - sideMen(x);
+        if (byStrength) return byStrength;
+        const xid = leadHost(x).id, yid = leadHost(y).id;
+        return xid < yid ? -1 : xid > yid ? 1 : 0;
+      });
+      resolveBattle(state, pid, sides[0], sides[1]);
     }
   };
 
@@ -1956,14 +2592,30 @@ window.FB = window.FB || {};
       for (const a of here) if (a.realm === 'player') { hit = a; break; }
     }
     if (hit && hit.realm === 'player') {
-      if (sel && sel.id === hit.id) {
-        hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
-        hit.manual = 0; hit.holdManual = 1; // a hand-halted host holds, automation or no
+      /* stacked player hosts share a centroid: a tap cycles the selection
+         through the stack, and the tap past the last banner halts it — the
+         long-standing tap-the-selected-host gesture, unchanged for a lone
+         host */
+      const stack = [];
+      const coLocated = FB.armiesAt(state, hit.at);
+      for (const a of coLocated) if (a.realm === 'player') stack.push(a);
+      const selIndex = sel ? stack.indexOf(sel) : -1;
+      if (selIndex >= 0 && selIndex === stack.length - 1) {
+        const held = stack[selIndex];
+        held.path = []; held.goal = null; held.moveLeft = 0; held.huntPrey = null;
+        held.manual = 0; held.holdManual = 1; // a hand-halted host holds, automation or no
         FB.selectArmy(null);
         if (FB.ui) FB.ui.toast('🚩 The host holds at {province}.',
-          { province: provName(hit.at) });
+          { province: provName(held.at) });
         if (FB.map) FB.map.request(); // drop the ring and route while paused
         return true;
+      }
+      if (selIndex >= 0) {
+        const next = stack[selIndex + 1];
+        FB.selectArmy(next.id);
+        if (FB.ui) FB.ui.toast('🚩 Your other host — {men} men at {province}. Tap again for the next banner, or past the last to halt it.', {
+          men: next.men, province: provName(next.at) });
+        return false; // let the tap through so the Land tab follows
       }
       FB.selectArmy(hit.id);
       if (FB.ui) FB.ui.toast('🚩 Your host — {men} men at {province}. Tap a province to march; tap the host again to halt.',
@@ -2083,6 +2735,12 @@ window.FB = window.FB || {};
     }
 
     const counts = {}; // hosts sharing a province fan out around the centroid
+    const stackCounts = {}; // same-realm stacks wear a count badge
+    const cutOffMemo = {}; // one encirclement read per host per pass
+    for (const a of s.armies) {
+      const stackKey = a.at + '|' + a.realm;
+      stackCounts[stackKey] = (stackCounts[stackKey] || 0) + 1;
+    }
     for (const a of s.armies) {
       const idx = counts[a.at] || 0; counts[a.at] = idx + 1;
       const pos = worldPos(a);
@@ -2148,6 +2806,32 @@ window.FB = window.FB || {};
         ctx.strokeText('⚔', x, y - u * 1.0);
         ctx.fillStyle = '#ffd75e';
         ctx.fillText('⚔', x, y - u * 1.0);
+      }
+      // ✂ over a cut-off host: no road home, no mercy in a shattering
+      if (FB.hostCutOff) {
+        if (cutOffMemo[a.id] === undefined) {
+          cutOffMemo[a.id] = FB.hostCutOff(s, a);
+        }
+        if (cutOffMemo[a.id]) {
+          ctx.font = Math.round(u * 0.8) + 'px Georgia';
+          ctx.textAlign = 'center';
+          ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = 'rgba(20,16,10,0.85)';
+          ctx.strokeText('✂', x + u * 0.7, y - u * 1.0);
+          ctx.fillStyle = '#ff9a7a';
+          ctx.fillText('✂', x + u * 0.7, y - u * 1.0);
+        }
+      }
+      // a stacked-count badge when banners of one realm share the province
+      const stackCount = stackCounts[a.at + '|' + a.realm] || 0;
+      if (stackCount > 1) {
+        ctx.font = Math.round(9 * dpr) + 'px Georgia';
+        ctx.textAlign = 'center';
+        const badge = '×' + stackCount;
+        const bx = x + u * 0.85, by = y + u * 0.75;
+        ctx.lineWidth = 2.5 * dpr; ctx.strokeStyle = 'rgba(20,16,10,0.85)';
+        ctx.strokeText(badge, bx, by);
+        ctx.fillStyle = '#ffe28a';
+        ctx.fillText(badge, bx, by);
       }
       // strength label
       if (z >= 1.3) {

@@ -1283,6 +1283,10 @@ FBDATA.balance = {
     open: { cycleDays:7, capacityMult:0.75 }
   },
   armyRearmDays: 60, // a shattered host may muster again after this long
+  detachmentRearmDays: 25, // a destroyed detachment (any host but the realm's primary) re-forms this fast
+  aiMultiHostStrength: 1200, // AI realms with a muster of at least this many men may split off a detachment in offensive wars
+  aiMaxHosts: 2, // the most hosts an AI realm fields at once
+  aiDetachmentFrac: 0.35, // the men-share of its muster an AI detachment carries
   armyRoutDays: 20, // a beaten host cannot be fought again for this long (rout grace)
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
   armyMinMen: 40, // a host under this many men disperses; also the smallest muster
@@ -1292,10 +1296,11 @@ FBDATA.balance = {
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   battleMarPlayer: 14, battleMarAI: 22, // martial divisors in field-battle power (the player's edge)
-  /* host composition (levy tiers): a host's men split into classes, each with
-     its own battle quality; casualties fall levy-first, men-at-arms last */
-  qualityLevy: 0.85, qualityArcher: 1.2, qualityCavalry: 2.0,
-  qualityRetinue: 2.5, qualityMerc: 1.5,
+  /* host composition (levy tiers): a host's men split into classes declared
+     in FBDATA.unitClasses (data/units.js) — the single source of truth for
+     per-class battle quality, per-100 logistics, casualty order, counters,
+     terrain overrides, and culture/technology gating */
+  battleCounterMaxSwing: 0.2, // a side's composition counter edge is capped at this fraction of its battle power
   mercCompanySize: 150, // men per hired company
   massLevyMult: 1.35, // the great levy swells the levy class by this
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
@@ -1342,11 +1347,10 @@ FBDATA.balance = {
   supplyStarvedPowerMult: 0.75, // battle power multiplier at 0 supply
   supplyLowThreshold: 30, // below this the host reads Low and fights worse
   supplyLowPowerMult: 0.9, // battle power multiplier below the low threshold
-  /* player host logistics per season: base camp cost, live soldiers per 100,
-     and the existing contract cost per hired mercenary company */
-  hostLogisticsBase: 2, hostLogisticsLevyPer100: 0.5,
-  hostLogisticsArcherPer100: 1, hostLogisticsCavalryPer100: 2,
-  hostLogisticsRetinuePer100: 2,
+  /* player host logistics per season: base camp cost once for any raised
+     host, then each class's `upkeepPer100` (FBDATA.unitClasses) per 100 live
+     soldiers of that class, plus the fixed contract cost per hired company */
+  hostLogisticsBase: 2,
   hostLogisticsMercenaryCompany: 4,
   /* loss-aware campaign events: Empty Bedrolls needs a recent defeat,
      meaningful recorded losses, a live host, and a per-war interval */
@@ -1364,6 +1368,7 @@ FBDATA.balance = {
   attainderStandingGate: -30, // liege Standing at which flagged defiance is prosecuted as felony
   attainderFineByTier: [0,0,0,15,30,50,80,0], // the price of the liege's mercy by the player's tier
   captureChanceBase: 0.35, // odds a beaten tier-3+ leader is taken on the field
+  captureChanceEncircled: 0.6, // ...when their host shatters while cut off (FB.hostCutOff)
   ransomByTier: [0,0,0,25,40,70,120,200], // the captor's demand by the prisoner's dignity
   ransomSeasonReleaseChance: 0.2, // each season in the cell: parole, escape, or exchange
   distraintGraceDays: 90, // a defaulted loan's writ of distraint arrives this long after default

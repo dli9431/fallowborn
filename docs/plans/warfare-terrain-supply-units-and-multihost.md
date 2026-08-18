@@ -2,8 +2,10 @@
 
 Date: 2026-08-18
 
-Status: **phase 1 implemented** (terrain in battle & movement, supply lines +
-attrition; 2026-08-18); phases 2 and 3 remain **proposed**. This plan organizes
+Status: **phases 1 and 2 implemented** (terrain in battle & movement, supply
+lines + attrition; data-driven unit classes with tech/culture gates and
+counters; 2026-08-18); **phase 3 implemented** (multiple hosts per realm —
+splitting, merging, encirclement; 2026-08-18). This plan organizes
 player feedback that warfare does not account
 for technology, unit differentiation, terrain, forts, or supply, and lacks troop splitting
 and encirclement. It sequences the overhaul into three independently shippable phases:

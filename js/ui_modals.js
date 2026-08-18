@@ -14760,9 +14760,12 @@ window.FB = window.FB || {};
     }
     if (fx.units) for (const unit in fx.units) {
       if (!fx.units[unit]) continue;
-      const unitName = unit === 'arch' ? FB.T('archers') :
-        unit === 'cav' ? FB.T('cavalry') :
-        unit === 'ret' ? FB.T('men-at-arms') : FB.T('levy');
+      const unitClassDef = FBDATA.unitClasses && FBDATA.unitClasses[unit];
+      const unitName = unitClassDef
+        ? dt(FB.state, 'unitClass', unit, unitClassDef, 'name')
+        : unit === 'arch' ? FB.T('archers') :
+          unit === 'cav' ? FB.T('cavalry') :
+          unit === 'ret' ? FB.T('men-at-arms') : FB.T('levy');
       out.push(FB.T('+{men} {unit}', { men:fx.units[unit], unit:unitName }));
     }
     return out;
@@ -14818,6 +14821,15 @@ window.FB = window.FB || {};
         return FB.T('Allows construction of {content}.', { content:content });
       }
       return FB.T('Makes the {content} household standard available.', { content:content });
+    }
+    if (kind === 'unit') {
+      const alias = (FBDATA.unitClassAliases || {})[target] || target;
+      const unitDef = FBDATA.unitClasses && FBDATA.unitClasses[alias];
+      if (!unitDef) return '';
+      const unitName = dt(s, 'unitClass', alias, unitDef, 'name');
+      return FB.T('Hosts muster {content} when the realm qualifies.', {
+        content:(unitDef.icon ? unitDef.icon + ' ' : '') + unitName
+      });
     }
     if (kind === 'research_slot') {
       return FB.T('Adds national research slot {slot}.', { slot:target });

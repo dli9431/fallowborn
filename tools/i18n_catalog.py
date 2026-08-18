@@ -64,6 +64,7 @@ STRUCTURED_DATA = {
     "techDomains": "techDomain",
     "techTraditions": "techTradition",
     "tech": "tech",
+    "unitClasses": "unitClass",
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text")
@@ -670,6 +671,7 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                            "modifiers.js" if data_name == "modifiers" else
                            "cultures.js" if data_name in ("cultures", "religions") else
+                           "units.js" if data_name == "unitClasses" else
                            "economy.js" if data_name in (
                                "careers", "positions", "schooling", "enterprises",
                                "householdStandards", "localCouncilMotions",

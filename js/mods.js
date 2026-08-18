@@ -325,6 +325,7 @@ window.FBMODS = window.FBMODS || [];
     if (mod.techDomains) mergeTable(FBDATA.techDomains, mod.techDomains);
     if (mod.techTraditions) mergeTable(FBDATA.techTraditions, mod.techTraditions);
     if (mod.techCaps) mergeTechCaps(mod.techCaps);
+    if (mod.unitClasses) mergeTable(FBDATA.unitClasses, mod.unitClasses);
     if (mod.techImpactReviews && mod.techImpactReviews.features) {
       mergeTable(FBDATA.techImpactReviews.features,
         mod.techImpactReviews.features);

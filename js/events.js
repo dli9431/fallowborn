@@ -2921,23 +2921,8 @@ window.FB = window.FB || {};
     }
   };
 
-  function warUnitParts(units) {
-    units = units || {};
-    const compKeys = [
-      ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
-      ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
-      ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
-      ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }],
-      ['mercs', 'fx.warstate.comp_mercs', { one: '{count} mercenary', other: '{count} mercenaries' }]
-    ];
-    const parts = [];
-    for (const item of compKeys) {
-      if (!units[item[0]]) continue;
-      parts.push(FB.renderKey(item[1], {
-        forms:{ select:'plural', param:'count', cases:item[2] }
-      }, { count:units[item[0]] }));
-    }
-    return parts;
+  function warUnitParts(state, units) {
+    return FB.unitClassParts ? FB.unitClassParts(state, units) : [];
   }
 
   FB.warBattleRecordText = function (state, feedback) {
@@ -2988,7 +2973,7 @@ window.FB = window.FB || {};
 
   FB.warLossesText = function (state, feedback) {
     feedback = feedback || (FB.warFeedback && FB.warFeedback(state));
-    const parts = feedback ? warUnitParts(feedback.losses) : [];
+    const parts = feedback ? warUnitParts(state, feedback.losses) : [];
     return parts.length
       ? FB.renderKey('fx.warstate.losses',
         { text:'Campaign losses from the live host: {losses}' }, {
@@ -3080,6 +3065,21 @@ window.FB = window.FB || {};
         label:item[2],
         amount:Math.round(upkeep[item[0]] * 10) / 10
       }));
+    }
+    /* unlocked classes beyond the baseline four bill from byClass */
+    const namedClasses = { levy:1, arch:1, cav:1, ret:1, mercs:1 };
+    const byClass = upkeep.byClass || {};
+    for (const classId in byClass) {
+      if (namedClasses[classId] || !byClass[classId]) continue;
+      const classDef = FBDATA.unitClasses && FBDATA.unitClasses[classId];
+      rows.push(FB.renderKey('fx.warstate.upkeep_class',
+        { text:'{label} {money:amount}' }, {
+          label:classDef
+            ? FB.dataText(state, state.player.charId, 'unitClass', classId,
+              classDef, 'name', {})
+            : classId,
+          amount:Math.round(byClass[classId] * 10) / 10
+        }));
     }
     return FB.renderKey('fx.warstate.logistics_ledger',
       { text:'Seasonal host logistics: {money:total} ({parts})' }, {
@@ -3374,13 +3374,13 @@ window.FB = window.FB || {};
         } else {
           const comp = FB.playerComposition ? FB.playerComposition(state)
             : { levy: FB.playerLevy(state), arch: 0, cav:0, ret: 0 };
-          const units = {
-            levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
-            mercs:(w.mercCos || 0) * cs
-          };
-          let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
+          const units = {};
+          for (const key in comp) units[key] = comp[key];
+          units.mercs = (w.mercCos || 0) * cs;
+          let men = 0;
+          for (const key in units) men += Math.max(0, Number(units[key]) || 0);
           const fl = bal.armyMinMen || 40;
-          if (men < fl) { units.levy += fl - men; men = fl; }
+          if (men < fl) { units.levy = (units.levy || 0) + fl - men; men = fl; }
           myQ = FB.compQuality ? FB.compQuality(units, men) : 1;
           myMen = men * (FB.rearmScale ? FB.rearmScale(state, 'player') : 1) * (w.strength || 1);
         }
@@ -4621,13 +4621,7 @@ window.FB = window.FB || {};
       const c = state.chars[charId];
       if (c) opinions[charId] = Number(c.opinion) || 0;
     }
-    let host = null;
-    const armies = state.armies || [];
-    for (let armyIndex = 0; armyIndex < armies.length; armyIndex++) {
-      if (armies[armyIndex].realm === 'player') {
-        host = armies[armyIndex]; break;
-      }
-    }
+    let host = FB.playerHost ? FB.playerHost(state) : null;
     const deadCharacters = {};
     for (const snapshotCharId in state.chars) {
       deadCharacters[snapshotCharId] = !!state.chars[snapshotCharId].dead;

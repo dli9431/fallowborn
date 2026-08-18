@@ -268,6 +268,20 @@ window.FBDATA = window.FBDATA || {};
       terrain_combat_modifiers:{
         mode:'none',
         rationale:'Terrain battle factors, home-ground defense, and march costs apply to every host in every age; no credible period technology gates reading the ground, so no dependency is invented.'
+      },
+      new_unit_classes:{
+        mode:'hard',
+        tech:['crossbows','infantry_polearms','cataphract_armor'],
+        fallback:'baseline_five_unit_classes',
+        rationale:'Crossbow, pike, and cataphract companies join the muster only after their named innovations; every realm fields the baseline levy, archer, cavalry, retinue, and mercenary classes without them, and hosts already fielded keep their composition after any technology loss.'
+      },
+      culture_unit_classes:{
+        mode:'none',
+        rationale:'Horse-archer, huscarl, and camel-rider companies gate on the mustering realm’s culture alone; no period technology credibly blocks a people’s traditional arm, so no dependency is invented.'
+      },
+      host_splitting_encirclement:{
+        mode:'none',
+        rationale:'Splitting and merging field hosts, and the destruction of a host shattered while cut off, are core play available from the baseline; no credible period technology gates dividing an army or reading whether a road home remains, so no dependency is invented.'
       }
     }
   };
@@ -756,7 +770,7 @@ window.FBDATA = window.FBDATA || {};
     'A permanent writing office carries the crown beyond one household.',
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:royal_chancery'], fx:{ research:0.25, domain:1 } });
 
-  /* Warfare and fortification — 32. */
+  /* Warfare and fortification — 33. */
   add('spear_shield_drill','Spear and Shield Drill','🛡','warfare',[-1000,500],[-500,300],[],
     'Repeated formation practice coordinates ordinary infantry.',
     { leaders:TRADITIONS, unlocks:['unit:levy','career:soldier'] });
@@ -807,7 +821,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin','caucasian'], unlocks:['building:keep'], fx:{ siege:0.03 } });
   add('crossbows','Military Crossbows','🏹','warfare',[500,1100],[850,1100],['iron_weaponry'],
     'Mechanical bows trade shooting speed for power and modest training demands.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['building:archery_butts','rule:crossbow_levies'], fx:{ units:{ arch:15 }, aiUnits:{ arch:0.02 } } });
+    { leaders:['byzantine','islamic','latin'], unlocks:['building:archery_butts','rule:crossbow_levies','unit:crossbow'], fx:{ units:{ arch:15 }, aiUnits:{ arch:0.02 } } });
   add('siege_engineering','Siege Engineering','🪨','warfare',[650,1100],[850,1120],['torsion_artillery','geometry'],
     'Specialists calculate engines, earthworks, approaches, and bombardment.',
     { leaders:['byzantine','islamic','persianate','latin'], unlocks:['rule:siege_engineers'], fx:{ siege:0.04 } });
@@ -831,7 +845,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:concentric_castles'], fx:{ siege:0.04 } });
   add('infantry_polearms','Infantry Polearms','🔱','warfare',[1050,1300],[1170,1320],['iron_weaponry','martial_drill'],
     'Long hafted weapons give ordered infantry reach against riders and armor.',
-    { leaders:['latin','byzantine','slavic'], unlocks:['rule:polearm_blocks'], fx:{ battle:0.008 } });
+    { leaders:['latin','byzantine','slavic'], unlocks:['rule:polearm_blocks','unit:pike'], fx:{ battle:0.008 } });
+  add('cataphract_armor','Cataphract Barding','♞','warfare',[400,950],[550,1000],['scale_lamellar','cavalry_saddles'],
+    'Full armor for horse and rider creates a slow, near-untouchable shock cavalry.',
+    { leaders:['byzantine','caucasian'], unlocks:['unit:cataphract'] });
   add('combined_arms','Combined Arms','⚔','warfare',[1050,1300],[1190,1330],['martial_drill'],
     'Bow, horse, and armored foot coordinate their different strengths.',
     { reqAny:['cavalry_lances','mounted_archery'], leaders:['byzantine','islamic','latin','steppe'], unlocks:['rule:combined_arms'], fx:{ battle:0.015, units:{ arch:10, cav:10 }, aiUnits:{ arch:0.01, cav:0.01 } } });

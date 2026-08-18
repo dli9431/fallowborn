@@ -974,9 +974,15 @@ window.FB = window.FB || {};
     for (var i = 0; i < list.length; i++) {
       var part = list[i];
       if (!part.sovereign || !participantRealmValid(state, part)) continue;
-      var host = current && FB.hostOf ? FB.hostOf(state, part.realm) : null;
-      total += host ? host.men : paperStrength(state, part.realm) *
-        (FB.rearmScale ? FB.rearmScale(state, part.realm) : 1);
+      /* fielded strength counts every host the realm has out — the main
+         body and any detachment */
+      var hosts = current && FB.hostsOf ? FB.hostsOf(state, part.realm) : [];
+      if (hosts.length) {
+        for (var h = 0; h < hosts.length; h++) total += hosts[h].men;
+      } else {
+        total += paperStrength(state, part.realm) *
+          (FB.rearmScale ? FB.rearmScale(state, part.realm) : 1);
+      }
     }
     return Math.round(total);
   }

@@ -250,8 +250,19 @@ families, credit, trade partnerships, Estates policies, privileges, feudal-servi
 and event options.
 `FB.techRequirementStatus` is the shared all-of projection and exposes exact required and
 missing ids. Technology detail reverse discovery scans every one of those consumers.
-Warfare technologies alter the existing levy/archer/cavalry/retinue classes, overland
-movement, quality, siege progress, and composition; they do not add a second unit taxonomy.
+Warfare technologies alter the baseline levy/archer/cavalry/retinue classes, overland
+movement, quality, siege progress, and composition — and, since the warfare overhaul's
+unit-class phase, they also gate genuinely new classes in `FBDATA.unitClasses`
+(`data/units.js`): `crossbows` unlocks the `crossbow` class, `infantry_polearms` the
+`pike`, and `cataphract_armor` the `cataphract` (which additionally requires a Greek or
+Armenian realm). The unit class's own `requiresTech` is the live gate; the technology's
+`unlocks:['unit:<id>']` entry is the discoverable record of it, validated against the
+unit-class table (with `FBDATA.unitClassAliases` covering the pre-table targets
+`unit:archers`/`unit:cavalry`/`unit:retinue`). An unlocked class converts its `share` of
+the mustered levy; hosts already fielded keep their composition after any technology
+loss. The `new_unit_classes` ledger entry records this as a hard gate with the baseline
+five classes as fallback; `culture_unit_classes` (horse archers, huscarls, camel riders)
+is `none` — a people's traditional arm is culture-gated, not research-gated.
 Seafaring and naval-organization technologies provide two army effects without adding
 fleets: additive `fx.seaMovement` shortens water-crossing cycles (capped at 0.40), while
 positive-integer `fx.seaTransport` is max-valued rather than summed. The best completed
@@ -264,8 +275,9 @@ The in-game detail sheet reports only effects that gameplay consumes: numeric `f
 concrete typed unlocks, and content or contracts gated by `requiresTech`. Every technology
 used as a prerequisite for another technology also provides a modest direct benefit; early
 foundations keep smaller bonuses than the later entries they enable so inherited 867
-knowledge does not overwhelm the starting balance. Historical `practice:*`, `rule:*`, and
-`unit:*` catalogue tags are documentation metadata and are not presented as mechanics.
+knowledge does not overwhelm the starting balance. Historical `practice:*` and `rule:*`
+catalogue tags are documentation metadata and are not presented as mechanics; `unit:*`
+tags name real unit classes and the detail sheet reports them as host unlocks.
 Per-entry confidence and source references remain in the research catalogue rather than
 the play UI.
 
@@ -334,7 +346,8 @@ carry capacity. See [war.md](war.md).
 
 Scalar effects resolve through `FB.techBonus`. Signed costs use
 `FB.techCostModifier`/`FB.techCostFactor`; unit additions use `FB.techUnits`, and AI
-composition uses `FB.techAIUnits`. `FBDATA.techCaps` limits tax, levy, battle, health,
+composition uses `FB.techAIUnits` — both keyed by `FBDATA.unitClasses` (`fx.units`
+accepts any mustered class id, `fx.aiUnits` any but the levy remainder). `FBDATA.techCaps` limits tax, levy, battle, health,
 research, domain, siege, overland movement, sea-crossing movement, education, finance,
 trade, cost reductions, and unit
 additions. Inherited foundations deliberately carry almost no scalar bonuses, so normal

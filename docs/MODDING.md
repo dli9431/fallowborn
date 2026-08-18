@@ -152,6 +152,7 @@ A JSON mod is one object with any of these keys:
   "tech":      { "id": { ... } },
   "techCaps":  { "seaMovement": 0.5, "units": { "arch": 250 } },
   "techImpactReviews": { "features": { "feature_id": { ... } } },
+  "unitClasses": { "id": { ... } },
   "holdings":  { "id": { ... } },
   "careers":   { "id": { ... } },
   "positions": { "id": { ... } },
@@ -2314,8 +2315,8 @@ back to their authored English.
 maps merge one member at a time, so `{ "techCaps": { "units": { "arch": 250 } } }`
 leaves every other built-in cap intact. Caps must be finite non-negative numbers. Scalar
 cap keys are the scalar `fx` keys below; `costFloor` accepts `build`, `enterprise`, and
-`training`; `units` accepts `levy`, `arch`, `cav`, and `ret`; and `aiUnits` accepts
-`arch`, `cav`, and `ret`.
+`training`; `units` accepts any mustered class id from `FBDATA.unitClasses`; and
+`aiUnits` accepts any of those but `levy`.
 
 `techImpactReviews` is the forward-only core design ledger rather than a gameplay or save
 contract. Mods need not classify arbitrary custom code, but may merge optional entries
@@ -2376,7 +2377,9 @@ non-empty `fallback`, and none entries must not name technologies. The core base
   traditions may override it. Dates affect cost rather than availability, so a project
   remains selectable before attestation at a severe premium.
 - `unlocks` names discrete content or rule hooks. Every referenced `building:*`,
-  `enterprise:*`, and `career:*` target is validated.
+  `enterprise:*`, and `career:*` target is validated. `unit:<id>` targets validate
+  against `FBDATA.unitClasses`; the pre-table targets `unit:archers`, `unit:cavalry`,
+  and `unit:retinue` remain valid through `FBDATA.unitClassAliases`.
 - `confidence` and `sources` are research metadata; core source codes are expanded in
   `docs/research/medieval-technology-catalogue.md`.
 - Optional `cultures` / `notCultures` arrays select mutually exclusive definitions when
@@ -2395,8 +2398,9 @@ non-empty `fallback`, and none entries must not name technologies. The core base
   details display both sea effects automatically.
 - `fx.costs` contains signed fractional modifiers for `build`, `enterprise`, and
   `training`; final factors have category floors.
-- `fx.units` adds flat player-host `levy`, `arch`, `cav`, or `ret` troops.
-  `fx.aiUnits` adds AI host composition fractions for `arch`, `cav`, or `ret`. Compatibility
+- `fx.units` adds flat player-host troops keyed by mustered `FBDATA.unitClasses` ids
+  (`levy`, `arch`, `cav`, `ret`, and any unlocked mod or core class).
+  `fx.aiUnits` adds AI host composition fractions for any of those but `levy`. Compatibility
   aliases remain readable: flat `build:0.20` means a twenty-percent building discount,
   while flat `retinue` and `archers` add those player-host classes.
 - `name`/`desc` accept text tokens and religion-variant objects.
@@ -2428,6 +2432,54 @@ Without `techTraditions`, the engine derives one or more traditions from capital
 culture and religion. Fresh seeds complete knowledge whose regional adoption window has
 ended, expose knowledge whose window has begun, apply overrides, and close all completed
 prerequisites.
+
+## Unit classes
+
+`FBDATA.unitClasses` (`data/units.js`, merged by id like other tables) is the single
+source of truth for host composition: every field host's saved `units` record is keyed
+by these class ids, with `men` always the total. The five baseline classes — `levy`,
+`arch`, `cav`, `ret`, `mercs` — are the migration baseline and must always exist; any
+class a save predates defaults to 0 on load.
+
+```json
+{
+  "unitClasses": {
+    "pike": {
+      "name": "Pikemen", "icon": "🔱",
+      "quality": 1.1, "upkeepPer100": 0.8, "casualtyOrder": 2,
+      "share": 0.2, "requiresTech": "infantry_polearms",
+      "counters": { "cav": 1.6 },
+      "terrainFactors": { "farmland": 1.05, "forest": 0.85 },
+      "basket": { "provisions": 0.7, "materials": 0.25, "transport": 0.05 }
+    }
+  }
+}
+```
+
+- `name` (required) is a localized plural group noun; `icon` is display metadata shown
+  in the host composition readouts.
+- `quality` (required, positive) is the battle quality of one man of the class;
+  `upkeepPer100` is the seasonal logistics per 100 live men (omit on hired classes);
+  `casualtyOrder` (required) orders battle losses, lowest first, ties broken by id.
+- `counters: { "<enemyClassId>": <multiplier> }` fights the class above its quality
+  against that enemy class. A side's counter multiplier is its composition-weighted
+  average against the enemy's composition shares, capped at ±`balance.battleCounterMaxSwing`
+  (0.2). Counter targets must be known class ids.
+- `terrainFactors` optionally overrides the class's `balance.terrainBattleFactors` row;
+  terrain keys must match the shared terrain set (`balance.terrainMarchMult`), and a
+  missing terrain reads as 1.
+- `share` (0–1) converts that fraction of the mustered levy into the class when the
+  realm qualifies; `requiresTech` gates on a completed technology, `cultures` /
+  `notCultures` gate on `FBDATA.cultures` ids (the player's own character culture for
+  the player, the ruler or capital culture for AI realms).
+- `hired: true` marks contract troops (`mercs`): never mustered from the levy, charged
+  per company instead of per head.
+- `basket` is the class's provisions/materials/transport mix for market-quoted upkeep.
+
+The validator checks the whole table: baseline presence, name/quality/casualtyOrder
+shape, resolved `requiresTech`, `cultures`/`notCultures`, `counters`, and
+`terrainFactors` references. Mods replace a class wholesale by id or add new classes;
+deleting a baseline class is a validation error.
 
 ## Cultures, religions, traits, titles, balance
 
@@ -2997,11 +3049,14 @@ ordinary `armyMinMen` floor cannot add replacements), `aiHostPerDev` (AI host si
 this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
 scales with how close the fight was).
 Terrain shapes the field through three moddable tables: `terrainBattleFactors`
-(per-terrain per-class battle-quality multipliers for `levy`/`arch`/`cav`/`ret`/`mercs`;
-a missing terrain or class reads as 1), `terrainDefenseBonus` (the standing host's
+(per-terrain per-class battle-quality multipliers for the baseline classes — a class's
+own `terrainFactors` row in `FBDATA.unitClasses` overrides it, and a missing terrain or
+class reads as 1), `terrainDefenseBonus` (the standing host's
 home-ground power bonus by battle terrain; nonzero for hills, mountains, forest, and
 marsh), and `terrainMarchMult` (the day-cost multiplier of marching into a province of
-that terrain; sea crossings are untouched). Supply lines use `supplyRecoverRate`
+that terrain; sea crossings are untouched). Composition counters come from each class's
+`counters` table in `FBDATA.unitClasses`, with the side's total swing capped by
+`battleCounterMaxSwing` (0.2). Supply lines use `supplyRecoverRate`
 (daily refill on own, sovereign, or allied land), `supplyFortRecoverMult` (the depot
 multiplier in a friendly-fort county), `supplyDevastatedRecoverFloor` (the resupply
 multiplier floor on a war-worn county), `supplyDrainBase` (daily drain on neutral or
@@ -3011,10 +3066,20 @@ from friendly land), `supplyAttritionPerDay` (fraction of the host lost daily at
 supply), `supplyLowThreshold`, and `supplyLowPowerMult` / `supplyStarvedPowerMult`
 (battle-power penalties below the threshold and at 0). Every host carries the saved
 0–100 `supply` field; old saves default to a full 100.
-Player logistics use `hostLogisticsBase` (default 2) once for any raised host;
-`hostLogisticsLevyPer100` (0.5), `hostLogisticsArcherPer100` (1), and
-`hostLogisticsCavalryPer100` / `hostLogisticsRetinuePer100` (2 each) multiply each
-100 live soldiers of that class;
+Multiple hosts: a realm may field detachments alongside its primary host (the largest,
+returned by `FB.hostOf`; `FB.hostsOf` lists them all; detachments are ordinary extra
+records in `state.armies`). `armyMinMen` also bounds the split order — each part must
+field at least that many men. `detachmentRearmDays` is the shorter rearm wait after a
+destroyed detachment (tracked in `state.armyDetachmentDown`), while a shattered primary
+still waits out `armyRearmDays`. `aiMultiHostStrength` is the muster size at which an AI
+realm prosecuting an offensive war splits off a detachment, `aiMaxHosts` caps hosts per
+AI realm, and `aiDetachmentFrac` is the men-share the detachment carries. A host with no
+road home is cut off (`FB.hostCutOff`); one shattered while cut off is destroyed
+outright and its beaten leader is captured at `captureChanceEncircled` instead of
+`captureChanceBase`.
+Player logistics use `hostLogisticsBase` (default 2) once for any raised host; each
+class's `upkeepPer100` in `FBDATA.unitClasses` (levy 0.5, archers 1, cavalry and
+men-at-arms 2, and so on) then multiplies each 100 live soldiers of that class;
 `hostLogisticsMercenaryCompany` (4) is charged for each hired company. A missing
 player host produces no logistics cost. These rates apply equally to ordinary and
 sovereign great holy-war hosts.
