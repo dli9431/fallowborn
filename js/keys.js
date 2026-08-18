@@ -28,7 +28,7 @@ window.FB = window.FB || {};
 
   function clickNth(sel, n) {
     const nodes = document.querySelectorAll(sel);
-    const visibleModalActions = sel === '#gm-body .actionbtn';
+    const visibleModalActions = sel.indexOf('#gm-body') === 0;
     const btns = visibleModalActions
       ? Array.prototype.filter.call(nodes, function (node) {
         return !node.hidden && node.getClientRects().length > 0;
@@ -171,7 +171,8 @@ window.FB = window.FB || {};
       } else if (k === 'Tab') {
         containModalTab(e);
       } else if (digit) {
-        e.preventDefault(); clickNth('#gm-body .actionbtn', slot);
+        e.preventDefault();
+        clickNth('#gm-body .actionbtn, #gm-body .settcard-raise', slot);
       }
       return;
     }

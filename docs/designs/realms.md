@@ -440,7 +440,11 @@ assembly where the terms of service, the aid and scutage, are voted on — see
 `FB.grantDuchy`, `demand_taxes`, `revoke_county`; vassal Standing retains its legacy
 backing in `player.liegeOps`, while each direct vassal's service charter determines
 the true share of county tax and levy returned through `FB.playerTax` and
-`FB.playerLevy`).
+`FB.playerLevy`). A revoked house dies: its directly held counties enter the
+player's demesne and its own vassals pass to its liege, mirroring the
+dissolution rule of `FB.realmBuryIfEmpty`/`FB.transferProvince` — restore
+(`FB.repairVassalLieges`) reattaches vassals left sworn to a dead house by
+saves that predate that rule.
 
 The Land panel's **Notable folk** is a live political view of this hierarchy. It lists
 the selected county's direct holder, every living realm sworn directly to that holder

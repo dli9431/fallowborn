@@ -177,9 +177,11 @@ protection before the project is added to a slot.
 
 Dedicated technology UI follows `FB.techUiRelevant`: only tier-3+ landed rulers
 receive the catalogue, Land rating, Guide catalogue, commitment row, contextual
-detail links, or direct modal routes. This includes both sovereigns who choose
-projects and vassals who may advocate them. Common households still receive the
-exact technology name in a locked household requirement, since national knowledge
+detail links, or direct modal routes. When opened from a contextual requirement or tooltip
+(such as a settlement fort upgrade requirement), `UI.showTechDetail` preserves the caller's
+return context so that the **Back** button and project completion return directly to the
+originating modal rather than falling back to the national technology catalogue. Common households
+still receive the exact technology name in a locked household requirement, since national knowledge
 continues to govern careers, education, standards, and enterprises even though the
 household has no research authority.
 

@@ -49733,6 +49733,16 @@
         "text": "Fund relief and patrol the roads. ({money:16})"
       }
     },
+    "src.04b55ec3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raise"
+      }
+    },
     "src.04bc8160": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54394,6 +54404,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -64198,16 +64209,6 @@
         "text": "Not every road to fortune needs taking."
       }
     },
-    "src.23eb3b08": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Demolish…"
-      }
-    },
     "src.23f256e2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65278,6 +65279,16 @@
       ],
       "source": {
         "text": "Woven farther east than most men will ever travel, and worth the journey."
+      }
+    },
+    "src.26541b82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raise buildings without leaving this ledger; each further copy of the same building in one county costs {percent}% more."
       }
     },
     "src.2655f5cf": {
@@ -70616,6 +70627,16 @@
         "text": "{money:5} says another man bleeds for you."
       }
     },
+    "src.32b928c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "grid-template-columns:minmax(96px,max-content) repeat("
+      }
+    },
     "src.32b94572": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73781,6 +73802,16 @@
       ],
       "source": {
         "text": "No recognized ground has been recorded."
+      }
+    },
+    "src.3a0581f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "No {building}"
       }
     },
     "src.3a080eaf": {
@@ -103648,6 +103679,16 @@
         "text": "Patronize the guilds. ({money:5})"
       }
     },
+    "src.7d345d82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Next at {threshold}: {change}."
+      }
+    },
     "src.7d38b879": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109126,16 +109167,6 @@
         "text": "💡 {realm} completes {technology}."
       }
     },
-    "src.882a7fd6": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price."
-      }
-    },
     "src.882e83bb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109334,16 +109365,6 @@
       ],
       "source": {
         "text": "county tax"
-      }
-    },
-    "src.88c35ba8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building."
       }
     },
     "src.88c60045": {
@@ -110238,6 +110259,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -147823,16 +147845,6 @@
         "text": "Zoroastrianism"
       }
     },
-    "src.dec25460": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{icon} {name} — Raise Next"
-      }
-    },
     "src.dec2d8c5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159868,6 +159880,16 @@
         "text": "Enter the wrestling."
       }
     },
+    "src.f9b31712": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Buildings"
+      }
+    },
     "src.f9c40379": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -171296,6 +171318,14 @@
         "text": "Building Works in {province}"
       }
     },
+    "ui:Buildings": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Buildings"
+      }
+    },
     "ui:Buildings cost 15% less while he serves": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174120,14 +174150,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Demolishing {building} is permanent and gives no refund. Its ongoing benefits and upkeep will end, and ruins will occupy this settlement."
-      }
-    },
-    "ui:Demolish…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Demolish…"
       }
     },
     "ui:Depart for {destination}": {
@@ -180749,6 +180771,17 @@
         "text": "Next"
       }
     },
+    "ui:Next at {threshold}: {change}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "change",
+        "threshold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Next at {threshold}: {change}."
+      }
+    },
     "ui:Next level: {name} — {effect}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -182162,6 +182195,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No worker can be assigned yet."
+      }
+    },
+    "ui:No {building}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "building"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "No {building}"
       }
     },
     "ui:Nomination blocked": {
@@ -185171,6 +185214,14 @@
         "text": "Raid reach: {range} provinces away. {navalStatus}"
       }
     },
+    "ui:Raise": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raise"
+      }
+    },
     "ui:Raise a Building in {settlement}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -185179,6 +185230,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Raise a Building in {settlement}"
+      }
+    },
+    "ui:Raise buildings without leaving this ledger; each further copy of the same building in one county costs {percent}% more.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "percent"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raise buildings without leaving this ledger; each further copy of the same building in one county costs {percent}% more."
       }
     },
     "ui:Raise by {increments} increments.": {
@@ -186048,16 +186109,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Repeat copy {number}: its price has risen to {money:cost}."
-      }
-    },
-    "ui:Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "percent"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price."
       }
     },
     "ui:Repelled (-{n} men)": {
@@ -192885,14 +192936,6 @@
         "text": "Use Deeds to build money, reputation, and a route to freedom."
       }
     },
-    "ui:Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building."
-      }
-    },
     "ui:Use appointments and diplomacy before coercive powers.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -199160,17 +199203,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{icon} {name}"
-      }
-    },
-    "ui:{icon} {name} — Raise Next": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "icon",
-        "name"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "{icon} {name} — Raise Next"
       }
     },
     "ui:{imports} / {exports}": {

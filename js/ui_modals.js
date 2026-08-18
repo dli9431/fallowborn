@@ -14,9 +14,11 @@ window.FB = window.FB || {};
   const allianceText = SH.allianceText;
   const automationAccess = SH.automationAccess;
   const assetEffectSummary = SH.assetEffectSummary;
+  const assetCard = SH.assetCard;
   const assetMoneyCost = SH.assetMoneyCost;
   const assetSeasonalMoneyCost = SH.assetSeasonalMoneyCost;
   const assetSummaryValue = SH.assetSummaryValue;
+  const bindCardInfoToggles = SH.bindCardInfoToggles;
   const bookmarkDevelopmentText = SH.bookmarkDevelopmentText;
   const characterStandingContext = SH.characterStandingContext;
   const childIdentityPreviewText = SH.childIdentityPreviewText;
@@ -81,6 +83,7 @@ window.FB = window.FB || {};
   const resetPanelMarkup = SH.resetPanelMarkup;
   const rivalryHeatName = SH.rivalryHeatName;
   const settlementDevelopmentText = SH.settlementDevelopmentText;
+  const settlementChangeName = SH.settlementChangeName;
   const settlementKindName = SH.settlementKindName;
   const shortcutBindings = SH.shortcutBindings;
   const shortcutFamilyLabel = SH.shortcutFamilyLabel;
@@ -3748,7 +3751,7 @@ window.FB = window.FB || {};
 
   /* ================= building picker =================
      The deed is a fast county ledger: choose a province when necessary, then
-     Raise Next repeatedly without leaving the dialog. The Land-tab settlement
+     Raise repeatedly without leaving the dialog. The Land-tab settlement
      path still passes idx for exact placement. */
   function buildingEffects(d, id) {
     const fx = [];
@@ -3893,11 +3896,10 @@ window.FB = window.FB || {};
         esc(FB.T('Keep automatic building out of this county')) +
         '<span class="adesc">' + esc(FB.T(
           'Manual construction remains available here.')) + '</span></label>' +
-        '<div class="gm-body-text"><p>' + esc(FB.T(
-        'Use Raise Next to build in the next open settlement; this ledger stays open so you can keep building.')) +
-        '</p><p><b>' + esc(FB.T(
-          'Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price.',
-          { percent: growth })) + '</b></p></div><div class="gm-list">';
+        '<p class="hint">' + esc(FB.T(
+          'Raise buildings without leaving this ledger; each further copy of the same building in one county costs {percent}% more.',
+          { percent: growth })) + '</p><div class="gm-list">';
+      let cardSeq = 0;
       for (const id in FBDATA.buildings) {
         const d = FBDATA.buildings[id];
         if (d.fort) continue;
@@ -3905,44 +3907,58 @@ window.FB = window.FB || {};
         const standing = FB.buildingCountIn(s, pid, id, false);
         const copies = FB.buildingCountIn(s, pid, id, true);
         const cost = FB.buildCost(s, pid, id);
+        const name = dt(s, 'building', id, d, 'name');
         const effects = buildingEffects(d, id).join(' · ');
         const short = s.player.gold < cost;
+        const costInfo = assetMoneyCost(cost, !short);
+        const costText = typeof costInfo === 'object' ? costInfo.text : costInfo;
+        const repeat = copies
+          ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
+            { number: copies + 1, cost: cost })
+          : FB.T('First copy in this county: {money:cost}.', { cost: cost });
+        let meta;
+        let details;
         if (slots.length) {
-          const repeat = copies
-            ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
-              { number: copies + 1, cost: cost })
-            : FB.T('First copy in this county: {money:cost}.', { cost: cost });
-          h += '<button class="actionbtn" data-bquick="' + esc(id) + '"' + (short ? ' disabled' : '') + '>' +
-            esc(FB.T('{icon} {name} — Raise Next', {
-              icon: d.icon, name: dt(s, 'building', id, d, 'name')
-            })) + '<span class="adesc">' +
-            esc(FB.T('{standing} standing · next in {settlement}.', {
+          meta = {
+            text: costText + ' · ' + FB.T('{standing} standing · next in {settlement}.', {
               standing: standing, settlement: sts[slots[0]].name
-            })) + ' ' + esc(repeat) + '</span>' + assetEffectSummary({
-              compact:true,
-              owner:FB.T('{province} county', { province:pr.name }),
-              scope:buildingScope(s, pid, slots[0], id),
-              setupCost:assetMoneyCost(cost, !short),
-              recurringCost:assetSeasonalMoneyCost(d.upkeep),
-              effect:effects,
-              transferRule:buildingTransferRule(),
-              expiry:buildingExpiryRule()
-            }) + '</button>';
+            }),
+            tone: short ? 'unaffordable' : 'cost'
+          };
+          details = assetEffectSummary({
+            compact:true,
+            owner:FB.T('{province} county', { province:pr.name }),
+            scope:buildingScope(s, pid, slots[0], id),
+            setupCost:costInfo,
+            recurringCost:assetSeasonalMoneyCost(d.upkeep),
+            effect:effects,
+            transferRule:buildingTransferRule(),
+            expiry:buildingExpiryRule()
+          }) + '<div class="hint settdesc">' +
+            esc(dt(s, 'building', id, d, 'desc')) + ' ' + esc(repeat) + '</div>';
         } else {
-          h += '<button class="actionbtn" disabled>' + d.icon + ' ' +
-            esc(dt(s, 'building', id, d, 'name')) + '<span class="adesc">' +
-            esc(buildingUnavailableText(s, pid, id, d)) +
-            '</span>' + assetEffectSummary({
-              compact:true,
-              owner:FB.T('{province} county', { province:pr.name }),
-              scope:FB.T('No eligible settlement'),
-              setupCost:assetMoneyCost(cost, !short),
-              recurringCost:assetSeasonalMoneyCost(d.upkeep),
-              effect:effects,
-              transferRule:buildingTransferRule(),
-              expiry:buildingExpiryRule()
-            }) + '</button>';
+          meta = {
+            text: buildingUnavailableText(s, pid, id, d),
+            tone: 'unavailable'
+          };
+          details = assetEffectSummary({
+            compact:true,
+            owner:FB.T('{province} county', { province:pr.name }),
+            scope:FB.T('No eligible settlement'),
+            setupCost:costInfo,
+            recurringCost:assetSeasonalMoneyCost(d.upkeep),
+            effect:effects,
+            transferRule:buildingTransferRule(),
+            expiry:buildingExpiryRule()
+          }) + '<div class="hint settdesc">' +
+            esc(dt(s, 'building', id, d, 'desc')) + '</div>';
         }
+        h += assetCard('bldwork-details-' + (++cardSeq), d.icon, name,
+          effects, meta, details,
+          '<button type="button" class="btn small primary settcard-raise"' +
+          ' data-bquick="' + esc(id) + '"' +
+          (slots.length && !short ? '' : ' disabled') + '>' +
+          esc(FB.T('Raise')) + '</button>');
       }
       h += '</div><button class="btn" id="gm-cancel">' +
         esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
@@ -3952,6 +3968,7 @@ window.FB = window.FB || {};
           $('building-auto-protection').checked);
         UI.refresh();
       });
+      bindCardInfoToggles($('gm-body'));
       document.querySelectorAll('[data-bquick]').forEach(function (btn) {
         btn.addEventListener('click', function () {
           const scrollTop = $('gm-body').scrollTop;
@@ -3990,30 +4007,7 @@ window.FB = window.FB || {};
     if (!st) return;
     const done = [];
     for (const e of FB.builtIn(s, pid)) if (e.s === idx) done.push(e);
-    let h = '<div class="gm-list">';
-    for (const b of FB.buildable(s, pid, idx)) {
-      const short = s.player.gold < b.cost;
-      const copies = FB.buildingCountIn(s, pid, b.id, true);
-      const repeat = copies
-        ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
-          { number: copies + 1, cost: b.cost })
-        : FB.T('First copy in this county: {money:cost}.', { cost: b.cost });
-      h += '<button class="actionbtn" data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
-        esc(FB.T('{icon} {name}', {
-          icon: b.def.icon, name: dt(s, 'building', b.id, b.def, 'name')
-        })) + '<span class="adesc">' + esc(dt(s, 'building', b.id, b.def, 'desc')) +
-        ' ' + esc(repeat) + '</span>' + assetEffectSummary({
-          compact:true,
-          owner:FB.T('{province} county', { province:pr.name }),
-          scope:buildingScope(s, pid, idx, b.id),
-          setupCost:assetMoneyCost(b.cost, !short),
-          recurringCost:assetSeasonalMoneyCost(b.def.upkeep),
-          effect:buildingEffects(b.def, b.id).join(' · '),
-          transferRule:buildingTransferRule(),
-          expiry:buildingExpiryRule()
-        }) + '</button>';
-    }
-    h += '</div>';
+    let h = '';
     if (done.length) {
       h += '<p class="hint">' + esc(FB.T('Already occupying {settlement}:',
         { settlement: st.name })) + ' ' + done.map(function (e) {
@@ -4023,8 +4017,41 @@ window.FB = window.FB || {};
         return d.icon + ' ' + esc(e.ruined ? FB.T('Ruins of {building}', { building: name }) : name);
       }).join(' · ') + '</p>';
     }
-    h += '<button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
+    h += '<div class="gm-list">';
+    let cardSeq = 0;
+    for (const b of FB.buildable(s, pid, idx)) {
+      const short = s.player.gold < b.cost;
+      const copies = FB.buildingCountIn(s, pid, b.id, true);
+      const repeat = copies
+        ? FB.T('Repeat copy {number}: its price has risen to {money:cost}.',
+          { number: copies + 1, cost: b.cost })
+        : FB.T('First copy in this county: {money:cost}.', { cost: b.cost });
+      const name = dt(s, 'building', b.id, b.def, 'name');
+      const effects = buildingEffects(b.def, b.id).join(' · ');
+      const costInfo = assetMoneyCost(b.cost, !short);
+      const meta = typeof costInfo === 'object'
+        ? costInfo
+        : { text: costInfo, tone: short ? 'unaffordable' : 'cost' };
+      h += assetCard('bldwork-site-details-' + (++cardSeq), b.def.icon, name,
+        effects, meta,
+        assetEffectSummary({
+          compact:true,
+          owner:FB.T('{province} county', { province:pr.name }),
+          scope:buildingScope(s, pid, idx, b.id),
+          setupCost:costInfo,
+          recurringCost:assetSeasonalMoneyCost(b.def.upkeep),
+          effect:effects,
+          transferRule:buildingTransferRule(),
+          expiry:buildingExpiryRule()
+        }) + '<div class="hint settdesc">' +
+          esc(dt(s, 'building', b.id, b.def, 'desc')) + ' ' + esc(repeat) + '</div>',
+        '<button type="button" class="btn small primary settcard-raise"' +
+        ' data-build="' + esc(b.id) + '"' + (short ? ' disabled' : '') + '>' +
+        esc(FB.T('Raise')) + '</button>');
+    }
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Raise a Building in {settlement}', { settlement: st.name }), h);
+    bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const focusId = btn.dataset.build;
@@ -4039,7 +4066,7 @@ window.FB = window.FB || {};
         });
       }, 0);
     }
-    $('gm-cancel').addEventListener('click', function () { UI.showBuildings(pid); });
+    $('gm-cancel').addEventListener('click', function () { UI.showSettlement(pid, idx); });
   };
 
   /* ================= settlement picker ================= */
@@ -4439,7 +4466,20 @@ window.FB = window.FB || {};
     return FB.T('This fort project is unavailable here.');
   }
 
-  function fortAssetHtml(s, pid, idx, fort, own) {
+  /* Settlement sheet card: the shared compact asset card plus the demolish
+     icon button for owned buildings. */
+  function demolishCardButton(id, name) {
+    const label = FB.T('Demolish {building}', { building:name });
+    return '<button type="button" class="btn small sett-demolish"' +
+      ' data-demolish="' + esc(id) + '" aria-label="' + esc(label) + '">🗑</button>';
+  }
+
+  function settAssetCard(detId, icon, name, fxLine, detailsHtml, demolishId) {
+    return assetCard(detId, icon, name, fxLine, null, detailsHtml,
+      demolishId ? demolishCardButton(demolishId, name) : null);
+  }
+
+  function fortAssetHtml(s, pid, idx, fort, own, detId) {
     const active = FB.fortLevelDef(fort.level);
     const target = fort.targetLevel && FB.fortLevelDef(fort.targetLevel);
     const shown = active || target;
@@ -4447,11 +4487,24 @@ window.FB = window.FB || {};
     const siege = FB.fortSiegeStatus(s, pid, {
       fortLevel:fort.level || 0, progress:0
     }, 0);
-    let h = '<div class="asset-owned-row fort-asset-row"><b>🏰 ' +
-      esc(active ? fortName(s, fort.level) : FB.T('{fort} foundations', {
-        fort:fortName(s, fort.targetLevel)
-      })) +
-      '</b>';
+    const title = active ? fortName(s, fort.level) : FB.T('{fort} foundations', {
+      fort:fortName(s, fort.targetLevel)
+    });
+    const fxLine = active ? FB.T(
+      '{percent}% local defense · {garrison} garrison · {steps} added siege steps', {
+        percent:Math.round(active.defense * 100), garrison:active.garrison,
+        steps:active.siegeDelay
+      }) : FB.T('No active defenses until construction completes');
+    let h = '<div class="asset-owned-row fort-asset-row settcard">' +
+      '<div class="settcard-head"><b>🏰 ' + esc(title) + '</b>' +
+      '<span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info"' +
+      ' aria-expanded="false" aria-controls="' + detId + '"' +
+      ' aria-label="' + esc(FB.T('Details')) + '">?</button>' +
+      (own ? demolishCardButton('walls',
+        dt(s, 'building', 'walls', FBDATA.buildings.walls, 'name')) : '') +
+      '</span></div>' +
+      '<div class="adesc settcard-fx">' + esc(fxLine) + '</div>';
     if (target) {
       const began = fort.completeTurn - target.seasons * 90;
       h += '<span class="adesc">' + esc(FB.T(
@@ -4460,24 +4513,20 @@ window.FB = window.FB || {};
           finish:fortDateText(s, fort.completeTurn)
         })) + '</span>';
     }
-    h += assetEffectSummary({
-      compact:true,
-      owner:FB.T('{province} county', { province:FB.world.byId[pid].name }),
-      scope:FB.T('Controls hostile movement through this county'),
-      setupCost:target
-        ? FB.T('Paid upfront; no cancellation or refund')
-        : FB.T('Already paid'),
-      recurringCost:fortMaintenanceText(s, fort, active),
-      effect:active ? FB.T(
-        '{percent}% local defense · {garrison} garrison · {steps} added siege steps', {
-          percent:Math.round(active.defense * 100), garrison:active.garrison,
-          steps:active.siegeDelay
-        }) : FB.T('No active defenses until construction completes'),
-      transferRule:FB.T('Project and fort pass intact with the county'),
-      expiry:FB.T('Until demolished; demolition also destroys unfinished work')
-    }) + '</div>';
+    let detailsHtml = assetEffectSummary({
+        compact:true,
+        owner:FB.T('{province} county', { province:FB.world.byId[pid].name }),
+        scope:FB.T('Controls hostile movement through this county'),
+        setupCost:target
+          ? FB.T('Paid upfront; no cancellation or refund')
+          : FB.T('Already paid'),
+        recurringCost:fortMaintenanceText(s, fort, active),
+        effect:fxLine,
+        transferRule:FB.T('Project and fort pass intact with the county'),
+        expiry:FB.T('Until demolished; demolition also destroys unfinished work')
+      });
     if (active) {
-      h += '<div class="hint fort-detail">' + esc(FB.T(
+      detailsHtml += '<div class="hint fort-detail">' + esc(FB.T(
         'Garrison and field-army burden: {garrison} men. A siege needs at least {minimum} uncontested besiegers and inflicts {attrition} casualties each active season. Hostile armies may enter, but cannot pass onward before a breach.', {
           garrison:active.garrison, minimum:siege.minimum,
           attrition:siege.attrition
@@ -4488,7 +4537,7 @@ window.FB = window.FB || {};
       const next = FB.fortLevelDef(currentLevel + 1);
       const status = own
         ? FB.fortProjectStatus(s, pid, idx, currentLevel + 1) : null;
-      h += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
+      detailsHtml += '<div class="fort-next-tier"><b>' + esc(FB.T('Next: {fort}', {
         fort:fortName(s, currentLevel + 1)
       })) + '</b><span class="adesc">' + esc(FB.T(
         '{money:cost} upfront · {seasons} seasons · {upkeep} upkeep · {garrison} garrison · requires {technology}', {
@@ -4496,7 +4545,7 @@ window.FB = window.FB || {};
           garrison:next.garrison, technology:fortRequirementNames(s, next)
         })) + '</span></div>';
       if (own && status && status.ok) {
-        h += '<button class="actionbtn fort-project-action" data-fort-start="' +
+        detailsHtml += '<button class="actionbtn fort-project-action" data-fort-start="' +
           (currentLevel + 1) + '">🏰 ' + esc(FB.T('Begin {fort}…', {
             fort:fortName(s, currentLevel + 1)
           })) + '<span class="adesc">' + esc(FB.T(
@@ -4506,19 +4555,21 @@ window.FB = window.FB || {};
       } else if (own && status && status.reason === 'technology' &&
           status.missingTech.length) {
         for (const missingTech of status.missingTech) {
-          h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
-            esc(missingTech) + '">' + esc(FB.T('Requires {technology}.', {
+          detailsHtml += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
+            esc(missingTech) + '" data-fort-pid="' + esc(pid) + '" data-fort-idx="' + esc(idx) + '">' + esc(FB.T('Requires {technology}.', {
               technology:technologyName(s, missingTech)
             })) + '<span class="adesc">' +
             esc(FB.T('Open the technology entry.')) + '</span></button>';
         }
       } else if (own && status) {
-        h += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
+        detailsHtml += '<button class="actionbtn" disabled>' + esc(FB.T('Begin {fort}', {
           fort:fortName(s, currentLevel + 1)
         })) + '<span class="adesc">' + esc(fortProjectReason(s, status, next)) +
           '</span></button>';
       }
     }
+    h += '<div class="settcard-details hidden" id="' + detId + '">' +
+      detailsHtml + '</div></div>';
     return h;
   }
 
@@ -4574,9 +4625,17 @@ window.FB = window.FB || {};
       '<p><b>' + esc(FB.T('County development: {current} / {cap}', {
         current:(s.dev[pid] || 1), cap:FB.devCap(s, pid)
       })) + ' · ' + esc(FB.T('Population: ~{pop}', { pop:settPop.toLocaleString() })) +
-      ' · ' + esc(FB.T('Dues: +{tax}g/season', { tax:(Math.round(kindTax * 100) / 100) })) + '</b></p><p>' + esc(settlementDevelopmentText(s, pid)) +
-      '</p><p class="hint">' + esc(bookmarkDevelopmentText(s, pid)) +
-      '</p></div>';
+      ' · ' + esc(FB.T('Dues: +{tax}g/season', { tax:(Math.round(kindTax * 100) / 100) })) + '</b></p>' +
+      (function () {
+        const status = FB.settlementDevelopment
+          ? FB.settlementDevelopment(s, pid) : null;
+        return status && status.next !== null
+          ? '<p class="hint">' + esc(FB.T('Next at {threshold}: {change}.', {
+              threshold:status.next,
+              change:settlementChangeName(status.change)
+            })) + '</p>'
+          : '';
+      })() + '</div>';
     /* household property in the exact slot — read directly so opening a
        sheet never migrates or rewrites saved property */
     const property = [];
@@ -4607,24 +4666,29 @@ window.FB = window.FB || {};
       h += '<div class="gm-body-text settlement-property"><p>' +
         property.join('<br>') + '</p></div>';
     }
+    const canRaise = own && s.player.tier >= 3 &&
+      FB.buildable(s, pid, idx).length > 0;
+    if (canRaise) {
+      h += '<div class="gm-list" style="margin-bottom:8px;"><button class="actionbtn" id="gm-raise">' +
+        esc(FB.T('🏗 Raise a building…')) + '</button></div>';
+    }
     if (done.length) {
+      let cardSeq = 0;
       for (const e of done) {
         const id = e.id;
         const d = FBDATA.buildings[id];
         if (!d) continue;
+        const detId = 'settcard-details-' + (++cardSeq);
+        const name = dt(s, 'building', id, d, 'name');
         if (id === 'walls' && !e.ruined) {
-          h += fortAssetHtml(s, pid, idx, e, own);
-          if (own) {
-            h += '<button class="btn sett-demolish" data-demolish="walls">' +
-              esc(FB.T('Demolish…')) + '</button>';
-          }
+          h += fortAssetHtml(s, pid, idx, e, own, detId);
           continue;
         }
         if (e.ruined) {
-          h += '<div class="asset-owned-row"><b>' + d.icon + ' ' +
-            esc(FB.T('Ruins of {building}', {
-              building:dt(s, 'building', id, d, 'name')
-            })) + '</b>' + assetEffectSummary({
+          h += settAssetCard(detId, d.icon,
+            FB.T('Ruins of {building}', { building:name }),
+            FB.T('No current benefit'),
+            assetEffectSummary({
               compact:true,
               owner:FB.T('{province} county', { province:pr.name }),
               scope:buildingScope(s, pid, idx, id),
@@ -4633,10 +4697,10 @@ window.FB = window.FB || {};
               effect:FB.T('No current benefit'),
               transferRule:buildingTransferRule(),
               expiry:FB.T('Permanent ruins; the site remains occupied')
-            }) + '</div>';
+            }), null);
         } else {
-          h += '<div class="asset-owned-row"><b>' + d.icon + ' ' +
-            esc(dt(s, 'building', id, d, 'name')) + '</b>' +
+          h += settAssetCard(detId, d.icon, name,
+            buildingEffects(d, id).join(' · '),
             assetEffectSummary({
               compact:true,
               owner:FB.T('{province} county', { province:pr.name }),
@@ -4646,12 +4710,9 @@ window.FB = window.FB || {};
               effect:buildingEffects(d, id).join(' · '),
               transferRule:buildingTransferRule(),
               expiry:buildingExpiryRule()
-            }) + '</div>' +
-            '<div class="hint settdesc">' + esc(dt(s, 'building', id, d, 'desc')) + '</div>' +
-            (own
-              ? '<button class="btn sett-demolish" data-demolish="' + esc(id) + '">' +
-                esc(FB.T('Demolish…')) + '</button>'
-              : '');
+            }) + '<div class="hint settdesc">' +
+              esc(dt(s, 'building', id, d, 'desc')) + '</div>',
+            own ? id : null);
         }
       }
     } else {
@@ -4673,7 +4734,7 @@ window.FB = window.FB || {};
           esc(FB.T('Begin {fort}…', { fort:fortName(s, 1) })) + '</button>';
       } else if (fortStatus.reason === 'technology' && fortStatus.missingTech.length) {
         h += '<button class="actionbtn fort-tech-action" data-fort-tech="' +
-          esc(fortStatus.missingTech[0]) + '">' +
+          esc(fortStatus.missingTech[0]) + '" data-fort-pid="' + esc(pid) + '" data-fort-idx="' + esc(idx) + '">' +
           esc(fortProjectReason(s, fortStatus, firstFort)) +
           '<span class="adesc">' + esc(FB.T('Open the technology entry.')) +
           '</span></button>';
@@ -4683,12 +4744,6 @@ window.FB = window.FB || {};
         })) + '<span class="adesc">' + esc(fortProjectReason(s, fortStatus, firstFort)) +
           '</span></button>';
       }
-    }
-    const canRaise = own && s.player.tier >= 3 &&
-      FB.buildable(s, pid, idx).length > 0;
-    if (canRaise) {
-      h += '<div class="gm-list"><button class="actionbtn" id="gm-raise">' +
-        esc(FB.T('🏗 Raise a building…')) + '</button></div>';
     }
     h += '<div class="gm-footer">' +
       (idx === 0 ? '<button class="btn" id="settlement-market">' +
@@ -4713,9 +4768,14 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-fort-tech]').forEach(function (button) {
       button.addEventListener('click', function () {
-        UI.showTechDetail(button.dataset.fortTech);
+        const bpid = button.dataset.fortPid || pid;
+        const bidx = button.dataset.fortIdx !== undefined ? Number(button.dataset.fortIdx) : idx;
+        UI.showTechDetail(button.dataset.fortTech, function () {
+          UI.showSettlement(bpid, bidx);
+        });
       });
     });
+    bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-demolish]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const id = btn.dataset.demolish;
@@ -15168,15 +15228,16 @@ window.FB = window.FB || {};
     $('tech-auto-back').addEventListener('click', UI.showTech);
   };
 
-  UI.showTechDetail = function (id) {
+  UI.showTechDetail = function (id, returnContext) {
     const s = FB.state, def = FBDATA.tech[id];
     if (!FB.techUiRelevant(s)) return false;
-    if (!def) return UI.showTech();
+    const backAction = typeof returnContext === 'function' ? returnContext : UI.showTech;
+    if (!def) return backAction();
     const rid = FB.techRealmId(s);
     const realm = s.realms[rid];
     const record = FB.realmTechRecord(s, rid);
     const item = FB.techCandidate(s, id, rid);
-    if (!item) return UI.showTech();
+    if (!item) return backAction();
     const canChoose = rid === 'player' && FB.isPlayerSovereign(s);
     const cost = item.breakdown || FB.techCostBreakdown(s, id, rid);
     const tradition = techTraditionName(cost.tradition);
@@ -15246,7 +15307,7 @@ window.FB = window.FB || {};
       });
     document.querySelectorAll('[data-tech-jump]').forEach(function (button) {
       button.addEventListener('click', function () {
-        UI.showTechDetail(button.dataset.techJump);
+        UI.showTechDetail(button.dataset.techJump, returnContext);
       });
     });
     const start = $('tech-start');
@@ -15256,22 +15317,22 @@ window.FB = window.FB || {};
           FB.autoResearch(s, FB.game.auto.researchMode);
         }
         UI.refresh();
-        UI.showTech();
+        backAction();
       }
     });
     const protection = $('tech-auto-protection');
     if (protection) protection.addEventListener('change', function () {
       FB.setProtected(s, 'researchTech', id, this.checked);
-      UI.showTechDetail(id);
+      UI.showTechDetail(id, returnContext);
     });
     const advocate = $('tech-advocate');
     if (advocate) advocate.addEventListener('click', function () {
       if (FB.advocateTech(s, id)) {
         UI.refresh();
-        UI.showTechDetail(id);
+        UI.showTechDetail(id, returnContext);
       }
     });
-    $('tech-back').addEventListener('click', UI.showTech);
+    $('tech-back').addEventListener('click', backAction);
   };
 
   /* ================= character sheet & trait dialogs ================= */

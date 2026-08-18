@@ -4235,6 +4235,35 @@ window.FB = window.FB || {};
     for (const vid in state.realms) if (state.realms[vid].liege === rid) state.realms[vid].liege = r.liege || null;
   };
 
+  /* Restore-time repair: a living realm sworn to a dead or unknown house is
+     legacy corruption (a peaceful revocation once killed a vassal house
+     without passing its own vassals upward). The orphan reattaches to the
+     dead house's own liege, walking past any further dead links, mirroring
+     the dissolution rule; a chain with no living anchor falls out to
+     independence. */
+  FB.repairVassalLieges = function (state) {
+    if (!state || !state.realms) return;
+    const realms = state.realms;
+    for (const rid in realms) {
+      const r = realms[rid];
+      if (!r || !r.alive || !r.liege || r.liege === 'player') continue;
+      const direct = realms[r.liege];
+      if (direct && direct.alive) continue;
+      let nl = direct ? direct.liege : null;
+      const seen = {};
+      seen[rid] = true;
+      seen[r.liege] = true;
+      while (nl && nl !== 'player' && !seen[nl]) {
+        seen[nl] = true;
+        const step = realms[nl];
+        if (step && step.alive) break;
+        nl = step ? step.liege : null;
+      }
+      if (nl && nl !== 'player' && !(realms[nl] && realms[nl].alive)) nl = null;
+      r.liege = nl;
+    }
+  };
+
   /* ---- crown recognition ---------------------------------------------------
      An anointed crown is sticky: an independent realm styled as a kingdom
      keeps the royal style while it holds even one county inside the de jure
@@ -7271,7 +7300,7 @@ window.FB = window.FB || {};
       const castellanTitle = FB.rankTitleSnapshot(state, 3,
         castleCounty ? castleCounty.name : castellany.provinceId);
       castellanTitle.special = 'castellan';
-      return { high:[{ d:'Appointed office', titleData:castellanTitle }],
+      return { high:[{ d:'Appointed office', titleData:castellanTitle, pid:castellany.provinceId }],
         counties:[] };
     }
     const bishopric = FB.bishopricOf &&
@@ -7282,13 +7311,14 @@ window.FB = window.FB || {};
       const bishopTitle = FB.rankTitleSnapshot(state, 3,
         see ? see.name : bishopric.seeProvinceId);
       bishopTitle.special = 'bishop';
-      bishopEntry = { d:'Bishopric', titleData:bishopTitle };
+      bishopEntry = { d:'Bishopric', titleData:bishopTitle, pid:bishopric.seeProvinceId };
     }
     if (p.tier === 3 && !bishopric) {
       const pr = FB.world && FB.world.byId[p.provinceId];
       out.push({
         d: 'Barony',
-        titleData: FB.rankTitleSnapshot(state, 3, pr ? pr.name : '?')
+        titleData: FB.rankTitleSnapshot(state, 3, pr ? pr.name : '?'),
+        pid: p.provinceId
       });
       return { high: out, counties: [] };
     }
@@ -7299,21 +7329,40 @@ window.FB = window.FB || {};
     /* list only styles actually held: a vassal can hold a dignity's substance
        without its style (a duke's man with a duchy majority stays a count) */
     if (p.tier >= 7) for (const eid of FB.playerEmpires(state)) {
+      const rawEid = eid.replace(/^e_/, '');
+      let empirePid = (state.realms[rawEid] && state.realms[rawEid].capital) || null;
+      if (!empirePid && FB.empireKingdoms && FB.kingdomCounties) {
+        const kIds = FB.empireKingdoms(eid);
+        for (const kid of kIds) {
+          const kcs = FB.kingdomCounties(kid);
+          if (kcs && kcs.length) { empirePid = kcs[0]; break; }
+        }
+      }
       out.push({
         d: 'Empire',
-        titleData: FB.rankTitleSnapshot(state, 7, FBDATA.empires[eid].name)
+        titleData: FB.rankTitleSnapshot(state, 7, FBDATA.empires[eid].name),
+        eid: eid,
+        pid: empirePid || (p.provs && p.provs[0]) || p.provinceId || null
       });
     }
     if (p.tier >= 6) for (const kid of FB.playerKingdoms(state)) {
+      const rawKid = kid.replace(/^k_/, '');
+      const kcs = FB.kingdomCounties ? FB.kingdomCounties(kid) : [];
+      const kingdomPid = (state.realms[rawKid] && state.realms[rawKid].capital) || kcs[0] || (p.provs && p.provs[0]) || p.provinceId || null;
       out.push({
         d: 'Kingdom',
-        titleData: FB.rankTitleSnapshot(state, 6, FBDATA.kingdoms[kid].name)
+        titleData: FB.rankTitleSnapshot(state, 6, FBDATA.kingdoms[kid].name),
+        kid: kid,
+        pid: kingdomPid
       });
     }
     if (p.tier >= 5) for (const did of FB.playerDuchies(state)) {
+      const dcs = FB.duchyCounties ? FB.duchyCounties(did) : [];
       out.push({
         d: 'Duchy',
-        titleData: FB.rankTitleSnapshot(state, 5, FBDATA.duchies[did].name)
+        titleData: FB.rankTitleSnapshot(state, 5, FBDATA.duchies[did].name),
+        did: did,
+        pid: dcs[0] || (p.provs && p.provs[0]) || p.provinceId || null
       });
     }
     if (bishopEntry) out.push(bishopEntry);

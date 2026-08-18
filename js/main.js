@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.140.1';
+  FB.VERSION = '1.140.2';
   FB.CHANGELOG = [
+    { v: '1.140.2', date: '2026-08-18', changes: [
+      'Settlement sheets now feature top-aligned building actions, interactive fortification tooltips with inline requirements, and contextual Back navigation.'
+    ] },
     { v: '1.140.1', date: '2026-08-17', changes: [
       'The market gear stall now shows buying and selling side by side on wide screens, with a Buy/Sell toggle above the list on phones and tablets.'
     ] },

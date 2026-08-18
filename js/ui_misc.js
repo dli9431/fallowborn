@@ -94,15 +94,18 @@ window.FB = window.FB || {};
       research:technology && FB.isPlayerSovereign(s)
     };
   }
-  function settlementDevelopmentText(s, pid) {
-    const status = FB.settlementDevelopment(s, pid);
-    if (!status) return '';
+  function settlementChangeName(change) {
     const changes = {
       head_town:FB.T('the first village becomes a town'),
       new_village:FB.T('an additional village appears'),
       second_town:FB.T('the second settlement becomes a town'),
       head_city:FB.T('the first settlement becomes a city')
     };
+    return changes[change] || change;
+  }
+  function settlementDevelopmentText(s, pid) {
+    const status = FB.settlementDevelopment(s, pid);
+    if (!status) return '';
     if (status.next === null) {
       return FB.T(
         'Started at development {start}. The settlements have grown as far as the land allows.', {
@@ -113,7 +116,7 @@ window.FB = window.FB || {};
     return FB.T('Started at development {start}. Next at {threshold}: {change}.', {
       start:status.bookmark,
       threshold:status.next,
-      change:changes[status.change] || status.change
+      change:settlementChangeName(status.change)
     });
   }
   function bookmarkDevelopmentText(s, pid) {
@@ -1219,6 +1222,45 @@ window.FB = window.FB || {};
         amount:amount
       })
       : FB.T('None');
+  }
+
+  /* Compact asset card: icon, name, one-line effect, optional meta line; the
+     full audit table and description sit behind the ? button (inline toggle,
+     plus a hover/focus tooltip on desktop). Callers compose the action
+     buttons (raise, demolish) rendered inside the card head. */
+  function assetCard(detId, icon, name, fxLine, metaLine, detailsHtml, actionsHtml) {
+    const metaText = typeof metaLine === 'object' && metaLine ? metaLine.text : metaLine;
+    const metaTone = typeof metaLine === 'object' && metaLine && metaLine.tone
+      ? ' ' + esc(metaLine.tone) : '';
+    return '<div class="asset-owned-row settcard">' +
+      '<div class="settcard-head"><b>' + icon + ' ' + esc(name) + '</b>' +
+      '<span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info"' +
+      ' aria-expanded="false" aria-controls="' + detId + '" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button>' + (actionsHtml || '') +
+      '</span></div>' +
+      (metaText
+        ? '<div class="settcard-meta' + metaTone + '">' + esc(metaText) + '</div>' : '') +
+      (fxLine
+        ? '<div class="adesc settcard-fx">' + esc(fxLine) + '</div>' : '') +
+      '<div class="settcard-details hidden" id="' + detId + '">' +
+      detailsHtml + '</div></div>';
+  }
+
+  function bindCardInfoToggles(root) {
+    root.querySelectorAll('.settcard-info').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const det = $(btn.getAttribute('aria-controls'));
+        if (!det) return;
+        const opening = det.classList.contains('hidden');
+        det.classList.toggle('hidden', !opening);
+        btn.setAttribute('aria-expanded', opening ? 'true' : 'false');
+        const label = opening ? FB.T('Hide details') : FB.T('Details');
+        btn.title = label;
+        btn.setAttribute('aria-label', label);
+      });
+    });
   }
 
   /* Shared presentation for choosing a person for a role. Callers supply the
@@ -2643,7 +2685,7 @@ window.FB = window.FB || {};
     FB.localizeTree($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
     if (!FB.isTouch) {
-      const btns = $('gm-body').querySelectorAll('.actionbtn');
+      const btns = $('gm-body').querySelectorAll('.actionbtn, .settcard-raise');
       for (let i = 0; i < btns.length && i < 18; i++) {
         btns[i].insertAdjacentHTML('afterbegin', hintFor(i));
       }
@@ -2937,25 +2979,51 @@ window.FB = window.FB || {};
       tip.id = 'tooltip';
       tip.className = 'hidden';
       document.body.appendChild(tip);
-      function resetEventChoiceTipSize() {
+      let hideTipTimer = null;
+      function cancelHideTip() {
+        if (hideTipTimer) {
+          clearTimeout(hideTipTimer);
+          hideTipTimer = null;
+        }
+      }
+      function scheduleHideTip() {
+        if (hideTipTimer) return;
+        hideTipTimer = setTimeout(function () {
+          hideTipTimer = null;
+          tip.classList.add('hidden');
+          resetTipSize();
+        }, 160);
+      }
+      function hideTipImmediately() {
+        cancelHideTip();
+        tip.classList.add('hidden');
+        resetTipSize();
+      }
+      tip.addEventListener('mouseenter', cancelHideTip);
+      tip.addEventListener('mouseleave', scheduleHideTip);
+      function resetTipSize() {
         tip.style.width = '';
         tip.style.maxWidth = '';
+        tip.style.maxHeight = '';
+        tip.style.overflowY = '';
+        tip.style.boxSizing = '';
       }
-      function showEventChoiceTip(control) {
-        if (eventChoiceUsesDisclosure()) return false;
-        const row = control && control.closest
-          ? control.closest('.event-choice') : null;
-        const details = row && row.querySelector('.event-choice-details');
-        if (!details) return false;
+      function showSideTip(anchorEl, detailsHtml) {
+        if (!detailsHtml) return false;
+        cancelHideTip();
         const edge = 8;
         const gap = 10;
         const width = Math.min(320, Math.max(180,
           window.innerWidth - edge * 2));
+        tip.style.boxSizing = 'border-box';
         tip.style.width = width + 'px';
         tip.style.maxWidth = width + 'px';
-        tip.innerHTML = details.innerHTML;
+        const maxH = Math.max(120, window.innerHeight - edge * 2);
+        tip.style.maxHeight = maxH + 'px';
+        tip.style.overflowY = 'auto';
+        tip.innerHTML = detailsHtml;
         tip.classList.remove('hidden');
-        const r = control.getBoundingClientRect();
+        const r = anchorEl.getBoundingClientRect();
         const tr = tip.getBoundingClientRect();
         let left = r.right + gap;
         if (left + tr.width > window.innerWidth - edge) {
@@ -2963,24 +3031,68 @@ window.FB = window.FB || {};
         }
         left = Math.max(edge, Math.min(
           window.innerWidth - edge - tr.width, left));
-        const top = Math.max(edge, Math.min(r.top,
+        let top = Math.max(edge, Math.min(r.top,
           window.innerHeight - edge - tr.height));
+        if (tr.height + edge * 2 >= window.innerHeight) {
+          top = edge;
+        }
         tip.style.left = left + 'px';
         tip.style.top = top + 'px';
         return true;
       }
+      function showEventChoiceTip(control) {
+        if (eventChoiceUsesDisclosure()) return false;
+        const row = control && control.closest
+          ? control.closest('.event-choice') : null;
+        const details = row && row.querySelector('.event-choice-details');
+        if (!details) return false;
+        return showSideTip(control, details.innerHTML);
+      }
+      function showBuildingActionTip(control) {
+        const btn = control && control.closest
+          ? control.closest('.actionbtn') : null;
+        const details = btn && btn.querySelector('.event-choice-details');
+        if (!details) return false;
+        return showSideTip(btn, details.innerHTML);
+      }
+      function showSettCardTip(infoBtn) {
+        const btn = infoBtn.classList && infoBtn.classList.contains('settcard-info')
+          ? infoBtn : (infoBtn.querySelector ? infoBtn.querySelector('.settcard-info') : null);
+        const detId = btn ? btn.getAttribute('aria-controls') : infoBtn.getAttribute('aria-controls');
+        const details = detId && $(detId);
+        if (!details) { scheduleHideTip(); return false; }
+        const card = (btn && btn.closest('.settcard')) || (infoBtn.closest && infoBtn.closest('.settcard')) || infoBtn;
+        return showSideTip(card, details.innerHTML);
+      }
       document.addEventListener('mouseover', function (e) {
-        if (!e.target || !e.target.closest) { tip.classList.add('hidden'); return; }
+        if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
+        if (e.target.closest('#tooltip')) {
+          cancelHideTip();
+          return;
+        }
         const eventChoice = e.target.closest('.event-choice .evopt');
         if (eventChoice) {
           if (showEventChoiceTip(eventChoice)) return;
-          tip.classList.add('hidden');
+          scheduleHideTip();
           return;
         }
-        resetEventChoiceTipSize();
+        const bldBtn = e.target.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]');
+        if (bldBtn) {
+          if (showBuildingActionTip(bldBtn)) return;
+          scheduleHideTip();
+          return;
+        }
+        const settCard = e.target.closest('.settcard');
+        if (settCard) {
+          if (showSettCardTip(settCard)) return;
+          scheduleHideTip();
+          return;
+        }
         // hovering a topbar resource shows what feeds it, season by season
         const statEl = e.target.closest('#tb-stats .stat[data-stat]');
         if (statEl && FB.state && !FB.game.observe) {
+          cancelHideTip();
+          resetTipSize();
           tip.innerHTML = SH.statBreakdownHtml(statEl.getAttribute('data-stat'));
           tip.classList.remove('hidden');
           const sr = statEl.getBoundingClientRect();
@@ -2989,7 +3101,8 @@ window.FB = window.FB || {};
           return;
         }
         const chip = e.target.closest('.traitchip[data-trait], .traitchip[data-ailment], .traitchip[data-item], .traitchip[data-itemview], .modifierchip[data-modifier]');
-        if (!chip) { tip.classList.add('hidden'); return; }
+        if (!chip) { scheduleHideTip(); return; }
+        cancelHideTip();
         if (chip.hasAttribute('data-modifier')) {
           const id = chip.getAttribute('data-modifier');
           const scope = chip.getAttribute('data-modifier-scope') === 'county'
@@ -2997,7 +3110,7 @@ window.FB = window.FB || {};
           const pid = chip.getAttribute('data-modifier-pid');
           const def = FBDATA.modifiers && FBDATA.modifiers[id];
           const record = FB.state && modifierRecord(FB.state, id, scope, pid);
-          if (!def || !record) { tip.classList.add('hidden'); return; }
+          if (!def || !record) { scheduleHideTip(); return; }
           const effects = modifierEffectText(FB.state, id);
           const upkeep = def.upkeep && def.upkeep.gold
             ? assetSeasonalMoneyCost(def.upkeep.gold) : '';
@@ -3017,7 +3130,7 @@ window.FB = window.FB || {};
             '<b>🤒 ' + esc(FB.T('Ill')) + '</b><br>' + esc(FB.T('Sickness has taken hold.'));
         } else if (chip.hasAttribute('data-trait')) {
           const t = FBDATA.traits[chip.getAttribute('data-trait')];
-          if (!t) return;
+          if (!t) { scheduleHideTip(); return; }
           const fx = traitFxText(t);
           const tid = chip.getAttribute('data-trait');
           tip.innerHTML = '<b>' + t.icon + ' ' + esc(dt(FB.state, 'trait', tid, t, 'name')) +
@@ -3031,7 +3144,7 @@ window.FB = window.FB || {};
         } else {
           const iid = chip.getAttribute('data-item') || chip.getAttribute('data-itemview');
           const item = FB.state && FB.resolveItem(FB.state, iid);
-          if (!item) return;
+          if (!item) { scheduleHideTip(); return; }
           const ifx = SH.itemFxText(item);
           const quality = item.ordinary ? FB.itemQualityName(item.quality) : rarityName(item.def.rarity);
           tip.innerHTML = '<b>' + item.def.icon + ' ' + esc(FB.itemName(FB.state, iid)) + '</b> · ' +
@@ -3044,18 +3157,61 @@ window.FB = window.FB || {};
         tip.style.left = Math.max(4, Math.min(window.innerWidth - 250, r.left)) + 'px';
         tip.style.top = Math.min(window.innerHeight - 110, r.bottom + 6) + 'px';
       });
+      document.addEventListener('click', function (e) {
+        if (!e.target || !e.target.closest) return;
+        const fortTech = e.target.closest('[data-fort-tech]');
+        if (fortTech && fortTech.dataset.fortTech) {
+          hideTipImmediately();
+          const bpid = fortTech.dataset.fortPid || (FB.state && FB.state.player && FB.state.player.provinceId);
+          const bidx = fortTech.dataset.fortIdx !== undefined ? Number(fortTech.dataset.fortIdx) : 0;
+          UI.showTechDetail(fortTech.dataset.fortTech, function () {
+            UI.showSettlement(bpid, bidx);
+          });
+          return;
+        }
+        const fortStart = e.target.closest('[data-fort-start]');
+        if (fortStart && fortStart.dataset.fortStart) {
+          const pid = fortStart.dataset.fortPid || (FB.state && FB.state.player && FB.state.player.provinceId);
+          const idx = fortStart.dataset.fortIdx !== undefined ? Number(fortStart.dataset.fortIdx) : 0;
+          const targetLevel = Number(fortStart.dataset.fortStart);
+          hideTipImmediately();
+          UI.showFortProject(pid, idx, targetLevel);
+          return;
+        }
+      });
       document.addEventListener('focusin', function (e) {
         if (!e.target || !e.target.closest) return;
+        if (e.target.closest('#tooltip')) {
+          cancelHideTip();
+          return;
+        }
+        const bldBtnFocus = e.target.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]');
+        if (bldBtnFocus) {
+          if (showBuildingActionTip(bldBtnFocus)) return;
+          scheduleHideTip();
+          return;
+        }
+        const settCardFocus = e.target.closest('.settcard');
+        if (settCardFocus) {
+          if (showSettCardTip(settCardFocus)) return;
+          scheduleHideTip();
+          return;
+        }
         const eventChoice = e.target.closest('.event-choice .evopt');
         if (eventChoice && !showEventChoiceTip(eventChoice)) {
-          tip.classList.add('hidden');
+          scheduleHideTip();
         }
       });
       document.addEventListener('focusout', function (e) {
-        if (!e.target || !e.target.closest ||
-            e.target.closest('.event-choice .evopt')) {
-          tip.classList.add('hidden');
+        if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
+        if (e.relatedTarget && e.relatedTarget.closest &&
+            (e.relatedTarget.closest('#tooltip') ||
+             e.relatedTarget.closest('.settcard') ||
+             e.relatedTarget.closest('.event-choice .evopt') ||
+             e.relatedTarget.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]'))) {
+          return;
         }
+        scheduleHideTip();
       });
     }
   };
@@ -3165,9 +3321,11 @@ window.FB = window.FB || {};
   SH.allianceText = allianceText;
   SH.automationAccess = automationAccess;
   SH.assetEffectSummary = assetEffectSummary;
+  SH.assetCard = assetCard;
   SH.assetMoneyCost = assetMoneyCost;
   SH.assetSeasonalMoneyCost = assetSeasonalMoneyCost;
   SH.assetSummaryValue = assetSummaryValue;
+  SH.bindCardInfoToggles = bindCardInfoToggles;
   SH.bookmarkDevelopmentText = bookmarkDevelopmentText;
   SH.characterStandingContext = characterStandingContext;
   SH.childIdentityPreviewText = childIdentityPreviewText;
@@ -3229,6 +3387,7 @@ window.FB = window.FB || {};
   SH.rivalryHeatName = rivalryHeatName;
   SH.roleName = roleName;
   SH.settlementDevelopmentText = settlementDevelopmentText;
+  SH.settlementChangeName = settlementChangeName;
   SH.settlementKindName = settlementKindName;
   SH.signedNumber = signedNumber;
   SH.socialAttentionSummary = socialAttentionSummary;

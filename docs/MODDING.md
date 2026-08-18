@@ -1338,7 +1338,7 @@ a province:
   (mitigates general crisis losses, e.g. `0.10`), `migrationAttraction` (integer migration attraction bonus, e.g. `1` or `2`).
 - `name`/`desc` accept text tokens and religion-variant objects (see the Great {temple}).
 - The `walls` id is reserved for the strategic fortification system below. It is excluded
-  from ordinary building pickers, repeat pricing, Raise Next, and autobuild.
+  from ordinary building pickers, repeat pricing, the Raise ledger, and autobuild.
 
 Built buildings live in `state.buildings` keyed by **province id**, each entry shaped
 `{ s: settlementIndex, id, devGranted?, ruined? }` - conquest takes them with the land, and they pass to heirs

@@ -32,19 +32,22 @@ map_data.js) via the build deed — `FB.build`/`FB.buildable` in actions.js, pic
 After choosing a province when necessary, `UI.showBuildings` presents a persistent
 building-first county ledger. A sticky native county selector remains visible while the
 ledger scrolls, so touch and keyboard players can move directly between every held county.
-**Raise Next** places the work in the next open settlement, keeps the ledger open, and
+**Raise** places the work in the next open settlement, keeps the ledger open, and
 refreshes the exact next price; the ledger warns that each further county copy costs 50%
 more. Each directly held county can also be placed in the `autoBuildCounty` protection
 scope from Governance or its building ledger. `FB.autoBuild` omits protected counties
-without changing the global automation setting; manual **Raise Next** and exact settlement
+without changing the global automation setting; manual **Raise** and exact settlement
 construction remain available. The Land-tab settlement path remains the exact-placement
-route.
+route. The **Raise a building…** modal's **Back** button returns directly to the originating
+settlement sheet rather than the general county ledger, and following fortification technology
+requirement links from cards or tooltips preserves the settlement sheet as the Back destination.
 
-Build choices and standing settlement buildings use the shared asset/effect row.
-It identifies the county owner and exact settlement scope, separates the live
-construction quote from seasonal upkeep, lists all effects, states that the
-building follows conquest, and names demolition/ruin as its end condition.
-Ruins use the same row with no benefit or upkeep.
+Build choices and standing settlement buildings use the shared compact asset card:
+icon, name, one-line effect, and a cost/status meta line, with the full asset/effect
+audit table behind the card's details disclosure. The audit identifies the county owner
+and exact settlement scope, separates the live construction quote from seasonal upkeep,
+lists all effects, states that the building follows conquest, and names demolition/ruin
+as its end condition. Ruins use the same card with no benefit or upkeep.
 An authored `d.dev` is labeled as immediate county development when raised.
 Technology `fx.devCap` is labeled as the development ceiling above the base of 10
 for every county in the nation that owns it, not as current development.

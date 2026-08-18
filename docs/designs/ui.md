@@ -147,6 +147,15 @@ the Guide restores its originating dialog, while footers remain for terminal mod
 only; gameplay actions and mandatory event decisions are never made undoable. If the History
 API is unavailable or rejects an entry, all existing visible controls remain the fallback.
 
+**Contextual Back Routing.** Whenever any tooltip, interaction card, requirement button, or
+contextual action inside a modal opens a different modal dialog (such as jumping from a
+fortification or building requirement into a technology sheet, or opening an enterprise or
+charter prerequisite), the newly opened modal's **Back** button and back navigation must always
+favor linking back directly to that specific originating context modal rather than falling back to
+a generic top-level catalogue or root screen. When navigating prerequisite chains or jumping
+between entries within the destination modal, that originating return context is preserved so
+backing out returns to the original source sheet.
+
 Every generic modal uses a flex-column card with a scrolling `#gm-body` and a sticky,
 centered `.gm-footer`, so its terminal controls remain at the bottom middle while long
 content ends at the footer's opaque, bordered cutoff rather than fading behind it. Search
@@ -287,8 +296,8 @@ native buttons showing the live pass chance and training-adjusted fee; unmet req
 and a failed-attempt cooldown remain visible as explanations. Passing or failing spends a
 day and returns to the originating person or Household Plan flow. Landed protagonists see
 the preserved path as biography but receive no examination actions.
-The building deed's county ledger stays open after **Raise Next**, so repeated construction
-does not traverse province and settlement dialogs for every work. Its nine building rows
+The building deed's county ledger stays open after **Raise**, so repeated construction
+does not traverse province and settlement dialogs for every work. Its building cards
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
 repeat copies in one county become 50% dearer each time. A sticky native county selector stays
 in reach above the scrolling ledger, including on narrow touch layouts, and switches directly
@@ -413,7 +422,11 @@ trait effects are the exception: both surfaces name the affected stage and show 
 directional hint, leaving the exact live score and chance to the courtship review. Unclassed
 mod traits appear under Other. Titles and Possessions use collapsed-by-default,
 counted accordion rows matching the Deeds group controls so large realms and armories do
-not dominate the Self panel. Active maintained standards appear in the livelihood summary
+not dominate the Self panel. When expanded, Titles presents high dignities as aligned rank-and-style rows and renders
+directly held demesne counties as a dedicated multi-line list under a clear count header,
+preventing large territorial rosters from squishing dignity labels. Title styles and county
+names are interactive links that navigate directly to the target county (or duchy/kingdom/empire
+capital) on the map and Land panel. Active maintained standards appear in the livelihood summary
 as compact icons with numeric levels; dormant purchased levels stay off that active row.
 The full-name heading leads the mobile/short-screen drawer,
 where that drawer covers the topbar, and is hidden in the desktop panel because the
@@ -1270,7 +1283,11 @@ a marker never blocks the county beneath it; keyboard province navigation stays
 province-based. `UI.showSettlement(pid, index)` is universal: it names the county,
 holder, localized kind, and development explanation, lists the buildings and ruins of
 the exact slot, and shows matching household plots, manor, and enterprises when
-present. Authorization lives inside the sheet, so foreign and non-demesne settlements
+present. Each building, ruin, or fort renders as a compact card — icon, name, and a
+one-line effect — with the full audit table and description behind a per-card
+details disclosure (a hover/focus tooltip on desktop, an inline tap toggle
+elsewhere), and demolition rides inside the owned card as an icon button.
+Authorization lives inside the sheet, so foreign and non-demesne settlements
 are read-only while a valid demesne settlement keeps construction and demolition.
 
 ## Localization

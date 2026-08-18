@@ -675,22 +675,70 @@ window.FB = window.FB || {};
             pct: Math.round((1 - FB.domainPenalty(s)) * 100)
           })) : '') + '</div>';
       }
-      const parts = [];
+      /* Compact ledger: county rows against one shared column per building
+         type standing anywhere in the demesne, so a glance shows what each
+         county has and lacks. The county name opens its settlement sheet. */
+      const bldByProv = {};
+      const bldTypes = {};
       for (const bp of FB.demesne(s)) {
-        const blt = FB.builtIn(s, bp).filter(function (e) { return !e.ruined; });
-        if (blt.length) {
-          parts.push(esc(FB.world.byId[bp].name) + ' ' + blt.map(function (e) {
-            const d = FBDATA.buildings[e.id];
-            return d ? d.icon : '?';
-          }).join(''));
+        const cells = {};
+        for (const e of FB.builtIn(s, bp)) {
+          if (e.ruined || !FBDATA.buildings[e.id]) continue;
+          cells[e.id] = (cells[e.id] || 0) + 1;
+          bldTypes[e.id] = true;
         }
+        if (Object.keys(cells).length) bldByProv[bp] = cells;
       }
-      if (parts.length) h += '<div class="progressnote">🏗 ' + parts.join(' · ') + '</div>';
+      const bldCols = [];
+      for (const id in FBDATA.buildings) if (bldTypes[id]) bldCols.push(id);
+      const bldPids = Object.keys(bldByProv);
+      if (bldCols.length && bldPids.length) {
+        let grid = '<span class="bldprov bldcolhead"></span>';
+        for (const id of bldCols) {
+          const d = FBDATA.buildings[id];
+          grid += '<span class="bldcell bldcolhead" title="' +
+            esc(dt(s, 'building', id, d, 'name')) + '">' + d.icon + '</span>';
+        }
+        for (const bp of bldPids) {
+          const cells = bldByProv[bp];
+          grid += '<button type="button" class="bldprov" data-bldprov="' +
+            esc(bp) + '" title="' +
+            esc(FB.T('See the buildings of {settlement}', {
+              settlement: FB.world.byId[bp].name
+            })) + '">' + esc(FB.world.byId[bp].name) + '</button>';
+          for (const id of bldCols) {
+            const d = FBDATA.buildings[id];
+            const name = dt(s, 'building', id, d, 'name');
+            const n = cells[id] || 0;
+            if (n) {
+              grid += '<span class="bldcell" title="' + esc(name) +
+                (n > 1 ? ' ×' + n : '') + '">' + d.icon +
+                (n > 1 ? '<span class="bldcnt">' + n + '</span>' : '') +
+                '</span>';
+            } else {
+              const none = FB.T('No {building}', { building: name });
+              grid += '<span class="bldcell bldmiss" title="' + esc(none) +
+                '" aria-label="' + esc(none) + '">·</span>';
+            }
+          }
+        }
+        h += '<div class="progressnote bldsummary"><span class="bldhead">🏗 ' +
+          esc(FB.T('Buildings')) + '</span><div class="bldgrid" style="' +
+          'grid-template-columns:minmax(96px,max-content) repeat(' +
+          bldCols.length + ', 24px)">' + grid + '</div></div>';
+      }
     }
     if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
       h += nextStepHint(s);
     }
     box.innerHTML = h;
+    box.querySelectorAll('[data-bldprov]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const pid = btn.dataset.bldprov;
+        FB.map.centerOn(pid);
+        UI.showSettlement(pid, 0);
+      });
+    });
     if ($('tutorial-dismiss')) {
       $('tutorial-dismiss').addEventListener('click', function () {
         delete s.player.flags.tutorial; // per-save opt-out; the card never returns
@@ -1190,18 +1238,30 @@ window.FB = window.FB || {};
     if (!t.high.length && !t.counties.length) return '';
     let h = '';
     for (const e of t.high) {
-      h += '<div class="kv"><span>' + esc(FB.T(e.d)) + '</span><b>' +
-        esc(e.titleData ? FB.renderTitleSnapshot(e.titleData) : FB.L(e.t || '')) +
-        '</b></div>';
+      const titleName = esc(e.titleData ? FB.renderTitleSnapshot(e.titleData) : FB.L(e.t || ''));
+      let targetPid = e.pid;
+      if (!targetPid && e.did && FB.duchyCounties) {
+        const dcs = FB.duchyCounties(e.did);
+        if (dcs && dcs.length) targetPid = dcs[0];
+      }
+      const titleVal = targetPid
+        ? '<button type="button" class="linklike" data-title-pid="' + esc(targetPid) + '">' + titleName + '</button>'
+        : titleName;
+      h += '<div class="kv self-title-row"><span>' + esc(FB.T(e.d)) + '</span><b>' +
+        titleVal + '</b></div>';
     }
     if (t.counties.length) {
       const names = [];
       for (const pid of t.counties) {
         const pr = FB.world.byId[pid];
-        if (pr) names.push(pr.name);
+        const name = esc(pr ? pr.name : pid);
+        names.push('<button type="button" class="linklike" data-title-pid="' + esc(pid) + '">' + name + '</button>');
       }
-      h += '<div class="kv"><span>' + esc(FB.T('Counties ({count})',
-        { count: t.counties.length })) + '</span><b>' + esc(names.join(' · ')) + '</b></div>';
+      h += '<div class="self-titles-counties"><span class="self-titles-counties-label">' +
+        esc(FB.T('Counties ({count})', { count: t.counties.length })) +
+        '</span><div class="self-titles-counties-list">' +
+        names.join(' · ') +
+        '</div></div>';
     }
     return h;
   }
@@ -1707,6 +1767,18 @@ window.FB = window.FB || {};
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
     const srh = $('self-rename-house');
     if (srh) srh.addEventListener('click', UI.showRenameHouse);
+    const titleLinks = box.querySelectorAll('[data-title-pid]');
+    for (let i = 0; i < titleLinks.length; i++) {
+      titleLinks[i].addEventListener('click', function () {
+        const pid = this.getAttribute('data-title-pid');
+        if (pid && FB.world && FB.world.byId[pid]) {
+          if (FB.map && FB.map.centerOn) {
+            FB.map.centerOn(pid, 2.0);
+          }
+          UI.selectProvince(pid);
+        }
+      });
+    }
   }
 
   /* Self-tab Dynasty panel: rename the player's house. A validation failure

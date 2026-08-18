@@ -740,6 +740,9 @@ window.FB = window.FB || {};
     else if (FB.ensureGuildMonopolies) FB.ensureGuildMonopolies(FB.state);
     if (FB.repairGreatHolyWar) FB.repairGreatHolyWar(FB.state);
     if (FB.repairWars) FB.repairWars(FB.state);
+    /* Vassals orphaned under a dead house (pre-fix revocation) reattach
+       upward before any hierarchy reader runs. */
+    if (FB.repairVassalLieges) FB.repairVassalLieges(FB.state);
     if (FB.ensureModifiers) FB.ensureModifiers(FB.state);
     if (FB.ensureIntrigue) FB.ensureIntrigue(FB.state);
     if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);

@@ -60,12 +60,16 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 /* live counters: monospace digits so changing numbers never change width */
 .mono { font-family: Consolas, Menlo, 'Courier New', monospace; font-size: 0.95em; }
 #tooltip {
-  position: fixed; z-index: 80; pointer-events: none;
+  position: fixed; z-index: 80; pointer-events: auto; box-sizing: border-box;
   background: #2c2418; border: 1px solid #a5842f; border-radius: 8px;
-  max-width: 280px; padding: 9px 11px; font-size: 13px; line-height: 1.4;
+  max-width: 320px; padding: 9px 11px; font-size: 13px; line-height: 1.4;
   color: var(--main-text-color); box-shadow: 0 4px 18px #000;
+  max-height: calc(100vh - 16px); overflow-y: auto;
 }
 #tooltip b { color: #e0c060; }
+#tooltip .actionbtn { margin-top: 6px; width: 100%; text-align: left; }
+#tooltip .fort-next-tier { margin: 6px 0 4px; padding: 6px 8px; }
+#tooltip .fort-detail { margin: 6px 0 4px; }
 .hidden { display: none !important; }
 .row { display: flex; align-items: center; }
 .gap { gap: 10px; }
@@ -870,6 +874,28 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   background: #2a2216; color: var(--main-text-color); font-size: 14px;
 }
 .asset-owned-row > b { display: block; color: var(--main-text-color); }
+/* settlement sheet cards: name row with icon actions; audit table behind ? */
+.settcard-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.settcard-head > b { color: var(--main-text-color); font-size: 15px; }
+.settcard-actions { display: flex; gap: 8px; align-items: center; flex: 0 0 auto; }
+.settcard-actions .btn.small.settcard-info,
+.settcard-actions .btn.small.sett-demolish {
+  min-width: 32px; min-height: 32px; padding: 0; font-size: 14px; font-weight: bold;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.settcard-actions .btn.small.settcard-raise {
+  min-height: 32px; padding: 0 14px; font-size: 13px; font-weight: bold;
+  display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+}
+.settcard-actions .btn.small.settcard-raise .keyhint {
+  margin-right: 4px;
+}
+.settcard-fx, .settcard-meta { display: block; margin-top: 3px; font-size: 13px; }
+.settcard-meta { color: #d0ad54; font-weight: bold; }
+.settcard-meta.unaffordable { color: #d79579; }
+.settcard-meta.unavailable { color: var(--helper-text-color); font-style: italic; font-weight: normal; }
+.settcard-details { margin-top: 7px; }
+.settcard-details .settdesc { margin: 6px 0 0; }
 .fort-asset-row { border-style: double; }
 .fort-detail { margin: 5px 2px 10px; line-height: 1.4; }
 .fort-next-tier {
@@ -1358,7 +1384,7 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 /* a building's flavor line under its kv row in the settlement view */
 .settdesc { margin: 0 0 8px; }
-.sett-demolish { display: block; margin: 0 0 12px auto; min-height: 36px; padding: 6px 10px; }
+.sett-demolish { color: #d79579; }
 .charcard[data-cid] { cursor: pointer; }
 .charcard[data-cid]:hover { border-color: #c9a24a; }
 .charrow .cname { color: var(--main-text-color); }
@@ -1393,6 +1419,15 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 .choice-receipt-outcome { margin-top: 4px; color: var(--helper-text-color); font-style: italic; }
 .progressnote { background: #241d15; border: 1px solid #55452a; border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-bottom: 8px; }
+/* Deeds demesne-buildings ledger: county rows against shared building columns */
+.bldsummary .bldhead { display: block; margin-bottom: 4px; }
+.bldsummary .bldgrid { display: grid; align-items: center; row-gap: 2px; overflow-x: auto; }
+.bldsummary .bldprov { background: none; border: 0; border-radius: 4px; padding: 0 2px; font: inherit; font-size: 12px; text-align: left; color: var(--helper-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bldsummary button.bldprov { cursor: pointer; }
+.bldsummary button.bldprov:hover, .bldsummary button.bldprov:focus-visible { color: var(--main-text-color); text-decoration: underline; }
+.bldsummary .bldcell { text-align: center; font-size: 13px; line-height: 1.3; white-space: nowrap; }
+.bldsummary .bldmiss { color: var(--helper-text-color); opacity: .35; }
+.bldsummary .bldcnt { font-size: 10px; vertical-align: super; color: #c9a44a; margin-left: 1px; }
 .warnote { border-color: #8a4030; }
 .tutorial-card .tutorial-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
 .tutorial-card ul { list-style: none; margin: 0; padding: 0; }
@@ -2087,6 +2122,21 @@ textarea.modjson, textarea.savetext {
 .self-overview-skills .skillrow .num { width: 18px; }
 .self-name { border-bottom: 0; padding-bottom: 0; }
 .self-details-divider { display: none; }
+.self-title-row {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px; min-width: 0;
+}
+.self-title-row > span { flex-shrink: 0; color: var(--helper-text-color); }
+.self-title-row > b { min-width: 0; text-align: right; overflow-wrap: break-word; }
+.self-titles-counties { padding: 4px 0 2px; }
+.self-title-row + .self-titles-counties {
+  margin-top: 4px; padding-top: 6px; border-top: 1px solid rgba(85, 69, 42, .4);
+}
+.self-titles-counties-label {
+  display: block; color: var(--helper-text-color); font-size: 13px; margin-bottom: 2px;
+}
+.self-titles-counties-list {
+  color: var(--main-text-color); font-size: 13px; line-height: 1.45; overflow-wrap: break-word;
+}
 @media (pointer: coarse) { .portrait-equip { min-height: 44px; } }
 
 /* Governance is the territorial ruler's political home. Its section strip

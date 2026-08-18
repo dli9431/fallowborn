@@ -6944,6 +6944,12 @@ window.FB = window.FB || {};
     }
     if (FB.mergeRealmTech) FB.mergeRealmTech(state, 'player', rid);
     FB.markRealmDead(state, rid);
+    /* the revoked house's own vassals pass to its liege, mirroring the
+       dissolution blocks of realmBuryIfEmpty and transferProvince — otherwise
+       they stay sworn to a dead realm and vanish from every vassal list */
+    for (const vid in state.realms) {
+      if (state.realms[vid].liege === rid) state.realms[vid].liege = r.liege || null;
+    }
     FB.invalidateRealmCache();
     if (FB.councilAuthority) FB.councilAuthority(state, 6); // a fief taken back: the crown reaches, the council notes
     FB.news(state, FB.msg('news.event.fief_reclaimed',
