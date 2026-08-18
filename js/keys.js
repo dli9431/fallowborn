@@ -142,12 +142,6 @@ window.FB = window.FB || {};
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const t = e.target;
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
-      if (e.key === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
-      if (e.key === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); }
-      return;
-    }
-    const onButton = t && t.tagName === 'BUTTON';
     const k = e.key;
     /* 1-9 hotkeys by PHYSICAL key (number row or numpad, any layout, any
        NumLock state); holding Shift reaches list items 10-18 (⇧1-⇧9). */
@@ -156,6 +150,17 @@ window.FB = window.FB || {};
     else if (e.code && e.code.length === 7 && e.code.indexOf('Numpad') === 0) digit = +e.code.charAt(6) || 0;
     if (!digit && k >= '1' && k <= '9') digit = +k;
     const slot = digit ? digit - 1 + (e.shiftKey ? 9 : 0) : -1;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
+      if (k === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
+      if (k === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); return; }
+      /* Checkboxes and radios take no typed text, so a focused one (a
+         dialog's first control can be a protection checkbox) swallows
+         everything except the digit hotkeys. */
+      const checkable = t.tagName === 'INPUT' &&
+        (t.type === 'checkbox' || t.type === 'radio');
+      if (!checkable || !digit) return;
+    }
+    const onButton = t && t.tagName === 'BUTTON';
 
     /* ---- event modal first: it demands a choice ---- */
     if (eventOpen()) {

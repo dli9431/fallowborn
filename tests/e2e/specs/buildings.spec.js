@@ -145,6 +145,13 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
       state.buildings[other] = [
         { s:0, id:'mill', ruined:true }, { s:0, id:'market' }
       ];
+      const record = FB.realmTechRecord(state);
+      for (const id in FBDATA.buildings) {
+        const requirement = FBDATA.buildings[id].requiresTech;
+        if (requirement && record.completed.indexOf(requirement) < 0) {
+          record.completed.push(requirement);
+        }
+      }
       state.player.roleOrientationsSeen =
         state.player.roleOrientationsSeen || {};
       state.player.roleOrientationsSeen[
@@ -185,7 +192,7 @@ test('deeds tab shows demesne buildings as a county grid that opens settlements'
       .toHaveCount(1);
     await expect(grid.locator('.bldcell.bldmiss[title="No Granary"]'))
       .toHaveCount(1);
-    await expect(grid.locator('.bldcell[title="Market Square"]'))
+    await expect(grid.locator('.bldcell[title="Market Square"]:not(.bldcolhead)'))
       .toHaveCount(1);
 
     // clicking a county name opens its head settlement's sheet
@@ -242,10 +249,11 @@ test('settlement modal encapsulates fort siege details and upgrade actions insid
       const state = FB.state;
       const pid = state.player.provinceId;
       state.player.tier = 4;
-      state.forts = state.forts || {};
-      state.forts[pid] = { level: 2, completeTurn: 0 };
+      /* the fort record IS the walls building entry; its level lives on the
+         record itself, so reindex after the direct data write */
       state.buildings = state.buildings || {};
-      state.buildings[pid] = [{ s: 0, id: 'walls' }];
+      state.buildings[pid] = [{ s: 0, id: 'walls', level: 2 }];
+      FB.invalidateFortIndex();
       FB.ui.refresh();
       FB.ui.showSettlement(pid, 0);
       return {
@@ -279,7 +287,7 @@ test('raise a building modal shows existing buildings at top and highlighted cos
       const state = FB.state;
       const pid = state.player.provinceId;
       state.player.tier = 4;
-      state.player.gold = 50; // watermill costs 120, so unaffordable
+      state.player.gold = 20; // the first card (watermill, ~40 gold) is out of reach
       state.buildings = state.buildings || {};
       state.buildings[pid] = [{ s:0, id:'granary' }];
       const record = FB.realmTechRecord(state);
@@ -370,16 +378,25 @@ test.describe('building ledger keyboard and tooltip access', function () {
       await openGame(page, testInfo);
       await startDeterministicGame(page);
 
-      await page.evaluate(function () {
+      const setup = await page.evaluate(function () {
         const state = FB.state;
         const pid = state.player.provinceId;
         state.player.tier = 4;
-        state.forts = state.forts || {};
-        state.forts[pid] = { level: 2, completeTurn: 0 };
+        /* the upgrade/tech actions render only for a county the player
+           actually holds (fortProjectStatus's playerHolds gate) */
+        state.player.liege = null;
+        state.player.provs = [pid];
+        FB.foundPlayerRealm(state);
+        /* the fort record IS the walls building entry; its level lives on
+           the record itself, so reindex after the direct data write */
         state.buildings = state.buildings || {};
-        state.buildings[pid] = [{ s: 0, id: 'walls' }];
+        state.buildings[pid] = [{ s: 0, id: 'walls', level: 2 }];
+        FB.invalidateFortIndex();
         FB.ui.refresh();
         FB.ui.showSettlement(pid, 0);
+        return {
+          settlement: FB.settlementsOf(state, pid)[0].name
+        };
       });
 
       const fortCard = page.locator('#gm-body .fort-asset-row');
@@ -406,8 +423,8 @@ test.describe('building ledger keyboard and tooltip access', function () {
       await expect(techBtn).toBeVisible();
       await techBtn.click();
 
-      // tech modal opened
-      await expect(page.locator('#gm-title')).toContainText('Concentric Defenses');
+      // tech modal opened (the level-2 fort's next tier needs Stone Castles)
+      await expect(page.locator('#gm-title')).toContainText('Stone Castles');
 
       // clicking Back on the tech modal returns directly to the settlement sheet
       await page.locator('#tech-back').click();

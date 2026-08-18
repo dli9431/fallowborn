@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.140.2';
+  FB.VERSION = '1.140.3';
   FB.CHANGELOG = [
+    { v: '1.140.3', date: '2026-08-18', changes: [
+      'Building ledger digit hotkeys work again even when the county protection checkbox has focus, and loading a life no longer leaves reattached vassals missing from your vassal lists.'
+    ] },
     { v: '1.140.2', date: '2026-08-18', changes: [
       'Settlement sheets now feature top-aligned building actions, interactive fortification tooltips with inline requirements, and contextual Back navigation.'
     ] },

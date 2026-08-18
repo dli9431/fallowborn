@@ -4244,6 +4244,7 @@ window.FB = window.FB || {};
   FB.repairVassalLieges = function (state) {
     if (!state || !state.realms) return;
     const realms = state.realms;
+    let changed = false;
     for (const rid in realms) {
       const r = realms[rid];
       if (!r || !r.alive || !r.liege || r.liege === 'player') continue;
@@ -4260,8 +4261,11 @@ window.FB = window.FB || {};
         nl = step ? step.liege : null;
       }
       if (nl && nl !== 'player' && !(realms[nl] && realms[nl].alive)) nl = null;
-      r.liege = nl;
+      if (r.liege !== nl) { r.liege = nl; changed = true; }
     }
+    /* lieges feed the realm cache's vassal lists, and an earlier restore
+       repair may already have primed it — never leave it stale */
+    if (changed) FB.invalidateRealmCache();
   };
 
   /* ---- crown recognition ---------------------------------------------------
