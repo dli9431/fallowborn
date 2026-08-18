@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.139.3';
+  FB.VERSION = '1.140.0';
   FB.CHANGELOG = [
+    { v: '1.140.0', date: '2026-08-17', changes: [
+      'Town and city visits now offer a market gear stall where you can buy and sell equipment from a seasonal stock that improves with urban market innovations.',
+      'Eleven legendary artifacts — from Excalibur to the Holy Lance — can now be sought through rumor events by the faithful and cultures that claim them, though each prize carries a dangerous edge and can be lost forever.'
+    ] },
     { v: '1.139.3', date: '2026-08-17', changes: [
       'Fast-forward now reuses each season’s settled finance and papal records instead of rescanning loans, investments, and church courts on every skipped day.'
     ] },

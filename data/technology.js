@@ -185,6 +185,14 @@ window.FBDATA = window.FBDATA || {};
         mode:'soft', tech:['urban_markets','trade_houses'],
         rationale:'Ordinary local exchange is universal; established markets and trade houses improve distribution capacity without blocking access.'
       },
+      item_shop:{
+        mode:'soft', tech:['urban_markets'],
+        rationale:'The town and city gear stall is available without research; established urban markets widen its seasonal stock and shift its quality upward.'
+      },
+      legendary_artifacts:{
+        mode:'none',
+        rationale:'Faith- and culture-gated legendary objects draw on myth and religious provenance; no technology credibly unlocks or improves them.'
+      },
       commodity_ventures:{
         mode:'none',
         rationale:'Selecting a commodity expands the existing venture and does not create a separately advanced form of exchange.'

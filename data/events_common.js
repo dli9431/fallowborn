@@ -758,6 +758,7 @@ FBDATA.events.push(
     { label:'Hear the {holy} preach at the {temple}.', desc:'An hour of good words costs nothing.', effects:{ piety:3 } },
     { label:'Court the town’s notables.', require:{ societalRoles:['gentry','lord'] }, desc:'Useful names are learned over wine.', effects:{ prestige:3, skills:{dip:1} } },
     { label:'Browse arms and useful goods.', require:{ goldMin:10 }, desc:'A town market keeps ordinary gear within reach.', effects:{ custom:'offer_gear' } },
+    { label:'Browse the market stalls.', desc:'The stallkeepers spread their season’s stock — buy gear, or sell what the armory no longer needs.', effects:{ custom:'open_item_shop' } },
     { label:'Patronize the guilds. ({money:5})', require:{ societalRoles:['lord','crowned'], goldMin:5 },
       desc:'Let the masters associate prosperity with your name.',
       effects:{ gold:-5, prestige:4, popularOpinion:3 } }
@@ -778,6 +779,7 @@ FBDATA.events.push(
       failure:{ text:'The work went to harder men — after one of them rearranged your face.', effects:{ health:-1 } } },
     { label:'Marvel at the great {temple}.', desc:'Stone raised to heaven lifts the heart with it.', effects:{ piety:4 } },
     { label:'Browse arms and useful goods.', require:{ goldMin:10 }, desc:'A city market always has serviceable gear for sale.', effects:{ custom:'offer_gear' } },
+    { label:'Walk the great bazaar.', desc:'Stall upon stall of gear and goods — buy from the season’s stock, or sell what the armory no longer needs.', effects:{ custom:'open_item_shop' } },
     { label:'Wander the pleasure quarter.', require:{ religionGroups:['christian','pagan','jewish'] }, desc:'Wine, music, and thinner pockets by morning.',
       effects:{ health:1, gold:-2, piety:-3 } },
     { label:'Linger in the bath-houses.', require:{ religionGroups:['muslim'] }, desc:'Steam soaks the road out of tired bones.',

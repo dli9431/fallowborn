@@ -2658,6 +2658,62 @@
         "text": "The Apprentice’s Mistake"
       }
     },
+    "event.artifact_coveted.options.0.desc.default": {
+      "context": "Event artifact_coveted, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "A gift that buys peace and renown — and loses the legend forever."
+      }
+    },
+    "event.artifact_coveted.options.0.label.default": {
+      "context": "Event artifact_coveted, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Yield it with ceremony."
+      }
+    },
+    "event.artifact_coveted.options.1.desc.default": {
+      "context": "Event artifact_coveted, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Some things are not for sale. Not everyone accepts that answer."
+      }
+    },
+    "event.artifact_coveted.options.1.failure.text.default": {
+      "context": "Event artifact_coveted, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Agents in the night, a bribed guard, a reliquary found empty at dawn. The legend has a new keeper."
+      }
+    },
+    "event.artifact_coveted.options.1.label.default": {
+      "context": "Event artifact_coveted, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Refuse — it is yours by right."
+      }
+    },
+    "event.artifact_coveted.options.1.success.text.default": {
+      "context": "Event artifact_coveted, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "They swallow the insult and ride home. For now, the legend stays."
+      }
+    },
+    "event.artifact_coveted.title.default": {
+      "context": "Event artifact_coveted, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Covetous Eyes"
+      }
+    },
     "event.artifact_found.options.0.desc.default": {
       "context": "Event artifact_found, authored option 0, desc, branch default.",
       "glossary": [],
@@ -2717,6 +2773,138 @@
       "location": "data/events_common.js",
       "source": {
         "text": "Out of the Earth"
+      }
+    },
+    "event.artifact_rumor.options.0.desc.default": {
+      "context": "Event artifact_rumor, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Legends do not wait for better times."
+      }
+    },
+    "event.artifact_rumor.options.0.label.default": {
+      "context": "Event artifact_rumor, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Pursue the rumor."
+      }
+    },
+    "event.artifact_rumor.options.1.desc.default": {
+      "context": "Event artifact_rumor, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Some songs are only songs."
+      }
+    },
+    "event.artifact_rumor.options.1.label.default": {
+      "context": "Event artifact_rumor, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Pay it no mind."
+      }
+    },
+    "event.artifact_rumor.title.default": {
+      "context": "Event artifact_rumor, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "A Name Out of Legend"
+      }
+    },
+    "event.artifact_trial.options.0.desc.default": {
+      "context": "Event artifact_trial, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Gold opens doors that songs cannot."
+      }
+    },
+    "event.artifact_trial.options.0.label.default": {
+      "context": "Event artifact_trial, authored option 0, label, branch default.",
+      "glossary": [
+        "money:artifactprice"
+      ],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Make the proper offering. ({money:artifactprice})"
+      }
+    },
+    "event.artifact_trial.options.1.desc.default": {
+      "context": "Event artifact_trial, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Risk blood for a legend."
+      }
+    },
+    "event.artifact_trial.options.1.failure.text.default": {
+      "context": "Event artifact_trial, authored option 1, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "It goes wrong badly and fast. You escape with your life, and little else of yours intact."
+      }
+    },
+    "event.artifact_trial.options.1.label.default": {
+      "context": "Event artifact_trial, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Take it by strength and daring."
+      }
+    },
+    "event.artifact_trial.options.1.success.text.default": {
+      "context": "Event artifact_trial, authored option 1, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Steel, nerve, and a long moment where the world holds its breath — then the legend is in your hand."
+      }
+    },
+    "event.artifact_trial.options.2.desc.default": {
+      "context": "Event artifact_trial, authored option 2, desc, branch default.",
+      "glossary": [
+        "temple"
+      ],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Fasts, vigils, and gifts to the {temple}, until the guardians believe."
+      }
+    },
+    "event.artifact_trial.options.2.label.default": {
+      "context": "Event artifact_trial, authored option 2, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Prove your devotion. (25 piety)"
+      }
+    },
+    "event.artifact_trial.options.3.desc.default": {
+      "context": "Event artifact_trial, authored option 3, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Let the legend keep its secret a while longer."
+      }
+    },
+    "event.artifact_trial.options.3.label.default": {
+      "context": "Event artifact_trial, authored option 3, label, branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "Walk away."
+      }
+    },
+    "event.artifact_trial.title.default": {
+      "context": "Event artifact_trial, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_artifacts.js",
+      "source": {
+        "text": "The Claim of Legend"
       }
     },
     "event.assassin_caught.options.0.desc.default": {
@@ -28022,7 +28210,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Wine, music, and thinner pockets by morning."
+        "text": "Stall upon stall of gear and goods — buy from the season’s stock, or sell what the armory no longer needs."
       }
     },
     "event.visit_city.options.6.label.default": {
@@ -28030,7 +28218,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Wander the pleasure quarter."
+        "text": "Walk the great bazaar."
       }
     },
     "event.visit_city.options.7.desc.default": {
@@ -28038,7 +28226,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Steam soaks the road out of tired bones."
+        "text": "Wine, music, and thinner pockets by morning."
       }
     },
     "event.visit_city.options.7.label.default": {
@@ -28046,7 +28234,7 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Linger in the bath-houses."
+        "text": "Wander the pleasure quarter."
       }
     },
     "event.visit_city.options.8.desc.default": {
@@ -28054,11 +28242,27 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Hear merchants, clergy, and magistrates together."
+        "text": "Steam soaks the road out of tired bones."
       }
     },
     "event.visit_city.options.8.label.default": {
       "context": "Event visit_city, authored option 8, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Linger in the bath-houses."
+      }
+    },
+    "event.visit_city.options.9.desc.default": {
+      "context": "Event visit_city, authored option 9, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Hear merchants, clergy, and magistrates together."
+      }
+    },
+    "event.visit_city.options.9.label.default": {
+      "context": "Event visit_city, authored option 9, label, branch default.",
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
@@ -28253,11 +28457,27 @@
       "glossary": [],
       "location": "data/events_common.js",
       "source": {
-        "text": "Let the masters associate prosperity with your name."
+        "text": "The stallkeepers spread their season’s stock — buy gear, or sell what the armory no longer needs."
       }
     },
     "event.visit_town.options.7.label.default": {
       "context": "Event visit_town, authored option 7, label, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Browse the market stalls."
+      }
+    },
+    "event.visit_town.options.8.desc.default": {
+      "context": "Event visit_town, authored option 8, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_common.js",
+      "source": {
+        "text": "Let the masters associate prosperity with your name."
+      }
+    },
+    "event.visit_town.options.8.label.default": {
+      "context": "Event visit_town, authored option 8, label, branch default.",
       "glossary": [
         "money:5"
       ],
@@ -32797,6 +33017,22 @@
         "text": "Household wares"
       }
     },
+    "item.amber_beads.desc.default": {
+      "context": "item amber_beads, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Sunlight, fossilized and strung. People lean in to look."
+      }
+    },
+    "item.amber_beads.name.default": {
+      "context": "item amber_beads, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Amber Beads"
+      }
+    },
     "item.ash_spear.desc.default": {
       "context": "item ash_spear, desc, faith branch default.",
       "glossary": [],
@@ -32811,6 +33047,70 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Ash Spear"
+      }
+    },
+    "item.astrolabe.desc.default": {
+      "context": "item astrolabe, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The heavens reduced to rings and rules — useful for calendars, debts, and voyages."
+      }
+    },
+    "item.astrolabe.name.default": {
+      "context": "item astrolabe, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Brass Astrolabe"
+      }
+    },
+    "item.bearded_axe.desc.default": {
+      "context": "item bearded_axe, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A hooked blade that pulls shields aside and arguments to a close."
+      }
+    },
+    "item.bearded_axe.name.default": {
+      "context": "item bearded_axe, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Bearded Axe"
+      }
+    },
+    "item.book_of_hours.desc.default": {
+      "context": "item book_of_hours, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Prayers for every hour, painted in gold licked thin as a saint’s patience."
+      }
+    },
+    "item.book_of_hours.name.default": {
+      "context": "item book_of_hours, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Book of Hours"
+      }
+    },
+    "item.book_of_kells.desc.default": {
+      "context": "item book_of_kells, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Columba’s monks poured a whole civilization into these pages. A house that studies them grows wise, and soft."
+      }
+    },
+    "item.book_of_kells.name.default": {
+      "context": "item book_of_kells, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The Book of Kells"
       }
     },
     "item.book_of_laws.desc.default": {
@@ -32861,6 +33161,22 @@
         "text": "Chronicle of Princes"
       }
     },
+    "item.cipher_disk.desc.default": {
+      "context": "item cipher_disk, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Brass rings within rings. What it cannot open, it can usually read."
+      }
+    },
+    "item.cipher_disk.name.default": {
+      "context": "item cipher_disk, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Cipher Disk"
+      }
+    },
     "item.compendium_of_nature.desc.default": {
       "context": "item compendium_of_nature, desc, faith branch default.",
       "glossary": [],
@@ -32909,6 +33225,38 @@
         "text": "Damascene Blade"
       }
     },
+    "item.dane_axe.desc.default": {
+      "context": "item dane_axe, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A haft as tall as a man and a blade like a cold moon. Shield walls remember it."
+      }
+    },
+    "item.dane_axe.name.default": {
+      "context": "item dane_axe, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Dane Axe"
+      }
+    },
+    "item.derafsh_kaviani.desc.default": {
+      "context": "item derafsh_kaviani, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Kaveh the smith’s apron raised as a banner against a tyrant, and flown by emperors since. Its keepers must keep a court worthy of it."
+      }
+    },
+    "item.derafsh_kaviani.name.default": {
+      "context": "item derafsh_kaviani, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The Derafsh Kaviani"
+      }
+    },
     "item.devotional_pendant.desc.default": {
       "context": "item devotional_pendant, desc, faith branch default.",
       "glossary": [],
@@ -32923,6 +33271,150 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Devotional Pendant"
+      }
+    },
+    "item.durendal.desc.default": {
+      "context": "item durendal, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Roland’s sword, relics sealed in its golden hilt. Keeping them housed and honored is not cheap."
+      }
+    },
+    "item.durendal.name.default": {
+      "context": "item durendal, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Durendal"
+      }
+    },
+    "item.engraved_armilla.desc.default": {
+      "context": "item engraved_armilla, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "An arm-ring cut with the tallies of some forgotten generosity."
+      }
+    },
+    "item.engraved_armilla.name.default": {
+      "context": "item engraved_armilla, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Engraved Armilla"
+      }
+    },
+    "item.excalibur.desc.default": {
+      "context": "item excalibur, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The sword the lake gave back once, and will not give back again. It draws battle to its bearer like a candle draws moths."
+      }
+    },
+    "item.excalibur.name.default": {
+      "context": "item excalibur, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Excalibur"
+      }
+    },
+    "item.falchion.desc.default": {
+      "context": "item falchion, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A single edge, heavy toward the point — a butcher’s honesty in a knight’s hand."
+      }
+    },
+    "item.falchion.name.default": {
+      "context": "item falchion, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Falchion"
+      }
+    },
+    "item.fur_mantle.desc.default": {
+      "context": "item fur_mantle, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Warm shoulders read as rich shoulders, and rich shoulders get heard."
+      }
+    },
+    "item.fur_mantle.name.default": {
+      "context": "item fur_mantle, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Fur Mantle"
+      }
+    },
+    "item.furlined_boots.desc.default": {
+      "context": "item furlined_boots, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Winter kills from the ground up. These argue otherwise."
+      }
+    },
+    "item.furlined_boots.name.default": {
+      "context": "item furlined_boots, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Fur-lined Boots"
+      }
+    },
+    "item.gold_ring.desc.default": {
+      "context": "item gold_ring, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Gold says what a common tongue might stammer."
+      }
+    },
+    "item.gold_ring.name.default": {
+      "context": "item gold_ring, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Gold Ring"
+      }
+    },
+    "item.gungnir.desc.default": {
+      "context": "item gungnir, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The Allfather’s spear never misses its mark — and its bearer’s oaths are watched as closely as his throws."
+      }
+    },
+    "item.gungnir.name.default": {
+      "context": "item gungnir, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Gungnir"
+      }
+    },
+    "item.herbal.desc.default": {
+      "context": "item herbal, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Which leaf feeds, which leaf kills, and which leaf merely tastes of regret."
+      }
+    },
+    "item.herbal.name.default": {
+      "context": "item herbal, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A Well-Thumbed Herbal"
       }
     },
     "item.hero_sword.desc.default": {
@@ -32941,6 +33433,22 @@
         "text": "Blade with a Name"
       }
     },
+    "item.holy_lance.desc.default": {
+      "context": "item holy_lance, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The iron that pierced the side at Golgotha, bound in gold. Every prelate in Christendom claims the right to guard it."
+      }
+    },
+    "item.holy_lance.name.default": {
+      "context": "item holy_lance, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The Holy Lance"
+      }
+    },
     "item.holy_relic.desc.default": {
       "context": "item holy_relic, desc, faith branch default.",
       "glossary": [],
@@ -32955,6 +33463,38 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Holy Relic"
+      }
+    },
+    "item.hunting_bow.desc.default": {
+      "context": "item hunting_bow, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Feeds the pot in peace and feathers a charge in war."
+      }
+    },
+    "item.hunting_bow.name.default": {
+      "context": "item hunting_bow, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Hunting Bow"
+      }
+    },
+    "item.illuminated_codex.desc.default": {
+      "context": "item illuminated_codex, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A generation of monks died inside these margins, and left the light on."
+      }
+    },
+    "item.illuminated_codex.name.default": {
+      "context": "item illuminated_codex, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Illuminated Codex"
       }
     },
     "item.jeweled_girdle.desc.default": {
@@ -32989,6 +33529,54 @@
         "text": "Keen Seax"
       }
     },
+    "item.kettle_helm.desc.default": {
+      "context": "item kettle_helm, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A wide brim keeps off iron and weather alike."
+      }
+    },
+    "item.kettle_helm.name.default": {
+      "context": "item kettle_helm, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Kettle Helm"
+      }
+    },
+    "item.kite_shield.desc.default": {
+      "context": "item kite_shield, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Long enough to guard shin as well as shoulder, from horse or on foot."
+      }
+    },
+    "item.kite_shield.name.default": {
+      "context": "item kite_shield, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Kite Shield"
+      }
+    },
+    "item.lamellar_cuirass.desc.default": {
+      "context": "item lamellar_cuirass, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Laced plates in the eastern fashion, bright as a fish in the sun."
+      }
+    },
+    "item.lamellar_cuirass.name.default": {
+      "context": "item lamellar_cuirass, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Lamellar Cuirass"
+      }
+    },
     "item.leather_belt.desc.default": {
       "context": "item leather_belt, desc, faith branch default.",
       "glossary": [],
@@ -33021,6 +33609,22 @@
         "text": "Thieves’ Picks"
       }
     },
+    "item.mail_hauberk.desc.default": {
+      "context": "item mail_hauberk, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Ten thousand rings, each one riveted, each one a small argument against dying."
+      }
+    },
+    "item.mail_hauberk.name.default": {
+      "context": "item mail_hauberk, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Mail Hauberk"
+      }
+    },
     "item.merchant_ledger.desc.default": {
       "context": "item merchant_ledger, desc, faith branch default.",
       "glossary": [],
@@ -33035,6 +33639,38 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Merchant’s Ledger"
+      }
+    },
+    "item.mjolnir_amulet.desc.default": {
+      "context": "item mjolnir_amulet, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Thor’s hammer in iron miniature, heavy with thunder. Priests of the White Christ spit when they see it."
+      }
+    },
+    "item.mjolnir_amulet.name.default": {
+      "context": "item mjolnir_amulet, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Mjölnir Amulet"
+      }
+    },
+    "item.money_coffer.desc.default": {
+      "context": "item money_coffer, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A locked box keeps the coin and the count honest."
+      }
+    },
+    "item.money_coffer.name.default": {
+      "context": "item money_coffer, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Money Coffer"
       }
     },
     "item.nasal_helm.desc.default": {
@@ -33101,6 +33737,86 @@
         "text": "Physician’s Chest"
       }
     },
+    "item.pilgrims_staff.desc.default": {
+      "context": "item pilgrims_staff, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The road is long; lean on something."
+      }
+    },
+    "item.pilgrims_staff.name.default": {
+      "context": "item pilgrims_staff, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Pilgrim’s Staff"
+      }
+    },
+    "item.psalter.desc.default": {
+      "context": "item psalter, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A hundred and fifty songs against the dark, thumbed soft at the edges."
+      }
+    },
+    "item.psalter.name.default": {
+      "context": "item psalter, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Psalter"
+      }
+    },
+    "item.quarterstaff.desc.default": {
+      "context": "item quarterstaff, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Six feet of seasoned oak. Masters of it are rarer than swordsmen, and cheaper."
+      }
+    },
+    "item.quarterstaff.name.default": {
+      "context": "item quarterstaff, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Quarterstaff"
+      }
+    },
+    "item.riding_boots.desc.default": {
+      "context": "item riding_boots, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Heeled, supple, and plainly made for someone who does not walk to war."
+      }
+    },
+    "item.riding_boots.name.default": {
+      "context": "item riding_boots, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Riding Boots"
+      }
+    },
+    "item.ring_of_solomon.desc.default": {
+      "context": "item ring_of_solomon, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The seal that commanded kings, spirits, and beasts. The devout lower their voices around it — and around you."
+      }
+    },
+    "item.ring_of_solomon.name.default": {
+      "context": "item ring_of_solomon, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The Ring of Solomon"
+      }
+    },
     "item.round_shield.desc.default": {
       "context": "item round_shield, desc, faith branch default.",
       "glossary": [],
@@ -33133,6 +33849,22 @@
         "text": "Signet Ring"
       }
     },
+    "item.silk_sash.desc.default": {
+      "context": "item silk_sash, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Woven farther east than most men will ever travel, and worth the journey."
+      }
+    },
+    "item.silk_sash.name.default": {
+      "context": "item silk_sash, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Silk Sash"
+      }
+    },
     "item.silver_ring.desc.default": {
       "context": "item silver_ring, desc, faith branch default.",
       "glossary": [],
@@ -33147,6 +33879,70 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Silver Ring"
+      }
+    },
+    "item.spangenhelm.desc.default": {
+      "context": "item spangenhelm, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Banded steel in the old imperial style, fit to be recognized across a field."
+      }
+    },
+    "item.spangenhelm.name.default": {
+      "context": "item spangenhelm, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Spangenhelm"
+      }
+    },
+    "item.tooled_belt.desc.default": {
+      "context": "item tooled_belt, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Purse, keys, tallies, knife — a steward’s whole office at one hip."
+      }
+    },
+    "item.tooled_belt.name.default": {
+      "context": "item tooled_belt, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Tooled Belt"
+      }
+    },
+    "item.torc.desc.default": {
+      "context": "item torc, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "An open ring of twisted gold — the old sign that a neck answers to no one."
+      }
+    },
+    "item.torc.name.default": {
+      "context": "item torc, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Noble’s Torc"
+      }
+    },
+    "item.torc_of_old_kings.desc.default": {
+      "context": "item torc_of_old_kings, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Buried with one dynasty, dug up by another. Gold keeps no grudges."
+      }
+    },
+    "item.torc_of_old_kings.name.default": {
+      "context": "item torc_of_old_kings, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Torc of the Old Kings"
       }
     },
     "item.treatise_on_virtue.desc.default": {
@@ -33165,6 +33961,22 @@
         "text": "Treatise on Virtue"
       }
     },
+    "item.true_cross_fragment.desc.default": {
+      "context": "item true_cross_fragment, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "A splinter of the wood itself, carried out of Jerusalem’s treasuries. Pilgrims will come, and pilgrims must be fed."
+      }
+    },
+    "item.true_cross_fragment.name.default": {
+      "context": "item true_cross_fragment, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Fragment of the True Cross"
+      }
+    },
     "item.turnshoe_boots.desc.default": {
       "context": "item turnshoe_boots, desc, faith branch default.",
       "glossary": [],
@@ -33179,6 +33991,70 @@
       "location": "data/map_data.js",
       "source": {
         "text": "Turnshoe Boots"
+      }
+    },
+    "item.tyrfing.desc.default": {
+      "context": "item tyrfing, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Forged by dwarves under duress, cursed to drink a life whenever it is drawn. It has never missed."
+      }
+    },
+    "item.tyrfing.name.default": {
+      "context": "item tyrfing, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Tyrfing"
+      }
+    },
+    "item.war_hammer.desc.default": {
+      "context": "item war_hammer, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Mail turns a blade. It does not turn this."
+      }
+    },
+    "item.war_hammer.name.default": {
+      "context": "item war_hammer, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "War Hammer"
+      }
+    },
+    "item.wool_cloak.desc.default": {
+      "context": "item wool_cloak, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Rain runs off good wool. So does gossip, mostly."
+      }
+    },
+    "item.wool_cloak.name.default": {
+      "context": "item wool_cloak, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Wool Cloak"
+      }
+    },
+    "item.zulfiqar.desc.default": {
+      "context": "item zulfiqar, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "The forked blade given to Ali beneath the Prophet’s own banner. Every jurist has an opinion about whose hand may hold it."
+      }
+    },
+    "item.zulfiqar.name.default": {
+      "context": "item zulfiqar, name, faith branch default.",
+      "glossary": [],
+      "location": "data/map_data.js",
+      "source": {
+        "text": "Zulfiqar"
       }
     },
     "legend.condition.default": {
@@ -36734,6 +37610,26 @@
         }
       }
     },
+    "news.item.artifact_claimed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "✨ {item} passes into your family’s keeping."
+      }
+    },
+    "news.item.artifact_seized": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "⚖ {item} passes out of your family’s keeping, and out of reach."
+      }
+    },
     "news.item.bought": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -36780,6 +37676,17 @@
       "location": "js/items.js",
       "source": {
         "text": "🎒 Nothing is offered that you do not already own."
+      }
+    },
+    "news.item.sacred_departed": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "item",
+        "piety"
+      ],
+      "location": "js/items.js",
+      "source": {
+        "text": "🕯 The devout mutter: {item} has left a faithful house. (Piety {piety})"
       }
     },
     "news.item.sold": {
@@ -47723,6 +48630,16 @@
         "text": "A Cardinal belongs to the Papal college and can shape or contest an election."
       }
     },
+    "src.022da410": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Forged by dwarves under duress, cursed to drink a life whenever it is drawn. It has never missed."
+      }
+    },
     "src.0233cbc3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -48635,6 +49552,16 @@
         "text": "Pay the wood amercement. ({money:3})"
       }
     },
+    "src.046cce90": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A haft as tall as a man and a blade like a cold moon. Shield walls remember it."
+      }
+    },
     "src.046dd191": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49236,6 +50163,16 @@
       ],
       "source": {
         "text": "🌊 The household’s venture to {destination} is lost with every coin invested."
+      }
+    },
+    "src.05c66be1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Brass rings within rings. What it cannot open, it can usually read."
       }
     },
     "src.05c72bbc": {
@@ -51739,6 +52676,16 @@
         "text": "Your sovereign"
       }
     },
+    "src.0add0a95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Amber Beads"
+      }
+    },
     "src.0ade4d69": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52069,6 +53016,16 @@
         "text": "At least one match is blocked by faith."
       }
     },
+    "src.0b9ad89f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Fragment of the True Cross"
+      }
+    },
     "src.0ba05616": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52137,6 +53094,16 @@
       ],
       "source": {
         "text": "Trøndelag"
+      }
+    },
+    "src.0bd73afa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Torc of the Old Kings"
       }
     },
     "src.0bda61c6": {
@@ -52397,6 +53364,16 @@
       ],
       "source": {
         "text": "Send the host home where it stands. On your own land every man returns to the rolls — {men} preserved for the next muster, which must wait {days} days."
+      }
+    },
+    "src.0cab3a04": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Excalibur"
       }
     },
     "src.0cb8fee0": {
@@ -53683,6 +54660,16 @@
         "text": "{chance}% yearly · {money:amount} each season"
       }
     },
+    "src.0f90e8c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The heavens reduced to rings and rules — useful for calendars, debts, and voyages."
+      }
+    },
     "src.0f9572ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54525,6 +55512,16 @@
       ],
       "source": {
         "text": "the defending lord"
+      }
+    },
+    "src.118ac87d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A splinter of the wood itself, carried out of Jerusalem’s treasuries. Pilgrims will come, and pilgrims must be fed."
       }
     },
     "src.11927fe9": {
@@ -57002,6 +57999,16 @@
       ],
       "source": {
         "text": "Settle permanently in {destination}?"
+      }
+    },
+    "src.165bea94": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Fur-lined Boots"
       }
     },
     "src.165e1e8e": {
@@ -60136,6 +61143,16 @@
         "text": "Rustamids"
       }
     },
+    "src.1d96fe2b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Falchion"
+      }
+    },
     "src.1d9b7a61": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61279,6 +62296,16 @@
       ],
       "source": {
         "text": "A bishopric is a non-hereditary church office. A merit petition is free; a disclosed cathedral endowment improves the lawful appointment chance but is spent whether the petition succeeds or fails."
+      }
+    },
+    "src.2029a22b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Noble’s Torc"
       }
     },
     "src.202cf423": {
@@ -63432,6 +64459,16 @@
         "text": "Win the men with a wineskin and a song."
       }
     },
+    "src.248dbda1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Columba’s monks poured a whole civilization into these pages. A house that studies them grows wise, and soft."
+      }
+    },
     "src.24934cc5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64231,6 +65268,16 @@
       ],
       "source": {
         "text": "The lords of the realm gather at {liege}’s summons: petty business mostly — a boundary dispute, a widow’s dower, a reading of old charters — but every bench is a pair of ears, and every recess a market of favors."
+      }
+    },
+    "src.2653cc2b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Woven farther east than most men will ever travel, and worth the journey."
       }
     },
     "src.2655f5cf": {
@@ -65119,6 +66166,16 @@
         "text": "Carry the rest back to the lord’s mill."
       }
     },
+    "src.283ed382": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Sell from the armory"
+      }
+    },
     "src.2841fb7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65329,6 +66386,16 @@
         "text": "Standing with this ruler"
       }
     },
+    "src.28cf61ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "An open ring of twisted gold — the old sign that a neck answers to no one."
+      }
+    },
     "src.28d93522": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65458,6 +66525,16 @@
       ],
       "source": {
         "text": "Cardiff"
+      }
+    },
+    "src.29480499": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Riding Boots"
       }
     },
     "src.2948b425": {
@@ -67373,6 +68450,16 @@
         "text": "💡 Technology…"
       }
     },
+    "src.2d67473f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Kite Shield"
+      }
+    },
     "src.2d6fdaba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -67771,6 +68858,16 @@
       ],
       "source": {
         "text": "Settlement in {county}"
+      }
+    },
+    "src.2ea08448": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{money:gold} — beyond your purse"
       }
     },
     "src.2ea5a43b": {
@@ -69489,6 +70586,16 @@
         "text": "Covert Sabotage"
       }
     },
+    "src.32887509": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Pursue the rumor."
+      }
+    },
     "src.32a1ab1d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -70978,6 +72085,16 @@
         "text": "“Custom lives in those who keep it.”"
       }
     },
+    "src.36256e92": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A hundred and fifty songs against the dark, thumbed soft at the edges."
+      }
+    },
     "src.362d2ffb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71477,6 +72594,16 @@
       ],
       "source": {
         "text": "🏛 The protected term of {ruler} ends; the office awaits a new nominee."
+      }
+    },
+    "src.3746d28b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Dane Axe"
       }
     },
     "src.374a9197": {
@@ -73406,6 +74533,16 @@
         "text": "🌾 Toil in the lord’s fields"
       }
     },
+    "src.3b6d6563": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Covetous Eyes"
+      }
+    },
     "src.3b81ad68": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73557,6 +74694,16 @@
         "text": "Bought off a conqueror."
       }
     },
+    "src.3c187c1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "The Claim of Legend"
+      }
+    },
     "src.3c1a8b6c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73605,6 +74752,16 @@
       ],
       "source": {
         "text": "Your rival · connected to {connection}"
+      }
+    },
+    "src.3c4c4df3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Quarterstaff"
       }
     },
     "src.3c56b2bb": {
@@ -75169,6 +76326,16 @@
         "text": "Duchy of {name}"
       }
     },
+    "src.4019c631": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "The stallkeepers spread their season’s stock — buy gear, or sell what the armory no longer needs."
+      }
+    },
     "src.402a1280": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75417,6 +76584,16 @@
       ],
       "source": {
         "text": "Eligible: living child of the current playable head."
+      }
+    },
+    "src.408b877a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Roland’s sword, relics sealed in its golden hilt. Keeping them housed and honored is not cheap."
       }
     },
     "src.40b25032": {
@@ -75937,6 +77114,16 @@
         "text": "Seasonal musters rehearse commands, formations, and weapon handling."
       }
     },
+    "src.41d4cadd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Gold says what a common tongue might stammer."
+      }
+    },
     "src.41d56d4a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76138,6 +77325,16 @@
         "text": ": unknown adoption tradition"
       }
     },
+    "src.42440bf7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Nothing in the armory is free to sell — worn and pledged gear stays home."
+      }
+    },
     "src.424a9212": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76306,6 +77503,16 @@
       ],
       "source": {
         "text": "Won new lands from the liege."
+      }
+    },
+    "src.42b03fb7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The Market Stalls"
       }
     },
     "src.42b5e015": {
@@ -77946,6 +79153,16 @@
         "text": "Patience, whispers, and a long knife. Occupies your focus until sprung."
       }
     },
+    "src.45c9c52f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Lamellar Cuirass"
+      }
+    },
     "src.45d0c4a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -78518,6 +79735,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/events_artifacts.js",
         "data/events_noble.js"
       ],
       "source": {
@@ -79588,6 +80806,16 @@
       ],
       "source": {
         "text": "Current asset"
+      }
+    },
+    "src.499a6449": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Ten thousand rings, each one riveted, each one a small argument against dying."
       }
     },
     "src.49a2d9c6": {
@@ -82442,6 +83670,16 @@
         "text": "Fulling Mill"
       }
     },
+    "src.5081facb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your purse: {money:gold}"
+      }
+    },
     "src.50827aa6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -83613,6 +84851,16 @@
         "text": "Repairs, hospitality, and obligations have thinned the episcopal chest. The diocese can be made to answer — or spared."
       }
     },
+    "src.52d00219": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The sword the lake gave back once, and will not give back again. It draws battle to its bearer like a candle draws moths."
+      }
+    },
     "src.52df497c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84707,6 +85955,16 @@
         "text": "Raise my banner"
       }
     },
+    "src.558504c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A single edge, heavy toward the point — a butcher’s honesty in a knight’s hand."
+      }
+    },
     "src.558daf87": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84715,6 +85973,16 @@
       ],
       "source": {
         "text": "📯 Great holy-war objective · {status}"
+      }
+    },
+    "src.55b31a85": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Walk the great bazaar."
       }
     },
     "src.55b4522c": {
@@ -85861,6 +87129,16 @@
         "text": "At a great ceremony, two magnates claim the place nearest your throne. Genealogy, old privilege, and naked ambition have turned a pace of floor into a contest for the realm to watch."
       }
     },
+    "src.57fd308d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Spangenhelm"
+      }
+    },
     "src.57fd85ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85999,6 +87277,16 @@
       ],
       "source": {
         "text": "Some things are not to be. Swallow it, and stay who you are."
+      }
+    },
+    "src.583ceb16": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The iron that pierced the side at Golgotha, bound in gold. Every prelate in Christendom claims the right to guard it."
       }
     },
     "src.583d8b3e": {
@@ -87098,6 +88386,16 @@
         "text": "Turn service rolls and aid tallies into leverage before the estates."
       }
     },
+    "src.5ab338b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Heeled, supple, and plainly made for someone who does not walk to war."
+      }
+    },
     "src.5ab34ed1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88131,6 +89429,16 @@
         "text": "Choose eligible {domain} technologies first, then fill remaining slots with the cheapest eligible technologies from other domains."
       }
     },
+    "src.5d191acb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Prove your devotion. (25 piety)"
+      }
+    },
     "src.5d1b37f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -88364,6 +89672,16 @@
       ],
       "source": {
         "text": "{cost} research · about {seasons} seasons"
+      }
+    },
+    "src.5dc2baf8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Wool Cloak"
       }
     },
     "src.5dc62d74": {
@@ -89227,6 +90545,16 @@
       ],
       "source": {
         "text": "Pay {money:25} for the seal."
+      }
+    },
+    "src.5f968b3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Tyrfing"
       }
     },
     "src.5fa20a78": {
@@ -90415,6 +91743,16 @@
         "text": "{icon} {name}"
       }
     },
+    "src.6213c987": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Purse, keys, tallies, knife — a steward’s whole office at one hip."
+      }
+    },
     "src.621b8e0f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91125,6 +92463,16 @@
       ],
       "source": {
         "text": "Demand ransom"
+      }
+    },
+    "src.63c5b3f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A locked box keeps the coin and the count honest."
       }
     },
     "src.63cbf192": {
@@ -92834,6 +94182,16 @@
       ],
       "source": {
         "text": "The liege’s jaw tightens at the name. “That fief was wasted on him.” The patent is drawn — {cname} is yours, and the court sees exactly whose star is rising."
+      }
+    },
+    "src.67cdbb2c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Banded steel in the old imperial style, fit to be recognized across a field."
       }
     },
     "src.67cebb57": {
@@ -95915,6 +97273,16 @@
         "text": "Two families arrive at the {temple} gate with one dispute, three witnesses, and absolute certainty on both sides. They will take your word as {god}’s."
       }
     },
+    "src.6e8b64bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "✨ {item} passes into your family’s keeping."
+      }
+    },
     "src.6e90a709": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97189,6 +98557,16 @@
         "text": "Patrols at every ford and fair. The songs quiet — for now."
       }
     },
+    "src.71d79523": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A wide brim keeps off iron and weather alike."
+      }
+    },
     "src.71d8c99e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -97217,6 +98595,16 @@
       ],
       "source": {
         "text": "{enterprise} becomes idle."
+      }
+    },
+    "src.71ed18ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Which leaf feeds, which leaf kills, and which leaf merely tastes of regret."
       }
     },
     "src.71f1aaaa": {
@@ -98211,6 +99599,16 @@
         "text": "Festival, Waist-High"
       }
     },
+    "src.73f1fa3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Buy it ({money:gold})"
+      }
+    },
     "src.73f94dd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98773,6 +100171,16 @@
         "text": "Ephesos"
       }
     },
+    "src.750dacd7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Sunlight, fossilized and strung. People lean in to look."
+      }
+    },
     "src.75110ccf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99134,6 +100542,16 @@
         "text": "The page that might have settled it was scraped clean generations ago."
       }
     },
+    "src.75dd3653": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The Book of Kells"
+      }
+    },
     "src.75ee3ab6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99384,6 +100802,16 @@
         "text": "Great Sahara"
       }
     },
+    "src.7699ac2b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Buried with one dynasty, dug up by another. Gold keeps no grudges."
+      }
+    },
     "src.769a13e6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99472,6 +100900,16 @@
       ],
       "source": {
         "text": "A bargain costs {money:gold}. Success moves the realm publicly into your obedience and creates a patronage promise that costs authority."
+      }
+    },
+    "src.76ca12eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Yield it with ceremony."
       }
     },
     "src.76d9061a": {
@@ -100371,6 +101809,16 @@
         "text": "{position} pay — {name}"
       }
     },
+    "src.790ccae3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Gungnir"
+      }
+    },
     "src.791713ba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100881,6 +102329,16 @@
       ],
       "source": {
         "text": "Mérida"
+      }
+    },
+    "src.79f945b2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "A gift that buys peace and renown — and loses the legend forever."
       }
     },
     "src.79febce1": {
@@ -101402,6 +102860,16 @@
       ],
       "source": {
         "text": "🎒 The find is no addition to your family’s treasures."
+      }
+    },
+    "src.7b54eaa1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "They swallow the insult and ride home. For now, the legend stays."
       }
     },
     "src.7b588302": {
@@ -103981,6 +105449,16 @@
       ],
       "source": {
         "text": "This is the highest religious office open to {name} on this path."
+      }
+    },
+    "src.80cfc790": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Bearded Axe"
       }
     },
     "src.80d88f54": {
@@ -108787,6 +110265,16 @@
         "text": "Resident family"
       }
     },
+    "src.8aa7fa01": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Prayers for every hour, painted in gold licked thin as a saint’s patience."
+      }
+    },
     "src.8aac0322": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109077,6 +110565,16 @@
         "text": "The council has concluded and every award now takes effect."
       }
     },
+    "src.8b2a2a69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Mail turns a blade. It does not turn this."
+      }
+    },
     "src.8b2ced34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109135,6 +110633,16 @@
       ],
       "source": {
         "text": "Preserve the charter and gain guild support at the Common Voice’s expense."
+      }
+    },
+    "src.8b516f63": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Brass Astrolabe"
       }
     },
     "src.8b5ee01c": {
@@ -111959,6 +113467,16 @@
         "text": "Old ink against new ambition."
       }
     },
+    "src.919b4113": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Pilgrim’s Staff"
+      }
+    },
     "src.91a68f86": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112360,6 +113878,16 @@
         "text": "Children in the protagonist line take culture, faith, and house from the recorded playable-line parent, preserving the line across succession."
       }
     },
+    "src.92b974b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Tooled Belt"
+      }
+    },
     "src.92be11e7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112450,6 +113978,16 @@
         "text": "Silver now; the village’s memory later."
       }
     },
+    "src.931c77e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Hunting Bow"
+      }
+    },
     "src.931c8d2d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112468,6 +114006,16 @@
       ],
       "source": {
         "text": "The patron praises the exercise, then turns to an heir whose family name needs no introduction."
+      }
+    },
+    "src.932f9a39": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Refuse — it is yours by right."
       }
     },
     "src.9332ba2b": {
@@ -112808,6 +114356,16 @@
       ],
       "source": {
         "text": "No auction is available."
+      }
+    },
+    "src.940f92a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Steel, nerve, and a long moment where the world holds its breath — then the legend is in your hand."
       }
     },
     "src.9422d7ed": {
@@ -114491,6 +116049,16 @@
         "text": "Long forked"
       }
     },
+    "src.97ec5560": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The Great Bazaar"
+      }
+    },
     "src.97f20994": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115116,6 +116684,16 @@
         "text": "The Estates…"
       }
     },
+    "src.99306f79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The Holy Lance"
+      }
+    },
     "src.99331931": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115567,6 +117145,16 @@
         "text": "Train the skill and experience used in your present career."
       }
     },
+    "src.9a49dd68": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The stalls are bare — everything sold."
+      }
+    },
     "src.9a4e6ee6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115910,6 +117498,16 @@
         "text": "Days blur into blisters and bruises. The grizzled spearman who drills the levy finds every dropped shield, and the men wash and boast and sprawl with no thought for the slight recruit who always slips off alone. Your arms harden; the spear stops feeling like a stranger in your hands. And once, across the cook-fire, {suitor} passes you the bread without a second glance — and your treacherous heart nearly betrays you where that hard old eye never could."
       }
     },
+    "src.9ae7a3c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Risk blood for a legend."
+      }
+    },
     "src.9aebc366": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116239,6 +117837,16 @@
       ],
       "source": {
         "text": "An Exceptional Courtship"
+      }
+    },
+    "src.9ba0dbe2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Leave the stalls"
       }
     },
     "src.9ba238e7": {
@@ -116779,6 +118387,16 @@
       ],
       "source": {
         "text": "A fighting knife of honest steel."
+      }
+    },
+    "src.9cc15058": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The seal that commanded kings, spirits, and beasts. The devout lower their voices around it — and around you."
       }
     },
     "src.9cc4746a": {
@@ -118155,6 +119773,16 @@
         "text": "The Liege Demands an Aid"
       }
     },
+    "src.9fabbcca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Kettle Helm"
+      }
+    },
     "src.9fb9f63e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118203,6 +119831,16 @@
       ],
       "source": {
         "text": "march speed"
+      }
+    },
+    "src.9fdd9dfe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Mail Hauberk"
       }
     },
     "src.9fe2405e": {
@@ -118385,6 +120023,16 @@
         "text": "The lord’s stores are full, the nights are long, and hunger keeps no law."
       }
     },
+    "src.a03ec680": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Durendal"
+      }
+    },
     "src.a0457f38": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118514,6 +120162,16 @@
       ],
       "source": {
         "text": "💰 A grudging purse of {money:gold} — and nothing more."
+      }
+    },
+    "src.a0aa8e62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Six feet of seasoned oak. Masters of it are rarer than swordsmen, and cheaper."
       }
     },
     "src.a0ac7922": {
@@ -120591,6 +122249,16 @@
         "text": "The lord orders you flogged in the yard as a lesson."
       }
     },
+    "src.a4c7c2df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Zulfiqar"
+      }
+    },
     "src.a4ccd5b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121138,6 +122806,16 @@
         "text": "Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Common Voice is popular support. Guild Standing belongs to an active vocational guild record."
       }
     },
+    "src.a63189fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Thor’s hammer in iron miniature, heavy with thunder. Priests of the White Christ spit when they see it."
+      }
+    },
     "src.a6388711": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121679,6 +123357,16 @@
         "text": "Appointments, replacements, gifts, and dismissals keep their existing Standing and crown-authority effects."
       }
     },
+    "src.a74f4460": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Fasts, vigils, and gifts to the {temple}, until the guardians believe."
+      }
+    },
     "src.a74f5b95": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121837,6 +123525,16 @@
       ],
       "source": {
         "text": "Return along the saved route after the required visit. You may remain together as long as you like."
+      }
+    },
+    "src.a7b8d9b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Take it by strength and daring."
       }
     },
     "src.a7c1ceab": {
@@ -122624,6 +124322,16 @@
         "text": "Household standard"
       }
     },
+    "src.a95da2a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The Derafsh Kaviani"
+      }
+    },
     "src.a95e12f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122906,6 +124614,16 @@
         "text": ", and"
       }
     },
+    "src.aa28b600": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Rain runs off good wool. So does gossip, mostly."
+      }
+    },
     "src.aa2a3a7d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123128,6 +124846,16 @@
         "text": "No counties are held directly."
       }
     },
+    "src.aae9594c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Money Coffer"
+      }
+    },
     "src.aaef38a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123288,6 +125016,16 @@
       ],
       "source": {
         "text": "Skills"
+      }
+    },
+    "src.ab6dc5e9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "A Name Out of Legend"
       }
     },
     "src.ab76186e": {
@@ -124213,6 +125951,16 @@
         "text": "Salé"
       }
     },
+    "src.ad48feec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Kaveh the smith’s apron raised as a banner against a tyrant, and flown by emperors since. Its keepers must keep a court worthy of it."
+      }
+    },
     "src.ad4afbfa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124353,6 +126101,16 @@
       ],
       "source": {
         "text": "Charity that may yet return with thanks."
+      }
+    },
+    "src.ada3d527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Silk Sash"
       }
     },
     "src.adb48efc": {
@@ -125350,6 +127108,16 @@
         "text": "Review leaders, member houses, interests, influence, and any pending vote forecast."
       }
     },
+    "src.affb3d62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Feeds the pot in peace and feathers a charge in war."
+      }
+    },
     "src.affc10d9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125418,6 +127186,16 @@
       ],
       "source": {
         "text": "Sell sweets and sherbet to the crowd."
+      }
+    },
+    "src.b011ab6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Cipher Disk"
       }
     },
     "src.b012460f": {
@@ -125690,6 +127468,16 @@
         "text": "A Road Under Two Seals"
       }
     },
+    "src.b085c2eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "For sale"
+      }
+    },
     "src.b085ea4a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -125728,6 +127516,16 @@
       ],
       "source": {
         "text": "📋 Copy to clipboard"
+      }
+    },
+    "src.b0904ee9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Engraved Armilla"
       }
     },
     "src.b090dc3b": {
@@ -125859,6 +127657,16 @@
       ],
       "source": {
         "text": "Sworn towns negotiate collective jurisdiction and public responsibilities."
+      }
+    },
+    "src.b0c7f15f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The stock changes with the season."
       }
     },
     "src.b0cc3654": {
@@ -129261,6 +131069,16 @@
         "text": "Better the known yoke than the unknown road."
       }
     },
+    "src.b873a2fd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "War Hammer"
+      }
+    },
     "src.b8747d25": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130274,6 +132092,16 @@
         "text": "Weight-denominated contract; price movement does not change the amount due."
       }
     },
+    "src.bada1292": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Warm shoulders read as rich shoulders, and rich shoulders get heard."
+      }
+    },
     "src.badc5af7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130745,6 +132573,16 @@
         "text": "At the {temple}"
       }
     },
+    "src.bc4145d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Some things are not for sale. Not everyone accepts that answer."
+      }
+    },
     "src.bc45cd7b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130884,6 +132722,16 @@
       ],
       "source": {
         "text": "Viterbo"
+      }
+    },
+    "src.bca9fcc4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The Ring of Solomon"
       }
     },
     "src.bcb27efe": {
@@ -131308,6 +133156,16 @@
       ],
       "source": {
         "text": "Established"
+      }
+    },
+    "src.bd797fdc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Walk away."
       }
     },
     "src.bd8106ea": {
@@ -131922,6 +133780,16 @@
       ],
       "source": {
         "text": "fine"
+      }
+    },
+    "src.bef0d156": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A hooked blade that pulls shields aside and arguments to a close."
       }
     },
     "src.befa9047": {
@@ -133121,6 +134989,16 @@
         "text": "Build a fortune"
       }
     },
+    "src.c19f06dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Sell it ({money:gold})"
+      }
+    },
     "src.c1ab3478": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133818,6 +135696,16 @@
         "text": "The merchants accept the narrow guarantee, and {rname} matches it."
       }
     },
+    "src.c31145ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Make the proper offering. ({money:artifactprice})"
+      }
+    },
     "src.c3162e01": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134266,6 +136154,16 @@
       ],
       "source": {
         "text": "Answer in the same spirit."
+      }
+    },
+    "src.c44e1655": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A generation of monks died inside these margins, and left the light on."
       }
     },
     "src.c46a8158": {
@@ -135459,6 +137357,16 @@
       ],
       "source": {
         "text": "The Coughing Sickness"
+      }
+    },
+    "src.c6fdc395": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Fur Mantle"
       }
     },
     "src.c701ddeb": {
@@ -137208,6 +139116,16 @@
         "text": "Burn the false ledger."
       }
     },
+    "src.cb012e0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Legends do not wait for better times."
+      }
+    },
     "src.cb0720b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138169,6 +140087,16 @@
         "text": "Your household resides in {settlement}, a {kind} in the county of {county}, living as free commoners under {ruler}."
       }
     },
+    "src.ccdae04c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Let the legend keep its secret a while longer."
+      }
+    },
     "src.ccdc3a8f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -138377,6 +140305,16 @@
       ],
       "source": {
         "text": "A Subsidy for the Liege’s War"
+      }
+    },
+    "src.cd2e7f76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Illuminated Codex"
       }
     },
     "src.cd32270b": {
@@ -138742,6 +140680,16 @@
       ],
       "source": {
         "text": "Merry throats make heavy purses."
+      }
+    },
+    "src.ce31de0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Long enough to guard shin as well as shoulder, from horse or on foot."
       }
     },
     "src.ce33305b": {
@@ -139976,6 +141924,16 @@
       ],
       "source": {
         "text": "🧭 Set out for {destination} with {money:stake} invested and {money:overhead} paid for the road."
+      }
+    },
+    "src.d18ff1bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Gold Ring"
       }
     },
     "src.d19f85d3": {
@@ -141753,6 +143711,16 @@
         "text": "The crowns pledge mutual defense until either ruler changes."
       }
     },
+    "src.d5d40d8b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The forked blade given to Ali beneath the Prophet’s own banner. Every jurist has an opinion about whose hand may hold it."
+      }
+    },
     "src.d5debdc5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141801,6 +143769,16 @@
       ],
       "source": {
         "text": "Your hall blazes with candles. Neighbors, vassals, and rivals eat your meat and drink your mead — and measure you all the while."
+      }
+    },
+    "src.d6032d4b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Stall upon stall of gear and goods — buy from the season’s stock, or sell what the armory no longer needs."
       }
     },
     "src.d60ad025": {
@@ -142752,6 +144730,16 @@
       ],
       "source": {
         "text": "Stirrup Cavalry"
+      }
+    },
+    "src.d7adbfb2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Book of Hours"
       }
     },
     "src.d7b4e00b": {
@@ -144983,6 +146971,16 @@
         "text": "Turn memory into patronage."
       }
     },
+    "src.dd0baaab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Some songs are only songs."
+      }
+    },
     "src.dd0ece8e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145815,6 +147813,16 @@
         "text": "{icon} {name} — Raise Next"
       }
     },
+    "src.dec2d8c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Mjölnir Amulet"
+      }
+    },
     "src.dec3f58d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146234,6 +148242,16 @@
       ],
       "source": {
         "text": "The Tutor’s Measure"
+      }
+    },
+    "src.dfb8305d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Agents in the night, a bribed guard, a reliquary found empty at dawn. The legend has a new keeper."
       }
     },
     "src.dfb8555c": {
@@ -147784,6 +149802,16 @@
       ],
       "source": {
         "text": "Holds their own station — independent"
+      }
+    },
+    "src.e311e016": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Laced plates in the eastern fashion, bright as a fish in the sun."
       }
     },
     "src.e312c205": {
@@ -151845,6 +153873,16 @@
         "text": "Ask for the vows"
       }
     },
+    "src.ec5efb66": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The Allfather’s spear never misses its mark — and its bearer’s oaths are watched as closely as his throws."
+      }
+    },
     "src.ec6066b3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -151853,6 +153891,16 @@
       ],
       "source": {
         "text": "Press {cause}…"
+      }
+    },
+    "src.ec6490f2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "An arm-ring cut with the tallies of some forgotten generosity."
       }
     },
     "src.ec66d793": {
@@ -151973,6 +154021,16 @@
       ],
       "source": {
         "text": "Find target"
+      }
+    },
+    "src.ec9c41a3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "⚖ {item} passes out of your family’s keeping, and out of reach."
       }
     },
     "src.eca53dcc": {
@@ -152344,6 +154402,16 @@
       ],
       "source": {
         "text": "Hunt the beast."
+      }
+    },
+    "src.ed3f07df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/items.js"
+      ],
+      "source": {
+        "text": "🕯 The devout mutter: {item} has left a faithful house. (Piety {piety})"
       }
     },
     "src.ed40e5dd": {
@@ -153111,6 +155179,26 @@
         "text": "Only an undecided bloc can be targeted for lobbying."
       }
     },
+    "src.ef407169": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "It goes wrong badly and fast. You escape with your life, and little else of yours intact."
+      }
+    },
+    "src.ef4cafcc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Psalter"
+      }
+    },
     "src.ef50ec65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153814,6 +155902,16 @@
         "text": "💡 The Kin tab (K) is your family: spouse, children, and kin. Tap a child to guide their education."
       }
     },
+    "src.f0afdb0d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "Winter kills from the ground up. These argue otherwise."
+      }
+    },
     "src.f0b0a8ff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154014,6 +156112,16 @@
         "text": "A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
       }
     },
+    "src.f0fded1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_common.js"
+      ],
+      "source": {
+        "text": "Browse the market stalls."
+      }
+    },
     "src.f1044ba9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154212,6 +156320,16 @@
       ],
       "source": {
         "text": "Each side hears only what it was denied."
+      }
+    },
+    "src.f1551e0e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "The road is long; lean on something."
       }
     },
     "src.f1580daa": {
@@ -156002,6 +158120,16 @@
       ],
       "source": {
         "text": "charisma persuasion standing courtship marriage relations"
+      }
+    },
+    "src.f5bf6fb3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{county} — the stock changes with the season."
       }
     },
     "src.f5c105d7": {
@@ -158431,6 +160559,16 @@
         "text": "⚜ {name}: you hold the majority, {held}."
       }
     },
+    "src.fb548c1a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/map_data.js"
+      ],
+      "source": {
+        "text": "A Well-Thumbed Herbal"
+      }
+    },
     "src.fb5d9f9b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -160189,6 +162327,16 @@
       ],
       "source": {
         "text": "+ FB.esc(seed) +"
+      }
+    },
+    "src.ffac8565": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_artifacts.js"
+      ],
+      "source": {
+        "text": "Gold opens doors that songs cannot."
       }
     },
     "src.ffad4253": {
@@ -169168,6 +171316,16 @@
         "text": "Buy Out a Neighbor"
       }
     },
+    "ui:Buy it ({money:gold})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Buy it ({money:gold})"
+      }
+    },
     "ui:Buy remaining plots here…": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174019,6 +176177,14 @@
         "text": "For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)"
       }
     },
+    "ui:For sale": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "For sale"
+      }
+    },
     "ui:Forbidden": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176576,6 +178742,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Leave the choice to them"
+      }
+    },
+    "ui:Leave the stalls": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Leave the stalls"
       }
     },
     "ui:Leave this slot empty": {
@@ -180192,6 +182366,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Not yours to grant"
+      }
+    },
+    "ui:Nothing in the armory is free to sell — worn and pledged gear stays home.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Nothing in the armory is free to sell — worn and pledged gear stays home."
       }
     },
     "ui:Nothing is recorded in this section.": {
@@ -185983,6 +188165,24 @@
         "text": "Selected."
       }
     },
+    "ui:Sell from the armory": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Sell from the armory"
+      }
+    },
+    "ui:Sell it ({money:gold})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Sell it ({money:gold})"
+      }
+    },
     "ui:Send a legation": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -187865,6 +190065,22 @@
         "text": "The Farming work focus follows the family from Toil in the lord’s fields to Work your land after promotion. Unavailable actions keep their key and explain the current block."
       }
     },
+    "ui:The Great Bazaar": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The Great Bazaar"
+      }
+    },
+    "ui:The Market Stalls": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The Market Stalls"
+      }
+    },
     "ui:The Papacy cannot be restored from this world state.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189070,6 +191286,22 @@
       "location": "js/economy.js",
       "source": {
         "text": "The stake and route overhead cost {money:cost}; you have {money:gold}."
+      }
+    },
+    "ui:The stalls are bare — everything sold.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The stalls are bare — everything sold."
+      }
+    },
+    "ui:The stock changes with the season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The stock changes with the season."
       }
     },
     "ui:The story advances": {
@@ -192541,6 +194773,16 @@
         "text": "Your promised term is not fulfilled. Withdrawal costs {piety} piety and {prestige} prestige and records a broken vow."
       }
     },
+    "ui:Your purse: {money:gold}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your purse: {money:gold}"
+      }
+    },
     "ui:Your raiders are resting ({days} days remain).": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -195740,6 +197982,16 @@
         "text": "{county} market"
       }
     },
+    "ui:{county} — the stock changes with the season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{county} — the stock changes with the season."
+      }
+    },
     "ui:{count}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -197425,6 +199677,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{money:gold} · raises chance to {chance}%"
+      }
+    },
+    "ui:{money:gold} — beyond your purse": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{money:gold} — beyond your purse"
       }
     },
     "ui:{money:gold}/season · {men} soldiers · {political}": {

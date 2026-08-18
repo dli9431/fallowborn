@@ -112,6 +112,7 @@ window.FB = window.FB || {};
   let eventOpen = false;
   let pendingEvents = [];
   let auctionOpenAfterEvents = false;
+  let itemShopOpenAfterEvents = null;
 
   UI.deferAuctionOpen = function () {
     if (eventOpen) {
@@ -119,6 +120,14 @@ window.FB = window.FB || {};
       return;
     }
     if (UI.showAuction) UI.showAuction();
+  };
+
+  UI.deferItemShopOpen = function (pid, kind) {
+    if (eventOpen) {
+      itemShopOpenAfterEvents = { pid:pid, kind:kind };
+      return;
+    }
+    if (UI.showItemShop) UI.showItemShop(pid, kind);
   };
 
   /* Touch mis-tap guard. On mobile the event modal is a bottom sheet that can
@@ -439,6 +448,8 @@ window.FB = window.FB || {};
     $('eventmodal').classList.add('hidden');
     const openAuction = auctionOpenAfterEvents;
     auctionOpenAfterEvents = false;
+    const openItemShop = itemShopOpenAfterEvents;
+    itemShopOpenAfterEvents = null;
     UI.refresh();
     if (FB.game && FB.game.afterEvents) FB.game.afterEvents({
       syncRulers:true,
@@ -447,6 +458,10 @@ window.FB = window.FB || {};
     if (openAuction && FB.auctionOf && FB.auctionOf(s) &&
         s.player && !s.player.dead) {
       UI.showAuction();
+      return true;
+    }
+    if (openItemShop && UI.showItemShop && s.player && !s.player.dead) {
+      UI.showItemShop(openItemShop.pid, openItemShop.kind);
       return true;
     }
     if (FB.state && !$('game').classList.contains('hidden') &&
@@ -17363,6 +17378,94 @@ window.FB = window.FB || {};
       FB.setProtected(s, 'equipmentItem', id, protection.checked);
       UI.refresh();
     });
+    $('gm-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  /* The market stall / bazaar: a seasonal stock of ordinary gear for sale,
+     plus a counter for selling unpledged, unequipped armory objects. Buying
+     and selling here cost no extra day — the settlement visit already spent
+     it — so the modal re-renders in place after each transaction. */
+  UI.showItemShop = function (pid, kind) {
+    const s = FB.state;
+    if (!s || !FB.shopStock) return;
+    const stock = FB.shopStock(s, pid, kind);
+    if (!stock) return;
+    const province = FB.world && FB.world.byId && FB.world.byId[pid];
+    const title = kind === 'city'
+      ? FB.T('The Great Bazaar') : FB.T('The Market Stalls');
+    const gold = Math.floor(Number(s.player.gold) || 0);
+    let h = '<div class="gm-body-text">' +
+      '<p class="cmeta">' + esc(province
+        ? FB.T('{county} — the stock changes with the season.', {
+          county:province.name })
+        : FB.T('The stock changes with the season.')) + ' · ' +
+      esc(FB.T('Your purse: {money:gold}', { gold:gold })) + '</p></div>';
+    h += '<h4>' + esc(FB.T('For sale')) + '</h4>';
+    h += '<div class="gm-list">';
+    if (!stock.offers.length) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'The stalls are bare — everything sold.')) + '</div>';
+    }
+    for (const offer of stock.offers) {
+      const item = FB.resolveItem(s, offer.ref);
+      if (!item) continue;
+      const fx = itemFxText(item) || FB.T('No mechanical effect');
+      const afford = gold >= offer.price;
+      h += '<button class="actionbtn shop-buy" data-shop-ref="' + esc(offer.ref) + '"' +
+        (afford ? '' : ' disabled') + '>' +
+        '<canvas class="itemart" data-item="' + esc(offer.ref) + '" width="54" height="54"></canvas>' +
+        '<span><b>' + item.def.icon + ' ' + esc(FB.itemName(s, offer.ref)) + '</b>' +
+        '<span class="adesc">' + esc(fx) + '</span>' +
+        '<span class="adesc">' + esc(afford
+          ? FB.T('Buy it ({money:gold})', { gold:offer.price })
+          : FB.T('{money:gold} — beyond your purse', { gold:offer.price })) +
+        '</span></span></button>';
+    }
+    h += '</div>';
+    h += '<h4>' + esc(FB.T('Sell from the armory')) + '</h4>';
+    h += '<div class="gm-list">';
+    const sellables = FB.shopSellables ? FB.shopSellables(s) : [];
+    if (!sellables.length) {
+      h += '<div class="progressnote">' + esc(FB.T(
+        'Nothing in the armory is free to sell — worn and pledged gear stays home.')) + '</div>';
+    }
+    for (const entry of sellables) {
+      const item = FB.resolveItem(s, entry.ref);
+      if (!item) continue;
+      const fx = itemFxText(item) || FB.T('No mechanical effect');
+      h += '<button class="actionbtn shop-sell" data-sell-ref="' + esc(entry.ref) + '">' +
+        '<canvas class="itemart" data-item="' + esc(entry.ref) + '" width="54" height="54"></canvas>' +
+        '<span><b>' + item.def.icon + ' ' + esc(FB.itemName(s, entry.ref)) + '</b>' +
+        '<span class="adesc">' + esc(fx) + '</span>' +
+        '<span class="adesc">' + esc(FB.T('Sell it ({money:gold})', {
+          gold:entry.price })) + '</span></span></button>';
+    }
+    h += '</div>';
+    h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' +
+      esc(FB.T('Leave the stalls')) + '</button>';
+    openModal(title, h);
+    FB.paintFaces($('gm-body'), s);
+    const body = $('gm-body');
+    const buys = body.querySelectorAll('.shop-buy');
+    for (let i = 0; i < buys.length; i++) {
+      buys[i].addEventListener('click', function () {
+        const ref = this.getAttribute('data-shop-ref');
+        if (ref && FB.buyShopItem(s, pid, kind, ref)) {
+          UI.refresh();
+          UI.showItemShop(pid, kind);
+        }
+      });
+    }
+    const sells = body.querySelectorAll('.shop-sell');
+    for (let i = 0; i < sells.length; i++) {
+      sells[i].addEventListener('click', function () {
+        const ref = this.getAttribute('data-sell-ref');
+        if (ref && FB.sellItem(s, ref)) {
+          UI.refresh();
+          UI.showItemShop(pid, kind);
+        }
+      });
+    }
     $('gm-cancel').addEventListener('click', UI.closeModal);
   };
 

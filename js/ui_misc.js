@@ -454,7 +454,8 @@ window.FB = window.FB || {};
     return FB.renderKey('settlement.' + source + '.default', { text: source }, {});
   }
   function rarityName(id) {
-    const source = id === 'famed' ? 'famed' : (id === 'fine' ? 'fine' : 'common');
+    const source = id === 'legendary' ? 'legendary' :
+      (id === 'famed' ? 'famed' : (id === 'fine' ? 'fine' : 'common'));
     return FB.renderKey('rarity.' + source + '.default', { text: source }, {});
   }
   const ROLE_NAMES = {

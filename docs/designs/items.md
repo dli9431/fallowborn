@@ -83,6 +83,42 @@ references. Unique objects already owned are removed from random pools rather th
 duplicated. The Man-at-Arms starts in a Plain Ash Spear and Padded Jack; the Hedge Knight
 starts with a Well-made Broad Sword and Plain Round Shield.
 
+**The market stall is a small seasonal shop.** The town and city visit events offer a
+"Browse the market stalls" / "Walk the great bazaar" option that opens a shop modal over
+`FB.shopStock(state, pid, kind)`: one saved `player.shopStock` record holding exact,
+materialized ordinary offers (quality pre-rolled from the curated
+`balance.shopQualityOdds` table rather than the loot table's 70/25/5), rerolled through
+the seeded RNG only when the season, county, or settlement kind changes. Unsold
+materialized instances are discarded on reroll exactly like a declined peddler offer, so
+the shop never leaks orphaned registry entries. Prices pass the quality-adjusted value
+through the county market quote and `balance.shopPriceRatio` (the always-available
+convenience premium over peddler scarcity). The `urban_markets` technology widens the
+stock (`balance.shopStockTechBonus`) and shifts quality upward
+(`balance.shopQualityOddsTech`) — a soft technology interaction (recorded as `item_shop`
+in `FBDATA.techImpactReviews`): the stall works everywhere without research. Buying and selling inside the modal cost no extra day; the
+settlement visit already spent it. The sell counter lists the unpledged, unequipped
+armory objects from `FB.shopSellables` and runs them through the ordinary
+`FB.sellItem` flat ratio.
+
+**Legendary and sacred artifacts are gated, singular, dual-edged, and losable.** A
+definition with an `artifact` field (`religionGroups`, `cultures`, `kingdoms`,
+`empires`, `sacred`) is a unique, `eventOnly`, `rarity:'legendary'` object the rumor
+event (`data/events_artifacts.js`) can surface only when the player's faith
+(inheritance-aware through `FB.faithIsA`), culture, and the de jure kingdom or empire of
+the home county all match — Excalibur does not turn up in Egypt. Claiming one stamps
+`state.artifacts[id]` once per save, a stamp that survives succession (unlike `once`,
+flags, and cooldowns, which reset per life); loss is derived from `FB.itemOwner` rather
+than a second stamp, so an artifact that leaves the family by any door — sale, gift,
+raid, seizure, loan default — never re-enters any pool. Every artifact carries a
+double-edged `fx` profile (negative values are supported end to end and render in the
+item card), and the generic `artifact_coveted` event periodically pressures a holder to
+yield a legend or risk having it taken. Selling or gifting away a `sacred` artifact of
+the player's own faith additionally costs piety and Common Voice through
+`FB.artifactDeparted`, wired into the deliberate exit doors rather than
+`FB.transferItem` (which also serves intra-household moves). Technology impact:
+`legendary_artifacts` is recorded `none` in `FBDATA.techImpactReviews` — mythic and
+religious provenance admits no credible research dependency.
+
 An item's authored value remains its stable real-gold base. A purchased market offer
 passes that base through the item's optional `marketBasket` and the current county quote,
 then rounds upward to whole gold. Loot, gifts, transfers, sale values, collateral, and

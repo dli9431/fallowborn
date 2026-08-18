@@ -570,7 +570,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`, and the artifact gates `artifact_trial_valid` / `artifact_can_afford` / `artifact_is_sacred`) |
 | `never` | only fired by other events' `queue` |
 
 Ordinary player-campaign custom gates in `js/world.js` are `war_live_host`,
@@ -2148,7 +2148,8 @@ unmarried children:
 
 - `rarity` — `common` / `fine` / `famed` is the stock class a definition draws in (famed
   pieces mostly arrive as war spoils and finds); definitions without a recognized rarity
-  sell as `common`. `value` is the purchase price.
+  sell as `common`. `legendary` is a display-only tier for gated artifacts (see below) and
+  never enters a weighted pool. `value` is the purchase price.
 - `slot` is `head`, `neck`, `body`, `waist`, `feet`, `hand`, or `ring`. `grip:2` on a
   hand item reserves both hands. `ageMin` is the minimum equip age.
 - Definitions are unique by default. `unique:false` makes a repeatable template: each
@@ -2157,7 +2158,7 @@ unmarried children:
   `qualityFx` zero/one/two times to the base `fx`.
 - `art.kind` selects procedural art (`generic`, `seax`, `sword`, `spear`, `shield`,
   `book`, `jack`, `helm`, `crown`, `ring`, `pendant`, `relic`, `belt`, `boots`,
-  `chest`, or `picks`). The kind accepts the color arrays demonstrated by core items:
+  `chest`, `picks`, `axe`, `bow`, or `staff`). The kind accepts the color arrays demonstrated by core items:
   `metals`, `grips`, `woods`, `cloths`, `threads`, `leathers`, `gems`, `trims`,
   `cords`, `covers`, `pages`, and `wraps`. Missing art uses `generic`. Drawing depends
   only on the saved seed; do not put gameplay randomness in an art recipe.
@@ -2187,6 +2188,31 @@ unmarried children:
   plot). Owned unique objects are excluded while repeatable templates may recur. War
   victories and raids also issue exact spoils. To grant one **specific definition**, use
   the `giveItem: "id"` effect; it creates a new instance when that definition is repeatable.
+- The **market shop** hooks: `open_item_shop` (used by the town/city visit events) opens
+  the seasonal stall modal. `FB.shopStock(state, pid, 'town'|'city')` keeps one saved
+  stock record (`player.shopStock`), rerolled through the seeded RNG only when the season,
+  county, or settlement kind changes; unsold materialized instances are discarded on
+  reroll. Knobs: `balance.shopStockSize` (per-kind `[min,max]`), `shopQualityOdds` /
+  `shopQualityOddsTech` (curated quality rolls; the `…Tech` table applies when the nation
+  knows `urban_markets`), `shopStockTechBonus` (extra offers with that technology),
+  `shopPriceRatio` (multiplier over the county market quote). `FB.buyShopItem` buys an
+  offer ref; `FB.shopSellables` lists unpledged, unequipped armory objects with their
+  flat `itemSellRatio` prices; sales run through the ordinary `FB.sellItem`.
+- **Artifacts.** An `artifact` field on a definition marks a legendary/sacred object:
+  `{ religionGroups:[…], cultures:[…], kingdoms:[…], empires:[…], sacred:true }`, every
+  part optional. The rumor can surface only when the player's faith (inheritance-aware),
+  culture, and the de jure kingdom-or-empire of the home county all match; claiming one
+  stamps `state.artifacts[id]` once per save, and an artifact that later leaves the family
+  never returns to any pool. Artifact definitions should be `unique:true`,
+  `eventOnly:true`, `rarity:'legendary'`, and carry a double-edged `fx` profile (negative
+  values are supported and render in the item card). Hooks: the `artifact_rumors` /
+  `artifact_held` context selectors feed the `artifact_rumor` and `artifact_coveted`
+  events in `data/events_artifacts.js`; the custom effects are `artifact_rumor_pursue`,
+  `artifact_offering`, `artifact_grant`, and `artifact_seize`, with the require/validator
+  gates `artifact_trial_valid`, `artifact_can_afford`, and `artifact_is_sacred`.
+  `balance.artifactOfferingRatio` scales the trial's gold offering against the artifact's
+  value. Selling or gifting away a `sacred` artifact of the player's own faith costs piety
+  and Common Voice (`FB.artifactDeparted`).
 - `offer_item` stock is banded by `balance.peddlerStockBands` (societal role →
   `common`/`fine`/`famed` class weights): the roll picks a rarity class first, then a
   definition inside it, so collecting uniques never shrinks a class until it is empty.
