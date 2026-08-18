@@ -2388,10 +2388,21 @@ window.FB = window.FB || {};
   };
 
   FB.localGovernmentDay = function (state) {
-    FB.ensureLocalGovernment(state, false);
+    /* New games and restored saves receive the full schema repair once.
+       The daily path only validates offices that actually exist; rebuilding
+       every vassal contract on all ninety days of a skip changed no outcome. */
+    const p = state.player;
+    if (p.localCouncil || (p.flags && p.flags.councilman)) {
+      FB.localCouncilValidate(state, false);
+    }
+    if (p.castellany) FB.castellanyValidate(state, false);
     const vassals = FB.playerVassals(state).slice();
     for (const rid of vassals) {
       const realm = state.realms[rid];
+      if (!realm.feudalContract || typeof realm.feudalContract !== 'object' ||
+          Array.isArray(realm.feudalContract)) {
+        realm.feudalContract = FB.feudalContractOf(state, rid);
+      }
       const contract = FB.feudalContractOf(state, rid);
       if (contract.tenure !== 'term' ||
           typeof contract.expiryTurn !== 'number' ||
@@ -3956,6 +3967,9 @@ window.FB = window.FB || {};
 
   /* realms sworn directly to the player */
   FB.playerVassals = function (state) {
+    if (FB.realmDirectVassals) {
+      return FB.realmDirectVassals(state, 'player').slice();
+    }
     const out = [];
     for (const id in state.realms) {
       const r = state.realms[id];
@@ -6003,14 +6017,35 @@ window.FB = window.FB || {};
     return range;
   };
 
+  FB.raidRangePx = function (state, charId) {
+    const realmId = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+    const hasLongships = FB.hasTech && FB.hasTech(state, 'longships', realmId);
+
+    // Overland baseline: 85px radius (~2.4 standard county widths)
+    let overlandPx = 85;
+    if (FB.hasTech && FB.hasTech(state, 'mounted_archery', realmId)) overlandPx += 35;
+    if (FB.hasTech && FB.hasTech(state, 'cavalry_lances', realmId)) overlandPx += 35;
+
+    // Naval reach with longships: 200px across open water
+    let navalPx = 0;
+    if (hasLongships) {
+      navalPx = 200;
+      if (FB.hasTech && FB.hasTech(state, 'celestial_navigation', realmId)) navalPx += 40;
+      if (FB.hasTech && FB.hasTech(state, 'naval_logbooks', realmId)) navalPx += 40;
+      if (FB.hasTech && FB.hasTech(state, 'mariners_compass', realmId)) navalPx += 40;
+    }
+
+    return { overland: overlandPx, naval: navalPx };
+  };
+
   FB.raidTargets = function (state, charId) {
     const out = [];
     if (!FB.canRaid(state, charId) || !FB.world || !FB.world.byId) return out;
     const p = state.player;
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
     const realmId = playerRealm;
-    const maxRange = FB.raidRange(state, charId);
-    const hasLongships = FB.hasTech && FB.hasTech(state, 'longships', realmId);
+    const rangePx = FB.raidRangePx(state, charId);
+    const hasLongships = rangePx.naval > 0;
 
     const startPids = [];
     if (p.provs && p.provs.length) {
@@ -6020,52 +6055,63 @@ window.FB = window.FB || {};
     }
     if (!startPids.length) return out;
 
-    const visited = {};
     const dist = {};
-    const queue = [];
+    const startPrs = [];
     for (let i = 0; i < startPids.length; i++) {
       const sp = startPids[i];
-      visited[sp] = true;
+      const spr = FB.world.byId[sp];
+      if (spr) startPrs.push(spr);
       dist[sp] = 0;
-      queue.push(sp);
     }
 
-    let head = 0;
-    while (head < queue.length) {
-      const cur = queue[head++];
-      const d = dist[cur];
-      if (d >= maxRange) continue;
+    // Evaluate all target provinces by physical distance from raider territory
+    for (let j = 0; j < FB.world.provs.length; j++) {
+      const tp = FB.world.provs[j];
+      if (tp.wasteland || dist[tp.id] === 0) continue;
 
-      const neighbors = [];
-      const adj = FB.world.adj && FB.world.adj[cur];
-      if (adj) {
-        for (const nb in adj) neighbors.push(nb);
-      }
-      const water = FB.world.waterAdj && FB.world.waterAdj[cur];
-      if (water) {
-        for (const nb in water) {
-          if (neighbors.indexOf(nb) < 0) neighbors.push(nb);
-        }
-      }
-      if (hasLongships && FB.world.byId[cur] && FB.world.byId[cur].coastal) {
-        const curPr = FB.world.byId[cur];
-        for (let j = 0; j < FB.world.provs.length; j++) {
-          const pr = FB.world.provs[j];
-          if (!pr.coastal || pr.id === cur || pr.wasteland) continue;
-          const dx = pr.sx - curPr.sx, dy = pr.sy - curPr.sy;
-          const sqDist = dx * dx + dy * dy;
-          if (sqDist <= 28000 && neighbors.indexOf(pr.id) < 0) {
-            neighbors.push(pr.id);
+      let bestDistPx = Infinity;
+
+      // 1. Direct overland distance from home territories (must share landmass or strait)
+      for (let i = 0; i < startPrs.length; i++) {
+        const sp = startPrs[i];
+        const sameLand = (sp.landmass && tp.landmass && sp.landmass === tp.landmass) ||
+                         (FB.world.waterAdj && FB.world.waterAdj[sp.id] && FB.world.waterAdj[sp.id][tp.id]);
+        if (sameLand) {
+          const dPx = Math.hypot(tp.sx - sp.sx, tp.sy - sp.sy);
+          if (dPx <= rangePx.overland && dPx < bestDistPx) {
+            bestDistPx = dPx;
           }
         }
       }
 
-      for (let i = 0; i < neighbors.length; i++) {
-        const nxt = neighbors[i];
-        if (visited[nxt]) continue;
-        visited[nxt] = true;
-        dist[nxt] = d + 1;
-        queue.push(nxt);
+      // 2. Naval longship distance from coastal territories
+      if (hasLongships) {
+        for (let i = 0; i < startPrs.length; i++) {
+          const sp = startPrs[i];
+          const dPx = Math.hypot(tp.sx - sp.sx, tp.sy - sp.sy);
+          if (dPx <= rangePx.naval && dPx < bestDistPx) {
+            if (tp.coastal) {
+              bestDistPx = dPx;
+            } else {
+              // River penetration: within 55px of a reachable foreign coast
+              let nearCoast = false;
+              for (let k = 0; k < FB.world.provs.length; k++) {
+                const cp = FB.world.provs[k];
+                if (cp.coastal && Math.hypot(tp.sx - cp.sx, tp.sy - cp.sy) <= 55) {
+                  nearCoast = true;
+                  break;
+                }
+              }
+              if (nearCoast) {
+                bestDistPx = dPx;
+              }
+            }
+          }
+        }
+      }
+
+      if (bestDistPx < Infinity) {
+        dist[tp.id] = Math.max(1, Math.round(bestDistPx / 35));
       }
     }
 
@@ -6079,6 +6125,26 @@ window.FB = window.FB || {};
       if (state.pacts && state.pacts[enemyRealm] && state.pacts[enemyRealm] > state.turn) continue;
       if (FB.areAllied && FB.areAllied(state, playerRealm, enemyRealm)) continue;
 
+      // Check if passage to target is blocked by intermediate hostile forts
+      const route = FB.raidMarchRoute ? FB.raidMarchRoute(state, startPids[0], pid) : [pid];
+      if (!route) continue;
+
+      let intermediateCounties = 0;
+      let intermediateForts = 0;
+      for (let sIdx = 0; sIdx < route.length - 1; sIdx++) {
+        const stepPid = route[sIdx];
+        if (stepPid === startPids[0]) continue;
+        const stepOwner = state.owner && state.owner[stepPid];
+        const isStepFriendly = (stepOwner === playerRealm || stepOwner === 'player' || (FB.areAllied && FB.areAllied(state, playerRealm, stepOwner)));
+        if (!isStepFriendly) {
+          intermediateCounties++;
+          const stepFort = FB.fortAt ? FB.fortAt(state, stepPid) : null;
+          if (stepFort && !stepFort.ruined && stepFort.level > 0) {
+            intermediateForts++;
+          }
+        }
+      }
+
       const r = state.realms && state.realms[enemyRealm];
       const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
       const fortLevel = (fort && !fort.ruined) ? (Number(fort.level) || 0) : 0;
@@ -6091,7 +6157,7 @@ window.FB = window.FB || {};
       let wealthScore = dev * 10 + buildings.length * 8 + endowments.length * 15;
       if (pr.coastal) wealthScore += 10;
 
-      let hazardScore = fortLevel * 25;
+      let hazardScore = fortLevel * 45 + intermediateForts * 30;
       if (r && r.rank) hazardScore += r.rank * 5;
 
       out.push({
@@ -6100,6 +6166,9 @@ window.FB = window.FB || {};
         terrain: pr.terrain,
         coastal: !!pr.coastal,
         distance: dist[pid],
+        route: route,
+        intermediateCounties: intermediateCounties,
+        intermediateForts: intermediateForts,
         realmId: enemyRealm,
         realmName: r ? r.name : enemyRealm,
         rulerName: r && r.ruler ? r.ruler.name : FB.T('Local Lord'),
@@ -6122,6 +6191,125 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.raidMarchRoute = function (state, fromPid, toPid) {
+    if (!fromPid || !toPid || fromPid === toPid || !FB.world || !FB.world.byId) return [toPid];
+    const fromPr = FB.world.byId[fromPid];
+    const toPr = FB.world.byId[toPid];
+    if (!fromPr || !toPr) return [toPid];
+
+    const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+    const hasLongships = FB.hasTech && FB.hasTech(state, 'longships', playerRealm);
+
+    function isHostileFort(pid) {
+      if (pid === fromPid || pid === toPid) return false;
+      const owner = state.owner && state.owner[pid];
+      if (owner === playerRealm || owner === 'player' || (FB.areAllied && FB.areAllied(state, playerRealm, owner))) {
+        return false;
+      }
+      const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+      return !!(fort && !fort.ruined && fort.level > 0);
+    }
+
+    // 1. Same landmass overland path avoiding intermediate hostile forts
+    const sameLand = (fromPr.landmass && toPr.landmass && fromPr.landmass === toPr.landmass) ||
+                     (FB.world.waterAdj && FB.world.waterAdj[fromPid] && FB.world.waterAdj[fromPid][toPid]);
+
+    if (sameLand && FB.world.adj) {
+      const prev = {};
+      prev[fromPid] = fromPid;
+      const q = [fromPid];
+      let found = false;
+
+      for (let qi = 0; qi < q.length; qi++) {
+        const cur = q[qi];
+        const neighbors = [];
+        const adj = FB.world.adj[cur] || {};
+        for (const nb in adj) neighbors.push(nb);
+        const wadj = FB.world.waterAdj && FB.world.waterAdj[cur];
+        if (wadj) for (const nb in wadj) if (neighbors.indexOf(nb) < 0) neighbors.push(nb);
+
+        for (let i = 0; i < neighbors.length; i++) {
+          const nb = neighbors[i];
+          if (prev[nb] !== undefined) continue;
+          if (isHostileFort(nb)) continue; // Intermediate hostile fort blocks passage!
+          prev[nb] = cur;
+          if (nb === toPid) {
+            found = true;
+            break;
+          }
+          q.push(nb);
+        }
+        if (found) break;
+      }
+
+      if (found) {
+        const path = [toPid];
+        let step = toPid;
+        while (step !== fromPid) {
+          step = prev[step];
+          if (step !== fromPid) path.unshift(step);
+        }
+        return path;
+      }
+    }
+
+    // 2. Naval longship expedition (can land on coast to bypass overland forts)
+    if (hasLongships) {
+      if (toPr.coastal) {
+        return [toPid];
+      }
+      let bestCoast = null;
+      let minCoastDist = Infinity;
+      let bestInlandPath = null;
+
+      for (let i = 0; i < FB.world.provs.length; i++) {
+        const cp = FB.world.provs[i];
+        if (cp.coastal && !cp.wasteland && cp.landmass === toPr.landmass) {
+          const d = Math.hypot(toPr.sx - cp.sx, toPr.sy - cp.sy);
+          if (d < minCoastDist) {
+            if (cp.id === toPid) {
+              minCoastDist = d;
+              bestCoast = cp.id;
+              bestInlandPath = [toPid];
+            } else if (FB.world.adj) {
+              const prev = {}; prev[cp.id] = cp.id;
+              const q = [cp.id];
+              let f = false;
+              for (let qi = 0; qi < q.length; qi++) {
+                const cur = q[qi];
+                const adj = FB.world.adj[cur] || {};
+                for (const nb in adj) {
+                  if (prev[nb] !== undefined || isHostileFort(nb)) continue;
+                  prev[nb] = cur;
+                  if (nb === toPid) { f = true; break; }
+                  q.push(nb);
+                }
+                if (f) break;
+              }
+              if (f) {
+                const path = [toPid];
+                let step = toPid;
+                while (step !== cp.id) {
+                  step = prev[step];
+                  if (step !== cp.id) path.unshift(step);
+                }
+                minCoastDist = d;
+                bestCoast = cp.id;
+                bestInlandPath = path;
+              }
+            }
+          }
+        }
+      }
+      if (bestInlandPath) {
+        return bestInlandPath;
+      }
+    }
+
+    // Completely blocked by intermediate forts
+    return null;
+  };
+
   FB.calculateRaidSpoils = function (state, targetPid, strategy, charId) {
     const pr = FB.world.byId[targetPid];
     const dev = (state.dev && state.dev[targetPid]) || (pr && (pr.dev0 || pr.dev)) || 1;
@@ -6135,14 +6323,192 @@ window.FB = window.FB || {};
     const cid = charId || state.player.charId;
     const c = state.chars && state.chars[cid];
     const mar = FB.skillOf ? FB.skillOf(c, 'mar') : 10;
+    const prowess = (c && c.prowess) || 10;
 
     const isSack = strategy === 'sack';
     const mult = isSack ? 1.35 : 0.65;
 
-    let baseGold = Math.round((dev * 7 + mar * 2 + (isSack ? 30 : 12)) * mult);
-    if (buildings.length) baseGold += Math.round(buildings.length * 6 * mult);
+    const p = state.player;
+    const homePid = p.provinceId || (p.provs && p.provs[0]);
+    const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+
+    // 1. Initial Raider Strength
+    const initialMen = (FB.playerLevy ? FB.playerLevy(state) : 0) || 120;
+    let currentMen = initialMen;
+    let totalCasualties = 0;
+    let wounded = false;
+    let stoppedProvince = null;
+    let repelled = false;
+    const marchSkirmishes = [];
+
+    // Calculate march route through intermediate counties (respecting fort zone of control)
+    const route = FB.raidMarchRoute ? FB.raidMarchRoute(state, homePid, targetPid) : [targetPid];
+    if (!route || !route.length) {
+      return {
+        targetPid: targetPid,
+        strategy: strategy,
+        success: false,
+        victoryGrade: 'repelled',
+        combatAdvantage: 0.1,
+        stoppedProvince: 'fort_blocked',
+        route: [],
+        marchSkirmishes: [{ pid: targetPid, name: pr ? pr.name : targetPid, casualties: 0, repelled: true, defenders: 100 }],
+        raiderMen: initialMen,
+        survivingMen: initialMen,
+        garrisonMen: 100,
+        gold: 0,
+        prestige: -20,
+        goods: { provisions:0, wares:0, materials:0, transport:0, luxuries:0 },
+        popLoss: 0,
+        captives: 0,
+        ruinedBuildings: [],
+        devLoss: false,
+        casualties: 0,
+        wounded: false
+      };
+    }
+
+    let finalAdvantage = 1;
+    // defenders the warband actually faces at the target under the chosen
+    // strategy — the picker shows this next to the risk label, so it must be
+    // the effective force (Swift Skirmishes slip past most of the garrison),
+    // not the raw muster
+    let targetEffectiveDef = 0;
+
+    // 2. Sequential combat simulation across all counties along the march
+    for (let step = 0; step < route.length; step++) {
+      const stepPid = route[step];
+      const stepPr = FB.world.byId[stepPid];
+      if (!stepPr || stepPr.wasteland) continue;
+
+      const stepOwner = state.owner && state.owner[stepPid];
+      const isHomeOrAlly = (stepOwner === playerRealm || stepOwner === 'player' ||
+                           (FB.areAllied && FB.areAllied(state, playerRealm, stepOwner)));
+
+      // Friendly territory passed unhindered
+      if (isHomeOrAlly && stepPid !== targetPid) {
+        continue;
+      }
+
+      const stepDev = (state.dev && state.dev[stepPid]) || (stepPr && (stepPr.dev0 || stepPr.dev)) || 1;
+      const stepFort = FB.fortAt ? FB.fortAt(state, stepPid) : null;
+      const stepFortLevel = (stepFort && !stepFort.ruined) ? (Number(stepFort.level) || 0) : 0;
+      const stepRealmMen = (stepOwner && stepOwner !== 'player' && FB.realmDefensiveStrength)
+        ? FB.realmDefensiveStrength(state, stepOwner)
+        : 0;
+      const stepRealmDev = (stepOwner && stepOwner !== 'player' && FB.realmStrength)
+        ? FB.realmStrength(state, stepOwner) : 0;
+
+      // Base defensive power: county population levies + dedicated fort garrison
+      let stepDefenders = stepDev * 18;
+      if (stepFortLevel > 0) {
+        const fortDef = FBDATA.fortLevels && FBDATA.fortLevels[stepFortLevel];
+        const baseG = (fortDef && fortDef.garrison) || (stepFortLevel * 45);
+        // Dedicated garrison troops have a 3.5x force-multiplier behind fortified defenses
+        stepDefenders += Math.round(baseG * 3.5);
+      }
+      if (stepRealmMen > 0) {
+        /* the county's own share of its realm's host — levies are raised in
+           proportion to county development — answers the raid: a border
+           hamlet of a great kingdom faces only its own muster, not a flat
+           tithe of the entire realm, while a one-county petty realm defends
+           home with everything it has */
+        const realmShare = stepRealmDev > 0 ? Math.min(1, stepDev / stepRealmDev) : 0;
+        stepDefenders += Math.round(stepRealmMen * realmShare);
+      }
+      stepDefenders = Math.max(30, stepDefenders);
+
+      const isTarget = (stepPid === targetPid);
+      // Fort defense multiplier: storming stone walls and battlements in a Deep Sack faces massive defensive advantages
+      if (isTarget && stepFortLevel > 0 && isSack) {
+        stepDefenders = Math.round(stepDefenders * (1 + stepFortLevel * 0.55));
+      }
+
+      // Effective defenders: target county faces full assault; intermediate passage counties are border garrisons/patrols
+      const effectiveDef = isTarget
+        ? (isSack ? stepDefenders : Math.max(20, Math.round(stepDefenders * 0.35)))
+        : (isSack ? Math.max(20, Math.round(stepDefenders * 0.65)) : Math.max(12, Math.round(stepDefenders * 0.22)));
+
+      const raiderPower = Math.round(currentMen * (1 + (mar * 0.03) + (prowess * 0.015)));
+      const stepAdv = raiderPower / (raiderPower + effectiveDef);
+
+      if (isTarget) {
+        finalAdvantage = stepAdv;
+        targetEffectiveDef = effectiveDef;
+      }
+
+      if (stepAdv < 0.38) {
+        // Repelled in this county!
+        repelled = true;
+        stoppedProvince = stepPid;
+        // Catastrophic slaughter at the walls or in fierce defense
+        const casFrac = stepFortLevel > 0
+          ? 0.40 + (0.45 - stepAdv) * 0.55
+          : 0.25 + (0.50 - stepAdv) * 0.45;
+        const cas = Math.max(15, Math.round(currentMen * Math.min(0.70, casFrac)));
+        totalCasualties += cas;
+        currentMen = Math.max(0, currentMen - cas);
+        if (FB.chance(0.55)) wounded = true;
+        marchSkirmishes.push({
+          pid: stepPid,
+          name: stepPr.name,
+          casualties: cas,
+          repelled: true,
+          defenders: stepDefenders
+        });
+        break;
+      }
+
+      // Break through / overcome local defenders
+      let cas = 0;
+      if (isTarget && stepFortLevel > 0 && isSack) {
+        // Direct storming of a fortified stronghold: scaling walls under missile and boiling oil fire
+        // Baseline assault casualties scale steeply with fort level: Tier 1: 12-18%, Tier 2: 20-30%, Tier 3: 28-40%, Tier 4: 38-52%
+        let fortAssaultBase = 0.08 + stepFortLevel * 0.08;
+        if (stepAdv < 0.52) {
+          fortAssaultBase += (0.55 - stepAdv) * 0.40; // Heavy assault resistance
+        }
+        cas = Math.max(12 * stepFortLevel, Math.round(currentMen * Math.min(0.55, fortAssaultBase)));
+        if (stepFortLevel >= 2 && FB.chance(0.25)) wounded = true;
+      } else if (stepAdv < 0.48) {
+        // Contested field skirmish
+        const casFrac = 0.08 + (0.55 - stepAdv) * 0.28;
+        cas = Math.max(5, Math.round(currentMen * Math.min(0.22, casFrac)));
+        if (FB.chance(0.15)) wounded = true;
+      } else if (stepFortLevel > 0 || effectiveDef > 100) {
+        // Light attrition against garrisons / outer crofts
+        cas = Math.max(2, Math.round(currentMen * 0.045));
+      } else {
+        // Unfortified open countryside skirmish
+        cas = Math.max(1, Math.round(currentMen * 0.025));
+      }
+
+      totalCasualties += cas;
+      currentMen = Math.max(1, currentMen - cas);
+      marchSkirmishes.push({
+        pid: stepPid,
+        name: stepPr.name,
+        casualties: cas,
+        repelled: false,
+        defenders: stepDefenders
+      });
+    }
+
+    const success = !repelled;
+    let victoryGrade = 'triumphant';
+    if (!success) {
+      victoryGrade = 'repelled';
+    } else if (finalAdvantage < 0.52 || totalCasualties >= Math.round(initialMen * 0.18)) {
+      victoryGrade = 'costly';
+    }
+
+    // Plunder scales with remaining raider strength after fighting through route
+    const hostSurvivalFrac = Math.max(0.40, currentMen / Math.max(1, initialMen));
+
+    let baseGold = Math.round((dev * 7 + mar * 2 + (isSack ? 30 : 12)) * mult * hostSurvivalFrac);
+    if (buildings.length) baseGold += Math.round(buildings.length * 6 * mult * hostSurvivalFrac);
     if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0) {
-      baseGold += Math.round(20 * mult);
+      baseGold += Math.round(20 * mult * hostSurvivalFrac);
     }
     if (fortLevel > 0) {
       const fortDampener = Math.max(0.40, 1 - fortLevel * (isSack ? 0.12 : 0.20));
@@ -6150,29 +6516,40 @@ window.FB = window.FB || {};
     }
     baseGold = Math.max(8, baseGold);
 
+    if (victoryGrade === 'costly') {
+      baseGold = Math.round(baseGold * 0.65);
+    } else if (!success) {
+      baseGold = 0;
+    }
+
     const goods = { provisions:0, wares:0, materials:0, transport:0, luxuries:0 };
-    goods.provisions = Math.round((10 + dev * 2) * mult);
-    if (endowments.indexOf('grain') >= 0 || endowments.indexOf('pastoral') >= 0 || endowments.indexOf('fisheries') >= 0) {
-      goods.provisions += Math.round(12 * mult);
-    }
-    if (endowments.indexOf('wool_textiles') >= 0) goods.wares += Math.round(8 * mult);
-    else goods.wares += Math.round(4 * mult);
-    if (endowments.indexOf('timber') >= 0 || endowments.indexOf('metalworking') >= 0) {
-      goods.materials += Math.round(10 * mult);
-    } else goods.materials += Math.round(3 * mult);
-    if (endowments.indexOf('horse_breeding') >= 0 || endowments.indexOf('pastoral') >= 0) {
-      goods.transport += Math.round(6 * mult);
-    }
-    if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0 || isSack) {
-      goods.luxuries += Math.round((isSack ? 3 : 1) * mult);
+    if (success) {
+      goods.provisions = Math.round((10 + dev * 2) * mult * hostSurvivalFrac);
+      if (endowments.indexOf('grain') >= 0 || endowments.indexOf('pastoral') >= 0 || endowments.indexOf('fisheries') >= 0) {
+        goods.provisions += Math.round(12 * mult * hostSurvivalFrac);
+      }
+      if (endowments.indexOf('wool_textiles') >= 0) goods.wares += Math.round(8 * mult * hostSurvivalFrac);
+      else goods.wares += Math.round(4 * mult * hostSurvivalFrac);
+      if (endowments.indexOf('timber') >= 0 || endowments.indexOf('metalworking') >= 0) {
+        goods.materials += Math.round(10 * mult * hostSurvivalFrac);
+      } else goods.materials += Math.round(3 * mult * hostSurvivalFrac);
+      if (endowments.indexOf('horse_breeding') >= 0 || endowments.indexOf('pastoral') >= 0) {
+        goods.transport += Math.round(6 * mult * hostSurvivalFrac);
+      }
+      if (endowments.indexOf('luxury_entrepot') >= 0 || endowments.indexOf('wine_oil') >= 0 || isSack) {
+        goods.luxuries += Math.round((isSack ? 3 : 1) * mult * hostSurvivalFrac);
+      }
+      if (victoryGrade === 'costly') {
+        for (const k in goods) goods[k] = Math.round(goods[k] * 0.60);
+      }
     }
 
     const popRate = isSack ? 0.045 : 0.018;
-    const popLoss = Math.max(40, Math.round(pop * popRate));
-    const captives = Math.max(15, Math.round(popLoss * 0.45));
+    const popLoss = success ? Math.max(40, Math.round(pop * popRate * hostSurvivalFrac * (victoryGrade === 'costly' ? 0.65 : 1.0))) : 0;
+    const captives = success ? Math.max(15, Math.round(popLoss * 0.45 * hostSurvivalFrac)) : 0;
 
     const ruinedBuildingIds = [];
-    if (isSack && buildings.length) {
+    if (success && isSack && buildings.length) {
       const ruinChance = Math.max(0.15, 0.45 - fortLevel * 0.08);
       for (let i = 0; i < buildings.length; i++) {
         if (FB.chance(ruinChance)) {
@@ -6182,33 +6559,41 @@ window.FB = window.FB || {};
     }
 
     let devLoss = false;
-    if (isSack && dev >= 3 && fortLevel <= 1 && FB.chance(0.20)) {
+    if (success && isSack && dev >= 3 && fortLevel <= 1 && FB.chance(0.20)) {
       devLoss = true;
     }
 
-    let casualties = 0;
-    let wounded = false;
-    if (isSack) {
-      const hazardBase = fortLevel * 15 + 5;
-      const martialSave = Math.min(25, mar * 1.5);
-      const netHazard = Math.max(5, hazardBase - martialSave);
-      if (FB.chance(netHazard / 100)) {
-        casualties = Math.round(FB.ri(5, 20) * (1 + fortLevel * 0.5));
-        if (FB.chance(0.25)) wounded = true;
-      }
+    let prestigeChange = 0;
+    if (success) {
+      prestigeChange = Math.round(isSack ? 15 + dev * 2 : 8);
+      if (victoryGrade === 'costly') prestigeChange = Math.round(prestigeChange * 0.60);
+    } else {
+      prestigeChange = -Math.round(20 + dev * 2);
     }
+
+    const targetDefenders = targetEffectiveDef ||
+      (marchSkirmishes.length ? marchSkirmishes[marchSkirmishes.length - 1].defenders : 40);
 
     return {
       targetPid: targetPid,
       strategy: strategy,
+      success: success,
+      victoryGrade: victoryGrade,
+      combatAdvantage: finalAdvantage,
+      stoppedProvince: stoppedProvince,
+      route: route,
+      marchSkirmishes: marchSkirmishes,
+      raiderMen: initialMen,
+      survivingMen: currentMen,
+      garrisonMen: targetDefenders,
       gold: baseGold,
-      prestige: Math.round(isSack ? 15 + dev * 2 : 8),
+      prestige: prestigeChange,
       goods: goods,
       popLoss: popLoss,
       captives: captives,
       ruinedBuildings: ruinedBuildingIds,
       devLoss: devLoss,
-      casualties: casualties,
+      casualties: totalCasualties,
       wounded: wounded
     };
   };
@@ -6220,50 +6605,74 @@ window.FB = window.FB || {};
     const targetRid = state.owner && state.owner[targetPid];
     const homePid = p.provinceId || (p.provs && p.provs[0]);
 
-    p.gold = (Number(p.gold) || 0) + spoils.gold;
+    p.gold = Math.max(0, (Number(p.gold) || 0) + spoils.gold);
     p.prestige = (Number(p.prestige) || 0) + spoils.prestige;
 
-    if (FB.changeCountyPopulation) {
-      FB.changeCountyPopulation(state, targetPid, -spoils.popLoss, 'raid_losses');
+    // Apply casualties to player home county / levy pool
+    if (spoils.casualties > 0 && homePid && FB.changeCountyPopulation) {
+      FB.changeCountyPopulation(state, homePid, -spoils.casualties, 'raid_casualties');
+    }
+    // Severe casualties or repelled raid triggers army recovery / rearm window;
+    // the floor remembers the expedition's surviving strength, so the home
+    // host reads what actually marched back, not a shattered remnant
+    if (!spoils.success || spoils.casualties >= 30) {
+      state.armyDown = state.armyDown || {};
+      state.armyDown.player = state.turn;
+      state.armyDownSurvival = state.armyDownSurvival || {};
+      state.armyDownSurvival.player = {
+        turn: state.turn,
+        frac: Math.max(0.15, Math.round((spoils.survivingMen / Math.max(1, spoils.raiderMen)) * 100) / 100)
+      };
     }
 
-    captiveChoice = captiveChoice || 'settle';
-    if (captiveChoice === 'settle') {
-      if (FB.changeCountyPopulation && homePid) {
-        FB.changeCountyPopulation(state, homePid, spoils.captives, 'raid_captives');
+    if (spoils.success) {
+      if (FB.changeCountyPopulation) {
+        FB.changeCountyPopulation(state, targetPid, -spoils.popLoss, 'raid_losses');
       }
-    } else if (captiveChoice === 'bond') {
-      p.bondedWorkers = (p.bondedWorkers || 0) + Math.max(1, Math.round(spoils.captives / 25));
-    } else if (captiveChoice === 'ransom') {
-      const extraGold = Math.round(spoils.captives * 0.25);
-      p.gold += extraGold;
-      p.prestige += 10;
-      spoils.ransomGold = extraGold;
-    }
 
-    if (spoils.ruinedBuildings.length && state.buildings && state.buildings[targetPid]) {
-      const bList = state.buildings[targetPid];
-      for (let i = 0; i < bList.length; i++) {
-        if (spoils.ruinedBuildings.indexOf(bList[i].id) >= 0) {
-          bList[i].ruined = true;
+      captiveChoice = captiveChoice || 'settle';
+      if (captiveChoice === 'settle') {
+        if (FB.changeCountyPopulation && homePid) {
+          FB.changeCountyPopulation(state, homePid, spoils.captives, 'raid_captives');
+        }
+      } else if (captiveChoice === 'bond') {
+        p.bondedWorkers = (p.bondedWorkers || 0) + Math.max(1, Math.round(spoils.captives / 25));
+      } else if (captiveChoice === 'ransom') {
+        const extraGold = Math.round(spoils.captives * 0.25);
+        p.gold += extraGold;
+        p.prestige += 10;
+        spoils.ransomGold = extraGold;
+      }
+
+      if (spoils.ruinedBuildings.length && state.buildings && state.buildings[targetPid]) {
+        const bList = state.buildings[targetPid];
+        for (let i = 0; i < bList.length; i++) {
+          if (spoils.ruinedBuildings.indexOf(bList[i].id) >= 0) {
+            bList[i].ruined = true;
+          }
         }
       }
-    }
 
-    if (spoils.devLoss && state.dev && state.dev[targetPid] > 1) {
-      state.dev[targetPid] = Math.max(1, state.dev[targetPid] - 1);
-    }
+      if (spoils.devLoss && state.dev && state.dev[targetPid] > 1) {
+        state.dev[targetPid] = Math.max(1, state.dev[targetPid] - 1);
+      }
 
-    if (FB.addMarketShock) {
-      FB.addMarketShock(state, {
-        pid: targetPid,
-        source: 'raid_devastation',
-        severe: true,
-        production: strategy === 'sack' ? -0.35 : -0.20,
-        demand: 0.15,
-        flow: -0.25,
-        seasons: (FBDATA.balance && FBDATA.balance.raidMarketShockSeasons) || 4
-      });
+      if (FB.addMarketShock) {
+        FB.addMarketShock(state, {
+          pid: targetPid,
+          source: 'raid_devastation',
+          severe: true,
+          production: strategy === 'sack' ? -0.35 : -0.20,
+          demand: 0.15,
+          flow: -0.25,
+          seasons: (FBDATA.balance && FBDATA.balance.raidMarketShockSeasons) || 4
+        });
+      }
+    } else {
+      if (targetRid && targetRid !== 'player' && state.realms && state.realms[targetRid]) {
+        const tr = state.realms[targetRid];
+        tr.prestige = (Number(tr.prestige) || 0) + 15;
+      }
     }
 
     if (targetRid && targetRid !== 'player' && FB.adjustStanding) {
@@ -6280,19 +6689,29 @@ window.FB = window.FB || {};
     p.raidCooldownUntil = state.turn + cdDays;
 
     if (FB.chronicle) {
-      FB.chronicle(state, 'raid_completed', {
+      FB.chronicle(state, spoils.success ? 'raid_completed' : 'raid_repelled', {
         provinceId: targetPid,
         gold: spoils.gold,
-        captives: spoils.captives
+        captives: spoils.captives,
+        casualties: spoils.casualties,
+        success: spoils.success
       });
     }
     if (FB.news) {
-      FB.news(state, FB.msg('news.raid.success',
-        '⚔ Your raid on {province} returns victorious: {money:gold} gold, provisions, and {captives} captives.', {
-          province: pr ? pr.name : targetPid,
-          gold: spoils.gold,
-          captives: spoils.captives
-        }));
+      if (spoils.success) {
+        FB.news(state, FB.msg('news.raid.success',
+          '⚔ Your raid on {province} returns victorious: {money:gold} gold, provisions, and {captives} captives.', {
+            province: pr ? pr.name : targetPid,
+            gold: spoils.gold,
+            captives: spoils.captives
+          }));
+      } else {
+        FB.news(state, FB.msg('news.raid.repelled',
+          '🛡 Your raid on {province} was repelled by the defending garrison with {casualties} casualties.', {
+            province: pr ? pr.name : targetPid,
+            casualties: spoils.casualties
+          }));
+      }
     }
 
     return spoils;

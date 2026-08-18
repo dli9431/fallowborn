@@ -40,7 +40,10 @@ format 3.
 `state.turn >= record.endTurn` and emits localized Chronicle descriptors for gains and
 natural expiries. Adding an already-active id refreshes its catalog duration without
 stacking it or repeating the gain notice. A refreshed event grant also replaces the
-semantic source id with the most recent granting event.
+semantic source id with the most recent granting event. The tick retains the normalized
+storage identities and nearest timed expiry in memory, so quiet days before that turn do
+not rescan every county record. Modifier mutations invalidate that snapshot; loads and
+campaign replacement also miss it by identity and repair normally.
 
 When `js/institutions.js` is present, adding or refreshing a recognized county effect
 also upserts its legal `state.privileges` provenance; removing or naturally expiring the

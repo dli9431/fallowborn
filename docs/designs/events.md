@@ -326,6 +326,9 @@ callers that ignore its return value, but now returns semantic before/after impa
 actual clamp-aware deltas. Resolution suppresses transient effect toasts, not their durable
 Chronicle messages, and adds one `kind:"choice"` entry containing the event/option/outcome
 descriptors plus the complete player-facing impact ledger.
+An autoresolved queue performs the shared post-event health, ruler-standing,
+and promotion reconciliation once after the queue drains. The daily driver
+does not repeat that pass after `runEvents` has already completed it.
 
 `marketShock:{id?,provinceId?,goodId?,production?,demand?,flow?,seasons?,severe?}` is the
 declarative bridge from authored harvest, disease, war, and local-disruption stories into

@@ -440,7 +440,10 @@ window.FB = window.FB || {};
     const openAuction = auctionOpenAfterEvents;
     auctionOpenAfterEvents = false;
     UI.refresh();
-    if (FB.game && FB.game.afterEvents) FB.game.afterEvents();
+    if (FB.game && FB.game.afterEvents) FB.game.afterEvents({
+      syncRulers:true,
+      forcePromotionCheck:true
+    });
     if (openAuction && FB.auctionOf && FB.auctionOf(s) &&
         s.player && !s.player.dead) {
       UI.showAuction();
@@ -3218,6 +3221,12 @@ window.FB = window.FB || {};
   let raidViewStrategy = 'sack';
   let raidViewSearch = '';
 
+  function raidStrategyHint(strat) {
+    return strat === 'sack'
+      ? FB.T('Assault settlements and shrines for high plunder and captives; risks defender resistance.')
+      : FB.T('Fast hit-and-run reaving across open countryside and herds with low casualty risk.');
+  }
+
   UI.showRaidTargets = function (returnContext) {
     const s = FB.state;
     if (!s || !s.player) return;
@@ -3227,32 +3236,41 @@ window.FB = window.FB || {};
     const hasLongships = FB.hasTech && FB.hasTech(s, 'longships', playerRealm);
 
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Raiding expeditions cross borders and waterways to plunder foreign wealth, livestock, crops, craft goods, and thralls without declaring formal war. Raids devastate local agriculture, ruin settlement buildings, drain county population, and inflict severe market shortages on your victims.'
+      'Plunder foreign wealth, provisions, and thralls across borders or waterways without formal war. Raids cause market shortages, drain population, and risk damaging settlement buildings.'
     )) + '</p><p class="hint">' + esc(FB.T(
-      'Maximum raid reach: {range} provinces away. {navalStatus}', {
+      'Raid reach: {range} provinces away. {navalStatus}', {
         range: maxRange,
         navalStatus: hasLongships
-          ? FB.T('Longships active: open sea and upriver waterways accessible.')
-          : FB.T('Naval tech (Longships) expands overseas and coastal reach.')
+          ? FB.T('Longships active for open sea and river routes.')
+          : FB.T('Longships tech unlocks distant overseas reach.')
       }
     )) + '</p></div>';
 
-    // Strategy selector
-    h += '<div class="finance-filter-row" style="margin-bottom:12px;">' +
-      '<label class="finance-filter-label">' + esc(FB.T('Expedition Strategy:')) + ' ' +
-      '<select class="finance-filter-select" id="raid-strategy-select">' +
+    // Toolbar: Strategy selector & search bar
+    h += '<div class="raid-target-toolbar" id="raid-target-toolbar">' +
+      '<label class="raid-strategy-label"><span>' + esc(FB.T('Expedition Strategy')) + '</span>' +
+      '<div class="raid-strategy-select-wrap">' +
+      '<select class="raid-strategy-select" id="raid-strategy-select" aria-label="' + esc(FB.T('Expedition Strategy')) + '">' +
       '<option value="sack"' + (raidViewStrategy === 'sack' ? ' selected' : '') + '>' +
-      esc(FB.T('⚔ Deep Sack — Assault settlements & shrines (high plunder & captives, risk of defense clash)')) +
+      esc(FB.T('⚔ Deep Sack')) +
       '</option>' +
       '<option value="swift"' + (raidViewStrategy === 'swift' ? ' selected' : '') + '>' +
-      esc(FB.T('🐎 Swift Skirmish — Reave countryside & herds (fast hit-and-run, minimal risk, modest plunder)')) +
+      esc(FB.T('🐎 Swift Skirmish')) +
       '</option>' +
-      '</select></label></div>';
-
-    // Search bar
-    h += '<div class="finance-filter-row" style="margin-bottom:10px;">' +
-      '<input type="text" id="raid-target-search" class="text-input" placeholder="' +
-      esc(FB.T('Search reachable counties or realms…')) + '" value="' + esc(raidViewSearch) + '" style="width:100%;max-width:340px;">' +
+      '</select></div>' +
+      '<span class="raid-strategy-hint" id="raid-strategy-hint">' + esc(raidStrategyHint(raidViewStrategy)) + '</span>' +
+      '</label>' +
+      '<label class="raid-search-label"><span>' + esc(FB.T('Find target')) + '</span>' +
+      '<div class="raid-search-wrap">' +
+      '<span class="raid-search-icon" aria-hidden="true">🔍</span>' +
+      '<input type="search" id="raid-target-search" class="raid-target-search-input" placeholder="' +
+      esc(FB.T('Find target…')) + '" value="' + esc(raidViewSearch) + '" autocomplete="off" spellcheck="false">' +
+      '<button type="button" id="raid-search-clear" class="raid-search-clear' + (raidViewSearch ? '' : ' hidden') + '" aria-label="' +
+      esc(FB.T('Clear search')) + '">✕</button>' +
+      '</div></label>' +
+      '</div>' +
+      '<div class="raid-target-toolbar-extra">' +
+      '<button type="button" class="btn secondary" id="raid-pick-map">🗺 ' + esc(FB.T('Select on Map')) + '</button>' +
       '</div>';
 
     h += '<div class="gm-list raid-target-list" id="raid-target-list">';
@@ -3267,32 +3285,51 @@ window.FB = window.FB || {};
           return ed ? ed.name : eid;
         }).join(', ');
 
+        const riskLabel = spoilsPreview.combatAdvantage < 0.40
+          ? FB.T('Severe Risk')
+          : (spoilsPreview.combatAdvantage < 0.55 ? FB.T('Moderate Risk') : FB.T('Favorable'));
+        const riskClass = spoilsPreview.combatAdvantage < 0.40
+          ? 'op-bad'
+          : (spoilsPreview.combatAdvantage < 0.55 ? 'op-warn' : 'op-good');
+
+        let routeDesc = '';
+        if (t.intermediateCounties > 0) {
+          if (t.intermediateForts > 0) {
+            routeDesc = FB.T('Passes {n} counties ({f} forts)', { n: t.intermediateCounties, f: t.intermediateForts });
+          } else {
+            routeDesc = FB.T('Passes {n} counties', { n: t.intermediateCounties });
+          }
+        } else {
+          routeDesc = t.coastal ? FB.T('Direct landing') : FB.T('Direct border');
+        }
+
+        const fortDesc = t.fortLevel > 0
+          ? ('🏰 ' + esc(t.fortName) + ' (Tier ' + t.fortLevel + ')')
+          : ('🌾 ' + esc(FB.T('Unfortified')));
+
         h += '<button class="actionbtn raid-target-row" data-target-pid="' + esc(t.pid) + '" data-search="' +
           esc((t.name + ' ' + t.realmName + ' ' + t.rulerName).toLowerCase()) + '">' +
           '⚔ ' + esc(t.name) + ' <span class="dim">(' + esc(t.realmName) + ')</span>' +
-          '<span class="adesc">' + esc(FB.T(
-            'Distance: {distance} legs · Defense: {fort} · Dev {dev} · Pop ~{pop}', {
-              distance: t.distance,
-              fort: t.fortName,
-              dev: t.dev,
-              pop: Math.round(t.pop)
+          '<span class="adesc">' + esc(routeDesc) + ' · ' + fortDesc + ' · ' + esc(FB.T(
+            'Defenders: ~{defenders} · {risk}', {
+              defenders: spoilsPreview.garrisonMen || 40,
+              risk: riskLabel
             }
           )) + '</span>' +
           (endNames ? '<span class="adesc dim">🌾 ' + esc(endNames) + '</span>' : '') +
-          '<span class="adesc op-good">' + esc(FB.T(
-            'Estimated spoils: ~{money:gold} gold · ~{captives} thralls & captives · goods plunder', {
+          (spoilsPreview.success ? ('<span class="adesc ' + riskClass + '">' + esc(FB.T(
+            'Estimated spoils: ~{money:gold} · ~{captives} thralls & captives', {
               gold: spoilsPreview.gold,
               captives: spoilsPreview.captives
             }
-          )) + '</span>' +
-          (t.fortLevel > 1 ? '<span class="adesc warnote">' + esc(FB.T(
-            '🛡 Fortified target: resistance and casualties likely on a deep assault.'
-          )) + '</span>' : '') +
+          )) + '</span>') : ('<span class="adesc op-bad">' + esc(FB.T(
+            'Heavy garrison: high risk of defeat and severe casualties.'
+          )) + '</span>')) +
           '</button>';
       }
     }
     h += '</div><div class="hint large-list-no-results" id="raid-target-empty" hidden>' +
-      esc(FB.T('No target county matches the search query.')) + '</div>' +
+      esc(FB.T('No reachable target matches the search query.')) + '</div>' +
       '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Cancel')) + '</button></div>';
 
@@ -3307,24 +3344,41 @@ window.FB = window.FB || {};
     if (strategySelect) {
       strategySelect.addEventListener('change', function () {
         raidViewStrategy = strategySelect.value;
+        const hintEl = $('raid-strategy-hint');
+        if (hintEl) hintEl.textContent = raidStrategyHint(raidViewStrategy);
         UI.showRaidTargets(returnContext);
       });
     }
 
     const searchInput = $('raid-target-search');
+    const searchClear = $('raid-search-clear');
+    function applyRaidSearch() {
+      raidViewSearch = (searchInput ? searchInput.value : '').toLowerCase().trim();
+      if (searchClear) searchClear.classList.toggle('hidden', !raidViewSearch);
+      const rows = document.querySelectorAll('.raid-target-row');
+      let visibleCount = 0;
+      for (let j = 0; j < rows.length; j++) {
+        const rowSearch = rows[j].getAttribute('data-search') || '';
+        const match = !raidViewSearch || rowSearch.indexOf(raidViewSearch) >= 0;
+        rows[j].style.display = match ? '' : 'none';
+        if (match) visibleCount++;
+      }
+      const emptyNotice = $('raid-target-empty');
+      if (emptyNotice) emptyNotice.hidden = visibleCount > 0;
+    }
+
     if (searchInput) {
-      searchInput.addEventListener('input', function () {
-        raidViewSearch = searchInput.value.toLowerCase();
-        const rows = document.querySelectorAll('.raid-target-row');
-        let visibleCount = 0;
-        for (let j = 0; j < rows.length; j++) {
-          const rowSearch = rows[j].getAttribute('data-search') || '';
-          const match = !raidViewSearch || rowSearch.indexOf(raidViewSearch) >= 0;
-          rows[j].style.display = match ? '' : 'none';
-          if (match) visibleCount++;
+      searchInput.addEventListener('input', applyRaidSearch);
+      if (raidViewSearch) applyRaidSearch();
+    }
+
+    if (searchClear) {
+      searchClear.addEventListener('click', function () {
+        if (searchInput) {
+          searchInput.value = '';
+          searchInput.focus();
         }
-        const emptyNotice = $('raid-target-empty');
-        if (emptyNotice) emptyNotice.hidden = visibleCount > 0;
+        applyRaidSearch();
       });
     }
 
@@ -3338,6 +3392,13 @@ window.FB = window.FB || {};
           UI.showRaidResolution(report, returnContext);
         });
       })(rows[k]);
+    }
+
+    const pickMapBtn = $('raid-pick-map');
+    if (pickMapBtn) {
+      pickMapBtn.addEventListener('click', function () {
+        UI.openRaidMapPicker(returnContext);
+      });
     }
 
     const cancelBtn = $('gm-cancel');
@@ -3354,6 +3415,168 @@ window.FB = window.FB || {};
     }
   };
 
+  let raidMapPickerContext = null;
+
+  UI.raidPickerOpen = function () {
+    const el = $('raid-picker');
+    return !!el && !el.classList.contains('hidden');
+  };
+
+  UI.closeRaidMapPicker = function (discard) {
+    const el = $('raid-picker');
+    if (el) el.classList.add('hidden');
+    document.body.classList.remove('raid-picking');
+    if (FB.map) {
+      FB.map.raidTargets = null;
+      FB.map.raidSelected = null;
+      FB.map.raidTargetMap = null;
+      FB.map.select(null);
+      FB.map.request();
+    }
+    mobileNavClosed('raid-picker', !!discard);
+  };
+
+  UI.openRaidMapPicker = function (returnContext) {
+    const s = FB.state;
+    if (!s || !s.player) return;
+    const rawTargets = FB.raidTargets ? FB.raidTargets(s) : [];
+    if (!rawTargets.length) {
+      UI.toast(FB.T('No foreign target counties are currently within reach.'));
+      return;
+    }
+
+    raidMapPickerContext = returnContext;
+    UI.closeModal();
+
+    const p = s.player;
+    const homePid = p.provinceId || (p.provs && p.provs[0]);
+    const targetMap = {};
+    const targetSet = {};
+    const targetPids = [];
+    for (let i = 0; i < rawTargets.length; i++) {
+      const t = rawTargets[i];
+      targetMap[t.pid] = t;
+      targetSet[t.pid] = true;
+      targetPids.push(t.pid);
+    }
+
+    if (FB.map) {
+      FB.map.raidTargets = targetPids;
+      FB.map.raidTargetMap = targetMap;
+      FB.map.raidSelected = null;
+
+      // Highlight only counties within range of the home county
+      FB.map.select(homePid, function (pid) {
+        return targetSet[pid] || pid === homePid ? 'in_reach' : null;
+      });
+      if (homePid) FB.map.centerOn(homePid, FB.map.zoom);
+      FB.map.request();
+    }
+
+    document.body.classList.add('raid-picking');
+
+    const el = $('raid-picker');
+    if (el) el.classList.remove('hidden');
+
+    const stratSelect = $('raid-picker-strategy');
+    if (stratSelect) stratSelect.value = raidViewStrategy || 'sack';
+
+    const summaryEl = $('raid-picker-summary');
+    if (summaryEl) {
+      summaryEl.textContent = FB.T('Tap any highlighted county on the map to target it ({count} in reach).', {
+        count: targetPids.length
+      });
+    }
+    const launchBtn = $('raid-picker-launch');
+    if (launchBtn) launchBtn.disabled = true;
+
+    mobileNavPush('raid-picker',
+      function () { UI.closeRaidMapPicker(true); },
+      function () { UI.openRaidMapPicker(returnContext); },
+      function () { return UI.raidPickerOpen(); },
+      function () { return true; });
+  };
+
+  UI.raidPickProvince = function (pid, center) {
+    if (!UI.raidPickerOpen()) return false;
+    const targetMap = (FB.map && FB.map.raidTargetMap) || {};
+    const item = targetMap[pid];
+    const s = FB.state;
+    const p = s.player;
+    const homePid = p.provinceId || (p.provs && p.provs[0]);
+
+    if (!item) {
+      if (pid === homePid) {
+        UI.toast(FB.T('This is your home county.'));
+      } else {
+        UI.toast(FB.T('That county is beyond your raiding reach.'));
+      }
+      return false;
+    }
+
+    if (FB.map) {
+      FB.map.raidSelected = pid;
+      const targetSet = {};
+      for (let i = 0; i < (FB.map.raidTargets || []).length; i++) {
+        targetSet[FB.map.raidTargets[i]] = true;
+      }
+      FB.map.select(pid, function (id) {
+        return targetSet[id] || id === homePid ? 'in_reach' : null;
+      });
+      if (center) FB.map.centerOn(pid, FB.map.zoom);
+      FB.map.request();
+    }
+
+    const strat = ($('raid-picker-strategy') && $('raid-picker-strategy').value) || raidViewStrategy || 'sack';
+    const spoils = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, pid, strat) : { gold: 0, captives: 0 };
+    const pr = FB.world.byId[pid];
+
+    const riskLabel = (spoils.combatAdvantage < 0.40)
+      ? FB.T('Severe Risk')
+      : ((spoils.combatAdvantage < 0.55) ? FB.T('Moderate Risk') : FB.T('Favorable'));
+
+    const summaryEl = $('raid-picker-summary');
+    if (summaryEl) {
+      summaryEl.innerHTML = '<strong>' + esc(pr ? pr.name : pid) + ' (' + esc(item.realmName) + ')</strong> · ' +
+        (spoils.success ? esc(FB.T('Est. Spoils: ~{money:gold}, ~{captives} captives', {
+          gold: spoils.gold,
+          captives: spoils.captives
+        })) : ('<span class="warnote">' + esc(FB.T('High garrison risk')) + '</span>')) +
+        ' · <span class="dim">' + esc(FB.T('Defenders: ~{defenders} ({risk})', {
+          defenders: spoils.garrisonMen || 40,
+          risk: riskLabel
+        })) + '</span>';
+    }
+
+    const launchBtn = $('raid-picker-launch');
+    if (launchBtn) launchBtn.disabled = false;
+    return true;
+  };
+
+  UI.returnToRaidList = function () {
+    const returnCtx = raidMapPickerContext;
+    UI.closeRaidMapPicker(false);
+    UI.showRaidTargets(returnCtx);
+  };
+
+  UI.raidStrategyChanged = function (val) {
+    raidViewStrategy = val;
+    if (FB.map && FB.map.raidSelected) {
+      UI.raidPickProvince(FB.map.raidSelected, false);
+    }
+  };
+
+  UI.executeRaidFromMap = function () {
+    if (!FB.map || !FB.map.raidSelected) return;
+    const targetPid = FB.map.raidSelected;
+    const stratSelect = $('raid-picker-strategy');
+    const strat = (stratSelect && stratSelect.value) || raidViewStrategy || 'sack';
+    const returnCtx = raidMapPickerContext;
+    UI.closeRaidMapPicker(false);
+    const report = FB.executeRaid(FB.state, targetPid, strat);
+    UI.showRaidResolution(report, returnCtx);
+  };
+
   UI.showRaidResolution = function (report, returnContext) {
     const s = FB.state;
     if (!s || !report) return;
@@ -3361,49 +3584,91 @@ window.FB = window.FB || {};
     const targetRid = s.owner && s.owner[report.targetPid];
     const targetRealm = targetRid && s.realms && s.realms[targetRid];
 
-    let h = '<div class="gm-body-text">' +
-      '<p><strong>' + esc(FB.T('Your raiders have returned from the raid on {province}!', {
-        province: pr ? pr.name : report.targetPid
-      })) + '</strong></p>' +
+    let h = '<div class="gm-body-text">';
+
+    if (report.success) {
+      const isCostly = report.victoryGrade === 'costly';
+      h += '<p><strong>' + esc(FB.T(
+        isCostly ? 'Your raiders fought through heavy resistance at {province}!' : 'Your raiders returned victorious from {province}!', {
+          province: pr ? pr.name : report.targetPid
+        }
+      )) + '</strong></p>' +
       '<div class="progressnote op-good" style="margin-bottom:8px;">' +
-      '💰 ' + esc(FB.T('+{money:gold} Gold plundered · +{prestige} Prestige', {
+      '💰 ' + esc(FB.T('+{money:gold} plundered · +{prestige} Prestige', {
         gold: report.gold + (report.ransomGold || 0),
         prestige: report.prestige
       })) + '</div>';
 
-    // Commodities breakdown
-    const g = report.goods || {};
-    const goodsParts = [];
-    if (g.provisions) goodsParts.push('🍞 ' + g.provisions + ' ' + FB.T('Provisions'));
-    if (g.wares) goodsParts.push('🧺 ' + g.wares + ' ' + FB.T('Wares'));
-    if (g.materials) goodsParts.push('⚒ ' + g.materials + ' ' + FB.T('Materials'));
-    if (g.transport) goodsParts.push('🐴 ' + g.transport + ' ' + FB.T('Transport'));
-    if (g.luxuries) goodsParts.push('✨ ' + g.luxuries + ' ' + FB.T('Luxuries'));
-    if (goodsParts.length) {
-      h += '<div class="progressnote" style="margin-bottom:8px;">' +
-        esc(FB.T('Looted Commodities:')) + ' ' + esc(goodsParts.join(' · ')) + '</div>';
+      // Commodities breakdown
+      const g = report.goods || {};
+      const goodsParts = [];
+      if (g.provisions) goodsParts.push('🍞 ' + g.provisions + ' ' + FB.T('Provisions'));
+      if (g.wares) goodsParts.push('🧺 ' + g.wares + ' ' + FB.T('Wares'));
+      if (g.materials) goodsParts.push('⚒ ' + g.materials + ' ' + FB.T('Materials'));
+      if (g.transport) goodsParts.push('🐴 ' + g.transport + ' ' + FB.T('Transport'));
+      if (g.luxuries) goodsParts.push('✨ ' + g.luxuries + ' ' + FB.T('Luxuries'));
+      if (goodsParts.length) {
+        h += '<div class="progressnote" style="margin-bottom:8px;">' +
+          esc(FB.T('Looted commodities:')) + ' ' + esc(goodsParts.join(' · ')) + '</div>';
+      }
+
+      // Captives
+      if (report.captives > 0) {
+        h += '<div class="progressnote" style="margin-bottom:8px;">' +
+          '👥 ' + esc(FB.T('{captives} captives taken.', { captives: report.captives })) +
+          '</div>';
+      }
+
+      // Devastation on Target
+      h += '<div class="progressnote warnote" style="margin-bottom:8px;">' +
+        '🔥 ' + esc(FB.T('Devastation inflicted on {province}:', { province: pr ? pr.name : report.targetPid })) + '<br>' +
+        ' · ' + esc(FB.T('Population drain: -{pop} inhabitants', { pop: report.popLoss })) + '<br>' +
+        ' · ' + esc(FB.T('Severe market disruption (4 seasons).')) + '<br>' +
+        (report.ruinedBuildings && report.ruinedBuildings.length ? ' · ' + esc(FB.T('{count} settlement buildings ruined.', { count: report.ruinedBuildings.length })) + '<br>' : '') +
+        (report.devLoss ? ' · ' + esc(FB.T('County development reduced by 1.')) + '<br>' : '') +
+        ' · ' + esc(FB.T('Standing with {realm} reduced by 25.', { realm: targetRealm ? targetRealm.name : FB.T('the victim realm') })) +
+        '</div>';
+    } else {
+      // Raid Repelled
+      const stoppedPr = report.stoppedProvince && FB.world.byId[report.stoppedProvince];
+      const stoppedName = stoppedPr ? stoppedPr.name : report.stoppedProvince;
+      h += '<p><strong class="op-bad">' + esc(FB.T(
+        stoppedPr && report.stoppedProvince !== report.targetPid
+          ? 'Your raiders were intercepted and repelled at {stopped} while marching toward {province}!'
+          : 'Your raiders were repelled with heavy losses at {province}!', {
+            stopped: stoppedName,
+            province: pr ? pr.name : report.targetPid
+          }
+      )) + '</strong></p>' +
+      '<div class="progressnote op-bad" style="margin-bottom:8px;">' +
+      esc(FB.T('The garrison and defenders under {realm} resisted the assault and drove off your reaving warband.', {
+        realm: targetRealm ? targetRealm.name : FB.T('the defending lord')
+      })) + '<br>' +
+      '📉 ' + esc(FB.T('{prestige} Prestige', { prestige: report.prestige })) +
+      '</div>';
     }
 
-    // Captives
-    h += '<div class="progressnote" style="margin-bottom:8px;">' +
-      '👥 ' + esc(FB.T('{captives} captives taken from the countryside.', { captives: report.captives })) +
-      '</div>';
+    // March Skirmishes along the route
+    if (report.marchSkirmishes && report.marchSkirmishes.length > 1) {
+      const marchParts = [];
+      for (let sIdx = 0; sIdx < report.marchSkirmishes.length; sIdx++) {
+        const ms = report.marchSkirmishes[sIdx];
+        if (ms.casualties > 0 || ms.repelled) {
+          marchParts.push(esc(ms.name) + ': ' + (ms.repelled ? FB.T('Repelled (-{n} men)', { n: ms.casualties }) : FB.T('-{n} men', { n: ms.casualties })));
+        }
+      }
+      if (marchParts.length) {
+        h += '<div class="progressnote" style="margin-bottom:8px;">' +
+          '🗺 ' + esc(FB.T('Expedition Skirmishes:')) + ' ' + marchParts.join(' · ') + '</div>';
+      }
+    }
 
-    // Devastation on Target
-    h += '<div class="progressnote warnote" style="margin-bottom:8px;">' +
-      '🔥 ' + esc(FB.T('Devastation inflicted on {province}:', { province: pr ? pr.name : report.targetPid })) + '<br>' +
-      ' · ' + esc(FB.T('Population drain: -{pop} inhabitants', { pop: report.popLoss })) + '<br>' +
-      ' · ' + esc(FB.T('Severe market shock applied for 4 seasons (production cut).')) + '<br>' +
-      (report.ruinedBuildings && report.ruinedBuildings.length ? ' · ' + esc(FB.T('{count} settlement buildings ruined by fire and pillage.', { count: report.ruinedBuildings.length })) + '<br>' : '') +
-      (report.devLoss ? ' · ' + esc(FB.T('County economic development reduced by 1.')) + '<br>' : '') +
-      ' · ' + esc(FB.T('Standing with {realm} reduced by 25.', { realm: targetRealm ? targetRealm.name : FB.T('the victim realm') })) +
-      '</div>';
-
-    // Casualties
+    // Casualties & Losses
     if (report.casualties > 0 || report.wounded) {
       h += '<div class="progressnote warnote" style="margin-bottom:8px;">' +
-        '🩸 ' + (report.casualties > 0 ? esc(FB.T('{men} raiders fell in skirmishes against defending garrisons. ', { men: report.casualties })) : '') +
-        (report.wounded ? esc(FB.T('You suffered a wound during the fighting.')) : '') +
+        '🩸 ' + (report.casualties > 0 ? esc(FB.T('{men} raiders and levies lost in combat across the expedition route.', { men: report.casualties })) : '') +
+        (report.wounded ? ('<br>⚠️ ' + esc(FB.T('You suffered a severe wound during the fighting.'))) : '') +
+        (!report.success || report.casualties >= 30 ? ('<br>🛡 ' + esc(FB.T('Your home host has been depleted and requires time to rearm.'))) : '') +
         '</div>';
     }
 
@@ -3411,7 +3676,13 @@ window.FB = window.FB || {};
       '<button class="btn primary" id="gm-raid-done">' + esc(FB.T('Done')) + '</button>' +
       '</div>';
 
-    openModal(FB.T('Raid Triumphant: {province}', { province: pr ? pr.name : report.targetPid }), h, {
+    const modalTitle = report.success
+      ? (report.victoryGrade === 'costly'
+          ? FB.T('Contested Raid: {province}', { province: pr ? pr.name : report.targetPid })
+          : FB.T('Raid Triumphant: {province}', { province: pr ? pr.name : report.targetPid }))
+      : FB.T('Raid Repelled: {province}', { province: pr ? pr.name : report.targetPid });
+
+    openModal(modalTitle, h, {
       historyView:false
     });
 

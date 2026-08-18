@@ -165,7 +165,9 @@ parallel `state.privileges` entry records holder, grantor, territorial scope, ri
 exemptions, obligations, protected duration, revocation rule, and semantic source.
 `obl.revocationConsent` likewise remains the authoritative law while its privilege record
 describes the institutional holder and estates-vote revocation rule. This is provenance,
-not a second modifier or law calculation.
+not a second modifier or law calculation. Load-time institution repair discovers legacy
+modifier provenance; the normalized modifier APIs maintain it afterward, so the daily
+institution pass does not rescan every county merely to rediscover the same records.
 
 The four authored institution agendas use the same county contract. Market settlements
 grant Market Charter or Contested Tolls; wartime service grants Muster Burden, Levy

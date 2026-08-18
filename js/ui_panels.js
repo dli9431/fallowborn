@@ -4142,10 +4142,47 @@ window.FB = window.FB || {};
       const rid = s.owner[pid];
       const realm = s.realms[rid];
       const communities = FB.provinceCommunities(pr);
-      const B = FBDATA.balance;
+      const B = FBDATA.balance || {};
       const myRealm = rid === 'player';
-      const realmMen = realm ? (myRealm ? FB.realmDefensiveStrength(s, 'player') :
-        FB.realmDefensiveStrength(s, rid)) : 0;
+      let curRealmMen;
+      let maxRealmMen;
+      if (myRealm && FB.playerLevy) {
+        /* the player's own card shows the real host — the full composition
+           (levy, archers, cavalry, retinue) that musters for wars and raids —
+           so the number matches the muster preview and expedition reports.
+           Maximum is the full-population baseline composition, floored at the
+           current host so the overpopulation bonus never reads as a deficit */
+        const rearmScale = FB.rearmScale ? FB.rearmScale(s, 'player') : 1;
+        const currentHost = FB.playerLevy(s);
+        curRealmMen = Math.round(currentHost * rearmScale);
+        maxRealmMen = Math.max(FB.playerMaxLevy ? FB.playerMaxLevy(s) : 0, currentHost);
+      } else {
+        const realmProvs = (FB.realmProvinces ? FB.realmProvinces(s, rid) : []).slice();
+        const provsToSum = realmProvs.length ? realmProvs : [pid];
+
+        let curProvTotal = 0;
+        let maxProvTotal = 0;
+        for (let i = 0; i < provsToSum.length; i++) {
+          const pId = provsToSum[i];
+          const pDev = (s.dev && s.dev[pId]) || 1;
+          const pPop = (FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pId) : 1);
+          const pMod = (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pId)) : 1);
+          curProvTotal += pDev * pPop * (B.levyPerDev || 80) * pMod;
+          /* maximum counts the overpopulation bonus (population factor above
+             its baseline) so a thriving county's realm host never reads below
+             its province levy; the current/max fraction appears only for
+             genuine deficits — the rearm window or a fallen population */
+          maxProvTotal += pDev * Math.max(pPop, 1) * (B.levyPerDev || 80) * pMod;
+        }
+
+        const rearmScale = (realm && FB.rearmScale) ? FB.rearmScale(s, rid) : 1;
+        curRealmMen = Math.round(curProvTotal * rearmScale);
+        maxRealmMen = Math.round(maxProvTotal);
+      }
+
+      const realmHostDisplay = (curRealmMen < maxRealmMen)
+        ? ('~' + curRealmMen + '/' + maxRealmMen + ' ' + FB.T('men'))
+        : ('~' + maxRealmMen + ' ' + FB.T('men'));
       // the feudal ladder: who holds this county directly, and above them whom
       const holdId = (s.holder && s.holder[pid]) || rid;
       let chain;
@@ -4191,7 +4228,7 @@ window.FB = window.FB || {};
         (realm ? landKv('Sovereign', sovereignHtml) : '') +
         (realm ? landKv('Realm size',
           esc(countyCountText(s, FB.realmProvinces(s, rid).length))) : '') +
-        (realm ? landKv('Realm host', '~' + esc(menText(s, realmMen))) : '') +
+        (realm ? landKv('Realm host', realmHostDisplay) : '') +
         (realm ? landKv('Defensive alliance', esc(allianceText(s, rid)), true) : '');
       if (realm && !myRealm && FB.isPlayerSovereign(s)) {
         const realmStanding = FB.standingOf(s, { kind:'realm', id:rid });
@@ -4225,9 +4262,9 @@ window.FB = window.FB || {};
           }).join('<br>'), true) : '') +
         landKv('Terrain', esc(terrainName(pr.terrain)) +
           (pr.coastal ? ', ' + esc(FB.T('coastal')) : '')) +
-        landKv('Province levy', '~' + esc(menText(s,
+        landKv('Province levy', '~' + esc(menText(s, Math.round(
           (s.dev[pid] || 1) * (FB.countyPopulationFactor ? FB.countyPopulationFactor(s, pid) : 1) * B.levyPerDev *
-          (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1))));
+          (FB.modBonus ? Math.max(0, 1 + FB.modBonus(s, 'levy', pid)) : 1)))));
       const setts = FB.settlementsOf(s, pid);
       if (setts.length) {
         // every settlement is a button: it opens that settlement's sheet
@@ -4332,8 +4369,8 @@ window.FB = window.FB || {};
       }
       if (realm && !myRealm && s.player.tier >= 3) {
         h += '<div class="progressnote">' + esc(FB.T(
-          '🛡 They can field ~{theirs} — you can field ~{yours}.',
-          { theirs: menText(s, realmMen), yours: menText(s, FB.playerLevy(s)) })) + '</div>';
+          '🛡 They can field {theirs} — you can field ~{yours}.',
+          { theirs: realmHostDisplay, yours: menText(s, FB.playerLevy(s)) })) + '</div>';
       }
       const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
       if (hostsHere.length) {

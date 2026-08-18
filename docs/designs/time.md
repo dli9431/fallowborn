@@ -21,6 +21,24 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 `G.setSpeed`, +/- keys or menu → Settings) while unpaused (`G.paused` / `G.togglePause`); death, succession,
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
+It still executes the authoritative daily tick for every date, but invariant
+repair work is retained between relevant mutations: political courts key off
+the unsaved realm revision only while no court is eligible (active courts keep
+their daily reconciliation), stable Papal and religious offices bypass their
+full repair until an election or vacancy is due, and a normalized Papal office
+answers player-decision checks and advances due AI conclave ballots directly
+without re-entering that world-wide repair. Institution legacy scans run once
+per loaded state. Scripted history likewise retains its next due date, and
+materialized ruler synchronization reuses each ruler projection within a pass.
+These retained paths never batch RNG-bearing mechanics or move expiry boundaries;
+focus, travel, armies, events, and dated transitions keep their ordinary
+per-day order. The player-facing skip is frame-sliced to an eight-millisecond
+budget (and at most six days per frame), with UI refreshes, political-map base
+rebuilds, canvas renders, and the replaceable autoresolve receipt toast deferred
+until the burst ends. This keeps input and painting responsive without making
+wall-clock timing part of simulation state. A coachmark raised during an active
+burst still pauses it immediately, and an already-open lesson keeps the skip
+from starting until the player dismisses it.
 
 Focus defaults are role-first. A landed adult defaults to `govern`, gentry to
 `manage_manor`, and only serfs/commoners default from their vocation. Hands-on

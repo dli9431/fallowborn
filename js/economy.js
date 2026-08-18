@@ -6462,9 +6462,30 @@ window.FB = window.FB || {};
   };
 
   FB.financeDay = function (state) {
+    /* New games and restored saves already carry a normalized economy. The
+       overwhelmingly common no-investment day has no finance work to do, so
+       do not rescan loan and investment ids ninety times per skipped season. */
+    if (state.economy && Array.isArray(state.economy.investments)) {
+      let due = false;
+      for (let i = 0; i < state.economy.investments.length; i++) {
+        const saved = state.economy.investments[i];
+        if (saved && saved.status === 'active' &&
+            saved.kind === 'trade_venture' && saved.dueTurn <= state.turn) {
+          due = true;
+          break;
+        }
+      }
+      if (!due) return;
+    }
     const e = FB.ensureEconomy(state);
     if (!e.investments.length) return; // nothing to build, nothing falls due
-    const ventures = FB.financeActiveTradeVentures(state);
+    const ventures = [];
+    for (let i = 0; i < e.investments.length; i++) {
+      const investment = e.investments[i];
+      if (investment.status === 'active' &&
+          investment.kind === 'trade_venture') ventures.push(investment);
+    }
+    ventures.sort(function (a, b) { return a.id - b.id; });
     for (let i = 0; i < ventures.length; i++) {
       if (ventures[i].dueTurn <= state.turn) FB.resolveTradeVenture(state, ventures[i]);
     }

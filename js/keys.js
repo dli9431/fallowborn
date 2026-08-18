@@ -22,6 +22,9 @@ window.FB = window.FB || {};
   function travelOpen() {
     return FB.ui && FB.ui.travelPickerOpen && FB.ui.travelPickerOpen();
   }
+  function raidOpen() {
+    return FB.ui && FB.ui.raidPickerOpen && FB.ui.raidPickerOpen();
+  }
 
   function clickNth(sel, n) {
     const nodes = document.querySelectorAll(sel);
@@ -199,11 +202,23 @@ window.FB = window.FB || {};
       }
     }
 
+    if (raidOpen()) {
+      if (k === 'Escape') {
+        e.preventDefault();
+        FB.ui.closeRaidMapPicker(false);
+        return;
+      }
+      if (k === ' ' || k === 'e' || k === 'E' || k === 'f' || k === 'F') {
+        e.preventDefault();
+        return;
+      }
+    }
+
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }
 
     /* User bindings are semantic deed/focus targets. Digits never enter this
        path, so positional modal navigation keeps its independent meaning. */
-    if (!travelOpen() && !(FB.game && FB.game.pickMode) &&
+    if (!travelOpen() && !raidOpen() && !(FB.game && FB.game.pickMode) &&
         !e.shiftKey && !e.repeat && FB.ui && FB.ui.runActionShortcut &&
         FB.ui.runActionShortcut(k)) {
       e.preventDefault();
@@ -284,7 +299,10 @@ window.FB = window.FB || {};
         e.preventDefault();
         // hold-to-fast-forward: key auto-repeat keeps skipping ahead (unlike the
         // Space/E pause toggles, a repeated one-way skip is harmless and useful).
-        if (FB.state && !FB.ui.eventsBusy()) { FB.game.setPaused(true); FB.game.skipAhead(); }
+        if (FB.state && !FB.ui.eventsBusy() && !FB.game.fastForwarding) {
+          FB.game.setPaused(true);
+          FB.game.skipAhead();
+        }
         return;
       case '?': case '/':
         if (FB.state && FB.ui.toggleFindOverlay && !FB.ui.eventsBusy()) {

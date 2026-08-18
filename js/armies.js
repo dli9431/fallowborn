@@ -31,6 +31,9 @@ window.FB = window.FB || {};
        levy only — the slain professionals are not replaced mid-war.
      state.armyDown: { realmId: turn } — a destroyed host may muster again
        only after balance.armyRearmDays.
+     state.armyDownSurvival: { realmId: { turn, frac } } — a costly raid's
+       surviving strength fraction; rearmScale ramps from it (keyed to the
+       down-turn) instead of the 0.15 shattered-host floor.
      state.player.war.musterPool: { levy, arch, cav, ret } — the men a
        voluntary de-muster sent home; the war's next muster is capped at
        them, so a beaten player cannot re-raise a full levy. */
@@ -554,14 +557,40 @@ window.FB = window.FB || {};
     return false;
   };
 
+  /* Vassals cannot own a foreign war or raise a sovereign host. Keep that
+     derived subset until a realm death or hierarchy mutation advances the
+     shared realm revision; a mature world has hundreds of vassal records but
+     only dozens of sovereigns. */
+  let sovereignIndexState = null;
+  let sovereignIndexRevision = -1;
+  let sovereignIndexIds = [];
+  function sovereignRealmIds(state) {
+    const revision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    if (sovereignIndexState === state &&
+        sovereignIndexRevision === revision) return sovereignIndexIds;
+    const ids = [];
+    for (const id in state.realms) {
+      const realm = state.realms[id];
+      if (id !== 'player' && realm && realm.alive && !realm.liege) ids.push(id);
+    }
+    sovereignIndexState = state;
+    sovereignIndexRevision = revision;
+    sovereignIndexIds = ids;
+    return ids;
+  }
+
   /* who fights whom, built once per tick: realmId → enemyId, both directions,
-     plus the player's personal war ('player' ↔ its enemy). Keeps the daily
-     raise/order loops O(realms + armies) instead of O(realms²). */
-  function warringMap(state) {
+     plus the player's personal war ('player' ↔ its enemy). Reading only the
+     retained sovereign subset keeps the daily path O(sovereigns + armies)
+     rather than revisiting every generated vassal. */
+  function warringMap(state, sovereignIds) {
     const m = {};
     const pw = state.player.war;
     if (pw && pw.enemy) { m['player'] = pw.enemy; m[pw.enemy] = 'player'; }
-    for (const id in state.realms) {
+    for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
+        sovereignIndex++) {
+      const id = sovereignIds[sovereignIndex];
       const r = state.realms[id];
       if (!r.alive || !r.war) continue;
       const e = state.realms[r.war.enemy];
@@ -605,7 +634,13 @@ window.FB = window.FB || {};
     FB.armiesEnsure(state);
     const down = state.armyDown[rid];
     if (down === undefined) return 1;
-    return FB.clamp((state.turn - down) / B().armyRearmDays, 0.15, 1);
+    /* a host depleted but intact (a costly raid) re-arms from its surviving
+       strength; only a shattered army starts from the 0.15 floor. The
+       survival record is keyed to the down-turn so a later shattering never
+       inherits a stale floor. */
+    const survival = (state.armyDownSurvival && state.armyDownSurvival[rid]) || null;
+    const floor = (survival && survival.turn === down) ? Math.max(0.15, survival.frac) : 0.15;
+    return FB.clamp((state.turn - down) / B().armyRearmDays, floor, 1);
   };
 
   function playerHome(state) {
@@ -1457,7 +1492,8 @@ window.FB = window.FB || {};
     if (p.militaryCommand && !FB.activeMilitaryCommand(state)) {
       FB.endMilitaryCommand(state);
     }
-    const warring = warringMap(state);
+    const sovereignIds = sovereignRealmIds(state);
+    const warring = warringMap(state, sovereignIds);
     /* read once per tick: nothing in the raise/disband/order steps below
        mutates the pledge, the campaign, or the player's sovereignty */
     const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
@@ -1481,9 +1517,10 @@ window.FB = window.FB || {};
     }
 
     // sovereigns at war raise their host (the player musters by deed/event)
-    for (const id in state.realms) {
+    for (let sovereignIndex = 0; sovereignIndex < sovereignIds.length;
+        sovereignIndex++) {
+      const id = sovereignIds[sovereignIndex];
       const r = state.realms[id];
-      if (!r.alive || r.liege || id === 'player') continue;
       if (!warring[id] || hostByRealm[id]) continue;
       const down = state.armyDown[id];
       if (down !== undefined && state.turn - down < B().armyRearmDays) continue;

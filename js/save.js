@@ -8,6 +8,27 @@ window.FB = window.FB || {};
   FB.save = S;
   const PREFIX = 'fb_';
   let serializingBuildingRecords = null;
+  const ROYAL_COMPACT_KEYS = {
+    id:1, childIds:1, alive:1, role:1, parentId:1, charId:1
+  };
+  const CHARACTER_COMPACT_KEYS = {
+    id:1, childrenIds:1, traits:1, dead:1, role:1, dyn:1,
+    station:1, opinion:1, fertility:1, health:1,
+    fatherId:1, motherId:1, spouseId:1
+  };
+  const REALM_COMPACT_KEYS = {
+    id:1, alive:1, liege:1, aggression:1, war:1, op:1
+  };
+  const TECHNOLOGY_COMPACT_KEYS = {
+    reserve:1, active:1, completed:1, progress:1, priorities:1, exposed:1
+  };
+  const SAVE_COMPACT_KEYS = {
+    id:1, childIds:1, alive:1, role:1, parentId:1, charId:1,
+    childrenIds:1, traits:1, dead:1, dyn:1, station:1, opinion:1,
+    fertility:1, health:1, fatherId:1, motherId:1, spouseId:1,
+    liege:1, aggression:1, war:1, op:1, s:1, devGranted:1,
+    reserve:1, active:1, completed:1, progress:1, priorities:1, exposed:1
+  };
 
   function own(o, key) {
     return Object.prototype.hasOwnProperty.call(o, key);
@@ -47,7 +68,8 @@ window.FB = window.FB || {};
      live object is mutated while a slot or export is written. */
   function saveReplacer(key, value) {
     const holder = this;
-    if (royalMemberRecord(holder)) {
+    if (!SAVE_COMPACT_KEYS[key]) return value;
+    if (ROYAL_COMPACT_KEYS[key] && royalMemberRecord(holder)) {
       if (key === 'id') return undefined;
       if (key === 'childIds') return undefined;
       if (key === 'alive' && value === true) return undefined;
@@ -65,7 +87,8 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (holder && (holder.royalLine || characterRecord(holder))) {
+    if (CHARACTER_COMPACT_KEYS[key] && holder &&
+        (holder.royalLine || characterRecord(holder))) {
       if (key === 'id') return undefined;
       if (key === 'childrenIds' && Array.isArray(value) && !value.length) {
         return undefined;
@@ -83,7 +106,7 @@ window.FB = window.FB || {};
       if ((key === 'fatherId' || key === 'motherId' || key === 'spouseId') &&
           value === null) return undefined;
     }
-    if (realmRecord(holder)) {
+    if (REALM_COMPACT_KEYS[key] && realmRecord(holder)) {
       if (key === 'id') return undefined;
       if (key === 'alive' && value === true) return undefined;
       if (key === 'liege' && value === null) return undefined;
@@ -91,11 +114,12 @@ window.FB = window.FB || {};
       if (key === 'war' && value === null) return undefined;
       if (key === 'op' && value === 0) return undefined;
     }
-    if (buildingRecord(holder) && key === 's' && value === 0) {
+    if (key === 's' && value === 0 && buildingRecord(holder)) {
       return undefined;
     }
     if (key === 'devGranted' && value === true) return undefined;
-    if (realmTechRecord(holder)) {
+    const technology = TECHNOLOGY_COMPACT_KEYS[key] && realmTechRecord(holder);
+    if (technology) {
       if (key === 'reserve' && value === 0) return undefined;
       if ((key === 'active' || key === 'completed') &&
           Array.isArray(value) && !value.length) return undefined;
@@ -104,7 +128,7 @@ window.FB = window.FB || {};
         return undefined;
       }
     }
-    if (key === 'exposed' && Array.isArray(value) && realmTechRecord(holder)) {
+    if (key === 'exposed' && Array.isArray(value) && technology) {
       const remaining = value.filter(function (id) {
         return holder.completed.indexOf(id) < 0;
       });
@@ -207,12 +231,14 @@ window.FB = window.FB || {};
      A serialized life is ~1.5 MB of JSON; localStorage quotas are ~5 MB on
      WebKit and ~10 MB elsewhere, and the quota is shared by the autosave and
      every slot - so uncompressed, a life effectively fits once on the
-     browsers mobile players actually use. Slots and exports are therefore
-     compressed at this boundary with an LZW variant (a port of lz-string by
-     pieroxy, MIT), packing the bit stream into storage-safe UTF-16
-     characters or base64 text. S.serialize keeps returning plain JSON; only
-     the at-rest and exported encodings change, and both decoders still
-     accept the uncompressed legacy forms. */
+     browsers mobile players actually use. Manual slots and exports are
+     therefore compressed at this boundary with an LZW variant (a port of
+     lz-string by pieroxy, MIT), packing the bit stream into storage-safe
+     UTF-16 characters or base64 text. The frequently replaced autosave stays
+     plain unless quota pressure requires the compressed fallback, avoiding a
+     whole-save codec round trip at every season boundary. S.serialize keeps
+     returning plain JSON, and both decoders still accept the uncompressed
+     legacy forms. */
 
   function lzCompress(input, bitsPerChar, charFromInt) {
     const dictionary = Object.create(null);
@@ -506,8 +532,10 @@ window.FB = window.FB || {};
 
   /* Autosaving splits so a season boundary does not stall the day loop: the
      snapshot is still taken synchronously (the state to capture is the live
-     one, before any mortality roll), but the codec pass and the storage
-     write run after a frame can paint. A newer autosave supersedes a
+     one, before any mortality roll), but the storage write runs after a frame
+     can paint. Writing that ready JSON directly avoids compressing and then
+     decompressing the entire life on every season. Only a quota rejection
+     pays for the smaller verified encoding. A newer autosave supersedes a
      still-pending one; only the autosave slot is written this way — manual
      saves stay fully synchronous. */
   let pendingAuto = null;
@@ -516,9 +544,17 @@ window.FB = window.FB || {};
     pendingAuto = null;
     if (!job) return;
     try {
-      localStorage.setItem(key('auto'), encodeStored(job.json));
+      localStorage.setItem(key('auto'), job.json);
     } catch (e) {
-      reportSaveError(e);
+      if (!isQuotaError(e)) {
+        reportSaveError(e);
+        return;
+      }
+      try {
+        localStorage.setItem(key('auto'), encodeStored(job.json));
+      } catch (compactError) {
+        reportSaveError(compactError);
+      }
     }
   }
   /* a hidden or closing page may never run another timer — land the pending

@@ -9,8 +9,12 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.139.1';
+  FB.VERSION = '1.139.2';
   FB.CHANGELOG = [
+    { v: '1.139.2', date: '2026-08-17', changes: [
+      'The raiding expedition modal now features standardized toolbar styles with custom strategy dropdowns, search inputs, and instant clear controls.',
+      'Fast-forward now stays responsive and avoids rebuilding unchanged world, market, institution, and save data on every skipped day.'
+    ] },
     { v: '1.139.1', date: '2026-08-17', changes: [
       'Raid target evaluation and spoils calculation now handle market endowments correctly, and naval navigation and cavalry raid reach are tuned to period innovations.'
     ] },
@@ -1939,7 +1943,7 @@ window.FB = window.FB || {};
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
-      armies: [], armyDown: {},
+      armies: [], armyDown: {}, armyDownSurvival: {},
       alliances: [],
       faiths: {}, faithRelations: {}, faithNextId: 1,
       religiousHeads: {},
@@ -2193,7 +2197,7 @@ window.FB = window.FB || {};
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
-      armies: [], armyDown: {},
+      armies: [], armyDown: {}, armyDownSurvival: {},
       alliances: [],
       faiths: {}, faithRelations: {}, faithNextId: 1,
       religiousHeads: {},
@@ -2311,9 +2315,6 @@ window.FB = window.FB || {};
         else FB.validateFocus(s);
       }
       FB.tickSocialAttention(s);
-      if (FB.syncMaterializedRealmRulers) {
-        FB.syncMaterializedRealmRulers(s);
-      }
     }
 
     // advance date: 90-day seasons, 360-day years
@@ -2440,20 +2441,69 @@ window.FB = window.FB || {};
       // runEvents reports whether a modal actually opened; autoresolved
       // events pass silently and the day keeps flowing
       if (FB.ui.runEvents(events)) return 'event';
-      G.afterEvents(); // a silently resolved blow can still prove mortal
+      /* runEvents closes its queue through afterEvents, including the mortal
+         and promotion checks. Do not repeat that whole post-event pass. */
       return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
     }
-    G.afterEvents();
+    G.afterEvents({ syncRulers:seasonBoundary });
     return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
   };
 
-  /* Fast-forward until something happens: an event, a new season, or death. */
+  /* Fast-forward until something happens: an event, a new season, or death.
+     The simulation remains one authoritative day at a time, but a whole
+     autoresolved season must not monopolize the browser's main thread. */
+  const FAST_FORWARD_FRAME_BUDGET = 8;
+  const FAST_FORWARD_MAX_DAYS_PER_FRAME = 6;
+  G.fastForwarding = false;
+
   G.skipAhead = function () {
-    for (let i = 0; i < 92; i++) {
-      const r = G.passDay();
-      if (r !== 'day') break;
-      if (G.paused) break; // a lesson popped mid-skip and stilled the days
+    if (G.fastForwarding ||
+        (FB.ui && FB.ui.coachmarkOpen && FB.ui.coachmarkOpen())) return;
+    /* The button and F pause the ordinary ticker before entering this
+       burst. Clear only that existing pause so a new pause raised
+       by a coachmark remains distinguishable and can still stop the skip. */
+    G.fastForwarding = true;
+    G.paused = false;
+
+    let daysLeft = 92;
+    function finishFastForward() {
+      G.fastForwarding = false;
+      if (!G.paused) G.setPaused(true);
+      if (FB.ui && FB.ui.fastForwardFinished) {
+        FB.ui.fastForwardFinished();
+      } else {
+        if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+        if (FB.map && FB.map.request) FB.map.request();
+      }
     }
+    function runFastForwardChunk() {
+      if (G.paused || !FB.state || FB.state.player.dead) {
+        finishFastForward();
+        return;
+      }
+      const now = window.performance && window.performance.now
+        ? function () { return window.performance.now(); }
+        : function () { return Date.now(); };
+      const started = now();
+      let daysThisFrame = 0;
+      while (daysLeft > 0) {
+        daysLeft--;
+        daysThisFrame++;
+        const r = G.passDay();
+        if (r !== 'day' || G.paused) {
+          finishFastForward();
+          return;
+        }
+        if (daysThisFrame >= FAST_FORWARD_MAX_DAYS_PER_FRAME ||
+            now() - started >= FAST_FORWARD_FRAME_BUDGET) break;
+      }
+      if (daysLeft <= 0) {
+        finishFastForward();
+        return;
+      }
+      requestAnimationFrame(runFastForwardChunk);
+    }
+    requestAnimationFrame(runFastForwardChunk);
   };
 
   /* ---------- the flow of days: auto-tick with pause/unpause ----------
@@ -2756,7 +2806,8 @@ window.FB = window.FB || {};
   function startTicker() {
     if (tickTimer) clearInterval(tickTimer);
     tickTimer = setInterval(function () {
-      if (G.paused || !FB.state || FB.state.player.dead || G.pickMode) return;
+      if (G.paused || G.fastForwarding || !FB.state ||
+          FB.state.player.dead || G.pickMode) return;
       if (FB.ui.eventsBusy()) return; // an event awaits your choice
       if (!$('genmodal').classList.contains('hidden')) return; // a dialog is open
       if (document.hidden) return;
@@ -2814,10 +2865,35 @@ window.FB = window.FB || {};
     if (FB.isSmallScreen()) pauseForBackground();
   });
 
-  G.afterEvents = function () {
+  let promotionCheckState = null;
+  let promotionCheckRealmRevision = -1;
+  let promotionCheckSignature = '';
+
+  function promotionSignature(s) {
+    const p = s.player;
+    return [p.charId, p.tier, p.liege || '', p.provinceId || '',
+      (p.provs || []).join('|')].join(':');
+  }
+
+  function checkPromotionsWhenChanged(s, force) {
+    const revision = FB.realmStateRevision
+      ? FB.realmStateRevision() : s.turn;
+    const signature = promotionSignature(s);
+    if (!force && !s.player.titleLapse && promotionCheckState === s &&
+        promotionCheckRealmRevision === revision &&
+        promotionCheckSignature === signature) return;
+    FB.checkTierPromotions(s);
+    promotionCheckState = s;
+    promotionCheckRealmRevision = FB.realmStateRevision
+      ? FB.realmStateRevision() : s.turn;
+    promotionCheckSignature = promotionSignature(s);
+  }
+
+  G.afterEvents = function (options) {
     const s = FB.state;
     if (!s || s.player.dead) return;
-    if (FB.syncMaterializedRealmRulers) {
+    options = options || {};
+    if (options.syncRulers && FB.syncMaterializedRealmRulers) {
       FB.syncMaterializedRealmRulers(s);
     }
     const me = s.chars[s.player.charId];
@@ -2833,7 +2909,7 @@ window.FB = window.FB || {};
         FB.ui.showPendingMarriageResidence()) {
       return;
     }
-    FB.checkTierPromotions(s);
+    checkPromotionsWhenChanged(s, !!options.forcePromotionCheck);
     FB.ui.refresh();
   };
 

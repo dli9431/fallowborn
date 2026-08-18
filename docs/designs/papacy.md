@@ -205,3 +205,6 @@ character-sheet reads do not install a missing legacy office map; save/load and 
 repair remain the mutation boundaries.
 Character-keyed sanction grounds are removed in `FB.papacyCharacterDied`; the sanction
 cannot outlive its target and the grounds table does not accumulate stale court ids.
+The daily Papacy path reads the normalized saved pending/election shape first. A settled
+office returns without rebuilding every Catholic court; the full ensure runs when a
+decision, vacancy, or ballot is actually due, preserving those exact turn boundaries.

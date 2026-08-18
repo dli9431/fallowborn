@@ -77,6 +77,11 @@ projection. National `exposed` contains only technologies not already in `comple
 because completion implies exposure, and empty technology work containers are recreated.
 `S.restore` expands the full live shape before the ordinary ensure chain, so uncompressed
 older version-3 saves pass through unchanged. The replacer never mutates running state.
+It also gates record-shape detection by the small set of keys that can actually be
+omitted: ordinary properties pass straight through instead of testing whether their
+holder resembles a character, realm, court member, building, and technology record.
+This keeps the wire form identical while bounding the per-property work of routine
+seasonal snapshots.
 
 **The ensure chain on load is not RNG-protected, and court materialization consumes
 randomness.** `S.restore` sets the saved RNG state and then runs the whole chain; only
@@ -231,20 +236,23 @@ the product). Two balance knobs do the bounding
 (see [../MODDING.md](../MODDING.md)): `kinConceiveCap` keeps stacked fertility
 multipliers a probability rather than a certainty, and `familyMaxChars` caps total
 tracked family records — past it, unscripted kin weddings and kin births pause, so an
-over-cap save stops growing instead of failing. On top of that bounding, slots are
-stored LZ-compressed (`FBC1.` prefix packing the bit stream into storage-safe UTF-16;
-an lz-string port private to `js/save.js`), which shrinks the ~1.6 MB serialized life
-several-fold so autosave plus every slot fits even the WebKit quota. `S.serialize`
-still returns plain JSON — compression happens only at the storage and export
-boundaries, each write verifies its own round trip and falls back to plain JSON rather
-than store an unproven encoding, and `S.read` accepts legacy uncompressed slots
-forever. The season-boundary autosave splits that work so it does not stall the
-day loop: `S.serialize` still snapshots synchronously (the state to capture is
-the live one, before any mortality roll), but the codec pass and the storage
-write run on a later task; a newer autosave supersedes a still-pending one, and
-`S.flushPending` (pagehide, background pause) lands the pending write
-synchronously when the page may never run another timer. Manual slot saves
-stay fully synchronous. If a save still hits the quota, `S.toSlot` recognizes
+over-cap save stops growing instead of failing. On top of that bounding, manual slots
+are stored LZ-compressed (`FBC1.` prefix packing the bit stream into storage-safe
+UTF-16; an lz-string port private to `js/save.js`), which shrinks each ~1.6 MB
+serialized life several-fold. The frequently replaced autosave is normally stored as
+ready plain JSON, keeping its worst-case footprint plus three compressed manual slots
+within the WebKit budget. This deliberately removes the full compression-and-
+verification pass from every season boundary; if the plain autosave write encounters
+quota pressure, that exceptional write retries with the verified compressed encoding.
+`S.serialize` still returns plain JSON, compressed writes verify their own round trip
+and fall back to plain JSON rather than store an unproven encoding, and `S.read`
+accepts both forms forever. The season-boundary autosave splits the remaining work so
+it does not stall the day loop: `S.serialize` still snapshots synchronously (the state
+to capture is the live one, before any mortality roll), but the storage write runs on
+a later task; a newer autosave supersedes a still-pending one, and `S.flushPending`
+(pagehide, background pause) lands the pending write synchronously when the page may
+never run another timer. Manual slot saves stay fully synchronous. If a save still
+hits the quota, `S.toSlot` recognizes
 the quota-shaped error
 and points the player at 📤 Export, which preserves the life as text when storage no
 longer can.

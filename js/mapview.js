@@ -336,6 +336,140 @@ window.FB = window.FB || {};
     }
   }
 
+  FB.renderRaidOverlay = M.renderRaidOverlay = function (ctx, toScreen, z, dpr) {
+    const map = FB.map;
+    const state = FB.state;
+    if (!map || !state) return;
+    const targets = map.raidTargets || [];
+    if (!targets.length) return;
+
+    // 1. Markers for unselected reachable targets (distinguishing unfortified vs fortified)
+    for (let i = 0; i < targets.length; i++) {
+      const pid = targets[i];
+      if (pid === map.raidSelected) continue;
+      const pr = FB.world.byId[pid];
+      if (!pr) continue;
+      const point = toScreen(pr.cx, pr.cy);
+      const fort = FB.fortAt ? FB.fortAt(state, pid) : null;
+      const hasFort = fort && !fort.ruined && fort.level > 0;
+
+      if (hasFort) {
+        // Fortified target: Draw distinct fortress marker
+        const fSize = (4 + fort.level * 1.5) * dpr;
+        ctx.fillStyle = 'rgba(20, 20, 28, 0.90)';
+        ctx.strokeStyle = 'rgba(255, 185, 50, 0.95)';
+        ctx.lineWidth = 1.5 * dpr;
+        ctx.beginPath();
+        ctx.rect(point[0] - fSize, point[1] - fSize, fSize * 2, fSize * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        if (z >= 0.95) {
+          ctx.font = Math.round(9 * dpr) + 'px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🏰', point[0], point[1]);
+        } else {
+          ctx.fillStyle = 'rgba(255, 195, 60, 0.95)';
+          ctx.beginPath();
+          ctx.arc(point[0], point[1], 2.5 * dpr, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else {
+        // Unfortified target: clean red/amber pip
+        ctx.fillStyle = 'rgba(235, 95, 70, 0.85)';
+        ctx.beginPath();
+        ctx.arc(point[0], point[1], 3.5 * dpr, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // 2. Selected target ring and multi-waypoint expedition route with fort markers
+    if (map.raidSelected) {
+      const selPr = FB.world.byId[map.raidSelected];
+      const p = state.player;
+      const homePid = p && (p.provinceId || (p.provs && p.provs[0]));
+      const homePr = homePid && FB.world.byId[homePid];
+      const fort = FB.fortAt ? FB.fortAt(state, map.raidSelected) : null;
+      const hasFort = fort && !fort.ruined && fort.level > 0;
+
+      if (selPr) {
+        const point = toScreen(selPr.cx, selPr.cy);
+        ctx.beginPath();
+        ctx.arc(point[0], point[1], (11 + Math.min(5, z)) * dpr, 0, Math.PI * 2);
+        ctx.strokeStyle = hasFort ? 'rgba(255, 175, 40, 0.98)' : 'rgba(255, 215, 80, 0.98)';
+        ctx.lineWidth = 2.5 * dpr;
+        ctx.stroke();
+        ctx.fillStyle = hasFort ? 'rgba(255, 160, 30, 0.32)' : 'rgba(255, 215, 80, 0.28)';
+        ctx.fill();
+
+        if (hasFort) {
+          ctx.font = Math.round(11 * dpr) + 'px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('🏰', point[0], point[1]);
+        }
+      }
+
+      // Draw full march route through intermediate counties
+      if (selPr && homePr) {
+        const marchRoute = FB.raidMarchRoute ? FB.raidMarchRoute(state, homePid, map.raidSelected) : [map.raidSelected];
+        const waypoints = [homePid];
+        if (marchRoute && marchRoute.length) {
+          for (let w = 0; w < marchRoute.length; w++) {
+            if (waypoints.indexOf(marchRoute[w]) < 0) waypoints.push(marchRoute[w]);
+          }
+        } else {
+          waypoints.push(map.raidSelected);
+        }
+
+        // Draw dotted march path between consecutive waypoints
+        ctx.strokeStyle = 'rgba(255, 195, 60, 0.95)';
+        ctx.lineWidth = 2.2 * dpr;
+        ctx.setLineDash([5 * dpr, 4 * dpr]);
+        ctx.beginPath();
+        for (let w = 0; w < waypoints.length; w++) {
+          const wpPr = FB.world.byId[waypoints[w]];
+          if (!wpPr) continue;
+          const pt = toScreen(wpPr.cx, wpPr.cy);
+          if (w === 0) ctx.moveTo(pt[0], pt[1]);
+          else ctx.lineTo(pt[0], pt[1]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw intermediate waypoint nodes and fort indicators
+        for (let w = 1; w < waypoints.length - 1; w++) {
+          const wpPid = waypoints[w];
+          const wpPr = FB.world.byId[wpPid];
+          if (!wpPr) continue;
+          const pt = toScreen(wpPr.cx, wpPr.cy);
+          const wpFort = FB.fortAt ? FB.fortAt(state, wpPid) : null;
+          const wpHasFort = wpFort && !wpFort.ruined && wpFort.level > 0;
+
+          if (wpHasFort) {
+            ctx.fillStyle = 'rgba(20, 20, 28, 0.92)';
+            ctx.strokeStyle = 'rgba(255, 185, 50, 0.98)';
+            ctx.lineWidth = 1.5 * dpr;
+            ctx.beginPath();
+            ctx.rect(pt[0] - 6 * dpr, pt[1] - 6 * dpr, 12 * dpr, 12 * dpr);
+            ctx.fill();
+            ctx.stroke();
+            ctx.font = Math.round(9 * dpr) + 'px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🏰', pt[0], pt[1]);
+          } else {
+            ctx.fillStyle = 'rgba(255, 215, 80, 0.95)';
+            ctx.beginPath();
+            ctx.arc(pt[0], pt[1], 3.5 * dpr, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+  };
+
   /* ---------- selection highlight ----------
      Selection preserves the political and terrain colors which already carry
      map meaning. Land outside the active group receives a cool focus shade;
@@ -656,8 +790,24 @@ window.FB = window.FB || {};
 
   /* ---------- render loop ---------- */
   M.request = function () {
+    if (FB.game && FB.game.fastForwarding) {
+      M._fastForwardRenderPending = true;
+      return;
+    }
     if (M._raf) return;
-    M._raf = requestAnimationFrame(function () { M._raf = null; M.render(); });
+    M._raf = requestAnimationFrame(function () {
+      M._raf = null;
+      if (FB.game && FB.game.fastForwarding) {
+        M._fastForwardRenderPending = true;
+        return;
+      }
+      M.render();
+    });
+  };
+  M.flushFastForwardRender = function () {
+    if (!M._fastForwardRenderPending) return;
+    M._fastForwardRenderPending = false;
+    M.request();
   };
 
   function clampView() {
@@ -787,6 +937,8 @@ window.FB = window.FB || {};
     if (FB.state && FB.renderArmies) FB.renderArmies(ctx, toScreen, z, M.dpr);
     // overland journeys: valid destination rings, route, and traveler
     if (FB.state && FB.renderTravel) FB.renderTravel(ctx, toScreen, z, M.dpr);
+    // raiding expedition map overlay: reachable targets and selected target route
+    if (FB.state && FB.renderRaidOverlay) FB.renderRaidOverlay(ctx, toScreen, z, M.dpr);
     if (M.marketGood && FB.state && FB.renderMarketRoutes) {
       FB.renderMarketRoutes(ctx, M.marketGood, toScreen, z, M.dpr);
     }

@@ -18,16 +18,30 @@ window.FB = window.FB || {};
      an autoresolve chain, a whole fast-forward) repaints the panels once,
      on the next animation frame. */
   let refreshQueued = false;
+  let refreshDeferredForFastForward = false;
   UI.refresh = function () {
+    if (FB.game && FB.game.fastForwarding) {
+      refreshDeferredForFastForward = true;
+      return;
+    }
     if (refreshQueued) return;
     refreshQueued = true;
     requestAnimationFrame(function () {
       refreshQueued = false;
+      if (FB.game && FB.game.fastForwarding) {
+        refreshDeferredForFastForward = true;
+        return;
+      }
       if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
       if (FB.state && FB.music) FB.music.sync(FB.state);
       refreshNow();
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     });
+  };
+  UI.flushFastForwardRefresh = function () {
+    if (!refreshDeferredForFastForward && refreshQueued) return;
+    refreshDeferredForFastForward = false;
+    UI.refresh();
   };
 
   /* last season's measured net change, as a small ± beside a topbar stat;

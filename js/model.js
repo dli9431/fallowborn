@@ -854,6 +854,7 @@ window.FB = window.FB || {};
     realm.war = null;
     if (FB.papacyRealmDied) FB.papacyRealmDied(state, realmId);
     if (FB.breakAlliance) FB.breakAlliance(state, realmId);
+    if (FB.invalidateRealmCache) FB.invalidateRealmCache();
     return true;
   };
 

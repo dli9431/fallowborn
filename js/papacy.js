@@ -355,14 +355,17 @@ window.FB = window.FB || {};
       state.chars[obedience.claimantId] || null;
   };
 
-  FB.papacyInSchism = function (state) {
-    var papacy = FB.ensurePapacy(state);
-    if (!papacy) return false;
+  function papacyInSchism(papacy) {
+    if (!papacy || !papacy.obediences) return false;
     var count = 0;
     for (var oid in papacy.obediences) {
       if (papacy.obediences[oid] && papacy.obediences[oid].status === 'active') count++;
     }
     return count > 1;
+  }
+
+  FB.papacyInSchism = function (state) {
+    return papacyInSchism(FB.ensurePapacy(state));
   };
 
   function starterCardinalCharacter(state, index) {
@@ -1435,8 +1438,7 @@ window.FB = window.FB || {};
     return true;
   }
 
-  FB.papalElectionBallot = function (state, obedienceId, tacticId, targetId) {
-    var papacy = FB.ensurePapacy(state);
+  function papalElectionBallot(state, papacy, obedienceId, tacticId, targetId) {
     var election = papacy && papacy.elections[
       obedienceId || papacy.romanObedience
     ];
@@ -1506,12 +1508,12 @@ window.FB = window.FB || {};
       election.assent = assent;
       if (assent.count < 2) winner = null;
     }
-    if (!winner && FB.maybePapalSchism &&
-        FB.maybePapalSchism(state, election.obedienceId)) {
+    if (!winner && maybePapalSchism(state, papacy,
+        election.obedienceId)) {
       return ballot;
     }
     if (!winner && election.round >= (definition().balance.forceAfterBallots || 12) &&
-        !FB.papacyInSchism(state)) {
+        !papacyInSchism(papacy)) {
       winner = state.chars[election.compromiseId || leader.id];
       ballot.forced = true;
     }
@@ -1528,6 +1530,11 @@ window.FB = window.FB || {};
       }
     }
     return ballot;
+  }
+
+  FB.papalElectionBallot = function (state, obedienceId, tacticId, targetId) {
+    return papalElectionBallot(state, FB.ensurePapacy(state),
+      obedienceId, tacticId, targetId);
   };
 
   /* ---------- investiture ---------- */
@@ -2149,9 +2156,8 @@ window.FB = window.FB || {};
     return rival;
   }
 
-  FB.maybePapalSchism = function (state, obedienceId) {
-    var papacy = FB.ensurePapacy(state);
-    if (!papacy || FB.papacyInSchism(state)) return false;
+  function maybePapalSchism(state, papacy, obedienceId) {
+    if (!papacy || papacyInSchism(papacy)) return false;
     var election = papacy.elections[obedienceId];
     var obedience = papacy.obediences[obedienceId];
     var conf = definition().schism;
@@ -2180,6 +2186,10 @@ window.FB = window.FB || {};
     }
     if (!willing.length || !FB.chance(conf.aiCrisisChance)) return false;
     return createRivalObedience(state, election, FB.pick(willing));
+  }
+
+  FB.maybePapalSchism = function (state, obedienceId) {
+    return maybePapalSchism(state, FB.ensurePapacy(state), obedienceId);
   };
 
   FB.resolvePapalSchismSponsorship = function (state, accept) {
@@ -2605,7 +2615,31 @@ window.FB = window.FB || {};
   };
 
   FB.papacyDay = function (state) {
-    var papacy = FB.ensurePapacy(state);
+    /* A settled Papacy has no daily work. Creation/load performs the full
+       repair; only an election whose next ballot is due needs it here. */
+    var saved = state && state.papacy;
+    var savedElections = saved && saved.elections;
+    if (saved && savedElections && typeof savedElections === 'object') {
+      var electionDue = false;
+      for (var savedOid in savedElections) {
+        var savedElection = savedElections[savedOid];
+        if (!savedElection ||
+            (savedElection.phase !== 'vacancy' &&
+             savedElection.phase !== 'balloting') ||
+            state.turn < savedElection.waitUntil ||
+            (savedElection.nextAutoBallotTurn !== undefined &&
+             state.turn < savedElection.nextAutoBallotTurn)) continue;
+        electionDue = true;
+        break;
+      }
+      if (!electionDue) return;
+    }
+    /* The office was normalized at creation/load and Papal mutations preserve
+       its shape. A due ballot can therefore use the saved model directly;
+       invoking the world-wide repair here made one AI conclave rescan every
+       Catholic sovereign many times per fast-forward. */
+    var papacy = saved && saved.obediences && saved.cardinals
+      ? saved : FB.ensurePapacy(state);
     if (!papacy) return;
     for (var oid in papacy.elections) {
       var election = papacy.elections[oid];
@@ -2619,13 +2653,46 @@ window.FB = window.FB || {};
       if (playerElector) continue;
       if (election.nextAutoBallotTurn !== undefined &&
           state.turn < election.nextAutoBallotTurn) continue;
-      FB.papalElectionBallot(state, oid, null, null);
+      papalElectionBallot(state, papacy, oid, null, null);
       election.nextAutoBallotTurn = state.turn +
         (election.law.enclosed ? 3 : 10);
     }
   };
 
   FB.papacyPendingDecision = function (state) {
+    /* The common path has neither a pending Papal demand nor a live
+       conclave. Read that normalized save shape directly instead of scanning
+       and resynchronizing every Catholic sovereign before every day. */
+    var saved = state && state.papacy;
+    if (saved && saved.elections && saved.obediences && saved.cardinals &&
+        typeof saved.elections === 'object' &&
+        typeof saved.obediences === 'object' &&
+        typeof saved.cardinals === 'object') {
+      if (saved.pendingInvestitureDemand || saved.pendingSchism ||
+          saved.pendingDeposedPlayer) {
+        /* Pending records are exceptional and may need relationship repair
+           to choose the player's recognized obedience. */
+      } else {
+        var playerId = state.player.charId;
+        var playerOffice = saved.cardinals[playerId];
+        for (var savedOid in saved.elections) {
+          var savedElection = saved.elections[savedOid];
+          if (!savedElection) continue;
+          if (savedElection.phase === 'name' &&
+              savedElection.winnerId === playerId) return savedOid;
+          var savedObedience = saved.obediences[savedOid];
+          if ((savedElection.phase === 'vacancy' ||
+               savedElection.phase === 'balloting') &&
+              state.turn >= savedElection.waitUntil &&
+              playerOffice && playerOffice.office === 'cardinal' &&
+              savedObedience && savedObedience.college &&
+              savedObedience.college.indexOf(playerId) >= 0) {
+            return savedOid;
+          }
+        }
+        return null;
+      }
+    }
     var papacy = FB.ensurePapacy(state);
     if (!papacy) return null;
     if (papacy.pendingInvestitureDemand || papacy.pendingSchism ||

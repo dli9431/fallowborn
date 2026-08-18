@@ -105,6 +105,15 @@ test('a lesson stills the days while it is read',
     await expect(coach).toContainText('days now flow');
     expect(await page.evaluate(function () { return FB.game.paused; }))
       .toBe(true);
+    const lessonHold = await page.evaluate(function () {
+      const turn = FB.state.turn;
+      FB.game.skipAhead();
+      return {
+        turn:FB.state.turn - turn,
+        fastForwarding:FB.game.fastForwarding
+      };
+    });
+    expect(lessonHold).toEqual({ turn:0, fastForwarding:false });
     await page.getByRole('button', { name:'Got it', exact:true }).click();
 
     // unpaused again (that lesson is spent), the days run...
@@ -124,7 +133,7 @@ test('a lesson stills the days while it is read',
 test('an F-skip burst breaks when a lesson pops mid-skip',
   async function ({ page }) {
     await startDeterministicGame(page);
-    const outcome = await page.evaluate(function () {
+    await page.evaluate(function () {
       // spend the one-time time-flow lesson, then run the days again
       FB.game.setPaused(false);
       document.querySelector('.coachmark-dismiss').click();
@@ -142,10 +151,22 @@ test('an F-skip burst breaks when a lesson pops mid-skip',
         }
         return r;
       };
+      window.__skipLessonOutcome = {
+        startTurn:startTurn,
+        passDay:passDay,
+        fired:function () { return fired; }
+      };
       FB.game.skipAhead();
-      FB.game.passDay = passDay;
-      return { startTurn:startTurn, endTurn:FB.state.turn,
-        fired:fired, paused:FB.game.paused,
+    });
+    await expect.poll(function () {
+      return page.evaluate(function () { return !FB.game.fastForwarding; });
+    }).toBe(true);
+    const outcome = await page.evaluate(function () {
+      const stored = window.__skipLessonOutcome;
+      FB.game.passDay = stored.passDay;
+      delete window.__skipLessonOutcome;
+      return { startTurn:stored.startTurn, endTurn:FB.state.turn,
+        fired:stored.fired(), paused:FB.game.paused,
         coach:!!document.querySelector('.coachmark') };
     });
     expect(outcome.fired).toBe(true);

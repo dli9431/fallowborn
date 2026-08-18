@@ -487,9 +487,10 @@ window.FB = window.FB || {};
           other: '{count} counties'
         }
       }
-    }, { count: count }), { state: s, viewer: s.player.charId });
+    }, { count: Math.round(Number(count) || 0) }), { state: s, viewer: s.player.charId });
   }
   function menText(s, count) {
+    const rounded = Math.round(Number(count) || 0);
     return FB.renderMessage(FB.msg('fx.ui.men', {
       forms: {
         select: 'plural', param: 'count', cases: {
@@ -497,14 +498,14 @@ window.FB = window.FB || {};
           other: '{count} men'
         }
       }
-    }, { count: count }), { state: s, viewer: s.player.charId });
+    }, { count: rounded }), { state: s, viewer: s.player.charId });
   }
   function signedNumber(value) {
-    const rounded = Math.round((Number(value) || 0) * 10) / 10;
+    const rounded = Math.round(Number(value) || 0);
     return (rounded > 0 ? '+' : '') + rounded;
   }
   function standingValue(value) {
-    return signedNumber(FB.clamp(Number(value) || 0, -100, 100));
+    return signedNumber(FB.clamp(Math.round(Number(value) || 0), -100, 100));
   }
   function standingBand(value) {
     value = FB.clamp(Number(value) || 0, -100, 100);
@@ -1741,7 +1742,15 @@ window.FB = window.FB || {};
     setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
   };
 
+  let fastForwardReceipt = null;
   UI.eventReceiptToast = function (receipt) {
+    /* Each autoresolved receipt is already durable in the Chronicle, and the
+       toast replaces its predecessor. During a frame-sliced skip retain only
+       that eventual final toast instead of rebuilding DOM between days. */
+    if (FB.game && FB.game.fastForwarding) {
+      fastForwardReceipt = receipt;
+      return;
+    }
     const box = $('toasts');
     if (!box || !receipt) return;
     const older = box.querySelector('.event-receipt-toast');
@@ -1840,6 +1849,7 @@ window.FB = window.FB || {};
     coachQueue.push(item);
     UI.maybeShowCoachmark();
   };
+  UI.coachmarkOpen = function () { return !!coachEl; };
   UI.maybeShowCoachmark = function () {
     // an over-sheet lesson whose menu sheet went away re-anchors to ☰
     if (coachEl && coachItem && coachItem.overModal && !$('m-save')) {
@@ -2282,13 +2292,38 @@ window.FB = window.FB || {};
      world tick can transfer several provinces — coalesce to a single rebuild
      on the next frame (before the render: rAF callbacks run in queue order). */
   let mapDirtyQueued = false;
+  let mapDirtyDeferredForFastForward = false;
   UI.mapDirty = function () {
+    if (FB.game && FB.game.fastForwarding) {
+      mapDirtyDeferredForFastForward = true;
+      return;
+    }
     if (mapDirtyQueued) return;
     mapDirtyQueued = true;
     requestAnimationFrame(function () {
       mapDirtyQueued = false;
+      if (FB.game && FB.game.fastForwarding) {
+        mapDirtyDeferredForFastForward = true;
+        return;
+      }
       mapDirtyNow();
     });
+  };
+  UI.fastForwardFinished = function () {
+    if (mapDirtyDeferredForFastForward) {
+      mapDirtyDeferredForFastForward = false;
+      UI.mapDirty();
+    }
+    if (UI.flushFastForwardRefresh) UI.flushFastForwardRefresh();
+    else if (UI.refresh) UI.refresh();
+    if (FB.map && FB.map.flushFastForwardRender) {
+      FB.map.flushFastForwardRender();
+    } else if (FB.map && FB.map.request) FB.map.request();
+    if (fastForwardReceipt) {
+      const receipt = fastForwardReceipt;
+      fastForwardReceipt = null;
+      UI.eventReceiptToast(receipt);
+    }
   };
   function mapDirtyNow() {
     const s = FB.state;
@@ -2727,7 +2762,10 @@ window.FB = window.FB || {};
       if (!UI.eventsBusy()) FB.game.togglePause();
     });
     $('btn-skip').addEventListener('click', function () {
-      if (!UI.eventsBusy()) { FB.game.setPaused(true); FB.game.skipAhead(); }
+      if (!UI.eventsBusy() && !FB.game.fastForwarding) {
+        FB.game.setPaused(true);
+        FB.game.skipAhead();
+      }
     });
     $('btn-auto').addEventListener('click', function () {
       if (!UI.eventsBusy()) UI.showAutoResolve();
@@ -2782,6 +2820,32 @@ window.FB = window.FB || {};
       UI.cancelTravelPicker(false);
     });
     $('travel-picker-continue').addEventListener('click', SH.reviewTravelChoice);
+
+    const raidCancel = $('raid-picker-cancel');
+    if (raidCancel) {
+      raidCancel.addEventListener('click', function () {
+        if (UI.closeRaidMapPicker) UI.closeRaidMapPicker(false);
+      });
+    }
+    const raidList = $('raid-picker-list');
+    if (raidList) {
+      raidList.addEventListener('click', function () {
+        if (UI.returnToRaidList) UI.returnToRaidList();
+      });
+    }
+    const raidStrat = $('raid-picker-strategy');
+    if (raidStrat) {
+      raidStrat.addEventListener('change', function () {
+        if (UI.raidStrategyChanged) UI.raidStrategyChanged(raidStrat.value);
+      });
+    }
+    const raidLaunch = $('raid-picker-launch');
+    if (raidLaunch) {
+      raidLaunch.addEventListener('click', function () {
+        if (UI.executeRaidFromMap) UI.executeRaidFromMap();
+      });
+    }
+
     /* Map tap precedence. A settlement marker hit carries its parent county
        into every targeting mode, so a marker never blocks the county beneath
        it; only ordinary browsing additionally opens the settlement sheet. The
@@ -2802,6 +2866,10 @@ window.FB = window.FB || {};
       }
       if (UI.travelPickerOpen()) {
         if (pr) UI.travelPickProvince(pr.id, false);
+        return;
+      }
+      if (UI.raidPickerOpen && UI.raidPickerOpen()) {
+        if (pr) UI.raidPickProvince(pr.id, false);
         return;
       }
       const s = FB.state;

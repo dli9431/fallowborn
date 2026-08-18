@@ -6,6 +6,8 @@
   const DATA = window.FBDATA = window.FBDATA || {};
   let edgeWorld = null;
   let stableEdges = [];
+  let provinceWorld = null;
+  let stableProvinceIds = [];
   let reportState = null;
   let reports = {};
   let overlayCache = { key:null, canvas:null };
@@ -13,6 +15,16 @@
   let overlayState = null;
   let ensuredState = null;
   let ensuredMarket = null;
+  const TERRAIN_OUTPUT = {
+    farmland:{ provisions:1.20, wares:0.34, materials:0.34, transport:0.36, luxuries:0.10 },
+    forest:{ provisions:0.76, wares:0.34, materials:1.12, transport:0.68, luxuries:0.07 },
+    hills:{ provisions:0.84, wares:0.43, materials:0.83, transport:0.80, luxuries:0.09 },
+    mountains:{ provisions:0.54, wares:0.29, materials:0.93, transport:0.79, luxuries:0.07 },
+    desert:{ provisions:0.34, wares:0.24, materials:0.34, transport:0.81, luxuries:0.11 },
+    steppe:{ provisions:0.74, wares:0.25, materials:0.34, transport:1.22, luxuries:0.05 },
+    marsh:{ provisions:0.79, wares:0.30, materials:0.64, transport:0.46, luxuries:0.05 },
+    tundra:{ provisions:0.44, wares:0.24, materials:0.74, transport:0.55, luxuries:0.04 }
+  };
 
   function balance(key, fallback) {
     const value = Number(DATA.balance && DATA.balance[key]);
@@ -44,25 +56,18 @@
   }
 
   function provinceIds() {
+    if (provinceWorld === FB.world) return stableProvinceIds;
     const ids = [];
     const byId = FB.world && FB.world.byId || {};
     for (const id in byId) if (!byId[id].wasteland) ids.push(id);
     ids.sort();
-    return ids;
+    provinceWorld = FB.world;
+    stableProvinceIds = ids;
+    return stableProvinceIds;
   }
 
   function terrainOutput(terrain) {
-    const table = {
-      farmland:{ provisions:1.20, wares:0.34, materials:0.34, transport:0.36, luxuries:0.10 },
-      forest:{ provisions:0.76, wares:0.34, materials:1.12, transport:0.68, luxuries:0.07 },
-      hills:{ provisions:0.84, wares:0.43, materials:0.83, transport:0.80, luxuries:0.09 },
-      mountains:{ provisions:0.54, wares:0.29, materials:0.93, transport:0.79, luxuries:0.07 },
-      desert:{ provisions:0.34, wares:0.24, materials:0.34, transport:0.81, luxuries:0.11 },
-      steppe:{ provisions:0.74, wares:0.25, materials:0.34, transport:1.22, luxuries:0.05 },
-      marsh:{ provisions:0.79, wares:0.30, materials:0.64, transport:0.46, luxuries:0.05 },
-      tundra:{ provisions:0.44, wares:0.24, materials:0.74, transport:0.55, luxuries:0.04 }
-    };
-    return table[terrain] || table.hills;
+    return TERRAIN_OUTPUT[terrain] || TERRAIN_OUTPUT.hills;
   }
 
   function countyBase(state, pid) {
@@ -83,8 +88,9 @@
     };
   }
 
-  function baseDemand(state, pid, ids) {
-    const base = countyBase(state, pid);
+  function baseDemand(state, pid, ids, context) {
+    const base = context && context.counties[pid]
+      ? context.counties[pid].base : countyBase(state, pid);
     const popFactor = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, pid) : 1.0;
     const minDemandFactor = balance('populationDemandFactorMin', 0.60);
     const maxDemandFactor = balance('populationDemandFactorMax', 1.60);
@@ -458,6 +464,139 @@
     return men / 120;
   }
 
+  function armyDemandIndex(state) {
+    const out = Object.create(null);
+    const armies = state.armies || [];
+    for (let i = 0; i < armies.length; i++) {
+      const army = armies[i];
+      const pid = army.provinceId || army.pid || army.at;
+      if (!pid) continue;
+      out[pid] = (out[pid] || 0) +
+        (Number(army.men || army.size || army.strength) || 0);
+    }
+    for (const pid in out) out[pid] /= 120;
+    return out;
+  }
+
+  function modifierBonusIndex(state) {
+    const out = Object.create(null);
+    if (!FB.ensureModifiers) return out;
+    const storage = FB.ensureModifiers(state);
+    const county = storage && storage.county || {};
+    for (const pid in county) {
+      const list = county[pid], row = {
+        production:0, provisions:0, flow:0
+      };
+      for (let i = 0; i < list.length; i++) {
+        const record = list[i];
+        if (record.endTurn !== undefined && state.turn >= record.endTurn) continue;
+        const def = DATA.modifiers && DATA.modifiers[record.id];
+        const fx = def && def.scope === 'county' && def.fx;
+        if (!fx) continue;
+        if (typeof fx.marketProduction === 'number') {
+          row.production += fx.marketProduction;
+        }
+        if (typeof fx.marketProvisions === 'number') {
+          row.provisions += fx.marketProvisions;
+        }
+        if (typeof fx.marketFlow === 'number') row.flow += fx.marketFlow;
+      }
+      out[pid] = row;
+    }
+    return out;
+  }
+
+  function merchantCapacityIndex(state) {
+    const out = Object.create(null);
+    const list = state.player && state.player.enterprises || [];
+    for (let i = 0; i < list.length; i++) {
+      const enterprise = list[i];
+      if (!enterprise.provinceId || !FB.enterpriseYield ||
+          FB.enterpriseYield(state, enterprise) <= 0) continue;
+      const distribution = FB.marketEnterpriseDistribution(state, enterprise);
+      const row = out[enterprise.provinceId] || { land:0, water:0 };
+      row.land += distribution.local + distribution.overland;
+      row.water += distribution.local + distribution.water;
+      out[enterprise.provinceId] = row;
+    }
+    return out;
+  }
+
+  function enterpriseOutputIndex(state) {
+    const out = Object.create(null);
+    const list = state.player && state.player.enterprises || [];
+    for (let i = 0; i < list.length; i++) {
+      const enterprise = list[i];
+      if (!enterprise.provinceId) continue;
+      const goods = FB.marketEnterpriseOutput(state, enterprise);
+      const row = out[enterprise.provinceId] || [];
+      row.push(goods);
+      out[enterprise.provinceId] = row;
+    }
+    return out;
+  }
+
+  function edgeKey(from, to) {
+    return from < to ? from + '|' + to : to + '|' + from;
+  }
+
+  function corridorBonusIndex(state) {
+    const out = Object.create(null);
+    if (!FB.guildMonopolyActive) return out;
+    const slots = ['incoming','outgoing'];
+    for (let i = 0; i < slots.length; i++) {
+      const record = FB.guildMonopolyActive(state, slots[i]);
+      if (!record || record.mode !== 'corridor' || !record.goodId) continue;
+      const route = routeWithOrigin(record);
+      const byEdge = out[record.goodId] || Object.create(null);
+      const seenEdges = Object.create(null);
+      for (let r = 1; r < route.length; r++) {
+        const key = edgeKey(route[r - 1], route[r]);
+        if (seenEdges[key]) continue;
+        seenEdges[key] = 1;
+        byEdge[key] = (byEdge[key] || 0) +
+          balance('marketCorridorCapacityBonus', 0.25);
+      }
+      out[record.goodId] = byEdge;
+    }
+    return out;
+  }
+
+  function seasonContext(state, ids, pids) {
+    const context = {
+      counties:Object.create(null),
+      modifiers:modifierBonusIndex(state),
+      merchant:merchantCapacityIndex(state),
+      enterprises:enterpriseOutputIndex(state),
+      armies:armyDemandIndex(state),
+      corridors:corridorBonusIndex(state)
+    };
+    const techByRealm = Object.create(null);
+    for (let p = 0; p < pids.length; p++) {
+      const pid = pids[p];
+      const owner = state.owner && state.owner[pid];
+      const realmId = owner && FB.techRealmId
+        ? FB.techRealmId(state, owner) : owner;
+      const techKey = realmId || '';
+      if (!Object.prototype.hasOwnProperty.call(techByRealm, techKey)) {
+        techByRealm[techKey] = FB.techBonus
+          ? Math.max(0, Number(FB.techBonus(state, 'trade', realmId)) || 0)
+          : 0;
+      }
+      const shocks = Object.create(null);
+      for (let g = 0; g < ids.length; g++) {
+        shocks[ids[g]] = shocksFor(state, pid, ids[g]);
+      }
+      context.counties[pid] = {
+        base:countyBase(state, pid),
+        endowments:FB.marketEndowments(state, pid),
+        tradeTech:techByRealm[techKey],
+        shocks:shocks
+      };
+    }
+    return context;
+  }
+
   function syncWarShocks(state) {
     const armies = state.armies || [];
     const affected = {};
@@ -478,13 +617,17 @@
     }
   }
 
-  function countyProduction(state, pid, ids, demand, report) {
+  function countyProduction(state, pid, ids, demand, report, context) {
     const pr = FB.world.byId[pid];
-    const base = countyBase(state, pid);
+    const cached = context && context.counties[pid];
+    const base = cached ? cached.base : countyBase(state, pid);
     const terrain = terrainOutput(pr.terrain);
-    const endowment = FB.marketEndowments(state, pid);
+    const endowment = cached
+      ? cached.endowments : FB.marketEndowments(state, pid);
     const owner = state.owner && state.owner[pid];
-    const tech = FB.techBonus ? Math.max(0, Number(FB.techBonus(state, 'trade', owner)) || 0) : 0;
+    const tech = cached ? cached.tradeTech :
+      (FB.techBonus ? Math.max(0,
+        Number(FB.techBonus(state, 'trade', owner)) || 0) : 0);
     const buildings = state.buildings && state.buildings[pid] || [];
     let building = 0;
     for (let i = 0; i < buildings.length; i++) {
@@ -496,7 +639,13 @@
     for (let i = 0; i < ids.length; i++) {
       const id = ids[i];
       let modifier = 1 + (endowment.production[id] || 0) + tech * 0.35 + building;
-      if (FB.modBonus) {
+      if (context) {
+        modifier += context.modifiers[pid]
+          ? context.modifiers[pid].production : 0;
+        if (id === 'provisions' && context.modifiers[pid]) {
+          modifier += context.modifiers[pid].provisions;
+        }
+      } else if (FB.modBonus) {
         modifier += FB.modBonus(state, 'marketProduction', pid);
         if (id === 'provisions') {
           modifier += FB.modBonus(state, 'marketProvisions', pid);
@@ -504,7 +653,7 @@
       }
       if (pr.coastal && id === 'provisions') modifier += 0.08;
       if (pr.coastal && id === 'transport') modifier += 0.05;
-      const shock = shocksFor(state, pid, id);
+      const shock = cached ? cached.shocks[id] : shocksFor(state, pid, id);
       modifier *= Math.max(0, 1 + shock.production);
       const terrainAmount = terrain[id] === undefined ? 0.1 : terrain[id];
       out.push(Math.max(0, base.amount * terrainAmount *
@@ -512,15 +661,28 @@
       report.severe[i] = shock.severe;
     }
     let playerOutput = 0;
-    const enterprises = state.player && state.player.enterprises || [];
-    for (let i = 0; i < enterprises.length; i++) {
-      if (enterprises[i].provinceId !== pid) continue;
-      const goods = FB.marketEnterpriseOutput(state, enterprises[i]);
-      for (let g = 0; g < ids.length; g++) {
-        const amount = Number(goods[ids[g]]) || 0;
-        out[g] += amount;
-        playerOutput += amount;
-        report.enterprise[g] += amount;
+    if (context) {
+      const enterprises = context.enterprises[pid] || [];
+      for (let i = 0; i < enterprises.length; i++) {
+        const goods = enterprises[i];
+        for (let g = 0; g < ids.length; g++) {
+          const amount = Number(goods[ids[g]]) || 0;
+          out[g] += amount;
+          playerOutput += amount;
+          report.enterprise[g] += amount;
+        }
+      }
+    } else {
+      const enterprises = state.player && state.player.enterprises || [];
+      for (let i = 0; i < enterprises.length; i++) {
+        if (enterprises[i].provinceId !== pid) continue;
+        const goods = FB.marketEnterpriseOutput(state, enterprises[i]);
+        for (let g = 0; g < ids.length; g++) {
+          const amount = Number(goods[ids[g]]) || 0;
+          out[g] += amount;
+          playerOutput += amount;
+          report.enterprise[g] += amount;
+        }
       }
     }
     report.playerEnterprise = playerOutput;
@@ -549,37 +711,70 @@
     return stableEdges;
   }
 
-  function edgeCapacity(state, edge, goodId) {
+  function edgeCapacity(state, edge, goodId, context) {
     const development = state.dev || {};
     const a = development[edge.from] || 1;
     const b = development[edge.to] || 1;
     let cap = balance('marketEdgeCapacity', 12) * (0.75 + Math.sqrt((a + b) / 2) * 0.2);
-    const ea = FB.marketEndowments(state, edge.from);
-    const eb = FB.marketEndowments(state, edge.to);
+    const from = context && context.counties[edge.from];
+    const to = context && context.counties[edge.to];
+    const ea = from ? from.endowments : FB.marketEndowments(state, edge.from);
+    const eb = to ? to.endowments : FB.marketEndowments(state, edge.to);
     cap *= 1 + ((ea.flow[goodId] || 0) + (eb.flow[goodId] || 0)) / 2;
     const water = edge.kind !== true && edge.kind !== 'land' && edge.kind !== 'border';
-    cap *= 1 + merchantCapacity(state, edge.from, water) + merchantCapacity(state, edge.to, water);
-    if (FB.techBonus) {
+    if (context) {
+      const ma = context.merchant[edge.from];
+      const mb = context.merchant[edge.to];
+      cap *= 1 + (ma ? ma[water ? 'water' : 'land'] : 0) +
+        (mb ? mb[water ? 'water' : 'land'] : 0);
+    } else {
+      cap *= 1 + merchantCapacity(state, edge.from, water) +
+        merchantCapacity(state, edge.to, water);
+    }
+    if (context) {
+      cap *= 1 + (from.tradeTech + to.tradeTech) / 2;
+    } else if (FB.techBonus) {
       cap *= 1 + (Math.max(0, FB.techBonus(state, 'trade',
         state.owner[edge.from])) + Math.max(0, FB.techBonus(state, 'trade',
         state.owner[edge.to]))) / 2;
     }
-    if (FB.modBonus) {
+    if (context) {
+      const am = context.modifiers[edge.from];
+      const bm = context.modifiers[edge.to];
+      cap *= Math.max(0.05, 1 + ((am ? am.flow : 0) +
+        (bm ? bm.flow : 0)) / 2);
+    } else if (FB.modBonus) {
       cap *= Math.max(0.05, 1 + (FB.modBonus(state, 'marketFlow', edge.from) +
         FB.modBonus(state, 'marketFlow', edge.to)) / 2);
     }
-    const sa = shocksFor(state, edge.from, goodId);
-    const sb = shocksFor(state, edge.to, goodId);
+    const sa = from ? from.shocks[goodId] : shocksFor(state, edge.from, goodId);
+    const sb = to ? to.shocks[goodId] : shocksFor(state, edge.to, goodId);
     const disruption = Math.min(0, sa.flow, sb.flow);
     const recovery = (Math.max(0, sa.flow) + Math.max(0, sb.flow)) / 2;
     cap *= Math.max(0.05, 1 + disruption + recovery);
-    if (FB.marketCorridorCapacityBonus) cap *= 1 + FB.marketCorridorCapacityBonus(state, edge, goodId);
+    if (context) {
+      const corridors = context.corridors[goodId];
+      cap *= 1 + (corridors && corridors[edgeKey(edge.from, edge.to)] || 0);
+    } else if (FB.marketCorridorCapacityBonus) {
+      cap *= 1 + FB.marketCorridorCapacityBonus(state, edge, goodId);
+    }
     return Math.max(0, cap);
   }
 
-  function flowPass(state, ids, demands, reportByPid) {
+  function capacityMatrix(state, ids, edges, context) {
+    const capacities = [];
+    for (let g = 0; g < ids.length; g++) {
+      const row = [];
+      for (let e = 0; e < edges.length; e++) {
+        row.push(edgeCapacity(state, edges[e], ids[g], context));
+      }
+      capacities.push(row);
+    }
+    return capacities;
+  }
+
+  function flowPass(state, ids, demands, reportByPid, edges, capacities) {
     const market = state.market;
-    const edges = stableEdgeList();
     for (let g = 0; g < ids.length; g++) {
       const proposals = [];
       const outgoing = {};
@@ -599,7 +794,7 @@
         const target = Math.max(0.01, demands[to][g] * balance('marketReserveSeasons', 2));
         const shortage = Math.max(0, target - market.counties[to][0][g]);
         const surplus = Math.max(0, stock - reserve);
-        const amount = Math.min(surplus, shortage, edgeCapacity(state, edge, ids[g]));
+        const amount = Math.min(surplus, shortage, capacities[g][e]);
         if (amount <= 0) continue;
         proposals.push({ from:from, to:to, amount:amount });
         outgoing[from] = (outgoing[from] || 0) + amount;
@@ -629,6 +824,9 @@
     syncWarShocks(state);
     const ids = market.goods;
     const pids = provinceIds();
+    const context = seasonContext(state, ids, pids);
+    const edges = stableEdgeList();
+    const capacities = capacityMatrix(state, ids, edges, context);
     const demands = {};
     const production = {};
     const reportByPid = {};
@@ -636,7 +834,7 @@
     const home = state.player.provinceId;
     for (let p = 0; p < pids.length; p++) {
       const pid = pids[p];
-      const demand = baseDemand(state, pid, ids);
+      const demand = baseDemand(state, pid, ids, context);
       const report = {
         production:emptyVector(ids, 0), demand:emptyVector(ids, 0),
         imports:emptyVector(ids, 0), exports:emptyVector(ids, 0),
@@ -645,9 +843,9 @@
         playerEnterprise:0
       };
       for (let g = 0; g < ids.length; g++) {
-        const shock = shocksFor(state, pid, ids[g]);
+        const shock = context.counties[pid].shocks[ids[g]];
         demand[g] *= Math.max(0.05, 1 + shock.demand);
-        demand[g] += ids[g] === 'provisions' ? armyDemand(state, pid) : 0;
+        demand[g] += ids[g] === 'provisions' ? (context.armies[pid] || 0) : 0;
         if (pid === home) {
           const exact = Number(household[ids[g]]) || 0;
           demand[g] += exact;
@@ -655,7 +853,7 @@
         }
       }
       demands[pid] = demand;
-      production[pid] = countyProduction(state, pid, ids, demand, report);
+      production[pid] = countyProduction(state, pid, ids, demand, report, context);
       report.production = production[pid].slice();
       report.demand = demand.slice();
       reportByPid[pid] = report;
@@ -665,7 +863,7 @@
       }
     }
     for (let pass = 0; pass < 2; pass++) {
-      flowPass(state, ids, demands, reportByPid);
+      flowPass(state, ids, demands, reportByPid, edges, capacities);
     }
     for (let p = 0; p < pids.length; p++) {
       const pid = pids[p];

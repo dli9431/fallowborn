@@ -2632,7 +2632,34 @@ window.FB = window.FB || {};
     return true;
   };
 
+  var sacredLossState = null;
+  var sacredLossRealmRevision = -1;
+  var sacredLossHeadStamp = null;
+
+  function religiousHeadStamp(state) {
+    var heads = state && state.religiousHeads;
+    if (!heads || typeof heads !== 'object' || Array.isArray(heads)) return '';
+    var ids = Object.keys(heads).sort();
+    var parts = [];
+    for (var i = 0; i < ids.length; i++) {
+      parts.push(ids[i] + ':' + String(heads[ids[i]]));
+    }
+    return parts.join('|');
+  }
+
   function trackSacredLosses(state) {
+    var realmRevision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    var headStamp = religiousHeadStamp(state);
+    /* Sacred control changes only with realm invalidation or a religious-head
+       assignment. Rechecking an unchanged map ninety times during one skip
+       cannot alter loss clocks, so retain the repaired snapshot in memory. */
+    if (sacredLossState === state &&
+        sacredLossRealmRevision === realmRevision &&
+        sacredLossHeadStamp === headStamp) return false;
+    sacredLossState = state;
+    sacredLossRealmRevision = realmRevision;
+    sacredLossHeadStamp = headStamp;
     var history = ensureHistory(state);
     /* one office-table repair for the whole pass: religiousHeadOf would
        re-run it per religion, and nothing below mutates the heads map */
@@ -2680,6 +2707,7 @@ window.FB = window.FB || {};
         headState.restoredTurn = state.turn;
       }
     }
+    return true;
   }
 
   function crisisChance(state, religionId, conf) {

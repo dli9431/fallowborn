@@ -147,6 +147,13 @@ crown, and attack gates use `FB.isPlayerSovereign`, while landed-hierarchy opera
 use the player realm itself. Swearing fealty reparents this node instead of dissolving
 it.
 
+The realm projections share one unsaved owner/holder/hierarchy index. Ownership, holder,
+and hierarchy mutation paths invalidate it explicitly, so ordinary daily reads retain
+the same county and direct-vassal lists instead of scanning the entire map and realm
+table again merely because the calendar advanced. Realm strength is a separate derived
+total and is refreshed at most once per turn because development can change without
+ownership changing. A different loaded state also forces both projections to rebuild.
+
 **Governance is the player-facing shell over this hierarchy, not another realm
 record.** `FB.governanceEligible` admits a territorial baron, an appointed Castellan,
 or a player holding count-or-greater land, but excludes observe mode and a see-only
@@ -279,6 +286,11 @@ Only the allegiance is durable. An annual review retains an ordinary
 affiliation unless its basis disappears or another valid interest exceeds it
 by at least 25 points. Voluntary realignment waits while any motion is
 pending, then the overdue review occurs after the motion clears.
+Daily repair retains the normalized empty state while the player has no
+eligible political court. An active court still reconciles every day because
+Standing, commerce, modifiers, and offices can change without a realm
+mutation; the forecast remains a live read-only projection whenever the
+player opens it.
 For an Estates-eligible vassal, `FB.politicalSummary` includes a forecast for
 every policy in the catalog plus the active pending-motion forecast.
 Crown-side blocs remain visible without implying those vassal motions apply
@@ -409,7 +421,10 @@ data (`FBDATA.empires/kingdoms/duchies` + each county's `duchy` field) drives ti
 promotions (`FB.checkTierPromotions` = majority of a duchy/kingdom/empire), realm
 naming, and the Land panel's hierarchy block. Helpers: `FB.topRealm`, `FB.liegeChain`,
 `FB.realmTerritory`, `FB.realmHeldCounties`, `FB.dejureOf`; owner/holder-derived lists
-are cached per turn (`FB.invalidateRealmCache` on transfers). Vassals make no foreign
+persist across turns until `FB.invalidateRealmCache` runs on a transfer or hierarchy
+change, while development-sensitive strength totals cache only for the current turn.
+Invalidation also increments an unsaved realm revision used by other derived maintenance
+passes; it is a runtime cache stamp, never save state. Vassals make no foreign
 policy; strong vassals occasionally break away (`balance.breakawayChance`). That base
 chance is unchanged for a player crown with no recent War of Aggression. Each such
 declaration still remembered for the current ruler multiplies breakaway pressure, and
@@ -804,8 +819,10 @@ materialization. Opening the realm sheet is an explicit exception: it fills the 
 court on demand when startup eagerness is `'ruler'`. `FB.realmRulerCharacterSnapshot`
 also avoids the compatibility sync performed by the older ruler getter, while
 `FB.realmRulerStandingSnapshot` reconciles the two legacy Standing stores
-without writing either one. Explicit adjustments and the ordinary daily
-materialized-ruler synchronization still persist the reconciled value. A compact royal
+without writing either one. Explicit adjustments and the typed Standing APIs persist
+the reconciled value immediately. A bounded fallback synchronization runs at season
+boundaries and after event queues rather than scanning every materialized court on every
+intervening day. A compact royal
 outside the displayed court still materializes only after an explicit courtship route
 or when accession selects that exact member.
 

@@ -134,17 +134,23 @@ price 1, invalid shock references are discarded, and no RNG is consumed.
 
 Once per 90-day season, `FB.marketSeason`:
 
-1. Computes county production and demand from terrain, coast, development,
+1. Builds one transient season snapshot of county bases, endowments,
+   effective-sovereign trade technology, relevant modifier totals, shocks,
+   army demand, staffed-enterprise output/distribution, and active charter
+   corridors. These inputs are invariant during settlement and are never
+   serialized.
+2. Computes county production and demand from terrain, coast, development,
    settlement weight, county population factor (`clamp(sqrt(P / P0), 0.60, 1.60)`), buildings, effective-sovereign trade technology,
    modifiers, endowments, armies, and saved shocks.
-2. Adds exact resident-player-household demand and staffed family-enterprise
+3. Adds exact resident-player-household demand and staffed family-enterprise
    output. No synthetic AI households are materialized.
-3. Runs exactly two synchronous passes across one cached, sorted adjacency
+4. Computes each good/edge capacity once from the snapshot, then runs exactly
+   two synchronous passes across one cached, sorted adjacency
    list. Each edge proposal is capped by donor surplus, recipient shortage,
    and edge capacity; competing exports are proportionally scaled before any
    application. Strait classes use water distribution bonuses. Flow therefore
    creates or destroys no stock.
-4. Quantizes stock to tenths and price to hundredths, stores last net flow, and
+5. Quantizes stock to tenths and price to hundredths, stores last net flow, and
    ages shocks.
 
 The target reserve is two seasons of demand. Desired price is
@@ -153,7 +159,9 @@ reserve or an explicit severe shock opens the 0.50–2.50 crisis range. A price
 moves no more than 20% from its prior value in one season and is additionally
 smoothed halfway toward the desired price.
 
-The runtime is `O(goods × (counties + 2 × edges))` once per season. It has no
+The runtime is `O(goods × (counties + 2 × edges))` once per season, while the
+more expensive county inputs and edge capacities are each derived only once
+rather than once per endpoint, good, and flow pass. It has no
 daily scans, merchant actors, all-pairs searches, flow pathfinding, or serialized
 reports. The county report shown in the UI is an in-memory view of the last
 season only. The market save target is under 64 KB and the complete long-campaign

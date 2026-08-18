@@ -399,7 +399,7 @@ window.FB = window.FB || {};
     }
   }
 
-  function repairElectionStore(state, silent) {
+  function repairElectionStore(state, silent, skipLegacyOfficers) {
     var store = electionStore(state, true);
     for (var key in store.cooldowns) {
       if (!own(store.cooldowns, key) ||
@@ -416,7 +416,7 @@ window.FB = window.FB || {};
       store.history.splice(0, store.history.length - HISTORY_LIMIT);
     }
     expireGuildTerms(state, store, silent);
-    grandfatherGuildTerms(state, store);
+    if (!skipLegacyOfficers) grandfatherGuildTerms(state, store);
     expireCouncilTerms(state, store, silent);
     ensureCouncilTerms(state, store);
     expireActiveElection(state, store, silent);
@@ -1182,7 +1182,7 @@ window.FB = window.FB || {};
     return false;
   }
 
-  function repairPrivileges(state) {
+  function repairPrivileges(state, skipLegacyModifiers) {
     var records = privilegeStore(state, true);
     var repaired = [];
     var seen = {};
@@ -1203,22 +1203,24 @@ window.FB = window.FB || {};
     }
     state.privileges = repaired;
 
-    var county = state.modifiers && state.modifiers.county || {};
-    for (var pid in county) {
-      if (!own(county, pid)) continue;
-      var modifierRecords = FB.countyModifierRecords
-        ? FB.countyModifierRecords(state, pid) : [];
-      for (i = 0; i < modifierRecords.length; i++) {
-        var modifier = modifierRecords[i];
-        var existingId = privilegeRecordId('modifier', modifier.id, pid);
-        var exists = state.privileges.some(function (item) {
-          return item.id === existingId;
-        });
-        if (!exists) {
-          FB.recordModifierPrivilege(state, modifier.id, pid, {
-            sourceEventId:modifier.sourceEventId || null,
-            sourceType:modifier.sourceEventId ? 'event' : 'legacy'
-          });
+    /* Add/remove modifier APIs maintain privilege provenance live. The full
+       county sweep is only for load-time legacy repair, not every daily tick. */
+    if (!skipLegacyModifiers) {
+      var county = state.modifiers && state.modifiers.county || {};
+      for (var pid in county) {
+        if (!own(county, pid)) continue;
+        var modifierRecords = FB.countyModifierRecords
+          ? FB.countyModifierRecords(state, pid) : [];
+        for (i = 0; i < modifierRecords.length; i++) {
+          var modifier = modifierRecords[i];
+          var existingId = privilegeRecordId('modifier', modifier.id, pid);
+          if (!seen[existingId]) {
+            var added = FB.recordModifierPrivilege(state, modifier.id, pid, {
+              sourceEventId:modifier.sourceEventId || null,
+              sourceType:modifier.sourceEventId ? 'event' : 'legacy'
+            });
+            if (added) seen[existingId] = 1;
+          }
         }
       }
     }
@@ -1767,17 +1769,26 @@ window.FB = window.FB || {};
     return refuseDemand(state, ctx, true);
   };
 
+  var dailyRepairState = null;
+
   FB.ensureInstitutions = function (state, options) {
     if (!state || !state.player) return null;
     options = options || {};
-    repairPrivileges(state);
-    var elections = repairElectionStore(state, !!options.silent);
+    repairPrivileges(state, !!options.skipLegacyRepairs);
+    var elections = repairElectionStore(state, !!options.silent,
+      !!options.skipLegacyRepairs);
     var demands = repairDemandStore(state);
+    if (!options.skipLegacyRepairs) dailyRepairState = state;
     return { elections:elections, privileges:state.privileges, demands:demands };
   };
 
   FB.institutionsDay = function (state) {
-    return FB.ensureInstitutions(state);
+    var skipLegacyRepairs = dailyRepairState === state;
+    var result = FB.ensureInstitutions(state, {
+      skipLegacyRepairs:skipLegacyRepairs
+    });
+    dailyRepairState = state;
+    return result;
   };
 
   FB.institutionsYearly = function (state) {

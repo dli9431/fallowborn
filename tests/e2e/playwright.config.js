@@ -15,7 +15,8 @@ const fileProjectTests = [
   '**/ruler-titles.spec.js',
   '**/settlement-engine.spec.js',
   '**/settlement-real-data.spec.js',
-  '**/simulation.spec.js'
+  '**/simulation.spec.js',
+  '**/time-controls.spec.js'
 ];
 const compatibilityProjectTests = [
   '**/boot.spec.js',

@@ -118,7 +118,10 @@ compatibility alias but is not a second top-level Deeds entry.
 
 **Saves**: `state.council` is optional and self-heals (`FB.councilEnsure` runs in the
 season tick) — no save-version bump; kings in old saves find their council formed on the
-next season. Only the player monarch has a council; AI realms are not simulated this deep.
+next season. The shared institution ensure performs legacy office and privilege discovery
+once for each loaded state; daily expiry/validity work then uses the normalized records
+without repeating those whole-save legacy scans. Only the player monarch has a council;
+AI realms are not simulated this deep.
 
 Related: [realms.md](realms.md) for vassals and Standing, [events.md](events.md) for the
 interpreter, [piety-intrigue-diplomacy.md](piety-intrigue-diplomacy.md) for plots.

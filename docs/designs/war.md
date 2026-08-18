@@ -159,8 +159,11 @@ same rearm wait as a shattering — so a beaten player cannot de-muster and imme
 re-raise a full levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts exist only while their sovereign
 is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
 ended, which covers every peace path with one rule. War relationships are folded into a
-single `warring` map (and hosts into a `hostByRealm` lookup) once per tick, so the daily
-loops stay O(realms + armies) even with dozens of hosts on the map.
+single `warring` map (and hosts into a `hostByRealm` lookup) once per tick. The eligible
+sovereign-realm ids are an unsaved derived index retained until realm death or hierarchy
+mutation advances the shared realm revision. Daily war discovery and host raising thus
+visit the dozens of sovereigns rather than every generated count and duke, keeping the
+hot path O(sovereigns + armies) even with dozens of hosts on the map.
 
 **A host is a composition, not just a headcount.** Every host carries
 `units: { levy, arch, cav, ret, mercs }` (with `men` always the total, so every place that only
@@ -579,7 +582,9 @@ is installed with `FB.assignRealmRulerCharacter`. A personal, beneficiary-free l
 award retains the final accept/decline choice; decline creates the cadet and converts
 service to honor. Sacred custody is stored on its awarded realm and pays the player
 2 piety per season while their realm or a vassal holds it and its sovereign bloc still
-controls a listed site.
+controls a listed site. Sacred-loss clocks are recomputed when realm control or the
+religious-head assignment changes; unchanged daily ticks retain that derived snapshot
+without moving the saved loss date or its yearly guarantee boundary.
 
 Intrigue captivity blocks a ruler from initiating an ordinary war, an independence
 rising, or a great-holy-war call. An already-running war continues because capture does
@@ -606,9 +611,32 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   - *Deep Sack*: Full assault on core settlements, markets, and shrines. High gold bullion,
     luxuries, and captives; risks defender resistance/casualties against stone castles and
     inflicts severe devastation.
+  - *Military Resistance & Route Combat Odds*: Raid expeditions do not fight target counties in isolation;
+    the expedition marches sequentially along its passage route (`FB.raidMarchRoute`). If raiders pass through
+    hostile foreign counties to reach an interior target, they engage in passage skirmishes against each
+    intermediate county garrison:
+    - County garrison composition: local levy (`dev × 18`), plus a dedicated fort garrison (×3.5 behind
+      walls), plus the county's proportional share of its realm's field host
+      (`host × county dev ÷ realm dev`). A poor border hamlet of a great kingdom is soft but yields
+      little; a one-county petty realm defends home with its whole host. The target list and map
+      picker display the effective defenders under the chosen strategy (a Deep Sack faces the full
+      garrison with fort multipliers; a Swift Skirmish faces 35% at the target), matching the
+      combat-odds risk label.
+    - Raiders fight the first intermediate county, suffering casualties.
+    - Surviving remainder forces advance into the next intermediate county to fight its defenders.
+    - If repelled at any intermediate county along the march, the entire expedition is turned back with heavy casualties.
+    - If the raiders successfully punch through to the final target county, the surviving warband conducts the main assault, with plunder scaling to surviving host strength.
+  - *Casualties & Troop Loss*: Casualties suffered across all skirmishes during raids are deducted directly from the player's home
+    county population and levy pool (`FB.changeCountyPopulation`). Severe losses or repelled expeditions trigger
+    an army rearm recovery period (`state.armyDown.player = state.turn`); the rearm ramp starts from the
+    expedition's surviving strength fraction (`state.armyDownSurvival`, keyed to the down-turn so a later
+    shattering never inherits a stale floor) instead of the 0.15 shattered-host floor, so the musterable
+    host reflects what actually marched back. Repelled raids yield zero plunder,
+    inflict prestige loss, and give prestige to the defending sovereign.
 - **Multi-System Impact**:
-  - *Fortifications*: Fort tier (`FB.fortAt`) resists assaults, lowers base plunder extraction,
-    and inflicts casualties on reckless sacks.
+  - *Fortifications & Zone of Control*:
+    - *Passage Blockage*: Active hostile fortifications (`FB.fortAt`, level $\ge 1$) project a zone of control. Raiders cannot march *through* an unbreached hostile fort to reach deeper interior provinces without first taking the fort, unless an unfortified overland bypass or coastal landing exists.
+    - *Assault Resistance & Casualties*: Dedicated garrison forces operate with a $3.5\times$ force multiplier behind stone walls, plus $+55\%$ to $+220\%$ fort defense multipliers in Deep Sacks. Storming stone battlements inflicts steep baseline assault casualties ($12\%$–$18\%$ for Tier 1 up to $38\%$–$52\%$ for Tier 4) even upon victory, and repelled assaults suffer devastating slaughter ($45\%$–$70\%$ casualties). Swift Skirmishes avoid storming the keep to pillage outer manors with minimal losses.
   - *Buildings & Development*: Deep sacks have a chance to ruin standing settlement buildings
     (`state.buildings[pid]`) and reduce county development (`state.dev[pid]`).
   - *Population & Captives*: Drains target county population and yields captives. Captives may
@@ -617,3 +645,7 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   - *Market System*: Hauls away commodities matching the target's endowments and applies a
     severe 4-season market shock (`FB.addMarketShock`), disrupting victim production.
   - *Diplomacy*: Reduces Standing with the victim sovereign by 25 and leaves retaliatory grievances.
+- **Expedition Interface & Map Targeting**: The Raiding modal provides a unified `.raid-target-toolbar`
+  with strategy selector dropdown, search filter, and a dedicated **Select on Map** action:
+  - *Target List*: Each candidate row summarizes the march route (e.g. `Passes 2 counties (1 fort)` or `Direct landing`), destination fort tier (e.g. `🏰 Stone Keep (Tier 2)`), garrison size, and combat risk assessment.
+  - *Interactive Map Overlay*: When selecting on the map, reachable unfortified counties are illuminated with clean pips, while fortified counties display distinct square fortress badges with `🏰` emblems. Selecting a target renders the full dotted march path through intermediate counties, highlighting intermediate forts along the march route and displaying live spoils and defender counts in the floating `#raid-picker` card.

@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/economy.js',
   'js/market.js',
+  'js/modifiers.js',
+  'js/technology.js',
   'js/ui_modals.js',
   'data/economy.js',
   'data/markets.js'
@@ -207,6 +209,52 @@ test('seasonal markets conserve flow, use exactly two bounded passes, and remap 
     expect(result.firstOutputLength).toBeLessThan(64 * 1024);
     expect(result.crisisPrice).toBe(1.2);
     expect(result.crisisRemaining).toBe(1);
+  });
+
+test('seasonal markets snapshot invariant inputs instead of recomputing them per edge',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      state.player.enterprises = [];
+      const countyCount = Object.keys(FB.world.byId).filter(function (pid) {
+        return !FB.world.byId[pid].wasteland;
+      }).length;
+      const calls = {
+        endowments:0, technology:0, modifiers:0,
+        corridor:0, monopoly:0
+      };
+      const wrapped = [
+        ['marketEndowments', 'endowments'],
+        ['techBonus', 'technology'],
+        ['modBonus', 'modifiers'],
+        ['marketCorridorCapacityBonus', 'corridor'],
+        ['guildMonopolyActive', 'monopoly']
+      ];
+      const originals = {};
+      for (let i = 0; i < wrapped.length; i++) {
+        const name = wrapped[i][0], key = wrapped[i][1];
+        originals[name] = FB[name];
+        FB[name] = function () {
+          calls[key]++;
+          return originals[name].apply(this, arguments);
+        };
+      }
+      state.turn += 90;
+      try {
+        FB.marketSeason(state);
+      } finally {
+        for (let i = 0; i < wrapped.length; i++) {
+          FB[wrapped[i][0]] = originals[wrapped[i][0]];
+        }
+      }
+      return { countyCount:countyCount, calls:calls };
+    });
+
+    expect(result.calls.endowments).toBe(result.countyCount);
+    expect(result.calls.technology).toBeLessThanOrEqual(result.countyCount);
+    expect(result.calls.modifiers).toBe(0);
+    expect(result.calls.corridor).toBe(0);
+    expect(result.calls.monopoly).toBe(2);
   });
 
 test('household demand, tangible quotes, hardship, and mortality obey their boundaries',

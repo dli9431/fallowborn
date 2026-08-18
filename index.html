@@ -499,6 +499,49 @@
               </div>
             </div>
             <div
+              id="raid-picker"
+              class="raid-picker hidden"
+              role="dialog"
+              aria-labelledby="raid-picker-title"
+            >
+              <div class="raid-picker-header">
+                <h3 id="raid-picker-title" data-i18n="Select a raid target">
+                  Select a raid target
+                </h3>
+                <div class="raid-strategy-select-wrap raid-picker-strategy-wrap">
+                  <select id="raid-picker-strategy" class="raid-picker-strategy" aria-label="Expedition Strategy">
+                    <option value="sack" data-i18n="⚔ Deep Sack">⚔ Deep Sack</option>
+                    <option value="swift" data-i18n="🐎 Swift Skirmish">🐎 Swift Skirmish</option>
+                  </select>
+                </div>
+              </div>
+              <div id="raid-picker-summary" class="hint"></div>
+              <div class="raid-picker-actions">
+                <button
+                  class="btn"
+                  id="raid-picker-cancel"
+                  data-i18n="Cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  class="btn"
+                  id="raid-picker-list"
+                  data-i18n="List View"
+                >
+                  List View
+                </button>
+                <button
+                  class="btn primary"
+                  id="raid-picker-launch"
+                  disabled
+                  data-i18n="Launch Raid"
+                >
+                  Launch Raid
+                </button>
+              </div>
+            </div>
+            <div
               id="map-finder"
               class="map-finder hidden"
               role="dialog"

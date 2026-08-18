@@ -296,7 +296,6 @@ button.stat:active { filter: brightness(1.35); } /* press feedback on touch */
 .bd-note { color: var(--helper-text-color); font-size: 12px; line-height: 1.4; margin-top: 6px; }
 #tb-date { color: #d8b24a; font-size: 14px; white-space: nowrap; width: 156px; min-width: 156px; text-align: right; overflow: hidden; }
 #tb-portrait { border: 1px solid #66522f; border-radius: 5px; background: #241d15; cursor: pointer; }
-#btn-endturn { text-align: left; padding-left: 14px; }
 
 #main { flex: 1 1 auto; display: flex; min-height: 0; }
 /* on desktop the panel wrapper vanishes so Self/Kin | map | Deeds flank as before */
@@ -331,6 +330,33 @@ button.stat:active { filter: brightness(1.35); } /* press feedback on touch */
 .travel-destination:disabled { opacity: .48; cursor: default; }
 .travel-destination .adesc { display: block; color: var(--helper-text-color); font-size: 13px; margin-top: 2px; }
 body.travel-picking #timebtns { visibility: hidden; }
+.raid-picker {
+  position: absolute; z-index: 32; left: 12px; bottom: 12px;
+  width: min(440px, calc(100% - 24px)); max-height: calc(100% - 24px);
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px; overflow: hidden;
+  color: var(--main-text-color); background: rgba(31, 25, 17, .96);
+  border: 2px solid #7a6234; border-radius: 10px;
+  box-shadow: 0 8px 28px rgba(0,0,0,.55);
+}
+.raid-picker.hidden { display: none; }
+.raid-picker-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+}
+.raid-picker h3 { color: #e0c060; margin: 0; font-size: 16px; }
+.raid-picker-strategy-wrap { flex: 0 1 140px; }
+.raid-picker-strategy-wrap select { min-height: 30px; font-size: 12px; padding: 4px 22px 4px 8px; }
+.raid-picker-summary { font-size: 13px; line-height: 1.3; }
+.raid-picker-actions {
+  display: grid; grid-template-columns: 1fr 1.1fr 1.3fr; gap: 6px;
+  align-items: stretch; margin-top: 4px; width: 100%;
+}
+.raid-picker-actions .btn {
+  font-size: 12.5px; padding: 5px 4px; min-height: 32px; height: 32px;
+  line-height: 1.15; text-align: center; white-space: nowrap; box-sizing: border-box;
+}
+.raid-picker-actions .btn.primary { font-weight: bold; }
+body.raid-picking #timebtns { visibility: hidden; }
 #map { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 #maphud { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 6px; z-index: 4; }
 .hudbtn { width: 40px; height: 40px; font-size: 19px; padding: 0; opacity: .9; flex: 0 0 auto; }
@@ -635,16 +661,19 @@ body.travel-picking #timebtns { visibility: hidden; }
 .tabpane.active { display: block; }
 #timebtns { display: flex; gap: 6px; margin: 8px; flex: 0 0 auto; }
 /* flex-basis 0: button widths come only from the container, never from label text */
-#btn-endturn { flex: 1 1 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#btn-endturn {
+  flex: 1 1 0; min-width: 0; text-align: left;
+  padding-left: 10px; padding-right: 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#btn-endturn .keyhint { margin-right: 5px; }
 /* icon-only time buttons hold two Emoji-property glyphs (skip = two triangles,
    auto = gear + tick). The browser allows a line break between two such glyphs
    even when they render monochrome, so in a fixed-width box without nowrap they
    wrap and stack. Keep them on one line and trim the wide .bigbtn text padding
    so both glyphs sit centered. */
-#btn-skip, #btn-auto { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
-#btn-skip { flex: 0 0 64px; }
-/* play/pause segment renders in a fixed box so toggling never moves the date */
-.pp { display: inline-block; width: 78px; }
+#btn-skip, #btn-auto { white-space: nowrap; padding-left: 6px; padding-right: 6px; flex: 0 0 64px; }
+.pp { display: inline-block; }
 .actionbtn.focused { border-color: #e0c060; background: #3a2f1c; }
 
 /* side panel content */
@@ -1733,6 +1762,78 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 /* .actionbtn's display:block would defeat the hidden attribute the filter sets */
 .war-target-row[hidden] { display: none !important; }
 
+/* ---------- raiding expedition target toolbar ---------- */
+.raid-target-toolbar {
+  position: sticky; top: 0; z-index: 2;
+  display: grid; grid-template-columns: minmax(190px, 1.35fr) minmax(150px, 1fr);
+  align-items: start;
+  gap: 10px; padding: 8px 10px; margin-bottom: 8px;
+  background: #1b1711; border: 1px solid #4a3b27; border-radius: 8px;
+}
+.raid-target-toolbar label {
+  display: flex; flex-direction: column; gap: 4px; min-width: 0;
+  color: var(--helper-text-color); font-size: 11px;
+}
+.raid-target-toolbar label > span {
+  color: var(--helper-text-color); font-size: 11px; font-weight: bold; line-height: 1.2;
+}
+.raid-strategy-select-wrap {
+  position: relative; display: block; width: 100%; min-width: 0;
+}
+.raid-strategy-select-wrap::after {
+  content: '▾'; position: absolute; right: 11px; top: 50%; transform: translateY(-53%);
+  color: #d8b24a; font-size: 14px; line-height: 1; pointer-events: none;
+}
+.raid-target-toolbar select {
+  width: 100%; height: 38px; min-height: 38px; padding: 6px 32px 6px 9px;
+  -webkit-appearance: none; appearance: none; box-sizing: border-box;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: linear-gradient(180deg, #3b3020, #2a2218); color: var(--main-text-color);
+  color-scheme: dark; font: inherit; font-size: 13px; line-height: 1.25; cursor: pointer;
+  box-shadow: inset 0 1px rgba(255,255,255,.05);
+}
+.raid-target-toolbar select:hover { border-color: #c9a24a; }
+.raid-target-toolbar select:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 1px;
+}
+.raid-target-toolbar select option {
+  background: #2a2218; color: var(--main-text-color);
+}
+.raid-strategy-hint {
+  display: block; margin-top: 3px; font-size: 11px; line-height: 1.35;
+  color: var(--helper-text-color);
+}
+.raid-search-wrap {
+  position: relative; display: flex; align-items: center; width: 100%; min-width: 0;
+}
+.raid-search-icon {
+  position: absolute; left: 9px; pointer-events: none;
+  font-size: 13px; opacity: .7; line-height: 1;
+}
+.raid-target-toolbar input[type="search"],
+.raid-target-toolbar input[type="text"] {
+  width: 100%; height: 38px; min-height: 38px; padding: 6px 28px 6px 28px;
+  box-sizing: border-box;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: #201a13; color: var(--main-text-color);
+  font-family: inherit; font-size: 13px; outline: none;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.35);
+}
+.raid-target-toolbar input[type="search"]:focus,
+.raid-target-toolbar input[type="text"]:focus {
+  border-color: #ffd24a; box-shadow: 0 0 0 1px #ffd24a, inset 0 1px 3px rgba(0,0,0,.35);
+}
+.raid-search-clear {
+  position: absolute; right: 5px; width: 22px; height: 22px; min-width: 22px; min-height: 22px;
+  padding: 0; font-size: 11px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; opacity: .7; cursor: pointer; color: var(--main-text-color);
+}
+.raid-search-clear:hover { opacity: 1; }
+.raid-search-clear.hidden { display: none; }
+.raid-target-toolbar-extra {
+  display: flex; justify-content: flex-end; margin-bottom: 8px;
+}
+
 /* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
    cell remains an ordinary .actionbtn so modal focus and number shortcuts work. */
 .household-plan-modal .modalcard { width: min(98vw, 1280px); }
@@ -2394,6 +2495,7 @@ textarea.modjson, textarea.savetext {
 @media (pointer: coarse) {
   .ftbranch-toggle { min-height: 44px; min-width: 44px; padding: 7px 10px; font-size: 12px; }
   .war-target-toolbar input, .war-target-toolbar select,
+  .raid-target-toolbar input, .raid-target-toolbar select,
   .enterprise-view-controls select { min-height: 44px; }
 }
 .fttree { display: flex; justify-content: center; min-width: max-content; }
@@ -2890,6 +2992,20 @@ textarea.modjson, textarea.savetext {
     border-radius: 14px; border-width: 2px;
     padding: 14px;
   }
+  .raid-picker {
+    position: fixed; z-index: 41;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: calc(50vh - 8px - env(safe-area-inset-bottom));
+    border-radius: 10px; border-width: 2px;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .raid-picker-actions .btn {
+    min-height: 34px; height: 34px; font-size: 13px; padding: 4px 6px;
+  }
   .travel-destination { min-height: 48px; font-size: 16px; }
   /* Self/Kin lives in a full-screen drawer opened by tapping the portrait;
      it covers the topbar too */
@@ -3081,6 +3197,7 @@ textarea.modjson, textarea.savetext {
   .enterprise-view-controls label { width: 100%; flex-basis: auto; }
   .war-target-toolbar { position: static; grid-template-columns: 1fr 1fr; }
   .war-target-search { grid-column: 1 / -1; }
+  .raid-target-toolbar { position: static; grid-template-columns: 1fr; }
   .shortcut-binding-row { grid-template-columns: 72px minmax(0, 1fr); }
   .shortcut-binding-row > .btn { grid-column: 1 / -1; }
   .large-list-row.actionbtn, .large-list-target-button,

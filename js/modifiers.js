@@ -7,6 +7,13 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
 
+  let tickState = null;
+  let tickStorage = null;
+  let tickCounty = null;
+  let tickCampaign = null;
+  let tickCampaignModifiers = null;
+  let tickNextExpiry = -Infinity;
+
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
   }
@@ -100,6 +107,48 @@ window.FB = window.FB || {};
     return state.modifiers;
   }
 
+  function invalidateTickCache() {
+    tickState = null;
+    tickStorage = null;
+    tickCounty = null;
+    tickCampaign = null;
+    tickCampaignModifiers = null;
+    tickNextExpiry = -Infinity;
+  }
+
+  function rememberTickState(state) {
+    tickState = state;
+    tickStorage = state.modifiers;
+    tickCounty = state.modifiers.county;
+    tickCampaign = state.greatHolyWar || null;
+    tickCampaignModifiers = tickCampaign && tickCampaign.modifiers || null;
+    tickNextExpiry = Infinity;
+    for (const pid in tickCounty) {
+      if (!own(tickCounty, pid)) continue;
+      const list = tickCounty[pid];
+      for (let i = 0; i < list.length; i++) {
+        if (own(list[i], 'endTurn') && list[i].endTurn < tickNextExpiry) {
+          tickNextExpiry = list[i].endTurn;
+        }
+      }
+    }
+    const campaign = tickCampaignModifiers || [];
+    for (let i = 0; i < campaign.length; i++) {
+      if (own(campaign[i], 'endTurn') &&
+          campaign[i].endTurn < tickNextExpiry) {
+        tickNextExpiry = campaign[i].endTurn;
+      }
+    }
+  }
+
+  function tickCacheCurrent(state) {
+    const campaign = state.greatHolyWar || null;
+    return tickState === state && tickStorage === state.modifiers &&
+      tickCounty === (state.modifiers && state.modifiers.county) &&
+      tickCampaign === campaign &&
+      tickCampaignModifiers === (campaign && campaign.modifiers || null);
+  }
+
   function listFor(state, scope, pid, create) {
     repairStorage(state);
     if (scope === 'county') {
@@ -190,6 +239,7 @@ window.FB = window.FB || {};
       if (def.scope === 'county' && FB.recordModifierPrivilege) {
         FB.recordModifierPrivilege(state, id, pid, options || {});
       }
+      invalidateTickCache();
       return true;
     }
     record = { id:id };
@@ -203,6 +253,7 @@ window.FB = window.FB || {};
       FB.recordModifierPrivilege(state, id, pid, options || {});
     }
     if (!(options && options.silent)) notice(state, id, def.scope, pid, true);
+    invalidateTickCache();
     return true;
   };
 
@@ -222,6 +273,7 @@ window.FB = window.FB || {};
       FB.removePrivilegeForModifier(state, id, pid);
     }
     if (removed && options && options.notice) notice(state, id, def.scope, pid, false);
+    if (removed) invalidateTickCache();
     return removed;
   };
 
@@ -380,9 +432,9 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.syncGreatHolyWarModifiers = function (state, options) {
+  FB.syncGreatHolyWarModifiers = function (state, options, storageReady) {
     if (!state) return;
-    repairStorage(state);
+    if (!storageReady) repairStorage(state);
     const campaign = state.greatHolyWar;
     if (!campaign) return;
     const validVow = FB.campaignModifierApplies(state);
@@ -396,11 +448,13 @@ window.FB = window.FB || {};
   FB.ensureModifiers = function (state) {
     if (!state) return null;
     const storage = repairStorage(state);
-    FB.syncGreatHolyWarModifiers(state);
+    FB.syncGreatHolyWarModifiers(state, null, true);
+    rememberTickState(state);
     return storage;
   };
 
   FB.modifierTick = function (state) {
+    if (tickCacheCurrent(state) && state.turn < tickNextExpiry) return;
     FB.ensureModifiers(state);
     const county = state.modifiers.county;
     for (const pid in county) {
@@ -425,5 +479,6 @@ window.FB = window.FB || {};
         }
       }
     }
+    rememberTickState(state);
   };
 })();

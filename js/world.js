@@ -1151,22 +1151,50 @@ window.FB = window.FB || {};
      state.owner[pid] = SOVEREIGN realm id (map color, war targeting);
      state.holder[pid] = the realm holding the county directly. */
 
-  /* owner/holder-derived lists, rebuilt lazily once per turn or after
-     any transfer (the AI loop consults them per realm per year) */
-  let rc = { turn: -1, dirty: true, provs: null, strength: null, held: null };
+  /* Owner/holder lists change only at the explicit realm-cache invalidation
+     boundary. Keep them across ordinary days instead of rescanning the whole
+     map whenever any daily system asks for one demesne. Development can move
+     independently, so the strength totals retain their once-per-turn cache. */
+  let rc = {
+    state:null, dirty:true, provs:null, held:null, vassals:null,
+    strengthTurn:-1, strength:null
+  };
+  let rcRevision = 0;
   function rcEnsure(state) {
-    if (rc.turn === state.turn && !rc.dirty) return;
-    rc.turn = state.turn; rc.dirty = false;
-    rc.provs = {}; rc.strength = {}; rc.held = {};
+    if (rc.state === state && !rc.dirty) return;
+    rc.state = state; rc.dirty = false;
+    rc.provs = {}; rc.held = {}; rc.vassals = {};
+    rc.strengthTurn = -1; rc.strength = null;
     for (const pid in state.owner) {
       const o = state.owner[pid];
       (rc.provs[o] = rc.provs[o] || []).push(pid);
-      rc.strength[o] = (rc.strength[o] || 0) + (state.dev[pid] || 1);
       const h = (state.holder && state.holder[pid]) || o;
       (rc.held[h] = rc.held[h] || []).push(pid);
     }
+    for (const id in state.realms) {
+      const realm = state.realms[id];
+      if (!realm || !realm.alive || !realm.liege) continue;
+      (rc.vassals[realm.liege] = rc.vassals[realm.liege] || []).push(id);
+    }
   }
-  FB.invalidateRealmCache = function () { rc.dirty = true; };
+  function rcStrengthEnsure(state) {
+    rcEnsure(state);
+    if (rc.strengthTurn === state.turn && rc.strength) return;
+    rc.strengthTurn = state.turn;
+    rc.strength = {};
+    for (const pid in state.owner) {
+      const o = state.owner[pid];
+      rc.strength[o] = (rc.strength[o] || 0) + (state.dev[pid] || 1);
+    }
+  }
+  FB.invalidateRealmCache = function () {
+    rc.dirty = true;
+    rcRevision++;
+  };
+  /* Unsaved monotonic stamp for derived systems whose inputs change only
+     with realm ownership, hierarchy, or development. It lets their daily
+     paths retain a repaired snapshot until a real mutation invalidates it. */
+  FB.realmStateRevision = function () { return rcRevision; };
 
   FB.topRealm = function (state, rid) {
     let cur = rid, guard = 0;
@@ -1239,7 +1267,11 @@ window.FB = window.FB || {};
   FB.resetWorldDataCaches = function () {
     dejureCounties = null;
     kingdomCountyLists = {};
-    rc = { turn: -1, dirty: true, provs: null, strength: null, held: null };
+    rc = {
+      state:null, dirty:true, provs:null, held:null, vassals:null,
+      strengthTurn:-1, strength:null
+    };
+    rcRevision++;
     if (FB.ui && FB.ui.resetLocationSearchCache) FB.ui.resetLocationSearchCache();
   };
 
@@ -1330,6 +1362,7 @@ window.FB = window.FB || {};
     };
     state.realms[r.id] = r;
     if (state.date) FB.ensureRealmSuccession(state, r.id);
+    FB.invalidateRealmCache();
     return r;
   };
 
@@ -1756,6 +1789,24 @@ window.FB = window.FB || {};
      year. Player opportunities remain explicit deeds; AI choices are stable. */
   FB.religiousHeadRecoveryTick = function (state) {
     const wait = FB.religiousHeadBalance('religiousHeadVacancyDays', 360);
+    /* New games and loads already normalize the office table. Until an
+       actual saved vacancy reaches its due turn, the full faith/realm repair
+       cannot produce a recovery and need not run on every skipped day. */
+    const savedVacancies = state && state.religiousHeadVacancies;
+    if (savedVacancies && typeof savedVacancies === 'object' &&
+        !Array.isArray(savedVacancies)) {
+      let recoveryDue = false;
+      for (const officeId in savedVacancies) {
+        if (!Object.prototype.hasOwnProperty.call(savedVacancies, officeId)) continue;
+        const vacancy = savedVacancies[officeId];
+        if (vacancy && isFinite(vacancy.turn) &&
+            state.turn - vacancy.turn >= wait) {
+          recoveryDue = true;
+          break;
+        }
+      }
+      if (!recoveryDue) return;
+    }
     FB.ensureReligiousHeads(state);
     const religionIds = FB.religionIds(state, false);
     for (let religionIndex = 0; religionIndex < religionIds.length; religionIndex++) {
@@ -3112,8 +3163,7 @@ window.FB = window.FB || {};
       ? FB.faithAdjustedRealmStanding(state, rid, stored) : stored;
   };
 
-  FB.syncRealmRulerStanding = function (state, rid) {
-    const c = FB.realmRulerCharacter(state, rid);
+  function syncRealmRulerStandingFor(state, rid, c) {
     let value = reconciledRealmRulerStanding(state, rid, c);
     value = writeStoredRealmStanding(state, rid, value);
     if (c) {
@@ -3122,6 +3172,11 @@ window.FB = window.FB || {};
     }
     return FB.faithAdjustedRealmStanding
       ? FB.faithAdjustedRealmStanding(state, rid, value) : value;
+  }
+
+  FB.syncRealmRulerStanding = function (state, rid) {
+    return syncRealmRulerStandingFor(state, rid,
+      FB.realmRulerCharacter(state, rid));
   };
 
   FB.setRealmRulerStanding = function (state, rid, value) {
@@ -3140,9 +3195,8 @@ window.FB = window.FB || {};
   FB.syncMaterializedRealmRulers = function (state) {
     if (!state || !state.realms) return;
     for (const rid in state.realms) {
-      if (FB.realmRulerCharacter(state, rid)) {
-        FB.syncRealmRulerStanding(state, rid);
-      }
+      const c = FB.realmRulerCharacter(state, rid);
+      if (c) syncRealmRulerStandingFor(state, rid, c);
     }
   };
 
@@ -3571,8 +3625,31 @@ window.FB = window.FB || {};
     return alliedReinforcement(state, defenderId, true);
   };
 
+  FB.realmCurrentStrength = function (state, rid) {
+    if (rid === 'player') {
+      const rearm = (FB.rearmScale) ? FB.rearmScale(state, 'player') : 1;
+      return Math.round(FB.playerLevy(state) * rearm);
+    }
+    const provs = FB.realmProvinces ? FB.realmProvinces(state, rid) : [];
+    let curDev = 0;
+    let maxDev = 0;
+    for (let i = 0; i < provs.length; i++) {
+      const p = provs[i];
+      const d = (state.dev && state.dev[p]) || 1;
+      const pop = FB.countyPopulationFactor ? FB.countyPopulationFactor(state, p) : 1;
+      curDev += d * pop;
+      maxDev += d;
+    }
+    const maxStrength = FB.aiBaseHost(state, rid);
+    const popRatio = (maxDev > 0) ? (curDev / maxDev) : 1;
+    const rearm = (FB.rearmScale) ? FB.rearmScale(state, rid) : 1;
+    const cur = Math.round(maxStrength * Math.min(1, popRatio) * rearm);
+    const allyMen = FB.alliedReinforcement(state, rid).men;
+    return cur + allyMen;
+  };
+
   FB.realmDefensiveStrength = function (state, rid) {
-    const base = rid === 'player' ? FB.playerLevy(state) : FB.aiBaseHost(state, rid);
+    const base = rid === 'player' ? (FB.playerMaxLevy ? FB.playerMaxLevy(state) : FB.playerLevy(state)) : FB.aiBaseHost(state, rid);
     return base + FB.alliedReinforcement(state, rid).men;
   };
 
@@ -3860,7 +3937,7 @@ window.FB = window.FB || {};
   };
 
   FB.realmStrength = function (state, realmId) {
-    rcEnsure(state);
+    rcStrengthEnsure(state);
     const realm = state.realms[realmId];
     let strength;
     if (realm && realm.liege) {
@@ -3879,6 +3956,13 @@ window.FB = window.FB || {};
   FB.realmHeldCounties = function (state, rid) {
     rcEnsure(state);
     return rc.held[rid] || [];
+  };
+
+  /* Direct hierarchy children in stable realm insertion order. The returned
+     array is a read-only cache view; public collection helpers clone it. */
+  FB.realmDirectVassals = function (state, rid) {
+    rcEnsure(state);
+    return rc.vassals[rid] || [];
   };
 
   function capitalRelocationBalance(key, fallback) {
@@ -4129,7 +4213,8 @@ window.FB = window.FB || {};
       seen[cur] = 1;
       const held = rc.held[cur] || [];
       for (const pid of held) out.push(pid);
-      for (const id in state.realms) if (state.realms[id].liege === cur) stack.push(id);
+      const vassals = rc.vassals[cur] || [];
+      for (let i = 0; i < vassals.length; i++) stack.push(vassals[i]);
     }
     return out;
   };
@@ -4587,8 +4672,17 @@ window.FB = window.FB || {};
   /* Scripted history is checked after every calendar advance. Legacy entries
      mean Spring day 1 and retain their old flag/message identities; precise
      entries carry stable bookmark/event ids and may land on any campaign day. */
+  let scriptedTickState = null;
+  let nextScriptedDate = -Infinity;
+
   FB.scriptedTick = function (state) {
     var scripted = FBDATA.scripted || [];
+    var today = dateNumber(state.date);
+    /* Scripted history is immutable after a life begins. Once every pending
+       entry lies in the future, retain the nearest due date instead of
+       rebuilding every event flag and date on each intervening day. */
+    if (scriptedTickState === state && today < nextScriptedDate) return;
+    var nextDate = Infinity;
     for (var scriptedIndex = 0; scriptedIndex < scripted.length; scriptedIndex++) {
       var ev = scripted[scriptedIndex];
       var due = {
@@ -4597,7 +4691,12 @@ window.FB = window.FB || {};
         day:ev.day === undefined ? 1 : ev.day
       };
       var flag = scriptedFlag(ev);
-      if (dateNumber(state.date) < dateNumber(due) || state.flags[flag]) continue;
+      if (state.flags[flag]) continue;
+      var dueDate = dateNumber(due);
+      if (today < dueDate) {
+        if (dueDate < nextDate) nextDate = dueDate;
+        continue;
+      }
       state.flags[flag] = 1;
       var rid = ev.realm;
       if (ev.newRealm) {
@@ -4632,6 +4731,8 @@ window.FB = window.FB || {};
       FB.registerMessage(scriptedKey, { text: '📜 ' + ev.news });
       FB.news(state, FB.message(scriptedKey, {}));
     }
+    scriptedTickState = state;
+    nextScriptedDate = nextDate;
   };
 
   function aggressionBalance(key, fallback) {
@@ -5340,7 +5441,7 @@ window.FB = window.FB || {};
   /* The player's host composition: the dev-driven muster is the levy (massed,
      untrained foot); buildings, national technology, positions, and a landed
      baron's household add archers, cavalry, and men-at-arms. */
-  FB.playerCompositionBreakdown = function (state) {
+  FB.playerCompositionBreakdown = function (state, baseline) {
     const B = FBDATA.balance;
     const p = state.player;
     const comp = { levy:0, arch:0, cav:0, ret:0 };
@@ -5371,7 +5472,8 @@ window.FB = window.FB || {};
 
     if (p.provs && p.provs.length) {
       for (const pid of p.provs) {
-        const countyLevy = (state.dev[pid] || 1) * B.levyPerDev;
+        const popFactor = (baseline || !FB.countyPopulationFactor) ? 1 : FB.countyPopulationFactor(state, pid);
+        const countyLevy = (state.dev[pid] || 1) * popFactor * B.levyPerDev;
         add('levy', 'county', countyLevy, { pid:pid });
         if (FB.countyModifierRecords) {
           for (const record of FB.countyModifierRecords(state, pid)) {
@@ -5509,13 +5611,18 @@ window.FB = window.FB || {};
     };
   };
 
-  FB.playerComposition = function (state) {
-    const c = FB.playerCompositionBreakdown(state).units;
+  FB.playerComposition = function (state, baseline) {
+    const c = FB.playerCompositionBreakdown(state, baseline).units;
     return { levy:c.levy, arch:c.arch, cav:c.cav, ret:c.ret };
   };
 
   FB.playerLevy = function (state) {
     const c = FB.playerComposition(state);
+    return c.levy + c.arch + c.cav + c.ret;
+  };
+
+  FB.playerMaxLevy = function (state) {
+    const c = FB.playerComposition(state, true);
     return c.levy + c.arch + c.cav + c.ret;
   };
 
@@ -6837,9 +6944,10 @@ window.FB = window.FB || {};
     const me = state.chars[state.player.charId];
     const p = state.player;
     const k = FB.playerKingdom(state), e = FB.playerEmpire(state);
+    const dynName = (me.dyn || me.name || '').replace(/^of\s+/i, '').trim();
     const nm = e ? 'Empire of ' + FBDATA.empires[e].name
              : k ? 'Kingdom of ' + FBDATA.kingdoms[k].name
-             : 'Realm of ' + (me.dyn || me.name);
+             : 'Realm of ' + (dynName || me.name);
     const old = state.realms.player;
     const generation = old && old.ruler && old.ruler.generation !== undefined
       ? old.ruler.generation : 1;
@@ -6985,6 +7093,11 @@ window.FB = window.FB || {};
         Object.prototype.hasOwnProperty.call(state.armyDown, 'player')) {
       state.armyDown[rid] = state.armyDown.player;
       delete state.armyDown.player;
+    }
+    if (state.armyDownSurvival &&
+        Object.prototype.hasOwnProperty.call(state.armyDownSurvival, 'player')) {
+      state.armyDownSurvival[rid] = state.armyDownSurvival.player;
+      delete state.armyDownSurvival.player;
     }
     delete state.realms.player;
 

@@ -151,13 +151,23 @@ Every generic modal uses a flex-column card with a scrolling `#gm-body` and a st
 centered `.gm-footer`, so its terminal controls remain at the bottom middle while long
 content ends at the footer's opaque, bordered cutoff rather than fading behind it. Search
 and select controls inside a sticky modal toolbar keep a small horizontal inset, so their
-focus border never visually merges with the card edge. Two families break only the bottom-sheet framing: the Changelog
+focus border never visually merges with the card edge. Sticky modal toolbars (such as
+`.war-target-toolbar`, `.raid-target-toolbar`, `.market-lens-controls`, `.guide-controls`, and
+`.tech-controls`) standardize on dark parchment inputs (`#201a13`/`#211a12`), bronze borders
+(`#66522f`/`#775f32`), gold focus rings (`#ffd24a`/`#e0c060`), custom chevron wrappers
+(`.raid-strategy-select-wrap`/`.market-lens-select-wrap`), search input wrappers with leading
+magnifying icons and dismissible clear buttons, and minimum 44 px touch heights on mobile.
+Dropdown options inside these toolbars must remain short and concise (e.g. `⚔ Deep Sack`, `🐎 Swift Skirmish`);
+never embed long multi-clause explanations or parenthetical descriptions inside `<option>` labels, which
+cause text to extend past dropdown bounds or clip horizontally on narrow screens. Any dynamic explanatory
+helper or hint text belongs immediately below the dropdown when a selection is picked.
+Two families break only the bottom-sheet framing: the Changelog
 (`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
 and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
 Action buttons never flex-shrink inside these columns, so wrapped descriptions and expanded
 translations remain inside their button borders and contribute their full height to scrolling.
 Ordinary modals (including event, settlement, and resource dialogs), the nested equipment
-picker, and the travel destination picker float above the device's bottom safe area with a
+picker, the raid map picker (`.raid-picker`), and the travel destination picker float above the device's bottom safe area with a
 complete rounded frame. Only deliberate full-screen sheets and the Self/Kin drawer meet the
 bottom edge.
 
@@ -1315,3 +1325,8 @@ the route still applies the authoritative target gates. All sheets use generic-m
 focus, keyboard action ordering, nested history Back, minimum touch targets, and mobile
 bottom-sheet behavior. UI strings use `FB.T` or localized data fields, while saved
 contexts keep ids and numbers only.
+
+**Numeric and Decimal Formatting Standards.**
+- *Whole Numbers by Default*: Never display raw floating-point decimals to players. All general gameplay quantities — including troops, hosts, levies, population counts, opinion, standing, prestige, piety, development scores, distances, and percentages — must be rounded to whole integers (`Math.round`, `Math.floor`, or `Math.ceil`).
+- *Strict Decimal Limits for Finances*: Decimals are restricted strictly to financial, coinage, and economic interfaces where sub-unit fractions are required for comprehension (such as fine interest rates, per-season coin rates, or investment dividends). In these exceptional cases, values must be strictly capped and formatted to at most **2 decimal places** (`.toFixed(2)` or `Math.round(n * 100) / 100`).
+- *Realm Host Capacity Formatting*: Realm host displays show current available forces versus maximum capacity (`~{current}/{max} men`) when recovering or rearming across the rearm window. When fully mustered at maximum strength, the display simplifies to `~{max} men`. The player's own realm card shows the real muster composition (`FB.playerLevy` current against the `FB.playerMaxLevy` full-population baseline), matching muster previews and expedition reports; AI realms show the dev-and-population levy estimate. Maximum capacity counts the overpopulation bonus (the population factor above its baseline, capped at ×1.5), so a thriving county's realm host never reads below its province levy; the fraction appears only for genuine deficits — the rearm window or a population fallen below baseline.

@@ -37517,6 +37517,17 @@
         "text": "✊ A protected privilege is revoked before its term; organized opposition hardens."
       }
     },
+    "news.raid.repelled": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "casualties",
+        "province"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🛡 Your raid on {province} was repelled by the defending garrison with {casualties} casualties."
+      }
+    },
     "news.raid.success": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -50673,6 +50684,16 @@
         "text": "Sanctions"
       }
     },
+    "src.08cbbb03": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Moderate Risk"
+      }
+    },
     "src.08cf9bb3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52858,16 +52879,6 @@
         "text": "Hard labor, and a little peace beside it."
       }
     },
-    "src.0d8c2a96": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Maximum raid reach: {range} provinces away. {navalStatus}"
-      }
-    },
     "src.0d947417": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -52997,16 +53008,6 @@
       ],
       "source": {
         "text": "Raise by {increments} increments."
-      }
-    },
-    "src.0de92dc8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{men} raiders fell in skirmishes against defending garrisons. "
       }
     },
     "src.0dfccea1": {
@@ -54266,16 +54267,6 @@
         "text": "Attend to the petitions."
       }
     },
-    "src.10f5cdc1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Severe market shock applied for 4 seasons (production cut)."
-      }
-    },
     "src.10f7733f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54524,6 +54515,16 @@
       ],
       "source": {
         "text": "🏳 Abandon to title"
+      }
+    },
+    "src.11856097": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "the defending lord"
       }
     },
     "src.11927fe9": {
@@ -55939,6 +55940,16 @@
         "text": "Make the name greater."
       }
     },
+    "src.1427a4c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🛡 Your raid on {province} was repelled by the defending garrison with {casualties} casualties."
+      }
+    },
     "src.142ce8fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56722,16 +56733,6 @@
         "text": "{money:pay}/season"
       }
     },
-    "src.15c7b027": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Expedition Strategy:"
-      }
-    },
     "src.15cfca7a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56930,6 +56931,16 @@
       ],
       "source": {
         "text": "Rotary stones grind grain more steadily than saddle querns."
+      }
+    },
+    "src.164893d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Tap any highlighted county on the map to target it ({count} in reach)."
       }
     },
     "src.164c58c4": {
@@ -57292,6 +57303,16 @@
       ],
       "source": {
         "text": "Compel as accomplice"
+      }
+    },
+    "src.16f279b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Heavy garrison: high risk of defeat and severe casualties."
       }
     },
     "src.16f420bc": {
@@ -62577,6 +62598,16 @@
         "text": "Pay the entry fee. ({money:15})"
       }
     },
+    "src.22f774d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raid reach: {range} provinces away. {navalStatus}"
+      }
+    },
     "src.22fa6af7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63048,6 +63079,16 @@
       ],
       "source": {
         "text": "none chosen"
+      }
+    },
+    "src.23b8e256": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "List View"
       }
     },
     "src.23c42453": {
@@ -64533,6 +64574,16 @@
       ],
       "source": {
         "text": "💰 The kin of {name} settle a dowry of {money:gold} on the match."
+      }
+    },
+    "src.26d924a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The garrison and defenders under {realm} resisted the assault and drove off your reaving warband."
       }
     },
     "src.26e17379": {
@@ -68294,16 +68345,6 @@
         "text": "active campaign"
       }
     },
-    "src.2fd72138": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{captives} captives taken from the countryside."
-      }
-    },
     "src.2fdc1fb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69296,6 +69337,16 @@
       ],
       "source": {
         "text": "Review Work & Enterprises."
+      }
+    },
+    "src.32240a6e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your raiders were intercepted and repelled at {stopped} while marching toward {province}!"
       }
     },
     "src.3224d558": {
@@ -70958,6 +71009,16 @@
         "text": "One night’s nerve against a winter’s hunger."
       }
     },
+    "src.3643fb9b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Passes {n} counties ({f} forts)"
+      }
+    },
     "src.3648c516": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71056,6 +71117,16 @@
       ],
       "source": {
         "text": "Let every witness know that you will give as good as you get."
+      }
+    },
+    "src.36837227": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "+{money:gold} plundered · +{prestige} Prestige"
       }
     },
     "src.368b0d59": {
@@ -72335,6 +72406,16 @@
         "text": "Freewoman"
       }
     },
+    "src.397d9fbd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This is your home county."
+      }
+    },
     "src.397fd9ef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72353,6 +72434,16 @@
       ],
       "source": {
         "text": "Your eye for horseflesh proves sound. The losers pay up with pinched smiles."
+      }
+    },
+    "src.3990615e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Passes {n} counties"
       }
     },
     "src.3990beb9": {
@@ -73496,16 +73587,6 @@
         "text": "Their trouble, their verdict."
       }
     },
-    "src.3c3663af": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🛡 They can field ~{theirs} — you can field ~{yours}."
-      }
-    },
     "src.3c3adae1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74192,6 +74273,16 @@
       ],
       "source": {
         "text": "Málaga"
+      }
+    },
+    "src.3df61ec5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} settlement buildings ruined."
       }
     },
     "src.3df69968": {
@@ -75585,6 +75676,16 @@
         "text": "Climb. Jump."
       }
     },
+    "src.4151eac7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Longships tech unlocks distant overseas reach."
+      }
+    },
     "src.41536799": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76245,6 +76346,16 @@
       ],
       "source": {
         "text": "Replaced"
+      }
+    },
+    "src.42d35709": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Plunder foreign wealth, provisions, and thralls across borders or waterways without formal war. Raids cause market shortages, drain population, and risk damaging settlement buildings."
       }
     },
     "src.42d92902": {
@@ -77050,16 +77161,6 @@
       ],
       "source": {
         "text": "The 🗺 button (or"
-      }
-    },
-    "src.445ea757": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Looted Commodities:"
       }
     },
     "src.4463998c": {
@@ -78463,6 +78564,17 @@
         "text": "Trust the spears that answered the first call."
       }
     },
+    "src.4707a93b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "⚔ Deep Sack"
+      }
+    },
     "src.470827ca": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79107,16 +79219,6 @@
         "text": "▶ Play"
       }
     },
-    "src.4894e648": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "You suffered a wound during the fighting."
-      }
-    },
     "src.48a3a6a9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79306,6 +79408,16 @@
       ],
       "source": {
         "text": "Rulers retain learned practitioners for diagnosis, regimen, and treatment."
+      }
+    },
+    "src.492b6d80": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Severe Risk"
       }
     },
     "src.492cf361": {
@@ -80122,6 +80234,16 @@
         "text": "Learned administrator"
       }
     },
+    "src.4b526a60": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "-{n} men"
+      }
+    },
     "src.4b6163e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80170,6 +80292,16 @@
       ],
       "source": {
         "text": "Last ballot · {count}"
+      }
+    },
+    "src.4b7b3ee5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{men} raiders and levies lost in combat across the expedition route."
       }
     },
     "src.4b7c5b80": {
@@ -82531,6 +82663,16 @@
         "text": "Abdicate and continue as the heir"
       }
     },
+    "src.50f6d048": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Estimated spoils: ~{money:gold} · ~{captives} thralls & captives"
+      }
+    },
     "src.50f7365b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84032,6 +84174,16 @@
       ],
       "source": {
         "text": "Matching local workshop output only."
+      }
+    },
+    "src.543e3f4c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Expedition Skirmishes:"
       }
     },
     "src.54400261": {
@@ -86421,6 +86573,16 @@
         "text": "A petition asks the reigning Pope for a personal appointment. The office grants station 4 and 3.5 piety each season, but no county or secular promotion."
       }
     },
+    "src.59b011e2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{captives} captives taken."
+      }
+    },
     "src.59b185c6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86627,6 +86789,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_modals.js",
         "index.html"
       ],
       "source": {
@@ -91127,6 +91290,16 @@
         "text": "No awards have yet been settled."
       }
     },
+    "src.6437fd2e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "You suffered a severe wound during the fighting."
+      }
+    },
     "src.643d08aa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91366,6 +91539,16 @@
       ],
       "source": {
         "text": "Clerical student"
+      }
+    },
+    "src.64c4779a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your home host has been depleted and requires time to rearm."
       }
     },
     "src.64c68bd6": {
@@ -92761,6 +92944,16 @@
       ],
       "source": {
         "text": "No household or earned office"
+      }
+    },
+    "src.6811f59e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raid Repelled: {province}"
       }
     },
     "src.681c85d1": {
@@ -94901,16 +95094,6 @@
         "text": "⛓ Buy your freedom"
       }
     },
-    "src.6cb7a32f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "🛡 Fortified target: resistance and casualties likely on a deep assault."
-      }
-    },
     "src.6cb7a8de": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95430,6 +95613,16 @@
       ],
       "source": {
         "text": "Basics"
+      }
+    },
+    "src.6dce50eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "That county is beyond your raiding reach."
       }
     },
     "src.6dd13294": {
@@ -98129,6 +98322,16 @@
         "text": "Rochester"
       }
     },
+    "src.74276830": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Select on Map"
+      }
+    },
     "src.74279759": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98568,6 +98771,16 @@
       ],
       "source": {
         "text": "Ephesos"
+      }
+    },
+    "src.75110ccf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Select a raid target"
       }
     },
     "src.7512a07b": {
@@ -103794,7 +104007,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_misc.js"
+        "js/ui_misc.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Favorable"
@@ -104955,16 +105169,6 @@
         "text": "Cider Press"
       }
     },
-    "src.8342d706": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Distance: {distance} legs · Defense: {fort} · Dev {dev} · Pop ~{pop}"
-      }
-    },
     "src.83488f2b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105124,6 +105328,16 @@
       ],
       "source": {
         "text": "Asked for a plain funeral and was, for once, obeyed."
+      }
+    },
+    "src.838ae887": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "(Tier"
       }
     },
     "src.838efcef": {
@@ -107927,6 +108141,16 @@
         "text": "Paper Scholarship"
       }
     },
+    "src.8940105b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Find target…"
+      }
+    },
     "src.894c5538": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108227,16 +108451,6 @@
       ],
       "source": {
         "text": "Castellan’s stipend and revenues"
-      }
-    },
-    "src.89e7a782": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Longships active: open sea and upriver waterways accessible."
       }
     },
     "src.89e7ea24": {
@@ -108773,6 +108987,16 @@
         "text": "Assigned, but paused until you are together."
       }
     },
+    "src.8afaa163": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Est. Spoils: ~{money:gold}, ~{captives} captives"
+      }
+    },
     "src.8afbc8bf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108991,6 +109215,16 @@
       ],
       "source": {
         "text": "Proposed accomplice"
+      }
+    },
+    "src.8b8671c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Longships active for open sea and river routes."
       }
     },
     "src.8b8812ab": {
@@ -109251,6 +109485,16 @@
       ],
       "source": {
         "text": "Shared labor may do what argument could not."
+      }
+    },
+    "src.8c2001e6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Repelled (-{n} men)"
       }
     },
     "src.8c23689b": {
@@ -111171,16 +111415,6 @@
         "text": "A favor bought now is peace kept at the high table."
       }
     },
-    "src.90161a23": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "🐎 Swift Skirmish — Reave countryside & herds (fast hit-and-run, minimal risk, modest plunder)"
-      }
-    },
     "src.901a6ae0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111219,16 +111453,6 @@
       ],
       "source": {
         "text": "You stumble on the meter. The laughter is not with you."
-      }
-    },
-    "src.90323ae5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Estimated spoils: ~{money:gold} gold · ~{captives} thralls & captives · goods plunder"
       }
     },
     "src.9033334e": {
@@ -116307,16 +116531,6 @@
         "text": "A captured rider names your captain and his orders."
       }
     },
-    "src.9c3a3c1b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Naval tech (Longships) expands overseas and coastal reach."
-      }
-    },
     "src.9c3b0c04": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120620,6 +120834,17 @@
         "text": "{heir} keeps the barony and family home. {former} and {spouse} remain married and live in {destination}."
       }
     },
+    "src.a57603a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "Expedition Strategy"
+      }
+    },
     "src.a57be543": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122523,7 +122748,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/actions.js"
+        "js/actions.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Unfortified"
@@ -122698,16 +122924,6 @@
       ],
       "source": {
         "text": "🤝 {name}’s guild family opens its purse and its contacts to your household."
-      }
-    },
-    "src.aa37d838": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{men} raiders fell in skirmishes against defending garrisons."
       }
     },
     "src.aa4680c6": {
@@ -123584,6 +123800,16 @@
       ],
       "source": {
         "text": "Proposed"
+      }
+    },
+    "src.ac84a1b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Defenders: ~{defenders} ({risk})"
       }
     },
     "src.ac8a623f": {
@@ -128663,16 +128889,6 @@
         "text": "Open an enterprise in {settlement}…"
       }
     },
-    "src.b7849a34": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Raiding expeditions cross borders and waterways to plunder foreign wealth, livestock, crops, craft goods, and thralls without declaring formal war. Raids devastate local agriculture, ruin settlement buildings, drain county population, and inflict severe market shortages on your victims."
-      }
-    },
     "src.b7857e42": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131718,16 +131934,6 @@
         "text": "An alliance envoy requires {money:25} in gifts."
       }
     },
-    "src.bf14045d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "⚔ Deep Sack — Assault settlements & shrines (high plunder & captives, risk of defense clash)"
-      }
-    },
     "src.bf1b2dcf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131786,6 +131992,16 @@
       ],
       "source": {
         "text": "Scatter and leave the bundles in the track."
+      }
+    },
+    "src.bf57e654": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "County development reduced by 1."
       }
     },
     "src.bf595e84": {
@@ -131866,6 +132082,16 @@
       ],
       "source": {
         "text": "No songs are sung about the one who leaves early."
+      }
+    },
+    "src.bf7dc506": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No reachable target matches the search query."
       }
     },
     "src.bf874c5a": {
@@ -136509,6 +136735,16 @@
         "text": "Pay the gift."
       }
     },
+    "src.c9ad5a6b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "men"
+      }
+    },
     "src.c9b024bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136970,6 +137206,16 @@
       ],
       "source": {
         "text": "Burn the false ledger."
+      }
+    },
+    "src.cb0720b3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your raiders returned victorious from {province}!"
       }
     },
     "src.cb0c4c96": {
@@ -139109,6 +139355,16 @@
         "text": "The purse changes hands. Your enemy names the injury answered, and the witnesses bind you both to peace."
       }
     },
+    "src.d01536b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Severe market disruption (4 seasons)."
+      }
+    },
     "src.d0156538": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140563,6 +140819,16 @@
         "text": "{quantity} units · Buy at {destPrice}× in {dest} · Sell at {homePrice}× in {home} ({ratio}% price comparison)."
       }
     },
+    "src.d3926416": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your raiders fought through heavy resistance at {province}!"
+      }
+    },
     "src.d39c19ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141587,16 +141853,6 @@
         "text": "🕊 {realm} no longer kneels to a house of equal dignity."
       }
     },
-    "src.d6199625": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "{count} settlement buildings ruined by fire and pillage."
-      }
-    },
     "src.d61aef34": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141956,16 +142212,6 @@
       ],
       "source": {
         "text": "Speak the word."
-      }
-    },
-    "src.d6c30db1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "+{money:gold} Gold plundered · +{prestige} Prestige"
       }
     },
     "src.d6c800ea": {
@@ -143311,6 +143557,16 @@
         "text": "names unknown endowment"
       }
     },
+    "src.d976e766": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Fast hit-and-run reaving across open countryside and herds with low casualty risk."
+      }
+    },
     "src.d97e2502": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -144006,16 +144262,6 @@
         "text": "Household armory"
       }
     },
-    "src.db562313": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Search reachable counties or realms…"
-      }
-    },
     "src.db5d2cb9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -144054,16 +144300,6 @@
       ],
       "source": {
         "text": "Under the ruined top layer: silk, barely touched."
-      }
-    },
-    "src.db697fd8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Your raiders have returned from the raid on {province}!"
       }
     },
     "src.db70f936": {
@@ -145349,6 +145585,16 @@
         "text": "Roman election with outside assent"
       }
     },
+    "src.de54fdff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Direct landing"
+      }
+    },
     "src.de57a47f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145847,16 +146093,6 @@
       ],
       "source": {
         "text": "Put your own mark upon it."
-      }
-    },
-    "src.df5f2acb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "No target county matches the search query."
       }
     },
     "src.df6ad095": {
@@ -149144,6 +149380,16 @@
         "text": "Offer a peace pact…"
       }
     },
+    "src.e69e2a3d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Assault settlements and shrines for high plunder and captives; risks defender resistance."
+      }
+    },
     "src.e6a4fe51": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150696,6 +150942,16 @@
         "text": "Smoke on the home road, and the church bell ringing backwards from the next village: a hostile host is living off this land, and your holding lies in its path. They take what burns slowest — grain, beasts, tools — and leave the rest to the crows."
       }
     },
+    "src.ea1b6d37": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{prestige} Prestige"
+      }
+    },
     "src.ea226fbc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -151269,6 +151525,16 @@
         "text": "Auch"
       }
     },
+    "src.eb88c7fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Direct border"
+      }
+    },
     "src.eb8a1184": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -151697,6 +151963,16 @@
       ],
       "source": {
         "text": "{money:cost} upfront · {seasons} seasons · one fort per county · requires {technology}"
+      }
+    },
+    "src.ec96333f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Find target"
       }
     },
     "src.eca53dcc": {
@@ -152291,16 +152567,6 @@
       ],
       "source": {
         "text": "Requires {technology}."
-      }
-    },
-    "src.edfe424b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "County economic development reduced by 1."
       }
     },
     "src.ee01e98e": {
@@ -155677,6 +155943,16 @@
         "text": "Observation keeps offense from the table."
       }
     },
+    "src.f59001cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "High garrison risk"
+      }
+    },
     "src.f5ad2a62": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156027,6 +156303,17 @@
       ],
       "source": {
         "text": "{expense} · {prestige}"
+      }
+    },
+    "src.f67b66f3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js",
+        "index.html"
+      ],
+      "source": {
+        "text": "🐎 Swift Skirmish"
       }
     },
     "src.f6834d77": {
@@ -157121,6 +157408,16 @@
         "text": "Catalogues of substances preserve recipes and warnings for healers."
       }
     },
+    "src.f92e442d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Defenders: ~{defenders} · {risk}"
+      }
+    },
     "src.f92eb75f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -157169,6 +157466,16 @@
       ],
       "source": {
         "text": "btn small coachmark-next"
+      }
+    },
+    "src.f9380ef6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your raiders were repelled with heavy losses at {province}!"
       }
     },
     "src.f93ad7fb": {
@@ -157281,6 +157588,16 @@
       ],
       "source": {
         "text": "Work Between the Stalls"
+      }
+    },
+    "src.f9743bb7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Looted commodities:"
       }
     },
     "src.f97c888e": {
@@ -157792,6 +158109,16 @@
       ],
       "source": {
         "text": "Seek a loan…"
+      }
+    },
+    "src.fa9dac7e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Launch Raid"
       }
     },
     "src.faa249d7": {
@@ -158699,6 +159026,16 @@
         "text": "🕯 Your child {name} has died, aged {age}."
       }
     },
+    "src.fce684b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Contested Raid: {province}"
+      }
+    },
     "src.fced05c2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -159421,6 +159758,16 @@
       ],
       "source": {
         "text": "fullsheet-modal education-policy-modal"
+      }
+    },
+    "src.fe9b82eb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🛡 They can field {theirs} — you can field ~{yours}."
       }
     },
     "src.fe9e82b0": {
@@ -165273,7 +165620,7 @@
         "text": "+{money:amount}/season"
       }
     },
-    "ui:+{money:gold} Gold plundered · +{prestige} Prestige": {
+    "ui:+{money:gold} plundered · +{prestige} Prestige": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "money:gold",
@@ -165281,7 +165628,7 @@
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "+{money:gold} Gold plundered · +{prestige} Prestige"
+        "text": "+{money:gold} plundered · +{prestige} Prestige"
       }
     },
     "ui:+{percent}% crisis protection": {
@@ -165430,6 +165777,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "+{standing} Standing. This exact object leaves family ownership. (spends the day)"
+      }
+    },
+    "ui:-{n} men": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "n"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "-{n} men"
       }
     },
     "ui:0/{capacity} assigned · +{rate} Standing/day when assigned": {
@@ -167525,6 +167882,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Ask {name}"
+      }
+    },
+    "ui:Assault settlements and shrines for high plunder and captives; risks defender resistance.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Assault settlements and shrines for high plunder and captives; risks defender resistance."
       }
     },
     "ui:Asset and effect summary": {
@@ -170122,6 +170487,14 @@
         "text": "Clear list search"
       }
     },
+    "ui:Clear search": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Clear search"
+      }
+    },
     "ui:Clerical Service": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -170418,6 +170791,16 @@
         "text": "Contest the Caliphate?"
       }
     },
+    "ui:Contested Raid: {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Contested Raid: {province}"
+      }
+    },
     "ui:Context": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -170690,6 +171073,14 @@
         "text": "County development may rise"
       }
     },
+    "ui:County development reduced by 1.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "County development reduced by 1."
+      }
+    },
     "ui:County development {change}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -170709,14 +171100,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "County development: {current} / {cap}"
-      }
-    },
-    "ui:County economic development reduced by 1.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "County economic development reduced by 1."
       }
     },
     "ui:County economy, levies, and local events": {
@@ -171427,6 +171810,28 @@
         "text": "Defenders"
       }
     },
+    "ui:Defenders: ~{defenders} ({risk})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "defenders",
+        "risk"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Defenders: ~{defenders} ({risk})"
+      }
+    },
+    "ui:Defenders: ~{defenders} · {risk}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "defenders",
+        "risk"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Defenders: ~{defenders} · {risk}"
+      }
+    },
     "ui:Defense strength": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -171717,12 +172122,28 @@
         "text": "Diplomatic reach"
       }
     },
+    "ui:Direct border": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Direct border"
+      }
+    },
     "ui:Direct demesne": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
         "text": "Direct demesne"
+      }
+    },
+    "ui:Direct landing": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Direct landing"
       }
     },
     "ui:Direct liege": {
@@ -171945,19 +172366,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Disputed crown"
-      }
-    },
-    "ui:Distance: {distance} legs · Defense: {fort} · Dev {dev} · Pop ~{pop}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "dev",
-        "distance",
-        "fort",
-        "pop"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Distance: {distance} legs · Defense: {fort} · Dev {dev} · Pop ~{pop}"
       }
     },
     "ui:Distant rights": {
@@ -172900,6 +173308,17 @@
         "text": "Equip…"
       }
     },
+    "ui:Est. Spoils: ~{money:gold}, ~{captives} captives": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "captives",
+        "money:gold"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Est. Spoils: ~{money:gold}, ~{captives} captives"
+      }
+    },
     "ui:Established": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172916,7 +173335,7 @@
         "text": "Established branch"
       }
     },
-    "ui:Estimated spoils: ~{money:gold} gold · ~{captives} thralls & captives · goods plunder": {
+    "ui:Estimated spoils: ~{money:gold} · ~{captives} thralls & captives": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "captives",
@@ -172924,7 +173343,7 @@
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Estimated spoils: ~{money:gold} gold · ~{captives} thralls & captives · goods plunder"
+        "text": "Estimated spoils: ~{money:gold} · ~{captives} thralls & captives"
       }
     },
     "ui:Even": {
@@ -173103,12 +173522,20 @@
         "text": "Expand"
       }
     },
-    "ui:Expedition Strategy:": {
+    "ui:Expedition Skirmishes:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Expedition Strategy:"
+        "text": "Expedition Skirmishes:"
+      }
+    },
+    "ui:Expedition Strategy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Expedition Strategy"
       }
     },
     "ui:Expiry": {
@@ -173319,10 +173746,18 @@
         "text": "Farming, Craft, and Trade"
       }
     },
+    "ui:Fast hit-and-run reaving across open countryside and herds with low casualty risk.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Fast hit-and-run reaving across open countryside and herds with low casualty risk."
+      }
+    },
     "ui:Favorable": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_misc.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Favorable"
       }
@@ -173454,6 +173889,22 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Financial contracts"
+      }
+    },
+    "ui:Find target": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Find target"
+      }
+    },
+    "ui:Find target…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Find target…"
       }
     },
     "ui:Finish the current journey before moving the capital.": {
@@ -174565,6 +175016,14 @@
         "text": "Health {change} (lethal)"
       }
     },
+    "ui:Heavy garrison: high risk of defeat and severe casualties.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Heavy garrison: high risk of defeat and severe casualties."
+      }
+    },
     "ui:Heir": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174624,6 +175083,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Hide details"
+      }
+    },
+    "ui:High garrison risk": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "High garrison risk"
       }
     },
     "ui:High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.": {
@@ -176666,20 +177133,28 @@
         "text": "Long square"
       }
     },
-    "ui:Longships active: open sea and upriver waterways accessible.": {
+    "ui:Longships active for open sea and river routes.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Longships active: open sea and upriver waterways accessible."
+        "text": "Longships active for open sea and river routes."
       }
     },
-    "ui:Looted Commodities:": {
+    "ui:Longships tech unlocks distant overseas reach.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Looted Commodities:"
+        "text": "Longships tech unlocks distant overseas reach."
+      }
+    },
+    "ui:Looted commodities:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Looted commodities:"
       }
     },
     "ui:Lose a household holding": {
@@ -177369,17 +177844,6 @@
         "text": "Maximum prestige requirement"
       }
     },
-    "ui:Maximum raid reach: {range} provinces away. {navalStatus}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "navalStatus",
-        "range"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Maximum raid reach: {range} provinces away. {navalStatus}"
-      }
-    },
     "ui:May be equipped, sold, gifted, or pledged": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -177534,6 +177998,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Minimum station: {station}"
+      }
+    },
+    "ui:Moderate Risk": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Moderate Risk"
       }
     },
     "ui:Money belongs to the playable household and pays costs, upkeep, wages, gifts, and contracts. Prestige supports social and political advancement. Piety supports religious acts and offices.": {
@@ -177930,14 +178402,6 @@
       "location": "js/items.js",
       "source": {
         "text": "Natural beard"
-      }
-    },
-    "ui:Naval tech (Longships) expands overseas and coastal reach.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Naval tech (Longships) expands overseas and coastal reach."
       }
     },
     "ui:Navigate the college while maintaining the character’s household and other offices.": {
@@ -179162,6 +179626,14 @@
         "text": "No qualifying family"
       }
     },
+    "ui:No reachable target matches the search query.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No reachable target matches the search query."
+      }
+    },
     "ui:No realm is sworn directly to you. Counties held in your own hand appear under Domain.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -179344,14 +179816,6 @@
       "location": "js/institutions.js",
       "source": {
         "text": "No such election tactic is available."
-      }
-    },
-    "ui:No target county matches the search query.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "No target county matches the search query."
       }
     },
     "ui:No technologies match these filters.": {
@@ -180916,6 +181380,27 @@
         "text": "Passes to the next household head; cannot be sold or pledged. It may lapse when upkeep cannot be paid."
       }
     },
+    "ui:Passes {n} counties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "n"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Passes {n} counties"
+      }
+    },
+    "ui:Passes {n} counties ({f} forts)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "f",
+        "n"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Passes {n} counties ({f} forts)"
+      }
+    },
     "ui:Paste a start code or world seed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -181689,6 +182174,14 @@
         "text": "Plots, leverage, and captivity"
       }
     },
+    "ui:Plunder foreign wealth, provisions, and thralls across borders or waterways without formal war. Raids cause market shortages, drain population, and risk damaging settlement buildings.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Plunder foreign wealth, provisions, and thralls across borders or waterways without formal war. Raids cause market shortages, drain population, and risk damaging settlement buildings."
+      }
+    },
     "ui:Pointed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182437,6 +182930,16 @@
         "text": "Queues the existing annulment plea."
       }
     },
+    "ui:Raid Repelled: {province}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raid Repelled: {province}"
+      }
+    },
     "ui:Raid Triumphant: {province}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -182447,12 +182950,15 @@
         "text": "Raid Triumphant: {province}"
       }
     },
-    "ui:Raiding expeditions cross borders and waterways to plunder foreign wealth, livestock, crops, craft goods, and thralls without declaring formal war. Raids devastate local agriculture, ruin settlement buildings, drain county population, and inflict severe market shortages on your victims.": {
+    "ui:Raid reach: {range} provinces away. {navalStatus}": {
       "context": "Explicit UI localization call.",
-      "glossary": [],
+      "glossary": [
+        "navalStatus",
+        "range"
+      ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Raiding expeditions cross borders and waterways to plunder foreign wealth, livestock, crops, craft goods, and thralls without declaring formal war. Raids devastate local agriculture, ruin settlement buildings, drain county population, and inflict severe market shortages on your victims."
+        "text": "Raid reach: {range} provinces away. {navalStatus}"
       }
     },
     "ui:Raise a Building in {settlement}": {
@@ -183342,6 +183848,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Repeat-price warning: every further copy of the same building in this county costs {percent}% more. Each button always shows the exact next price."
+      }
+    },
+    "ui:Repelled (-{n} men)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "n"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Repelled (-{n} men)"
       }
     },
     "ui:Replace all three prospects without spending a day or resources.": {
@@ -185173,14 +185689,6 @@
         "text": "Search guide"
       }
     },
-    "ui:Search reachable counties or realms…": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Search reachable counties or realms…"
-      }
-    },
     "ui:Search realm, ruler, or territory": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185441,6 +185949,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Select commodities from {destination} to sell in {home}."
+      }
+    },
+    "ui:Select on Map": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Select on Map"
       }
     },
     "ui:Select to review every requirement.": {
@@ -185760,12 +186276,20 @@
         "text": "Several kingdoms answer to an imperial crown."
       }
     },
-    "ui:Severe market shock applied for 4 seasons (production cut).": {
+    "ui:Severe Risk": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Severe market shock applied for 4 seasons (production cut)."
+        "text": "Severe Risk"
+      }
+    },
+    "ui:Severe market disruption (4 seasons).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Severe market disruption (4 seasons)."
       }
     },
     "ui:Short": {
@@ -186865,6 +187389,16 @@
         "text": "Tap a person for their sheet — and your dealings with them."
       }
     },
+    "ui:Tap any highlighted county on the map to target it ({count} in reach).": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Tap any highlighted county on the map to target it ({count} in reach)."
+      }
+    },
     "ui:Tap the 🚩 on the map to give march orders.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -187063,6 +187597,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "That county does not qualify for this journey."
+      }
+    },
+    "ui:That county is beyond your raiding reach.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "That county is beyond your raiding reach."
       }
     },
     "ui:That enterprise’s staffing lock will be cleared.": {
@@ -187879,6 +188421,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The following remote enterprises will lose their workers and become idle:"
+      }
+    },
+    "ui:The garrison and defenders under {realm} resisted the assault and drove off your reaving warband.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The garrison and defenders under {realm} resisted the assault and drove off your reaving warband."
       }
     },
     "ui:The gold and yearly motion remain spent; unused redress evidence is preserved.": {
@@ -189127,6 +189679,14 @@
         "text": "This is you"
       }
     },
+    "ui:This is your home county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This is your home county."
+      }
+    },
     "ui:This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -189835,7 +190395,7 @@
     "ui:Unfortified": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/actions.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "Unfortified"
       }
@@ -191417,12 +191977,12 @@
         "text": "You renounce {liege} and raise your own banner over {province}, seized as your own county. {sovereign} will march to bring you to heel — they can field ~{theirs} against your ~{yours}."
       }
     },
-    "ui:You suffered a wound during the fighting.": {
+    "ui:You suffered a severe wound during the fighting.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "You suffered a wound during the fighting."
+        "text": "You suffered a severe wound during the fighting."
       }
     },
     "ui:You will command your realm’s host.": {
@@ -191687,6 +192247,14 @@
       "location": "js/parliament.js",
       "source": {
         "text": "Your home county’s custom is already confirmed."
+      }
+    },
+    "ui:Your home host has been depleted and requires time to rearm.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your home host has been depleted and requires time to rearm."
       }
     },
     "ui:Your host": {
@@ -191981,16 +192549,6 @@
       "location": "js/actions.js",
       "source": {
         "text": "Your raiders are resting ({days} days remain)."
-      }
-    },
-    "ui:Your raiders have returned from the raid on {province}!": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "province"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Your raiders have returned from the raid on {province}!"
       }
     },
     "ui:Your realm": {
@@ -193195,6 +193753,14 @@
         "text": "march speed"
       }
     },
+    "ui:men": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "men"
+      }
+    },
     "ui:men-at-arms": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -193948,6 +194514,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "the current worker"
+      }
+    },
+    "ui:the defending lord": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "the defending lord"
       }
     },
     "ui:the enemy": {
@@ -194942,14 +195516,14 @@
         "text": "{campaign} for {kingdom} · {phase}"
       }
     },
-    "ui:{captives} captives taken from the countryside.": {
+    "ui:{captives} captives taken.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "captives"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "{captives} captives taken from the countryside."
+        "text": "{captives} captives taken."
       }
     },
     "ui:{cause} · {kind}": {
@@ -195403,14 +195977,14 @@
         "text": "{count} semantic bindings saved. Number keys remain positional in dialogs."
       }
     },
-    "ui:{count} settlement buildings ruined by fire and pillage.": {
+    "ui:{count} settlement buildings ruined.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "count"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "{count} settlement buildings ruined by fire and pillage."
+        "text": "{count} settlement buildings ruined."
       }
     },
     "ui:{count} songs · {duration} · {size}": {
@@ -196587,14 +197161,14 @@
         "text": "{men} men-at-arms"
       }
     },
-    "ui:{men} raiders fell in skirmishes against defending garrisons. ": {
+    "ui:{men} raiders and levies lost in combat across the expedition route.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "men"
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "{men} raiders fell in skirmishes against defending garrisons. "
+        "text": "{men} raiders and levies lost in combat across the expedition route."
       }
     },
     "ui:{mode} privilege{destination} · {days} days remain · +{enterprise}% matching enterprise profit · +{tax}% tax · {opinion} popular opinion": {
@@ -197662,6 +198236,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{power}/{needed}"
+      }
+    },
+    "ui:{prestige} Prestige": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "prestige"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{prestige} Prestige"
       }
     },
     "ui:{prestige} prestige": {
@@ -199230,12 +199814,12 @@
         "text": "⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%"
       }
     },
-    "ui:⚔ Deep Sack — Assault settlements & shrines (high plunder & captives, risk of defense clash)": {
+    "ui:⚔ Deep Sack": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "⚔ Deep Sack — Assault settlements & shrines (high plunder & captives, risk of defense clash)"
+        "text": "⚔ Deep Sack"
       }
     },
     "ui:⚔ Hosts in the field here:": {
@@ -199570,12 +200154,12 @@
         "text": "🏰 You hold this province."
       }
     },
-    "ui:🐎 Swift Skirmish — Reave countryside & herds (fast hit-and-run, minimal risk, modest plunder)": {
+    "ui:🐎 Swift Skirmish": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "🐎 Swift Skirmish — Reave countryside & herds (fast hit-and-run, minimal risk, modest plunder)"
+        "text": "🐎 Swift Skirmish"
       }
     },
     "ui:👁 Observe": {
@@ -199833,15 +200417,7 @@
         "text": "🛑 No more children — open your spouse’s sheet to change this."
       }
     },
-    "ui:🛡 Fortified target: resistance and casualties likely on a deep assault.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "🛡 Fortified target: resistance and casualties likely on a deep assault."
-      }
-    },
-    "ui:🛡 They can field ~{theirs} — you can field ~{yours}.": {
+    "ui:🛡 They can field {theirs} — you can field ~{yours}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "theirs",
@@ -199849,7 +200425,7 @@
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "🛡 They can field ~{theirs} — you can field ~{yours}."
+        "text": "🛡 They can field {theirs} — you can field ~{yours}."
       }
     },
     "ui:🤝 Personal attention 0/{capacity} · no assignment · +{rate} Standing/day when assigned": {

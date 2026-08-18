@@ -213,8 +213,12 @@ window.FB = window.FB || {};
         (polityId !== 'player' && !polity.ruler)) return null;
     var rulerHouseId = polityId;
     var ids = [rulerHouseId];
-    for (var rid in state.realms) {
-      if (!own(state.realms, rid) || rid === 'player') continue;
+    var directVassals = FB.realmDirectVassals
+      ? FB.realmDirectVassals(state, polityId) : Object.keys(state.realms);
+    for (var directIndex = 0; directIndex < directVassals.length;
+        directIndex++) {
+      var rid = directVassals[directIndex];
+      if (rid === 'player') continue;
       var realm = state.realms[rid];
       if (!realm || !realm.alive || !realm.ruler ||
           realm.liege !== polityId || !realmTerritory(state, rid).length) {
@@ -687,6 +691,16 @@ window.FB = window.FB || {};
     return true;
   }
 
+  var repairedState = null;
+  var repairedRealmRevision = -1;
+
+  function rememberRepair(state, politics) {
+    repairedState = state;
+    repairedRealmRevision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    return politics;
+  }
+
   FB.repairPolitics = function (state, opts) {
     if (!state || !state.player) return null;
     opts = opts || {};
@@ -706,7 +720,7 @@ window.FB = window.FB || {};
       politics.polityId = null;
       politics.allegiances = {};
       politics.pendingMotion = null;
-      return politics;
+      return rememberRepair(state, politics);
     }
     if (politics.polityId !== court.polityId) {
       politics.polityId = court.polityId;
@@ -739,11 +753,38 @@ window.FB = window.FB || {};
     } else {
       reconcileAllegiances(state, politics, court, annual, evaluation);
     }
-    return politics;
+    return rememberRepair(state, politics);
   };
   FB.ensurePolitics = FB.repairPolitics;
 
   FB.politicsDay = function (state) {
+    var politics = state && state.politics;
+    var revision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    var expectedPolity = null;
+    if (state && state.player && !state.player.dead &&
+        state.player.tier >= 3 && !(FB.game && FB.game.observe)) {
+      expectedPolity = state.player.liege ||
+        (state.realms.player && state.realms.player.alive ? 'player' : null);
+      var expectedRealm = expectedPolity && state.realms[expectedPolity];
+      if (!expectedRealm || !expectedRealm.alive ||
+          (expectedPolity !== 'player' && !expectedRealm.ruler)) {
+        expectedPolity = null;
+      }
+    }
+    var pending = politics && politics.pendingMotion;
+    var pendingDue = !!(pending && !pending.result &&
+      (!isFinite(Number(pending.expiresTurn)) ||
+       state.turn >= Number(pending.expiresTurn)));
+    /* An ineligible player has no political court to reevaluate. Active
+       courts still run their daily reconciliation because Standing,
+       commerce, modifiers, and offices can change without a realm mutation. */
+    if (politics && typeof politics === 'object' &&
+        !Array.isArray(politics) && repairedState === state &&
+        repairedRealmRevision === revision &&
+        expectedPolity === null && politics.polityId === null && !pendingDue) {
+      return politics;
+    }
     return FB.repairPolitics(state);
   };
 

@@ -463,10 +463,11 @@ test('autosave snapshots synchronously, writes on a later task, and flushes safe
     await startDeterministicGame(page);
 
     /* The season-boundary autosave keeps its synchronous snapshot but defers
-       the codec+write: the slot must not hold the new snapshot in the same
-       task, must hold it a task later, and flushPending must land it
-       synchronously (the background-pause path depends on that). A second
-       autosave before the write supersedes the first. */
+       the write: the slot must not hold the new snapshot in the same task,
+       must hold it a task later as ready plain JSON (without a full codec
+       round trip), and flushPending must land it synchronously (the
+       background-pause path depends on that). A second autosave before the
+       write supersedes the first. */
     expect(await page.evaluate(async function (startCode) {
       FB.state.player.gold += 777;
       FB.save.autosave();
@@ -476,6 +477,7 @@ test('autosave snapshots synchronously, writes on a later task, and flushes safe
 
       await new Promise(function (resolve) { setTimeout(resolve, 0); });
       const landed = FB.save.read('auto');
+      const landedRaw = localStorage.getItem('fb_auto');
 
       const goldAfter = FB.state.player.gold;
       FB.state.player.gold += 1;
@@ -496,6 +498,7 @@ test('autosave snapshots synchronously, writes on a later task, and flushes safe
       const flushed = FB.save.read('auto');
       return {
         deferred:deferred,
+        landedPlain:!!landedRaw && landedRaw.charAt(0) === '{',
         landedVersion:landed && landed.v,
         landedSeed:landed && landed.state.seed,
         superseded:!!latest && latest.state.player.gold === goldAfter + 1001,
@@ -505,10 +508,54 @@ test('autosave snapshots synchronously, writes on a later task, and flushes safe
       };
     }, START_CODE)).toEqual({
       deferred:true,
+      landedPlain:true,
       landedVersion:3,
       landedSeed:START_CODE,
       superseded:true,
       pagehideFlush:true,
       flushedNow:true
+    });
+  });
+
+test('autosave compresses only when a plain write reaches storage quota',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The storage encoding fallback belongs to the served-origin contract.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      const original = Storage.prototype.setItem;
+      const attempts = [];
+      Storage.prototype.setItem = function (storageKey, value) {
+        if (storageKey === 'fb_auto') {
+          const text = String(value);
+          attempts.push(text.charAt(0) === '{' ? 'plain' :
+            (text.indexOf('FBC1.') === 0 ? 'compressed' : 'other'));
+          if (attempts.length === 1) {
+            throw new DOMException('storage is full', 'QuotaExceededError');
+          }
+        }
+        return original.call(this, storageKey, value);
+      };
+      try {
+        FB.state.player.gold += 4321;
+        const expectedGold = FB.state.player.gold;
+        FB.save.autosave();
+        FB.save.flushPending();
+        const raw = localStorage.getItem('fb_auto');
+        const reread = FB.save.read('auto');
+        return {
+          attempts:attempts,
+          compressed:!!raw && raw.indexOf('FBC1.') === 0,
+          readable:!!reread && reread.state.player.gold === expectedGold
+        };
+      } finally {
+        Storage.prototype.setItem = original;
+      }
+    })).toEqual({
+      attempts:['plain', 'compressed'],
+      compressed:true,
+      readable:true
     });
   });
