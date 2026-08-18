@@ -18,6 +18,14 @@ fallback (Venice's lagoon islands). Adjacency, coastal flags, and centroids are
 derived from the corrected raster. Changing `FBDATA.provinces` (authored as compact rows in
 `data/counties.js`) reshapes the map automatically.
 
+A county's authored `terrain` (farmland, forest, hills, mountains, desert, steppe,
+marsh, tundra) is load-bearing well beyond its map color: population carrying capacity
+and market yields read it, and warfare reads it directly — battle quality per unit
+class and the standing host's home-ground bonus at the battle county, the day cost of
+marching into the county, and the supply drain of campaigning across it
+(`balance.terrainBattleFactors`, `terrainDefenseBonus`, `terrainMarchMult`, and
+`supplyDrainTerrain`; see [war.md](war.md)).
+
 ## County communities
 
 A settled bookmark province has one principal culture and faith in its existing

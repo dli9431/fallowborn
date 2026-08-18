@@ -51,7 +51,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techCaps = {
     tax:0.35, levy:0.35, battle:0.15, devCap:4, health:0.03,
     research:5, domain:2, siege:0.35, movement:0.25, seaMovement:0.40,
-    education:0.20, finance:0.30, trade:0.30,
+    education:0.20, finance:0.30, trade:0.30, supply:0.25,
     populationCapacity:0.35, populationCrisisProtection:0.10, migrationAttraction:3,
     costFloor:{ build:0.55, enterprise:0.55, training:0.65 },
     units:{ levy:250, arch:200, cav:160, ret:160 },
@@ -260,6 +260,14 @@ window.FBDATA = window.FBDATA || {};
       raiding_party_scale:{
         mode:'soft', tech:['shield_walls','martial_drill','professional_retinues','logistics_magazines'],
         rationale:'Martial and logistics innovations improve raiding host discipline against garrisons and increase plunder capacity.'
+      },
+      field_supply_attrition:{
+        mode:'soft', tech:['pack_saddles','wheeled_carts','logistics_magazines'],
+        rationale:'Every field host carries supply, refills it on friendly land, and starves abroad from the baseline; pack, cart, and magazine innovations stretch how long a campaign can range before attrition bites.'
+      },
+      terrain_combat_modifiers:{
+        mode:'none',
+        rationale:'Terrain battle factors, home-ground defense, and march costs apply to every host in every age; no credible period technology gates reading the ground, so no dependency is invented.'
       }
     }
   };
@@ -535,10 +543,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['rule:regulated_tolls'], fx:{ tax:0.005 } });
   add('pack_saddles','Pack Saddles','🐴','commerce',[-500,600],[-100,400],[],
     'Balanced frames let animals carry bulky loads over poor roads.',
-    { leaders:TRADITIONS, unlocks:['rule:pack_transport'] });
+    { leaders:TRADITIONS, unlocks:['rule:pack_transport'], fx:{ supply:0.05 } });
   add('wheeled_carts','Iron-Tired Carts','🛞','commerce',[-500,600],[500,700],['bloomery_iron'],
     'Iron fittings and durable wheels extend the useful life of carts.',
-    { leaders:TRADITIONS, unlocks:['rule:wheeled_transport'] });
+    { leaders:TRADITIONS, unlocks:['rule:wheeled_transport'], fx:{ supply:0.05 } });
   add('warehouses','Warehouses','🏚','commerce',[-300,600],[500,720],['cooperage'],
     'Dedicated stores gather goods safely between harvest, voyage, and sale.',
     { leaders:TRADITIONS, unlocks:['rule:warehousing','building:granary'] });
@@ -841,7 +849,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:fortified_gates'] });
   add('logistics_magazines','Military Magazines','📦','warfare',[900,1250],[1050,1280],['warehouses','tax_assessment'],
     'Designated stores and requisition records sustain forces away from harvest-time supply.',
-    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:military_magazines'], fx:{ movement:0.02 } });
+    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:military_magazines'], fx:{ movement:0.02, supply:0.1 } });
   add('gunpowder_knowledge','Gunpowder Knowledge','💥','warfare',[1200,1320],[1270,1380],['algebra','distillation'],
     'Recipes for saltpeter mixtures open a new field of incendiary and explosive experiment.',
     { leaders:['islamic','persianate'], unlocks:['rule:gunpowder_experiment'], confidence:'medium', sources:['NEEDHAM','DEVRIES'] });

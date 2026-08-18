@@ -4124,6 +4124,32 @@ window.FB = window.FB || {};
           })) + '</div>';
         }
       }
+      if (FB.hostSupplyStatus) {
+        const supplyInfo = FB.hostSupplyStatus(s, selA);
+        if (supplyInfo) {
+          const supplyStatus = supplyInfo.status === 'starving'
+            ? FB.T('Starving')
+            : (supplyInfo.status === 'low' ? FB.T('Low') : FB.T('Good'));
+          let supplyLine;
+          if (supplyInfo.status === 'starving') {
+            supplyLine = FB.T('🥀 Supply: {status} — hunger thins the host daily.', {
+              status:supplyStatus
+            });
+          } else if (supplyInfo.daysToAttrition !== null) {
+            supplyLine = FB.T('🥖 Supply: {status} ({pct}%) — about {days} days before hunger bites.', {
+              status:supplyStatus,
+              pct:Math.round(supplyInfo.supply),
+              days:supplyInfo.daysToAttrition
+            });
+          } else {
+            supplyLine = FB.T('🥖 Supply: {status} ({pct}%) — refilling on friendly land.', {
+              status:supplyStatus,
+              pct:Math.round(supplyInfo.supply)
+            });
+          }
+          h += '<div class="cmeta">' + esc(supplyLine) + '</div>';
+        }
+      }
       if (selA.realm === 'player' && s.player.war && FB.warFeedback) {
         const fieldFeedback = FB.warFeedback(s);
         h += '<div class="cmeta">' + esc(FB.warBattleRecordText(

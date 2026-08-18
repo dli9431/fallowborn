@@ -3106,6 +3106,19 @@ window.FB = window.FB || {};
       const parts = warUnitParts(host.units);
       if (parts.length) clauses.push(parts.join(', '));
     }
+    // how long the host can eat: supply starvation lands on live troops
+    if (host && FB.hostSupplyStatus) {
+      const supplyInfo = FB.hostSupplyStatus(state, host);
+      if (supplyInfo && supplyInfo.status === 'starving') {
+        clauses.push(FB.renderKey('fx.warstate.supply_starving', {
+          text: 'the host is starving — supplies are gone and hunger thins its ranks daily'
+        }, {}));
+      } else if (supplyInfo && supplyInfo.status === 'low') {
+        clauses.push(FB.renderKey('fx.warstate.supply_low', {
+          text: 'the host is low on supplies'
+        }, {}));
+      }
+    }
     if (war.mercCos) {
       clauses.push(FB.renderKey('fx.warstate.mercenaries', {
         forms: {

@@ -178,7 +178,8 @@ start from `balance.aiRetinueFrac`/`aiArcherFrac`, then add the effective sovere
 `fx.aiUnits` fractions; national `levy` bonuses also increase their muster, and there is
 no global era step. `FB.techArmyMarchDays` applies the capped overland movement bonus to
 land legs, while ordinary and great-holy-war sieges use the capped sovereign siege bonus.
-Technologies therefore change access, quality, composition, movement, and siege practice
+Technologies therefore change access, quality, composition, movement, supply
+endurance, and siege practice
 without introducing additional unit classes. Each class fights at its own quality
 (`balance.qualityLevy`/`qualityArcher`/`qualityCavalry`/`qualityRetinue`/`qualityMerc`,
 read through `FB.compQuality`): cavalry has quality 2.0, men-at-arms punch far above their
@@ -209,6 +210,29 @@ host also refreshes a saved severe shock that lowers local production and adjace
 capacity; after the host leaves, the shock ages out normally. This replaces the former
 flat sovereign-war surcharge on household necessities. See [markets.md](markets.md).
 
+**Every host carries a supply meter (0–100), and supply lines are real.** Each day
+(`FB.armyTick`, after the march and reinforcement, before the battle scan) a host on
+friendly ground — its own, its sovereign's, or allied land, one
+`FB.armyFriendlyProvince` question — refills at `balance.supplyRecoverRate`, half again
+as fast in a county with a friendly fort (the depot effect), and slower on a war-worn
+county whose development has been beaten below its bookmark baseline (floored at
+`balance.supplyDevastatedRecoverFloor`). Abroad the host drains at
+`balance.supplyDrainBase` × the terrain being crossed (`balance.supplyDrainTerrain`) ×
+the winter multiplier (`balance.supplyWinterDrainMult`, season 3) × (1 +
+`balance.supplyDistanceDepth` per county of distance from the nearest friendly land —
+one reverse-BFS map per host realm per tick). The capped national `fx.supply`
+technologies (pack saddles, iron-tired carts, military magazines) shrink the drain and
+quicken the refill. At 0 supply the host starves: `balance.supplyAttritionPerDay` of
+its men melt away daily through `FB.applyHostLosses`, its battle power falls to
+`balance.supplyStarvedPowerMult`, the player hears the news once on the day the well
+runs dry, and a starving host cannot reinforce even at home — it eats before it fills
+its ranks. A besieging host pinned on hostile ground drains at the foreign rate like
+any other; the siege's own seasonal attrition is unchanged and never doubled. AI hosts
+follow the same rules through the same path. Hosts from older saves default to a full
+100 (`FB.hostSupply`, repaired by `FB.armiesEnsure`); the Land tab and war status read
+the meter through `FB.hostSupplyStatus` (Good / Low / Starving, with a rough
+days-to-attrition hint abroad).
+
 **Ordinary player wars retain a compact campaign-feedback ledger.** The active
 `player.war` object stores at most eight battle records (outcome, field/abstract mode,
 place, before/after headcounts, and losses by class), cumulative live-host losses by
@@ -219,9 +243,11 @@ effects, and the same authoritative `FB.playerHostUpkeepParts` result used by se
 charging. These additive, JSON-safe fields self-initialize on old active wars and do not
 constitute a second battle or casualty simulation.
 
-Campaign condition and live troops remain deliberately separate. Supply, thin ranks,
+Campaign condition and live troops remain deliberately separate. Thin ranks,
 discipline, and disorder normally move the bounded abstract `war.strength` used by war
-council odds. A handler changes headcount only when its option says so, and all such
+council odds; field supply is the exception, a live per-host meter (above) whose
+starvation bleeds real men. A handler changes headcount only when its option says so,
+and all such
 losses use `FB.applyHostLosses`; the feedback UI labels the affected ledger explicitly.
 The loss-aware **Empty Bedrolls** event requires a surviving raised host, meaningful
 recorded casualties, a recent defeat or defeat streak, and a per-war interval. Its
@@ -234,7 +260,11 @@ any of its options stamps the interval.
 **Movement is daily, weighted, and adjacency-based.** `FB.findPath` remains the plain BFS
 compatibility surface over `FB.world.adj`; field hosts use deterministic
 `FB.findArmyPath`, which minimizes quoted travel days, then leg count, then the full
-province-id path. Land legs use `FB.armyMarchDays`. An authored strait is also present in
+province-id path. Land legs use `FB.armyMarchDays` multiplied by the destination
+county's terrain (`balance.terrainMarchMult`: mountains double the crossing, marsh and
+tundra half again, desert and forest and hills in between, open steppe slightly
+faster) — the day-weighted search therefore detours around bad going on its own. An
+authored strait is also present in
 `FB.world.waterAdj`, and `FB.armyLegQuote` gives it a `narrow`, `coastal`, or `open`
 crossing class. The effective sovereign's best completed `fx.seaTransport` value supplies
 national transport capacity (250 men without such knowledge), modified by the crossing
@@ -266,7 +296,7 @@ its own, a one-time toast at muster
 (`flags.hostHintShown`) and a Deeds-tab hint while the raised host stands idle both tell
 the player to tap it, then tap a province. A host resting on its sovereign's own land refills toward its mustered `size`
 at `balance.armyReinforceRate` per day — the refill is all fresh levy; lost men-at-arms
-and archers stay lost. On the map a host stands on a disc of its realm's
+and archers stay lost, and a host at 0 supply does not reinforce until it has eaten. On the map a host stands on a disc of its realm's
 color — green for yours, red for your war enemy's — so its side reads at a glance, and
 hosts locked with an enemy in one province bear a ⚔ for the day they clash.
 Map invalidation follows visible host state: raising or disbanding a host, changing its
@@ -310,7 +340,8 @@ its in-flight construction still pass intact with the land.
 The strongpoint protects political control, not every field and village. Hostile armies
 inside the county can still cause devastation and outside-the-walls events. Stores,
 surrender terms, repairs, garrison characters, and settlement-interior combat remain
-future work rather than hidden supply simulation.
+future work; host-level supply lines are simulated separately (see above) and never
+double the siege's own attrition.
 
 **The host can fight the war for you.** The ⚙ automation's host-command stances
 (`G.auto.hosts`) re-raise a destroyed host once the rearm window passes and steer an
@@ -326,11 +357,22 @@ overrides either, and while active it supersedes the council's `huntPrey`.
 
 **A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
 sovereigns hold a war object on each other, or one side is the player's war enemy).
-Power is men × composition quality (`FB.compQuality`) × martial factor (player
+Power is men × composition quality × martial factor (player
 mar/`battleMarPlayer` with tech/item/blessing edges, AI ruler mar/`battleMarAI`) ×
 `FB.rf(0.75, 1.25)`; the loser takes `balance.battleLoseLoss` casualties and
 routs (dispersing under `balance.armyMinMen`), the winner loses `battleWinLoss` scaled
 by closeness.
+**Terrain and supply both bite at the point of battle.** Where the battle is joined,
+each class's quality is multiplied by the province's terrain
+(`balance.terrainBattleFactors` via `FB.compTerrainQuality`: cavalry shines on open
+farmland and steppe and flounders in forest, mountains, and marsh; archers relish
+hills and woods; the levy mass is indifferent), and the host holding the ground —
+standing, no march in progress; ties and mutual arrivals broken by the saved RNG —
+adds the terrain's home-ground bonus (`balance.terrainDefenseBonus`: hills, mountains,
+forest, marsh). A host out of supply fights at `balance.supplyStarvedPowerMult`, and
+one below `balance.supplyLowThreshold` at `balance.supplyLowPowerMult`. Callers without
+a location (the automation's odds check, the war-council abstraction) keep the
+terrain-neutral `FB.compQuality` average.
 Player battles queue a `field_battle_won/lost` event (the `_steel` variants when the
 player's men-at-arms stood in the line) and score through the existing
 `war_win`/`war_loss` handlers (3 losses still break the campaign); AI-vs-AI results

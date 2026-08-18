@@ -2386,7 +2386,8 @@ non-empty `fallback`, and none entries must not name technologies. The core base
   `battle` (added battle power), `devCap` (development ceiling), `health` (lower ruler
   mortality), `research` (national points each season), `domain` (domain capacity),
   `siege`, `movement` (overland army speed), `seaMovement` (water-crossing speed),
-  `education`, `finance`, and `trade`. All are subject to
+  `education`, `finance`, `trade`, and `supply` (field supply endurance: shrinks the
+  daily supply drain abroad and quickens the refill on friendly land). All are subject to
   `FBDATA.techCaps`.
 - `fx.seaTransport` is different: it must be a finite positive integer and the effective
   sovereign uses the largest completed value, not a sum. Without one, field armies use
@@ -2995,6 +2996,21 @@ ordinary `armyMinMen` floor cannot add replacements), `aiHostPerDev` (AI host si
 `levyPerDev` ×
 this), and `battleWinLoss` / `battleLoseLoss` (battle casualty fractions — the winner's
 scales with how close the fight was).
+Terrain shapes the field through three moddable tables: `terrainBattleFactors`
+(per-terrain per-class battle-quality multipliers for `levy`/`arch`/`cav`/`ret`/`mercs`;
+a missing terrain or class reads as 1), `terrainDefenseBonus` (the standing host's
+home-ground power bonus by battle terrain; nonzero for hills, mountains, forest, and
+marsh), and `terrainMarchMult` (the day-cost multiplier of marching into a province of
+that terrain; sea crossings are untouched). Supply lines use `supplyRecoverRate`
+(daily refill on own, sovereign, or allied land), `supplyFortRecoverMult` (the depot
+multiplier in a friendly-fort county), `supplyDevastatedRecoverFloor` (the resupply
+multiplier floor on a war-worn county), `supplyDrainBase` (daily drain on neutral or
+hostile land), `supplyDrainTerrain` (per-terrain drain multipliers),
+`supplyWinterDrainMult`, `supplyDistanceDepth` (added drain per county of distance
+from friendly land), `supplyAttritionPerDay` (fraction of the host lost daily at 0
+supply), `supplyLowThreshold`, and `supplyLowPowerMult` / `supplyStarvedPowerMult`
+(battle-power penalties below the threshold and at 0). Every host carries the saved
+0–100 `supply` field; old saves default to a full 100.
 Player logistics use `hostLogisticsBase` (default 2) once for any raised host;
 `hostLogisticsLevyPer100` (0.5), `hostLogisticsArcherPer100` (1), and
 `hostLogisticsCavalryPer100` / `hostLogisticsRetinuePer100` (2 each) multiply each

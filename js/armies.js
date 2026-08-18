@@ -40,6 +40,9 @@ window.FB = window.FB || {};
   FB.armiesEnsure = function (state) {
     if (!state.armies) state.armies = [];
     if (!state.armyDown) state.armyDown = {};
+    /* hosts from before supply lines carry no supply field: repair in place
+       (additive, no save-version bump) */
+    for (const a of state.armies) FB.hostSupply(a);
   };
 
   /* a host's composition, migrating hosts from before levy tiers (their men
@@ -57,6 +60,15 @@ window.FB = window.FB || {};
       }
     }
     return army.units;
+  };
+
+  /* a host's carried supply, 0–100; hosts from older saves and hand-built
+     hosts default to a full 100 (see FB.armiesEnsure) */
+  FB.hostSupply = function (army) {
+    if (!army) return 100;
+    if (!isFinite(Number(army.supply))) army.supply = 100;
+    army.supply = FB.clamp(Number(army.supply), 0, 100);
+    return army.supply;
   };
 
   function emptyUnitCounts() {
@@ -112,6 +124,60 @@ window.FB = window.FB || {};
       (units.cav || 0) * (bal.qualityCavalry || 1) +
       units.ret * (bal.qualityRetinue || 1) + (units.mercs || 0) * (bal.qualityMerc || 1)) / men;
   };
+
+  /* ---------- terrain (docs/designs/war.md) ----------
+     A province's terrain multiplies each unit class's battle quality
+     (balance.terrainBattleFactors) and the day cost of marching into it
+     (balance.terrainMarchMult). Unknown terrain and unknown classes read
+     as 1, so modded or legacy data never breaks the quote. */
+
+  function terrainOf(pid) {
+    const pr = pid && FB.world && FB.world.byId ? FB.world.byId[pid] : null;
+    return pr && typeof pr.terrain === 'string' ? pr.terrain : null;
+  }
+
+  function balanceTable(name) {
+    const table = B()[name];
+    return table && typeof table === 'object' ? table : {};
+  }
+
+  function terrainBattleFactor(terrain, key) {
+    const row = balanceTable('terrainBattleFactors')[terrain];
+    const value = row && Number(row[key]);
+    return isFinite(value) ? value : 1;
+  }
+
+  function terrainMarchFactor(terrain) {
+    const value = Number(balanceTable('terrainMarchMult')[terrain]);
+    return isFinite(value) && value > 0 ? value : 1;
+  }
+
+  function terrainDrainFactor(terrain) {
+    const value = Number(balanceTable('supplyDrainTerrain')[terrain]);
+    return isFinite(value) && value > 0 ? value : 1;
+  }
+
+  /* weighted battle quality of a composition fighting on the given terrain;
+     the terrain-neutral FB.compQuality remains the fallback for callers
+     without a location */
+  FB.compTerrainQuality = function (units, men, terrain) {
+    if (!units || !men) return 1;
+    if (!terrain || !balanceTable('terrainBattleFactors')[terrain]) {
+      return FB.compQuality(units, men);
+    }
+    const bal = B();
+    return (units.levy * (bal.qualityLevy || 1) * terrainBattleFactor(terrain, 'levy') +
+      units.arch * (bal.qualityArcher || 1) * terrainBattleFactor(terrain, 'arch') +
+      (units.cav || 0) * (bal.qualityCavalry || 1) * terrainBattleFactor(terrain, 'cav') +
+      units.ret * (bal.qualityRetinue || 1) * terrainBattleFactor(terrain, 'ret') +
+      (units.mercs || 0) * (bal.qualityMerc || 1) * terrainBattleFactor(terrain, 'mercs')) / men;
+  };
+
+  /* the standing host's home-ground edge on defensive terrain */
+  function terrainDefenseBonus(terrain) {
+    const value = Number(balanceTable('terrainDefenseBonus')[terrain]);
+    return isFinite(value) && value > 0 ? value : 0;
+  }
 
   /* AI realms keep no buildings: their baseline professional core is joined
      by nation-specific military technology. */
@@ -918,6 +984,11 @@ window.FB = window.FB || {};
     const crossingClass = FB.waterCrossing
       ? FB.waterCrossing(fromPid, toPid) : null;
     if (!crossingClass) {
+      /* land legs pay the destination's terrain: the day-weighted route
+         search then detours around mountains and mires on its own. Sea legs
+         keep their crossing-class clock. */
+      const landDays = Math.max(1, Math.round(memo.landDays *
+        terrainMarchFactor(terrainOf(toPid))));
       return {
         water:false,
         crossingClass:null,
@@ -925,8 +996,8 @@ window.FB = window.FB || {};
         nationalCapacity:null,
         effectiveCapacity:null,
         cycles:1,
-        cycleDays:memo.landDays,
-        totalDays:memo.landDays
+        cycleDays:landDays,
+        totalDays:landDays
       };
     }
     const crossing = memo.crossings[crossingClass] || memo.crossings.narrow ||
@@ -1382,7 +1453,14 @@ window.FB = window.FB || {};
 
   function battlePower(state, army, pid) {
     let pw;
-    const q = FB.compQuality(army.units, army.men); // 1 for hosts from before levy tiers
+    const bal = B();
+    /* where the battle is joined, terrain multiplies each class
+       (balance.terrainBattleFactors); callers without a location keep the
+       terrain-neutral composition average */
+    const terrain = pid ? terrainOf(pid) : null;
+    const q = terrain
+      ? FB.compTerrainQuality(army.units, army.men, terrain)
+      : FB.compQuality(army.units, army.men); // 1 for hosts from before levy tiers
     if (army.realm === 'player') {
       const me = state.chars[state.player.charId];
       pw = army.men * q * (1 + (me ? FB.skillOf(me, 'mar') : 5) / (B().battleMarPlayer || 14));
@@ -1406,8 +1484,24 @@ window.FB = window.FB || {};
     if (pid && FB.fortBattleBonus) {
       pw *= 1 + FB.fortBattleBonus(state, pid, army);
     }
+    /* a hungry host fights at a fraction of its strength */
+    const supply = FB.hostSupply(army);
+    const supplyLow = bal.supplyLowThreshold === undefined
+      ? 30 : bal.supplyLowThreshold;
+    if (supply <= 0) {
+      pw *= bal.supplyStarvedPowerMult === undefined
+        ? 0.75 : bal.supplyStarvedPowerMult;
+    } else if (supply < supplyLow) {
+      pw *= bal.supplyLowPowerMult === undefined
+        ? 0.9 : bal.supplyLowPowerMult;
+    }
     return pw;
   }
+
+  /* public surface for tests, tooling, and UI previews */
+  FB.armyBattlePower = function (state, army, pid) {
+    return battlePower(state, army, pid);
+  };
 
   /* a field win/loss in an AI-vs-AI war tilts that war's yearly resolution */
   function trackAIWar(state, winnerSov, loserSov) {
@@ -1418,8 +1512,20 @@ window.FB = window.FB || {};
   }
 
   function resolveBattle(state, pid, a, b) {
-    const sa = battlePower(state, a, pid) * FB.rf(0.75, 1.25);
-    const sb = battlePower(state, b, pid) * FB.rf(0.75, 1.25);
+    /* the host holding the ground — standing, with no march in progress —
+       defends it and gains the terrain's home-ground bonus
+       (balance.terrainDefenseBonus); when both stand or both march, the
+       saved coin picks the defender */
+    const defense = terrainDefenseBonus(terrainOf(pid));
+    let defender = null;
+    if (defense > 0) {
+      const aStanding = !(a.moveLeft > 0) && !(a.path && a.path.length);
+      const bStanding = !(b.moveLeft > 0) && !(b.path && b.path.length);
+      defender = aStanding !== bStanding ? (aStanding ? a : b)
+        : (FB.rng() < 0.5 ? a : b);
+    }
+    const sa = battlePower(state, a, pid) * (defender === a ? 1 + defense : 1) * FB.rf(0.75, 1.25);
+    const sb = battlePower(state, b, pid) * (defender === b ? 1 + defense : 1) * FB.rf(0.75, 1.25);
     const winner = sa >= sb ? a : b, loser = sa >= sb ? b : a;
     const winnerBefore = winner.men, loserBefore = loser.men;
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
@@ -1485,6 +1591,152 @@ window.FB = window.FB || {};
     }
     requestMap();
   }
+
+  /* ---------- supply lines (docs/designs/war.md) ----------
+     Every host carries 0–100 supply. On friendly ground — its own, its
+     sovereign's, or allied land (FB.armyFriendlyProvince) — it refills at
+     balance.supplyRecoverRate, faster beside a friendly fort and slower on
+     a war-worn county. Abroad it drains at balance.supplyDrainBase scaled by
+     the terrain crossed, winter, and the depth of the march past the
+     friendly frontier (one reverse-BFS distance map per host realm per
+     tick). At 0 supply the host starves: balance.supplyAttritionPerDay of
+     its men melt away daily and it fights at balance.supplyStarvedPowerMult.
+     A besieging host pinned on hostile ground simply drains at the foreign
+     rate — the siege's own seasonal attrition is unchanged, never doubled.
+     AI hosts follow the same rules through this one path. */
+
+  /* counties-from-friendly-land for the host's realm; one map per realm per
+     tick, shared through distCache */
+  function supplyDistanceMap(state, army, distCache) {
+    const adj = (FB.world && FB.world.adj) || {};
+    let map = distCache[army.realm];
+    if (map) return map;
+    map = distCache[army.realm] = {};
+    const frontier = [];
+    for (const pid in adj) {
+      if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, pid)) {
+        map[pid] = 0;
+        frontier.push(pid);
+      }
+    }
+    for (let i = 0; i < frontier.length; i++) {
+      const cur = frontier[i], next = map[cur] + 1;
+      for (const nb in (adj[cur] || {})) {
+        if (map[nb] === undefined) { map[nb] = next; frontier.push(nb); }
+      }
+    }
+    return map;
+  }
+
+  function supplyDistance(state, army, distCache) {
+    const adj = (FB.world && FB.world.adj) || {};
+    if (!adj[army.at]) return 0;
+    const d = supplyDistanceMap(state, army, distCache || {})[army.at];
+    return d === undefined ? 0 : d;
+  }
+
+  /* the day's drain on neutral or hostile ground (0 on friendly land) */
+  function supplyDrainPerDay(state, army, distCache) {
+    if (FB.armyFriendlyProvince && FB.armyFriendlyProvince(state, army, army.at)) {
+      return 0;
+    }
+    const bal = B();
+    const base = bal.supplyDrainBase === undefined ? 1.2 : bal.supplyDrainBase;
+    const winter = state.date && state.date.season === 3; // FB.SEASONS[3]
+    const winterMult = winter
+      ? (bal.supplyWinterDrainMult === undefined ? 1.5 : bal.supplyWinterDrainMult)
+      : 1;
+    const depth = bal.supplyDistanceDepth === undefined
+      ? 0.25 : bal.supplyDistanceDepth;
+    const tech = FB.techBonus ? FB.techBonus(state, 'supply', army.realm) : 0;
+    return Math.max(0, base * terrainDrainFactor(terrainOf(army.at)) *
+      winterMult * (1 + depth * supplyDistance(state, army, distCache)) *
+      (1 - tech));
+  }
+
+  /* the day's refill on friendly ground */
+  function supplyRecoverPerDay(state, army) {
+    const bal = B();
+    let rate = bal.supplyRecoverRate === undefined ? 3 : bal.supplyRecoverRate;
+    if (FB.fortAt && FB.fortAt(state, army.at)) {
+      rate *= bal.supplyFortRecoverMult === undefined
+        ? 1.5 : bal.supplyFortRecoverMult;
+    }
+    /* a war-worn county (development beaten below its bookmark baseline)
+       resupplies poorly, floored at supplyDevastatedRecoverFloor */
+    const pr = FB.world && FB.world.byId ? FB.world.byId[army.at] : null;
+    if (pr && pr.dev0 && state.dev && state.dev[army.at] !== undefined) {
+      rate *= FB.clamp(state.dev[army.at] / pr.dev0,
+        bal.supplyDevastatedRecoverFloor === undefined
+          ? 0.4 : bal.supplyDevastatedRecoverFloor,
+        1);
+    }
+    rate *= 1 + (FB.techBonus ? FB.techBonus(state, 'supply', army.realm) : 0);
+    return rate;
+  }
+
+  /* one host's day of supply: refill on friendly land, drain and starve
+     abroad. The player hears the news once, on the day the well runs dry. */
+  function supplyTickHost(state, army, distCache) {
+    const bal = B();
+    const wasStarving = FB.hostSupply(army) <= 0;
+    const drain = supplyDrainPerDay(state, army, distCache);
+    if (drain <= 0) {
+      army.supply = Math.min(100, army.supply + supplyRecoverPerDay(state, army));
+      return;
+    }
+    army.supply = Math.max(0, army.supply - drain);
+    if (army.supply > 0) return;
+    if (army.men > 0) {
+      const rate = bal.supplyAttritionPerDay === undefined
+        ? 0.01 : bal.supplyAttritionPerDay;
+      const losses = FB.applyHostLosses(army,
+        Math.max(1, Math.round(army.men * Math.max(0, rate))));
+      if (army.realm === 'player' && FB.notePlayerWarTroopLosses) {
+        FB.notePlayerWarTroopLosses(state, losses);
+      }
+      requestMap();
+      /* hunger finishes what battle would: a host ground below the minimum
+         disperses and waits out the same rearm clock as a shattering */
+      if (army.men < (bal.armyMinMen || 40)) {
+        state.armyDown = state.armyDown || {};
+        state.armyDown[army.realm] = state.turn;
+        if (army.realm === 'player') {
+          FB.news(state, FB.msg('news.army.host_scatters',
+            '🥀 Hunger scatters the starving host at {province} — the survivors slip home.',
+            { province: provName(army.at) }));
+        }
+        disband(state, army);
+        return;
+      }
+    }
+    if (army.realm === 'player' && !wasStarving) {
+      FB.news(state, FB.msg('news.army.host_starving',
+        '🥀 The host at {province} has exhausted its supplies — hunger thins its ranks daily until it reaches friendly land.',
+        { province: provName(army.at) }));
+    }
+  }
+
+  /* the Land tab / war status readout */
+  FB.hostSupplyStatus = function (state, army) {
+    if (!army) return null;
+    const bal = B();
+    const supply = FB.hostSupply(army);
+    const low = bal.supplyLowThreshold === undefined ? 30 : bal.supplyLowThreshold;
+    const friendly = !!(FB.armyFriendlyProvince &&
+      FB.armyFriendlyProvince(state, army, army.at));
+    let daysToAttrition = null;
+    if (!friendly && supply > 0) {
+      const drain = supplyDrainPerDay(state, army, {});
+      if (drain > 0) daysToAttrition = Math.ceil(supply / drain);
+    }
+    return {
+      supply: supply,
+      status: supply <= 0 ? 'starving' : (supply < low ? 'low' : 'good'),
+      friendly: friendly,
+      daysToAttrition: daysToAttrition
+    };
+  };
 
   FB.armyTick = function (state) {
     FB.armiesEnsure(state);
@@ -1610,6 +1862,8 @@ window.FB = window.FB || {};
       if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
       FB.hostUnits(a); // hosts from before levy tiers
       if (a.men >= a.size || a.moveLeft > 0) continue;
+      // a starving host eats before it fills its ranks
+      if (FB.hostSupply(a) <= 0) continue;
       const own = a.realm === 'player'
         ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
         : state.owner[a.at] === a.realm;
@@ -1619,6 +1873,17 @@ window.FB = window.FB || {};
         a.men += add;
         requestMap();
       }
+    }
+
+    /* supply lines: refill on friendly land, drain and starve abroad. The
+       phase runs after the day's march so the price is paid at the ground
+       the host ends on, and after reinforcement so a host that limped home
+       at 0 supply eats before it fills its ranks; battles below still read
+       today's supply. One friendly-distance map per host realm per tick.
+       Starvation can disband a host, so the loop walks a snapshot. */
+    const supplyDistances = {};
+    for (const a of state.armies.slice()) {
+      supplyTickHost(state, a, supplyDistances);
     }
 
     // battles: hostile hosts sharing a province (one clash per province per day)

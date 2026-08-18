@@ -14715,7 +14715,8 @@ window.FB = window.FB || {};
       education:FB.T('education success chance'),
       finance:FB.T('credit capacity'), trade:FB.T('merchant and craft income'),
       populationCapacity:FB.T('county population capacity'),
-      populationCrisisProtection:FB.T('crisis population protection')
+      populationCrisisProtection:FB.T('crisis population protection'),
+      supply:FB.T('field supply endurance')
     };
     for (const key in percentKeys) {
       if (!fx[key]) continue;

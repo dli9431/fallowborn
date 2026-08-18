@@ -1300,6 +1300,48 @@ FBDATA.balance = {
   massLevyMult: 1.35, // the great levy swells the levy class by this
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
   aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI baseline before national military technology
+  /* terrain shapes the field battle (docs/designs/war.md): each province
+     terrain multiplies the per-class battle quality of the hosts fighting on
+     it — cavalry shines on open ground and flounders in close or steep
+     country, archers relish hills and woods, the levy mass is indifferent.
+     A missing terrain or class key multiplies by 1. */
+  terrainBattleFactors: {
+    farmland: { levy:1, arch:1, cav:1.15, ret:1, mercs:1 },
+    forest:   { levy:1, arch:1.15, cav:0.6, ret:0.9, mercs:0.9 },
+    hills:    { levy:1, arch:1.15, cav:0.85, ret:1.05, mercs:1 },
+    mountains:{ levy:1, arch:1.1, cav:0.6, ret:1.05, mercs:0.9 },
+    desert:   { levy:0.95, arch:1, cav:1.05, ret:1, mercs:1 },
+    steppe:   { levy:1, arch:1, cav:1.15, ret:1, mercs:1.05 },
+    marsh:    { levy:0.95, arch:1.05, cav:0.6, ret:0.95, mercs:0.9 },
+    tundra:   { levy:1, arch:1, cav:0.85, ret:1, mercs:0.95 }
+  },
+  /* the standing host's home-ground edge by battle terrain: the host holding
+     the province (no march in progress; ties broken by the saved RNG) adds
+     this fraction of its power */
+  terrainDefenseBonus: { hills:0.1, mountains:0.2, forest:0.1, marsh:0.15 },
+  /* marching into a province costs armyMarchDays × this for its terrain;
+     the route search minimizes days, so hosts detour around bad going */
+  terrainMarchMult: {
+    farmland:1, forest:1.25, hills:1.15, mountains:2,
+    desert:1.3, steppe:0.9, marsh:1.5, tundra:1.5
+  },
+  /* supply lines: every host carries 0–100 supply. It refills on its own,
+     its sovereign's, or allied land and drains abroad by terrain, season,
+     and depth past the friendly frontier; at 0 the host starves */
+  supplyRecoverRate: 3, // supply points a host on friendly land regains per day
+  supplyFortRecoverMult: 1.5, // resupply multiplier in a county with a friendly fort (depot effect)
+  supplyDevastatedRecoverFloor: 0.4, // resupply multiplier floor on a war-worn county (development below its baseline)
+  supplyDrainBase: 1.2, // supply points a host on neutral or hostile land loses per day
+  supplyDrainTerrain: { // the terrain being crossed multiplies the daily drain
+    farmland:1, forest:1.1, hills:1.1, mountains:1.4,
+    desert:1.5, steppe:1.05, marsh:1.3, tundra:1.4
+  },
+  supplyWinterDrainMult: 1.5, // winter multiplies the daily drain abroad
+  supplyDistanceDepth: 0.25, // the drain grows by this per county of distance from the nearest friendly land
+  supplyAttritionPerDay: 0.01, // fraction of the host lost to hunger each day at 0 supply
+  supplyStarvedPowerMult: 0.75, // battle power multiplier at 0 supply
+  supplyLowThreshold: 30, // below this the host reads Low and fights worse
+  supplyLowPowerMult: 0.9, // battle power multiplier below the low threshold
   /* player host logistics per season: base camp cost, live soldiers per 100,
      and the existing contract cost per hired mercenary company */
   hostLogisticsBase: 2, hostLogisticsLevyPer100: 0.5,
