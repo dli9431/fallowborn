@@ -17385,11 +17385,12 @@ window.FB = window.FB || {};
      plus a counter for selling unpledged, unequipped armory objects. Buying
      and selling here cost no extra day — the settlement visit already spent
      it — so the modal re-renders in place after each transaction. */
-  UI.showItemShop = function (pid, kind) {
+  UI.showItemShop = function (pid, kind, pane) {
     const s = FB.state;
     if (!s || !FB.shopStock) return;
     const stock = FB.shopStock(s, pid, kind);
     if (!stock) return;
+    pane = pane === 'sell' ? 'sell' : 'buy';
     const province = FB.world && FB.world.byId && FB.world.byId[pid];
     const title = kind === 'city'
       ? FB.T('The Great Bazaar') : FB.T('The Market Stalls');
@@ -17400,6 +17401,20 @@ window.FB = window.FB || {};
           county:province.name })
         : FB.T('The stock changes with the season.')) + ' · ' +
       esc(FB.T('Your purse: {money:gold}', { gold:gold })) + '</p></div>';
+    /* The panes sit side by side on wide layouts; on mobile/tablet widths
+       (.shop-split in style.css) the tab pair above the list toggles which
+       pane shows. Re-renders pass the current pane so a transaction never
+       flips the player's view. */
+    h += '<div class="shop-tabs">' +
+      '<button type="button" class="tab shop-tab' + (pane === 'buy' ? ' active' : '') +
+      '" aria-pressed="' + (pane === 'buy') + '" data-shop-pane="buy">' +
+      esc(FB.T('Buy')) + '</button>' +
+      '<button type="button" class="tab shop-tab' + (pane === 'sell' ? ' active' : '') +
+      '" aria-pressed="' + (pane === 'sell') + '" data-shop-pane="sell">' +
+      esc(FB.T('Sell')) + '</button></div>';
+    h += '<div class="shop-split">';
+    h += '<div class="shop-pane' + (pane === 'buy' ? ' active' : '') +
+      '" data-shop-pane="buy">';
     h += '<h4>' + esc(FB.T('For sale')) + '</h4>';
     h += '<div class="gm-list">';
     if (!stock.offers.length) {
@@ -17421,7 +17436,9 @@ window.FB = window.FB || {};
           : FB.T('{money:gold} — beyond your purse', { gold:offer.price })) +
         '</span></span></button>';
     }
-    h += '</div>';
+    h += '</div></div>';
+    h += '<div class="shop-pane' + (pane === 'sell' ? ' active' : '') +
+      '" data-shop-pane="sell">';
     h += '<h4>' + esc(FB.T('Sell from the armory')) + '</h4>';
     h += '<div class="gm-list">';
     const sellables = FB.shopSellables ? FB.shopSellables(s) : [];
@@ -17440,19 +17457,25 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(FB.T('Sell it ({money:gold})', {
           gold:entry.price })) + '</span></span></button>';
     }
-    h += '</div>';
+    h += '</div></div></div>';
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' +
       esc(FB.T('Leave the stalls')) + '</button>';
     openModal(title, h);
     FB.paintFaces($('gm-body'), s);
     const body = $('gm-body');
+    const tabs = body.querySelectorAll('.shop-tab');
+    for (let i = 0; i < tabs.length; i++) {
+      tabs[i].addEventListener('click', function () {
+        UI.showItemShop(pid, kind, this.getAttribute('data-shop-pane'));
+      });
+    }
     const buys = body.querySelectorAll('.shop-buy');
     for (let i = 0; i < buys.length; i++) {
       buys[i].addEventListener('click', function () {
         const ref = this.getAttribute('data-shop-ref');
         if (ref && FB.buyShopItem(s, pid, kind, ref)) {
           UI.refresh();
-          UI.showItemShop(pid, kind);
+          UI.showItemShop(pid, kind, pane);
         }
       });
     }
@@ -17462,7 +17485,7 @@ window.FB = window.FB || {};
         const ref = this.getAttribute('data-sell-ref');
         if (ref && FB.sellItem(s, ref)) {
           UI.refresh();
-          UI.showItemShop(pid, kind);
+          UI.showItemShop(pid, kind, pane);
         }
       });
     }

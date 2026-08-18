@@ -98,7 +98,10 @@ stock (`balance.shopStockTechBonus`) and shifts quality upward
 in `FBDATA.techImpactReviews`): the stall works everywhere without research. Buying and selling inside the modal cost no extra day; the
 settlement visit already spent it. The sell counter lists the unpledged, unequipped
 armory objects from `FB.shopSellables` and runs them through the ordinary
-`FB.sellItem` flat ratio.
+`FB.sellItem` flat ratio. The modal lays its buy and sell panes side by side on wide
+layouts; on mobile/tablet widths (`.shop-split` in `style.css`) a Buy/Sell tab pair
+above the list toggles the visible pane, and the modal re-renders after each
+transaction without flipping the player's current pane.
 
 **Legendary and sacred artifacts are gated, singular, dual-edged, and losable.** A
 definition with an `artifact` field (`religionGroups`, `cultures`, `kingdoms`,

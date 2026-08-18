@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/market.js',
   'js/technology.js',
   'js/ui_modals.js',
+  'css/style.css',
   'data/map_data.js',
   'data/markets.js',
   'data/events_common.js'
@@ -20,7 +21,10 @@ const { startDeterministicGame } = require('../support/game/start');
    orphaned unsold instances discarded on reroll. Buying deducts the quoted
    price and moves the exact instance to the armory; selling reuses the flat
    itemSellRatio through FB.sellItem and excludes worn or pledged gear. The
-   urban_markets technology widens the stock without gating it. */
+   urban_markets technology widens the stock without gating it. The modal lays
+   buy and sell panes side by side on wide layouts; on mobile/tablet widths a
+   Buy/Sell tab pair toggles the visible pane and transactions re-render
+   without flipping it. */
 
 test('keeps one seasonal stock per county and kind, then rerolls cleanly',
   async function ({ page }, testInfo) {
@@ -211,4 +215,77 @@ test('the shop modal lists every offer and sells through the UI',
     expect(after.gold).toBe(10000 - setup.firstPrice);
     expect(after.remaining).toBe(setup.offers - 1);
     expect(after.armory).toBeGreaterThan(0);
+  });
+
+test('the shop modal shows buy and sell side by side on wide layouts',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 10000;
+      FB.ui.deferItemShopOpen(s.player.provinceId, 'town');
+    });
+
+    await expect(page.locator('#genmodal')).toBeVisible();
+    await expect(page.locator('.shop-tabs')).toBeHidden();
+    const buyPane = page.locator('.shop-pane[data-shop-pane="buy"]');
+    const sellPane = page.locator('.shop-pane[data-shop-pane="sell"]');
+    await expect(buyPane).toBeVisible();
+    await expect(sellPane).toBeVisible();
+    const buyBox = await buyPane.boundingBox();
+    const sellBox = await sellPane.boundingBox();
+    expect(buyBox).toBeTruthy();
+    expect(sellBox).toBeTruthy();
+    /* side by side, buy left of sell — not stacked */
+    expect(buyBox.x + buyBox.width).toBeLessThanOrEqual(sellBox.x + 1);
+    expect(Math.abs(buyBox.y - sellBox.y)).toBeLessThan(40);
+  });
+
+test('the shop modal toggles buy and sell behind tabs on mobile widths',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 10000;
+      FB.ui.deferItemShopOpen(s.player.provinceId, 'town');
+    });
+
+    await expect(page.locator('#genmodal')).toBeVisible();
+    const buyTab = page.locator('.shop-tab[data-shop-pane="buy"]');
+    const sellTab = page.locator('.shop-tab[data-shop-pane="sell"]');
+    const buyPane = page.locator('.shop-pane[data-shop-pane="buy"]');
+    const sellPane = page.locator('.shop-pane[data-shop-pane="sell"]');
+    await expect(buyTab).toBeVisible();
+    await expect(sellTab).toBeVisible();
+    await expect(buyPane).toBeVisible();
+    await expect(sellPane).toBeHidden();
+    await expect(buyTab).toHaveAttribute('aria-pressed', 'true');
+    await expect(sellTab).toHaveAttribute('aria-pressed', 'false');
+
+    await sellTab.click();
+    await expect(buyPane).toBeHidden();
+    await expect(sellPane).toBeVisible();
+    await expect(sellTab).toHaveAttribute('aria-pressed', 'true');
+
+    /* a sale re-renders the modal without flipping back to the buy pane */
+    await page.evaluate(function () {
+      FB.grantItem(FB.state, 'bearded_axe', { quality:'well' });
+      FB.ui.showItemShop(FB.state.player.provinceId, 'town', 'sell');
+    });
+    const sellButtons = page.locator('.shop-sell');
+    await expect(sellButtons.first()).toBeVisible();
+    const sellCount = await sellButtons.count();
+    await sellButtons.first().click();
+    await expect(page.locator('.shop-sell')).toHaveCount(sellCount - 1);
+    await expect(buyPane).toBeHidden();
+    await expect(sellPane).toBeVisible();
+
+    await buyTab.click();
+    await expect(buyPane).toBeVisible();
+    await expect(sellPane).toBeHidden();
   });

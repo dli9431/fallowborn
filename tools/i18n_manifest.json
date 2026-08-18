@@ -139036,6 +139036,16 @@
         "text": "🧭 Returned safely to {home} and sold the return cargo of {good} for {money:payout}."
       }
     },
+    "src.cada780b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Buy"
+      }
+    },
     "src.cadaf63d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147721,6 +147731,16 @@
       ],
       "source": {
         "text": "Some gifts cost more than they pay."
+      }
+    },
+    "src.de897825": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Sell"
       }
     },
     "src.de93886c": {
@@ -171308,6 +171328,14 @@
         "text": "But a house is more than one life. Who carries the name onward?"
       }
     },
+    "ui:Buy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Buy"
+      }
+    },
     "ui:Buy Out a Neighbor": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188163,6 +188191,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Selected."
+      }
+    },
+    "ui:Sell": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Sell"
       }
     },
     "ui:Sell from the armory": {

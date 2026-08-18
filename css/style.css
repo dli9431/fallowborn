@@ -2456,6 +2456,18 @@ textarea.modjson, textarea.savetext {
 .equip-choice { display: flex; align-items: center; gap: 10px; }
 .equip-choice > span { min-width: 0; }
 .equip-choice .itemart { width: 54px; height: 54px; }
+/* market gear shop: buy and sell panes sit side by side on wide layouts;
+   on mobile/tablet widths the .shop-tabs pair toggles one visible pane */
+.shop-tabs { display: none; }
+.shop-split { display: flex; gap: 14px; align-items: flex-start; }
+.shop-pane { flex: 1 1 0; min-width: 0; }
+.shop-pane h4 { color: #d8b24a; margin: 12px 0 4px; }
+@media (max-width: 820px), (max-height: 520px) {
+  .shop-tabs { display: flex; margin: 8px 0 4px; }
+  .shop-split { display: block; }
+  .shop-pane { display: none; }
+  .shop-pane.active { display: block; }
+}
 .death-paper {
   display: grid; grid-template-columns: minmax(135px, 170px) minmax(0, 1fr);
   gap: 12px; align-items: start; margin: 12px 0;
