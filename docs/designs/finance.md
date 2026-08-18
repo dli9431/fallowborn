@@ -23,7 +23,11 @@ index of 1 on their next annual tick; no past inflation is reconstructed.
 The daily finance hook first reads the already-normalized investment list and returns
 unless a live self-founded venture is actually due. Full id repair and deterministic
 sorting therefore occur on resolution days and seasonal settlement, not on every quiet
-day of a fast-forward.
+day of a fast-forward. Seasonal settlement normalizes once and passes that record through
+assigned revenue, loan maturity, and partnership maturity; the immediately following
+annual price tick reuses it instead of rescanning the same collections. Coin & Credit
+eligibility and offer construction likewise share one normalized record during a Deeds
+refresh, including collateral, defaults, assigned income, and capacity checks.
 `FB.addPricePressure(state, amount, years, source)` retains deterministic saved
 nominal shocks for coinage and compatibility. New lean-harvest, pestilence, and
 recovery calls are routed to saved county market shocks; war scarcity is also a

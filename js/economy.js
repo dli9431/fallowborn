@@ -5164,57 +5164,73 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.financeDueNow = function (state, loan) {
-    const price = FB.ensureEconomy(state).price;
+  FB.financeDueNow = function (state, loan, economy) {
+    const price = (economy || FB.ensureEconomy(state)).price;
     if (!loan || financeSettled(loan.status)) return 0;
     return loan.denomination === 'real' ? loan.face : loan.face / price;
   };
 
-  FB.financeActiveLoans = function (state) {
+  function activeLoans(economy) {
     const out = [];
-    for (const loan of FB.ensureEconomy(state).loans) {
+    for (const loan of economy.loans) {
       if (!financeSettled(loan.status)) out.push(loan);
     }
     out.sort(function (a, b) { return a.id - b.id; });
     return out;
+  }
+
+  FB.financeActiveLoans = function (state, economy) {
+    return activeLoans(economy || FB.ensureEconomy(state));
   };
 
-  FB.financeActiveInvestments = function (state) {
+  function activeInvestments(economy) {
     const out = [];
-    for (const inv of FB.ensureEconomy(state).investments) {
+    for (const inv of economy.investments) {
       if (inv.status === 'active') out.push(inv);
     }
     out.sort(function (a, b) { return a.id - b.id; });
     return out;
+  }
+
+  FB.financeActiveInvestments = function (state, economy) {
+    return activeInvestments(economy || FB.ensureEconomy(state));
   };
 
-  FB.financeActivePartnerships = function (state) {
-    return FB.financeActiveInvestments(state).filter(function (inv) {
+  function activePartnerships(economy) {
+    return activeInvestments(economy).filter(function (inv) {
       return !inv.kind || inv.kind === 'trade_partnership';
     });
+  }
+
+  FB.financeActivePartnerships = function (state, economy) {
+    return activePartnerships(economy || FB.ensureEconomy(state));
   };
 
-  FB.financeActiveTradeVentures = function (state) {
-    return FB.financeActiveInvestments(state).filter(function (inv) {
+  FB.financeActiveTradeVentures = function (state, economy) {
+    return activeInvestments(economy || FB.ensureEconomy(state)).filter(function (inv) {
       return inv.kind === 'trade_venture';
     });
   };
 
-  FB.financeHasDefault = function (state) {
-    for (const loan of FB.financeActiveLoans(state)) {
+  function hasDefault(loans) {
+    for (const loan of loans) {
       if (loan.status === 'default') return true;
     }
     return false;
+  }
+
+  FB.financeHasDefault = function (state, economy) {
+    return hasDefault(activeLoans(economy || FB.ensureEconomy(state)));
   };
 
   function collateralKey(collateral) {
     return collateral ? collateral.kind + ':' + collateral.id : '';
   }
 
-  function collateralPledged(state, collateral) {
+  function collateralPledged(state, collateral, economy) {
     const key = collateralKey(collateral);
     if (!key) return false;
-    for (const loan of FB.financeActiveLoans(state)) {
+    for (const loan of activeLoans(economy || FB.ensureEconomy(state))) {
       if (collateralKey(loan.collateral) === key) return true;
     }
     return false;
@@ -5224,13 +5240,14 @@ window.FB = window.FB || {};
     return collateralPledged(state, { kind:kind, id:id });
   };
 
-  FB.financeCollateral = function (state) {
+  FB.financeCollateral = function (state, economy) {
+    const e = economy || FB.ensureEconomy(state);
     const out = [];
     if (!FB.itemList || !FB.holdingList) return out;
     for (const id of FB.itemList(state)) {
       const item = FB.resolveItem ? FB.resolveItem(state, id) : null;
       const collateral = { kind:'item', id:id };
-      if (item && item.value > 0 && !collateralPledged(state, collateral) &&
+      if (item && item.value > 0 && !collateralPledged(state, collateral, e) &&
         (!FB.itemAssignment || !FB.itemAssignment(state, id))) {
         out.push({ collateral:collateral, value:item.value });
       }
@@ -5239,7 +5256,7 @@ window.FB = window.FB || {};
       const def = FBDATA.holdings[id];
       const collateral = { kind:'holding', id:id };
       if (def && def.cost > 0 && !def.eventOnly && def.pledge !== false &&
-        !collateralPledged(state, collateral)) {
+          !collateralPledged(state, collateral, e)) {
         out.push({ collateral:collateral, value:def.cost });
       }
     }
@@ -5250,34 +5267,39 @@ window.FB = window.FB || {};
     return out;
   };
 
-  function outstandingValue(state) {
+  function outstandingValue(state, economy) {
     let total = 0;
-    for (const loan of FB.financeActiveLoans(state)) total += FB.financeDueNow(state, loan);
+    for (const loan of activeLoans(economy)) {
+      total += FB.financeDueNow(state, loan, economy);
+    }
     return total;
   }
 
-  function assignedRevenueBase(state, loan) {
+  function assignedRevenueBase(state, loan, economy) {
     if (loan.kind === 'merchant' && FB.reliableGoldIncome) {
-      return Math.max(0, FB.reliableGoldIncome(state, true));
+      return Math.max(0, FB.reliableGoldIncome(state, true, economy));
     }
     return Math.max(0, FB.playerTax ? FB.playerTax(state) : 0);
   }
 
-  FB.financeAssignedIncomeCost = function (state) {
+  FB.financeAssignedIncomeCost = function (state, economy) {
+    const e = economy || FB.ensureEconomy(state);
     const share = FBDATA.balance.financeRevenueShare || 0.25;
     let assigned = 0;
-    for (const loan of FB.financeActiveLoans(state)) {
+    for (const loan of activeLoans(e)) {
       if (loan.status === 'default' && loan.defaultKind === 'revenue') {
-        assigned += Math.min(FB.financeDueNow(state, loan),
-          assignedRevenueBase(state, loan) * share);
+        assigned += Math.min(FB.financeDueNow(state, loan, e),
+          assignedRevenueBase(state, loan, e) * share);
       }
     }
     return assigned;
   };
 
-  FB.financeCreditCapacity = function (state, collateral, secured) {
+  FB.financeCreditCapacity = function (state, collateral, secured, economy) {
+    const e = economy || FB.ensureEconomy(state);
     const B = FBDATA.balance;
-    const income = FB.reliableGoldIncome ? FB.reliableGoldIncome(state) : 0;
+    const income = FB.reliableGoldIncome
+      ? FB.reliableGoldIncome(state, false, e) : 0;
     const seasons = secured ? (B.financeSecuredSeasons || 4) :
       (B.financeUnsecuredSeasons || 2);
     let capacity = Math.max(0, income) * seasons;
@@ -5291,7 +5313,7 @@ window.FB = window.FB || {};
         Math.max(0, state.player.prestige || 0) / 20);
     }
     capacity *= 1 + (FB.techBonus ? FB.techBonus(state, 'finance') : 0);
-    return Math.max(0, capacity - outstandingValue(state));
+    return Math.max(0, capacity - outstandingValue(state, e));
   };
 
   function currentCareer(state) {
@@ -5303,22 +5325,23 @@ window.FB = window.FB || {};
     return (e.defaults || 0) + Math.max(0, (e.debasements || 0) - (e.recoinages || 0));
   }
 
-  FB.financeLoanOffers = function (state) {
-    const e = FB.ensureEconomy(state);
+  FB.financeLoanOffers = function (state, economy) {
+    const e = economy || FB.ensureEconomy(state);
     const B = FBDATA.balance;
     const defs = FBDATA.finance || {};
     const out = [];
     const borrower = state.chars[state.player.charId];
+    const loans = activeLoans(e);
     if (!borrower || FB.ageOf(borrower, state.date.year) < 16 ||
-      FB.financeActiveLoans(state).length >= (B.financeMaxLoans || 2) ||
-      FB.financeHasDefault(state) ||
+      loans.length >= (B.financeMaxLoans || 2) ||
+      hasDefault(loans) ||
       (e.creditBanUntil !== undefined && state.turn < e.creditBanUntil)) return out;
 
     const pledge = defs.pledge;
     if (pledge && (!pledge.requiresTech ||
         FB.techRequirementMet(state, pledge.requiresTech))) {
-      for (const asset of FB.financeCollateral(state)) {
-        const cap = FB.financeCreditCapacity(state, asset, true);
+      for (const asset of FB.financeCollateral(state, e)) {
+        const cap = FB.financeCreditCapacity(state, asset, true, e);
         const principal = Math.floor(Math.min(pledge.maxPrincipal || 40, cap,
           asset.value * (pledge.collateralRatio || 0.6)));
         if (principal >= 5) {
@@ -5329,21 +5352,22 @@ window.FB = window.FB || {};
     }
 
     const career = currentCareer(state);
-    const income = FB.reliableGoldIncome ? FB.reliableGoldIncome(state) : 0;
+    const income = FB.reliableGoldIncome
+      ? FB.reliableGoldIncome(state, false, e) : 0;
     if (defs.merchant && (!defs.merchant.requiresTech ||
       FB.techRequirementMet(state, defs.merchant.requiresTech)) &&
       state.player.tier <= 2 && income > 0 && career &&
       (career.profession === 'merchant' || career.profession === 'craftsman' ||
         state.player.tier === 2)) {
       const principal = Math.floor(Math.min(defs.merchant.maxPrincipal || 100,
-        FB.financeCreditCapacity(state, null, false)));
+        FB.financeCreditCapacity(state, null, false, e)));
       if (principal >= 10) out.push({ kind:'merchant', principal:principal, collateral:null });
     }
     if (defs.revenue && (!defs.revenue.requiresTech ||
       FB.techRequirementMet(state, defs.revenue.requiresTech)) &&
       state.player.tier >= 3 && income > 0) {
       const principal = Math.floor(Math.min(defs.revenue.maxPrincipal || 500,
-        FB.financeCreditCapacity(state, null, true)));
+        FB.financeCreditCapacity(state, null, true, e)));
       if (principal >= 20) out.push({ kind:'revenue', principal:principal, collateral:null });
     }
 
@@ -5358,8 +5382,9 @@ window.FB = window.FB || {};
      obligations are on the book or collateral secures an actual pledge offer. */
   FB.financeUiRelevant = function (state) {
     if (state.player.tier >= 1) return true;
-    return FB.financeActiveLoans(state).length > 0 ||
-      FB.financeLoanOffers(state).length > 0;
+    const e = FB.ensureEconomy(state);
+    return activeLoans(e).length > 0 ||
+      FB.financeLoanOffers(state, e).length > 0;
   };
 
   function financeTermDate(state, seasons) {
@@ -5427,14 +5452,16 @@ window.FB = window.FB || {};
     return loan;
   };
 
-  function findLoan(state, id) {
-    for (const loan of FB.ensureEconomy(state).loans) if (loan.id === id) return loan;
+  function findLoan(state, id, economy) {
+    const e = economy || FB.ensureEconomy(state);
+    for (const loan of e.loans) if (loan.id === id) return loan;
     return null;
   }
 
-  FB.repayFinanceLoan = function (state, id, automatic) {
-    const loan = findLoan(state, id);
-    const due = FB.financeDueNow(state, loan);
+  FB.repayFinanceLoan = function (state, id, automatic, economy) {
+    const e = economy || FB.ensureEconomy(state);
+    const loan = findLoan(state, id, e);
+    const due = FB.financeDueNow(state, loan, e);
     if (!loan || financeSettled(loan.status) || loan.status === 'default' ||
       state.player.gold + 0.000001 < due) return false;
     state.player.gold = Math.max(0, state.player.gold - due);
@@ -5460,8 +5487,8 @@ window.FB = window.FB || {};
     return true;
   }
 
-  function defaultLoan(state, loan) {
-    const e = FB.ensureEconomy(state);
+  function defaultLoan(state, loan, economy) {
+    const e = economy || FB.ensureEconomy(state);
     e.defaults++;
     e.creditBanUntil = Math.max(e.creditBanUntil || 0, state.turn +
       (FBDATA.balance.financeDefaultBanSeasons || 4) * 90);
@@ -5505,10 +5532,10 @@ window.FB = window.FB || {};
     }
   }
 
-  function processLoan(state, loan) {
+  function processLoan(state, loan, economy) {
     if (financeSettled(loan.status) || loan.status === 'default' ||
       state.turn < loan.dueTurn) return;
-    if (FB.repayFinanceLoan(state, loan.id, true)) return;
+    if (FB.repayFinanceLoan(state, loan.id, true, economy)) return;
     if (!loan.arrears) {
       loan.arrears = 1;
       loan.status = 'arrears';
@@ -5523,22 +5550,22 @@ window.FB = window.FB || {};
         {}));
       return;
     }
-    defaultLoan(state, loan);
+    defaultLoan(state, loan, economy);
   }
 
-  function collectAssignedRevenue(state) {
+  function collectAssignedRevenue(state, economy) {
     const share = FBDATA.balance.financeRevenueShare || 0.25;
-    const loans = FB.financeActiveLoans(state);
+    const loans = activeLoans(economy);
     for (const loan of loans) {
       if (loan.status !== 'default' || loan.defaultKind !== 'revenue') continue;
-      const due = FB.financeDueNow(state, loan);
+      const due = FB.financeDueNow(state, loan, economy);
       const levy = Math.min(due, state.player.gold,
         assignedRevenueBase(state, loan) * share);
       if (!(levy > 0)) continue;
       state.player.gold -= levy;
       if (loan.denomination === 'real') loan.face = Math.max(0, loan.face - levy);
-      else loan.face = Math.max(0, loan.face - levy * FB.ensureEconomy(state).price);
-      if (FB.financeDueNow(state, loan) < 0.01) {
+      else loan.face = Math.max(0, loan.face - levy * economy.price);
+      if (FB.financeDueNow(state, loan, economy) < 0.01) {
         loan.status = 'settled';
         loan.face = 0;
         FB.news(state, FB.msg('news.finance.revenue_settled',
@@ -6492,16 +6519,20 @@ window.FB = window.FB || {};
   };
 
   FB.financeSeason = function (state) {
-    FB.ensureEconomy(state);
-    collectAssignedRevenue(state);
-    const loans = FB.financeActiveLoans(state);
-    for (const loan of loans) processLoan(state, loan);
-    const investments = FB.financeActivePartnerships(state);
+    /* This boundary owns one normalization pass. Its helpers operate on the
+       returned record so a new year cannot rescan the same loan and
+       investment collections several times in one fast-forwarded day. */
+    const e = FB.ensureEconomy(state);
+    collectAssignedRevenue(state, e);
+    const loans = activeLoans(e);
+    for (const loan of loans) processLoan(state, loan, e);
+    const investments = activePartnerships(e);
     for (const inv of investments) maturePartnership(state, inv);
+    return e;
   };
 
-  FB.financeYear = function (state) {
-    const e = FB.ensureEconomy(state);
+  FB.financeYear = function (state, economy) {
+    const e = economy || FB.ensureEconomy(state);
     if (e.lastYear === state.date.year) return false;
     e.lastYear = state.date.year;
     const B = FBDATA.balance;

@@ -399,11 +399,12 @@ window.FB = window.FB || {};
   }
 
   function financeCommitmentText(s) {
-    const loans = FB.financeActiveLoans ? FB.financeActiveLoans(s) : [];
+    const economy = FB.ensureEconomy ? FB.ensureEconomy(s) : null;
+    const loans = FB.financeActiveLoans ? FB.financeActiveLoans(s, economy) : [];
     const partnerships = FB.financeActivePartnerships
-      ? FB.financeActivePartnerships(s) : [];
+      ? FB.financeActivePartnerships(s, economy) : [];
     const ventures = FB.financeActiveTradeVentures
-      ? FB.financeActiveTradeVentures(s) : [];
+      ? FB.financeActiveTradeVentures(s, economy) : [];
     const parts = [];
     if (loans.length) {
       parts.push(FB.T('Loans: {count}', { count:loans.length }));

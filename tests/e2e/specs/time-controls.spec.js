@@ -15,6 +15,7 @@ dependsOnRuntime(__filename, [
   'js/market.js',
   'js/events.js',
   'js/ui_misc.js',
+  'js/ui_panels.js',
   'js/ui_topbar.js',
   'js/ui_modals.js',
   'js/mapview.js',
@@ -204,6 +205,8 @@ test('fast-forward matches individual days and avoids invariant repair loops',
     expect(result.counts.papacy).toBeLessThanOrEqual(5);
     expect(result.counts.religiousHeads).toBeLessThanOrEqual(5);
     expect(result.counts.modifiers).toBeLessThanOrEqual(2);
+    /* Seasonal settlement, an adjacent annual price tick, and post-skip Coin
+       & Credit eligibility each reuse their normalized record. */
     expect(result.counts.economy).toBeLessThanOrEqual(6);
     expect(result.counts.rulerSync).toBeLessThanOrEqual(2);
     expect(result.counts.promotions).toBeLessThanOrEqual(2);
@@ -218,9 +221,13 @@ test('realm county indexes persist across quiet days while strength stays curren
       let realmId = null;
       let otherRealm = null;
       for (const pid in state.owner) {
-        if (!realmId) realmId = state.owner[pid];
-        else if (state.owner[pid] !== realmId) {
-          otherRealm = state.owner[pid];
+        const rid = state.owner[pid];
+        /* A Catholic sovereign's default investiture policy scales its
+           realmStrength by 5%, which would blur the exact dev→strength step
+           this spec asserts; use a realm beyond the papal reach instead. */
+        if (!realmId && FB.papacyRealmStrengthMultiplier(state, rid) === 1) realmId = rid;
+        else if (realmId && rid !== realmId) {
+          otherRealm = rid;
           break;
         }
       }

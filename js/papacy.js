@@ -303,7 +303,7 @@ window.FB = window.FB || {};
   };
 
   FB.papalObedienceForRealm = function (state, rid) {
-    var papacy = FB.ensurePapacy(state);
+    var papacy = savedPapacy(state) || FB.ensurePapacy(state);
     if (!papacy) return null;
     var sovereign = realmSovereign(state, rid);
     if (!sovereign || !catholicReligion(state,
@@ -517,6 +517,18 @@ window.FB = window.FB || {};
         silent:true
       });
     }
+  }
+
+  /* The normalized save shape: creation and load run the full repair below,
+     and every Papal mutation preserves these collections. Read-only queries
+     on a hot path — obedience and excommunication lookups behind every realm
+     strength check — can therefore trust the saved record directly instead of
+     rescanning every Catholic sovereign once per query. */
+  function savedPapacy(state) {
+    var saved = state && state.papacy;
+    return saved && typeof saved === 'object' && !Array.isArray(saved) &&
+      saved.romanObedience && saved.obediences && saved.realmObedience &&
+      saved.excommunications ? saved : null;
   }
 
   FB.ensurePapacy = function (state) {
@@ -1783,7 +1795,7 @@ window.FB = window.FB || {};
   };
 
   FB.excommunicationOf = function (state, charId, obedienceId) {
-    var papacy = FB.ensurePapacy(state);
+    var papacy = savedPapacy(state) || FB.ensurePapacy(state);
     if (!papacy || !charId) return null;
     if (obedienceId) {
       var exact = papacy.excommunications[obedienceId + ':' + charId];

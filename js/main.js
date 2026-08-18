@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.139.2';
+  FB.VERSION = '1.139.3';
   FB.CHANGELOG = [
+    { v: '1.139.3', date: '2026-08-17', changes: [
+      'Fast-forward now reuses each season’s settled finance and papal records instead of rescanning loans, investments, and church courts on every skipped day.'
+    ] },
     { v: '1.139.2', date: '2026-08-17', changes: [
       'The raiding expedition modal now features standardized toolbar styles with custom strategy dropdowns, search inputs, and instant clear controls.',
       'Fast-forward now stays responsive and avoids rebuilding unchanged world, market, institution, and save data on every skipped day.'
@@ -2400,7 +2403,7 @@ window.FB = window.FB || {};
       if (FB.greatHolyWarSeason) FB.greatHolyWarSeason(s);
       if (FB.sacredCustodySeason) FB.sacredCustodySeason(s);
       FB.tickForeignPolicy(s);
-      FB.financeSeason(s);
+      const seasonEconomy = FB.financeSeason(s);
       FB.tickRivalry(s);
       // the season's ledger: what each stat truly did since the last
       // boundary (focus trickle, upkeep, taxes, events and all) — shown
@@ -2417,7 +2420,7 @@ window.FB = window.FB || {};
       /* Annual revaluation follows the completed winter ledger. Its purse
          adjustment is therefore measured in the next spring-to-summer net,
          while Finance and the gold sheet show it immediately. */
-      if (newYear) FB.financeYear(s);
+      if (newYear) FB.financeYear(s, seasonEconomy);
       if (newYear) FB.worldTick(s);
       FB.save.autosave(); // snapshot before any mortality roll, never a dead state
       if (newYear) {

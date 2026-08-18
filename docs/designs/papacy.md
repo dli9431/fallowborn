@@ -208,3 +208,8 @@ cannot outlive its target and the grounds table does not accumulate stale court 
 The daily Papacy path reads the normalized saved pending/election shape first. A settled
 office returns without rebuilding every Catholic court; the full ensure runs when a
 decision, vacancy, or ballot is actually due, preserving those exact turn boundaries.
+The read-only obedience and excommunication gateways (`FB.papalObedienceForRealm`,
+`FB.excommunicationOf`) trust the same normalized collections: realm strength checks
+reach them once per realm per research season and on every war evaluation, so routing
+them through the world-wide repair rebuilt every Catholic court many times per quiet
+day. The full ensure remains the boundary for creation, load, and incomplete shapes.

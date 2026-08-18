@@ -2943,7 +2943,7 @@ window.FB = window.FB || {};
   /* Locale-neutral standing seasonal cash flow. Credit capacity and the
      displayed ledger both use this numeric source; neither parses localized
      labels from incomeBreakdown. */
-  FB.reliableGoldIncome = function (state, ignoreAssignments) {
+  FB.reliableGoldIncome = function (state, ignoreAssignments, economy) {
     const p = state.player;
     let total = -FB.householdUpkeep(state);
     if (FB.householdStandardsUpkeep) total -= FB.householdStandardsUpkeep(state);
@@ -2966,7 +2966,7 @@ window.FB = window.FB || {};
     const focus = FB.focusIncome(state);
     if (focus && focus.gold) total += focus.gold;
     if (!ignoreAssignments && FB.financeAssignedIncomeCost) {
-      total -= FB.financeAssignedIncomeCost(state);
+      total -= FB.financeAssignedIncomeCost(state, economy);
     }
     return total;
   };
