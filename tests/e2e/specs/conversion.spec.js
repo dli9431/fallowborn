@@ -261,6 +261,9 @@ test('adopts a culture for prestige and converts the household for both',
     player.piety = 1000;
     const selfBefore = player.prestige;
     const selfOk = FB.applyConversion(state, 'culture', target, 'self');
+    // Read the self result now: the household scope below also converts the
+    // player (household = the player plus FB.householdMembers).
+    const selfCulture = me.culture;
     const selfSpent = selfBefore - player.prestige;
     const household = FB.householdMembers(state);
     const ids = household.map(function (c) { return c.id; });
@@ -270,7 +273,7 @@ test('adopts a culture for prestige and converts the household for both',
     const holdOk = FB.applyConversion(state, 'culture', other, 'household');
     return {
       selfOk:selfOk,
-      culture:me.culture,
+      culture:selfCulture,
       selfTarget:target,
       selfSpent:selfSpent,
       holdStatusOk:st.ok,
