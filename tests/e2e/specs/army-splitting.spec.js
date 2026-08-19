@@ -12,7 +12,7 @@ dependsOnRuntime(__filename, [
   'data/technology.js'
 ]);
 
-/* Multiple hosts per realm (docs/plans/warfare-terrain-supply-units-and-multihost.md
+/* Multiple hosts per realm (docs/plans/archive/warfare-terrain-supply-units-and-multihost.md
    phase 3): splitting and merging player hosts, encirclement destruction and
    the elevated capture odds, save/load round-trip of detachments, and AI
    detachments above the multi-host strength threshold. These tests are

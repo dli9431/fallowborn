@@ -14,11 +14,11 @@ dependsOnRuntime(__filename, [
   'data/counties.js'
 ]);
 
-/* Data-driven unit classes (docs/plans/warfare-terrain-supply-units-and-multihost.md
+/* Data-driven unit classes (docs/plans/archive/warfare-terrain-supply-units-and-multihost.md
    phase 2): the FBDATA.unitClasses table, technology/culture gating, and the
    capped composition-counter swing in field battles — plus the combat-role
    split and replacement cohorts of
-   docs/plans/political-choice-war-depth-and-life-paths.md step 11. These tests
+   docs/plans/archive/political-choice-war-depth-and-life-paths.md step 11. These tests
    are authored
    for the owner-run Playwright harness and deliberately do not execute in the
    authoring flow. */
