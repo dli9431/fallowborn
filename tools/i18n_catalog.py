@@ -64,6 +64,7 @@ STRUCTURED_DATA = {
     "techDomains": "techDomain",
     "techTraditions": "techTradition",
     "tech": "tech",
+    "unitClasses": "unitClass",
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text")
@@ -670,6 +671,7 @@ def extract_structured(inv: Inventory) -> None:
             path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                            "modifiers.js" if data_name == "modifiers" else
                            "cultures.js" if data_name in ("cultures", "religions") else
+                           "units.js" if data_name == "unitClasses" else
                            "economy.js" if data_name in (
                                "careers", "positions", "schooling", "enterprises",
                                "householdStandards", "localCouncilMotions",
@@ -773,6 +775,20 @@ def extract_structured(inv: Inventory) -> None:
                             TOKEN_RE.findall(record["text"]),
                         )
             if data_name == "householdStandards":
+                levels = node_array(item.get("levels")) or []
+                for level_index, level_node in enumerate(levels):
+                    level = node_object(level_node) or {}
+                    for field in DATA_FIELDS:
+                        for branch, record, line in branch_records(level.get(field)):
+                            inv.add(
+                                f"{namespace}.{item_id}.levels.{level_index}.{field}.{branch}",
+                                record,
+                                f"{rel}:{line}",
+                                f"{namespace} {item_id}, level {level_index + 1}, "
+                                f"{field}, faith branch {branch}.",
+                                TOKEN_RE.findall(record["text"]),
+                            )
+            if data_name == "policies":
                 levels = node_array(item.get("levels")) or []
                 for level_index, level_node in enumerate(levels):
                     level = node_object(level_node) or {}

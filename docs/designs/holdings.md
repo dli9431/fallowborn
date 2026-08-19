@@ -54,7 +54,11 @@ effects remain separate productive or combat property.
 
 **Freeholders assemble land before they can claim a manor.** Repeatable plots live in
 `player.landPlots` as `{provinceId, settlement}` and pass to heirs. The Buy Freehold Land
-deed places each purchase in one of the home county's stable derived settlements. Every
+deed places each purchase in one of the home county's stable derived settlements. A
+completed frontier homestead (the *Withdraw into the wastes* journey — see
+[travel.md](travel.md)) grants its starter plots through exactly this table at the
+materialized county's head settlement: `balance.frontierSettlementPlots` records, no
+gold spent, no manor progress implied beyond the plots themselves. Every
 plot supplies seasonal produce through `FB.landYield`; plots consolidated in the same
 settlement receive `balance.landConsolidationBonus` for each additional plot in that
 holding. A settlement is capped by `balance.landPlotMaxSettlement`.

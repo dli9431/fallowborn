@@ -212,6 +212,17 @@ FBDATA.privileges = {
     obligations:['The crown nominates one eligible direct vassal at a time.'],
     duration:'indefinite', revocation:'council_consent',
     effect:{ kind:'council_confirmation', seats:['treasurer','constable'] }
+  },
+  protected_worship: {
+    name:'Protected Worship', icon:'📜', order:8,
+    desc:'A minority faith community worships under the crown’s written protection while the royal tolerance policy stands.',
+    holderTypes:['faith'], scopeTypes:['county'],
+    rights:['Worship, persons, and market rights of the minority congregation are guaranteed by charter.'],
+    exemptions:['The congregation is spared the fines and dispersals of persecution.'],
+    obligations:['The community keeps the peace of the county that shelters it.'],
+    duration:'policy', revocation:'policy_change',
+    effect:{ kind:'modifier', id:'protected_worship' },
+    sourceEvents:['realm_policy_protected_worship']
   }
 };
 

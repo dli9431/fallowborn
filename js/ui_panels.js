@@ -80,6 +80,7 @@ window.FB = window.FB || {};
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', intrigue_assets:'life', take_road:'life', travel_turn_back:'life',
     travel_return_cargo:'life', travel_marriage_residence:'life', travel_settle_here:'life',
+    frontier_settle_here:'life',
     seek_blessing:'faith', seek_absolution:'faith', papacy:'faith',
     bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
     convene_synod:'faith', extraordinary_tithe:'faith',
@@ -498,6 +499,27 @@ window.FB = window.FB || {};
             quantity:Math.round(travel.returnVenture.quantity * 10) / 10,
             good:rGoodName
           })));
+    }
+    /* A frontier withdrawal shows its gateway, work milestones, residence
+       progress, and whether the permanent homestead is available yet. */
+    if (travel.purpose === 'frontier' && FB.frontierStatus) {
+      const frontier = FB.frontierStatus(s);
+      if (frontier) {
+        status += ' · ' + FB.T('gateway: {gateway}', {
+          gateway:frontier.gatewayName
+        });
+        status += ' · ' + FB.T('frontier work {done}/{needed}', {
+          done:frontier.milestones, needed:frontier.milestonesRequired
+        });
+        if (travel.phase === 'arrived') {
+          status += ' · ' + (frontier.settlementReady
+            ? FB.T('the homestead can be made permanent')
+            : FB.T('residence {days}/{required} days', {
+              days:Math.min(frontier.stayDays, frontier.residenceRequired),
+              required:frontier.residenceRequired
+            }));
+        }
+      }
     }
     return status;
   }
@@ -1025,6 +1047,7 @@ window.FB = window.FB || {};
               '[data-action-id="travel_turn_back"], ' +
               '[data-action-id="travel_return_cargo"], ' +
               '[data-action-id="travel_marriage_residence"], ' +
+              '[data-action-id="frontier_settle_here"], ' +
               '[data-action-id="travel_settle_here"]');
           } else if (commitment === 'finance') {
             UI.showFinance();
@@ -2418,10 +2441,27 @@ window.FB = window.FB || {};
         name:c ? c.name : FB.T('household servant')
       });
     }
+    if (entry.kind === 'unit_class') {
+      const unitDef = FBDATA.unitClasses && FBDATA.unitClasses[entry.unitClassId];
+      return unitDef
+        ? dt(s, 'unitClass', entry.unitClassId, unitDef, 'name')
+        : FB.T('Special companies');
+    }
+    if (entry.kind === 'unit_class_conversion') {
+      const conversionDef =
+        FBDATA.unitClasses && FBDATA.unitClasses[entry.unitClassId];
+      return FB.T('Mustered as {unitclass}', {
+        unitclass:conversionDef
+          ? dt(s, 'unitClass', entry.unitClassId, conversionDef, 'name')
+          : entry.unitClassId
+      });
+    }
     return FB.T('Muster count adjustment');
   }
 
-  function networkUnitName(unit) {
+  function networkUnitName(s, unit) {
+    const def = FBDATA.unitClasses && FBDATA.unitClasses[unit];
+    if (def) return dt(s, 'unitClass', unit, def, 'name');
     if (unit === 'arch') return FB.T('archers');
     if (unit === 'cav') return FB.T('cavalry');
     if (unit === 'ret') return FB.T('men-at-arms');
@@ -3337,7 +3377,7 @@ window.FB = window.FB || {};
         kind:'other',
         title:networkLevyLabel(s, entry),
         meta:[
-          networkUnitName(entry.unit),
+          networkUnitName(s, entry.unit),
           (displayed > 0 ? '+' : '') + displayed
         ]
       };
@@ -3345,12 +3385,13 @@ window.FB = window.FB || {};
       realmRows.push(record);
     }
     sortReadableRows(realmRows);
-    realmSummary += '<div class="progressnote">' + esc(FB.T(
-      '{total} total · {levy} levy · {archers} archers · {cavalry} cavalry · {retinue} men-at-arms', {
-        total:composition.total, levy:composition.units.levy,
-        archers:composition.units.arch, cavalry:composition.units.cav,
-        retinue:composition.units.ret
-      })) + '</div>';
+    const summaryParts = FB.unitClassParts
+      ? FB.unitClassParts(s, composition.units) : [];
+    realmSummary += '<div class="progressnote">' + esc(summaryParts.length
+      ? FB.T('{total} total · {composition}', {
+          total:composition.total, composition:summaryParts.join(', ')
+        })
+      : FB.T('{total} total', { total:composition.total })) + '</div>';
     if (!realmRows.length) {
       realmSummary += '<div class="hint">' + esc(FB.T(
         'No personal host.')) +
@@ -4307,21 +4348,7 @@ window.FB = window.FB || {};
       const selectedHostUpkeep = FB.playerHostUpkeepParts
         ? FB.playerHostUpkeepParts(s) : null;
       if (selA.units) {
-        const u = selA.units;
-        const compKeys = [
-          ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
-          ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
-          ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
-          ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }],
-          ['mercs', 'fx.warstate.comp_mercs', { one: '{count} mercenary', other: '{count} mercenaries' }]
-        ];
-        const parts = [];
-        for (const ck of compKeys) {
-          if (!u[ck[0]]) continue;
-          parts.push(FB.renderKey(ck[1], {
-            forms: { select: 'plural', param: 'count', cases: ck[2] }
-          }, { count: u[ck[0]] }));
-        }
+        const parts = FB.unitClassParts ? FB.unitClassParts(s, selA.units) : [];
         if (parts.length) h += '<div class="cmeta">' + esc(parts.join(', ')) + '</div>';
         if (selA.allied && selA.allied.men) {
           const ar = s.realms[selA.allied.ally];
@@ -4332,11 +4359,83 @@ window.FB = window.FB || {};
             })) + '</div>';
         }
       }
+      /* per-class roles: troops, attack, defense, upkeep, counters — the
+         same catalog numbers the battle reads (docs/designs/war.md) */
+      if (selA.units && FB.unitClassBattleStats && FB.unitClassIds) {
+        for (const classId of FB.unitClassIds()) {
+          const classCount = Math.max(0,
+            Math.round(Number(selA.units[classId]) || 0));
+          if (!classCount) continue;
+          const classDef = (FBDATA.unitClasses || {})[classId];
+          if (!classDef) continue; // a mod-removed class renders in the parts line only
+          const className = FB.dataText(s, null, 'unitClass', classId,
+            classDef, 'name', {});
+          const classStats = FB.unitClassBattleStats(classId);
+          let classLine = FB.T(
+            '{icon} {unit} ×{count} — attack {attack}, defense {defense}', {
+              icon:classDef.icon || '', unit:className, count:classCount,
+              attack:classStats.attack, defense:classStats.defense
+            });
+          if (classStats.upkeepPer100) {
+            classLine += FB.T(', upkeep {upkeep} per 100', {
+              upkeep:classStats.upkeepPer100 });
+          }
+          if (classStats.counters.length) {
+            const counterNames = [];
+            for (const counter of classStats.counters) {
+              const counterDef = (FBDATA.unitClasses || {})[counter.id];
+              counterNames.push(counterDef
+                ? FB.dataText(s, null, 'unitClass', counter.id, counterDef,
+                  'name', {})
+                : counter.id);
+            }
+            classLine += FB.T('; strong against {counters}', {
+              counters:counterNames.join(', ') });
+          }
+          h += '<div class="cmeta">' + esc(classLine) + '</div>';
+        }
+      }
+      /* readiness and replacement: the realm's professional cohort ledger,
+         with the exact drilling time and the premium it costs */
+      if (FB.cohortStatus) {
+        const cohort = FB.cohortStatus(s, 'player');
+        for (const classId of FB.unitClassIds ? FB.unitClassIds() : []) {
+          const cohortClass = cohort.classes[classId];
+          if (!cohortClass) continue;
+          const classDef = (FBDATA.unitClasses || {})[classId];
+          const className = classDef
+            ? FB.dataText(s, null, 'unitClass', classId, classDef, 'name', {})
+            : classId;
+          if (cohortClass.pending) {
+            const premium = selectedHostUpkeep &&
+              selectedHostUpkeep.reinforceByClass &&
+              selectedHostUpkeep.reinforceByClass[classId];
+            h += '<div class="cmeta">' + esc(FB.T(
+              '🛠 Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season.', {
+                count:cohortClass.pending, unit:className,
+                days:cohortClass.daysLeft,
+                amount:SH.financeAmount(premium || 0)
+              })) + '</div>';
+          }
+          if (cohortClass.ready) {
+            h += '<div class="cmeta">' + esc(FB.T(
+              '🛡 {count} drilled {unit} stand ready — they join a resting host or the next muster.', {
+                count:cohortClass.ready, unit:className
+              })) + '</div>';
+          }
+        }
+      }
       if (selectedHostUpkeep) {
         h += '<div class="cmeta">' + esc(FB.T(
           'Seasonal host logistics: {money:amount}', {
             amount:SH.financeAmount(selectedHostUpkeep.total)
           })) + '</div>';
+        if (selectedHostUpkeep.reinforcement) {
+          h += '<div class="cmeta">' + esc(FB.T(
+            '…of which replacement drilling: {money:amount}', {
+              amount:SH.financeAmount(selectedHostUpkeep.reinforcement)
+            })) + '</div>';
+        }
         if (selectedHostUpkeep.campaignModifier) {
           h += '<div class="cmeta">' + esc(FB.T(
             'Campaign supply adjustment: {money:amount}', {
@@ -4344,6 +4443,61 @@ window.FB = window.FB || {};
           })) + '</div>';
         }
       }
+      if (FB.hostSupplyStatus) {
+        const supplyInfo = FB.hostSupplyStatus(s, selA);
+        if (supplyInfo) {
+          const supplyStatus = supplyInfo.status === 'starving'
+            ? FB.T('Starving')
+            : (supplyInfo.status === 'low' ? FB.T('Low') : FB.T('Good'));
+          let supplyLine;
+          if (supplyInfo.status === 'starving') {
+            supplyLine = FB.T('🥀 Supply: {status} — hunger thins the host daily.', {
+              status:supplyStatus
+            });
+          } else if (supplyInfo.daysToAttrition !== null) {
+            supplyLine = FB.T('🥖 Supply: {status} ({pct}%) — about {days} days before hunger bites.', {
+              status:supplyStatus,
+              pct:Math.round(supplyInfo.supply),
+              days:supplyInfo.daysToAttrition
+            });
+          } else {
+            supplyLine = FB.T('🥖 Supply: {status} ({pct}%) — refilling on friendly land.', {
+              status:supplyStatus,
+              pct:Math.round(supplyInfo.supply)
+            });
+          }
+          h += '<div class="cmeta">' + esc(supplyLine) + '</div>';
+        }
+      }
+      if (FB.hostCutOff && FB.hostCutOff(s, selA)) {
+        h += '<div class="progressnote warnote">' + esc(FB.T(
+          '✂ Cut off — no road home. If this host shatters here it is destroyed outright.')) + '</div>';
+      }
+      /* split / merge / hold orders: keyboard-reachable twins of the map
+         tap gestures (docs/designs/ui.md) */
+      const splitStatus = FB.splitHostStatus ? FB.splitHostStatus(s, selA) : null;
+      if (splitStatus) {
+        h += '<button type="button" class="actionbtn" id="btn-host-split"' +
+          (splitStatus.ok ? '' : ' disabled') + '>' +
+          esc(FB.T('➗ Split the host')) +
+          '<span class="adesc">' + esc(splitStatus.ok
+            ? FB.T('{men} men march under a second banner; supplies divide with them.', {
+              men: menText(s, splitStatus.targetMen) })
+            : splitStatus.reason) + '</span></button>';
+      }
+      const mergePartner = FB.mergeableHost ? FB.mergeableHost(s, selA) : null;
+      if (mergePartner) {
+        h += '<button type="button" class="actionbtn" id="btn-host-merge">' +
+          esc(FB.T('⚔ Merge with the other host here')) +
+          '<span class="adesc">' + esc(FB.T(
+            'Join the {men} men of the second banner into this one.', {
+              men: menText(s, mergePartner.men) })) + '</span></button>';
+      }
+      h += '<button type="button" class="actionbtn" id="btn-host-halt">' +
+        esc(FB.T('🚩 Hold here')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Cancel the march and stand fast; the automated stances leave a held host alone.')) +
+        '</span></button>';
       if (selA.realm === 'player' && s.player.war && FB.warFeedback) {
         const fieldFeedback = FB.warFeedback(s);
         h += '<div class="cmeta">' + esc(FB.warBattleRecordText(
@@ -4653,6 +4807,28 @@ window.FB = window.FB || {};
     const relocate = $('btn-relocate-capital');
     if (relocate) relocate.addEventListener('click', function () {
       UI.showCapitalRelocation(pid);
+    });
+    const hostSplit = $('btn-host-split');
+    if (hostSplit && selA) hostSplit.addEventListener('click', function () {
+      if (FB.splitHost) FB.splitHost(s, selA);
+      if (FB.map) FB.map.request();
+      renderProv();
+    });
+    const hostMerge = $('btn-host-merge');
+    if (hostMerge && selA) hostMerge.addEventListener('click', function () {
+      const partner = FB.mergeableHost ? FB.mergeableHost(s, selA) : null;
+      if (partner && FB.mergeHosts) FB.mergeHosts(s, selA, partner);
+      if (FB.map) FB.map.request();
+      renderProv();
+    });
+    const hostHalt = $('btn-host-halt');
+    if (hostHalt && selA) hostHalt.addEventListener('click', function () {
+      /* the keyboard twin of tapping the selected host: halt and hold */
+      selA.path = []; selA.goal = null; selA.moveLeft = 0; selA.huntPrey = null;
+      selA.manual = 0; selA.holdManual = 1;
+      FB.selectArmy(null);
+      if (FB.map) FB.map.request();
+      renderProv();
     });
     document.querySelectorAll('#tab-prov .settlink').forEach(function (btn) {
       btn.addEventListener('click', function () { FB.map.centerOn(pid); UI.showSettlement(pid, +btn.dataset.sett); });

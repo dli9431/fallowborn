@@ -85,6 +85,40 @@ FBDATA.modifiers = {
     scope:'county', days:2160,
     fx:{ tax:-0.15, levy:-0.20, commonVoice:-8, unrest:0.40 }
   },
+  /* Royal-policy modifiers (data/policies.js, institution 'crown') carry no
+     `days`: they stand while the proclaimed level stands, and the policy sync
+     in js/institutions.js is the only writer and remover. */
+  persecuted_minorities: {
+    name:'Persecuted Minorities', icon:'🔥',
+    desc:'The crown’s agents harry those who keep another faith: fines, closed houses of prayer, and informers in every parish.',
+    scope:'county',
+    fx:{ tax:0.05, levy:-0.10, commonVoice:-10, unrest:0.30, marketFlow:-0.15 }
+  },
+  tolerated_minorities: {
+    name:'Tolerated Minorities', icon:'🕊',
+    desc:'Other faiths keep their houses of prayer and their market stalls under the king’s peace.',
+    scope:'county',
+    fx:{ unrest:-0.10, commonVoice:4, marketFlow:0.05 }
+  },
+  protected_worship: {
+    name:'Protected Worship', icon:'📜',
+    desc:'Minority congregations stand under the crown’s written protection; their worship, persons, and market rights are guaranteed.',
+    scope:'county',
+    fx:{ unrest:-0.15, commonVoice:6, tax:0.02, marketFlow:0.10 }
+  },
+  closed_settlement: {
+    name:'Closed Settlement', icon:'🚪',
+    desc:'Newcomers are turned back at the boundary stones; the villages approve, and the markets thin.',
+    scope:'county',
+    fx:{ commonVoice:4, marketFlow:-0.10, tax:-0.04 }
+  },
+  encouraged_settlement: {
+    name:'Encouraged Settlement', icon:'🏕',
+    desc:'Posted protections, seed grain, and remitted dues draw newcomers onto waste and street.',
+    scope:'county',
+    upkeep:{ gold:1 },
+    fx:{ tax:-0.03, marketFlow:0.10 }
+  },
   oathbound_host: {
     name:'Oathbound Host', icon:'🕊',
     desc:'The host marches under a public vow.',

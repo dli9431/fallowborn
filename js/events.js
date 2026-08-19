@@ -2921,23 +2921,8 @@ window.FB = window.FB || {};
     }
   };
 
-  function warUnitParts(units) {
-    units = units || {};
-    const compKeys = [
-      ['levy', 'fx.warstate.comp_levy', { one: '{count} levyman', other: '{count} levy' }],
-      ['arch', 'fx.warstate.comp_archers', { one: '{count} archer', other: '{count} archers' }],
-      ['cav', 'fx.warstate.comp_cavalry', { one: '{count} cavalryman', other: '{count} cavalry' }],
-      ['ret', 'fx.warstate.comp_retinue', { one: '{count} man-at-arms', other: '{count} men-at-arms' }],
-      ['mercs', 'fx.warstate.comp_mercs', { one: '{count} mercenary', other: '{count} mercenaries' }]
-    ];
-    const parts = [];
-    for (const item of compKeys) {
-      if (!units[item[0]]) continue;
-      parts.push(FB.renderKey(item[1], {
-        forms:{ select:'plural', param:'count', cases:item[2] }
-      }, { count:units[item[0]] }));
-    }
-    return parts;
+  function warUnitParts(state, units) {
+    return FB.unitClassParts ? FB.unitClassParts(state, units) : [];
   }
 
   FB.warBattleRecordText = function (state, feedback) {
@@ -2988,7 +2973,7 @@ window.FB = window.FB || {};
 
   FB.warLossesText = function (state, feedback) {
     feedback = feedback || (FB.warFeedback && FB.warFeedback(state));
-    const parts = feedback ? warUnitParts(feedback.losses) : [];
+    const parts = feedback ? warUnitParts(state, feedback.losses) : [];
     return parts.length
       ? FB.renderKey('fx.warstate.losses',
         { text:'Campaign losses from the live host: {losses}' }, {
@@ -3072,6 +3057,7 @@ window.FB = window.FB || {};
       ['cavalry', 'fx.warstate.upkeep_cavalry', FB.T('cavalry')],
       ['retinue', 'fx.warstate.upkeep_retinue', FB.T('men-at-arms')],
       ['mercenaries', 'fx.warstate.upkeep_mercenaries', FB.T('mercenaries')],
+      ['reinforcement', 'fx.warstate.upkeep_reinforcement', FB.T('replacement drilling')],
       ['campaignModifier', 'fx.warstate.upkeep_campaign', FB.T('campaign adjustment')]
     ];
     for (const item of parts) {
@@ -3080,6 +3066,21 @@ window.FB = window.FB || {};
         label:item[2],
         amount:Math.round(upkeep[item[0]] * 10) / 10
       }));
+    }
+    /* unlocked classes beyond the baseline four bill from byClass */
+    const namedClasses = { levy:1, arch:1, cav:1, ret:1, mercs:1 };
+    const byClass = upkeep.byClass || {};
+    for (const classId in byClass) {
+      if (namedClasses[classId] || !byClass[classId]) continue;
+      const classDef = FBDATA.unitClasses && FBDATA.unitClasses[classId];
+      rows.push(FB.renderKey('fx.warstate.upkeep_class',
+        { text:'{label} {money:amount}' }, {
+          label:classDef
+            ? FB.dataText(state, state.player.charId, 'unitClass', classId,
+              classDef, 'name', {})
+            : classId,
+          amount:Math.round(byClass[classId] * 10) / 10
+        }));
     }
     return FB.renderKey('fx.warstate.logistics_ledger',
       { text:'Seasonal host logistics: {money:total} ({parts})' }, {
@@ -3105,6 +3106,19 @@ window.FB = window.FB || {};
     if (host && host.units) {
       const parts = warUnitParts(host.units);
       if (parts.length) clauses.push(parts.join(', '));
+    }
+    // how long the host can eat: supply starvation lands on live troops
+    if (host && FB.hostSupplyStatus) {
+      const supplyInfo = FB.hostSupplyStatus(state, host);
+      if (supplyInfo && supplyInfo.status === 'starving') {
+        clauses.push(FB.renderKey('fx.warstate.supply_starving', {
+          text: 'the host is starving — supplies are gone and hunger thins its ranks daily'
+        }, {}));
+      } else if (supplyInfo && supplyInfo.status === 'low') {
+        clauses.push(FB.renderKey('fx.warstate.supply_low', {
+          text: 'the host is low on supplies'
+        }, {}));
+      }
     }
     if (war.mercCos) {
       clauses.push(FB.renderKey('fx.warstate.mercenaries', {
@@ -3361,13 +3375,13 @@ window.FB = window.FB || {};
         } else {
           const comp = FB.playerComposition ? FB.playerComposition(state)
             : { levy: FB.playerLevy(state), arch: 0, cav:0, ret: 0 };
-          const units = {
-            levy:comp.levy, arch:comp.arch, cav:comp.cav || 0, ret:comp.ret,
-            mercs:(w.mercCos || 0) * cs
-          };
-          let men = units.levy + units.arch + units.cav + units.ret + units.mercs;
+          const units = {};
+          for (const key in comp) units[key] = comp[key];
+          units.mercs = (w.mercCos || 0) * cs;
+          let men = 0;
+          for (const key in units) men += Math.max(0, Number(units[key]) || 0);
           const fl = bal.armyMinMen || 40;
-          if (men < fl) { units.levy += fl - men; men = fl; }
+          if (men < fl) { units.levy = (units.levy || 0) + fl - men; men = fl; }
           myQ = FB.compQuality ? FB.compQuality(units, men) : 1;
           myMen = men * (FB.rearmScale ? FB.rearmScale(state, 'player') : 1) * (w.strength || 1);
         }
@@ -4083,11 +4097,11 @@ window.FB = window.FB || {};
     'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
     'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend ' +
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
-    'loot_item offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
+    'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
-    'raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_harry war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
-    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_no_enemy_host war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
+    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_no_enemy_host war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
   FB.coreEventImpactCustomIds = CORE_CUSTOM_EFFECT_IDS.slice();
   FB.eventImpactAdapters = FB.eventImpactAdapters || {};
@@ -4235,8 +4249,15 @@ window.FB = window.FB || {};
         id === 'claim_won' || id === 'claim_sold') {
       return [impact('gold', { reward:true, variable:true })];
     }
-    if (id === 'find_artifact' || id === 'loot_item' || id === 'plot_loot') {
+    if (id === 'find_artifact' || id === 'loot_item' || id === 'plot_loot' ||
+        id === 'lifepath_author_work' || id === 'travel_expedition_record') {
       return [impact('item', { action:'add', reward:true, variable:true })];
+    }
+    if (id === 'merc_contract_collect') {
+      return [
+        impact('gold', { reward:true, variable:true }),
+        impact('item', { action:'add', reward:true, variable:true })
+      ];
     }
     if (id === 'polly_rout') return [impact('death', {
       targetKind:'player', lethal:true, variable:true, customId:id
@@ -4608,13 +4629,7 @@ window.FB = window.FB || {};
       const c = state.chars[charId];
       if (c) opinions[charId] = Number(c.opinion) || 0;
     }
-    let host = null;
-    const armies = state.armies || [];
-    for (let armyIndex = 0; armyIndex < armies.length; armyIndex++) {
-      if (armies[armyIndex].realm === 'player') {
-        host = armies[armyIndex]; break;
-      }
-    }
+    let host = FB.playerHost ? FB.playerHost(state) : null;
     const deadCharacters = {};
     for (const snapshotCharId in state.chars) {
       deadCharacters[snapshotCharId] = !!state.chars[snapshotCharId].dead;

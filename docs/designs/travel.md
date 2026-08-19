@@ -12,8 +12,9 @@ move.
 ## Data and destinations
 
 `data/travel.js` defines `FBDATA.travelPurposes`, `FBDATA.travelSites`, and the
-travel balance values. The five core purposes are pilgrimage, trade, study, paid
-service, and a character-targeted relationship visit:
+travel balance values. The core purposes are pilgrimage, trade, study, paid
+service, adventuring expedition, frontier withdrawal, and a character-targeted
+relationship visit:
 
 - pilgrimage uses authored sites filtered by the traveler's exact faith or any faith
   in its inheritance lineage;
@@ -22,6 +23,12 @@ service, and a character-targeted relationship visit:
 - study uses authored learned/urban sites;
 - paid service reads the current capitals of living realms, including generated
   vassal realms;
+- expedition (`mode:'foreign'`) offers every reachable settled county whose culture
+  differs from the traveler's own, nearest first, bounded by
+  `balance.travelExpeditionMaxDestinations` (40); each foreign county can be
+  charted once per character through the ordinary completed-destination rule;
+- frontier withdrawal (`mode:'frontier'`, tiers 1–2 only) offers every wasteland
+  bordering a reachable settled gateway county — see the frontier section below;
 - relationship visits use `FB.characterResidence` for one named character and
   therefore do not appear in the generic destination picker.
 
@@ -87,7 +94,8 @@ home/destination/current county ids, optional service realm, phase
 (`outbound`, `arrived`, or `return`), remaining and original routes, visited
 counties, leg clock, departure turn/cost, encounter counts, seen cultures/events,
 and additive destination-stay fields (`stayStartTurn`, `nextWorkTurn`, `workEvents`,
-and last work event). Accompanied trade ventures also save an optional `venture` child for outbound cargo
+and last work event). A signed mercenary contract adds `travel.contract`
+(`realmId`, `startedTurn`, `paidSeasons`, `renewals`), described below. Accompanied trade ventures also save an optional `venture` child for outbound cargo
 and an optional `returnVenture` child (`kind`, `goodId`, `stake`, `ladingFee`, `quantity`, `strategy`, `status`)
 when cargo is loaded at the destination market before returning. A targeted journey also saves optional `targetCharId`, whether
 departure initiated courtship, and a reigning-ruler realm/generation stamp when
@@ -145,6 +153,96 @@ following an invalid realm reference.
 Commoner destination stays retain local-work choices. Tier-3+ stays use guest
 quarters and court-residence events, and relationship journeys use personal-visit
 events at every rank.
+
+## Mercenary contracts and expeditions
+
+A paid-service arrival at a **warring** realm's capital offers a sustained
+mercenary contract instead of the ordinary court-service capstone when the
+traveler is a working soldier (journeyman or master — the career is itself
+male-gated and tier 1–2, so the offer inherits both bounds). Accepting saves
+`travel.contract = {realmId, startedTurn, paidSeasons, renewals}` on the journey
+record; nothing else is stored. The destination-stay tick pays
+`balance.mercContractSeasonPay` (6) at each crossed season boundary, and after
+`balance.mercContractSeasons` (4) it queues the completion audience once per
+term: collect the `balance.mercContractCompletionGold` (20) purse and take the
+road home (the first collected contract in a life also grants the family
+**Company Standard** and the Veteran trait), renew on the same terms while the
+patron's war lasts, or release the contract and remain. Contract work stories
+(patrol, storming parties, camp life) replace the court-service stories while
+the contract stands. If the patron's war ends or the realm dies mid-term, a
+peace audience ends the contract honestly with a small severance.
+
+The contract never blocks the road home. Coming home by any ordinary route —
+the return or turn-back deeds, or an invalidated journey — settles the record in
+`finishAtHome`: a served-out term pays its purse even without the audience,
+while an abandoned term costs `balance.mercContractAbandonStanding` (−8) with
+the patron realm. Death, succession, imprisonment, and personal war cancel the
+journey and the contract together through the existing cleanup. Old saves simply
+lack the field; a damaged record is dropped by `travelEnsure`, never invented.
+
+An **expedition** is the adventuring counterpart for any non-serf tier (a landed
+ruler deliberately accepts a temporary expedition; it changes no career). Its
+capstone offers recording or profiteering; the first recording at a genuinely
+foreign destination writes the family **Travel Journal** exactly once per
+protagonist life (`player.flags.expedition_journal`), and expedition work
+stories cover guides, foreign markets, and lawless miles. Return, settlement,
+and the destination cooldowns follow the ordinary travel rules, so an
+expedition can never strand the traveler.
+
+## Frontier withdrawal and commoner settlement
+
+The **Withdraw into the wastes** purpose (`mode:'frontier'`, tiers 1–2,
+`repeatable`) sends a freeholder or gentry household beyond the settled world
+without granting noble land. Destinations are wasteland provinces that border
+at least one reachable settled gateway county: the route is computed through
+the ordinary settled-only BFS to the nearest reachable gateway (county ids
+break ties), then extended by a single final wasteland leg. Wastelands remain
+impassable for every generic mover — personal routes, gift couriers, and trade
+ventures still run through the settled-only `FB.travelRoute`, and the army
+route search never uses a wasteland as a leg. Departure snapshots
+`travel.frontier = {gatewayId, holderId, sovereignId, charId, milestones}`
+beside the journey's own frozen route, cost, and start turn; a damaged record
+is dropped by `travelEnsure`, never invented, and the tick cancels a journey
+whose attempt can no longer resolve (wrong protagonist, missing gateway, or a
+destination no longer empty).
+
+Arrival queues the frontier capstone and begins the ordinary destination stay,
+but the work-event pool admits only purpose-written frontier stories —
+shelter, water, food, weather, solitude, visitors, faith, illness, tools, and
+the persist-or-turn-back decision (`data/events_travel.js`). Their genuine
+work options advance the saved `frontier.milestones` count through
+`frontier_milestone`; survival options grant nothing. The turn-back option
+appears only once the ordinary minimum stay has passed and then performs the
+ordinary return.
+
+`FB.frontierSettlementEligible` requires the arrived phase, tiers 1–2, the
+character's unused lifetime permanent move, a still-settled adjacent gateway,
+the ordinary one-year residence (`balance.travelSettleOfferDays`), and
+`balance.frontierMilestonesRequired` (4) successful work milestones.
+`FB.frontierStatus` derives the unsaved progress summary (gateway, phase,
+milestones, residence, availability) shown in the Deeds travel commitment row,
+the journey review, and the settlement sheet.
+
+`FB.frontierSettle` materializes the county through the shared
+`FB.materializeWasteland` helper (see [provinces.md](provinces.md)): the
+settler's culture and faith, development 1, no de jure membership, and the
+gateway county's **live** political holder and sovereign (the departure
+snapshot is the fallback and the deterministic reference). The household then
+moves through the ordinary travel-settlement cleanup — which consumes the
+one-per-character `player.travelSettlement`, so the same protagonist can never
+chain frontier colonies — and receives `balance.frontierSettlementPlots` (1)
+starter land plots at the new county's head settlement through the ordinary
+`player.landPlots` holdings rules. No county title and no `player.provs`
+entry is ever granted. Death, succession, imprisonment, personal war, and
+leaving tiers 1–2 end the attempt through the existing journey cleanup, and
+turning back abandons it without any property changing hands. No autonomous
+unowned population, demographic migration, wilderness inventory, or parallel
+hermit economy is simulated; once the county exists, ordinary holdings,
+household work, development, mortality, and political rules take over.
+
+Technology impact: `commoner_frontier_settlement` is `none`. Withdrawing onto
+empty land is a core life-path and recovery choice riding ordinary travel and
+holdings; no innovation credibly unlocks or improves it.
 
 ## Gift couriers
 
@@ -222,6 +320,10 @@ The public surface is `FB.travelLocation`, `FB.travelRoute`,
 `FB.travelReturnEligible`, `FB.travelSettlementEligible`,
 `FB.travelMarriageResidenceEligible`, `FB.travelMarriageResidence`,
 `FB.travelTurnBack`, `FB.travelReturn`, `FB.travelSettle`, and `FB.travelCancel`.
+The contract surface is `FB.mercContractOffer` and `FB.mercContractActive`.
+The frontier surface is `FB.frontierSettlementEligible`, `FB.frontierStatus`,
+and `FB.frontierSettle`, with the event handlers `frontier_milestone`,
+`frontier_leave_ready`, and `frontier_go_home`.
 The courier surface is `FB.giftDeliveryEnsure`, `FB.giftDeliveryPreview`,
 `FB.giftDeliveryPending`, `FB.dispatchGiftDelivery`, and `FB.giftDeliveryTick`.
 `FB.socialVisitPreview(state, character)` returns an object with `eligible` and

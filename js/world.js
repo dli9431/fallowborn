@@ -1046,103 +1046,151 @@ window.FB = window.FB || {};
     return { x:pr.cx, y:pr.cy };
   }
 
-  function compileSites(world) {
+  /* Compile one county's ordered site records: authored slots first (never
+     renumbered), then deterministic generated slots filling to the maximum.
+     Boot calls this for every settled county; the wasteland-materialization
+     helper calls it for a county converted during play (wastelands are skipped
+     at boot, so a frontier county receives the same generated context the
+     moment it becomes real land). Pure: it reads the world raster but returns
+     its records instead of installing them. */
+  function compileProvinceSites(world, pr) {
     var faults = [];
     var siteTable = FBDATA.settlementSites || {};
+    var authored = pr.settlements || [];
+    /* A legacy province replacement may deliberately omit site data. It
+       still inherits the former slot labels, while all physical records are
+       freshly generated and remain explicitly unauthored. */
+    var legacyPresentation = pr.legacySettlementPresentation || [];
+    var records = [];
+    var placed = [], seenNames = {}, forcedCount = 0;
+    for (var ai = 0; ai < authored.length; ai++) {
+      var entry = authored[ai];
+      /* fill: true presentations (data/settlements_real.js) replace a
+         slot's generated name/location with a real place but, unlike a
+         curated entry, do not force early visibility — development reveals
+         them on the normal thresholds. */
+      if (!entry.fill) forcedCount++;
+      var geo = siteTable[entry.site];
+      if (!geo) continue; // impossible after bookmark validation; defensive
+      var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);
+      var sx = Math.round(wx), sy = Math.round(wy), snap = 0;
+      var cell = siteGridIndex(world, sx, sy);
+      if (cell < 0 || world.grid[cell] !== pr.idx + 1) {
+        var snapped = nearestCountyCell(world, pr, wx, wy);
+        if (!snapped) {
+          faults.push('Bookmark ' + (FB.activeBookmarkId || '?') +
+            ': settlement site ' + entry.site + ' is assigned to ' + pr.id +
+            ' but lies more than ' + SETTLEMENT_SNAP_MAX +
+            ' map units outside that county — fix its coordinates or its county assignment.');
+          continue;
+        }
+        sx = snapped.x; sy = snapped.y;
+        snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
+      }
+      var adjusted = seaMarginSnap(world, pr, sx, sy, placed);
+      sx = adjusted.x; sy = adjusted.y;
+      placed.push({ x: sx, y: sy });
+      seenNames[entry.name] = 1;
+      records.push({
+        pid: pr.id, pidx: pr.idx, index: ai, site: entry.site,
+        name: entry.name, kind: entry.kind,
+        x: sx, y: sy, authored: true, snap: snap
+      });
+    }
+    for (var gi = authored.length; gi < SETTLEMENT_MAX_SLOTS; gi++) {
+      var legacy = legacyPresentation[gi];
+      var name = legacy && typeof legacy.name === 'string' && !seenNames[legacy.name]
+        ? legacy.name : null;
+      var kind = legacy && (legacy.kind === 'village' || legacy.kind === 'town' ||
+        legacy.kind === 'city') ? legacy.kind : 'village';
+      if (!name) {
+        var h = strHash(pr.id + ':' + gi);
+        name = FB.settlementName(pr.culture, h);
+        while (seenNames[name]) {
+          h = (h * 31 + 7) >>> 0;
+          name = FB.settlementName(pr.culture, h);
+        }
+      }
+      seenNames[name] = 1;
+      var pt = generatedSitePoint(world, pr, gi, placed);
+      /* generatedSitePoint already pushed its pick; swap it for the
+         inland-adjusted point so coastal slots keep the same sea margin */
+      placed.pop();
+      pt = seaMarginSnap(world, pr, pt.x, pt.y, placed);
+      placed.push(pt);
+      records.push({
+        pid: pr.id, pidx: pr.idx, index: gi,
+        site: 'generated__' + pr.id + '__' + gi,
+        name: name, kind: kind,
+        x: pt.x, y: pt.y, authored: false, snap: 0
+      });
+    }
+    return {
+      faults: faults,
+      records: records,
+      authored: forcedCount,
+      legacyBase: 2 + (strHash(pr.id) % 2)
+    };
+  }
+
+  /* Render/hit priority: head settlements first, then authored before
+     generated, then stable province/index order. The renderer sweeps this
+     list per live kind rank, so the effective priority is kind, then head
+     status, then authored status, then province/index — one deterministic
+     order shared by label collision and hit ties. */
+  function siteRenderCompare(a, b) {
+    if ((a.index === 0) !== (b.index === 0)) return a.index === 0 ? -1 : 1;
+    if (a.authored !== b.authored) return a.authored ? -1 : 1;
+    if (a.pid !== b.pid) return a.pid < b.pid ? -1 : 1;
+    return a.index - b.index;
+  }
+
+  function compileSites(world) {
+    var faults = [];
     world.sites = [];
     world.sitesByProv = {};
     for (var pi = 0; pi < world.provs.length; pi++) {
       var pr = world.provs[pi];
       if (pr.wasteland) continue;
-      var authored = pr.settlements || [];
-      /* A legacy province replacement may deliberately omit site data. It
-         still inherits the former slot labels, while all physical records are
-         freshly generated and remain explicitly unauthored. */
-      var legacyPresentation = pr.legacySettlementPresentation || [];
-      var records = [];
-      var placed = [], seenNames = {}, forcedCount = 0;
-      for (var ai = 0; ai < authored.length; ai++) {
-        var entry = authored[ai];
-        /* fill: true presentations (data/settlements_real.js) replace a
-           slot's generated name/location with a real place but, unlike a
-           curated entry, do not force early visibility — development reveals
-           them on the normal thresholds. */
-        if (!entry.fill) forcedCount++;
-        var geo = siteTable[entry.site];
-        if (!geo) continue; // impossible after bookmark validation; defensive
-        var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);
-        var sx = Math.round(wx), sy = Math.round(wy), snap = 0;
-        var cell = siteGridIndex(world, sx, sy);
-        if (cell < 0 || world.grid[cell] !== pr.idx + 1) {
-          var snapped = nearestCountyCell(world, pr, wx, wy);
-          if (!snapped) {
-            faults.push('Bookmark ' + (FB.activeBookmarkId || '?') +
-              ': settlement site ' + entry.site + ' is assigned to ' + pr.id +
-              ' but lies more than ' + SETTLEMENT_SNAP_MAX +
-              ' map units outside that county — fix its coordinates or its county assignment.');
-            continue;
-          }
-          sx = snapped.x; sy = snapped.y;
-          snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
-        }
-        var adjusted = seaMarginSnap(world, pr, sx, sy, placed);
-        sx = adjusted.x; sy = adjusted.y;
-        placed.push({ x: sx, y: sy });
-        seenNames[entry.name] = 1;
-        records.push({
-          pid: pr.id, pidx: pr.idx, index: ai, site: entry.site,
-          name: entry.name, kind: entry.kind,
-          x: sx, y: sy, authored: true, snap: snap
-        });
-      }
-      for (var gi = authored.length; gi < SETTLEMENT_MAX_SLOTS; gi++) {
-        var legacy = legacyPresentation[gi];
-        var name = legacy && typeof legacy.name === 'string' && !seenNames[legacy.name]
-          ? legacy.name : null;
-        var kind = legacy && (legacy.kind === 'village' || legacy.kind === 'town' ||
-          legacy.kind === 'city') ? legacy.kind : 'village';
-        if (!name) {
-          var h = strHash(pr.id + ':' + gi);
-          name = FB.settlementName(pr.culture, h);
-          while (seenNames[name]) {
-            h = (h * 31 + 7) >>> 0;
-            name = FB.settlementName(pr.culture, h);
-          }
-        }
-        seenNames[name] = 1;
-        var pt = generatedSitePoint(world, pr, gi, placed);
-        /* generatedSitePoint already pushed its pick; swap it for the
-           inland-adjusted point so coastal slots keep the same sea margin */
-        placed.pop();
-        pt = seaMarginSnap(world, pr, pt.x, pt.y, placed);
-        placed.push(pt);
-        records.push({
-          pid: pr.id, pidx: pr.idx, index: gi,
-          site: 'generated__' + pr.id + '__' + gi,
-          name: name, kind: kind,
-          x: pt.x, y: pt.y, authored: false, snap: 0
-        });
+      var compiled = compileProvinceSites(world, pr);
+      for (var fi = 0; fi < compiled.faults.length; fi++) {
+        faults.push(compiled.faults[fi]);
       }
       world.sitesByProv[pr.id] = {
-        list: records,
-        authored: forcedCount,
-        legacyBase: 2 + (strHash(pr.id) % 2)
+        list: compiled.records,
+        authored: compiled.authored,
+        legacyBase: compiled.legacyBase
       };
-      for (var ri = 0; ri < records.length; ri++) world.sites.push(records[ri]);
+      for (var ri = 0; ri < compiled.records.length; ri++) {
+        world.sites.push(compiled.records[ri]);
+      }
     }
-    /* Render/hit priority: head settlements first, then authored before
-       generated, then stable province/index order. The renderer sweeps this
-       list per live kind rank, so the effective priority is kind, then head
-       status, then authored status, then province/index — one deterministic
-       order shared by label collision and hit ties. */
-    world.sitesRender = world.sites.slice().sort(function (a, b) {
-      if ((a.index === 0) !== (b.index === 0)) return a.index === 0 ? -1 : 1;
-      if (a.authored !== b.authored) return a.authored ? -1 : 1;
-      if (a.pid !== b.pid) return a.pid < b.pid ? -1 : 1;
-      return a.index - b.index;
-    });
+    world.sitesRender = world.sites.slice().sort(siteRenderCompare);
     return faults;
   }
+
+  /* A wasteland converted during play was skipped by boot compilation. Give it
+     the same deterministic generated slot list now — bookmark validation
+     forbids authored or legacy presentations on wastelands, so only generated
+     slots ever appear here, named in the county's (newly settler) culture. */
+  FB.worldCompileSettlements = function (pid) {
+    var world = FB.world;
+    var pr = world && world.byId ? world.byId[pid] : null;
+    if (!pr || pr.wasteland || !world.sitesByProv || world.sitesByProv[pid]) {
+      return false;
+    }
+    var compiled = compileProvinceSites(world, pr);
+    world.sitesByProv[pid] = {
+      list: compiled.records,
+      authored: compiled.authored,
+      legacyBase: compiled.legacyBase
+    };
+    for (var i = 0; i < compiled.records.length; i++) {
+      world.sites.push(compiled.records[i]);
+    }
+    world.sitesRender = world.sites.slice().sort(siteRenderCompare);
+    return true;
+  };
 
   /* ================= POLITICAL STATE ================= */
 
@@ -4534,32 +4582,72 @@ window.FB = window.FB || {};
     return (state.owner && state.player && state.owner[state.player.provinceId]) || null;
   };
 
+  /* The one authoritative physical conversion of empty land into a real
+     county: clears the wasteland flag, stamps the settlers' culture and faith,
+     development 1, and the given political holder and sovereign owner. A
+     converted county keeps its bookmark lack of a duchy, so it stays outside
+     every de jure duchy, kingdom claim, and title majority — a colony, never a
+     duchy-maker. Boot site compilation skipped the wasteland, so the county
+     now receives its deterministic generated settlement slots; realm caches,
+     the market province list, and the map are invalidated together. The two
+     Chronicle descriptors are shared by every caller.
+
+     Callers pick the politics: the noble `settle_waste` deed passes the player
+     as holder and then adds the county to the demesne and pays the cost; the
+     commoner frontier journey passes the gateway county's holder and grants
+     only household property. Returns the province, or null when the land is
+     not convertible. */
+  FB.materializeWasteland = function (state, pid, opts) {
+    opts = opts || {};
+    const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
+    if (!pr || !pr.wasteland) return null;
+    const me = state.chars && state.player
+      ? state.chars[state.player.charId] : null;
+    const culture = opts.culture || (me && me.culture) || null;
+    const religion = opts.religion || (me && me.religion) || null;
+    const holderId = opts.holderId || null;
+    const ownerId = opts.ownerId || holderId;
+    if (!culture || !religion || !holderId || !ownerId) return null;
+    pr.wasteland = false;
+    pr.culture = culture;
+    pr.religion = religion;
+    state.dev[pid] = 1;
+    state.holder[pid] = holderId;
+    state.owner[pid] = ownerId;
+    FB.worldCompileSettlements(pid);
+    FB.invalidateRealmCache();
+    if (FB.marketWorldDirty) FB.marketWorldDirty();
+    FB.checkTierPromotions(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.news(state, FB.msg('news.world.wasteland_settlement_record',
+      'Settled the empty land of {province}.', { province: pr.name }));
+    FB.news(state, FB.msg('news.world.wasteland_settled',
+      '🌱 You settle the empty land of {province} — smoke rises where only the wind went before.',
+      { province: pr.name }));
+    return pr;
+  };
+
   /* found a new holding on empty land: a bordering wasteland becomes a true
      county of the player's demesne — the settlers' own culture and faith,
-     outside every de jure duchy (a colony, not a duchy-maker) */
+     outside every de jure duchy (a colony, not a duchy-maker). The physical
+     conversion lives in FB.materializeWasteland; this deed adds the demesne
+     politics and the cost. */
   FB.settleWaste = function (state, pid) {
     const p = state.player, pr = FB.world.byId[pid];
     if (!pr || !pr.wasteland) return;
     const me = state.chars[p.charId];
-    pr.wasteland = false;
-    pr.culture = me.culture;
-    pr.religion = me.religion;
-    state.dev[pid] = 1;
-    state.holder[pid] = 'player';
-    state.owner[pid] = FB.playerRealmId(state) || 'player';
+    const done = FB.materializeWasteland(state, pid, {
+      culture: me.culture,
+      religion: me.religion,
+      holderId: 'player',
+      ownerId: FB.playerRealmId(state) || 'player'
+    });
+    if (!done) return;
     p.provs = p.provs || [];
     if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     FB.applyEffects(state, {
       gold: -FBDATA.balance.settleGold, prestige: -FBDATA.balance.settlePrestige
     });
-    FB.news(state, FB.msg('news.world.wasteland_settlement_record',
-      'Settled the empty land of {province}.', { province: pr.name }));
-    FB.invalidateRealmCache();
-    FB.checkTierPromotions(state);
-    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    FB.news(state, FB.msg('news.world.wasteland_settled',
-      '🌱 You settle the empty land of {province} — smoke rises where only the wind went before.',
-      { province: pr.name }));
   };
 
   FB.isRealmAtWar = function (state, realmId) {
@@ -4677,12 +4765,11 @@ window.FB = window.FB || {};
       }
     }
 
+    /* Detachments are ordinary extra host records since multi-host warfare:
+       every host of a warring or crusading realm survives this repair. */
     const armies = Array.isArray(state.armies) ? state.armies : [];
-    const seenHosts = {};
     state.armies = armies.filter(function (army) {
-      if (!army || !activeHosts[army.realm] || seenHosts[army.realm]) return false;
-      seenHosts[army.realm] = 1;
-      return true;
+      return !!(army && activeHosts[army.realm]);
     });
   };
 
@@ -5245,10 +5332,18 @@ window.FB = window.FB || {};
         const winner = sa > sd ? id : war.enemy;
         const loser = winner === id ? war.enemy : id;
         const winnerReligion = FB.realmReligionId(state, winner);
-        const winnerHost = FB.hostOf ? FB.hostOf(state, winner) : null;
-        let taken = winnerHost && state.owner[winnerHost.at] === loser &&
-          FB.fortBlocksArmy && FB.fortBlocksArmy(state, winnerHost.at, winnerHost)
-          ? winnerHost.at : null;
+        /* the host pressing the siege claims the county: any of the winner's
+           hosts pinned on the loser's fortified ground, not just the main
+           body */
+        const winnerHosts = FB.hostsOf ? FB.hostsOf(state, winner) : [];
+        let taken = null;
+        for (const winnerHost of winnerHosts) {
+          if (state.owner[winnerHost.at] === loser && FB.fortBlocksArmy &&
+              FB.fortBlocksArmy(state, winnerHost.at, winnerHost)) {
+            taken = winnerHost.at;
+            break;
+          }
+        }
         if (taken && FB.sameFaithHeadWarPolicy(
             state, winnerReligion, loser, taken)) taken = null;
         if (!taken) taken = FB.borderProvince(state, loser, winner, function (pid) {
@@ -5473,11 +5568,20 @@ window.FB = window.FB || {};
 
   /* The player's host composition: the dev-driven muster is the levy (massed,
      untrained foot); buildings, national technology, positions, and a landed
-     baron's household add archers, cavalry, and men-at-arms. */
+     baron's household add archers, cavalry, and men-at-arms; culture- and
+     technology-unlocked classes (FBDATA.unitClasses) convert a share of the
+     levy into their own companies. */
   FB.playerCompositionBreakdown = function (state, baseline) {
     const B = FBDATA.balance;
     const p = state.player;
-    const comp = { levy:0, arch:0, cav:0, ret:0 };
+    const comp = {};
+    const mustered = FB.unitClassIds
+      ? FB.unitClassIds().filter(function (id) {
+          const def = (FBDATA.unitClasses || {})[id];
+          return !def || !def.hired;
+        })
+      : ['levy', 'arch', 'cav', 'ret'];
+    for (const classId of mustered) comp[classId] = 0;
     const entries = [];
     function add(unit, kind, amount, data) {
       if (!amount) return;
@@ -5554,7 +5658,7 @@ window.FB = window.FB || {};
       const techUnits = FB.techUnits ? FB.techUnits(state) :
         { levy:0, arch:FB.techBonus(state, 'archers'), cav:0,
           ret:FB.techBonus(state, 'retinue') };
-      for (const unit of ['levy', 'arch', 'cav', 'ret']) {
+      for (const unit of mustered) {
         if (techUnits[unit]) add(unit, 'technology_flat', techUnits[unit], { key:unit });
       }
 
@@ -5622,7 +5726,7 @@ window.FB = window.FB || {};
       }
     }
 
-    for (const unit of ['levy', 'arch', 'cav', 'ret']) {
+    for (const unit of mustered) {
       const papalMultiplier = FB.papacyRealmStrengthMultiplier
         ? FB.papacyRealmStrengthMultiplier(state, 'player') : 1;
       if (papalMultiplier !== 1 && comp[unit]) {
@@ -5637,26 +5741,53 @@ window.FB = window.FB || {};
       }
       comp[unit] = rounded;
     }
+
+    /* Culture- and technology-unlocked classes convert a share of the
+       mustered levy into their own companies (FBDATA.unitClasses `share`);
+       the host's headcount is unchanged. */
+    for (const unit of mustered) {
+      if (unit === 'levy') continue;
+      const def = (FBDATA.unitClasses || {})[unit];
+      const share = def && Number(def.share);
+      if (!share || share <= 0 || !comp.levy) continue;
+      if (!(FB.unitClassUnlocked && FB.unitClassUnlocked(state, unit))) {
+        continue;
+      }
+      const converted = Math.min(comp.levy,
+        Math.round(comp.levy * Math.min(1, share)));
+      if (!converted) continue;
+      add('levy', 'unit_class_conversion', -converted, { unitClassId:unit });
+      add(unit, 'unit_class', converted, { unitClassId:unit });
+    }
+
+    let total = 0;
+    for (const unit of mustered) total += comp[unit];
     return {
       units:comp,
       entries:entries,
-      total:comp.levy + comp.arch + comp.cav + comp.ret
+      total:total
     };
   };
 
   FB.playerComposition = function (state, baseline) {
     const c = FB.playerCompositionBreakdown(state, baseline).units;
-    return { levy:c.levy, arch:c.arch, cav:c.cav, ret:c.ret };
+    const out = {};
+    for (const key in c) out[key] = c[key];
+    return out;
   };
 
   FB.playerLevy = function (state) {
     const c = FB.playerComposition(state);
-    return c.levy + c.arch + c.cav + c.ret;
+    let total = 0;
+    for (const key in c) total += c[key];
+    return total;
   };
 
   FB.playerMaxLevy = function (state) {
     const c = FB.playerComposition(state, true);
-    return c.levy + c.arch + c.cav + c.ret;
+    let total = 0;
+    for (const key in c) total += c[key];
+    return total;
   };
 
   /* Is the player personally caught up in a war? While true, only events
@@ -6276,11 +6407,16 @@ window.FB = window.FB || {};
      A beaten tier-3+ leader may be taken in the rout: martial cuts a way
      out, intrigue slips the noose. The captor's price arrives by event; the
      war's end (or a dark night) opens the cell. */
-  FB.maybeCapturePlayer = function (state) {
+  FB.maybeCapturePlayer = function (state, encircled) {
     const p = state.player, w = p.war;
     if (!w || p.tier < 3 || !p.flags || p.flags.in_prison) return;
     const me = state.chars[p.charId];
-    const base = FBDATA.balance.captureChanceBase === undefined ? 0.35 : FBDATA.balance.captureChanceBase;
+    /* a host shattered while cut off surrenders its leader far more often —
+       there is no rout to slip away in */
+    const base = encircled
+      ? (FBDATA.balance.captureChanceEncircled === undefined
+        ? 0.6 : FBDATA.balance.captureChanceEncircled)
+      : (FBDATA.balance.captureChanceBase === undefined ? 0.35 : FBDATA.balance.captureChanceBase);
     const escape = Math.min(0.3,
       ((me ? FB.skillOf(me, 'mar') : 0) + (me ? FB.skillOf(me, 'int') : 0)) / 200);
     if (!FB.chance(Math.max(0.05, base - escape))) return;
@@ -6479,7 +6615,7 @@ window.FB = window.FB || {};
       }
     }, { losses: w.losses }));
     FB.warOutcome(state);
-    FB.maybeCapturePlayer(state);
+    FB.maybeCapturePlayer(state, !!(battle && battle.encircled));
   };
   FB.fns.war_harry = function (state) {
     const w = state.player.war; if (!w) return;
@@ -6514,8 +6650,16 @@ window.FB = window.FB || {};
   };
   FB.playerSiegeStatus = function (state) {
     const w = state.player.war;
-    const host = w && FB.playerHost ? FB.playerHost(state) : null;
-    if (!w || w.defending || !w.target || !host || host.at !== w.target) return null;
+    if (!w || w.defending || !w.target) return null;
+    /* any of the player's hosts standing on the target presses the siege —
+       the largest of them leads the works */
+    const hosts = FB.hostsOf ? FB.hostsOf(state, 'player') : [];
+    let host = null;
+    for (const candidate of hosts) {
+      if (candidate.at !== w.target) continue;
+      if (!host || candidate.men > host.men) host = candidate;
+    }
+    if (!host) return null;
     const here = FB.armiesAt ? FB.armiesAt(state, w.target) : [host];
     const besiegers = [], contested = here.some(function (army) {
       if (army === host || !FB.armiesHostile) return false;

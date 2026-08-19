@@ -556,7 +556,13 @@ built by riding with the liege's host, against the victim's `favor`); *Buy out a
 neighbor* (`buy_county`, a vassal-only gold sink for adjacent rank-1 counts with no
 vassals of their own); and *Settle the wasteland* (`settle_waste` → `FB.settleWaste`,
 which turns a bordering wasteland province into a true county of the player's demesne —
-settler culture and faith, belonging to no de jure duchy). Separately, a dying petty
+settler culture and faith, belonging to no de jure duchy). Both that deed and the
+commoner frontier-homestead journey (see [travel.md](travel.md)) perform the physical
+conversion through the one shared `FB.materializeWasteland` helper — culture, faith,
+development 1, holder, owner, de jure exclusion, generated settlement slots, cache
+invalidation, map redraw, and the Chronicle descriptors; the deed adds the demesne
+entry and the gold/prestige cost, while the frontier path assigns the county to the
+gateway's existing political controller and grants only commoner property. Separately, a dying petty
 count may leave no heir (`balance.escheatChance`, `FB.escheatRealm` in the yearly
 tick): the fief escheats to the liege unless a bordering player of the same sovereign
 wins the scramble (Standing with the liege, prestige, service) — and heirless fiefs of the

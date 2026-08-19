@@ -2,11 +2,11 @@
 
 Date: 2026-07-30
 
-Status: **in progress; steps 1–6 implemented**. This plan organizes player feedback
+Status: **complete (2026-08-19); all steps implemented**. This plan organizes player feedback
 about political blocs, elections, laws, military depth, tournaments, careers,
 religious policy, frontier settlement, migration, and wars without claims. It
 prioritizes player-facing quality of life before the larger simulation and content
-expansions. Steps 7–11 remain proposed.
+expansions.
 
 Related design:
 [realms](../designs/realms.md),
@@ -448,7 +448,7 @@ fully autonomous new realm.
 
 Classification: **Balance with Writing support**.
 
-Status: **proposed**.
+Status: **complete (2026-08-19)**.
 
 Add two royal policy families to the law framework.
 
@@ -474,11 +474,30 @@ county, move an invented population total, or erase local identity. Settlement e
 may introduce cultural or religious pressure, invited specialists, merchants,
 refugees, or frontier settlers without claiming a demographic simulation.
 
+The implemented slice adds two crown-side families to the shared policy catalog
+(`institution:'crown'` in `data/policies.js`), proclaimed by the sovereign player
+(tier 6+) without an Estates campaign: Religious Tolerance (persecution →
+confessional preference → tolerated minorities → protected worship) and
+Settlement (closed settlement → licensed newcomers → encouraged settlement).
+Only the current level and proclamation stamps are saved; standing county
+effects ride ordinary county modifiers maintained by a daily sync on directly
+held counties (minority-faith ones for tolerance — county faith is never
+rewritten), while piety, research rate, the conserved-migration draw,
+development, Crown Authority, religious-head and fold-split foreign Standing,
+and vassal Standing all come from the level definitions. Persecution feeds the
+existing `religious_persecution` mistreatment machinery — at proclamation,
+yearly while it stands, and in the unrest story — and Protected Worship records
+durable faith privileges whose early withdrawal is an unlawful revocation.
+Three gated slot-day stories add invited specialists, merchants, refugees, and
+persecution unrest. The Estates machinery skips crown defs; Governance's
+Institution section opens a Royal laws & policy sheet listing every level with
+its effects, exact blocked reasons, and the repeal and protected-term rules.
+
 ### 8. Expanded life paths and authored works
 
 Classification: **Writing**.
 
-Status: **proposed**.
+Status: **complete (2026-08-19)**.
 
 Build on the current career, focus, travel, research, event, and item hooks.
 
@@ -505,9 +524,64 @@ At landed tiers, careers remain biography and patronage rather than a return to 
 commoner labor unless the player deliberately accepts a temporary expedition,
 command, or court appointment.
 
+The implemented slice lives in `data/events_lifepaths.js` and extends the existing
+careers rather than adding professions. Soldiers in a warring realm draw two
+`battle`-resolved command assignments (a scouting party, the rearguard) whose
+success feeds existing war-service progress and whose failure costs blood, plus a
+peacetime muster-drill story; physician practice adds a county outbreak, the
+lord's sickroom, and the once-per-life **Book of Remedies** for a master
+Physician; scholars dispute in public; Astronomers choose between recorded
+observation (national research) and risky paid horoscopes and bind the once-per-life
+**Star Tables**; Authors accept patron commissions whose success grants another
+randomized family treatise through the existing authored-work item path. Paid
+service becomes a sustained mercenary contract: a working soldier arriving at a
+warring realm's capital is offered a fixed term saved on the journey record
+(`travel.contract`), paid each crossed season from `FBDATA.balance`, with contract
+work stories (patrol, storming party, camp life), a completion audience offering
+the final purse and road home, renewal while the war lasts, or release — the first
+collected term grants the **Company Standard** and the Veteran trait; peace or the
+patron's death ends the contract honestly, and coming home early settles it with a
+Standing cost so the traveler can never be stranded. The new **expedition** travel
+purpose (`mode:'foreign'`, tiers 1–7) sends the player to a bounded list of
+reachable foreign-culture counties with its own work stories; recording the first
+foreign expedition writes the once-per-life **Travel Journal**. All four works are
+`eventOnly` family items; the five new `FBDATA.techImpactReviews` entries are all
+`none` — every path rides an existing career or travel gate, and no innovation
+credibly unlocks them. Landed protagonists keep careers as biography through the
+existing `professions`/`career` trigger exclusions; the contract, expedition, and
+gentry field command remain the deliberate temporary exceptions.
+
 ### 9. Hermit travel and commoner frontier settlement
 
 Classification: **Writing and Balance, built on travel and holdings**.
+
+Status: **complete (2026-08-19)**.
+
+The implemented slice adds the **Withdraw into the wastes** travel purpose
+(`mode:'frontier'`, tiers 1–2, repeatable): destinations are wastelands reached
+through the nearest reachable settled gateway county over the ordinary
+settled-only route plus one final wasteland leg, and departure snapshots
+`travel.frontier` (gateway, holder, sovereign, protagonist, milestones). The
+stay admits only purpose-written frontier stories — shelter, water, food,
+weather, solitude, visitors, faith, illness, tools, and a persist-or-turn-back
+decision gated on the ordinary minimum stay — whose work options advance saved
+milestones. Settlement requires the ordinary one-year residence plus
+`balance.frontierMilestonesRequired` (4) milestones, then materializes a
+development-1 county through the new shared `FB.materializeWasteland` helper
+(extracted from `FB.settleWaste`, which keeps its exact costs and political
+result): settler culture and faith, no de jure membership, the gateway's live
+political holder and sovereign, generated settlement slots compiled on the
+spot, and shared cache invalidation, map redraw, and Chronicle descriptors.
+The household relocates through the ordinary travel-settlement cleanup —
+consuming the one-per-character lifetime move — and receives
+`balance.frontierSettlementPlots` (1) starter land plots, never a county title
+or `player.provs` entry. Wastelands stay impassable for generic travel,
+couriers, trade, and (now explicitly) army routing; death, succession,
+imprisonment, personal war, rank change, and turning back end the attempt
+through the existing journey cleanup without any property changing hands. The
+optional Hermit/Frontier-Freeholder challenge start remains deferred, and no
+autonomous wilderness population or parallel hermit economy is simulated. The
+`commoner_frontier_settlement` technology impact review is `none`.
 
 Implement the travel version before adding a special new-game scenario. Current
 freeholders and gentry can travel and eventually relocate, but their routes and
@@ -580,7 +654,27 @@ before ordinary play had exercised them.
 
 Classification: **Balance and modding foundation**.
 
-Status: **proposed**.
+Status: **complete (2026-08-19)**.
+
+The catalog was delivered by the warfare plan's phase 2
+([warfare-terrain-supply-units-and-multihost](warfare-terrain-supply-units-and-multihost.md)):
+`FBDATA.unitClasses` (`data/units.js`) is the single source of truth — stable ids,
+localized names and icons, `quality`, `upkeepPer100`, `casualtyOrder`, `counters`,
+per-terrain `terrainFactors`, `share`, culture/technology gates, the `hired`
+contract flag, and per-class market baskets. Every engine site iterates
+`FB.unitClassIds()` instead of named keys; `FB.hostUnits` migrates pre-table hosts
+in place (their men count as levy but the hired companies, and any class a save
+predates defaults to 0), and `FBDATA.unitClassAliases` resolves the legacy
+`unit:*` unlock targets. The five baseline classes keep their long-standing
+quality, upkeep, composition, casualty order, and battle results; MODDING.md
+documents the schema and the mod compatibility rule, and
+`FB.warFeedback`/`FB.playerHostUpkeepParts` remain the authoritative deterministic
+summaries. Verified against this step's acceptance bullets on 2026-08-19; the one
+gap closed here: a saved class the table no longer defines (a removed mod) now
+falls last in `FB.applyHostLosses`, in id order, so its headcount never drifts
+from the units record — the rule is documented in MODDING.md. The spec's "damage
+and defense" and "recruitment and reinforcement costs" fields are step 11's
+mechanics, delivered there.
 
 Replace hard-coded knowledge of `levy`, `arch`, `cav`, `ret`, and `mercs` with a unit
 catalog, while reproducing current behavior in the first integration.
@@ -612,7 +706,42 @@ Do not tune combat in the same integration that changes the data representation.
 
 Classification: **Balance**.
 
-Status: **proposed**.
+Status: **complete (2026-08-19)**.
+
+The implemented slice: legible counters (composition-weighted, capped by
+`balance.battleCounterMaxSwing`), catalog upkeep (`upkeepPer100` + market
+baskets), and culture/tech-gated classes were delivered by the warfare plan's
+phases 2–3 and are unchanged here. The remainder landed as follows. **Attack
+and defense are separate catalog values** (`data/units.js`, both falling back to
+`quality` so mods and legacy entries keep working): the camp holding the ground
+fights at `defense`, the camp marching in at `attack`, and a meeting engagement
+on open ground — where no `terrainDefenseBonus` names a defender — reads
+`attack` for both (`FB.compRoleQuality`; `resolveBattle` passes the role, no new
+RNG draws). The shipped splits are modest and every pair averages to the
+long-standing quality — archers and crossbows hit harder than they stand, pikes
+and men-at-arms hold better than they charge — so numbers, terrain, martial,
+supply, and counters still decide the day. **Professional readiness and
+replacement** run through the realm-owned cohort ledger
+`state.armyCohorts[<realmId>][<classId>] = { batches:[{ n, readyTurn }], ready }`:
+every battle, siege, starvation, and desertion loss of a `professional` class
+queues a batch that finishes drilling at loss turn + the class's `replaceDays`
+(else `balance.cohortReplaceDays`) — a fixed date, no RNG. The cohort belongs to
+the realm, not the host: it survives dismissal, de-muster, peace, and save/load
+(`FB.armiesEnsure` repairs additively and drops dead realms), and a fresh muster
+takes the drilled `ready` men at no surcharge — a de-muster-capped muster does
+not, since those veterans already returned in the pool. While batches are
+pending the player pays the reinforcement premium (`upkeepPer100` ×
+`balance.reinforcementPremiumMult` per 100 pending men, market-quoted, charged
+even with no host fielded, ending exactly when the last batch completes);
+drilled men join a home-rested host before the day's levy refill or wait for
+the next muster. The Land-tab host card shows every present class's attack,
+defense, upkeep, and counters plus each cohort's pending men, exact ready date,
+premium, and drilled reserves; the gold ledger and war logistics ledger list
+the premium. New balance knobs: `cohortReplaceDays` (120),
+`reinforcementPremiumMult` (1), `cohortMaxPerClass` (600). The
+`unit_attack_defense_roles` and `professional_replacement_cohorts` technology
+impact reviews are both `none` — core combat play whose unit classes already
+carry their own gates.
 
 After the catalog is stable:
 

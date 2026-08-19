@@ -508,11 +508,17 @@ window.FB = window.FB || {};
   };
 
   function lossTotals() {
-    return { levy:0, arch:0, cav:0, ret:0, mercs:0, total:0 };
+    var totals = { total:0 };
+    var ids = FB.unitClassIds ? FB.unitClassIds() :
+      ['levy', 'arch', 'cav', 'ret', 'mercs'];
+    for (var i = 0; i < ids.length; i++) totals[ids[i]] = 0;
+    return totals;
   }
 
   function mergeLosses(total, losses) {
-    for (var key in total) total[key] += Number(losses[key]) || 0;
+    for (var key in losses) {
+      if (key in total) total[key] += Number(losses[key]) || 0;
+    }
   }
 
   function applyProportionalLosses(state, hosts, casualties) {
@@ -540,6 +546,9 @@ window.FB = window.FB || {};
         ? FB.applyHostLosses(allocations[i].host, allocations[i].amount)
         : { total:0 };
       mergeLosses(losses, hostLosses);
+      if (FB.noteCohortLosses) {
+        FB.noteCohortLosses(state, allocations[i].host.realm, hostLosses);
+      }
       if (allocations[i].host.realm === 'player' &&
           FB.notePlayerWarTroopLosses) {
         FB.notePlayerWarTroopLosses(state, hostLosses);
@@ -705,7 +714,18 @@ window.FB = window.FB || {};
   FB.advanceAIYearlyFortSiege = function (state, war, pid, besiegerRealm) {
     war.fortSieges = war.fortSieges || {};
     var siege = war.fortSieges[pid] = war.fortSieges[pid] || { progress:0 };
-    var host = FB.hostOf && FB.hostOf(state, besiegerRealm);
+    /* any of the besieger's hosts standing on the fort presses the siege —
+       a detachment's work counts, not only the main body's */
+    var besiegers = [];
+    var hosts = FB.hostsOf ? FB.hostsOf(state, besiegerRealm) : [];
+    for (var h = 0; h < hosts.length; h++) {
+      if (hosts[h].at === pid && FB.fortBlocksArmy(state, pid, hosts[h])) {
+        besiegers.push(hosts[h]);
+      }
+    }
+    besiegers.sort(function (a, b) { return b.men - a.men; });
+    var host = besiegers.length ? besiegers[0]
+      : (FB.hostOf ? FB.hostOf(state, besiegerRealm) : null);
     if (!host || host.at !== pid || !FB.fortBlocksArmy(state, pid, host)) {
       return FB.fortSiegeStatus(state, pid, siege, host ? [host] : []);
     }
@@ -720,7 +740,7 @@ window.FB = window.FB || {};
     var status = null;
     for (i = 0; i < 4; i++) {
       status = FB.advanceFortSiegePulse(state, pid, siege, {
-        hosts:[host], contested:contested,
+        hosts:besiegers, contested:contested,
         progressAmount:1 + (FB.techBonus ? FB.techBonus(state, 'siege', besiegerRealm) * 3 : 0)
       });
       if (status.stalled || status.breached || host.men <= 0) break;

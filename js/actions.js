@@ -1290,6 +1290,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!(s.player.travel && s.player.travel.phase === 'arrived' &&
+        s.player.travel.purpose !== 'frontier' &&
         s.player.tier >= 1 && s.player.tier <= 2 &&
         !s.player.travelSettlement);
     },
@@ -1300,6 +1301,27 @@ window.FB = window.FB || {};
     },
     run: function () {
       if (FB.ui && FB.ui.showTravelSettlement) FB.ui.showTravelSettlement();
+    } },
+  { id: 'frontier_settle_here', label: '🛖 Found the frontier homestead…', noConsume: true,
+    desc: function (s) {
+      const status = FB.frontierStatus ? FB.frontierStatus(s) : null;
+      return FB.T('Turn this proven corner of the waste into a real frontier county — your household’s permanent home under the lord of {gateway}, with a starter land plot but no title. Each character may make this permanent move only once in their lifetime.', {
+        gateway: status ? status.gatewayName : ''
+      });
+    },
+    show: function (s) {
+      return !!(s.player.travel && s.player.travel.purpose === 'frontier' &&
+        s.player.travel.phase === 'arrived' &&
+        s.player.tier >= 1 && s.player.tier <= 2 &&
+        !s.player.travelSettlement);
+    },
+    can: function (s) {
+      return FB.frontierSettlementEligible
+        ? FB.frontierSettlementEligible(s)
+        : FB.T('The homestead is not yet proven.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showFrontierSettlement) FB.ui.showFrontierSettlement();
     } },
   { id: 'retire', label: '👴 Hand over the house…', noConsume: true,
     desc: function (s) {
@@ -2168,8 +2190,16 @@ window.FB = window.FB || {};
   { id: 'muster_host', label: '🚩 Muster the host',
     desc: function (s) {
       const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
-      return FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
+      let text = FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
         { men: preview ? preview.men : FB.playerLevy(s) });
+      const parts = preview && preview.units && FB.unitClassParts
+        ? FB.unitClassParts(s, preview.units) : [];
+      if (parts.length) {
+        text += ' ' + FB.T('Muster: {composition}.', {
+          composition: parts.join(', ')
+        });
+      }
+      return text;
     },
     show: function (s) {
       if (!s.player.war && !(FB.playerGreatHolyWarHostActive &&
@@ -3732,7 +3762,25 @@ window.FB = window.FB || {};
       add('gold', FB.T('Archer food and supplies'), -hostUpkeep.archers);
       add('gold', FB.T('Cavalry fodder and supplies'), -hostUpkeep.cavalry);
       add('gold', FB.T('Men-at-arms food and supplies'), -hostUpkeep.retinue);
+      /* unlocked classes (crossbows, pikes, cultural companies) bill per 100
+         from the unit-class table */
+      const billed = { levy:1, arch:1, cav:1, ret:1 };
+      const byClass = hostUpkeep.byClass || {};
+      for (const classId in byClass) {
+        if (billed[classId] || !byClass[classId]) continue;
+        const classDef = FBDATA.unitClasses && FBDATA.unitClasses[classId];
+        add('gold', FB.T('{unitclass} upkeep', {
+          unitclass:classDef
+            ? FB.dataText(state, p.charId, 'unitClass', classId, classDef,
+              'name', {})
+            : classId
+        }), -byClass[classId]);
+      }
       add('gold', FB.T('Mercenary company contracts'), -hostUpkeep.mercenaries);
+      if (hostUpkeep.reinforcement) {
+        add('gold', FB.T('Replacement drilling for slain professionals'),
+          -hostUpkeep.reinforcement);
+      }
       if (hostUpkeep.campaignModifier) {
         add('gold', FB.T('Campaign supply modifiers'), -hostUpkeep.campaignModifier);
       }
@@ -7734,7 +7782,7 @@ window.FB = window.FB || {};
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
-          'travel_settle_here'].indexOf(a.id) < 0) continue;
+          'travel_settle_here', 'frontier_settle_here'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
       const status = FB.instantStatus(state, a.id);
       if (!status.shown) continue;

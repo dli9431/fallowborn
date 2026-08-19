@@ -9,8 +9,15 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.141.1';
+  FB.VERSION = '1.142.0';
   FB.CHANGELOG = [
+    { v: '1.142.0', date: '2026-08-19', changes: [
+      'Field armies are now made up of distinct unit classes — beyond the baseline levy, archers, cavalry, men-at-arms, and mercenaries, crossbow and pike companies unlock through innovations while horse-archer, huscarl, camel-rider, and cataphract companies muster from the cultures that field them, each with its own counters and terrain strengths.',
+      'Realms can now field several hosts at once: split a halted army or merge co-located ones from the Land tab, march and fight with supply that refills on friendly land and starves abroad, and read the ground — terrain now shapes marches and battles.',
+      'Kings and emperors can proclaim royal policies on religious tolerance and frontier settlement from the council.',
+      'New life paths let you command soldiers, practice as a physician, pursue scholarship, compose works for patrons, serve mercenary contracts, and join foreign expeditions — each leaving durable accomplishments.',
+      'Freeholders and gentry can now withdraw into the wastes to found a frontier county of their own.'
+    ] },
     { v: '1.141.1', date: '2026-08-18', changes: [
       'The Deeds tab now supports two-stage keyboard navigation across category groups, and culture and faith conversion options are now soft-gated to traditions you have encountered with clearer highlighted costs.'
     ] },
@@ -1965,7 +1972,7 @@ window.FB = window.FB || {};
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
-      armies: [], armyDown: {}, armyDownSurvival: {},
+      armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
       alliances: [],
       faiths: {}, faithRelations: {}, faithNextId: 1,
       religiousHeads: {},
@@ -2219,7 +2226,7 @@ window.FB = window.FB || {};
       chars: {}, roles: {}, eventQueue: [], log: [], legends: [], flags: {}, buildings: {},
       realmTech: {}, realmTechMigration: 2, techSeeded:0,
       itemInstances: {}, itemNextId: 1,
-      armies: [], armyDown: {}, armyDownSurvival: {},
+      armies: [], armyDown: {}, armyDownSurvival: {}, armyDetachmentDown: {},
       alliances: [],
       faiths: {}, faithRelations: {}, faithNextId: 1,
       religiousHeads: {},
@@ -2410,6 +2417,7 @@ window.FB = window.FB || {};
         if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
       }
+      if (FB.realmPolicySeason) FB.realmPolicySeason(s); // standing royal policy: piety trickle, settler development
       /* A raised host costs its live composition once per season, for both
          ordinary and great holy wars. Shattered/disbanded hosts return zero. */
       if (FB.playerHostUpkeepParts) {

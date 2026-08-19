@@ -2,7 +2,7 @@
 
 Date: 2026-08-16
 
-Status: proposed
+Status: done
 
 Baseline: Fallowborn v1.134.1
 

@@ -842,6 +842,26 @@ FBDATA.items = {
     fx:{ lea:1 }, qualityFx:{ lea:1 },
     art:{ kind:'book', covers:['#6c5c2d','#85733a'], pages:['#d8c9a5','#c8b68c'] },
     desc:'A family author’s collection of animals, plants, stones, and wonders.' },
+  book_of_remedies:{ name:'Book of Remedies', icon:'📕', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1, health:0.001 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#5d3232','#754242'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family physician’s gathered remedies, regimens, and case notes.' },
+  star_tables:{ name:'Star Tables', icon:'🌠', rarity:'fine', value:35,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1, ste:1 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#23304f','#31415f'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family astronomer’s patient tables of the wandering stars.' },
+  travel_journal:{ name:'Travel Journal', icon:'🗺', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ ste:1, dip:1 }, qualityFx:{ ste:1 },
+    art:{ kind:'book', covers:['#3f4a2e','#525e3a'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'Coasts, customs, and strange tongues, written down on foreign roads.' },
+  company_standard:{ name:'Company Standard', icon:'🚩', rarity:'fine', value:40,
+    unique:false, eventOnly:true, slot:'hand', grip:2, ageMin:12,
+    fx:{ mar:1, prestige:0.5 }, qualityFx:{ mar:1 },
+    art:{ kind:'spear', woods:['#6b4a2e','#553a24'], metals:['#b89042','#c9a856'] },
+    desc:'A served-out mercenary contract, struck from its pole and carried home.' },
   padded_jack:     { name:'Padded Jack', icon:'🧥', rarity:'common', value:25,
     unique:false, slot:'body', ageMin:12, fx:{ battle:0.03 }, qualityFx:{ battle:0.01 },
     art:{ kind:'jack', cloths:['#76664a','#53624b','#6b4c3f'], threads:['#b49a69','#9a835b'] },
@@ -1283,6 +1303,10 @@ FBDATA.balance = {
     open: { cycleDays:7, capacityMult:0.75 }
   },
   armyRearmDays: 60, // a shattered host may muster again after this long
+  detachmentRearmDays: 25, // a destroyed detachment (any host but the realm's primary) re-forms this fast
+  aiMultiHostStrength: 1200, // AI realms with a muster of at least this many men may split off a detachment in offensive wars
+  aiMaxHosts: 2, // the most hosts an AI realm fields at once
+  aiDetachmentFrac: 0.35, // the men-share of its muster an AI detachment carries
   armyRoutDays: 20, // a beaten host cannot be fought again for this long (rout grace)
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
   armyMinMen: 40, // a host under this many men disperses; also the smallest muster
@@ -1292,19 +1316,64 @@ FBDATA.balance = {
   aiHostPerDev: 0.3, // AI host size = realm dev × levyPerDev × this
   battleWinLoss: 0.28, battleLoseLoss: 0.62, // battle casualty fractions (winner's scales with closeness)
   battleMarPlayer: 14, battleMarAI: 22, // martial divisors in field-battle power (the player's edge)
-  /* host composition (levy tiers): a host's men split into classes, each with
-     its own battle quality; casualties fall levy-first, men-at-arms last */
-  qualityLevy: 0.85, qualityArcher: 1.2, qualityCavalry: 2.0,
-  qualityRetinue: 2.5, qualityMerc: 1.5,
+  /* host composition (levy tiers): a host's men split into classes declared
+     in FBDATA.unitClasses (data/units.js) — the single source of truth for
+     per-class battle quality, per-100 logistics, casualty order, counters,
+     terrain overrides, and culture/technology gating */
+  battleCounterMaxSwing: 0.2, // a side's composition counter edge is capped at this fraction of its battle power
+  cohortReplaceDays: 120, // days to drill one replacement batch of a professional class (a class's replaceDays overrides)
+  reinforcementPremiumMult: 1, // professionals being replaced cost their upkeepPer100 × (1 + this) while drilling
+  cohortMaxPerClass: 600, // the most replacements of one class a realm's cohort ledger holds
   mercCompanySize: 150, // men per hired company
   massLevyMult: 1.35, // the great levy swells the levy class by this
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
   aiRetinueFrac: 0.08, aiArcherFrac: 0.08, // AI baseline before national military technology
-  /* player host logistics per season: base camp cost, live soldiers per 100,
-     and the existing contract cost per hired mercenary company */
-  hostLogisticsBase: 2, hostLogisticsLevyPer100: 0.5,
-  hostLogisticsArcherPer100: 1, hostLogisticsCavalryPer100: 2,
-  hostLogisticsRetinuePer100: 2,
+  /* terrain shapes the field battle (docs/designs/war.md): each province
+     terrain multiplies the per-class battle quality of the hosts fighting on
+     it — cavalry shines on open ground and flounders in close or steep
+     country, archers relish hills and woods, the levy mass is indifferent.
+     A missing terrain or class key multiplies by 1. */
+  terrainBattleFactors: {
+    farmland: { levy:1, arch:1, cav:1.15, ret:1, mercs:1 },
+    forest:   { levy:1, arch:1.15, cav:0.6, ret:0.9, mercs:0.9 },
+    hills:    { levy:1, arch:1.15, cav:0.85, ret:1.05, mercs:1 },
+    mountains:{ levy:1, arch:1.1, cav:0.6, ret:1.05, mercs:0.9 },
+    desert:   { levy:0.95, arch:1, cav:1.05, ret:1, mercs:1 },
+    steppe:   { levy:1, arch:1, cav:1.15, ret:1, mercs:1.05 },
+    marsh:    { levy:0.95, arch:1.05, cav:0.6, ret:0.95, mercs:0.9 },
+    tundra:   { levy:1, arch:1, cav:0.85, ret:1, mercs:0.95 }
+  },
+  /* the standing host's home-ground edge by battle terrain: the host holding
+     the province (no march in progress; ties broken by the saved RNG) adds
+     this fraction of its power */
+  terrainDefenseBonus: { hills:0.1, mountains:0.2, forest:0.1, marsh:0.15 },
+  /* marching into a province costs armyMarchDays × this for its terrain;
+     the route search minimizes days, so hosts detour around bad going */
+  terrainMarchMult: {
+    farmland:1, forest:1.25, hills:1.15, mountains:2,
+    desert:1.3, steppe:0.9, marsh:1.5, tundra:1.5
+  },
+  /* supply lines: every host carries 0–100 supply. It refills on its own,
+     its sovereign's, or allied land and drains abroad by terrain, season,
+     and depth past the friendly frontier; at 0 the host starves */
+  supplyRecoverRate: 3, // supply points a host on friendly land regains per day
+  supplyFortRecoverMult: 1.5, // resupply multiplier in a county with a friendly fort (depot effect)
+  supplyDevastatedRecoverFloor: 0.4, // resupply multiplier floor on a war-worn county (development below its baseline)
+  supplyDrainBase: 1.2, // supply points a host on neutral or hostile land loses per day
+  supplyDrainTerrain: { // the terrain being crossed multiplies the daily drain
+    farmland:1, forest:1.1, hills:1.1, mountains:1.4,
+    desert:1.5, steppe:1.05, marsh:1.3, tundra:1.4
+  },
+  supplyWinterDrainMult: 1.5, // winter multiplies the daily drain abroad
+  supplyDistanceDepth: 0.25, // the drain grows by this per county of distance from the nearest friendly land
+  supplyAttritionPerDay: 0.01, // fraction of the host lost to hunger each day at 0 supply
+  supplyStarvedPowerMult: 0.75, // battle power multiplier at 0 supply
+  supplyLowThreshold: 30, // below this the host reads Low and fights worse
+  supplyLowPowerMult: 0.9, // battle power multiplier below the low threshold
+  /* player host logistics per season: base camp cost once for any raised
+     host, then each class's `upkeepPer100` (FBDATA.unitClasses) per 100 live
+     soldiers of that class, plus the fixed contract cost per hired company */
+  hostLogisticsBase: 2,
   hostLogisticsMercenaryCompany: 4,
   /* loss-aware campaign events: Empty Bedrolls needs a recent defeat,
      meaningful recorded losses, a live host, and a per-war interval */
@@ -1322,6 +1391,7 @@ FBDATA.balance = {
   attainderStandingGate: -30, // liege Standing at which flagged defiance is prosecuted as felony
   attainderFineByTier: [0,0,0,15,30,50,80,0], // the price of the liege's mercy by the player's tier
   captureChanceBase: 0.35, // odds a beaten tier-3+ leader is taken on the field
+  captureChanceEncircled: 0.6, // ...when their host shatters while cut off (FB.hostCutOff)
   ransomByTier: [0,0,0,25,40,70,120,200], // the captor's demand by the prisoner's dignity
   ransomSeasonReleaseChance: 0.2, // each season in the cell: parole, escape, or exchange
   distraintGraceDays: 90, // a defaulted loan's writ of distraint arrives this long after default
@@ -1436,6 +1506,10 @@ FBDATA.balance = {
   parliamentSessionChance: 0.5, // yearly odds the liege summons the estates to sit
   parliamentSubsidyGold: 20, // the war subsidy the estates may vote their liege
   parliamentMotionCost: 15, // gold to sound out fellow lords and put a motion before the estates
+  /* royal religious-tolerance and settlement policy (tier 6+, js/institutions.js) */
+  realmPolicyChangeCost: 20, // gold to proclaim a new level of a royal policy family
+  realmPolicyProtectedWorshipDays: 1440, // leaving Protected Worship before this term is an unlawful revocation
+  realmPolicySettlementDevChance: 0.25, // seasonal odds Encouraged Settlement raises one held county's development
   /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,

@@ -211,7 +211,8 @@ test('the catalog drives availability, wartime gates, and per-family cooldowns',
     expect(result.ids).toEqual([
       'redress', 'emergency_subsidy', 'scutage', 'levy_relief',
       'market_charter', 'local_custom', 'revocation_consent',
-      'war_authorization', 'war_condemnation'
+      'war_authorization', 'war_condemnation',
+      'religious_tolerance', 'settlement_policy'
     ]);
     expect(result.peacetime.redress.ready).toBe(true);
     expect(result.peacetime.scutage.ready).toBe(true);

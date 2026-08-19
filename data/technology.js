@@ -51,7 +51,7 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techCaps = {
     tax:0.35, levy:0.35, battle:0.15, devCap:4, health:0.03,
     research:5, domain:2, siege:0.35, movement:0.25, seaMovement:0.40,
-    education:0.20, finance:0.30, trade:0.30,
+    education:0.20, finance:0.30, trade:0.30, supply:0.25,
     populationCapacity:0.35, populationCrisisProtection:0.10, migrationAttraction:3,
     costFloor:{ build:0.55, enterprise:0.55, training:0.65 },
     units:{ levy:250, arch:200, cav:160, ret:160 },
@@ -111,6 +111,14 @@ window.FBDATA = window.FBDATA || {};
         mode:'hard', tech:['customary_law','authenticated_seals'],
         fallback:'other_service_charters',
         rationale:'A durable liberties charter requires recorded law and an authenticated seal.'
+      },
+      royal_religious_tolerance_policy:{
+        mode:'none',
+        rationale:'Tolerance and persecution are social and confessional prerogatives of the crown; no innovation credibly unlocks or improves proclaiming them.'
+      },
+      royal_settlement_policy:{
+        mode:'none',
+        rationale:'Closing or inviting settlement is a royal proclamation exercised through existing county modifiers, migration draw, and development; the baseline needs no research and no credible dependency belongs here.'
       },
       tournament_jousting:{
         mode:'hard', tech:['cavalry_lances'], fallback:'melee_attendance_patronage_or_wagers',
@@ -205,6 +213,30 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Baseline return cargo is an ordinary merchant commodity purchase at destination markets available to any accompanied trade traveler.'
       },
+      soldier_command_assignments:{
+        mode:'none',
+        rationale:'Scouting, rearguard, and peacetime drill stories extend the existing Soldiering career, which already inherits its own spear-and-drill technology requirement; leading a small party needs no separate innovation.'
+      },
+      physician_practice_stories:{
+        mode:'none',
+        rationale:'Outbreaks, bedside calls, and the Book of Remedies ride the existing Medicine career and Physician specialty, which carry their own Herbals and Physicians gates; the stories add no separately gateable capability.'
+      },
+      learned_master_works:{
+        mode:'none',
+        rationale:'The Star Tables and commissioned treatises are reachable only through master specialties that already carry Scriptoria and Astrolabe gates; the durable works themselves add no new research dependency.'
+      },
+      mercenary_contracts:{
+        mode:'none',
+        rationale:'A sustained paid-service contract with a warring realm is personal military service extended over seasons; no innovation credibly unlocks or improves selling a sword.'
+      },
+      adventuring_expeditions:{
+        mode:'none',
+        rationale:'Foreign expeditions reuse ordinary travel, whose transport standards already carry the technology interaction; seeing foreign lands needs no separate research gate.'
+      },
+      commoner_frontier_settlement:{
+        mode:'none',
+        rationale:'Withdrawing into an empty wasteland and proving a homestead is a core recovery and life-path choice for freeholders and gentry; it rides ordinary travel, holdings, and the shared wasteland materialization, and no innovation credibly unlocks walking onto empty land.'
+      },
       building_university:{
         mode:'hard', tech:['universities'], fallback:'library',
         rationale:'Corporate university centers require organized universities knowledge; ordinary libraries remain available.'
@@ -268,6 +300,37 @@ window.FBDATA = window.FBDATA || {};
       culture_adoption:{
         mode:'none',
         rationale:'Adopting another people’s language and customs is a personal and social act with no credible technology dependency; courts and households assimilated long before any researched practice.'
+      },
+      field_supply_attrition:{
+        mode:'soft', tech:['pack_saddles','wheeled_carts','logistics_magazines'],
+        rationale:'Every field host carries supply, refills it on friendly land, and starves abroad from the baseline; pack, cart, and magazine innovations stretch how long a campaign can range before attrition bites.'
+      },
+      terrain_combat_modifiers:{
+        mode:'none',
+        rationale:'Terrain battle factors, home-ground defense, and march costs apply to every host in every age; no credible period technology gates reading the ground, so no dependency is invented.'
+      },
+      new_unit_classes:{
+        mode:'hard',
+        tech:['crossbows','infantry_polearms','cataphract_armor'],
+        fallback:'baseline_five_unit_classes',
+        rationale:'Crossbow, pike, and cataphract companies join the muster only after their named innovations; every realm fields the baseline levy, archer, cavalry, retinue, and mercenary classes without them, and hosts already fielded keep their composition after any technology loss.'
+      },
+      culture_unit_classes:{
+        mode:'none',
+        rationale:'Horse-archer, huscarl, and camel-rider companies gate on the mustering realm’s culture alone; no period technology credibly blocks a people’s traditional arm, so no dependency is invented.'
+      },
+      host_splitting_encirclement:{
+        mode:'none',
+        rationale:'Splitting and merging field hosts, and the destruction of a host shattered while cut off, are core play available from the baseline; no credible period technology gates dividing an army or reading whether a road home remains, so no dependency is invented.'
+      },
+      unit_attack_defense_roles:{
+        mode:'none',
+        rationale:'Attack and defense values are intrinsic doctrine of each unit class in core battle resolution, available to every realm from the baseline; no period technology credibly blocks a class fighting differently on the attack than on the defense, so no dependency is invented.'
+      },
+      professional_replacement_cohorts:{
+        mode:'none',
+        rationale:'Re-drilling slain professionals at a reinforcement premium is core war play owned by the realm; the unit classes themselves already carry their technology gates, so a second gate on replacing them would double-lock the same content.'
+      }
       }
     }
   };
@@ -543,10 +606,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:TRADITIONS, unlocks:['rule:regulated_tolls'], fx:{ tax:0.005 } });
   add('pack_saddles','Pack Saddles','🐴','commerce',[-500,600],[-100,400],[],
     'Balanced frames let animals carry bulky loads over poor roads.',
-    { leaders:TRADITIONS, unlocks:['rule:pack_transport'] });
+    { leaders:TRADITIONS, unlocks:['rule:pack_transport'], fx:{ supply:0.05 } });
   add('wheeled_carts','Iron-Tired Carts','🛞','commerce',[-500,600],[500,700],['bloomery_iron'],
     'Iron fittings and durable wheels extend the useful life of carts.',
-    { leaders:TRADITIONS, unlocks:['rule:wheeled_transport'] });
+    { leaders:TRADITIONS, unlocks:['rule:wheeled_transport'], fx:{ supply:0.05 } });
   add('warehouses','Warehouses','🏚','commerce',[-300,600],[500,720],['cooperage'],
     'Dedicated stores gather goods safely between harvest, voyage, and sale.',
     { leaders:TRADITIONS, unlocks:['rule:warehousing','building:granary'] });
@@ -756,7 +819,7 @@ window.FBDATA = window.FBDATA || {};
     'A permanent writing office carries the crown beyond one household.',
     { leaders:['byzantine','latin','islamic'], unlocks:['rule:royal_chancery'], fx:{ research:0.25, domain:1 } });
 
-  /* Warfare and fortification — 32. */
+  /* Warfare and fortification — 33. */
   add('spear_shield_drill','Spear and Shield Drill','🛡','warfare',[-1000,500],[-500,300],[],
     'Repeated formation practice coordinates ordinary infantry.',
     { leaders:TRADITIONS, unlocks:['unit:levy','career:soldier'] });
@@ -807,7 +870,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin','caucasian'], unlocks:['building:keep'], fx:{ siege:0.03 } });
   add('crossbows','Military Crossbows','🏹','warfare',[500,1100],[850,1100],['iron_weaponry'],
     'Mechanical bows trade shooting speed for power and modest training demands.',
-    { leaders:['byzantine','islamic','latin'], unlocks:['building:archery_butts','rule:crossbow_levies'], fx:{ units:{ arch:15 }, aiUnits:{ arch:0.02 } } });
+    { leaders:['byzantine','islamic','latin'], unlocks:['building:archery_butts','rule:crossbow_levies','unit:crossbow'], fx:{ units:{ arch:15 }, aiUnits:{ arch:0.02 } } });
   add('siege_engineering','Siege Engineering','🪨','warfare',[650,1100],[850,1120],['torsion_artillery','geometry'],
     'Specialists calculate engines, earthworks, approaches, and bombardment.',
     { leaders:['byzantine','islamic','persianate','latin'], unlocks:['rule:siege_engineers'], fx:{ siege:0.04 } });
@@ -831,7 +894,10 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:concentric_castles'], fx:{ siege:0.04 } });
   add('infantry_polearms','Infantry Polearms','🔱','warfare',[1050,1300],[1170,1320],['iron_weaponry','martial_drill'],
     'Long hafted weapons give ordered infantry reach against riders and armor.',
-    { leaders:['latin','byzantine','slavic'], unlocks:['rule:polearm_blocks'], fx:{ battle:0.008 } });
+    { leaders:['latin','byzantine','slavic'], unlocks:['rule:polearm_blocks','unit:pike'], fx:{ battle:0.008 } });
+  add('cataphract_armor','Cataphract Barding','♞','warfare',[400,950],[550,1000],['scale_lamellar','cavalry_saddles'],
+    'Full armor for horse and rider creates a slow, near-untouchable shock cavalry.',
+    { leaders:['byzantine','caucasian'], unlocks:['unit:cataphract'] });
   add('combined_arms','Combined Arms','⚔','warfare',[1050,1300],[1190,1330],['martial_drill'],
     'Bow, horse, and armored foot coordinate their different strengths.',
     { reqAny:['cavalry_lances','mounted_archery'], leaders:['byzantine','islamic','latin','steppe'], unlocks:['rule:combined_arms'], fx:{ battle:0.015, units:{ arch:10, cav:10 }, aiUnits:{ arch:0.01, cav:0.01 } } });
@@ -849,7 +915,7 @@ window.FBDATA = window.FBDATA || {};
     { leaders:['byzantine','islamic','latin'], unlocks:['rule:fortified_gates'] });
   add('logistics_magazines','Military Magazines','📦','warfare',[900,1250],[1050,1280],['warehouses','tax_assessment'],
     'Designated stores and requisition records sustain forces away from harvest-time supply.',
-    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:military_magazines'], fx:{ movement:0.02 } });
+    { leaders:['byzantine','islamic','persianate'], unlocks:['rule:military_magazines'], fx:{ movement:0.02, supply:0.1 } });
   add('gunpowder_knowledge','Gunpowder Knowledge','💥','warfare',[1200,1320],[1270,1380],['algebra','distillation'],
     'Recipes for saltpeter mixtures open a new field of incendiary and explosive experiment.',
     { leaders:['islamic','persianate'], unlocks:['rule:gunpowder_experiment'], confidence:'medium', sources:['NEEDHAM','DEVRIES'] });

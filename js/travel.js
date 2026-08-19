@@ -13,7 +13,25 @@ window.FB = window.FB || {};
     const pr = FB.world && FB.world.byId[pid];
     return !!(pr && !pr.wasteland && pr.culture && pr.religion);
   }
-  function queueItem(state, id, travel) {
+  function mercContractSeasonsTotal() {
+    return Math.max(1, Math.floor(balance('mercContractSeasons', 4)));
+  }
+  function mercContractPay() {
+    return Math.max(0, Number(balance('mercContractSeasonPay', 6)) || 0);
+  }
+  function mercContractCompletion() {
+    return Math.max(0, Number(balance('mercContractCompletionGold', 20)) || 0);
+  }
+  function mercContractServed(state, contract) {
+    return Math.max(0, Math.floor((state.turn - contract.startedTurn) / 90));
+  }
+  function mercContractAtWar(state, contract) {
+    const realm = contract.realmId && state.realms[contract.realmId];
+    return !!(realm && realm.alive &&
+      FB.isRealmAtWar(state, contract.realmId));
+  }
+
+  function queueItem(state, id, travel, extra) {
     const loc = FB.world.byId[travel.currentId];
     const dest = FB.world.byId[travel.destinationId];
     const ctx = {
@@ -22,6 +40,20 @@ window.FB = window.FB || {};
     };
     const target = travel.targetCharId && state.chars[travel.targetCharId];
     if (target) ctx.visitname = FB.fullName(target);
+    /* Contract stories quote the same frozen terms as the offer. */
+    if (travel.contract) {
+      ctx.realmId = travel.contract.realmId;
+      ctx.mercPay = mercContractPay();
+      ctx.mercSeasons = mercContractSeasonsTotal();
+      ctx.mercPurse = mercContractCompletion();
+      ctx.mercServed = Math.min(
+        mercContractServed(state, travel.contract), ctx.mercSeasons);
+    }
+    if (extra) {
+      for (const key in extra) {
+        if (Object.prototype.hasOwnProperty.call(extra, key)) ctx[key] = extra[key];
+      }
+    }
     FB.queueEvent(state, id, ctx, { travel:true });
   }
   function clearQueued(state) {
@@ -104,6 +136,40 @@ window.FB = window.FB || {};
         delete t.marriageResidence;
       } else {
         residence.promptPending = !!residence.promptPending;
+      }
+    }
+    /* An active mercenary contract rides the paid-service journey that
+       created it. Additive repair keeps old saves (and mods) safe: a damaged
+       record is dropped, never invented. */
+    if (t && t.contract !== undefined) {
+      const contract = t.contract;
+      if (!contract || typeof contract !== 'object' || Array.isArray(contract) ||
+          typeof contract.realmId !== 'string') {
+        delete t.contract;
+      } else {
+        if (!isFinite(Number(contract.startedTurn))) {
+          contract.startedTurn = state.turn;
+        }
+        contract.paidSeasons = Math.max(0, Number(contract.paidSeasons) || 0);
+        contract.renewals = Math.max(0, Number(contract.renewals) || 0);
+      }
+    }
+    /* A frontier withdrawal rides the journey record: the gateway, its
+       controller, and the sovereign are snapshotted at departure and the
+       milestones accrue during the stay. A damaged record is dropped, never
+       invented; the tick and validation paths then cancel the journey because
+       the attempt can no longer be resolved honestly. */
+    if (t && t.purpose === 'frontier') {
+      const frontier = t.frontier;
+      if (!frontier || typeof frontier !== 'object' || Array.isArray(frontier) ||
+          typeof frontier.gatewayId !== 'string' ||
+          typeof frontier.charId !== 'string') {
+        t.frontier = null;
+      } else {
+        frontier.milestones = Math.max(0,
+          Math.floor(Number(frontier.milestones) || 0));
+        if (typeof frontier.holderId !== 'string') frontier.holderId = null;
+        if (typeof frontier.sovereignId !== 'string') frontier.sovereignId = null;
       }
     }
     return t;
@@ -908,6 +974,64 @@ window.FB = window.FB || {};
             null, search);
         }
       }
+    } else if (def.mode === 'foreign') {
+      /* Expeditions seek what the traveler is not: every reachable settled
+         county of another culture, nearest first, bounded by the configured
+         destination cap so the picker stays a list rather than an atlas. */
+      const homeCulture = me(state).culture;
+      const provs = FB.world.provs || [];
+      for (let i = 0; i < provs.length; i++) {
+        const pr = provs[i];
+        if (!pr.culture || pr.culture === homeCulture) continue;
+        addDestination(state, out, seen, purposeId, pr.id, null, null, search);
+      }
+      sortDestinations(out);
+      const cap = Math.max(1,
+        Math.floor(balance('travelExpeditionMaxDestinations', 40)));
+      return out.slice(0, cap);
+    } else if (def.mode === 'frontier') {
+      /* Withdrawal into the wastes: the destination is a wasteland, but the
+         route reaches it through one settled gateway county — entirely settled
+         legs, then a single final wasteland leg. The nearest reachable gateway
+         anchors the attempt; county ids break ties deterministically. */
+      const legDays = FB.travelLegDays(state);
+      const provs = FB.world.provs || [];
+      for (let i = 0; i < provs.length; i++) {
+        const waste = provs[i];
+        if (!waste.wasteland || seen[waste.id]) continue;
+        const adjacency = FB.world.adj[waste.id] || {};
+        const gateways = [];
+        for (const nb in adjacency) {
+          if (settled(nb)) gateways.push(nb);
+        }
+        gateways.sort();
+        let best = null;
+        for (let gi = 0; gi < gateways.length; gi++) {
+          const gatewayId = gateways[gi];
+          const settledRoute = routeFromSearch(search, gatewayId);
+          /* An empty route means the gateway IS the home county: the
+             withdrawal is one wasteland leg. */
+          if (!settledRoute) continue;
+          const route = settledRoute.concat([waste.id]);
+          if (!best || route.length < best.route.length) {
+            best = { gatewayId:gatewayId, route:route };
+          }
+        }
+        if (!best) continue;
+        seen[waste.id] = 1;
+        out.push({
+          purpose:purposeId,
+          destinationId:waste.id,
+          destinationRealm:null,
+          gatewayId:best.gatewayId,
+          route:best.route,
+          legs:best.route.length,
+          days:best.route.length * legDays,
+          legDays:legDays,
+          development:1,
+          cost:FB.travelCost(purposeId, best.route, state)
+        });
+      }
     }
     return sortDestinations(out);
   };
@@ -979,6 +1103,19 @@ window.FB = window.FB || {};
     if (opts.targetRulerRealm) {
       p.travel.targetRulerRealm = opts.targetRulerRealm;
       p.travel.targetRulerGeneration = opts.targetRulerGeneration;
+    }
+    /* The frontier attempt freezes everything needed to resolve a later
+       settlement: the anchor gateway, its political holder and controlling
+       sovereign, and the protagonist. The route, cost, and departure turn are
+       already snapshotted on the journey record itself. */
+    if (purposeId === 'frontier' && choice.gatewayId) {
+      p.travel.frontier = {
+        gatewayId: choice.gatewayId,
+        holderId: (state.holder && state.holder[choice.gatewayId]) || null,
+        sovereignId: provinceSovereign(state, choice.gatewayId),
+        charId: p.charId,
+        milestones: 0
+      };
     }
     p.travel.seenCultures[me(state).culture] = 1;
     clearQueued(state);
@@ -1145,6 +1282,15 @@ window.FB = window.FB || {};
           state.player.tier < ev.travel.minTier) continue;
       if (ev.travel.maxTier !== undefined &&
           state.player.tier > ev.travel.maxTier) continue;
+      /* contract:true stories exist only while a mercenary contract is
+         served; contract:false stories stand down for its duration. */
+      if (ev.travel.contract === true && !travel.contract) continue;
+      if (ev.travel.contract === false && travel.contract) continue;
+      /* A frontier withdrawal happens in an empty waste: only purpose-written
+         survival and work stories exist there, never the settled-county work
+         that presumes neighbors, stalls, or a hall. */
+      if (kind === 'work' && travel.purpose === 'frontier' &&
+          ev.travel.purpose !== 'frontier') continue;
       out.push(ev);
     }
     return out;
@@ -1182,6 +1328,7 @@ window.FB = window.FB || {};
   function tickDestinationStay(state) {
     const t = state.player.travel;
     if (!t || !t.completed || t.stayStartTurn === undefined) return;
+    tickMercenaryContract(state, t);
     if (t.nextWorkTurn === undefined) t.nextWorkTurn = state.turn + nextWorkDelay();
     if (state.turn < t.nextWorkTurn) return;
     queueWork(state);
@@ -1194,6 +1341,94 @@ window.FB = window.FB || {};
     return !!(realm && realm.alive && realm.capital === t.destinationId);
   }
 
+  /* A paid-service journey to a warring realm's capital becomes a sustained
+     mercenary contract when the traveler is a working soldier. The contract
+     lives on the journey record, so every ordinary travel exit — return,
+     turn back, settlement, succession, or cancellation — disposes of it. */
+  FB.mercContractOffer = function (state, t) {
+    if (!t || t.purpose !== 'service' || t.contract) return false;
+    if (!servicePatronAlive(state, t)) return false;
+    if (!FB.isRealmAtWar(state, t.destinationRealm)) return false;
+    const career = FB.careerOf && FB.careerOf(state, me(state));
+    if (!career || !career.chosen || career.profession !== 'soldier') return false;
+    return career.rank === 'journeyman' || career.rank === 'master';
+  };
+
+  FB.mercContractActive = function (state) {
+    const t = state && state.player && state.player.travel;
+    return !!(t && t.contract);
+  };
+
+  /* Seasonal pay while the contract stands, then the completion or
+     peace audiences. Each is queued once per contract term. */
+  function tickMercenaryContract(state, t) {
+    const contract = t && t.contract;
+    if (!contract) return;
+    if (!mercContractAtWar(state, contract)) {
+      if (!contract.peaceQueued) {
+        contract.peaceQueued = true;
+        queueItem(state, 'travel_merc_contract_peace', t);
+      }
+      return;
+    }
+    const total = mercContractSeasonsTotal();
+    const served = Math.min(mercContractServed(state, contract), total);
+    while ((contract.paidSeasons || 0) < served) {
+      contract.paidSeasons++;
+      state.player.gold += mercContractPay();
+      const realm = state.realms[contract.realmId];
+      FB.news(state, FB.msg('news.lifepath.merc_pay',
+        '⚔ The paymaster of {realm} counts out {money:pay} for the season’s service.', {
+          realm:realm ? realm.name : contract.realmId,
+          pay:mercContractPay()
+        }));
+    }
+    if (served >= total && !contract.completeQueued) {
+      contract.completeQueued = true;
+      queueItem(state, 'travel_merc_contract_complete', t);
+    }
+  }
+
+  /* Coming home settles the contract one way or the other: a served-out
+     term pays its purse even if the farewell audience never opened, while
+     an abandoned term costs Standing with the patron. */
+  function settleContractOnReturn(state, t) {
+    const contract = t && t.contract;
+    if (!contract) return;
+    delete t.contract;
+    const realm = contract.realmId && state.realms[contract.realmId];
+    const realmName = realm ? realm.name : contract.realmId;
+    if (mercContractServed(state, contract) >= mercContractSeasonsTotal()) {
+      state.player.gold += mercContractCompletion();
+      FB.news(state, FB.msg('news.lifepath.merc_fulfilled',
+        '⚔ The contract with {realm} is served out; the final purse of {money:purse} travels home with you.', {
+          realm:realmName, purse:mercContractCompletion()
+        }));
+    } else {
+      if (realm && realm.alive && FB.adjustStanding) {
+        FB.adjustStanding(state, { kind:'realm', id:contract.realmId },
+          balance('mercContractAbandonStanding', -8), 'merc_contract_abandon');
+      }
+      FB.news(state, FB.msg('news.lifepath.merc_abandoned',
+        '⚔ You leave the contract with {realm} before its term; the company will remember.', {
+          realm:realmName
+        }));
+    }
+  }
+
+  /* A frontier journey can only continue while its saved attempt record still
+     resolves: same protagonist, a recorded gateway, and a destination that is
+     still empty land. Anything else ends the attempt through the ordinary
+     journey cleanup — no homestead, no property. */
+  function frontierAttemptValid(state, t) {
+    if (!t || t.purpose !== 'frontier') return true;
+    const frontier = t.frontier;
+    if (!frontier || typeof frontier.gatewayId !== 'string') return false;
+    if (frontier.charId !== state.player.charId) return false;
+    const destination = FB.world.byId[t.destinationId];
+    return !!(destination && destination.wasteland);
+  }
+
   function arriveDestination(state) {
     const t = state.player.travel;
     if (!t) return;
@@ -1202,12 +1437,19 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[t.destinationId];
     const c = me(state);
     /* A genuinely foreign destination guarantees one mismatch story when the
-       road has not already supplied one. */
-    if (pr && pr.culture !== c.culture && !t.encounters.culture) {
+       road has not already supplied one. A wasteland has no culture, so the
+       frontier's final leg never produces one. */
+    if (pr && pr.culture && pr.culture !== c.culture && !t.encounters.culture) {
       queueEncounter(state, 'culture');
     }
     if (t.purpose === 'service' && !servicePatronAlive(state, t)) {
       queueItem(state, 'travel_patron_gone', t);
+    } else if (FB.mercContractOffer(state, t)) {
+      queueItem(state, 'travel_capstone_mercenary', t, {
+        realmId:t.destinationRealm,
+        mercPay:mercContractPay(),
+        mercSeasons:mercContractSeasonsTotal()
+      });
     } else {
       queueItem(state, 'travel_capstone_' + t.purpose, t);
     }
@@ -1219,7 +1461,7 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[t.currentId];
     const c = me(state);
     const destination = t.currentId === t.destinationId && t.phase === 'outbound';
-    if (pr && pr.culture !== c.culture && !t.seenCultures[pr.culture] &&
+    if (pr && pr.culture && pr.culture !== c.culture && !t.seenCultures[pr.culture] &&
       t.encounters.culture < balance('travelCultureEventCap', 3) &&
       (destination || FB.chance(0.65))) {
       queueEncounter(state, 'culture');
@@ -1239,6 +1481,7 @@ window.FB = window.FB || {};
     const t = p.travel;
     if (!t) return;
     clearQueued(state);
+    settleContractOnReturn(state, t);
     if (t.returnVenture && t.returnVenture.status === 'active' &&
         FB.resolveReturnTradeVenture) {
       FB.resolveReturnTradeVenture(state, t);
@@ -1347,7 +1590,8 @@ window.FB = window.FB || {};
     if (p.dead || !purpose(t.purpose) ||
       !purposeTierAllowed(state, purpose(t.purpose)) ||
       (p.flags && p.flags.in_prison) ||
-      FB.atWarPersonally(state)) {
+      FB.atWarPersonally(state) ||
+      !frontierAttemptValid(state, t)) {
       FB.travelCancel(state);
       return;
     }
@@ -1402,6 +1646,11 @@ window.FB = window.FB || {};
     if (!t || t.phase !== 'arrived') return FB.T('Reach the destination first.');
     if (p.tier < 1 || p.tier > 2) {
       return FB.T('Only freeholders and gentry may relocate the household this way.');
+    }
+    /* A frontier withdrawal never relocates into empty land through the
+       ordinary rule: the homestead has to be proven first. */
+    if (!settled(t.destinationId)) {
+      return FB.T('Only a settled county can become a permanent home this way.');
     }
     if (p.travelSettlement) {
       return FB.T('{name} has already made the one permanent move allowed in this lifetime.', {
@@ -1510,6 +1759,16 @@ window.FB = window.FB || {};
     const rival = FB.getRole ? FB.getRole(state, 'rival', false) : null;
     if (rival) rival.homeProvinceId = t.homeId;
     clearQueued(state);
+    /* Settling in the patron's own lands ends a mercenary contract in good
+       order: no purse, no abandonment penalty, no leftover record. */
+    if (t.contract) {
+      const contractRealm = state.realms[t.contract.realmId];
+      delete t.contract;
+      FB.news(state, FB.msg('news.lifepath.merc_released',
+        '⚔ The contract with {realm} ends in good order; the camp keeps only your name.', {
+          realm:contractRealm ? contractRealm.name : 'the patron'
+        }));
+    }
     p.provinceId = destination;
     if (FB.localCouncilValidate) FB.localCouncilValidate(state, false);
     FB.changePlayerLiege(state, null, 'travel:flight');
@@ -1665,6 +1924,131 @@ window.FB = window.FB || {};
       }));
   };
 
+  /* ================= FRONTIER SETTLEMENT =================
+     A frontier withdrawal (purpose 'frontier') ends not in relocation to a
+     settled county but in the materialization of a brand-new one: the shared
+     FB.materializeWasteland helper turns the empty land into a development-1
+     county of the settler's own culture and faith, owned and held by the
+     gateway county's current political controller. The household then moves
+     through the ordinary travel-settlement cleanup — consuming the character's
+     one lifetime permanent move — and receives a starter land plot, never a
+     county title or a demesne entry. */
+
+  function frontierMilestonesRequired() {
+    return Math.max(1, Math.floor(balance('frontierMilestonesRequired', 4)));
+  }
+
+  FB.frontierSettlementEligible = function (state) {
+    const p = state.player;
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'frontier') {
+      return FB.T('Only a withdrawal into the wastes can found a frontier homestead.');
+    }
+    if (t.phase !== 'arrived') return FB.T('Reach the wasteland first.');
+    const frontier = t.frontier;
+    if (!frontierAttemptValid(state, t)) {
+      return FB.T('This frontier attempt can no longer be completed.');
+    }
+    if (p.tier < 1 || p.tier > 2) {
+      return FB.T('Only freeholders and gentry may homestead the frontier.');
+    }
+    if (p.travelSettlement) {
+      return FB.T('{name} has already made the one permanent move allowed in this lifetime.', {
+        name:FB.fullName(me(state))
+      });
+    }
+    const gateway = FB.world.byId[frontier.gatewayId];
+    if (!gateway || !settled(frontier.gatewayId)) {
+      return FB.T('The gateway county can no longer anchor a frontier settlement.');
+    }
+    if (!FB.world.adj[frontier.gatewayId] ||
+        !FB.world.adj[frontier.gatewayId][t.destinationId]) {
+      return FB.T('The gateway no longer borders this waste.');
+    }
+    const remaining = balance('travelSettleOfferDays', 360) - stayDays(state, t);
+    if (remaining > 0) {
+      return FB.T('The land can only be claimed after {days} more days of living from it.', {
+        days:remaining
+      });
+    }
+    const required = frontierMilestonesRequired();
+    if ((frontier.milestones || 0) < required) {
+      return FB.T('Prove the homestead through more frontier work — {done} of {needed} tasks endured.', {
+        done:frontier.milestones || 0, needed:required
+      });
+    }
+    return true;
+  };
+
+  /* Read-only progress summary for the Deeds commitment row and the
+     settlement sheet: gateway, phase, milestones, residence, and whether
+     permanent settlement is available. Nothing here is saved state. */
+  FB.frontierStatus = function (state) {
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'frontier' || !t.frontier) return null;
+    const gateway = FB.world.byId[t.frontier.gatewayId];
+    const required = frontierMilestonesRequired();
+    const stayed = stayDays(state, t);
+    const residence = balance('travelSettleOfferDays', 360);
+    const eligible = t.phase === 'arrived'
+      ? FB.frontierSettlementEligible(state) : null;
+    return {
+      gatewayId: t.frontier.gatewayId,
+      gatewayName: gateway ? gateway.name : t.frontier.gatewayId,
+      phase: t.phase,
+      milestones: t.frontier.milestones || 0,
+      milestonesRequired: required,
+      stayDays: stayed,
+      residenceRequired: residence,
+      settlementReady: eligible === true,
+      settlementReason: eligible === true ? null : eligible
+    };
+  };
+
+  FB.frontierSettle = function (state) {
+    const p = state.player;
+    const t = FB.travelEnsure(state);
+    if (FB.frontierSettlementEligible(state) !== true) return false;
+    const frontier = t.frontier;
+    const pid = t.destinationId;
+    const protagonist = me(state);
+    /* The gateway's LIVE political controller receives the county; the
+       departure snapshot is the fallback for a damaged political record and
+       the deterministic reference across save/load. */
+    const gatewayId = frontier.gatewayId;
+    const holderId = (state.holder && state.holder[gatewayId]) ||
+      frontier.holderId;
+    const ownerId = (state.owner && state.owner[gatewayId]) ||
+      frontier.sovereignId ||
+      (holderId && FB.topRealm ? FB.topRealm(state, holderId) : holderId);
+    if (!holderId || !ownerId || !protagonist) return false;
+    const done = FB.materializeWasteland && FB.materializeWasteland(state, pid, {
+      culture: protagonist.culture,
+      religion: protagonist.religion,
+      holderId: holderId,
+      ownerId: ownerId
+    });
+    if (!done) return false;
+    const gatewayName = FB.world.byId[gatewayId].name;
+    const moved = relocateHousehold(state, pid, t,
+      FB.msg('news.travel.frontier_settled',
+        '🛖 The household raises a permanent homestead in {province}, on land answerable to the lord of {gateway}.', {
+          province:done.name, gateway:gatewayName
+        }));
+    if (!moved) return false;
+    /* The starter homestead: ordinary commoner land plots at the county head,
+       inheritable and productive under the existing holdings rules. */
+    const plots = Math.max(1,
+      Math.floor(Number(balance('frontierSettlementPlots', 1)) || 1));
+    const land = FB.landPlots(state);
+    for (let i = 0; i < plots; i++) {
+      land.push({ provinceId:pid, settlement:0 });
+    }
+    FB.news(state, FB.msg('news.travel.frontier_plot',
+      '🌾 The family clears its first field at the new homestead — land held by labor and custom.', {}));
+    return true;
+  };
+
   FB.travelCancel = function (state, reason, silent) {
     const p = state && state.player;
     if (!p || !p.travel) return false;
@@ -1704,7 +2088,8 @@ window.FB = window.FB || {};
     if (p.dead || !purpose(t.purpose) ||
       !purposeTierAllowed(state, purpose(t.purpose)) ||
       (p.flags && p.flags.in_prison) ||
-      FB.atWarPersonally(state)) {
+      FB.atWarPersonally(state) ||
+      !frontierAttemptValid(state, t)) {
       FB.travelCancel(state);
       return false;
     }
@@ -1723,8 +2108,10 @@ window.FB = window.FB || {};
     clearQueued(state);
     queueItem(state, t.purpose === 'relationship'
       ? 'travel_arrival_choice_relationship'
-      : (state.player.tier >= 3
-        ? 'travel_arrival_choice_ruler' : 'travel_arrival_choice'), t);
+      : (t.purpose === 'frontier'
+        ? 'travel_arrival_choice_frontier'
+        : (state.player.tier >= 3
+          ? 'travel_arrival_choice_ruler' : 'travel_arrival_choice')), t);
   };
 
   FB.travelTradeSettle = function (state, outcome, multiplier) {
@@ -1796,6 +2183,129 @@ window.FB = window.FB || {};
     const def = career && FBDATA.careers[career.profession];
     if (career) career.experience = (career.experience || 0) + 1;
     FB.gainSkill(c, def && def.skill ? def.skill : 'ste', 1);
+  };
+
+  /* Signing on freezes the contract on the journey record and starts the
+     ordinary destination stay; the patron realm is revalidated live at pay,
+     completion, and renewal so a collapsed or pacified realm cannot pay. */
+  FB.fns.merc_contract_accept = function (state) {
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'service' || t.phase !== 'arrived') return false;
+    /* The stay must always begin — a war that ends between arrival and
+       resolution degrades the signature to ordinary court service rather
+       than stranding the traveler in a stay that never starts. */
+    if (FB.mercContractOffer(state, t)) {
+      t.contract = {
+        realmId:t.destinationRealm,
+        startedTurn:state.turn,
+        paidSeasons:0,
+        renewals:0
+      };
+    }
+    FB.travelCapstoneDone(state);
+    return true;
+  };
+  FB.fns.merc_contract_ongoing = function (state) {
+    const t = FB.travelEnsure(state);
+    return !!(t && t.contract && mercContractAtWar(state, t.contract));
+  };
+  FB.fns.merc_contract_collect = function (state) {
+    const t = FB.travelEnsure(state);
+    const contract = t && t.contract;
+    if (!contract) return false;
+    const p = state.player;
+    const realm = state.realms[contract.realmId];
+    p.gold += mercContractCompletion();
+    delete t.contract;
+    if (!p.flags.merc_standard && FB.grantItem) {
+      const ref = FB.grantItem(state, 'company_standard');
+      if (ref) {
+        p.flags.merc_standard = 1;
+        FB.news(state, FB.msg('news.lifepath.company_standard',
+          '🚩 The captain strikes the company’s standard from its pole and presses it into your hands: {item} — a campaign’s proof to hang at home.', {
+            item:FB.itemParam ? FB.itemParam(state, ref, true) : ref
+          }));
+      }
+    }
+    FB.news(state, FB.msg('news.lifepath.merc_fulfilled',
+      '⚔ The contract with {realm} is served out; the final purse of {money:purse} travels home with you.', {
+        realm:realm ? realm.name : contract.realmId,
+        purse:mercContractCompletion()
+      }));
+    if (FB.travelReturnEligible(state) === true) FB.travelReturn(state);
+    return true;
+  };
+  FB.fns.merc_contract_renew = function (state) {
+    const t = FB.travelEnsure(state);
+    const contract = t && t.contract;
+    if (!contract || !mercContractAtWar(state, contract)) return false;
+    contract.startedTurn = state.turn;
+    contract.paidSeasons = 0;
+    contract.renewals = (contract.renewals || 0) + 1;
+    delete contract.completeQueued;
+    delete contract.peaceQueued;
+    const realm = state.realms[contract.realmId];
+    FB.news(state, FB.msg('news.lifepath.merc_renewed',
+      '⚔ The contract with {realm} is renewed for another term of seasons.', {
+        realm:realm ? realm.name : contract.realmId
+      }));
+    return true;
+  };
+  FB.fns.merc_contract_release = function (state) {
+    const t = FB.travelEnsure(state);
+    const contract = t && t.contract;
+    if (!contract) return false;
+    delete t.contract;
+    const realm = state.realms[contract.realmId];
+    FB.news(state, FB.msg('news.lifepath.merc_released',
+      '⚔ The contract with {realm} ends in good order; the camp keeps only your name.', {
+        realm:realm ? realm.name : contract.realmId
+      }));
+    return true;
+  };
+
+  /* The expedition record is the durable accomplishment of foreign travel:
+     the first charting of a genuinely foreign destination writes the
+     family’s Travel Journal exactly once per protagonist life. */
+  FB.fns.travel_expedition_record = function (state) {
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'expedition' || t.phase !== 'arrived') return false;
+    const p = state.player;
+    const pr = FB.world.byId[t.destinationId];
+    const foreign = !!(pr && pr.culture && pr.culture !== me(state).culture);
+    if (foreign && !p.flags.expedition_journal && FB.grantItem) {
+      const ref = FB.grantItem(state, 'travel_journal');
+      if (ref) {
+        p.flags.expedition_journal = 1;
+        FB.news(state, FB.msg('news.lifepath.travel_journal',
+          '🗺 Months of coasts, customs, and strange tongues become {item}, written down for the family to keep.', {
+            item:FB.itemParam ? FB.itemParam(state, ref, true) : ref
+          }));
+      }
+    }
+    FB.travelCapstoneDone(state);
+    return true;
+  };
+
+  /* Frontier withdrawal stories: a successful piece of frontier work advances
+     the attempt's saved milestone count; the persist-or-turn-back story can
+     only send the traveler home once the ordinary minimum stay has passed. */
+  FB.fns.frontier_milestone = function (state) {
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'frontier' || !t.frontier) return false;
+    t.frontier.milestones = (t.frontier.milestones || 0) + 1;
+    return true;
+  };
+  FB.fns.frontier_leave_ready = function (state) {
+    const t = FB.travelEnsure(state);
+    return !!(t && t.purpose === 'frontier' &&
+      FB.travelReturnEligible(state) === true);
+  };
+  FB.fns.frontier_go_home = function (state) {
+    const t = FB.travelEnsure(state);
+    if (!t || t.purpose !== 'frontier' || t.phase !== 'arrived') return false;
+    if (FB.travelReturnEligible(state) !== true) return false;
+    return FB.travelReturn(state);
   };
 
   /* Map overlay: destination rings while picking, the selected/active route,

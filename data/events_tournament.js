@@ -2,7 +2,7 @@
    Fallowborn — TOURNAMENT EVENTS: bounded jousting invitations for the
    gentry (tier 2) and landed lords (tier 3+). Participation only — no
    hosting, brackets, entrant rosters, or tournament calendar (see
-   docs/plans/political-choice-war-depth-and-life-paths.md, step 4).
+   docs/plans/archive/political-choice-war-depth-and-life-paths.md, step 4).
    Every mounted contest resolves through the existing 'battle' named
    chance: Martial, Brave/Craven, holdings, worn battle gear, blessings.
    ========================================================================= */

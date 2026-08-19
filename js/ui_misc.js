@@ -199,6 +199,9 @@ window.FB = window.FB || {};
     if (fx.unrest) parts.push(FB.T('{amount}% unrest harm', {
       amount:signedPercent(fx.unrest)
     }));
+    if (fx.marketFlow) parts.push(FB.T('{amount}% trade through local markets', {
+      amount:signedPercent(fx.marketFlow)
+    }));
     if (fx.supplyUse) parts.push(FB.T('{amount}% campaign supply use', {
       amount:signedPercent(fx.supplyUse)
     }));

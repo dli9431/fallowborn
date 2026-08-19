@@ -996,6 +996,11 @@ window.FB = window.FB || {};
   FB.politicalMotionForecast = function (state, motionId) {
     var motionDef = policyDef(motionId);
     if (!motionDef) return null;
+    /* Crown-side royal policy is proclaimed, not moved before the Estates;
+       it never enters the bloc forecast. */
+    if (motionDef.institution && motionDef.institution !== 'estates') {
+      return null;
+    }
     if (FB.parliamentActive && !FB.parliamentActive(state)) return null;
     var summary = buildSummary(state);
     if (!summary) return null;

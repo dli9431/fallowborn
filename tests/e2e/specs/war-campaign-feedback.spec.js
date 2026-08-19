@@ -141,7 +141,9 @@ test('filtered declarations initialize campaign feedback and preserve the catalo
     expect(active.cause).toBe('fabricated');
     expect(active.battles).toEqual([]);
     expect(active.effects).toEqual([]);
-    expect(active.losses).toEqual({
+    // loss records are keyed by every unit class (data/units.js); assert the
+    // baseline five without demanding the exact key set
+    expect(active.losses).toMatchObject({
       levy:0, arch:0, cav:0, ret:0, mercs:0
     });
     expect(active.hostMen).toBeGreaterThan(0);
@@ -214,7 +216,7 @@ test('campaign feedback shares battle, class-loss, effect, and upkeep facts',
     });
     expect(result.battles).toEqual(['loss', 'loss']);
     expect(result.streak).toEqual({ outcome:'loss', count:2 });
-    expect(result.losses).toEqual({
+    expect(result.losses).toMatchObject({
       levy:180, arch:0, cav:0, ret:0, mercs:0
     });
     expect(result.lossTotal).toBe(180);
@@ -333,7 +335,9 @@ test('Empty Bedrolls is loss-aware and seeded desertion changes live troops',
     expect(result.first.units.cav).toBe(40);
     expect(result.first.units.ret).toBe(50);
     expect(result.first.units.mercs).toBe(30);
-    expect(result.allocation).toEqual({
+    // the allocator result is keyed by every unit class (data/units.js);
+    // assert the baseline five without demanding the exact key set
+    expect(result.allocation).toMatchObject({
       total:65, levy:20, arch:20, cav:5, ret:0, mercs:20
     });
     expect(result.first.interval).toBe(false);

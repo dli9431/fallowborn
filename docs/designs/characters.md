@@ -531,6 +531,23 @@ progression. Landed monks and priests keep gaining the vocational years required
 religious-office advancement, and office-derived seasonal piety remains active, but their
 hands-on scriptorium and parish work stops.
 
+**The working careers carry sustained life-path stories.** `data/events_lifepaths.js`
+extends the existing careers instead of adding parallel professions; every path keeps
+its entry route, recurring work decisions, advancement, personal risk, and at least one
+durable accomplishment, and none of them passes the `professions` or `career` gates at
+landed tiers. Soldiers in a realm at war draw command assignments (a scouting party, the
+rearguard) resolved through the ordinary `battle` chance, with war service feeding the
+existing muster-bred progress and failure costing blood; in peacetime they drill the
+levy or spend the season at home. Practicing physicians face county outbreaks and the
+lord's sickroom, and a master Physician completes the family **Book of Remedies** once
+per life as an ordinary `giveItem` heirloom. Scholars dispute in public; Astronomers
+choose between observation and paid horoscopes and bind the **Star Tables** once per
+life; Authors accept patron commissions whose success grants another randomized family
+treatise through the same item path as the qualification reward. The deliberate
+tier-crossing exceptions are the temporary ones the player explicitly accepts: the
+existing gentry field command, the mercenary contract, and the expedition (see
+[travel.md](travel.md)).
+
 **Guild standing is separate from career rank.** Guild careers display their standing as
 Guild member → Master → Guild officer → Guildmaster. The saved `guildRank` ids remain
 `member`, `master`, `officer`, and `guildmaster`; reaching Master also promotes the

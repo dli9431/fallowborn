@@ -18,6 +18,14 @@ fallback (Venice's lagoon islands). Adjacency, coastal flags, and centroids are
 derived from the corrected raster. Changing `FBDATA.provinces` (authored as compact rows in
 `data/counties.js`) reshapes the map automatically.
 
+A county's authored `terrain` (farmland, forest, hills, mountains, desert, steppe,
+marsh, tundra) is load-bearing well beyond its map color: population carrying capacity
+and market yields read it, and warfare reads it directly — battle quality per unit
+class and the standing host's home-ground bonus at the battle county, the day cost of
+marching into the county, and the supply drain of campaigning across it
+(`balance.terrainBattleFactors`, `terrainDefenseBonus`, `terrainMarchMult`, and
+`supplyDrainTerrain`; see [war.md](war.md)).
+
 ## County communities
 
 A settled bookmark province has one principal culture and faith in its existing
@@ -143,6 +151,35 @@ compact tier/construction mark in ordinary DOM text.
 Related: [realms.md](realms.md) for who owns a province; `docs/MODDING.md` for the
 province/county data schema.
 
+## Wasteland conversion during play
+
+Wasteland provinces are impassable scenery at world build: they receive no
+settlement compilation, no population record, no market row, and no de jure
+duchy. Two player paths can convert one into a real county during play, and
+both go through the single authoritative helper `FB.materializeWasteland(state,
+pid, {culture, religion, holderId, ownerId})` in `js/world.js`. It clears the
+wasteland flag, stamps the settlers' culture and faith, sets development 1,
+assigns the political holder and sovereign owner, compiles the county's
+deterministic generated settlement slots on the spot
+(`FB.worldCompileSettlements` — the per-province half of `compileSites`,
+extracted so boot and conversion share one code path; the slots are named in
+the new settler culture), invalidates the realm caches, drops the market
+province cache (`FB.marketWorldDirty`, so the next `ensureMarket` rebuild
+seeds the new county while preserving existing rows), redraws the map, and
+writes the two shared Chronicle descriptors. The county keeps the wasteland's
+lack of a duchy, so it stays outside every de jure duchy, kingdom claim, and
+title majority forever. Population and market records then attach through
+their ordinary lazy ensure paths; the army route search reads the wasteland
+flag live, so the new county becomes marchable at once without rebuilding the
+per-world path caches.
+
+The noble caller is the `settle_waste` deed (`FB.settleWaste`), which passes
+the player as holder, adds the county to `player.provs`, and pays
+`balance.settleGold`/`settlePrestige` — costs and political result unchanged
+by the refactor. The commoner caller is the frontier-homestead journey (see
+[travel.md](travel.md)), which passes the gateway county's live political
+holder and sovereign and grants the household only starter land plots.
+
 ## Start bookmarks
 
 `FBDATA.bookmarks` holds complete, atomic world definitions. The 867 entry retains the
@@ -219,7 +256,7 @@ Each inhabited county tracks an integer civilian population record in `state.pop
   `pop0 = Math.max(1000, Math.round((populationByDevelopment[dev0 - 1] * terrainFactor) / 100) * 100)`.
 - **Carrying capacity**: Authored in bookmark province `populationCapacity0`, or derived from `cap0 = Math.max(pop0, Math.round((pop0 / 0.85) / 100) * 100)`.
   Adjusted by county buildings (Watermill +5%, Harbor +3%, max +40%) and national technology (`crop_rotation`, `heavy_plough`, `three_field`, etc., max +35%).
-- **Annual simulation pass**: Zero-RNG logistic natural growth bounded by pressure $(1 - P / K)$ within $[-1\%, +2\%]$, and conserved land migration across non-hostile borders when attraction differential $\ge 2$.
+- **Annual simulation pass**: Zero-RNG logistic natural growth bounded by pressure $(1 - P / K)$ within $[-1\%, +2\%]$, and conserved land migration across non-hostile borders when attraction differential $\ge 2$. Attraction combines county buildings, national technology, occupancy, war, and market shocks with the player realm's standing settlement policy ([council.md](council.md)); the policy shifts only the draw of player-owned counties and never moves a population record directly.
 - **Economic & military factor**: $\text{clamp}(\sqrt{P / P_0}, 0.50, 1.50)$ scales county tax base, direct & vassal levies, and market household demand.
 - **War & siege mitigation**: Hostile captures cause $-2\%$ population loss, mitigated by fortification strongpoints ($0\%, 10\%, 20\%, 35\%, 50\%$ for fort tiers 0–4).
 - **Settlement allocation**: On-demand display projection weights sites (village 1, town 3, city 7 + 1 per economic building), summing exactly to total county population.

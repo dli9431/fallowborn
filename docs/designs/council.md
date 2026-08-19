@@ -72,6 +72,65 @@ becomes invalid rather than silently moving to another councillor. The context a
 stamps the realm ruler's generation, so succession in that vassal house cannot transfer
 the evidence to a new officer.
 
+**Royal policy: religious tolerance and settlement.** The crown also proclaims
+standing realm policy directly — no Estates campaign, no bloc vote. Two
+`institution:'crown'` families in the shared policy catalog
+(`data/policies.js`; engine in js/institutions.js, see
+[parliament.md](parliament.md) for the vassal-side catalog) carry ordered,
+mutually exclusive levels: **Religious Tolerance** (persecution →
+confessional preference → tolerated minorities → protected worship) and
+**Settlement** (closed settlement → licensed newcomers → encouraged
+settlement). Only the current level id and proclamation stamps are saved
+(`state.realmPolicies`), healed additively to each family's declared default
+on old saves; effects are always derived from the catalog.
+
+Every effect rides a system that already exists, and none of them rewrites a
+county's faith, moves an invented population total, or erases local identity:
+
+- a level's county `modifier` (without `days`, so the policy rather than the
+  calendar ends it) is maintained on the player's directly held counties by
+  `FB.realmPolicySync` in the daily institution pass — on every held county,
+  or only minority-faith ones (`modifierScope:'minority'`, meaning anything
+  short of `same`/`in_fold` against the realm religion). Tax, levy, Common
+  Voice, unrest-event harm, and market flow follow the ordinary modifier
+  consumers. Losing a county, changing level, or losing the crown removes the
+  records; the proclamation itself carries the one Chronicle notice.
+- `seasonPiety` trickles piety each season; `researchFactor` scales the
+  player realm's research rate; `migrationAttraction` shifts the conserved
+  migration draw of player-owned counties; `developmentGrowth` gives a
+  bounded seasonal chance (`balance.realmPolicySettlementDevChance`) to raise
+  the least-developed held county's development.
+- Proclamation pays `balance.realmPolicyChangeCost`, is limited to one change
+  per family per calendar year, and applies the level's one-time `onEnact`
+  reactions: piety, prestige, Common Voice, Crown Authority, Standing with
+  the realm religion's head realm, foreign Standing with every living
+  sovereign realm split by fold, and direct-vassal Standing by fold.
+- Persecution is recorded through the existing mistreatment machinery
+  (`religious_persecution` notes at proclamation, once a year while the
+  policy stands, and from the unrest story), so it feeds the sanctuary-claim
+  collective demand exactly like other mistreatment. Protected Worship
+  records a durable faith privilege per minority county
+  (`duration:'policy'`, `revocation:'policy_change'`); proclaiming another
+  level within `balance.realmPolicyProtectedWorshipDays` is an unlawful
+  revocation — Common Voice falls, mistreatment is recorded, and the faith
+  constituency organizes.
+
+Three gated slot-day stories (`data/events_politics.js`) add pressure on top
+of the standing effects: a burned prayer-house under Persecution, invited
+settlers and specialists under Encouraged Settlement, and faith refugees
+testing the charter under Protected Worship. They introduce cultural and
+religious pressure, invited specialists, merchants, and refugees as narrative
+and ledger effects without claiming a demographic simulation.
+
+Governance's Institution section shows each family's standing level and opens
+the **Royal laws & policy** sheet (`UI.showRealmPolicies`), which lists every
+level with its effects, the exact blocked reason on disabled proclamations,
+the proclamation cost, and the repeal and protected-term rules. The sheet is
+read-only until a proclamation; its Back contract returns to Governance's
+Institution section. Both families record `none` technology-impact reviews in
+`FBDATA.techImpactReviews`: tolerance and settlement are social prerogatives
+of the crown with no credible research dependency.
+
 **Interaction** is summarized in the landed ruler's **Governance** sheet and managed in
 the focused `UI.showCouncil` modal: the authority meter, every seat with its holder's
 trait and Standing, term protection where applicable, and the levers — offer a gift,
@@ -118,7 +177,8 @@ compatibility alias but is not a second top-level Deeds entry.
 
 **Saves**: `state.council` is optional and self-heals (`FB.councilEnsure` runs in the
 season tick) — no save-version bump; kings in old saves find their council formed on the
-next season. The shared institution ensure performs legacy office and privilege discovery
+next season. `state.realmPolicies` likewise self-heals in the daily institution pass,
+with each family falling back to its declared default level. The shared institution ensure performs legacy office and privilege discovery
 once for each loaded state; daily expiry/validity work then uses the normalized records
 without repeating those whole-save legacy scans. Only the player monarch has a council;
 AI realms are not simulated this deep.

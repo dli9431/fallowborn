@@ -10,7 +10,7 @@ const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
-/* Plan: docs/plans/political-choice-war-depth-and-life-paths.md, step 4 —
+/* Plan: docs/plans/archive/political-choice-war-depth-and-life-paths.md, step 4 —
    bounded jousting tournaments (data/events_tournament.js). */
 
 async function startTournamentGame(page, testInfo) {

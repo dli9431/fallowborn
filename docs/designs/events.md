@@ -262,7 +262,23 @@ at county arrivals, code-queues capstones with `trigger:{never:true}`, and sched
 work stories every 55–85 days during a destination stay without immediate repeats.
 While traveling, already queued events remain valid, but the random home-event
 picker does not add a slot event. Returning and the once-per-life permanent move
-are destination deeds rather than automatic event choices.
+are destination deeds rather than automatic event choices. A work story may also
+declare `contract:true` (only while the journey carries an active mercenary
+contract) or `contract:false` (stood down for the contract's duration), and
+contract stories read the frozen `mercPay`/`mercSeasons`/`mercPurse`/`mercServed`
+context the travel driver supplies.
+
+**Life-path content lives in `data/events_lifepaths.js`.** The pack extends the
+existing careers rather than duplicating them: soldier command assignments and
+operational war decisions (wartime, `battle`-resolved), physician outbreaks and
+bedside calls, scholarly disputation, astronomer observations, and author
+commissions. Its travel chapters are the mercenary contract family (a service
+capstone substitute, contract work stories, and the completion and peace
+audiences, whose effects call the `merc_contract_*` handlers in `js/travel.js`)
+and the expedition family (`travel_expedition_record`). The once-per-life durable
+works — Book of Remedies, Star Tables — use ordinary declarative `giveItem`;
+the randomized commissioned treatise uses `lifepath_author_work` in
+`js/economy.js`. All of them resolve identically when autoresolved.
 
 ## Localized display
 

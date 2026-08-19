@@ -13,11 +13,30 @@ window.FB = window.FB || {};
   var SCALAR_KEYS = {
     tax:1, levy:1, battle:1, devCap:1, health:1, research:1, domain:1,
     siege:1, movement:1, seaMovement:1, education:1, finance:1, trade:1,
-    populationCapacity:1, populationCrisisProtection:1, migrationAttraction:1
+    populationCapacity:1, populationCrisisProtection:1, migrationAttraction:1,
+    supply:1
   };
   var COST_KEYS = { build:1, enterprise:1, training:1 };
-  var UNIT_KEYS = { levy:1, arch:1, cav:1, ret:1 };
-  var AI_UNIT_KEYS = { arch:1, cav:1, ret:1 };
+  /* Unit-effect key sets follow the unit-class table (data/units.js):
+     fx.units accepts every mustered class (never hired companies); fx.aiUnits
+     accepts any of those but the levy remainder. The five baseline classes
+     are the fallback when the table itself is missing. */
+  function unitEffectKeys() {
+    var out = {}, table = (typeof FBDATA !== 'undefined' && FBDATA.unitClasses) || {};
+    for (var id in table) {
+      if (own(table, id) && !(table[id] && table[id].hired)) out[id] = 1;
+    }
+    for (var baselineIndex = 0;
+        baselineIndex < ['levy','arch','cav','ret'].length; baselineIndex++) {
+      out[['levy','arch','cav','ret'][baselineIndex]] = 1;
+    }
+    return out;
+  }
+  function aiUnitEffectKeys() {
+    var out = unitEffectKeys();
+    delete out.levy;
+    return out;
+  }
   /* Technology records are engine-owned after their first access. Remember
      that access outside saved state so hot gameplay queries do not repeatedly
      deduplicate and rewrite the same arrays. A loaded save creates new record
@@ -722,7 +741,8 @@ window.FB = window.FB || {};
   };
 
   FB.techUnits = function (state, realmId) {
-    var units = { levy:0, arch:0, cav:0, ret:0 };
+    var units = {}, keys = unitEffectKeys();
+    for (var key0 in keys) if (own(keys, key0)) units[key0] = 0;
     var list = FB.techList(state, realmId);
     for (var i = 0; i < list.length; i++) {
       var fx = FBDATA.tech[list[i]] && FBDATA.tech[list[i]].fx;
@@ -739,7 +759,8 @@ window.FB = window.FB || {};
   };
 
   FB.techAIUnits = function (state, realmId) {
-    var units = { arch:0, cav:0, ret:0 };
+    var units = {}, keys = aiUnitEffectKeys();
+    for (var key0 in keys) if (own(keys, key0)) units[key0] = 0;
     var list = FB.techList(state, realmId);
     for (var i = 0; i < list.length; i++) {
       var fx = FBDATA.tech[list[i]] && FBDATA.tech[list[i]].fx;
@@ -871,7 +892,13 @@ window.FB = window.FB || {};
   FB.techResearchRate = function (state, realmId) {
     var rid = FB.techRealmId(state, realmId);
     var dev = FB.realmStrength ? FB.realmStrength(state, rid) : 0;
-    return 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+    var rate = 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+    /* Standing royal tolerance policy speeds or slows the player realm's
+       scholarship (js/institutions.js). */
+    if (FB.realmPolicyResearchFactor) {
+      rate *= Math.max(0, 1 + FB.realmPolicyResearchFactor(state, rid));
+    }
+    return rate;
   };
 
   function realmCoastal(state, rid) {
@@ -1381,9 +1408,16 @@ window.FB = window.FB || {};
     if (kind === 'research_slot' && target !== '2' && target !== '3') {
       errors.push('Technology ' + id + ': invalid research slot ' + target + '.');
     }
-    if (kind === 'unit' &&
-        ['levy','archers','cavalry','retinue'].indexOf(target) < 0) {
-      errors.push('Technology ' + id + ': invalid unit unlock ' + target + '.');
+    if (kind === 'unit') {
+      /* unit-class ids (FBDATA.unitClasses); the pre-table targets
+         unit:archers / unit:cavalry / unit:retinue resolve through the
+         alias table */
+      var aliases = FBDATA.unitClassAliases || {};
+      var classes = FBDATA.unitClasses || {};
+      var classTarget = own(aliases, target) ? aliases[target] : target;
+      if (!classes[classTarget]) {
+        errors.push('Technology ' + id + ': invalid unit unlock ' + target + '.');
+      }
     }
   }
 
@@ -1420,8 +1454,8 @@ window.FB = window.FB || {};
       }
       var capTables = {
         costFloor:COST_KEYS,
-        units:UNIT_KEYS,
-        aiUnits:AI_UNIT_KEYS
+        units:unitEffectKeys(),
+        aiUnits:aiUnitEffectKeys()
       };
       for (var capName in caps) if (own(caps, capName) &&
           !own(SCALAR_KEYS, capName) && !own(capTables, capName)) {
@@ -1500,6 +1534,144 @@ window.FB = window.FB || {};
             if (!FBDATA.tech[reviewTech[reviewTechIndex]]) {
               errors.push('Technology impact review ' + featureId +
                 ': missing technology ' + reviewTech[reviewTechIndex] + '.');
+            }
+          }
+        }
+      }
+    }
+    var unitClasses = FBDATA.unitClasses;
+    if (!unitClasses || typeof unitClasses !== 'object' ||
+        Array.isArray(unitClasses)) {
+      errors.push('Unit class table is invalid.');
+    } else {
+      var baselineClasses = ['levy','arch','cav','ret','mercs'];
+      for (var baselineClassIndex = 0;
+          baselineClassIndex < baselineClasses.length; baselineClassIndex++) {
+        if (!unitClasses[baselineClasses[baselineClassIndex]]) {
+          errors.push('Unit class table is missing baseline class ' +
+            baselineClasses[baselineClassIndex] + '.');
+        }
+      }
+      var balanceData = FBDATA.balance || {};
+      var knownTerrains = balanceData.terrainMarchMult || {};
+      for (var classId in unitClasses) {
+        if (!own(unitClasses, classId)) continue;
+        var unitClass = unitClasses[classId];
+        if (!unitClass || typeof unitClass !== 'object' ||
+            Array.isArray(unitClass)) {
+          errors.push('Unit class ' + classId + ': definition is invalid.');
+          continue;
+        }
+        if (typeof unitClass.name !== 'string' || !unitClass.name) {
+          errors.push('Unit class ' + classId + ': name is required.');
+        }
+        if (unitClass.icon !== undefined && typeof unitClass.icon !== 'string') {
+          errors.push('Unit class ' + classId + ': icon must be a string.');
+        }
+        if (typeof unitClass.quality !== 'number' ||
+            !isFinite(unitClass.quality) || unitClass.quality <= 0) {
+          errors.push('Unit class ' + classId +
+            ': quality must be a positive number.');
+        }
+        for (var powerFieldIndex = 0;
+            powerFieldIndex < ['attack','defense'].length; powerFieldIndex++) {
+          var powerField = ['attack','defense'][powerFieldIndex];
+          if (unitClass[powerField] !== undefined &&
+              (typeof unitClass[powerField] !== 'number' ||
+               !isFinite(unitClass[powerField]) || unitClass[powerField] <= 0)) {
+            errors.push('Unit class ' + classId + ': ' + powerField +
+              ' must be a positive number.');
+          }
+        }
+        if (unitClass.replaceDays !== undefined &&
+            (typeof unitClass.replaceDays !== 'number' ||
+             !isFinite(unitClass.replaceDays) || unitClass.replaceDays <= 0)) {
+          errors.push('Unit class ' + classId +
+            ': replaceDays must be a positive number.');
+        }
+        if (unitClass.professional !== undefined &&
+            typeof unitClass.professional !== 'boolean') {
+          errors.push('Unit class ' + classId +
+            ': professional must be a boolean.');
+        }
+        if (unitClass.upkeepPer100 !== undefined &&
+            (typeof unitClass.upkeepPer100 !== 'number' ||
+             !isFinite(unitClass.upkeepPer100) || unitClass.upkeepPer100 < 0)) {
+          errors.push('Unit class ' + classId +
+            ': upkeepPer100 must be a non-negative number.');
+        }
+        if (typeof unitClass.casualtyOrder !== 'number' ||
+            !isFinite(unitClass.casualtyOrder)) {
+          errors.push('Unit class ' + classId +
+            ': casualtyOrder must be a number.');
+        }
+        if (unitClass.share !== undefined &&
+            (typeof unitClass.share !== 'number' || !isFinite(unitClass.share) ||
+             unitClass.share <= 0 || unitClass.share > 1)) {
+          errors.push('Unit class ' + classId +
+            ': share must be a number in (0, 1].');
+        }
+        if (unitClass.hired !== undefined &&
+            typeof unitClass.hired !== 'boolean') {
+          errors.push('Unit class ' + classId + ': hired must be a boolean.');
+        }
+        validateRequirement('Unit class', classId, unitClass.requiresTech);
+        for (var cultureFieldIndex = 0;
+            cultureFieldIndex < ['cultures','notCultures'].length;
+            cultureFieldIndex++) {
+          var cultureField = ['cultures','notCultures'][cultureFieldIndex];
+          var cultureList = unitClass[cultureField];
+          if (cultureList === undefined) continue;
+          if (!Array.isArray(cultureList)) {
+            errors.push('Unit class ' + classId + ': ' + cultureField +
+              ' must be an array.');
+            continue;
+          }
+          for (var cultureIndex = 0; cultureIndex < cultureList.length;
+              cultureIndex++) {
+            if (!FBDATA.cultures || !FBDATA.cultures[cultureList[cultureIndex]]) {
+              errors.push('Unit class ' + classId + ': ' + cultureField +
+                ' references unknown culture ' + cultureList[cultureIndex] + '.');
+            }
+          }
+        }
+        if (unitClass.counters !== undefined) {
+          if (!unitClass.counters || typeof unitClass.counters !== 'object' ||
+              Array.isArray(unitClass.counters)) {
+            errors.push('Unit class ' + classId + ': counters must be a map.');
+          } else {
+            for (var counterKey in unitClass.counters) {
+              if (!own(unitClass.counters, counterKey)) continue;
+              if (!unitClasses[counterKey]) {
+                errors.push('Unit class ' + classId +
+                  ': counter references unknown class ' + counterKey + '.');
+              } else if (!isFinite(Number(unitClass.counters[counterKey]))) {
+                errors.push('Unit class ' + classId +
+                  ': counter ' + counterKey + ' must be numeric.');
+              }
+            }
+          }
+        }
+        if (unitClass.terrainFactors !== undefined) {
+          if (!unitClass.terrainFactors ||
+              typeof unitClass.terrainFactors !== 'object' ||
+              Array.isArray(unitClass.terrainFactors)) {
+            errors.push('Unit class ' + classId +
+              ': terrainFactors must be a map.');
+          } else {
+            for (var terrainKey in unitClass.terrainFactors) {
+              if (!own(unitClass.terrainFactors, terrainKey)) continue;
+              if (!own(knownTerrains, terrainKey)) {
+                errors.push('Unit class ' + classId +
+                  ': terrain factor references unknown terrain ' +
+                  terrainKey + '.');
+              } else if (!isFinite(Number(
+                  unitClass.terrainFactors[terrainKey])) ||
+                  Number(unitClass.terrainFactors[terrainKey]) <= 0) {
+                errors.push('Unit class ' + classId +
+                  ': terrain factor ' + terrainKey +
+                  ' must be a positive number.');
+              }
             }
           }
         }
@@ -1588,20 +1760,26 @@ window.FB = window.FB || {};
           errors.push('Technology ' + id + ': non-numeric cost effect ' + costKey + '.');
         }
       }
-      if (def.fx.units) for (var unitKey in def.fx.units) {
-        if (own(def.fx.units, unitKey) && !UNIT_KEYS[unitKey]) {
-          errors.push('Technology ' + id + ': invalid unit effect ' + unitKey + '.');
-        } else if (own(def.fx.units, unitKey) &&
-            !isFinite(Number(def.fx.units[unitKey]))) {
-          errors.push('Technology ' + id + ': non-numeric unit effect ' + unitKey + '.');
+      if (def.fx.units) {
+        var fxUnitKeys = unitEffectKeys();
+        for (var unitKey in def.fx.units) {
+          if (own(def.fx.units, unitKey) && !fxUnitKeys[unitKey]) {
+            errors.push('Technology ' + id + ': invalid unit effect ' + unitKey + '.');
+          } else if (own(def.fx.units, unitKey) &&
+              !isFinite(Number(def.fx.units[unitKey]))) {
+            errors.push('Technology ' + id + ': non-numeric unit effect ' + unitKey + '.');
+          }
         }
       }
-      if (def.fx.aiUnits) for (var aiKey in def.fx.aiUnits) {
-        if (own(def.fx.aiUnits, aiKey) && !AI_UNIT_KEYS[aiKey]) {
-          errors.push('Technology ' + id + ': invalid AI unit effect ' + aiKey + '.');
-        } else if (own(def.fx.aiUnits, aiKey) &&
-            !isFinite(Number(def.fx.aiUnits[aiKey]))) {
-          errors.push('Technology ' + id + ': non-numeric AI unit effect ' + aiKey + '.');
+      if (def.fx.aiUnits) {
+        var fxAiUnitKeys = aiUnitEffectKeys();
+        for (var aiKey in def.fx.aiUnits) {
+          if (own(def.fx.aiUnits, aiKey) && !fxAiUnitKeys[aiKey]) {
+            errors.push('Technology ' + id + ': invalid AI unit effect ' + aiKey + '.');
+          } else if (own(def.fx.aiUnits, aiKey) &&
+              !isFinite(Number(def.fx.aiUnits[aiKey]))) {
+            errors.push('Technology ' + id + ': non-numeric AI unit effect ' + aiKey + '.');
+          }
         }
       }
     }

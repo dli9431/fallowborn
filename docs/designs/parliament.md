@@ -37,7 +37,11 @@ liege's unilateral aid demand leaves the agenda for good. Between sittings the
 player's political court, and begins a motion of the player's own for
 `balance.parliamentMotionCost` gold. The available motions are not hard-coded:
 they come from the **policy catalog** (`FBDATA.policies` in
-`data/policies.js`; see [MODDING](../MODDING.md) for the contract). Each policy
+`data/policies.js`; see [MODDING](../MODDING.md) for the contract). The
+catalog also carries `institution:'crown'` royal policy — standing religious
+tolerance and settlement levels the sovereign player proclaims directly
+([council.md](council.md)) — which the Estates machinery skips: no Estates
+gate, forecast, or motion button ever reads a crown def. Each policy
 declares its family, gate, cost, bloc posture, and result event; the catalog
 ships redress (`parliament_redress`, aid down a step), an emergency war
 subsidy, scutage (`parliament_scutage`), levy relief (a timed county exemption
