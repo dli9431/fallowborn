@@ -224,11 +224,11 @@ window.FB = window.FB || {};
 
   /* Rough worth of an option for the auto-picker. Options needing a human
      (naming an heir) score far below anything else. */
-  /* the war-council customs carry no numbers for fxScore to read — without
-     these, "Fall back and refit" (health +1) outscored "Press the siege"
-     every season and an automated war could never take land */
+  /* the war-council customs carry no numbers for fxScore to read. The siege
+     needs no score: an automated host takes land by standing on the target —
+     the season tick presses the works on its own (FB.playerWarTick). */
   const CUSTOM_FX_SCORE = {
-    war_siege:12, war_win:8, war_hunt:6, war_loss:-8,
+    war_hunt:6,
     war_supply:5, war_thin:-5, war_discipline:4, war_disorder:-5,
     war_discipline_deserters:4, war_pay_deserters:7, war_desert:-12,
     war_allied_withdrawal:-12, war_negotiated_withdrawal:-3,
@@ -396,7 +396,7 @@ window.FB = window.FB || {};
         '</div>';
     }
     h += '<div class="gm-footer"><button class="btn primary" id="ar-done">Done</button></div>';
-    openModal('⚙ Automation', h, { modalClass: 'fullsheet-modal' });
+    openModal('⚙ Automation', h, { modalClass: 'fullsheet-modal', modalKey: 'v' });
     function sync() {
       a.minor = $('ar-minor').checked;
       a.major = $('ar-major').checked;
@@ -703,7 +703,6 @@ window.FB = window.FB || {};
       btn.setAttribute('aria-describedby', detailsId);
       btn.innerHTML = hintFor(i) +
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
-        (o.desc ? '<span class="odesc">' + esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.desc', ctx) : FB.fmt(s, o.desc, ctx)) + '</span>' : '') +
         (optionStatus.techLocked ? '<span class="odesc">' +
           esc(optionStatus.reason) + (technologyLink
             ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
@@ -773,6 +772,13 @@ window.FB = window.FB || {};
     const receipt = FB.resolveEventOption(s, ev, opt, ctx, { automated:false });
     if (!receipt) return false;
     if (UI.eventReceiptToast) UI.eventReceiptToast(receipt);
+    /* A daily pick normally contains one event, but callers and restored UI
+       state can still supply a batch. Once the player pauses, put the unread
+       tail back on the authoritative queue instead of opening it immediately. */
+    if (FB.game && FB.game.paused && pendingEvents.length) {
+      s.eventQueue = pendingEvents.concat(s.eventQueue || []);
+      pendingEvents = [];
+    }
     nextEvent();
   }
 
@@ -3492,7 +3498,7 @@ window.FB = window.FB || {};
       ? s.realms.player.rank : s.player.tier;
     const models = [];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
+      'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
           amount:financeAmount(musterUpkeep.total)
@@ -3718,7 +3724,7 @@ window.FB = window.FB || {};
     let h = '<div class="gm-body-text"><p class="warnote"><b>' +
       esc(FB.T('This war has no recognized right.')) + '</b></p><p>' +
       esc(FB.T(
-        'Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps.', {
+        'Target {realm}; conquer {province} by standing your host on it until {steps} siege steps are done.', {
           realm:realm.name,
           province:province.name,
           steps:siege.required
@@ -7439,7 +7445,11 @@ window.FB = window.FB || {};
     let h = header + realmCourtStripHtml(s, rid, rulerCharacter && rulerCharacter.id) + interactionCardHtml(model) +
       '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
-      '</button></div>';
+      '</button>' +
+      (returnContext
+        ? '<button type="button" class="btn" id="gm-dismiss">' +
+          esc(FB.T('Close')) + '</button>'
+        : '') + '</div>';
     openModal(rid === s.player.liege
       ? FB.T('Your Liege') : FB.T('Realm Ruler'), h, {
         modalClass:'fullsheet-modal interaction-modal realm-interaction-modal',
@@ -7582,6 +7592,12 @@ window.FB = window.FB || {};
         UI.closeModal();
       }
     });
+    const gmDismiss = $('gm-dismiss');
+    if (gmDismiss) {
+      gmDismiss.addEventListener('click', function () {
+        UI.closeModal();
+      });
+    }
   }
 
   /* A realm link opens its ruler's one character sheet. The older realm-only
@@ -8994,26 +9010,37 @@ window.FB = window.FB || {};
         : FB.T('Breakaway ×{multiplier}', {
           multiplier:item.breakawayMultiplier
         });
-      h += '<div class="governance-vassal">' +
+      h += '<div class="governance-vassal settcard">' +
         '<div class="governance-vassal-head"><div>' +
         governanceRealmLink(s, item.realmId, realm.name, 'vassals') +
         '<span>' + esc(FB.T('{title} {ruler}', {
           title:FB.realmRankTitle(s, realm),
           ruler:realm.ruler ? realm.ruler.name : realm.name
         })) + '</span></div>' +
-        standingSpan(item.standing) + '</div>' +
-        '<div class="governance-vassal-stats">' +
+        '<span class="settcard-actions">' + standingSpan(item.standing) +
+        '<button type="button" class="btn small settcard-info"' +
+        ' aria-expanded="false" aria-controls="gov-vassal-det-' +
+        esc(item.realmId) + '" title="' + esc(FB.T('Details')) +
+        '" aria-label="' + esc(FB.T('Details')) + '">?</button>' +
+        '</span></div>' +
+        /* the crucial facts stay on the card face; the charter, tenure, and
+           political terms sit behind the details affordance (hover/focus side
+           tooltip on desktop, ? inline disclosure on touch/tablet layouts) */
+        '<div class="governance-vassal-stats governance-vassal-face">' +
         kv('Territory', esc(countyCountText(s, item.countyIds.length))) +
         kv('Seasonal tax contribution', esc(FB.money(
           Math.round(item.taxContribution * 10) / 10))) +
         kv('Host levy contribution', esc(menText(
           s, Math.round(item.levyContribution * 10) / 10))) +
+        '</div>' +
+        '<div class="settcard-details hidden" id="gov-vassal-det-' +
+        esc(item.realmId) + '"><div class="governance-vassal-stats">' +
         kv('Service charter', esc(feudalCharterName(s, item.charterId))) +
         kv('Tenure', esc(tenure)) +
         kv('Political terms', esc(political)) +
         kv('Council office', esc(office)) +
         kv('Exceptional levy', esc(promise)) +
-        '</div><div class="governance-vassal-actions">' +
+        '</div></div><div class="governance-vassal-actions">' +
         '<div class="governance-inline-actions">' +
         '<button type="button" class="btn small" data-governance-gift="' +
         esc(item.realmId) + '">' + esc(FB.T('Offer a gift…')) + '</button>' +
@@ -9288,6 +9315,7 @@ window.FB = window.FB || {};
     });
     const sectionButtons = document.querySelectorAll(
       '[data-governance-section]');
+    bindCardInfoToggles($('gm-body'));
     function refreshGovernanceActionHints(activeId) {
       const actionButtons = document.querySelectorAll(
         '.governance-card .actionbtn');
@@ -17126,6 +17154,15 @@ window.FB = window.FB || {};
     }
     const model = buildCharacterInteractionCard(s, cid);
     if (!model) return;
+    /* realmIdForRulerCharacter indexes AI realms only, so a war-realm link
+       that resolves to the player's own realm used to land on a bare self
+       card. Give the reigning player the same ruler frame every other
+       sovereign gets here: rank title, realm muster, and the current-war
+       notice. The self sheet still skips the foreign Standing/diplomacy
+       card, which is meaningless against yourself. */
+    const selfRealmId = !model.realmId && c.id === s.player.charId &&
+      s.realms.player && s.realms.player.alive ? 'player' : null;
+    const displayRealmId = model.realmId || selfRealmId;
     const royalCourt = royalCourtCharacterContext(s, cid, returnContext);
     if (royalCourt) model.showContext = false;
     const cardOptions = { skillsGuide:true, mapHome:true };
@@ -17136,10 +17173,10 @@ window.FB = window.FB || {};
     if (royalCourt && royalCourt.ruler && royalCourt.ruler.id === c.id) {
       cardOptions.cardClass = 'realm-ruler-card';
     }
-    if (model.realmId && s.realms[model.realmId]) {
-      const realm = s.realms[model.realmId];
+    if (displayRealmId && s.realms[displayRealmId]) {
+      const realm = s.realms[displayRealmId];
       cardOptions.namePrefix = FB.realmRankTitle(s, realm);
-      cardOptions.realmMuster = realmMusterText(s, model.realmId);
+      cardOptions.realmMuster = realmMusterText(s, displayRealmId);
       cardOptions.cardClass = 'realm-ruler-card';
     }
     const courtRealmId = model.realmId || (royalCourt && royalCourt.rid);
@@ -17148,12 +17185,19 @@ window.FB = window.FB || {};
       realmFamily:true
     } : null;
     let h = UI.charCardHtml(s, c, false, true, cardOptions);
-    if (model.realmId) h += realmWarNoticeHtml(s, model.realmId);
+    if (displayRealmId) h += realmWarNoticeHtml(s, displayRealmId);
     if (courtRealmId) h += realmCourtStripHtml(s, courtRealmId, c.id);
     if (!c.dead) h += interactionCardHtml(model);
+    /* Back walks the sheet-to-sheet return chain, which can loop between two
+       linked rulers; always offer a plain Close that dismisses the modal
+       stack outright. */
+    const backable = !royalCourt && !!returnContext;
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
-      esc(royalCourt || !returnContext ? FB.T('Close') : FB.T('Back')) +
-      '</button></div>';
+      esc(backable ? FB.T('Back') : FB.T('Close')) + '</button>' +
+      (backable
+        ? '<button type="button" class="btn" id="cm-dismiss">' +
+          esc(FB.T('Close')) + '</button>'
+        : '') + '</div>';
     const modalTitle = cardOptions.namePrefix
       ? FB.T('{title} {name}', {
         title:cardOptions.namePrefix, name:FB.fullName(c)
@@ -17170,8 +17214,8 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
     bindCharacterSkillsGuides($('gm-body'));
     if (familyContext) bindRealmFamilyNavigation($('gm-body'), familyContext);
-    if (model.realmId) {
-      bindWarRealmLinks($('gm-body'), s, model.realmId, c.id, returnContext);
+    if (displayRealmId) {
+      bindWarRealmLinks($('gm-body'), s, displayRealmId, c.id, returnContext);
     }
     if (cardOptions.mapHome) bindCharacterHome($('gm-body'), s, c);
     if (!c.dead) {
@@ -17492,6 +17536,12 @@ window.FB = window.FB || {};
         UI.closeModal();
       }
     });
+    const cmDismiss = $('cm-dismiss');
+    if (cmDismiss) {
+      cmDismiss.addEventListener('click', function () {
+        UI.closeModal();
+      });
+    }
   }
 
   UI.showCharModal = function (cid, returnContext, replaceView) {
@@ -19630,7 +19680,7 @@ window.FB = window.FB || {};
         '<input id="m-seed" type="text" readonly value="' + esc(FB.state.seed) + '"></div>' : '') +
       '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>' +
       '<div class="gm-footer"><button class="btn primary" id="m-close">✕ Close</button></div>';
-    openModal('Menu', h, { modalClass: 'fullsheet-modal' });
+    openModal('Menu', h, { modalClass: 'fullsheet-modal', modalKey: 'm' });
     $('m-resume').addEventListener('click', UI.closeModal);
     $('m-close').addEventListener('click', UI.closeModal);
     if (FB.state && FB.state.seed) {
@@ -21441,7 +21491,7 @@ window.FB = window.FB || {};
         FB.T('Barons and higher rulers compare available conquests through Declare war. A bordering de jure right, a fabricated claim, or a crown-restoration right is recognized; pacts and defensive alliances can still block the declaration.'),
         FB.T('When no recognized right applies to a bordering county, the picker offers a War of Aggression. Its confirmation shows the exact immediate prestige, Common Voice, direct-vassal Standing, and foreign-sovereign Standing changes before anything is committed.'),
         FB.T('Recent aggressive declarations by the same ruler multiply those political costs and increase breakaway pressure. A conquered county receives Conquered Without Right, reducing tax and levy while increasing unrest for its listed duration.'),
-        FB.T('A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.')
+        FB.T('A declaration must still be won on the map. March the host to the named prize and hold it — the works advance each season the host stands there. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.')
       ]), 'war warfare aggression aggressive casus belli claim fabricated de jure conquest siege host peace breakaway conquered without right');
     add('government', 'government', FB.T('Government systems'),
       FB.T('Territorial rank opens Governance; institutions vary by relationship to the crown.'),
@@ -21660,13 +21710,13 @@ window.FB = window.FB || {};
       '<h4>Mobile navigation</h4>' +
       '<p>On a phone, the browser or device Back control steps out of equipment choices, dialogs, and the Self/Kin drawer. It never undoes a decision that changed the game.</p>' +
       '<h4>Map filters</h4>' +
-      '<p>The 🗺 button (or <b>R</b>) cycles five ways to color the map: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, and <b>de jure kingdoms</b>.</p>' +
+      '<p>The 🗺 button (or <b>R</b>) cycles map filters: <b>realm</b>, <b>mine</b>, <b>liege</b>, <b>de jure duchies</b>, <b>de jure kingdoms</b>, and <b>war</b>.</p>' +
       '<h4>War</h4>' +
       '<p>From baron upward the Deeds tab always shows <b>⚔ Declare war</b>, with the exact reason when it is locked. A county war prefers a bordering <b>de jure right</b> through a duchy, kingdom, or empire you hold, or your one <b>fabricated claim</b> (made through a plot). ' +
       esc(FB.T('Where neither right applies, the picker plainly offers a War of Aggression and requires you to review its escalating political costs and the conquered county’s burden before confirming.')) +
       ' A rare crown-restoration right reaches the usurper’s capital without a shared border. Pacts and defensive alliances forbid attacks. Your host musters when war begins — tap it, then a province to march (or let ⚙ automation command it). You may de-muster a raised host from the Deeds tab: the men preserved for your next muster depend on where it stands — all on your own land, half elsewhere in your realm, none abroad — and re-mustering waits out the same rearm window as a shattering. <b>' +
       esc(FB.T('Land is taken only by siege:')) + '</b> ' +
-      esc(FB.T('Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.')) + '</p>' +
+      esc(FB.T('Stand your host on the prize — the works advance each season it holds the ground. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.')) + '</p>' +
       '<p>' + esc(FB.T('Water links use local boats at low throughput. A host larger than the available transport needs repeated crossing cycles; national seafaring and naval-organization technologies raise capacity and crossing speed. No separate fleet must be raised.')) + '</p>' +
       '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +

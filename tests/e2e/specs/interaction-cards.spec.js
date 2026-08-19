@@ -2,8 +2,10 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/actions.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
-  'js/ui_panels.js'
+  'js/ui_panels.js',
+  'js/world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -823,4 +825,79 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
     await expect(page.getByRole('heading', {
       name:'The Estates', exact:true
     })).toBeVisible();
+  });
+
+test('war-realm links open the full ruler sheet, even for your own realm',
+  async function ({ page }, testInfo) {
+    await startInteractionGame(page, testInfo);
+    var setup = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var homeId = p.provinceId;
+      p.tier = 6;
+      p.liege = null;
+      p.provs = [homeId];
+      s.owner[homeId] = 'player';
+      s.holder[homeId] = 'player';
+      FB.foundPlayerRealm(s);
+      s.realms.player.alive = true;
+      s.realms.player.rank = 3;
+      s.realms.player.liege = null;
+      s.realms.player.capital = homeId;
+      var enemyId = Object.keys(s.realms).filter(function (id) {
+        return id !== 'player' && s.realms[id] &&
+          s.realms[id].alive && s.realms[id].ruler && !s.realms[id].liege;
+      })[0];
+      var enemyCapital = s.realms[enemyId].capital;
+      FB.materializeRealmRuler(s, enemyId);
+      p.war = {
+        enemy:enemyId, target:enemyCapital, wins:0, losses:0,
+        seasons:1, defending:false, strength:1,
+        casus:{ type:'fabricated' }
+      };
+      FB.invalidateRealmCache();
+      s.player.panelIntrosSeen = s.player.panelIntrosSeen || {};
+      s.player.panelIntrosSeen.prov = 1;
+      s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
+      s.player.roleOrientationsSeen['role-tier-' + p.tier] = 1;
+      return { enemyId:enemyId, enemyCapital:enemyCapital };
+    });
+
+    // the land panel war notice under the county name: your own realm's link
+    // must open the same framed ruler sheet an AI sovereign gets, not the
+    // bare self card
+    await page.evaluate(function (ids) {
+      FB.ui.selectProvince(ids.enemyCapital);
+    }, setup);
+    await waitForUiRefresh(page);
+    await expect(page.locator('#tab-prov .land-current-war')).toBeVisible();
+    await page.locator(
+      '#tab-prov .land-current-war [data-war-realm="player"]').click();
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-card')).toBeVisible();
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-muster'))
+      .toContainText('Realm muster');
+    await expect(page.locator(
+      '.character-interaction-modal .character-current-war')).toBeVisible();
+
+    // ruler sheet v ruler sheet: the self sheet's war box links out to the
+    // enemy ruler's sheet, and the enemy sheet's war box links back
+    await page.locator('.character-interaction-modal ' +
+      '.character-current-war [data-war-realm="' + setup.enemyId + '"]')
+      .click();
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-card')).toBeVisible();
+    await expect(page.locator('.character-interaction-modal ' +
+      '.character-current-war [data-war-realm="player"]')).toBeVisible();
+    // a linked sheet offers both exits: Back walks the chain, Close leaves
+    await expect(page.locator('#cm-close')).toContainText('Back');
+    await expect(page.locator('#cm-dismiss')).toContainText('Close');
+    await page.locator('.character-interaction-modal ' +
+      '.character-current-war [data-war-realm="player"]').click();
+    await expect(page.locator(
+      '.character-interaction-modal .realm-ruler-muster'))
+      .toContainText('Realm muster');
+    await page.locator('#cm-dismiss').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });

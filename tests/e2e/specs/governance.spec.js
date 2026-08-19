@@ -4,7 +4,9 @@ dependsOnRuntime(__filename, [
   'js/council.js',
   'js/parliament.js',
   'js/politics.js',
-  'js/ui_modals.js'
+  'js/ui_misc.js',
+  'js/ui_modals.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -361,6 +363,68 @@ test('summary values match domain, tax, levy, Standing, and hierarchy sources',
       'Seasonal tax contribution');
     await expect(page.locator('#governance-vassals')).toContainText(
       'Host levy contribution');
+  });
+
+test('vassal cards keep crucial dues visible and move terms into the details tooltip',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    await page.evaluate(function () { FB.ui.showGovernance('vassals'); });
+
+    const card = page.locator('#governance-vassals .governance-vassal', {
+      hasText:'Ash March' });
+    await expect(card).toBeVisible();
+
+    // the card face always carries the crucial facts
+    const face = card.locator('.governance-vassal-stats').first();
+    await expect(face).toContainText('Territory');
+    await expect(face).toContainText('Seasonal tax contribution');
+    await expect(face).toContainText('Host levy contribution');
+    await expect(face).not.toContainText('Service charter');
+
+    // the terms live in the hidden details, never duplicated on the face
+    const details = card.locator('.settcard-details');
+    await expect(details).toBeHidden();
+
+    // desktop: no ? button; hovering the card opens the side tooltip
+    await expect(card.locator('.settcard-info')).toBeHidden();
+    await card.hover();
+    const tip = page.locator('#tooltip');
+    await expect(tip).toBeVisible();
+    await expect(tip).toContainText('Service charter');
+    await expect(tip).toContainText('Tenure');
+    await expect(tip).toContainText('Council office');
+    await expect(tip).toContainText('Exceptional levy');
+    await expect(details).toBeHidden();
+  });
+
+test('tablet-width vassal cards swap the hover tooltip for the ? disclosure',
+  async function ({ page }, testInfo) {
+    await startGovernanceGame(page, testInfo);
+    await configureGovernance(page, 'king');
+    await page.setViewportSize({ width:1000, height:700 });
+    await page.evaluate(function () { FB.ui.showGovernance('vassals'); });
+
+    const card = page.locator('#governance-vassals .governance-vassal', {
+      hasText:'Ash March' });
+    await expect(card).toBeVisible();
+    const infoBtn = card.locator('.settcard-info');
+    await expect(infoBtn).toBeVisible();
+
+    // the disclosure layout never opens the hover/focus side tooltip
+    await card.hover();
+    await expect(page.locator('#tooltip')).toBeHidden();
+
+    // the ? button toggles the same terms inline instead
+    const details = card.locator('.settcard-details');
+    await expect(details).toBeHidden();
+    await infoBtn.click();
+    await expect(infoBtn).toHaveAttribute('aria-expanded', 'true');
+    await expect(details).toBeVisible();
+    await expect(details).toContainText('Service charter');
+    await expect(details).toContainText('Political terms');
+    await infoBtn.click();
+    await expect(details).toBeHidden();
   });
 
 test('domain cleanup is preview-first, stale-safe, and respects county reservations',
@@ -1316,19 +1380,28 @@ test('Governance tabs show one compact desktop surface at a time',
       function (row) {
         var stats = row.querySelector('.governance-vassal-stats');
         var actions = row.querySelector('.governance-vassal-actions');
+        var inline = row.querySelector('.governance-inline-actions');
         return {
           rowDisplay:getComputedStyle(row).display,
           rowColumns:getComputedStyle(row).gridTemplateColumns.split(' ').length,
           statColumns:getComputedStyle(stats).gridTemplateColumns.split(' ').length,
+          actionColumns:getComputedStyle(inline)
+            .gridTemplateColumns.split(' ').length,
           actionsVisible:actions.getClientRects().length > 0,
           rowHeight:row.getBoundingClientRect().height
         };
       });
     expect(layout.rowDisplay).toBe('grid');
     expect(layout.rowColumns).toBe(3);
-    expect(layout.statColumns).toBe(5);
+    /* the face carries only the three crucial dues rows; the terms moved to
+       the details tooltip */
+    expect(layout.statColumns).toBe(3);
+    // the desktop action buttons stack as one full-width column
+    expect(layout.actionColumns).toBe(1);
     expect(layout.actionsVisible).toBe(true);
-    expect(layout.rowHeight).toBeLessThan(150);
+    /* the stacked full-width action buttons replaced the squished auto-fit
+       columns, so a row is taller than the old cramped layout */
+    expect(layout.rowHeight).toBeLessThan(190);
 
     await page.locator('[data-governance-section="domain"]').click();
     await expect(page.locator('#governance-domain')).toBeVisible();
@@ -1404,15 +1477,24 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
       '.governance-vassal').first().evaluate(function (row) {
         var stats = row.querySelector('.governance-vassal-stats');
         var actions = row.querySelector('.governance-inline-actions');
+        var protection = row.querySelector(
+          '[data-governance-council-protection]');
+        var gift = row.querySelector('[data-governance-gift]');
         return {
           rowDisplay:getComputedStyle(row).display,
           statColumns:getComputedStyle(stats).gridTemplateColumns.split(' ').length,
-          actionColumns:getComputedStyle(actions).gridTemplateColumns.split(' ').length
+          actionColumns:getComputedStyle(actions).gridTemplateColumns.split(' ').length,
+          /* the long Council-protection label spans the full action row so it
+             stays one line */
+          protectionFullWidth:!!protection && !!gift &&
+            protection.getBoundingClientRect().width >
+              gift.getBoundingClientRect().width * 1.5
         };
       });
     expect(vassalLayout.rowDisplay).toBe('block');
     expect(vassalLayout.statColumns).toBe(2);
     expect(vassalLayout.actionColumns).toBe(2);
+    expect(vassalLayout.protectionFullWidth).toBe(true);
 
     await page.locator('[data-governance-section="institution"]').click();
     await page.locator(

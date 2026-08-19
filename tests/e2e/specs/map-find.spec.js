@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/mapview.js',
+  'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_topbar.js',
   'css/style.css'
@@ -267,4 +268,72 @@ test('map HUD buttons and find overlay fit within mapwrap on tablet and shallow 
       // Close finder overlay
       await page.locator('#map-finder-close').click();
     }
+  });
+
+test('Map filter button cycles through Realm, Mine, Liege, Duchies, Kingdoms, and War without cycling Market',
+  async function ({ page }) {
+    const mapmodeBtn = page.locator('#btn-mapmode');
+    await expect(mapmodeBtn).toBeVisible();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Realm (R)');
+
+    // 1. Cycle to Mine
+    await mapmodeBtn.click();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Mine (R)');
+
+    // 2. Cycle to Liege or skip if independent
+    await mapmodeBtn.click();
+    const hasLiege = await page.evaluate(function () {
+      return !!(FB.state && FB.state.player && FB.state.player.liege);
+    });
+    if (hasLiege) {
+      await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Liege (R)');
+      await mapmodeBtn.click();
+    }
+
+    // 3. Duchy mode
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: De jure duchies (R)');
+
+    // 4. Kingdom mode
+    await mapmodeBtn.click();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: De jure kingdoms (R)');
+
+    // 5. When at peace, next cycle skips war and returns to realm (market is excluded)
+    await mapmodeBtn.click();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Realm (R)');
+
+    // 6. Set up active war and cycle to War mode
+    await page.evaluate(function () {
+      FB.state.player.war = {
+        enemy: 'croatia',
+        wins: 0,
+        losses: 0,
+        strength: 1.0,
+        started: FB.state.turn
+      };
+    });
+
+    // Advance to Kingdom
+    await mapmodeBtn.click(); // Mine
+    if (hasLiege) await mapmodeBtn.click(); // Liege
+    await mapmodeBtn.click(); // Duchy
+    await mapmodeBtn.click(); // Kingdom
+
+    // Now cycle from Kingdom to War
+    await mapmodeBtn.click();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: War (R)');
+
+    const warHighlight = await page.evaluate(function () {
+      return {
+        highlightColor: FB.map.highlightColor,
+        focusColor: FB.map.focusColor(),
+        focusGroupActive: FB.map.focusGroupActive
+      };
+    });
+    expect(warHighlight.highlightColor).toBe('#c8352b');
+    expect(warHighlight.focusColor).toBe('#c8352b');
+    expect(warHighlight.focusGroupActive).toBe(true);
+
+    // 7. Cycling from War returns directly to Realm (market remains excluded)
+    await mapmodeBtn.click();
+    await expect(mapmodeBtn).toHaveAttribute('title', 'Map filter: Realm (R)');
   });

@@ -57,6 +57,14 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+The daily picker moves at most one valid queued event into the UI. A random slot event
+is selected only when no queued event claimed that day, so a pause after resolving one
+choice stops the stream with later events still in the serializable queue. As a second
+guard, if another caller supplies a UI batch and the player pauses while answering it,
+the unread tail is returned to `state.eventQueue` instead of being opened immediately.
+Context validation runs both when the picker dequeues an event and immediately before
+the modal displays it.
+
 **Guild-path stories stay declarative.** An event may use
 `trigger.career:{profession,specialization,guildRankMin,guildStandingMin}` to require
 the protagonist's current working career. This is distinct from broad `professions`:
@@ -138,6 +146,16 @@ condition, mutate the live host through the shared deterministic allocator, or e
 ordinary war, and write the affected ledger into the campaign-feedback record. Because
 visible choices and non-`first` autoresolve both finish through `FB.applyEffects`, they
 produce the same mechanical outcome for a selected option.
+
+The ordinary-war operational queue is distinct from those cooldown-bound stories:
+`FB.queueWarEvent` stamps musters, councils, offers, and captivity audiences with the
+active war serial and enemy. `war_event_context_valid` expires them after peace or war
+replacement, while primary-host field reports remain historical results that may still
+be read after their battle settles the war. Detached-host battles write only Chronicle
+and campaign-ledger results, avoiding a second protagonist-facing modal. After daily
+movement and battles, the first uncontested player host strong enough to work the war
+target queues `war_occupation_policy` through the same exact-war path. It is a once-per-war
+operational event, not a random slot story.
 
 **Tournaments are bounded invitations, not a simulation.** `data/events_tournament.js`
 holds the jousting family: a gentry tourney (tier 2, noble vocation) and a great
@@ -291,8 +309,12 @@ and bundled mods have been applied, so mod-provided English remains a valid fall
 `FB.prepareEvent` materializes roles in the same deterministic order as the original English
 renderer. Display helpers then render without changing game state, and event option keys use
 their authored indices rather than their filtered visible positions. An event that uses the
-localized war summary declares `warStatus: true`; the summary is rendered as independent
-structured clauses instead of being spliced into surrounding prose.
+localized war summary declares `warStatus: true`; the summary is a compact
+one-paragraph status line (host strength and condition, urgent supply or pinning
+warnings, streak, logistics total, enemy host, siege progress) rendered as
+independent structured clauses instead of being spliced into surrounding prose.
+The full battle record, campaign losses, campaign effects, and the itemized
+upkeep ledger stay in the war panels, not in the event modal.
 
 New chronicle and event-log entries store locale-neutral `{key, params}` message descriptors
 and are rendered in the player's current locale. Legacy saves and unstructured mod prose keep

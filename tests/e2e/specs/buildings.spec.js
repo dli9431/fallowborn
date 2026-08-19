@@ -346,8 +346,10 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
       const firstCard = page.locator('#gm-body .gm-list .settcard').first();
       await expect(firstCard).toBeVisible();
-      const infoBtn = firstCard.locator('.settcard-info');
-      await infoBtn.hover();
+      /* one affordance per layout: on desktop the ? disclosure stays hidden
+         and hovering the card opens the side tooltip */
+      await expect(firstCard.locator('.settcard-info')).toBeHidden();
+      await firstCard.hover();
 
       const tip = page.locator('#tooltip');
       await expect(tip).toBeVisible();
@@ -401,8 +403,8 @@ test.describe('building ledger keyboard and tooltip access', function () {
 
       const fortCard = page.locator('#gm-body .fort-asset-row');
       await expect(fortCard).toBeVisible();
-      const infoBtn = fortCard.locator('.settcard-info');
-      await infoBtn.hover();
+      await expect(fortCard.locator('.settcard-info')).toBeHidden();
+      await fortCard.hover();
 
       const tip = page.locator('#tooltip');
       await expect(tip).toBeVisible();
@@ -429,6 +431,38 @@ test.describe('building ledger keyboard and tooltip access', function () {
       // clicking Back on the tech modal returns directly to the settlement sheet
       await page.locator('#tech-back').click();
       await expect(page.locator('#gm-title')).toContainText(setup.settlement);
+    });
+
+  test('tablet-width layouts swap the hover tooltip for the ? disclosure',
+    async function ({ page }, testInfo) {
+      await openGame(page, testInfo);
+      await startDeterministicGame(page);
+      await page.setViewportSize({ width:1000, height:700 });
+
+      await page.evaluate(function () {
+        const state = FB.state;
+        const pid = state.player.provinceId;
+        state.player.tier = 4;
+        state.player.gold = 500;
+        FB.ui.refresh();
+        FB.ui.showBuildings(pid, 0);
+      });
+
+      const firstCard = page.locator('#gm-body .gm-list .settcard').first();
+      await expect(firstCard).toBeVisible();
+      const infoBtn = firstCard.locator('.settcard-info');
+      await expect(infoBtn).toBeVisible();
+
+      // the disclosure layout never opens the hover/focus side tooltip
+      await firstCard.hover();
+      await expect(page.locator('#tooltip')).toBeHidden();
+
+      // the ? button toggles the same details inline instead
+      await infoBtn.click();
+      await expect(infoBtn).toHaveAttribute('aria-expanded', 'true');
+      await expect(firstCard.locator('.settcard-details')).toBeVisible();
+      await infoBtn.click();
+      await expect(firstCard.locator('.settcard-details')).toBeHidden();
     });
 
   test('digit keys raise buildings from the compact ledger',

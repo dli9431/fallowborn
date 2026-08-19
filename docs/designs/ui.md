@@ -57,7 +57,8 @@ Opening and closing it uses the generic modal's normal activating-control restor
 must stay fully playable mouse-free on desktop. New buttons/dialogs need to stay reachable —
 modals autofocus their first control, list dialogs get 1–9 / ⇧1–⇧9 `keyhint` badges via
 `UI.openModal` (`UI.hintFor`; Shift+digit reaches items 10–18, resolved by physical key
-code in keys.js), and dialogs that must not be Esc-dismissed pass `{dismissable:false}`.
+code in keys.js). Pressing Escape on any modal closes it, and pressing a modal's opening hotkey
+again (such as `V` for Automation, `M` for Menu, or a custom action shortcut) closes the open modal.
 Tab and Shift+Tab wrap between the first and last focusable controls of an open generic
 dialog or mandatory event, so keyboard focus cannot move into the obscured game until the
 dialog closes. Event option number shortcuts target only the resolving Choice buttons;
@@ -85,7 +86,9 @@ The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily 
 `2`–`6` select Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War &
 Diplomacy respectively. Selection opens a closed category, scrolls its heading to the top of
 the panel, focuses and highlights it, and assigns `Q W E / A S D / Z X C` to its first nine
-rendered focuses or deeds. Only the active section shows these letter badges. These local
+rendered focuses or deeds. If a section extends beyond nine items, subsequent items are
+assigned `Shift+Q, Shift+W, Shift+E, Shift+A, Shift+S, Shift+D, Shift+Z, Shift+X, Shift+C`
+(items 10–18). Only the active section shows these letter badges. These local
 letters take precedence over panel, time, autoresolve, and configurable semantic shortcuts
 while that Deeds section is active; modal and event digit handling still takes precedence over
 the panel layer. Shift+digit does not extend the Deeds list.
@@ -109,6 +112,28 @@ decorative and the button expands to the 44 px touch target on compact layouts. 
 form keeps only Rename/Cancel-style terminal controls in the shared sticky `.gm-footer`,
 never in an ad-hoc action row in the scrolling body.
 
+**Card details follow one tooltip convention per layout — never both.** The most
+crucial facts stay visible on the card face at all times — identity, standing, and
+the numbers a player acts on — while supplementary detail (audit tables,
+descriptions, charter and tenure terms, siege math) lives in a hidden
+`.settcard-details` div keyed by the card head's `.settcard-info` `?` button. The
+canonical example runs from the Deeds tab: the buildings ledger's county link opens
+the settlement sheet (`UI.showSettlement`), whose building and fort cards carry this
+pattern; the Governance Vassals section follows it too, keeping each vassal's
+standing, territory, and tax/levy contribution on the card and moving the service
+charter, tenure, political terms, council office, and exceptional levy into the
+details. On desktop (fine pointer, wider than 1100 px and taller than 520 px) the `?`
+button stays hidden and hovering or focusing the card opens the shared `#tooltip`
+side panel just right of the card (flipping left near the viewport edge); the pointer
+may move onto the tooltip without closing it, so buttons rendered inside it — the
+fort card's `data-fort-tech` technology link and `data-fort-start` construction
+button — stay clickable from the tooltip itself. On touch and tablet-width or short
+layouts the hover tooltip never opens and the `?` button toggles the same details
+inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of the
+switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
+`css/style.css` is the CSS half; event-choice stakes follow the same rule with their
+`.event-details-button`.
+
 **Responsive layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). From the 821 px desktop breakpoint through 1440 px, the
 persistent Self/Kin and Deeds/Land/Network/Chronicle bars scale together from 80% to their
@@ -129,6 +154,24 @@ full-width row (`#tb-date` order 4, `#tb-stats` order 5; a single stats row clip
 leftmost figures on narrow screens, and the date is hidden in the tighter landscape bar).
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
+
+Natural clock ticks use a low-priority `UI.refresh({ liveTick:true })`: the lightweight
+topbar and date remain daily, but the expensive Deeds and Land trees stay mounted without
+an automatic repaint while natural time flows. A changing host value otherwise makes Land
+recompute and replace the host card, county economy, settlements, population, people, and
+all their bindings; Deeds likewise reconstructs every action and eligibility description.
+Those whole-panel frame spikes matter more than their average frequency, so the live clock
+does not invoke either renderer. An ordinary refresh — used by pauses, tab/selection
+changes, orders, deeds, and modal outcomes — bypasses the live snapshot and makes every
+value exact immediately.
+
+Live refreshes also never compete with a direct map gesture. While a pointer drag, pinch,
+or wheel-zoom is active, refresh requests retain the last completed topbar and panel DOM
+and collapse into one deferred refresh. Pointer release, cancellation, or 120 ms of wheel
+idleness flushes it without raising its priority: deferred natural ticks remain lightweight
+and cannot cause a whole-panel rebuild between repeated drags, while a deferred pause or
+other exact request still repaints immediately. The simulation updates daily throughout;
+only repeated text calculation and DOM replacement are skipped.
 
 The Land tab groups realm, county, and development facts into compact cards. A county
 with authored communities keeps its principal Culture and Faith rows and adds the full
@@ -325,7 +368,12 @@ Every reigning ruler uses the standard character sheet, rather than a duplicate
 realm-ruler sheet. Their title, **Realm muster** line, court, political actions, and
 personal actions share that one sheet; the muster names the current approximate troops
 the realm can raise. An active war is the first notice under the card, and the Land tab
-places the same notice directly below its county heading. The larger skill line carries
+places the same notice directly below its county heading. The notice's realm links always
+open the linked ruler's sheet — including the player's own realm, whose self sheet wears
+the same ruler frame (rank title, muster, war notice) while still skipping the foreign
+Standing and diplomacy card. A sheet reached through a return chain shows both **Back**
+(walk the chain) and **Close** (dismiss the modal outright), so linked sheets can never
+trap the player in a back-and-forth loop. The larger skill line carries
 the same compact Skills Guide icon as an ordinary character sheet. Every
 character-sheet portrait centers the map on that
 character's home county without dismissing the sheet. A decorated ruler portrait frame and a quieter heir
@@ -1297,7 +1345,7 @@ the exact slot, and shows matching household plots, manor, and enterprises when
 present. Each building, ruin, or fort renders as a compact card — icon, name, and a
 one-line effect — with the full audit table and description behind a per-card
 details disclosure (a hover/focus tooltip on desktop, an inline tap toggle
-elsewhere), and demolition rides inside the owned card as an icon button.
+elsewhere — one or the other per layout, per the tooltip convention above), and demolition rides inside the owned card as an icon button.
 Authorization lives inside the sheet, so foreign and non-demesne settlements
 are read-only while a valid demesne settlement keeps construction and demolition.
 
@@ -1316,7 +1364,7 @@ markup, but localization must never replace substrings or fragments inside mixed
 Dynamic UI uses message keys or localized parts plus proper names. Rendered messages are
 plain text and substitutions are escaped before insertion into HTML. Keyboard hint badges
 (`.keyhint`) label physical keys, so they are authored as literals and never localized; the
-time-bar badges (`Space`/`F`/`Z`) are re-emitted on every `refreshNow`, so a locale reload or
+time-bar badges (`Space`/`F`/`V`) are re-emitted on every `refreshNow`, so a locale reload or
 any DOM re-render cannot leave them stripped.
 
 New UI must tolerate longer translations, keep translated labels out of fixed-width

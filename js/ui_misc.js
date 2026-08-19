@@ -31,7 +31,10 @@ window.FB = window.FB || {};
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return FB.esc(s); }
-  /* Event stakes use an explicit disclosure on touch and tablet-width layouts. */
+  /* Rich card details use an explicit ? disclosure on touch and tablet-width
+     or short layouts; roomier desktop pointers get the hover/focus side
+     tooltip instead — one affordance per layout, never both (the CSS gate on
+     .settcard-info mirrors this switch). */
   function eventChoiceUsesDisclosure() {
     return FB.isTouch || (typeof window.matchMedia === 'function' &&
       window.matchMedia('(max-width: 1100px), (max-height: 520px)').matches);
@@ -1228,8 +1231,10 @@ window.FB = window.FB || {};
   }
 
   /* Compact asset card: icon, name, one-line effect, optional meta line; the
-     full audit table and description sit behind the ? button (inline toggle,
-     plus a hover/focus tooltip on desktop). Callers compose the action
+     full audit table and description sit behind the ? button — an inline
+     toggle on touch/tablet layouts, replaced by the hover/focus side tooltip
+     on desktop (never both at once; the CSS hides the ? where the tooltip
+     serves). Callers compose the action
      buttons (raise, demolish) rendered inside the card head. */
   function assetCard(detId, icon, name, fxLine, metaLine, detailsHtml, actionsHtml) {
     const metaText = typeof metaLine === 'object' && metaLine ? metaLine.text : metaLine;
@@ -2393,7 +2398,7 @@ window.FB = window.FB || {};
       }
     );
     FB.map.buildBase();
-    FB.map.select(FB.map.selected, SH.mapGroupOf); // realm highlight tracks conquests
+    FB.map.select(FB.map.selected, SH.mapGroupOf, SH.mapHighlightColorOf ? SH.mapHighlightColorOf(FB.map.selected) : null); // realm highlight tracks conquests
     FB.map.request();
   }
 
@@ -2478,6 +2483,9 @@ window.FB = window.FB || {};
     view.body = document.createDocumentFragment();
     view.scrollTop = body.scrollTop;
     view.dismiss = UI._gmDismiss;
+    view.modalKey = UI._gmModalKey;
+    view.modalTarget = UI._gmModalTarget;
+    view.modalAction = UI._gmModalAction;
     view.historyBack = !!(genericNavSnapshot && genericNavSnapshot.historyBack);
     view.returnFocus = UI._gmReturnFocus;
     view.returnAction = UI._gmReturnAction;
@@ -2500,6 +2508,9 @@ window.FB = window.FB || {};
     body.scrollTop = view.scrollTop || 0;
     setModalClasses(gm, view.modalClass);
     UI._gmDismiss = view.dismiss;
+    UI._gmModalKey = view.modalKey;
+    UI._gmModalTarget = view.modalTarget;
+    UI._gmModalAction = view.modalAction;
     UI._gmReturnFocus = view.returnFocus;
     UI._gmReturnAction = view.returnAction;
     genericNavSnapshot = {
@@ -2622,10 +2633,17 @@ window.FB = window.FB || {};
       document.documentElement.contains(pickerBack)) pickerBack.focus();
   }
 
+  UI._gmModalKey = null;
+  UI._gmModalTarget = null;
+  UI._gmModalAction = null;
+
   function closeGenericModalRaw() {
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
     UI._gmNoHotkeys = false;
+    UI._gmModalKey = null;
+    UI._gmModalTarget = null;
+    UI._gmModalAction = null;
     const back = UI._gmReturnFocus;
     const actionId = UI._gmReturnAction;
     UI._gmReturnFocus = null;
@@ -2670,6 +2688,9 @@ window.FB = window.FB || {};
     }
     UI._gmDismiss = !(opts && opts.dismissable === false);
     UI._gmNoHotkeys = !!(opts && opts.noHotkeys);
+    UI._gmModalKey = (opts && opts.modalKey) || UI._gmModalKey || null;
+    UI._gmModalTarget = (opts && opts.modalTarget) || UI._gmModalTarget || null;
+    UI._gmModalAction = (opts && opts.modalAction) || UI._gmModalAction || UI._gmReturnAction || null;
     if (wasHidden) {
       UI._gmReturnFocus = modalOpenTrigger &&
         document.documentElement.contains(modalOpenTrigger)
@@ -2752,6 +2773,39 @@ window.FB = window.FB || {};
   }
   UI.openModal = openModal;
   UI._gmDismiss = true;
+
+  function modalHotkeyClose(key, shift) {
+    const gm = $('genmodal');
+    if (!gm || gm.classList.contains('hidden')) return false;
+    const normalized = String(key || '').toLocaleLowerCase();
+    const keyCombo = (shift ? 'shift+' : '') + normalized;
+
+    if (UI._gmModalKey && (UI._gmModalKey === keyCombo || (!shift && UI._gmModalKey === normalized))) {
+      return true;
+    }
+
+    if (!shift && normalized === 'v' && $('ar-done')) {
+      return true;
+    }
+    if (!shift && normalized === 'm' && ($('m-resume') || $('m-close'))) {
+      return true;
+    }
+
+    if (!shift && FB.game && FB.game.uiPrefs && FB.game.uiPrefs.actionBindings) {
+      const bindings = FB.game.uiPrefs.actionBindings;
+      const boundTarget = bindings[normalized];
+      if (boundTarget) {
+        if (UI._gmModalTarget && boundTarget === UI._gmModalTarget) return true;
+        if (UI._gmModalAction && boundTarget === 'action:' + UI._gmModalAction) return true;
+        if (UI._gmReturnAction && boundTarget === 'action:' + UI._gmReturnAction) return true;
+      }
+    }
+
+    return false;
+  }
+  UI.modalHotkeyClose = modalHotkeyClose;
+  SH.modalHotkeyClose = modalHotkeyClose;
+
   UI.closeModal = function () {
     const equipmentPicker = $('equip-picker-overlay');
     if (equipmentPicker) {
@@ -2775,7 +2829,13 @@ window.FB = window.FB || {};
       UI.toastMessage(intent.message, intent.legacyText);
     });
     document.querySelectorAll('#sidetabs .tab[data-tab], #lefttabs .tab[data-tab]').forEach(function (t) {
-      t.addEventListener('click', function () { SH.setTab(t.dataset.tab); });
+      t.addEventListener('click', function (ev) {
+        SH.setTab(t.dataset.tab);
+        /* A pointer click leaves the tab focused, and a focused button swallows
+           Space/Enter as native activation — stealing the pause hotkey until
+           focus moves elsewhere. Keyboard activation (detail 0) keeps focus. */
+        if (ev.detail > 0) t.blur();
+      });
     });
     // the topbar portrait opens your own sheet (a drawer on phones)
     $('tb-portrait').addEventListener('click', function () {
@@ -2947,6 +3007,11 @@ window.FB = window.FB || {};
       }
       const lnk = e.target.closest('[data-liege]');
       if (lnk && FB.state && !UI.eventsBusy()) { UI.showLiegeModal(lnk.getAttribute('data-liege')); return; }
+      const enemyBtn = e.target.closest('[data-war-enemy]');
+      if (enemyBtn && FB.state && UI.highlightEnemyRealm) {
+        UI.highlightEnemyRealm(enemyBtn.getAttribute('data-war-enemy'));
+        return;
+      }
       const modifierChip = e.target.closest('.modifierchip[data-modifier]');
       if (modifierChip && FB.state) {
         UI.showModifierModal(
@@ -3064,6 +3129,7 @@ window.FB = window.FB || {};
         return showSideTip(btn, details.innerHTML);
       }
       function showSettCardTip(infoBtn) {
+        if (eventChoiceUsesDisclosure()) return false;
         const btn = infoBtn.classList && infoBtn.classList.contains('settcard-info')
           ? infoBtn : (infoBtn.querySelector ? infoBtn.querySelector('.settcard-info') : null);
         const detId = btn ? btn.getAttribute('aria-controls') : infoBtn.getAttribute('aria-controls');

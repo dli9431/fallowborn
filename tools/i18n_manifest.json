@@ -31593,15 +31593,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Force a decision in the field — only while they have no host raised. A fielded enemy must be hunted on the map."
-      }
-    },
-    "event.war_council.options.0.failure.text.default": {
-      "context": "Event war_council, authored option 0, failure text, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "The day goes against you. You are carried back with the remnant of your host — alive, and little else."
+        "text": "March on their army in the field — battle joins when you catch it."
       }
     },
     "event.war_council.options.0.label.default": {
@@ -31609,15 +31601,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Offer pitched battle."
-      }
-    },
-    "event.war_council.options.0.success.text.default": {
-      "context": "Event war_council, authored option 0, success text, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "The lines meet with a sound like a falling forest — and it is theirs that breaks. The field is yours."
+        "text": "Hunt down their field host."
       }
     },
     "event.war_council.options.1.desc.default": {
@@ -31625,7 +31609,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "March on their army in the field — battle joins when you catch it."
+        "text": "The host mends and your borders are relieved — but no ground is gained."
       }
     },
     "event.war_council.options.1.label.default": {
@@ -31633,7 +31617,7 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Hunt down their field host."
+        "text": "Fall back and refit."
       }
     },
     "event.war_council.options.2.desc.default": {
@@ -31641,77 +31625,11 @@
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
-        "text": "Ladders, mines, and patience — your host must stand in the target province. Fortifications add siege work, demand enough uncontested men, and exact seasonal losses."
+        "text": "End the war now, at a price."
       }
     },
     "event.war_council.options.2.label.default": {
       "context": "Event war_council, authored option 2, label, branch default.",
-      "glossary": [
-        "target"
-      ],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "Press the siege of {target}."
-      }
-    },
-    "event.war_council.options.3.desc.default": {
-      "context": "Event war_council, authored option 3, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "Burn and take — weaken them before the next battle."
-      }
-    },
-    "event.war_council.options.3.failure.text.default": {
-      "context": "Event war_council, authored option 3, failure text, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "Their riders were waiting at the ford. Your raiders return fewer, poorer, and ashamed."
-      }
-    },
-    "event.war_council.options.3.label.default": {
-      "context": "Event war_council, authored option 3, label, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "Harry their lands."
-      }
-    },
-    "event.war_council.options.3.success.text.default": {
-      "context": "Event war_council, authored option 3, success text, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "Granaries burn and herds change owners. Their war grows dearer by the day — and yours a little richer."
-      }
-    },
-    "event.war_council.options.4.desc.default": {
-      "context": "Event war_council, authored option 4, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "The host mends and your borders are relieved — but no ground is gained."
-      }
-    },
-    "event.war_council.options.4.label.default": {
-      "context": "Event war_council, authored option 4, label, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "Fall back and refit."
-      }
-    },
-    "event.war_council.options.5.desc.default": {
-      "context": "Event war_council, authored option 5, desc, branch default.",
-      "glossary": [],
-      "location": "data/events_war.js",
-      "source": {
-        "text": "End the war now, at a price."
-      }
-    },
-    "event.war_council.options.5.label.default": {
-      "context": "Event war_council, authored option 5, label, branch default.",
       "glossary": [],
       "location": "data/events_war.js",
       "source": {
@@ -32184,7 +32102,7 @@
       ],
       "location": "data/events_war.js",
       "source": {
-        "text": "War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls while the council presses the works."
+        "text": "War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls, season by season, until the works are done."
       }
     },
     "event.war_muster.title.default": {
@@ -32716,7 +32634,7 @@
       ],
       "location": "data/events_war.js",
       "source": {
-        "text": "Keep your host standing on {target} and press the siege at each war council. Fortifications may demand more work and a larger host."
+        "text": "Keep your host standing on {target} — the works advance each season it holds the ground. Fortifications may demand more work and a larger host."
       }
     },
     "event.war_tribute_offer.options.1.effects.log.default": {
@@ -38288,6 +38206,17 @@
         "text": "🏳 The war is done — the host disbands to hearth and field."
       }
     },
+    "news.army.enemy_destroyed_cornered": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province",
+        "realm"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "⚔ Cornered with nowhere to retreat — the host of {realm} at {province} is destroyed."
+      }
+    },
     "news.army.enemy_destroyed_encircled": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -38318,6 +38247,27 @@
       "location": "js/armies.js",
       "source": {
         "text": "🚩 {realm} takes the field — some {men} spears against you."
+      }
+    },
+    "news.army.enemy_wiped_out": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province",
+        "realm"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "⚔ Overwhelmed and overrun — the host of {realm} at {province} is shattered and destroyed completely."
+      }
+    },
+    "news.army.host_destroyed_cornered": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "⚔ Cornered with nowhere to retreat — the host at {province} is destroyed."
       }
     },
     "news.army.host_destroyed_encircled": {
@@ -38359,6 +38309,16 @@
       "location": "js/armies.js",
       "source": {
         "text": "🥀 The host at {province} has exhausted its supplies — hunger thins its ranks daily until it reaches friendly land."
+      }
+    },
+    "news.army.host_wiped_out": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "⚔ Overwhelmed and overrun — the host at {province} is shattered and destroyed completely."
       }
     },
     "news.army.hosts_merge": {
@@ -40189,6 +40149,26 @@
       "location": "js/holywar.js",
       "source": {
         "text": "🏳 The gathering {campaign} collapses before the banners can march."
+      }
+    },
+    "news.holywar.detachment_defeat": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "⚔ Your detached banner is driven from the field at {province} in the great holy war."
+      }
+    },
+    "news.holywar.detachment_victory": {
+      "context": "Durable message descriptor; English source remains at its callsite.",
+      "glossary": [
+        "province"
+      ],
+      "location": "js/holywar.js",
+      "source": {
+        "text": "⚔ Your detached banner helps win the field at {province} in the great holy war."
       }
     },
     "news.holywar.failure": {
@@ -51071,7 +51051,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Status"
@@ -51557,6 +51538,16 @@
       ],
       "source": {
         "text": "fullsheet-modal equip-best-modal"
+      }
+    },
+    "src.017c5ced": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "War & Host — {men}"
       }
     },
     "src.017edc0e": {
@@ -52398,16 +52389,6 @@
       ],
       "source": {
         "text": "Some doors are better left unknocked."
-      }
-    },
-    "src.0399219d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land"
       }
     },
     "src.03a98ff9": {
@@ -54153,6 +54134,16 @@
         "text": "{occupied}/{total} relevant counties occupied; your host occupied {personal} of them."
       }
     },
+    "src.0748c1e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Battle Odds"
+      }
+    },
     "src.074c7bba": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -55651,16 +55642,6 @@
         "text": "Learned master"
       }
     },
-    "src.0a324c9a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%"
-      }
-    },
     "src.0a49959d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56292,6 +56273,16 @@
       ],
       "source": {
         "text": "The campaign’s partition"
+      }
+    },
+    "src.0b5ce996": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your host: ~{men} men at {condition}% condition, at {place}"
       }
     },
     "src.0b61b976": {
@@ -57586,6 +57577,16 @@
         "text": "The villages approve; the roads learn to pass you by."
       }
     },
+    "src.0e20a664": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "the host is starving"
+      }
+    },
     "src.0e26f29f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57892,7 +57893,8 @@
       "glossary": [],
       "location": [
         "js/ui_misc.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/ui_panels.js"
       ],
       "source": {
         "text": "Details"
@@ -57926,6 +57928,16 @@
       ],
       "source": {
         "text": "Adds {percent}% levy for one year and lowers Standing by 15. (spends the day)"
+      }
+    },
+    "src.0eeef99b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Pinned by {fort} at {place}"
       }
     },
     "src.0f004c88": {
@@ -58176,6 +58188,16 @@
       ],
       "source": {
         "text": "{chance}% yearly · {money:amount} each season"
+      }
+    },
+    "src.0f8e0265": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "⚔ Overwhelmed and overrun — the host of {realm} at {province} is shattered and destroyed completely."
       }
     },
     "src.0f90e8c5": {
@@ -59314,6 +59336,16 @@
         "text": "Return this object to the armory before gifting it."
       }
     },
+    "src.120f3c76": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Starving — hunger thins the host daily."
+      }
+    },
     "src.12127346": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60293,16 +60325,6 @@
       ],
       "source": {
         "text": "It is nothing like the drill-yard. The line locks shield to shield, the horns wail, and across a hundred paces of trampled barley the enemy comes on like a grey tide. Somewhere down the wall is {suitor}, white-knuckled on his spear. There is no hiding left now — only the wall, and whether you hold your span of it."
-      }
-    },
-    "src.139bfdba": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "Campaign condition changes war-council odds; live troop totals change only when a loss names the host."
       }
     },
     "src.13a198a3": {
@@ -62001,6 +62023,16 @@
         "text": "{profession} Monopoly"
       }
     },
+    "src.16f6c653": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Highlight {realm} on map"
+      }
+    },
     "src.16faf94b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62311,6 +62343,16 @@
       ],
       "source": {
         "text": "Custom & Reformed Faiths"
+      }
+    },
+    "src.178a25f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🗺 At peace — no active war to show."
       }
     },
     "src.178c45cb": {
@@ -63728,16 +63770,6 @@
       ],
       "source": {
         "text": "The Guild Bench"
-      }
-    },
-    "src.1a72d91c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🥖 Supply: {status} ({pct}%) — refilling on friendly land."
       }
     },
     "src.1a78e375": {
@@ -65532,16 +65564,6 @@
       ],
       "source": {
         "text": "Enough for tonight; the waste keeps score."
-      }
-    },
-    "src.1ec6dcd9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "✂ Cut off — no road home. If this host shatters here it is destroyed outright."
       }
     },
     "src.1ec8d55c": {
@@ -67998,6 +68020,16 @@
       ],
       "source": {
         "text": "Direct vassal"
+      }
+    },
+    "src.239c2fcf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Automation (V)"
       }
     },
     "src.239d0b17": {
@@ -70839,16 +70871,6 @@
         "text": "Disorder and cruelty lower abstract condition despite immediate plunder."
       }
     },
-    "src.29f300e1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Keep your host standing on {target} and press the siege at each war council. Fortifications may demand more work and a larger host."
-      }
-    },
     "src.29f561a2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71047,16 +71069,6 @@
       ],
       "source": {
         "text": "Their figures collapse under examination, and so does the toll."
-      }
-    },
-    "src.2a740abf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls while the council presses the works."
       }
     },
     "src.2a7ceeb3": {
@@ -71439,16 +71451,6 @@
         "text": "Pay two seasons of current live-host logistics. Supply raises abstract condition; live troops do not change."
       }
     },
-    "src.2b23befa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_harry war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win"
-      }
-    },
     "src.2b26e790": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71649,16 +71651,6 @@
         "text": "✓ Repeating"
       }
     },
-    "src.2b7dcab4": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
-      }
-    },
     "src.2b805de7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71777,6 +71769,16 @@
       ],
       "source": {
         "text": "Money pays for land, enterprises, gifts — and freedom."
+      }
+    },
+    "src.2bbdd1d7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your {fort}: {minimum} besiegers needed, {attrition} lost each season"
       }
     },
     "src.2bc007cc": {
@@ -72383,16 +72385,6 @@
         "text": "Written statements stabilize customs once carried mainly by memory."
       }
     },
-    "src.2d08648b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "{count} mercenary company"
-      }
-    },
     "src.2d09638b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72993,16 +72985,6 @@
         "text": "Undermine your rival by fair means or foul."
       }
     },
-    "src.2e8232d3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🛡 {count} drilled {unit} stand ready — they join a resting host or the next muster."
-      }
-    },
     "src.2e914682": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73524,6 +73506,16 @@
         "text": "Market Stall"
       }
     },
+    "src.2fa86fc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Supplies replenished from friendly territory."
+      }
+    },
     "src.2fa8f9e5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73915,16 +73907,6 @@
       ],
       "source": {
         "text": "The Villages Bar Their Doors"
-      }
-    },
-    "src.306adcd8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Their riders were waiting at the ford. Your raiders return fewer, poorer, and ashamed."
       }
     },
     "src.306b41cb": {
@@ -74629,6 +74611,16 @@
         "text": "Sealed a charter of liberties for the great council."
       }
     },
+    "src.31e673b9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Stand your host on the prize — the works advance each season it holds the ground. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
+      }
+    },
     "src.31eaddb7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74727,16 +74719,6 @@
       ],
       "source": {
         "text": "Break off the talks."
-      }
-    },
-    "src.3217c25e": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles."
       }
     },
     "src.3218cacf": {
@@ -75591,6 +75573,16 @@
         "text": "Turn surplus iron back into silver."
       }
     },
+    "src.33eae673": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "🚩 The host marches to {province} — about {days} days."
+      }
+    },
     "src.33ed1e30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75973,6 +75965,16 @@
       ],
       "source": {
         "text": "{amount} piety a season"
+      }
+    },
+    "src.34cafe35": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station"
       }
     },
     "src.34d20fb8": {
@@ -76466,6 +76468,16 @@
       ],
       "source": {
         "text": "Share news at the well."
+      }
+    },
+    "src.35fc0f6f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Cut off — no road home. If this host shatters here it is destroyed outright."
       }
     },
     "src.35ff49f8": {
@@ -79017,6 +79029,16 @@
         "text": "Bold — chase the bigger prize"
       }
     },
+    "src.3b503334": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A declaration must still be won on the map. March the host to the named prize and hold it — the works advance each season the host stands there. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
+      }
+    },
     "src.3b5a5cf1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -79045,6 +79067,16 @@
       ],
       "source": {
         "text": "Feet"
+      }
+    },
+    "src.3b64a23f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win"
       }
     },
     "src.3b6570bd": {
@@ -79974,6 +80006,16 @@
         "text": "The Pope demands canonical investiture. Acceptance strengthens Papal authority; refusal creates grounds for excommunication."
       }
     },
+    "src.3deb38e7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "⚔ Your detached banner helps win the field at {province} in the great holy war."
+      }
+    },
     "src.3dee08c4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80142,6 +80184,16 @@
       ],
       "source": {
         "text": "Attaleia"
+      }
+    },
+    "src.3e70fc79": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Starving — supplies are gone and hunger thins its ranks daily."
       }
     },
     "src.3e72577e": {
@@ -80929,6 +80981,16 @@
         "text": "button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), a[href]"
       }
     },
+    "src.3fe9f69e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🚩 Ready at {place}"
+      }
+    },
     "src.3fecdec8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80967,16 +81029,6 @@
       ],
       "source": {
         "text": "{house} shares {leader}’s culture."
-      }
-    },
-    "src.400646e3": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "🚩 The host marches on {province} — about {days} days."
       }
     },
     "src.400e05fe": {
@@ -81307,6 +81359,16 @@
       ],
       "source": {
         "text": "Roland’s sword, relics sealed in its golden hilt. Keeping them housed and honored is not cheap."
+      }
+    },
+    "src.40a52bf3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "⚔ Overwhelmed and overrun — the host at {province} is shattered and destroyed completely."
       }
     },
     "src.40b25032": {
@@ -81674,16 +81736,6 @@
       ],
       "source": {
         "text": "Stand in the granary door."
-      }
-    },
-    "src.416b6dfa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps."
       }
     },
     "src.417ce5ff": {
@@ -82619,6 +82671,16 @@
       ],
       "source": {
         "text": "Military Magazines"
+      }
+    },
+    "src.4335e0b6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Supply at {pct}% — refilling on friendly land."
       }
     },
     "src.4339439d": {
@@ -83916,16 +83978,6 @@
         "text": "Not yet"
       }
     },
-    "src.458f89dd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Force a decision in the field — only while they have no host raised. A fielded enemy must be hunted on the map."
-      }
-    },
     "src.459023ef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84501,6 +84553,16 @@
       ],
       "source": {
         "text": "No exact targets are currently eligible."
+      }
+    },
+    "src.46b42ada": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🚩 Holding at {place}"
       }
     },
     "src.46b697df": {
@@ -86122,6 +86184,16 @@
         "text": "Hooped wooden vessels store and move liquids, grain, and salted food."
       }
     },
+    "src.4a6aee28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Total seasonal logistics: {money:amount}"
+      }
+    },
     "src.4a6e0755": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86292,16 +86364,6 @@
       ],
       "source": {
         "text": "Rich yeoman’s daughter"
-      }
-    },
-    "src.4af3c3b5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🥀 Supply: {status} — hunger thins the host daily."
       }
     },
     "src.4af53a3c": {
@@ -87385,6 +87447,16 @@
       ],
       "source": {
         "text": "Question follows question; the wording never changes. The testament stands."
+      }
+    },
+    "src.4d854dae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season."
       }
     },
     "src.4d89a2d6": {
@@ -89779,6 +89851,16 @@
         "text": "the two-year refusal cooldown ({days} days remain)"
       }
     },
+    "src.528a54b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your host: ~{men} at {condition}% condition"
+      }
+    },
     "src.528d7461": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90104,6 +90186,16 @@
       ],
       "source": {
         "text": "Work outfits"
+      }
+    },
+    "src.533991a7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count} drilled {unit} stand ready — they join a resting host or the next muster."
       }
     },
     "src.533ed283": {
@@ -91942,6 +92034,16 @@
         "text": "Good profit, poor prayers — and his mill if he fails."
       }
     },
+    "src.570cf300": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Tap troops, then tap a county to move."
+      }
+    },
     "src.57184957": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92351,6 +92453,16 @@
       ],
       "source": {
         "text": "Open a row for its effect, ownership, upkeep, and lapse terms."
+      }
+    },
+    "src.57ef29af": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/holywar.js"
+      ],
+      "source": {
+        "text": "⚔ Your detached banner is driven from the field at {province} in the great holy war."
       }
     },
     "src.57efb27f": {
@@ -94794,6 +94906,16 @@
         "text": "Save shortcuts"
       }
     },
+    "src.5d100cc9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land."
+      }
+    },
     "src.5d1011d0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95712,6 +95834,16 @@
         "text": "Glassblowing"
       }
     },
+    "src.5f1b82c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "⚔ Cornered with nowhere to retreat — the host at {province} is destroyed."
+      }
+    },
     "src.5f1baa57": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -96596,16 +96728,6 @@
       ],
       "source": {
         "text": "{god} preserve us."
-      }
-    },
-    "src.60e7f89b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Command your men in the field. (better odds at the war council)"
       }
     },
     "src.60eb25b9": {
@@ -98365,16 +98487,6 @@
         "text": "Take it, and remember."
       }
     },
-    "src.64a37800": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🤝 {men} allied defenders from {realm}"
-      }
-    },
     "src.64a4791a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98493,6 +98605,16 @@
       ],
       "source": {
         "text": "Murcia"
+      }
+    },
+    "src.64d11168": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Your Host"
       }
     },
     "src.64dfb90f": {
@@ -101337,16 +101459,6 @@
         "text": "👤 {heir} takes up the family’s story while {former} retires to {destination}. Generation {generation}."
       }
     },
-    "src.6aed70a5": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "The day goes against you. You are carried back with the remnant of your host — alive, and little else."
-      }
-    },
     "src.6af09216": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -102288,16 +102400,6 @@
         "text": "Every breath and laugh comes at a price."
       }
     },
-    "src.6cda7c6a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Burn and take — weaken them before the next battle."
-      }
-    },
     "src.6ce3256f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103029,16 +103131,6 @@
         "text": "Conversion scope"
       }
     },
-    "src.6e5988d7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Tap the 🚩 on the map to give march orders."
-      }
-    },
     "src.6e5db4d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103640,16 +103732,6 @@
       ],
       "source": {
         "text": "Wages for hunger — labor that may pay double."
-      }
-    },
-    "src.7005b160": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles."
       }
     },
     "src.700e4d13": {
@@ -105464,6 +105546,16 @@
         "text": "Your fabricated claim no longer borders your realm; it remains valid if the frontier reaches it again."
       }
     },
+    "src.73b8376e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Host & Units"
+      }
+    },
     "src.73c16c3b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106274,6 +106366,16 @@
       ],
       "source": {
         "text": "A grizzled sergeant taps your shoulder with a practice blade: “Young ones always think it’s about strength. Care to learn otherwise, for a wager?”"
+      }
+    },
+    "src.753ec715": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🎯 ~{odds}% chance"
       }
     },
     "src.753f71ee": {
@@ -109863,6 +109965,16 @@
       ],
       "source": {
         "text": "Filter list"
+      }
+    },
+    "src.7d64d643": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "+{men} allied"
       }
     },
     "src.7d6e4ef6": {
@@ -114782,6 +114894,16 @@
         "text": "Who Stands Nearest"
       }
     },
+    "src.86c498b7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{wins}W · {losses}L"
+      }
+    },
     "src.86d15b80": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116379,16 +116501,6 @@
         "text": "Castellan’s stipend and revenues"
       }
     },
-    "src.89e7ea24": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
-      }
-    },
     "src.89e9f6ed": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116621,16 +116733,6 @@
         "text": "The scheme unravels, and fingers point at you."
       }
     },
-    "src.8a713c13": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Harry their lands."
-      }
-    },
     "src.8a715d5f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116832,16 +116934,6 @@
       ],
       "source": {
         "text": "Turned faith refugees back at the border."
-      }
-    },
-    "src.8ac7dc6f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more."
       }
     },
     "src.8acd33b1": {
@@ -117835,16 +117927,6 @@
         "text": "{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices."
       }
     },
-    "src.8c96eb82": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Seasonal host logistics: {money:amount}"
-      }
-    },
     "src.8c983e7f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118396,6 +118478,16 @@
       ],
       "source": {
         "text": "Hedge Knight"
+      }
+    },
+    "src.8dbc9a95": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "⚓ The host embarks for {province} — {days} days, {coin}{capstone}."
       }
     },
     "src.8dbd8ec7": {
@@ -118999,6 +119091,16 @@
         "text": "Sweat now, live later — and grow strong enough to matter."
       }
     },
+    "src.8ee40cab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Supply at {pct}% — about {days} days before hunger bites."
+      }
+    },
     "src.8ee4e73e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119229,16 +119331,6 @@
       ],
       "source": {
         "text": "Lose the coin, keep your soul."
-      }
-    },
-    "src.8f3e41ba": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Press the siege of {target}."
       }
     },
     "src.8f405d17": {
@@ -119793,6 +119885,16 @@
         "text": "☠ {name} is Dead"
       }
     },
+    "src.908ef43d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Their host: ~{men} at {place}"
+      }
+    },
     "src.90987036": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120087,6 +120189,16 @@
         "text": "The eldest of them picks up the pieces, bows with insulting correctness, and rides home. Within the month, his defiance is armed."
       }
     },
+    "src.91755e82": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "⚔ Cornered with nowhere to retreat — the host of {realm} at {province} is destroyed."
+      }
+    },
     "src.917e2a3a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120327,16 +120439,6 @@
         "text": "A Hairy Star"
       }
     },
-    "src.91f11f6b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Granaries burn and herds change owners. Their war grows dearer by the day — and yours a little richer."
-      }
-    },
     "src.91f7f98a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120345,6 +120447,16 @@
       ],
       "source": {
         "text": "Consequence"
+      }
+    },
+    "src.91fbb336": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Battle & Campaign Record"
       }
     },
     "src.91fe7156": {
@@ -120678,6 +120790,16 @@
         "text": "Convert"
       }
     },
+    "src.92e45a1c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls, season by season, until the works are done."
+      }
+    },
     "src.92ee3126": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -120766,16 +120888,6 @@
       ],
       "source": {
         "text": "Refuse — it is yours by right."
-      }
-    },
-    "src.9332ba2b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "{count} mercenary companies"
       }
     },
     "src.93336caa": {
@@ -122328,6 +122440,16 @@
         "text": "Not enough money: requires {money:cost}."
       }
     },
+    "src.96ce931e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Target {realm}; conquer {province} by standing your host on it until {steps} siege steps are done."
+      }
+    },
     "src.96d00ef7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122766,16 +122888,6 @@
       ],
       "source": {
         "text": "No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12."
-      }
-    },
-    "src.97a6f1b0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
       }
     },
     "src.97a80d1c": {
@@ -124340,6 +124452,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/ui_panels.js",
         "js/events.js"
       ],
       "source": {
@@ -124797,6 +124910,16 @@
       ],
       "source": {
         "text": "The intercepted letters name {rulername} of {rname}: payments to singers, promises to dissatisfied captains, careful guesses at how long your crown would survive a bad harvest. The evidence is real. How honestly you use it is another question."
+      }
+    },
+    "src.9b995208": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Battle & Losses"
       }
     },
     "src.9b9bfeef": {
@@ -125607,16 +125730,6 @@
       ],
       "source": {
         "text": "fullsheet-modal papacy-modal"
-      }
-    },
-    "src.9d00561d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🛠 Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season."
       }
     },
     "src.9d11a81d": {
@@ -127154,6 +127267,16 @@
         "text": "Durendal"
       }
     },
+    "src.a03fdcc0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Troops"
+      }
+    },
     "src.a0457f38": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127685,6 +127808,16 @@
       ],
       "source": {
         "text": "Shared embarrassment becomes shared good humor."
+      }
+    },
+    "src.a160f707": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Intelligence & Front"
       }
     },
     "src.a16321e7": {
@@ -128357,16 +128490,6 @@
       ],
       "source": {
         "text": "Koblenz"
-      }
-    },
-    "src.a2a61195": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "{fort}: {minimum} besiegers required; {attrition} casualties each active season"
       }
     },
     "src.a2a71ea6": {
@@ -130896,6 +131019,16 @@
       ],
       "source": {
         "text": "Samandar"
+      }
+    },
+    "src.a7e9cdbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "{fort}: {minimum} besiegers needed, {attrition} lost each season"
       }
     },
     "src.a7f032f1": {
@@ -133704,6 +133837,16 @@
         "text": "No neighboring sovereign court lies within reach."
       }
     },
+    "src.ae229ba7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🚩 Marching to {next} — {days}d remaining"
+      }
+    },
     "src.ae242168": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134176,6 +134319,16 @@
         "text": "Health may improve"
       }
     },
+    "src.af4e4fca": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Troop Composition & Battle Quality"
+      }
+    },
     "src.af52590e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -134344,6 +134497,16 @@
       ],
       "source": {
         "text": "Stone Bridge"
+      }
+    },
+    "src.af996604": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "px system-ui, sans-serif"
       }
     },
     "src.af9984d3": {
@@ -136301,6 +136464,16 @@
         "text": "A fugitive clings to the cathedral door-ring while armed men demand surrender. Sanctuary, justice, and your liege’s patience pull in different directions."
       }
     },
+    "src.b3487bfd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "a fort"
+      }
+    },
     "src.b34ab101": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137135,6 +137308,16 @@
         "text": "The bench remains hers, and your advance returns with grateful thanks."
       }
     },
+    "src.b4dce066": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_war.js"
+      ],
+      "source": {
+        "text": "Keep your host standing on {target} — the works advance each season it holds the ground. Fortifications may demand more work and a larger host."
+      }
+    },
     "src.b4e54f17": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -137536,16 +137719,6 @@
       ],
       "source": {
         "text": "Mounted Relay Posts"
-      }
-    },
-    "src.b5c854d0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": ") cycles five ways to color the map:"
       }
     },
     "src.b5ce5f50": {
@@ -138740,6 +138913,16 @@
         "text": "Levy Relief"
       }
     },
+    "src.b855fd69": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "⚓ Crossing to {next} — {days}d remaining"
+      }
+    },
     "src.b8630818": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -139530,6 +139713,16 @@
       ],
       "source": {
         "text": "Poor flour, quietly made, is still flour."
+      }
+    },
+    "src.ba1b3f16": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "💰 {money:amount}/season"
       }
     },
     "src.ba20b345": {
@@ -141815,6 +142008,16 @@
         "text": "Fee unpaid · term paused"
       }
     },
+    "src.bfadd76c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": ") cycles map filters:"
+      }
+    },
     "src.bfb1985d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141923,6 +142126,16 @@
       ],
       "source": {
         "text": "Biological mother"
+      }
+    },
+    "src.bff6850e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Your host: ~{men} men at {condition}% condition, not yet mustered"
       }
     },
     "src.bffa8121": {
@@ -142843,16 +143056,6 @@
         "text": "Requires {standing} standing; currently {current}. Active guild work restores {gain} each New Year, up to {maximum}."
       }
     },
-    "src.c1bdd495": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt."
-      }
-    },
     "src.c1bee5d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143056,6 +143259,16 @@
       ],
       "source": {
         "text": "Undermine {name} by fair means or foul."
+      }
+    },
+    "src.c208d170": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "⛓ Pinned by {fort}"
       }
     },
     "src.c2105a88": {
@@ -143349,16 +143562,6 @@
       ],
       "source": {
         "text": "Back"
-      }
-    },
-    "src.c29d3366": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Offer pitched battle."
       }
     },
     "src.c2a53f8c": {
@@ -146287,6 +146490,16 @@
         "text": "This contract is reckoned by weight: price changes do not change the amount due."
       }
     },
+    "src.c8d0cd3d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Logistics & Supply"
+      }
+    },
     "src.c8d10d3b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146418,6 +146631,16 @@
         "text": "Sanctuary at the Cathedral Door"
       }
     },
+    "src.c910db7b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Low on supplies — forage before starvation sets in."
+      }
+    },
     "src.c913022f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146518,14 +146741,14 @@
         "text": "The return journey has already begun."
       }
     },
-    "src.c94259dc": {
+    "src.c94ee202": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/events.js"
+        "js/ui_panels.js"
       ],
       "source": {
-        "text": "Your {fort} needs {minimum} besiegers and costs them {attrition} men each active season"
+        "text": "🥖 {status} ({pct}%)"
       }
     },
     "src.c9564902": {
@@ -147021,6 +147244,16 @@
         "text": "Silence the news toasts"
       }
     },
+    "src.caa26092": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "~{men} ({condition}%) · 🚩 {place}"
+      }
+    },
     "src.caa3521f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -147109,16 +147342,6 @@
       ],
       "source": {
         "text": "🏳 The gathering {campaign} collapses before the banners can march."
-      }
-    },
-    "src.caec161d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "🥖 Supply: {status} ({pct}%) — about {days} days before hunger bites."
       }
     },
     "src.caeddd1e": {
@@ -147369,6 +147592,16 @@
       ],
       "source": {
         "text": "Guild member"
+      }
+    },
+    "src.cb884e50": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🗺 {mode} — at war with {enemy}"
       }
     },
     "src.cb9271aa": {
@@ -149639,16 +149872,6 @@
         "text": "Take the loss; keep the lord’s good regard."
       }
     },
-    "src.d04c1363": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle."
-      }
-    },
     "src.d053a042": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150491,6 +150714,16 @@
       ],
       "source": {
         "text": "Too young for an apprenticeship yet."
+      }
+    },
+    "src.d233d3c4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Supply & Upkeep"
       }
     },
     "src.d2361967": {
@@ -151645,6 +151878,16 @@
         "text": "Duration"
       }
     },
+    "src.d4d55c9c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{realm} Host — {men}"
+      }
+    },
     "src.d4dc4344": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152057,6 +152300,16 @@
         "text": "The forked blade given to Ali beneath the Prophet’s own banner. Every jurist has an opinion about whose hand may hold it."
       }
     },
+    "src.d5dc1b3a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Left-click troops, then left-click a county to move."
+      }
+    },
     "src.d5debdc5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152075,6 +152328,16 @@
       ],
       "source": {
         "text": "Culture of household kin ({name})"
+      }
+    },
+    "src.d5e017d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/armies.js"
+      ],
+      "source": {
+        "text": "{count} sea legs"
       }
     },
     "src.d5e35b92": {
@@ -153267,6 +153530,16 @@
       ],
       "source": {
         "text": "Signed a mercenary contract with {rname}."
+      }
+    },
+    "src.d801a780": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🚩 Stationed at {place}"
       }
     },
     "src.d803c949": {
@@ -155126,16 +155399,6 @@
         "text": "Return the letters with a private warning."
       }
     },
-    "src.dc446899": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "The lines meet with a sound like a falling forest — and it is theirs that breaks. The field is yours."
-      }
-    },
     "src.dc497d43": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156600,6 +156863,16 @@
         "text": "Put your own mark upon it."
       }
     },
+    "src.df697c0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "Logistics: {money:total}/season"
+      }
+    },
     "src.df6ad095": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -157988,6 +158261,16 @@
       ],
       "source": {
         "text": "Stewardship {value}"
+      }
+    },
+    "src.e26ed578": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "At War with {enemy}"
       }
     },
     "src.e275abee": {
@@ -160352,6 +160635,16 @@
       ],
       "source": {
         "text": "A cracked pate"
+      }
+    },
+    "src.e71f04dd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count} mercenary companies hired"
       }
     },
     "src.e720474b": {
@@ -162909,6 +163202,16 @@
         "text": "Change main text color…"
       }
     },
+    "src.ecbfdb78": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "🏆 {won}W · {lost}L · 💀 {losses} lost"
+      }
+    },
     "src.ecc0e3ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -164688,16 +164991,6 @@
         "text": "Seat"
       }
     },
-    "src.f07f3ddf": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_no_enemy_host war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station"
-      }
-    },
     "src.f0846cb8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -164996,16 +165289,6 @@
       ],
       "source": {
         "text": "Spade beard"
-      }
-    },
-    "src.f0f80e1a": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
       }
     },
     "src.f0fded1b": {
@@ -165596,6 +165879,16 @@
       ],
       "source": {
         "text": "Strike the night-drill before it becomes an army."
+      }
+    },
+    "src.f251af14": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Campaign condition, leadership, and refits tilt every field battle; live troop totals change only when a loss names the host."
       }
     },
     "src.f254b3dd": {
@@ -168925,16 +169218,6 @@
         "text": "Manage household education policy"
       }
     },
-    "src.f9887144": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "data/events_war.js"
-      ],
-      "source": {
-        "text": "Ladders, mines, and patience — your host must stand in the target province. Fortifications add siege work, demand enough uncontested men, and exact seasonal losses."
-      }
-    },
     "src.f98b9366": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -169195,16 +169478,6 @@
       ],
       "source": {
         "text": "Pay for a physician."
-      }
-    },
-    "src.fa0f6265": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/armies.js"
-      ],
-      "source": {
-        "text": "🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle."
       }
     },
     "src.fa16dcb2": {
@@ -169957,16 +170230,6 @@
         "text": "Guild Standing {needed}"
       }
     },
-    "src.fba67e33": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "Automation (Z)"
-      }
-    },
     "src.fba7f597": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -170352,16 +170615,6 @@
         "text": "venture settled: {money:payout} returned"
       }
     },
-    "src.fc8ac180": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/events.js"
-      ],
-      "source": {
-        "text": "the host is starving — supplies are gone and hunger thins its ranks daily"
-      }
-    },
     "src.fc8e1c9d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -170370,6 +170623,16 @@
       ],
       "source": {
         "text": "Granada"
+      }
+    },
+    "src.fc9165fb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more."
       }
     },
     "src.fc959576": {
@@ -171845,6 +172108,16 @@
       ],
       "source": {
         "text": "Merv"
+      }
+    },
+    "src.ffe5bac8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Command your men in the field. (steadies the host for the next field battle)"
       }
     },
     "src.ffe90b64": {
@@ -177173,6 +177446,16 @@
         "text": "+{gain} each active vocational year · maximum {maximum}"
       }
     },
+    "ui:+{men} allied": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "+{men} allied"
+      }
+    },
     "ui:+{men} archers": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -177617,12 +177900,12 @@
         "text": "A couple sharing a faith with the xwēdōdah doctrine may use its recognized rite for 75 piety and {money:25}. Otherwise an illicit courtship risks exposure each season, and an irregular wedding costs 75 piety and 25 prestige, lowers Common Voice and liege Standing, and gives both spouses Scandalous Union."
       }
     },
-    "ui:A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.": {
+    "ui:A declaration must still be won on the map. March the host to the named prize and hold it — the works advance each season the host stands there. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "A declaration must still be won on the map. March the host to the named prize and press the works at war councils. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
+        "text": "A declaration must still be won on the map. March the host to the named prize and hold it — the works advance each season the host stands there. An unfortified county needs three siege steps; a fort adds one to four, pins onward movement, requires enough uncontested besiegers, and inflicts seasonal attrition. Field victories can produce peace offers but do not transfer the target by themselves."
       }
     },
     "ui:A defensive alliance may be offered only to an adjacent sovereign.": {
@@ -179723,6 +180006,16 @@
         "text": "At +{rate} Standing per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure."
       }
     },
+    "ui:At War with {enemy}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "enemy"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "At War with {enemy}"
+      }
+    },
     "ui:At least one candidate is not yet old enough.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180307,6 +180600,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Basics"
+      }
+    },
+    "ui:Battle & Campaign Record": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Battle & Campaign Record"
       }
     },
     "ui:Battle losses": {
@@ -181069,6 +181370,14 @@
       "location": "js/events.js",
       "source": {
         "text": "Campaign condition {change}"
+      }
+    },
+    "ui:Campaign condition, leadership, and refits tilt every field battle; live troop totals change only when a loss names the host.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Campaign condition, leadership, and refits tilt every field battle; live troop totals change only when a loss names the host."
       }
     },
     "ui:Campaign or host conditions change": {
@@ -182467,12 +182776,12 @@
         "text": "Communities: {communities}"
       }
     },
-    "ui:Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.": {
+    "ui:Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and press the works at each war council. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more."
+        "text": "Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more."
       }
     },
     "ui:Compel as accomplice": {
@@ -183477,6 +183786,14 @@
         "text": "Custom & Reformed Faiths"
       }
     },
+    "ui:Cut off — no road home. If this host shatters here it is destroyed outright.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Cut off — no road home. If this host shatters here it is destroyed outright."
+      }
+    },
     "ui:Daily focus": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184029,7 +184346,7 @@
     "ui:Details": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/ui_modals.js",
+      "location": "js/ui_panels.js",
       "source": {
         "text": "Details"
       }
@@ -187219,6 +187536,16 @@
         "text": "Highest level reached"
       }
     },
+    "ui:Highlight {realm} on map": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "realm"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Highlight {realm} on map"
+      }
+    },
     "ui:Hire a qualified local": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -187379,6 +187706,14 @@
       "location": "js/items.js",
       "source": {
         "text": "Horseshoe moustache"
+      }
+    },
+    "ui:Host & Units": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Host & Units"
       }
     },
     "ui:Hostile": {
@@ -188087,6 +188422,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Insult them publicly"
+      }
+    },
+    "ui:Intelligence & Front": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Intelligence & Front"
       }
     },
     "ui:Interests": {
@@ -188808,6 +189151,14 @@
         "text": "Left to their judgment"
       }
     },
+    "ui:Left-click troops, then left-click a county to move.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Left-click troops, then left-click a county to move."
+      }
+    },
     "ui:Length": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189283,6 +189634,14 @@
         "text": "Locked enterprises and deeds link back to their prerequisite technology."
       }
     },
+    "ui:Logistics & Supply": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Logistics & Supply"
+      }
+    },
     "ui:Long": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189441,6 +189800,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Low"
+      }
+    },
+    "ui:Low on supplies — forage before starvation sets in.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Low on supplies — forage before starvation sets in."
       }
     },
     "ui:Lower opacity lets the terrain show through while the focus outline stays clear.": {
@@ -192515,6 +192882,14 @@
         "text": "Not yet"
       }
     },
+    "ui:Not yet mustered": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Not yet mustered"
+      }
+    },
     "ui:Not yours to grant": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -194484,6 +194859,17 @@
       "location": "js/economy.js",
       "source": {
         "text": "Pilgrim"
+      }
+    },
+    "ui:Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort",
+        "place"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land."
       }
     },
     "ui:Plain": {
@@ -196573,6 +196959,19 @@
         "text": "Replaces {name}; the former officer loses 8 Standing and the appointee gains 10 Standing."
       }
     },
+    "ui:Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "days",
+        "money:amount",
+        "unit"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season."
+      }
+    },
     "ui:Required for legitimacy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -198445,16 +198844,6 @@
         "text": "Seasonal fee cap per child"
       }
     },
-    "ui:Seasonal host logistics: {money:amount}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "money:amount"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Seasonal host logistics: {money:amount}"
-      }
-    },
     "ui:Seasonal subsistence and obligations leave little margin; a livelihood keeps the household viable.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -199500,12 +199889,12 @@
         "text": "Stand for election as {rank} — {chance}% chance"
       }
     },
-    "ui:Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.": {
+    "ui:Stand your host on the prize — the works advance each season it holds the ground. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Stand on the prize and press the works at each war council. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
+        "text": "Stand your host on the prize — the works advance each season it holds the ground. An unfortified county takes three steps. A fort pins hostile passage, adds one to four steps, demands enough uncontested besiegers, and inflicts seasonal attrition. Allies send abstract defenders only when you are attacked; they never become separate war participants. Field victories make the enemy sue for peace. Attacked yourself? Keep their host out of your lands, because a fortified county cannot fall before its exact breach. Exhaustion begins after eight seasons, extended by the fort’s added steps."
       }
     },
     "ui:Standing": {
@@ -199827,6 +200216,22 @@
         "text": "Starving"
       }
     },
+    "ui:Starving — hunger thins the host daily.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Starving — hunger thins the host daily."
+      }
+    },
+    "ui:Starving — supplies are gone and hunger thins its ranks daily.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Starving — supplies are gone and hunger thins its ranks daily."
+      }
+    },
     "ui:Station": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -200080,12 +200485,41 @@
         "text": "Sunni law reserves the Caliphate for a male ruler."
       }
     },
+    "ui:Supplies replenished from friendly territory.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Supplies replenished from friendly territory."
+      }
+    },
     "ui:Supply": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/events.js",
       "source": {
         "text": "Supply"
+      }
+    },
+    "ui:Supply at {pct}% — about {days} days before hunger bites.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days",
+        "pct"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Supply at {pct}% — about {days} days before hunger bites."
+      }
+    },
+    "ui:Supply at {pct}% — refilling on friendly land.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "pct"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Supply at {pct}% — refilling on friendly land."
       }
     },
     "ui:Support": {
@@ -200266,15 +200700,15 @@
         "text": "Tap any highlighted county on the map to target it ({count} in reach)."
       }
     },
-    "ui:Tap the 🚩 on the map to give march orders.": {
+    "ui:Tap troops, then tap a county to move.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Tap the 🚩 on the map to give march orders."
+        "text": "Tap troops, then tap a county to move."
       }
     },
-    "ui:Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps.": {
+    "ui:Target {realm}; conquer {province} by standing your host on it until {steps} siege steps are done.": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "province",
@@ -200283,7 +200717,7 @@
       ],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Target {realm}; conquer {province} by holding it and completing {steps} war-council siege steps."
+        "text": "Target {realm}; conquer {province} by standing your host on it until {steps} siege steps are done."
       }
     },
     "ui:Target: {province}. Opens the existing cause review and muster preview.": {
@@ -202289,6 +202723,17 @@
         "text": "Their current enterprise assignment will be preserved, or they will remain available only for manual assignment."
       }
     },
+    "ui:Their host: ~{men} at {place}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men",
+        "place"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Their host: ~{men} at {place}"
+      }
+    },
     "ui:Their house will provide {money:gold}.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -203099,6 +203544,16 @@
         "text": "Toponymic (of [Place])"
       }
     },
+    "ui:Total seasonal logistics: {money:amount}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Total seasonal logistics: {money:amount}"
+      }
+    },
     "ui:Town Council of {province}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -203296,6 +203751,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Treasurer and Constable nominees require a vote and receive protected fixed terms."
+      }
+    },
+    "ui:Troop Composition & Battle Quality": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Troop Composition & Battle Quality"
       }
     },
     "ui:Try for children": {
@@ -204131,6 +204594,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "War"
+      }
+    },
+    "ui:War & Host — {men}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "War & Host — {men}"
       }
     },
     "ui:War & independence": {
@@ -205443,6 +205916,17 @@
         "text": "Your host"
       }
     },
+    "ui:Your host: ~{men} at {condition}% condition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "condition",
+        "men"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Your host: ~{men} at {condition}% condition"
+      }
+    },
     "ui:Your house already has an active royal marriage compact.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -205981,6 +206465,14 @@
       "location": "js/events.js",
       "source": {
         "text": "a curiosity"
+      }
+    },
+    "ui:a fort": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/armies.js",
+      "source": {
+        "text": "a fort"
       }
     },
     "ui:a household office": {
@@ -209277,6 +209769,17 @@
         "text": "{count} direct vassal courts"
       }
     },
+    "ui:{count} drilled {unit} stand ready — they join a resting host or the next muster.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "unit"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count} drilled {unit} stand ready — they join a resting host or the next muster."
+      }
+    },
     "ui:{count} eligible household workers.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -209325,6 +209828,16 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "{count} member houses"
+      }
+    },
+    "ui:{count} mercenary companies hired": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count} mercenary companies hired"
       }
     },
     "ui:{count} need attention": {
@@ -209387,6 +209900,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{count} requirements are not met."
+      }
+    },
+    "ui:{count} sea legs": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/armies.js",
+      "source": {
+        "text": "{count} sea legs"
       }
     },
     "ui:{count} seats are vacant or inactive": {
@@ -211988,6 +212511,17 @@
         "text": "{realm} (bound to defend)"
       }
     },
+    "ui:{realm} Host — {men}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "men",
+        "realm"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{realm} Host — {men}"
+      }
+    },
     "ui:{realm} is at war with an unrecorded opponent.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -213136,6 +213670,17 @@
         "text": "{weight} votes · {percent}% expected support"
       }
     },
+    "ui:{wins}W · {losses}L": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "losses",
+        "wins"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{wins}W · {losses}L"
+      }
+    },
     "ui:{worker} · {place} · base value {money:value} · about {money:amount}/season{lock}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -213192,6 +213737,18 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{year} BC"
+      }
+    },
+    "ui:~{men} ({condition}%) · 🚩 {place}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "condition",
+        "men",
+        "place"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "~{men} ({condition}%) · 🚩 {place}"
       }
     },
     "ui:×{multiplier} ({percent}% of normal)": {
@@ -213315,18 +213872,15 @@
         "text": "⚑ (home)"
       }
     },
-    "ui:⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%": {
+    "ui:⚓ Crossing to {next} — {days}d remaining": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "enemy",
-        "losses",
-        "odds",
-        "status",
-        "wins"
+        "days",
+        "next"
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%"
+        "text": "⚓ Crossing to {next} — {days}d remaining"
       }
     },
     "ui:⚔ Deep Sack": {
@@ -213429,6 +213983,16 @@
         "text": "⚠ {school}: {terms}/4 completed terms · {risk}% extra fatality risk at New Year"
       }
     },
+    "ui:⛓ Pinned by {fort}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "fort"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "⛓ Pinned by {fort}"
+      }
+    },
     "ui:⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -213468,14 +214032,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "⛪ {pope} · {obedience} obedience"
-      }
-    },
-    "ui:✂ Cut off — no road home. If this host shatters here it is destroyed outright.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "✂ Cut off — no road home. If this host shatters here it is destroyed outright."
       }
     },
     "ui:➗ Split the host": {
@@ -213632,6 +214188,28 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "🎓 Your education"
+      }
+    },
+    "ui:🎯 ~{odds}% chance": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "odds"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🎯 ~{odds}% chance"
+      }
+    },
+    "ui:🏆 {won}W · {lost}L · 💀 {losses} lost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "losses",
+        "lost",
+        "won"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🏆 {won}W · {lost}L · 💀 {losses} lost"
       }
     },
     "ui:🏗 Raise a building…": {
@@ -213847,6 +214425,16 @@
         "text": "💰 Sell it ({money:gold})"
       }
     },
+    "ui:💰 {money:amount}/season": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "money:amount"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "💰 {money:amount}/season"
+      }
+    },
     "ui:📋 Household Plan": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -213919,6 +214507,22 @@
         "text": "🗝 Hire a Retainer"
       }
     },
+    "ui:🗺 At peace — no active war to show.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🗺 At peace — no active war to show."
+      }
+    },
+    "ui:🗺 You answer to no one — no liege to show.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🗺 You answer to no one — no liege to show."
+      }
+    },
     "ui:🚩 Hold here": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -213927,41 +214531,45 @@
         "text": "🚩 Hold here"
       }
     },
-    "ui:🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.": {
+    "ui:🚩 Holding at {place}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "place"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "🚩 Holding at {place}"
+      }
+    },
+    "ui:🚩 Marching to {next} — {days}d remaining": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "days",
-        "men",
-        "next",
-        "place"
+        "next"
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
+        "text": "🚩 Marching to {next} — {days}d remaining"
       }
     },
-    "ui:🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.": {
+    "ui:🚩 Ready at {place}": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "days",
-        "men",
-        "next",
         "place"
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt."
+        "text": "🚩 Ready at {place}"
       }
     },
-    "ui:🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt.": {
+    "ui:🚩 Stationed at {place}": {
       "context": "Explicit UI localization call.",
       "glossary": [
-        "men",
         "place"
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt."
+        "text": "🚩 Stationed at {place}"
       }
     },
     "ui:🛑 No more children — open your spouse’s sheet to change this.": {
@@ -213970,19 +214578,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "🛑 No more children — open your spouse’s sheet to change this."
-      }
-    },
-    "ui:🛠 Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "count",
-        "days",
-        "money:amount",
-        "unit"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "🛠 Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season."
       }
     },
     "ui:🛡 They can field {theirs} — you can field ~{yours}.": {
@@ -213994,17 +214589,6 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "🛡 They can field {theirs} — you can field ~{yours}."
-      }
-    },
-    "ui:🛡 {count} drilled {unit} stand ready — they join a resting host or the next muster.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "count",
-        "unit"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "🛡 {count} drilled {unit} stand ready — they join a resting host or the next muster."
       }
     },
     "ui:🤝 Personal attention 0/{capacity} · no assignment · +{rate} Standing/day when assigned": {
@@ -214069,40 +214653,7 @@
         "text": "🤝 betrothed"
       }
     },
-    "ui:🤝 {men} allied defenders from {realm}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "men",
-        "realm"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "🤝 {men} allied defenders from {realm}"
-      }
-    },
-    "ui:🥀 Supply: {status} — hunger thins the host daily.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "status"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "🥀 Supply: {status} — hunger thins the host daily."
-      }
-    },
-    "ui:🥖 Supply: {status} ({pct}%) — about {days} days before hunger bites.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "days",
-        "pct",
-        "status"
-      ],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "🥖 Supply: {status} ({pct}%) — about {days} days before hunger bites."
-      }
-    },
-    "ui:🥖 Supply: {status} ({pct}%) — refilling on friendly land.": {
+    "ui:🥖 {status} ({pct}%)": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "pct",
@@ -214110,7 +214661,7 @@
       ],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "🥖 Supply: {status} ({pct}%) — refilling on friendly land."
+        "text": "🥖 {status} ({pct}%)"
       }
     },
     "ui:🦅 {name}: you rule {share} — independence would make you its emperor.": {

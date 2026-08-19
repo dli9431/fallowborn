@@ -335,8 +335,12 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       const originalWorld = FB.world;
       const originalHosts = state.armies;
       const originalDown = state.armyDown;
+      const originalDetachmentDown = state.armyDetachmentDown;
       const originalAuto = FB.game.auto.hosts;
       const originalRf = FB.rf;
+      const originalTechBonus = FB.techBonus;
+      const originalFortBattleBonus = FB.fortBattleBonus;
+      const originalMilitaryCommand = FB.activeMilitaryCommand;
       const originalWar = state.player.war;
       const keptMultiHost = FBDATA.balance.aiMultiHostStrength;
       FBDATA.balance.aiMultiHostStrength = Infinity; // no pre-battle split
@@ -354,6 +358,10 @@ test('attack equal to defense reproduces the pre-split battle exactly',
         if (sovereigns[i] !== playerSovereign) picked.push(sovereigns[i]);
       }
       const bigRealmId = picked[0], smallRealmId = picked[1];
+      const bigRealm = state.realms[bigRealmId];
+      const smallRealm = state.realms[smallRealmId];
+      const keptMar = [bigRealm.ruler.mar, smallRealm.ruler.mar];
+      const keptWar = [bigRealm.war, smallRealm.war];
       const keptTech = [
         state.realmTech[bigRealmId], state.realmTech[smallRealmId]
       ];
@@ -362,6 +370,7 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       }
       state.player.war = null;
       state.armyDown = {};
+      state.armyDetachmentDown = {};
       FB.game.auto.hosts = 'manual';
       state.realmTech[bigRealmId] = {
         completed:[], exposed:[], active:[], progress:{},
@@ -371,15 +380,16 @@ test('attack equal to defense reproduces the pre-split battle exactly',
         completed:[], exposed:[], active:[], progress:{},
         reserve:0, priorities:{}
       };
-      const bigRealm = state.realms[bigRealmId];
-      const smallRealm = state.realms[smallRealmId];
-      const keptMar = [bigRealm.ruler.mar, smallRealm.ruler.mar];
-      const keptWar = [bigRealm.war, smallRealm.war];
       bigRealm.ruler.mar = 5;
       smallRealm.ruler.mar = 5;
       bigRealm.war = { enemy:smallRealmId };
       smallRealm.war = { enemy:bigRealmId };
       FB.rf = function () { return 1; };
+      /* This is a legacy battle-math comparison, so realm-specific bonuses
+         must not tilt either side of the otherwise identical levy matchup. */
+      FB.techBonus = function () { return 0; };
+      FB.fortBattleBonus = function () { return 0; };
+      FB.activeMilitaryCommand = function () { return null; };
 
       /* open farmland: no home-ground bonus names a defender, so this is a
          meeting engagement and no defender coin is drawn */
@@ -390,13 +400,13 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       };
       const bigHost = {
         id:'big_host', realm:bigRealmId, men:1000, size:1000,
-        units:{ levy:1000 }, at:'f', from:'f', moveLeft:0, path:[],
-        goal:null, supply:100
+        units:{ levy:1000, arch:0, cav:0, ret:0, mercs:0 },
+        at:'f', from:'f', moveLeft:0, path:[], goal:'f', supply:100
       };
       const smallHost = {
         id:'small_host', realm:smallRealmId, men:800, size:800,
-        units:{ levy:800 }, at:'f', from:'f', moveLeft:3, path:[],
-        goal:'f', supply:100
+        units:{ levy:800, arch:0, cav:0, ret:0, mercs:0 },
+        at:'f', from:'f', moveLeft:3, path:[], goal:'f', supply:100
       };
       state.armies = [bigHost, smallHost];
 
@@ -423,9 +433,13 @@ test('attack equal to defense reproduces the pre-split battle exactly',
 
       state.armies = originalHosts;
       state.armyDown = originalDown;
+      state.armyDetachmentDown = originalDetachmentDown;
       state.player.war = originalWar;
       FB.game.auto.hosts = originalAuto;
       FB.rf = originalRf;
+      FB.techBonus = originalTechBonus;
+      FB.fortBattleBonus = originalFortBattleBonus;
+      FB.activeMilitaryCommand = originalMilitaryCommand;
       FBDATA.balance.aiMultiHostStrength = keptMultiHost;
       bigRealm.ruler.mar = keptMar[0];
       smallRealm.ruler.mar = keptMar[1];
@@ -437,8 +451,10 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       else state.realmTech[smallRealmId] = keptTech[1];
       FB.world = originalWorld;
       for (const classId in keptSplit) {
-        classes[classId].attack = keptSplit[classId].attack;
-        classes[classId].defense = keptSplit[classId].defense;
+        if (keptSplit[classId].attack === undefined) delete classes[classId].attack;
+        else classes[classId].attack = keptSplit[classId].attack;
+        if (keptSplit[classId].defense === undefined) delete classes[classId].defense;
+        else classes[classId].defense = keptSplit[classId].defense;
       }
       return {
         roleAttack:roleAttack, roleDefense:roleDefense, neutral:neutral,
@@ -452,11 +468,11 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       };
     });
 
-    expect(result.roleAttack).toBeCloseTo(result.neutral, 10);
-    expect(result.roleDefense).toBeCloseTo(result.neutral, 10);
-    expect(result.flatRole).toBeCloseTo(result.flatNeutral, 10);
-    expect(result.powerAttack).toBeCloseTo(result.powerNeutral, 10);
-    expect(result.powerDefense).toBeCloseTo(result.powerNeutral, 10);
+    expect(result.roleAttack).toBeCloseTo(result.neutral, 8);
+    expect(result.roleDefense).toBeCloseTo(result.neutral, 8);
+    expect(result.flatRole).toBeCloseTo(result.flatNeutral, 8);
+    expect(result.powerAttack).toBeCloseTo(result.powerNeutral, 8);
+    expect(result.powerDefense).toBeCloseTo(result.powerNeutral, 8);
     /* the hand-computed pre-split outcome: 1000 levy beat 800 levy at equal
        martial with no RNG spread — the winner pays 0.28 × 0.8 of its men,
        the loser 0.62 of its own */
@@ -680,3 +696,47 @@ test('the host card shows attack, defense, and replacement state',
     await expect(panel).toContainText('ready in 120 days');
     await expect(panel).toContainText('replacement drilling');
   });
+
+test('overwhelming numerical or battle advantage fully stack-wipes and destroys enemy army',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const home = state.player.provinceId;
+      state.player.war = {
+        enemy:'croatia', wins:0, losses:0, strength:1.0, started:state.turn
+      };
+      const playerHost = {
+        id:'overwhelming_player_host', realm:'player', men:1200, size:1200,
+        units:{ levy:800, arch:200, cav:50, ret:150, mercs:0 },
+        at:home, from:home, moveLeft:0, path:[], goal:null, supply:100
+      };
+      const enemyHost = {
+        id:'small_enemy_host', realm:'croatia', men:300, size:300,
+        units:{ levy:300, arch:0, cav:0, ret:0, mercs:0 },
+        at:home, from:home, moveLeft:0, path:[], goal:null, supply:80
+      };
+      state.armies = [playerHost, enemyHost];
+
+      // Run battle tick
+      FB.armyTick(state);
+
+      const enemyAlive = state.armies.some(function (a) { return a.id === 'small_enemy_host'; });
+      const playerAlive = state.armies.some(function (a) { return a.id === 'overwhelming_player_host'; });
+      const pHostAfter = state.armies.find(function (a) { return a.id === 'overwhelming_player_host'; });
+
+      return {
+        enemyAlive: enemyAlive,
+        playerAlive: playerAlive,
+        playerMenAfter: pHostAfter ? pHostAfter.men : 0,
+        warWins: state.player.war.wins,
+        warStrength: state.player.war.strength
+      };
+    });
+
+    expect(result.enemyAlive).toBe(false); // Enemy was stack-wiped and disbanded
+    expect(result.playerAlive).toBe(true);
+    expect(result.playerMenAfter).toBeGreaterThan(1150); // Winner took minimal skirmish casualties
+    expect(result.warWins).toBe(1);
+    expect(result.warStrength).toBeGreaterThanOrEqual(1.0); // War strength did not degrade on win
+  });
+

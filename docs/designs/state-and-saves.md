@@ -173,8 +173,17 @@ normal fabricated-war and conquest-clear path rather than creating a second clai
 `{schema,status,startedTurn,venue,lot,openingBid,bidIncrement,rivalMaximum,currentBid,bidCount}`.
 Its lot and rival ceiling are already fixed, so restore validates or discards it without
 consuming RNG. Both records are additive and keep save format 3.
-`player.war.casus` records the semantic cause selected for a new war, while a displaced
-rightful character may carry one `restorationRight`. `FB.ensureDynasticState`,
+`player.war.casus` records the semantic cause selected for a new war. Ordinary wars may
+also carry a compact `eventId`, allocated from additive `state.warEventSerial`, so queued
+operational-event contexts cannot cross peace into a later war. An older active war
+receives the serial lazily when it next enters war footing or queues an operational
+event. Its additive `occupationEventQueued` bit records that the first qualifying siege
+position has already produced its player-facing occupation story, preventing repeated
+arrival events in the same war. Neither field needs RNG or a save-version migration. A displaced rightful character may
+carry one `restorationRight`. Compact `player.war.battles` entries may add
+`primaryHostInvolved`; absence reads as true for legacy and abstract battle records, while
+false marks a detached-host result that must not apply protagonist consequences.
+`FB.ensureDynasticState`,
 `FB.fabricatedClaimOf`, and the normal load repairs lazily initialize and validate all
 of these fields, so older version-3 saves require no migration.
 

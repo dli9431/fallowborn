@@ -150,7 +150,11 @@ with hired companies (`war_mercs`, `balance.mercCompanySize` men each) or a grea
 (`war_mass`, swelling the levy class by `balance.massLevyMult`) behind
 it. A shattered primary host may muster again only after `balance.armyRearmDays`
 (`state.armyDown`); a destroyed detachment re-forms after the shorter
-`balance.detachmentRearmDays` (`state.armyDetachmentDown`). A standing player host may also **de-muster** mid-war (Deeds tab):
+`balance.detachmentRearmDays` (`state.armyDetachmentDown`). Destruction records
+which banner was primary before fatal casualties are applied: a zero-strength
+host is removed by army-state repair, so post-casualty identity checks would
+mistake a wiped main banner for a detachment and allow an immediate remuster.
+A standing player host may also **de-muster** mid-war (Deeds tab):
 it disperses where it stands and only part of it returns to the muster rolls —
 `balance.armyDemusterKeepOwn` (all, by default) on the player's own county,
 `balance.armyDemusterKeepRealm` (half) elsewhere in the player's sovereign realm,
@@ -183,8 +187,7 @@ AI realms whose muster clears `balance.aiMultiHostStrength` split off a
 `balance.aiDetachmentFrac` detachment while prosecuting an offensive war (capped at
 `balance.aiMaxHosts`); the main host hunts enemy hosts while the detachment makes for
 the enemy seat or the holy-war goal — screening and besieging while the main body
-fights. On the map each host bears its own marker; same-realm hosts sharing a province
-wear a ×N stack badge, and tapping the stack cycles the selection banner by banner.
+fights. On the map each host bears its own marker distributed with non-overlapping spacing and settlement clearance around the province centroid, strictly clamped to remain within the county's boundaries; at far zoom-out (`z < 1.35`), troop-occupied counties highlight their borders in green (friendly/player), red (hostile), or realm color to ensure battlefields read clearly without markers straying into neighboring counties; same-realm hosts sharing a province wear a ×N stack badge, and tapping an individual host selects it directly (while keyboard/centroid taps cycle the selection banner by banner). In the Land tab, selected host information is presented in a dedicated, compact `.war-card` featuring only critical summary lines (status, troop numbers/composition chips, supply/upkeep, campaign losses, and split/merge/halt actions), while exhaustive unit combat stats, cohort replacements, detailed logistics, and casualty records are contained in interactive tooltips (desktop hover/focus side-tip and mobile `?` disclosure toggle). In the Deeds tab, the active war card header links the enemy realm name so clicking or tapping it centers the map on that enemy and highlights their borders in red.
 
 **A host is a composition, not just a headcount.** Every host carries
 `units: { <classId>: men }` keyed by `FBDATA.unitClasses` (with `men` always the total,
@@ -311,8 +314,9 @@ charging. These additive, JSON-safe fields self-initialize on old active wars an
 constitute a second battle or casualty simulation.
 
 Campaign condition and live troops remain deliberately separate. Thin ranks,
-discipline, and disorder normally move the bounded abstract `war.strength` used by war
-council odds; field supply is the exception, a live per-host meter (above) whose
+discipline, and disorder normally move the bounded abstract `war.strength` that
+multiplies the host's field-battle power (`battlePower`); field supply is the
+exception, a live per-host meter (above) whose
 starvation bleeds real men. A handler changes headcount only when its option says so,
 and all such
 losses use `FB.applyHostLosses`; the feedback UI labels the affected ledger explicitly.
@@ -351,11 +355,10 @@ Each leg is quoted only when it begins. The whole indivisible host and its marke
 on the departure county while the clock represents gathering boats, loading successive
 contingents, and completing the passage; `army.at` changes only on arrival. Battle,
 reinforcement, siege, and map-marker rules therefore remain province-based. An active
-`moveLeft` is never recalculated after loading, gaining technology, changing allegiance,
-or rerouting. A mid-leg reroute preserves the current next county and countdown and
-replaces only the remainder; a failed reroute stops after that active leg. Ordering the
-departure county remains an explicit halt. Broken hosts, AI hunting, and player automation
-all use the same weighted route and leg quotes. The player taps their host to
+`moveLeft` is reset when giving a new movement destination. A new movement order
+immediately overrides any prior path, routing directly from the host's current county
+to the new goal. Ordering the departure county remains an explicit halt. Broken hosts,
+AI hunting, and player automation all use the same weighted route and leg quotes. The player taps their host to
 select it, taps a province to march — which lets go of the host again so further taps
 browse the map — and taps the selected host again to halt; Enter/Shift+arrows do the
 same by keyboard. `FB.armyTap` (called from `FB.map.onTap` in ui.js) owns that
@@ -372,9 +375,30 @@ professionals stay lost until their batches complete, and a host at 0 supply doe
 color — green for yours, red for your war enemy's — so its side reads at a glance, and
 hosts locked with an enemy in one province bear a ⚔ for the day they clash.
 Map invalidation follows visible host state: raising or disbanding a host, changing its
-route, arriving in a county, changing allied levies, reinforcing, or fighting requests a
-render. Intermediate march-day countdowns do not, because markers remain on the county
-the host still occupies and there is no interpolated movement to draw.
+route, arriving in a county, changing allied levies, or fighting requests a render.
+Steady reinforcement updates simulation state daily but redraws the map on one shared
+five-day cadence, plus the day any host finishes refilling; this prevents many damaged,
+staggered hosts from collectively forcing a full canvas repaint every day. While the clock
+runs, the Deeds and Land host readouts remain a stable snapshot rather than rebuilding
+their full panels for every supply, march-countdown, or replacement step. Pausing,
+selecting, ordering, resolving an event, or otherwise requesting an exact UI refresh
+updates the snapshot immediately.
+Intermediate march-day countdowns likewise do not redraw, because markers remain on the
+county the host still occupies and there is no interpolated movement to draw. Panning
+reuses the current season/revision's zoom-specific host layout and each day’s
+encirclement reads;
+moving the viewport therefore changes only screen coordinates, while
+a split, merge, arrival, destruction, zoom, or seasonal settlement-layout change
+rebuilds the marker geometry.
+Selected-host route previews are cached by host state and destination rather than
+rerunning routefinding on every drag frame. The zoomed-out troop-border layer culls
+offscreen counties, and its province bounds are discovered for the whole world in one
+grid pass instead of one full-grid scan per newly encountered troop county.
+The daily AI orders phase also derives every realm's primary banner in one
+army-list pass; multi-host wars do not call the repairing `FB.hostOf` scan once
+per banner merely to distinguish main hosts from detachments. `FB.armiesEnsure`
+preserves the live array when every record is already valid, so quiet war days do
+not invalidate the retained marker layout through an equivalent filtered copy.
 
 ## Fortified strongpoints
 
@@ -421,9 +445,8 @@ double the siege's own attrition.
 standing in the player's lands and otherwise refits at home; offensive hunts the
 enemy host when `battlePower` favors the player (the Prudent/Bold option style sets
 how much of an edge it demands) and marches on the war target when no host opposes
-it — and once standing on the target it stays put, so the council's siege can
-proceed (a council resolved by automation presses the siege: the `war_*` customs
-carry explicit auto-picker scores in ui.js's `CUSTOM_FX_SCORE`). A hand-tapped route (`manual`) always plays out first and a hand-given halt
+it — and once standing on the target it stays put, so the season tick's siege pulse
+proceeds on its own, no council order (manual or automated) required. A hand-tapped route (`manual`) always plays out first and a hand-given halt
 (`holdManual`) parks the host until the next manual march — automation never
 overrides either, and while active it supersedes the council's `huntPrey`.
 
@@ -436,10 +459,13 @@ battle power, counter edges read the pooled compositions, and casualties spread 
 the side in proportion to each host's men (`spreadLosses`).
 Power is men × composition quality × martial factor (player
 mar/`battleMarPlayer` with tech/item/blessing edges, AI ruler mar/`battleMarAI`) ×
-the side's counter multiplier × `FB.rf(0.75, 1.25)`; the loser side takes `balance.battleLoseLoss` casualties and
-each of its hosts routs singly (dispersing under `balance.armyMinMen`), the winner loses
-`battleWinLoss` scaled
-by closeness.
+the side's counter multiplier × `FB.rf(0.75, 1.25)`.
+**Overrun and stack wipe:** when a side holds an overwhelming numerical (≥2.5×) or power (≥2.0×)
+advantage, the defeated camp is completely overrun and stack-wiped: the loser suffers 100%
+casualties and its hosts are destroyed immediately, while the winner takes negligible skirmish
+losses. In closer engagements, loser casualties scale with the power imbalance (62%–98%),
+routed surviving hosts drop 50 supply in panic, and any cornered host unable to retreat
+disperses. Winner casualties scale with closeness and are capped by the opposing force's size.
 **Attack and defense are separate class values.** Each class may declare `attack`
 and `defense` in `FBDATA.unitClasses`, both falling back to `quality` (a class whose
 two values equal its quality reproduces the pre-split numbers exactly). The camp
@@ -450,8 +476,8 @@ engagement on open ground, where no home-ground bonus names a defender, reads
 shipped splits are deliberately modest — archers and crossbows hit harder than they
 stand, pikes and men-at-arms hold better than they charge — with every pair averaging
 to the long-standing quality, so composition, counters, terrain, martial, and numbers
-still decide the day. Neutral previews (the automation's odds check, the war-council
-abstraction) keep the terrain-neutral `FB.compQuality` average.
+still decide the day. Neutral previews (the automation's odds check, the war card's
+estimate) keep the terrain-neutral `FB.compQuality` average.
 **Composition counters swing the field battle.** Each class's `counters` table
 (`FBDATA.unitClasses`) fights it above its quality against the named enemy classes —
 pike blocks break cavalry charges, crossbows punish armored foot, horse archers wear
@@ -470,11 +496,15 @@ standing, no march in progress; ties and mutual arrivals broken by the saved RNG
 adds the terrain's home-ground bonus (`balance.terrainDefenseBonus`: hills, mountains,
 forest, marsh). A host out of supply fights at `balance.supplyStarvedPowerMult`, and
 one below `balance.supplyLowThreshold` at `balance.supplyLowPowerMult`. Callers without
-a location (the automation's odds check, the war-council abstraction) keep the
+a location (the automation's odds check, the war card's estimate) keep the
 terrain-neutral `FB.compQuality` average.
-Player battles queue a `field_battle_won/lost` event (the `_steel` variants when the
-player's men-at-arms stood in the line) and score through the existing
-`war_win`/`war_loss` handlers (3 losses still break the campaign); AI-vs-AI results
+Every player-side battle scores through the existing `war_win`/`war_loss` handlers
+(3 losses still break the campaign) and enters the compact campaign ledger. Only a
+battle containing the player's primary (largest) host queues the protagonist-facing
+`field_battle_won/lost` event (the `_steel` variants when the player's men-at-arms
+stood in the line). A detached banner's result is therefore visible in Chronicle and
+campaign feedback without opening another blocking modal or applying personal wounds,
+skill gains, spoils, or capture to a protagonist who was not there. AI-vs-AI results
 accumulate as `war.fw`/`war.fl` and tilt that war's yearly resolution in
 `FB.worldTick`. A beaten host carries a `broken` stamp (`state.turn`) and enjoys a
 **rout grace**: the side scan skips any host broken
@@ -489,8 +519,9 @@ host's sea transport. A beaten host routs only toward a reachable friendly count
 (`FB.armyRetreatGoal`: home while the road is clear, else the nearest friendly county
 a legal march can reach); a cut-off one stands its ground and is fought again once its
 rout grace lapses. A host shattered while cut off is destroyed outright rather than
-routed home, and a beaten tier-3+ leader whose host shatters encircled is taken at the
-graver `balance.captureChanceEncircled` odds instead of `captureChanceBase`. The host
+routed home. The graver `balance.captureChanceEncircled` odds instead of
+`captureChanceBase` apply only when that destroyed force included the primary player
+host; a remote detachment never teleports the protagonist into its rout. The host
 marker bears a ✂ and the Land-tab host card a warning chip while the noose holds. Three field wins no
 longer end an attacking war by fiat: the beaten
 defender sues for peace and the `war_tribute_offer` event lets the player choose —
@@ -503,11 +534,11 @@ once per war, not after every battle.
 
 **Equipment participates at the point of battle, not merely by ownership.** Only battle
 effects worn by the current head enter `FB.itemBonus('battle')`; a sword or armor lying
-in the family armory contributes nothing. Existing field-victory, harrying, raid, and
+in the family armory contributes nothing. Existing field-victory, raid, and
 event-spoils paths now resolve through the exact item APIs, creating a repeatable gear
 instance or granting an unowned unique heirloom when their normal loot roll succeeds.
 
-Lethal field-battle, host-battle, war-council battle, and shield-wall rout effects carry
+Lethal field-battle, host-battle, and shield-wall rout effects carry
 `deathProvenance`. `FB.applyEffects` materializes the event, province, and enemy ids only
 when that resolution actually leaves health at zero. `G.die` freezes those semantic ids
 and the exact final loadout into the legend before succession. The death sheet can
@@ -516,24 +547,48 @@ No battlefield loss or looting of the dead character's equipment occurs in this 
 
 **The seasonal layer remains, now grounded in the field.** The shared season boundary
 charges any live player host, while `FB.playerWarTick` queues the `war_council`, whose
-options act through the `war_*` fns — but the enemy-advance clock (`war.enemySiege`)
+options act through the `war_*` fns — but both siege clocks run on the map, not on
+council orders. The enemy-advance clock (`war.enemySiege`)
 ticks only while a hostile host stands in
-the player's lands (`FB.enemyHostInPlayerLands`), and `war_can_siege` requires one of
-the player's hosts standing in the target province (the largest leads the works). The council's abstract pitched battle
-(`war_battle` named chance, itself reading the fielded hosts' real men) is offered only
-while the enemy has no host raised (`war_no_enemy_host`) — and a side still re-forming a
-shattered host counts only a remnant of its paper strength there (`FB.rearmScale`: the
-share of `armyRearmDays` elapsed, floored at 0.15); a fielded enemy is hunted on the map
-instead (`war_can_hunt`/`war_hunt`, which sets `huntPrey` so the host re-paths onto its
-prey each day rather than marching to where it stood).
+the player's lands (`FB.enemyHostInPlayerLands`), and the attacker's siege
+(`war.siege`) pulses once per season while one of
+the player's hosts stands in the target province (the largest leads the works) —
+`FB.fns.war_siege` runs from the war tick itself, under the same uncontested-numbers
+rule `war_can_siege` expresses. Every battle win or loss comes from a real map
+battle: the council's old abstract pitched battle and harrying options are gone, and
+its remaining orders are map orders — hunt the fielded enemy host
+(`war_can_hunt`/`war_hunt`, which sets `huntPrey` so the host re-paths onto its
+prey each day rather than marching to where it stood), fall back and refit, or seek
+terms. The campaign's abstract condition (`war.strength`), days spent leading the
+host (`war.led`), and a refit (`war.rested`) multiply the player host's real battle
+power in `battlePower` and are spent by `afterBattle` when a battle is fought; the
+`war_battle` named chance survives only as the field-battle estimate behind the Deeds
+war card and the unfortified-siege sortie roll, where a side still re-forming a
+shattered host counts only a remnant of its paper strength (`FB.rearmScale`: the
+share of `armyRearmDays` elapsed, floored at 0.15). The war blessing (`blessed_war`)
+applies its edge through `battlePower`, and a real battle involving the player's host
+spends it. Siege flavor follows the same map truth: after each day's movement and
+battles, `FB.maybeQueuePlayerSiegeEvent` recognizes the first uncontested player force
+large enough to work the enemy-held target and queues `war_occupation_policy`
+immediately. `war.occupationEventQueued` makes that story once per war, while its exact
+war context lets peace discard a stale queued audience. The read-only
+`war_active_occupation` trigger remains available to mods that need the broader live
+presence fact.
+
+Operational musters, councils, submission/ransom audiences, and tribute offers are
+queued through `FB.queueWarEvent`. Their context saves the ordinary war's deterministic
+serial and enemy id; `war_event_context_valid` (composed into the specialized submission
+and prison validators) drops the event if that exact war ends or is replaced. Old saves
+without a serial retain their current-war event, then all newly queued events are exact.
 
 **Defeat has a price beyond provinces.** A defender outranked and outweighed
 (`submissionStrengthRatio`) whose war is all but lost is offered the loser's homage
 once per war (`war_submission_offer` via `FB.maybeOfferSubmission`): kneel and keep
 every acre as the victor's vassal (`war_submit` — a crowned head that kneels begins
 its title lapse, see [descent.md](descent.md)), buy the peace at a conqueror's price,
-or fight on. A beaten tier-3+ leader may be **taken in the rout**
-(`FB.maybeCapturePlayer` on `war_loss`, skill-softened odds): the `in_prison` flag
+or fight on. A beaten tier-3+ leader may be **taken in the rout** only when the
+primary host was in that battle (`FB.maybeCapturePlayer` on `war_loss`, skill-softened
+odds): the `in_prison` flag
 blocks travel, retirement, and ventures; the ransom event prices freedom by dignity
 (`ransomByTier`), payable in silver or in a border county; and while the flag stands
 no war council is queued — the war drifts leaderless while health and crown authority
@@ -666,6 +721,10 @@ Battles shift resolve by 10 and occupations by 5. Defenders win at
 −100 resolve, when no sovereign attacker remains, or after eight years. Attackers
 must occupy every frozen lost holy county, at least half the objective counties, and
 60% of objective development. Only occupied counties transfer at settlement.
+The ordinary primary-host presentation rule also applies here: a battle containing the
+primary player host queues `ghw_field_battle_won/lost`, while a detached banner writes a
+localized Chronicle result without applying protagonist health, prestige, piety, or
+skill effects. Both still change campaign resolve and contribution normally.
 
 Contribution is keyed by participant realm, with the protagonist recorded as
 `player`, and therefore survives character succession. Field winners earn

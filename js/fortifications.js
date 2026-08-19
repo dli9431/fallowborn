@@ -415,13 +415,36 @@ window.FB = window.FB || {};
     return total;
   };
 
+  function resolveArmyTopRealm(state, realmId) {
+    if (!state || !realmId) return null;
+    if (realmId === 'player') {
+      if (state.realms && state.realms.player && state.realms.player.alive && state.realms.player.liege) {
+        return FB.topRealm(state, state.realms.player.liege);
+      }
+      if (state.player && state.player.liege) {
+        return FB.topRealm(state, state.player.liege);
+      }
+      if (FB.playerRealmId) return FB.playerRealmId(state);
+      return (state.owner && state.player && state.owner[state.player.provinceId]) || 'player';
+    }
+    return FB.topRealm ? FB.topRealm(state, realmId) : realmId;
+  }
+
   function realmFriendlyTo(state, realmId, controller) {
     if (!controller || realmId === controller) return true;
-    var top = realmId === 'player'
-      ? (FB.playerRealmId ? FB.playerRealmId(state) : 'player')
-      : (FB.topRealm ? FB.topRealm(state, realmId) : realmId);
-    if (top === controller) return true;
-    return !!(FB.areAllied && FB.areAllied(state, realmId, controller));
+    var topA = resolveArmyTopRealm(state, realmId);
+    var topB = FB.topRealm ? FB.topRealm(state, controller) : controller;
+    if (topA && topB && topA === topB) return true;
+    if (topA === controller || topB === realmId) return true;
+    if (state.realms && state.realms[controller]) {
+      var cur = state.realms[controller];
+      var guard = 0;
+      while (cur && guard++ < 20) {
+        if (cur.liege === realmId || (realmId === 'player' && cur.liege === 'player')) return true;
+        cur = state.realms[cur.liege];
+      }
+    }
+    return !!(FB.areAllied && (FB.areAllied(state, realmId, controller) || (topA && topB && FB.areAllied(state, topA, topB))));
   }
 
   FB.armyFriendlyProvince = function (state, army, pid) {
@@ -429,7 +452,10 @@ window.FB = window.FB || {};
     if (army.realm === 'player' && playerHolds(state, pid)) return true;
     var holder = state.holder && state.holder[pid];
     if (holder === army.realm) return true;
-    return realmFriendlyTo(state, army.realm, state.owner[pid]);
+    if (holder && realmFriendlyTo(state, army.realm, holder)) return true;
+    var owner = state.owner && state.owner[pid];
+    if (owner && realmFriendlyTo(state, army.realm, owner)) return true;
+    return false;
   };
 
   function holyWarFortControl(state, army, pid) {

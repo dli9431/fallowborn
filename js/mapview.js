@@ -25,12 +25,24 @@ window.FB = window.FB || {};
     focusMembers: null, focusGroupActive: false,
     groupOutline: null, selectedOutline: null,
     groupOutlineSmooth: null, selectedOutlineSmooth: null,
+    highlightColor: null,
     onTap: null, dirty: true,
     marketGood: null,
     visibleSites: [], _sitePool: [], _labelRects: [], _rectCount: 0,
-    pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1
+    pointers: {}, pinchD: 0, downX: 0, downY: 0, moved: false, dpr: 1,
+    wheelActive: false, wheelTimer: null
   };
   FB.map = M;
+  M.isInteracting = function () {
+    return M.wheelActive || Object.keys(M.pointers).length > 0;
+  };
+
+  function flushUiAfterMapInteraction() {
+    if (M.isInteracting()) return;
+    if (FB.ui && FB.ui.flushMapInteractionRefresh) {
+      FB.ui.flushMapInteractionRefresh();
+    }
+  }
 
   /* Settlement marker detail thresholds (screen zoom) and tap hit radii in
      screen pixels (scaled by dpr at use). Below SITE_Z_MID the map draws no
@@ -91,6 +103,7 @@ window.FB = window.FB || {};
     M.selectedOutline = null;
     M.groupOutlineSmooth = null;
     M.selectedOutlineSmooth = null;
+    M.highlightColor = null;
     M.visibleSites.length = 0; // no stale settlement hit targets from the old world
     M._sitePool.length = 0;
     M._rectCount = 0;
@@ -478,6 +491,9 @@ window.FB = window.FB || {};
   /* groupOf: optional (pid) => groupKey|null deciding what counts as "the
      realm" for the highlight (map filters); defaults to sovereign ownership */
   M.focusColor = function () {
+    if (M.highlightColor && typeof M.highlightColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(M.highlightColor)) {
+      return M.highlightColor.toLowerCase();
+    }
     const prefs = FB.game && FB.game.uiPrefs;
     const color = prefs && prefs.realmHighlightColor;
     return typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color)
@@ -560,8 +576,65 @@ window.FB = window.FB || {};
     return path;
   }
 
-  M.select = function (provId, groupOf) {
+  /* Province bounds serve every vector outline. Discover all of them in one
+     grid pass: the wartime troop overlay may request dozens of previously
+     unseen counties in one frame, and scanning the full world once per
+     county made the first low-zoom pan needlessly quadratic. */
+  function ensureProvinceBounds(w) {
+    if (w._provinceBoundsReady) return;
+    const byIndex = {};
+    for (const pr of w.provs) {
+      pr._bounds = {
+        minX:w.W, minY:w.H, maxX:-1, maxY:-1
+      };
+      byIndex[pr.idx] = pr;
+    }
+    for (let y = 0; y < w.H; y++) {
+      for (let x = 0; x < w.W; x++) {
+        const pidx = w.grid[y * w.W + x] - 1;
+        const pr = byIndex[pidx];
+        if (!pr) continue;
+        const bounds = pr._bounds;
+        if (x < bounds.minX) bounds.minX = x;
+        if (x > bounds.maxX) bounds.maxX = x;
+        if (y < bounds.minY) bounds.minY = y;
+        if (y > bounds.maxY) bounds.maxY = y;
+      }
+    }
+    w._provinceBoundsReady = true;
+  }
+
+  FB.provinceBounds = function (pid) {
+    const w = FB.world;
+    if (!w || !w.byId || !w.grid) return null;
+    const pr = w.byId[pid];
+    if (!pr) return null;
+    ensureProvinceBounds(w);
+    const bounds = pr._bounds;
+    return bounds && bounds.minX <= bounds.maxX ? bounds : null;
+  };
+
+  FB.provinceOutline = function (pid) {
+    const w = FB.world;
+    if (!w || !w.byId || !w.grid) return null;
+    const pr = w.byId[pid];
+    if (!pr) return null;
+    if (pr._outline) return pr._outline;
+    const pidx = pr.idx;
+    const bounds = FB.provinceBounds(pid);
+    if (!bounds) return null;
+    pr._outline = traceSmoothOutline(
+      function (v) { return v === pidx + 1; },
+      bounds.minX - 1, bounds.minY - 1,
+      bounds.maxX + 1, bounds.maxY + 1
+    );
+    return pr._outline;
+  };
+
+  M.select = function (provId, groupOf, highlightColor) {
     M.selected = provId;
+    M.highlightColor = (typeof highlightColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(highlightColor))
+      ? highlightColor.toLowerCase() : null;
     if (!groupOf) groupOf = M.ownerOf;
     const hc = M.hiliteCtx;
     hc.clearRect(0, 0, M.hilite.width, M.hilite.height);
@@ -1019,6 +1092,7 @@ window.FB = window.FB || {};
     const wasSingle = Object.keys(M.pointers).length === 1;
     delete M.pointers[e.pointerId];
     M.pinchD = 0;
+    flushUiAfterMapInteraction();
     // an aborted gesture (notification shade, incoming call) is not a tap
     if (e.type === 'pointercancel') return;
     if (wasSingle && !M.moved) {
@@ -1031,6 +1105,13 @@ window.FB = window.FB || {};
   }
   function onWheel(e) {
     e.preventDefault();
+    M.wheelActive = true;
+    if (M.wheelTimer !== null) window.clearTimeout(M.wheelTimer);
+    M.wheelTimer = window.setTimeout(function () {
+      M.wheelTimer = null;
+      M.wheelActive = false;
+      flushUiAfterMapInteraction();
+    }, 120);
     const p = ptr(e);
     zoomAt(p[0], p[1], e.deltaY < 0 ? 1.18 : 1 / 1.18);
   }

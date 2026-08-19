@@ -480,7 +480,7 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   await expect(page.locator('.conversion-section-title', { hasText:'Islamic Traditions' })).toBeVisible();
   await expect(page.locator('.conversion-section-title', { hasText:'Pagan Traditions' })).toBeVisible();
 
-  // Cards display icon, name, relation badge, highlighted cost without multiplier parentheses, and ? info button
+  // Cards display icon, name, relation badge, highlighted cost without multiplier parentheses
   const orthodoxCard = page.locator('.conversion-card[data-conv-target="orthodox"]');
   await expect(orthodoxCard).toBeVisible();
   await expect(orthodoxCard.locator('.conversion-badge.schismatic')).toBeVisible();
@@ -488,17 +488,18 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   await expect(orthodoxCard.locator('.cost-highlight')).toHaveText('80 piety');
   await expect(orthodoxCard.locator('.conversion-card-cost')).not.toContainText('(×');
   await expect(page.locator('.conversion-card .keyhint')).toHaveCount(0);
-  const infoBtn = orthodoxCard.locator('.settcard-info');
-  await expect(infoBtn).toBeVisible();
 
-  // Tapping ? reveals doctrine details (Authority, Marriage, Clergy)
+  // Desktop hides the ? disclosure; hovering the card reveals the doctrine
+  // details (Authority, Marriage, Clergy) in the side tooltip
+  await expect(orthodoxCard.locator('.settcard-info')).toBeHidden();
   const details = orthodoxCard.locator('.settcard-details');
   await expect(details).toBeHidden();
-  await infoBtn.click();
-  await expect(details).toBeVisible();
-  await expect(details).toContainText('Authority');
-  await expect(details).toContainText('Marriage');
-  await expect(details).toContainText('Clergy');
+  await orthodoxCard.hover();
+  const tip = page.locator('#tooltip');
+  await expect(tip).toBeVisible();
+  await expect(tip).toContainText('Authority');
+  await expect(tip).toContainText('Marriage');
+  await expect(tip).toContainText('Clergy');
 
   // Switching scope updates costs and description
   await page.locator('[data-conv-scope="household"]').click();
@@ -557,16 +558,18 @@ test('culture conversion modal renders grouped regional traditions, scope contro
   await expect(page.locator('.conversion-section-title', { hasText:'Western & Northern Europe' })).toBeVisible();
   await expect(page.locator('.conversion-card .keyhint')).toHaveCount(0);
 
-  // Details button discloses dynasty style
+  // Desktop hover discloses dynasty style in the side tooltip; the ? button
+  // stays hidden on this layout
   const norseCard = page.locator('.conversion-card[data-conv-target="norse"]');
   await expect(norseCard).toBeVisible();
   await expect(norseCard.locator('.conversion-badge.in-fold')).toBeVisible();
   await expect(norseCard.locator('.conversion-card-cost')).toContainText('120 prestige');
   await expect(norseCard.locator('.cost-highlight')).toHaveText('120 prestige');
   await expect(norseCard.locator('.conversion-card-cost')).not.toContainText('(×');
-  await norseCard.locator('.settcard-info').click();
-  await expect(norseCard.locator('.settcard-details')).toContainText('Dynasty style');
-  await expect(norseCard.locator('.settcard-details')).toContainText('Patronymic');
+  await expect(norseCard.locator('.settcard-info')).toBeHidden();
+  await norseCard.hover();
+  await expect(page.locator('#tooltip')).toContainText('Dynasty style');
+  await expect(page.locator('#tooltip')).toContainText('Patronymic');
 
   // Digit keys do not select culture cards
   await page.keyboard.press('1');

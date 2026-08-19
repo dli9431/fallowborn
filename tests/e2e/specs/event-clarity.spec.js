@@ -567,3 +567,48 @@ test('every core option effect is previewable and every custom effect has an ada
     });
     expect(coverage).toEqual({ missingKeys:[], missingAdapters:[] });
   });
+
+test('event option buttons do not render helper desc text under label',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    await page.evaluate(function () {
+      FB.ui.showEventModal({
+        id: 'test_desc_event',
+        title: 'A Test Event With Descs',
+        text: 'An event testing option helper text omission.',
+        options: [
+          {
+            label: 'Acknowledge the cost in public.',
+            desc: 'Common Voice recovers, but thin ranks lower abstract condition.',
+            effects: { popularOpinion: 3, prestige: -2 }
+          },
+          {
+            label: 'Demand one more effort.',
+            desc: 'Discipline rises while Common Voice falls.',
+            effects: { popularOpinion: -2 }
+          }
+        ]
+      }, {});
+    });
+
+    var dialog = page.getByRole('dialog', { name: 'A Test Event With Descs' });
+    await expect(dialog).toBeVisible();
+
+    var buttons = page.locator('#ev-options .evopt');
+    await expect(buttons).toHaveCount(2);
+
+    // Labels are rendered
+    await expect(buttons.first()).toContainText('Acknowledge the cost in public.');
+    await expect(buttons.last()).toContainText('Demand one more effort.');
+
+    // Helper descs are NOT rendered inside the buttons
+    await expect(buttons.first()).not.toContainText('Common Voice recovers');
+    await expect(buttons.first()).not.toContainText('thin ranks lower abstract condition');
+    await expect(buttons.last()).not.toContainText('Discipline rises while Common Voice falls');
+
+    // Tooltip provides the effect preview instead
+    await buttons.first().hover();
+    var tooltip = page.locator('#tooltip');
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Guaranteed');
+  });

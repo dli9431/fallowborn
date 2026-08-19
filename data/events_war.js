@@ -11,7 +11,8 @@ FBDATA.events.push(
 
 /* ---------- the ruler’s war (tier 4+, own banner) ---------- */
 { id:'war_muster', title:'The Banners Rise', trigger:{ never:true }, wartime:true,
-  text:'War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls while the council presses the works.',
+  contextValidator:'war_event_context_valid',
+  text:'War with {enemy}. The host musters at your banner even now — farmers, spears, and pride. Will you swell its ranks before it marches? And mark this: {target} falls only to a siege — your host must stand upon its walls, season by season, until the works are done.',
   options:[
     { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season while the host is raised).',
       effects:{ gold:-20, custom:'war_mercs', log:'Hired mercenaries for the war.' } },
@@ -20,6 +21,7 @@ FBDATA.events.push(
     { label:'March with what you have.', desc:'Trust the spears that answered the first call.', effects:{ prestige:3, custom:'war_raise' } }
   ]},
 { id:'war_defense_muster', title:'War Comes to You', trigger:{ never:true }, wartime:true,
+  contextValidator:'war_event_context_valid',
   text:'{enemy} marches on your lands. Roads fill with carts and rumor; your captains stand in the yard, waiting for orders.',
   options:[
     { label:'Hire mercenaries. ({money:20})', require:{ goldMin:20 }, desc:'A company of ~150 hard men, promptly paid ({money:4} a season while the host is raised).',
@@ -29,36 +31,23 @@ FBDATA.events.push(
     { label:'Stand ready at the border.', desc:'Meet them with the host you already have.', effects:{ prestige:2, custom:'war_raise' } }
   ]},
 { id:'war_council', title:'The War Council', trigger:{ never:true }, wartime:true, warStatus:true,
+  contextValidator:'war_event_context_valid',
   text:'Maps, candle-stubs, and hard-eyed captains. The war against {enemy} must be given its next move — and the men must see you certain of it.',
   options:[
-    { label:'Offer pitched battle.', chance:'war_battle', require:{ custom:'war_no_enemy_host' },
-      desc:'Force a decision in the field — only while they have no host raised. A fielded enemy must be hunted on the map.',
-      success:{ text:'The lines meet with a sound like a falling forest — and it is theirs that breaks. The field is yours.',
-        effects:{ custom:'war_win', prestige:8, skills:{mar:1} } },
-      failure:{ text:'The day goes against you. You are carried back with the remnant of your host — alive, and little else.',
-        effects:{ custom:'war_loss', gold:-4, health:-1, prestige:-4,
-          deathProvenance:{ kind:'battle', enemy:'war' } } } },
     { label:'Hunt down their field host.', require:{ custom:'war_can_hunt' },
       desc:'March on their army in the field — battle joins when you catch it.',
       effects:{ custom:'war_hunt' } },
-    { label:'Press the siege of {target}.', require:{ custom:'war_can_siege' },
-      desc:'Ladders, mines, and patience — your host must stand in the target province. Fortifications add siege work, demand enough uncontested men, and exact seasonal losses.',
-      effects:{ custom:'war_siege', prestige:2, skills:{mar:1} } },
-    { label:'Harry their lands.', chance:0.7, desc:'Burn and take — weaken them before the next battle.',
-      success:{ text:'Granaries burn and herds change owners. Their war grows dearer by the day — and yours a little richer.',
-        effects:{ custom:'war_harry', gold:6, skills:{mar:1} } },
-      failure:{ text:'Their riders were waiting at the ford. Your raiders return fewer, poorer, and ashamed.',
-        effects:{ gold:-3, prestige:-2 } } },
     { label:'Fall back and refit.', desc:'The host mends and your borders are relieved — but no ground is gained.',
       effects:{ custom:'war_hold', health:1 } },
     { label:'Seek terms.', desc:'End the war now, at a price.', effects:{ custom:'war_terms' } }
   ]},
 { id:'war_tribute_offer', title:'Envoys Under a White Flag', trigger:{ never:true }, wartime:true, warStatus:true,
+  contextValidator:'war_event_context_valid',
   text:'Beaten in the field again and again, {enemy} sends envoys under a white flag: silver enough to end this war today, if you sheath the sword. But {target} still stands untaken — and its walls will not fall to a purse.',
   options:[
     { label:'Take the tribute.', desc:'Their coin, your glory — the war ends here.',
       effects:{ custom:'war_accept_tribute', log:'Took the enemy’s tribute and ended the war.' } },
-    { label:'Press on for {target}.', desc:'Keep your host standing on {target} and press the siege at each war council. Fortifications may demand more work and a larger host.',
+    { label:'Press on for {target}.', desc:'Keep your host standing on {target} — the works advance each season it holds the ground. Fortifications may demand more work and a larger host.',
       effects:{ prestige:2, custom:'war_press_on', log:'Refused tribute; the war goes on.' } }
   ]},
 
@@ -316,7 +305,8 @@ FBDATA.events.push(
     { label:'Acknowledge the cost in public.', desc:'Common Voice recovers, but thin ranks lower abstract condition.', effects:{ popularOpinion:3, custom:'war_thin', prestige:-2 } }
   ]},
 { id:'war_occupation_policy', title:'Under Your Banner',
-  trigger:{ tierMin:3, atWar:true, custom:'war_active_occupation', chance:0.24 }, wartime:true, warStatus:true, weight:7, cooldown:3,
+  trigger:{ never:true }, wartime:true, warStatus:true,
+  contextValidator:'war_event_context_valid',
   text:'The siege works bite into {target}. Farms and streets behind your lines now answer to soldiers who ask whether they are conquerors, guests, or thieves.',
   options:[
     { label:'Protect market, shrine, and field.', require:{ goldMin:4 }, desc:'Restraint raises abstract discipline and costs {money:4}.', effects:{ gold:-4, custom:'war_discipline', piety:4, popularOpinion:2 } },

@@ -15,26 +15,56 @@ window.FB = window.FB || {};
 
   /* ================= top bar & panels ================= */
   /* Refresh requests coalesce: a burst of calls in one JS turn (a day tick,
-     an autoresolve chain, a whole fast-forward) repaints the panels once,
-     on the next animation frame. */
+     an autoresolve chain, a whole fast-forward) updates on the next animation
+     frame. Natural ticks may refresh only the lightweight chrome. */
   let refreshQueued = false;
+  let queuedRefreshKind = 0; // 1 = natural live tick, 2 = exact/player-driven
   let refreshDeferredForFastForward = false;
-  UI.refresh = function () {
+  let refreshDeferredForMapInteraction = 0;
+  function mapInteractionActive() {
+    return !!(FB.map && FB.map.isInteracting && FB.map.isInteracting());
+  }
+  function activePanelShouldRender(liveTick) {
+    const tab = SH.activeTab;
+    const heavy = tab === 'actions' || tab === 'prov';
+    /* These renderers are whole-panel operations. One changing supply value
+       causes Land to rebuild the county, settlements and people, while Deeds
+       reconstructs every action and eligibility description. Keep that DOM
+       mounted during natural time flow; exact refreshes still repaint it. */
+    return !liveTick || !heavy;
+  }
+  UI.refresh = function (options) {
+    const refreshKind = options && options.liveTick ? 1 : 2;
     if (FB.game && FB.game.fastForwarding) {
       refreshDeferredForFastForward = true;
       return;
     }
+    if (mapInteractionActive()) {
+      if (refreshKind > refreshDeferredForMapInteraction) {
+        refreshDeferredForMapInteraction = refreshKind;
+      }
+      return;
+    }
+    if (refreshKind > queuedRefreshKind) queuedRefreshKind = refreshKind;
     if (refreshQueued) return;
     refreshQueued = true;
     requestAnimationFrame(function () {
       refreshQueued = false;
+      const runKind = queuedRefreshKind;
+      queuedRefreshKind = 0;
       if (FB.game && FB.game.fastForwarding) {
         refreshDeferredForFastForward = true;
         return;
       }
+      if (mapInteractionActive()) {
+        if (runKind > refreshDeferredForMapInteraction) {
+          refreshDeferredForMapInteraction = runKind;
+        }
+        return;
+      }
       if (FB.state && FB.tutorialCheck) FB.tutorialCheck(FB.state);
       if (FB.state && FB.music) FB.music.sync(FB.state);
-      refreshNow();
+      refreshNow(runKind === 1);
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     });
   };
@@ -42,6 +72,12 @@ window.FB = window.FB || {};
     if (!refreshDeferredForFastForward && refreshQueued) return;
     refreshDeferredForFastForward = false;
     UI.refresh();
+  };
+  UI.flushMapInteractionRefresh = function () {
+    if (!refreshDeferredForMapInteraction) return;
+    const refreshKind = refreshDeferredForMapInteraction;
+    refreshDeferredForMapInteraction = 0;
+    UI.refresh(refreshKind === 1 ? { liveTick:true } : undefined);
   };
 
   /* last season's measured net change, as a small ± beside a topbar stat;
@@ -102,9 +138,10 @@ window.FB = window.FB || {};
   }
 
   SH.portraitKey = '';
-  function refreshNow() {
+  function refreshNow(liveTick) {
     const s = FB.state;
     if (!s || s.player.dead) return;
+    const renderPanel = activePanelShouldRender(liveTick);
     // the fast-forward button's F hotkey badge (desktop only) — rendered every
     // refresh so it holds in both observe and normal modes and in every locale
     $('btn-skip').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">F</span> ') + '▶▶';
@@ -118,7 +155,7 @@ window.FB = window.FB || {};
       })) + '</span>';
       $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
         '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
-      renderActiveTab();
+      if (renderPanel) renderActiveTab();
       return;
     }
     const me = s.chars[s.player.charId];
@@ -156,13 +193,13 @@ window.FB = window.FB || {};
     $('btn-endturn').innerHTML = kh + '<span class="pp">' +
       esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
     const autoAccess = automationAccess(s);
-    $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Z</span> ') + '⚙' +
+    $('btn-auto').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">V</span> ') + '⚙' +
       (FB.game.auto && (FB.game.auto.minor || FB.game.auto.major || FB.game.auto.war || FB.game.auto.all ||
         (autoAccess.hosts && FB.game.auto.hosts &&
           FB.game.auto.hosts !== 'manual') ||
         (autoAccess.build && FB.game.auto.build) ||
         (autoAccess.research && FB.game.auto.research)) ? '✓' : '');
-    renderActiveTab();
+    if (renderPanel) renderActiveTab();
   }
 
   /* ===== shared exports (bound by the later UI files) ===== */

@@ -148,8 +148,9 @@ test('filtered declarations initialize campaign feedback and preserve the catalo
     });
     expect(active.hostMen).toBeGreaterThan(0);
     expect(active.upkeep).toBeGreaterThan(0);
-    expect(active.summary).toContain('Battle record: no battles recorded');
-    expect(active.summary).toContain('Seasonal host logistics');
+    expect(active.summary).toContain('Your host:');
+    expect(active.summary).toContain('not yet mustered');
+    expect(active.summary).not.toContain('Battle record');
 
     await page.evaluate(function () {
       var s = FB.state;
@@ -233,11 +234,13 @@ test('campaign feedback shares battle, class-loss, effect, and upkeep facts',
       intervalReady:true,
       lossTotal:180
     });
-    expect(result.summary).toContain('Battle record');
+    // the injected event summary stays compact; the panels carry the detail
+    expect(result.summary).toContain('Your host:');
     expect(result.summary).toContain('2-defeat streak');
-    expect(result.summary).toContain('Campaign losses from the live host');
-    expect(result.summary).toContain('abstract strength only');
-    expect(result.summary).toContain('Seasonal host logistics');
+    expect(result.summary).toContain('Logistics:');
+    expect(result.summary).not.toContain('Battle record');
+    expect(result.summary).not.toContain('Campaign losses');
+    expect(result.summary).not.toContain('Campaign effects');
     await expect(page.locator('#tab-actions')).toContainText('Battle record');
     await expect(page.locator('#tab-actions')).toContainText(
       'Campaign losses from the live host');

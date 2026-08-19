@@ -3089,6 +3089,10 @@ window.FB = window.FB || {};
       });
   };
 
+  /* Compact war status injected under wartime event text. One line of short
+     clauses; the full battle record, campaign losses, effects, and the upkeep
+     ledger stay in the war panels (ui_panels.js), which render the
+     warBattleRecordText/warLossesText/warEffectsText/warUpkeepText detail. */
   FB.warStateText = function (state) {
     const war = state.player.war;
     if (!war) return '';
@@ -3097,22 +3101,23 @@ window.FB = window.FB || {};
     const men = host ? host.men :
       Math.round(Math.max(FBDATA.balance.armyMinMen || 40, FB.playerLevy(state)) * (war.strength || 1) +
         (war.mercCos || 0) * (FBDATA.balance.mercCompanySize || 150));
+    const condition = Math.round((war.strength || 1) * 100);
     const clauses = [
-      FB.renderKey('fx.warstate.host',
-        { text: 'Your host: ~{men} men at {condition}% condition' },
-        { men: men, condition: Math.round((war.strength || 1) * 100) })
+      host
+        ? FB.renderKey('fx.warstate.host_at', {
+          text: 'Your host: ~{men} men at {condition}% condition, at {place}'
+        }, { men: men, condition: condition,
+          place: FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?' })
+        : FB.renderKey('fx.warstate.host_unmustered', {
+          text: 'Your host: ~{men} men at {condition}% condition, not yet mustered'
+        }, { men: men, condition: condition })
     ];
-    // what the host is made of: the levy mass, the bowmen, the hard core
-    if (host && host.units) {
-      const parts = warUnitParts(host.units);
-      if (parts.length) clauses.push(parts.join(', '));
-    }
-    // how long the host can eat: supply starvation lands on live troops
+    // urgent warnings only; the panel carries the full supply detail
     if (host && FB.hostSupplyStatus) {
       const supplyInfo = FB.hostSupplyStatus(state, host);
       if (supplyInfo && supplyInfo.status === 'starving') {
         clauses.push(FB.renderKey('fx.warstate.supply_starving', {
-          text: 'the host is starving — supplies are gone and hunger thins its ranks daily'
+          text: 'the host is starving'
         }, {}));
       } else if (supplyInfo && supplyInfo.status === 'low') {
         clauses.push(FB.renderKey('fx.warstate.supply_low', {
@@ -3120,35 +3125,31 @@ window.FB = window.FB || {};
         }, {}));
       }
     }
-    if (war.mercCos) {
-      clauses.push(FB.renderKey('fx.warstate.mercenaries', {
-        forms: {
-          select: 'plural', param: 'count', cases: {
-            one: '{count} mercenary company',
-            other: '{count} mercenary companies'
-          }
-        }
-      }, { count: war.mercCos }));
-    }
     if (feedback) {
-      clauses.push(FB.warBattleRecordText(state, feedback));
-      clauses.push(FB.warLossesText(state, feedback));
-      const effectText = FB.warEffectsText(state, feedback);
-      if (effectText) clauses.push(effectText);
-      clauses.push(FB.warUpkeepText(state, feedback));
-      clauses.push(FB.renderKey('fx.warstate.condition_explainer', {
-        text:'Campaign condition changes war-council odds; live troop totals change only when a loss names the host.'
-      }, {}));
+      if (feedback.streak && feedback.streak.count) {
+        clauses.push(feedback.streak.outcome === 'win'
+          ? FB.renderKey('fx.warstate.win_streak', {
+            forms:{ select:'plural', param:'count', cases:{
+              one:'{count}-victory streak', other:'{count}-victory streak'
+            }}
+          }, { count:feedback.streak.count })
+          : FB.renderKey('fx.warstate.loss_streak', {
+            forms:{ select:'plural', param:'count', cases:{
+              one:'{count}-defeat streak', other:'{count}-defeat streak'
+            }}
+          }, { count:feedback.streak.count }));
+      }
+      if (feedback.host) {
+        clauses.push(FB.renderKey('fx.warstate.logistics_total', {
+          text: 'Logistics: {money:total}/season'
+        }, { total: Math.round(feedback.upkeep.total * 10) / 10 }));
+      }
     }
-    clauses.push(host
-      ? FB.renderKey('fx.warstate.in_field', { text: 'In the field at {place}' },
-        { place: FB.world.byId[host.at] ? FB.world.byId[host.at].name : '?' })
-      : FB.renderKey('fx.warstate.not_mustered', { text: 'Not yet mustered' }, {}));
     const pinned = host && FB.fortPinnedStatus
       ? FB.fortPinnedStatus(state, host) : null;
     if (pinned) {
       clauses.push(FB.renderKey('fx.warstate.fort_pinned', {
-        text:'Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land'
+        text:'Pinned by {fort} at {place}'
       }, { fort:pinned.name, place:FB.world.byId[pinned.pid].name }));
     }
     const enemyHost = FB.hostOf ? FB.hostOf(state, war.enemy) : null;
@@ -3171,7 +3172,7 @@ window.FB = window.FB || {};
           required:siegeStatus ? siegeStatus.required : 3 }));
       if (siegeStatus && siegeStatus.level) {
         clauses.push(FB.renderKey('fx.warstate.fort_siege_terms', {
-          text:'{fort}: {minimum} besiegers required; {attrition} casualties each active season'
+          text:'{fort}: {minimum} besiegers needed, {attrition} lost each season'
         }, {
           fort:siegeStatus.name, minimum:siegeStatus.minimum,
           attrition:siegeStatus.attrition
@@ -3200,7 +3201,7 @@ window.FB = window.FB || {};
         }));
       if (enemyStatus && enemyStatus.level) {
         clauses.push(FB.renderKey('fx.warstate.enemy_fort_siege', {
-          text:'Your {fort} needs {minimum} besiegers and costs them {attrition} men each active season'
+          text:'Your {fort}: {minimum} besiegers needed, {attrition} lost each season'
         }, { fort:enemyStatus.name, minimum:enemyStatus.minimum,
           attrition:enemyStatus.attrition }));
         if (enemyStatus.shortage) {
@@ -3397,10 +3398,12 @@ window.FB = window.FB || {};
           (bal.battleMarAI || 22)) * (1 + FB.techBonus(state, 'battle', w.enemy));
         let c = myStr / (myStr + enStr);
         c += Math.min(90, w.led || 0) / 90 * 0.1;              // a season spent leading the host
-        c += 0.08 * (w.harried || 0) + (w.rested ? 0.05 : 0);  // council preparations
+        c += w.rested ? 0.05 : 0;                              // a refit
         c += (w.mass ? 0.05 : 0);                              // the great levy
-        /* The council's abstract battle uses the invaded county when a live
-           host supplies one; otherwise it falls back to the defended seat. */
+        /* field-battle estimate (the war card, the siege sortie roll): when
+           defending, read the fort bonus of the invaded county when a live
+           host supplies one; otherwise fall back to the defended seat. The
+           same terms multiply real battle power in battlePower (js/armies.js). */
         if (w.defending && FB.fortBattleBonus) {
           const invader = FB.enemyHostInPlayerLandsArmy
             ? FB.enemyHostInPlayerLandsArmy(state) : null;
@@ -3831,7 +3834,10 @@ window.FB = window.FB || {};
   FB.pickDailyEvents = function (state) {
     const out = [];
     FB.queueStationFarewellIfReady(state);
-    while (state.eventQueue.length && out.length < 3) {
+    /* One blocking decision per simulated day. Invalid entries may be skipped
+       in the same pass, but later valid entries remain queued for later days
+       so pausing after a choice really stops the event stream. */
+    while (state.eventQueue.length && !out.length) {
       const qev = state.eventQueue.shift();
       /* queueEvent already stamps all five context defaults — only a queued
          item from a legacy save needs the repair copy */
@@ -3870,7 +3876,7 @@ window.FB = window.FB || {};
       // consume ONE slot: two rolls landing on the same day stay two happenings
       slots.splice(slotAt, 1);
     }
-    if (!isSlot || out.length >= 2) return out;
+    if (!isSlot || out.length) return out;
     /* The road supplies its own paced encounters. Queued home events that
        already existed still resolve above, but no new home slot event is
        selected while the traveler is away. */
@@ -4100,8 +4106,8 @@ window.FB = window.FB || {};
     'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
     'raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
-    'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_harry war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
-    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_no_enemy_host war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
+    'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
+    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
   FB.coreEventImpactCustomIds = CORE_CUSTOM_EFFECT_IDS.slice();
   FB.eventImpactAdapters = FB.eventImpactAdapters || {};
@@ -6748,7 +6754,7 @@ window.FB = window.FB || {};
         '⚔ {realm} will not let you go without a fight!',
         { realm: state.realms[oldLiege].name }));
       FB.warFooting(state);
-      FB.queueEvent(state, 'war_defense_muster', {});
+      FB.queueWarEvent(state, 'war_defense_muster', {});
     }
     FB.checkTierPromotions(state);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
@@ -6940,7 +6946,7 @@ window.FB = window.FB || {};
     const held = FB.realmHeldCounties(state, rid);
     p.war = { enemy: rid, target: held[0] || null, wins: 0, losses: 0, seasons: 0, defending: false };
     FB.warFooting(state);
-    FB.queueEvent(state, 'war_muster', {});
+    FB.queueWarEvent(state, 'war_muster', {});
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
   /* a vassal yields his fief peacefully */

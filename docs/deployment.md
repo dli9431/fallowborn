@@ -60,7 +60,7 @@ player action or campaign transition directly:
 | `campaign-resumed` | A saved campaign was loaded; emitted at most once per page visit. |
 | `observer-mode-started` | A new observer-mode world was started. |
 | `active-play-reached-{1,5,15,30}-minute(s)` | The current gameplay session reached that much visible, active play. |
-| `active-play-checkpoint` | Active time was recorded because the page was hidden or unloading; this is not a unique visit or session count. |
+| `active-play-checkpoint` | Active time was recorded because the page was hidden or unloading; this is not a unique visit or session count. Carries the current in-game year as `game_year`. |
 | `returned-to-title` | The player deliberately returned from a running campaign or observer world to the title screen. |
 | `player-life-ended` | The current player character died with at least one playable heir. |
 | `succession-completed` | An heir took over after a death. |
@@ -70,7 +70,7 @@ player action or campaign transition directly:
 Every event carries `telemetry_schema`, `game_version`, and `locale`. When available, the shared
 campaign properties are `start_bookmark`, `player_tier`, and `dynasty_generation`; lifecycle
 events add only low-cardinality context such as `entry_type`, `scenario`, `family_preset`,
-`active_seconds`, or checkpoint reason. Player and dynasty names, world seeds, province choices,
+`active_seconds`, `game_year`, or checkpoint reason. Player and dynasty names, world seeds, province choices,
 rendered death text, and save contents must never be sent. Do Not Track remains respected by the
 Umami loader. Older event names remain only as historical schema-1 rows in Umami.
 

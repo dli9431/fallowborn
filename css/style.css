@@ -883,6 +883,14 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   min-width: 32px; min-height: 32px; padding: 0; font-size: 14px; font-weight: bold;
   display: inline-flex; align-items: center; justify-content: center;
 }
+/* Card detail affordances are mutually exclusive per layout: roomier desktop
+   pointers get the hover/focus side tooltip, so the ? disclosure button stays
+   hidden; touch, tablet-width, and short layouts get the button instead (the
+   same switch as eventChoiceUsesDisclosure in ui_misc.js). */
+.settcard-actions .btn.small.settcard-info { display: none; }
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  .settcard-actions .btn.small.settcard-info { display: inline-flex; }
+}
 .settcard-actions .btn.small.settcard-raise,
 .settcard-actions .btn.small.convcard-select {
   min-height: 32px; padding: 0 14px; font-size: 13px; font-weight: bold;
@@ -1343,8 +1351,78 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .land-kv > b { line-height: 1.35; text-align: right; }
 .land-kv-detail { grid-template-columns: minmax(0, 1fr); gap: 1px; padding: 5px 0; }
 .land-kv-detail > span { color: var(--helper-text-color); font-size: 12px; }
-.land-kv-detail > b { text-align: left; }
 .land-section .progressnote { margin: 6px 0 0; }
+.war-card {
+  border-color: #5c4623;
+  background: linear-gradient(135deg, #241d14, #1a1610);
+}
+.war-card .settcard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(218, 165, 32, 0.2);
+}
+.war-card .settcard-head > b {
+  color: #f2e3b3;
+  font-size: 14px;
+}
+.war-card .settcard-details {
+  margin-top: 7px;
+  padding: 8px 9px;
+  border-radius: 6px;
+  background: rgba(12, 10, 7, 0.7);
+  border: 1px solid rgba(130, 105, 55, 0.35);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.war-card .settcard-details > div {
+  margin-bottom: 4px;
+}
+.war-card .settcard-details > div:last-child {
+  margin-bottom: 0;
+}
+.war-card .land-kv {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(218, 165, 32, 0.1);
+}
+.war-card .land-kv:last-of-type {
+  border-bottom: none;
+}
+.war-card .land-kv > span {
+  color: #bfa45d;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.war-card .land-kv > b {
+  text-align: left;
+  color: var(--main-text-color);
+  font-size: 13.5px;
+  font-weight: normal;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.war-card .hint {
+  margin: 6px 0 2px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(30, 24, 16, 0.7);
+  border: 1px solid rgba(130, 105, 55, 0.25);
+  font-size: 12px;
+  color: #dfd2ab;
+  line-height: 1.35;
+}
+.war-card .actionbtn {
+  margin-top: 6px;
+}
 .land-market-card {
   display: grid; grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center; gap: 9px; width: 100%; min-height: 58px;
@@ -2313,8 +2391,8 @@ textarea.modjson, textarea.savetext {
 .governance-modifier-county .modifier-list { padding: 4px 0 0; }
 .governance-vassal {
   display: grid;
-  grid-template-columns: minmax(150px, .85fr) minmax(390px, 2.25fr)
-    minmax(190px, 1fr);
+  grid-template-columns: minmax(150px, .85fr) minmax(300px, 1.6fr)
+    minmax(240px, 1.2fr);
   gap: 12px; align-items: start; margin: 0; padding: 4px 2px;
   border: 0; border-bottom: 1px solid #493c27;
   border-radius: 0; background: transparent;
@@ -2332,6 +2410,10 @@ textarea.modjson, textarea.savetext {
   display: grid; grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
 }
+/* the card face shows only the three crucial dues rows */
+.governance-vassal-face { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* the vassal card's details (shown by the ? disclosure) span the full row */
+.governance-vassal .settcard-details { grid-column: 1 / -1; }
 .governance-vassal-stats .kv {
   min-width: 0; padding: 0; flex-direction: column;
   justify-content: flex-start; gap: 2px;
@@ -2348,7 +2430,9 @@ textarea.modjson, textarea.savetext {
   margin-top: 4px; color: var(--helper-text-color); font-size: 10px; line-height: 1.3;
 }
 .governance-inline-actions {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  /* one full-width button per row: the narrow auto-fit columns squeezed the
+     labels into tall mid-word-wrapped boxes */
+  display: grid; grid-template-columns: 1fr;
   gap: 5px; margin: 0;
 }
 .governance-inline-actions .btn {
@@ -3010,6 +3094,11 @@ textarea.modjson, textarea.savetext {
   .governance-vassal-actions { margin-top: 9px; }
   .governance-inline-actions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* the long Council-protection label spans the row, staying on one line
+     instead of wrapping into a tall box */
+  .governance-inline-actions [data-governance-council-protection] {
+    grid-column: 1 / -1;
   }
   .protected-choice { grid-template-columns: minmax(0, 1fr); }
   .protected-choice .protection-toggle { margin-top: -5px; }

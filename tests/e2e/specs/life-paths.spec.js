@@ -42,12 +42,13 @@ test('mercenary contracts pay, complete, and never strand the traveler',
       const homeRealm = state.owner && state.owner[state.player.provinceId];
       const destination = FB.travelDestinations(state, 'service').filter(
         function (d) {
-          return FB.topRealm(state, d.destinationRealm) !== homeRealm;
+          const r = state.realms[d.destinationRealm];
+          return r && !r.liege && d.destinationRealm !== homeRealm && r.capital === d.destinationId;
         })[0];
       if (!destination) return { setup:false };
       /* wars are sovereign-level: a war planted on a vassal realm is
          invisible to the contract offer and stripped by repairWars */
-      const warRealmId = FB.topRealm(state, destination.destinationRealm);
+      const warRealmId = destination.destinationRealm;
       // clear every war, then set the patron at war with a war-free sovereign
       for (const rid in state.realms) {
         if (state.realms[rid]) delete state.realms[rid].war;
@@ -191,12 +192,13 @@ test('an abandoned mercenary contract costs Standing and still reaches home',
       const homeRealm = state.owner && state.owner[state.player.provinceId];
       const destination = FB.travelDestinations(state, 'service').filter(
         function (d) {
-          return FB.topRealm(state, d.destinationRealm) !== homeRealm;
+          const r = state.realms[d.destinationRealm];
+          return r && !r.liege && d.destinationRealm !== homeRealm && r.capital === d.destinationId;
         })[0];
       if (!destination) return { setup:false };
       /* wars are sovereign-level: a war planted on a vassal realm is
          invisible to the contract offer and stripped by repairWars */
-      const warRealmId = FB.topRealm(state, destination.destinationRealm);
+      const warRealmId = destination.destinationRealm;
       let enemyId = null;
       for (const rid in state.realms) {
         const realm = state.realms[rid];

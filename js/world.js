@@ -5466,7 +5466,7 @@ window.FB = window.FB || {};
           FB.news(state, FB.msg('news.world.war_declared_on_player',
             '🔥 {realm} declares war upon YOU!', { realm: r.name }));
           FB.warFooting(state);
-          FB.queueEvent(state, 'war_defense_muster', {});
+          FB.queueWarEvent(state, 'war_defense_muster', {});
           if (FB.ui && FB.ui.maybeTip) {
             FB.ui.maybeTip('war-declared',
               '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
@@ -5507,7 +5507,7 @@ window.FB = window.FB || {};
           state.player.war = { enemy: id, target: null, wins: 0, losses: 0, seasons: 0,
             defending: true, casus: { type: 'independence' } };
           FB.warFooting(state);
-          FB.queueEvent(state, 'war_defense_muster', {});
+          FB.queueWarEvent(state, 'war_defense_muster', {});
           if (FB.ui && FB.ui.maybeTip) {
             FB.ui.maybeTip('war-declared',
               '💡 War has come! The muster raises your host. Follow the fighting on the map and keep the household safe.',
@@ -5812,9 +5812,56 @@ window.FB = window.FB || {};
      event's war_raise retries once the window has passed. */
   FB.warFooting = function (state) {
     const p = state.player;
+    if (p.war) playerWarEventId(state);
     if (p.focus !== 'lead_host') { p.focusBack = p.focus; p.focus = 'lead_host'; }
     if (FB.raisePlayerHost) FB.raisePlayerHost(state);
     if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
+  };
+
+  /* Operational war events belong to one exact ordinary war. The serial is
+     deterministic, saved with the state, and distinguishes a fresh war from
+     an old queued council against the same enemy. Legacy queues without a
+     serial remain valid only while some ordinary player war is still live. */
+  function playerWarEventId(state) {
+    const w = state.player && state.player.war;
+    if (!w) return null;
+    if (w.eventId === undefined) {
+      state.warEventSerial = Math.max(0, Number(state.warEventSerial) || 0) + 1;
+      w.eventId = state.warEventSerial;
+    } else {
+      state.warEventSerial = Math.max(Number(state.warEventSerial) || 0,
+        Number(w.eventId) || 0);
+    }
+    return w.eventId;
+  }
+  FB.warEventContext = function (state, ctx) {
+    const out = {}, source = ctx || {};
+    for (const key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) out[key] = source[key];
+    }
+    const w = state.player && state.player.war;
+    if (w) {
+      out.warEventId = playerWarEventId(state);
+      out.warEnemyId = w.enemy;
+    } else {
+      out.warEventId = null;
+      out.warEnemyId = null;
+    }
+    return out;
+  };
+  FB.queueWarEvent = function (state, id, ctx, extra) {
+    return FB.queueEvent(state, id, FB.warEventContext(state, ctx), extra);
+  };
+  FB.fns = FB.fns || {};
+  FB.fns.war_event_context_valid = function (state, ctx) {
+    const w = state.player && state.player.war;
+    if (!w) return false;
+    ctx = ctx || {};
+    if (ctx.warEventId === undefined) { // queue from a legacy save
+      return ctx.warEnemyId === undefined || ctx.warEnemyId === w.enemy;
+    }
+    return ctx.warEventId === playerWarEventId(state) &&
+      (ctx.warEnemyId === undefined || ctx.warEnemyId === w.enemy);
   };
 
   FB.endPlayerWar = function (state) {
@@ -5968,6 +6015,12 @@ window.FB = window.FB || {};
         }
       }
       FB.maybeOfferSubmission(state);
+    } else {
+      /* the mirror of the invader's siege above: a host standing on the war
+         target presses the works each season on its own — no council order
+         needed. A breach captures the prize and may end the war on the spot. */
+      FB.fns.war_siege(state);
+      if (!state.player.war) return;
     }
     /* a prisoner leads from a cell: no war council while the in_prison flag
        stands — the war drifts without orders while health, authority, and
@@ -5989,7 +6042,7 @@ window.FB = window.FB || {};
       }
       return;
     }
-    FB.queueEvent(state, 'war_council', {});
+    FB.queueWarEvent(state, 'war_council', {});
   };
 
   /* Is a hostile field host standing in the player's own lands? Drives the
@@ -6400,7 +6453,7 @@ window.FB = window.FB || {};
     const need = FBDATA.balance.warWinsToTakeProvince;
     if ((w.enemySiege || 0) < 2 && (w.losses || 0) < need - 1) return;
     w.submissionOffered = 1;
-    FB.queueEvent(state, 'war_submission_offer', {});
+    FB.queueWarEvent(state, 'war_submission_offer', {});
   };
 
   /* ---- capture & ransom (docs/designs/descent.md) ------------------------
@@ -6424,15 +6477,16 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.war.captured',
       '⛓ Taken in the rout! You are a prisoner of {enemy}.',
       { enemy: state.realms[w.enemy] ? state.realms[w.enemy].name : '' }));
-    FB.queueEvent(state, 'prison_ransom', {});
+    FB.queueWarEvent(state, 'prison_ransom', {});
   };
   function prisonRansom(state) {
     const table = FBDATA.balance.ransomByTier || [];
     return table[state.player.tier] || 30;
   }
-  FB.fns.prison_still = function (state) {
+  FB.fns.prison_still = function (state, ctx) {
     const p = state.player;
-    return !!(p.flags && p.flags.in_prison && p.war &&
+    return FB.fns.war_event_context_valid(state, ctx) &&
+      !!(p.flags && p.flags.in_prison && p.war &&
       state.realms[p.war.enemy] && state.realms[p.war.enemy].alive);
   };
   FB.fns.prison_can_pay = function (state) {
@@ -6549,16 +6603,18 @@ window.FB = window.FB || {};
           if (q.id === 'war_tribute_offer') { queued = true; break; }
         }
         if (!queued && !w.tributeDeclined) {
-          FB.queueEvent(state, 'war_tribute_offer', {});
+          FB.queueWarEvent(state, 'war_tribute_offer', {});
         }
       }
     }
     FB.maybeOfferSubmission(state);
   };
 
-  /* ---- war-council handlers (called by event effects {custom:'war_*'}).
-     Battle bonuses (led days, harrying, rest, mercenaries, mass levy) are
-     read by the 'war_battle' named chance and spent when a battle is fought. */
+  /* ---- war-council handlers (called by event effects {custom:'war_*'}) and
+     the season-tick siege pulse. Battle preparations (led days, rest) and the
+     abstract campaign condition (war.strength) multiply the host's real
+     field-battle power (battlePower, js/armies.js) and are spent by
+     afterBattle when a battle is fought. */
   FB.fns = FB.fns || {};
   function afterBattle(w) { w.led = 0; w.harried = 0; w.rested = 0; }
   function warEffectSource(ev, fallback) {
@@ -6578,18 +6634,20 @@ window.FB = window.FB || {};
     const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'win');
     if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
     if (FB.adjustWarStrength) {
-      FB.adjustWarStrength(state, -0.05, {
+      FB.adjustWarStrength(state, 0.05, {
         source:warEffectSource(ev, battle.mode === 'field' ? 'field_battle' : 'war_council'),
         condition:'battle', troopLosses:battle.playerLosses
       });
     } else {
-      w.strength = Math.max(0.5, (w.strength || 1) - 0.05);
+      w.strength = Math.min(1.1, (w.strength || 1) + 0.05);
     }
     if (w.defending && w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1);
     FB.news(state, FB.msg('news.war.field_victory',
       '⚔ Victory in the field! ({wins}/{needed})',
       { wins: w.wins, needed: FBDATA.balance.warWinsToTakeProvince }));
-    if (FB.chance(0.3)) FB.lootItem(state, null, 'spoils');
+    if (battle.primaryHostInvolved !== false && FB.chance(0.3)) {
+      FB.lootItem(state, null, 'spoils');
+    }
     FB.warOutcome(state);
   };
   FB.fns.war_loss = function (state, ctx, ev) {
@@ -6615,12 +6673,12 @@ window.FB = window.FB || {};
       }
     }, { losses: w.losses }));
     FB.warOutcome(state);
-    FB.maybeCapturePlayer(state, !!(battle && battle.encircled));
-  };
-  FB.fns.war_harry = function (state) {
-    const w = state.player.war; if (!w) return;
-    w.harried = Math.min(2, (w.harried || 0) + 1);
-    if (FB.chance(0.15)) FB.lootItem(state, null, 'raid');
+    /* A detached banner can lose war score, men, and position without
+       teleporting the protagonist into its rout. Abstract council battles
+       and legacy records omit the flag and remain personal. */
+    if (!battle || battle.primaryHostInvolved !== false) {
+      FB.maybeCapturePlayer(state, !!(battle && battle.encircled));
+    }
   };
   FB.fns.war_hold = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
@@ -6640,8 +6698,9 @@ window.FB = window.FB || {};
       }
     }
   };
-  /* press the siege of the war's target (attacking wars only): your host
-     must stand in the target province to keep the works going */
+  /* the siege of the war's target (attacking wars only): a host standing in
+     the target province presses the works, pulsed once per season by the war
+     tick (playerWarTick) — no council order needed */
   FB.fns.war_can_siege = function (state) {
     const w = state.player.war;
     if (!(w && !w.defending && w.target && state.owner[w.target] === w.enemy)) return false;
@@ -6678,6 +6737,26 @@ window.FB = window.FB || {};
     status.contested = contested;
     status.canProgress = status.canProgress && !contested;
     return status;
+  };
+  /* The first real siege position in an ordinary war gets one immediate
+     player-facing story. Army movement calls this after battles, so merely
+     carrying old progress, standing contested, or lacking a fort's minimum
+     force cannot manufacture the event. The saved bit makes it once per war
+     even after the queued story has been resolved. */
+  FB.maybeQueuePlayerSiegeEvent = function (state) {
+    const p = state.player;
+    const w = p && p.war;
+    if (!(w && !w.defending && p.tier >= 3 && w.target &&
+        state.owner[w.target] === w.enemy) || w.occupationEventQueued) {
+      return false;
+    }
+    const status = FB.playerSiegeStatus(state);
+    if (!status || !status.canProgress) return false;
+    w.occupationEventQueued = 1;
+    FB.queueWarEvent(state, 'war_occupation_policy', {
+      locationId:w.target
+    });
+    return true;
   };
   FB.fns.war_siege = function (state) {
     const w = state.player.war;
@@ -6755,13 +6834,6 @@ window.FB = window.FB || {};
       host.size = host.size === undefined ? host.men : host.size + add;
       if (FB.map) FB.map.request();
     } else if (FB.raisePlayerHost) FB.raisePlayerHost(state); // applies the great levy itself
-  };
-  /* the council's abstract pitched battle exists only while the enemy has
-     no host in the field — a fielded enemy is fought on the map instead */
-  FB.fns.war_no_enemy_host = function (state) {
-    const w = state.player.war;
-    if (!w) return false;
-    return !(FB.hostOf && FB.hostOf(state, w.enemy));
   };
   FB.fns.war_can_hunt = function (state) {
     const w = state.player.war;
@@ -6943,9 +7015,14 @@ window.FB = window.FB || {};
     return !!(w && w.seasons >= 2 &&
       (w.wins || 0) + (w.losses || 0) > 0);
   };
+  /* an active occupation is a live fact on the map, not a ledger value: one
+     of the player's hosts must be standing on the enemy-held war target.
+     Siege progress alone (w.siege) lingers up to a season after the host
+     leaves and must not satisfy mod-authored occupation triggers. */
   FB.fns.war_active_occupation = function (state) {
     const w = state.player.war;
-    return !!(w && !w.defending && w.target && (w.siege || 0) > 0);
+    if (!(w && !w.defending && w.target && state.owner[w.target] === w.enemy)) return false;
+    return !!(FB.playerSiegeStatus && FB.playerSiegeStatus(state));
   };
   FB.fns.war_negotiation_possible = function (state) {
     const w = state.player.war;
@@ -7005,10 +7082,11 @@ window.FB = window.FB || {};
 
   /* submission resolutions: the war_submission_offer event ends here. The
      queued offer is valid only while the same defensive war still runs. */
-  FB.fns.war_submission_valid = function (state) {
+  FB.fns.war_submission_valid = function (state, ctx) {
     const w = state.player.war;
     const enemy = w && state.realms[w.enemy];
-    return !!(w && w.defending && enemy && enemy.alive &&
+    return FB.fns.war_event_context_valid(state, ctx) &&
+      !!(w && w.defending && enemy && enemy.alive &&
       !(FB.fortGarrisonBurden &&
         FB.fortGarrisonBurden(state, 'player') > 0));
   };
@@ -7112,7 +7190,7 @@ window.FB = window.FB || {};
     FB.news(state, FB.msg('news.world.attainder_resist',
       '⚔ You deny the judgment and raise your banner — felony is answered with rebellion.', {}));
     FB.warFooting(state);
-    FB.queueEvent(state, 'war_defense_muster', {});
+    FB.queueWarEvent(state, 'war_defense_muster', {});
     FB.checkTierPromotions(state);
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
   };

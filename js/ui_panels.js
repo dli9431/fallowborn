@@ -96,7 +96,7 @@ window.FB = window.FB || {};
     swear_fealty:'war'
   };
   const ACTION_SHORTCUT_KEYS = [
-    'a', 'b', 'g', 'i', 'j', 'o', 'p', 'q', 't', 'u', 'v', 'w', 'x', 'y'
+    'a', 'b', 'g', 'i', 'j', 'o', 'p', 'q', 't', 'u', 'w', 'x', 'y', 'z'
   ];
 
   function focusShortcutTarget(focus) {
@@ -146,9 +146,17 @@ window.FB = window.FB || {};
   }
 
   function deedItemHintFor(index) {
-    if (FB.isTouch || index < 0 || index >= DEED_ITEM_KEYS.length) return '';
-    return '<span class="keyhint deed-item-keyhint">' +
-      DEED_ITEM_KEYS[index].toUpperCase() + '</span>';
+    if (FB.isTouch || index < 0) return '';
+    const keyCount = DEED_ITEM_KEYS.length;
+    if (index < keyCount) {
+      return '<span class="keyhint deed-item-keyhint">' +
+        DEED_ITEM_KEYS[index].toUpperCase() + '</span>';
+    }
+    if (index < keyCount * 2) {
+      return '<span class="keyhint deed-item-keyhint">⇧' +
+        DEED_ITEM_KEYS[index - keyCount].toUpperCase() + '</span>';
+    }
+    return '';
   }
 
   function actionSectionButtons(box, id) {
@@ -188,7 +196,7 @@ window.FB = window.FB || {};
     }
     if (FB.isTouch || !activeActionSection) return;
     const buttons = actionSectionButtons(box, activeActionSection);
-    for (let i = 0; i < buttons.length && i < DEED_ITEM_KEYS.length; i++) {
+    for (let i = 0; i < buttons.length && i < DEED_ITEM_KEYS.length * 2; i++) {
       buttons[i].insertAdjacentHTML('afterbegin', deedItemHintFor(i));
     }
   }
@@ -219,14 +227,21 @@ window.FB = window.FB || {};
     return true;
   };
 
-  UI.runDeedItemShortcut = function (key, run) {
+  UI.runDeedItemShortcut = function (key, run, shift) {
     if (!activeActionSection) return false;
     const normalized = String(key || '').toLocaleLowerCase();
-    const index = DEED_ITEM_KEYS.indexOf(normalized);
+    let index = DEED_ITEM_KEYS.indexOf(normalized);
     if (index < 0) return false;
+    if (shift) index += DEED_ITEM_KEYS.length;
     const box = $('tab-actions');
     const buttons = box ? actionSectionButtons(box, activeActionSection) : [];
     if (run !== false && index < buttons.length && !buttons[index].disabled) {
+      UI._gmModalKey = (shift ? 'shift+' : '') + normalized;
+      const actId = buttons[index].getAttribute('data-action-id');
+      if (actId) {
+        UI._gmModalAction = actId;
+        UI._gmModalTarget = 'action:' + actId;
+      }
       buttons[index].click();
     }
     return true;
@@ -346,6 +361,11 @@ window.FB = window.FB || {};
         action:status.label, reason:status.reason
       }));
       return true;
+    }
+    UI._gmModalKey = normalized;
+    UI._gmModalTarget = target;
+    if (target.indexOf('action:') === 0) {
+      UI._gmModalAction = target.slice(7);
     }
     status.run();
     return true;
@@ -712,6 +732,138 @@ window.FB = window.FB || {};
     updateTabNudges(FB.state);
   }
 
+  function renderDeedsWarCard(s) {
+    const w = s.player && s.player.war;
+    if (!w) return '';
+    const en = s.realms[w.enemy];
+    const enemyName = en ? en.name : (w.enemy || '?');
+    const wins = w.wins || 0;
+    const losses = w.losses || 0;
+    const battleOdds = Math.round(FB.namedChance(s, 'war_battle') * 100);
+
+    const feedback = FB.warFeedback ? FB.warFeedback(s) : null;
+    const pHost = FB.playerHost ? FB.playerHost(s) : null;
+    const men = pHost ? pHost.men :
+      Math.round(Math.max(FBDATA.balance.armyMinMen || 40, FB.playerLevy(s)) * (w.strength || 1) +
+        (w.mercCos || 0) * (FBDATA.balance.mercCompanySize || 150));
+    const conditionPct = Math.round((w.strength || 1) * 100);
+    const hostPlace = pHost ? (FB.world.byId[pHost.at] ? FB.world.byId[pHost.at].name : '?') : FB.T('Not yet mustered');
+
+    const supplyInfo = (pHost && FB.hostSupplyStatus) ? FB.hostSupplyStatus(s, pHost) : null;
+    const supplyStatus = supplyInfo
+      ? (supplyInfo.status === 'starving' ? FB.T('Starving') : (supplyInfo.status === 'low' ? FB.T('Low') : FB.T('Good')))
+      : FB.T('Good');
+    const supplyPct = supplyInfo ? Math.round(supplyInfo.supply) : 100;
+    const selectedHostUpkeep = FB.playerHostUpkeepParts ? FB.playerHostUpkeepParts(s) : null;
+    let supplyUpkeepLine = FB.T('🥖 {status} ({pct}%)', { status: supplyStatus, pct: supplyPct });
+    if (selectedHostUpkeep) {
+      supplyUpkeepLine += ' · ' + FB.T('💰 {money:amount}/season', { amount: SH.financeAmount(selectedHostUpkeep.total) });
+    }
+
+    const hostLine = FB.T('~{men} ({condition}%) · 🚩 {place}', {
+      men: menText(s, men), condition: conditionPct, place: hostPlace
+    });
+
+    const pinned = pHost && FB.fortPinnedStatus ? FB.fortPinnedStatus(s, pHost) : null;
+    let oddsLine = FB.T('🎯 ~{odds}% chance', { odds: battleOdds });
+    if (pinned) {
+      oddsLine += ' · ' + FB.T('⛓ Pinned by {fort}', { fort: pinned.name });
+    }
+
+    // Build the detailed breakdown for Tooltip / Mobile Disclosure
+    let detailsHtml = '';
+
+    // 1. Host condition & unit composition
+    detailsHtml += '<div class="land-section-title">' + esc(FB.T('Host & Units')) + '</div>';
+    detailsHtml += '<div>' + esc(FB.T('Your host: ~{men} at {condition}% condition', {
+      men: menText(s, men), condition: conditionPct
+    })) + '</div>';
+    if (pHost && pHost.units && FB.unitClassParts) {
+      const parts = FB.unitClassParts(s, pHost.units);
+      if (parts.length) {
+        detailsHtml += '<div>' + esc(parts.join(' · ')) + '</div>';
+      }
+    }
+    if (w.mercCos) {
+      detailsHtml += '<div>' + esc(FB.T('{count} mercenary companies hired', { count: w.mercCos })) + '</div>';
+    }
+
+    // 2. Battle record & Campaign losses
+    if (feedback) {
+      detailsHtml += '<div class="land-section-title" style="margin-top:8px">' + esc(FB.T('Battle & Campaign Record')) + '</div>';
+      detailsHtml += '<div>' + esc(FB.warBattleRecordText(s, feedback)) + '</div>';
+      detailsHtml += '<div>' + esc(FB.warLossesText(s, feedback)) + '</div>';
+      const effectText = FB.warEffectsText(s, feedback);
+      if (effectText) detailsHtml += '<div>' + esc(effectText) + '</div>';
+      detailsHtml += '<div style="font-size:12px;color:var(--helper-text-color);margin-top:3px">' +
+        esc(FB.T('Campaign condition, leadership, and refits tilt every field battle; live troop totals change only when a loss names the host.')) + '</div>';
+    }
+
+    // 3. Logistics & Supply
+    detailsHtml += '<div class="land-section-title" style="margin-top:8px">' + esc(FB.T('Logistics & Supply')) + '</div>';
+    if (supplyInfo) {
+      if (supplyInfo.status === 'starving') {
+        detailsHtml += '<div>🥀 ' + esc(FB.T('Starving — supplies are gone and hunger thins its ranks daily.')) + '</div>';
+      } else if (supplyInfo.status === 'low') {
+        detailsHtml += '<div>🥖 ' + esc(FB.T('Low on supplies — forage before starvation sets in.')) + '</div>';
+      } else {
+        detailsHtml += '<div>🥖 ' + esc(FB.T('Supplies replenished from friendly territory.')) + '</div>';
+      }
+    }
+    if (feedback) {
+      detailsHtml += '<div>' + esc(FB.warUpkeepText(s, feedback)) + '</div>';
+    } else if (selectedHostUpkeep) {
+      detailsHtml += '<div>💰 ' + esc(FB.T('Total seasonal logistics: {money:amount}', {
+        amount: SH.financeAmount(selectedHostUpkeep.total)
+      })) + '</div>';
+    }
+
+    // 4. Intelligence & Fortifications
+    if (pinned || (FB.hostOf && w.enemy)) {
+      detailsHtml += '<div class="land-section-title" style="margin-top:8px">' + esc(FB.T('Intelligence & Front')) + '</div>';
+      if (pinned) {
+        detailsHtml += '<div>⛓ ' + esc(FB.T('Pinned by {fort} at {place}; siege, retreat by the arrival road, or move into friendly land.', {
+          fort: pinned.name, place: FB.world.byId[pinned.pid] ? FB.world.byId[pinned.pid].name : '?'
+        })) + '</div>';
+      }
+      const enemyHost = FB.hostOf ? FB.hostOf(s, w.enemy) : null;
+      if (enemyHost) {
+        detailsHtml += '<div>⚔ ' + esc(FB.T('Their host: ~{men} at {place}', {
+          men: menText(s, enemyHost.men),
+          place: FB.world.byId[enemyHost.at] ? FB.world.byId[enemyHost.at].name : '?'
+        })) + '</div>';
+      }
+    }
+
+    // Card markup
+    const enemyLink = '<button type="button" class="linklike" data-war-enemy="' + esc(w.enemy) +
+      '" title="' + esc(FB.T('Highlight {realm} on map', { realm: enemyName })) + '">' +
+      esc(enemyName) + '</button>';
+
+    let cardHtml = '<section class="land-section war-card settcard" id="deeds-war-card">' +
+      '<div class="settcard-head"><b>⚔ ' + FB.T('At War with {enemy}', { enemy: enemyLink }) + '</b>' +
+      '<span class="settcard-actions">' +
+      '<span style="font-size:12.5px;color:#f0d888;margin-right:6px">🏆 ' + esc(FB.T('{wins}W · {losses}L', { wins: wins, losses: losses })) + '</span>' +
+      '<button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="deeds-war-details" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) + '">?</button>' +
+      '</span></div>' +
+      landKv('Your Host', esc(hostLine), true) +
+      landKv('Supply & Upkeep', esc(supplyUpkeepLine)) +
+      landKv('Battle Odds', esc(oddsLine));
+
+    if (pHost && (!pHost.path || !pHost.path.length) && !pHost.goal) {
+      const marchHint = FB.isTouch
+        ? FB.T('Tap troops, then tap a county to move.')
+        : FB.T('Left-click troops, then left-click a county to move.');
+      cardHtml += '<div class="hint">🚩 ' + esc(marchHint) + '</div>';
+    }
+
+    cardHtml += '<div class="settcard-details hidden" id="deeds-war-details">' + detailsHtml + '</div>';
+    cardHtml += '</section>';
+
+    return cardHtml;
+  }
+
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
     let h = '';
@@ -721,20 +873,7 @@ window.FB = window.FB || {};
     }
     h += ongoingCommitmentsHtml(s);
     if (s.player.war) {
-      const w = s.player.war;
-      const en = s.realms[w.enemy];
-      const warSummary = FB.T('⚔ At war with {enemy} — victories: {wins}; defeats: {losses} · {status} · battle odds ~{odds}%', {
-        enemy: en ? en.name : '?',
-        wins: w.wins,
-        losses: w.losses,
-        status: FB.warStateText(s, s.player.charId),
-        odds: Math.round(FB.namedChance(s, 'war_battle') * 100)
-      });
-      h += '<div class="progressnote warnote">' + esc(warSummary) + '</div>';
-      const pHost = FB.playerHost ? FB.playerHost(s) : null;
-      if (pHost && (!pHost.path || !pHost.path.length) && !pHost.goal) {
-        h += '<div class="hint">' + esc(FB.T('Tap the 🚩 on the map to give march orders.')) + '</div>';
-      }
+      h += renderDeedsWarCard(s);
     }
     if (s.greatHolyWar) {
       const great = s.greatHolyWar;
@@ -894,6 +1033,8 @@ window.FB = window.FB || {};
         (function (id) {
           btn.addEventListener('click', function () {
             setActiveActionSection(groupId);
+            UI._gmModalAction = id;
+            UI._gmModalTarget = 'action:' + id;
             FB.runInstant(FB.state, id);
           });
         })(item.a.id);
@@ -1056,7 +1197,16 @@ window.FB = window.FB || {};
           }
         });
       });
+    box.querySelectorAll('[data-war-enemy]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const enemyRid = btn.getAttribute('data-war-enemy');
+        if (enemyRid && UI.highlightEnemyRealm) {
+          UI.highlightEnemyRealm(enemyRid);
+        }
+      });
+    });
     FB.localizeTree(box);
+    if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
   }
 
   /* the tutorial checklist: staged tracks that teach the game to a new life.
@@ -3823,12 +3973,12 @@ window.FB = window.FB || {};
   };
 
   /* ---------- map filters: what a selection highlights ---------- */
-  let mapMode = 'realm'; // realm | mine | liege | duchy | kingdom | market
+  let mapMode = 'realm'; // realm | mine | liege | duchy | kingdom | war | market
 
   /* is pid held by the player or by one of the player's vassals? */
   function inPlayerRealm(s, pid) {
     const holdId = (s.holder && s.holder[pid]) || s.owner[pid];
-    if (holdId === 'player') return true;
+    if (holdId === 'player') return true; // your own lands sit inside his realm
     const chain = FB.liegeChain(s, holdId);
     for (const cid of chain) if (s.realms[cid] && s.realms[cid].liege === 'player') return true;
     return false;
@@ -3859,11 +4009,31 @@ window.FB = window.FB || {};
       const k = FB.dejureOf(pid).kingdom;
       return k ? 'kingdom:' + k : null;
     }
+    if (mapMode === 'war') {
+      const w = s.player && s.player.war;
+      if (w && w.enemy) {
+        if ((s.owner && s.owner[pid] === w.enemy) || (s.holder && s.holder[pid] === w.enemy)) {
+          return 'war_enemy';
+        }
+      }
+      return inPlayerRealm(s, pid) ? 'player' : null;
+    }
     // realm: your own province lights YOUR realm, a foreign one its sovereign's
     return inPlayerRealm(s, pid) ? 'player' : (s.owner[pid] || null);
   }
 
-  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', market:'Market' };
+  function mapHighlightColorOf(pid) {
+    const s = FB.state;
+    if (!s) return null;
+    if (mapMode === 'war' && s.player && s.player.war && s.player.war.enemy) {
+      if ((s.owner && s.owner[pid] === s.player.war.enemy) || (s.holder && s.holder[pid] === s.player.war.enemy)) {
+        return '#c8352b';
+      }
+    }
+    return null;
+  }
+
+  const MAPMODES = { realm: 'Realm', mine: 'Mine', liege: 'Liege', duchy: 'De jure duchies', kingdom: 'De jure kingdoms', war: 'War', market: 'Market' };
 
   function marketLensControls(active) {
     const controls = $('market-lens-controls');
@@ -3908,7 +4078,8 @@ window.FB = window.FB || {};
       btn.title = FB.T('Map filter: {mode} (R)', { mode:FB.T(MAPMODES[mapMode]) });
       btn.setAttribute('aria-label', btn.title);
     }
-    FB.map.select(FB.map.selected || FB.state.player.provinceId, mapGroupOf);
+    const targetPid = FB.map.selected || FB.state.player.provinceId;
+    FB.map.select(targetPid, mapGroupOf, mapHighlightColorOf(targetPid));
     FB.map.request();
   };
 
@@ -3935,10 +4106,14 @@ window.FB = window.FB || {};
   UI.cycleMapMode = function () {
     const s = FB.state;
     if (!s) return;
-    const order = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'market'];
+    const order = ['realm', 'mine', 'liege', 'duchy', 'kingdom', 'war'];
     let next = order[(order.indexOf(mapMode) + 1) % order.length];
     if (next === 'liege' && !s.player.liege) {
-      UI.toast('🗺 You answer to no one — no liege to show.');
+      UI.toast(FB.T('🗺 You answer to no one — no liege to show.'));
+      next = order[(order.indexOf(next) + 1) % order.length];
+    }
+    if (next === 'war' && !(s.player && s.player.war && s.player.war.enemy)) {
+      UI.toast(FB.T('🗺 At peace — no active war to show.'));
       next = order[(order.indexOf(next) + 1) % order.length];
     }
     mapMode = next;
@@ -3951,7 +4126,33 @@ window.FB = window.FB || {};
     }
     let toastText = '🗺 Map filter: {mode}';
     let toastParams = { mode: FB.T(MAPMODES[mapMode]) };
-    if ((mapMode === 'duchy' || mapMode === 'kingdom') && s.player.provs && s.player.provs.length) {
+    let selectProvId = FB.map.selected || s.player.provinceId;
+
+    if (mapMode === 'war') {
+      const w = s.player && s.player.war;
+      const en = w && s.realms && s.realms[w.enemy];
+      const enemyName = en ? en.name : (w ? w.enemy : '?');
+      toastText = '🗺 {mode} — at war with {enemy}';
+      toastParams = { mode: toastParams.mode, enemy: enemyName };
+
+      let enemyProv = en && en.capital;
+      if (!enemyProv || !FB.world || !FB.world.byId || !FB.world.byId[enemyProv] || (s.owner && s.owner[enemyProv] !== w.enemy)) {
+        if (FB.world && FB.world.provs) {
+          for (let i = 0; i < FB.world.provs.length; i++) {
+            const pid = FB.world.provs[i].id;
+            if ((s.owner && s.owner[pid] === w.enemy) || (s.holder && s.holder[pid] === w.enemy)) {
+              enemyProv = pid;
+              break;
+            }
+          }
+        }
+      }
+      if (!enemyProv && en && en.capital) enemyProv = en.capital;
+      if (enemyProv) {
+        selectProvId = enemyProv;
+        if (FB.map && FB.map.centerOn) FB.map.centerOn(enemyProv, 2.0);
+      }
+    } else if ((mapMode === 'duchy' || mapMode === 'kingdom') && s.player.provs && s.player.provs.length) {
       const claim = bestDejureClaim(s, mapMode);
       if (claim) {
         toastText = '🗺 {mode} — your best claim: {name}, {held} (need {need})';
@@ -3960,7 +4161,8 @@ window.FB = window.FB || {};
       }
     }
     UI.toast(toastText, toastParams);
-    FB.map.select(FB.map.selected || s.player.provinceId, mapGroupOf);
+    FB.map.select(selectProvId, mapGroupOf, mapHighlightColorOf(selectProvId));
+    if (FB.map && FB.map.request) FB.map.request();
   };
 
   let selectedProv = null;
@@ -3968,6 +4170,38 @@ window.FB = window.FB || {};
     selectedProv = pid;
     FB.map.select(pid, mapGroupOf);
     setTab('prov');
+  };
+
+  UI.highlightEnemyRealm = function (rid) {
+    const s = FB.state;
+    if (!s) return;
+    if (!rid && s.player && s.player.war) rid = s.player.war.enemy;
+    if (!rid) return;
+    const en = s.realms && s.realms[rid];
+    let provId = en && en.capital;
+    if (!provId || !FB.world || !FB.world.byId || !FB.world.byId[provId] || (s.owner && s.owner[provId] !== rid)) {
+      if (FB.world && FB.world.provs) {
+        for (let i = 0; i < FB.world.provs.length; i++) {
+          const pid = FB.world.provs[i].id;
+          if ((s.owner && s.owner[pid] === rid) || (s.holder && s.holder[pid] === rid)) {
+            provId = pid;
+            break;
+          }
+        }
+      }
+    }
+    if (!provId && en && en.capital) provId = en.capital;
+    if (provId && FB.world && FB.world.byId && FB.world.byId[provId]) {
+      if (FB.map) {
+        if (FB.map.centerOn) FB.map.centerOn(provId, 2.0);
+        if (FB.map.select) {
+          FB.map.select(provId, function (pid) {
+            return (s.owner && s.owner[pid] === rid) ? rid : ((s.holder && s.holder[pid] === rid) ? rid : null);
+          }, '#c8352b');
+        }
+        if (FB.map.request) FB.map.request();
+      }
+    }
   };
 
   /* "{have} of {total} counties/kingdoms" fragments — the noun agrees with the
@@ -4300,6 +4534,223 @@ window.FB = window.FB || {};
       '<span class="land-market-card-open" aria-hidden="true">›</span></button>';
   }
 
+  function renderWarCard(s, selA, pr) {
+    if (!selA) return '';
+    const isPlayerHost = selA.realm === 'player';
+    const hostRealm = (s.realms && s.realms[selA.realm]) ? s.realms[selA.realm].name : selA.realm;
+    const cardTitle = isPlayerHost
+      ? FB.T('War & Host — {men}', { men: menText(s, selA.men) })
+      : FB.T('{realm} Host — {men}', { realm: hostRealm, men: menText(s, selA.men) });
+
+    const selPr = FB.world.byId[selA.at];
+    const nextPid = selA.path && selA.path.length ? selA.path[0] : null;
+    const nextPr = nextPid && FB.world.byId[nextPid];
+    let hostStatusText;
+    if (nextPr && selA.moveLeft > 0) {
+      hostStatusText = FB.waterCrossing && FB.waterCrossing(selA.at, nextPid)
+        ? FB.T('⚓ Crossing to {next} — {days}d remaining', { next: nextPr.name, days: selA.moveLeft })
+        : FB.T('🚩 Marching to {next} — {days}d remaining', { next: nextPr.name, days: selA.moveLeft });
+    } else if (selA.holdManual) {
+      hostStatusText = FB.T('🚩 Holding at {place}', { place: selPr ? selPr.name : '?' });
+    } else {
+      hostStatusText = isPlayerHost
+        ? FB.T('🚩 Ready at {place}', { place: selPr ? selPr.name : '?' })
+        : FB.T('🚩 Stationed at {place}', { place: selPr ? selPr.name : '?' });
+    }
+
+    const parts = (selA.units && FB.unitClassParts) ? FB.unitClassParts(s, selA.units) : [];
+    let troopSummary = parts.length ? parts.join(' · ') : menText(s, selA.men);
+    if (selA.allied && selA.allied.men) {
+      const ar = s.realms[selA.allied.ally];
+      troopSummary += ' · ' + FB.T('+{men} allied', { men: menText(s, selA.allied.men) });
+    }
+
+    const selectedHostUpkeep = (isPlayerHost && FB.playerHostUpkeepParts)
+      ? FB.playerHostUpkeepParts(s) : null;
+    const supplyInfo = FB.hostSupplyStatus ? FB.hostSupplyStatus(s, selA) : null;
+    const supplyStatus = supplyInfo
+      ? (supplyInfo.status === 'starving' ? FB.T('Starving') : (supplyInfo.status === 'low' ? FB.T('Low') : FB.T('Good')))
+      : FB.T('Good');
+    const supplyPct = supplyInfo ? Math.round(supplyInfo.supply) : 100;
+    let supplyUpkeepLine = FB.T('🥖 {status} ({pct}%)', { status: supplyStatus, pct: supplyPct });
+    if (selectedHostUpkeep) {
+      supplyUpkeepLine += ' · ' + FB.T('💰 {money:amount}/season', { amount: SH.financeAmount(selectedHostUpkeep.total) });
+    }
+
+    const isPlayerWar = isPlayerHost && s.player.war && FB.warFeedback;
+    const fieldFeedback = isPlayerWar ? FB.warFeedback(s) : null;
+    let warLossSummary = '';
+    if (fieldFeedback) {
+      const won = fieldFeedback.battlesWon || 0;
+      const lost = fieldFeedback.battlesLost || 0;
+      const menLost = fieldFeedback.totalLosses || 0;
+      warLossSummary = FB.T('🏆 {won}W · {lost}L · 💀 {losses} lost', {
+        won: won, lost: lost, losses: menText(s, menLost)
+      });
+    }
+
+    // Build the detailed breakdown for tooltips (Desktop hover & Mobile disclosure)
+    let detailsHtml = '';
+
+    // 1. Detailed Unit Class breakdown
+    if (selA.units && FB.unitClassBattleStats && FB.unitClassIds) {
+      detailsHtml += '<div class="land-section-title">' + esc(FB.T('Troop Composition & Battle Quality')) + '</div>';
+      for (const classId of FB.unitClassIds()) {
+        const classCount = Math.max(0, Math.round(Number(selA.units[classId]) || 0));
+        if (!classCount) continue;
+        const classDef = (FBDATA.unitClasses || {})[classId];
+        if (!classDef) continue;
+        const className = FB.dataText(s, null, 'unitClass', classId, classDef, 'name', {});
+        const classStats = FB.unitClassBattleStats(classId);
+        let classLine = FB.T(
+          '{icon} {unit} ×{count} — attack {attack}, defense {defense}', {
+            icon: classDef.icon || '', unit: className, count: classCount,
+            attack: classStats.attack, defense: classStats.defense
+          });
+        if (classStats.upkeepPer100) {
+          classLine += FB.T(', upkeep {upkeep} per 100', { upkeep: classStats.upkeepPer100 });
+        }
+        if (classStats.counters.length) {
+          const counterNames = [];
+          for (const counter of classStats.counters) {
+            const counterDef = (FBDATA.unitClasses || {})[counter.id];
+            counterNames.push(counterDef
+              ? FB.dataText(s, null, 'unitClass', counter.id, counterDef, 'name', {})
+              : counter.id);
+          }
+          classLine += FB.T('; strong against {counters}', { counters: counterNames.join(', ') });
+        }
+        detailsHtml += '<div>' + esc(classLine) + '</div>';
+      }
+    }
+
+    // 2. Replacements & Cohort Reserves (player host only)
+    if (isPlayerHost && FB.cohortStatus) {
+      const cohort = FB.cohortStatus(s, 'player');
+      for (const classId of FB.unitClassIds ? FB.unitClassIds() : []) {
+        const cohortClass = cohort.classes[classId];
+        if (!cohortClass) continue;
+        const classDef = (FBDATA.unitClasses || {})[classId];
+        const className = classDef
+          ? FB.dataText(s, null, 'unitClass', classId, classDef, 'name', {})
+          : classId;
+        if (cohortClass.pending) {
+          const premium = selectedHostUpkeep &&
+            selectedHostUpkeep.reinforceByClass &&
+            selectedHostUpkeep.reinforceByClass[classId];
+          detailsHtml += '<div style="margin-top:4px">🛠 ' + esc(FB.T(
+            'Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season.', {
+              count: cohortClass.pending, unit: className,
+              days: cohortClass.daysLeft,
+              amount: SH.financeAmount(premium || 0)
+            })) + '</div>';
+        }
+        if (cohortClass.ready) {
+          detailsHtml += '<div style="margin-top:4px">🛡 ' + esc(FB.T(
+            '{count} drilled {unit} stand ready — they join a resting host or the next muster.', {
+              count: cohortClass.ready, unit: className
+            })) + '</div>';
+        }
+      }
+    }
+
+    // 3. Logistics & Supply details
+    if (selectedHostUpkeep || supplyInfo) {
+      detailsHtml += '<div class="land-section-title" style="margin-top:8px">' + esc(FB.T('Logistics & Supply')) + '</div>';
+      if (supplyInfo) {
+        if (supplyInfo.status === 'starving') {
+          detailsHtml += '<div>🥀 ' + esc(FB.T('Starving — hunger thins the host daily.')) + '</div>';
+        } else if (supplyInfo.daysToAttrition !== null) {
+          detailsHtml += '<div>🥖 ' + esc(FB.T('Supply at {pct}% — about {days} days before hunger bites.', {
+            pct: Math.round(supplyInfo.supply), days: supplyInfo.daysToAttrition
+          })) + '</div>';
+        } else {
+          detailsHtml += '<div>🥖 ' + esc(FB.T('Supply at {pct}% — refilling on friendly land.', {
+            pct: Math.round(supplyInfo.supply)
+          })) + '</div>';
+        }
+      }
+      if (selectedHostUpkeep) {
+        detailsHtml += '<div>💰 ' + esc(FB.T('Total seasonal logistics: {money:amount}', {
+          amount: SH.financeAmount(selectedHostUpkeep.total)
+        })) + '</div>';
+        if (selectedHostUpkeep.reinforcement) {
+          detailsHtml += '<div>' + esc(FB.T('…of which replacement drilling: {money:amount}', {
+            amount: SH.financeAmount(selectedHostUpkeep.reinforcement)
+          })) + '</div>';
+        }
+        if (selectedHostUpkeep.campaignModifier) {
+          detailsHtml += '<div>' + esc(FB.T('Campaign supply adjustment: {money:amount}', {
+            amount: SH.financeAmount(selectedHostUpkeep.campaignModifier)
+          })) + '</div>';
+        }
+      }
+    }
+
+    // 4. Battle & Campaign Losses details
+    if (fieldFeedback) {
+      detailsHtml += '<div class="land-section-title" style="margin-top:8px">' + esc(FB.T('Battle & Campaign Record')) + '</div>';
+      detailsHtml += '<div>' + esc(FB.warBattleRecordText(s, fieldFeedback)) + '</div>';
+      detailsHtml += '<div>' + esc(FB.warLossesText(s, fieldFeedback)) + '</div>';
+      const fieldEffects = FB.warEffectsText(s, fieldFeedback);
+      if (fieldEffects) {
+        detailsHtml += '<div>' + esc(fieldEffects) + '</div>';
+      }
+    }
+
+    // Assemble the card
+    let cardHtml = '<section class="land-section war-card settcard" id="land-war-card">' +
+      '<div class="settcard-head"><b>⚔ ' + esc(cardTitle) + '</b>' +
+      '<span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="war-card-details" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) + '">?</button>' +
+      '</span></div>' +
+      landKv('Status', esc(hostStatusText)) +
+      landKv('Troops', esc(troopSummary), true) +
+      landKv('Supply & Upkeep', esc(supplyUpkeepLine));
+
+    if (warLossSummary) {
+      cardHtml += landKv('Battle & Losses', esc(warLossSummary));
+    }
+
+    if (isPlayerHost && FB.hostCutOff && FB.hostCutOff(s, selA)) {
+      cardHtml += '<div class="progressnote warnote">✂ ' + esc(FB.T(
+        'Cut off — no road home. If this host shatters here it is destroyed outright.')) + '</div>';
+    }
+
+    cardHtml += '<div class="settcard-details hidden" id="war-card-details">' + detailsHtml + '</div>';
+
+    // Host Decisions / Action buttons (player host only)
+    if (isPlayerHost) {
+      const splitStatus = FB.splitHostStatus ? FB.splitHostStatus(s, selA) : null;
+      if (splitStatus) {
+        cardHtml += '<button type="button" class="actionbtn" id="btn-host-split"' +
+          (splitStatus.ok ? '' : ' disabled') + '>' +
+          esc(FB.T('➗ Split the host')) +
+          '<span class="adesc">' + esc(splitStatus.ok
+            ? FB.T('{men} men march under a second banner; supplies divide with them.', {
+              men: menText(s, splitStatus.targetMen) })
+            : splitStatus.reason) + '</span></button>';
+      }
+      const mergePartner = FB.mergeableHost ? FB.mergeableHost(s, selA) : null;
+      if (mergePartner) {
+        cardHtml += '<button type="button" class="actionbtn" id="btn-host-merge">' +
+          esc(FB.T('⚔ Merge with the other host here')) +
+          '<span class="adesc">' + esc(FB.T(
+            'Join the {men} men of the second banner into this one.', {
+              men: menText(s, mergePartner.men) })) + '</span></button>';
+      }
+      cardHtml += '<button type="button" class="actionbtn" id="btn-host-halt">' +
+        esc(FB.T('🚩 Hold here')) +
+        '<span class="adesc">' + esc(FB.T(
+          'Cancel the march and stand fast; the automated stances leave a held host alone.')) +
+        '</span></button>';
+    }
+
+    cardHtml += '</section>';
+    return cardHtml;
+  }
+
   function renderProv() {
     const s = FB.state;
     /* Map selection is the authoritative current county. `selectedProv` is
@@ -4323,192 +4774,11 @@ window.FB = window.FB || {};
         '⚔ ' + FB.warStatusLinkHtml(s, selectedRealmId) + '</div>';
     }
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
-    if (selA) {
-      const selPr = FB.world.byId[selA.at];
-      const nextPid = selA.path && selA.path.length ? selA.path[0] : null;
-      const nextPr = nextPid && FB.world.byId[nextPid];
-      let hostText;
-      if (nextPr && selA.moveLeft > 0) {
-        hostText = FB.waterCrossing && FB.waterCrossing(selA.at, nextPid)
-          ? FB.T('🚩 Your host — {men} at {place}. Preparing the crossing to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.', {
-            men:menText(s, selA.men), place:selPr ? selPr.name : '?',
-            next:nextPr.name, days:selA.moveLeft
-          })
-          : FB.T('🚩 Your host — {men} at {place}. Marching to {next} — {days} days remaining. Tap a province on the map to march; tap the host again to halt.', {
-            men:menText(s, selA.men), place:selPr ? selPr.name : '?',
-            next:nextPr.name, days:selA.moveLeft
-          });
-      } else {
-        hostText = FB.T('🚩 Your host — {men} at {place}. Tap a province on the map to march; tap the host again to halt.', {
-          men: menText(s, selA.men), place: selPr ? selPr.name : '?'
-        });
-      }
-      h += '<div class="progressnote">' + esc(hostText) + '</div>';
-      // what the host is made of (the same breakdown the war status shows)
-      const selectedHostUpkeep = FB.playerHostUpkeepParts
-        ? FB.playerHostUpkeepParts(s) : null;
-      if (selA.units) {
-        const parts = FB.unitClassParts ? FB.unitClassParts(s, selA.units) : [];
-        if (parts.length) h += '<div class="cmeta">' + esc(parts.join(', ')) + '</div>';
-        if (selA.allied && selA.allied.men) {
-          const ar = s.realms[selA.allied.ally];
-          h += '<div class="cmeta">' + esc(FB.T(
-            '🤝 {men} allied defenders from {realm}', {
-              men: menText(s, selA.allied.men),
-              realm: ar ? ar.name : selA.allied.ally
-            })) + '</div>';
-        }
-      }
-      /* per-class roles: troops, attack, defense, upkeep, counters — the
-         same catalog numbers the battle reads (docs/designs/war.md) */
-      if (selA.units && FB.unitClassBattleStats && FB.unitClassIds) {
-        for (const classId of FB.unitClassIds()) {
-          const classCount = Math.max(0,
-            Math.round(Number(selA.units[classId]) || 0));
-          if (!classCount) continue;
-          const classDef = (FBDATA.unitClasses || {})[classId];
-          if (!classDef) continue; // a mod-removed class renders in the parts line only
-          const className = FB.dataText(s, null, 'unitClass', classId,
-            classDef, 'name', {});
-          const classStats = FB.unitClassBattleStats(classId);
-          let classLine = FB.T(
-            '{icon} {unit} ×{count} — attack {attack}, defense {defense}', {
-              icon:classDef.icon || '', unit:className, count:classCount,
-              attack:classStats.attack, defense:classStats.defense
-            });
-          if (classStats.upkeepPer100) {
-            classLine += FB.T(', upkeep {upkeep} per 100', {
-              upkeep:classStats.upkeepPer100 });
-          }
-          if (classStats.counters.length) {
-            const counterNames = [];
-            for (const counter of classStats.counters) {
-              const counterDef = (FBDATA.unitClasses || {})[counter.id];
-              counterNames.push(counterDef
-                ? FB.dataText(s, null, 'unitClass', counter.id, counterDef,
-                  'name', {})
-                : counter.id);
-            }
-            classLine += FB.T('; strong against {counters}', {
-              counters:counterNames.join(', ') });
-          }
-          h += '<div class="cmeta">' + esc(classLine) + '</div>';
-        }
-      }
-      /* readiness and replacement: the realm's professional cohort ledger,
-         with the exact drilling time and the premium it costs */
-      if (FB.cohortStatus) {
-        const cohort = FB.cohortStatus(s, 'player');
-        for (const classId of FB.unitClassIds ? FB.unitClassIds() : []) {
-          const cohortClass = cohort.classes[classId];
-          if (!cohortClass) continue;
-          const classDef = (FBDATA.unitClasses || {})[classId];
-          const className = classDef
-            ? FB.dataText(s, null, 'unitClass', classId, classDef, 'name', {})
-            : classId;
-          if (cohortClass.pending) {
-            const premium = selectedHostUpkeep &&
-              selectedHostUpkeep.reinforceByClass &&
-              selectedHostUpkeep.reinforceByClass[classId];
-            h += '<div class="cmeta">' + esc(FB.T(
-              '🛠 Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season.', {
-                count:cohortClass.pending, unit:className,
-                days:cohortClass.daysLeft,
-                amount:SH.financeAmount(premium || 0)
-              })) + '</div>';
-          }
-          if (cohortClass.ready) {
-            h += '<div class="cmeta">' + esc(FB.T(
-              '🛡 {count} drilled {unit} stand ready — they join a resting host or the next muster.', {
-                count:cohortClass.ready, unit:className
-              })) + '</div>';
-          }
-        }
-      }
-      if (selectedHostUpkeep) {
-        h += '<div class="cmeta">' + esc(FB.T(
-          'Seasonal host logistics: {money:amount}', {
-            amount:SH.financeAmount(selectedHostUpkeep.total)
-          })) + '</div>';
-        if (selectedHostUpkeep.reinforcement) {
-          h += '<div class="cmeta">' + esc(FB.T(
-            '…of which replacement drilling: {money:amount}', {
-              amount:SH.financeAmount(selectedHostUpkeep.reinforcement)
-            })) + '</div>';
-        }
-        if (selectedHostUpkeep.campaignModifier) {
-          h += '<div class="cmeta">' + esc(FB.T(
-            'Campaign supply adjustment: {money:amount}', {
-              amount:SH.financeAmount(selectedHostUpkeep.campaignModifier)
-          })) + '</div>';
-        }
-      }
-      if (FB.hostSupplyStatus) {
-        const supplyInfo = FB.hostSupplyStatus(s, selA);
-        if (supplyInfo) {
-          const supplyStatus = supplyInfo.status === 'starving'
-            ? FB.T('Starving')
-            : (supplyInfo.status === 'low' ? FB.T('Low') : FB.T('Good'));
-          let supplyLine;
-          if (supplyInfo.status === 'starving') {
-            supplyLine = FB.T('🥀 Supply: {status} — hunger thins the host daily.', {
-              status:supplyStatus
-            });
-          } else if (supplyInfo.daysToAttrition !== null) {
-            supplyLine = FB.T('🥖 Supply: {status} ({pct}%) — about {days} days before hunger bites.', {
-              status:supplyStatus,
-              pct:Math.round(supplyInfo.supply),
-              days:supplyInfo.daysToAttrition
-            });
-          } else {
-            supplyLine = FB.T('🥖 Supply: {status} ({pct}%) — refilling on friendly land.', {
-              status:supplyStatus,
-              pct:Math.round(supplyInfo.supply)
-            });
-          }
-          h += '<div class="cmeta">' + esc(supplyLine) + '</div>';
-        }
-      }
-      if (FB.hostCutOff && FB.hostCutOff(s, selA)) {
-        h += '<div class="progressnote warnote">' + esc(FB.T(
-          '✂ Cut off — no road home. If this host shatters here it is destroyed outright.')) + '</div>';
-      }
-      /* split / merge / hold orders: keyboard-reachable twins of the map
-         tap gestures (docs/designs/ui.md) */
-      const splitStatus = FB.splitHostStatus ? FB.splitHostStatus(s, selA) : null;
-      if (splitStatus) {
-        h += '<button type="button" class="actionbtn" id="btn-host-split"' +
-          (splitStatus.ok ? '' : ' disabled') + '>' +
-          esc(FB.T('➗ Split the host')) +
-          '<span class="adesc">' + esc(splitStatus.ok
-            ? FB.T('{men} men march under a second banner; supplies divide with them.', {
-              men: menText(s, splitStatus.targetMen) })
-            : splitStatus.reason) + '</span></button>';
-      }
-      const mergePartner = FB.mergeableHost ? FB.mergeableHost(s, selA) : null;
-      if (mergePartner) {
-        h += '<button type="button" class="actionbtn" id="btn-host-merge">' +
-          esc(FB.T('⚔ Merge with the other host here')) +
-          '<span class="adesc">' + esc(FB.T(
-            'Join the {men} men of the second banner into this one.', {
-              men: menText(s, mergePartner.men) })) + '</span></button>';
-      }
-      h += '<button type="button" class="actionbtn" id="btn-host-halt">' +
-        esc(FB.T('🚩 Hold here')) +
-        '<span class="adesc">' + esc(FB.T(
-          'Cancel the march and stand fast; the automated stances leave a held host alone.')) +
-        '</span></button>';
-      if (selA.realm === 'player' && s.player.war && FB.warFeedback) {
-        const fieldFeedback = FB.warFeedback(s);
-        h += '<div class="cmeta">' + esc(FB.warBattleRecordText(
-          s, fieldFeedback)) + '</div>';
-        h += '<div class="cmeta">' + esc(FB.warLossesText(
-          s, fieldFeedback)) + '</div>';
-        const fieldEffects = FB.warEffectsText(s, fieldFeedback);
-        if (fieldEffects) {
-          h += '<div class="cmeta">' + esc(fieldEffects) + '</div>';
-        }
-      }
+    const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
+    const playerHostHere = hostsHere.find(function (a) { return a.realm === 'player'; });
+    const hostToShow = (selA && (selA.at === pid || !hostsHere.length)) ? selA : (playerHostHere || hostsHere[0] || selA);
+    if (hostToShow) {
+      h += renderWarCard(s, hostToShow, pr);
     }
     if (pr.wasteland) {
       h += '<div class="cmeta">' + esc(FB.T('Trackless {terrain}. No lord rules here — it feeds no duchy or crown.',
@@ -4798,6 +5068,7 @@ window.FB = window.FB || {};
     FB.localizeTree(box);
     FB.paintFaces(box, s);
     bindFaithDetails(box);
+    if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     const b = $('btn-center-home');
     if (b) b.addEventListener('click', function () { FB.map.centerOn(FB.state.player.provinceId, 2.2); });
     const countyMarket = $('county-market');
@@ -4809,23 +5080,23 @@ window.FB = window.FB || {};
       UI.showCapitalRelocation(pid);
     });
     const hostSplit = $('btn-host-split');
-    if (hostSplit && selA) hostSplit.addEventListener('click', function () {
-      if (FB.splitHost) FB.splitHost(s, selA);
+    if (hostSplit && hostToShow) hostSplit.addEventListener('click', function () {
+      if (FB.splitHost) FB.splitHost(s, hostToShow);
       if (FB.map) FB.map.request();
       renderProv();
     });
     const hostMerge = $('btn-host-merge');
-    if (hostMerge && selA) hostMerge.addEventListener('click', function () {
-      const partner = FB.mergeableHost ? FB.mergeableHost(s, selA) : null;
-      if (partner && FB.mergeHosts) FB.mergeHosts(s, selA, partner);
+    if (hostMerge && hostToShow) hostMerge.addEventListener('click', function () {
+      const partner = FB.mergeableHost ? FB.mergeableHost(s, hostToShow) : null;
+      if (partner && FB.mergeHosts) FB.mergeHosts(s, hostToShow, partner);
       if (FB.map) FB.map.request();
       renderProv();
     });
     const hostHalt = $('btn-host-halt');
-    if (hostHalt && selA) hostHalt.addEventListener('click', function () {
+    if (hostHalt && hostToShow) hostHalt.addEventListener('click', function () {
       /* the keyboard twin of tapping the selected host: halt and hold */
-      selA.path = []; selA.goal = null; selA.moveLeft = 0; selA.huntPrey = null;
-      selA.manual = 0; selA.holdManual = 1;
+      hostToShow.path = []; hostToShow.goal = null; hostToShow.moveLeft = 0; hostToShow.huntPrey = null;
+      hostToShow.manual = 0; hostToShow.holdManual = 1;
       FB.selectArmy(null);
       if (FB.map) FB.map.request();
       renderProv();
@@ -5053,6 +5324,7 @@ window.FB = window.FB || {};
   SH.itemWearerText = itemWearerText;
   SH.livelihoodNote = livelihoodNote;
   SH.mapGroupOf = mapGroupOf;
+  SH.mapHighlightColorOf = mapHighlightColorOf;
   SH.relationText = relationText;
   SH.renderActions = renderActions;
   SH.renderActiveTab = renderActiveTab;

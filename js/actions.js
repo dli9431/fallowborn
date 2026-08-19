@@ -376,7 +376,7 @@ window.FB = window.FB || {};
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
   { id: 'lead_host', label: '🚩 Lead the host',
     desc: function (s) {
-      return s.player.war ? 'Command your men in the field. (better odds at the war council)'
+      return s.player.war ? 'Command your men in the field. (steadies the host for the next field battle)'
         : (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))
           ? 'Command your host in the great holy war. (+martial over time)'
         : (FB.activeMilitaryCommand && FB.activeMilitaryCommand(s))
@@ -7716,7 +7716,7 @@ window.FB = window.FB || {};
         ? FB.warPrestigeReward(cause, 'declaration') : 5;
     }
     FB.warFooting(state);
-    FB.queueEvent(state, 'war_muster', {});
+    FB.queueWarEvent(state, 'war_muster', {});
     return true;
   };
 

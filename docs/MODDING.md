@@ -571,8 +571,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`, and the artifact gates `artifact_trial_valid` / `artifact_can_afford` / `artifact_is_sacred`, and the life-path gates `lifepath_realm_at_peace` / `merc_contract_ongoing`) |
-| `never` | only fired by other events' `queue` |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`, and the artifact gates `artifact_trial_valid` / `artifact_can_afford` / `artifact_is_sacred`, and the life-path gates `lifepath_realm_at_peace` / `merc_contract_ongoing`) |
+| `never` | excluded from random selection; fired only by an explicit code or event-effect queue |
 
 Ordinary player-campaign custom gates in `js/world.js` are `war_live_host`,
 `war_host_under_pressure`, `war_deserters_due`, `war_can_pay_deserters`,
@@ -580,7 +580,11 @@ Ordinary player-campaign custom gates in `js/world.js` are `war_live_host`,
 `war_has_allied_host`, `war_host_abroad`, `war_enemy_offer_possible`,
 `war_active_occupation`, and `war_negotiation_possible`. They inspect the active
 ordinary war and, where relevant, its live host; each returns false outside an
-ordinary player war.
+ordinary player war. `war_active_occupation` is a live map fact: it holds only while
+one of the player's hosts stands on the enemy-held war target. It remains available to
+mods, while the shipped `war_occupation_policy` is queued once per war by the engine when
+that force is uncontested and large enough to make siege progress; it is not selected by
+the random event-slot picker.
 
 The same trigger keys may be used in an option's `require` object. Societal role does
 not imply political position: combine it with `isVassal` or `isLiege` where that
@@ -621,6 +625,14 @@ Core plot discovery and every plot resolution event use
 if the active plot or any target component has changed. For save compatibility, a legacy
 queued resolution without `plotId` may infer it only when its event id exactly matches
 the current active plot definition.
+
+Ordinary-war operational events use `FB.queueWarEvent` rather than bare `FB.queueEvent`.
+It adds `warEventId` and `warEnemyId` to the context, and
+`contextValidator:'war_event_context_valid'` accepts only the exact active player war.
+`war_submission_valid` and `prison_still` compose that identity check with their own
+eligibility rules. Unstamped queues from older saves are accepted only for the currently
+live ordinary war; every newly queued council, muster, or offer is exact.
+
 Predetermined player-motion results use
 `parliament_motion_context_valid`; the exact polity, pending-motion id, motion id, and
 pass/fail result must still match. The paired option gates are
@@ -629,11 +641,15 @@ pass/fail result must still match. The paired option gates are
 `wartime: true` (top-level, next to `weight`) marks an event as fit for a war footing. While
 the player is **personally at war** — fighting their own war, soldiering in a realm at war,
 or riding with the liege's host — random picks draw *only* from wartime events; ordinary
-life waits for peace. Queued events always fire regardless.
+life waits for peace. Queued events bypass the wartime/random filter but still pass their
+context validator. At most one valid queued event enters the UI per simulated day; when
+one does, that day's random slot event is skipped.
 
 `warStatus: true` adds the current localized host, enemy, siege, and advance summary as a
 separate paragraph below the event text. Use this instead of embedding a `{warstate}` token:
-the summary has its own grammar and may contain several clauses.
+the summary has its own grammar and may contain several clauses. The summary is deliberately
+compact — one short clause per fact — so wartime events stay readable; the full battle
+record, campaign losses, effects, and upkeep ledger live in the war panels.
 
 `tags: ["famine", "unrest"]` is an optional top-level array. Active modifiers in the
 event's snapshotted county (and compatible estate-trait bonuses) sum each named tag.
@@ -686,9 +702,11 @@ Stewardship check helped by a Hearth Garden or Orchard.
 per mercenary company otherwise), worn by the host's condition (`war.strength`), against
 the enemy realm's fielded host (its per-development muster otherwise) — a side still
 re-forming a shattered host counts only a fraction of that muster (`FB.rearmScale`: the
-share of `armyRearmDays` elapsed, floored at 0.15) — with the bonuses
-banked by war-council effects, a fort in the defended county, tech, items, and blessings
-on top.
+share of `armyRearmDays` elapsed, floored at 0.15) — with the days spent leading the
+host, a refit, the great levy, a fort in the defended county, tech, items, and blessings
+on top. It is an estimate shown on the Deeds war card and rolled for unfortified-siege
+sorties: the same terms multiply real battle power in `battlePower` (js/armies.js),
+which every actual win or loss now comes from.
 `appeal_outcome` weighs an appeal above the player's liege (diplomacy, intrigue, and the
 target lord's opinion); `vassal_comply` weighs whether a vassal yields his fief peacefully.
 `county_petition` weighs the liege's favor toward the player, prestige, and war service
@@ -824,10 +842,12 @@ market shocks instead) ·
 "severe":true,"seasons":2}` (a saved seasonal county-commodity shock; omit
 `provinceId` for a world-wide effect and omit `goodId` for every basket) ·
 `log: "chronicle text"` ·
-`worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war-council
-handlers `war_win war_loss war_harry war_hold war_siege war_mercs war_mass war_raise
-war_hunt war_supply war_thin war_terms war_accept_tribute war_press_on` (and the `war_can_siege` / `war_no_enemy_host` /
-`war_can_hunt` triggers) live in `js/world.js`; the
+`worldNews` · `custom: "fnName"` (calls a function registered on `FB.fns` — the war
+handlers `war_win war_loss war_hold war_siege war_mercs war_mass war_raise
+war_hunt war_supply war_thin war_terms war_accept_tribute war_press_on` (and the `war_can_siege` /
+`war_can_hunt` triggers) live in `js/world.js` — `war_siege` doubles as the season-tick
+siege pulse: a host standing on the war target presses the works without a council
+order; the
 great-holy-war field handlers `ghw_recruit_volunteers ghw_recruit_mercenaries
 ghw_recruit_knights ghw_recruit_adventurers` (and the `ghw_has_field_host` trigger)
 live in `js/holywar.js`; they add only to the current live host, increasing its unit
@@ -2434,7 +2454,8 @@ value; compelled leverage adds 10 points. All rolls use the saved game RNG.
 
 **Blessings** are plain event data (`seek_blessing`, fired by the Seek-a-blessing deed) that
 spend piety on flags the engine reads: `blessed_crops` (+harvest odds, spent with the
-harvest), `blessed_war` (+battle odds, spent on the next battle roll), `blessed_union`
+harvest), `blessed_war` (+battle power, spent by the next battle involving the player's
+host), `blessed_union`
 (+fertility until a child is conceived).
 
 **Pacts** are engine-side diplomacy: the envoy deed (tier 4+, independent) spends gold on a

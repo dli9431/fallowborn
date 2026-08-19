@@ -246,7 +246,9 @@ keyline keeps arbitrary chosen colors legible. `groupOf` comes from
 `mapGroupOf` in `ui_panels.js` and follows the map filter (`R` key / 🗺 HUD button): **Realm** (default —
 your own province focuses your realm, demesne + vassals; a foreign one focuses its
 sovereign's), **Mine** (only your realm), **Liege** (your liege's whole sub-realm),
-**De jure duchies**, and **De jure kingdoms** (the historical de jure groupings).
+**De jure duchies**, **De jure kingdoms** (the historical de jure groupings), and
+**War** (active war participants: outlines the enemy realm in red and your own realm in player focus).
+Market commodity prices are inspected through the separate Market Lens HUD button.
 Membership walks `FB.liegeChain` over `state.holder` for the realm-based modes.
 
 ## County population & lightweight demographics

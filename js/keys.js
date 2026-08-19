@@ -2,11 +2,11 @@
    Arrows pan · Shift+arrows jump to a neighboring province · PgUp/PgDn zoom ·
    +/- game speed (zoom on the start-picker map) · H home · Enter select
    province at screen center · in Deeds, 1-6 select a section and QWE / ASD /
-   ZXC activate its first nine items · dialogs use 1-9 and Shift+1-9 ·
-   Space or E play/pause · F skip to the next happening ·
-   Z autoresolve settings · D/S/K/L/N/C open Deeds/Self/Kin/Land/Network/Chronicle
-   panels · configurable unused letters fire semantic action bindings ·
-   [ ] cycle panels · Esc menu / back / close dialog. */
+   ZXC activate its first nine items (Shift+QWE / ASD / ZXC for items 10-18) ·
+   dialogs use 1-9 and Shift+1-9 · Space or E play/pause · F skip to the next
+   happening · V autoresolve settings · D/S/K/L/N/C open Deeds/Self/Kin/Land/
+   Network/Chronicle panels · configurable unused letters fire semantic action
+   bindings · [ ] cycle panels · Esc menu / back / close dialog. */
 window.FB = window.FB || {};
 
 (function () {
@@ -153,6 +153,7 @@ window.FB = window.FB || {};
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
       if (k === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
       if (k === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); return; }
+      if (k === 'Escape' && genOpen()) { e.preventDefault(); FB.ui.closeModal(); return; }
       /* Checkboxes and radios take no typed text, so a focused one (a
          dialog's first control can be a protection checkbox) swallows
          everything except the digit hotkeys. */
@@ -172,10 +173,20 @@ window.FB = window.FB || {};
     /* ---- generic dialog (menu, war targets, heirs, saves...) ---- */
     if (genOpen()) {
       if (k === 'Escape') {
-        if (FB.ui._gmDismiss) { e.preventDefault(); FB.ui.closeModal(); }
-      } else if (k === 'Tab') {
+        e.preventDefault();
+        FB.ui.closeModal();
+        return;
+      }
+      if (k === 'Tab') {
         containModalTab(e);
-      } else if (digit) {
+        return;
+      }
+      if (FB.ui && FB.ui.modalHotkeyClose && FB.ui.modalHotkeyClose(k, e.shiftKey)) {
+        e.preventDefault();
+        FB.ui.closeModal();
+        return;
+      }
+      if (digit) {
         if (!FB.ui._gmNoHotkeys) {
           e.preventDefault();
           clickNth('#gm-body .actionbtn, #gm-body .settcard-raise', slot);
@@ -236,8 +247,8 @@ window.FB = window.FB || {};
         }
         return;
       }
-      if (!e.shiftKey && FB.ui && FB.ui.runDeedItemShortcut &&
-          FB.ui.runDeedItemShortcut(k, !e.repeat)) {
+      if (FB.ui && FB.ui.runDeedItemShortcut &&
+          FB.ui.runDeedItemShortcut(k, !e.repeat, e.shiftKey)) {
         e.preventDefault();
         return;
       }
@@ -288,7 +299,7 @@ window.FB = window.FB || {};
         return;
       case 'PageUp': e.preventDefault(); M.zoomIn(); return;
       case 'PageDown': e.preventDefault(); M.zoomOut(); return;
-      case 'z': case 'Z':
+      case 'v': case 'V':
         if (FB.state && !FB.ui.eventsBusy()) FB.ui.showAutoResolve();
         return;
       case 'h': case 'H': case 'Home':

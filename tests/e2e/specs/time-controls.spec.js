@@ -16,6 +16,7 @@ dependsOnRuntime(__filename, [
   'js/events.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
+  'js/keys.js',
   'js/ui_topbar.js',
   'js/ui_modals.js',
   'js/mapview.js',
@@ -30,6 +31,211 @@ const { startDeterministicGame } = require('../support/game/start');
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
+
+test('map interaction defers exact Deeds and Land war-card rebuilds until release',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      const s = FB.state;
+      const home = s.player.provinceId;
+      const enemy = Object.keys(s.realms).filter(function (rid) {
+        const realm = s.realms[rid];
+        return rid !== 'player' && realm && realm.alive && !realm.liege;
+      })[0];
+      FB.game.setPaused(true);
+      s.player.war = {
+        enemy:enemy, target:null, wins:0, losses:0, seasons:0,
+        defending:true, strength:1
+      };
+      const host = {
+        id:'panel_drag_host', realm:'player', men:500, size:500,
+        units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
+        at:home, from:home, moveLeft:0, path:[], goal:null, supply:82
+      };
+      s.armies = [host];
+      FB.selectArmy(host.id);
+      FB.map.select(home);
+      FB.ui.showTab('actions');
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+
+    await page.evaluate(function () {
+      const sentinel = document.createElement('i');
+      sentinel.id = 'deeds-drag-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+      FB.map.pointers.panel_drag = [0, 0];
+      FB.playerHost(FB.state).supply = 81;
+      FB.ui.refresh();
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#deeds-drag-sentinel')).toHaveCount(1);
+    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+
+    await page.evaluate(function () {
+      delete FB.map.pointers.panel_drag;
+      FB.ui.flushMapInteractionRefresh();
+    });
+    await expect(page.locator('#deeds-drag-sentinel')).toHaveCount(0);
+    await expect(page.locator('#deeds-war-card')).toContainText('81%');
+
+    await page.evaluate(function () { FB.ui.showTab('prov'); });
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
+    await page.evaluate(function () {
+      const sentinel = document.createElement('i');
+      sentinel.id = 'land-drag-sentinel';
+      document.getElementById('tab-prov').appendChild(sentinel);
+      FB.map.pointers.panel_drag = [0, 0];
+      FB.playerHost(FB.state).men = 499;
+      FB.ui.refresh();
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#land-drag-sentinel')).toHaveCount(1);
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
+
+    await page.evaluate(function () {
+      delete FB.map.pointers.panel_drag;
+      FB.ui.flushMapInteractionRefresh();
+    });
+    await expect(page.locator('#land-drag-sentinel')).toHaveCount(0);
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('499');
+  });
+
+test('natural clock ticks keep heavy warfare panels mounted until an exact refresh',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      const s = FB.state;
+      const home = s.player.provinceId;
+      const enemy = Object.keys(s.realms).filter(function (rid) {
+        const realm = s.realms[rid];
+        return rid !== 'player' && realm && realm.alive && !realm.liege;
+      })[0];
+      FB.game.setPaused(true);
+      s.player.war = {
+        enemy:enemy, target:null, wins:0, losses:0, seasons:0,
+        defending:true, strength:1
+      };
+      s.armies = [{
+        id:'live_panel_host', realm:'player', men:500, size:500,
+        units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
+        at:home, from:home, moveLeft:0, path:[], goal:null, supply:82
+      }];
+      FB.selectArmy('live_panel_host');
+      FB.map.select(home);
+      FB.ui.showTab('actions');
+      FB.ui.refresh();
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+
+    await page.evaluate(function () {
+      const sentinel = document.createElement('i');
+      sentinel.id = 'deeds-live-tick-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+      FB.playerHost(FB.state).supply = 81;
+      FB.state.turn++;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+
+    /* Even many natural days must not trigger the all-or-nothing Deeds
+       renderer merely because supply changed. */
+    await page.evaluate(function () {
+      FB.state.turn += 20;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#deeds-war-card')).toContainText('82%');
+
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(0);
+    await expect(page.locator('#deeds-war-card')).toContainText('81%');
+
+    await page.evaluate(function () {
+      FB.ui.showTab('prov');
+      FB.ui.refresh();
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
+    await page.evaluate(function () {
+      const sentinel = document.createElement('i');
+      sentinel.id = 'land-live-tick-sentinel';
+      document.getElementById('tab-prov').appendChild(sentinel);
+      FB.playerHost(FB.state).men = 499;
+      FB.state.turn++;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#land-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
+
+    await page.evaluate(function () {
+      FB.map.pointers.live_panel_drag = [0, 0];
+      FB.state.turn += 20;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#land-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
+
+    /* Releasing a drag must preserve the deferred request's live priority;
+       it must not promote that tick into a full Land-panel rebuild. */
+    await page.evaluate(function () {
+      delete FB.map.pointers.live_panel_drag;
+      FB.ui.flushMapInteractionRefresh();
+    });
+    await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        requestAnimationFrame(function () { requestAnimationFrame(resolve); });
+      });
+    });
+    await expect(page.locator('#land-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('500');
+
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await expect(page.locator('#land-live-tick-sentinel')).toHaveCount(0);
+    await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('499');
+  });
 
 test('autoresolving fast-forward advances a paused game to the next season',
   async function ({ page }) {
@@ -358,6 +564,48 @@ test('direct-vassal reads retain the hierarchy index across quiet days',
       includesMutation:true
     });
   });
+
+test('clicking a panel tab leaves Space as the pause hotkey', async function ({ page }) {
+  await startDeterministicGame(page);
+  await page.evaluate(function () {
+    delete FB.state.player.flags.tutorial;
+    FB.state.player.flags.tutorial_done = 1;
+    FB.state.eventQueue = [];
+    FB.state.slotDays = [];
+    FB.game.uiPrefs.hideTips = true;
+    FB.game.uiPrefs.hideBeginnerHints = true;
+    FB.game.setPaused(true);
+  });
+
+  const landTab = page.locator('#sidetabs .tab[data-tab="prov"]');
+  await landTab.click();
+  await expect(landTab).toHaveClass(/active/);
+  /* A pointer click must not leave the tab focused: a focused button swallows
+     Space as native activation, stealing the pause hotkey until another tab
+     is clicked. Keyboard activation (event detail 0) still keeps focus. */
+  await expect(landTab).not.toBeFocused();
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(true);
+
+  await page.keyboard.press('Space');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(false);
+  await page.keyboard.press('Space');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(true);
+
+  const kinTab = page.locator('#lefttabs .tab[data-tab="family"]');
+  await kinTab.click();
+  await expect(kinTab).toHaveClass(/active/);
+  await expect(kinTab).not.toBeFocused();
+  await page.keyboard.press('Space');
+  await expect.poll(function () {
+    return page.evaluate(function () { return FB.game.paused; });
+  }).toBe(false);
+});
 
 test('desktop play button fits its full label and keyhint without truncation',
   async function ({ page }) {

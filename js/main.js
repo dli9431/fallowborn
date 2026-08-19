@@ -9,8 +9,14 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.142.1';
+  FB.VERSION = '1.143.0';
   FB.CHANGELOG = [
+    { v: '1.143.0', date: '2026-08-19', changes: [
+      'War councils now issue real map orders — hunt the enemy host, refit, or seek terms — while a host standing on the war target presses the siege on its own each season. Campaign condition, field leadership, rest, and blessings now shape every real battle.',
+      'Press R to cycle new map filters: Realm, Mine, Liege, the de jure duchies and kingdoms, and a War view that outlines your enemy in red.',
+      'Long deed and focus lists now offer Shift+letter shortcuts beyond the first nine items, and pressing a modal’s hotkey again closes it.',
+      'The map and the Deeds and Land tabs stay smoother while time flows and while panning across the wider world.'
+    ] },
     { v: '1.142.1', date: '2026-08-19', changes: [
       'Completing a mercenary contract now smoothly transitions to the journey home, and wartime battle records track win/loss tallies consistently.'
     ] },
@@ -1101,11 +1107,13 @@ window.FB = window.FB || {};
     const activeSeconds = telemetryPulse();
     if (activeSeconds <= telemetrySession.lastCheckpointSeconds) return;
     telemetrySession.lastCheckpointSeconds = activeSeconds;
-    trackTelemetry('active-play-checkpoint', {
+    const extra = {
       entry_type:telemetrySession.entryType,
       active_seconds:activeSeconds,
       checkpoint_reason:reason
-    });
+    };
+    if (FB.state && FB.state.date) extra.game_year = FB.state.date.year;
+    trackTelemetry('active-play-checkpoint', extra);
   }
 
   function endTelemetrySession() {
@@ -2319,7 +2327,8 @@ window.FB = window.FB || {};
   }
   G.scheduleSlots = scheduleSlots;
 
-  /* Advance one day. opts.skipFocus: an instant deed filled this day instead.
+  /* Advance one day. opts.skipFocus: an instant deed filled this day instead;
+     opts.liveTick: the natural clock may leave heavy panel DOM mounted.
      Returns 'event' | 'dead' | 'season' | 'day' (or undefined if blocked). */
   G.passDay = function (opts) {
     const s = FB.state;
@@ -2380,7 +2389,7 @@ window.FB = window.FB || {};
       FB.armyTick(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
       s.eventQueue.length = 0;
-      FB.ui.refresh();
+      FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
       return seasonBoundary ? 'season' : 'day';
     }
 
@@ -2469,7 +2478,7 @@ window.FB = window.FB || {};
     }
 
     const events = FB.pickDailyEvents(s);
-    FB.ui.refresh();
+    FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
     if (events.length) {
       // runEvents reports whether a modal actually opened; autoresolved
       // events pass silently and the day keeps flowing
@@ -2641,7 +2650,7 @@ window.FB = window.FB || {};
         G.uiPrefs.actionBindings = {};
         for (const key in storedUiPrefs.actionBindings) {
           const target = storedUiPrefs.actionBindings[key];
-          if (/^[abgijopqtuvwxy]$/.test(key) &&
+          if (/^[abgijopqtuwxyz]$/.test(key) &&
               typeof target === 'string' && target) {
             G.uiPrefs.actionBindings[key] = target;
           }
@@ -2846,7 +2855,7 @@ window.FB = window.FB || {};
       if (document.hidden) return;
       if (FB.ui.dailyTip) FB.ui.dailyTip(); // first-time tips: one drip per natural day
       if (G.paused) return; // a fresh lesson just stilled the days
-      G.passDay();
+      G.passDay({ liveTick:true });
     }, G.SPEEDS[G.speedIdx]);
   }
   G.setSpeed = function (d) {

@@ -36,11 +36,12 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   home · `Enter` selects the province at screen center · `D` `S` `K` `L` `N` `C` open the
   Deeds/Self/Kin/Land/Network/Chronicle panels (hotkey letter underlined in-game) · in Deeds,
   `1–6` select Daily Focus and the five deed sections, then `Q W E` / `A S D` / `Z X C`
-  activate the first nine entries in that section · in events and dialogs, `1–9` choose an
+  activate the first nine entries in that section (and `Shift+Q W E` / `A S D` / `Z X C` for
+  items 10–18) · in events and dialogs, `1–9` choose an
   item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
-  `Z` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege /
-  De jure duchies / De jure kingdoms) ·
+  `V` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege /
+  De jure duchies / De jure kingdoms / War) ·
   `[` `]` cycle panels · `Esc` menu/back/close ·
   `Tab` moves between buttons.
 - **Mobile / touch:** drag to pan, pinch to zoom, tap provinces. In portrait the map sits

@@ -1307,7 +1307,7 @@ FBDATA.balance = {
   aiMultiHostStrength: 1200, // AI realms with a muster of at least this many men may split off a detachment in offensive wars
   aiMaxHosts: 2, // the most hosts an AI realm fields at once
   aiDetachmentFrac: 0.35, // the men-share of its muster an AI detachment carries
-  armyRoutDays: 20, // a beaten host cannot be fought again for this long (rout grace)
+  armyRoutDays: 4, // a beaten host cannot be fought again for this long (rout grace)
   armyReinforceRate: 0.02, // fraction of its mustered size a host resting on home land refills per day
   armyMinMen: 40, // a host under this many men disperses; also the smallest muster
   armyDemusterKeepOwn: 1, // a voluntary de-muster on the player's own county preserves this share of the host

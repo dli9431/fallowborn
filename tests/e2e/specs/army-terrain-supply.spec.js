@@ -306,6 +306,78 @@ test('a host drains supply abroad, starves at 0, and refills at home',
     expect(result.homeStatus.daysToAttrition).toBeNull();
   });
 
+test('daily troop replenishment redraws the map on a bounded cadence',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const originalTurn = state.turn;
+      const originalWar = state.player.war;
+      const originalHosts = state.armies;
+      const originalDown = state.armyDown;
+      const originalCohorts = state.armyCohorts;
+      const originalAuto = FB.game.auto.hosts;
+      const originalRequest = FB.map.request;
+      const home = state.player.provinceId;
+      state.holder = state.holder || {};
+      const originalHolder = state.holder[home];
+      const playerSovereign = FB.playerRealmId(state);
+      let enemy = null;
+      for (const realmId in state.realms) {
+        const realm = state.realms[realmId];
+        if (realmId !== playerSovereign && realmId !== 'player' &&
+            realm && realm.alive && !realm.liege) {
+          enemy = realmId;
+          break;
+        }
+      }
+
+      state.player.war = { enemy:enemy, defending:true };
+      state.armyDown = {};
+      for (const realmId in state.realms) state.armyDown[realmId] = state.turn;
+      state.armyCohorts = {};
+      state.holder[home] = 'player';
+      FB.game.auto.hosts = 'manual';
+      const host = {
+        id:'reinforcement_render_host', realm:'player', men:400, size:1000,
+        units:{ levy:400, arch:0, cav:0, ret:0, mercs:0 },
+        at:home, from:home,
+        moveLeft:0, path:[], goal:null, supply:100
+      };
+      state.armies = [host];
+
+      let requests = 0;
+      FB.map.request = function () { requests++; };
+      for (let day = 0; day < 30; day++) {
+        state.turn++;
+        FB.armyTick(state);
+      }
+
+      const out = {
+        enemy:enemy,
+        men:host.men,
+        requests:requests
+      };
+      FB.map.request = originalRequest;
+      state.turn = originalTurn;
+      state.player.war = originalWar;
+      state.armies = originalHosts;
+      state.armyDown = originalDown;
+      state.armyCohorts = originalCohorts;
+      if (originalHolder === undefined) delete state.holder[home];
+      else state.holder[home] = originalHolder;
+      FB.game.auto.hosts = originalAuto;
+      return out;
+    });
+
+    expect(result.enemy).toBeTruthy();
+    expect(result.men).toBe(1000);
+    /* The five-day cadence yields six paints over thirty days, or seven when
+       the final completion falls between cadence days. The old hot path
+       requested all thirty daily repaints while the host stood still. */
+    expect(result.requests).toBeGreaterThanOrEqual(6);
+    expect(result.requests).toBeLessThanOrEqual(7);
+  });
+
 test('the selected host readout reports its supply in the Land tab',
   async function ({ page }) {
     await page.evaluate(function () {

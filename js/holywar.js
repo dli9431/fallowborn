@@ -1275,7 +1275,8 @@ window.FB = window.FB || {};
       occupiedDev >= objectiveDev * 0.6;
   }
 
-  FB.greatHolyWarBattle = function (state, pid, winner, loser, winnerLoss, loserLoss) {
+  FB.greatHolyWarBattle = function (state, pid, winner, loser, winnerLoss, loserLoss,
+      playerBattle) {
     var campaign = state && state.greatHolyWar;
     if (!campaign || campaign.phase !== 'active') return false;
     var winnerCamp = FB.greatHolyWarCamp(state, winner.realm);
@@ -1286,12 +1287,28 @@ window.FB = window.FB || {};
       B('greatHolyWarBattleResolve', 10), -100, 100);
     addContribution(state, campaign, winner.realm, 5 + Math.floor((loserLoss || 0) / 100));
     if (loser.men > 0) addContribution(state, campaign, loser.realm, 1);
-    if (winner.realm === 'player' || loser.realm === 'player') {
-      state.eventQueue.push({
-        id:winner.realm === 'player'
-          ? 'ghw_field_battle_won' : 'ghw_field_battle_lost',
-        ctx:{ pid:pid, enemyId:winner.realm === 'player' ? loser.realm : winner.realm }
-      });
+    var playerInvolved = playerBattle
+      ? !!playerBattle.playerInvolved
+      : winner.realm === 'player' || loser.realm === 'player';
+    var playerWon = playerBattle ? !!playerBattle.won : winner.realm === 'player';
+    var primaryInvolved = playerBattle
+      ? !!playerBattle.primaryHostInvolved : playerInvolved;
+    var playerEnemy = playerBattle && playerBattle.enemyId ||
+      (playerWon ? loser.realm : winner.realm);
+    if (playerInvolved && primaryInvolved) {
+      FB.queueEvent(state,
+        playerWon ? 'ghw_field_battle_won' : 'ghw_field_battle_lost',
+        { pid:pid, enemyId:playerEnemy });
+    } else if (playerInvolved) {
+      FB.news(state, playerWon
+        ? FB.msg('news.holywar.detachment_victory',
+          '⚔ Your detached banner helps win the field at {province} in the great holy war.', {
+            province:FB.world.byId[pid] ? FB.world.byId[pid].name : ''
+          })
+        : FB.msg('news.holywar.detachment_defeat',
+          '⚔ Your detached banner is driven from the field at {province} in the great holy war.', {
+            province:FB.world.byId[pid] ? FB.world.byId[pid].name : ''
+          }));
     } else if (FB.game.observe) {
       FB.news(state, FB.msg('news.holywar.battle',
         '⚔ Battle at {province}: {winner} breaks {loser} in the great holy war.', {

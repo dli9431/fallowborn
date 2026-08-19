@@ -122,7 +122,8 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     expect(events[events.length - 1].data).toEqual(expect.objectContaining({
       entry_type:'new-campaign',
       active_seconds:1800,
-      checkpoint_reason:'page-hide'
+      checkpoint_reason:'page-hide',
+      game_year:867
     }));
 
     const saved = await page.evaluate(function () {

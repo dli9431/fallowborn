@@ -3,7 +3,9 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/politics.js',
   'js/world.js',
-  'js/ui_modals.js'
+  'js/ui_misc.js',
+  'js/ui_modals.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -775,7 +777,16 @@ test('grant terms and local council state are visible before and after confirmat
     }, setup.county);
     expect(contract.charterId).toBe('host_duty');
     expect(contract.tenure).toBe('term');
-    await expect(page.locator('#governance-vassals')).toContainText('Host Duty');
-    await expect(page.locator('#governance-vassals')).toContainText('Ten-year');
-    await expect(page.locator('#governance-vassals')).toContainText('Breakaway ×1.25');
+    // the charter, tenure, and political terms live in the card's details,
+    // which desktop reveals through the hover side tooltip
+    const vassalCard = page.locator('#governance-vassals .governance-vassal', {
+      has:page.locator('#gov-vassal-det-pv_' + setup.county)
+    });
+    await expect(vassalCard.locator('.settcard-details')).toBeHidden();
+    await vassalCard.hover();
+    const vassalTip = page.locator('#tooltip');
+    await expect(vassalTip).toBeVisible();
+    await expect(vassalTip).toContainText('Host Duty');
+    await expect(vassalTip).toContainText('Ten-year');
+    await expect(vassalTip).toContainText('Breakaway ×1.25');
   });

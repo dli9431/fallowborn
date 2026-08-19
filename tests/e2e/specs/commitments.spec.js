@@ -527,3 +527,140 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
     await page.locator('#sidetabs [data-tab="actions"]').click();
     await expect(page.locator('[data-action-id="coin_credit"]')).toBeVisible();
   });
+
+test('ruler deed section extending past nine items exposes Shift+letter shortcuts',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 5;
+      s.player.liege = null;
+      s.player.provs = [s.player.provinceId, 1, 2, 3];
+      FB.foundPlayerRealm(s);
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+
+    const panel = page.locator('#tab-actions');
+    const realmHeader = panel.locator('[data-action-group="realm"]');
+    await expect(realmHeader.locator('.deed-section-keyhint')).toHaveText('5');
+
+    await page.keyboard.press('Digit5');
+    await expect(realmHeader).toHaveAttribute('aria-expanded', 'true');
+    await expect(realmHeader).toHaveAttribute('aria-current', 'true');
+
+    const realmBody = panel.locator('[data-action-group-body="realm"]');
+    const buttons = realmBody.locator('[data-action-id]');
+    const count = await buttons.count();
+    expect(count).toBeGreaterThan(9);
+
+    const hints = await buttons.evaluateAll(function (btnList) {
+      return btnList.map(function (btn) {
+        const hint = btn.querySelector('.deed-item-keyhint');
+        return hint ? hint.textContent : null;
+      });
+    });
+
+    const expectedKeys = ['Q', 'W', 'E', 'A', 'S', 'D', 'Z', 'X', 'C',
+      '⇧Q', '⇧W', '⇧E', '⇧A', '⇧S', '⇧D', '⇧Z', '⇧X', '⇧C'];
+    for (let i = 0; i < count && i < expectedKeys.length; i++) {
+      expect(hints[i]).toBe(expectedKeys[i]);
+    }
+
+    const tenthId = await buttons.nth(9).evaluate(function (btn) {
+      const id = btn.getAttribute('data-action-id');
+      btn.click = function () { window.__deedShortcutTarget = id; };
+      return id;
+    });
+    await page.keyboard.press('Shift+KeyQ');
+    expect(await page.evaluate(function () {
+      return window.__deedShortcutTarget;
+    })).toBe(tenthId);
+
+    const eleventhId = await buttons.nth(10).evaluate(function (btn) {
+      const id = btn.getAttribute('data-action-id');
+      btn.click = function () { window.__deedShortcutTarget = id; };
+      return id;
+    });
+    await page.keyboard.press('Shift+KeyW');
+    expect(await page.evaluate(function () {
+      return window.__deedShortcutTarget;
+    })).toBe(eleventhId);
+  });
+
+test('automation hotkey uses V and btn-auto displays V keyhint',
+  async function ({ page }) {
+    await page.setViewportSize({ width: 1200, height: 800 });
+    const autoBtn = page.locator('#btn-auto');
+    await expect(autoBtn.locator('.keyhint')).toHaveText('V');
+    await expect(autoBtn).toHaveAttribute('title', 'Automation (V)');
+    await expect(autoBtn).toHaveAttribute('aria-label', 'Automation (V)');
+
+    await page.keyboard.press('KeyZ');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    await page.keyboard.press('KeyV');
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#ar-done')).toBeVisible();
+    await page.locator('#ar-done').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
+test('modal hotkeys toggle open modals and Escape closes any modal',
+  async function ({ page }) {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
+    // 1. Automation hotkey V toggles modal open and closed
+    await page.keyboard.press('KeyV');
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#ar-done')).toBeVisible();
+
+    await page.keyboard.press('KeyV');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // 2. Automation hotkey V opens modal, Escape closes it
+    await page.keyboard.press('KeyV');
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // 3. Menu hotkey M toggles modal open and closed
+    await page.keyboard.press('KeyM');
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#m-resume')).toBeVisible();
+
+    await page.keyboard.press('KeyM');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // 4. Menu opened via Escape, pressing Escape again closes it
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#m-resume')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // 5. Action shortcut (e.g. Q for livelihoods) toggles modal open and closed
+    await page.keyboard.press('KeyQ');
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+
+    await page.keyboard.press('KeyQ');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // 6. Non-dismissable modal closes on Escape
+    await page.evaluate(function () {
+      FB.ui.openModal('Non-dismissable Dialog', '<p>Test</p>', { dismissable: false });
+    });
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    // 7. Input inside modal focused, Escape closes modal
+    await page.evaluate(function () {
+      FB.ui.openModal('Input Dialog', '<input id="test-inp" type="text">');
+      document.getElementById('test-inp').focus();
+    });
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
