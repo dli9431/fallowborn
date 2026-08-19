@@ -892,7 +892,13 @@ window.FB = window.FB || {};
   FB.techResearchRate = function (state, realmId) {
     var rid = FB.techRealmId(state, realmId);
     var dev = FB.realmStrength ? FB.realmStrength(state, rid) : 0;
-    return 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+    var rate = 2 + Math.min(4, dev * 0.04) + FB.techBonus(state, 'research', rid);
+    /* Standing royal tolerance policy speeds or slows the player realm's
+       scholarship (js/institutions.js). */
+    if (FB.realmPolicyResearchFactor) {
+      rate *= Math.max(0, 1 + FB.realmPolicyResearchFactor(state, rid));
+    }
+    return rate;
   };
 
   function realmCoastal(state, rid) {
@@ -1566,6 +1572,27 @@ window.FB = window.FB || {};
             !isFinite(unitClass.quality) || unitClass.quality <= 0) {
           errors.push('Unit class ' + classId +
             ': quality must be a positive number.');
+        }
+        for (var powerFieldIndex = 0;
+            powerFieldIndex < ['attack','defense'].length; powerFieldIndex++) {
+          var powerField = ['attack','defense'][powerFieldIndex];
+          if (unitClass[powerField] !== undefined &&
+              (typeof unitClass[powerField] !== 'number' ||
+               !isFinite(unitClass[powerField]) || unitClass[powerField] <= 0)) {
+            errors.push('Unit class ' + classId + ': ' + powerField +
+              ' must be a positive number.');
+          }
+        }
+        if (unitClass.replaceDays !== undefined &&
+            (typeof unitClass.replaceDays !== 'number' ||
+             !isFinite(unitClass.replaceDays) || unitClass.replaceDays <= 0)) {
+          errors.push('Unit class ' + classId +
+            ': replaceDays must be a positive number.');
+        }
+        if (unitClass.professional !== undefined &&
+            typeof unitClass.professional !== 'boolean') {
+          errors.push('Unit class ' + classId +
+            ': professional must be a boolean.');
         }
         if (unitClass.upkeepPer100 !== undefined &&
             (typeof unitClass.upkeepPer100 !== 'number' ||

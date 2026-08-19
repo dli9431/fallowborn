@@ -7,6 +7,11 @@
      name          — localized display name (a plural group noun)
      icon          — display emoji
      quality       — battle quality of one man of the class
+     attack        — optional per-man power on the attacking side of a field
+                     battle (falls back to quality)
+     defense       — optional per-man power on the defending side (falls back
+                     to quality); a meeting engagement on open ground reads
+                     attack for both camps
      upkeepPer100  — seasonal logistics per 100 live men of the class
                      (absent on hired classes, which cost fixed contracts)
      casualtyOrder — battle losses fall on the lowest order first
@@ -24,6 +29,12 @@
      cultures / notCultures — optional culture gates (data/cultures.js ids)
      hired         — true for hired companies: never mustered from the levy,
                      costed per contract instead of per head
+     professional  — true for standing troops whose battle losses enter the
+                     realm's replacement cohort (state.armyCohorts): slain
+                     professionals are re-drilled over replaceDays while the
+                     realm pays the reinforcement premium
+     replaceDays   — optional days to drill one replacement batch (falls
+                     back to balance.cohortReplaceDays)
 
    The five baseline classes (levy, arch, cav, ret, mercs) are the migration
    baseline: saves and hosts from before this table default every missing
@@ -36,16 +47,20 @@ FBDATA.unitClasses = {
   levy: { name:'Levy', icon:'🌾', quality:0.85, upkeepPer100:0.5,
     casualtyOrder:0,
     basket:{ provisions:0.75, materials:0.20, transport:0.05 } },
-  arch: { name:'Archers', icon:'🏹', quality:1.2, upkeepPer100:1,
+  /* strong bowshot on the attack, but a bow line cannot stand a charge */
+  arch: { name:'Archers', icon:'🏹', quality:1.2, attack:1.35, defense:1.05,
+    upkeepPer100:1,
     casualtyOrder:1,
     counters:{ pike:1.3 },
     basket:{ provisions:0.60, materials:0.30, transport:0.10 } },
-  cav: { name:'Cavalry', icon:'🐎', quality:2.0, upkeepPer100:2,
+  cav: { name:'Cavalry', icon:'🐎', quality:2.0, attack:2.15, defense:1.85,
+    upkeepPer100:2,
     casualtyOrder:5,
     counters:{ crossbow:1.25 },
     basket:{ provisions:0.35, materials:0.10, transport:0.55 } },
-  ret: { name:'Men-at-arms', icon:'🛡', quality:2.5, upkeepPer100:2,
-    casualtyOrder:8,
+  ret: { name:'Men-at-arms', icon:'🛡', quality:2.5, attack:2.4, defense:2.6,
+    upkeepPer100:2,
+    casualtyOrder:8, professional:true, replaceDays:120,
     basket:{ provisions:0.45, materials:0.35, transport:0.20 } },
   mercs: { name:'Mercenaries', icon:'⚔', quality:1.5, casualtyOrder:4,
     hired:true,
@@ -53,8 +68,10 @@ FBDATA.unitClasses = {
 
   /* Mechanical bows punch through armored foot but reload too slowly to
      answer a cavalry rush. */
-  crossbow: { name:'Crossbowmen', icon:'🎯', quality:1.5, upkeepPer100:1.2,
+  crossbow: { name:'Crossbowmen', icon:'🎯', quality:1.5, attack:1.65,
+    defense:1.35, upkeepPer100:1.2,
     casualtyOrder:3, share:0.15, requiresTech:'crossbows',
+    professional:true, replaceDays:100,
     counters:{ ret:1.35, huscarl:1.35, pike:1.2, levy:1.1 },
     terrainFactors:{ farmland:1.05, forest:1.05, hills:1.1, mountains:1,
       desert:1, steppe:1, marsh:1, tundra:0.95 },
@@ -62,30 +79,37 @@ FBDATA.unitClasses = {
 
   /* Ordered pike blocks stop mounted charges cold and struggle under
      archery or on broken ground. */
-  pike: { name:'Pikemen', icon:'🔱', quality:1.1, upkeepPer100:0.8,
+  pike: { name:'Pikemen', icon:'🔱', quality:1.1, attack:1.0, defense:1.2,
+    upkeepPer100:0.8,
     casualtyOrder:2, share:0.2, requiresTech:'infantry_polearms',
+    professional:true, replaceDays:90,
     counters:{ cav:1.6, horsearcher:1.35, camel:1.35, cataphract:1.25 },
     terrainFactors:{ farmland:1.05, forest:0.85, hills:0.95, mountains:0.85,
       desert:1, steppe:1, marsh:0.85, tundra:0.95 },
     basket:{ provisions:0.70, materials:0.25, transport:0.05 } },
 
   horsearcher: { name:'Horse archers', icon:'🏇', quality:1.9,
-    upkeepPer100:2.2, casualtyOrder:6, share:0.25,
+    attack:2.0, defense:1.8, upkeepPer100:2.2,
+    casualtyOrder:6, share:0.25, professional:true, replaceDays:150,
     cultures:['magyar','turkic'],
     counters:{ levy:1.2, arch:1.15 },
     terrainFactors:{ farmland:1.1, forest:0.7, hills:0.9, mountains:0.7,
       desert:1.15, steppe:1.25, marsh:0.7, tundra:1 },
     basket:{ provisions:0.40, materials:0.15, transport:0.45 } },
 
-  huscarl: { name:'Huscarls', icon:'🪓', quality:2.3, upkeepPer100:2,
-    casualtyOrder:9, share:0.15, cultures:['norse','english'],
+  huscarl: { name:'Huscarls', icon:'🪓', quality:2.3, attack:2.2,
+    defense:2.4, upkeepPer100:2,
+    casualtyOrder:9, share:0.15, professional:true, replaceDays:130,
+    cultures:['norse','english'],
     counters:{ cav:1.4, levy:1.15 },
     terrainFactors:{ farmland:1, forest:1, hills:1.1, mountains:1.05,
       desert:0.95, steppe:1, marsh:0.95, tundra:1 },
     basket:{ provisions:0.50, materials:0.35, transport:0.15 } },
 
-  camel: { name:'Camel riders', icon:'🐪', quality:1.8, upkeepPer100:2.2,
-    casualtyOrder:7, share:0.2, cultures:['arabic','berber'],
+  camel: { name:'Camel riders', icon:'🐪', quality:1.8, attack:1.9,
+    defense:1.7, upkeepPer100:2.2,
+    casualtyOrder:7, share:0.2, professional:true, replaceDays:150,
+    cultures:['arabic','berber'],
     counters:{ cav:1.35, horsearcher:1.15 },
     terrainFactors:{ farmland:1, forest:0.7, hills:0.9, mountains:0.7,
       desert:1.3, steppe:1.1, marsh:0.7, tundra:0.8 },
@@ -93,8 +117,10 @@ FBDATA.unitClasses = {
 
   /* Fully armored lancers — irresistible on open ground, helpless in close
      country, and checked by a steady pike block. */
-  cataphract: { name:'Cataphracts', icon:'♞', quality:3.2, upkeepPer100:3.5,
+  cataphract: { name:'Cataphracts', icon:'♞', quality:3.2, attack:3.35,
+    defense:3.05, upkeepPer100:3.5,
     casualtyOrder:10, share:0.1, requiresTech:'cataphract_armor',
+    professional:true, replaceDays:180,
     cultures:['greek','armenian'],
     counters:{ levy:1.3, arch:1.2 },
     terrainFactors:{ farmland:1.2, forest:0.55, hills:0.8, mountains:0.55,

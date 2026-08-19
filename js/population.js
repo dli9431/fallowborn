@@ -238,6 +238,11 @@ window.FB = window.FB || {};
     if (countyOccupiedOrBesieged(state, pid)) attraction -= 3;
     if (realmIsAtWar(state, owner)) attraction -= 2;
     if (countySevereMarketShock(state, pid)) attraction -= 2;
+    /* Royal settlement policy (js/institutions.js) shifts the draw of the
+       player's own counties; the conserved migration itself is untouched. */
+    if (owner === 'player' && FB.realmPolicySettlementAttraction) {
+      attraction += FB.realmPolicySettlementAttraction(state);
+    }
 
     return attraction;
   };

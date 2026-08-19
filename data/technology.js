@@ -112,6 +112,14 @@ window.FBDATA = window.FBDATA || {};
         fallback:'other_service_charters',
         rationale:'A durable liberties charter requires recorded law and an authenticated seal.'
       },
+      royal_religious_tolerance_policy:{
+        mode:'none',
+        rationale:'Tolerance and persecution are social and confessional prerogatives of the crown; no innovation credibly unlocks or improves proclaiming them.'
+      },
+      royal_settlement_policy:{
+        mode:'none',
+        rationale:'Closing or inviting settlement is a royal proclamation exercised through existing county modifiers, migration draw, and development; the baseline needs no research and no credible dependency belongs here.'
+      },
       tournament_jousting:{
         mode:'hard', tech:['cavalry_lances'], fallback:'melee_attendance_patronage_or_wagers',
         rationale:'Formal couched-lance competition depends on the matching cavalry practice.'
@@ -205,6 +213,30 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Baseline return cargo is an ordinary merchant commodity purchase at destination markets available to any accompanied trade traveler.'
       },
+      soldier_command_assignments:{
+        mode:'none',
+        rationale:'Scouting, rearguard, and peacetime drill stories extend the existing Soldiering career, which already inherits its own spear-and-drill technology requirement; leading a small party needs no separate innovation.'
+      },
+      physician_practice_stories:{
+        mode:'none',
+        rationale:'Outbreaks, bedside calls, and the Book of Remedies ride the existing Medicine career and Physician specialty, which carry their own Herbals and Physicians gates; the stories add no separately gateable capability.'
+      },
+      learned_master_works:{
+        mode:'none',
+        rationale:'The Star Tables and commissioned treatises are reachable only through master specialties that already carry Scriptoria and Astrolabe gates; the durable works themselves add no new research dependency.'
+      },
+      mercenary_contracts:{
+        mode:'none',
+        rationale:'A sustained paid-service contract with a warring realm is personal military service extended over seasons; no innovation credibly unlocks or improves selling a sword.'
+      },
+      adventuring_expeditions:{
+        mode:'none',
+        rationale:'Foreign expeditions reuse ordinary travel, whose transport standards already carry the technology interaction; seeing foreign lands needs no separate research gate.'
+      },
+      commoner_frontier_settlement:{
+        mode:'none',
+        rationale:'Withdrawing into an empty wasteland and proving a homestead is a core recovery and life-path choice for freeholders and gentry; it rides ordinary travel, holdings, and the shared wasteland materialization, and no innovation credibly unlocks walking onto empty land.'
+      },
       building_university:{
         mode:'hard', tech:['universities'], fallback:'library',
         rationale:'Corporate university centers require organized universities knowledge; ordinary libraries remain available.'
@@ -282,6 +314,14 @@ window.FBDATA = window.FBDATA || {};
       host_splitting_encirclement:{
         mode:'none',
         rationale:'Splitting and merging field hosts, and the destruction of a host shattered while cut off, are core play available from the baseline; no credible period technology gates dividing an army or reading whether a road home remains, so no dependency is invented.'
+      },
+      unit_attack_defense_roles:{
+        mode:'none',
+        rationale:'Attack and defense values are intrinsic doctrine of each unit class in core battle resolution, available to every realm from the baseline; no period technology credibly blocks a class fighting differently on the attack than on the defense, so no dependency is invented.'
+      },
+      professional_replacement_cohorts:{
+        mode:'none',
+        rationale:'Re-drilling slain professionals at a reinforcement premium is core war play owned by the realm; the unit classes themselves already carry their technology gates, so a second gate on replacing them would double-lock the same content.'
       }
     }
   };

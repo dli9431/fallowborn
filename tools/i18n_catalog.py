@@ -788,6 +788,20 @@ def extract_structured(inv: Inventory) -> None:
                                 f"{field}, faith branch {branch}.",
                                 TOKEN_RE.findall(record["text"]),
                             )
+            if data_name == "policies":
+                levels = node_array(item.get("levels")) or []
+                for level_index, level_node in enumerate(levels):
+                    level = node_object(level_node) or {}
+                    for field in DATA_FIELDS:
+                        for branch, record, line in branch_records(level.get(field)):
+                            inv.add(
+                                f"{namespace}.{item_id}.levels.{level_index}.{field}.{branch}",
+                                record,
+                                f"{rel}:{line}",
+                                f"{namespace} {item_id}, level {level_index + 1}, "
+                                f"{field}, faith branch {branch}.",
+                                TOKEN_RE.findall(record["text"]),
+                            )
 
     # The Papacy definition is one atomic mod value rather than an id-keyed
     # FBDATA table. Its display-bearing sub-tables still receive stable,

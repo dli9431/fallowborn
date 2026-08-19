@@ -244,7 +244,12 @@ window.FB = window.FB || {};
     academy_introduction:3, academy_student_focus:1.5,
     academy_student_dip:1.5, academy_student_ste:1.5,
     academy_student_int:1.5, academy_student_lea:1.5,
-    academy_withdraw:-1
+    academy_withdraw:-1,
+    /* royal policy stories (data/events_politics.js): the custom carries the
+       ledger work the declarative numbers cannot express */
+    realm_policy_persecution_noted:-4,
+    realm_policy_settlers_welcome:6, realm_policy_settlers_employ:4,
+    realm_policy_refugees_welcome:3, realm_policy_refugees_refused:-2
   };
   function modifierFxScore(raw) {
     const spec = typeof raw === 'string' ? { id:raw } : raw;
@@ -1457,6 +1462,15 @@ window.FB = window.FB || {};
         : '<p>' + esc(s.player.travelSettlement
           ? FB.T('This character has already made their one permanent move; this journey cannot relocate the household again.')
           : FB.T('After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.')) + '</p>') +
+      (SH.travelPicker.purpose === 'frontier' && item.gatewayId
+        ? '<p><b>' + esc(FB.T('The road stays on settled land to {gateway}; only the last leg enters the waste.', {
+            gateway:(FB.world.byId[item.gatewayId] || {}).name || item.gatewayId
+          })) + '</b> ' + esc(FB.T('Arrival begins a year of survival and work, not an immediate move. With {days} days of residence and {count} proven frontier works, the homestead can become a permanent development-1 county under the lord of {gateway} — a commoner home with a starter land plot, never a title.', {
+            days:FBDATA.balance.travelSettleOfferDays || 360,
+            count:FBDATA.balance.frontierMilestonesRequired || 4,
+            gateway:(FB.world.byId[item.gatewayId] || {}).name || item.gatewayId
+          })) + '</p>'
+        : '') +
       '<p><b>' + esc(FB.T('Exact upfront cost: {money:cost}.', {cost:item.cost})) +
       '</b> ' + esc(FB.T('Turning back refunds nothing.')) + '</p></div>' +
       '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
@@ -1652,6 +1666,56 @@ window.FB = window.FB || {};
       FB.travelSettle(s);
     });
     $('travel-settle-cancel').addEventListener('click', UI.closeModal);
+  };
+
+  UI.showFrontierSettlement = function () {
+    const s = FB.state;
+    const t = s && s.player.travel;
+    const eligible = s && FB.frontierSettlementEligible
+      ? FB.frontierSettlementEligible(s) : false;
+    if (!s || !t || t.purpose !== 'frontier' || eligible !== true) {
+      if (eligible && typeof eligible === 'string') UI.toast(eligible);
+      return;
+    }
+    const c = s.chars[s.player.charId];
+    const frontier = t.frontier;
+    const destination = FB.world.byId[t.destinationId];
+    const gateway = frontier && FB.world.byId[frontier.gatewayId];
+    if (!c || !destination || !gateway) return;
+    const holderId = s.holder && s.holder[frontier.gatewayId];
+    const holderRealm = holderId && s.realms[holderId];
+    const status = FB.frontierStatus ? FB.frontierStatus(s) : null;
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'The proving is complete: {residence} days lived from this land and {milestones} frontier works endured. {destination} becomes a real frontier county — development 1, of your own culture and faith, belonging to no de jure duchy.', {
+        residence:status ? status.stayDays : 0,
+        milestones:status ? status.milestones : 0,
+        destination:destination.name
+      })) + '</p><p>' + esc(holderRealm
+      ? FB.T('The new land answers to {holder}, the lord of {gateway}. Your household receives a starter land plot there — a commoner homestead, never a county title.', {
+        holder:holderRealm.name,
+        gateway:gateway.name
+      })
+      : FB.T('The new land answers to the lord of {gateway}. Your household receives a starter land plot there — a commoner homestead, never a county title.', {
+        gateway:gateway.name
+      })) + '</p>' +
+      enterpriseRelocationWarningHtml(s, t.destinationId) +
+      '<p class="warnote"><b>' + esc(FB.T(
+      'This is {name}’s only permanent move for this lifetime. No later journey can resettle the household again.', {
+        name:FB.fullName(c)
+      })) + '</b></p></div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="frontier-settle-confirm">🛖 ' +
+      esc(FB.T('Found the homestead in {destination}', {
+        destination:destination.name
+      })) + '</button><button type="button" class="actionbtn" id="frontier-settle-cancel">' +
+      esc(FB.T('Keep proving the land')) + '</button></div>';
+    openModal(FB.T('Found a homestead in {destination}?', {
+      destination:destination.name
+    }), h);
+    $('frontier-settle-confirm').addEventListener('click', function () {
+      UI.closeModal();
+      FB.frontierSettle(s);
+    });
+    $('frontier-settle-cancel').addEventListener('click', UI.closeModal);
   };
 
   UI.showMarriageResidence = function () {
@@ -8415,6 +8479,9 @@ window.FB = window.FB || {};
       } else {
         const blocked = [];
         for (const entry of policies) {
+          if (entry.def.institution && entry.def.institution !== 'estates') {
+            continue;
+          }
           const status = FB.parliamentMotionStatus(s, entry.id);
           const forecast = forecasts[entry.id];
           if (status.ready && forecast) {
@@ -8489,6 +8556,24 @@ window.FB = window.FB || {};
           (realm && !seat.effective
             ? ' · ' + esc(FB.T('inactive at hostile Standing')) : '') +
           '</small></div>';
+      }
+      const royalPolicies = FB.realmPolicySummary
+        ? FB.realmPolicySummary(s) : null;
+      if (royalPolicies && royalPolicies.policies.length) {
+        for (const royalPolicy of royalPolicies.policies) {
+          const policyDef = FB.policyDef(royalPolicy.id);
+          const levelDef = policyDef.levels[royalPolicy.currentIndex] || {};
+          h += kv(dt(s, 'policy', royalPolicy.id, policyDef, 'name'),
+            esc((levelDef.icon ? levelDef.icon + ' ' : '') +
+              dt(s, 'policy', royalPolicy.id, policyDef,
+                'levels.' + royalPolicy.currentIndex + '.name')));
+        }
+        h += '<button type="button" class="actionbtn" ' +
+          'data-governance-policies="1">👑 ' +
+          esc(FB.T('Royal laws & policy…')) +
+          '<span class="adesc">' + esc(FB.T(
+            'Review or proclaim the crown’s religious-tolerance and settlement policy.')) +
+          '</span></button>';
       }
       h += '<button type="button" class="actionbtn" ' +
         'data-governance-institution="council">🏛 ' +
@@ -8757,6 +8842,12 @@ window.FB = window.FB || {};
       function (button) {
         button.addEventListener('click', function () {
           UI.showPrivileges('governance');
+        });
+      });
+    document.querySelectorAll('[data-governance-policies]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          UI.showRealmPolicies('governance');
         });
       });
     $('governance-close').addEventListener('click', UI.closeModal);
@@ -9092,6 +9183,191 @@ window.FB = window.FB || {};
       if (returnView === 'governance') {
         modalHistoryBack(function () { UI.showGovernance('institution'); });
       } else UI.closeModal();
+    });
+  };
+
+  function realmPolicySignedPercent(value) {
+    const percent = Math.round((Number(value) || 0) * 100);
+    return (percent > 0 ? '+' : '') + percent;
+  }
+
+  function realmPolicyEnactText(s, enact) {
+    const parts = [];
+    if (enact.piety) {
+      parts.push(FB.T('{amount} piety', {
+        amount:politicalSigned(enact.piety) }));
+    }
+    if (enact.prestige) {
+      parts.push(FB.T('{amount} prestige', {
+        amount:politicalSigned(enact.prestige) }));
+    }
+    if (enact.pop) {
+      parts.push(FB.T('{amount} Common Voice', {
+        amount:politicalSigned(enact.pop) }));
+    }
+    if (enact.authority) {
+      parts.push(FB.T('{amount} Crown Authority', {
+        amount:politicalSigned(enact.authority) }));
+    }
+    if (enact.headFaith) {
+      parts.push(FB.T('{amount} Standing with your faith’s religious head', {
+        amount:politicalSigned(enact.headFaith) }));
+    }
+    if (enact.sameFold) {
+      parts.push(FB.T('{amount} foreign Standing with realms of your faith', {
+        amount:politicalSigned(enact.sameFold) }));
+    }
+    if (enact.otherFold) {
+      parts.push(FB.T('{amount} foreign Standing with realms of other faiths', {
+        amount:politicalSigned(enact.otherFold) }));
+    }
+    if (enact.vassalSameFaith) {
+      parts.push(FB.T('{amount} Standing with same-faith vassals', {
+        amount:politicalSigned(enact.vassalSameFaith) }));
+    }
+    if (enact.vassalOtherFaith) {
+      parts.push(FB.T('{amount} Standing with other-faith vassals', {
+        amount:politicalSigned(enact.vassalOtherFaith) }));
+    }
+    if (enact.mistreatment) {
+      parts.push(FB.T('recorded as mistreatment — it can feed collective demands'));
+    }
+    return parts.length
+      ? FB.T('On proclamation: {list}.', { list:parts.join('; ') }) : '';
+  }
+
+  function realmPolicyLevelEffectLines(s, entry, level, summary) {
+    const lines = [];
+    if (level.modifier && FBDATA.modifiers[level.modifier]) {
+      const modDef = FBDATA.modifiers[level.modifier];
+      const effects = modifierEffectText(s, level.modifier) ||
+        FB.T('no mechanical effect');
+      const upkeep = modDef.upkeep && modDef.upkeep.gold
+        ? assetSeasonalMoneyCost(modDef.upkeep.gold) : null;
+      lines.push(FB.T('{modifier} while the policy stands: {effects}{upkeep}.', {
+        modifier:dt(s, 'modifier', level.modifier, modDef, 'name'),
+        effects:effects,
+        upkeep:upkeep
+          ? FB.T('; {cost} per county and season', { cost:upkeep }) : ''
+      }));
+      lines.push(level.modifierScope === 'minority'
+        ? FB.T('Applies to directly held counties outside the realm’s faith — {count} now. A county’s faith itself never changes.', {
+          count:summary.minorityCountyIds.length })
+        : FB.T('Applies to every county you hold directly.'));
+    }
+    if (level.seasonPiety) {
+      lines.push(FB.T('{amount} piety each season.', {
+        amount:politicalSigned(level.seasonPiety) }));
+    }
+    if (level.researchFactor) {
+      lines.push(FB.T('{amount}% research speed for your realm.', {
+        amount:realmPolicySignedPercent(level.researchFactor) }));
+    }
+    if (level.migrationAttraction) {
+      lines.push(FB.T('{amount} migration draw in your counties.', {
+        amount:politicalSigned(level.migrationAttraction) }));
+    }
+    if (level.developmentGrowth) {
+      lines.push(FB.T('Each season, settlers may raise one held county’s development, up to its cap.'));
+    }
+    if (level.privilege) {
+      lines.push(FB.T('Each affected congregation receives a durable charter privilege, visible in the Privileges roll.'));
+    }
+    const enact = realmPolicyEnactText(s, level.onEnact || {});
+    if (enact) lines.push(enact);
+    if (level.protectedTerm) {
+      lines.push(FB.T('Protected for {days} days: proclaiming another level before the protected term ends is an unlawful revocation — recorded as mistreatment, and the faith constituency organizes.', {
+        days:summary.protectedDays }));
+    }
+    return lines;
+  }
+
+  UI.showRealmPolicies = function (returnView, replaceView) {
+    if (returnView !== 'governance') returnView = null;
+    const s = FB.state;
+    const summary = FB.realmPolicySummary ? FB.realmPolicySummary(s) : null;
+    if (!summary || !summary.policies.length) {
+      UI.toast(FB.T('No royal policy is recognized.'));
+      return;
+    }
+    let h = '<p class="hint">' + esc(FB.T(
+      'Standing laws of your realm, proclaimed by the crown alone — no Estates vote. A new proclamation costs {money:cost}, replaces the standing level, and settles that family’s policy for the year. County faith and local identity are never rewritten by policy; the law decides how the realm treats the difference.', {
+        cost:summary.changeCost
+      })) + '</p>';
+    if (!summary.active) {
+      h += '<div class="progressnote warnote">' + esc(FB.T(
+        'Royal policy requires a crowned sovereign ruling a realm of their own.')) + '</div>';
+    }
+    for (const policy of summary.policies) {
+      const policyDef = FB.policyDef(policy.id);
+      h += '<div class="panelh">' + esc(dt(s, 'policy', policy.id,
+        policyDef, 'name')) + '</div>' +
+        '<p class="hint">' + esc(dt(s, 'policy', policy.id, policyDef,
+          'desc')) + '</p>';
+      for (const levelRow of policy.levels) {
+        const level = policyDef.levels[levelRow.index];
+        const status = levelRow.status;
+        h += '<div class="charcard"><div><div class="ccname">' +
+          (level.icon ? esc(level.icon) + ' ' : '') +
+          esc(dt(s, 'policy', policy.id, policyDef,
+            'levels.' + levelRow.index + '.name')) +
+          (levelRow.current ? ' · ' + esc(FB.T('Standing policy')) : '') +
+          '</div>' +
+          '<div class="cmeta">' + esc(dt(s, 'policy', policy.id, policyDef,
+            'levels.' + levelRow.index + '.desc')) + '</div>';
+        const lines = realmPolicyLevelEffectLines(s, policy, level, summary);
+        for (const line of lines) {
+          h += '<div class="cmeta">' + esc(line) + '</div>';
+        }
+        if (levelRow.current) {
+          h += '</div></div>';
+          continue;
+        }
+        if (status.warning) {
+          h += '<div class="cmeta">' + esc(FB.T(
+            'Warning: the standing level’s protected term has {days} days remaining.', {
+              days:status.warning.days
+            })) + '</div>';
+        }
+        h += '<button type="button" class="btn" data-realm-policy="' +
+          esc(policy.id + ':' + level.id) + '"' +
+          (status.ready ? '' : ' disabled') + '>' +
+          esc(FB.T('Proclaim ({money:cost})', {
+            cost:status.cost === undefined
+              ? summary.changeCost : status.cost
+          })) + '</button>' +
+          (status.ready
+            ? ''
+            : '<div class="cmeta">' + esc(status.reason) + '</div>') +
+          '</div></div>';
+      }
+    }
+    h += '<div class="gm-footer"><button type="button" class="btn" ' +
+      'id="realm-policies-back">' +
+      esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
+      '</button></div>';
+    openModal(FB.T('👑 Royal laws & policy'), h, {
+      modalClass:'fullsheet-modal',
+      historyView:returnView === 'governance',
+      replaceView:!!replaceView,
+      historyBackRender:function () { UI.showGovernance('institution'); }
+    });
+    document.querySelectorAll('[data-realm-policy]').forEach(
+      function (button) {
+        button.addEventListener('click', function () {
+          const parts = String(button.dataset.realmPolicy).split(':');
+          if (!FB.realmPolicyProclaim(s, parts[0], parts[1])) return;
+          UI.showRealmPolicies(returnView, true);
+          UI.refresh();
+        });
+      });
+    $('realm-policies-back').addEventListener('click', function () {
+      if (returnView === 'governance') {
+        modalHistoryBack(function () { UI.showGovernance('institution'); });
+      } else {
+        UI.closeModal();
+        UI.refresh();
+      }
     });
   };
 
@@ -9523,6 +9799,9 @@ window.FB = window.FB || {};
       '</span></button>';
     if (!pending) {
       for (const policy of policies) {
+        if (policy.def.institution && policy.def.institution !== 'estates') {
+          continue;
+        }
         const status = FB.parliamentMotionStatus(s, policy.id);
         const forecast = forecasts[policy.id] || null;
         const technologyLink = status.techLocked &&

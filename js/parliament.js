@@ -58,7 +58,8 @@ window.FB = window.FB || {};
       liege.obl.motionYears = {};
       if (used) {
         for (const entry of FB.policyList ? FB.policyList() : []) {
-          if (entry.def && entry.def.family) {
+          if (entry.def && entry.def.family &&
+              (!entry.def.institution || entry.def.institution === 'estates')) {
             liege.obl.motionYears[entry.def.family] = state.date.year;
           }
         }
@@ -84,7 +85,8 @@ window.FB = window.FB || {};
       motionYears = {};
       if (stored && stored.lastMotion === state.date.year) {
         for (const entry of FB.policyList ? FB.policyList() : []) {
-          if (entry.def && entry.def.family) {
+          if (entry.def && entry.def.family &&
+              (!entry.def.institution || entry.def.institution === 'estates')) {
             motionYears[entry.def.family] = state.date.year;
           }
         }
@@ -193,6 +195,12 @@ window.FB = window.FB || {};
       return {
         ready:false,
         reason:FB.T('That motion is not recognized by the Estates.')
+      };
+    }
+    if (def.institution && def.institution !== 'estates') {
+      return {
+        ready:false,
+        reason:FB.T('That policy is proclaimed by the crown, not moved before the Estates.')
       };
     }
     if (def.requiresTech && FB.techRequirementStatus) {

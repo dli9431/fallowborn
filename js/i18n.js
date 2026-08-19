@@ -455,7 +455,7 @@ window.FBDATA = window.FBDATA || {};
           travelPurpose: FBDATA.travelPurposes,
           election:FBDATA.elections, privilege:FBDATA.privileges,
           collectiveDemand:FBDATA.collectiveDemands,
-          unitClass:FBDATA.unitClasses
+          unitClass:FBDATA.unitClasses, policy:FBDATA.policies
         };
         const def = value.$data === 'religion' && FB.religionOf
           ? FB.religionOf(value.id, state)

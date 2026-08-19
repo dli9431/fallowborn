@@ -40,7 +40,12 @@ procedural art.
 ordinary gear, full peddler stock, loot, plots, finds, raids, and war-spoil pools, but may
 still be created by `FB.grantItem` or a specific `giveItem` effect. Author specialties use
 this with four `unique:false` family treatises, so each qualified Author receives a single
-quality-rolled exact instance without flooding the world's random book stock.
+quality-rolled exact instance without flooding the world's random book stock. The same
+contract covers the other life-path works: the physician's Book of Remedies and the
+astronomer's Star Tables (declarative once-per-life `giveItem` effects), further
+commissioned treatises (`lifepath_author_work`), the expedition's Travel Journal, and
+the mercenary Company Standard (both granted once per protagonist life by their owning
+travel handlers).
 
 **Only worn objects grant power.** Skill and health effects apply to the wearer:
 `FB.skillOf` reads their equipped skill bonuses and yearly NPC mortality reads their

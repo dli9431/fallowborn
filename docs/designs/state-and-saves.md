@@ -303,6 +303,15 @@ cooldown years, bounded mistreatment evidence, and bounded organized opposition.
 calls `FB.ensureInstitutions` only after modifier, realm, agency, and political repair;
 protagonist-stamped pending demands clear rather than crossing succession.
 
+Royal policy is additive save-format-3 state. `state.realmPolicies[policyId]` stores only
+`{level, setTurn, setYear}` for each `institution:'crown'` policy family — the standing
+level id and the proclamation stamps that drive the per-family yearly cooldown and the
+protected-worship term. `FB.ensureInstitutions` heals missing or unknown entries to each
+def's declared `defaultLevel` and drops unknown policy ids, so old saves get the customary
+level with no save-version bump. The standing county modifiers the level maintains are
+ordinary modifier records rederived by `FB.realmPolicySync` from the saved level; effect
+projections, localized level names, and repeal explanations are never saved.
+
 Ruler and family agency is additive save-format-3 state. `state.agency` contains
 plain JSON maps for generation-stamped `rulerAims`, managed-character
 `familyAmbitions`, sparse directed `relations`, and temporary `rebelSupport`,
@@ -527,6 +536,20 @@ A qualifying tier-3+ destination wedding adds the optional JSON-only child
 `marriageResidence:{spouseId,destinationId,promptPending}`. Restore validates it
 additively and reopens the immediate decision only while `promptPending` remains
 true; deferral leaves the child and its Deed entry in place until travel ends.
+A signed mercenary contract adds the optional JSON-only child
+`contract:{realmId,startedTurn,paidSeasons,renewals}`; `travelEnsure` drops a
+damaged record and the journey's ordinary exits dispose of the rest (see
+[travel.md](travel.md)).
+A frontier withdrawal adds the optional JSON-only child
+`frontier:{gatewayId,holderId,sovereignId,charId,milestones}` — the settled
+anchor county, its political holder and controlling sovereign snapshotted at
+departure, the protagonist, and the accrued successful-work milestones. The
+route, cost, and start turn are the journey record's own frozen fields.
+`travelEnsure` repairs milestone/type drift and drops a damaged record; the
+daily tick then cancels the journey because the attempt can no longer resolve.
+The completed settlement is not a frontier record at all: it is the ordinary
+`player.travelSettlement` lifetime move plus starter `player.landPlots`
+entries at the materialized county.
 `player.travelHistory` stores completed purpose/destination pairs for the
 current character. `player.travelSettlement` records the current character’s one
 completed permanent move as `{turn,destinationId}`. All initialize lazily without

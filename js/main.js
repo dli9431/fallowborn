@@ -2398,6 +2398,7 @@ window.FB = window.FB || {};
         if (FB.parliamentEnsure) FB.parliamentEnsure(s); // the liege's terms of service — heals old saves too
         if (G.auto.build) FB.autoBuild(s);
       }
+      if (FB.realmPolicySeason) FB.realmPolicySeason(s); // standing royal policy: piety trickle, settler development
       /* A raised host costs its live composition once per season, for both
          ordinary and great holy wars. Shattered/disbanded hosts return zero. */
       if (FB.playerHostUpkeepParts) {

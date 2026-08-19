@@ -251,7 +251,7 @@ FBDATA.events.push(
       effects:{gold:2, skills:{dip:1}} }
   ]},
 { id:'travel_work_service', title:'Work Beyond the Hall', trigger:{never:true},
-  travel:{kind:'work', purpose:'service', maxTier:2},
+  travel:{kind:'work', purpose:'service', maxTier:2, contract:false},
   text:'The hall in {destination} has endless work below the notice of great people: stores to count, messages to carry, and disputes to calm.',
   options:[
     { label:'Set the stores in order.', desc:'Reliable service earns wages and sharper stewardship.',
@@ -294,5 +294,147 @@ FBDATA.events.push(
       effects:{gold:-2, prestige:4} },
     { label:'Offer counsel instead.', desc:'A ruler’s experience can repay hospitality without coin.',
       effects:{skills:{dip:1,ste:1}} }
+  ]},
+
+/* ---------- frontier withdrawal (the wastes) ----------
+   Survival-and-work stories for the 'frontier' purpose. Each genuine piece of
+   frontier work advances the attempt’s saved milestones through
+   frontier_milestone; only work options grant them, never weathered or
+   purchased ease. The persist-or-turn-back story can only send the traveler
+   home once the ordinary minimum stay has passed. */
+{ id:'travel_capstone_frontier', title:'The Edge of the Waste', trigger:{never:true},
+  travel:{kind:'capstone', purpose:'frontier'},
+  text:'The last field ends, the last smoke thins, and {destination} opens before you — empty land that belongs to no plow and no lord’s rent-roll. What you build here, no one will build for you.',
+  options:[
+    { label:'Make camp and begin.', desc:'The proving starts: shelter, water, food, and work, season upon season.',
+      effects:{custom:'travel_capstone_done', log:'Withdrew into the wastes at {destination}.'} }
+  ]},
+{ id:'travel_arrival_choice_frontier', title:'A Life to Carve Out', trigger:{never:true},
+  travel:{kind:'decision', purpose:'frontier'},
+  text:'There is no lodging to find in {destination}, no lane to be known in — only what your hands raise. A year of living from this land, and enough real work to prove it, could make the homestead permanent. Or the road home waits, once the season’s turn allows it.',
+  options:[
+    { label:'Take up the proving.', desc:'Time passes normally; frontier survival and work stories while you remain.',
+      effects:{log:'Began the frontier proving in {destination}.'} }
+  ]},
+{ id:'frontier_work_shelter', title:'A Roof Before Nightfall', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'Wind combs the open ground of {location} and the nights are lengthening. Branches, turves, and stone are here for the taking — only the labor is missing.',
+  options:[
+    { label:'Raise a proper shelter.', desc:'Days of heavy work for walls that will stand.',
+      chance:'skill_ste',
+      success:{ text:'The roof holds against the first hard blow of weather, and smoke rises from your own hearth-hole.',
+        effects:{ custom:'frontier_milestone', skills:{ste:1}, log:'Raised a first shelter in the waste.' } },
+      failure:{ text:'The ridge-pole comes down twice before it stays. You sleep cold and learn the lesson.',
+        effects:{ health:-1 } } },
+    { label:'Patch a lean-to and endure.', desc:'Enough for tonight; the waste keeps score.',
+      effects:{ health:-1 } }
+  ]},
+{ id:'frontier_work_water', title:'The Search for Water', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'A homestead stands or falls on water. The map of {location} is written in damp hollows, green seams, and the flight of birds at dusk.',
+  options:[
+    { label:'Dig where the land promises.', desc:'Back and arms against the ground’s closed mouth.',
+      chance:0.7,
+      success:{ text:'The seep becomes a spring, the spring a muddy pool that clears by morning. Water. Enough.',
+        effects:{ custom:'frontier_milestone', prestige:2, log:'Found water in the waste.' } },
+      failure:{ text:'Three pits, three failures of dry gravel. Your hands crack and your temper with them.',
+        effects:{ health:-1, gold:-1 } } },
+    { label:'Haul from the nearest stream.', desc:'Half a day’s walk each way — safe, and endless.',
+      effects:{ health:-1 } }
+  ]},
+{ id:'frontier_work_food', title:'An Empty Larder', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'The sack you carried into {location} is nearly empty. Out here, dinner is something you outwit.',
+  options:[
+    { label:'Trap and forage the wild larder.', desc:'Snares, roots, and patience.',
+      chance:0.7,
+      success:{ text:'A hare in the snare, cresses by the spring, berries the birds missed. The pot is not empty tonight.',
+        effects:{ custom:'frontier_milestone', health:1, log:'Lived off the wild larder.' } },
+      failure:{ text:'The snares sit empty and the roots you chose argue with your stomach all night.',
+        effects:{ health:-2 } } },
+    { label:'Break ground for a first sowing.', desc:'Bread next year instead of supper tonight.',
+      effects:{ custom:'frontier_milestone', health:-1, log:'Broke ground for a first field in the waste.' } }
+  ]},
+{ id:'frontier_work_weather', title:'The Sky Turns', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'Weather walks across {location} like a king’s army — you watch it come from a horizon away, and there is no wall between you and it.',
+  options:[
+    { label:'Secure everything and wait it out.', desc:'Roof-weights, tethered stores, and a stoked fire.',
+      effects:{ health:1 } },
+    { label:'Work straight through it.', desc:'The waste does not wait; neither will you.',
+      chance:0.6,
+      success:{ text:'Soaked, frozen, and unbowed — the work stands finished when the sky clears.',
+        effects:{ custom:'frontier_milestone', prestige:2, log:'Worked through the turning weather.' } },
+      failure:{ text:'The wind takes the thatch and half the day’s work with it. You cough for a week.',
+        effects:{ health:-2 } } }
+  ]},
+{ id:'frontier_work_solitude', title:'No Voice but the Wind', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'Weeks pass in {location} without another human word. You catch yourself talking to the fire, and the fire is a poor conversationalist.',
+  options:[
+    { label:'Keep a rule of work and prayer.', desc:'Order is a companion that never leaves.',
+      effects:{ custom:'frontier_milestone', piety:2, skills:{lea:1}, log:'Kept a rule of life in the waste.' } },
+    { label:'Talk to the fire anyway.', desc:'Madness is only loneliness without a schedule.',
+      effects:{ health:-1, prestige:-1 } }
+  ]},
+{ id:'frontier_work_visitors', title:'Smoke on the Horizon', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'You are not the only one who walks {location}: a ragtag band of wanderers — herders, outlaws, pilgrims, who can say — angles toward your smoke.',
+  options:[
+    { label:'Share the fire and the pot.', desc:'Hospitality costs little and buys news of the world.',
+      effects:{ gold:-2, prestige:3, log:'Shared a fire with wanderers in the waste.' } },
+    { label:'Barter with them.', desc:'They carry what the waste cannot grow.',
+      chance:'skill_ste',
+      success:{ text:'Salt, an iron pot, and a usable axe change hands for your smoked meat and worked leather.',
+        effects:{ custom:'frontier_milestone', gold:2, log:'Bartered with wanderers in the waste.' } },
+      failure:{ text:'They smile, trade nothing, and your stored cheese walks away with them.',
+        effects:{ gold:-2 } } },
+    { label:'Douse the fire and watch them pass.', desc:'The careful outlive the friendly.',
+      effects:{ health:-1 } }
+  ]},
+{ id:'frontier_work_faith', title:'A Prayer with No Roof', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'There is no chapel in {location}, no bell, no one to say the responses. Only you, the open sky, and the question of whether the divine follows anyone this far out.',
+  options:[
+    { label:'Raise a wayside shrine.', desc:'A stone, a mark, a promise — the work of an afternoon and a vow.',
+      effects:{ custom:'frontier_milestone', piety:5, log:'Raised a shrine in the waste.' } },
+    { label:'Pray as you work.', desc:'The field is chapel enough.',
+      effects:{ piety:2 } }
+  ]},
+{ id:'frontier_work_illness', title:'Fever with No Healer', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'A fever comes up out of the damp ground of {location}, and the nearest healer is a week’s walk behind you. Your own hands will have to be the medicine.',
+  options:[
+    { label:'Dose yourself and rest.', desc:'Bitter herbs, boiled water, and the discipline to lie still.',
+      chance:'skill_lea',
+      success:{ text:'The fever breaks on the third night. You rise weak, hollow, and alive.',
+        effects:{ custom:'frontier_milestone', skills:{lea:1}, log:'Survived a fever alone in the waste.' } },
+      failure:{ text:'The fever has its own opinions. You lose a week to sweating dreams.',
+        effects:{ health:-3 } } },
+    { label:'Keep working through it.', desc:'The waste does not care that you are ill.',
+      effects:{ health:-2, prestige:1 } }
+  ]},
+{ id:'frontier_work_tools', title:'The Broken Spade', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'The spade’s haft snaps with a crack like a knuckle. In {location} there is no smith, no market stall, no neighbor to borrow from — only what you can remake.',
+  options:[
+    { label:'Rehaft it yourself.', desc:'Seasoned wood, a heated stone, and patient fitting.',
+      chance:0.65,
+      success:{ text:'The new haft sits truer than the old. You look at your blistered hands with something like pride.',
+        effects:{ custom:'frontier_milestone', skills:{ste:1}, log:'Remade a broken tool in the waste.' } },
+      failure:{ text:'The fitting splits at the first stroke. You dig with a shard and a curse.',
+        effects:{ health:-1 } } },
+    { label:'Make do with what remains.', desc:'Slow work, sore hands.',
+      effects:{ health:-1 } }
+  ]},
+{ id:'frontier_work_persist', title:'The Edge of Endurance', trigger:{never:true},
+  travel:{kind:'work', purpose:'frontier'},
+  text:'On a grey morning in {location} the question arrives plainly, as it does for everyone who tests the waste: is this a life you are building, or a slow way of dying? The road back still exists. So does everything your hands have raised.',
+  options:[
+    { label:'Persist. This is home now.', desc:'The proving continues; the waste yields to the stubborn.',
+      effects:{ prestige:3, log:'Chose to persist in the waste.' } },
+    { label:'Turn back while you still can.', desc:'The road home, the old life, and no shame in either.',
+      require:{ custom:'frontier_leave_ready' },
+      effects:{ custom:'frontier_go_home', log:'Abandoned the frontier attempt and turned back.' } }
   ]}
 );

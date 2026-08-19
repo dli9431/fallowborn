@@ -311,6 +311,17 @@
     return state.market;
   };
 
+  /* The settled province set can change during play (wasteland conversion).
+     Drop the cached id list and the ensure shortcut so the next ensureMarket
+     rebuilds the county table — preserving every existing county row — and
+     seeds the newly settled county. */
+  FB.marketWorldDirty = function () {
+    provinceWorld = null;
+    stableProvinceIds = [];
+    ensuredState = null;
+    ensuredMarket = null;
+  };
+
   FB.addMarketShock = function (state, shock) {
     const market = FB.ensureMarket(state);
     if (!market) return false;

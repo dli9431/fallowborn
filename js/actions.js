@@ -733,6 +733,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!(s.player.travel && s.player.travel.phase === 'arrived' &&
+        s.player.travel.purpose !== 'frontier' &&
         s.player.tier >= 1 && s.player.tier <= 2 &&
         !s.player.travelSettlement);
     },
@@ -743,6 +744,27 @@ window.FB = window.FB || {};
     },
     run: function () {
       if (FB.ui && FB.ui.showTravelSettlement) FB.ui.showTravelSettlement();
+    } },
+  { id: 'frontier_settle_here', label: '🛖 Found the frontier homestead…', noConsume: true,
+    desc: function (s) {
+      const status = FB.frontierStatus ? FB.frontierStatus(s) : null;
+      return FB.T('Turn this proven corner of the waste into a real frontier county — your household’s permanent home under the lord of {gateway}, with a starter land plot but no title. Each character may make this permanent move only once in their lifetime.', {
+        gateway: status ? status.gatewayName : ''
+      });
+    },
+    show: function (s) {
+      return !!(s.player.travel && s.player.travel.purpose === 'frontier' &&
+        s.player.travel.phase === 'arrived' &&
+        s.player.tier >= 1 && s.player.tier <= 2 &&
+        !s.player.travelSettlement);
+    },
+    can: function (s) {
+      return FB.frontierSettlementEligible
+        ? FB.frontierSettlementEligible(s)
+        : FB.T('The homestead is not yet proven.');
+    },
+    run: function () {
+      if (FB.ui && FB.ui.showFrontierSettlement) FB.ui.showFrontierSettlement();
     } },
   { id: 'retire', label: '👴 Hand over the house…', noConsume: true,
     desc: function (s) {
@@ -3176,6 +3198,10 @@ window.FB = window.FB || {};
         }), -byClass[classId]);
       }
       add('gold', FB.T('Mercenary company contracts'), -hostUpkeep.mercenaries);
+      if (hostUpkeep.reinforcement) {
+        add('gold', FB.T('Replacement drilling for slain professionals'),
+          -hostUpkeep.reinforcement);
+      }
       if (hostUpkeep.campaignModifier) {
         add('gold', FB.T('Campaign supply modifiers'), -hostUpkeep.campaignModifier);
       }
@@ -7177,7 +7203,7 @@ window.FB = window.FB || {};
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
-          'travel_settle_here'].indexOf(a.id) < 0) continue;
+          'travel_settle_here', 'frontier_settle_here'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
       const status = FB.instantStatus(state, a.id);
       if (!status.shown) continue;

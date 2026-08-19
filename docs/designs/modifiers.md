@@ -87,6 +87,19 @@ when the player captures the objective of a saved `aggression` war cause. Like e
 county record, it remains attached to the county after a transfer and expires through
 the normal daily modifier tick.
 
+Royal religious-tolerance and settlement policy (see
+[council.md](council.md)) adds five standing definitions without `days` — they have no
+calendar expiry because the policy, not the clock, ends them: `persecuted_minorities`
+(+5% county tax, −10% levy, −10 Common Voice, +30% `unrest` exposure, −15% market flow),
+`tolerated_minorities` (−10% `unrest` exposure, +4 Common Voice, +5% market flow),
+`protected_worship` (−15% `unrest` exposure, +6 Common Voice, +2% tax, +10% market
+flow), `closed_settlement` (+4 Common Voice, −10% market flow, −4% tax), and
+`encouraged_settlement` (−3% tax, +10% market flow, 1 gold seasonal upkeep per county).
+`FB.realmPolicySync` in js/institutions.js is their only writer and remover: it applies
+them to the sovereign player's directly held counties (minority-faith counties for the
+tolerance levels) while the level stands, and strips them when the level, the holding,
+or the crown lapses.
+
 ## Public APIs
 
 - `FB.addModifier(state,id,pid?,options?)` and

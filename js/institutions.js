@@ -1,7 +1,11 @@
 /* Fallowborn — elections, durable privileges, and collective demands.
    Existing county modifiers, guild-monopoly contracts, obligations, and
    Council seats remain the mechanical ledgers. This module records the legal
-   terms around them and owns the bounded election and demand workflows. */
+   terms around them and owns the bounded election and demand workflows. It
+   also owns the crown-side royal policy machinery (religious tolerance and
+   settlement, `institution:'crown'` entries in data/policies.js): proclaimed
+   levels, per-family yearly cooldowns, standing county-modifier effects, and
+   the mistreatment wiring of persecution and unlawful revocation. */
 window.FB = window.FB || {};
 
 (function () {
@@ -1087,7 +1091,8 @@ window.FB = window.FB || {};
     var effectRecord = def && modifierRecord(state, modifierId, pid);
     if (!def || !effectRecord) return null;
     var grantor = options.grantor || inferredGrantor(state, sourceEventId);
-    var holderType = defId === 'sanctuary' ? 'faith' : 'county';
+    var holderType = def.holderTypes && def.holderTypes.indexOf('faith') >= 0
+      ? 'faith' : 'county';
     var province = FB.world.byId[pid];
     var holderId = holderType === 'faith'
       ? (province && province.religion) || (playerChar(state) || {}).religion
@@ -1769,11 +1774,584 @@ window.FB = window.FB || {};
     return refuseDemand(state, ctx, true);
   };
 
+  /* ---------- royal policy (religious tolerance & settlement) ----------
+     Crown-side `institution:'crown'` entries in the shared policy catalog
+     (data/policies.js): standing laws the sovereign player (tier 6+)
+     proclaims directly — no Estates campaign, no bloc vote. Only the current
+     level id and proclamation stamps are saved (`state.realmPolicies`);
+     effects are derived from the catalog. Standing county effects ride
+     ordinary county modifiers maintained by FB.realmPolicySync — a
+     proclamation never rewrites a county's faith or moves a population
+     record. See docs/designs/council.md. */
+
+  function realmPolicyEntryList() {
+    var out = [];
+    var defs = FBDATA.policies || {};
+    for (var id in defs) {
+      if (!own(defs, id)) continue;
+      var def = defs[id];
+      if (!def || typeof def !== 'object' || Array.isArray(def) ||
+          def.institution !== 'crown' ||
+          !Array.isArray(def.levels) || !def.levels.length) continue;
+      out.push({ id:id, def:def });
+    }
+    out.sort(function (a, b) {
+      return finite(a.def.order, 99) - finite(b.def.order, 99) ||
+        compareId(a.id, b.id);
+    });
+    return out;
+  }
+  FB.realmPolicyList = realmPolicyEntryList;
+
+  function realmPolicyLevelDef(def, levelId) {
+    var levels = def && Array.isArray(def.levels) ? def.levels : [];
+    for (var i = 0; i < levels.length; i++) {
+      if (levels[i] && levels[i].id === levelId) return levels[i];
+    }
+    return null;
+  }
+
+  function realmPolicyLevelIndex(def, levelId) {
+    var levels = def && Array.isArray(def.levels) ? def.levels : [];
+    for (var i = 0; i < levels.length; i++) {
+      if (levels[i] && levels[i].id === levelId) return i;
+    }
+    return -1;
+  }
+
+  function realmPolicyDefaultLevel(def) {
+    return realmPolicyLevelDef(def, def.defaultLevel)
+      ? def.defaultLevel : def.levels[0].id;
+  }
+
+  function realmPolicyStore(state, create) {
+    var store = state && state.realmPolicies;
+    if ((!store || typeof store !== 'object' || Array.isArray(store)) &&
+        create) {
+      store = state.realmPolicies = {};
+    }
+    return store && typeof store === 'object' && !Array.isArray(store)
+      ? store : null;
+  }
+
+  /* Heal the saved levels: unknown policies drop out, and a missing or
+     unknown level falls back to the def's declared default — old saves get
+     the customary level on first sight, with no save-version bump. */
+  function repairRealmPolicies(state) {
+    var store = realmPolicyStore(state, true);
+    var entries = realmPolicyEntryList();
+    var valid = {};
+    for (var i = 0; i < entries.length; i++) {
+      var id = entries[i].id;
+      var def = entries[i].def;
+      var record = store[id];
+      if (!record || typeof record !== 'object' || Array.isArray(record) ||
+          !realmPolicyLevelDef(def, record.level)) {
+        record = store[id] = { level:realmPolicyDefaultLevel(def) };
+      }
+      record.setTurn = isFinite(Number(record.setTurn))
+        ? Number(record.setTurn) : 0;
+      record.setYear = isFinite(Number(record.setYear))
+        ? Number(record.setYear) : 0;
+      valid[id] = record;
+    }
+    for (var key in store) {
+      if (own(store, key) && !valid[key]) delete store[key];
+    }
+    return store;
+  }
+
+  FB.realmPolicyActive = function (state) {
+    return !!(state && state.player && !state.player.dead &&
+      state.player.tier >= 6 &&
+      FB.isPlayerSovereign && FB.isPlayerSovereign(state));
+  };
+
+  FB.realmPolicyRecord = function (state, policyId) {
+    var store = realmPolicyStore(state, false);
+    return (store && store[policyId]) || null;
+  };
+
+  FB.realmPolicyLevelId = function (state, policyId) {
+    var record = FB.realmPolicyRecord(state, policyId);
+    if (record && typeof record.level === 'string') return record.level;
+    var entries = realmPolicyEntryList();
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].id === policyId) {
+        return realmPolicyDefaultLevel(entries[i].def);
+      }
+    }
+    return null;
+  };
+
+  /* Directly held counties whose faith lies outside the realm's fold —
+     anything short of 'same' or 'in_fold' counts as a minority community.
+     Read-only; policy never rewrites a county's faith. */
+  FB.realmPolicyMinorityCounties = function (state) {
+    var out = [];
+    if (!state || !state.player || !FB.realmReligionId ||
+        !FB.faithRelation) return out;
+    var religion = FB.realmReligionId(state, 'player');
+    if (!religion) return out;
+    var provs = Array.isArray(state.player.provs) ? state.player.provs : [];
+    for (var i = 0; i < provs.length; i++) {
+      var province = FB.world.byId[provs[i]];
+      if (!province || !province.religion) continue;
+      var relation = FB.faithRelation(state, religion, province.religion);
+      if (relation !== 'same' && relation !== 'in_fold') out.push(provs[i]);
+    }
+    out.sort(compareId);
+    return out;
+  };
+
+  function realmPolicyManagedModifierIds(entries) {
+    var ids = {};
+    for (var i = 0; i < entries.length; i++) {
+      var levels = entries[i].def.levels;
+      for (var j = 0; j < levels.length; j++) {
+        if (levels[j] && typeof levels[j].modifier === 'string' &&
+            FBDATA.modifiers && FBDATA.modifiers[levels[j].modifier]) {
+          ids[levels[j].modifier] = true;
+        }
+      }
+    }
+    return ids;
+  }
+
+  /* Maintain the standing county effects of proclaimed royal policy. Policy
+     modifier ids belong to this system alone, so the county pass can remove
+     lapsed records (a lost county, a changed level, a lost crown) without
+     touching any other modifier. Additions stay silent; the proclamation
+     itself carries the Chronicle notice. */
+  FB.realmPolicySync = function (state) {
+    if (!state || !state.player || !FB.world || !FB.world.byId) return;
+    var entries = realmPolicyEntryList();
+    if (!entries.length) return;
+    var managed = realmPolicyManagedModifierIds(entries);
+    var desired = {};
+    if (FB.realmPolicyActive(state)) {
+      var minority = null;
+      for (var i = 0; i < entries.length; i++) {
+        var def = entries[i].def;
+        var level = realmPolicyLevelDef(def,
+          FB.realmPolicyLevelId(state, entries[i].id));
+        if (!level || !managed[level.modifier]) continue;
+        var targets;
+        if (level.modifierScope === 'minority') {
+          if (!minority) minority = FB.realmPolicyMinorityCounties(state);
+          targets = minority;
+        } else {
+          targets = Array.isArray(state.player.provs)
+            ? state.player.provs : [];
+        }
+        var pids = {};
+        for (var t = 0; t < targets.length; t++) pids[targets[t]] = true;
+        desired[level.modifier] = {
+          pids:pids,
+          privilege:typeof level.privilege === 'string'
+            ? level.privilege : null
+        };
+      }
+    }
+    var county = state.modifiers && state.modifiers.county || {};
+    for (var pid in county) {
+      if (!own(county, pid)) continue;
+      var list = county[pid];
+      if (!Array.isArray(list)) continue;
+      for (var j = list.length - 1; j >= 0; j--) {
+        var id = list[j] && list[j].id;
+        if (managed[id] && (!desired[id] || !desired[id].pids[pid])) {
+          FB.removeModifier(state, id, pid);
+        }
+      }
+    }
+    for (var modifierId in desired) {
+      if (!own(desired, modifierId)) continue;
+      for (pid in desired[modifierId].pids) {
+        if (!own(desired[modifierId].pids, pid)) continue;
+        if (!FB.hasModifier(state, modifierId, pid)) {
+          FB.addModifier(state, modifierId, pid, {
+            silent:true,
+            sourceEventId:'realm_policy_' + modifierId,
+            sourceType:'law',
+            privilegeDefId:desired[modifierId].privilege || undefined,
+            grantor:{ type:'realm', id:'player' }
+          });
+        }
+      }
+    }
+  };
+
+  function realmPolicyFamilyName(family) {
+    switch (family) {
+      case 'faith': return FB.T('faith');
+      case 'settlement': return FB.T('settlement');
+      default: return FB.T('policy');
+    }
+  }
+
+  function realmPolicyProtectedDays() {
+    return Math.max(1, Math.round(finite(
+      FBDATA.balance.realmPolicyProtectedWorshipDays, 1440)));
+  }
+
+  /* The shared read-only gate for Governance and the royal-policy sheet:
+     exact blocked reasons, the proclamation cost, and the protected-term
+     warning when leaving a chartered level early. */
+  FB.realmPolicyStatus = function (state, policyId, levelId) {
+    var entries = realmPolicyEntryList();
+    var def = null;
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].id === policyId) def = entries[i].def;
+    }
+    if (!def) {
+      return { ready:false, reason:FB.T('That royal policy is not recognized.') };
+    }
+    var level = realmPolicyLevelDef(def, levelId);
+    if (!level) {
+      return { ready:false,
+        reason:FB.T('That level is not part of this policy.') };
+    }
+    var currentId = FB.realmPolicyLevelId(state, policyId);
+    if (levelId === currentId) {
+      return { ready:false, current:true,
+        reason:FB.T('This is already the standing policy.') };
+    }
+    if (!FB.realmPolicyActive(state)) {
+      return { ready:false, reason:FB.T(
+        'Royal policy requires a crowned sovereign ruling a realm of their own.') };
+    }
+    if (!def.emergency && def.family) {
+      var store = realmPolicyStore(state, false) || {};
+      for (var otherIndex = 0; otherIndex < entries.length; otherIndex++) {
+        var other = entries[otherIndex];
+        if (other.def.family !== def.family) continue;
+        var otherRecord = store[other.id];
+        if (otherRecord && Number(otherRecord.setYear) === state.date.year) {
+          return { ready:false, reason:FB.T(
+            'The crown has already settled {family} policy this year.', {
+              family:realmPolicyFamilyName(def.family)
+            }) };
+        }
+      }
+    }
+    var cost = isFinite(Number(def.cost)) ? Number(def.cost) :
+      finite(FBDATA.balance.realmPolicyChangeCost, 20);
+    if (state.player.gold < cost) {
+      return { ready:false, reason:FB.T(
+        'Requires {money:cost}; you have {money:current}.', {
+          cost:cost, current:Math.floor(state.player.gold)
+        }) };
+    }
+    var warning = null;
+    var record = FB.realmPolicyRecord(state, policyId);
+    var currentLevel = realmPolicyLevelDef(def, currentId);
+    if (currentLevel && currentLevel.protectedTerm && record &&
+        state.turn < Number(record.setTurn) + realmPolicyProtectedDays()) {
+      warning = {
+        levelId:currentId,
+        days:Math.ceil(Number(record.setTurn) +
+          realmPolicyProtectedDays() - state.turn)
+      };
+    }
+    return { ready:true, reason:'', cost:cost, warning:warning };
+  };
+
+  function realmPolicyFoldReactions(state, enact) {
+    var religion = FB.realmReligionId && FB.realmReligionId(state, 'player');
+    if (!religion) return;
+    var sameFold = finite(enact.sameFold, 0);
+    var otherFold = finite(enact.otherFold, 0);
+    if (sameFold || otherFold) {
+      for (var rid in state.realms) {
+        if (!own(state.realms, rid) || rid === 'player') continue;
+        var realm = state.realms[rid];
+        if (!realm || !realm.alive) continue;
+        if (FB.topRealm(state, rid) !== rid) continue; // sovereign courts only
+        var foreignReligion = FB.realmReligionId(state, rid);
+        var inFold = !!(foreignReligion &&
+          FB.faithInFold(state, religion, foreignReligion));
+        var amount = inFold ? sameFold : otherFold;
+        if (amount) {
+          FB.adjustStanding(state, { kind:'realm', id:rid }, amount,
+            'realm_policy:faith');
+        }
+      }
+    }
+    var vassalSame = finite(enact.vassalSameFaith, 0);
+    var vassalOther = finite(enact.vassalOtherFaith, 0);
+    if (vassalSame || vassalOther) {
+      var vassals = FB.playerVassals ? FB.playerVassals(state) : [];
+      for (var i = 0; i < vassals.length; i++) {
+        var vassalReligion = FB.realmReligionId(state, vassals[i]);
+        var sameFoldVassal = !!(vassalReligion &&
+          FB.faithInFold(state, religion, vassalReligion));
+        var vassalAmount = sameFoldVassal ? vassalSame : vassalOther;
+        if (vassalAmount) {
+          FB.adjustStanding(state, { kind:'realm', id:vassals[i] },
+            vassalAmount, 'realm_policy:faith');
+        }
+      }
+    }
+    var headFaith = finite(enact.headFaith, 0);
+    if (headFaith && FB.religiousHeadOf) {
+      var head = FB.religiousHeadOf(state, religion);
+      if (head && head.id && head.id !== 'player') {
+        FB.adjustStanding(state, { kind:'realm', id:head.id }, headFaith,
+          'realm_policy:clergy');
+      }
+    }
+  }
+
+  FB.realmPolicyProclaim = function (state, policyId, levelId) {
+    var status = FB.realmPolicyStatus(state, policyId, levelId);
+    if (!status.ready) return false;
+    var store = repairRealmPolicies(state);
+    var entries = realmPolicyEntryList();
+    var def = null;
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].id === policyId) def = entries[i].def;
+    }
+    var level = realmPolicyLevelDef(def, levelId);
+    var record = store[policyId];
+    var oldLevel = realmPolicyLevelDef(def, record.level);
+    /* Withdrawing a protected charter before its term mirrors the unlawful
+       privilege-revocation path: Common Voice falls, the mistreatment roll
+       records it, and the faith constituency organizes. */
+    if (oldLevel && oldLevel.protectedTerm &&
+        state.turn < Number(record.setTurn) + realmPolicyProtectedDays()) {
+      state.player.pop = FB.clamp((state.player.pop || 0) - 10, -100, 100);
+      FB.notePoliticalMistreatment(state, 'unlawful_privilege_revocation', {
+        policyId:policyId, levelId:record.level
+      });
+      if (oldLevel.privilege) {
+        FB.addCollectiveOpposition(state, 'faith', oldLevel.privilege, 1);
+      }
+    }
+    state.player.gold -= status.cost;
+    var enact = level.onEnact || {};
+    if (enact.piety) {
+      state.player.piety = Math.max(0, state.player.piety + enact.piety);
+    }
+    if (enact.prestige) state.player.prestige += enact.prestige;
+    if (enact.pop) {
+      state.player.pop = FB.clamp((state.player.pop || 0) + enact.pop,
+        -100, 100);
+    }
+    if (enact.authority && FB.councilAuthority) {
+      FB.councilAuthority(state, enact.authority);
+    }
+    if (typeof enact.mistreatment === 'string' && enact.mistreatment) {
+      FB.notePoliticalMistreatment(state, enact.mistreatment, {
+        policyId:policyId, levelId:levelId
+      });
+    }
+    realmPolicyFoldReactions(state, enact);
+    store[policyId] = {
+      level:levelId, setTurn:state.turn, setYear:state.date.year
+    };
+    FB.realmPolicySync(state);
+    FB.news(state, FB.msg('news.realmpolicy.proclaimed',
+      '👑 Royal policy proclaimed — {policy} now stands at {level}.',
+      {
+        policy:FB.dataParam('policy', policyId, 'name'),
+        level:FB.dataParam('policy', policyId,
+          'levels.' + realmPolicyLevelIndex(def, levelId) + '.name')
+      }));
+    return true;
+  };
+
+  /* Locale-neutral, RNG-free projection for Governance and the royal-policy
+     sheet; opening those surfaces never heals or writes simulation state. */
+  FB.realmPolicySummary = function (state) {
+    var entries = realmPolicyEntryList();
+    var policies = [];
+    for (var i = 0; i < entries.length; i++) {
+      var id = entries[i].id;
+      var def = entries[i].def;
+      var record = FB.realmPolicyRecord(state, id);
+      var currentId = FB.realmPolicyLevelId(state, id);
+      var levels = [];
+      for (var j = 0; j < def.levels.length; j++) {
+        var level = def.levels[j];
+        levels.push({
+          id:level.id, index:j,
+          current:level.id === currentId,
+          status:FB.realmPolicyStatus(state, id, level.id)
+        });
+      }
+      policies.push({
+        id:id,
+        family:def.family || null,
+        currentId:currentId,
+        currentIndex:realmPolicyLevelIndex(def, currentId),
+        setYear:record ? Number(record.setYear) : null,
+        levels:levels
+      });
+    }
+    return {
+      active:FB.realmPolicyActive(state),
+      changeCost:finite(FBDATA.balance.realmPolicyChangeCost, 20),
+      protectedDays:realmPolicyProtectedDays(),
+      minorityCountyIds:FB.realmPolicyMinorityCounties(state),
+      policies:policies
+    };
+  };
+
+  /* The least-developed directly held county below its cap, deterministically
+     (development, then county id), or null when no county can still grow. */
+  function leastDevelopedHeldCounty(state) {
+    if (!state.dev || !FB.devCap) return null;
+    var provs = Array.isArray(state.player.provs)
+      ? state.player.provs.slice() : [];
+    provs.sort(compareId);
+    var target = null;
+    var bestDev = Infinity;
+    for (var i = 0; i < provs.length; i++) {
+      var pid = provs[i];
+      if (state.dev[pid] === undefined) continue;
+      var cap = Math.max(1, Number(FB.devCap(state, pid)) || 10);
+      var dev = Number(state.dev[pid]);
+      if (isFinite(dev) && dev < cap && dev < bestDev) {
+        bestDev = dev;
+        target = pid;
+      }
+    }
+    return target;
+  }
+
+  /* Season tick (main.js): the piety trickle of the tolerance law and the
+     settler development growth of Encouraged Settlement. */
+  FB.realmPolicySeason = function (state) {
+    if (!FB.realmPolicyActive(state)) return;
+    var entries = realmPolicyEntryList();
+    for (var i = 0; i < entries.length; i++) {
+      var level = realmPolicyLevelDef(entries[i].def,
+        FB.realmPolicyLevelId(state, entries[i].id));
+      if (!level) continue;
+      if (level.seasonPiety) {
+        state.player.piety = Math.max(0,
+          state.player.piety + level.seasonPiety);
+      }
+      if (level.developmentGrowth && FB.changeCountyDevelopment) {
+        var growthChance = finite(
+          FBDATA.balance.realmPolicySettlementDevChance, 0.25);
+        if (growthChance > 0 && FB.chance(growthChance)) {
+          var target = leastDevelopedHeldCounty(state);
+          if (target) {
+            FB.changeCountyDevelopment(state, target, 1, 'policy_settlement');
+          }
+        }
+      }
+    }
+  };
+
+  /* Yearly (FB.institutionsYearly): sustained persecution is sustained
+     mistreatment — one note a year keeps the sanctuary-claim pressure alive
+     for exactly as long as the policy stands. */
+  FB.realmPolicyYearly = function (state) {
+    if (!FB.realmPolicyActive(state)) return;
+    if (FB.realmPolicyLevelId(state, 'religious_tolerance') === 'persecution' &&
+        FB.realmPolicyMinorityCounties(state).length) {
+      FB.notePoliticalMistreatment(state, 'religious_persecution', {
+        policyId:'religious_tolerance', sustained:true
+      });
+    }
+  };
+
+  /* The player realm's research-rate factor from standing royal policy
+     (read by FB.techResearchRate in js/technology.js). */
+  FB.realmPolicyResearchFactor = function (state, realmId) {
+    if (realmId !== 'player' || !FB.realmPolicyActive(state)) return 0;
+    var factor = 0;
+    var entries = realmPolicyEntryList();
+    for (var i = 0; i < entries.length; i++) {
+      var level = realmPolicyLevelDef(entries[i].def,
+        FB.realmPolicyLevelId(state, entries[i].id));
+      if (level && level.researchFactor) factor += level.researchFactor;
+    }
+    return factor;
+  };
+
+  /* The migration-draw shift royal settlement policy gives player-owned
+     counties (read by FB.countyMigrationAttraction in js/population.js); the
+     conserved migration itself is untouched. */
+  FB.realmPolicySettlementAttraction = function (state) {
+    if (!FB.realmPolicyActive(state)) return 0;
+    var entries = realmPolicyEntryList();
+    for (var i = 0; i < entries.length; i++) {
+      var level = realmPolicyLevelDef(entries[i].def,
+        FB.realmPolicyLevelId(state, entries[i].id));
+      if (level && level.migrationAttraction) {
+        return Number(level.migrationAttraction) || 0;
+      }
+    }
+    return 0;
+  };
+
+  /* ---------- royal policy event helpers ---------- */
+
+  FB.fns.realm_policy_persecution_due = function (state) {
+    return FB.realmPolicyActive(state) &&
+      FB.realmPolicyLevelId(state, 'religious_tolerance') === 'persecution' &&
+      FB.realmPolicyMinorityCounties(state).length > 0;
+  };
+  FB.fns.realm_policy_encouraged_settlement_due = function (state) {
+    return FB.realmPolicyActive(state) &&
+      FB.realmPolicyLevelId(state, 'settlement_policy') === 'encouraged_settlement' &&
+      Array.isArray(state.player.provs) && state.player.provs.length > 0;
+  };
+  FB.fns.realm_policy_protected_worship_due = function (state) {
+    return FB.realmPolicyActive(state) &&
+      FB.realmPolicyLevelId(state, 'religious_tolerance') === 'protected_worship' &&
+      FB.realmPolicyMinorityCounties(state).length > 0;
+  };
+
+  function adjustForeignFold(state, amount, source) {
+    var religion = FB.realmReligionId && FB.realmReligionId(state, 'player');
+    if (!religion || !amount) return;
+    for (var rid in state.realms) {
+      if (!own(state.realms, rid) || rid === 'player') continue;
+      var realm = state.realms[rid];
+      if (!realm || !realm.alive || FB.topRealm(state, rid) !== rid) continue;
+      var foreignReligion = FB.realmReligionId(state, rid);
+      if (foreignReligion && !FB.faithInFold(state, religion, foreignReligion)) {
+        FB.adjustStanding(state, { kind:'realm', id:rid }, amount, source);
+      }
+    }
+  }
+
+  FB.fns.realm_policy_persecution_noted = function (state) {
+    FB.notePoliticalMistreatment(state, 'religious_persecution', {
+      policyId:'religious_tolerance', source:'event'
+    });
+  };
+  FB.fns.realm_policy_settlers_welcome = function (state) {
+    var target = leastDevelopedHeldCounty(state);
+    if (target && FB.changeCountyDevelopment) {
+      FB.changeCountyDevelopment(state, target, 1, 'policy_settlement');
+    }
+  };
+  FB.fns.realm_policy_settlers_employ = function (state) {
+    if (FB.addResearch) FB.addResearch(state, 8, 'player');
+  };
+  FB.fns.realm_policy_refugees_welcome = function (state) {
+    adjustForeignFold(state, 3, 'realm_policy:refugees_welcomed');
+  };
+  FB.fns.realm_policy_refugees_refused = function (state) {
+    adjustForeignFold(state, -2, 'realm_policy:refugees_refused');
+  };
+
   var dailyRepairState = null;
 
   FB.ensureInstitutions = function (state, options) {
     if (!state || !state.player) return null;
     options = options || {};
+    /* Royal-policy records and their standing county modifiers repair before
+       the privilege roll, so protected-worship records are discovered against
+       the modifiers the sync just maintained. */
+    repairRealmPolicies(state);
+    FB.realmPolicySync(state);
     repairPrivileges(state, !!options.skipLegacyRepairs);
     var elections = repairElectionStore(state, !!options.silent,
       !!options.skipLegacyRepairs);
@@ -1793,6 +2371,7 @@ window.FB = window.FB || {};
 
   FB.institutionsYearly = function (state) {
     FB.ensureInstitutions(state);
+    if (FB.realmPolicyYearly) FB.realmPolicyYearly(state);
     return queueCollectiveDemand(state);
   };
 })();

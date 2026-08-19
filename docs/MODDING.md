@@ -571,7 +571,7 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
 | `chance` | final random gate 0–1 |
-| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`, and the artifact gates `artifact_trial_valid` / `artifact_can_afford` / `artifact_is_sacred`) |
+| `custom` | name of a `FB.fns` function; must return true for the event to fire (built-ins: `war_can_siege`, `war_no_enemy_host`, `war_can_hunt`, the live sovereign-campaign-host gate `ghw_has_field_host`, `can_afford_item`, the marriage-station checks `suitor_above_station` / `wed_above_station` / `wed_below_station`, and the royal-council gates `council_has_members` / `council_two_members` / `council_has_schemer` / `council_has_sycophant` / `council_scheme_ripe` / `council_scheme_watched` / `council_charter_due` / `council_has_unseated` / `council_market_charter_due` / `council_muster_due` / `council_domain_pressure_due` / `council_sanctuary_due`, and the estates gates `parliament_has_scutage` / `parliament_redress_possible` / `parliament_aid_can_rise` / `parliament_scutage_possible`, and the finance investability gate `finance_can_invest`, and the artifact gates `artifact_trial_valid` / `artifact_can_afford` / `artifact_is_sacred`, and the life-path gates `lifepath_realm_at_peace` / `merc_contract_ongoing`) |
 | `never` | only fired by other events' `queue` |
 
 Ordinary player-campaign custom gates in `js/world.js` are `war_live_host`,
@@ -860,7 +860,10 @@ devastation handlers `devastation_lose_holding devastation_commend` live in
 handlers `finance_trade_20 finance_trade_50` (commit merchant coin to a four-season trade
 partnership at the given base stake) and guild-monopoly petition handlers
 `guild_monopoly_paid guild_monopoly_persuade_success
-guild_monopoly_persuade_failure` live in `js/economy.js`; targeted-plot handlers
+guild_monopoly_persuade_failure` live in `js/economy.js`; the life-path handlers
+`lifepath_author_work` (a commissioned Author's further randomized family
+treatise) and `lifepath_realm_at_peace` (the peacetime muster-drill trigger)
+live there too; targeted-plot handlers
 `fabricate_claim_success fabricate_claim_failure plot_discovery_success
 plot_discovery_failure plot_discovery_abandon plot_discovery_contain` and the
 diplomatic pact/alliance handlers live in `js/actions.js`; obligation handlers live in
@@ -1126,6 +1129,105 @@ liege's unilateral aid demand from the yearly session agenda. Forecasts and
 postures are always derived; only terms, cooldown years, consent, and the
 pending campaign are saved.
 
+### Crown-side royal policy (religious tolerance and settlement)
+
+Catalog entries with `institution: "crown"` are **royal policy**: standing laws
+the sovereign player (tier 6+, ruling their own realm) proclaims directly —
+no Estates campaign, no bloc vote. The Estates machinery (motion status, bloc
+forecasts, and both Estates sheets) skips these defs. Such a def uses
+`states: "levels"` and declares ordered, mutually exclusive `levels`:
+
+```json
+{
+  "policies": {
+    "religious_tolerance": {
+      "name": "Religious Tolerance",
+      "icon": "🕯",
+      "desc": "The crown’s standing law for subjects who keep another faith.",
+      "family": "faith",
+      "institution": "crown",
+      "proposer": "ruler",
+      "minTier": 6,
+      "maxTier": 7,
+      "states": "levels",
+      "defaultLevel": "confessional_preference",
+      "cooldown": "year",
+      "repeal": "proclamation",
+      "order": 9,
+      "levels": [
+        { "id": "persecution", "name": "Persecution", "icon": "🔥",
+          "desc": "…",
+          "modifier": "persecuted_minorities", "modifierScope": "minority",
+          "seasonPiety": 2, "researchFactor": -0.15,
+          "onEnact": { "piety": 10, "authority": 4, "pop": -6,
+            "headFaith": 8, "sameFold": 3, "otherFold": -8,
+            "vassalSameFaith": 2, "vassalOtherFaith": -15,
+            "mistreatment": "religious_persecution" } }
+      ]
+    }
+  }
+}
+```
+
+- `defaultLevel` names the customary level old saves and new games start at;
+  the saved record is only `state.realmPolicies[policyId] =
+  { level, setTurn, setYear }`, healed additively on load. Unknown saved
+  levels fall back to `defaultLevel`; unknown policy ids are dropped.
+- `cooldown: "year"` allows one proclamation per family each calendar year,
+  checked across every crown policy sharing the `family`.
+- `repeal: "proclamation"` means proclaiming another level replaces the
+  standing one. A level with `protectedTerm: true` protects its charter for
+  `balance.realmPolicyProtectedWorshipDays` (1440): leaving it early mirrors
+  the unlawful privilege-revocation path (Common Voice −10, a recorded
+  `unlawful_privilege_revocation` mistreatment note, and organized faith
+  opposition through `FB.addCollectiveOpposition`).
+- Level fields, all optional: `name`/`icon`/`desc` (structured display
+  fields, localized as `policy.<id>.levels.<index>.<field>`); `modifier`
+  (a county modifier id applied while the level stands — omit `days` in the
+  modifier def so the policy, not the calendar, ends it); `modifierScope`
+  (`"all"` directly held counties, or `"minority"` for directly held counties
+  whose faith relation to the realm religion is neither `same` nor
+  `in_fold` — county faith itself is never rewritten); `privilege` (a
+  `FBDATA.privileges` id recorded per affected county, holder type `faith`);
+  `seasonPiety` (seasonal piety trickle); `researchFactor` (fractional change
+  to the player realm's research rate); `migrationAttraction` (integer shift
+  to the conserved migration draw of player-owned counties);
+  `developmentGrowth: true` (each season,
+  `balance.realmPolicySettlementDevChance` odds of +1 development to the
+  least-developed held county below its cap).
+- `onEnact` declares one-proclamation reactions: `piety`, `prestige`, `pop`
+  (Common Voice), `authority` (Crown Authority), `headFaith` (Standing with
+  the realm religion's head realm), `sameFold`/`otherFold` (foreign Standing
+  with every living sovereign realm, split by fold), `vassalSameFaith`/
+  `vassalOtherFaith` (direct-vassal Standing by fold), and `mistreatment`
+  (a `FB.notePoliticalMistreatment` kind, e.g. `religious_persecution`, which
+  feeds the sanctuary-claim collective demand).
+- Proclamation costs `balance.realmPolicyChangeCost` (20 gold) unless the def
+  overrides `cost`. The royal-policy sheet shows every level, its effects,
+  the exact blocked reason, and the protected-term warning.
+
+Engine API (js/institutions.js): `FB.realmPolicyList()`,
+`FB.realmPolicyLevelId(state, policyId)`,
+`FB.realmPolicyMinorityCounties(state)` (read-only),
+`FB.realmPolicyStatus(state, policyId, levelId)` (read-only gate),
+`FB.realmPolicyProclaim(state, policyId, levelId)` (mutation),
+`FB.realmPolicySummary(state)` (read-only UI projection),
+`FB.realmPolicySync(state)` (modifier maintenance, run by the daily
+institution pass), `FB.realmPolicySeason(state)` (main-tick piety and
+development), `FB.realmPolicyResearchFactor(state, realmId)`, and
+`FB.realmPolicySettlementAttraction(state)`. While Persecution stands, one
+sustained `religious_persecution` mistreatment note is recorded per year.
+
+Core content ships `religious_tolerance` (persecution → confessional
+preference → tolerated minorities → protected worship) and
+`settlement_policy` (closed settlement → licensed newcomers → encouraged
+settlement), the standing county modifiers `persecuted_minorities`,
+`tolerated_minorities`, `protected_worship`, `closed_settlement`, and
+`encouraged_settlement`, the `protected_worship` faith privilege, and three
+gated slot-day stories (`realm_policy_persecution_unrest`,
+`realm_policy_settlers_arrive`, `realm_policy_refugees_shelter`) with their
+`realm_policy_*` trigger and effect fns.
+
 ## Elections, privileges, and collective demands
 
 `FBDATA.elections`, `FBDATA.privileges`, and `FBDATA.collectiveDemands` live in
@@ -1274,7 +1376,9 @@ and is paid only while the affected county is directly held. A later mod replace
 same-id definition as one atomic record.
 
 Supported county `fx` keys are fractional `tax`, `levy`, and `buildingCost`; flat
-`commonVoice`; and fractional event-tag keys such as `famine` and `unrest`. Supported
+`commonVoice`; fractional `marketFlow`, `marketProduction`, and
+`marketProvisions` for the commodity-market model; and fractional event-tag
+keys such as `famine` and `unrest`. Supported
 campaign keys are fractional `supplyUse`, `contribution`, `withdrawalPenalty`,
 `marchSpeed`, `battleOdds`, and seasonal `desertion`. Campaign values affect only the
 protagonist's valid participation in the active great holy war—never AI parties or an
@@ -1575,6 +1679,9 @@ character can learn and perform:
   `fx.tradeVenture:n` contributes to a venture's saved formation preview. `authoredWork:true`
   invokes the core Author treatise reward and should be used only with that intended
   content contract.
+- The sustained life-path stories for the soldier, physician, scholar, and author
+  careers live in `data/events_lifepaths.js` and use only ordinary trigger and
+  effect keys plus the `lifepath_*` custom handlers; they add no new career fields.
 - License and specialty `name` values are structured-data display fields. Specialty
   `requiresTech` values are validated and appear in reverse technology discovery.
 - Owned character state lives in `character.career`; `player.profession` mirrors the
@@ -1889,8 +1996,25 @@ by key, and site objects replace by their required stable `id`.
 ```
 
 - A purpose carries localized `name`/`desc`, optional `icon`, added upfront
-  `cost`, and one destination `mode`: `sites`, `developed` (with `minDev`), or
-  `capitals` (the current capitals of living realms).
+  `cost`, and one destination `mode`: `sites`, `developed` (with `minDev`),
+  `capitals` (the current capitals of living realms), `foreign` (every
+  reachable settled county of another culture, nearest first, capped at
+  `balance.travelExpeditionMaxDestinations`), or `frontier` (every wasteland
+  bordering a reachable settled gateway county — the route is settled-only
+  until one final wasteland leg, and the departure snapshots
+  `travel.frontier = {"gatewayId","holderId","sovereignId","charId","milestones"}`).
+  The frontier mode is the commoner homestead path: arrival begins the
+  ordinary destination stay but admits only `travel:{"kind":"work",
+  "purpose":"frontier"}` stories, whose work options advance saved milestones
+  through the `frontier_milestone` handler. `FB.frontierSettlementEligible`
+  requires the one-year residence plus `balance.frontierMilestonesRequired`
+  milestones; `FB.frontierSettle` converts the wasteland through the shared
+  `FB.materializeWasteland(state, pid, {culture, religion, holderId, ownerId})`
+  helper — the same physical conversion the `settle_waste` deed uses — then
+  relocates the household through the ordinary settlement cleanup and grants
+  `balance.frontierSettlementPlots` starter land plots at the county head.
+  `frontier_leave_ready` (option `require`) and `frontier_go_home` back the
+  persist-or-turn-back story.
 - The core `trade` purpose retains its embedded `cost`/`stake` only for direct
   compatibility calls. The player-facing flow reads stake, market threshold,
   timing, outcomes, and modifiers from `finance.tradeVenture`.
@@ -1922,9 +2046,29 @@ by key, and site objects replace by their required stable `id`.
   or work event may add `"purpose":"id"`. Culture/road events are drawn without
   repetition up to the journey caps; destination work events repeat but never
   immediately repeat the last story. A work event may add `minTier`/`maxTier`
-  inside `travel` to separate commoner work from ruler guest-residence stories.
-  The core driver queues a purpose’s capstone
+  inside `travel` to separate commoner work from ruler guest-residence stories,
+  and `"contract":true` / `"contract":false` to exist only while a mercenary
+  contract is served on the journey or to stand down for its duration.
+  The core driver queues a purpose's capstone
   by the id `travel_capstone_<purpose id>`.
+- A paid-service arrival at a warring realm's capital instead queues
+  `travel_capstone_mercenary` for a working soldier (journeyman or master).
+  Accepting saves `travel.contract = {"realmId","startedTurn","paidSeasons","renewals"}`
+  on the journey record. The destination-stay tick pays
+  `balance.mercContractSeasonPay` per crossed season, queues
+  `travel_merc_contract_complete` once after `balance.mercContractSeasons`,
+  and queues `travel_merc_contract_peace` once if the patron's war ends or the
+  realm dies mid-term. The contract handlers are `merc_contract_accept`,
+  `merc_contract_ongoing` (the renewal option's `require`), `merc_contract_collect`
+  (final purse plus the once-per-life Company Standard), `merc_contract_renew`,
+  and `merc_contract_release`. Coming home by any route settles the record:
+  a served-out term pays `balance.mercContractCompletionGold`; an abandoned term
+  costs `balance.mercContractAbandonStanding` with the patron realm. Contract
+  event text may quote the frozen `{mercPay}`, `{mercSeasons}`, `{mercPurse}`,
+  and `{mercServed}` context values and the `{rname}`/`{rulername}` patron.
+- The expedition capstone's recording option uses `travel_expedition_record`,
+  which writes the once-per-life Travel Journal through the ordinary item grant
+  and then performs the ordinary capstone completion.
 - Core trade-capstone settlement uses `travel_trade_cautious`,
   `travel_trade_bold_success`, and `travel_trade_bold_failure`; these scale the
   selected accompanied stake and then perform the ordinary capstone completion.
@@ -1933,6 +2077,11 @@ by key, and site objects replace by their required stable `id`.
   `travelRoadEventCap` tune the road. `travelMinStayDays`,
   `travelWorkEventMinDays`, `travelWorkEventMaxDays`, `travelSettleOfferDays`,
   and `travelSettleWorkEvents` tune destination life and permanent settlement.
+  `travelExpeditionMaxDestinations` bounds the foreign-mode destination list;
+  `frontierMilestonesRequired` and `frontierSettlementPlots` tune the frontier
+  withdrawal's settlement gate and starter homestead;
+  `mercContractSeasons`, `mercContractSeasonPay`, `mercContractCompletionGold`,
+  and `mercContractAbandonStanding` tune the mercenary contract.
 
 ## Finance contracts
 
@@ -2446,8 +2595,10 @@ class a save predates defaults to 0 on load.
   "unitClasses": {
     "pike": {
       "name": "Pikemen", "icon": "🔱",
-      "quality": 1.1, "upkeepPer100": 0.8, "casualtyOrder": 2,
+      "quality": 1.1, "attack": 1.0, "defense": 1.2,
+      "upkeepPer100": 0.8, "casualtyOrder": 2,
       "share": 0.2, "requiresTech": "infantry_polearms",
+      "professional": true, "replaceDays": 90,
       "counters": { "cav": 1.6 },
       "terrainFactors": { "farmland": 1.05, "forest": 0.85 },
       "basket": { "provisions": 0.7, "materials": 0.25, "transport": 0.05 }
@@ -2459,8 +2610,23 @@ class a save predates defaults to 0 on load.
 - `name` (required) is a localized plural group noun; `icon` is display metadata shown
   in the host composition readouts.
 - `quality` (required, positive) is the battle quality of one man of the class;
-  `upkeepPer100` is the seasonal logistics per 100 live men (omit on hired classes);
+  `attack` and `defense` (optional, positive) split that power by battle side — the
+  camp holding the ground fights at `defense`, the camp marching in at `attack`, and a
+  meeting engagement on open ground reads `attack` for both. Each falls back to
+  `quality`, so legacy entries and mods that declare only `quality` reproduce the
+  pre-split battles exactly.
+- `upkeepPer100` is the seasonal logistics per 100 live men (omit on hired classes);
   `casualtyOrder` (required) orders battle losses, lowest first, ties broken by id.
+- `professional: true` marks standing troops whose battle, siege, starvation, and
+  desertion losses enter the realm's replacement cohort
+  (`state.armyCohorts[<realmId>][<classId>] = { batches:[{ n, readyTurn }], ready }`):
+  each loss queues a batch that finishes drilling after `replaceDays` (else
+  `balance.cohortReplaceDays`), the realm pays `upkeepPer100` ×
+  `balance.reinforcementPremiumMult` per 100 pending men while they drill, and the
+  drilled `ready` men join a home-rested host or the realm's next fresh muster. The
+  ledger is additive save state: old saves have none, `FB.armiesEnsure` repairs
+  malformed records, a dead realm's ledger is dropped, and per-class volume is capped
+  at `balance.cohortMaxPerClass`.
 - `counters: { "<enemyClassId>": <multiplier> }` fights the class above its quality
   against that enemy class. A side's counter multiplier is its composition-weighted
   average against the enemy's composition shares, capped at ±`balance.battleCounterMaxSwing`
@@ -2476,10 +2642,15 @@ class a save predates defaults to 0 on load.
   per company instead of per head.
 - `basket` is the class's provisions/materials/transport mix for market-quoted upkeep.
 
-The validator checks the whole table: baseline presence, name/quality/casualtyOrder
-shape, resolved `requiresTech`, `cultures`/`notCultures`, `counters`, and
+The validator checks the whole table: baseline presence, name/quality/attack/defense/
+casualtyOrder shape, `professional`/`replaceDays` shape, resolved `requiresTech`,
+`cultures`/`notCultures`, `counters`, and
 `terrainFactors` references. Mods replace a class wholesale by id or add new classes;
-deleting a baseline class is a validation error.
+deleting a baseline class is a validation error. Removing a non-baseline class that a
+save still fields is safe: the saved men keep their headcount, fight at the fallback
+quality 1, fall last in the casualty allocation (in id order, after every known
+class), are never mustered fresh, and return to full behavior if the class is
+re-added.
 
 ## Cultures, religions, traits, titles, balance
 
@@ -3082,7 +3253,12 @@ class's `upkeepPer100` in `FBDATA.unitClasses` (levy 0.5, archers 1, cavalry and
 men-at-arms 2, and so on) then multiplies each 100 live soldiers of that class;
 `hostLogisticsMercenaryCompany` (4) is charged for each hired company. A missing
 player host produces no logistics cost. These rates apply equally to ordinary and
-sovereign great holy-war hosts.
+sovereign great holy-war hosts. Professional replacement adds `cohortReplaceDays`
+(default days to drill one replacement batch; a class's `replaceDays` overrides),
+`reinforcementPremiumMult` (pending replacements cost their `upkeepPer100` × this
+per 100 men while drilling, charged even with no host fielded, ending exactly when
+the last batch completes), and `cohortMaxPerClass` (the most pending-plus-ready replacements one
+realm's cohort ledger holds per class).
 Loss-aware desertion uses `warDeserterMinCasualties` and
 `warDeserterMinCasualtyRate`; the larger absolute-or-initial-host threshold is required.
 `warDeserterDefeatWindowDays` defines how recently the host must have lost, while a

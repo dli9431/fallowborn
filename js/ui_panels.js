@@ -79,6 +79,7 @@ window.FB = window.FB || {};
     seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
     scheme_rival:'life', begin_plot:'life', intrigue_assets:'life', take_road:'life', travel_turn_back:'life',
     travel_return_cargo:'life', travel_marriage_residence:'life', travel_settle_here:'life',
+    frontier_settle_here:'life',
     seek_blessing:'faith', seek_absolution:'faith', papacy:'faith',
     bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
     convene_synod:'faith', extraordinary_tithe:'faith',
@@ -394,6 +395,27 @@ window.FB = window.FB || {};
             quantity:Math.round(travel.returnVenture.quantity * 10) / 10,
             good:rGoodName
           })));
+    }
+    /* A frontier withdrawal shows its gateway, work milestones, residence
+       progress, and whether the permanent homestead is available yet. */
+    if (travel.purpose === 'frontier' && FB.frontierStatus) {
+      const frontier = FB.frontierStatus(s);
+      if (frontier) {
+        status += ' · ' + FB.T('gateway: {gateway}', {
+          gateway:frontier.gatewayName
+        });
+        status += ' · ' + FB.T('frontier work {done}/{needed}', {
+          done:frontier.milestones, needed:frontier.milestonesRequired
+        });
+        if (travel.phase === 'arrived') {
+          status += ' · ' + (frontier.settlementReady
+            ? FB.T('the homestead can be made permanent')
+            : FB.T('residence {days}/{required} days', {
+              days:Math.min(frontier.stayDays, frontier.residenceRequired),
+              required:frontier.residenceRequired
+            }));
+        }
+      }
     }
     return status;
   }
@@ -829,6 +851,7 @@ window.FB = window.FB || {};
               '[data-action-id="travel_turn_back"], ' +
               '[data-action-id="travel_return_cargo"], ' +
               '[data-action-id="travel_marriage_residence"], ' +
+              '[data-action-id="frontier_settle_here"], ' +
               '[data-action-id="travel_settle_here"]');
           } else if (commitment === 'finance') {
             UI.showFinance();
@@ -4116,11 +4139,83 @@ window.FB = window.FB || {};
             })) + '</div>';
         }
       }
+      /* per-class roles: troops, attack, defense, upkeep, counters — the
+         same catalog numbers the battle reads (docs/designs/war.md) */
+      if (selA.units && FB.unitClassBattleStats && FB.unitClassIds) {
+        for (const classId of FB.unitClassIds()) {
+          const classCount = Math.max(0,
+            Math.round(Number(selA.units[classId]) || 0));
+          if (!classCount) continue;
+          const classDef = (FBDATA.unitClasses || {})[classId];
+          if (!classDef) continue; // a mod-removed class renders in the parts line only
+          const className = FB.dataText(s, null, 'unitClass', classId,
+            classDef, 'name', {});
+          const classStats = FB.unitClassBattleStats(classId);
+          let classLine = FB.T(
+            '{icon} {unit} ×{count} — attack {attack}, defense {defense}', {
+              icon:classDef.icon || '', unit:className, count:classCount,
+              attack:classStats.attack, defense:classStats.defense
+            });
+          if (classStats.upkeepPer100) {
+            classLine += FB.T(', upkeep {upkeep} per 100', {
+              upkeep:classStats.upkeepPer100 });
+          }
+          if (classStats.counters.length) {
+            const counterNames = [];
+            for (const counter of classStats.counters) {
+              const counterDef = (FBDATA.unitClasses || {})[counter.id];
+              counterNames.push(counterDef
+                ? FB.dataText(s, null, 'unitClass', counter.id, counterDef,
+                  'name', {})
+                : counter.id);
+            }
+            classLine += FB.T('; strong against {counters}', {
+              counters:counterNames.join(', ') });
+          }
+          h += '<div class="cmeta">' + esc(classLine) + '</div>';
+        }
+      }
+      /* readiness and replacement: the realm's professional cohort ledger,
+         with the exact drilling time and the premium it costs */
+      if (FB.cohortStatus) {
+        const cohort = FB.cohortStatus(s, 'player');
+        for (const classId of FB.unitClassIds ? FB.unitClassIds() : []) {
+          const cohortClass = cohort.classes[classId];
+          if (!cohortClass) continue;
+          const classDef = (FBDATA.unitClasses || {})[classId];
+          const className = classDef
+            ? FB.dataText(s, null, 'unitClass', classId, classDef, 'name', {})
+            : classId;
+          if (cohortClass.pending) {
+            const premium = selectedHostUpkeep &&
+              selectedHostUpkeep.reinforceByClass &&
+              selectedHostUpkeep.reinforceByClass[classId];
+            h += '<div class="cmeta">' + esc(FB.T(
+              '🛠 Replacing {count} {unit} — ready in {days} days, costing {money:amount} a season.', {
+                count:cohortClass.pending, unit:className,
+                days:cohortClass.daysLeft,
+                amount:SH.financeAmount(premium || 0)
+              })) + '</div>';
+          }
+          if (cohortClass.ready) {
+            h += '<div class="cmeta">' + esc(FB.T(
+              '🛡 {count} drilled {unit} stand ready — they join a resting host or the next muster.', {
+                count:cohortClass.ready, unit:className
+              })) + '</div>';
+          }
+        }
+      }
       if (selectedHostUpkeep) {
         h += '<div class="cmeta">' + esc(FB.T(
           'Seasonal host logistics: {money:amount}', {
             amount:SH.financeAmount(selectedHostUpkeep.total)
           })) + '</div>';
+        if (selectedHostUpkeep.reinforcement) {
+          h += '<div class="cmeta">' + esc(FB.T(
+            '…of which replacement drilling: {money:amount}', {
+              amount:SH.financeAmount(selectedHostUpkeep.reinforcement)
+            })) + '</div>';
+        }
         if (selectedHostUpkeep.campaignModifier) {
           h += '<div class="cmeta">' + esc(FB.T(
             'Campaign supply adjustment: {money:amount}', {

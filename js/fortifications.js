@@ -546,6 +546,9 @@ window.FB = window.FB || {};
         ? FB.applyHostLosses(allocations[i].host, allocations[i].amount)
         : { total:0 };
       mergeLosses(losses, hostLosses);
+      if (FB.noteCohortLosses) {
+        FB.noteCohortLosses(state, allocations[i].host.realm, hostLosses);
+      }
       if (allocations[i].host.realm === 'player' &&
           FB.notePlayerWarTroopLosses) {
         FB.notePlayerWarTroopLosses(state, hostLosses);

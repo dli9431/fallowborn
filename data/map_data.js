@@ -842,6 +842,26 @@ FBDATA.items = {
     fx:{ lea:1 }, qualityFx:{ lea:1 },
     art:{ kind:'book', covers:['#6c5c2d','#85733a'], pages:['#d8c9a5','#c8b68c'] },
     desc:'A family author’s collection of animals, plants, stones, and wonders.' },
+  book_of_remedies:{ name:'Book of Remedies', icon:'📕', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1, health:0.001 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#5d3232','#754242'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family physician’s gathered remedies, regimens, and case notes.' },
+  star_tables:{ name:'Star Tables', icon:'🌠', rarity:'fine', value:35,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ lea:1, ste:1 }, qualityFx:{ lea:1 },
+    art:{ kind:'book', covers:['#23304f','#31415f'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'A family astronomer’s patient tables of the wandering stars.' },
+  travel_journal:{ name:'Travel Journal', icon:'🗺', rarity:'fine', value:30,
+    unique:false, eventOnly:true, slot:'hand', ageMin:6,
+    fx:{ ste:1, dip:1 }, qualityFx:{ ste:1 },
+    art:{ kind:'book', covers:['#3f4a2e','#525e3a'], pages:['#d8c9a5','#c8b68c'] },
+    desc:'Coasts, customs, and strange tongues, written down on foreign roads.' },
+  company_standard:{ name:'Company Standard', icon:'🚩', rarity:'fine', value:40,
+    unique:false, eventOnly:true, slot:'hand', grip:2, ageMin:12,
+    fx:{ mar:1, prestige:0.5 }, qualityFx:{ mar:1 },
+    art:{ kind:'spear', woods:['#6b4a2e','#553a24'], metals:['#b89042','#c9a856'] },
+    desc:'A served-out mercenary contract, struck from its pole and carried home.' },
   padded_jack:     { name:'Padded Jack', icon:'🧥', rarity:'common', value:25,
     unique:false, slot:'body', ageMin:12, fx:{ battle:0.03 }, qualityFx:{ battle:0.01 },
     art:{ kind:'jack', cloths:['#76664a','#53624b','#6b4c3f'], threads:['#b49a69','#9a835b'] },
@@ -1301,6 +1321,9 @@ FBDATA.balance = {
      per-class battle quality, per-100 logistics, casualty order, counters,
      terrain overrides, and culture/technology gating */
   battleCounterMaxSwing: 0.2, // a side's composition counter edge is capped at this fraction of its battle power
+  cohortReplaceDays: 120, // days to drill one replacement batch of a professional class (a class's replaceDays overrides)
+  reinforcementPremiumMult: 1, // professionals being replaced cost their upkeepPer100 × (1 + this) while drilling
+  cohortMaxPerClass: 600, // the most replacements of one class a realm's cohort ledger holds
   mercCompanySize: 150, // men per hired company
   massLevyMult: 1.35, // the great levy swells the levy class by this
   baronyRetinue: 120, // a landed baron with no counties yet fields this many men-at-arms
@@ -1462,6 +1485,10 @@ FBDATA.balance = {
   parliamentSessionChance: 0.5, // yearly odds the liege summons the estates to sit
   parliamentSubsidyGold: 20, // the war subsidy the estates may vote their liege
   parliamentMotionCost: 15, // gold to sound out fellow lords and put a motion before the estates
+  /* royal religious-tolerance and settlement policy (tier 6+, js/institutions.js) */
+  realmPolicyChangeCost: 20, // gold to proclaim a new level of a royal policy family
+  realmPolicyProtectedWorshipDays: 1440, // leaving Protected Worship before this term is an unlawful revocation
+  realmPolicySettlementDevChance: 0.25, // seasonal odds Encouraged Settlement raises one held county's development
   /* intra-realm consolidation: petitioning, buying out, escheats, settling waste */
   escheatChance: 0.15, // yearly odds a dying petty count leaves no heir
   petitionLiegeOp: 55, petitionPrestige: 250, petitionService: 4, petitionFavorMax: -15,

@@ -607,6 +607,31 @@ window.FB = window.FB || {};
     return (FBDATA.positions && FBDATA.positions[id]) || null;
   };
 
+  /* Life-path hooks shared with data/events_lifepaths.js. A commissioned
+     Author completes another randomized family treatise through the same
+     grant path as the qualification reward; the saved career keeps only the
+     original authoredWorkRef, and each later work is an ordinary armory
+     instance. */
+  FB.fns = FB.fns || {};
+  FB.fns.lifepath_author_work = function (state) {
+    const c = playerChar(state);
+    if (!c || !FB.grantItem) return false;
+    const ref = FB.grantItem(state, FB.pick(AUTHORED_WORKS));
+    if (!ref) return false;
+    FB.news(state, FB.msg('news.career.work_completed',
+      '📖 {name} completes {item}, another work for the family to preserve.', {
+        name:c.name,
+        item:FB.itemParam ? FB.itemParam(state, ref, true) : ref
+      }));
+    return true;
+  };
+  FB.fns.lifepath_realm_at_peace = function (state) {
+    const p = state.player;
+    if (p.war) return false;
+    const rid = state.owner && state.owner[p.provinceId];
+    return !(rid && FB.isRealmAtWar(state, rid));
+  };
+
   FB.playerPositionIds = function (state) {
     const out = [];
     const flags = state.player.flags || {};

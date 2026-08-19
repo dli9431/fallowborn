@@ -31,10 +31,12 @@ window.FB = window.FB || {};
        either.
        units: { <classId>: men } — the host's composition, keyed by
        FBDATA.unitClasses (data/units.js); men is always the total. Each class
-       fights at its own table quality, battle casualties fall in the table's
-       casualtyOrder (levy first, the heaviest professionals last), and a
-       resting host refills with fresh levy only — the slain professionals are
-       not replaced mid-war. Culture- and technology-gated classes
+       fights at its own table attack/defense values (falling back to
+       quality), battle casualties fall in the table's casualtyOrder (levy
+       first, the heaviest professionals last), and a resting host refills
+       with fresh levy plus any drilled cohort replacements — slain
+       professionals rejoin only through the replacement ledger
+       (state.armyCohorts below). Culture- and technology-gated classes
        (FB.unitClassUnlocked) convert a share of the mustered levy.
      state.armyDown: { realmId: turn } — a destroyed PRIMARY host may muster
        again only after balance.armyRearmDays.
@@ -46,7 +48,19 @@ window.FB = window.FB || {};
        down-turn) instead of the 0.15 shattered-host floor.
      state.player.war.musterPool: { <classId>: men } — the men a
        voluntary de-muster sent home; the war's next muster is capped at
-       them, so a beaten player cannot re-raise a full levy. */
+       them, so a beaten player cannot re-raise a full levy.
+     state.armyCohorts: { <realmId|'player'>: { <classId>: { batches:
+       [{ n, readyTurn }], ready } } } — the professional replacement ledger
+       (docs/designs/war.md). Battle, siege, starvation, and desertion losses
+       of `professional` unit classes are owned by the realm, not the host:
+       each loss queues a batch that finishes drilling at loss turn +
+       replaceDays (per class, else balance.cohortReplaceDays), deterministically
+       and without RNG. While a batch is pending the realm pays the
+       reinforcement premium (its upkeepPer100 × balance.reinforcementPremiumMult,
+       player only — the AI economy is abstract); once drilled, the ready men
+       join a host resting on home land or the realm's next fresh muster, and
+       the premium ends exactly when the last pending batch completes. The
+       ledger survives host dismissal, de-muster, and peace untouched. */
   FB.armiesEnsure = function (state) {
     if (!state.armies) state.armies = [];
     if (!state.armyDown) state.armyDown = {};
@@ -66,6 +80,40 @@ window.FB = window.FB || {};
     /* hosts from before supply lines carry no supply field: repair in place
        (additive, no save-version bump) */
     for (const a of state.armies) FB.hostSupply(a);
+    /* the replacement-cohort ledger is additive: old saves have none, a dead
+       realm's ledger is dropped, and malformed entries coerce to whole men */
+    if (!state.armyCohorts || typeof state.armyCohorts !== 'object') {
+      state.armyCohorts = {};
+    }
+    for (const cohortRealm in state.armyCohorts) {
+      if (cohortRealm !== 'player' &&
+          !(state.realms && state.realms[cohortRealm])) {
+        delete state.armyCohorts[cohortRealm];
+        continue;
+      }
+      const ledger = state.armyCohorts[cohortRealm];
+      if (!ledger || typeof ledger !== 'object') {
+        delete state.armyCohorts[cohortRealm];
+        continue;
+      }
+      for (const classId in ledger) {
+        const record = ledger[classId];
+        if (!record || typeof record !== 'object') {
+          delete ledger[classId];
+          continue;
+        }
+        if (!Array.isArray(record.batches)) record.batches = [];
+        record.batches = record.batches.filter(function (batch) {
+          return batch && isFinite(Number(batch.n)) && Number(batch.n) > 0 &&
+            isFinite(Number(batch.readyTurn));
+        });
+        for (const batch of record.batches) {
+          batch.n = Math.max(1, Math.round(Number(batch.n)));
+        }
+        record.ready = Math.max(0, Math.round(Number(record.ready) || 0));
+        if (!record.ready && !record.batches.length) delete ledger[classId];
+      }
+    }
   };
 
   /* ---------- the unit-class table ----------
@@ -93,6 +141,21 @@ window.FB = window.FB || {};
     const def = unitClassDef(key);
     const value = def && Number(def.quality);
     return isFinite(value) && value > 0 ? value : 1;
+  }
+
+  /* attack/defense split (docs/designs/war.md): a class may declare separate
+     per-man power for the attacking and defending side of a field battle;
+     both fall back to quality, so legacy entries and mods keep working */
+  function unitClassAttack(key) {
+    const def = unitClassDef(key);
+    const value = def && Number(def.attack);
+    return isFinite(value) && value > 0 ? value : unitClassQuality(key);
+  }
+
+  function unitClassDefense(key) {
+    const def = unitClassDef(key);
+    const value = def && Number(def.defense);
+    return isFinite(value) && value > 0 ? value : unitClassQuality(key);
   }
 
   /* classes a muster can field: everything but hired companies (mercs join
@@ -217,6 +280,24 @@ window.FB = window.FB || {};
       result[key] += amount;
       remaining -= amount;
     }
+    /* a saved class the current table no longer defines (a removed mod)
+       stands outside the casualty order: its men fall last, in id order, so
+       the headcount and the units record never drift apart */
+    if (remaining > 0) {
+      const unknown = [];
+      for (const key in units) {
+        if (key === 'total' || unitClassDef(key)) continue;
+        if (Math.max(0, Number(units[key]) || 0) > 0) unknown.push(key);
+      }
+      unknown.sort();
+      for (const key of unknown) {
+        if (remaining <= 0) break;
+        const amount = Math.min(units[key], remaining);
+        units[key] -= amount;
+        result[key] = (result[key] || 0) + amount;
+        remaining -= amount;
+      }
+    }
     army.men = Math.max(0, army.men - actual);
     result.total = actual;
     return result;
@@ -235,7 +316,9 @@ window.FB = window.FB || {};
   /* the composition readout shared by the Land tab host card and the war
      ledger: one "{count} {class}" part per present class. The five baseline
      classes keep their long-standing plural-form lines; unlocked classes
-     render their icon and table name. */
+     render their icon and table name; a saved class the table no longer
+     defines (a removed mod) renders its raw id, in id order after the known
+     classes. */
   FB.unitClassParts = function (state, units) {
     const legacyForms = {
       levy:['fx.warstate.comp_levy', { one:'{count} levyman', other:'{count} levy' }],
@@ -262,7 +345,39 @@ window.FB = window.FB || {};
         }));
       }
     }
+    const unknown = [];
+    for (const key in (units || {})) {
+      if (key === 'total' || unitClassDef(key)) continue;
+      if (Math.max(0, Math.round(Number(units[key]) || 0)) > 0) unknown.push(key);
+    }
+    unknown.sort();
+    for (const key of unknown) {
+      parts.push(FB.T('{count} {unit}', {
+        count:Math.round(Number(units[key]) || 0), unit:key
+      }));
+    }
     return parts;
+  };
+
+  /* one class's display stats for the host view: attack/defense (with the
+     quality fallback applied), per-100 upkeep, and its counter edges */
+  FB.unitClassBattleStats = function (classId) {
+    const def = unitClassDef(classId);
+    const counters = [];
+    if (def && def.counters) {
+      for (const enemyId of FB.unitClassIds()) {
+        const mult = Number(def.counters[enemyId]);
+        if (isFinite(mult) && mult > 1) counters.push({ id:enemyId, mult:mult });
+      }
+    }
+    return {
+      attack:unitClassAttack(classId),
+      defense:unitClassDefense(classId),
+      upkeepPer100:def && isFinite(Number(def.upkeepPer100))
+        ? Number(def.upkeepPer100) : 0,
+      professional:!!(def && def.professional),
+      counters:counters
+    };
   };
 
   /* ---------- terrain (docs/designs/war.md) ----------
@@ -314,6 +429,22 @@ window.FB = window.FB || {};
     for (const key in units) {
       sum += Math.max(0, Number(units[key]) || 0) * unitClassQuality(key) *
         terrainBattleFactor(terrain, key);
+    }
+    return sum / men;
+  };
+
+  /* Weighted per-man power of a composition fighting one side of a field
+     battle: 'defense' reads the classes' defense values, anything else reads
+     their attack values, and both fall back to quality per class (so a class
+     with attack === defense === quality reproduces the pre-split numbers
+     exactly). Terrain multiplies both roles alike. */
+  FB.compRoleQuality = function (units, men, terrain, role) {
+    if (!units || !men) return 1;
+    const classPower = role === 'defense' ? unitClassDefense : unitClassAttack;
+    let sum = 0;
+    for (const key in units) {
+      const factor = terrain ? terrainBattleFactor(terrain, key) : 1;
+      sum += Math.max(0, Number(units[key]) || 0) * classPower(key) * factor;
     }
     return sum / men;
   };
@@ -544,14 +675,20 @@ window.FB = window.FB || {};
   /* Current seasonal cost of the live player hosts. A missing (disbanded or
      shattered) host has no base logistics and therefore costs nothing; each
      fielded host — the main body and every detachment — pays its own camp
-     base, while hired companies are contracted once for the whole war. */
+     base, while hired companies are contracted once for the whole war. The
+     reinforcement premium is charged while replacement cohorts drill, host
+     or no host — the drilling does not pause when the banners come down. */
   FB.playerHostUpkeepParts = function (state) {
+    const reinforcement = reinforcementParts(state);
     const hosts = FB.hostsOf(state, 'player');
     const host = hosts.length ? FB.hostOf(state, 'player') : null;
     if (!host) {
       return {
         base:0, levy:0, archers:0, cavalry:0, retinue:0,
-        mercenaries:0, byClass:{}, campaignModifier:0, total:0
+        mercenaries:0, byClass:{}, campaignModifier:0,
+        reinforcement:reinforcement.total,
+        reinforceByClass:reinforcement.byClass,
+        total:reinforcement.total
       };
     }
     const units = emptyUnitCounts();
@@ -586,6 +723,9 @@ window.FB = window.FB || {};
     }
     const rate = FB.campaignHostModBonus
       ? FB.campaignHostModBonus(state, 'supplyUse') : 0;
+    parts.reinforcement = reinforcement.total;
+    parts.reinforceByClass = reinforcement.byClass;
+    parts.total += reinforcement.total;
     const nonContract = parts.total - parts.mercenaries;
     parts.campaignModifier = nonContract * rate;
     parts.total = Math.max(0, parts.total + parts.campaignModifier);
@@ -687,6 +827,7 @@ window.FB = window.FB || {};
     const host = FB.playerHost(state);
     if (!host) return null;
     const losses = FB.applyHostLosses(host, lost);
+    FB.noteCohortLosses(state, host.realm, losses);
     FB.notePlayerWarTroopLosses(state, losses);
     spec = spec || {};
     spec.troopLosses = losses;
@@ -773,6 +914,203 @@ window.FB = window.FB || {};
       result.lossTotal >= result.threshold;
     return result;
   };
+
+  /* ---------- professional replacement cohorts (docs/designs/war.md) ----------
+     Slain professionals (classes flagged `professional` in the unit table)
+     are not gone for the war: their realm drills replacements. The cohort is
+     owned by the realm (state.armyCohorts), not by any host, so it survives
+     host dismissal, de-muster, save/load, and peace. Each loss queues a
+     batch that completes at loss turn + the class's replaceDays — a fixed
+     date, no RNG — and while any batch is pending the realm pays the
+     reinforcement premium. Drilled men wait in `ready` and join a host
+     resting on home land or the realm's next fresh muster (never a
+     de-muster-capped one: those veterans already returned in the pool). */
+
+  function cohortReplaceDays(classId) {
+    const def = unitClassDef(classId);
+    const own = def && Number(def.replaceDays);
+    if (isFinite(own) && own > 0) return Math.max(1, Math.round(own));
+    const shared = Number(B().cohortReplaceDays);
+    return isFinite(shared) && shared > 0 ? Math.max(1, Math.round(shared)) : 120;
+  }
+
+  function cohortLedger(state, realmId) {
+    if (!state.armyCohorts) state.armyCohorts = {};
+    let ledger = state.armyCohorts[realmId];
+    if (!ledger) ledger = state.armyCohorts[realmId] = {};
+    return ledger;
+  }
+
+  function cohortPending(record) {
+    let pending = 0;
+    for (const batch of record.batches) pending += batch.n;
+    return pending;
+  }
+
+  /* record slain professionals of one realm's hosts; every live loss path
+     (battle, siege, starvation, desertion, campaign events) funnels here */
+  FB.noteCohortLosses = function (state, realmId, losses) {
+    if (!state || !realmId || !losses) return;
+    const cap = Number(B().cohortMaxPerClass);
+    const capPerClass = isFinite(cap) && cap > 0 ? Math.round(cap) : 600;
+    const ledger = cohortLedger(state, realmId);
+    for (const key in losses) {
+      if (key === 'total') continue;
+      const def = unitClassDef(key);
+      if (!def || !def.professional) continue;
+      const lost = Math.max(0, Math.round(Number(losses[key]) || 0));
+      if (!lost) continue;
+      const record = ledger[key] || (ledger[key] = { batches:[], ready:0 });
+      const room = Math.max(0, capPerClass - record.ready - cohortPending(record));
+      if (!room) continue;
+      record.batches.push({
+        n:Math.min(lost, room),
+        readyTurn:state.turn + cohortReplaceDays(key)
+      });
+    }
+  };
+
+  /* mature due batches into ready; the player hears once per class whose
+     drilling finishes today */
+  function cohortTick(state) {
+    const ledgers = state.armyCohorts;
+    if (!ledgers) return;
+    for (const realmId in ledgers) {
+      const ledger = ledgers[realmId];
+      if (!ledger) continue;
+      for (const classId in ledger) {
+        const record = ledger[classId];
+        if (!record) continue;
+        let drilled = 0;
+        const pendingBatches = [];
+        for (const batch of record.batches) {
+          if (batch.readyTurn <= state.turn) drilled += batch.n;
+          else pendingBatches.push(batch);
+        }
+        if (!drilled) continue;
+        record.batches = pendingBatches;
+        record.ready += drilled;
+        if (realmId === 'player' && !pendingBatches.length) {
+          const def = unitClassDef(classId);
+          FB.news(state, FB.msg('news.army.cohort_replaced',
+            '🛡 The replacement {unit} finish their drilling — {men} stand ready for the next muster.', {
+              unit:def
+                ? FB.dataText(state, null, 'unitClass', classId, def, 'name', {})
+                : classId,
+              men:record.ready
+            }));
+        }
+      }
+    }
+  }
+
+  /* the replacement ledger as the host view and the upkeep quote read it:
+     per professional class the pending men, the exact turn the last batch
+     completes, and the drilled men waiting */
+  FB.cohortStatus = function (state, realmId) {
+    const out = { classes:{}, pendingTotal:0, readyTotal:0 };
+    const ledger = state && state.armyCohorts &&
+      state.armyCohorts[realmId === undefined ? 'player' : realmId];
+    if (!ledger) return out;
+    for (const classId of FB.unitClassIds()) {
+      const record = ledger[classId];
+      if (!record) continue;
+      const pending = cohortPending(record);
+      const ready = Math.max(0, Number(record.ready) || 0);
+      if (!pending && !ready) continue;
+      let lastReadyTurn = null;
+      for (const batch of record.batches) {
+        if (lastReadyTurn === null || batch.readyTurn > lastReadyTurn) {
+          lastReadyTurn = batch.readyTurn;
+        }
+      }
+      out.classes[classId] = {
+        pending:pending,
+        ready:ready,
+        daysLeft:lastReadyTurn === null
+          ? 0 : Math.max(0, lastReadyTurn - state.turn)
+      };
+      out.pendingTotal += pending;
+      out.readyTotal += ready;
+    }
+    return out;
+  };
+
+  /* the seasonal reinforcement premium: professionals still drilling cost
+     their class upkeepPer100 × balance.reinforcementPremiumMult on top of the
+     host's ordinary logistics, quoted against each class's market basket at
+     the host's (or home) county. Charged while pending, gone the day the
+     last batch completes. */
+  function reinforcementParts(state) {
+    const out = { byClass:{}, total:0 };
+    const status = FB.cohortStatus(state, 'player');
+    const mult = Number(B().reinforcementPremiumMult);
+    const rate = isFinite(mult) && mult > 0 ? mult : 1;
+    const host = FB.playerHost(state);
+    const pid = (host && host.at) || state.player.provinceId;
+    for (const classId in status.classes) {
+      const pending = status.classes[classId].pending;
+      if (!pending) continue;
+      const def = unitClassDef(classId);
+      const per100 = def && isFinite(Number(def.upkeepPer100))
+        ? Number(def.upkeepPer100) : 0;
+      if (!per100) continue;
+      let amount = pending / 100 * per100 * rate;
+      const basket = def && def.basket;
+      if (basket && FB.marketCostQuote) {
+        amount = FB.marketCostQuote(state, amount, basket, pid);
+      }
+      out.byClass[classId] = amount;
+      out.total += amount;
+    }
+    return out;
+  }
+
+  /* pull drilled replacements into a host resting on home land, up to its
+     mustered size; returns the men joined (runs before the levy refill, so
+     professionals claim the room first) */
+  function cohortJoinHost(state, host, room) {
+    const ledger = state.armyCohorts && state.armyCohorts[host.realm];
+    if (!ledger || room <= 0) return 0;
+    let joined = 0;
+    const units = FB.hostUnits(host);
+    for (const classId of FB.unitClassIds()) {
+      if (joined >= room) break;
+      const record = ledger[classId];
+      if (!record || !record.ready) continue;
+      const take = Math.min(record.ready, room - joined);
+      record.ready -= take;
+      units[classId] = (units[classId] || 0) + take;
+      host.men += take;
+      joined += take;
+      if (!record.ready && !record.batches.length) delete ledger[classId];
+    }
+    return joined;
+  }
+
+  /* fresh musters take every drilled replacement of the realm; returns the
+     per-class amounts added so the caller can consume the ledger */
+  function cohortMusterAdditions(state, realmId) {
+    const out = {};
+    const status = FB.cohortStatus(state, realmId);
+    for (const classId in status.classes) {
+      if (status.classes[classId].ready > 0) {
+        out[classId] = status.classes[classId].ready;
+      }
+    }
+    return out;
+  }
+
+  function cohortConsumeReady(state, realmId, used) {
+    const ledger = state.armyCohorts && state.armyCohorts[realmId];
+    if (!ledger) return;
+    for (const classId in used) {
+      const record = ledger[classId];
+      if (!record) continue;
+      record.ready = Math.max(0, record.ready - used[classId]);
+      if (!record.ready && !record.batches.length) delete ledger[classId];
+    }
+  }
 
   /* Declaration preview: the present peacetime composition at an ordinary
      muster, before a great levy, mercenaries, or defensive allies join it. */
@@ -938,6 +1276,13 @@ window.FB = window.FB || {};
         units[key] = Math.min(units[key], Math.max(0, Number(pool[key]) || 0));
       }
     }
+    /* drilled replacement cohorts answer a fresh muster at no surcharge; a
+       de-muster-capped muster leaves them waiting — those veterans already
+       returned in the pool */
+    const cohort = limited ? null : cohortMusterAdditions(state, 'player');
+    if (cohort) {
+      for (const key in cohort) units[key] = (units[key] || 0) + cohort[key];
+    }
     const allied = w && w.defending && !w.alliedWithdrew && FB.alliedReinforcement
       ? FB.alliedReinforcement(state, 'player') : { ally: null, men: 0 };
     if (allied.men) units.levy += allied.men;
@@ -946,7 +1291,7 @@ window.FB = window.FB || {};
     if (!limited && men < floor) { units.levy += floor - men; men = floor; }
     return {
       units:units, allied:allied, men:men, floor:floor,
-      limited:limited, greatHost:greatHost
+      limited:limited, greatHost:greatHost, cohort:cohort
     };
   }
 
@@ -970,6 +1315,7 @@ window.FB = window.FB || {};
     const plan = playerMusterPlan(state);
     if (!plan || plan.men < plan.floor) return null;
     if (plan.limited) delete w.musterPool;
+    if (plan.cohort) cohortConsumeReady(state, 'player', plan.cohort);
     const units = plan.units, allied = plan.allied, men = plan.men;
     const home = playerHome(state);
     const host = { id: FB.uid(), realm: 'player', men: men, size: men, units: units,
@@ -1016,6 +1362,17 @@ window.FB = window.FB || {};
       professional += units[id];
     }
     units.levy = base - professional + allied.men;
+    /* drilled replacement cohorts answer the fresh muster too */
+    const cohort = cohortMusterAdditions(state, rid);
+    let cohortMen = 0;
+    for (const classId in cohort) {
+      units[classId] = (units[classId] || 0) + cohort[classId];
+      cohortMen += cohort[classId];
+    }
+    if (cohortMen) {
+      cohortConsumeReady(state, rid, cohort);
+      men += cohortMen;
+    }
     const host = { id: FB.uid(), realm: rid, men: men, size: men, units: units,
       at: r.capital, from: r.capital, moveLeft: 0, path: [], goal: null };
     if (allied.men) host.allied = allied;
@@ -1492,6 +1849,12 @@ window.FB = window.FB || {};
       const neighbors = sortedNeighbors(adj, current.pid);
       for (let i = 0; i < neighbors.length; i++) {
         const neighbor = neighbors[i];
+        /* Wastelands are impassable scenery: never a route leg. The flag is
+           read live so a county converted to real land during play (wasteland
+           materialization) becomes passable without rebuilding the per-world
+           path caches. */
+        const neighborPr = FB.world.byId[neighbor];
+        if (neighborPr && neighborPr.wasteland) continue;
         /* A host already pinned inside a hostile fortified county may leave
            only by its arrival edge or directly into friendly-controlled
            ground. Once clear, ordinary routing resumes. */
@@ -1892,16 +2255,20 @@ window.FB = window.FB || {};
     return home;
   }
 
-  function battlePower(state, army, pid) {
+  /* role: 'defense' for the camp holding the ground, 'attack' otherwise
+     (the default for neutral previews such as the automation odds check) */
+  function battlePower(state, army, pid, role) {
     let pw;
     const bal = B();
     /* where the battle is joined, terrain multiplies each class
        (balance.terrainBattleFactors); callers without a location keep the
        terrain-neutral composition average */
     const terrain = pid ? terrainOf(pid) : null;
-    const q = terrain
-      ? FB.compTerrainQuality(army.units, army.men, terrain)
-      : FB.compQuality(army.units, army.men); // 1 for hosts from before levy tiers
+    const q = role
+      ? FB.compRoleQuality(army.units, army.men, terrain, role)
+      : (terrain
+        ? FB.compTerrainQuality(army.units, army.men, terrain)
+        : FB.compQuality(army.units, army.men)); // 1 for hosts from before levy tiers
     if (army.realm === 'player') {
       const me = state.chars[state.player.charId];
       pw = army.men * q * (1 + (me ? FB.skillOf(me, 'mar') : 5) / (B().battleMarPlayer || 14));
@@ -1979,9 +2346,10 @@ window.FB = window.FB || {};
     return battleCounterMultiplier(units, enemyUnits);
   };
 
-  /* public surface for tests, tooling, and UI previews */
-  FB.armyBattlePower = function (state, army, pid) {
-    return battlePower(state, army, pid);
+  /* public surface for tests, tooling, and UI previews; role is 'defense'
+     for the camp holding the ground, 'attack' (or omitted) otherwise */
+  FB.armyBattlePower = function (state, army, pid, role) {
+    return battlePower(state, army, pid, role);
   };
 
   /* a field win/loss in an AI-vs-AI war tilts that war's yearly resolution */
@@ -2027,8 +2395,9 @@ window.FB = window.FB || {};
 
   /* spread a side's casualties across its hosts in proportion to their men;
      the lead host absorbs the rounding drift. Returns the pooled per-class
-     losses (with .total) for the war ledger. */
-  function spreadLosses(side, total) {
+     losses (with .total) for the war ledger. Slain professionals enter each
+     host realm's replacement cohort. */
+  function spreadLosses(state, side, total) {
     const aggregate = emptyUnitCounts();
     aggregate.total = 0;
     const men = sideMen(side);
@@ -2041,6 +2410,7 @@ window.FB = window.FB || {};
         : Math.round(total * host.men / men);
       assigned += Math.max(0, share);
       const losses = FB.applyHostLosses(host, Math.max(0, share));
+      FB.noteCohortLosses(state, host.realm, losses);
       for (const key of FB.unitClassIds()) aggregate[key] += losses[key] || 0;
       aggregate.total += losses.total;
     }
@@ -2073,8 +2443,13 @@ window.FB = window.FB || {};
     }
     const unitsA = sideUnits(sideA), unitsB = sideUnits(sideB);
     let powerA = 0, powerB = 0;
-    for (const h of sideA) powerA += battlePower(state, h, pid);
-    for (const h of sideB) powerB += battlePower(state, h, pid);
+    /* the defender's classes read their defense values, the attacker's their
+       attack values; a meeting engagement on open ground (no home-ground
+       terrain bonus, no defender) reads attack for both camps */
+    const roleA = defender === sideA ? 'defense' : 'attack';
+    const roleB = defender === sideB ? 'defense' : 'attack';
+    for (const h of sideA) powerA += battlePower(state, h, pid, roleA);
+    for (const h of sideB) powerB += battlePower(state, h, pid, roleB);
     const sa = powerA * battleCounterMultiplier(unitsA, unitsB) *
       (defender === sideA ? 1 + defense : 1) * FB.rf(0.75, 1.25);
     const sb = powerB * battleCounterMultiplier(unitsB, unitsA) *
@@ -2086,10 +2461,10 @@ window.FB = window.FB || {};
     const sw = Math.max(sa, sb), sl = Math.min(sa, sb);
     const ratio = FB.clamp(sl / sw, 0.3, 1); // a close fight costs the winner too
     const winnerLoss = Math.round(winnerBefore * (B().battleWinLoss || 0.28) * ratio);
-    const winnerLosses = spreadLosses(winnerSide, winnerLoss);
+    const winnerLosses = spreadLosses(state, winnerSide, winnerLoss);
     for (const h of winnerSide) if (h.men < 1) h.men = 1;
     const loserLoss = Math.round(loserBefore * (B().battleLoseLoss || 0.62));
-    const loserLosses = spreadLosses(loserSide, loserLoss);
+    const loserLosses = spreadLosses(state, loserSide, loserLoss);
     const pInvolved = sideHasRealm(winnerSide, 'player') ||
       sideHasRealm(loserSide, 'player');
     // the beaten camp routs for home — or disperses entirely
@@ -2272,6 +2647,7 @@ window.FB = window.FB || {};
         ? 0.01 : bal.supplyAttritionPerDay;
       const losses = FB.applyHostLosses(army,
         Math.max(1, Math.round(army.men * Math.max(0, rate))));
+      FB.noteCohortLosses(state, army.realm, losses);
       if (army.realm === 'player' && FB.notePlayerWarTroopLosses) {
         FB.notePlayerWarTroopLosses(state, losses);
       }
@@ -2473,13 +2849,17 @@ window.FB = window.FB || {};
       const fraction = expected - lost;
       if (fraction > 0 && FB.rng() < fraction) lost++;
       if (lost > 0) {
-        FB.applyHostLosses(playerHost, Math.min(playerHost.men, lost));
+        const deserters = FB.applyHostLosses(playerHost,
+          Math.min(playerHost.men, lost));
+        FB.noteCohortLosses(state, 'player', deserters);
         requestMap();
       }
     }
 
     // levies trickle back while a host rests on its sovereign's own land —
-    // fresh peasants from the fields; the slain men-at-arms are not replaced
+    // fresh peasants from the fields; slain professionals return only as
+    // drilled cohort replacements, which claim the room first
+    cohortTick(state);
     for (const a of state.armies) {
       if (a.size === undefined) a.size = a.men; // hosts from before ranks refilled
       FB.hostUnits(a); // hosts from before levy tiers
@@ -2490,10 +2870,14 @@ window.FB = window.FB || {};
         ? ((p.provs && p.provs.indexOf(a.at) >= 0) || (state.holder && state.holder[a.at] === 'player'))
         : state.owner[a.at] === a.realm;
       if (own) {
-        const add = Math.min(a.size - a.men, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
-        a.units.levy += add;
-        a.men += add;
-        requestMap();
+        if (cohortJoinHost(state, a, a.size - a.men)) requestMap();
+        const room = a.size - a.men;
+        if (room > 0) {
+          const add = Math.min(room, Math.max(1, Math.round(a.size * (B().armyReinforceRate || 0.02))));
+          a.units.levy += add;
+          a.men += add;
+          requestMap();
+        }
       }
     }
 

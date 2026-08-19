@@ -34,6 +34,25 @@ FBDATA.travelPurposes = {
     cost:0,
     mode:'capitals'
   },
+  expedition: {
+    name:'Adventuring expedition',
+    icon:'🗺',
+    desc:'Journey beyond your own people to see foreign lands and return with discoveries worth the road.',
+    cost:12,
+    minTier:1,
+    maxTier:7,
+    mode:'foreign'
+  },
+  frontier: {
+    name:'Withdraw into the wastes',
+    icon:'🛖',
+    desc:'Leave settled life for an empty frontier beside a reachable county, endure a year of survival and work, and raise a permanent homestead — never a title.',
+    cost:10,
+    minTier:1,
+    maxTier:2,
+    mode:'frontier',
+    repeatable:true
+  },
   relationship: {
     name:'Relationship visit',
     icon:'🤝',
@@ -105,3 +124,17 @@ FBDATA.balance.travelWorkEventMinDays = 55;
 FBDATA.balance.travelWorkEventMaxDays = 85;
 FBDATA.balance.travelSettleOfferDays = 360;
 FBDATA.balance.travelSettleWorkEvents = 4;
+/* Mercenary contracts grow out of paid-service journeys: a soldier arriving
+   at a warring realm's capital may sign on for a fixed term of seasons. */
+FBDATA.balance.travelExpeditionMaxDestinations = 40;
+FBDATA.balance.mercContractSeasons = 4;
+FBDATA.balance.mercContractSeasonPay = 6;
+FBDATA.balance.mercContractCompletionGold = 20;
+FBDATA.balance.mercContractAbandonStanding = -8;
+/* The frontier withdrawal (mode:'frontier'): the destination is a wasteland
+   reached through one settled gateway county, and permanent settlement needs
+   the ordinary one-year residence plus this many successful frontier-work
+   milestones. A completed homestead grants this many starter land plots at the
+   new county's head settlement. */
+FBDATA.balance.frontierMilestonesRequired = 4;
+FBDATA.balance.frontierSettlementPlots = 1;

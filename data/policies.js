@@ -8,7 +8,20 @@
    aid-response and per-trait posture adjustments live in each def’s `posture`.
    A `gate` names an FB.fns fn that returns true when the policy may be
    proposed, or a localized reason string when it may not. Runtime mods may
-   replace complete definitions through the top-level `policies` key. */
+   replace complete definitions through the top-level `policies` key.
+
+   The catalog also carries crown-side royal policy (`institution:'crown'`):
+   standing laws the sovereign player (tier 6+) proclaims directly, with no
+   Estates campaign or bloc vote. Such a def declares ordered mutually
+   exclusive `levels`; each level may carry a county `modifier` (applied to
+   every county the player holds directly, or only minority-faith ones when
+   `modifierScope:'minority'`), a `seasonPiety` trickle, a `researchFactor`
+   on the player realm’s research rate, a `migrationAttraction` shift for
+   player-owned counties, `developmentGrowth` (a seasonal chance to raise one
+   held county’s development), and one-proclamation `onEnact` reactions
+   (piety, prestige, authority, Common Voice, religious-head and foreign
+   Standing, vassal Standing by faith, and a mistreatment note). The engine
+   is js/institutions.js; the Estates machinery below ignores these defs. */
 window.FBDATA = window.FBDATA || {};
 
 FBDATA.policies = {
@@ -163,5 +176,73 @@ FBDATA.policies = {
     order:8,
     gate:'parliament_gate_war_condemnation',
     posture:{ traits:{ brave:-8, craven:8, patient:4, kind:4 } }
+  },
+  religious_tolerance: {
+    name:'Religious Tolerance',
+    icon:'🕯',
+    desc:'The crown’s standing law for subjects who keep another faith. No proclamation rewrites a county’s faith; the law decides only how the realm treats the difference.',
+    family:'faith',
+    institution:'crown',
+    proposer:'ruler',
+    minTier:6, maxTier:7,
+    states:'levels',
+    defaultLevel:'confessional_preference',
+    cooldown:'year',
+    repeal:'proclamation',
+    emergency:false,
+    order:9,
+    levels:[
+      { id:'persecution', name:'Persecution', icon:'🔥',
+        desc:'The minority faith is harried: gatherings dispersed, houses of prayer closed, informers paid. The clergy approve and the treasury takes its fines; the persecuted nurse a grievance that outlives the reign.',
+        modifier:'persecuted_minorities', modifierScope:'minority',
+        seasonPiety:2, researchFactor:-0.15,
+        onEnact:{ piety:10, authority:4, pop:-6, headFaith:8,
+          sameFold:3, otherFold:-8, vassalSameFaith:2, vassalOtherFaith:-15,
+          mistreatment:'religious_persecution' } },
+      { id:'confessional_preference', name:'Confessional Preference', icon:'⛪',
+        desc:'The customary peace: the realm’s faith holds first place in law and custom, and other faiths keep their parishes without the crown’s protection or its particular attention.' },
+      { id:'tolerated_minorities', name:'Tolerated Minorities', icon:'🕊',
+        desc:'Other faiths worship openly under the king’s peace. Their markets and workshops prosper; the stricter clergy grumble.',
+        modifier:'tolerated_minorities', modifierScope:'minority',
+        researchFactor:0.05,
+        onEnact:{ prestige:4, authority:-2, pop:3, headFaith:-4,
+          sameFold:-2, otherFold:4, vassalOtherFaith:8 } },
+      { id:'protected_worship', name:'Protected Worship', icon:'📜',
+        desc:'Minority congregations receive the crown’s written protection: worship, persons, and market rights guaranteed by charter. Withdrawing the charter before its protected term is an unlawful revocation.',
+        modifier:'protected_worship', modifierScope:'minority',
+        privilege:'protected_worship', protectedTerm:true,
+        seasonPiety:-1, researchFactor:0.10,
+        onEnact:{ piety:-5, prestige:6, authority:-3, pop:5, headFaith:-10,
+          sameFold:-4, otherFold:8, vassalSameFaith:-2, vassalOtherFaith:12 } }
+    ]
+  },
+  settlement_policy: {
+    name:'Settlement Policy',
+    icon:'🏕',
+    desc:'The crown’s standing law for newcomers: who may cross the boundary stones to settle, work, and trade in your counties.',
+    family:'settlement',
+    institution:'crown',
+    proposer:'ruler',
+    minTier:6, maxTier:7,
+    states:'levels',
+    defaultLevel:'licensed_newcomers',
+    cooldown:'year',
+    repeal:'proclamation',
+    emergency:false,
+    order:10,
+    levels:[
+      { id:'closed_settlement', name:'Closed Settlement', icon:'🚪',
+        desc:'Strangers are turned back at the boundary stones. The villages approve of work and land kept for their own sons; the markets thin and the roads empty.',
+        modifier:'closed_settlement', modifierScope:'all',
+        migrationAttraction:-2,
+        onEnact:{ pop:6, prestige:-2, authority:1, otherFold:-2 } },
+      { id:'licensed_newcomers', name:'Licensed Newcomers', icon:'📜',
+        desc:'The customary rule: a newcomer with a lord’s license, a craft, or a merchant’s surety may settle; the shiftless are moved along. Neither gate nor bounty.' },
+      { id:'encouraged_settlement', name:'Encouraged Settlement', icon:'🏕',
+        desc:'The crown pays to plant newcomers on waste and street: posted protections, seed grain, and remitted dues draw settlers, specialists, and refugees — at a standing seasonal cost in every county you hold.',
+        modifier:'encouraged_settlement', modifierScope:'all',
+        migrationAttraction:2, developmentGrowth:true, researchFactor:0.05,
+        onEnact:{ pop:2, prestige:4, authority:-1, otherFold:2 } }
+    ]
   }
 };

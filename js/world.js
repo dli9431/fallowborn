@@ -1046,103 +1046,151 @@ window.FB = window.FB || {};
     return { x:pr.cx, y:pr.cy };
   }
 
-  function compileSites(world) {
+  /* Compile one county's ordered site records: authored slots first (never
+     renumbered), then deterministic generated slots filling to the maximum.
+     Boot calls this for every settled county; the wasteland-materialization
+     helper calls it for a county converted during play (wastelands are skipped
+     at boot, so a frontier county receives the same generated context the
+     moment it becomes real land). Pure: it reads the world raster but returns
+     its records instead of installing them. */
+  function compileProvinceSites(world, pr) {
     var faults = [];
     var siteTable = FBDATA.settlementSites || {};
+    var authored = pr.settlements || [];
+    /* A legacy province replacement may deliberately omit site data. It
+       still inherits the former slot labels, while all physical records are
+       freshly generated and remain explicitly unauthored. */
+    var legacyPresentation = pr.legacySettlementPresentation || [];
+    var records = [];
+    var placed = [], seenNames = {}, forcedCount = 0;
+    for (var ai = 0; ai < authored.length; ai++) {
+      var entry = authored[ai];
+      /* fill: true presentations (data/settlements_real.js) replace a
+         slot's generated name/location with a real place but, unlike a
+         curated entry, do not force early visibility — development reveals
+         them on the normal thresholds. */
+      if (!entry.fill) forcedCount++;
+      var geo = siteTable[entry.site];
+      if (!geo) continue; // impossible after bookmark validation; defensive
+      var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);
+      var sx = Math.round(wx), sy = Math.round(wy), snap = 0;
+      var cell = siteGridIndex(world, sx, sy);
+      if (cell < 0 || world.grid[cell] !== pr.idx + 1) {
+        var snapped = nearestCountyCell(world, pr, wx, wy);
+        if (!snapped) {
+          faults.push('Bookmark ' + (FB.activeBookmarkId || '?') +
+            ': settlement site ' + entry.site + ' is assigned to ' + pr.id +
+            ' but lies more than ' + SETTLEMENT_SNAP_MAX +
+            ' map units outside that county — fix its coordinates or its county assignment.');
+          continue;
+        }
+        sx = snapped.x; sy = snapped.y;
+        snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
+      }
+      var adjusted = seaMarginSnap(world, pr, sx, sy, placed);
+      sx = adjusted.x; sy = adjusted.y;
+      placed.push({ x: sx, y: sy });
+      seenNames[entry.name] = 1;
+      records.push({
+        pid: pr.id, pidx: pr.idx, index: ai, site: entry.site,
+        name: entry.name, kind: entry.kind,
+        x: sx, y: sy, authored: true, snap: snap
+      });
+    }
+    for (var gi = authored.length; gi < SETTLEMENT_MAX_SLOTS; gi++) {
+      var legacy = legacyPresentation[gi];
+      var name = legacy && typeof legacy.name === 'string' && !seenNames[legacy.name]
+        ? legacy.name : null;
+      var kind = legacy && (legacy.kind === 'village' || legacy.kind === 'town' ||
+        legacy.kind === 'city') ? legacy.kind : 'village';
+      if (!name) {
+        var h = strHash(pr.id + ':' + gi);
+        name = FB.settlementName(pr.culture, h);
+        while (seenNames[name]) {
+          h = (h * 31 + 7) >>> 0;
+          name = FB.settlementName(pr.culture, h);
+        }
+      }
+      seenNames[name] = 1;
+      var pt = generatedSitePoint(world, pr, gi, placed);
+      /* generatedSitePoint already pushed its pick; swap it for the
+         inland-adjusted point so coastal slots keep the same sea margin */
+      placed.pop();
+      pt = seaMarginSnap(world, pr, pt.x, pt.y, placed);
+      placed.push(pt);
+      records.push({
+        pid: pr.id, pidx: pr.idx, index: gi,
+        site: 'generated__' + pr.id + '__' + gi,
+        name: name, kind: kind,
+        x: pt.x, y: pt.y, authored: false, snap: 0
+      });
+    }
+    return {
+      faults: faults,
+      records: records,
+      authored: forcedCount,
+      legacyBase: 2 + (strHash(pr.id) % 2)
+    };
+  }
+
+  /* Render/hit priority: head settlements first, then authored before
+     generated, then stable province/index order. The renderer sweeps this
+     list per live kind rank, so the effective priority is kind, then head
+     status, then authored status, then province/index — one deterministic
+     order shared by label collision and hit ties. */
+  function siteRenderCompare(a, b) {
+    if ((a.index === 0) !== (b.index === 0)) return a.index === 0 ? -1 : 1;
+    if (a.authored !== b.authored) return a.authored ? -1 : 1;
+    if (a.pid !== b.pid) return a.pid < b.pid ? -1 : 1;
+    return a.index - b.index;
+  }
+
+  function compileSites(world) {
+    var faults = [];
     world.sites = [];
     world.sitesByProv = {};
     for (var pi = 0; pi < world.provs.length; pi++) {
       var pr = world.provs[pi];
       if (pr.wasteland) continue;
-      var authored = pr.settlements || [];
-      /* A legacy province replacement may deliberately omit site data. It
-         still inherits the former slot labels, while all physical records are
-         freshly generated and remain explicitly unauthored. */
-      var legacyPresentation = pr.legacySettlementPresentation || [];
-      var records = [];
-      var placed = [], seenNames = {}, forcedCount = 0;
-      for (var ai = 0; ai < authored.length; ai++) {
-        var entry = authored[ai];
-        /* fill: true presentations (data/settlements_real.js) replace a
-           slot's generated name/location with a real place but, unlike a
-           curated entry, do not force early visibility — development reveals
-           them on the normal thresholds. */
-        if (!entry.fill) forcedCount++;
-        var geo = siteTable[entry.site];
-        if (!geo) continue; // impossible after bookmark validation; defensive
-        var wx = FB.lonToX(geo.x), wy = FB.latToY(geo.y);
-        var sx = Math.round(wx), sy = Math.round(wy), snap = 0;
-        var cell = siteGridIndex(world, sx, sy);
-        if (cell < 0 || world.grid[cell] !== pr.idx + 1) {
-          var snapped = nearestCountyCell(world, pr, wx, wy);
-          if (!snapped) {
-            faults.push('Bookmark ' + (FB.activeBookmarkId || '?') +
-              ': settlement site ' + entry.site + ' is assigned to ' + pr.id +
-              ' but lies more than ' + SETTLEMENT_SNAP_MAX +
-              ' map units outside that county — fix its coordinates or its county assignment.');
-            continue;
-          }
-          sx = snapped.x; sy = snapped.y;
-          snap = Math.round(Math.hypot(sx - wx, sy - wy) * 10) / 10;
-        }
-        var adjusted = seaMarginSnap(world, pr, sx, sy, placed);
-        sx = adjusted.x; sy = adjusted.y;
-        placed.push({ x: sx, y: sy });
-        seenNames[entry.name] = 1;
-        records.push({
-          pid: pr.id, pidx: pr.idx, index: ai, site: entry.site,
-          name: entry.name, kind: entry.kind,
-          x: sx, y: sy, authored: true, snap: snap
-        });
-      }
-      for (var gi = authored.length; gi < SETTLEMENT_MAX_SLOTS; gi++) {
-        var legacy = legacyPresentation[gi];
-        var name = legacy && typeof legacy.name === 'string' && !seenNames[legacy.name]
-          ? legacy.name : null;
-        var kind = legacy && (legacy.kind === 'village' || legacy.kind === 'town' ||
-          legacy.kind === 'city') ? legacy.kind : 'village';
-        if (!name) {
-          var h = strHash(pr.id + ':' + gi);
-          name = FB.settlementName(pr.culture, h);
-          while (seenNames[name]) {
-            h = (h * 31 + 7) >>> 0;
-            name = FB.settlementName(pr.culture, h);
-          }
-        }
-        seenNames[name] = 1;
-        var pt = generatedSitePoint(world, pr, gi, placed);
-        /* generatedSitePoint already pushed its pick; swap it for the
-           inland-adjusted point so coastal slots keep the same sea margin */
-        placed.pop();
-        pt = seaMarginSnap(world, pr, pt.x, pt.y, placed);
-        placed.push(pt);
-        records.push({
-          pid: pr.id, pidx: pr.idx, index: gi,
-          site: 'generated__' + pr.id + '__' + gi,
-          name: name, kind: kind,
-          x: pt.x, y: pt.y, authored: false, snap: 0
-        });
+      var compiled = compileProvinceSites(world, pr);
+      for (var fi = 0; fi < compiled.faults.length; fi++) {
+        faults.push(compiled.faults[fi]);
       }
       world.sitesByProv[pr.id] = {
-        list: records,
-        authored: forcedCount,
-        legacyBase: 2 + (strHash(pr.id) % 2)
+        list: compiled.records,
+        authored: compiled.authored,
+        legacyBase: compiled.legacyBase
       };
-      for (var ri = 0; ri < records.length; ri++) world.sites.push(records[ri]);
+      for (var ri = 0; ri < compiled.records.length; ri++) {
+        world.sites.push(compiled.records[ri]);
+      }
     }
-    /* Render/hit priority: head settlements first, then authored before
-       generated, then stable province/index order. The renderer sweeps this
-       list per live kind rank, so the effective priority is kind, then head
-       status, then authored status, then province/index — one deterministic
-       order shared by label collision and hit ties. */
-    world.sitesRender = world.sites.slice().sort(function (a, b) {
-      if ((a.index === 0) !== (b.index === 0)) return a.index === 0 ? -1 : 1;
-      if (a.authored !== b.authored) return a.authored ? -1 : 1;
-      if (a.pid !== b.pid) return a.pid < b.pid ? -1 : 1;
-      return a.index - b.index;
-    });
+    world.sitesRender = world.sites.slice().sort(siteRenderCompare);
     return faults;
   }
+
+  /* A wasteland converted during play was skipped by boot compilation. Give it
+     the same deterministic generated slot list now — bookmark validation
+     forbids authored or legacy presentations on wastelands, so only generated
+     slots ever appear here, named in the county's (newly settler) culture. */
+  FB.worldCompileSettlements = function (pid) {
+    var world = FB.world;
+    var pr = world && world.byId ? world.byId[pid] : null;
+    if (!pr || pr.wasteland || !world.sitesByProv || world.sitesByProv[pid]) {
+      return false;
+    }
+    var compiled = compileProvinceSites(world, pr);
+    world.sitesByProv[pid] = {
+      list: compiled.records,
+      authored: compiled.authored,
+      legacyBase: compiled.legacyBase
+    };
+    for (var i = 0; i < compiled.records.length; i++) {
+      world.sites.push(compiled.records[i]);
+    }
+    world.sitesRender = world.sites.slice().sort(siteRenderCompare);
+    return true;
+  };
 
   /* ================= POLITICAL STATE ================= */
 
@@ -4501,32 +4549,72 @@ window.FB = window.FB || {};
     return (state.owner && state.player && state.owner[state.player.provinceId]) || null;
   };
 
+  /* The one authoritative physical conversion of empty land into a real
+     county: clears the wasteland flag, stamps the settlers' culture and faith,
+     development 1, and the given political holder and sovereign owner. A
+     converted county keeps its bookmark lack of a duchy, so it stays outside
+     every de jure duchy, kingdom claim, and title majority — a colony, never a
+     duchy-maker. Boot site compilation skipped the wasteland, so the county
+     now receives its deterministic generated settlement slots; realm caches,
+     the market province list, and the map are invalidated together. The two
+     Chronicle descriptors are shared by every caller.
+
+     Callers pick the politics: the noble `settle_waste` deed passes the player
+     as holder and then adds the county to the demesne and pays the cost; the
+     commoner frontier journey passes the gateway county's holder and grants
+     only household property. Returns the province, or null when the land is
+     not convertible. */
+  FB.materializeWasteland = function (state, pid, opts) {
+    opts = opts || {};
+    const pr = FB.world && FB.world.byId ? FB.world.byId[pid] : null;
+    if (!pr || !pr.wasteland) return null;
+    const me = state.chars && state.player
+      ? state.chars[state.player.charId] : null;
+    const culture = opts.culture || (me && me.culture) || null;
+    const religion = opts.religion || (me && me.religion) || null;
+    const holderId = opts.holderId || null;
+    const ownerId = opts.ownerId || holderId;
+    if (!culture || !religion || !holderId || !ownerId) return null;
+    pr.wasteland = false;
+    pr.culture = culture;
+    pr.religion = religion;
+    state.dev[pid] = 1;
+    state.holder[pid] = holderId;
+    state.owner[pid] = ownerId;
+    FB.worldCompileSettlements(pid);
+    FB.invalidateRealmCache();
+    if (FB.marketWorldDirty) FB.marketWorldDirty();
+    FB.checkTierPromotions(state);
+    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+    FB.news(state, FB.msg('news.world.wasteland_settlement_record',
+      'Settled the empty land of {province}.', { province: pr.name }));
+    FB.news(state, FB.msg('news.world.wasteland_settled',
+      '🌱 You settle the empty land of {province} — smoke rises where only the wind went before.',
+      { province: pr.name }));
+    return pr;
+  };
+
   /* found a new holding on empty land: a bordering wasteland becomes a true
      county of the player's demesne — the settlers' own culture and faith,
-     outside every de jure duchy (a colony, not a duchy-maker) */
+     outside every de jure duchy (a colony, not a duchy-maker). The physical
+     conversion lives in FB.materializeWasteland; this deed adds the demesne
+     politics and the cost. */
   FB.settleWaste = function (state, pid) {
     const p = state.player, pr = FB.world.byId[pid];
     if (!pr || !pr.wasteland) return;
     const me = state.chars[p.charId];
-    pr.wasteland = false;
-    pr.culture = me.culture;
-    pr.religion = me.religion;
-    state.dev[pid] = 1;
-    state.holder[pid] = 'player';
-    state.owner[pid] = FB.playerRealmId(state) || 'player';
+    const done = FB.materializeWasteland(state, pid, {
+      culture: me.culture,
+      religion: me.religion,
+      holderId: 'player',
+      ownerId: FB.playerRealmId(state) || 'player'
+    });
+    if (!done) return;
     p.provs = p.provs || [];
     if (p.provs.indexOf(pid) < 0) p.provs.push(pid);
     FB.applyEffects(state, {
       gold: -FBDATA.balance.settleGold, prestige: -FBDATA.balance.settlePrestige
     });
-    FB.news(state, FB.msg('news.world.wasteland_settlement_record',
-      'Settled the empty land of {province}.', { province: pr.name }));
-    FB.invalidateRealmCache();
-    FB.checkTierPromotions(state);
-    if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
-    FB.news(state, FB.msg('news.world.wasteland_settled',
-      '🌱 You settle the empty land of {province} — smoke rises where only the wind went before.',
-      { province: pr.name }));
   };
 
   FB.isRealmAtWar = function (state, realmId) {
