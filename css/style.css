@@ -883,7 +883,8 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   min-width: 32px; min-height: 32px; padding: 0; font-size: 14px; font-weight: bold;
   display: inline-flex; align-items: center; justify-content: center;
 }
-.settcard-actions .btn.small.settcard-raise {
+.settcard-actions .btn.small.settcard-raise,
+.settcard-actions .btn.small.convcard-select {
   min-height: 32px; padding: 0 14px; font-size: 13px; font-weight: bold;
   display: inline-flex; align-items: center; justify-content: center; gap: 2px;
 }
@@ -904,6 +905,108 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 }
 .fort-next-tier > b, .fort-next-tier .adesc { display: block; }
 .fort-next-tier .adesc { margin-top: 3px; color: var(--helper-text-color); font-size: 12px; }
+
+/* Conversion picker: segmented scopes, tradition sections, clean cards */
+.conversion-modal .modalcard {
+  display: flex; flex-direction: column;
+  width: min(96vw, 800px); max-height: min(90vh, 820px);
+}
+.conversion-modal #gm-body {
+  display: flex; flex-direction: column;
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+}
+.conversion-modal .gm-body-text p {
+  font-size: 14.5px; line-height: 1.45;
+}
+.conversion-scope-bar {
+  display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0 4px;
+}
+.conversion-scope-tab {
+  flex: 1 1 110px; min-height: 40px; padding: 7px 12px; font-size: 14.5px;
+  text-align: center;
+}
+.conversion-scope-desc {
+  margin: 2px 2px 8px; color: var(--helper-text-color); font-size: 13.5px; line-height: 1.45;
+}
+.conversion-search-wrap {
+  margin: 4px 0 10px;
+}
+.conversion-search-wrap input {
+  width: 100%; min-height: 40px; padding: 7px 12px; border: 1px solid #66522f;
+  border-radius: 6px; background: #211a12; color: var(--main-text-color); font-size: 14.5px;
+}
+.conversion-section {
+  margin: 0 0 14px;
+}
+.conversion-section-title {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 8px 0 6px; color: #d8b24a; font-size: 15px; font-weight: bold;
+  letter-spacing: .03em;
+}
+.conversion-section-count {
+  color: var(--helper-text-color); font-size: 12.5px; font-weight: normal;
+}
+.conversion-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 8px;
+}
+.conversion-card {
+  position: relative; display: flex; flex-direction: column; justify-content: space-between;
+  min-height: 74px; padding: 10px 12px; border: 1px solid #55452a; border-radius: 8px;
+  background: #261e15; color: var(--main-text-color); cursor: pointer; text-align: left;
+  user-select: none;
+}
+.conversion-card .settcard-head b {
+  font-size: 15px;
+}
+.conversion-card:hover {
+  border-color: #a5842f; background: #302619;
+}
+.conversion-card:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 2px;
+}
+.conversion-card.disabled {
+  opacity: .62; cursor: default; border-color: #3d311e; background: #1e1811;
+}
+.conversion-card.disabled:hover {
+  border-color: #3d311e; background: #1e1811;
+}
+.conversion-card-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 5px;
+}
+.conversion-badge {
+  display: inline-block; padding: 2px 6px; border-radius: 4px;
+  font-size: 11px; font-weight: bold; line-height: 1.3;
+}
+.conversion-badge.in-fold { background: #263e23; color: #a8e09a; border: 1px solid #3c6536; }
+.conversion-badge.schismatic { background: #38341b; color: #ded787; border: 1px solid #5a552b; }
+.conversion-badge.foreign { background: #242229; color: #b8b2cb; border: 1px solid #454053; }
+.conversion-badge.hostile { background: #3e201d; color: #e89b94; border: 1px solid #63322d; }
+.conversion-badge.local { background: #362a16; color: #e8cd82; border: 1px solid #5a4623; }
+.conversion-card-cost {
+  margin-top: 5px; color: #d0ad54; font-size: 14.5px; font-weight: bold;
+}
+.conversion-card-cost .cost-highlight {
+  color: #f2cf6d; font-weight: bold;
+}
+.conversion-card-cost.unaffordable { color: #e89b94; }
+.conversion-card-cost.unaffordable .cost-highlight { color: #e89b94; }
+.conversion-card-reason {
+  margin-top: 3px; color: var(--helper-text-color); font-size: 12px; font-style: italic;
+}
+.conversion-card .settcard-details {
+  font-size: 13.5px; line-height: 1.45;
+}
+.conversion-confirm-cost {
+  font-size: 15px; margin: 6px 0;
+}
+.conversion-confirm-cost .cost-highlight {
+  color: #f2cf6d; font-weight: bold; font-size: 15.5px;
+}
+.conversion-empty {
+  padding: 16px; text-align: center; color: var(--helper-text-color); font-size: 14px;
+  font-style: italic;
+}
 
 /* Better Household uses the same dense scan rhythm as Technology. */
 .household-modal .modalcard { width: min(94vw, 780px); }
@@ -1213,8 +1316,14 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   background:#211b12; color:#d8b24a; font:inherit; text-align:left; cursor:pointer;
 }
 .actiongroup-toggle:hover { border-color:#c9a24a; }
-.actiongroup-toggle span:last-child { color:var(--helper-text-color); font-size:13px; white-space:nowrap; }
+.actiongroup-toggle.deed-section-active {
+  border-color:#e0c060; background:#302719;
+}
+.actiongroup-toggle > span:last-child { color:var(--helper-text-color); font-size:13px; white-space:nowrap; }
 .actionsubhead { color:var(--helper-text-color); font-size:13px; margin:7px 3px 5px; }
+.actionsubhead.deed-section-active {
+  color:#e0c060; border-left:2px solid #e0c060; padding-left:6px;
+}
 .kv { display: flex; justify-content: space-between; font-size: 14px; padding: 3px 0; }
 .kv b { color: var(--main-text-color); font-weight: normal; }
 .land-section {
@@ -3154,8 +3263,8 @@ textarea.modjson, textarea.savetext {
     align-items: center; justify-content: center;
     padding: max(14px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
   }
-  .modal.fullsheet-modal { align-items: stretch; padding: 0; }
-  .changelog-modal .modalcard, .fullsheet-modal .modalcard {
+  .modal.fullsheet-modal, .modal.conversion-modal { align-items: stretch; padding: 0; }
+  .changelog-modal .modalcard, .fullsheet-modal .modalcard, .conversion-modal .modalcard {
     display: flex; flex-direction: column;
     width: 100%; max-height: 100%; overflow: hidden;
   }
@@ -3163,19 +3272,19 @@ textarea.modjson, textarea.savetext {
     padding: 16px 16px 0;
     border: 2px solid #7a6234; border-radius: 14px;
   }
-  .fullsheet-modal .modalcard {
+  .fullsheet-modal .modalcard, .conversion-modal .modalcard {
     height: 100%; max-width: none;
     padding: max(14px, env(safe-area-inset-top)) 16px 0;
     border: none; border-radius: 0;
   }
-  .changelog-modal .gm-heading, .fullsheet-modal .gm-heading { flex: 0 0 auto; }
-  .changelog-modal .modalcard h3, .fullsheet-modal .modalcard h3 { flex: 0 0 auto; margin-bottom: 8px; }
-  .changelog-modal .gm-heading h3, .fullsheet-modal .gm-heading h3 { margin-bottom: 0; }
-  .changelog-modal #gm-body, .fullsheet-modal #gm-body {
+  .changelog-modal .gm-heading, .fullsheet-modal .gm-heading, .conversion-modal .gm-heading { flex: 0 0 auto; }
+  .changelog-modal .modalcard h3, .fullsheet-modal .modalcard h3, .conversion-modal .modalcard h3 { flex: 0 0 auto; margin-bottom: 8px; }
+  .changelog-modal .gm-heading h3, .fullsheet-modal .gm-heading h3, .conversion-modal .gm-heading h3 { margin-bottom: 0; }
+  .changelog-modal #gm-body, .fullsheet-modal #gm-body, .conversion-modal #gm-body {
     flex: 1 1 auto; min-height: 0; overflow-y: auto;
     -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
   }
-  .changelog-modal .gm-footer, .fullsheet-modal .gm-footer {
+  .changelog-modal .gm-footer, .fullsheet-modal .gm-footer, .conversion-modal .gm-footer {
     position: sticky; bottom: 0; margin-top: auto;
     display: flex; justify-content: center;
     padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
@@ -3184,7 +3293,7 @@ textarea.modjson, textarea.savetext {
   /* full-screen sheets: a column body whose footer margin soaks up the slack
      keeps the Close at the very bottom even when the content is short (the
      sticky rule above still handles the long, scrolling case) */
-  .fullsheet-modal #gm-body { display: flex; flex-direction: column; }
+  .fullsheet-modal #gm-body, .conversion-modal #gm-body { display: flex; flex-direction: column; }
   .equip-picker-overlay {
     align-items: flex-end;
     padding: 0 max(10px, env(safe-area-inset-right))

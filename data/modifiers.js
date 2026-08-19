@@ -73,6 +73,12 @@ FBDATA.modifiers = {
     scope:'county', days:1440,
     fx:{ unrest:0.35, commonVoice:-12, tax:-0.08, levy:-0.05 }
   },
+  cultural_unrest: {
+    name:'Cultural Unrest', icon:'✊',
+    desc:'Local traditionalists and the commons reject foreign customs and resist the convert’s house.',
+    scope:'county', days:1440,
+    fx:{ unrest:0.35, commonVoice:-12, tax:-0.08, levy:-0.05 }
+  },
   conquered_without_right: {
     name:'Conquered Without Right', icon:'⚔',
     desc:'The county was taken without claim or de jure right. Its people resist the new rule and its obligations.',

@@ -3,6 +3,8 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/model.js',
   'js/world.js',
+  'js/keys.js',
+  'js/ui_panels.js',
   'js/ui_modals.js'
 ]);
 
@@ -225,6 +227,146 @@ test('daily focuses stay together and Settings can disable guide hints',
         };
       });
     }).toEqual({ preference:true, stored:true });
+  });
+
+test('deed section keys scroll, activate, and use a local QWE-ASD-ZXC grid',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.chars[s.player.charId].sex = 'f';
+      s.player.tier = 3;
+      s.player.liege = null;
+      s.player.provs = [s.player.provinceId];
+      s.player.focus = 'govern';
+      FB.foundPlayerRealm(s);
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+
+    const panel = page.locator('#tab-actions');
+    const focusList = panel.locator('#daily-focus-list');
+    const work = panel.locator('[data-action-group="work"]');
+    const life = panel.locator('[data-action-group="life"]');
+    await expect(focusList.locator('.deed-section-keyhint')).toHaveText('1');
+    await expect(work.locator('.deed-section-keyhint')).toHaveText('2');
+    await expect(life.locator('.deed-section-keyhint')).toHaveText('3');
+    await expect(panel.locator('.deed-item-keyhint')).toHaveCount(0);
+    await expect(life).toHaveAttribute('aria-expanded', 'false');
+
+    await page.keyboard.press('Digit1');
+    await expect(focusList).toBeFocused();
+    await expect(focusList).toHaveAttribute('aria-current', 'true');
+    const focusKeys = await panel.locator('[data-focus-id]').evaluateAll(
+      function (buttons) {
+        return buttons.map(function (button) {
+          return {
+            id:button.getAttribute('data-focus-id'),
+            key:button.querySelector('.deed-item-keyhint').textContent
+          };
+        });
+      });
+    expect(focusKeys).toEqual([
+      { id:'rest', key:'Q' },
+      { id:'pray', key:'W' },
+      { id:'courtly_graces', key:'E' },
+      { id:'govern', key:'A' },
+      { id:'patronize', key:'S' }
+    ]);
+    const activeSectionClick = await panel.evaluate(function (element) {
+      const hint = element.querySelector(
+        '[data-focus-id="rest"] .deed-item-keyhint');
+      hint._deedShortcutProbe = true;
+      window.__deedOriginalSetFocus = FB.setFocus;
+      FB.setFocus = function (_, id) { window.__deedFocusTarget = id; };
+      return !!hint;
+    });
+    expect(activeSectionClick).toBe(true);
+    await page.keyboard.press('q');
+    const activeSectionResult = await panel.evaluate(function (element) {
+      const hint = element.querySelector(
+        '[data-focus-id="rest"] .deed-item-keyhint');
+      const result = {
+        target:window.__deedFocusTarget,
+        hintPreserved:!!(hint && hint._deedShortcutProbe)
+      };
+      FB.setFocus = window.__deedOriginalSetFocus;
+      delete window.__deedOriginalSetFocus;
+      delete window.__deedFocusTarget;
+      return result;
+    });
+    expect(activeSectionResult).toEqual({
+      target:'rest', hintPreserved:true
+    });
+    await page.keyboard.press('q');
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.state.player.focus; });
+    }).toBe('rest');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await waitForUiRefresh(page);
+
+    await panel.evaluate(function (element) {
+      element.querySelector('[data-focus-id]')._deedsAccordionProbe = true;
+    });
+    const beforeScroll = await page.locator('#sidebody').evaluate(
+      function (sidebody) { return sidebody.scrollTop; });
+    await page.keyboard.press('Digit3');
+    await expect(life).toHaveAttribute('aria-expanded', 'true');
+    await expect(life).toHaveAttribute('aria-current', 'true');
+    await expect(life).toBeFocused();
+    await expect(focusList).not.toHaveAttribute('aria-current', 'true');
+    const lifeBody = panel.locator('[data-action-group-body="life"]');
+    await expect(lifeBody).toHaveCount(1);
+    await expect(lifeBody.locator('[data-action-id]').first()).toBeVisible();
+    const opened = await panel.evaluate(function (element) {
+      const buttons = element.querySelectorAll(
+        '[data-action-group-body="life"] [data-action-id]');
+      const hints = [];
+      for (let i = 0; i < buttons.length; i++) {
+        const hint = buttons[i].querySelector('.deed-item-keyhint');
+        if (hint) hints.push(hint.textContent);
+      }
+      return {
+        focusPreserved:!!element.querySelector('[data-focus-id]')
+          ._deedsAccordionProbe,
+        focusHints:element.querySelectorAll(
+          '[data-focus-id] .deed-item-keyhint').length,
+        workHints:element.querySelectorAll(
+          '[data-action-group-body="work"] .deed-item-keyhint').length,
+        hints:hints
+      };
+    });
+    expect(opened.focusPreserved).toBe(true);
+    expect(opened.focusHints).toBe(0);
+    expect(opened.workHints).toBe(0);
+    expect(opened.hints.slice(0, 9)).toEqual(
+      ['Q', 'W', 'E', 'A', 'S', 'D', 'Z', 'X', 'C'].slice(
+        0, opened.hints.length));
+    const firstLifeId = await lifeBody.locator('[data-action-id]').first()
+      .evaluate(function (button) {
+        const id = button.getAttribute('data-action-id');
+        button.click = function () { window.__deedShortcutTarget = id; };
+        return id;
+      });
+    await page.keyboard.press('q');
+    expect(await page.evaluate(function () {
+      return window.__deedShortcutTarget;
+    })).toBe(firstLifeId);
+    const scrolled = await page.locator('#sidebody').evaluate(
+      function (sidebody) { return sidebody.scrollTop; });
+    expect(scrolled).toBeGreaterThan(beforeScroll);
+
+    await lifeBody.locator('[data-action-id]').first().evaluate(
+      function (button) { button._deedsAccordionProbe = true; });
+    await life.click();
+    await expect(life).toHaveAttribute('aria-expanded', 'false');
+    await expect(lifeBody).toHaveCount(0);
+    await expect(life).toBeFocused();
+
+    await life.click();
+    await expect(lifeBody).toHaveCount(1);
+    const reopened = await lifeBody.locator('[data-action-id]').first()
+      .evaluate(function (button) { return !!button._deedsAccordionProbe; });
+    expect(reopened).toBe(true);
   });
 
 test('conditional commitments expose travel, finance, and political management',

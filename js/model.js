@@ -16,6 +16,29 @@ window.FB = window.FB || {};
 
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
 
+  const CULTURE_GROUPS = {
+    frankish:'west_european', german:'west_european', english:'west_european', norse:'west_european',
+    gaelic:'celtic', brezhon:'celtic',
+    iberian:'romance', basque:'romance', italian:'romance',
+    greek:'byzantine_caucasian', armenian:'byzantine_caucasian', georgian:'byzantine_caucasian',
+    slavic:'slavic_baltic', baltic:'slavic_baltic',
+    magyar:'steppe', turkic:'steppe',
+    andalusi:'middle_eastern', arabic:'middle_eastern', berber:'middle_eastern', persian:'middle_eastern',
+    nubian:'african'
+  };
+
+  FB.cultureGroup = function (cid) {
+    return CULTURE_GROUPS[cid] || 'other';
+  };
+
+  FB.cultureRelation = function (state, observerId, targetId) {
+    if (observerId === targetId) return 'same';
+    const g1 = FB.cultureGroup(observerId);
+    const g2 = FB.cultureGroup(targetId);
+    if (g1 === g2 && g1 !== 'other') return 'same_group';
+    return 'foreign';
+  };
+
   /* ---------- faith definitions ----------
      Authored and generated faiths share one inheritance graph. Definitions
      keep identity/lifecycle fields locally and recursively inherit only the

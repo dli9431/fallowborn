@@ -18,7 +18,6 @@ window.FB = window.FB || {};
   const firstMissingTech = SH.firstMissingTech;
   const foreignPolicyStanceText = SH.foreignPolicyStanceText;
   const foreignPolicyStatusText = SH.foreignPolicyStatusText;
-  const hintFor = SH.hintFor;
   const householdStandardsSummary = SH.householdStandardsSummary;
   const initLargeListSurface = SH.initLargeListSurface;
   const kv = SH.kv;
@@ -61,6 +60,8 @@ window.FB = window.FB || {};
     { id:'realm', label:'👑 Rank & Realm' },
     { id:'war', label:'⚔ War & Diplomacy' }
   ];
+  const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
+  let activeActionSection = null;
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
     petition_monopoly:'work',
@@ -127,6 +128,108 @@ window.FB = window.FB || {};
     const key = shortcutKeyFor(target);
     return key ? '<span class="keyhint action-keyhint">' + esc(key) + '</span>' : '';
   }
+
+  function actionSectionIndex(id) {
+    if (id === 'focus') return 0;
+    for (let i = 0; i < ACTION_GROUPS.length; i++) {
+      if (ACTION_GROUPS[i].id === id) return i + 1;
+    }
+    return -1;
+  }
+
+  function actionSectionHintFor(id) {
+    const index = actionSectionIndex(id);
+    if (FB.isTouch || index < 0) return '';
+    return '<span class="keyhint deed-section-keyhint">' +
+      (index + 1) + '</span>';
+  }
+
+  function deedItemHintFor(index) {
+    if (FB.isTouch || index < 0 || index >= DEED_ITEM_KEYS.length) return '';
+    return '<span class="keyhint deed-item-keyhint">' +
+      DEED_ITEM_KEYS[index].toUpperCase() + '</span>';
+  }
+
+  function actionSectionButtons(box, id) {
+    if (id === 'focus') return box.querySelectorAll('[data-focus-id]');
+    const body = box.querySelector('[data-action-group-body="' + id + '"]');
+    return body ? body.querySelectorAll('[data-action-id]') : [];
+  }
+
+  function refreshDeedPanelShortcuts() {
+    const box = $('tab-actions');
+    if (!box) return;
+    const headers = box.querySelectorAll('[data-action-section]');
+    let activeFound = false;
+    for (let i = 0; i < headers.length; i++) {
+      const active = headers[i].getAttribute('data-action-section') ===
+        activeActionSection;
+      headers[i].classList.toggle('deed-section-active', active);
+      if (active) {
+        activeFound = true;
+        headers[i].setAttribute('aria-current', 'true');
+      } else {
+        headers[i].removeAttribute('aria-current');
+      }
+    }
+    if (activeActionSection && !activeFound) activeActionSection = null;
+    const globalHints = box.querySelectorAll('.action-keyhint');
+    for (let i = 0; i < globalHints.length; i++) {
+      const conflicts = activeActionSection && DEED_ITEM_KEYS.indexOf(
+        globalHints[i].textContent.toLocaleLowerCase()) >= 0;
+      /* Once a section is active, its compact grid wins over overlapping
+         configured bindings. Hide badges that cannot currently fire. */
+      globalHints[i].classList.toggle('hidden', !!conflicts);
+    }
+    const oldHints = box.querySelectorAll('.deed-item-keyhint');
+    for (let i = 0; i < oldHints.length; i++) {
+      oldHints[i].parentNode.removeChild(oldHints[i]);
+    }
+    if (FB.isTouch || !activeActionSection) return;
+    const buttons = actionSectionButtons(box, activeActionSection);
+    for (let i = 0; i < buttons.length && i < DEED_ITEM_KEYS.length; i++) {
+      buttons[i].insertAdjacentHTML('afterbegin', deedItemHintFor(i));
+    }
+  }
+
+  function setActiveActionSection(id) {
+    /* Item hotkeys click a control in the section that is already active.
+       Avoid removing and recreating all nine badges before the action's own
+       ordinary UI refresh. */
+    if (activeActionSection === id) return;
+    activeActionSection = id;
+    refreshDeedPanelShortcuts();
+  }
+
+  UI.activateDeedSection = function (index) {
+    if (index < 0 || index > ACTION_GROUPS.length) return false;
+    const box = $('tab-actions');
+    if (!box) return true;
+    const id = index === 0 ? 'focus' : ACTION_GROUPS[index - 1].id;
+    const header = box.querySelector('[data-action-section="' + id + '"]');
+    if (!header) return true;
+    if (id !== 'focus' && header.getAttribute('aria-expanded') === 'false') {
+      header.click();
+    } else {
+      setActiveActionSection(id);
+    }
+    header.scrollIntoView({ block:'start' });
+    header.focus({ preventScroll:true });
+    return true;
+  };
+
+  UI.runDeedItemShortcut = function (key, run) {
+    if (!activeActionSection) return false;
+    const normalized = String(key || '').toLocaleLowerCase();
+    const index = DEED_ITEM_KEYS.indexOf(normalized);
+    if (index < 0) return false;
+    const box = $('tab-actions');
+    const buttons = box ? actionSectionButtons(box, activeActionSection) : [];
+    if (run !== false && index < buttons.length && !buttons[index].disabled) {
+      buttons[index].click();
+    }
+    return true;
+  };
 
   function shortcutTargetDefinition(target) {
     const s = FB.state;
@@ -746,70 +849,33 @@ window.FB = window.FB || {};
         renderActions();
       });
     }
-    let n = 0; // hotkey numbering covers only actions visible in open groups
     const focuses = FB.listFocuses(s);
     const instants = FB.listInstants(s);
-    function appendFocus(f) {
-      const cur = s.player.focus === f.id;
-      const btn = document.createElement('button');
-      btn.className = 'actionbtn' + (cur ? ' focused' : '');
-      btn.setAttribute('data-focus-id', f.id);
-      btn.innerHTML = hintFor(n) + shortcutHintFor(focusShortcutTarget(f)) +
-        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
-        '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
-      (function (id) {
-        btn.addEventListener('click', function () { FB.setFocus(FB.state, id); });
-      })(f.id);
-      box.appendChild(btn);
-      n++;
-    }
-    if (focuses.length) {
-      const fh = document.createElement('div');
-      fh.className = 'actionsubhead';
-      fh.id = 'daily-focus-list';
-      fh.tabIndex = -1;
-      fh.setAttribute('role', 'heading');
-      fh.setAttribute('aria-level', '3');
-      fh.textContent = FB.T('Daily focus — continues until changed');
-      box.appendChild(fh);
-      for (const f of focuses) appendFocus(f);
-    }
-    for (const group of ACTION_GROUPS) {
-      const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
-      if (!ga.length) continue;
-      const toggle = document.createElement('button');
-      const open = !!actionGroupsOpen[group.id];
-      toggle.className = 'actiongroup-toggle';
-      toggle.setAttribute('data-action-group', group.id);
-      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      toggle.innerHTML = '<span>' + esc(FB.T(group.label)) + '</span><span>' +
-        esc(String(ga.length)) + ' ' +
-        (open ? '▾' : '▸') + '</span>';
-      (function (id) {
-        toggle.addEventListener('click', function () {
-          actionGroupsOpen[id] = !actionGroupsOpen[id];
-          renderActions();
-        });
-      })(group.id);
-      box.appendChild(toggle);
-      if (!open) continue;
+    function buildActionGroupBody(groupId, items) {
+      const body = document.createElement('div');
+      body.className = 'actiongroup-body';
+      body.setAttribute('data-action-group-body', groupId);
       const ih = document.createElement('div');
       ih.className = 'actionsubhead';
       ih.textContent = FB.T('Deeds — done at once unless noted');
-      box.appendChild(ih);
-      for (const item of ga) {
+      body.appendChild(ih);
+      for (const item of items) {
         const btn = document.createElement('button');
         btn.className = 'actionbtn';
         btn.setAttribute('data-action-id', item.a.id);
         btn.disabled = !item.can;
         const label = dt(s, 'action', item.a.id, item.a, 'label');
-        btn.innerHTML = hintFor(n) + shortcutHintFor('action:' + item.a.id) +
-          esc(label) + '<span class="adesc">' +
-          esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) + '</span>';
+        btn.innerHTML = shortcutHintFor('action:' + item.a.id) + esc(label) +
+          '<span class="adesc">' +
+          esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) +
+          '</span>';
         (function (id) {
-          btn.addEventListener('click', function () { FB.runInstant(FB.state, id); });
+          btn.addEventListener('click', function () {
+            setActiveActionSection(groupId);
+            FB.runInstant(FB.state, id);
+          });
         })(item.a.id);
-        box.appendChild(btn);
+        body.appendChild(btn);
         if (FB.techUiRelevant(s) && !item.can && item.a.requiresTech &&
             !FB.techRequirementMet(s, item.a.requiresTech)) {
           const techId = firstMissingTech(s, item.a.requiresTech);
@@ -822,11 +888,88 @@ window.FB = window.FB || {};
           techButton.addEventListener('click', function () {
             UI.showTechDetail(techId);
           });
-          box.appendChild(techButton);
+          body.appendChild(techButton);
         }
-        n++;
       }
+      return body;
     }
+    function appendFocus(f) {
+      const cur = s.player.focus === f.id;
+      const btn = document.createElement('button');
+      btn.className = 'actionbtn' + (cur ? ' focused' : '');
+      btn.setAttribute('data-focus-id', f.id);
+      btn.innerHTML = shortcutHintFor(focusShortcutTarget(f)) +
+        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
+        '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
+      (function (id) {
+        btn.addEventListener('click', function () {
+          setActiveActionSection('focus');
+          FB.setFocus(FB.state, id);
+        });
+      })(f.id);
+      box.appendChild(btn);
+    }
+    if (focuses.length) {
+      const fh = document.createElement('div');
+      fh.className = 'actionsubhead';
+      fh.id = 'daily-focus-list';
+      fh.tabIndex = -1;
+      fh.setAttribute('role', 'heading');
+      fh.setAttribute('aria-level', '3');
+      fh.setAttribute('data-action-section', 'focus');
+      fh.innerHTML = actionSectionHintFor('focus') +
+        esc(FB.T('Daily focus — continues until changed'));
+      box.appendChild(fh);
+      for (const f of focuses) appendFocus(f);
+    }
+    for (const group of ACTION_GROUPS) {
+      const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
+      if (!ga.length) continue;
+      const toggle = document.createElement('button');
+      const open = !!actionGroupsOpen[group.id];
+      toggle.className = 'actiongroup-toggle';
+      toggle.setAttribute('data-action-group', group.id);
+      toggle.setAttribute('data-action-section', group.id);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      toggle.innerHTML = '<span>' + actionSectionHintFor(group.id) +
+        esc(FB.T(group.label)) + '</span><span>' +
+        esc(String(ga.length)) + ' ' +
+        (open ? '▾' : '▸') + '</span>';
+      let body = null;
+      if (open) {
+        body = buildActionGroupBody(group.id, ga);
+      }
+      (function (id, items) {
+        toggle.addEventListener('click', function () {
+          /* The panel summaries and eligibility checks are substantially more
+             expensive than the disclosure itself. Keep this group's controls
+             detached for reuse and leave the rest of Deeds mounted. */
+          setActiveActionSection(id);
+          const opening = !actionGroupsOpen[id];
+          actionGroupsOpen[id] = opening;
+          toggle.setAttribute('aria-expanded', opening ? 'true' : 'false');
+          toggle.lastElementChild.textContent = String(items.length) + ' ' +
+            (opening ? '▾' : '▸');
+          if (opening) {
+            if (!body) {
+              body = buildActionGroupBody(id, items);
+              FB.localizeTree(body);
+            }
+            let next = toggle.nextElementSibling;
+            while (next && !next.classList.contains('actiongroup-toggle')) {
+              next = next.nextElementSibling;
+            }
+            box.insertBefore(body, next);
+          } else if (body && body.parentNode === box) {
+            box.removeChild(body);
+          }
+          refreshDeedPanelShortcuts();
+        });
+      })(group.id, ga);
+      box.appendChild(toggle);
+      if (body) box.appendChild(body);
+    }
+    refreshDeedPanelShortcuts();
     function focusActionControl(selector, fallbackGroup, scrollBlock) {
       const target = box.querySelector(selector) ||
         (fallbackGroup && box.querySelector(
@@ -836,7 +979,10 @@ window.FB = window.FB || {};
       target.focus({ preventScroll:true });
     }
     function revealActionControl(groupId, selector, scrollBlock) {
-      if (groupId) actionGroupsOpen[groupId] = true;
+      if (groupId) {
+        actionGroupsOpen[groupId] = true;
+        activeActionSection = groupId;
+      }
       renderActions();
       focusActionControl(selector, groupId, scrollBlock);
     }
@@ -856,6 +1002,7 @@ window.FB = window.FB || {};
         button.addEventListener('click', function () {
           const commitment = button.dataset.commitment;
           if (commitment === 'focus') {
+            setActiveActionSection('focus');
             focusActionControl('#daily-focus-list', null, 'start');
           } else if (commitment === 'personal-attention') {
             const target = FB.socialAttentionTarget(s);

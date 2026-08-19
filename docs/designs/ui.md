@@ -81,6 +81,14 @@ share the `farmer-work` focus family, so promotion preserves that binding's mean
 Modal 1–9/Shift+1–9 navigation still wins while a dialog is open. Desktop Settings places the
 shortcut entry in its own Keyboard section. Touch and compact layouts omit that section and
 global-key badges.
+The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily Focus and
+`2`–`6` select Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War &
+Diplomacy respectively. Selection opens a closed category, scrolls its heading to the top of
+the panel, focuses and highlights it, and assigns `Q W E / A S D / Z X C` to its first nine
+rendered focuses or deeds. Only the active section shows these letter badges. These local
+letters take precedence over panel, time, autoresolve, and configurable semantic shortcuts
+while that Deeds section is active; modal and event digit handling still takes precedence over
+the panel layer. Shift+digit does not extend the Deeds list.
 Desktop panel tabs render the matching label letter as a compact keycap (`[S]elf`, `[K]in`,
 `[D]eeds`, `[L]and`, `[N]etwork`, `[C]hronicle`) rather than repeating it in the remaining
 text; narrow or short non-desktop layouts and coarse-pointer touch layouts keep the ordinary
@@ -623,9 +631,12 @@ prices this year** line.
 
 The Deeds panel uses accessible accordion groups for Work & Wealth, Life & Family,
 Faith & Community, Rank & Realm, and War & Diplomacy. Group headers are real buttons
-with `aria-expanded`; closed actions are not rendered, so number-key selection can never
-activate an invisible deed. Every available daily focus appears together in one block
-above the category accordions; the accordions split and count only deeds by category.
+with `aria-expanded`; closed actions are not rendered, so a section-local letter can never
+activate an invisible deed. Opening or closing a group updates that group in place without
+rebuilding the commitments, focus, or other group controls. Every available daily focus
+appears together in one block above the category accordions; the accordions split and count
+only deeds by category. The stable `1`–`6` section keys do not renumber when a role has no
+actions in one category, preserving muscle memory across promotions and temporary states.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
 a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the

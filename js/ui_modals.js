@@ -1908,6 +1908,22 @@ window.FB = window.FB || {};
     return FB.T('Myself alone');
   }
 
+  function conversionScopeDesc(kind, scope) {
+    if (kind === 'faith') {
+      if (scope === 'realm') {
+        return FB.T('Proclaims the state religion across your realm. Piety and prestige cost; zealot unrest in all held counties.');
+      }
+      if (scope === 'household') {
+        return FB.T('Converts your family and household. Moderate piety and prestige cost; zealot unrest in your home county.');
+      }
+      return FB.T('Personal adoption for yourself alone. Piety cost only; minimal diplomatic fallout.');
+    }
+    if (scope === 'household') {
+      return FB.T('Raises your household in the new way of life. Prestige and piety cost; cultural unrest in your lands.');
+    }
+    return FB.T('Personal adoption for yourself alone. Prestige cost only.');
+  }
+
   function conversionCostText(st) {
     const parts = [];
     if (st.pietyCost) {
@@ -1916,13 +1932,214 @@ window.FB = window.FB || {};
     if (st.prestigeCost) {
       parts.push(FB.T('{prestige} prestige', { prestige:st.prestigeCost }));
     }
-    let text = parts.join(' + ');
-    if (st.kind === 'faith' && st.relationMult !== 1) {
-      text += ' ' + FB.T('(×{mult} for the distance between the faiths)', {
-        mult:st.relationMult
-      });
+    return parts.join(' + ');
+  }
+
+  function conversionRelationBadge(relation) {
+    if (relation === 'in_fold') {
+      return '<span class="conversion-badge in-fold">' + esc(FB.T('In-Fold · −40% cost')) + '</span>';
     }
-    return text;
+    if (relation === 'schismatic') {
+      return '<span class="conversion-badge schismatic">' + esc(FB.T('Schismatic · −20% cost')) + '</span>';
+    }
+    if (relation === 'foreign') {
+      return '<span class="conversion-badge foreign">' + esc(FB.T('Foreign Tradition')) + '</span>';
+    }
+    if (relation === 'hostile') {
+      return '<span class="conversion-badge hostile">' + esc(FB.T('Hostile · +25% cost')) + '</span>';
+    }
+    return '';
+  }
+
+  function conversionCultureRelationBadge(relation) {
+    if (relation === 'same_group') {
+      return '<span class="conversion-badge in-fold">' + esc(FB.T('Related Tradition · −20% cost')) + '</span>';
+    }
+    if (relation === 'foreign') {
+      return '<span class="conversion-badge foreign">' + esc(FB.T('Foreign Culture · +25% cost')) + '</span>';
+    }
+    return '';
+  }
+
+  function conversionFaithGroup(s, fid) {
+    const g = FB.faithGroup ? FB.faithGroup(fid, s) : '';
+    if (g === 'christian') return { id:'christian', icon:'✝', name:FB.T('Christian Traditions'), order:1 };
+    if (g === 'muslim') return { id:'muslim', icon:'☪', name:FB.T('Islamic Traditions'), order:2 };
+    if (g === 'pagan') return { id:'pagan', icon:'☀', name:FB.T('Pagan Traditions'), order:3 };
+    if (g === 'zoroastrian') return { id:'zoroastrian', icon:'🔥', name:FB.T('Zoroastrianism'), order:4 };
+    if (g === 'jewish') return { id:'jewish', icon:'✡', name:FB.T('Jewish Traditions'), order:5 };
+    const rel = FB.religionOf(fid, s);
+    if (rel && (rel.founderId !== undefined || rel.originProvinceId !== undefined)) {
+      return { id:'reformed', icon:'👑', name:FB.T('Custom & Reformed Faiths'), order:6 };
+    }
+    return { id:'other', icon:'✨', name:FB.T('Other Traditions'), order:7 };
+  }
+
+  const CONVERSION_CULTURE_GROUPS = {
+    frankish:'west_european', german:'west_european', english:'west_european', norse:'west_european',
+    gaelic:'celtic', brezhon:'celtic',
+    iberian:'romance', basque:'romance', italian:'romance',
+    greek:'byzantine_caucasian', armenian:'byzantine_caucasian', georgian:'byzantine_caucasian',
+    slavic:'slavic_baltic', baltic:'slavic_baltic',
+    magyar:'steppe', turkic:'steppe',
+    andalusi:'middle_eastern', arabic:'middle_eastern', berber:'middle_eastern', persian:'middle_eastern',
+    nubian:'african'
+  };
+
+  function conversionCultureGroup(s, cid) {
+    const gid = CONVERSION_CULTURE_GROUPS[cid] || 'other';
+    if (gid === 'west_european') return { id:'west_european', icon:'🏰', name:FB.T('Western & Northern Europe'), order:1 };
+    if (gid === 'celtic') return { id:'celtic', icon:'☘', name:FB.T('Celtic Traditions'), order:2 };
+    if (gid === 'romance') return { id:'romance', icon:'🏛', name:FB.T('Romance & Iberian'), order:3 };
+    if (gid === 'byzantine_caucasian') return { id:'byzantine_caucasian', icon:'☦', name:FB.T('Byzantine & Caucasian'), order:4 };
+    if (gid === 'slavic_baltic') return { id:'slavic_baltic', icon:'🌲', name:FB.T('Slavic & Baltic'), order:5 };
+    if (gid === 'steppe') return { id:'steppe', icon:'🐎', name:FB.T('Steppe & Nomad'), order:6 };
+    if (gid === 'middle_eastern') return { id:'middle_eastern', icon:'🕌', name:FB.T('Middle Eastern & North African'), order:7 };
+    if (gid === 'african') return { id:'african', icon:'☀️', name:FB.T('African Traditions'), order:8 };
+    return { id:'other', icon:'🌍', name:FB.T('Other Cultures'), order:9 };
+  }
+
+  function conversionFaithTooltipHtml(s, fid) {
+    const rel = FB.religionOf(fid, s);
+    if (!rel) return '';
+    const name = religionName(s, fid);
+    const icon = rel.icon || '';
+    const desc = dt(s, 'religion', fid, rel, 'desc') || '';
+    const lines = [];
+
+    if (FB.faithHasSystem && FB.faithHasSystem(fid, 'papacy', s)) {
+      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(FB.T('Papacy (Pope in Rome) · Excommunication authority')));
+    } else if (rel.properties && rel.properties.head && rel.properties.head.officeId === 'sunni') {
+      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(FB.T('Caliphate (Caliph in Baghdad) · Sacred leadership')));
+    } else if (rel.properties && rel.properties.head && rel.properties.head.title) {
+      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(rel.properties.head.title));
+    } else {
+      lines.push('<b>' + esc(FB.T('Authority')) + ':</b> ' + esc(FB.T('Autonomous hierarchy')));
+    }
+
+    if (rel.properties && rel.properties.head && rel.properties.head.greatHolyWar) {
+      const ghwName = dt(s, 'religion', fid, rel, 'head.greatHolyWar.name') || FB.T('Great holy war');
+      lines.push('<b>' + esc(FB.T('Holy War')) + ':</b> ' + esc(ghwName));
+    }
+
+    const marriage = rel.properties && rel.properties.marriage;
+    if (marriage) {
+      const spouseLimit = marriage.spouseLimit && marriage.spouseLimit.m ? marriage.spouseLimit.m : 1;
+      const spouseText = spouseLimit > 1
+        ? FB.T('Polygyny (up to {count} wives)', { count:spouseLimit })
+        : FB.T('Monogamy (1 spouse)');
+      let divText = '';
+      if (marriage.divorce) {
+        if (marriage.divorce.kind === 'talaq') divText = FB.T('Talaq repudiation');
+        else if (marriage.divorce.kind === 'sunder') divText = FB.T('Sunder union');
+        else if (marriage.divorce.kind === 'get') divText = FB.T('Get divorce');
+      }
+      lines.push('<b>' + esc(FB.T('Marriage')) + ':</b> ' + esc(divText ? spouseText + ' · ' + divText : spouseText));
+    }
+
+    if (rel.properties && rel.properties.clergyMarriage !== undefined) {
+      lines.push('<b>' + esc(FB.T('Clergy')) + ':</b> ' + esc(rel.properties.clergyMarriage ? FB.T('May marry') : FB.T('Celibate')));
+    }
+
+    const pres = FB.conversionTargetPresence ? FB.conversionTargetPresence(s, 'faith', fid) : null;
+    if (pres) {
+      if (pres.kind === 'spouse') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Confessed by your spouse ({name})', { name:pres.name || '' })) + '</i>');
+      } else if (pres.kind === 'household') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Confessed by household kin ({name})', { name:pres.name || '' })) + '</i>');
+      } else if (pres.kind === 'neighbor') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Practiced in a neighboring border county')) + '</i>');
+      } else if (pres.kind === 'trade') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Encountered via active trade partners')) + '</i>');
+      } else if (pres.kind === 'network') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Known contact in your court or network ({name})', { name:pres.name || '' })) + '</i>');
+      } else if (pres.kind === 'travel') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Encountered through travels and pilgrimages')) + '</i>');
+      }
+    }
+    const realmProvs = FB.realmProvinces ? FB.realmProvinces(s, 'player') : (s.player.provs || []);
+    let countInRealm = 0;
+    let inCapital = false;
+    const capitalPid = s.realms && s.realms.player && s.realms.player.capital ? s.realms.player.capital : s.player.provinceId;
+    for (let i = 0; i < realmProvs.length; i++) {
+      const pid = realmProvs[i];
+      const prov = FB.world && FB.world.byId && FB.world.byId[pid];
+      if (prov && prov.religion === fid) {
+        countInRealm++;
+        if (pid === capitalPid) inCapital = true;
+      }
+    }
+    if (countInRealm > 0) {
+      lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(inCapital
+        ? FB.T('Practiced in {count} realm counties (including capital)', { count:countInRealm })
+        : FB.T('Practiced in {count} realm counties', { count:countInRealm })) + '</i>');
+    }
+
+    let h = '<b>' + (icon ? icon + ' ' : '') + esc(name) + '</b>';
+    if (desc) h += '<br><span class="adesc">' + esc(desc) + '</span>';
+    if (lines.length) {
+      h += '<div class="settdesc" style="margin-top:6px;font-size:13px;line-height:1.4;">' +
+        lines.join('<br>') + '</div>';
+    }
+    return h;
+  }
+
+  function conversionCultureTooltipHtml(s, cid) {
+    const def = FBDATA.cultures && FBDATA.cultures[cid];
+    if (!def) return '';
+    const name = dt(s, 'culture', cid, def, 'name') || cid;
+    const lines = [];
+
+    if (def.dyn) {
+      const dynText = def.dyn === 'patronym' ? FB.T('Patronymic (-sson / -datter)')
+        : def.dyn === 'mac' ? FB.T('Clan prefix (mac)')
+        : def.dyn === 'ibn' ? FB.T('Lineage prefix (Banu / Ibn)')
+        : def.dyn === 'ov' ? FB.T('Patronymic suffix (-ovich)')
+        : def.dyn === 'ap' ? FB.T('Patronymic prefix (ap)')
+        : def.dyn === 'of_place' ? FB.T('Toponymic (of [Place])')
+        : FB.T('Family surname');
+      lines.push('<b>' + esc(FB.T('Dynasty style')) + ':</b> ' + esc(dynText));
+    }
+
+    const males = (def.male || []).slice(0, 4).join(', ');
+    const females = (def.female || []).slice(0, 4).join(', ');
+    if (males || females) {
+      lines.push('<b>' + esc(FB.T('Sample names')) + ':</b> ' + esc([males, females].filter(Boolean).join(' · ')));
+    }
+
+    const pres = FB.conversionTargetPresence ? FB.conversionTargetPresence(s, 'culture', cid) : null;
+    if (pres) {
+      if (pres.kind === 'spouse') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Culture of your spouse ({name})', { name:pres.name || '' })) + '</i>');
+      } else if (pres.kind === 'household') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Culture of household kin ({name})', { name:pres.name || '' })) + '</i>');
+      } else if (pres.kind === 'neighbor') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Culture of a neighboring border county')) + '</i>');
+      } else if (pres.kind === 'trade') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Encountered via active trade partners')) + '</i>');
+      } else if (pres.kind === 'network') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Known contact in your court or network ({name})', { name:pres.name || '' })) + '</i>');
+      } else if (pres.kind === 'travel') {
+        lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Encountered through travels')) + '</i>');
+      }
+    }
+    const realmProvs = FB.realmProvinces ? FB.realmProvinces(s, 'player') : (s.player.provs || []);
+    let countInRealm = 0;
+    for (let i = 0; i < realmProvs.length; i++) {
+      const pid = realmProvs[i];
+      const prov = FB.world && FB.world.byId && FB.world.byId[pid];
+      if (prov && prov.culture === cid) countInRealm++;
+    }
+    if (countInRealm > 0) {
+      lines.push('<b>' + esc(FB.T('Presence')) + ':</b> <i>' + esc(FB.T('Culture of {count} realm counties', { count:countInRealm })) + '</i>');
+    }
+
+    let h = '<b>🌍 ' + esc(name) + '</b>';
+    if (lines.length) {
+      h += '<div class="settdesc" style="margin-top:6px;font-size:13px;line-height:1.4;">' +
+        lines.join('<br>') + '</div>';
+    }
+    return h;
   }
 
   UI.showConversionPicker = function (kind, initialScope) {
@@ -1934,56 +2151,215 @@ window.FB = window.FB || {};
       ? FB.religionIds(s, true) : Object.keys(FBDATA.cultures);
     const targets = [];
     for (let i = 0; i < ids.length; i++) {
-      if (ids[i] !== currentId) targets.push(ids[i]);
+      const id = ids[i];
+      if (id !== currentId && (!FB.conversionTargetEncountered || FB.conversionTargetEncountered(s, kind, id))) {
+        targets.push(id);
+      }
     }
-    targets.sort(function (a, b) {
-      const an = conversionTargetName(s, kind, a).toLowerCase();
-      const bn = conversionTargetName(s, kind, b).toLowerCase();
-      return an < bn ? -1 : (an > bn ? 1 : 0);
-    });
     const scopes = kind === 'faith'
       ? ['self', 'household', 'realm'] : ['self', 'household'];
     let scope = scopes.indexOf(initialScope) >= 0 ? initialScope : 'self';
+    let searchQuery = '';
 
-    function render() {
-      let h = '<div class="gm-body-text"><p>' + esc(kind === 'faith'
-        ? FB.T('Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it.')
-        : FB.T('Choose the culture to adopt, and how far the change reaches.')) +
-        '</p></div><div class="gm-list">';
-      for (let i = 0; i < scopes.length; i++) {
-        h += '<button type="button" class="actionbtn" data-conv-scope="' +
-          scopes[i] + '"' + (scopes[i] === scope ? ' disabled' : '') + '>' +
-          esc(conversionScopeLabel(scopes[i])) + '</button>';
-      }
-      h += '</div><div class="gm-list">';
+    function getGroups() {
+      const groupMap = {};
+      const groupList = [];
       for (let i = 0; i < targets.length; i++) {
         const id = targets[i];
-        const st = FB.conversionStatus(s, kind, id, scope);
-        let label = conversionTargetName(s, kind, id);
-        if (st.ok) label += ' — ' + conversionCostText(st);
-        h += '<button type="button" class="actionbtn" data-conv-target="' +
-          esc(id) + '"' + (st.ok ? '' : ' disabled') + '>' + esc(label) +
-          (st.ok ? '' : '<br><small>' + esc(st.reason) + '</small>') +
-          '</button>';
+        const gInfo = kind === 'faith'
+          ? conversionFaithGroup(s, id)
+          : conversionCultureGroup(s, id);
+        if (!groupMap[gInfo.id]) {
+          groupMap[gInfo.id] = {
+            id:gInfo.id, icon:gInfo.icon, name:gInfo.name, order:gInfo.order, items:[]
+          };
+          groupList.push(groupMap[gInfo.id]);
+        }
+        groupMap[gInfo.id].items.push(id);
       }
-      h += '</div>';
+      groupList.sort(function (a, b) { return a.order - b.order; });
+      for (let g = 0; g < groupList.length; g++) {
+        groupList[g].items.sort(function (a, b) {
+          const an = conversionTargetName(s, kind, a).toLowerCase();
+          const bn = conversionTargetName(s, kind, b).toLowerCase();
+          return an < bn ? -1 : (an > bn ? 1 : 0);
+        });
+      }
+      return groupList;
+    }
+
+    function renderCardsHtml(groups) {
+      let h = '';
+      const q = (searchQuery || '').trim().toLowerCase();
+      let matchCount = 0;
+
+      for (let g = 0; g < groups.length; g++) {
+        const group = groups[g];
+        const visibleItems = [];
+        for (let i = 0; i < group.items.length; i++) {
+          const id = group.items[i];
+          const name = conversionTargetName(s, kind, id);
+          if (!q || name.toLowerCase().indexOf(q) >= 0 || group.name.toLowerCase().indexOf(q) >= 0) {
+            visibleItems.push(id);
+          }
+        }
+        if (!visibleItems.length) continue;
+        matchCount += visibleItems.length;
+
+        h += '<div class="conversion-section">' +
+          '<div class="conversion-section-title">' +
+          '<span>' + esc(group.icon + ' ' + group.name) + '</span>' +
+          '<span class="conversion-section-count">' + esc(FB.T('{count} available', { count:visibleItems.length })) + '</span>' +
+          '</div><div class="conversion-grid">';
+
+        for (let i = 0; i < visibleItems.length; i++) {
+          const id = visibleItems[i];
+          const st = FB.conversionStatus(s, kind, id, scope);
+          const name = conversionTargetName(s, kind, id);
+          const relDef = kind === 'faith' ? FB.religionOf(id, s) : null;
+          const icon = relDef ? (relDef.icon || '') : '🌍';
+          const detId = 'conv-det-' + esc(id);
+          const tooltipHtml = kind === 'faith'
+            ? conversionFaithTooltipHtml(s, id)
+            : conversionCultureTooltipHtml(s, id);
+
+          let localBadge = '';
+          const pres = FB.conversionTargetPresence ? FB.conversionTargetPresence(s, kind, id) : null;
+          if (pres && pres.kind !== 'tradition' && pres.kind !== 'self') {
+            localBadge = '<span class="conversion-badge local">' + esc(pres.label) + '</span>';
+          }
+
+          const relationBadge = kind === 'faith' && st.relation
+            ? conversionRelationBadge(st.relation)
+            : (kind === 'culture' && st.relation ? conversionCultureRelationBadge(st.relation) : '');
+
+          h += '<div class="conversion-card settcard' + (st.ok ? '' : ' disabled') + '" data-conv-target="' + esc(id) + '" role="button" tabindex="' + (st.ok ? '0' : '-1') + '">' +
+            '<div class="settcard-head">' +
+            '<b>' + (icon ? esc(icon) + ' ' : '') + esc(name) + '</b>' +
+            '<span class="settcard-actions">' +
+            '<button type="button" class="btn small settcard-info" aria-expanded="false" aria-controls="' + detId + '" title="' + esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) + '">?</button>' +
+            '<button type="button" class="btn small convcard-select" data-conv-select="' + esc(id) + '"' + (st.ok ? '' : ' disabled') + '>' +
+            esc(FB.T('Select')) + '</button>' +
+            '</span></div>' +
+            '<div class="conversion-card-meta">' +
+            relationBadge + localBadge +
+            '</div>' +
+            '<div class="conversion-card-cost' + (st.ok ? '' : ' unaffordable') + '">' +
+            (st.ok
+              ? '<span class="cost-highlight">' + esc(conversionCostText(st)) + '</span>'
+              : esc(st.reason || FB.T('Unavailable'))) +
+            '</div>' +
+            '<div class="settcard-details hidden" id="' + detId + '">' +
+            tooltipHtml +
+            '</div></div>';
+        }
+        h += '</div></div>';
+      }
+
+      if (matchCount === 0) {
+        h = '<div class="conversion-empty">' + esc(FB.T('No traditions match "{query}".', { query:searchQuery })) + '</div>';
+      }
+      return h;
+    }
+
+    function render() {
+      const groups = getGroups();
+      let h = '<div class="gm-body-text">' +
+        '<p>' + esc(kind === 'faith'
+          ? FB.T('Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it.')
+          : FB.T('Choose the culture to adopt, and how far the change reaches.')) +
+        '</p></div>' +
+        '<div class="conversion-scope-bar" role="tablist" aria-label="' + esc(FB.T('Conversion scope')) + '">';
+      for (let i = 0; i < scopes.length; i++) {
+        const active = scopes[i] === scope;
+        h += '<button type="button" class="tab conversion-scope-tab' + (active ? ' active' : '') +
+          '" data-conv-scope="' + scopes[i] + '" aria-pressed="' + active + '">' +
+          esc(conversionScopeLabel(scopes[i])) + '</button>';
+      }
+      h += '</div>' +
+        '<div class="conversion-scope-desc" id="conv-scope-desc">' +
+        esc(conversionScopeDesc(kind, scope)) + '</div>' +
+        '<div class="conversion-search-wrap">' +
+        '<input id="conv-search" type="search" placeholder="' +
+        esc(kind === 'faith' ? FB.T('Search faith or tradition…') : FB.T('Search culture…')) +
+        '" value="' + esc(searchQuery) + '">' +
+        '</div>' +
+        '<div id="conv-grid-container">' +
+        renderCardsHtml(groups) +
+        '</div>' +
+        '<div class="gm-footer">' +
+        '<button type="button" class="btn" id="conv-close">' +
+        esc(FB.T('Close')) + '</button></div>';
+
       openModal(kind === 'faith'
-        ? FB.T('Convert faith') : FB.T('Adopt a new culture'), h);
-      document.querySelectorAll('[data-conv-scope]').forEach(function (button) {
+        ? FB.T('Convert faith') : FB.T('Adopt a new culture'), h, { modalClass:'conversion-modal', noHotkeys:true });
+      bindModalEvents();
+    }
+
+    function bindModalEvents() {
+      const modalBody = $('gm-body');
+      if (!modalBody) return;
+
+      bindCardInfoToggles(modalBody);
+
+      const closeBtn = $('conv-close');
+      if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+          UI.closeModal();
+        });
+      }
+
+      modalBody.querySelectorAll('[data-conv-scope]').forEach(function (button) {
         button.addEventListener('click', function () {
           scope = button.getAttribute('data-conv-scope');
           render();
         });
       });
-      document.querySelectorAll('[data-conv-target]').forEach(function (button) {
-        button.addEventListener('click', function () {
-          confirmConversion(button.getAttribute('data-conv-target'));
+
+      const searchInput = $('conv-search');
+      if (searchInput) {
+        searchInput.addEventListener('input', function () {
+          searchQuery = searchInput.value;
+          const container = $('conv-grid-container');
+          if (container) {
+            container.innerHTML = renderCardsHtml(getGroups());
+            bindCardInfoToggles(container);
+            bindCardSelectEvents(container);
+          }
+        });
+      }
+
+      bindCardSelectEvents(modalBody);
+    }
+
+    function bindCardSelectEvents(root) {
+      root.querySelectorAll('.conversion-card').forEach(function (card) {
+        const targetId = card.getAttribute('data-conv-target');
+        if (!targetId) return;
+
+        card.addEventListener('click', function (e) {
+          if (e.target.closest('.settcard-info') || e.target.closest('.settcard-details')) {
+            return;
+          }
+          confirmConversion(targetId);
+        });
+
+        card.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (e.target.closest('.settcard-info') || e.target.closest('.settcard-details')) return;
+            e.preventDefault();
+            confirmConversion(targetId);
+          }
         });
       });
-      setTimeout(function () {
-        const first = document.querySelector('[data-conv-target]:not([disabled])');
-        if (first) first.focus();
-      }, 0);
+
+      root.querySelectorAll('[data-conv-select]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const targetId = btn.getAttribute('data-conv-select');
+          if (targetId) confirmConversion(targetId);
+        });
+      });
     }
 
     function confirmConversion(targetId) {
@@ -1993,7 +2369,7 @@ window.FB = window.FB || {};
         return;
       }
       const name = conversionTargetName(s, kind, targetId);
-      const lines = [FB.T('Cost: {cost}.', { cost:conversionCostText(st) })];
+      const lines = [];
       let lead;
       if (kind === 'faith') {
         lead = scope === 'realm'
@@ -2012,20 +2388,29 @@ window.FB = window.FB || {};
         }));
       }
       if (st.oldFoldRealmIds.length) {
-        lines.push(FB.T(
-          'Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy.', {
-            amount:st.foldStanding, count:st.oldFoldRealmIds.length
-          }));
+        lines.push(kind === 'faith'
+          ? FB.T(
+            'Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy.', {
+              amount:st.foldStanding, count:st.oldFoldRealmIds.length
+            })
+          : FB.T(
+            'Standing falls {amount} with {count} realms of your old culture.', {
+              amount:st.foldStanding, count:st.oldFoldRealmIds.length
+            }));
       }
       if (st.vassalIds.length) {
         lines.push(FB.T('Standing falls {amount} with your {count} vassal realms.', {
           amount:st.vassalStanding, count:st.vassalIds.length
         }));
       }
-      if (kind === 'faith' && scope === 'realm') {
-        lines.push(FB.T('Zealot unrest rises in every county you hold.'));
-      } else if (kind === 'faith' && scope === 'household') {
-        lines.push(FB.T('Zealot unrest rises in your home county.'));
+      if (kind === 'faith') {
+        if (scope === 'realm') {
+          lines.push(FB.T('Zealot unrest rises in every county you hold.'));
+        } else if (scope === 'household') {
+          lines.push(FB.T('Zealot unrest rises in your home county.'));
+        }
+      } else if (scope === 'household') {
+        lines.push(FB.T('Cultural unrest rises in your lands, risking rebellion and peasant revolts.'));
       }
       if (st.excommunicates) {
         lines.push(FB.T('The Pope will excommunicate you for apostasy.'));
@@ -2034,7 +2419,8 @@ window.FB = window.FB || {};
         lines.push(FB.T(
           'Your realm becomes a lawful target for the great holy wars of your old faith.'));
       }
-      let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p>';
+      let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p>' +
+        '<p class="conversion-confirm-cost"><b>' + esc(FB.T('Cost:')) + '</b> <span class="cost-highlight">' + esc(conversionCostText(st)) + '</span></p>';
       for (let i = 0; i < lines.length; i++) {
         h += '<p>' + esc(lines[i]) + '</p>';
       }
@@ -2045,7 +2431,7 @@ window.FB = window.FB || {};
         esc(FB.T('Not yet')) + '</button></div>';
       openModal(kind === 'faith'
         ? FB.T('Convert to {target}?', { target:name })
-        : FB.T('Adopt {target}?', { target:name }), h);
+        : FB.T('Adopt {target}?', { target:name }), h, { noHotkeys:true, noFocus:true });
       $('conv-confirm').addEventListener('click', function () {
         if (!FB.applyConversion(s, kind, targetId, scope)) {
           const failed = FB.conversionStatus(s, kind, targetId, scope);
@@ -19072,7 +19458,7 @@ window.FB = window.FB || {};
     }
     if (!rows.length) rows.push({ key:'', target:'' });
     let body = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds.')) +
+      'Global shortcuts follow named deeds and focus families outside the Deeds panel. In Deeds, 1–6 select a section and Q W E / A S D / Z X C activate its first nine entries.')) +
       '</p><p class="hint">' + esc(FB.T(
         'The Farming work focus follows the family from Toil in the lord’s fields to Work your land after promotion. Unavailable actions keep their key and explain the current block.')) +
       '</p></div><div class="shortcut-bindings" id="shortcut-bindings">';
@@ -20992,7 +21378,7 @@ window.FB = window.FB || {};
       '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
-      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · <b>1–9</b> choose focuses, deeds, event options, and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
+      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
       '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu, beside 📤 Export / 📥 Import — a life kept as text survives browsers that wipe their storage, and travels to other devices.</p>' +
       '</div><button class="btn primary" id="gm-ok">Close</button>',
       { historyView:true });

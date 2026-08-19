@@ -1,8 +1,8 @@
 /* Fallowborn — desktop keyboard controls.
    Arrows pan · Shift+arrows jump to a neighboring province · PgUp/PgDn zoom ·
    +/- game speed (zoom on the start-picker map) · H home · Enter select
-   province at screen center · 1-9 pick focuses / deeds / event options /
-   dialog items, Shift+1-9 reaches items 10-18 (physical keys, any layout) ·
+   province at screen center · in Deeds, 1-6 select a section and QWE / ASD /
+   ZXC activate its first nine items · dialogs use 1-9 and Shift+1-9 ·
    Space or E play/pause · F skip to the next happening ·
    Z autoresolve settings · D/S/K/L/N/C open Deeds/Self/Kin/Land/Network/Chronicle
    panels · configurable unused letters fire semantic action bindings ·
@@ -144,7 +144,7 @@ window.FB = window.FB || {};
     const t = e.target;
     const k = e.key;
     /* 1-9 hotkeys by PHYSICAL key (number row or numpad, any layout, any
-       NumLock state); holding Shift reaches list items 10-18 (⇧1-⇧9). */
+       NumLock state); dialogs and pickers use Shift for items 10-18. */
     let digit = 0;
     if (e.code && e.code.length === 6 && e.code.indexOf('Digit') === 0) digit = +e.code.charAt(5) || 0;
     else if (e.code && e.code.length === 7 && e.code.indexOf('Numpad') === 0) digit = +e.code.charAt(6) || 0;
@@ -176,8 +176,10 @@ window.FB = window.FB || {};
       } else if (k === 'Tab') {
         containModalTab(e);
       } else if (digit) {
-        e.preventDefault();
-        clickNth('#gm-body .actionbtn, #gm-body .settcard-raise', slot);
+        if (!FB.ui._gmNoHotkeys) {
+          e.preventDefault();
+          clickNth('#gm-body .actionbtn, #gm-body .settcard-raise', slot);
+        }
       }
       return;
     }
@@ -222,6 +224,25 @@ window.FB = window.FB || {};
 
     if (FB.game && FB.game.pickMode && k === 'Escape') { $('btn-pick-back').click(); return; }
 
+    /* Deeds uses stable number keys for its sections, then a compact letter
+       grid for the active section. Dialogs above retain positional digits. */
+    const deedsActive = FB.state && $('tab-actions').classList.contains('active');
+    if (!travelOpen() && !raidOpen() &&
+        !(FB.game && FB.game.pickMode) && deedsActive) {
+      if (digit) {
+        e.preventDefault();
+        if (!e.repeat && FB.ui && FB.ui.activateDeedSection) {
+          FB.ui.activateDeedSection(digit - 1);
+        }
+        return;
+      }
+      if (!e.shiftKey && FB.ui && FB.ui.runDeedItemShortcut &&
+          FB.ui.runDeedItemShortcut(k, !e.repeat)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     /* User bindings are semantic deed/focus targets. Digits never enter this
        path, so positional modal navigation keeps its independent meaning. */
     if (!travelOpen() && !raidOpen() && !(FB.game && FB.game.pickMode) &&
@@ -234,13 +255,6 @@ window.FB = window.FB || {};
     /* ---- map & game keys ---- */
     const M = FB.map;
     if (!M || !M.canvas) return;
-    /* numpad digits pick deeds even when NumLock routes them to nav keys */
-    if (digit && e.code && e.code.indexOf('Numpad') === 0 &&
-      FB.state && $('tab-actions').classList.contains('active')) {
-      e.preventDefault();
-      clickNth('#tab-actions .actionbtn', slot);
-      return;
-    }
     switch (k) {
       case 'ArrowUp':
         e.preventDefault();
@@ -335,9 +349,7 @@ window.FB = window.FB || {};
         if (FB.state) FB.ui.showMenu();
         return;
       default:
-        if (digit && FB.state && $('tab-actions').classList.contains('active')) {
-          clickNth('#tab-actions .actionbtn', slot);
-        }
+        return;
     }
   });
 })();

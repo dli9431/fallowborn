@@ -562,14 +562,14 @@ window.FB = window.FB || {};
       return { piety:conversionBalance('faithConversionSelfPiety', 100), prestige:0 };
     }
     if (scope === 'household') return {
-      piety:conversionBalance('cultureAdoptionHouseholdPiety', 100),
-      prestige:conversionBalance('cultureAdoptionHouseholdPrestige', 300)
+      piety:conversionBalance('cultureAdoptionHouseholdPiety', 150),
+      prestige:conversionBalance('cultureAdoptionHouseholdPrestige', 450)
     };
-    return { piety:0, prestige:conversionBalance('cultureAdoptionSelfPrestige', 75) };
+    return { piety:0, prestige:conversionBalance('cultureAdoptionSelfPrestige', 150) };
   }
 
   function conversionCooldownDays(kind, scope) {
-    if (scope === 'household') {
+    if (scope === 'household' || scope === 'realm') {
       return conversionBalance(kind === 'faith'
         ? 'faithConversionHouseholdCooldown' : 'cultureAdoptionHouseholdCooldown', 1460);
     }
@@ -596,6 +596,19 @@ window.FB = window.FB || {};
       if (!realm || !realm.alive) continue;
       const faith = FB.realmReligionId(state, rid);
       if (faith && FB.faithInFold(state, faith, fromReligion)) out.push(rid);
+    }
+    return out;
+  }
+
+  function conversionOldCultureRealmIds(state, fromCulture) {
+    const out = [];
+    for (const rid in (state.realms || {})) {
+      if (!Object.prototype.hasOwnProperty.call(state.realms, rid) ||
+          rid === 'player') continue;
+      const realm = state.realms[rid];
+      if (!realm || !realm.alive) continue;
+      const rCult = realm.culture || (realm.capital && FB.world && FB.world.byId[realm.capital] && FB.world.byId[realm.capital].culture);
+      if (rCult === fromCulture) out.push(rid);
     }
     return out;
   }
@@ -630,6 +643,162 @@ window.FB = window.FB || {};
     if (!obedience || !pope || pope.dead) return null;
     return obedience;
   }
+
+  /* Soft-gating: conversion options are accessible only for traditions the
+     player dynasty has encountered through family, court, realm, neighboring
+     borders, diplomacy, trade, travel, or shared cultural/faith heritage. */
+  FB.conversionTargetPresence = function (state, kind, targetId) {
+    if (!state || !targetId) return null;
+    const p = state.player;
+    if (!p) return null;
+    const c = p.charId && state.chars ? state.chars[p.charId] : null;
+    if (!c) return null;
+
+    if (kind === 'faith' ? c.religion === targetId : c.culture === targetId) {
+      return { kind:'self', label:FB.T('Current') };
+    }
+    if (c.spouseId && state.chars[c.spouseId]) {
+      const sp = state.chars[c.spouseId];
+      if (kind === 'faith' ? sp.religion === targetId : sp.culture === targetId) {
+        return { kind:'spouse', label:FB.T('Spouse'), name:sp.name };
+      }
+    }
+    const capPid = state.realms && state.realms.player && state.realms.player.capital
+      ? state.realms.player.capital : p.provinceId;
+    const capProv = FB.world && FB.world.byId && FB.world.byId[capPid];
+    if (capProv && (kind === 'faith' ? capProv.religion === targetId : capProv.culture === targetId)) {
+      return { kind:'capital', label:FB.T('Capital') };
+    }
+    const rProvs = FB.realmProvinces ? FB.realmProvinces(state, 'player') : (p.provs || [p.provinceId]);
+    for (let i = 0; i < rProvs.length; i++) {
+      const pid = rProvs[i];
+      const prov = FB.world && FB.world.byId && FB.world.byId[pid];
+      if (prov && (kind === 'faith' ? prov.religion === targetId : prov.culture === targetId)) {
+        return { kind:'realm', label:FB.T('Realm') };
+      }
+    }
+    if (FB.householdMembers) {
+      const household = FB.householdMembers(state);
+      for (let i = 0; i < household.length; i++) {
+        const hm = household[i];
+        if (hm && (kind === 'faith' ? hm.religion === targetId : hm.culture === targetId)) {
+          return { kind:'household', label:FB.T('Household'), name:hm.name };
+        }
+      }
+    }
+    for (let i = 0; i < rProvs.length; i++) {
+      const pid = rProvs[i];
+      const prov = FB.world && FB.world.byId && FB.world.byId[pid];
+      if (prov && prov.adj) {
+        for (let j = 0; j < prov.adj.length; j++) {
+          const npid = prov.adj[j];
+          const nprov = FB.world && FB.world.byId && FB.world.byId[npid];
+          if (nprov && (kind === 'faith' ? nprov.religion === targetId : nprov.culture === targetId)) {
+            return { kind:'neighbor', label:FB.T('Neighbor') };
+          }
+        }
+      }
+    }
+    if (p.network) {
+      for (const nid in p.network) {
+        const nc = state.chars && state.chars[nid];
+        if (nc && (kind === 'faith' ? nc.religion === targetId : nc.culture === targetId)) {
+          return { kind:'network', label:FB.T('Contact'), name:nc.name };
+        }
+      }
+    }
+    if (p.captives && p.captives.length) {
+      for (let i = 0; i < p.captives.length; i++) {
+        const cap = state.chars && state.chars[p.captives[i]];
+        if (cap && (kind === 'faith' ? cap.religion === targetId : cap.culture === targetId)) {
+          return { kind:'network', label:FB.T('Captive'), name:cap.name };
+        }
+      }
+    }
+    if (state.realms) {
+      const pRealm = state.realms.player;
+      for (const rid in state.realms) {
+        if (!Object.prototype.hasOwnProperty.call(state.realms, rid) || rid === 'player') continue;
+        const r = state.realms[rid];
+        if (!r || !r.alive) continue;
+        let isInteracted = false;
+        let relKind = 'diplomacy';
+        if (r.liege === 'player') { isInteracted = true; relKind = 'vassal'; }
+        else if (pRealm && pRealm.liege === rid) { isInteracted = true; relKind = 'liege'; }
+        else if (p.tradePartners && p.tradePartners.indexOf(rid) >= 0) { isInteracted = true; relKind = 'trade'; }
+        else if (p.treaties && p.treaties[rid]) { isInteracted = true; relKind = 'treaty'; }
+        else if (p.wars && p.wars.indexOf(rid) >= 0) { isInteracted = true; relKind = 'war'; }
+        else if (p.standings && p.standings[rid] !== undefined) { isInteracted = true; relKind = 'standing'; }
+
+        if (isInteracted) {
+          const rFaith = FB.realmReligionId ? FB.realmReligionId(state, rid) : r.religion;
+          const rCult = r.culture || (r.capital && FB.world && FB.world.byId[r.capital] && FB.world.byId[r.capital].culture);
+          if (kind === 'faith' ? rFaith === targetId : rCult === targetId) {
+            return {
+              kind:relKind,
+              label:relKind === 'trade' ? FB.T('Trade')
+                : relKind === 'vassal' ? FB.T('Vassal')
+                : relKind === 'liege' ? FB.T('Liege')
+                : relKind === 'war' ? FB.T('War')
+                : FB.T('Diplomacy')
+            };
+          }
+          if (r.rulerId && state.chars[r.rulerId]) {
+            const ruler = state.chars[r.rulerId];
+            if (kind === 'faith' ? ruler.religion === targetId : ruler.culture === targetId) {
+              return {
+                kind:relKind,
+                label:relKind === 'trade' ? FB.T('Trade')
+                  : relKind === 'vassal' ? FB.T('Vassal')
+                  : relKind === 'liege' ? FB.T('Liege')
+                  : relKind === 'war' ? FB.T('War')
+                  : FB.T('Diplomacy')
+              };
+            }
+          }
+        }
+      }
+    }
+    if (kind === 'faith') {
+      const myGroup = FB.faithGroup ? FB.faithGroup(c.religion, state) : '';
+      const targetGroup = FB.faithGroup ? FB.faithGroup(targetId, state) : '';
+      if (myGroup && targetGroup && myGroup === targetGroup) {
+        return { kind:'tradition', label:FB.T('Tradition') };
+      }
+      if (FB.faithInFold && FB.faithInFold(state, targetId, c.religion)) {
+        return { kind:'tradition', label:FB.T('In-Fold') };
+      }
+      const rel = FB.religionOf ? FB.religionOf(targetId, state) : null;
+      if (rel && (rel.founderId === p.charId || rel.createdTurn !== undefined)) {
+        return { kind:'tradition', label:FB.T('Reformed') };
+      }
+    } else {
+      const myGroup = FB.cultureGroup ? FB.cultureGroup(c.culture) : '';
+      const targetGroup = FB.cultureGroup ? FB.cultureGroup(targetId) : '';
+      if (myGroup && targetGroup && myGroup === targetGroup && myGroup !== 'other') {
+        return { kind:'tradition', label:FB.T('Related') };
+      }
+    }
+    if (p.visitedProvinces && p.visitedProvinces.length) {
+      for (let i = 0; i < p.visitedProvinces.length; i++) {
+        const vprov = FB.world && FB.world.byId && FB.world.byId[p.visitedProvinces[i]];
+        if (vprov && (kind === 'faith' ? vprov.religion === targetId : vprov.culture === targetId)) {
+          return { kind:'travel', label:FB.T('Travel') };
+        }
+      }
+    }
+    if (kind === 'culture' && p.encounteredCultures && p.encounteredCultures[targetId]) {
+      return { kind:'campaign', label:FB.T('Known') };
+    }
+    if (kind === 'faith' && p.encounteredFaiths && p.encounteredFaiths[targetId]) {
+      return { kind:'campaign', label:FB.T('Known') };
+    }
+    return null;
+  };
+
+  FB.conversionTargetEncountered = function (state, kind, targetId) {
+    return !!FB.conversionTargetPresence(state, kind, targetId);
+  };
 
   FB.conversionStatus = function (state, kind, targetId, scope) {
     const out = {
@@ -673,6 +842,7 @@ window.FB = window.FB || {};
       }
     }
     out.targetValid = true;
+    out.encountered = !FB.conversionTargetEncountered || FB.conversionTargetEncountered(state, kind, targetId);
     if (scope === 'realm') {
       const realm = state.realms && state.realms.player;
       if (p.tier < 3 || !realm || !realm.alive) {
@@ -689,34 +859,63 @@ window.FB = window.FB || {};
         return out;
       }
     }
-    const cdKey = conversionDeedId(kind) + ':' + scope;
-    const cdDays = conversionCooldownDays(kind, scope);
+    const deedId = conversionDeedId(kind);
     const cooldowns = p.cooldowns || {};
-    const last = cooldowns[cdKey];
-    if (last !== undefined && state.turn - last < cdDays) {
-      out.reason = FB.T('Ready in {days} days.', {
-        days:cdDays - (state.turn - last)
-      });
-      return out;
+    const scopesToCheck = ['self', 'household', 'realm'];
+    for (let i = 0; i < scopesToCheck.length; i++) {
+      const sc = scopesToCheck[i];
+      const last = cooldowns[deedId + ':' + sc];
+      if (last !== undefined) {
+        const cdDays = conversionCooldownDays(kind, sc);
+        if (state.turn - last < cdDays) {
+          out.reason = FB.T('Ready in {days} days.', {
+            days:cdDays - (state.turn - last)
+          });
+          return out;
+        }
+      }
+    }
+    const deedLast = cooldowns[deedId];
+    if (deedLast !== undefined) {
+      const cdDays = conversionCooldownDays(kind, scope);
+      if (state.turn - deedLast < cdDays) {
+        out.reason = FB.T('Ready in {days} days.', {
+          days:cdDays - (state.turn - deedLast)
+        });
+        return out;
+      }
     }
     const base = conversionBaseCosts(kind, scope);
     if (kind === 'faith') {
       out.relation = FB.faithRelation(state, c.religion, targetId);
       const multKey = CONVERSION_RELATION_MULT_KEYS[out.relation];
       out.relationMult = multKey ? Number(conversionBalance(multKey, 1)) : 1;
+    } else {
+      out.relation = FB.cultureRelation ? FB.cultureRelation(state, c.culture, targetId) : 'foreign';
+      out.relationMult = out.relation === 'same_group'
+        ? Number(conversionBalance('cultureAdoptionSameGroupMult', 0.8))
+        : Number(conversionBalance('cultureAdoptionForeignMult', 1.25));
     }
     out.pietyCost = Math.ceil(base.piety * out.relationMult);
     out.prestigeCost = Math.ceil(base.prestige * out.relationMult);
     out.popularOpinion = conversionPopularOpinion(scope);
-    if (kind === 'faith' && scope !== 'self') {
-      out.oldFoldRealmIds = conversionOldFoldRealmIds(state, c.religion);
-      out.foldStanding = scope === 'realm'
-        ? conversionBalance('faithConversionRealmRealmStanding', -25)
-        : conversionBalance('faithConversionHouseholdRealmStanding', -10);
+    if (scope !== 'self') {
+      if (kind === 'faith') {
+        out.oldFoldRealmIds = conversionOldFoldRealmIds(state, c.religion);
+        out.foldStanding = scope === 'realm'
+          ? conversionBalance('faithConversionRealmRealmStanding', -25)
+          : conversionBalance('faithConversionHouseholdRealmStanding', -10);
+      } else {
+        out.oldFoldRealmIds = conversionOldCultureRealmIds(state, c.culture);
+        out.foldStanding = conversionBalance('cultureAdoptionHouseholdRealmStanding', -15);
+      }
     }
-    if (kind === 'faith' && scope === 'realm') {
+    if (p.tier >= 3 && (kind === 'faith' ? scope === 'realm' : scope === 'household')) {
       out.vassalIds = conversionVassalIds(state);
-      out.vassalStanding = conversionBalance('faithConversionVassalStanding', -35);
+      out.vassalStanding = conversionBalance(
+        kind === 'faith' ? 'faithConversionVassalStanding' : 'cultureAdoptionVassalStanding',
+        kind === 'faith' ? -35 : -25
+      );
     }
     if (kind === 'faith') {
       out.excommunicates =
@@ -770,18 +969,26 @@ window.FB = window.FB || {};
     if (status.oldFoldRealmIds.length) {
       for (let i = 0; i < status.oldFoldRealmIds.length; i++) {
         FB.adjustStanding(state, { kind:'realm', id:status.oldFoldRealmIds[i] },
-          status.foldStanding, 'deed:convert_faith');
+          status.foldStanding, kind === 'faith' ? 'deed:convert_faith' : 'deed:adopt_culture');
       }
     }
     for (let i = 0; i < status.vassalIds.length; i++) {
       FB.adjustStanding(state, { kind:'realm', id:status.vassalIds[i] },
-        status.vassalStanding, 'deed:convert_faith');
+        status.vassalStanding, kind === 'faith' ? 'deed:convert_faith' : 'deed:adopt_culture');
     }
 
-    if (kind === 'faith' && scope !== 'self' && FB.addModifier) {
-      const pids = scope === 'realm' ? (p.provs || []) : [p.provinceId];
+    if (scope !== 'self' && FB.addModifier) {
+      const modId = kind === 'faith' ? 'zealot_unrest' : 'cultural_unrest';
+      const pids = (kind === 'faith' && scope === 'realm')
+        ? (p.provs || [])
+        : (p.provs && p.provs.length ? p.provs : [p.provinceId]);
       for (let i = 0; i < pids.length; i++) {
-        if (pids[i]) FB.addModifier(state, 'zealot_unrest', pids[i], { silent:true });
+        if (pids[i]) {
+          const prov = FB.world && FB.world.byId && FB.world.byId[pids[i]];
+          if (kind === 'faith' || !prov || prov.culture !== targetId) {
+            FB.addModifier(state, modId, pids[i], { silent:true });
+          }
+        }
       }
     }
 
@@ -817,6 +1024,7 @@ window.FB = window.FB || {};
     }
 
     p.cooldowns = p.cooldowns || {};
+    p.cooldowns[conversionDeedId(kind)] = state.turn;
     p.cooldowns[conversionDeedId(kind) + ':' + scope] = state.turn;
     if (kind === 'faith' && scope === 'realm') {
       p.realmFaithConversion = {

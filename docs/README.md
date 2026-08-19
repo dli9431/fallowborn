@@ -34,9 +34,10 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
 - **Desktop (keyboard only):** fully playable without a mouse —
   arrows pan · Shift+arrows hop between neighboring provinces · `PgUp`/`PgDn` zoom · `H` center
   home · `Enter` selects the province at screen center · `D` `S` `K` `L` `N` `C` open the
-  Deeds/Self/Kin/Land/Network/Chronicle panels (hotkey letter underlined in-game) · `1–9` pick focuses,
-  deeds, event options, and dialog items, and `Shift+1–9` reaches items 10–18 (badges show
-  the numbers; the number row and numpad both work) · `Space`/`E` play/pause the
+  Deeds/Self/Kin/Land/Network/Chronicle panels (hotkey letter underlined in-game) · in Deeds,
+  `1–6` select Daily Focus and the five deed sections, then `Q W E` / `A S D` / `Z X C`
+  activate the first nine entries in that section · in events and dialogs, `1–9` choose an
+  item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
   `Z` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege /
   De jure duchies / De jure kingdoms) ·

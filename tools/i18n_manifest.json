@@ -8239,6 +8239,88 @@
         "text": "Who Stands Nearest"
       }
     },
+    "event.cultural_backlash.options.0.desc.default": {
+      "context": "Event cultural_backlash, authored option 0, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Iron will teach them who rules this hall."
+      }
+    },
+    "event.cultural_backlash.options.0.failure.text.default": {
+      "context": "Event cultural_backlash, authored option 0, failure text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The traditionalists ambush your retainers at the narrows, forcing an ignominious retreat."
+      }
+    },
+    "event.cultural_backlash.options.0.label.default": {
+      "context": "Event cultural_backlash, authored option 0, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Put down the traditionalists by force."
+      }
+    },
+    "event.cultural_backlash.options.0.success.effects.log.default": {
+      "context": "Durable event log for cultural_backlash, authored option 0, success.effects.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Crushed a cultural revolt."
+      }
+    },
+    "event.cultural_backlash.options.0.success.text.default": {
+      "context": "Event cultural_backlash, authored option 0, success text, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Your soldiers disperse the gathering. The rebel leaders are paraded in chains."
+      }
+    },
+    "event.cultural_backlash.options.1.desc.default": {
+      "context": "Event cultural_backlash, authored option 1, desc, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "A concession to ancestral tradition may calm the county."
+      }
+    },
+    "event.cultural_backlash.options.1.effects.log.default": {
+      "context": "Durable event log for cultural_backlash, authored option 1, effects.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Conceded traditional rights to quell revolt."
+      }
+    },
+    "event.cultural_backlash.options.1.label.default": {
+      "context": "Event cultural_backlash, authored option 1, label, branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Confirm local rights and customs."
+      }
+    },
+    "event.cultural_backlash.text.default": {
+      "context": "Event cultural_backlash, text, faith branch default.",
+      "glossary": [
+        "province"
+      ],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "Armed traditionalists and local headmen assemble in {province}, denouncing foreign customs and demanding you govern by ancestral ways."
+      }
+    },
+    "event.cultural_backlash.title.default": {
+      "context": "Event cultural_backlash, title, faith branch default.",
+      "glossary": [],
+      "location": "data/events_noble.js",
+      "source": {
+        "text": "The Old Ways Defended"
+      }
+    },
     "event.debt_labor_sentence.options.0.desc.default": {
       "context": "Event debt_labor_sentence, authored option 0, desc, branch default.",
       "glossary": [],
@@ -34923,6 +35005,22 @@
         "text": "Covert Sabotage"
       }
     },
+    "modifier.cultural_unrest.desc.default": {
+      "context": "modifier cultural_unrest, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Local traditionalists and the commons reject foreign customs and resist the convert’s house."
+      }
+    },
+    "modifier.cultural_unrest.name.default": {
+      "context": "modifier cultural_unrest, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Cultural Unrest"
+      }
+    },
     "modifier.custom_confirmed.desc.default": {
       "context": "modifier custom_confirmed, desc, faith branch default.",
       "glossary": [],
@@ -51843,6 +51941,16 @@
         "text": "🌿 Practice physic"
       }
     },
+    "src.091a6ace": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Autonomous hierarchy"
+      }
+    },
     "src.0927ac58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -53328,6 +53436,16 @@
         "text": "{count} man"
       }
     },
+    "src.0c2ee49e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Dynasty style"
+      }
+    },
     "src.0c348151": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54459,6 +54577,16 @@
       ],
       "source": {
         "text": "Scholar"
+      }
+    },
+    "src.0eba61f4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Foreign Culture · +25% cost"
       }
     },
     "src.0ebdf636": {
@@ -55722,6 +55850,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -55996,6 +56125,16 @@
       ],
       "source": {
         "text": "Weigh and test them."
+      }
+    },
+    "src.124e753f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Patronymic prefix (ap)"
       }
     },
     "src.1251e9da": {
@@ -58244,6 +58383,16 @@
         "text": "Learning and lay-standing result"
       }
     },
+    "src.1681d009": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Marriage"
+      }
+    },
     "src.1683a7a5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58747,6 +58896,16 @@
         "text": "+{amount} domain capacity"
       }
     },
+    "src.17894057": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Custom & Reformed Faiths"
+      }
+    },
     "src.178c45cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58881,6 +59040,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
       ],
@@ -61094,6 +61254,16 @@
       ],
       "source": {
         "text": "Huscarl"
+      }
+    },
+    "src.1d130dfb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Standing falls {amount} with {count} realms of your old culture."
       }
     },
     "src.1d277640": {
@@ -63495,6 +63665,16 @@
         "text": "The Dying Time"
       }
     },
+    "src.2246a3b1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Patronymic suffix (-ovich)"
+      }
+    },
     "src.2249ffcd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -63626,6 +63806,16 @@
       ],
       "source": {
         "text": "Muezzin"
+      }
+    },
+    "src.22b28c86": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Talaq repudiation"
       }
     },
     "src.22b4750d": {
@@ -65043,6 +65233,16 @@
         "text": "Now my true education begins."
       }
     },
+    "src.25bd82f6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Global shortcuts follow named deeds and focus families outside the Deeds panel. In Deeds, 1–6 select a section and Q W E / A S D / Z X C activate its first nine entries."
+      }
+    },
     "src.25be0a84": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65584,6 +65784,16 @@
       ],
       "source": {
         "text": "Battle — the Day Is Lost"
+      }
+    },
+    "src.2697a1c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Clergy"
       }
     },
     "src.269860a9": {
@@ -66357,6 +66567,16 @@
       ],
       "source": {
         "text": "A mace you never saw ends your day early."
+      }
+    },
+    "src.2863d124": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Celibate"
       }
     },
     "src.28646881": {
@@ -68115,6 +68335,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
       ],
@@ -68491,6 +68712,16 @@
       ],
       "source": {
         "text": "{used}/{capacity} assigned · {assignments}"
+      }
+    },
+    "src.2d2cef53": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Proclaims the state religion across your realm. Piety and prestige cost; zealot unrest in all held counties."
       }
     },
     "src.2d36a142": {
@@ -69383,6 +69614,16 @@
         "text": "Unravel their witnesses before yours unravel."
       }
     },
+    "src.2f6b2f5f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Search culture…"
+      }
+    },
     "src.2f6c76f2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69625,6 +69866,16 @@
         "text": "Waiting for a focus"
       }
     },
+    "src.2fefc649": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "activate its first nine entries ·"
+      }
+    },
     "src.2ffd8c3e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -69713,6 +69964,16 @@
       ],
       "source": {
         "text": "Domain tax, levy, vassal relations, development, and de jure rights drive expansion."
+      }
+    },
+    "src.30325d10": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Culture of {count} realm counties"
       }
     },
     "src.3042009e": {
@@ -69825,6 +70086,16 @@
       ],
       "source": {
         "text": "Begins a visible confirmation election. Appointment and its protected fixed term occur only if the nominee wins."
+      }
+    },
+    "src.3075f0c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Related Tradition · −20% cost"
       }
     },
     "src.307a84a2": {
@@ -71241,6 +71512,16 @@
         "text": "Rival obediences"
       }
     },
+    "src.33c1f0e5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Middle Eastern & North African"
+      }
+    },
     "src.33c20343": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -71399,16 +71680,6 @@
       ],
       "source": {
         "text": "Unavailable while traveling"
-      }
-    },
-    "src.3412286b": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds."
       }
     },
     "src.34169be6": {
@@ -71865,6 +72136,16 @@
         "text": "Courtship changes"
       }
     },
+    "src.3513b492": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Islamic Traditions"
+      }
+    },
     "src.351d0886": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72226,6 +72507,16 @@
       ],
       "source": {
         "text": "“Custom lives in those who keep it.”"
+      }
+    },
+    "src.361934e8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Confessed by your spouse ({name})"
       }
     },
     "src.36256e92": {
@@ -72719,6 +73010,16 @@
         "text": "{count} eligible household workers."
       }
     },
+    "src.373d9ac8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "African Traditions"
+      }
+    },
     "src.373e13ef": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72899,6 +73200,16 @@
         "text": "Ride well, speak better."
       }
     },
+    "src.37ae1eb5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Christian Traditions"
+      }
+    },
     "src.37b5f7a8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72957,6 +73268,16 @@
       ],
       "source": {
         "text": "Standing Surety"
+      }
+    },
+    "src.37d6e276": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Celtic Traditions"
       }
     },
     "src.37df8864": {
@@ -73706,6 +74027,16 @@
         "text": "Your eye for horseflesh proves sound. The losers pay up with pinched smiles."
       }
     },
+    "src.3984b4f7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Reformed"
+      }
+    },
     "src.3990615e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74404,16 +74735,6 @@
       ],
       "source": {
         "text": "{chance}% merit chance"
-      }
-    },
-    "src.3af0faa1": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "choose focuses, deeds, event options, and dialog items ·"
       }
     },
     "src.3af8b5da": {
@@ -75755,6 +76076,16 @@
         "text": "+1 piety a season while he serves"
       }
     },
+    "src.3e892b4d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Select"
+      }
+    },
     "src.3e90211a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -76087,6 +76418,16 @@
       ],
       "source": {
         "text": "📜 {name} is named heir before witnesses."
+      }
+    },
+    "src.3f42d62c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Known"
       }
     },
     "src.3f49f2ec": {
@@ -78099,6 +78440,16 @@
       ],
       "source": {
         "text": "Pay the fine before it grows. ({money:6})"
+      }
+    },
+    "src.4363a28d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Holy War"
       }
     },
     "src.4368c362": {
@@ -80388,6 +80739,16 @@
         "text": "🔑 Start seed — tap to copy & share"
       }
     },
+    "src.47e451ed": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Practiced in {count} realm counties (including capital)"
+      }
+    },
     "src.47e648ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -80644,6 +81005,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -81202,6 +81564,16 @@
         "text": "Traitor"
       }
     },
+    "src.4a1db69e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "In-Fold"
+      }
+    },
     "src.4a1f7af3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -81593,6 +81965,16 @@
       ],
       "source": {
         "text": "{lord} reins in beside your warhorse and looks it over far too long. “A fine beast,” he says, “for a common man.”"
+      }
+    },
+    "src.4b2466d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Related"
       }
     },
     "src.4b286d96": {
@@ -84375,6 +84757,16 @@
         "text": "The host stands on enemy soil and the nearby villages hide grain, carts, and livestock. Your foragers ask how much law follows a banner across the border."
       }
     },
+    "src.518c74a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Pagan Traditions"
+      }
+    },
     "src.519087af": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -84993,6 +85385,16 @@
         "text": "Education policy fills only unchosen eligible options. It reserves no money and never changes a manual choice."
       }
     },
+    "src.52b46fbc": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Cultural Unrest"
+      }
+    },
     "src.52b48fe2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85052,6 +85454,16 @@
       ],
       "source": {
         "text": "The sword the lake gave back once, and will not give back again. It draws battle to its bearer like a candle draws moths."
+      }
+    },
+    "src.52d3b504": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Culture of your spouse ({name})"
       }
     },
     "src.52df497c": {
@@ -85274,6 +85686,16 @@
       ],
       "source": {
         "text": "The host mends and your borders are relieved — but no ground is gained."
+      }
+    },
+    "src.53798427": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Personal adoption for yourself alone. Piety cost only; minimal diplomatic fallout."
       }
     },
     "src.537e2491": {
@@ -86056,6 +86478,16 @@
       ],
       "source": {
         "text": "Current officer"
+      }
+    },
+    "src.555b9d33": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Western & Northern Europe"
       }
     },
     "src.555dcf42": {
@@ -87541,6 +87973,16 @@
       ],
       "source": {
         "text": "Harold wears England’s crown; Normandy and Norway have not yet crossed the sea."
+      }
+    },
+    "src.5843974b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Neighbor"
       }
     },
     "src.5848e153": {
@@ -89332,6 +89774,16 @@
         "text": "One of your councillors — all smiles and low bows — waylays you after the sitting with a small gift and large praise: your wisdom, your justice, your very profile on the coinage. He wants something, of course. They always do."
       }
     },
+    "src.5c5a530c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Family surname"
+      }
+    },
     "src.5c5f8a5e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -90954,6 +91406,16 @@
         "text": "county"
       }
     },
+    "src.6004e27d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Byzantine & Caucasian"
+      }
+    },
     "src.600ef5b7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -91957,6 +92419,16 @@
         "text": "fullsheet-modal guide-modal"
       }
     },
+    "src.6209bce8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Known contact in your court or network ({name})"
+      }
+    },
     "src.620feebf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92568,6 +93040,16 @@
         "text": "Escaped raiders by sacrificing household wealth."
       }
     },
+    "src.635cb3be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raises your household in the new way of life. Prestige and piety cost; cultural unrest in your lands."
+      }
+    },
     "src.6366e2b9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92912,6 +93394,16 @@
         "text": "The unremarked lord keeps what he has."
       }
     },
+    "src.6455598e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Patronymic (-sson / -datter)"
+      }
+    },
     "src.6455a40e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93243,6 +93735,16 @@
         "text": "Seek a loan"
       }
     },
+    "src.6510b155": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Get divorce"
+      }
+    },
     "src.6513f3f4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93565,6 +94067,16 @@
       ],
       "source": {
         "text": "Recommended match"
+      }
+    },
+    "src.65edfb3f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Confessed by household kin ({name})"
       }
     },
     "src.65f8d4e7": {
@@ -95985,6 +96497,16 @@
         "text": "Work hard, keep your distance, and add to the purse."
       }
     },
+    "src.6b184c70": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Search faith or tradition…"
+      }
+    },
     "src.6b1b17bc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95993,6 +96515,16 @@
       ],
       "source": {
         "text": "Begin a Plot"
+      }
+    },
+    "src.6b27d000": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Polygyny (up to {count} wives)"
       }
     },
     "src.6b2f44e5": {
@@ -96453,6 +96985,16 @@
       ],
       "source": {
         "text": "greatHolyWar has invalid firstByYear."
+      }
+    },
+    "src.6c466937": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Encountered through travels"
       }
     },
     "src.6c48c0d6": {
@@ -97455,6 +97997,16 @@
       ],
       "source": {
         "text": "Current investiture"
+      }
+    },
+    "src.6e523dfd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Conversion scope"
       }
     },
     "src.6e5988d7": {
@@ -98501,6 +99053,16 @@
         "text": "Your good name, wagered on theirs."
       }
     },
+    "src.712f05c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Personal adoption for yourself alone. Prestige cost only."
+      }
+    },
     "src.7136cbc8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -98619,6 +99181,16 @@
       ],
       "source": {
         "text": "🕊 Safe conduct is agreed; the surviving host withdraws and the war ends."
+      }
+    },
+    "src.717fbda3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cultural unrest rises in your lands, risking rebellion and peasant revolts."
       }
     },
     "src.717fd33a": {
@@ -99262,6 +99834,16 @@
         "text": "Answer forfeiture through the existing attainder and independence-war path."
       }
     },
+    "src.72caff1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Sunder union"
+      }
+    },
     "src.72d26ace": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -99753,6 +100335,16 @@
         "text": "Raise your household in the {target} way of life?"
       }
     },
+    "src.73ac94c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Contact"
+      }
+    },
     "src.73ad4fcf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100094,6 +100686,16 @@
         "text": "Grand Qadi"
       }
     },
+    "src.74748117": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Your soldiers disperse the gathering. The rebel leaders are paraded in chains."
+      }
+    },
     "src.747b2619": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -100332,6 +100934,16 @@
       ],
       "source": {
         "text": "Plot against…"
+      }
+    },
+    "src.74deca0b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "May marry"
       }
     },
     "src.74f07259": {
@@ -102749,6 +103361,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -103232,6 +103845,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -103650,6 +104264,16 @@
       ],
       "source": {
         "text": "Tell them to choose another road."
+      }
+    },
+    "src.7c80016c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The Old Ways Defended"
       }
     },
     "src.7c880a51": {
@@ -104981,6 +105605,16 @@
       ],
       "source": {
         "text": "Lost — the successful rival or vacancy holds until the next opening."
+      }
+    },
+    "src.7f3f43a9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Papacy (Pope in Rome) · Excommunication authority"
       }
     },
     "src.7f3f84fe": {
@@ -106630,6 +107264,16 @@
         "text": "Kilkenny"
       }
     },
+    "src.829fe548": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Iron will teach them who rules this hall."
+      }
+    },
     "src.82aafccd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -106939,6 +107583,16 @@
       ],
       "source": {
         "text": "{distance} county steps · {affinity}"
+      }
+    },
+    "src.834965a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Presence"
       }
     },
     "src.834fbc2b": {
@@ -108518,6 +109172,16 @@
         "text": "📜 Keep records"
       }
     },
+    "src.864098c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "The traditionalists ambush your retainers at the narrows, forcing an ignominious retreat."
+      }
+    },
     "src.864601c3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108649,6 +109313,16 @@
         "text": "👑 They say {realm} is the mightiest power of the age."
       }
     },
+    "src.86aae3ac": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Confirm local rights and customs."
+      }
+    },
     "src.86ad0354": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -108774,6 +109448,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_panels.js"
       ],
       "source": {
@@ -109028,16 +109703,6 @@
       ],
       "source": {
         "text": "Offer a gift to {name}"
-      }
-    },
-    "src.8788fffa": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "(×{mult} for the distance between the faiths)"
       }
     },
     "src.87890a1e": {
@@ -111180,6 +111845,16 @@
         "text": "Visit Barber for {name}"
       }
     },
+    "src.8be491d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Schismatic · −20% cost"
+      }
+    },
     "src.8bee6a4a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -111860,6 +112535,16 @@
       ],
       "source": {
         "text": "One witness follows another until even the steward must call the custom proven."
+      }
+    },
+    "src.8d573535": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Steppe & Nomad"
       }
     },
     "src.8d5b354a": {
@@ -112796,6 +113481,16 @@
         "text": "Land plots {change}"
       }
     },
+    "src.8f308564": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Encountered through travels and pilgrimages"
+      }
+    },
     "src.8f31094b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112985,6 +113680,16 @@
       ],
       "source": {
         "text": "✨ The venture to {destination} returns a remarkable {money:payout}."
+      }
+    },
+    "src.8f9cc29c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Caliphate (Caliph in Baghdad) · Sacred leadership"
       }
     },
     "src.8fa0fe15": {
@@ -115763,6 +116468,16 @@
         "text": "Not enough money: requires {money:cost}."
       }
     },
+    "src.96d00ef7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Armed traditionalists and local headmen assemble in {province}, denouncing foreign customs and demanding you govern by ancestral ways."
+      }
+    },
     "src.96d4cb58": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118282,6 +118997,16 @@
       ],
       "source": {
         "text": "Amman"
+      }
+    },
+    "src.9be13d0c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Jewish Traditions"
       }
     },
     "src.9bf3ee7c": {
@@ -123862,6 +124587,16 @@
         "text": "Make a pastoral circuit, inspect the clergy, or receive local notables."
       }
     },
+    "src.a7cf47f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "A concession to ancestral tradition may calm the county."
+      }
+    },
     "src.a7d7e0b2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124547,6 +125282,16 @@
         "text": "Collect fully, moderate the demand, or remit it for pastoral standing."
       }
     },
+    "src.a93107e3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Culture of a neighboring border county"
+      }
+    },
     "src.a936a4ea": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124747,6 +125492,16 @@
         "text": "Forbidden"
       }
     },
+    "src.a9aa65c8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Conceded traditional rights to quell revolt."
+      }
+    },
     "src.a9b7a1d6": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -124937,6 +125692,16 @@
       ],
       "source": {
         "text": "🤝 {name}’s guild family opens its purse and its contacts to your household."
+      }
+    },
+    "src.aa35f81c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "select a section and"
       }
     },
     "src.aa4680c6": {
@@ -126398,6 +127163,16 @@
         "text": "Charity that may yet return with thanks."
       }
     },
+    "src.ad8b91a6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "choose event and dialog items ·"
+      }
+    },
     "src.ada3d527": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -126526,6 +127301,16 @@
       ],
       "source": {
         "text": "🕊 Peace is bought from {enemy} for {money:cost}."
+      }
+    },
+    "src.adf4527f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Tradition"
       }
     },
     "src.adf517a1": {
@@ -128504,6 +129289,16 @@
         "text": "🕯 You and {name} persist in an irregular union. Kin, neighbors, and rulers recoil; no dowry or alliance follows."
       }
     },
+    "src.b213f06d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Put down the traditionalists by force."
+      }
+    },
     "src.b21973ab": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129339,6 +130134,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -129666,6 +130462,16 @@
       ],
       "source": {
         "text": "Harran"
+      }
+    },
+    "src.b46b4bf0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Slavic & Baltic"
       }
     },
     "src.b46e55de": {
@@ -130611,6 +131417,16 @@
         "text": "🕯 Your niece {name} has died, aged {age}."
       }
     },
+    "src.b6b4cb3c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Other Cultures"
+      }
+    },
     "src.b6b76cae": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130741,6 +131557,16 @@
         "text": "🧭 The visit to {name} can no longer continue; you turn toward home."
       }
     },
+    "src.b6ebd82e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Other Traditions"
+      }
+    },
     "src.b6ee8d6f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -130849,6 +131675,16 @@
       ],
       "source": {
         "text": "A broker in {destination} needs someone who can watch a delivery, remember a promise, and recognize a false weight."
+      }
+    },
+    "src.b7134c51": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "In-Fold · −40% cost"
       }
     },
     "src.b71ef5ce": {
@@ -131322,6 +132158,16 @@
       ],
       "source": {
         "text": "Roma"
+      }
+    },
+    "src.b83491ec": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Hostile · +25% cost"
       }
     },
     "src.b835cb75": {
@@ -132400,6 +133246,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_modals.js",
         "js/model.js"
       ],
@@ -135540,6 +136387,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/ui_panels.js",
         "js/ui_misc.js"
       ],
@@ -135989,6 +136837,16 @@
       ],
       "source": {
         "text": "Completed a pilgrimage to {destination}."
+      }
+    },
+    "src.c2f16f58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Romance & Iberian"
       }
     },
     "src.c2f659e5": {
@@ -136529,6 +137387,16 @@
       ],
       "source": {
         "text": "A generation of monks died inside these margins, and left the light on."
+      }
+    },
+    "src.c45dded3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Converts your family and household. Moderate piety and prestige cost; zealot unrest in your home county."
       }
     },
     "src.c46a8158": {
@@ -140927,6 +141795,26 @@
         "text": "The pilgrim house in {destination} never lacks for tired feet, empty bowls, and names that must be entered correctly."
       }
     },
+    "src.cdc44d3b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Practiced in {count} realm counties"
+      }
+    },
+    "src.cdc873cf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{count} available"
+      }
+    },
     "src.cddce44f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141395,6 +142283,16 @@
       ],
       "source": {
         "text": "Fustat"
+      }
+    },
+    "src.ceee7e4c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/events_noble.js"
+      ],
+      "source": {
+        "text": "Crushed a cultural revolt."
       }
     },
     "src.cefbd80c": {
@@ -142610,6 +143508,16 @@
       ],
       "source": {
         "text": "The poisoner walks into it, and under questioning gives up a name. The knives stop — and {rival} knows that you know."
+      }
+    },
+    "src.d2420853": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Foreign Tradition"
       }
     },
     "src.d246a081": {
@@ -144126,6 +145034,16 @@
         "text": "Dead dogs do not cut their own throats."
       }
     },
+    "src.d5df43bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Culture of household kin ({name})"
+      }
+    },
     "src.d5e35b92": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -145418,6 +146336,16 @@
         "text": "💰 The estates vote {liege} a war subsidy of {money:gold} — your name was spoken warmly in the hall."
       }
     },
+    "src.d84fe593": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Q W E / A S D / Z X C"
+      }
+    },
     "src.d85117c1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146372,6 +147300,16 @@
       ],
       "source": {
         "text": "Warmth, straw, and a barred door."
+      }
+    },
+    "src.da595942": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "No traditions match \"{query}\"."
       }
     },
     "src.da6322c9": {
@@ -147938,16 +148876,6 @@
         "text": "At least one match is blocked by marriage doctrine."
       }
     },
-    "src.de3d3b5d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "open the Deeds / Self / Kin / Land / Chronicle panels ·"
-      }
-    },
     "src.de3d66ad": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -148222,7 +149150,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "data/cultures.js"
+        "data/cultures.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "Zoroastrianism"
@@ -148767,16 +149696,6 @@
       ],
       "source": {
         "text": "{rival} comes with elders and a careful proposal: speak the injuries plainly, make restitution where it is owed, and swear before witnesses that the quarrel is ended."
-      }
-    },
-    "src.dff40209": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_modals.js"
-      ],
-      "source": {
-        "text": "Cost: {cost}."
       }
     },
     "src.dff47c36": {
@@ -151681,6 +152600,16 @@
       ],
       "source": {
         "text": "Recipient cooldown: {days} days remain."
+      }
+    },
+    "src.e64259ae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Local traditionalists and the commons reject foreign customs and resist the convert’s house."
       }
     },
     "src.e651baad": {
@@ -156187,6 +157116,16 @@
         "text": "⚔ You deny the judgment and raise your banner — felony is answered with rebellion."
       }
     },
+    "src.f05100ef": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Sample names"
+      }
+    },
     "src.f056ec11": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156527,6 +157466,16 @@
         "text": "Spear and Shield Drill"
       }
     },
+    "src.f0e08746": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cost:"
+      }
+    },
     "src.f0e199da": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156555,6 +157504,16 @@
       ],
       "source": {
         "text": "{legs} county legs · {days} days each way · {money:stake} stake + {money:overhead} overhead"
+      }
+    },
+    "src.f0eb17c1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "open the Deeds / Self / Kin / Land / Chronicle panels · in Deeds,"
       }
     },
     "src.f0ef0c46": {
@@ -156935,6 +157894,16 @@
       ],
       "source": {
         "text": "County inside your sovereign realm"
+      }
+    },
+    "src.f1bfa1d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Monogamy (1 spouse)"
       }
     },
     "src.f1c15f42": {
@@ -157608,6 +158577,16 @@
         "text": "Remember every word."
       }
     },
+    "src.f3923115": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Clan prefix (mac)"
+      }
+    },
     "src.f39573d5": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -157736,6 +158715,16 @@
       ],
       "source": {
         "text": "Seasonal fee"
+      }
+    },
+    "src.f3ed388b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Vassal"
       }
     },
     "src.f3f0a119": {
@@ -159134,6 +160123,7 @@
       "glossary": [],
       "location": [
         "data/economy.js",
+        "js/actions.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -160744,6 +161734,16 @@
         "text": "Ailments"
       }
     },
+    "src.fa85f9b8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Toponymic (of [Place])"
+      }
+    },
     "src.fa869805": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -160962,6 +161962,16 @@
       ],
       "source": {
         "text": "Written grafting practice preserves valued fruit varieties."
+      }
+    },
+    "src.fafc72fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Practiced in a neighboring border county"
       }
     },
     "src.fb08a68f": {
@@ -161940,6 +162950,16 @@
         "text": "{name} (heir)"
       }
     },
+    "src.fd704303": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Lineage prefix (Banu / Ibn)"
+      }
+    },
     "src.fd7467b9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -162601,6 +163621,16 @@
       ],
       "source": {
         "text": "🕯 Your son {name} has died, aged {age}."
+      }
+    },
+    "src.ff032284": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Encountered via active trade partners"
       }
     },
     "src.ff07ac86": {
@@ -168039,16 +169069,6 @@
         "text": "({days} days’ weaving, roughly)"
       }
     },
-    "ui:(×{mult} for the distance between the faiths)": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "mult"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "(×{mult} for the distance between the faiths)"
-      }
-    },
     "ui:+1 piety a season while he serves": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169754,6 +170774,14 @@
         "text": "Affected direct vassals ({count}): {vassals}."
       }
     },
+    "ui:African Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "African Traditions"
+      }
+    },
     "ui:After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -170996,6 +172024,14 @@
         "text": "Auctioned title rights are locked: {requirement}"
       }
     },
+    "ui:Authority": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Authority"
+      }
+    },
     "ui:Automatic allowed": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -171052,6 +172088,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Automation will skip this technology. You may still begin it manually."
+      }
+    },
+    "ui:Autonomous hierarchy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Autonomous hierarchy"
       }
     },
     "ui:Available": {
@@ -171986,6 +173030,22 @@
         "text": "Buy {plots} plots for {money:cost}"
       }
     },
+    "ui:Byzantine & Caucasian": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Byzantine & Caucasian"
+      }
+    },
+    "ui:Caliphate (Caliph in Baghdad) · Sacred leadership": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Caliphate (Caliph in Baghdad) · Sacred leadership"
+      }
+    },
     "ui:Call a Catholic great holy war": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -172364,6 +173424,22 @@
       "location": "js/actions.js",
       "source": {
         "text": "Cavalry fodder and supplies"
+      }
+    },
+    "ui:Celibate": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Celibate"
+      }
+    },
+    "ui:Celtic Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Celtic Traditions"
       }
     },
     "ui:Center map on {name}’s home county": {
@@ -173178,6 +174254,14 @@
         "text": "Choosing a worker below will leave that worker’s current enterprise idle."
       }
     },
+    "ui:Christian Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Christian Traditions"
+      }
+    },
     "ui:Chronicle filter": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173252,6 +174336,14 @@
         "text": "Claims and restorations"
       }
     },
+    "ui:Clan prefix (mac)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Clan prefix (mac)"
+      }
+    },
     "ui:Class: {className}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -173292,6 +174384,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Clear search"
+      }
+    },
+    "ui:Clergy": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Clergy"
       }
     },
     "ui:Clerical Service": {
@@ -173468,6 +174568,26 @@
         "text": "Condemned as hostile"
       }
     },
+    "ui:Confessed by household kin ({name})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Confessed by household kin ({name})"
+      }
+    },
+    "ui:Confessed by your spouse ({name})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Confessed by your spouse ({name})"
+      }
+    },
     "ui:Confirm grant": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173580,6 +174700,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Construction cannot begin while the county is contested."
+      }
+    },
+    "ui:Contact": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Contact"
       }
     },
     "ui:Contest the Caliphate?": {
@@ -173695,6 +174823,14 @@
         "text": "Controls hostile movement through this county"
       }
     },
+    "ui:Conversion scope": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Conversion scope"
+      }
+    },
     "ui:Convert": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173721,6 +174857,14 @@
         "text": "Convert to {target}?"
       }
     },
+    "ui:Converts your family and household. Moderate piety and prestige cost; zealot unrest in your home county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Converts your family and household. Moderate piety and prestige cost; zealot unrest in your home county."
+      }
+    },
     "ui:Corridor": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173739,6 +174883,14 @@
         "text": "Corridor to {destination}"
       }
     },
+    "ui:Cost:": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cost:"
+      }
+    },
     "ui:Cost: {cost} gold · Current gold: {gold}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -173748,16 +174900,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Cost: {cost} gold · Current gold: {gold}"
-      }
-    },
-    "ui:Cost: {cost}.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "cost"
-      ],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Cost: {cost}."
       }
     },
     "ui:Costs {money:10}.": {
@@ -174195,6 +175337,52 @@
         "text": "Cultivated connection"
       }
     },
+    "ui:Cultural unrest rises in your lands, risking rebellion and peasant revolts.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cultural unrest rises in your lands, risking rebellion and peasant revolts."
+      }
+    },
+    "ui:Culture of a neighboring border county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Culture of a neighboring border county"
+      }
+    },
+    "ui:Culture of household kin ({name})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Culture of household kin ({name})"
+      }
+    },
+    "ui:Culture of your spouse ({name})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Culture of your spouse ({name})"
+      }
+    },
+    "ui:Culture of {count} realm counties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Culture of {count} realm counties"
+      }
+    },
     "ui:Curial Standing, order, bloc, piety, and relationships within the college matter.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174332,6 +175520,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Custody of the sacred places"
+      }
+    },
+    "ui:Custom & Reformed Faiths": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Custom & Reformed Faiths"
       }
     },
     "ui:Daily focus": {
@@ -175456,6 +176652,14 @@
         "text": "Dynastically relevant proposal"
       }
     },
+    "ui:Dynasty style": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Dynasty style"
+      }
+    },
     "ui:Each direction uses attention and changes Standing every season.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -175784,6 +176988,30 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Empty"
+      }
+    },
+    "ui:Encountered through travels": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Encountered through travels"
+      }
+    },
+    "ui:Encountered through travels and pilgrimages": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Encountered through travels and pilgrimages"
+      }
+    },
+    "ui:Encountered via active trade partners": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Encountered via active trade partners"
       }
     },
     "ui:Encourage this ambition": {
@@ -176541,6 +177769,14 @@
         "text": "Family provisions and quarters"
       }
     },
+    "ui:Family surname": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Family surname"
+      }
+    },
     "ui:Family, house, and household scope": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -176862,12 +178098,28 @@
         "text": "Forbidden"
       }
     },
+    "ui:Foreign Culture · +25% cost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Foreign Culture · +25% cost"
+      }
+    },
     "ui:Foreign Policy": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Foreign Policy"
+      }
+    },
+    "ui:Foreign Tradition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Foreign Tradition"
       }
     },
     "ui:Foreign border counties": {
@@ -177244,6 +178496,14 @@
         "text": "Gentry"
       }
     },
+    "ui:Get divorce": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Get divorce"
+      }
+    },
     "ui:Gift courier bound for {destination} · {days} days remain.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -177263,12 +178523,12 @@
         "text": "Give up this level with no refund"
       }
     },
-    "ui:Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds.": {
+    "ui:Global shortcuts follow named deeds and focus families outside the Deeds panel. In Deeds, 1–6 select a section and Q W E / A S D / Z X C activate its first nine entries.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
-        "text": "Global shortcuts follow named deeds and focus families, not their changing position in a list. Number keys remain reserved for the visible choices in dialogs and Deeds."
+        "text": "Global shortcuts follow named deeds and focus families outside the Deeds panel. In Deeds, 1–6 select a section and Q W E / A S D / Z X C activate its first nine entries."
       }
     },
     "ui:Goatee": {
@@ -178074,6 +179334,14 @@
         "text": "Holds this county · sovereign"
       }
     },
+    "ui:Holy War": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Holy War"
+      }
+    },
     "ui:Home": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178144,6 +179412,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Hostile plots choose a target and method first. An accomplice may improve the plan, but a refusal can expose it."
+      }
+    },
+    "ui:Hostile · +25% cost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Hostile · +25% cost"
       }
     },
     "ui:House": {
@@ -178599,6 +179875,22 @@
         "text": "In {days} days"
       }
     },
+    "ui:In-Fold": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "In-Fold"
+      }
+    },
+    "ui:In-Fold · −40% cost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "In-Fold · −40% cost"
+      }
+    },
     "ui:In-communion branches": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178880,6 +180172,14 @@
         "text": "Investiture policy"
       }
     },
+    "ui:Islamic Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Islamic Traditions"
+      }
+    },
     "ui:Issue an excommunication": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -178962,6 +180262,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Items that will move"
+      }
+    },
+    "ui:Jewish Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Jewish Traditions"
       }
     },
     "ui:Jump through the family tree": {
@@ -179232,12 +180540,30 @@
         "text": "Kingdom · {count} counties"
       }
     },
+    "ui:Known": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Known"
+      }
+    },
     "ui:Known character": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Known character"
+      }
+    },
+    "ui:Known contact in your court or network ({name})": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "name"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Known contact in your court or network ({name})"
       }
     },
     "ui:Known tie": {
@@ -179616,6 +180942,14 @@
         "text": "Licensed Scholar"
       }
     },
+    "ui:Liege": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Liege"
+      }
+    },
     "ui:Liege & obligations": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -179690,6 +181024,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Limits the dowry written into a recommended pledge. Leave blank for no limit."
+      }
+    },
+    "ui:Lineage prefix (Banu / Ibn)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Lineage prefix (Banu / Ibn)"
       }
     },
     "ui:Live host {change} troops": {
@@ -180509,6 +181851,14 @@
         "text": "Market…"
       }
     },
+    "ui:Marriage": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Marriage"
+      }
+    },
     "ui:Marriage previews show which parent supplies each identity.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180745,6 +182095,14 @@
         "text": "May keep, reverse, or withdraw the current direction."
       }
     },
+    "ui:May marry": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "May marry"
+      }
+    },
     "ui:Meet your household in the Kin tab": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180823,6 +182181,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Methods change speed, chance, cost, and exposure. Forceful methods use Martial."
+      }
+    },
+    "ui:Middle Eastern & North African": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Middle Eastern & North African"
       }
     },
     "ui:Minimum acceptable station": {
@@ -180909,6 +182275,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Money, land plots, guild Standing, and local relationships open longer plans."
+      }
+    },
+    "ui:Monogamy (1 spouse)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Monogamy (1 spouse)"
       }
     },
     "ui:More info": {
@@ -181308,6 +182682,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Needs {prestige} prestige"
+      }
+    },
+    "ui:Neighbor": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Neighbor"
       }
     },
     "ui:Neighboring sovereign": {
@@ -182706,6 +184088,16 @@
         "text": "No trade or guild ties."
       }
     },
+    "ui:No traditions match \"{query}\".": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "query"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "No traditions match \"{query}\"."
+      }
+    },
     "ui:No trait modifier": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184066,6 +185458,22 @@
         "text": "Organized opposition"
       }
     },
+    "ui:Other Cultures": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Other Cultures"
+      }
+    },
+    "ui:Other Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Other Traditions"
+      }
+    },
     "ui:Other enterprises": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184164,6 +185572,14 @@
         "text": "Owner"
       }
     },
+    "ui:Pagan Traditions": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Pagan Traditions"
+      }
+    },
     "ui:Paid on purchase": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184196,6 +185612,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Paid when raised"
+      }
+    },
+    "ui:Papacy (Pope in Rome) · Excommunication authority": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Papacy (Pope in Rome) · Excommunication authority"
       }
     },
     "ui:Papacy and College": {
@@ -184357,6 +185781,30 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Path: serve your lord, win renown ({prestige}+ prestige, Standing {standing}+), and petition for a barony."
+      }
+    },
+    "ui:Patronymic (-sson / -datter)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Patronymic (-sson / -datter)"
+      }
+    },
+    "ui:Patronymic prefix (ap)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Patronymic prefix (ap)"
+      }
+    },
+    "ui:Patronymic suffix (-ovich)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Patronymic suffix (-ovich)"
       }
     },
     "ui:Paused": {
@@ -184762,6 +186210,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Person"
+      }
+    },
+    "ui:Personal adoption for yourself alone. Piety cost only; minimal diplomatic fallout.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Personal adoption for yourself alone. Piety cost only; minimal diplomatic fallout."
+      }
+    },
+    "ui:Personal adoption for yourself alone. Prestige cost only.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Personal adoption for yourself alone. Prestige cost only."
       }
     },
     "ui:Personal ambition": {
@@ -185193,6 +186657,16 @@
         "text": "Political terms change"
       }
     },
+    "ui:Polygyny (up to {count} wives)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Polygyny (up to {count} wives)"
+      }
+    },
     "ui:Pope": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185295,6 +186769,34 @@
         "text": "Powers apply only while equipped. Skills and health affect the wearer; battle and seasonal resources count only on the head of the family."
       }
     },
+    "ui:Practiced in a neighboring border county": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Practiced in a neighboring border county"
+      }
+    },
+    "ui:Practiced in {count} realm counties": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Practiced in {count} realm counties"
+      }
+    },
+    "ui:Practiced in {count} realm counties (including capital)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Practiced in {count} realm counties (including capital)"
+      }
+    },
     "ui:Prepare an eligible heir and the prestige for a barony.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185333,6 +186835,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Prerequisites needed"
+      }
+    },
+    "ui:Presence": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Presence"
       }
     },
     "ui:Press your claim · {odds}% chance": {
@@ -185585,6 +187095,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Proclaim the {target} faith throughout your realm?"
+      }
+    },
+    "ui:Proclaims the state religion across your realm. Piety and prestige cost; zealot unrest in all held counties.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Proclaims the state religion across your realm. Piety and prestige cost; zealot unrest in all held counties."
       }
     },
     "ui:Professed Brother": {
@@ -185977,6 +187495,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Raised-host base logistics"
+      }
+    },
+    "ui:Raises your household in the new way of life. Prestige and piety cost; cultural unrest in your lands.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raises your household in the new way of life. Prestige and piety cost; cultural unrest in your lands."
       }
     },
     "ui:Random Province": {
@@ -186465,6 +187991,14 @@
         "text": "Reduce {standard}?"
       }
     },
+    "ui:Reformed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Reformed"
+      }
+    },
     "ui:Refusal is permanent; acceptance begins a courtship and spends the day.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -186505,6 +188039,22 @@
       "location": "js/events.js",
       "source": {
         "text": "Reinforcement ceiling {change}"
+      }
+    },
+    "ui:Related": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Related"
+      }
+    },
+    "ui:Related Tradition · −20% cost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Related Tradition · −20% cost"
       }
     },
     "ui:Relationship": {
@@ -188339,6 +189889,14 @@
         "text": "Roman"
       }
     },
+    "ui:Romance & Iberian": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Romance & Iberian"
+      }
+    },
     "ui:Rome refuses the petition.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -188537,6 +190095,14 @@
         "text": "Same rank"
       }
     },
+    "ui:Sample names": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Sample names"
+      }
+    },
     "ui:Sanctions require {authority} authority.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -188579,6 +190145,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Schemer warning — affected Council seats: {count}."
+      }
+    },
+    "ui:Schismatic · −20% cost": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Schismatic · −20% cost"
       }
     },
     "ui:Scope": {
@@ -188637,6 +190211,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Search"
+      }
+    },
+    "ui:Search culture…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Search culture…"
+      }
+    },
+    "ui:Search faith or tradition…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Search faith or tradition…"
       }
     },
     "ui:Search family by name": {
@@ -188885,6 +190475,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Seeking a Match"
+      }
+    },
+    "ui:Select": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Select"
       }
     },
     "ui:Select a commodity to buy in {destination} and transport back to {home}.": {
@@ -189426,6 +191024,14 @@
         "text": "Skills"
       }
     },
+    "ui:Slavic & Baltic": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Slavic & Baltic"
+      }
+    },
     "ui:Social and religious roles": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189785,6 +191391,17 @@
         "text": "Standing falls {amount} with your {count} vassal realms."
       }
     },
+    "ui:Standing falls {amount} with {count} realms of your old culture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Standing falls {amount} with {count} realms of your old culture."
+      }
+    },
     "ui:Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy.": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -190084,6 +191701,14 @@
         "text": "Steer them toward another road"
       }
     },
+    "ui:Steppe & Nomad": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Steppe & Nomad"
+      }
+    },
     "ui:Stewardship turns land, labor, and property into reliable value.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -190245,6 +191870,14 @@
         "text": "Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom."
       }
     },
+    "ui:Sunder union": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Sunder union"
+      }
+    },
     "ui:Sunni law reserves the Caliphate for a male ruler.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -190403,6 +192036,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Take your seat in the settlement council or decide a final territorial grant."
+      }
+    },
+    "ui:Talaq repudiation": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Talaq repudiation"
       }
     },
     "ui:Tap a marked county or choose it from the list. Routes use settled counties and authored straits.": {
@@ -193119,6 +194760,14 @@
         "text": "Topic, alias, unlock, or term"
       }
     },
+    "ui:Toponymic (of [Place])": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Toponymic (of [Place])"
+      }
+    },
     "ui:Town Council of {province}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -193171,6 +194820,14 @@
       "location": "js/economy.js",
       "source": {
         "text": "Trade partnership"
+      }
+    },
+    "ui:Tradition": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Tradition"
       }
     },
     "ui:Trainee → {license} from age {age}, after {years} vocational years, Lettered, and {requirements}.": {
@@ -193938,6 +195595,14 @@
         "text": "Varies by acquisition"
       }
     },
+    "ui:Vassal": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Vassal"
+      }
+    },
     "ui:Vassal dues": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -194328,6 +195993,14 @@
       "location": "js/items.js",
       "source": {
         "text": "Well-made {item}"
+      }
+    },
+    "ui:Western & Northern Europe": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Western & Northern Europe"
       }
     },
     "ui:What distraint means": {
@@ -195923,6 +197596,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne."
+      }
+    },
+    "ui:Zoroastrianism": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Zoroastrianism"
       }
     },
     "ui:a Bishop": {
@@ -198978,6 +200659,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}."
+      }
+    },
+    "ui:{count} available": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{count} available"
       }
     },
     "ui:{count} commodity baskets available in {destination}.": {

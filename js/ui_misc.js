@@ -2600,6 +2600,7 @@ window.FB = window.FB || {};
   function reopenGenericModalRaw() {
     if (!genericNavSnapshot) return;
     UI._gmDismiss = genericNavSnapshot.dismiss;
+    UI._gmNoHotkeys = genericNavSnapshot.noHotkeys;
     UI._gmReturnFocus = genericNavSnapshot.returnFocus;
     UI._gmReturnAction = genericNavSnapshot.returnAction;
     const gm = $('genmodal');
@@ -2621,6 +2622,7 @@ window.FB = window.FB || {};
   function closeGenericModalRaw() {
     $('genmodal').classList.add('hidden');
     UI._gmDismiss = true;
+    UI._gmNoHotkeys = false;
     const back = UI._gmReturnFocus;
     const actionId = UI._gmReturnAction;
     UI._gmReturnFocus = null;
@@ -2664,6 +2666,7 @@ window.FB = window.FB || {};
       captureModalView(previousView);
     }
     UI._gmDismiss = !(opts && opts.dismissable === false);
+    UI._gmNoHotkeys = !!(opts && opts.noHotkeys);
     if (wasHidden) {
       UI._gmReturnFocus = modalOpenTrigger &&
         document.documentElement.contains(modalOpenTrigger)
@@ -2684,7 +2687,7 @@ window.FB = window.FB || {};
     normalizeModalFooter($('gm-body'));
     FB.localizeTree($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
-    if (!FB.isTouch) {
+    if (!FB.isTouch && !UI._gmNoHotkeys) {
       const btns = $('gm-body').querySelectorAll('.actionbtn, .settcard-raise');
       for (let i = 0; i < btns.length && i < 18; i++) {
         btns[i].insertAdjacentHTML('afterbegin', hintFor(i));
@@ -2703,6 +2706,8 @@ window.FB = window.FB || {};
     genericNavSnapshot = {
       dismiss:retainedNavigation
         ? retainedNavigation.dismiss : UI._gmDismiss,
+      noHotkeys:retainedNavigation
+        ? retainedNavigation.noHotkeys : UI._gmNoHotkeys,
       historyBack:retainedNavigation
         ? retainedNavigation.historyBack : !!(opts && opts.historyBack),
       returnFocus:retainedNavigation

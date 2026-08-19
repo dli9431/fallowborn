@@ -2662,10 +2662,12 @@ Deliberate player conversion (`docs/designs/conversion.md`) is tuned through
 `faithConversionSchismaticMult`, `faithConversionForeignMult`, and
 `faithConversionHostileMult` multiply faith costs by the relation-graph distance to the
 target; `cultureAdoptionSelfPrestige`, `cultureAdoptionHouseholdPrestige` /
-`cultureAdoptionHouseholdPiety` price culture adoption;
+`cultureAdoptionHouseholdPiety` price culture adoption, scaled by
+`cultureAdoptionSameGroupMult` and `cultureAdoptionForeignMult`;
 `conversionPopularOpinionSelf` / `…Household` / `…Realm`,
-`faithConversionHouseholdRealmStanding`, `faithConversionRealmRealmStanding`, and
-`faithConversionVassalStanding` set the opinion penalties; and
+`faithConversionHouseholdRealmStanding`, `faithConversionRealmRealmStanding`,
+`faithConversionVassalStanding`, `cultureAdoptionHouseholdRealmStanding`, and
+`cultureAdoptionVassalStanding` set the opinion and standing penalties; and
 `faithConversionSelfCooldown` / `…HouseholdCooldown` (plus the
 `cultureAdoption…Cooldown` pair) set the per-scope cooldowns in days. Realm faith
 conversion is once per ruler regardless of these knobs.

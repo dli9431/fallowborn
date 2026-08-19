@@ -33,6 +33,16 @@ FBDATA.events.push(
       success:{ text:'You remit the worst taxes; the crowd disperses, grudging but calm. Wise lords bend.', effects:{ gold:-10, popularOpinion:25, prestige:3, log:'Settled a revolt with mercy.' } },
       failure:{ text:'They take patience for weakness and demand more, emboldened.', effects:{ gold:-15, popularOpinion:5, prestige:-8 } } }
   ]},
+{ id:'cultural_backlash', title:'The Old Ways Defended', tags:['unrest'],
+  trigger:{ tierMin:3, hasModifier:'cultural_unrest', chance:0.25 }, weight:10, cooldown:8,
+  text:'Armed traditionalists and local headmen assemble in {province}, denouncing foreign customs and demanding you govern by ancestral ways.',
+  options:[
+    { label:'Put down the traditionalists by force.', desc:'Iron will teach them who rules this hall.', chance:'battle',
+      success:{ text:'Your soldiers disperse the gathering. The rebel leaders are paraded in chains.', effects:{ prestige:10, popularOpinion:-5, log:'Crushed a cultural revolt.' } },
+      failure:{ text:'The traditionalists ambush your retainers at the narrows, forcing an ignominious retreat.', effects:{ prestige:-15, gold:-15, popularOpinion:-10 } } },
+    { label:'Confirm local rights and customs.', desc:'A concession to ancestral tradition may calm the county.',
+      effects:{ gold:-12, popularOpinion:20, prestige:-5, log:'Conceded traditional rights to quell revolt.' } }
+  ]},
 { id:'vassal_demand', title:'A Baron Grows Bold',
   trigger:{ tierMin:4, chance:0.2 }, weight:8, cooldown:10,
   text:'One of your sworn men arrives with too many retainers and too few courtesies, demanding lower dues and a seat at your right hand.',

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.141.0';
+  FB.VERSION = '1.141.1';
   FB.CHANGELOG = [
+    { v: '1.141.1', date: '2026-08-18', changes: [
+      'The Deeds tab now supports two-stage keyboard navigation across category groups, and culture and faith conversion options are now soft-gated to traditions you have encountered with clearer highlighted costs.'
+    ] },
     { v: '1.141.0', date: '2026-08-18', changes: [
       'The Deeds tab now offers deliberate conversion: adopt a new culture or convert to a new faith for yourself, your household, or your whole realm — paid in prestige or piety, with real penalties from those you leave behind.'
     ] },
