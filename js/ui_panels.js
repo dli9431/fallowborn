@@ -83,6 +83,7 @@ window.FB = window.FB || {};
     bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
     convene_synod:'faith', extraordinary_tithe:'faith',
     restore_papacy:'faith',
+    convert_faith:'faith', adopt_culture:'life',
     claim_caliphate:'faith', call_great_holy_war:'faith',
     join_great_holy_war:'faith', renew_great_holy_war_vow:'faith',
     withdraw_great_holy_war:'faith', give_alms:'faith', hold_feast:'faith',

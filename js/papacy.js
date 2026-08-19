@@ -1972,6 +1972,11 @@ window.FB = window.FB || {};
     if (sentence.cause === 'reunification_defiance') {
       return !FB.isPapalClaimant(state, sentence.targetId);
     }
+    /* an apostate's sentence is remedied only by returning to the fold
+       (see applyConversion in js/actions.js) */
+    if (sentence.cause === 'apostasy') {
+      return !!catholicFaith(state, state.chars[sentence.targetId]);
+    }
     return sentence.cause === 'arbitrary' || sentence.cause === 'penance';
   }
 

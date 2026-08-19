@@ -260,6 +260,14 @@ window.FBDATA = window.FBDATA || {};
       raiding_party_scale:{
         mode:'soft', tech:['shield_walls','martial_drill','professional_retinues','logistics_magazines'],
         rationale:'Martial and logistics innovations improve raiding host discipline against garrisons and increase plunder capacity.'
+      },
+      faith_conversion:{
+        mode:'none',
+        rationale:'Deliberate conversion of self, household, or realm to another faith is a personal and political act; rulers and households converted throughout the period regardless of literacy or legal innovations, so no technology credibly gates or improves it.'
+      },
+      culture_adoption:{
+        mode:'none',
+        rationale:'Adopting another people’s language and customs is a personal and social act with no credible technology dependency; courts and households assimilated long before any researched practice.'
       }
     }
   };

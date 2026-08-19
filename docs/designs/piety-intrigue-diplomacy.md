@@ -27,6 +27,12 @@ dead (prestige and popular opinion), and a blessing upon your house (spouse Stan
 The `give_alms` deed closes the loop, turning gold into piety (with a little popular
 opinion) so the temple's services stay within reach.
 
+The `convert_faith` deed is the largest discretionary piety spend: adopting another
+faith costs piety scaled by scope (self, household, realm) and by the relation-graph
+distance to the target, while `adopt_culture` spends prestige the same way. Both carry
+heavy Standing, popular-opinion, unrest, and (leaving the Papal fold) excommunication
+penalties. See [conversion.md](conversion.md).
+
 **Piety also backs household religious standing.** The player resource is the house's pool
 of reputation and support, so it gates the advancement of the player, a spouse, or a
 dependent child; the candidate's age, Learning, and years in the vocation remain personal.

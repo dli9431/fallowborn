@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.140.3';
+  FB.VERSION = '1.141.0';
   FB.CHANGELOG = [
+    { v: '1.141.0', date: '2026-08-18', changes: [
+      'The Deeds tab now offers deliberate conversion: adopt a new culture or convert to a new faith for yourself, your household, or your whole realm — paid in prestige or piety, with real penalties from those you leave behind.'
+    ] },
     { v: '1.140.3', date: '2026-08-18', changes: [
       'Building ledger digit hotkeys work again even when the county protection checkbox has focus, and loading a life no longer leaves reattached vassals missing from your vassal lists.'
     ] },

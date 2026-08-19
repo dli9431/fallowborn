@@ -523,6 +523,355 @@ window.FB = window.FB || {};
     gain: function () { return { gold: -2 }; } }
   ];
 
+  /* ================= CONVERSION (faith & culture) =================
+     docs/designs/conversion.md — deliberate player conversion to another
+     culture or religion. Piety pays for faith, prestige for culture; costs
+     and penalties escalate with scope (self < household < realm). County
+     culture/faith stays authored world data: a realm conversion writes only
+     realm.religion, never province records. */
+  function conversionBalance(key, fallback) {
+    const value = FBDATA.balance[key];
+    return value !== undefined ? value : fallback;
+  }
+
+  const CONVERSION_RELATION_MULT_KEYS = {
+    in_fold:'faithConversionInFoldMult',
+    schismatic:'faithConversionSchismaticMult',
+    foreign:'faithConversionForeignMult',
+    hostile:'faithConversionHostileMult'
+  };
+
+  function conversionScopes(kind) {
+    return kind === 'faith' ? ['self', 'household', 'realm'] : ['self', 'household'];
+  }
+
+  function conversionDeedId(kind) {
+    return kind === 'faith' ? 'convert_faith' : 'adopt_culture';
+  }
+
+  function conversionBaseCosts(kind, scope) {
+    if (kind === 'faith') {
+      if (scope === 'realm') return {
+        piety:conversionBalance('faithConversionRealmPiety', 600),
+        prestige:conversionBalance('faithConversionRealmPrestige', 400)
+      };
+      if (scope === 'household') return {
+        piety:conversionBalance('faithConversionHouseholdPiety', 250),
+        prestige:conversionBalance('faithConversionHouseholdPrestige', 150)
+      };
+      return { piety:conversionBalance('faithConversionSelfPiety', 100), prestige:0 };
+    }
+    if (scope === 'household') return {
+      piety:conversionBalance('cultureAdoptionHouseholdPiety', 100),
+      prestige:conversionBalance('cultureAdoptionHouseholdPrestige', 300)
+    };
+    return { piety:0, prestige:conversionBalance('cultureAdoptionSelfPrestige', 75) };
+  }
+
+  function conversionCooldownDays(kind, scope) {
+    if (scope === 'household') {
+      return conversionBalance(kind === 'faith'
+        ? 'faithConversionHouseholdCooldown' : 'cultureAdoptionHouseholdCooldown', 1460);
+    }
+    return conversionBalance(kind === 'faith'
+      ? 'faithConversionSelfCooldown' : 'cultureAdoptionSelfCooldown', 730);
+  }
+
+  function conversionPopularOpinion(scope) {
+    if (scope === 'realm') {
+      return conversionBalance('conversionPopularOpinionRealm', -50);
+    }
+    if (scope === 'household') {
+      return conversionBalance('conversionPopularOpinionHousehold', -30);
+    }
+    return conversionBalance('conversionPopularOpinionSelf', -10);
+  }
+
+  function conversionOldFoldRealmIds(state, fromReligion) {
+    const out = [];
+    for (const rid in (state.realms || {})) {
+      if (!Object.prototype.hasOwnProperty.call(state.realms, rid) ||
+          rid === 'player') continue;
+      const realm = state.realms[rid];
+      if (!realm || !realm.alive) continue;
+      const faith = FB.realmReligionId(state, rid);
+      if (faith && FB.faithInFold(state, faith, fromReligion)) out.push(rid);
+    }
+    return out;
+  }
+
+  function conversionVassalIds(state) {
+    const out = [];
+    for (const rid in (state.realms || {})) {
+      if (!Object.prototype.hasOwnProperty.call(state.realms, rid) ||
+          rid === 'player') continue;
+      const realm = state.realms[rid];
+      if (realm && realm.alive && realm.liege === 'player') out.push(rid);
+    }
+    return out;
+  }
+
+  /* Abandoning a faith that recognizes the Papacy while a Pope reigns earns a
+     sentence. Converting to another faith that still recognizes the same
+     office does not. The sentence's cause is 'apostasy'; absolutionRemedyMet
+     in js/papacy.js remedies it only by returning to the fold. */
+  function conversionExcommunicationObedience(state, fromReligion, toReligion) {
+    if (!FB.faithHasSystem(fromReligion, 'papacy', state)) return null;
+    const fromOffice = FB.faithOfficeId(fromReligion, state);
+    if (fromOffice && FB.faithOfficeId(toReligion, state) === fromOffice) {
+      return null;
+    }
+    if (!FB.ensurePapacy) return null;
+    const papacy = FB.ensurePapacy(state);
+    const obedience = papacy && papacy.obediences &&
+      papacy.obediences[papacy.romanObedience];
+    const pope = obedience && obedience.claimantId &&
+      state.chars[obedience.claimantId];
+    if (!obedience || !pope || pope.dead) return null;
+    return obedience;
+  }
+
+  FB.conversionStatus = function (state, kind, targetId, scope) {
+    const out = {
+      ok:false, reason:'', kind:kind, targetId:targetId || null,
+      scope:scope || 'self', targetValid:false,
+      pietyCost:0, prestigeCost:0, relation:null, relationMult:1,
+      popularOpinion:0, oldFoldRealmIds:[], foldStanding:0,
+      vassalIds:[], vassalStanding:0, excommunicates:false
+    };
+    const p = state && state.player;
+    const c = p && state.chars && state.chars[p.charId];
+    if (!p || !c || c.dead || p.dead) {
+      out.reason = FB.T('Only a living character may convert.');
+      return out;
+    }
+    if (kind !== 'faith' && kind !== 'culture') {
+      out.reason = FB.T('That conversion is not possible.');
+      return out;
+    }
+    if (conversionScopes(kind).indexOf(scope) < 0) {
+      out.reason = FB.T('That conversion is not possible.');
+      return out;
+    }
+    if (kind === 'faith') {
+      if (!targetId || !FB.faithAssignable(targetId, state)) {
+        out.reason = FB.T('That faith cannot be adopted.');
+        return out;
+      }
+      if (targetId === c.religion) {
+        out.reason = FB.T('You already confess that faith.');
+        return out;
+      }
+    } else {
+      if (!targetId || !FBDATA.cultures[targetId]) {
+        out.reason = FB.T('That culture cannot be adopted.');
+        return out;
+      }
+      if (targetId === c.culture) {
+        out.reason = FB.T('That is already your culture.');
+        return out;
+      }
+    }
+    out.targetValid = true;
+    if (scope === 'realm') {
+      const realm = state.realms && state.realms.player;
+      if (p.tier < 3 || !realm || !realm.alive) {
+        out.reason = FB.T('Only a landed ruler may proclaim a realm conversion.');
+        return out;
+      }
+      const marker = p.realmFaithConversion;
+      if (marker && typeof marker === 'object' && marker.charId === p.charId) {
+        out.reason = FB.T('This ruler has already led the realm to a new faith.');
+        return out;
+      }
+      if (p.war) {
+        out.reason = FB.T('You must first make peace.');
+        return out;
+      }
+    }
+    const cdKey = conversionDeedId(kind) + ':' + scope;
+    const cdDays = conversionCooldownDays(kind, scope);
+    const cooldowns = p.cooldowns || {};
+    const last = cooldowns[cdKey];
+    if (last !== undefined && state.turn - last < cdDays) {
+      out.reason = FB.T('Ready in {days} days.', {
+        days:cdDays - (state.turn - last)
+      });
+      return out;
+    }
+    const base = conversionBaseCosts(kind, scope);
+    if (kind === 'faith') {
+      out.relation = FB.faithRelation(state, c.religion, targetId);
+      const multKey = CONVERSION_RELATION_MULT_KEYS[out.relation];
+      out.relationMult = multKey ? Number(conversionBalance(multKey, 1)) : 1;
+    }
+    out.pietyCost = Math.ceil(base.piety * out.relationMult);
+    out.prestigeCost = Math.ceil(base.prestige * out.relationMult);
+    out.popularOpinion = conversionPopularOpinion(scope);
+    if (kind === 'faith' && scope !== 'self') {
+      out.oldFoldRealmIds = conversionOldFoldRealmIds(state, c.religion);
+      out.foldStanding = scope === 'realm'
+        ? conversionBalance('faithConversionRealmRealmStanding', -25)
+        : conversionBalance('faithConversionHouseholdRealmStanding', -10);
+    }
+    if (kind === 'faith' && scope === 'realm') {
+      out.vassalIds = conversionVassalIds(state);
+      out.vassalStanding = conversionBalance('faithConversionVassalStanding', -35);
+    }
+    if (kind === 'faith') {
+      out.excommunicates =
+        !!conversionExcommunicationObedience(state, c.religion, targetId);
+    }
+    if ((Number(p.piety) || 0) < out.pietyCost) {
+      out.reason = FB.T('Requires {needed} piety; currently {current}.', {
+        needed:out.pietyCost, current:Math.floor(Number(p.piety) || 0)
+      });
+      return out;
+    }
+    if ((Number(p.prestige) || 0) < out.prestigeCost) {
+      out.reason = FB.T('Requires {needed} prestige; currently {current}.', {
+        needed:out.prestigeCost, current:Math.floor(Number(p.prestige) || 0)
+      });
+      return out;
+    }
+    out.ok = true;
+    return out;
+  };
+
+  FB.applyConversion = function (state, kind, targetId, scope) {
+    const status = FB.conversionStatus(state, kind, targetId, scope);
+    if (!status.ok) return false;
+    const p = state.player;
+    const c = state.chars[p.charId];
+    const from = kind === 'faith' ? c.religion : c.culture;
+
+    p.piety = Math.max(0, (Number(p.piety) || 0) - status.pietyCost);
+    p.prestige = Math.max(0, (Number(p.prestige) || 0) - status.prestigeCost);
+
+    const converts = [c];
+    if (scope !== 'self' && FB.householdMembers) {
+      const household = FB.householdMembers(state);
+      for (let i = 0; i < household.length; i++) {
+        if (converts.indexOf(household[i]) < 0) converts.push(household[i]);
+      }
+    }
+    for (let i = 0; i < converts.length; i++) {
+      if (kind === 'faith') converts[i].religion = targetId;
+      else converts[i].culture = targetId;
+    }
+    if (kind === 'faith' && scope === 'realm' &&
+        state.realms && state.realms.player) {
+      state.realms.player.religion = targetId;
+    }
+
+    if (status.popularOpinion) {
+      FB.applyEffects(state, { popularOpinion:status.popularOpinion });
+    }
+    if (status.oldFoldRealmIds.length) {
+      for (let i = 0; i < status.oldFoldRealmIds.length; i++) {
+        FB.adjustStanding(state, { kind:'realm', id:status.oldFoldRealmIds[i] },
+          status.foldStanding, 'deed:convert_faith');
+      }
+    }
+    for (let i = 0; i < status.vassalIds.length; i++) {
+      FB.adjustStanding(state, { kind:'realm', id:status.vassalIds[i] },
+        status.vassalStanding, 'deed:convert_faith');
+    }
+
+    if (kind === 'faith' && scope !== 'self' && FB.addModifier) {
+      const pids = scope === 'realm' ? (p.provs || []) : [p.provinceId];
+      for (let i = 0; i < pids.length; i++) {
+        if (pids[i]) FB.addModifier(state, 'zealot_unrest', pids[i], { silent:true });
+      }
+    }
+
+    if (status.excommunicates && FB.ensurePapacy) {
+      const papacy = FB.ensurePapacy(state);
+      const obedience = papacy && papacy.obediences &&
+        papacy.obediences[papacy.romanObedience];
+      const pope = obedience && obedience.claimantId &&
+        state.chars[obedience.claimantId];
+      if (obedience && pope && !pope.dead) {
+        papacy.excommunications = papacy.excommunications || {};
+        papacy.excommunications[obedience.id + ':' + c.id] = {
+          targetId:c.id,
+          targetRealmId:(FB.realmIdForRulerCharacter &&
+            FB.realmIdForRulerCharacter(state, c)) || 'player',
+          obedienceId:obedience.id,
+          cause:'apostasy',
+          justified:true,
+          issuedTurn:state.turn,
+          issuingClaimantId:obedience.claimantId,
+          clearedTurn:null
+        };
+        FB.addTrait(c, 'excommunicated');
+        if (FB.adjustPapalSupporterOpinions) {
+          FB.adjustPapalSupporterOpinions(state, obedience.id, -25);
+        }
+        FB.news(state, FB.msg('news.papacy.excommunicated',
+          '⛓ {target} is excommunicated by {pope}.', {
+            target:FB.fullName(c),
+            pope:FB.papalDisplayName(state, pope)
+          }));
+      }
+    }
+
+    p.cooldowns = p.cooldowns || {};
+    p.cooldowns[conversionDeedId(kind) + ':' + scope] = state.turn;
+    if (kind === 'faith' && scope === 'realm') {
+      p.realmFaithConversion = {
+        charId:p.charId, turn:state.turn, from:from, to:targetId
+      };
+    }
+    if (FB.clearPortraitCache) FB.clearPortraitCache();
+
+    const targetParam = kind === 'faith'
+      ? { faith:{ $data:'religion', id:targetId } }
+      : { culture:{ $data:'culture', id:targetId } };
+    const params = { name:FB.fullName(c) };
+    for (const key in targetParam) params[key] = targetParam[key];
+    let text;
+    if (kind === 'faith') {
+      text = scope === 'realm'
+        ? '✝ {name} proclaims the {faith} faith throughout the realm; the old faithful seethe.'
+        : scope === 'household'
+          ? '✝ {name} leads the whole household into the {faith} faith.'
+          : '✝ {name} turns to the {faith} faith.';
+    } else {
+      text = scope === 'household'
+        ? '🌍 {name} raises the household in the {culture} way of life.'
+        : '🌍 {name} takes up the {culture} way of life.';
+    }
+    FB.news(state, FB.msg(
+      kind === 'faith' ? 'news.action.convert_faith' : 'news.action.adopt_culture',
+      text, params));
+    if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+    return true;
+  };
+
+  /* Deed-row probe: the cheapest self-scope target decides whether the row
+     is enabled, and its reason explains why not. */
+  function conversionProbe(state, kind) {
+    const c = me(state);
+    const ids = kind === 'faith'
+      ? FB.religionIds(state, true) : Object.keys(FBDATA.cultures);
+    let cheapest = null;
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if (id === (kind === 'faith' ? c.religion : c.culture)) continue;
+      const st = FB.conversionStatus(state, kind, id, 'self');
+      if (!st.targetValid) continue;
+      if (st.ok) return true;
+      if (!cheapest ||
+          (st.pietyCost + st.prestigeCost) <
+            (cheapest.pietyCost + cheapest.prestigeCost)) cheapest = st;
+    }
+    if (cheapest && cheapest.reason) return cheapest.reason;
+    return kind === 'faith'
+      ? FB.T('There is no other faith to turn to.')
+      : FB.T('There is no other culture to adopt.');
+  }
+
   /* ================= INSTANTS (one-shot deeds) ================= */
   FB.instants = [
 
@@ -940,6 +1289,28 @@ window.FB = window.FB || {};
       }
       if (FB.ui && FB.ui.showReligiousHeadClaim) {
         FB.ui.showReligiousHeadClaim('sunni');
+      }
+    } },
+  { id: 'convert_faith', label: '✝ Convert faith…', noConsume: true,
+    desc: function () {
+      return FB.T('Turn to another faith — privately, with your household, or across your whole realm. Piety and prestige pay the price, and the old faithful will not forgive it.');
+    },
+    show: function (s) { return adult(s); },
+    can: function (s) { return conversionProbe(s, 'faith'); },
+    run: function () {
+      if (FB.ui && FB.ui.showConversionPicker) {
+        FB.ui.showConversionPicker('faith');
+      }
+    } },
+  { id: 'adopt_culture', label: '🌍 Adopt a new culture…', noConsume: true,
+    desc: function () {
+      return FB.T('Take up the language and customs of another people — yourself alone, or your whole household. Prestige pays the price, and your neighbors will mark the change.');
+    },
+    show: function (s) { return adult(s); },
+    can: function (s) { return conversionProbe(s, 'culture'); },
+    run: function () {
+      if (FB.ui && FB.ui.showConversionPicker) {
+        FB.ui.showConversionPicker('culture');
       }
     } },
   { id: 'call_great_holy_war', label: '📯 Call great holy war…', noConsume: true,

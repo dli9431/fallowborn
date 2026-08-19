@@ -1893,6 +1893,176 @@ window.FB = window.FB || {};
     $('caliph-war-cancel').addEventListener('click', UI.closeModal);
   };
 
+  /* Conversion picker (docs/designs/conversion.md): choose a target faith or
+     culture and a scope, previewing the exact cost and every penalty before
+     anything is spent. */
+  function conversionTargetName(s, kind, id) {
+    if (kind === 'faith') return religionName(s, id);
+    const def = FBDATA.cultures[id];
+    return dt(s, 'culture', id, def, 'name');
+  }
+
+  function conversionScopeLabel(scope) {
+    if (scope === 'household') return FB.T('With my household');
+    if (scope === 'realm') return FB.T('Across my whole realm');
+    return FB.T('Myself alone');
+  }
+
+  function conversionCostText(st) {
+    const parts = [];
+    if (st.pietyCost) {
+      parts.push(FB.T('{piety} piety', { piety:st.pietyCost }));
+    }
+    if (st.prestigeCost) {
+      parts.push(FB.T('{prestige} prestige', { prestige:st.prestigeCost }));
+    }
+    let text = parts.join(' + ');
+    if (st.kind === 'faith' && st.relationMult !== 1) {
+      text += ' ' + FB.T('(×{mult} for the distance between the faiths)', {
+        mult:st.relationMult
+      });
+    }
+    return text;
+  }
+
+  UI.showConversionPicker = function (kind, initialScope) {
+    const s = FB.state;
+    const c = s && s.chars && s.chars[s.player.charId];
+    if (!s || !c || (kind !== 'faith' && kind !== 'culture')) return;
+    const currentId = kind === 'faith' ? c.religion : c.culture;
+    const ids = kind === 'faith'
+      ? FB.religionIds(s, true) : Object.keys(FBDATA.cultures);
+    const targets = [];
+    for (let i = 0; i < ids.length; i++) {
+      if (ids[i] !== currentId) targets.push(ids[i]);
+    }
+    targets.sort(function (a, b) {
+      const an = conversionTargetName(s, kind, a).toLowerCase();
+      const bn = conversionTargetName(s, kind, b).toLowerCase();
+      return an < bn ? -1 : (an > bn ? 1 : 0);
+    });
+    const scopes = kind === 'faith'
+      ? ['self', 'household', 'realm'] : ['self', 'household'];
+    let scope = scopes.indexOf(initialScope) >= 0 ? initialScope : 'self';
+
+    function render() {
+      let h = '<div class="gm-body-text"><p>' + esc(kind === 'faith'
+        ? FB.T('Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it.')
+        : FB.T('Choose the culture to adopt, and how far the change reaches.')) +
+        '</p></div><div class="gm-list">';
+      for (let i = 0; i < scopes.length; i++) {
+        h += '<button type="button" class="actionbtn" data-conv-scope="' +
+          scopes[i] + '"' + (scopes[i] === scope ? ' disabled' : '') + '>' +
+          esc(conversionScopeLabel(scopes[i])) + '</button>';
+      }
+      h += '</div><div class="gm-list">';
+      for (let i = 0; i < targets.length; i++) {
+        const id = targets[i];
+        const st = FB.conversionStatus(s, kind, id, scope);
+        let label = conversionTargetName(s, kind, id);
+        if (st.ok) label += ' — ' + conversionCostText(st);
+        h += '<button type="button" class="actionbtn" data-conv-target="' +
+          esc(id) + '"' + (st.ok ? '' : ' disabled') + '>' + esc(label) +
+          (st.ok ? '' : '<br><small>' + esc(st.reason) + '</small>') +
+          '</button>';
+      }
+      h += '</div>';
+      openModal(kind === 'faith'
+        ? FB.T('Convert faith') : FB.T('Adopt a new culture'), h);
+      document.querySelectorAll('[data-conv-scope]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          scope = button.getAttribute('data-conv-scope');
+          render();
+        });
+      });
+      document.querySelectorAll('[data-conv-target]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          confirmConversion(button.getAttribute('data-conv-target'));
+        });
+      });
+      setTimeout(function () {
+        const first = document.querySelector('[data-conv-target]:not([disabled])');
+        if (first) first.focus();
+      }, 0);
+    }
+
+    function confirmConversion(targetId) {
+      const st = FB.conversionStatus(s, kind, targetId, scope);
+      if (!st.ok) {
+        if (st.reason) UI.toast(st.reason);
+        return;
+      }
+      const name = conversionTargetName(s, kind, targetId);
+      const lines = [FB.T('Cost: {cost}.', { cost:conversionCostText(st) })];
+      let lead;
+      if (kind === 'faith') {
+        lead = scope === 'realm'
+          ? FB.T('Proclaim the {target} faith throughout your realm?', { target:name })
+          : scope === 'household'
+            ? FB.T('Lead your whole household into the {target} faith?', { target:name })
+            : FB.T('Turn to the {target} faith?', { target:name });
+      } else {
+        lead = scope === 'household'
+          ? FB.T('Raise your household in the {target} way of life?', { target:name })
+          : FB.T('Take up the {target} way of life?', { target:name });
+      }
+      if (st.popularOpinion) {
+        lines.push(FB.T('Popular opinion {amount}.', {
+          amount:st.popularOpinion
+        }));
+      }
+      if (st.oldFoldRealmIds.length) {
+        lines.push(FB.T(
+          'Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy.', {
+            amount:st.foldStanding, count:st.oldFoldRealmIds.length
+          }));
+      }
+      if (st.vassalIds.length) {
+        lines.push(FB.T('Standing falls {amount} with your {count} vassal realms.', {
+          amount:st.vassalStanding, count:st.vassalIds.length
+        }));
+      }
+      if (kind === 'faith' && scope === 'realm') {
+        lines.push(FB.T('Zealot unrest rises in every county you hold.'));
+      } else if (kind === 'faith' && scope === 'household') {
+        lines.push(FB.T('Zealot unrest rises in your home county.'));
+      }
+      if (st.excommunicates) {
+        lines.push(FB.T('The Pope will excommunicate you for apostasy.'));
+      }
+      if (kind === 'faith' && scope === 'realm' && st.oldFoldRealmIds.length) {
+        lines.push(FB.T(
+          'Your realm becomes a lawful target for the great holy wars of your old faith.'));
+      }
+      let h = '<div class="gm-body-text"><p>' + esc(lead) + '</p>';
+      for (let i = 0; i < lines.length; i++) {
+        h += '<p>' + esc(lines[i]) + '</p>';
+      }
+      h += '</div><div class="gm-list">' +
+        '<button type="button" class="actionbtn" id="conv-confirm">' +
+        esc(kind === 'faith' ? FB.T('Convert') : FB.T('Adopt')) + '</button>' +
+        '<button type="button" class="actionbtn" id="conv-cancel">' +
+        esc(FB.T('Not yet')) + '</button></div>';
+      openModal(kind === 'faith'
+        ? FB.T('Convert to {target}?', { target:name })
+        : FB.T('Adopt {target}?', { target:name }), h);
+      $('conv-confirm').addEventListener('click', function () {
+        if (!FB.applyConversion(s, kind, targetId, scope)) {
+          const failed = FB.conversionStatus(s, kind, targetId, scope);
+          if (failed.reason) UI.toast(failed.reason);
+          UI.closeModal();
+          UI.refresh();
+          return;
+        }
+        UI.closeModal();
+        UI.refresh();
+      });
+      $('conv-cancel').addEventListener('click', function () { render(); });
+    }
+
+    render();
+  };
+
   function greatHolyWarRealmName(s, rid) {
     if (!rid) return FB.T('Not chosen');
     if (rid === 'player') {

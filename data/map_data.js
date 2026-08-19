@@ -1369,6 +1369,24 @@ FBDATA.balance = {
   capitalRelocationPrestigeCost: 200,
   capitalRelocationPopularOpinion: -15,
   capitalRelocationVassalFavor: -15,
+  /* deliberate conversion (docs/designs/conversion.md): piety pays for faith,
+     prestige for culture; larger scopes charge both. Faith costs scale by the
+     relation-graph distance to the target faith. Realm faith conversion is
+     once per ruler. */
+  faithConversionSelfPiety: 100,
+  faithConversionHouseholdPiety: 250, faithConversionHouseholdPrestige: 150,
+  faithConversionRealmPiety: 600, faithConversionRealmPrestige: 400,
+  faithConversionInFoldMult: 0.6, faithConversionSchismaticMult: 0.8,
+  faithConversionForeignMult: 1.0, faithConversionHostileMult: 1.25,
+  cultureAdoptionSelfPrestige: 75,
+  cultureAdoptionHouseholdPrestige: 300, cultureAdoptionHouseholdPiety: 100,
+  conversionPopularOpinionSelf: -10, conversionPopularOpinionHousehold: -30,
+  conversionPopularOpinionRealm: -50,
+  faithConversionHouseholdRealmStanding: -10,
+  faithConversionRealmRealmStanding: -25,
+  faithConversionVassalStanding: -35,
+  faithConversionSelfCooldown: 730, faithConversionHouseholdCooldown: 1460,
+  cultureAdoptionSelfCooldown: 730, cultureAdoptionHouseholdCooldown: 1460,
   /* domain limit: counties the player may hold DIRECTLY before overload.
      cap = domainBase + floor(stewardship / domainStewPer); every county past
      the cap multiplies the player's OWN income and levy by (1 - overDomainPenalty).

@@ -8,6 +8,14 @@
         "text": "📜 Abandon fabricated claim"
       }
     },
+    "action.adopt_culture.label.default": {
+      "context": "action adopt_culture, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "🌍 Adopt a new culture…"
+      }
+    },
     "action.adopt_tech.label.default": {
       "context": "action adopt_tech, visible label.",
       "glossary": [],
@@ -126,6 +134,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "📜 Convene a synod"
+      }
+    },
+    "action.convert_faith.label.default": {
+      "context": "action convert_faith, visible label.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "✝ Convert faith…"
       }
     },
     "action.debase_coinage.label.default": {
@@ -35067,6 +35083,22 @@
         "text": "Tax Concession"
       }
     },
+    "modifier.zealot_unrest.desc.default": {
+      "context": "modifier zealot_unrest, desc, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "The old faith’s faithful preach defiance against the convert’s house."
+      }
+    },
+    "modifier.zealot_unrest.name.default": {
+      "context": "modifier zealot_unrest, name, faith branch default.",
+      "glossary": [],
+      "location": "data/modifiers.js",
+      "source": {
+        "text": "Zealot Unrest"
+      }
+    },
     "news.action.alliance_failure": {
       "context": "Durable message descriptor; English source remains at its callsite.",
       "glossary": [
@@ -47848,6 +47880,16 @@
         "text": "Scouts need volunteers to cross dangerous ground before dawn. Success would bring useful intelligence; failure may leave no road home."
       }
     },
+    "src.001e89fe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "The Pope will excommunicate you for apostasy."
+      }
+    },
     "src.0031f8ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -49040,6 +49082,16 @@
       ],
       "source": {
         "text": "No choice recorded"
+      }
+    },
+    "src.0336f760": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "With my household"
       }
     },
     "src.0337b4f5": {
@@ -51309,6 +51361,16 @@
       ],
       "source": {
         "text": "Download a bank or the complete soundtrack before going offline."
+      }
+    },
+    "src.0815b2d5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Lead your whole household into the {target} faith?"
       }
     },
     "src.0823a3f4": {
@@ -53626,6 +53688,16 @@
         "text": "Back another merchant’s four-season venture for a share of its profit or loss."
       }
     },
+    "src.0d1ef630": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Only a landed ruler may proclaim a realm conversion."
+      }
+    },
     "src.0d2187ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -54579,6 +54651,16 @@
       ],
       "source": {
         "text": "No valid guild electorate is available."
+      }
+    },
+    "src.0f624b58": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "✝ {name} leads the whole household into the {faith} faith."
       }
     },
     "src.0f69a200": {
@@ -56107,6 +56189,16 @@
         "text": "mosque"
       }
     },
+    "src.128edb2d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That culture cannot be adopted."
+      }
+    },
     "src.128fdfcd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -57328,6 +57420,16 @@
         "text": "Breeders keep lines for wool, milk, traction, or hardiness."
       }
     },
+    "src.14ee3f62": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Popular opinion {amount}."
+      }
+    },
     "src.14f2f78e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58271,6 +58373,16 @@
       ],
       "source": {
         "text": "Continuing consequences"
+      }
+    },
+    "src.16c1202b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "Zealot Unrest"
       }
     },
     "src.16c639bb": {
@@ -61402,6 +61514,16 @@
       ],
       "source": {
         "text": "The miller pays rather than explain to the village why its savior owes him coin."
+      }
+    },
+    "src.1e140bb4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Turn to the {target} faith?"
       }
     },
     "src.1e1456b4": {
@@ -74655,6 +74777,16 @@
         "text": "Church standing"
       }
     },
+    "src.3be36489": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That is already your culture."
+      }
+    },
     "src.3be55318": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -75631,6 +75763,16 @@
       ],
       "source": {
         "text": "{support} of {total} weighted votes; {majority} required"
+      }
+    },
+    "src.3ea39673": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "✝ Convert faith…"
       }
     },
     "src.3ea3d3b8": {
@@ -77424,6 +77566,16 @@
       ],
       "source": {
         "text": "value"
+      }
+    },
+    "src.4269df28": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Turn to another faith — privately, with your household, or across your whole realm. Piety and prestige pay the price, and the old faithful will not forgive it."
       }
     },
     "src.42709cff": {
@@ -82466,6 +82618,16 @@
         "text": "Gone at {age}; the chronicle leaves most of the page blank."
       }
     },
+    "src.4d9a0ae1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "There is no other faith to turn to."
+      }
+    },
     "src.4d9e3b0a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85365,6 +85527,16 @@
         "text": "construction costs"
       }
     },
+    "src.54171572": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Zealot unrest rises in your home county."
+      }
+    },
     "src.541ccddd": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -85663,6 +85835,16 @@
       ],
       "source": {
         "text": "🛡 The hired security traces the preparations to {name}."
+      }
+    },
+    "src.54ccd6b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Take up the language and customs of another people — yourself alone, or your whole household. Prestige pays the price, and your neighbors will mark the change."
       }
     },
     "src.54ce3a41": {
@@ -87334,6 +87516,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/actions.js",
         "js/papacy.js"
       ],
       "source": {
@@ -87529,6 +87712,16 @@
       ],
       "source": {
         "text": "Words Before Dawn"
+      }
+    },
+    "src.58d4b4df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That faith cannot be adopted."
       }
     },
     "src.58da7bdb": {
@@ -92659,6 +92852,16 @@
         "text": "High Queen"
       }
     },
+    "src.642b6049": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "There is no other culture to adopt."
+      }
+    },
     "src.6430f747": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93262,6 +93465,16 @@
       ],
       "source": {
         "text": ": non-numeric effect"
+      }
+    },
+    "src.65a21b02": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Myself alone"
       }
     },
     "src.65a730d7": {
@@ -99530,6 +99743,16 @@
         "text": "Endangered target: {target}"
       }
     },
+    "src.73ac7dff": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Raise your household in the {target} way of life?"
+      }
+    },
     "src.73ad4fcf": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -101858,6 +102081,16 @@
       ],
       "source": {
         "text": "Estate-service outfit"
+      }
+    },
+    "src.791a4347": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "✝ {name} proclaims the {faith} faith throughout the realm; the old faithful seethe."
       }
     },
     "src.791a80ec": {
@@ -108797,6 +109030,16 @@
         "text": "Offer a gift to {name}"
       }
     },
+    "src.8788fffa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "(×{mult} for the distance between the faiths)"
+      }
+    },
     "src.87890a1e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -110705,6 +110948,16 @@
       ],
       "source": {
         "text": "Bruised flesh"
+      }
+    },
+    "src.8b75869a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "This ruler has already led the realm to a new faith."
       }
     },
     "src.8b7672b4": {
@@ -113948,6 +114201,16 @@
       ],
       "source": {
         "text": "Standing with liege"
+      }
+    },
+    "src.92e29218": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Convert"
       }
     },
     "src.92ee3126": {
@@ -119022,6 +119285,16 @@
       ],
       "source": {
         "text": "Crushed a peasant revolt."
+      }
+    },
+    "src.9e1e41df": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy."
       }
     },
     "src.9e278397": {
@@ -126195,6 +126468,16 @@
         "text": "Build goodwill at this court every season."
       }
     },
+    "src.ade4afdd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Requires {needed} prestige; currently {current}."
+      }
+    },
     "src.ade6e02c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128239,6 +128522,16 @@
       ],
       "source": {
         "text": "Whithorn"
+      }
+    },
+    "src.b21ce7f1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Adopt"
       }
     },
     "src.b2266dcb": {
@@ -130608,6 +130901,16 @@
         "text": "Repent and tell the court about the bribe."
       }
     },
+    "src.b73dbfa3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/modifiers.js"
+      ],
+      "source": {
+        "text": "The old faith’s faithful preach defiance against the convert’s house."
+      }
+    },
     "src.b73e27fa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131963,6 +132266,16 @@
         "text": "Caravan Factor"
       }
     },
+    "src.ba59dd0a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the culture to adopt, and how far the change reaches."
+      }
+    },
     "src.ba61a9d4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133065,6 +133378,16 @@
       ],
       "source": {
         "text": "Create target-bound leverage lasting two years."
+      }
+    },
+    "src.bd4a6aa6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Across my whole realm"
       }
     },
     "src.bd4acea6": {
@@ -135366,6 +135689,16 @@
         "text": "No compact"
       }
     },
+    "src.c2565aeb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "✝ {name} turns to the {faith} faith."
+      }
+    },
     "src.c25dc13b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135846,6 +136179,16 @@
       ],
       "source": {
         "text": "📯 {campaign} for {kingdom} · {status}"
+      }
+    },
+    "src.c34e1f45": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Requires {needed} piety; currently {current}."
       }
     },
     "src.c35be32f": {
@@ -138737,6 +139080,16 @@
         "text": "Existing diplomatic commitment"
       }
     },
+    "src.c9d26dc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "You already confess that faith."
+      }
+    },
     "src.c9d9572a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -140522,6 +140875,16 @@
       ],
       "source": {
         "text": "Fell in battle at {province} against {enemy}."
+      }
+    },
+    "src.cdaa19c7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "{piety} piety"
       }
     },
     "src.cdb2687a": {
@@ -143823,6 +144186,16 @@
         "text": "Offer it as a gift."
       }
     },
+    "src.d614d474": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Proclaim the {target} faith throughout your realm?"
+      }
+    },
     "src.d6150e06": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -146192,6 +146565,16 @@
         "text": "Burn every copy."
       }
     },
+    "src.db1d9c2b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it."
+      }
+    },
     "src.db26a475": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -148386,6 +148769,16 @@
         "text": "{rival} comes with elders and a careful proposal: speak the injuries plainly, make restitution where it is owed, and swear before witnesses that the quarrel is ended."
       }
     },
+    "src.dff40209": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Cost: {cost}."
+      }
+    },
     "src.dff47c36": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150106,6 +150499,16 @@
         "text": "Treatise on Virtue"
       }
     },
+    "src.e3ca4b54": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Convert faith"
+      }
+    },
     "src.e3cb4da1": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150224,6 +150627,16 @@
       ],
       "source": {
         "text": "Pay for full confirmation. ({money:12})"
+      }
+    },
+    "src.e417328d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Zealot unrest rises in every county you hold."
       }
     },
     "src.e419fed0": {
@@ -150938,6 +151351,16 @@
       ],
       "source": {
         "text": "Higher rank"
+      }
+    },
+    "src.e59d2b56": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Adopt a new culture"
       }
     },
     "src.e5a04c0d": {
@@ -154507,6 +154930,16 @@
         "text": "{money:amount} each season"
       }
     },
+    "src.ed74d109": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌍 {name} takes up the {culture} way of life."
+      }
+    },
     "src.eda2985a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -154525,6 +154958,16 @@
       ],
       "source": {
         "text": "loss of Rome"
+      }
+    },
+    "src.eda590c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Standing falls {amount} with your {count} vassal realms."
       }
     },
     "src.eda6547e": {
@@ -156594,6 +157037,16 @@
         "text": "Ends {modifier} in {province}; its effects and upkeep stop."
       }
     },
+    "src.f2037dae": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Take up the {target} way of life?"
+      }
+    },
     "src.f20446fb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -156622,6 +157075,16 @@
       ],
       "source": {
         "text": "⚔ The {campaign} begins. {leader} takes command of the gathered host."
+      }
+    },
+    "src.f22151a1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Adopt {target}?"
       }
     },
     "src.f222dab8": {
@@ -156932,6 +157395,16 @@
       ],
       "source": {
         "text": "Slavic Paganism"
+      }
+    },
+    "src.f31c5991": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Convert to {target}?"
       }
     },
     "src.f31d9bec": {
@@ -158011,6 +158484,16 @@
       ],
       "source": {
         "text": "Grace settles over hearth and home."
+      }
+    },
+    "src.f56b6736": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Only a living character may convert."
       }
     },
     "src.f575236d": {
@@ -159176,6 +159659,26 @@
       ],
       "source": {
         "text": "✨ Out of the earth: {item}."
+      }
+    },
+    "src.f846c6d6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌍 {name} raises the household in the {culture} way of life."
+      }
+    },
+    "src.f84e00b5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Your realm becomes a lawful target for the great holy wars of your old faith."
       }
     },
     "src.f86ab027": {
@@ -161829,6 +162332,16 @@
         "text": "Disable"
       }
     },
+    "src.fe5fd3ab": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "🌍 Adopt a new culture…"
+      }
+    },
     "src.fe604d30": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -162098,6 +162611,16 @@
       ],
       "source": {
         "text": "You sweat it out at your labors."
+      }
+    },
+    "src.ff130aee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "That conversion is not possible."
       }
     },
     "src.ff175c9c": {
@@ -167516,6 +168039,16 @@
         "text": "({days} days’ weaving, roughly)"
       }
     },
+    "ui:(×{mult} for the distance between the faiths)": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "mult"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "(×{mult} for the distance between the faiths)"
+      }
+    },
     "ui:+1 piety a season while he serves": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -168973,6 +169506,14 @@
         "text": "Acquisition order"
       }
     },
+    "ui:Across my whole realm": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Across my whole realm"
+      }
+    },
     "ui:Action": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -169156,6 +169697,32 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Administration, Medicine, and Scholarship teach letters during their trainee stage. Licensed practice and permanent specializations require Lettered, Learning, vocational years, technology, fees, and a professional examination whose chance rises with skill."
+      }
+    },
+    "ui:Adopt": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Adopt"
+      }
+    },
+    "ui:Adopt a new culture": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Adopt a new culture"
+      }
+    },
+    "ui:Adopt {target}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Adopt {target}?"
       }
     },
     "ui:Advance an eligible household worker through the guild, then assign that worker here.": {
@@ -172403,12 +172970,28 @@
         "text": "Choose the color used for ordinary labels, values, and body copy."
       }
     },
+    "ui:Choose the culture to adopt, and how far the change reaches.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the culture to adopt, and how far the change reaches."
+      }
+    },
     "ui:Choose the exact land named in the vow.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "Choose the exact land named in the vow."
+      }
+    },
+    "ui:Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Choose the faith to turn to, and how far the conversion reaches. The old faithful will not forgive it."
       }
     },
     "ui:Choose the focus outline and, when you are independent, your realm’s map color.": {
@@ -173112,6 +173695,32 @@
         "text": "Controls hostile movement through this county"
       }
     },
+    "ui:Convert": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Convert"
+      }
+    },
+    "ui:Convert faith": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Convert faith"
+      }
+    },
+    "ui:Convert to {target}?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Convert to {target}?"
+      }
+    },
     "ui:Corridor": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -173139,6 +173748,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Cost: {cost} gold · Current gold: {gold}"
+      }
+    },
+    "ui:Cost: {cost}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cost"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Cost: {cost}."
       }
     },
     "ui:Costs {money:10}.": {
@@ -178699,6 +179318,16 @@
         "text": "Lead a contingent for {ruler}. Win a real field battle before the host disperses and earn a barony in your own lifetime."
       }
     },
+    "ui:Lead your whole household into the {target} faith?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Lead your whole household into the {target} faith?"
+      }
+    },
     "ui:Lean harvest": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180481,6 +181110,14 @@
       "location": "js/items.js",
       "source": {
         "text": "Mutton chops + moustache"
+      }
+    },
+    "ui:Myself alone": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Myself alone"
       }
     },
     "ui:Name": {
@@ -182858,6 +183495,22 @@
         "text": "Only a guildmaster of the Craft or Trade profession may petition."
       }
     },
+    "ui:Only a landed ruler may proclaim a realm conversion.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Only a landed ruler may proclaim a realm conversion."
+      }
+    },
+    "ui:Only a living character may convert.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Only a living character may convert."
+      }
+    },
     "ui:Only a living count or higher ruler may move a capital.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184558,6 +185211,16 @@
         "text": "Pope {name}"
       }
     },
+    "ui:Popular opinion {amount}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Popular opinion {amount}."
+      }
+    },
     "ui:Population": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184914,6 +185577,16 @@
         "text": "Proceed alone"
       }
     },
+    "ui:Proclaim the {target} faith throughout your realm?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Proclaim the {target} faith throughout your realm?"
+      }
+    },
     "ui:Professed Brother": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -185266,6 +185939,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Raise this county’s development to meet the requirement."
+      }
+    },
+    "ui:Raise your household in the {target} way of life?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Raise your household in the {target} way of life?"
       }
     },
     "ui:Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.": {
@@ -186578,6 +187261,28 @@
       "location": "js/actions.js",
       "source": {
         "text": "Requires {needed} Standing; currently {current}."
+      }
+    },
+    "ui:Requires {needed} piety; currently {current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Requires {needed} piety; currently {current}."
+      }
+    },
+    "ui:Requires {needed} prestige; currently {current}.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "current",
+        "needed"
+      ],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Requires {needed} prestige; currently {current}."
       }
     },
     "ui:Requires {piety} piety; you have {current}.": {
@@ -189069,6 +189774,28 @@
         "text": "Standing contribution"
       }
     },
+    "ui:Standing falls {amount} with your {count} vassal realms.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Standing falls {amount} with your {count} vassal realms."
+      }
+    },
+    "ui:Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "amount",
+        "count"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Standing falls {amount} with {count} realms of your old faith — before they even weigh your apostasy."
+      }
+    },
     "ui:Standing is scoped: a person, realm, lord, Pope, guild, or institution can each hold a different opinion. Common Voice is popular support. Guild Standing belongs to an active vocational guild record.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189652,6 +190379,24 @@
         "text": "Take up a livelihood"
       }
     },
+    "ui:Take up the language and customs of another people — yourself alone, or your whole household. Prestige pays the price, and your neighbors will mark the change.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Take up the language and customs of another people — yourself alone, or your whole household. Prestige pays the price, and your neighbors will mark the change."
+      }
+    },
+    "ui:Take up the {target} way of life?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Take up the {target} way of life?"
+      }
+    },
     "ui:Take your seat in the settlement council or decide a final territorial grant.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189870,6 +190615,14 @@
         "text": "That commodity is not available."
       }
     },
+    "ui:That conversion is not possible.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That conversion is not possible."
+      }
+    },
     "ui:That county cannot become a capital.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -189894,12 +190647,28 @@
         "text": "That county is beyond your raiding reach."
       }
     },
+    "ui:That culture cannot be adopted.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That culture cannot be adopted."
+      }
+    },
     "ui:That enterprise’s staffing lock will be cleared.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_modals.js",
       "source": {
         "text": "That enterprise’s staffing lock will be cleared."
+      }
+    },
+    "ui:That faith cannot be adopted.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That faith cannot be adopted."
       }
     },
     "ui:That great office does not exist.": {
@@ -189924,6 +190693,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "That is already the name of your house."
+      }
+    },
+    "ui:That is already your culture.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "That is already your culture."
       }
     },
     "ui:That motion is not recognized by the Estates.": {
@@ -190198,6 +190975,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The Pope directs an obedience while remaining the playable member of the dynasty."
+      }
+    },
+    "ui:The Pope will excommunicate you for apostasy.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "The Pope will excommunicate you for apostasy."
       }
     },
     "ui:The Pope will receive you after peace. Pay {money:gold} and offer {piety} piety to lift excommunication and restore {standing} Standing with every Catholic realm.": {
@@ -191598,6 +192383,22 @@
         "text": "There is no heir."
       }
     },
+    "ui:There is no other culture to adopt.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "There is no other culture to adopt."
+      }
+    },
+    "ui:There is no other faith to turn to.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "There is no other faith to turn to."
+      }
+    },
     "ui:There is no war for the estates to authorize.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -192140,6 +192941,14 @@
         "text": "This revocation breaks the protected term. Common Voice falls, mistreatment is recorded, and the affected constituency organizes opposition."
       }
     },
+    "ui:This ruler has already led the realm to a new faith.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "This ruler has already led the realm to a new faith."
+      }
+    },
     "ui:This ruler has already moved the capital once.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -192515,6 +193324,24 @@
       "location": "js/ui_misc.js",
       "source": {
         "text": "Try the highlighted control first"
+      }
+    },
+    "ui:Turn to another faith — privately, with your household, or across your whole realm. Piety and prestige pay the price, and the old faithful will not forgive it.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "Turn to another faith — privately, with your household, or across your whole realm. Piety and prestige pay the price, and the old faithful will not forgive it."
+      }
+    },
+    "ui:Turn to the {target} faith?": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "target"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Turn to the {target} faith?"
       }
     },
     "ui:Turning back refunds nothing.": {
@@ -193583,6 +194410,14 @@
         "text": "Whom to honor with {icon} {item}? Such largesse is worth up to +{standing} Standing; access determines the exact value."
       }
     },
+    "ui:With my household": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "With my household"
+      }
+    },
     "ui:Withdraw": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -193827,6 +194662,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "You"
+      }
+    },
+    "ui:You already confess that faith.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/actions.js",
+      "source": {
+        "text": "You already confess that faith."
       }
     },
     "ui:You also lose 20 Papal Standing, the recognized obedience loses 8 authority, and it gains grounds to excommunicate you.": {
@@ -194888,6 +195731,14 @@
         "text": "Your realm already has one defensive ally."
       }
     },
+    "ui:Your realm becomes a lawful target for the great holy wars of your old faith.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Your realm becomes a lawful target for the great holy wars of your old faith."
+      }
+    },
     "ui:Your realm has already granted a local guild monopoly.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -195048,6 +195899,22 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Your {cleric}"
+      }
+    },
+    "ui:Zealot unrest rises in every county you hold.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Zealot unrest rises in every county you hold."
+      }
+    },
+    "ui:Zealot unrest rises in your home county.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Zealot unrest rises in your home county."
       }
     },
     "ui:Zoom in on the map to reveal settlement markers: county heads and great cities first, every place at the closest zoom. Tap a marker for its sheet — buildings, and any household property in that exact place. Sheets abroad are read-only; construction and demolition appear only in your own demesne.": {
@@ -200458,6 +201325,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{percent}% {camp} siege"
+      }
+    },
+    "ui:{piety} piety": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "piety"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "{piety} piety"
       }
     },
     "ui:{place}; controls hostile movement through its county": {
