@@ -2655,6 +2655,21 @@ Generated definitions live in `state.faiths`, relationship changes in
 still authored bookmark data, so founding does not mutate a county. See
 [designs/religions.md](designs/religions.md) for the complete resolution and save model.
 
+Deliberate player conversion (`docs/designs/conversion.md`) is tuned through
+`FBDATA.balance`: `faithConversionSelfPiety`, `faithConversionHouseholdPiety` /
+`faithConversionHouseholdPrestige`, `faithConversionRealmPiety` /
+`faithConversionRealmPrestige` set the scope ladder; `faithConversionInFoldMult`,
+`faithConversionSchismaticMult`, `faithConversionForeignMult`, and
+`faithConversionHostileMult` multiply faith costs by the relation-graph distance to the
+target; `cultureAdoptionSelfPrestige`, `cultureAdoptionHouseholdPrestige` /
+`cultureAdoptionHouseholdPiety` price culture adoption;
+`conversionPopularOpinionSelf` / `…Household` / `…Realm`,
+`faithConversionHouseholdRealmStanding`, `faithConversionRealmRealmStanding`, and
+`faithConversionVassalStanding` set the opinion penalties; and
+`faithConversionSelfCooldown` / `…HouseholdCooldown` (plus the
+`cultureAdoption…Cooldown` pair) set the per-scope cooldowns in days. Realm faith
+conversion is once per ruler regardless of these knobs.
+
 ### Catholic Papacy definition
 
 `FBDATA.papacy` (in `data/papacy.js`, mod key `papacy`) defines the Catholic College,

@@ -87,6 +87,11 @@ when the player captures the objective of a saved `aggression` war cause. Like e
 county record, it remains attached to the county after a transfer and expires through
 the normal daily modifier tick.
 
+Deliberate conversion (see [conversion.md](conversion.md)) supplies `zealot_unrest`:
+1,440 days of +35% harmful `unrest` exposure, −12 effective Common Voice, −8% county
+tax, and −5% county levy. A household faith conversion grants it to the home county; a
+realm faith conversion grants it to every county the player holds.
+
 ## Public APIs
 
 - `FB.addModifier(state,id,pid?,options?)` and

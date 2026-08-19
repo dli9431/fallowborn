@@ -67,6 +67,12 @@ FBDATA.modifiers = {
     scope:'county', days:900,
     fx:{ commonVoice:-7, unrest:0.25 }
   },
+  zealot_unrest: {
+    name:'Zealot Unrest', icon:'🔥',
+    desc:'The old faith’s faithful preach defiance against the convert’s house.',
+    scope:'county', days:1440,
+    fx:{ unrest:0.35, commonVoice:-12, tax:-0.08, levy:-0.05 }
+  },
   conquered_without_right: {
     name:'Conquered Without Right', icon:'⚔',
     desc:'The county was taken without claim or de jure right. Its people resist the new rule and its obligations.',

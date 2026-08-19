@@ -146,6 +146,21 @@ County faith remains authored world data rather than mutable campaign state. Fou
 faith can convert characters and a player realm, but a future county-conversion system
 must first add an explicit saved county-faith overlay instead of mutating `FBDATA`.
 
+## Player conversion
+
+The **Convert faith…** and **Adopt a new culture…** deeds let the player deliberately
+convert to another assignable faith or culture — alone, with the managed household, or
+(faith only, for a landed ruler, once per ruler) across the player realm by writing
+`state.realms.player.religion`. Piety pays for faith and prestige for culture, with
+costs escalating by scope and faith costs multiplied by the relation-graph distance to
+the target (in-fold ×0.6 through hostile ×1.25). Penalties go well beyond the price:
+the Standing faith-baseline re-base turns old co-religionists cold automatically, and
+the deed adds popular-opinion loss, explicit Standing hits with old-fold realms and
+vassals, timed `zealot_unrest` county modifiers, and — when abandoning a faith that
+recognizes a reigning Pope — an `apostasy` excommunication the player can remedy only
+by returning to the fold. County culture and faith are deliberately untouched. Full
+design: [conversion.md](conversion.md).
+
 ## Validation and saves
 
 The compiler rejects missing parents, cycles, invalid directional statuses, unknown

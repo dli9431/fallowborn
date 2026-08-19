@@ -209,6 +209,7 @@ about to touch, and update it when you change that system.**
 - `docs/designs/holdings.md` — commoner family property.
 - `docs/designs/tech.md` — innovations and research.
 - `docs/designs/piety-intrigue-diplomacy.md` — blessings, plots, pacts.
+- `docs/designs/conversion.md` — deliberate conversion of self, household, or realm to another culture or religion.
 - `docs/designs/finance.md` — price index, loans, defaults, trade partnerships, coinage.
 - `docs/designs/council.md` — the royal council: great officers, crown authority, schemers and sycophants.
 - `docs/designs/parliament.md` — the estates: vassal-tier assembly, the liege's aid and scutage votes.
