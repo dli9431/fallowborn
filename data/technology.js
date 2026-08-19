@@ -331,7 +331,6 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Re-drilling slain professionals at a reinforcement premium is core war play owned by the realm; the unit classes themselves already carry their technology gates, so a second gate on replacing them would double-lock the same content.'
       }
-      }
     }
   };
 

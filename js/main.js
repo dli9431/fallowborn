@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.142.0';
+  FB.VERSION = '1.142.1';
   FB.CHANGELOG = [
+    { v: '1.142.1', date: '2026-08-19', changes: [
+      'Completing a mercenary contract now smoothly transitions to the journey home, and wartime battle records track win/loss tallies consistently.'
+    ] },
     { v: '1.142.0', date: '2026-08-19', changes: [
       'Field armies are now made up of distinct unit classes — beyond the baseline levy, archers, cavalry, men-at-arms, and mercenaries, crossbow and pike companies unlock through innovations while horse-archer, huscarl, camel-rider, and cataphract companies muster from the cultures that field them, each with its own counters and terrain strengths.',
       'Realms can now field several hosts at once: split a halted army or merge co-located ones from the Land tab, march and fight with supply that refills on friendly land and starves abroad, and read the ground — terrain now shapes marches and battles.',

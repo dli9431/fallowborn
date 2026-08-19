@@ -166,6 +166,13 @@ test('persecution applies through existing ledgers and feeds mistreatment',
       const pietyBefore = p.piety;
       const researchBefore = FB.techResearchRate(s, 'player');
       const faithBefore = FB.world.byId[ids.minority].religion;
+      /* standings carry faith-relation priors; measure the policy's deltas */
+      const foreignBefore = FB.standingOf(s, {
+        kind:'realm', id:'policy_foreign' });
+      const allyBefore = FB.standingOf(s, {
+        kind:'realm', id:'policy_ally' });
+      const vassalBefore = FB.standingOf(s, {
+        kind:'realm', id:'policy_vassal' });
       const minority = FB.realmPolicyMinorityCounties(s);
       const proclaimed = FB.realmPolicyProclaim(
         s, 'religious_tolerance', 'persecution');
@@ -213,9 +220,9 @@ test('persecution applies through existing ledgers and feeds mistreatment',
         persecutedOnMinority:persecutedOnMinority,
         persecutedOnHome:persecutedOnHome,
         faithUnchanged:FB.world.byId[ids.minority].religion === faithBefore,
-        foreignStanding:foreignAfterProclaim,
-        allyStanding:allyAfterProclaim,
-        vassalStanding:vassalAfterProclaim,
+        foreignStanding:foreignAfterProclaim - foreignBefore,
+        allyStanding:allyAfterProclaim - allyBefore,
+        vassalStanding:vassalAfterProclaim - vassalBefore,
         mistreatmentCount:yearlyBefore,
         yearlyAdded:yearlyAfter - yearlyBefore,
         sameFamilyReady:sameFamily.ready,
@@ -241,6 +248,7 @@ test('persecution applies through existing ledgers and feeds mistreatment',
     expect(result.foreignStanding).toBe(-8);
     expect(result.allyStanding).toBe(3);
     expect(result.vassalStanding).toBe(-15);
+    // deltas against each realm's faith-relation prior, not absolutes
     expect(result.mistreatmentCount).toBe(1);
     expect(result.yearlyAdded).toBe(1);
     expect(result.sameFamilyReady).toBe(false);
@@ -269,6 +277,9 @@ test('protected worship records faith privileges and early repeal is unlawful',
       const popBefore = p.pop;
       const repealed = FB.realmPolicyProclaim(
         s, 'religious_tolerance', 'confessional_preference');
+      /* read the unlawful-repeal cost now, before the lawful sequence below
+         re-proclaims and pays its own onEnact pop */
+      const popAfterRepeal = p.pop;
       const demands = FB.collectiveDemandSummary(s);
       const mistreatment = (s.collectiveDemands.mistreatment || [])
         .filter(function (row) {
@@ -291,7 +302,7 @@ test('protected worship records faith privileges and early repeal is unlawful',
         modifierHeld:FB.hasModifier(s, 'protected_worship', ids.minority),
         warnedDays:status.warning ? status.warning.days : null,
         repealed:repealed,
-        popDelta:p.pop - popBefore,
+        popDelta:popAfterRepeal - popBefore,
         mistreatment:mistreatment.length,
         faithOpposition:demands.opposition.some(function (row) {
           return row.constituency === 'faith';
@@ -330,6 +341,10 @@ test('encouraged settlement moves migration draw, markets, and development',
       const proclaimed = FB.realmPolicyProclaim(
         s, 'settlement_policy', 'encouraged_settlement');
       const attractionAfter = FB.countyMigrationAttraction(s, ids.home);
+      /* the season tick below grows the minority county's development, which
+         lifts realm strength and with it the raw research numerator; measure
+         the policy factor before it runs */
+      const researchAfterProclaim = FB.techResearchRate(s, 'player');
       const devBefore = s.dev[ids.minority];
       const originalRng = FB.rng;
       FB.rng = function () { return 0; };
@@ -346,7 +361,7 @@ test('encouraged settlement moves migration draw, markets, and development',
         policyAttraction:FB.realmPolicySettlementAttraction(s),
         onHome:FB.hasModifier(s, 'encouraged_settlement', ids.home),
         onMinority:FB.hasModifier(s, 'encouraged_settlement', ids.minority),
-        researchRatio:FB.techResearchRate(s, 'player') / researchBefore,
+        researchRatio:researchAfterProclaim / researchBefore,
         devBefore:devBefore,
         devAfter:s.dev[ids.minority],
         devHomeUnchanged:s.dev[ids.home] === 3,

@@ -29,6 +29,7 @@ test('mercenary contracts pay, complete, and never strand the traveler',
     const result = await page.evaluate(function () {
       let state = FB.state;
       const me = state.chars[state.player.charId];
+      state.player.tier = 1;
       state.player.gold = 100;
       me.sex = 'm';
       me.career = {
@@ -40,21 +41,24 @@ test('mercenary contracts pay, complete, and never strand the traveler',
 
       const homeRealm = state.owner && state.owner[state.player.provinceId];
       const destination = FB.travelDestinations(state, 'service').filter(
-        function (d) { return d.destinationRealm !== homeRealm; })[0];
+        function (d) {
+          return FB.topRealm(state, d.destinationRealm) !== homeRealm;
+        })[0];
       if (!destination) return { setup:false };
-      const warRealmId = destination.destinationRealm;
-      // clear every war touching the home sovereign, then set the patron at war
+      /* wars are sovereign-level: a war planted on a vassal realm is
+         invisible to the contract offer and stripped by repairWars */
+      const warRealmId = FB.topRealm(state, destination.destinationRealm);
+      // clear every war, then set the patron at war with a war-free sovereign
+      for (const rid in state.realms) {
+        if (state.realms[rid]) delete state.realms[rid].war;
+      }
       let enemyId = null;
       for (const rid in state.realms) {
-        if (rid !== warRealmId && rid !== homeRealm &&
-            state.realms[rid] && state.realms[rid].alive) {
-          enemyId = enemyId || rid;
-        }
-        if (state.realms[rid] && state.realms[rid].war) {
-          const enemyTop = FB.topRealm(state, state.realms[rid].war.enemy);
-          if (rid === homeRealm || enemyTop === homeRealm) {
-            delete state.realms[rid].war;
-          }
+        const realm = state.realms[rid];
+        if (rid !== warRealmId && rid !== homeRealm && realm && realm.alive &&
+            !realm.liege) {
+          enemyId = rid;
+          break;
         }
       }
       state.realms[warRealmId].war = { enemy:enemyId, startedTurn:state.turn };
@@ -175,6 +179,7 @@ test('an abandoned mercenary contract costs Standing and still reaches home',
     const result = await page.evaluate(function () {
       const state = FB.state;
       const me = state.chars[state.player.charId];
+      state.player.tier = 1;
       state.player.gold = 100;
       me.sex = 'm';
       me.career = {
@@ -185,16 +190,21 @@ test('an abandoned mercenary contract costs Standing and still reaches home',
       state.player.profession = 'soldier';
       const homeRealm = state.owner && state.owner[state.player.provinceId];
       const destination = FB.travelDestinations(state, 'service').filter(
-        function (d) { return d.destinationRealm !== homeRealm; })[0];
+        function (d) {
+          return FB.topRealm(state, d.destinationRealm) !== homeRealm;
+        })[0];
       if (!destination) return { setup:false };
-      const warRealmId = destination.destinationRealm;
+      /* wars are sovereign-level: a war planted on a vassal realm is
+         invisible to the contract offer and stripped by repairWars */
+      const warRealmId = FB.topRealm(state, destination.destinationRealm);
       let enemyId = null;
       for (const rid in state.realms) {
-        if (rid !== warRealmId && rid !== homeRealm &&
-            state.realms[rid] && state.realms[rid].alive) {
+        const realm = state.realms[rid];
+        if (rid !== warRealmId && rid !== homeRealm && realm && realm.alive &&
+            !realm.liege) {
           enemyId = enemyId || rid;
         }
-        if (state.realms[rid].war) delete state.realms[rid].war;
+        if (realm && realm.war) delete realm.war;
       }
       state.realms[warRealmId].war = { enemy:enemyId, startedTurn:state.turn };
 
@@ -202,6 +212,9 @@ test('an abandoned mercenary contract costs Standing and still reaches home',
       state.player.travel.remainingRoute = [];
       state.player.travel.legDaysLeft = 0;
       FB.travelTick(state);
+      /* the teleport above never marched a leg, so the record still points at
+         home; an arrived traveler stands at the destination */
+      state.player.travel.currentId = destination.destinationId;
       FB.fns.merc_contract_accept(state);
       // serve the minimum stay but not the term, then turn back
       state.turn += 90;
@@ -231,6 +244,7 @@ test('expeditions reach foreign cultures and journal the first one only',
     const result = await page.evaluate(function () {
       let state = FB.state;
       const me = state.chars[state.player.charId];
+      state.player.tier = 1;
       state.player.gold = 100;
       const eligible = FB.travelEligible(state, 'expedition');
       const destinations = FB.travelDestinations(state, 'expedition');

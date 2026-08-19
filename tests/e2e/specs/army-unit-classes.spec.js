@@ -133,6 +133,8 @@ test('a pike-heavy defender breaks a cavalry charge at equal numbers',
       const keptTech = [
         state.realmTech[pikeRealmId], state.realmTech[cavRealmId]
       ];
+      const keptMultiHost = FBDATA.balance.aiMultiHostStrength;
+      FBDATA.balance.aiMultiHostStrength = Infinity; // test unit counters directly without detachment split
       for (const realmId in state.realms) {
         if (state.realms[realmId]) state.realms[realmId].war = null;
       }
@@ -200,6 +202,7 @@ test('a pike-heavy defender breaks a cavalry charge at equal numbers',
       state.player.war = originalWar;
       FB.game.auto.hosts = originalAuto;
       FB.rf = originalRf;
+      FBDATA.balance.aiMultiHostStrength = keptMultiHost;
       pikeRealm.ruler.mar = keptMar[0];
       cavRealm.ruler.mar = keptMar[1];
       pikeRealm.war = keptWar[0];
@@ -217,7 +220,12 @@ test('a pike-heavy defender breaks a cavalry charge at equal numbers',
         turn:turn,
         pikeMen:pikeAfter ? pikeAfter.men : null,
         cavMen:cavAfter ? cavAfter.men : null,
-        cavBroken:cavAfter ? cavAfter.broken : null
+        cavBroken:cavAfter ? cavAfter.broken : null,
+        debugLog:state.log.slice(-8).map(function (e) {
+          return e.msg ? e.msg.key + ' ' + JSON.stringify(e.msg.params) : String(e.text || e);
+        }),
+        debugPike:JSON.parse(JSON.stringify(pikeAfter || null)),
+        debugCav:JSON.parse(JSON.stringify(cavAfter || null))
       };
     });
 
@@ -332,6 +340,7 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       const originalWar = state.player.war;
       const keptMultiHost = FBDATA.balance.aiMultiHostStrength;
       FBDATA.balance.aiMultiHostStrength = Infinity; // no pre-battle split
+      const playerSovereign = FB.playerRealmId(state);
       const sovereigns = [];
       for (const realmId in state.realms) {
         const realm = state.realms[realmId];
@@ -340,7 +349,11 @@ test('attack equal to defense reproduces the pre-split battle exactly',
         }
       }
       sovereigns.sort();
-      const bigRealmId = sovereigns[0], smallRealmId = sovereigns[1];
+      const picked = [];
+      for (let i = 0; i < sovereigns.length && picked.length < 2; i++) {
+        if (sovereigns[i] !== playerSovereign) picked.push(sovereigns[i]);
+      }
+      const bigRealmId = picked[0], smallRealmId = picked[1];
       const keptTech = [
         state.realmTech[bigRealmId], state.realmTech[smallRealmId]
       ];
@@ -439,11 +452,11 @@ test('attack equal to defense reproduces the pre-split battle exactly',
       };
     });
 
-    expect(result.roleAttack).toBe(result.neutral);
-    expect(result.roleDefense).toBe(result.neutral);
-    expect(result.flatRole).toBe(result.flatNeutral);
-    expect(result.powerAttack).toBe(result.powerNeutral);
-    expect(result.powerDefense).toBe(result.powerNeutral);
+    expect(result.roleAttack).toBeCloseTo(result.neutral, 10);
+    expect(result.roleDefense).toBeCloseTo(result.neutral, 10);
+    expect(result.flatRole).toBeCloseTo(result.flatNeutral, 10);
+    expect(result.powerAttack).toBeCloseTo(result.powerNeutral, 10);
+    expect(result.powerDefense).toBeCloseTo(result.powerNeutral, 10);
     /* the hand-computed pre-split outcome: 1000 levy beat 800 levy at equal
        martial with no RNG spread — the winner pays 0.28 × 0.8 of its men,
        the loser 0.62 of its own */

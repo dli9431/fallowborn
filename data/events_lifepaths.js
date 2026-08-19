@@ -145,7 +145,7 @@ FBDATA.events.push(
   travel:{ kind:'decision', purpose:'service' },
   text:'The muster roll is read one last time: {mercSeasons} seasons served, every one paid. The captain offers the final purse of {money:mercPurse} — and, if you want it, a fresh term on the same terms.',
   options:[
-    { label:'Collect the purse and take the road home.', desc:'The final payment, a veteran’s name, and the first company’s standard once in a life.', effects:{ custom:'merc_contract_collect', prestige:8, addTraitOnce:'veteran', log:'Served out a full mercenary contract with {rname}.' } },
+    { label:'Collect the purse and take the road home.', desc:'The final payment, a veteran’s name, and the first company’s standard once in a life.', effects:{ custom:'merc_contract_collect', travelReturn:true, prestige:8, addTraitOnce:'veteran', log:'Served out a full mercenary contract with {rname}.' } },
     { label:'Renew for another term.', desc:'The war goes on, and so does the silver.', require:{ custom:'merc_contract_ongoing' }, effects:{ custom:'merc_contract_renew', log:'Renewed the mercenary contract with {rname}.' } },
     { label:'Remain at court as a retainer.', desc:'End the contract in good order and stay on at {destination}.', effects:{ custom:'merc_contract_release', gold:2, log:'Ended the contract with {rname} and remained at {destination}.' } }
   ]},

@@ -9964,6 +9964,7 @@ window.FB = window.FB || {};
       '</button></div>';
     openModal(FB.T('👑 Royal laws & policy'), h, {
       modalClass:'fullsheet-modal',
+      noFocus:true,
       historyView:returnView === 'governance',
       replaceView:!!replaceView,
       historyBackRender:function () { UI.showGovernance('institution'); }

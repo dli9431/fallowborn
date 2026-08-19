@@ -278,6 +278,17 @@ test('detachments survive a save/load round trip',
     const result = await page.evaluate(function () {
       const before = FB.save.serialize();
       const home = FB.state.player.provinceId;
+      /* peacetime hosts are not a legal persistent state: repairWars drops
+         every host whose realm has no active war on restore */
+      let enemy = null;
+      for (const realmId in FB.state.realms) {
+        const realm = FB.state.realms[realmId];
+        if (realmId !== 'player' && realm && realm.alive && !realm.liege) {
+          enemy = realmId;
+          break;
+        }
+      }
+      FB.state.player.war = { enemy:enemy };
       const host = {
         id:'roundtrip_host', realm:'player', men:400, size:400,
         units:{ levy:400, arch:0, cav:0, ret:0, mercs:0 },
@@ -345,6 +356,8 @@ test('a strong AI aggressor fields a detachment in an offensive war',
         aggressor:aggressor,
         muster:FB.aiBaseHost(state, aggressor),
         hosts:hosts,
+        detachmentFrac:FBDATA.balance.aiDetachmentFrac,
+        minMen:FBDATA.balance.armyMinMen,
         detachmentRearm:state.armyDetachmentDown[aggressor]
       };
 
@@ -364,8 +377,8 @@ test('a strong AI aggressor fields a detachment in an offensive war',
     /* splitting conserves men: the two banners sum to the muster */
     expect(result.hosts[0].men + result.hosts[1].men).toBe(result.muster);
     expect(result.hosts[1].men).toBe(
-      Math.round(result.muster * FBDATA.balance.aiDetachmentFrac));
-    expect(result.hosts[1].men).toBeGreaterThanOrEqual(FBDATA.balance.armyMinMen);
+      Math.round(result.muster * result.detachmentFrac));
+    expect(result.hosts[1].men).toBeGreaterThanOrEqual(result.minMen);
     /* no detachment was destroyed: the shorter rearm clock stays unset */
     expect(result.detachmentRearm).toBeUndefined();
   });

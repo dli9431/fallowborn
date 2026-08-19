@@ -6574,7 +6574,7 @@ window.FB = window.FB || {};
   }
   FB.fns.war_win = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
-    w.wins++; afterBattle(w);
+    w.wins = (w.wins || 0) + 1; afterBattle(w);
     const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'win');
     if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
     if (FB.adjustWarStrength) {
@@ -6594,7 +6594,7 @@ window.FB = window.FB || {};
   };
   FB.fns.war_loss = function (state, ctx, ev) {
     const w = state.player.war; if (!w) return;
-    w.losses++; afterBattle(w);
+    w.losses = (w.losses || 0) + 1; afterBattle(w);
     const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'loss');
     if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
     w.lastDefeatTurn = state.turn;
