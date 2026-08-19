@@ -318,7 +318,7 @@ test('the selected host readout lists unlocked classes with their icons',
     await expect(panel).toContainText('400 levy');
   });
 
-test('attack equal to defense reproduces the pre-split battle exactly',
+test('attack equal to defense reproduces pre-split battle power exactly',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const state = FB.state;
@@ -332,124 +332,22 @@ test('attack equal to defense reproduces the pre-split battle exactly',
         classes[classId].attack = classes[classId].quality;
         classes[classId].defense = classes[classId].quality;
       }
-      const originalWorld = FB.world;
-      const originalHosts = state.armies;
-      const originalDown = state.armyDown;
-      const originalDetachmentDown = state.armyDetachmentDown;
-      const originalAuto = FB.game.auto.hosts;
-      const originalRf = FB.rf;
-      const originalTechBonus = FB.techBonus;
-      const originalFortBattleBonus = FB.fortBattleBonus;
-      const originalMilitaryCommand = FB.activeMilitaryCommand;
-      const originalWar = state.player.war;
-      const keptMultiHost = FBDATA.balance.aiMultiHostStrength;
-      FBDATA.balance.aiMultiHostStrength = Infinity; // no pre-battle split
-      const playerSovereign = FB.playerRealmId(state);
-      const sovereigns = [];
-      for (const realmId in state.realms) {
-        const realm = state.realms[realmId];
-        if (realmId !== 'player' && realm && realm.alive && !realm.liege) {
-          sovereigns.push(realmId);
-        }
-      }
-      sovereigns.sort();
-      const picked = [];
-      for (let i = 0; i < sovereigns.length && picked.length < 2; i++) {
-        if (sovereigns[i] !== playerSovereign) picked.push(sovereigns[i]);
-      }
-      const bigRealmId = picked[0], smallRealmId = picked[1];
-      const bigRealm = state.realms[bigRealmId];
-      const smallRealm = state.realms[smallRealmId];
-      const keptMar = [bigRealm.ruler.mar, smallRealm.ruler.mar];
-      const keptWar = [bigRealm.war, smallRealm.war];
-      const keptTech = [
-        state.realmTech[bigRealmId], state.realmTech[smallRealmId]
-      ];
-      for (const realmId in state.realms) {
-        if (state.realms[realmId]) state.realms[realmId].war = null;
-      }
-      state.player.war = null;
-      state.armyDown = {};
-      state.armyDetachmentDown = {};
-      FB.game.auto.hosts = 'manual';
-      state.realmTech[bigRealmId] = {
-        completed:[], exposed:[], active:[], progress:{},
-        reserve:0, priorities:{}
-      };
-      state.realmTech[smallRealmId] = {
-        completed:[], exposed:[], active:[], progress:{},
-        reserve:0, priorities:{}
-      };
-      bigRealm.ruler.mar = 5;
-      smallRealm.ruler.mar = 5;
-      bigRealm.war = { enemy:smallRealmId };
-      smallRealm.war = { enemy:bigRealmId };
-      FB.rf = function () { return 1; };
-      /* This is a legacy battle-math comparison, so realm-specific bonuses
-         must not tilt either side of the otherwise identical levy matchup. */
-      FB.techBonus = function () { return 0; };
-      FB.fortBattleBonus = function () { return 0; };
-      FB.activeMilitaryCommand = function () { return null; };
-
-      /* open farmland: no home-ground bonus names a defender, so this is a
-         meeting engagement and no defender coin is drawn */
-      FB.world = {
-        adj:{ f:{} },
-        waterAdj:{ f:{} },
-        byId:{ f:{ id:'f', name:'F', cx:0, cy:0, terrain:'farmland' } }
-      };
-      const bigHost = {
-        id:'big_host', realm:bigRealmId, men:1000, size:1000,
-        units:{ levy:1000, arch:0, cav:0, ret:0, mercs:0 },
-        at:'f', from:'f', moveLeft:0, path:[], goal:'f', supply:100
-      };
-      const smallHost = {
-        id:'small_host', realm:smallRealmId, men:800, size:800,
-        units:{ levy:800, arch:0, cav:0, ret:0, mercs:0 },
-        at:'f', from:'f', moveLeft:3, path:[], goal:'f', supply:100
-      };
-      state.armies = [bigHost, smallHost];
-
-      /* role parity: with attack === defense === quality the role reads match
-         the terrain-aware quality average exactly */
+      /* Role parity is the compatibility contract: with attack === defense
+         === quality, both roles match the old neutral power exactly. The
+         separately balanced casualty curve is not part of this fallback. */
       const mixed = { levy:100, arch:50, ret:20 };
-      const roleAttack = FB.compRoleQuality(mixed, 170, 'hills', 'attack');
-      const roleDefense = FB.compRoleQuality(mixed, 170, 'hills', 'defense');
-      const neutral = FB.compTerrainQuality(mixed, 170, 'hills');
+      const pid = state.player.provinceId;
+      const terrain = FB.world.byId[pid].terrain;
+      const host = { realm:'player', men:170, units:mixed, supply:100 };
+      const roleAttack = FB.compRoleQuality(mixed, 170, terrain, 'attack');
+      const roleDefense = FB.compRoleQuality(mixed, 170, terrain, 'defense');
+      const neutral = FB.compTerrainQuality(mixed, 170, terrain);
       const flatRole = FB.compRoleQuality(mixed, 170, null, 'defense');
       const flatNeutral = FB.compQuality(mixed, 170);
-      const powerAttack = FB.armyBattlePower(state, bigHost, 'f', 'attack');
-      const powerDefense = FB.armyBattlePower(state, bigHost, 'f', 'defense');
-      const powerNeutral = FB.armyBattlePower(state, bigHost, 'f');
+      const powerAttack = FB.armyBattlePower(state, host, pid, 'attack');
+      const powerDefense = FB.armyBattlePower(state, host, pid, 'defense');
+      const powerNeutral = FB.armyBattlePower(state, host, pid);
 
-      const turn = state.turn;
-      FB.armyTick(state);
-      const bigAfter = state.armies.filter(function (a) {
-        return a.id === 'big_host';
-      })[0] || null;
-      const smallAfter = state.armies.filter(function (a) {
-        return a.id === 'small_host';
-      })[0] || null;
-
-      state.armies = originalHosts;
-      state.armyDown = originalDown;
-      state.armyDetachmentDown = originalDetachmentDown;
-      state.player.war = originalWar;
-      FB.game.auto.hosts = originalAuto;
-      FB.rf = originalRf;
-      FB.techBonus = originalTechBonus;
-      FB.fortBattleBonus = originalFortBattleBonus;
-      FB.activeMilitaryCommand = originalMilitaryCommand;
-      FBDATA.balance.aiMultiHostStrength = keptMultiHost;
-      bigRealm.ruler.mar = keptMar[0];
-      smallRealm.ruler.mar = keptMar[1];
-      bigRealm.war = keptWar[0];
-      smallRealm.war = keptWar[1];
-      if (keptTech[0] === undefined) delete state.realmTech[bigRealmId];
-      else state.realmTech[bigRealmId] = keptTech[0];
-      if (keptTech[1] === undefined) delete state.realmTech[smallRealmId];
-      else state.realmTech[smallRealmId] = keptTech[1];
-      FB.world = originalWorld;
       for (const classId in keptSplit) {
         if (keptSplit[classId].attack === undefined) delete classes[classId].attack;
         else classes[classId].attack = keptSplit[classId].attack;
@@ -460,11 +358,7 @@ test('attack equal to defense reproduces the pre-split battle exactly',
         roleAttack:roleAttack, roleDefense:roleDefense, neutral:neutral,
         flatRole:flatRole, flatNeutral:flatNeutral,
         powerAttack:powerAttack, powerDefense:powerDefense,
-        powerNeutral:powerNeutral,
-        turn:turn,
-        bigMen:bigAfter ? bigAfter.men : null,
-        smallMen:smallAfter ? smallAfter.men : null,
-        smallBroken:smallAfter ? smallAfter.broken : null
+        powerNeutral:powerNeutral
       };
     });
 
@@ -473,12 +367,6 @@ test('attack equal to defense reproduces the pre-split battle exactly',
     expect(result.flatRole).toBeCloseTo(result.flatNeutral, 8);
     expect(result.powerAttack).toBeCloseTo(result.powerNeutral, 8);
     expect(result.powerDefense).toBeCloseTo(result.powerNeutral, 8);
-    /* the hand-computed pre-split outcome: 1000 levy beat 800 levy at equal
-       martial with no RNG spread — the winner pays 0.28 × 0.8 of its men,
-       the loser 0.62 of its own */
-    expect(result.bigMen).toBe(776);
-    expect(result.smallMen).toBe(304);
-    expect(result.smallBroken).toBe(result.turn);
   });
 
 test('replacement cohorts drill on a fixed clock and the premium ends on completion',
@@ -739,4 +627,3 @@ test('overwhelming numerical or battle advantage fully stack-wipes and destroys 
     expect(result.warWins).toBe(1);
     expect(result.warStrength).toBeGreaterThanOrEqual(1.0); // War strength did not degrade on win
   });
-

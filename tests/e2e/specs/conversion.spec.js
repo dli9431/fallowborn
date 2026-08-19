@@ -239,7 +239,14 @@ test('excommunicates an apostate from the papal faith while a Pope reigns',
     player.piety = 1000;
     player.prestige = 1000;
     const pope = FB.religiousHeadOf(state, 'catholic');
+    const ensurePapacy = FB.ensurePapacy;
+    let previewRepairs = 0;
+    FB.ensurePapacy = function () {
+      previewRepairs++;
+      return ensurePapacy.apply(this, arguments);
+    };
     const status = FB.conversionStatus(state, 'faith', 'orthodox', 'self');
+    FB.ensurePapacy = ensurePapacy;
     const ok = FB.applyConversion(state, 'faith', 'orthodox', 'self');
     const papacy = FB.ensurePapacy(state);
     const obedience = papacy.obediences[papacy.romanObedience];
@@ -247,6 +254,7 @@ test('excommunicates an apostate from the papal faith while a Pope reigns',
     return {
       pope:!!pope,
       excommunicates:status.excommunicates,
+      previewRepairs:previewRepairs,
       ok:ok,
       trait:me.traits.indexOf('excommunicated') >= 0,
       cause:record ? record.cause : null,
@@ -255,6 +263,7 @@ test('excommunicates an apostate from the papal faith while a Pope reigns',
   });
   expect(result.pope).toBe(true);
   expect(result.excommunicates).toBe(true);
+  expect(result.previewRepairs).toBe(0);
   expect(result.ok).toBe(true);
   expect(result.trait).toBe(true);
   expect(result.cause).toBe('apostasy');
@@ -581,4 +590,3 @@ test('culture conversion modal renders grouped regional traditions, scope contro
   await closeBtn.click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 });
-

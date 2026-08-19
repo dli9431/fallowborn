@@ -635,7 +635,15 @@ window.FB = window.FB || {};
       return null;
     }
     if (!FB.ensurePapacy) return null;
-    const papacy = FB.ensurePapacy(state);
+    /* Conversion cards and the Deeds-row probe ask this question for every
+       encountered faith. Creation/load already normalizes the Papacy, so the
+       ordinary preview path can read its saved Roman obedience directly;
+       reserve the world-wide repair for an incomplete legacy/modded shape. */
+    const saved = state && state.papacy;
+    const papacy = saved && saved.romanObedience && saved.obediences &&
+      typeof saved.obediences === 'object' && !Array.isArray(saved.obediences) &&
+      saved.obediences[saved.romanObedience]
+      ? saved : FB.ensurePapacy(state);
     const obedience = papacy && papacy.obediences &&
       papacy.obediences[papacy.romanObedience];
     const pope = obedience && obedience.claimantId &&

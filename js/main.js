@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.143.0';
+  FB.VERSION = '1.143.1';
   FB.CHANGELOG = [
+    { v: '1.143.1', date: '2026-08-19', changes: [
+      'Apostasy previews in the faith conversion picker now read the Church’s saved state directly instead of re-checking the whole world for every candidate faith.'
+    ] },
     { v: '1.143.0', date: '2026-08-19', changes: [
       'War councils now issue real map orders — hunt the enemy host, refit, or seek terms — while a host standing on the war target presses the siege on its own each season. Campaign condition, field leadership, rest, and blessings now shape every real battle.',
       'Press R to cycle new map filters: Realm, Mine, Liege, the de jure duchies and kingdoms, and a War view that outlines your enemy in red.',

@@ -107,6 +107,9 @@ comes into contact with them through marriage, expansion, diplomacy, or travel.
   gate/preview function; `FB.applyConversion(state, kind, targetId, scope)` revalidates
   and then performs the writes. `FB.conversionTargetPresence(state, kind, targetId)` and
   `FB.conversionTargetEncountered(state, kind, targetId)` determine soft-gated availability.
+  Apostasy previews read the normalized saved Roman obedience without running the full
+  Papacy repair for every candidate card; applying the conversion still enters the
+  ordinary mutating Papacy path before recording the sentence.
 - The picker sheet (`FB.ui.showConversionPicker` in `js/ui_modals.js`) presents encountered
   candidates grouped by tradition (Christian, Islamic, Pagan, Zoroastrian, Jewish,
   Reformed/Custom, or Cultural regions) with segmented scope controls, live search, clean cards,
@@ -118,4 +121,3 @@ comes into contact with them through marriage, expansion, diplomacy, or travel.
   `FBDATA.techImpactReviews` as `mode:'none'` — personal and social acts with no
   credible technology dependency; rulers converted long before (and regardless of)
   literacy or law innovations.
-
