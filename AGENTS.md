@@ -127,6 +127,10 @@ move, prune, repair, or otherwise modify a worktree or its registration.
    then delete **only the branch** with `git branch -d <branch>` (use `-d`, not `-D`, so Git
    refuses if it is not fully merged). Leave every worktree and worktree registration intact.
 
+**The `dev` branch is long-lived — never delete it.** It survives its merges into `main`
+and serves as the owner's test branch for larger changes. Merge it like any other branch,
+but skip step 3's deletion for it.
+
 **Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
 touched by *every* change at the same spot, so doing them on a branch guarantees a conflict with
 every other branch in flight (parallel worktrees are unaware of each other):
