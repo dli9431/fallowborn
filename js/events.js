@@ -1600,6 +1600,7 @@ window.FB = window.FB || {};
       delete p.flags.courting;
       return false;
     }
+    delete p.flags.match_refused;
     FB.courtshipTerms(state, c, true);
     return true;
   };
@@ -6175,6 +6176,17 @@ window.FB = window.FB || {};
     p.courtingId = null;
     p.courtshipTerms = null;
     delete p.flags.courting;
+    delete p.flags.match_refused;
+    if (FB.tutorialActive && FB.tutorialActive(state) &&
+        p.flags.tut_family_guidance_started &&
+        !p.flags.tut_track_family_legacy &&
+        p.flags.tut_family_marriage_char_id !== me.id) {
+      /* The first wedding in this protagonist's active family lesson owns
+         its fertility grace period. Further doctrine-permitted weddings must
+         not restart that wait. */
+      p.flags.tut_family_marriage_char_id = me.id;
+      p.flags.tut_family_married_at = state.turn;
+    }
     p.marriedAt = state.turn;
     if (s.royalLine && !options.suppressRoyalCompact) {
       const rs = FB.ensureRealmSuccession(state, s.royalLine.realmId);

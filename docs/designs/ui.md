@@ -25,6 +25,12 @@ functions are exported onto that object by their owning file and bound by later
 files at load. Keep new cross-file internals on `FB.ui._shared` rather than
 inventing a second channel.
 
+The loading screen keeps its title, progress state, and first-visit music choice inside one
+explicit dynamic-viewport-height wrapper. It does not use the other pregame screens’
+auto-margin pseudo-elements, because mobile device emulation in Opera can drop flex content
+when the music choice expands that scroll container. The wrapper remains vertically centered
+when it fits and scrolls from a reachable top edge when narrow or translated copy makes it tall.
+
 The Papacy deed opens `fullsheet-modal papacy-modal`: a responsive two-column summary
 collapses to one column on narrow/short screens, and the College grid does the same.
 Every elector, obedience, election tactic, regnal name, policy, sanction, and governance
@@ -713,7 +719,7 @@ chain, tab nudges, first-player map tip, empty-state
 guidance lines, stat teaching lines, the contextual one-line hints below, and the
 first-time tips further below. The complete Guide remains available from the menu.
 
-Only the first life begun by a fresh browser profile carries
+Only the first campaign begun by a fresh browser profile carries
 `player.flags.tutorial`, which puts a dismissible tutorial
 checklist at the top of the Deeds panel. `uiPrefs.onboardingStarted` records that the
 checklist was offered; profiles that already hold a save when this preference first
@@ -721,9 +727,15 @@ appears are grandfathered out. The checklist is staged in tracks (`TUTORIAL_TRAC
 in `js/main.js`), and the first eligible unfinished track shows: **First steps**
 (complete a one-time deed rather than merely changing Daily Focus, let the days flow,
 answer an event),
-**Family & legacy** (open the Kin tab, wed a spouse, welcome a child), then
-**Making a living** (tier 0–2 only: take up a livelihood, start an enterprise, buy
-a land plot). Landed ranks skip Making a living and finish with the family track.
+**Family & legacy** (open the Kin tab, wed a first spouse, welcome a first child), then
+**Making a living** (tier 0–2 only: take up a livelihood, start an enterprise, and
+reach a first land plot; a serf is told to buy freedom first). Landed ranks skip
+Making a living and finish with the family track. If the protagonist dies before the
+checklist finishes, its `tutorial`/`tut_*` progress follows the household through the
+chosen succession while ordinary life-local flags reset. The resumed card identifies
+whether play continues as the previous head's child or another relative. A minor's
+livelihood, enterprise, and land wording first explains that adult deeds unlock at
+sixteen; inherited enterprises and land still satisfy their live-state objectives.
 Step state comes from `FB.tutorialStatus` (live state plus one-time flags
 written at each action's single choke point: `G.setPaused`, direct
 `FB.runInstant` resolution or `G.passDay({skipFocus:true})`, the event-option handler,
@@ -773,7 +785,10 @@ A lesson fired to the screen shows as a **coachmark** (`UI.coachmark` in
 so each coachmark is a tooltip anchored to the button or area it teaches (the
 time buttons, a tab, a topbar stat, the map), with that target lit by a pulsing
 outline. The player moves on with **Got it** or chooses **Stop tips** directly on
-the coachmark; using the highlighted control also counts as learning the tip.
+the coachmark. Clicking the highlighted control learns and immediately closes a
+one-step tip before the control's own handler runs; this lets the requested deed or
+time action respond to that first click and prevents a lesson hidden behind a picker
+from silently blocking fast-forward.
 First-time tips are persisted only at one of those acknowledgement points, not
 when they are queued, so leaving mid-prompt does not lose the lesson; Continue
 reconstructs the unfinished opening prompt from tutorial progress. Nothing
@@ -789,7 +804,8 @@ the arrow and rests by the toast corner, except targets with a natural
 revealer: on small layouts the Self/Kin tabs live in a drawer that a portrait
 tap exposes, so their lessons point at the topbar portrait instead
 (`COACH_ALT_TARGETS`). The Self lesson explicitly tells compact-layout players to tap
-that portrait, then closes the drawer before family guidance continues. Only a truly tall area
+that portrait; using it leaves the drawer open for inspection, while **Got it** closes the
+drawer before family guidance continues. Only a truly tall area
 (the map) is pointed at near its top edge;
 a lesson targeting either retained side panel places its card in the adjacent visible map
 space and points back with a side arrow (or an up/down arrow when the portrait layout stacks
@@ -798,6 +814,12 @@ full-screen Self/Kin drawer overlaps the map and therefore retains ordinary safe
 a short full-width bar (the mobile time controls) gets the ordinary
 above-or-below placement, so the lesson never covers the controls. Screen
 switches retire any lesson in flight.
+
+The once-per-profile succession lesson is created only after the player chooses the
+actual successor, so its wording distinguishes a child from another relative and adds
+the childhood limitation for a minor. It targets the Chronicle tab rather than the
+departed protagonist's portrait. On desktop that retained-panel target uses the standard
+over-map placement instead of falling back to the bottom-left toast corner.
 
 First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
 brand-new player once ever per install rather than once per save. The opening tips
@@ -815,7 +837,11 @@ shown **Buy a plot of land** directly. The lesson opens the owning Deeds section
 anchoring its coachmark, waits for the enterprise objective to be completed before teaching
 land, skips an objective already completed, and Continue resumes at
 the first unread lesson. Family coachmarks, including the Kin-area lesson, remain gated
-until **First steps** is complete; the Kin panel's beginner courtship line follows the same
+until **First steps** is complete. The marriage objective ends with the first spouse;
+when doctrine permits more, the checklist and a one-time Kin coachmark say that additional
+marriages are optional while the Deeds action changes to **Seek an additional spouse…**.
+A refused proposal changes it to **Seek another match…** and exposes any remaining search
+cooldown in the same guidance. The Kin panel's beginner courtship line follows the same
 gate. If Kin was opened early, its coachmark resumes once the gate clears instead of being
 lost. The Family & legacy handoff then begins when the player acknowledges
 the Kin-area lesson: it opens **Life & Family** and points to **Seek a match**, then sends an

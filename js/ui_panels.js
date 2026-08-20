@@ -9,6 +9,7 @@ window.FB = window.FB || {};
   const UI = FB.ui;
   const SH = UI._shared;
   const $ = SH.$;
+  const actionLabel = SH.actionLabel;
   const allianceText = SH.allianceText;
   const countyCountText = SH.countyCountText;
   const cultureName = SH.cultureName;
@@ -277,7 +278,7 @@ window.FB = window.FB || {};
       if (!action) return null;
       return {
         kind:'action', id:id, definition:action,
-        label:s ? dt(s, 'action', id, action, 'label') : FB.T(action.label)
+        label:s ? actionLabel(s, id, action) : FB.T(action.label)
       };
     }
     if (target.indexOf('focus-family:') === 0) {
@@ -1071,7 +1072,7 @@ window.FB = window.FB || {};
         btn.setAttribute('data-deed-flow', flow);
         btn.setAttribute('aria-describedby', detailsId);
         btn.disabled = !item.can;
-        const label = dt(s, 'action', item.a.id, item.a, 'label');
+        const label = actionLabel(s, item.a.id, item.a);
         const detailText = FB.translateKnown(
           item.can ? item.a.desc(s) : item.reason);
         btn.innerHTML = shortcutHintFor('action:' + item.a.id) + esc(label);
@@ -1283,7 +1284,12 @@ window.FB = window.FB || {};
     let h = '<div class="progressnote tutorial-card"><div class="tutorial-head">' +
       '<b>' + esc(status.track.icon) + ' ' + esc(status.track.title) + '</b>' +
       '<button type="button" class="btn small" id="tutorial-dismiss">' +
-      esc(FB.T('Dismiss')) + '</button></div><ul>';
+      esc(FB.T('Dismiss')) + '</button></div>';
+    if (status.track.note) {
+      h += '<p class="cmeta tutorial-context">' +
+        esc(status.track.note) + '</p>';
+    }
+    h += '<ul>';
     for (const step of status.steps) {
       h += '<li' + (step.done ? ' class="done"' : '') + '>' +
         (step.done ? '✓ ' : '○ ') + esc(step.label) + '</li>';

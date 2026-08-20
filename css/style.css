@@ -86,6 +86,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
    top (justify-content:center would push the heading above the scroll origin,
    where it can never be scrolled back into view) */
 .screen::before, .screen::after { content: ''; margin: auto 0; }
+/* Loading owns one explicit viewport-height wrapper. Opera's mobile device
+   emulation can lose flex content that is centered between auto-margin pseudo
+   elements when the music choice expands the screen after boot. */
+#loading { padding: 0; }
+#loading::before, #loading::after { display: none; }
+.loading-content {
+  width: 100%; min-height: 100%; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 20px; flex: 0 0 auto;
+}
+.loading-content > * { flex-shrink: 0; }
 .gametitle {
   font-size: clamp(34px, 8vw, 60px); color: #d8b24a; letter-spacing: 2px;
   text-shadow: 0 2px 8px #000; margin-bottom: 8px;
@@ -930,6 +941,10 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .settcard-actions .btn.small.settcard-info { display: none; }
 @media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
   .settcard-actions .btn.small.settcard-info { display: inline-flex; }
+  .suitor-card .settcard-actions .btn.small.settcard-info,
+  .suitor-card .settcard-actions .btn.small.settcard-raise {
+    min-width: 44px; min-height: 44px;
+  }
   .deed-entry .settcard-actions .btn.small.deed-info {
     min-width: 44px; min-height: 44px;
   }
@@ -948,6 +963,11 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .settcard-meta.unavailable { color: var(--helper-text-color); font-style: italic; font-weight: normal; }
 .settcard-details { margin-top: 7px; }
 .settcard-details .settdesc { margin: 6px 0 0; }
+.suitor-list { display: grid; gap: 8px; }
+.suitor-card { margin: 0; }
+.suitor-essentials {
+  margin-top: 5px; color: #d8c38d; font-size: 13px; line-height: 1.35;
+}
 .fort-asset-row { border-style: double; }
 .fort-detail { margin: 5px 2px 10px; line-height: 1.4; }
 .fort-next-tier {

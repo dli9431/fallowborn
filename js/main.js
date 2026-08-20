@@ -2772,8 +2772,9 @@ window.FB = window.FB || {};
   G.uiPrefs.helperTextColor = G.applyHelperTextColor(G.uiPrefs.helperTextColor);
 
   /* ---------- Tutorial: staged checklist tracks that teach the game ----------
-     Offered only to the first life begun by a fresh browser profile
-     (player.flags.tutorial is stamped at game start). Tracks run in order;
+     Offered only to the first campaign begun by a fresh browser profile
+     (player.flags.tutorial is stamped at game start and follows an unfinished
+     checklist through succession). Tracks run in order;
      the first eligible unfinished track shows in the Deeds tab. Steps flip
      from ordinary play — some read live state, some read one-time flags
      written at the action's choke point. FB.tutorialCheck runs from the
@@ -2793,20 +2794,100 @@ window.FB = window.FB || {};
       ] },
     { id:'family_legacy', icon:'👪', event:'tut_legacy',
       title:function () { return FB.T('Family & legacy'); },
+      note:function (s) {
+        const p = s.player;
+        const flags = p.flags || {};
+        const me = s.chars[p.charId];
+        const spouses = me && FB.spousesSnapshot
+          ? FB.spousesSnapshot(s, me) : (me && me.spouseId ? [me.spouseId] : []);
+        if (me && spouses.length && FB.marriageDoctrine) {
+          const doctrine = FB.marriageDoctrine(me.religion, s);
+          const limit = doctrine.spouseLimit[me.sex === 'f' ? 'f' : 'm'];
+          if (limit > 1) {
+            return FB.T(
+              'Your faith permits up to {count} spouses. Your first marriage completes this lesson; additional marriages are optional.', {
+                count:limit
+              });
+          }
+        }
+        if (flags.match_refused) {
+          const status = FB.instantStatus
+            ? FB.instantStatus(s, 'seek_match') : null;
+          if (status && status.shown && !status.can && status.reason) {
+            return FB.translateKnown(status.reason);
+          }
+          return FB.T(
+            'That proposal was refused. Seek another match when you are ready.');
+        }
+        return '';
+      },
       steps:[
         { id:'kin_tab', label:function () { return FB.T('Meet your household in the Kin tab'); } },
-        { id:'wed',     label:function () { return FB.T('Wed a spouse'); } },
-        { id:'heir',    label:function () { return FB.T('Welcome a child'); } }
+        { id:'wed',     label:function () { return FB.T('Wed your first spouse'); } },
+        { id:'heir',    label:function () { return FB.T('Welcome your first child'); } }
       ] },
     { id:'making_a_living', icon:'🌾', event:'tut_livelihood',
       title:function () { return FB.T('Making a living'); },
       // livelihoods and enterprises belong to the lower stations — landed
       // rulers (tier 3+) finish with the family track instead
       when:function (s) { return s.player.tier <= 2; },
+      note:function (s) {
+        const flags = s.player.flags || {};
+        if (!flags.tut_successor_child && !flags.tut_successor_relative) {
+          return '';
+        }
+        const me = s.chars[s.player.charId];
+        const minor = me && FB.ageOf(me, s.date.year) < 16;
+        if (flags.tut_successor_child) {
+          return minor
+            ? FB.T('You now play as the previous head’s child. Household progress carries over; adult deeds unlock at age 16.')
+            : FB.T('You now play as the previous head’s child. Continue the household’s unfinished work.');
+        }
+        return minor
+          ? FB.T('You now play as a young relative. Household progress carries over; adult deeds unlock at age 16.')
+          : FB.T('You now play as a relative. Continue the household’s unfinished work.');
+      },
       steps:[
-        { id:'livelihood', label:function () { return FB.T('Take up a livelihood'); } },
-        { id:'enterprise', label:function () { return FB.T('Start an enterprise'); } },
-        { id:'land',       label:function () { return FB.T('Buy your first land plot'); } }
+        { id:'livelihood', label:function (s) {
+          const flags = s.player.flags || {};
+          const successor = flags.tut_successor_child ||
+            flags.tut_successor_relative;
+          const me = s.chars[s.player.charId];
+          if (successor && me && FB.ageOf(me, s.date.year) < 16) {
+            return FB.T('Come of age and take up a livelihood');
+          }
+          return successor
+            ? FB.T('Continue or take up a livelihood')
+            : FB.T('Take up a livelihood');
+        } },
+        { id:'enterprise', label:function (s) {
+          const flags = s.player.flags || {};
+          const successor = flags.tut_successor_child ||
+            flags.tut_successor_relative;
+          const me = s.chars[s.player.charId];
+          if (successor && !(s.player.enterprises || []).length && me &&
+              FB.ageOf(me, s.date.year) < 16) {
+            return FB.T('Come of age and start an enterprise');
+          }
+          return successor
+            ? FB.T('Start or continue a household enterprise')
+            : FB.T('Start an enterprise');
+        } },
+        { id:'land', label:function (s) {
+          const flags = s.player.flags || {};
+          const successor = flags.tut_successor_child ||
+            flags.tut_successor_relative;
+          const me = s.chars[s.player.charId];
+          const minor = successor && me && FB.ageOf(me, s.date.year) < 16;
+          if (s.player.tier === 0) {
+            return minor
+              ? FB.T('Come of age, buy your freedom, then acquire land')
+              : FB.T('Buy your freedom, then your first land plot');
+          }
+          return minor
+            ? FB.T('Come of age, then buy your first land plot')
+            : FB.T('Buy your first land plot');
+        } }
       ] }
   ];
   function tutorialStepDone(s, id) {
@@ -2834,14 +2915,23 @@ window.FB = window.FB || {};
         !!flags.tut_event && p.gold > p.startGold;
     }
     if (id === 'event') return !!flags.tut_event;
-    if (id === 'livelihood') return !!p.profession;
+    if (id === 'livelihood') {
+      const me = s.chars[p.charId];
+      const successor = flags.tut_successor_child ||
+        flags.tut_successor_relative;
+      if (successor && me && FB.ageOf(me, s.date.year) < 16) return false;
+      return !!p.profession;
+    }
     if (id === 'enterprise') return (p.enterprises || []).length > 0;
     if (id === 'land') return FB.landPlots(s).length > 0;
     if (id === 'kin_tab') return !!flags.tut_kin_tab;
     if (id === 'wed' || id === 'heir') {
       const me = s.chars[p.charId];
       if (!me) return false;
-      return id === 'wed' ? !!me.spouseId : !!(me.childrenIds && me.childrenIds.length);
+      const spouses = FB.spousesSnapshot
+        ? FB.spousesSnapshot(s, me) : (me.spouseId ? [me.spouseId] : []);
+      return id === 'wed' ? spouses.length > 0
+        : !!(me.childrenIds && me.childrenIds.length);
     }
     return false;
   }
@@ -2867,14 +2957,17 @@ window.FB = window.FB || {};
     for (const step of track.steps) {
       const isDone = tutorialStepDone(s, step.id);
       if (isDone) done++;
-      steps.push({ id:step.id, label:step.label(), done:isDone });
+      steps.push({ id:step.id, label:step.label(s), done:isDone });
     }
-    return { track:{ id:track.id, icon:track.icon, title:track.title() },
+    return { track:{ id:track.id, icon:track.icon, title:track.title(),
+        note:track.note ? track.note(s) : '' },
       steps:steps, done:done, total:track.steps.length };
   }
   FB.tutorialStatus = function (s) {
+    const flags = (s.player && s.player.flags) || {};
     for (const track of TUTORIAL_TRACKS) {
       if (track.when && !track.when(s)) continue;
+      if (flags['tut_track_' + track.id]) continue;
       const status = tutorialTrackStatus(s, track);
       if (status.done < status.total) return status;
     }
@@ -2905,12 +2998,18 @@ window.FB = window.FB || {};
         allDone = false;
         continue;
       }
+      /* A completed chapter belongs to the household's tutorial history.
+         Do not reopen Family & legacy when its child later becomes the
+         unmarried protagonist, or repeat any earlier completion feedback. */
+      if (flags['tut_track_' + track.id]) continue;
       if (track.id === 'family_legacy' && flags.tut_track_first_steps &&
           !flags.tut_track_family_legacy &&
           !flags.tut_family_guidance_started &&
           !flags.tut_family_established) {
         const me = s.chars[s.player.charId];
-        if (me && me.spouseId) {
+        const spouses = me && FB.spousesSnapshot
+          ? FB.spousesSnapshot(s, me) : (me && me.spouseId ? [me.spouseId] : []);
+        if (me && spouses.length) {
           /* A household already established before this track becomes active
              needs no courtship tutorial. Complete the whole chapter without
              inventing a child record or flashing three synthetic toasts. */
@@ -2939,7 +3038,6 @@ window.FB = window.FB || {};
         }
       }
       if (status.done < status.total) { allDone = false; continue; }
-      if (flags['tut_track_' + track.id]) continue;
       flags['tut_track_' + track.id] = 1;
       if (track.id === 'first_steps' && FB.ui &&
           FB.ui.resumePostFirstStepsTips) {
@@ -3597,7 +3695,29 @@ window.FB = window.FB || {};
         mother.fertility * (father.fertility || 1) *
         FB.ageFert('f', mAge) * FB.ageFert('m', FB.ageOf(father, s.date.year));
       if (s.player.flags.blessed_union) fert *= 1.6;
-      if (FB.chance(fert)) {
+      const beginnerHeirPending = FB.tutorialActive(s) &&
+        p.flags.tut_family_guidance_started &&
+        !p.flags.tut_track_family_legacy &&
+        !(me.childrenIds && me.childrenIds.length);
+      let tutorialConceptionDue = false;
+      if (beginnerHeirPending && fert > 0) {
+        const tutorialChance = Number(
+          FBDATA.balance.tutorialChildChance) || 0;
+        if (tutorialChance > 0) {
+          fert = Math.max(fert, tutorialChance / 90);
+        }
+        const configuredGrace = Number(
+          FBDATA.balance.tutorialConceptionPityDays);
+        const graceDays = isFinite(configuredGrace)
+          ? Math.max(0, Math.floor(configuredGrace)) : 90;
+        const tutorialMarriageTurn =
+          p.flags.tut_family_marriage_char_id === me.id &&
+          isFinite(Number(p.flags.tut_family_married_at))
+            ? Number(p.flags.tut_family_married_at) : p.marriedAt;
+        tutorialConceptionDue = tutorialMarriageTurn !== undefined &&
+          s.turn - tutorialMarriageTurn >= graceDays;
+      }
+      if (tutorialConceptionDue || FB.chance(fert)) {
         delete s.player.flags.blessed_union; // the prayer is answered
         s.pregnant = {
           due: s.turn + 270,
@@ -3760,11 +3880,6 @@ window.FB = window.FB || {};
       FB.news(s, '☠ ' + causeText);
     }
     const heirs = FB.heirsOf(s).slice(0, 4);
-    if (heirs.length && FB.ui && FB.ui.maybeTip) {
-      FB.ui.maybeTip('succession',
-        '💡 The chronicle continues: your heir inherits the household; gold, land, and debts carry over.',
-        '#tb-portrait');
-    }
     const deathTelemetry = {
       entry_type:telemetryEntryType,
       active_seconds:activeSeconds,
@@ -3912,6 +4027,15 @@ window.FB = window.FB || {};
       if (!livingAbdication) FB.ui.gameOver();
       return false;
     }
+    const successorIsChild = (old.childrenIds || []).indexOf(heir.id) >= 0;
+    const tutorialCarry = FB.tutorialActive(s) ? {} : null;
+    if (tutorialCarry) {
+      for (const key in p.flags) {
+        if (key === 'tutorial' || key.indexOf('tut_') === 0) {
+          tutorialCarry[key] = p.flags[key];
+        }
+      }
+    }
     /* A bishop's see is returned before the dynasty changes hands. Secular
        counties remain in the ordinary succession; a see-only household falls
        back to its established gentry standing. */
@@ -4007,6 +4131,13 @@ window.FB = window.FB || {};
     if (FB.clearFriendship) FB.clearFriendship(s, true);
     const keep = {};
     for (const fl of ['own_ox']) if (p.flags[fl]) keep[fl] = 1; // household property passes separately
+    if (tutorialCarry) {
+      for (const key in tutorialCarry) keep[key] = tutorialCarry[key];
+      delete keep.tut_successor_child;
+      delete keep.tut_successor_relative;
+      keep[successorIsChild
+        ? 'tut_successor_child' : 'tut_successor_relative'] = 1;
+    }
     p.flags = keep;
     if (FB.intriguePlayerSuccession) {
       FB.intriguePlayerSuccession(s, old.id, heir.id);
@@ -4114,6 +4245,21 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.life.succession',
         '👤 {name} takes up the family’s story. Generation {generation}.',
         { name: FB.fullName(heir), generation: s.generation }));
+    }
+    if (!livingAbdication && FB.ui && FB.ui.maybeTip) {
+      const minor = FB.ageOf(heir, s.date.year) < 16;
+      let successionTip;
+      if (successorIsChild) {
+        successionTip = minor
+          ? '💡 The chronicle continues through your child. You now play as them; household gold, property, enterprises, and debts carry over. Childhood uses Play or Study, and adult deeds unlock at 16.'
+          : '💡 The chronicle continues through your child. You now play as them; household gold, property, enterprises, and debts carry over.';
+      } else {
+        successionTip = minor
+          ? '💡 The chronicle continues through a young relative. You now play as them; household gold, property, enterprises, and debts carry over. Childhood uses Play or Study, and adult deeds unlock at 16.'
+          : '💡 The chronicle continues through a relative. You now play as them; household gold, property, enterprises, and debts carry over.';
+      }
+      FB.ui.maybeTip('succession', successionTip,
+        '#sidetabs .tab[data-tab="log"]');
     }
     G.paused = true; // a new life begins at rest
     FB.ui.refresh();

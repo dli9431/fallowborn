@@ -10,6 +10,7 @@ window.FB = window.FB || {};
   const SH = UI._shared;
   const $ = SH.$;
   const ACTION_SHORTCUT_KEYS = SH.ACTION_SHORTCUT_KEYS;
+  const actionLabel = SH.actionLabel;
   const actionShortcutStatus = SH.actionShortcutStatus;
   const allianceText = SH.allianceText;
   const automationAccess = SH.automationAccess;
@@ -6739,7 +6740,7 @@ window.FB = window.FB || {};
     return {
       id:'instant:' + id,
       group:group,
-      label:dt(s, 'action', id, status.action, 'label'),
+      label:actionLabel(s, id, status.action),
       detail:FB.translateKnown(status.action.desc(s)),
       enabled:status.can,
       blockedReason:status.reason || null,
@@ -8752,7 +8753,7 @@ window.FB = window.FB || {};
         rows += '<button type="button" class="actionbtn" ' +
           'data-governance-action="' + esc(id) + '"' +
           (status.can ? '' : ' disabled') + '>' +
-          esc(dt(s, 'action', id, action, 'label')) +
+          esc(actionLabel(s, id, action)) +
           '<span class="adesc">' + esc(detail) + '</span></button>';
       }
       if (rows) {
@@ -8771,7 +8772,7 @@ window.FB = window.FB || {};
           esc(FB.T('Institution management')) + '</h5>' +
           '<button type="button" class="actionbtn" ' +
           'data-governance-institution="' + institution + '">' +
-          esc(dt(s, 'action', actionId, status.action, 'label')) +
+          esc(actionLabel(s, actionId, status.action)) +
           '<span class="adesc">' +
           esc(FB.translateKnown(status.action.desc(s))) +
           '</span></button></div>';
@@ -14157,7 +14158,7 @@ window.FB = window.FB || {};
       if (!item) continue;
       h += '<button class="actionbtn" data-bishop-power="' + item.a.id + '"' +
         (item.can ? '' : ' disabled') + '>' +
-        esc(dt(s, 'action', item.a.id, item.a, 'label')) +
+        esc(actionLabel(s, item.a.id, item.a)) +
         '<span class="adesc">' + esc(item.can
           ? FB.T('{description} · {days}-day cooldown', {
             description:FB.translateKnown(item.a.desc(s)),
@@ -15872,7 +15873,7 @@ window.FB = window.FB || {};
     for (const action of (FB.instants || [])) {
       if (!action || !techRequiresId(action.requiresTech, id)) continue;
       add('action:' + action.id, FB.T('Makes the deed {content} available.', {
-        content:dt(s, 'action', action.id, action, 'label')
+        content:actionLabel(s, action.id, action)
       }));
     }
     for (const event of (FBDATA.events || [])) {
@@ -18153,23 +18154,23 @@ window.FB = window.FB || {};
         'These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household.', {
           county:province ? province.name : FB.T('this county')
         })) +
-      '</p></div><div class="gm-list">';
+      '</p></div><div class="gm-list suitor-list">';
     for (const m of cands) {
       const st = FB.stationOf(m);
       const gap = st - ps;
       const age = FB.ageOf(m, s.date.year);
-      const details = [
-        cultureName(s, m.culture) + ' · ' + religionName(s, m.religion),
-        FB.stationName(st),
-        FB.T('age {age}', { age: age }),
-        FB.T('proposal requires +{standing} Standing', {
-          standing:FB.courtshipStandingThreshold(s, m)
-        })
-      ];
+      const detId = 'suitor-details-' + m.id;
+      const threshold = FB.courtshipStandingThreshold(s, m);
+      const identity = cultureName(s, m.culture) + ' · ' +
+        religionName(s, m.religion);
+      const essentials = [FB.T('Requires +{standing} Standing', {
+        standing:threshold
+      })];
+      const details = [];
       const marriage = FB.marriageTerms(s,
         s.chars[s.player.charId], m);
       if (marriage.amount) {
-        details.push(marriage.playerPays
+        essentials.push(marriage.playerPays
           ? FB.T('your house would provide exactly {money:gold}', {
             gold:marriage.amount
           })
@@ -18177,21 +18178,41 @@ window.FB = window.FB || {};
             gold:marriage.amount
           }));
       }
-      details.push((m.sex === 'f' && age > 45) ? FB.T('🌱 past childbearing')
+      details.push((m.sex === 'f' && age > 45) ? FB.T('🌱 Past childbearing')
         : FB.T('🌱 fertility {percent}%', {
           percent: Math.round((m.fertility || 1) * FB.traitAgg(m).fert *
             FB.ageFert(m.sex, age) * 100)
         }));
-      if (gap > 0) details.push(FB.T('a step up — a harder suit'));
-      else if (gap < 0) details.push(FB.T('a step down — folk will mark it'));
+      if (gap > 0) details.push(FB.T('A step up — a harder suit.'));
+      else if (gap < 0) details.push(FB.T('A step down — folk will mark it.'));
       details.push(childIdentityPreviewText(
         s, s.chars[s.player.charId], m, true));
-      h += '<button class="actionbtn" data-suitor="' + m.id + '">💍 ' +
-        esc((epithetText(s, m) ? epithetText(s, m) + ' — ' : '') + m.name) +
-        '<span class="adesc">' + esc(details.join(' · ')) + '</span></button>';
+      const name = (epithetText(s, m) ? epithetText(s, m) + ' — ' : '') +
+        m.name;
+      h += '<div class="asset-owned-row settcard suitor-card" ' +
+        'data-suitor-card="' + esc(m.id) + '">' +
+        '<div class="settcard-head"><b>💍 ' + esc(name) + '</b>' +
+        '<span class="settcard-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detId) + '" ' +
+        'title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button>' +
+        '<button type="button" class="btn small settcard-raise" ' +
+        'data-suitor="' + esc(m.id) + '" aria-label="' +
+        esc(FB.T('Meet {name}', { name:m.name })) + '">' +
+        esc(FB.T('Meet')) + '</button></span></div>' +
+        '<div class="settcard-meta">' + esc(identity) + '</div>' +
+        '<div class="settcard-fx">' + esc(FB.T('{station} · age {age}', {
+          station:FB.stationName(st), age:age
+        })) + '</div>' +
+        '<div class="suitor-essentials">' + esc(essentials.join(' · ')) +
+        '</div><div class="settcard-details hidden" id="' + esc(detId) +
+        '"><div class="settdesc">' + esc(details.join(' · ')) +
+        '</div></div></div>';
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Decide nothing today')) + '</button>';
     openModal(FB.T('Seeking a Match'), h);
+    bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-suitor]').forEach(function (b) {
       b.addEventListener('click', function () {
         const m = s.chars[b.dataset.suitor];
@@ -19761,7 +19782,7 @@ window.FB = window.FB || {};
       if (action.compatibilityAlias) continue;
       actions.push({
         target:'action:' + action.id,
-        label:s ? dt(s, 'action', action.id, action, 'label') : FB.T(action.label)
+        label:s ? actionLabel(s, action.id, action) : FB.T(action.label)
       });
     }
     actions.sort(function (a, b) {

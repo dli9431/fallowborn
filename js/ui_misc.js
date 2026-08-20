@@ -42,6 +42,11 @@ window.FB = window.FB || {};
   function dt(s, kind, id, def, path, ctx) {
     return FB.dataText(s, s.player.charId, kind, id, def, path, ctx || {});
   }
+  function actionLabel(s, id, action) {
+    return action && typeof action.uiLabel === 'function'
+      ? action.uiLabel(s)
+      : dt(s, 'action', id, action, 'label');
+  }
   function cultureName(s, id) {
     const def = FB.cultureOf(id);
     return dt(s, 'culture', id, def, 'name');
@@ -1796,6 +1801,26 @@ window.FB = window.FB || {};
   };
 
   let fastForwardReceipt = null;
+  const fastForwardNewsToasts = [];
+  function deferFastForwardNewsToast(intent) {
+    fastForwardNewsToasts.push({
+      message:intent.message || null,
+      legacyText:intent.legacyText || null
+    });
+    /* The live toast rail retains only five notices. Keep the same visible
+       result without creating and removing DOM nodes inside the simulation
+       burst. Durable Chronicle entries are already written by FB.news. */
+    while (fastForwardNewsToasts.length > 5) {
+      fastForwardNewsToasts.shift();
+    }
+  }
+  function flushFastForwardNewsToasts() {
+    const pending = fastForwardNewsToasts.splice(0,
+      fastForwardNewsToasts.length);
+    for (const intent of pending) {
+      UI.toastMessage(intent.message, intent.legacyText);
+    }
+  }
   UI.eventReceiptToast = function (receipt) {
     /* Each autoresolved receipt is already durable in the Chronicle, and the
        toast replaces its predecessor. During a frame-sliced skip retain only
@@ -1858,7 +1883,7 @@ window.FB = window.FB || {};
      A beginner lesson shows as a coachmark: a tooltip anchored to the button
      or area it teaches, with that target lit up, staying open until the
      player acknowledges it — the corner toasts faded before a lesson could
-     sink in. Using the lit control counts as learning a first-time tip, while
+     sink in. Using the lit control learns and closes a one-step tip, while
      Got it dismisses it and Stop tips opts out in place. touchAlso can widen
      that interaction to an already-open pane. While an event or dialog holds
      the screen the lesson waits its turn (pumped by UI.refresh and the modal
@@ -1898,12 +1923,7 @@ window.FB = window.FB || {};
     if (item && item.tipId) delete tipPending[item.tipId];
   }
 
-  function acknowledgeCoachmark(action) {
-    const item = coachItem;
-    const followUp = item && item.tipId;
-    rememberFirstTimeTip(item);
-    coachTelemetry('hint-dismissed', item, { dismiss_action:action });
-    dismissCoachmark();
+  function runCoachFollowUp(followUp, usedControl) {
     if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
       UI.maybeFirstTimeFlowTip();
     } else if (followUp === 'map-controls' && UI.maybeMapHomeTip) {
@@ -1913,7 +1933,7 @@ window.FB = window.FB || {};
     } else if (followUp === 'map-filters' && UI.resumeFirstPlayerTip) {
       UI.resumeFirstPlayerTip();
     } else if (followUp === 'area-self' && UI.resumeFamilyLegacyTips) {
-      if (SH.closeSelfDrawer) SH.closeSelfDrawer();
+      if (!usedControl && SH.closeSelfDrawer) SH.closeSelfDrawer();
       UI.resumeFamilyLegacyTips();
     } else if (followUp === 'area-kin' && UI.resumeFamilyLegacyTips) {
       UI.resumeFamilyLegacyTips();
@@ -1921,6 +1941,15 @@ window.FB = window.FB || {};
         UI.resumeMakingLivingTips) {
       UI.resumeMakingLivingTips();
     }
+  }
+
+  function acknowledgeCoachmark(action) {
+    const item = coachItem;
+    const followUp = item && item.tipId;
+    rememberFirstTimeTip(item);
+    coachTelemetry('hint-dismissed', item, { dismiss_action:action });
+    dismissCoachmark();
+    runCoachFollowUp(followUp);
   }
 
   function stopCoachmarkTips() {
@@ -2155,7 +2184,7 @@ window.FB = window.FB || {};
      count, and keyboard activation arrives via click): Next opens up. The
      listeners stay until the lesson closes — a menu lesson's follow-up needs
      the click after the pointerdown. */
-  function coachTouched() {
+  function coachTouched(ev) {
     if (coachItem && !coachItem.interactedTracked) {
       coachItem.interactedTracked = true;
       rememberFirstTimeTip(coachItem);
@@ -2166,6 +2195,26 @@ window.FB = window.FB || {};
     if (coachNext) {
       coachNext.disabled = false;
       coachNext.removeAttribute('title');
+    }
+    /* A one-step lesson has been completed when its highlighted control is
+       actually clicked. Retire it during capture, before the control's own
+       handler, so time controls do not see an open coachmark and discard the
+       very click the lesson asked for. Pointerdown still records touch
+       immediately, but waits for click before retiring the lesson. */
+    if (ev && ev.type === 'click' && coachItem && coachItem.noNext &&
+        !coachItem.overTarget) {
+      const usedItem = coachItem;
+      const followUp = usedItem.tipId;
+      rememberFirstTimeTip(usedItem);
+      coachTelemetry('hint-dismissed', usedItem, {
+        dismiss_action:'highlighted-control'
+      });
+      dismissCoachmark();
+      /* Let the highlighted control finish first. A follow-up may otherwise
+         open or close the very panel that this click is still changing. */
+      if (followUp) setTimeout(function () {
+        runCoachFollowUp(followUp, true);
+      }, 0);
     }
     // a menu lesson's touch opens the menu: re-present it above the sheet at
     // its own spot there (checked after the click handlers ran)
@@ -2577,6 +2626,21 @@ window.FB = window.FB || {};
         '#sidetabs .tab[data-tab="actions"]', { noNext:true });
   };
 
+  UI.maybeAdditionalMarriageTip = function () {
+    const s = FB.state;
+    const me = s && s.chars && s.chars[s.player.charId];
+    if (!me || !FB.marriageDoctrine) return false;
+    const doctrine = FB.marriageDoctrine(me.religion, s);
+    const limits = doctrine && doctrine.spouseLimit;
+    const limit = limits && Number(limits[me.sex === 'f' ? 'f' : 'm']);
+    if (!isFinite(limit) || limit <= 1) return false;
+    const text = FB.T(
+      '💡 Your faith permits up to {count} spouses at once. Your first marriage completes this lesson; further marriages are optional.',
+      { count:Math.floor(limit) });
+    return UI.maybeTip('family-marriage-doctrine', text,
+      '#lefttabs .tab[data-tab="family"]', { noNext:true });
+  };
+
   UI.resumeFamilyLegacyTips = function () {
     if (tipsSilenced()) return false;
     const s = FB.state;
@@ -2585,9 +2649,18 @@ window.FB = window.FB || {};
     }
     const flags = s.player.flags || {};
     if (!flags.tut_track_first_steps) return false;
+    if (flags.tut_family_established || flags.tut_track_family_legacy) {
+      return false;
+    }
     const me = s.chars && s.chars[s.player.charId];
-    if (!flags.tut_kin_tab || !me || me.spouseId) return false;
+    if (!flags.tut_kin_tab || !me) return false;
     const seen = FB.game.uiPrefs.tipsSeen || {};
+    const spouses = FB.spousesSnapshot
+      ? FB.spousesSnapshot(s, me) : (me.spouseId ? [me.spouseId] : []);
+    if (spouses.length) {
+      return !seen['family-marriage-doctrine']
+        ? UI.maybeAdditionalMarriageTip() : false;
+    }
     if (!seen['area-kin']) {
       return UI.maybeTabTip ? UI.maybeTabTip('family') : false;
     }
@@ -2748,6 +2821,7 @@ window.FB = window.FB || {};
     if (FB.map && FB.map.flushFastForwardRender) {
       FB.map.flushFastForwardRender();
     } else if (FB.map && FB.map.request) FB.map.request();
+    flushFastForwardNewsToasts();
     if (fastForwardReceipt) {
       const receipt = fastForwardReceipt;
       fastForwardReceipt = null;
@@ -3204,6 +3278,10 @@ window.FB = window.FB || {};
     FB.fx.on(function (intent) {
       if (intent.kind !== 'toast') return;
       if (FB.game.observe && FB.game.obsQuiet) return;
+      if (FB.game && FB.game.fastForwarding) {
+        deferFastForwardNewsToast(intent);
+        return;
+      }
       UI.toastMessage(intent.message, intent.legacyText);
     });
     document.querySelectorAll('#sidetabs .tab[data-tab], #lefttabs .tab[data-tab]').forEach(function (t) {
@@ -3770,6 +3848,7 @@ window.FB = window.FB || {};
 
   /* ===== shared exports (bound by the later UI files) ===== */
   SH.$ = $;
+  SH.actionLabel = actionLabel;
   SH.allianceText = allianceText;
   SH.automationAccess = automationAccess;
   SH.assetEffectSummary = assetEffectSummary;

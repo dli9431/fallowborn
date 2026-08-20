@@ -711,6 +711,15 @@ uncles-aunts/cousins order and attaches a stable eligibility code for UI prose.
 Spouses, dead relatives, different-house branches, and branches behind living
 children remain visible with an explicit reason rather than silently disappearing.
 
+An unfinished first-profile tutorial is household continuity, not a personal benefit.
+`FB.game.succeedTo` preserves only its `tutorial`/`tut_*` flags while clearing the
+predecessor's ordinary life-local flags, then records whether the chosen successor is a
+direct child or another relative. Making-a-living guidance uses that relationship and the
+successor's current age to explain inherited progress and childhood limits. Its first
+succession coachmark is likewise selected after the heir choice and points to Chronicle;
+gold, property, enterprises, and debts continue to follow their existing inheritance
+rules. This is onboarding presentation and continuity, with no technology impact.
+
 **Voluntary retirement is a living handover, not a second succession system.** A
 living head aged `balance.retirementAge` (50) or older may use the Hand over the
 house deed to yield to any already-eligible adult successor from the same review.

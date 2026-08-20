@@ -1125,12 +1125,50 @@ window.FB = window.FB || {};
           'The scheme unravels, and fingers point at you.', {}));
       }
     } },
-  { id: 'seek_match', label: '💍 Seek a match',
+  { id: 'seek_match', label: '💍 Seek a match', opensChoices:true,
     cd: FB.marriageProspectRefreshDays(), noConsume: true,
     cooldownDays: function () {
       return FB.marriageProspectRefreshDays();
     },
-    desc: function () { return 'Ask local kin and gossips to find a spouse among the county’s communities.'; },
+    cooldownReason: function (s, days) {
+      if (s.player.flags && s.player.flags.match_refused) {
+        const spouseCount = FB.spousesOf(s, me(s)).length;
+        return spouseCount
+          ? FB.T(
+            'That proposal was refused. You can seek an additional spouse in {days} days.', {
+              days:days
+            })
+          : FB.T(
+            'That proposal was refused. You can seek another match in {days} days.', {
+              days:days
+            });
+      }
+      return FB.T('Ready in {days} days.', { days:days });
+    },
+    uiLabel: function (s) {
+      const m = me(s);
+      const spouses = FB.spousesOf(s, m).length;
+      if (spouses) return FB.T('💍 Seek an additional spouse…');
+      if (s.player.flags && s.player.flags.match_refused) {
+        return FB.T('💍 Seek another match…');
+      }
+      return FB.T('💍 Seek a match…');
+    },
+    desc: function (s) {
+      const m = me(s);
+      const spouses = FB.spousesOf(s, m).length;
+      if (!spouses) {
+        return s.player.flags && s.player.flags.match_refused
+          ? FB.T('Ask local kin and gossips to find another prospective spouse among the county’s communities.')
+          : FB.T('Ask local kin and gossips to find a spouse among the county’s communities.');
+      }
+      const doctrine = FB.marriageDoctrine(m.religion, s);
+      const limit = doctrine.spouseLimit[m.sex === 'f' ? 'f' : 'm'];
+      return FB.T(
+        'Ask local kin and gossips about an additional spouse. {current} of {limit} spouse places are filled.', {
+          current:spouses, limit:limit
+        });
+    },
     show: function (s) {
       const m = me(s);
       const clergyCelibate = s.player.profession === 'monk' &&
@@ -7760,9 +7798,10 @@ window.FB = window.FB || {};
       const last = cooldowns[action.id];
       if (last !== undefined && state.turn - last < cooldownDays) {
         can = false;
-        reason = FB.T('Ready in {days} days.', {
-          days:cooldownDays - (state.turn - last)
-        });
+        const days = cooldownDays - (state.turn - last);
+        reason = action.cooldownReason
+          ? action.cooldownReason(state, days)
+          : FB.T('Ready in {days} days.', { days:days });
       }
     }
     if (can && action.requiresTech &&

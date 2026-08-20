@@ -11,6 +11,12 @@ if the live route or hard gates change before resolution. Autoresolution takes
 the first authored option: make an already-reviewed approach, end an exposed
 relationship, or make an already-reviewed proposal.
 
+The ordinary `proposal_made` refusal stamps the life-local `match_refused` flag while
+clearing the failed courtship. Marriage onboarding and the Deeds renderer use it to say
+**Seek another match** and to contextualize the existing prospect-search cooldown; a
+new courtship or successful wedding clears it. The flag changes presentation only and
+has no technology impact.
+
 Plot definitions may add a `target` selector. Beginning such a plot presents the
 selector first and stores its JSON-safe choice in `player.plot.context`; that same
 context is supplied to discovery and resolution events. The built-in
@@ -490,8 +496,10 @@ tutorial life, `tut_legacy` when the Family-and-legacy checklist track completes
 play, and `tut_livelihood` when the lower-rank Making-a-living track completes. A protagonist
 who is already married when family guidance becomes eligible silently completes that track
 and skips `tut_legacy`, whose child-and-inheritance framing would otherwise be misleading.
-Stage flags live in `player.flags`
-and die with the protagonist; dismissing the checklist stops further chapters.
+Stage flags live in `player.flags`. While the checklist remains unfinished, its
+`tutorial`/`tut_*` subset follows the household through succession so a child or
+collateral relative resumes the remaining chapter; other protagonist-local flags and
+event memory still reset. Dismissing the checklist stops further chapters.
 Options are small and all-positive so automation scores them sanely.
 
 Related: [war.md](war.md) for the war-council events, [characters.md](characters.md) for

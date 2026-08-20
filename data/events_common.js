@@ -29,7 +29,7 @@ FBDATA.events.push(
   options:[
     { label:'Await the answer.', chance:'proposal', desc:'Your standing and your silver are on the scales now.',
       success:{ text:'It is agreed! Before {holy} and kin, you are wed to {suitor}.', effects:{ marry:true, prestige:15, log:'Married {spouse}.' } },
-      failure:{ text:'The family refuses — politely, but firmly. Perhaps with more standing, or more silver…', effects:{ clearFlag:'courting', clearSuitor:true, prestige:-5 } } }
+      failure:{ text:'The family refuses — politely, but firmly. Perhaps with more standing, or more silver…', effects:{ clearFlag:'courting', setFlag:'match_refused', clearSuitor:true, prestige:-5 } } }
   ]},
 { id:'sibling_courtship_approach', title:'A Word That Cannot Be Recalled',
   trigger:{ never:true }, contextValidator:'sibling_courtship_approach_valid',

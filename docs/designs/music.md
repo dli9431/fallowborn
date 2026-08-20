@@ -23,7 +23,9 @@ changes the generated revision token, allowing the persistent music cache to kee
 ## Choosing music
 
 The first boot with a non-empty catalog asks whether to play music and shows the expected download
-size. The answer is remembered, and Settings can change it later. Each page load chooses one of
+size. Its loading-screen surface uses an explicit viewport-height content wrapper so the title,
+download explanation, and both choices remain rendered and scrollable in narrow mobile browser
+viewports and device-emulation modes. The answer is remembered, and Settings can change it later. Each page load chooses one of
 the three title themes with an equal one-third chance and keeps that choice for the loaded
 session, including title-screen pauses, resumes, and returns. In a campaign the context resolver
 selects:

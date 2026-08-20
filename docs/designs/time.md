@@ -44,8 +44,11 @@ These retained paths never batch RNG-bearing mechanics or move expiry boundaries
 focus, travel, armies, events, and dated transitions keep their ordinary
 per-day order. The player-facing skip is frame-sliced to an eight-millisecond
 budget (and at most six days per frame), with UI refreshes, political-map base
-rebuilds, canvas renders, and the replaceable autoresolve receipt toast deferred
-until the burst ends. This keeps input and painting responsive without making
+rebuilds, canvas renders, transient Chronicle-news toasts, and the replaceable
+autoresolve receipt toast deferred until the burst ends. Chronicle entries are
+still recorded on their exact simulation day; only the last five notices that
+the live toast rail could have retained are rendered afterward. This keeps input
+and painting responsive without making
 wall-clock timing part of simulation state. A coachmark raised during an active
 burst still pauses it immediately, and an already-open lesson keeps the skip
 from starting until the player dismisses it.

@@ -179,7 +179,10 @@ where **Seek a match** is used (`FB.marriageProspectIdentities`): authored count
 pairs are offered first, followed by the cartesian combinations of their cultures and faiths.
 Thus 867 Dublin can produce Norse Pagan and Gaelic Catholic prospects as well as Norse
 Catholic or Gaelic Norse Pagan households, while a single-community county stays homogeneous.
-The picker names each prospect's culture, faith, and exact Standing requirement. Once the protagonist is forty, a fourth step-down
+The picker keeps each prospect's culture, faith, station, age, exact Standing
+requirement, and dowry direction visible at a glance. Fertility, station-gap
+interpretation, and the prospective child's identity move into the shared card
+tooltip on desktop or `?` disclosure on touch and compact layouts. Once the protagonist is forty, a fourth step-down
 family offers a very young adult aged sixteen to twenty-four. The available candidates persist on
 the player as `suitorIds` until one is chosen in the picker or the next eligible **Seek a match**
 replaces the full pool
@@ -224,6 +227,28 @@ mother still gives birth after the father dies, and the newborn is linked as the
 protagonist's sibling rather than child. New schemes against a spouse use the shared
 Assassination setup and authoritative death path. The hidden `widow_veil` definition
 and `plot_spouse_end` remain only so an active version-3 plot can finish.
+
+Beginner guidance treats marriage as establishing a household, not filling every
+doctrine-permitted spouse place. **Family & legacy** completes its wedding step at the
+first living spouse and explains that further marriages are optional when the effective
+limit is greater than one. In that state **Seek a match** remains intentionally available,
+but reads **Seek an additional spouse…** and its tooltip reports filled versus available
+places. A refused first proposal instead reads **Seek another match…**; while the shared
+prospect-search cooldown remains, its detail states the rejection and exact days left.
+This is doctrine-aware presentation over the existing eligibility rules and has no
+technology impact.
+
+The first browser profile's active **Family & legacy** tutorial receives a bounded
+first-child safeguard. While its eligible protagonist has married, has no child, and is
+still waiting on **Welcome your first child**, the ordinary daily conception roll has a
+`balance.tutorialChildChance` seasonal floor. If variance still produces no pregnancy,
+conception succeeds once `balance.tutorialConceptionPityDays` have elapsed since the
+first wedding made during that protagonist's active family lesson. The anchor is stored
+separately from the general latest-wedding timestamp, so taking another permitted spouse
+does not restart the tutorial wait. Age, spouse co-location, celibacy/marriage eligibility, and the explicit **No
+more children** choice remain authoritative; the safeguard ends as soon as pregnancy
+begins or the family chapter completes. This is onboarding pacing, not a global fertility
+change, and therefore has no technology impact.
 
 Catholic Bishoprics, Cardinalates, and Papal claims are personally celibate offices.
 `FB.canCourt`, `FB.canWed`, `FB.doMarry`, and the queued-wedding path all reject a living

@@ -130,13 +130,36 @@ test('first soundtrack boot, title pause, and background playback preserve state
       window.Audio = FakeAudio;
     });
     await routeSyntheticSoundtrack(page);
+    await page.setViewportSize({ width:320, height:800 });
     await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
 
     await expect(page.locator('#music-choice:not(.hidden)')).toBeVisible();
     await expect(page.locator('#music-choice-copy')).toContainText('average song');
     await expect(page.locator('#music-choice-copy')).toContainText('complete soundtrack');
+    const bootChoiceLayout = await page.locator('#loading').evaluate(function (loading) {
+      function insideViewport(element) {
+        const box = element.getBoundingClientRect();
+        return box.top >= 0 && box.left >= 0 &&
+          box.right <= window.innerWidth && box.bottom <= window.innerHeight;
+      }
+      return {
+        titleInside:insideViewport(loading.querySelector('.gametitle')),
+        choiceInside:insideViewport(document.getElementById('music-choice')),
+        playInside:insideViewport(document.getElementById('music-choice-play')),
+        silentInside:insideViewport(document.getElementById('music-choice-silent')),
+        horizontalScroll:loading.scrollWidth > loading.clientWidth
+      };
+    });
+    expect(bootChoiceLayout).toEqual({
+      titleInside:true,
+      choiceInside:true,
+      playInside:true,
+      silentInside:true,
+      horizontalScroll:false
+    });
     await page.getByRole('button', { name:'Continue silently', exact:true }).click();
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
+    await page.setViewportSize({ width:1280, height:720 });
     expect(await page.evaluate(function () {
       return {
         choice:FB.game.uiPrefs.musicChoice,

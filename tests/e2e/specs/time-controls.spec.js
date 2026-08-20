@@ -289,6 +289,42 @@ test('autoresolving fast-forward advances a paused game to the next season',
     await expect(page.locator('.event-receipt-toast')).toHaveCount(1);
   });
 
+test('fast-forward records news immediately but renders only its final five toasts afterward',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const box = document.getElementById('toasts');
+      box.innerHTML = '';
+      const before = FB.state.log.length;
+      FB.game.fastForwarding = true;
+      for (let i = 1; i <= 7; i++) {
+        FB.news(FB.state, 'Fast-forward notice ' + i);
+      }
+      const during = box.children.length;
+      const recorded = FB.state.log.length - before;
+      FB.game.fastForwarding = false;
+      FB.ui.fastForwardFinished();
+      return {
+        during:during,
+        recorded:recorded,
+        after:Array.prototype.map.call(box.children, function (toast) {
+          return toast.textContent;
+        })
+      };
+    });
+    expect(result).toEqual({
+      during:0,
+      recorded:7,
+      after:[
+        'Fast-forward notice 3',
+        'Fast-forward notice 4',
+        'Fast-forward notice 5',
+        'Fast-forward notice 6',
+        'Fast-forward notice 7'
+      ]
+    });
+  });
+
 test('fast-forward matches individual days and avoids invariant repair loops',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-file',

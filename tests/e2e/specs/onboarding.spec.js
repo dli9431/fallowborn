@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/map_data.js',
   'js/main.js',
   'js/save.js',
   'js/ui_misc.js',
@@ -9,6 +10,7 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'css/style.css',
   'data/bookmarks.js',
+  'data/events_common.js',
   'data/events_tutorial.js'
 ]);
 
@@ -287,7 +289,7 @@ test('an existing profile is grandfathered out of first-life onboarding',
     })).toBe(false);
   });
 
-test('a coachmark is learned on interaction and can disable later tips in place',
+test('using a highlighted control learns and closes its one-step coachmark',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
     await page.locator('#ng-seed').fill(START_CODE);
@@ -303,14 +305,13 @@ test('a coachmark is learned on interaction and can disable later tips in place'
     })).toBe(false);
 
     await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await expect(coach).toHaveCount(0);
     expect(await page.evaluate(function () {
       return !!FB.game.uiPrefs.tipsSeen['first-deed'];
     })).toBe(true);
-    await coach.getByRole('button', { name:'Stop tips', exact:true }).click();
-    await expect(page.locator('.coachmark')).toHaveCount(0);
     expect(await page.evaluate(function () {
       return FB.game.uiPrefs.hideTips;
-    })).toBe(true);
+    })).toBe(false);
   });
 
 test('First steps flip from ordinary play and the track advances',
@@ -460,7 +461,15 @@ test('the checklist walks its tracks and retires after the last one',
       const secondTrack = FB.tutorialStatus(s).track.id;
       // Family & legacy
       flags.tut_kin_tab = 1;
-      me.spouseId = me.spouseId || 'spec_spouse';
+      if (!me.spouseId) {
+        const spouse = FB.makeCharacter(s, {
+          name:'Spec Spouse', sex:me.sex === 'f' ? 'm' : 'f',
+          culture:me.culture, religion:me.religion,
+          born:s.date.year - 20, traitsN:0
+        });
+        me.spouseId = spouse.id;
+        spouse.spouseId = me.id;
+      }
       me.childrenIds.push('spec_child');
       FB.tutorialCheck(s);
       const thirdTrack = FB.tutorialStatus(s).track.id;
@@ -494,6 +503,291 @@ test('the checklist walks its tracks and retires after the last one',
     await page.evaluate(function () { FB.ui.refresh(); });
     await waitForUiRefresh(page);
     await expect(page.locator('.tutorial-card')).toHaveCount(0);
+  });
+
+test('the first-player family chapter bounds conception delay without changing later lives',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player, me = s.chars[p.charId];
+      const spouse = FB.makeCharacter(s, {
+        name:'Tutorial Spouse', sex:me.sex === 'f' ? 'm' : 'f',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 20, traitsN:0
+      });
+      spouse.fertility = 1;
+      spouse.spouseId = me.id;
+      spouse.role = 'spouse';
+      me.fertility = 1;
+      me.spouseId = spouse.id;
+      me.childrenIds = [];
+      s.roles.spouse = spouse.id;
+      p.flags.tut_track_first_steps = 1;
+      p.flags.tut_family_guidance_started = 1;
+      delete p.flags.tut_track_family_legacy;
+      delete p.flags.noChildren;
+      p.flags.tut_family_marriage_char_id = me.id;
+      p.flags.tut_family_married_at =
+        s.turn - FBDATA.balance.tutorialConceptionPityDays;
+      p.marriedAt = s.turn; // a later doctrine-permitted wedding must not reset the lesson
+      s.pregnant = null;
+
+      const chance = FB.chance;
+      const picker = FB.pickDailyEvents;
+      FB.chance = function () { return false; };
+      FB.pickDailyEvents = function () { return []; };
+      FB.game.passDay();
+      const tutorialPregnancy = s.pregnant && {
+        motherId:s.pregnant.motherId,
+        fatherId:s.pregnant.fatherId,
+        days:s.pregnant.due - s.turn
+      };
+
+      s.pregnant = null;
+      delete p.flags.tutorial;
+      p.marriedAt = s.turn - FBDATA.balance.tutorialConceptionPityDays;
+      FB.game.passDay();
+      const ordinaryPregnancy = !!s.pregnant;
+      FB.chance = chance;
+      FB.pickDailyEvents = picker;
+      return {
+        tutorialPregnancy:tutorialPregnancy,
+        ordinaryPregnancy:ordinaryPregnancy,
+        parents:[me.id, spouse.id]
+      };
+    });
+    expect(result.tutorialPregnancy).not.toBeNull();
+    expect(result.tutorialPregnancy.days).toBe(270);
+    expect(result.parents).toContain(result.tutorialPregnancy.motherId);
+    expect(result.parents).toContain(result.tutorialPregnancy.fatherId);
+    expect(result.ordinaryPregnancy).toBe(false);
+  });
+
+test('polygynous guidance completes the first wedding and makes later marriages optional',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player, me = s.chars[p.charId];
+      me.sex = 'm';
+      me.religion = 'norse_pagan';
+      me.childrenIds = [];
+      p.flags.tutorial = 1;
+      p.flags.tut_track_first_steps = 1;
+      p.flags.tut_family_guidance_started = 1;
+      p.flags.tut_kin_tab = 1;
+      delete p.flags.tut_track_family_legacy;
+      FB.game.uiPrefs.hideTips = false;
+      FB.game.uiPrefs.hideBeginnerHints = false;
+      FB.game.uiPrefs.tipsGrandfathered = false;
+      FB.game.uiPrefs.tipsSeen = FB.game.uiPrefs.tipsSeen || {};
+      delete FB.game.uiPrefs.tipsSeen['family-marriage-doctrine'];
+
+      function wed(name) {
+        const spouse = FB.makeCharacter(s, {
+          name:name, sex:'f', culture:me.culture,
+          religion:me.religion, born:s.date.year - 20,
+          station:FB.playerStation(s), traitsN:0
+        });
+        p.courtingId = spouse.id;
+        p.flags.courting = 1;
+        return FB.doMarry(s, { settleDowry:false });
+      }
+      s.turn = 40;
+      const first = wed('First Wife');
+      const firstAnchor = p.flags.tut_family_married_at;
+      s.turn = 65;
+      const second = wed('Second Wife');
+      const status = FB.tutorialStatus(s);
+      const action = FB.instantStatus(s, 'seek_match').action;
+      const label = FB.ui._shared.actionLabel(s, 'seek_match', action);
+      const desc = action.desc(s);
+      const tip = FB.ui.maybeAdditionalMarriageTip();
+      FB.ui.refresh();
+      return {
+        first:first, second:second,
+        spouseCount:FB.spousesOf(s, me).length,
+        doctrineLimit:FB.marriageDoctrine(me.religion, s).spouseLimit.m,
+        firstAnchor:firstAnchor,
+        anchorAfterSecond:p.flags.tut_family_married_at,
+        latestWedding:p.marriedAt,
+        track:status.track,
+        steps:status.steps,
+        label:label, desc:desc, tip:tip
+      };
+    });
+    expect(result.first).toBe(true);
+    expect(result.second).toBe(true);
+    expect(result.spouseCount).toBe(2);
+    expect(result.doctrineLimit).toBe(3);
+    expect(result.firstAnchor).toBe(40);
+    expect(result.anchorAfterSecond).toBe(40);
+    expect(result.latestWedding).toBe(65);
+    expect(result.track.note).toContain('up to 3 spouses');
+    expect(result.track.note).toContain('additional marriages are optional');
+    expect(result.steps[1]).toEqual({
+      id:'wed', label:'Wed your first spouse', done:true
+    });
+    expect(result.label).toBe('💍 Seek an additional spouse…');
+    expect(result.desc).toContain('2 of 3 spouse places are filled');
+    expect(result.tip).toBe(true);
+    await expect(page.locator('.coachmark')).toContainText(
+      'Your faith permits up to 3 spouses');
+    await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
+      .toHaveClass(/coachmark-lit/);
+  });
+
+test('a refused first proposal explains the next search and its cooldown',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player;
+      p.flags.tutorial = 1;
+      p.flags.tut_track_first_steps = 1;
+      p.flags.tut_family_guidance_started = 1;
+      p.flags.tut_kin_tab = 1;
+      const proposal = FBDATA.events.filter(function (event) {
+        return event.id === 'proposal_made';
+      })[0];
+      FB.applyEffects(s, proposal.options[0].failure.effects);
+      p.cooldowns.seek_match = s.turn;
+      const waiting = FB.instantStatus(s, 'seek_match');
+      const waitingLabel = FB.ui._shared.actionLabel(
+        s, 'seek_match', waiting.action);
+      const waitingNote = FB.tutorialStatus(s).track.note;
+      s.turn += FB.marriageProspectRefreshDays();
+      const ready = FB.instantStatus(s, 'seek_match');
+      return {
+        waitingCan:waiting.can,
+        waitingReason:waiting.reason,
+        waitingLabel:waitingLabel,
+        waitingNote:waitingNote,
+        readyCan:ready.can,
+        readyLabel:FB.ui._shared.actionLabel(s, 'seek_match', ready.action),
+        readyNote:FB.tutorialStatus(s).track.note
+      };
+    });
+    expect(result.waitingCan).toBe(false);
+    expect(result.waitingReason).toContain('proposal was refused');
+    expect(result.waitingReason).toContain('30 days');
+    expect(result.waitingLabel).toBe('💍 Seek another match…');
+    expect(result.waitingNote).toBe(result.waitingReason);
+    expect(result.readyCan).toBe(true);
+    expect(result.readyLabel).toBe('💍 Seek another match…');
+    expect(result.readyNote).toContain('Seek another match');
+  });
+
+test('unfinished work guidance follows a minor child and points succession at Chronicle',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player, old = s.chars[p.charId];
+      FB.ui.coachmarkReset();
+      FB.game.uiPrefs.hideTips = false;
+      FB.game.uiPrefs.hideBeginnerHints = false;
+      FB.game.uiPrefs.tipsGrandfathered = false;
+      FB.game.uiPrefs.tipsSeen = FB.game.uiPrefs.tipsSeen || {};
+      delete FB.game.uiPrefs.tipsSeen.succession;
+      p.flags.tutorial = 1;
+      delete p.flags.tutorial_done;
+      p.flags.tut_track_first_steps = 1;
+      p.flags.tut_track_family_legacy = 1;
+      p.tier = 0;
+      p.enterpriseMigration = 1;
+      p.enterprises = [{
+        uid:'tutorial_inherited_enterprise',
+        type:Object.keys(FBDATA.enterprises)[0],
+        provinceId:p.provinceId, settlement:0, workerId:null
+      }];
+      p.landPlotMigration = 1;
+      p.landPlots = [];
+
+      const child = FB.makeCharacter(s, {
+        name:'Young Successor', sex:old.sex,
+        culture:old.culture, religion:old.religion,
+        born:s.date.year - 8, dyn:old.dyn, traitsN:0,
+        fatherId:old.sex === 'm' ? old.id : null,
+        motherId:old.sex === 'f' ? old.id : null
+      });
+      old.childrenIds.push(child.id);
+      old.dead = true;
+      p.dead = true;
+      FB.game.succeedTo(child.id);
+      const status = FB.tutorialStatus(s);
+      return {
+        active:FB.tutorialActive(s),
+        child:!!p.flags.tut_successor_child,
+        relative:!!p.flags.tut_successor_relative,
+        track:status && status.track,
+        steps:status && status.steps
+      };
+    });
+    expect(result.active).toBe(true);
+    expect(result.child).toBe(true);
+    expect(result.relative).toBe(false);
+    expect(result.track.id).toBe('making_a_living');
+    expect(result.track.note).toContain('previous head’s child');
+    expect(result.track.note).toContain('adult deeds unlock at age 16');
+    expect(result.steps.map(function (step) { return step.label; })).toEqual([
+      'Come of age and take up a livelihood',
+      'Start or continue a household enterprise',
+      'Come of age, buy your freedom, then acquire land'
+    ]);
+    expect(result.steps[1].done).toBe(true);
+    await expect(page.locator('.coachmark')).toContainText(
+      'chronicle continues through your child');
+    await expect(page.locator('#sidetabs .tab[data-tab="log"]'))
+      .toHaveClass(/coachmark-lit/);
+    await expect(page.locator('.coachmark')).toHaveClass(/over-map/);
+  });
+
+test('unfinished work guidance identifies an adult collateral successor',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state, p = s.player, old = s.chars[p.charId];
+      FB.ui.coachmarkReset();
+      FB.game.uiPrefs.hideTips = false;
+      FB.game.uiPrefs.hideBeginnerHints = false;
+      FB.game.uiPrefs.tipsGrandfathered = false;
+      FB.game.uiPrefs.tipsSeen = FB.game.uiPrefs.tipsSeen || {};
+      delete FB.game.uiPrefs.tipsSeen.succession;
+      p.flags.tutorial = 1;
+      delete p.flags.tutorial_done;
+      p.flags.tut_track_first_steps = 1;
+      p.flags.tut_track_family_legacy = 1;
+      p.tier = 1;
+      p.enterpriseMigration = 1;
+      p.enterprises = [];
+      p.landPlotMigration = 1;
+      p.landPlots = [];
+
+      const relative = FB.makeCharacter(s, {
+        name:'Collateral Successor', sex:old.sex,
+        culture:old.culture, religion:old.religion,
+        born:s.date.year - 24, dyn:old.dyn, traitsN:0
+      });
+      old.dead = true;
+      p.dead = true;
+      FB.game.succeedTo(relative.id);
+      const status = FB.tutorialStatus(s);
+      return {
+        child:!!p.flags.tut_successor_child,
+        relative:!!p.flags.tut_successor_relative,
+        track:status && status.track,
+        steps:status && status.steps
+      };
+    });
+    expect(result.child).toBe(false);
+    expect(result.relative).toBe(true);
+    expect(result.track.id).toBe('making_a_living');
+    expect(result.track.note).toContain('play as a relative');
+    expect(result.steps.map(function (step) { return step.label; })).toEqual([
+      'Continue or take up a livelihood',
+      'Start or continue a household enterprise',
+      'Buy your first land plot'
+    ]);
+    await expect(page.locator('.coachmark')).toContainText(
+      'chronicle continues through a relative');
   });
 
 test('landed rulers skip the livelihood track',

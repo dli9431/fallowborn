@@ -1216,7 +1216,13 @@ FBDATA.balance = {
   taxPerDev: 1.5, levyPerDev: 90,
   levyPerMartial: 0.02, // player levy grows this fraction per point of martial
   serfWage: [1,3], freeWage: [2,5], manorIncome: [5,9],
-  childChance: 0.13, mortalityBase: 0.012,
+  childChance: 0.13,
+  /* A first-profile tutorial should demonstrate succession without making a
+     player wait through years of ordinary conception variance. While its
+     Family & legacy chapter is awaiting the first child, conception uses at
+     least this seasonal chance and succeeds after the bounded grace period. */
+  tutorialChildChance: 0.65, tutorialConceptionPityDays: 90,
+  mortalityBase: 0.012,
   careerExamBaseChance:0.55, careerExamLearningBonus:0.04,
   careerExamSkillBonus:0.02, careerExamMaxChance:0.90,
   careerExamCooldownDays:360, learnedPractitionerMortality:0.002,

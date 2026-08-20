@@ -6,8 +6,9 @@
    FB.tutorialCheck: tut_welcome a couple of days into the life, tut_legacy
    when Family & legacy completes through play (an already-established
    marriage silently skips it), and tut_livelihood when the lower-rank
-   Making-a-living track completes. Once per life; the stage flags live in player.flags and die with
-   the protagonist like all life-local flags, so an heir starts clean. Options
+   Making-a-living track completes. Once per first campaign; unfinished stage
+   flags follow the household through succession while other life-local flags
+   reset, so a child or collateral heir resumes the remaining lesson. Options
    are small and all-positive so autoresolve scores them sanely. See
    docs/designs/events.md. */
 window.FBDATA = window.FBDATA || {};

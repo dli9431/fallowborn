@@ -146,7 +146,15 @@ test('the map sequence comes first and Making a living waits for Family & legacy
       const s = FB.state;
       const me = s.chars[s.player.charId];
       s.player.flags.tut_kin_tab = 1;
-      me.spouseId = me.spouseId || 'spec_spouse';
+      if (!me.spouseId) {
+        const spouse = FB.makeCharacter(s, {
+          name:'Spec Spouse', sex:me.sex === 'f' ? 'm' : 'f',
+          culture:me.culture, religion:me.religion,
+          born:s.date.year - 20, traitsN:0
+        });
+        me.spouseId = spouse.id;
+        spouse.spouseId = me.id;
+      }
       me.childrenIds.push('spec_child');
       FB.tutorialCheck(s);
     });
@@ -222,9 +230,7 @@ test('compact layouts teach the map before Self through the portrait',
     await expect(page.locator('#lefttabs')).not.toBeVisible();
     await page.locator('#tb-portrait').click();
     await expect(page.locator('body')).toHaveClass(/showself/);
-    await self.getByRole('button', { name:'Got it', exact:true }).click();
-
-    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    await expect(self).toHaveCount(0);
     await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
       .toHaveCount(0);
   });
@@ -318,6 +324,7 @@ test('an established marriage silently skips Family & legacy guidance',
     await page.evaluate(function () {
       const s = FB.state;
       const me = s.chars[s.player.charId];
+      me.religion = 'norse_pagan';
       const spouse = FB.makeCharacter(s, {
         sex:me.sex === 'm' ? 'f' : 'm',
         culture:me.culture,
@@ -467,6 +474,15 @@ test('a coachmark points, survives refresh, and stills running days',
       return { days:FB.state.turn - turn, fastForwarding:FB.game.fastForwarding };
     });
     expect(held).toEqual({ days:0, fastForwarding:false });
+
+    const used = await page.evaluate(function () {
+      document.getElementById('btn-skip').click();
+      return {
+        coachmark:FB.ui.coachmarkOpen(),
+        fastForwarding:FB.game.fastForwarding
+      };
+    });
+    expect(used).toEqual({ coachmark:false, fastForwarding:true });
   });
 
 test('desktop panel coachmarks place their cards over the map',

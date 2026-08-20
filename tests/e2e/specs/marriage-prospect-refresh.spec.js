@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'data/bookmarks.js',
   'data/cultures.js',
   'data/map_data.js',
@@ -259,17 +260,38 @@ test('Seek a match draws culture-faith identities from the current county and ra
       'These prospects reflect the cultures and faiths of Dublin; local traditions may mix within one household.',
       { exact:true }
     )).toBeVisible();
-    await expect(page.locator('[data-suitor]').nth(0)).toContainText(
+    await expect(page.locator('[data-suitor-card]').nth(0)
+      .locator('.settcard-meta')).toContainText(
       'Norse · Norse Paganism');
-    await expect(page.locator('[data-suitor]').nth(1)).toContainText(
+    await expect(page.locator('[data-suitor-card]').nth(1)
+      .locator('.settcard-meta')).toContainText(
       'Gaelic · Latin Christianity');
-    await expect(page.locator('[data-suitor]').nth(2)).toContainText(
+    await expect(page.locator('[data-suitor-card]').nth(2)
+      .locator('.settcard-meta')).toContainText(
       result.candidates[2].identity === 'norse.catholic'
         ? 'Norse · Latin Christianity'
         : 'Gaelic · Norse Paganism');
-    await expect(page.locator('[data-suitor]').nth(1)).toContainText(
-      'proposal requires +' +
+    const peerCard = page.locator('[data-suitor-card]').nth(1);
+    await expect(peerCard.locator('.suitor-essentials')).toContainText(
+      'Requires +' +
       (result.base + result.culturePremium + result.faithPremium) + ' Standing');
+    await expect(peerCard.locator('.settcard-info')).toHaveAttribute(
+      'aria-controls', /suitor-details-/);
+    await expect(peerCard.locator('.settcard-details')).toHaveClass(/hidden/);
+    await expect(peerCard.locator('.settcard-details'))
+      .toContainText(/fertility|Past childbearing/);
+    await expect(peerCard.locator('[data-suitor]')).toHaveText('Meet');
+    await page.setViewportSize({ width:390, height:740 });
+    await expect(peerCard.locator('.settcard-info')).toBeVisible();
+    expect(await peerCard.locator('.settcard-actions .btn').evaluateAll(
+      function (buttons) {
+        return buttons.every(function (button) {
+          const box = button.getBoundingClientRect();
+          return box.width >= 44 && box.height >= 44;
+        });
+      })).toBe(true);
+    await peerCard.locator('.settcard-info').click();
+    await expect(peerCard.locator('.settcard-details')).toBeVisible();
   });
 
 test('age forty adds a fourth adult prospect without capping older age bands',
@@ -318,7 +340,7 @@ test('age forty adds a fourth adult prospect without capping older age bands',
     await page.evaluate(function () {
       FB.ui.showSuitorPicker();
     });
-    await expect(page.locator('[data-suitor]')).toHaveCount(4);
+    await expect(page.locator('[data-suitor-card]')).toHaveCount(4);
     await expect(page.getByText(
       'Kin and gossips name 4 people who would hear your suit:',
       { exact:true }
