@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/save.js',
   'js/population.js',
   'js/world.js',
   'js/ui_panels.js',
@@ -15,6 +16,7 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { unlockStartTier } = require('../support/game/start');
 
 const EXPECTED = {
   '867':{
@@ -169,6 +171,7 @@ const EXPECTED = {
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  await unlockStartTier(page, 1);
 });
 
 async function useStartCode(page, code) {
@@ -531,4 +534,3 @@ test('1066 Granada provides Andalusi, Berber, and Iberian community options',
     await expect(page.locator('#cg-community')).toContainText('Berber');
     await expect(page.locator('#cg-community')).toContainText('Iberian');
   });
-

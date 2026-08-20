@@ -7,6 +7,8 @@ window.FB = window.FB || {};
   const S = {};
   FB.save = S;
   const PREFIX = 'fb_';
+  const START_PROGRESSION_KEY = PREFIX + 'progression';
+  const HIGHEST_START_TIER = 3;
   let serializingBuildingRecords = null;
   const ROYAL_COMPACT_KEYS = {
     id:1, childIds:1, alive:1, role:1, parentId:1, charId:1
@@ -33,6 +35,125 @@ window.FB = window.FB || {};
   function own(o, key) {
     return Object.prototype.hasOwnProperty.call(o, key);
   }
+
+  /* Starting-station unlocks belong to the browser profile, not to any one
+     dynasty. They therefore survive replacing save slots without entering
+     FB.state, the deterministic start code, or the save-format contract. A
+     blocked localStorage still gets page-lifetime progression in memory. */
+  function normalizeStartProgression(value) {
+    let tier = value && Number(value.highestAchievedTier);
+    if (!isFinite(tier)) tier = 0;
+    return {
+      v:1,
+      highestAchievedTier:Math.max(0, Math.min(7, Math.floor(tier)))
+    };
+  }
+
+  function readStartProgression() {
+    try {
+      const raw = localStorage.getItem(START_PROGRESSION_KEY);
+      return normalizeStartProgression(raw ? JSON.parse(raw) : null);
+    } catch (e) {
+      return normalizeStartProgression(null);
+    }
+  }
+
+  let startProgression = readStartProgression();
+
+  window.addEventListener('storage', function (event) {
+    if (event.key !== START_PROGRESSION_KEY) return;
+    try {
+      startProgression = normalizeStartProgression(
+        event.newValue ? JSON.parse(event.newValue) : null);
+    } catch (e) {
+      startProgression = normalizeStartProgression(null);
+    }
+  });
+
+  function writeStartProgression() {
+    try {
+      localStorage.setItem(START_PROGRESSION_KEY,
+        JSON.stringify(startProgression));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  const SP = {};
+  FB.startProgression = SP;
+  SP.snapshot = function () {
+    return {
+      v:startProgression.v,
+      highestAchievedTier:startProgression.highestAchievedTier,
+      highestStartTier:Math.min(HIGHEST_START_TIER,
+        startProgression.highestAchievedTier)
+    };
+  };
+  SP.isTierUnlocked = function (tier) {
+    tier = Math.max(0, Math.min(HIGHEST_START_TIER,
+      Math.floor(Number(tier) || 0)));
+    return tier <= startProgression.highestAchievedTier;
+  };
+  SP.noteTier = function (tier) {
+    tier = Math.max(0, Math.min(7, Math.floor(Number(tier) || 0)));
+    const stored = readStartProgression();
+    if (stored.highestAchievedTier > startProgression.highestAchievedTier) {
+      startProgression = stored;
+    }
+    const previous = startProgression.highestAchievedTier;
+    if (tier <= previous) {
+      return {
+        changed:false, startsChanged:false, previous:previous, tier:previous
+      };
+    }
+    const previousStart = Math.min(HIGHEST_START_TIER, previous);
+    startProgression.highestAchievedTier = tier;
+    writeStartProgression();
+    return {
+      changed:true,
+      startsChanged:Math.min(HIGHEST_START_TIER, tier) > previousStart,
+      previous:previous,
+      tier:tier
+    };
+  };
+  SP.reset = function () {
+    startProgression = normalizeStartProgression(null);
+    try {
+      localStorage.removeItem(START_PROGRESSION_KEY);
+    } catch (e) { /* memory only */ }
+    return SP.snapshot();
+  };
+
+  function scenarioIdFromStart(state) {
+    if (!state || typeof state.seed !== 'string') return null;
+    const parts = state.seed.split('-');
+    if (parts.length === 5) return parts[1].toLowerCase();
+    if (parts.length >= 6) return parts[2].toLowerCase();
+    return null;
+  }
+
+  function scenarioStartTier(state) {
+    const id = scenarioIdFromStart(state);
+    const scenarios = FB.game && FB.game.SCENARIOS;
+    if (!id || !Array.isArray(scenarios)) return null;
+    for (let i = 0; i < scenarios.length; i++) {
+      if (scenarios[i].id === id) return scenarios[i].tier;
+    }
+    return null;
+  }
+
+  /* A restored pre-unlock life can prove an earned rise, but its selected
+     beginning cannot. Comparing the saved peak with the scenario's authored
+     starting tier preserves that distinction without changing old saves. */
+  SP.creditEarnedState = function (state) {
+    const startedAt = scenarioStartTier(state);
+    if (startedAt === null || !state || !state.player) return false;
+    const peak = Math.max(Number(state.peakTier) || 0,
+      Number(state.player.tier) || 0);
+    if (peak <= startedAt) return false;
+    return SP.noteTier(peak).changed;
+  };
 
   function royalMemberRecord(o) {
     return !!(o && typeof o.id === 'string' &&
@@ -697,6 +818,7 @@ window.FB = window.FB || {};
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
+    SP.creditEarnedState(FB.state);
     // the realm cache is keyed by state.turn, which two lives can share
     FB.invalidateRealmCache();
     /* Faith definitions are an additive version-3 field. Old lives begin

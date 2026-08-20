@@ -1298,6 +1298,25 @@ window.FB = window.FB || {};
       intro: 'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
   ];
 
+  const START_TIER_NAMES = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
+
+  function scenarioUnlocked(scenario) {
+    return !!scenario && (!FB.startProgression ||
+      FB.startProgression.isTierUnlocked(scenario.tier));
+  }
+
+  function scenarioUnlockText(scenario, startCode) {
+    const station = FB.T(START_TIER_NAMES[Math.min(3, scenario.tier)] || 'Baron');
+    if (startCode) {
+      return FB.T(
+        'That beginning is locked. Reach {station} in any life to use this start code.',
+        { station:station });
+    }
+    return FB.T('Reach {station} in any life to unlock this beginning.', {
+      station:station
+    });
+  }
+
   /* Starting-family presets: a small authored set of age/household shapes,
      picked on the character screen and carried in the start code's optional
      seventh part. 'standard' must stay exactly the historical start, so every
@@ -1593,6 +1612,10 @@ window.FB = window.FB || {};
     function useSeed() {
       const r = parseSeedInput($('ng-seed').value);
       if (r.error) { $('ng-seed-err').textContent = FB.T(r.error); return; }
+      if (r.scenario && !scenarioUnlocked(r.scenario)) {
+        $('ng-seed-err').textContent = scenarioUnlockText(r.scenario, true);
+        return;
+      }
       FB.ui.closeModal();
       if (r.scenario) { // a full start code: straight to the pre-filled details
         G.pending = {
@@ -1680,20 +1703,28 @@ window.FB = window.FB || {};
     box.innerHTML = '';
     for (const sc of G.SCENARIOS) {
       const el = document.createElement('button');
-      el.className = 'scencard';
-      el.innerHTML = '<h3>' + FB.esc(FB.L(sc.name)) + '</h3><div class="diff">' +
-        FB.esc(FB.L(sc.diff)) + '</div><p>' + FB.esc(FB.L(sc.desc)) + '</p>';
-      (function (scenario) {
-        el.addEventListener('click', function () {
-          G.pending = {
-            seed:G.pending && G.pending.seed,
-            bookmarkId:bookmark.id,
-            scenario:scenario,
-            provinceId:null
-          };
-          showPickProv();
-        });
-      })(sc);
+      const locked = !scenarioUnlocked(sc);
+      el.type = 'button';
+      el.className = 'scencard' + (locked ? ' locked' : '');
+      if (locked) el.setAttribute('aria-disabled', 'true');
+      el.innerHTML = '<h3>' + (locked ? '🔒 ' : '') + FB.esc(FB.L(sc.name)) +
+        '</h3><div class="diff">' + FB.esc(FB.L(sc.diff)) + '</div><p>' +
+        FB.esc(FB.L(sc.desc)) + '</p>' + (locked
+          ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
+          : '');
+      if (!locked) {
+        (function (scenario) {
+          el.addEventListener('click', function () {
+            G.pending = {
+              seed:G.pending && G.pending.seed,
+              bookmarkId:bookmark.id,
+              scenario:scenario,
+              provinceId:null
+            };
+            showPickProv();
+          });
+        })(sc);
+      }
       box.appendChild(el);
     }
     // observe mode: no province, no character — just a world to watch
@@ -1953,6 +1984,11 @@ window.FB = window.FB || {};
   G.start = function () {
     G.observe = false;
     document.body.classList.remove('observing');
+    const sc = G.pending && G.pending.scenario;
+    if (!scenarioUnlocked(sc)) {
+      showScenarios();
+      return false;
+    }
     // re-seed before politics and characters draw on the RNG, so anyone holding
     // the same seed and making the same picks gets this exact start
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
@@ -1962,7 +1998,6 @@ window.FB = window.FB || {};
       id:bookmark.id, year:bookmark.date.year,
       season:bookmark.date.season, day:bookmark.date.day
     };
-    const sc = G.pending.scenario;
     const provId = G.pending.provinceId;
     const pr = FB.world.byId[provId];
     const settIdx = clampSettlementIdx(provId, G.pending.settlementIdx);

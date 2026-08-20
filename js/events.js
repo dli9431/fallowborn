@@ -3779,6 +3779,16 @@ window.FB = window.FB || {};
     const oldRole = FB.societalRole(oldTier);
     const newRole = FB.societalRole(tier);
     p.tier = tier;
+    if (tier > oldTier && FB.startProgression) {
+      const unlocked = FB.startProgression.noteTier(tier);
+      if (unlocked.startsChanged && FB.ui) {
+        const names = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
+        const unlockedTier = Math.min(3, tier);
+        FB.ui.toast('🔓 New beginnings unlocked through {station}.', {
+          station:FB.T(names[unlockedTier])
+        });
+      }
+    }
     if (oldTier === 2 && tier !== 2 && p.militaryCommand) {
       delete p.militaryCommand;
     }

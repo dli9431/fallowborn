@@ -4,7 +4,17 @@ const { expect } = require('../fixture');
 
 const START_CODE = 'CADENCE-867-farmer-london-f-Ada';
 
+async function unlockStartTier(page, tier) {
+  await page.evaluate(function (wantedTier) {
+    FB.startProgression.noteTier(wantedTier);
+  }, tier);
+}
+
 async function startDeterministicGame(page) {
+  /* CADENCE intentionally remains the long-standing Free Farmer fixture.
+     New-player locking has its own focused coverage; established journeys
+     explicitly grant the fixture's earned station before using its code. */
+  await unlockStartTier(page, 1);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await expect(page.getByRole('heading', { name:'New Game', exact:true })).toBeVisible();
   const seedInput = page.locator('#ng-seed');
@@ -56,5 +66,6 @@ async function startDeterministicGame(page) {
 
 module.exports = {
   START_CODE:START_CODE,
+  unlockStartTier:unlockStartTier,
   startDeterministicGame:startDeterministicGame
 };
