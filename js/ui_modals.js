@@ -781,6 +781,11 @@ window.FB = window.FB || {};
       pendingEvents = [];
     }
     nextEvent();
+    if (UI.maybeTip) {
+      UI.maybeTip('first-event-result',
+        '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
+        '#toasts', { noNext:true });
+    }
   }
 
   UI.eventsBusy = function () { return eventOpen; };
@@ -7724,7 +7729,6 @@ window.FB = window.FB || {};
     if (!ctx) return false;
     s.player.cooldowns = s.player.cooldowns || {};
     s.player.cooldowns.petition_monopoly = s.turn;
-    if (s.player.flags) s.player.flags.tut_deed = 1;
     UI.closeModal();
     FB.queueEvent(s, 'guild_monopoly_petition', ctx);
     if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus:true });
@@ -20782,7 +20786,7 @@ window.FB = window.FB || {};
       '<label class="autorow"><input type="checkbox" id="set-hide-tips"' +
       (G.uiPrefs.hideTips ? ' checked' : '') + '> <b>' +
       esc(FB.T('Disable first-time tips')) + '</b><span class="adesc">' +
-      esc(FB.T('Stop the short day-by-day and situational tips shown to brand-new players. The guide-hints switch above also silences them.')) +
+      esc(FB.T('Stop the short action-first and situational tips shown to brand-new players. The guide-hints switch above also silences them.')) +
       '</span></label>';
     h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
       esc(FB.T('Beginnings')) + '</p></div><div class="autorow"><b>' +
@@ -20924,11 +20928,25 @@ window.FB = window.FB || {};
     $('set-hide-beginner-hints').addEventListener('change', function () {
       G.uiPrefs.hideBeginnerHints = $('set-hide-beginner-hints').checked;
       G.saveUiPrefs();
+      if (G.uiPrefs.hideBeginnerHints) {
+        if (UI.coachmarkReset) UI.coachmarkReset();
+        if (FB.trackTelemetry) FB.trackTelemetry('tips-disabled', {
+          hint_id:'all', hint_kind:'guide',
+          disable_scope:'guide-hints', disable_source:'settings'
+        });
+      }
       if (FB.state && !G.observe) UI.refresh();
     });
     $('set-hide-tips').addEventListener('change', function () {
       G.uiPrefs.hideTips = $('set-hide-tips').checked;
       G.saveUiPrefs();
+      if (G.uiPrefs.hideTips) {
+        if (UI.coachmarkReset) UI.coachmarkReset();
+        if (FB.trackTelemetry) FB.trackTelemetry('tips-disabled', {
+          hint_id:'all', hint_kind:'first-time',
+          disable_scope:'first-time', disable_source:'settings'
+        });
+      }
     });
     if ($('set-shortcuts')) {
       $('set-shortcuts').addEventListener('click', UI.showShortcutSettings);
@@ -21359,6 +21377,7 @@ window.FB = window.FB || {};
       FB.T('Focuses continue; deeds happen once; time stops for choices.'),
       guideBody([
         FB.T('A focus repeats each day until changed. A deed is a one-shot act and normally spends the day. Events pause time until you choose.'),
+        FB.T('In Deeds, border colors distinguish immediate actions from actions that open choices. Hover or focus an action for its details; on touch screens, use ?. Opening a choice does not commit the deed; confirm the final action to complete it.'),
         FB.T('Space plays or pauses time; F skips to the next happening. On touch screens the same controls are in the top bar.')
       ]), 'focus deed actions pause skip time keyboard mobile');
 

@@ -86,7 +86,10 @@ The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily 
 `2`–`6` select Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War &
 Diplomacy respectively. Selection opens a closed category, scrolls its heading to the top of
 the panel, focuses and highlights it, and assigns `Q W E / A S D / Z X C` to its first nine
-rendered focuses or deeds. If a section extends beyond nine items, subsequent items are
+rendered focuses or deeds. Daily Focus is the active section by default when a life opens on
+desktop, so its letter badges and shortcuts are present from the panel's first render rather
+than appearing after the first click. Touch layouts have no default keyboard section. If a
+section extends beyond nine items, subsequent items are
 assigned `Shift+Q, Shift+W, Shift+E, Shift+A, Shift+S, Shift+D, Shift+Z, Shift+X, Shift+C`
 (items 10–18). Only the active section shows these letter badges. These local
 letters take precedence over panel, time, autoresolve, and configurable semantic shortcuts
@@ -133,6 +136,10 @@ inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of th
 switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
 `css/style.css` is the CSS half; event-choice stakes follow the same rule with their
 `.event-details-button`.
+One-time deed rows use this convention too: the card face keeps only the enlarged action
+name, with gold, green, or blue-green border accents distinguishing day-spending immediate,
+choice-backed, and no-day immediate actions. Timing and descriptive copy live together in
+the hidden details, exposed through the desktop side tooltip or compact-layout `?`.
 
 **Responsive layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). From the 821 px desktop breakpoint through 1440 px, the
@@ -702,21 +709,35 @@ The promotion-path note is new-player guidance rather than a mechanic. Settings 
 a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the
 whole beginner-guidance layer: the path note, tutorial checklist and scripted tutorial
-chain, tab nudges, initial map tip, empty-state
+chain, tab nudges, first-player map tip, empty-state
 guidance lines, stat teaching lines, the contextual one-line hints below, and the
 first-time tips further below. The complete Guide remains available from the menu.
 
-New lives created from this version on carry `player.flags.tutorial` and a
-`startGold` baseline, which put a dismissible tutorial checklist at the top of the
-Deeds panel. The checklist is staged in tracks (`TUTORIAL_TRACKS` in `js/main.js`),
-and the first eligible unfinished track shows: **First steps** (set a daily focus,
-let the days flow, complete a deed, answer an event, earn your first coin),
+Only the first life begun by a fresh browser profile carries
+`player.flags.tutorial`, which puts a dismissible tutorial
+checklist at the top of the Deeds panel. `uiPrefs.onboardingStarted` records that the
+checklist was offered; profiles that already hold a save when this preference first
+appears are grandfathered out. The checklist is staged in tracks (`TUTORIAL_TRACKS`
+in `js/main.js`), and the first eligible unfinished track shows: **First steps**
+(complete a one-time deed rather than merely changing Daily Focus, let the days flow,
+answer an event),
+**Family & legacy** (open the Kin tab, wed a spouse, welcome a child), then
 **Making a living** (tier 0–2 only: take up a livelihood, start an enterprise, buy
-a land plot), and **Family & legacy** (open the Kin tab, wed a spouse, welcome a
-child). Step state comes from `FB.tutorialStatus` (live state plus one-time flags
-written at each action's single choke point: `G.setPaused`, `FB.runInstant`, the
-event-option handler, `setTab`). `FB.tutorialCheck` runs from the coalesced
+a land plot). Landed ranks skip Making a living and finish with the family track.
+Step state comes from `FB.tutorialStatus` (live state plus one-time flags
+written at each action's single choke point: `G.setPaused`, direct
+`FB.runInstant` resolution or `G.passDay({skipFocus:true})`, the event-option handler,
+`setTab`). Direct deeds stamp completion as soon as their action resolves; picker-backed
+deeds stamp only when a confirmed choice actually spends the day. Opening and cancelling a
+picker therefore never completes the lesson. Tutorial
+lives saved before that shared stamp also accept a retained authored deed cooldown as
+read-only completion evidence. If an affected action left no cooldown, completing every
+other First steps outcome likewise repairs the stranded deed item; neither path requires
+replaying the deed.
+`FB.tutorialCheck` runs from the coalesced
 `UI.refresh` before the repaint, so a finished track disappears in that same frame.
+It does not stamp steps, show completion toasts, or launch chapters from a later track
+until the preceding track is complete, even when the player satisfied that goal early.
 Completion detection uses only state reads and no RNG; it toasts each completion
 once (`tut_seen_*` flags survive a hints-off phase), marks each finished track
 (`tut_track_*`) with a chronicle line, and retires the tutorial when every eligible
@@ -734,7 +755,7 @@ not queued.
 Around the checklist, the rest of the beginner layer for a tutorial life
 (`FB.tutorialLife` — the checklist was offered, finished or not): tab **nudge
 dots** mark the tab holding the next unfinished lesson (Deeds until the first deed,
-Kin until the first look); each topbar stat’s breakdown carries one teaching line,
+then Kin after First steps until the first look); each topbar stat’s breakdown carries one teaching line,
 served by the shared renderer to both the desktop hover tooltip and the mobile tap
 sheet; and the Kin and Network panels add a guidance line when they would otherwise
 be empty. (The older first-open **panel intro sheets** and tier/role **orientation
@@ -742,8 +763,8 @@ sheets** were retired in favor of the coachmark lessons below; their content liv
 on as Guide entries.)
 
 Contextual hints (`UI.hintDue` / `UI.maybeHint` in `ui_misc.js`) deliver a single
-one-line lesson the first time its moment arrives — time controls on the first
-unpause, "events pause time" inside the first event modal — each recorded as a
+one-line lesson the first time its moment arrives — for example, "events pause
+time" inside the first event modal — each recorded as a
 per-save `hint_*` flag so a life teaches it exactly once. The new-game intro modal
 keeps only the scenario flavor and a one-line pointer to the Deeds tab.
 
@@ -751,60 +772,70 @@ A lesson fired to the screen shows as a **coachmark** (`UI.coachmark` in
 `ui_misc.js`), not a toast: corner toasts faded before a lesson could be read,
 so each coachmark is a tooltip anchored to the button or area it teaches (the
 time buttons, a tab, a topbar stat, the map), with that target lit by a pulsing
-outline. The player moves on with **Got it** (bottom-left), pages forward with
-**Next**, or rewinds with **Back** (the pair grouped bottom-right, Back left of
-Next); the final stop (the corner-notes lesson) drops Next and keeps Back
-beside one right-side Got it. Back rides on every lesson that has a stop behind
-it: the tour runs from the map lesson (stop zero) through the drip sequence,
-and a lesson outside the sequence (a contextual tip) borrows the tour's current
-position. Next stays shut until the lit control has had its touch (any tap or
-click inside it counts, keyboard activation included), so paging walks the
-interface for real; lessons with no safe touch (the pace of days: unpausing
-could pop an event mid-tour) are marked `freeNext` and skip the gate. A lesson
-can also widen what counts as the touch: `touchAlso` names a second control
-whose use counts — the Deeds and Self panes are open by default, so scrolling
-or tapping the pane arms Next without a tab tap — and `touchHover` counts the
-pointer moving over the lit control, for the top bar whose stat breakdowns
-show on hover. Paging
-and rewinding walk the orientation sequence positionally: a first showing
-records through the usual once-ever path (so the daily drip never re-teaches
-it), and a review showing records nothing. Nothing auto-fades, and only the
+outline. The player moves on with **Got it** or chooses **Stop tips** directly on
+the coachmark; using the highlighted control also counts as learning the tip.
+First-time tips are persisted only at one of those acknowledgement points, not
+when they are queued, so leaving mid-prompt does not lose the lesson; Continue
+reconstructs the unfinished opening prompt from tutorial progress. Nothing
+auto-fades, and only the
 buttons take pointer input, so a waiting lesson never blocks the map or a panel
 beneath it. A popping lesson also pauses a running game on the spot (the day
-ticker re-checks right after its daily drip, and an F-skip burst breaks on the
-pause), so a fresh event modal cannot bury it mid-read. One coachmark shows at
+flow and an F-skip burst both respect that pause), so a fresh event modal cannot
+bury it mid-read. One coachmark shows at
 a time; later lessons queue behind it, and while an event or dialog holds the
 screen a fired lesson waits its turn (pumped by `UI.refresh` and the modal
 close path) rather than fighting the modal. A missing or hidden target drops
 the arrow and rests by the toast corner, except targets with a natural
 revealer: on small layouts the Self/Kin tabs live in a drawer that a portrait
 tap exposes, so their lessons point at the topbar portrait instead
-(`COACH_ALT_TARGETS`), and paging or rewinding closes the full-screen drawer
-only when the next stop lives outside it (Self → Kin keeps it open, the lit
-tab exposed). The menu lessons (controls and guide, the ones anchored to ☰)
-cannot live under the menu sheet, which covers the whole screen on small
-layouts: when the sheet opens, the lesson re-presents above it at its own spot
-there (`overTarget`: the ⚙ Settings button or the ❓ How to play button), with
-its own over-sheet wording when one is authored (`overText`) and a free Next.
-The sheet closes when the tour steps outside it — an open sheet would block
-the lesson it left for (menu lessons chain above the open sheet) — and
-rewinding to a menu lesson reopens the sheet. If the sheet closes first, the lesson re-anchors to the menu
-button. Only a truly tall area (the map) is pointed at near its top edge;
+(`COACH_ALT_TARGETS`). The Self lesson explicitly tells compact-layout players to tap
+that portrait, then closes the drawer before family guidance continues. Only a truly tall area
+(the map) is pointed at near its top edge;
+a lesson targeting either retained side panel places its card in the adjacent visible map
+space and points back with a side arrow (or an up/down arrow when the portrait layout stacks
+map and panel). This keeps the lesson from layering parchment over dense panel text. A
+full-screen Self/Kin drawer overlaps the map and therefore retains ordinary safe placement.
 a short full-width bar (the mobile time controls) gets the ordinary
 above-or-below placement, so the lesson never covers the controls. Screen
 switches retire any lesson in flight.
 
-First-time **player tips** (`UI.tipDue` / `UI.maybeTip` / `UI.dailyTip` in
-`ui_misc.js`) teach the interface itself to a brand-new player, once ever per
-install rather than once per save. A day-by-day drip of UI orientation (what each
-tab does, where saving and the day speed live) fires one tip per natural day from
-the day ticker — never during an F-skip burst, which does not pass through the
-ticker — and contextual one-liners fire from engine choke points the first time a
-situation occurs: the first wage, the first marriage offer, the first war declared
-on the player, the first child, the first land plot, the first burning of the home
-county, the first household hardship, and the first succession. Every tip
+First-time **player tips** (`UI.tipDue` / `UI.maybeTip` in `ui_misc.js`) teach a
+brand-new player once ever per install rather than once per save. The opening tips
+begin with the map before any other coachmark: map controls hand off in order to the **Home**
+button (recenter on the current home county) and **Map filters** (cycle realm, personal,
+liege, de jure, and war views); Continue resumes at the first unread lesson in this map
+sequence. The opening then follows the playable loop: do a one-time deed, let time pass,
+answer the queued welcome event, read its result, and review **Self**. On mobile and tablet
+layouts the Self lesson targets the always-visible portrait because the Self/Kin drawer tabs
+are hidden. Afterward, ranks 0–2 finish **Family & legacy** before unfinished
+**Making a living** steps hand off to
+**Work, training & enterprises…** for the first business, then to the rank-aware land
+route in **Rank & Realm**: serfs are shown **Buy your freedom**, while freeholders are
+shown **Buy a plot of land** directly. The lesson opens the owning Deeds section before
+anchoring its coachmark, waits for the enterprise objective to be completed before teaching
+land, skips an objective already completed, and Continue resumes at
+the first unread lesson. Family coachmarks, including the Kin-area lesson, remain gated
+until **First steps** is complete; the Kin panel's beginner courtship line follows the same
+gate. If Kin was opened early, its coachmark resumes once the gate clears instead of being
+lost. The Family & legacy handoff then begins when the player acknowledges
+the Kin-area lesson: it opens **Life & Family** and points to **Seek a match**, then sends an
+active courtship back to the Kin panel for personal attention. Once the authoritative
+proposal gate is ready, it opens **Life & Family** again and points directly to **Propose
+marriage**; it never advertises that action while it is hidden or unavailable.
+If the protagonist is already married when the family track first becomes eligible, all
+three family checklist items complete silently (without inventing a child or showing Kin,
+courtship, proposal, or legacy-event guidance) and the next eligible track takes over.
+Acknowledging the opening Deeds prompt immediately
+hands off to the Play controls with the instruction to unpause after choosing a deed;
+completing a day-consuming deed is a second trigger for that same once-only prompt.
+Kin, Land, Network, and Chronicle otherwise teach themselves only when the player first
+opens that area; Settings and the full Guide
+are not pushed into the opening. Other contextual one-liners fire from engine choke
+points the first time a situation occurs: the first wage, marriage offer, war
+declared on the player, child, land plot, burning of the home county, household
+hardship, and succession. Every tip
 carries the selector of the control or area it teaches and shows through the
-coachmark layer above. Fired tips are recorded in the browser-local
+coachmark layer above. Learned tips are recorded in the browser-local
 `uiPrefs.tipsSeen`, so no campaign ever re-teaches them. The layer has its own
 Settings switch, **Disable first-time tips**
 (`uiPrefs.hideTips`), is also silenced by the wider **Disable guide hints** switch,
@@ -812,7 +843,9 @@ and never starts on an install that already held a save when the layer first
 initialized — the upgrade case — decided once from `FB.save.hasAnySave()` when the
 prefs load and kept as `uiPrefs.tipsGrandfathered`. The per-save `hint_*` layer
 above is unchanged: those are lessons a life may need again, while tips are lessons
-only the very first player needs.
+only the very first player needs. Hosted telemetry emits low-cardinality
+`hint-shown`, `hint-interacted`, `hint-dismissed`, and `tips-disabled` events keyed
+by authored hint ID and kind; no hint text or save content is sent.
 The Self sheet's faith block names the live religious head, the number of days its office
 has been vacant, or the branch's lack of a centralized office, and states excommunication
 separately from the trait chip. Faith names on Self and Land are focusable links to a

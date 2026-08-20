@@ -7902,11 +7902,17 @@ window.FB = window.FB || {};
         state.player.cooldowns[id] = state.turn;
       }
       a.run(state, options || {});
-      if (!a.noConsume && state.player.flags) {
-        state.player.flags.tut_deed = 1; // First steps: complete a deed
-      }
       if (a.noConsume) { if (FB.ui && FB.ui.refresh) FB.ui.refresh(); }
-      else if (FB.game && FB.game.passDay) FB.game.passDay({ skipFocus: true });
+      else if (FB.game && FB.game.passDay) {
+        /* The deed itself has resolved even if a newly raised decision keeps
+           the following daily pass from advancing. Picker-backed deeds stamp
+           only when their eventual confirmation calls passDay(skipFocus). */
+        if (FB.noteDeedCompleted) FB.noteDeedCompleted(state);
+        FB.game.passDay({ skipFocus: true });
+        if (FB.ui && FB.ui.maybeFirstTimeFlowTip) {
+          FB.ui.maybeFirstTimeFlowTip();
+        }
+      }
     }
   };
 })();

@@ -620,12 +620,14 @@ body.raid-picking #timebtns { visibility: hidden; }
   pointer-events: none;
 }
 .coachmark-text { margin-bottom: 8px; }
-.coachmark-actions { display: flex; gap: 7px; }
+.coachmark-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .coachmark-actions button { pointer-events: auto; }
-/* Got it keeps the bottom-left; Back and Next group at the bottom-right. On
-   the final lesson (no Next) Got it takes the bottom-right slot. */
+.coachmark-stop { color: var(--helper-text-color); }
+/* Stop tips stays left and the ordinary acknowledgement takes the right. The
+   Back/Next selectors remain for compatibility with authored paged lessons. */
 .coachmark-dismiss + .coachmark-back,
 .coachmark-dismiss + .coachmark-next,
+.coachmark-stop + .coachmark-dismiss,
 .coachmark-back + .coachmark-dismiss { margin-left: auto; }
 /* the save lesson re-presents above the open menu sheet, beneath modals'
    tooltip layer */
@@ -637,6 +639,14 @@ body.raid-picking #timebtns { visibility: hidden; }
 }
 .coachmark.arrow-top .coachmark-arrow { top: -7px; border-right: none; border-bottom: none; }
 .coachmark.arrow-bottom .coachmark-arrow { bottom: -7px; border-top: none; border-left: none; }
+.coachmark.arrow-left .coachmark-arrow,
+.coachmark.arrow-right .coachmark-arrow { margin-left: 0; margin-top: -6px; }
+.coachmark.arrow-left .coachmark-arrow {
+  left: -7px; border-top: none; border-right: none;
+}
+.coachmark.arrow-right .coachmark-arrow {
+  right: -7px; border-bottom: none; border-left: none;
+}
 .coachmark.noarrow { left: 10px; bottom: 10px; }
 .coachmark.noarrow .coachmark-arrow { display: none; }
 .coachmark-lit {
@@ -699,6 +709,30 @@ a.actionbtn { text-decoration: none; }
 .actionbtn:disabled { opacity: .45; cursor: default; }
 .actionbtn .adesc { display: block; color: var(--helper-text-color); font-size: 13px; line-height: 1.35; }
 .actionbtn.done { border-style: dashed; opacity: .55; }
+.deed-entry {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch; gap: 7px; margin-bottom: 7px;
+}
+.deed-entry .deed-main-action {
+  min-width: 0; margin-bottom: 0; font-size: 16px; font-weight: 600;
+}
+.deed-entry[data-deed-flow="now"] .deed-main-action {
+  border-color: #a77f2e; box-shadow: inset 3px 0 0 #d8b24a;
+}
+.deed-entry[data-deed-flow="choices"] .deed-main-action {
+  border-color: #667b43; box-shadow: inset 3px 0 0 #9fbd6d;
+}
+.deed-entry[data-deed-flow="no-day"] .deed-main-action {
+  border-color: #58767b; box-shadow: inset 3px 0 0 #83abb0;
+}
+.deed-entry[data-deed-flow="now"] .deed-main-action:hover { border-color: #e0b64f; }
+.deed-entry[data-deed-flow="choices"] .deed-main-action:hover { border-color: #a9c779; }
+.deed-entry[data-deed-flow="no-day"] .deed-main-action:hover { border-color: #91bdc2; }
+.deed-entry .settcard-actions { align-self: center; }
+.deed-entry .deed-details { grid-column: 1 / -1; }
+.deed-entry .deed-details > b { color: #d8b24a; }
+.deed-entry[data-deed-flow="choices"] .deed-details > b { color: #b8ca8e; }
+.deed-entry[data-deed-flow="no-day"] .deed-details > b { color: #9dc4c8; }
 .interaction-card {
   display: flex; flex-direction: column; gap: 10px; margin-top: 12px;
 }
@@ -896,6 +930,9 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .settcard-actions .btn.small.settcard-info { display: none; }
 @media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
   .settcard-actions .btn.small.settcard-info { display: inline-flex; }
+  .deed-entry .settcard-actions .btn.small.deed-info {
+    min-width: 44px; min-height: 44px;
+  }
 }
 .settcard-actions .btn.small.settcard-raise,
 .settcard-actions .btn.small.convcard-select {
@@ -3134,6 +3171,7 @@ textarea.modjson, textarea.savetext {
   button.stat { padding: 8px 3px; margin: -8px -3px; }
   .tab { font-size: 15px; min-height: 48px; }
   .actionbtn { min-height: 48px; font-size: 16px; padding: 10px 12px; }
+  .deed-entry .deed-main-action { font-size: 17px; }
   .actionbtn .adesc { font-size: 14px; }
   .ongoing-commitment-row { min-height: 58px; padding: 9px 10px; }
   .ongoing-commitment-row[data-commitment="focus"] { display: grid; }

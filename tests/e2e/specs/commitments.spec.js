@@ -281,7 +281,11 @@ test('deed section keys scroll, activate, and use a local QWE-ASD-ZXC grid',
     await expect(focusList.locator('.deed-section-keyhint')).toHaveText('1');
     await expect(work.locator('.deed-section-keyhint')).toHaveText('2');
     await expect(life.locator('.deed-section-keyhint')).toHaveText('3');
-    await expect(panel.locator('.deed-item-keyhint')).toHaveCount(0);
+    await expect(focusList).toHaveAttribute('aria-current', 'true');
+    await expect(panel.locator('[data-focus-id] .deed-item-keyhint'))
+      .toHaveCount(5);
+    await expect(panel.locator('[data-focus-id="rest"] .deed-item-keyhint'))
+      .toHaveText('Q');
     await expect(life).toHaveAttribute('aria-expanded', 'false');
 
     await page.keyboard.press('Digit1');

@@ -4,8 +4,18 @@
 
 **Time is daily** (`G.passDay` in main.js): 90-day seasons, 360-day years; `state.turn`
 counts days. Each day the player's **focus** ticks (`FB.focuses` in actions.js — continuous
-activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds that spend
-the day and use day-based cooldowns (`cd`). Focus-based skill training applies the shared
+activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds that normally
+spend the day or open the interface where a final action is chosen, and may use day-based
+cooldowns (`cd`). The Deeds panel presents this as a strong
+two-kind contract: **Daily Focus** repeats automatically whenever a day passes, while
+**one-time deeds** are chosen once. Immediate and choice-backed deed buttons use different
+border accents; their supplementary **Resolves now** / **Opens choices…** timing and action
+description follow the shared card-details convention (hover/focus side tooltip on desktop,
+`?` disclosure on touch/tablet), keeping the button face to one prominent action line. Thus
+an immediate deed such as Poach is visibly different from a picker-backed deed such as Go
+into town. A picker opener is not itself a
+completed deed: cancelling leaves the tutorial step unfinished, while confirming the
+eventual day-spending choice completes it. Focus-based skill training applies the shared
 `balance.focusSkillGainRate` multiplier (0.75 by default) to its seasonal chance; other
 focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,
 `stand_guard`, `train_arms`) are male-only; women instead get `keep_house` (tier ≤ 2,

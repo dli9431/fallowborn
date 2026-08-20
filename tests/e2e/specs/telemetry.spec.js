@@ -2,12 +2,13 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/ui_misc.js',
   'js/ui_modals.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { startDeterministicGame } = require('../support/game/start');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
 
 test('telemetry accepts only the exact official play origin and stays silent locally',
   async function ({ page }, testInfo) {
@@ -113,6 +114,8 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     });
     expect(events.map(function (event) { return event.name; })).toEqual([
       'campaign-started',
+      'hint-shown',
+      'hint-dismissed',
       'active-play-reached-1-minute',
       'active-play-reached-5-minutes',
       'active-play-reached-15-minutes',
@@ -178,6 +181,98 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     }));
   });
 
+test('first-time hints report shown, interaction, dismissal, and opt-out actions',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-seed').fill(START_CODE);
+    await page.getByRole('button', { name:/Use this seed/ }).click();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    for (const text of ['map is yours to explore', 'Use Home to recenter',
+      'Use Map filters']) {
+      const opening = page.locator('.coachmark', { hasText:text });
+      await expect(opening).toBeVisible();
+      await opening.getByRole('button', { name:'Got it', exact:true }).click();
+    }
+    await page.evaluate(function () {
+      /* Isolate this assertion from the earlier map-tour telemetry while
+         reconstructing the unread Deeds prompt under test. */
+      FB.ui.coachmarkReset();
+      window.__telemetryEvents = [];
+      FB.ui.resumeFirstPlayerTip();
+    });
+    const coach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
+    await expect(coach).toBeVisible();
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await coach.getByRole('button', { name:'Got it', exact:true }).click();
+    const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
+    await expect(flow).toBeVisible();
+    await flow.getByRole('button', { name:'Got it', exact:true }).click();
+
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = false;
+      FB.ui.maybeTip('telemetry-opt-out', 'Synthetic opt-out lesson',
+        '#timebtns', { noNext:true });
+    });
+    const optOut = page.locator('.coachmark', { hasText:'Synthetic opt-out lesson' });
+    await expect(optOut).toBeVisible();
+    await optOut.getByRole('button', { name:'Stop tips', exact:true }).click();
+
+    const events = await page.evaluate(function () {
+      return window.__telemetryEvents.filter(function (event) {
+        return event.name.indexOf('hint-') === 0 ||
+          event.name === 'tips-disabled';
+      });
+    });
+    expect(events.map(function (event) { return event.name; })).toEqual([
+      'hint-shown',
+      'hint-interacted',
+      'hint-dismissed',
+      'hint-shown',
+      'hint-dismissed',
+      'hint-shown',
+      'tips-disabled'
+    ]);
+    expect(events[0].data).toEqual(expect.objectContaining({
+      telemetry_schema:2,
+      hint_id:'first-deed',
+      hint_kind:'first-time'
+    }));
+    expect(events[1].data).toEqual(expect.objectContaining({
+      hint_id:'first-deed',
+      interaction:'highlighted-control'
+    }));
+    expect(events[2].data).toEqual(expect.objectContaining({
+      hint_id:'first-deed',
+      dismiss_action:'got-it'
+    }));
+    expect(events[3].data).toEqual(expect.objectContaining({
+      hint_id:'first-time-flow'
+    }));
+    expect(events[4].data).toEqual(expect.objectContaining({
+      hint_id:'first-time-flow',
+      dismiss_action:'got-it'
+    }));
+    expect(events[6].data).toEqual(expect.objectContaining({
+      hint_id:'telemetry-opt-out',
+      disable_scope:'first-time',
+      disable_source:'coachmark'
+    }));
+  });
+
 test('death telemetry distinguishes succession from a completed saga',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
@@ -205,9 +300,10 @@ test('death telemetry distinguishes succession from a completed saga',
       FB.game.toTitle();
       return {
         succeeded:succeeded,
-        eventNames:window.__telemetryEvents.map(function (event) {
-          return event.name;
-        }),
+        eventNames:window.__telemetryEvents.filter(function (event) {
+          return event.name.indexOf('hint-') !== 0 &&
+            event.name !== 'tips-disabled';
+        }).map(function (event) { return event.name; }),
         finalEvent:window.__telemetryEvents[window.__telemetryEvents.length - 1]
       };
     })).toEqual({

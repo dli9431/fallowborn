@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
   'js/save.js',
   'js/actions.js',
   'css/style.css'
@@ -11,575 +12,574 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { startDeterministicGame } = require('../support/game/start');
+const { START_CODE, startDeterministicGame } = require('../support/game/start');
 const { openMenu, waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
 
-test('the first-time drip teaches in order and records each tip once',
+async function startFirstCampaign(page) {
+  await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#ng-seed').fill(START_CODE);
+  await page.getByRole('button', { name:/Use this seed/ }).click();
+  await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+  await page.getByRole('button', { name:'Begin', exact:true }).click();
+  await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+}
+
+async function finishOpeningMapTour(page) {
+  const map = page.locator('.coachmark', { hasText:'map is yours to explore' });
+  await expect(map).toBeVisible();
+  await expect(page.locator('#mapwrap')).toHaveClass(/coachmark-lit/);
+  await map.getByRole('button', { name:'Got it', exact:true }).click();
+  const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
+  await expect(home).toBeVisible();
+  await home.getByRole('button', { name:'Got it', exact:true }).click();
+  const filters = page.locator('.coachmark', { hasText:'Use Map filters' });
+  await expect(filters).toBeVisible();
+  await filters.getByRole('button', { name:'Got it', exact:true }).click();
+  await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
+    .toBeVisible();
+}
+
+test('the first prompt begins with the map and is saved only after acknowledgement',
   async function ({ page }, testInfo) {
-    await startDeterministicGame(page);
-    const coach = page.locator('.coachmark');
-
-    // one drip per natural day: the first call teaches the game controls,
-    // pointing at the menu button it speaks of
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(coach).toHaveCount(1);
-    await expect(coach).toContainText('game controls live in the Settings');
-    await expect(page.locator('#btn-menu')).toHaveClass(/coachmark-lit/);
-
-    // the next natural day's lesson queues behind the open one — lessons
-    // neither stack nor fade before they are read
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(coach).toHaveCount(1);
-    await expect(coach).toContainText('game controls live in the Settings');
-
-    // dismissing the open lesson brings the queued one up
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    await expect(coach).toContainText('How to play');
-    await expect(page.locator('.coachmark', {
-      hasText: 'game controls live in the Settings'
-    })).toHaveCount(0);
-
-    // a later day teaches the next tip — never an already-seen one again
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    await expect(coach).toContainText('runs the game one day at a time');
-
-    const seen = await page.evaluate(function () {
-      return {
-        seen: FB.game.uiPrefs.tipsSeen,
-        stored: JSON.parse(localStorage.getItem('fb_ui') || '{}').tipsSeen
-      };
-    });
-    expect(seen.seen['drip-controls']).toBe(1);
-    expect(seen.seen['drip-guide']).toBe(1);
-    if (testInfo.project.name.endsWith('-served')) {
-      expect(seen.stored['drip-controls']).toBe(1);
-      expect(seen.stored['drip-guide']).toBe(1);
-    }
-  });
-
-test('a coachmark points at the control it teaches and waits to be read',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    const coach = page.locator('.coachmark');
+    await startFirstCampaign(page);
+    const coach = page.locator('.coachmark', { hasText:'map is yours to explore' });
     await expect(coach).toBeVisible();
+    await expect(page.locator('#mapwrap'))
+      .toHaveClass(/coachmark-lit/);
 
-    // the menu button sits at the top of the screen, so the lesson opens
-    // beneath it with the arrow on top, roughly centered on the button
-    await expect(coach).toHaveClass(/arrow-top/);
-    const geo = await page.evaluate(function () {
-      const c = document.querySelector('.coachmark').getBoundingClientRect();
-      const t = document.querySelector('#btn-menu').getBoundingClientRect();
-      return { coachTop:c.top, targetBottom:t.bottom,
-        coachMid:c.left + c.width / 2, targetMid:t.left + t.width / 2 };
-    });
-    expect(geo.coachTop).toBeGreaterThanOrEqual(geo.targetBottom);
-    expect(Math.abs(geo.coachMid - geo.targetMid)).toBeLessThan(180);
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+    })).toBe(false);
 
-    // no toast-style fade: the lesson rides out a full UI refresh, and only
-    // its dismiss button clears it (and the target's highlight)
-    await page.evaluate(function () { FB.ui.refresh(); });
-    await waitForUiRefresh(page);
+    // A screen reset releases an unread tip instead of consuming it.
+    expect(await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      return FB.ui.resumeFirstPlayerTip();
+    })).toBe(true);
     await expect(coach).toBeVisible();
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    await expect(page.locator('.coachmark')).toHaveCount(0);
-    await expect(page.locator('#btn-menu')).not.toHaveClass(/coachmark-lit/);
-  });
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+    })).toBe(false);
 
-test('a lesson stills the days while it is read',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    const coach = page.locator('.coachmark');
-
-    // the first unpause teaches the time controls — and holds the days still
-    await page.evaluate(function () { FB.game.setPaused(false); });
-    await expect(coach).toContainText('days now flow');
-    expect(await page.evaluate(function () { return FB.game.paused; }))
-      .toBe(true);
-    const lessonHold = await page.evaluate(function () {
-      const turn = FB.state.turn;
-      FB.game.skipAhead();
+    await coach.getByRole('button', { name:'Got it', exact:true }).click();
+    const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
+    await expect(home).toBeVisible();
+    await expect(page.locator('#btn-home')).toHaveClass(/coachmark-lit/);
+    const learned = await page.evaluate(function () {
       return {
-        turn:FB.state.turn - turn,
-        fastForwarding:FB.game.fastForwarding
+        memory:FB.game.uiPrefs.tipsSeen['map-controls'],
+        stored:(JSON.parse(localStorage.getItem('fb_ui') || '{}').tipsSeen || {})
+          ['map-controls'],
+        repeats:FB.ui.resumeFirstPlayerTip()
       };
     });
-    expect(lessonHold).toEqual({ turn:0, fastForwarding:false });
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-
-    // unpaused again (that lesson is spent), the days run...
-    await page.evaluate(function () { FB.game.setPaused(false); });
-    expect(await page.evaluate(function () { return FB.game.paused; }))
-      .toBe(false);
-    await expect(page.locator('.coachmark')).toHaveCount(0);
-
-    // ...until the next lesson pops, which stills them again
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(coach).toContainText('game controls live in the Settings');
-    expect(await page.evaluate(function () { return FB.game.paused; }))
-      .toBe(true);
+    expect(learned.memory).toBe(1);
+    expect(learned.repeats).toBe(false);
+    if (testInfo.project.name.endsWith('-served')) expect(learned.stored).toBe(1);
   });
 
-test('an F-skip burst breaks when a lesson pops mid-skip',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    await page.evaluate(function () {
-      // spend the one-time time-flow lesson, then run the days again
-      FB.game.setPaused(false);
-      document.querySelector('.coachmark-dismiss').click();
-      FB.game.setPaused(false);
-      const startTurn = FB.state.turn;
-      // a lesson arriving on a plain day, fired through the real coachmark
-      // layer from a wrapped daily tick
-      const passDay = FB.game.passDay;
-      let fired = false;
-      FB.game.passDay = function () {
-        const r = passDay.apply(this, arguments);
-        if (!fired && r === 'day') {
-          fired = true;
-          FB.ui.maybeTip('spec-skip-lesson', '💡 spec lesson', '#btn-menu');
-        }
-        return r;
-      };
-      window.__skipLessonOutcome = {
-        startTurn:startTurn,
-        passDay:passDay,
-        fired:function () { return fired; }
-      };
-      FB.game.skipAhead();
-    });
-    await expect.poll(function () {
-      return page.evaluate(function () { return !FB.game.fastForwarding; });
-    }).toBe(true);
-    const outcome = await page.evaluate(function () {
-      const stored = window.__skipLessonOutcome;
-      FB.game.passDay = stored.passDay;
-      delete window.__skipLessonOutcome;
-      return { startTurn:stored.startTurn, endTurn:FB.state.turn,
-        fired:stored.fired(), paused:FB.game.paused,
-        coach:!!document.querySelector('.coachmark') };
-    });
-    expect(outcome.fired).toBe(true);
-    expect(outcome.paused).toBe(true);
-    expect(outcome.coach).toBe(true);
-    // the burst stopped on the lesson instead of burning on to a happening
-    expect(outcome.endTurn - outcome.startTurn).toBeLessThan(10);
-  });
-
-test('Next pages to the next lesson once the lit control had its touch',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    const coach = page.locator('.coachmark');
-    const next = page.getByRole('button', { name:'Next', exact:true });
-
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(coach).toContainText('game controls live in the Settings');
-    await expect(page.locator('#btn-menu')).toHaveClass(/coachmark-lit/);
-    await expect(next).toBeDisabled();
-
-    // every hint has a Back button with a stop behind it — the first drip
-    // lesson rewinds to the tour's first stop, the map lesson
-    await page.locator('.coachmark-back').click();
-    await expect(coach).toContainText('Drag to pan');
-    await expect(page.locator('#mapwrap')).toHaveClass(/coachmark-lit/);
-    await expect(page.locator('.coachmark-back')).toHaveCount(0); // stop zero
-    await page.locator('#mapwrap').dispatchEvent('pointerdown'); // its touch
-    await expect(next).toBeEnabled();
-    await next.click();
-    await expect(coach).toContainText('game controls live in the Settings');
-
-    // Next stays shut until the lit control is touched
-    await expect(next).toBeDisabled();
-    await page.locator('#btn-menu').click(); // the menu sheet opens
-    // ...and the lesson floats above the sheet, at the ⚙ Settings button,
-    // with its over-sheet text
-    await expect(page.locator('#m-settings')).toHaveClass(/coachmark-lit/);
-    await expect(coach).toContainText('Settings holds the game controls');
-    await expect(next).toBeEnabled();
-
-    // no waiting for the next natural day — the tour walks on above the
-    // open sheet (a desktop sheet stays up) to the Guide button
-    await next.click();
-    await expect(page.locator('#m-help')).toHaveClass(/coachmark-lit/);
-    await expect(coach).toContainText('How to play');
-    await expect(next).toBeEnabled();
-
-    // the pace lesson lives outside the sheet: Next from the Guide lesson
-    // closes the sheet itself and hands it the screen — and it asks for no
-    // touch, since unpausing could pop an event and break the tour
-    await next.click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(coach).toContainText('runs the game one day at a time');
-    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
-    await expect(next).toBeEnabled();
-
-    await next.click();
-    await expect(coach).toContainText('Deeds tab');
-    await expect(page.locator('#sidetabs .tab[data-tab="actions"]'))
-      .toHaveClass(/coachmark-lit/);
-    await expect(next).toBeDisabled(); // a new lesson wants its own touch
-
-    // the Deeds pane is open by default, so using it counts as the touch:
-    // scrolling it (a wheel over the pane) arms Next without tapping the tab
-    await page.locator('#tab-actions').dispatchEvent('wheel');
-    await expect(next).toBeEnabled();
-
-    // the buttons line up Got it, Back, Next — and Back rewinds one lesson
-    const order = await page.evaluate(function () {
-      const row = document.querySelector('.coachmark-actions');
-      return Array.prototype.map.call(row.children, function (b) {
-        return b.className;
-      });
-    });
-    expect(order).toEqual([
-      'btn small coachmark-dismiss',
-      'btn small coachmark-back',
-      'btn small coachmark-next'
-    ]);
-    await page.locator('.coachmark-back').click();
-    await expect(coach).toContainText('runs the game one day at a time');
-    await expect(next).toBeEnabled(); // still the free pace lesson
-
-    // Back from the pace lesson reopens the menu sheet and points at
-    // ❓ How to play in it — on the desktop sheet as on the phone one
-    await page.locator('.coachmark-back').click();
-    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#m-help')).toHaveClass(/coachmark-lit/);
-    await expect(coach).toContainText('How to play');
-
-    // and the tour walks forward again from the sheet: Next closes it and
-    // the pace lesson takes the screen
-    await next.click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(coach).toContainText('runs the game one day at a time');
-    await next.click();
-    await expect(coach).toContainText('Deeds tab');
-
-    // paged lessons are recorded, so the daily drip never re-teaches them
-    const seen = await page.evaluate(function () {
-      return FB.game.uiPrefs.tipsSeen;
-    });
-    expect(seen['drip-controls']).toBe(1);
-    expect(seen['drip-guide']).toBe(1);
-    expect(seen['drip-speed']).toBe(1);
-  });
-
-test('a drawer-bound tab aims its lesson at the portrait on small screens',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    await page.setViewportSize({ width:390, height:844 }); // phone layout
-
-    expect(await page.evaluate(function () {
-      return FB.ui.maybeTip('drip-self',
-        '💡 spec self lesson', '#lefttabs .tab[data-tab="char"]');
-    })).toBe(true);
-    const coach = page.locator('.coachmark');
-    await expect(coach).toContainText('spec self lesson');
-    // the Self tab sits in the closed drawer, so the lesson points at the
-    // portrait that exposes it
-    await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
-    await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
-      .not.toHaveClass(/coachmark-lit/);
-
-    // the portrait touch opens the drawer and arms Next
-    const next = page.getByRole('button', { name:'Next', exact:true });
-    await expect(next).toBeDisabled();
-    await page.locator('#tb-portrait').click();
-    await expect(page.locator('body')).toHaveClass(/showself/);
-    await expect(next).toBeEnabled();
-
-    // Next keeps the drawer open: the Kin lesson points at the exposed tab
-    await next.click();
-    await expect(page.locator('body')).toHaveClass(/showself/);
-    await expect(coach).toContainText('Kin tab');
-    await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
-      .toHaveClass(/coachmark-lit/);
-  });
-
-test('a desktop lesson counts its open pane or a hover as the touch',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    const coach = page.locator('.coachmark');
-    const next = page.getByRole('button', { name:'Next', exact:true });
-
-    // the Self pane is open by default on desktop: scrolling it (a wheel
-    // over the pane) is the touch, the tab itself need not be tapped
-    expect(await page.evaluate(function () {
-      return FB.ui.maybeTip('drip-self',
-        '💡 spec self lesson', '#lefttabs .tab[data-tab="char"]');
-    })).toBe(true);
-    await expect(coach).toContainText('spec self lesson');
-    await expect(next).toBeDisabled();
-    await page.locator('#tab-char').dispatchEvent('wheel');
-    await expect(next).toBeEnabled();
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-
-    // the top-bar lesson teaches the hover breakdowns, so the pointer
-    // moving over the stats arms Next
-    expect(await page.evaluate(function () {
-      return FB.ui.maybeTip('drip-topbar',
-        '💡 spec topbar lesson', '#tb-stats');
-    })).toBe(true);
-    await expect(coach).toContainText('spec topbar lesson');
-    await expect(next).toBeDisabled();
-    await page.locator('#tb-stats').dispatchEvent('pointerenter');
-    await expect(next).toBeEnabled();
-  });
-
-test('the final lesson keeps a single right-side Got it',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    // every orientation lesson but the last (corner notes) was already taught
-    await page.evaluate(function () {
-      const prefs = FB.game.uiPrefs;
-      prefs.tipsSeen = prefs.tipsSeen || {};
-      ['drip-controls', 'drip-guide', 'drip-speed', 'drip-deeds', 'drip-self',
-        'drip-kin', 'drip-land', 'drip-network', 'drip-chronicle',
-        'drip-topbar'].forEach(function (id) {
-        prefs.tipsSeen[id] = 1;
-      });
-    });
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    const coach = page.locator('.coachmark');
-    await expect(coach).toContainText('corner notes fade on their own');
-
-    // no Next on the last stop: Back left of one right-side Got it
-    await expect(page.getByRole('button', { name:'Next', exact:true }))
-      .toHaveCount(0);
-    const order = await page.evaluate(function () {
-      const row = document.querySelector('.coachmark-actions');
-      return Array.prototype.map.call(row.children, function (b) {
-        return b.className;
-      });
-    });
-    expect(order).toEqual([
-      'btn small coachmark-back',
-      'btn small coachmark-dismiss'
-    ]);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    await expect(coach).toHaveCount(0);
-  });
-
-test('menu lessons chain above the sheet, closing it only when the tour leaves',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    await page.setViewportSize({ width:390, height:844 }); // phone layout
-    const coach = page.locator('.coachmark');
-    const next = page.getByRole('button', { name:'Next', exact:true });
-
-    // the controls lesson points at the menu button first, gated as usual
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(coach).toContainText('game controls live in the Settings');
-    await expect(page.locator('#btn-menu')).toHaveClass(/coachmark-lit/);
-    await expect(next).toBeDisabled();
-
-    // opening the menu re-presents it above the sheet, at ⚙ Settings, with
-    // its over-sheet text and a free Next (the touch already happened)
-    await page.locator('#btn-menu').click();
-    await expect(page.locator('#m-settings')).toBeVisible();
-    await expect(page.locator('#m-settings')).toHaveClass(/coachmark-lit/);
-    await expect(coach).toContainText('Settings holds the game controls');
-    await expect(next).toBeEnabled();
-
-    // Next chains above the open sheet to the Guide button — menu lessons
-    // do not close the sheet between each other
-    await next.click();
-    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#m-help')).toHaveClass(/coachmark-lit/);
-    await expect(coach).toContainText('How to play');
-
-    // the sheet closes only when the tour steps outside it (the pace lesson)
-    await next.click();
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    await expect(coach).toContainText('runs the game one day at a time');
-    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
-
-    // the pace lesson sits above the bottom bar pointing down at it, never
-    // covering the controls
-    await expect(coach).toHaveClass(/arrow-bottom/);
-    const paceGeo = await page.evaluate(function () {
-      const c = document.querySelector('.coachmark').getBoundingClientRect();
-      const t = document.querySelector('#timebtns').getBoundingClientRect();
-      return { coachBottom:c.bottom, barTop:t.top };
-    });
-    expect(paceGeo.coachBottom).toBeLessThanOrEqual(paceGeo.barTop);
-
-    // Back from it reopens the sheet and points at ❓ How to play
-    await page.locator('.coachmark-back').click();
-    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#m-help')).toHaveClass(/coachmark-lit/);
-    await expect(coach).toContainText('How to play');
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    await page.evaluate(function () { FB.ui.closeModal(); });
-
-    const seen = await page.evaluate(function () {
-      return FB.game.uiPrefs.tipsSeen;
-    });
-    expect(seen['drip-controls']).toBe(1);
-    expect(seen['drip-guide']).toBe(1);
-    expect(seen['drip-speed']).toBe(1);
-  });
-
-test('a lesson waits out an open dialog instead of fighting it',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    await openMenu(page);
-
-    // fired while a dialog holds the screen: counted, but not shown yet —
-    // not even by the refresh pump that would otherwise surface it
-    expect(await page.evaluate(function () {
-      return FB.ui.maybeTip('spec-land-lesson', '💡 spec land lesson',
-        '#sidetabs .tab[data-tab="prov"]');
-    })).toBe(true);
-    await page.evaluate(function () { FB.ui.refresh(); });
-    await waitForUiRefresh(page);
-    await expect(page.locator('.coachmark')).toHaveCount(0);
-
-    // closing the dialog hands the screen to the waiting lesson
-    await page.evaluate(function () { FB.ui.closeModal(); });
-    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
-    const coach = page.locator('.coachmark');
-    await expect(coach).toHaveCount(1);
-    await expect(coach).toContainText('spec land lesson');
-  });
-
-test('a menu lesson fired under the open menu floats above the sheet',
-  async function ({ page }) {
-    await startDeterministicGame(page);
-    await openMenu(page);
-
-    // the controls lesson's home is the menu: it shows over the sheet at
-    // ⚙ Settings rather than hiding beneath it
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    const coach = page.locator('.coachmark');
-    await expect(coach).toHaveCount(1);
-    await expect(coach).toContainText('Settings holds the game controls');
-    await expect(page.locator('#m-settings')).toHaveClass(/coachmark-lit/);
-    await expect(page.getByRole('button', { name:'Next', exact:true }))
-      .toBeEnabled();
-  });
-
-test('fired tips stay fired across a reload and a continue',
+test('an unread first prompt returns after reload and Continue',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
-      'The storage contract belongs to the served origin.');
-    await startDeterministicGame(page);
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(page.locator('.coachmark', {
-      hasText: 'game controls live in the Settings'
-    })).toHaveCount(1);
+      'The reload storage contract belongs to the served origin.');
+    await startFirstCampaign(page);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toBeVisible();
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['map-controls'];
+    })).toBe(false);
 
-    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.reload({ waitUntil:'domcontentloaded' });
     await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await page.locator('#btn-continue').click();
     await expect(page.locator('#game:not(.hidden)')).toBeVisible();
-
-    // the controls lesson survived the reload; the drip resumes with the Guide
-    expect(await page.evaluate(function () {
-      return FB.game.uiPrefs.tipsSeen['drip-controls'];
-    })).toBe(1);
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(true);
-    await expect(page.locator('.coachmark', {
-      hasText: 'How to play'
-    })).toHaveCount(1);
-    await expect(page.locator('.coachmark', {
-      hasText: 'game controls live in the Settings'
-    })).toHaveCount(0);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toBeVisible();
   });
 
-test('Settings offers a first-time tips switch, and both switches silence tips',
+test('the Deeds lesson hands the player to the flow of days',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
+    await expect(flow).toBeVisible();
+    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['first-time-flow'];
+    })).toBe(false);
+  });
+
+test('the map sequence comes first and Making a living waits for Family & legacy',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () {
+      const flags = FB.state.player.flags;
+      flags.tut_deed = 1;
+      flags.tut_unpause = 1;
+      flags.tut_event = 1;
+      FB.tutorialCheck(FB.state);
+    });
+    const self = page.locator('.coachmark', {
+      hasText:'Self shows your character'
+    });
+    await expect(self).toBeVisible();
+    await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
+      .toHaveClass(/coachmark-lit/);
+    await self.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      FB.game.uiPrefs.tipsSeen['area-kin'] = 1;
+    });
+    expect(await page.evaluate(function () {
+      return FB.tutorialStatus(FB.state).track.id;
+    })).toBe('family_legacy');
+    await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      s.player.flags.tut_kin_tab = 1;
+      me.spouseId = me.spouseId || 'spec_spouse';
+      me.childrenIds.push('spec_child');
+      FB.tutorialCheck(s);
+    });
+
+    const enterprise = page.locator('.coachmark', {
+      hasText:'Work, training & enterprises'
+    });
+    await expect(enterprise).toBeVisible();
+    await expect(page.locator('#tab-actions')).toHaveClass(/active/);
+    await expect(page.locator('[data-action-group="work"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('[data-action-id="livelihoods"]'))
+      .toHaveClass(/coachmark-lit/);
+    expect(await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      return FB.ui.resumeFirstPlayerTip();
+    })).toBe(true);
+    await expect(enterprise).toBeVisible();
+    await enterprise.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await page.evaluate(function () {
+      const s = FB.state;
+      const type = Object.keys(FBDATA.enterprises)[0];
+      s.player.enterpriseMigration = 1;
+      s.player.enterprises = [{
+        uid:'spec_enterprise', type:type, provinceId:s.player.provinceId,
+        settlement:0, workerId:null
+      }];
+      FB.tutorialCheck(s);
+    });
+
+    const land = page.locator('.coachmark', { hasText:'Land comes after freedom' });
+    await expect(land).toBeVisible();
+    await expect(page.locator('[data-action-group="realm"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('[data-action-id="buy_freedom"]'))
+      .toHaveClass(/coachmark-lit/);
+    await land.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      const seen = FB.game.uiPrefs.tipsSeen;
+      return {
+        map:seen['map-controls'],
+        home:seen['map-home'],
+        filters:seen['map-filters'],
+        enterprise:seen['making-enterprise'],
+        land:seen['making-land']
+      };
+    })).toEqual({ map:1, home:1, filters:1, enterprise:1, land:1 });
+  });
+
+test('compact layouts teach the map before Self through the portrait',
+  async function ({ page }) {
+    await page.setViewportSize({ width:768, height:900 });
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () {
+      const flags = FB.state.player.flags;
+      flags.tut_deed = 1;
+      flags.tut_unpause = 1;
+      flags.tut_event = 1;
+      FB.tutorialCheck(FB.state);
+    });
+
+    const self = page.locator('.coachmark', {
+      hasText:'Tap your portrait to open Self'
+    });
+    await expect(self).toBeVisible();
+    await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#lefttabs')).not.toBeVisible();
+    await page.locator('#tb-portrait').click();
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    await self.getByRole('button', { name:'Got it', exact:true }).click();
+
+    await expect(page.locator('body')).not.toHaveClass(/showself/);
+    await expect(page.locator('.coachmark', { hasText:'map is yours to explore' }))
+      .toHaveCount(0);
+  });
+
+test('the Kin lesson leads through finding a match and proposing marriage',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_seen_kin_tab;
+    })).toBe(false);
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      const flags = s.player.flags;
+      const seen = FB.game.uiPrefs.tipsSeen;
+      seen['map-controls'] = 1;
+      seen['map-home'] = 1;
+      seen['map-filters'] = 1;
+      flags.tut_deed = 1;
+      flags.tut_unpause = 1;
+      flags.tut_event = 1;
+      FB.tutorialCheck(s);
+    });
+
+    const kin = page.locator('.coachmark', {
+      hasText:'Kin is your household and dynasty'
+    });
+    await expect(kin).toBeVisible();
+    await kin.getByRole('button', { name:'Got it', exact:true }).click();
+
+    const match = page.locator('.coachmark', {
+      hasText:'use Seek a match'
+    });
+    await expect(match).toBeVisible();
+    await expect(page.locator('#tab-actions')).toHaveClass(/active/);
+    await expect(page.locator('[data-action-group="life"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('[data-action-id="seek_match"]'))
+      .toHaveClass(/coachmark-lit/);
+    await match.getByRole('button', { name:'Got it', exact:true }).click();
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const candidates = FB.spawnSuitor(s);
+      const suitor = candidates[1] || candidates[0];
+      FB.pickSuitor(s, suitor.id);
+      const began = FB.beginCourtship(s, suitor);
+      FB.ui.refresh();
+      return began;
+    })).toBe(true);
+    const courtship = page.locator('.coachmark', {
+      hasText:'person under Courting'
+    });
+    await expect(courtship).toBeVisible();
+    await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
+      .toHaveClass(/coachmark-lit/);
+    await courtship.getByRole('button', { name:'Got it', exact:true }).click();
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.gold = 100000;
+      FB.adjustStanding(s, { kind:'character', id:s.player.courtingId },
+        100, 'spec:family-guidance');
+      FB.ui.refresh();
+    });
+    const proposal = page.locator('.coachmark', {
+      hasText:'use Propose marriage'
+    });
+    await expect(proposal).toBeVisible();
+    await expect(page.locator('[data-action-group="life"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator('[data-action-id="propose"]'))
+      .toHaveClass(/coachmark-lit/);
+  });
+
+test('an established marriage silently skips Family & legacy guidance',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+
+    await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const spouse = FB.makeCharacter(s, {
+        sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture,
+        religion:me.religion,
+        born:me.born,
+        role:'spouse'
+      });
+      me.spouseId = spouse.id;
+      spouse.spouseId = me.id;
+      s.roles.spouse = spouse.id;
+      FB.ui.refresh();
+    });
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const flags = s.player.flags;
+      const seen = FB.game.uiPrefs.tipsSeen;
+      seen['map-controls'] = 1;
+      seen['map-home'] = 1;
+      seen['map-filters'] = 1;
+      flags.tut_deed = 1;
+      flags.tut_unpause = 1;
+      flags.tut_event = 1;
+      FB.tutorialCheck(s);
+      return {
+        track:FB.tutorialStatus(s).track.id,
+        established:!!flags.tut_family_established,
+        familyComplete:!!flags.tut_track_family_legacy,
+        checked:[flags.tut_seen_kin_tab, flags.tut_seen_wed,
+          flags.tut_seen_heir],
+        legacyEvents:s.eventQueue.filter(function (event) {
+          return event.id === 'tut_legacy';
+        }).length
+      };
+    });
+    expect(result).toEqual({
+      track:'making_a_living',
+      established:true,
+      familyComplete:true,
+      checked:[1, 1, 1],
+      legacyEvents:0
+    });
+
+    const enterprise = page.locator('.coachmark', {
+      hasText:'Work, training & enterprises'
+    });
+    await expect(enterprise).toBeVisible();
+    await enterprise.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+  });
+
+test('the land lesson points a freeholder directly at the land market deed',
   async function ({ page }) {
     await startDeterministicGame(page);
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      FB.game.uiPrefs.hideTips = false;
+      s.player.tier = 1;
+      s.player.gold = 100;
+      FB.ui.refresh();
+      return FB.ui.maybeMakingLandTip();
+    })).toBe(true);
+    const land = page.locator('.coachmark', {
+      hasText:'use Buy a plot of land'
+    });
+    await expect(land).toBeVisible();
+    await expect(page.locator('[data-action-id="buy_land"]'))
+      .toHaveClass(/coachmark-lit/);
+    await expect(land).not.toContainText('Buy your freedom');
+  });
+
+test('secondary areas teach themselves only when opened', async function ({ page }) {
+  await startFirstCampaign(page);
+  await finishOpeningMapTour(page);
+  await page.getByRole('button', { name:'Got it', exact:true }).click();
+  await page.locator('.coachmark', { hasText:'unpause with Play' })
+    .getByRole('button', { name:'Got it', exact:true }).click();
+  await expect(page.locator('.coachmark')).toHaveCount(0);
+  expect(await page.evaluate(function () {
+    return {
+      land:!!FB.game.uiPrefs.tipsSeen['area-land'],
+      network:!!FB.game.uiPrefs.tipsSeen['area-network'],
+      chronicle:!!FB.game.uiPrefs.tipsSeen['area-chronicle']
+    };
+  })).toEqual({ land:false, network:false, chronicle:false });
+
+  await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+  const coach = page.locator('.coachmark', { hasText:'Land looks closely' });
+  await expect(coach).toBeVisible();
+  await expect(page.getByRole('button', { name:'Next', exact:true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name:'Back', exact:true })).toHaveCount(0);
+  await coach.getByRole('button', { name:'Got it', exact:true }).click();
+  expect(await page.evaluate(function () {
+    return !!FB.game.uiPrefs.tipsSeen['area-land'];
+  })).toBe(true);
+});
+
+test('Stop tips is available in place and clears queued first-time lessons',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    const coach = page.locator('.coachmark');
+    await expect(coach.getByRole('button', { name:'Stop tips', exact:true }))
+      .toBeVisible();
+    await page.evaluate(function () {
+      FB.ui.maybeTip('queued-after-first', 'Queued lesson', '#timebtns', {
+        noNext:true
+      });
+    });
+    await coach.getByRole('button', { name:'Stop tips', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return {
+        disabled:FB.game.uiPrefs.hideTips,
+        later:FB.ui.maybeTip('later-lesson', 'Later lesson', '#timebtns')
+      };
+    })).toEqual({ disabled:true, later:false });
+  });
+
+test('a coachmark points, survives refresh, and stills running days',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = false;
+      FB.game.setPaused(false);
+      FB.ui.maybeTip('spec-time-lesson', 'Synthetic time lesson', '#timebtns', {
+        noNext:true
+      });
+    });
+    const coach = page.locator('.coachmark', { hasText:'Synthetic time lesson' });
+    await expect(coach).toBeVisible();
+    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
+    expect(await page.evaluate(function () { return FB.game.paused; })).toBe(true);
+
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await waitForUiRefresh(page);
+    await expect(coach).toBeVisible();
+    const held = await page.evaluate(function () {
+      const turn = FB.state.turn;
+      FB.game.skipAhead();
+      return { days:FB.state.turn - turn, fastForwarding:FB.game.fastForwarding };
+    });
+    expect(held).toEqual({ days:0, fastForwarding:false });
+  });
+
+test('desktop panel coachmarks place their cards over the map',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    await page.evaluate(function () {
+      FB.ui.coachmarkReset();
+      FB.ui.coachmark('Synthetic left-panel lesson', '#tab-char', {
+        noNext:true
+      });
+    });
+    const coach = page.locator('.coachmark');
+    await expect(coach).toHaveClass(/over-map/);
+    await expect(coach).toHaveClass(/arrow-left/);
+    const leftPlacement = await page.evaluate(function () {
+      const card = document.querySelector('.coachmark').getBoundingClientRect();
+      const map = document.querySelector('#mapwrap').getBoundingClientRect();
+      return {
+        insideLeft:card.left >= map.left,
+        insideRight:card.right <= map.right,
+        insideTop:card.top >= map.top,
+        insideBottom:card.bottom <= map.bottom
+      };
+    });
+    expect(leftPlacement).toEqual({
+      insideLeft:true, insideRight:true, insideTop:true, insideBottom:true
+    });
+    await coach.getByRole('button', { name:'Got it', exact:true }).click();
+
+    await page.evaluate(function () {
+      FB.ui.coachmark('Synthetic right-panel lesson',
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+    });
+    await expect(coach).toHaveClass(/over-map/);
+    await expect(coach).toHaveClass(/arrow-right/);
+    const rightPlacement = await page.evaluate(function () {
+      const card = document.querySelector('.coachmark').getBoundingClientRect();
+      const map = document.querySelector('#mapwrap').getBoundingClientRect();
+      return card.left >= map.left && card.right <= map.right &&
+        card.top >= map.top && card.bottom <= map.bottom;
+    });
+    expect(rightPlacement).toBe(true);
+  });
+
+test('a lesson waits out an open dialog', async function ({ page }) {
+  await startDeterministicGame(page);
+  await page.evaluate(function () { FB.game.uiPrefs.hideTips = false; });
+  await openMenu(page);
+  expect(await page.evaluate(function () {
+    return FB.ui.maybeTip('spec-dialog-lesson', 'Synthetic waiting lesson',
+      '#sidetabs .tab[data-tab="prov"]', { noNext:true });
+  })).toBe(true);
+  await page.evaluate(function () { FB.ui.refresh(); });
+  await waitForUiRefresh(page);
+  await expect(page.locator('.coachmark')).toHaveCount(0);
+
+  await page.evaluate(function () { FB.ui.closeModal(); });
+  await expect(page.locator('.coachmark', { hasText:'Synthetic waiting lesson' }))
+    .toBeVisible();
+});
+
+test('a hidden drawer target falls back to the portrait on phones',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:390, height:844 });
+    expect(await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = false;
+      return FB.ui.maybeTip('spec-self-lesson', 'Synthetic Self lesson',
+        '#lefttabs .tab[data-tab="char"]', { noNext:true });
+    })).toBe(true);
+    await expect(page.locator('#tb-portrait')).toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#lefttabs .tab[data-tab="char"]'))
+      .not.toHaveClass(/coachmark-lit/);
+    await page.locator('#tb-portrait').click();
+    await expect(page.locator('body')).toHaveClass(/showself/);
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['spec-self-lesson'];
+    })).toBe(true);
+  });
+
+test('Settings keeps both guidance switches as persistent opt-outs',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = false;
+      FB.game.saveUiPrefs();
+    });
     await page.locator('#btn-menu').click();
     await page.locator('#m-settings').click();
-
     const hideTips = page.getByRole('checkbox', {
-      name: /Disable first-time tips/
+      name:/Disable first-time tips/
+    });
+    const guideHints = page.getByRole('checkbox', {
+      name:/Disable guide hints/
     });
     await expect(hideTips).not.toBeChecked();
     await expect(page.locator('label.autorow', { has: hideTips }))
       .toContainText('guide-hints switch above');
-    const guideHints = page.getByRole('checkbox', {
-      name: /Disable guide hints/
-    });
-    await expect(page.locator('label.autorow', { has: guideHints }))
-      .toContainText('first-time tips');
-
-    // the dedicated switch, through the real Settings modal
     await hideTips.check();
-    await expect.poll(async function () {
+    await expect.poll(function () {
       return page.evaluate(function () {
-        return {
-          preference: FB.game.uiPrefs.hideTips,
-          stored: JSON.parse(localStorage.getItem('fb_ui')).hideTips
-        };
+        const stored = JSON.parse(localStorage.getItem('fb_ui') || '{}');
+        return { memory:FB.game.uiPrefs.hideTips, stored:stored.hideTips };
       });
-    }).toEqual({ preference: true, stored: true });
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(false);
-
-    // the wider guide-hints switch silences the tips as well
-    await page.evaluate(function () {
-      FB.game.uiPrefs.hideTips = false;
-      FB.game.uiPrefs.hideBeginnerHints = true;
-      FB.game.saveUiPrefs();
-    });
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(false);
+    }).toEqual({ memory:true, stored:true });
+    await expect(guideHints).not.toBeChecked();
   });
 
-test('an install with an existing save is grandfathered out of tips',
-  async function ({ page }, testInfo) {
-    test.skip(testInfo.project.name !== 'chromium-served',
-      'The storage contract belongs to the served origin.');
-    await startDeterministicGame(page);
-    await expect.poll(async function () {
-      return page.evaluate(function () { return FB.save.hasAnySave(); });
-    }).toBe(true);
-
-    // an upgrade arrives with prefs that predate the tips layer: the tips
-    // keys are absent, but the choices the player already made in earlier
-    // versions (the boot music question, say) are still on record
-    await page.evaluate(function () {
-      const prefs = JSON.parse(localStorage.getItem('fb_ui')) || {};
-      delete prefs.tipsSeen;
-      delete prefs.tipsGrandfathered;
-      localStorage.setItem('fb_ui', JSON.stringify(prefs));
-    });
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect(page.locator('#title:not(.hidden)')).toBeVisible();
-    await expect.poll(async function () {
-      return page.evaluate(function () {
-        return FB.game.uiPrefs.tipsGrandfathered;
-      });
-    }).toBe(true);
-
-    await page.locator('#btn-continue').click();
-    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
-    expect(await page.evaluate(function () { return FB.ui.dailyTip(); }))
-      .toBe(false);
-    await expect(page.locator('.coachmark')).toHaveCount(0);
-  });
-
-test('a contextual tip fires at its moment and never twice',
+test('a situational tip fires at its moment and never twice',
   async function ({ page }) {
     await startDeterministicGame(page);
+    await page.evaluate(function () { FB.game.uiPrefs.hideTips = false; });
     const bought = await page.evaluate(function () {
       FB.state.player.gold = 100000;
       const available = FB.landAvailable(FB.state);
@@ -589,16 +589,11 @@ test('a contextual tip fires at its moment and never twice',
         FB.buyLandPlot(FB.state, settlement);
     });
     expect(bought).toBe(true);
-    // it opens pointing at the Land tab it recommends, lit until dismissed
-    await expect(page.locator('.coachmark', {
-      hasText: 'first plot of land'
-    })).toHaveCount(1);
+    const coach = page.locator('.coachmark', { hasText:'first plot of land' });
+    await expect(coach).toBeVisible();
     await expect(page.locator('#sidetabs .tab[data-tab="prov"]'))
       .toHaveClass(/coachmark-lit/);
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    await expect(page.locator('.coachmark')).toHaveCount(0);
-    await expect(page.locator('#sidetabs .tab[data-tab="prov"]'))
-      .not.toHaveClass(/coachmark-lit/);
+    await coach.getByRole('button', { name:'Got it', exact:true }).click();
     expect(await page.evaluate(function () {
       return FB.ui.tipDue('first-plot');
     })).toBe(false);

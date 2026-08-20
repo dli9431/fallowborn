@@ -3,9 +3,10 @@
    =========================================================================
    The scripted companion to the staged checklist tracks (TUTORIAL_TRACKS in
    js/main.js). Every event here is trigger:{never:true} and queued only from
-   FB.tutorialCheck: tut_welcome a couple of days into the life, tut_livelihood
-   when the Making-a-living track completes, tut_legacy when the final track
-   completes. Once per life; the stage flags live in player.flags and die with
+   FB.tutorialCheck: tut_welcome a couple of days into the life, tut_legacy
+   when Family & legacy completes through play (an already-established
+   marriage silently skips it), and tut_livelihood when the lower-rank
+   Making-a-living track completes. Once per life; the stage flags live in player.flags and die with
    the protagonist like all life-local flags, so an heir starts clean. Options
    are small and all-positive so autoresolve scores them sanely. See
    docs/designs/events.md. */

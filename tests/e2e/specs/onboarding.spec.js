@@ -4,7 +4,10 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/ui_misc.js',
+  'js/ui_panels.js',
   'js/ui_modals.js',
+  'js/actions.js',
+  'css/style.css',
   'data/bookmarks.js',
   'data/events_tutorial.js'
 ]);
@@ -21,6 +24,20 @@ test.beforeEach(async function ({ page }, testInfo) {
   await unlockStartTier(page, 1);
 });
 
+async function finishOpeningMapTour(page) {
+  const map = page.locator('.coachmark', { hasText:'map is yours to explore' });
+  await expect(map).toBeVisible();
+  await map.getByRole('button', { name:'Got it', exact:true }).click();
+  const home = page.locator('.coachmark', { hasText:'Use Home to recenter' });
+  await expect(home).toBeVisible();
+  await home.getByRole('button', { name:'Got it', exact:true }).click();
+  const filters = page.locator('.coachmark', { hasText:'Use Map filters' });
+  await expect(filters).toBeVisible();
+  await filters.getByRole('button', { name:'Got it', exact:true }).click();
+  await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
+    .toBeVisible();
+}
+
 test('a new life gets a short intro, a focused orientation, and First steps',
   async function ({ page }) {
     await page.getByRole('button', { name: 'New Game', exact: true }).click();
@@ -32,7 +49,7 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await page.getByRole('button', { name: 'Begin Your Story', exact: true })
       .click();
 
-    // the intro keeps the flavor and points at the Deeds tab — no control dump
+    // the intro keeps the flavor and points at the playable first loop
     await expect(page.getByRole('heading', {
       name: 'Your Story Begins', exact: true
     })).toBeVisible();
@@ -41,27 +58,50 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await expect(page.locator('#gm-body')).not.toContainText('Press Space');
     await page.getByRole('button', { name: 'Begin', exact: true }).click();
 
-    // no orientation sheet — the coachmark hints carry that teaching now
+    // no orientation sheet — the map tour is the first coachmark sequence
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
-    // the map lesson waited out the intro sheets, then points at the lit map
-    const mapCoach = page.locator('.coachmark', { hasText:'Drag to pan' });
-    await expect(mapCoach).toBeVisible();
-    await expect(page.locator('#mapwrap')).toHaveClass(/coachmark-lit/);
+    await finishOpeningMapTour(page);
+    const firstCoach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
+    await expect(firstCoach).toBeVisible();
+    await expect(page.locator('#sidetabs .tab[data-tab="actions"]'))
+      .toHaveClass(/coachmark-lit/);
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
+    })).toBe(false); // showing alone does not consume the tip
     await page.getByRole('button', { name:'Got it', exact:true }).click();
+    const flowCoach = page.locator('.coachmark', { hasText:'unpause with Play' });
+    await expect(flowCoach).toBeVisible();
+    await expect(page.locator('#timebtns')).toHaveClass(/coachmark-lit/);
+    await flowCoach.getByRole('button', { name:'Got it', exact:true }).click();
     await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
+    })).toBe(true);
 
-    // the First-steps checklist tops the Deeds tab; the start's focus
-    // already counts, so a brand-new player sees one step done
+    // Secondary areas wait until the player deliberately opens them.
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['area-network'];
+    })).toBe(false);
+    await page.locator('#sidetabs .tab[data-tab="network"]').click();
+    const networkCoach = page.locator('.coachmark', {
+      hasText:'Network gathers the ties'
+    });
+    await expect(networkCoach).toBeVisible();
+    await networkCoach.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+
+    // the First-steps checklist is the deterministic deed → time → event loop
     const card = page.locator('.tutorial-card');
     await expect(card).toBeVisible();
     await expect(card).toContainText('First steps');
-    await expect(card.locator('li')).toHaveCount(5);
-    await expect(card.locator('li.done')).toHaveCount(1);
-    await expect(card.locator('li.done').first()).toContainText('daily focus');
+    await expect(card.locator('li')).toHaveCount(3);
+    await expect(card.locator('li.done')).toHaveCount(0);
+    await expect(card.locator('li').first())
+      .toContainText('Complete a one-time deed (not a Daily Focus)');
   });
 
-test('a saved guide-hints setting suppresses new-life map and orientation popups',
+test('a saved guide-hints setting suppresses first-life onboarding surfaces',
   async function ({ page }) {
     await page.evaluate(function () {
       FB.game.uiPrefs.hideBeginnerHints = true;
@@ -83,6 +123,196 @@ test('a saved guide-hints setting suppresses new-life map and orientation popups
     await expect(page.locator('.tutorial-card')).toHaveCount(0);
   });
 
+test('Daily Focus stays separate and an immediate deed completes First steps',
+  async function ({ page }) {
+    await page.setViewportSize({ width:1280, height:800 });
+    await startDeterministicGame(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+
+    await expect(page.locator('#daily-focus-list'))
+      .toContainText('repeats automatically whenever a day passes');
+    await expect(page.locator('[data-action-group-body="work"] .actionsubhead'))
+      .toContainText('One-time deeds');
+
+    const poach = page.locator('[data-action-id="poach"]');
+    const town = page.locator('[data-action-id="go_to_town"]');
+    const poachRow = poach.locator('..');
+    const townRow = town.locator('..');
+    await expect(poach).toHaveAttribute('data-deed-flow', 'now');
+    await expect(poach).not.toContainText('Resolves now');
+    await expect(poach).not.toContainText('Meat and coin');
+    await expect(poachRow.locator('.deed-details'))
+      .toContainText('Resolves now · spends one day');
+    await expect(poachRow.locator('.deed-details')).toBeHidden();
+    await expect(town).toHaveAttribute('data-deed-flow', 'choices');
+    await expect(town).not.toContainText('Opens choices…');
+    await expect(townRow.locator('.deed-details')).toContainText('Opens choices…');
+    const borders = await page.evaluate(function () {
+      return {
+        immediate:getComputedStyle(document.querySelector(
+          '[data-action-id="poach"]')).borderColor,
+        choices:getComputedStyle(document.querySelector(
+          '[data-action-id="go_to_town"]')).borderColor
+      };
+    });
+    expect(borders.immediate).not.toBe(borders.choices);
+
+    await poach.hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Resolves now · spends one day');
+    await expect(page.locator('#tooltip')).toContainText('Meat and coin');
+    await town.hover();
+    await expect(page.locator('#tooltip')).toContainText('Opens choices…');
+    await expect(page.locator('#tooltip')).toContainText('Spend a day at one');
+
+    // Compact/tablet layouts swap the hover surface for the shared ? disclosure.
+    await page.setViewportSize({ width:900, height:700 });
+    await town.hover();
+    await expect(page.locator('#tooltip')).toBeHidden();
+    const townInfo = townRow.locator('.deed-info');
+    await expect(townInfo).toBeVisible();
+    await townInfo.click();
+    await expect(townRow.locator('.deed-details')).toBeVisible();
+
+    // Choosing an ongoing focus is not completing a one-time deed.
+    await page.locator('[data-focus-id]:not(.focused)').first().click();
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_deed;
+    })).toBe(false);
+
+    await poach.click();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!FB.state.player.flags.tut_deed;
+      });
+    }).toBe(true);
+  });
+
+test('a choice-backed deed completes only after its confirmed day',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_deed;
+    })).toBe(false);
+
+    await page.locator('[data-action-id="go_to_town"]').click();
+    await expect(page.getByRole('heading', { name:'Where To?', exact:true }))
+      .toBeVisible();
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_deed;
+    })).toBe(false);
+    await page.getByRole('button', { name:'Stay home', exact:true }).click();
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tut_deed;
+    })).toBe(false);
+
+    await page.locator('[data-action-id="go_to_town"]').click();
+    await page.locator('[data-visit]').first().click();
+
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!FB.state.player.flags.tut_deed;
+      });
+    }).toBe(true);
+    const deedStep = await page.evaluate(function () {
+      const status = FB.tutorialStatus(FB.state);
+      return status.steps.filter(function (step) {
+        return step.id === 'deed';
+      })[0];
+    });
+    expect(deedStep.done).toBe(true);
+  });
+
+test('an affected tutorial save repairs its missing deed evidence',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const repaired = await page.evaluate(function () {
+      const s = FB.state;
+      delete s.player.flags.tut_deed;
+      s.player.cooldowns = s.player.cooldowns || {};
+      s.player.cooldowns.go_to_town = Math.max(0, s.turn - 1);
+      const status = FB.tutorialStatus(s);
+      const cooldownEvidence = status.steps.filter(function (step) {
+        return step.id === 'deed';
+      })[0].done;
+      delete s.player.cooldowns.go_to_town;
+      s.player.flags.tut_unpause = 1;
+      s.player.flags.tut_event = 1;
+      s.player.startGold = s.player.gold - 1; // legacy affected-save baseline
+      return {
+        cooldownEvidence:cooldownEvidence,
+        completedLoopTrack:FB.tutorialStatus(s).track.id
+      };
+    });
+    expect(repaired).toEqual({
+      cooldownEvidence:true,
+      completedLoopTrack:'family_legacy'
+    });
+  });
+
+test('an existing profile is grandfathered out of first-life onboarding',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The upgrade storage contract belongs to the served origin.');
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      FB.game.toTitle(); // leaves the autosave as evidence of prior play
+      localStorage.removeItem('fb_ui'); // simulate upgrading from older prefs
+    });
+    await page.reload();
+    await expect(page.getByRole('button', { name:'New Game', exact:true }))
+      .toBeVisible();
+    expect(await page.evaluate(function () {
+      return {
+        grandfathered:FB.game.uiPrefs.tipsGrandfathered,
+        onboardingStarted:FB.game.uiPrefs.onboardingStarted
+      };
+    })).toEqual({ grandfathered:true, onboardingStarted:true });
+
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-seed').fill(START_CODE);
+    await page.getByRole('button', { name:/Use this seed/ }).click();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.locator('#gm-body')).not.toContainText('First steps');
+    await expect(page.locator('#gm-body')).toContainText('daily focus and one-shot deeds');
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    await expect(page.locator('.tutorial-card')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return !!FB.state.player.flags.tutorial;
+    })).toBe(false);
+  });
+
+test('a coachmark is learned on interaction and can disable later tips in place',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#ng-seed').fill(START_CODE);
+    await page.getByRole('button', { name:/Use this seed/ }).click();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    await finishOpeningMapTour(page);
+    const coach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
+    await expect(coach).toBeVisible();
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
+    })).toBe(false);
+
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    expect(await page.evaluate(function () {
+      return !!FB.game.uiPrefs.tipsSeen['first-deed'];
+    })).toBe(true);
+    await coach.getByRole('button', { name:'Stop tips', exact:true }).click();
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return FB.game.uiPrefs.hideTips;
+    })).toBe(true);
+  });
+
 test('First steps flip from ordinary play and the track advances',
   async function ({ page }) {
     await startDeterministicGame(page);
@@ -95,9 +325,9 @@ test('First steps flip from ordinary play and the track advances',
       FB.tutorialCheck(FB.state);
       return FB.tutorialStatus(FB.state);
     });
-    expect(status.done).toBe(2); // focus + days flow
+    expect(status.done).toBe(1); // days flow
     await expect(page.locator('.toast', {
-      hasText: 'First steps 2/5: Let the days flow'
+      hasText: 'First steps 1/3: Let the days flow'
     }))
       .toBeVisible();
 
@@ -111,20 +341,19 @@ test('First steps flip from ordinary play and the track advances',
       FB.runInstant(s, runnable.a.id);
     });
 
-    // the event answer flag and the first earned coin complete the track —
-    // and the checklist advances to the next stage instead of retiring
+    // the event answer completes the track and advances to the next stage
+    // instead of waiting on an RNG-dependent income result
     await page.evaluate(function () {
       const s = FB.state;
       s.player.flags.tut_event = 1; // written by the event-option handler
-      s.player.gold = s.player.startGold + 1;
       FB.ui.refresh();
     });
     await waitForUiRefresh(page);
     status = await page.evaluate(function () {
       return FB.tutorialStatus(FB.state);
     });
-    expect(status.track.id).toBe('making_a_living');
-    await expect(page.locator('.tutorial-card')).toContainText('Making a living');
+    expect(status.track.id).toBe('family_legacy');
+    await expect(page.locator('.tutorial-card')).toContainText('Family & legacy');
 
     const advanced = await page.evaluate(function () {
       const flags = FB.state.player.flags;
@@ -223,23 +452,22 @@ test('the checklist walks its tracks and retires after the last one',
       s.turn = 5;
       FB.tutorialCheck(s); // queues the scripted welcome chapter
       const firstTrack = FB.tutorialStatus(s).track.id;
-      // First steps: the scenario's focus counts; flip the rest from play
+      // First steps: flip the three action/result steps
       flags.tut_unpause = 1;
       flags.tut_deed = 1;
       flags.tut_event = 1;
-      s.player.gold = s.player.startGold + 1;
       FB.tutorialCheck(s);
       const secondTrack = FB.tutorialStatus(s).track.id;
-      // Making a living: the livelihood comes with the scenario; add the rest
-      s.player.enterprises = [{ type:'spec_enterprise' }];
-      s.player.landPlotMigration = 1; // no legacy farm migration mid-test
-      s.player.landPlots = [{ provinceId:s.player.provinceId, settlement:0 }];
-      FB.tutorialCheck(s);
-      const thirdTrack = FB.tutorialStatus(s).track.id;
       // Family & legacy
       flags.tut_kin_tab = 1;
       me.spouseId = me.spouseId || 'spec_spouse';
       me.childrenIds.push('spec_child');
+      FB.tutorialCheck(s);
+      const thirdTrack = FB.tutorialStatus(s).track.id;
+      // Making a living: the livelihood comes with the scenario; add the rest
+      s.player.enterprises = [{ type:'spec_enterprise' }];
+      s.player.landPlotMigration = 1; // no legacy farm migration mid-test
+      s.player.landPlots = [{ provinceId:s.player.provinceId, settlement:0 }];
       FB.tutorialCheck(s);
       const queued = s.eventQueue.map(function (e) { return e.id; });
       const news = s.log.filter(function (entry) {
@@ -252,11 +480,13 @@ test('the checklist walks its tracks and retires after the last one',
         thirdTrack:thirdTrack, queued:queued, news:news, retired:retired };
     });
     expect(result.firstTrack).toBe('first_steps');
-    expect(result.secondTrack).toBe('making_a_living');
-    expect(result.thirdTrack).toBe('family_legacy');
+    expect(result.secondTrack).toBe('family_legacy');
+    expect(result.thirdTrack).toBe('making_a_living');
     expect(result.queued).toContain('tut_welcome');
     expect(result.queued).toContain('tut_livelihood');
     expect(result.queued).toContain('tut_legacy');
+    expect(result.queued.indexOf('tut_legacy'))
+      .toBeLessThan(result.queued.indexOf('tut_livelihood'));
     expect(result.news).toBe(1);
     expect(result.retired.tutorial).toBe(false);
     expect(result.retired.done).toBe(true);
@@ -275,7 +505,6 @@ test('landed rulers skip the livelihood track',
       flags.tut_unpause = 1;
       flags.tut_deed = 1;
       flags.tut_event = 1;
-      s.player.gold = s.player.startGold + 1;
       FB.tutorialCheck(s);
       const id = FB.tutorialStatus(s).track.id;
       const livelihoodQueued = s.eventQueue.filter(function (e) {
@@ -309,7 +538,6 @@ test('the scripted chain queues its welcome once, and dismissal stops it',
       flags.tut_unpause = 1;
       flags.tut_deed = 1;
       flags.tut_event = 1;
-      s.player.gold = s.player.startGold + 1;
       FB.tutorialCheck(s);
       return s.eventQueue.filter(function (e) {
         return e.id === 'tut_livelihood' || e.id === 'tut_legacy';
@@ -324,7 +552,7 @@ test('tab nudges point at the next unfinished lesson',
     const deedsTab = page.locator('#sidetabs .tab[data-tab="actions"]');
     const kinTab = page.locator('#lefttabs .tab[data-tab="family"]');
     await expect(deedsTab).toHaveClass(/nudge/);
-    await expect(kinTab).toHaveClass(/nudge/);
+    await expect(kinTab).not.toHaveClass(/nudge/);
 
     // a real deed clears the Deeds nudge
     await page.evaluate(function () {
@@ -338,6 +566,14 @@ test('tab nudges point at the next unfinished lesson',
     });
     await waitForUiRefresh(page);
     await expect(deedsTab).not.toHaveClass(/nudge/);
+
+    // Family guidance, including its tab nudge, waits for First steps.
+    await page.evaluate(function () {
+      FB.state.player.flags.tut_track_first_steps = 1;
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+    await expect(kinTab).toHaveClass(/nudge/);
 
     // opening the Kin tab stamps its step and clears its nudge
     await kinTab.click();
@@ -373,6 +609,13 @@ test('beginner lines in the stat breakdown and empty Kin panel honor the prefere
       }
       FB.ui.showTab('family');
     });
+    await expect(page.locator('#tab-family')).not.toContainText(
+      'first deed of a dynasty');
+    await page.evaluate(function () {
+      FB.state.player.flags.tut_track_first_steps = 1;
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
     await expect(page.locator('#tab-family')).toContainText(
       'first deed of a dynasty');
     await page.evaluate(function () {
@@ -392,7 +635,7 @@ test('a mid-checklist save from the single-track version keeps its progress',
     await startDeterministicGame(page);
     const status = await page.evaluate(function () {
       const s = FB.state;
-      s.player.flags = { tutorial:1, tut_seen_focus:1 }; // pre-tracks shape
+      s.player.flags = { tutorial:1, tut_deed:1, tut_seen_deed:1 };
       return FB.tutorialStatus(s);
     });
     expect(status.track.id).toBe('first_steps');

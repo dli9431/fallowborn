@@ -62,6 +62,7 @@ window.FB = window.FB || {};
   ];
   const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
   let activeActionSection = null;
+  let activeActionState = null;
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
     petition_monopoly:'work',
@@ -224,6 +225,21 @@ window.FB = window.FB || {};
     }
     header.scrollIntoView({ block:'start' });
     header.focus({ preventScroll:true });
+    return true;
+  };
+
+  /* Onboarding can teach a deed only if its real section is open and the
+     control is on screen. Keep this routing inside the Deeds panel, which
+     owns its grouping and retained disclosure state. */
+  UI.revealDeedAction = function (id) {
+    const group = DEED_GROUP[id] || 'realm';
+    actionGroupsOpen[group] = true;
+    activeActionSection = group;
+    setTab('actions', { history:false });
+    const target = document.querySelector(
+      '#tab-actions [data-action-id="' + id + '"]');
+    if (!target) return false;
+    target.scrollIntoView({ block:'center' });
     return true;
   };
 
@@ -709,7 +725,9 @@ window.FB = window.FB || {};
     const deedsTab = document.querySelector('#sidetabs .tab[data-tab="actions"]');
     if (deedsTab) deedsTab.classList.toggle('nudge', !!(on && !flags.tut_deed));
     const kinTab = document.querySelector('#lefttabs .tab[data-tab="family"]');
-    if (kinTab) kinTab.classList.toggle('nudge', !!(on && !flags.tut_kin_tab));
+    if (kinTab) kinTab.classList.toggle('nudge', !!(on &&
+      flags.tut_track_first_steps && !flags.tut_family_established &&
+      !flags.tut_kin_tab));
   }
 
   function renderActiveTab() {
@@ -868,6 +886,13 @@ window.FB = window.FB || {};
 
   function renderActions() {
     const s = FB.state, box = $('tab-actions');
+    /* Give desktop players a complete, stable keyboard map as soon as a life
+       opens. Touch layouts keep no active keyboard section, and rerenders of
+       the same life preserve whichever section the player selected. */
+    if (activeActionState !== s) {
+      activeActionState = s;
+      activeActionSection = FB.isTouch ? null : 'focus';
+    }
     let h = '';
     if (FB.tutorialActive && FB.tutorialActive(s) &&
         (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints)) {
@@ -1014,24 +1039,42 @@ window.FB = window.FB || {};
     }
     const focuses = FB.listFocuses(s);
     const instants = FB.listInstants(s);
+    function deedFlow(action) {
+      const label = String(action && action.label || '');
+      if ((action && action.opensChoices) || label.indexOf('…') >= 0) {
+        return 'choices';
+      }
+      return action && action.noConsume ? 'no-day' : 'now';
+    }
+    function deedFlowText(flow) {
+      if (flow === 'choices') return FB.T('Opens choices…');
+      if (flow === 'no-day') return FB.T('Resolves now · no day spent');
+      return FB.T('Resolves now · spends one day');
+    }
     function buildActionGroupBody(groupId, items) {
       const body = document.createElement('div');
       body.className = 'actiongroup-body';
       body.setAttribute('data-action-group-body', groupId);
       const ih = document.createElement('div');
       ih.className = 'actionsubhead';
-      ih.textContent = FB.T('Deeds — done at once unless noted');
+      ih.textContent = FB.T('One-time deeds');
       body.appendChild(ih);
       for (const item of items) {
+        const row = document.createElement('div');
         const btn = document.createElement('button');
-        btn.className = 'actionbtn';
+        const flow = deedFlow(item.a);
+        const detailsId = 'deed-details-' + item.a.id;
+        row.className = 'deed-entry settcard';
+        row.setAttribute('data-deed-flow', flow);
+        btn.className = 'actionbtn deed-main-action';
         btn.setAttribute('data-action-id', item.a.id);
+        btn.setAttribute('data-deed-flow', flow);
+        btn.setAttribute('aria-describedby', detailsId);
         btn.disabled = !item.can;
         const label = dt(s, 'action', item.a.id, item.a, 'label');
-        btn.innerHTML = shortcutHintFor('action:' + item.a.id) + esc(label) +
-          '<span class="adesc">' +
-          esc(FB.translateKnown(item.can ? item.a.desc(s) : item.reason)) +
-          '</span>';
+        const detailText = FB.translateKnown(
+          item.can ? item.a.desc(s) : item.reason);
+        btn.innerHTML = shortcutHintFor('action:' + item.a.id) + esc(label);
         (function (id) {
           btn.addEventListener('click', function () {
             setActiveActionSection(groupId);
@@ -1040,7 +1083,26 @@ window.FB = window.FB || {};
             FB.runInstant(FB.state, id);
           });
         })(item.a.id);
-        body.appendChild(btn);
+        const actions = document.createElement('span');
+        actions.className = 'settcard-actions';
+        const detailsButton = document.createElement('button');
+        detailsButton.type = 'button';
+        detailsButton.className = 'btn small settcard-info deed-info';
+        detailsButton.textContent = '?';
+        detailsButton.title = FB.T('Details');
+        detailsButton.setAttribute('aria-label', FB.T('Details'));
+        detailsButton.setAttribute('aria-expanded', 'false');
+        detailsButton.setAttribute('aria-controls', detailsId);
+        actions.appendChild(detailsButton);
+        const details = document.createElement('div');
+        details.id = detailsId;
+        details.className = 'settcard-details deed-details hidden';
+        details.innerHTML = '<b>' + esc(deedFlowText(flow)) + '</b><br>' +
+          esc(detailText);
+        row.appendChild(btn);
+        row.appendChild(actions);
+        row.appendChild(details);
+        body.appendChild(row);
         if (FB.techUiRelevant(s) && !item.can && item.a.requiresTech &&
             !FB.techRequirementMet(s, item.a.requiresTech)) {
           const techId = firstMissingTech(s, item.a.requiresTech);
@@ -1083,7 +1145,7 @@ window.FB = window.FB || {};
       fh.setAttribute('aria-level', '3');
       fh.setAttribute('data-action-section', 'focus');
       fh.innerHTML = actionSectionHintFor('focus') +
-        esc(FB.T('Daily focus — continues until changed'));
+        esc(FB.T('Daily Focus — repeats automatically whenever a day passes'));
       box.appendChild(fh);
       for (const f of focuses) appendFocus(f);
     }
@@ -2471,7 +2533,10 @@ window.FB = window.FB || {};
       h += '<div class="hint" style="margin:2px 0 0">Tap a child to set their education focus and schooling.</div>';
     } else h += '<div class="cmeta" style="font-size:13px">No living children. Without an heir, your story ends with you.</div>';
     if ((!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) &&
-        FB.tutorialLife && FB.tutorialLife(s) && !sps.length && !kids.length) {
+        FB.tutorialLife && FB.tutorialLife(s) &&
+        s.player.flags.tut_track_first_steps &&
+        !s.player.flags.tut_family_established &&
+        !sps.length && !kids.length) {
       h += '<div class="hint">' + esc(FB.T(
         '🌱 Courtship and marriage live in the Deeds tab, under Life & Family — a spouse is the first deed of a dynasty.')) + '</div>';
     }
@@ -5301,6 +5366,7 @@ window.FB = window.FB || {};
     if (name === 'family' && FB.tutorialActive && FB.tutorialActive(FB.state)) {
       FB.state.player.flags.tut_kin_tab = 1;
     }
+    if (UI.maybeTabTip) UI.maybeTabTip(name);
   }
 
   UI.cycleTab = function (dir) {

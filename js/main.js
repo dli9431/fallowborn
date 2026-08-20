@@ -2205,8 +2205,13 @@ window.FB = window.FB || {};
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
     state.player.focus = sc.focus || FB.defaultFocus(state);
-    state.player.startGold = state.player.gold; // First steps: earn-your-first-coin baseline
-    state.player.flags.tutorial = 1; // offer the First-steps checklist this life
+    const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
+      !G.uiPrefs.onboardingStarted;
+    if (firstPlayerOnboarding) {
+      G.uiPrefs.onboardingStarted = true;
+      G.saveUiPrefs();
+      state.player.flags.tutorial = 1; // offered once per browser profile
+    }
     state.peakTitleData = FB.titleSnapshot(state);
     G.paused = true;
 
@@ -2215,14 +2220,6 @@ window.FB = window.FB || {};
     FB.ui.showGame();
     FB.map.centerOn(provId, 2.0);
     FB.ui.refresh();
-    if (!state.player.flags.mapHintShown) {
-      state.player.flags.mapHintShown = 1; // once per save: how to work the map
-      if (!G.uiPrefs || !G.uiPrefs.hideBeginnerHints) {
-        FB.ui.coachmark(
-          'Drag to pan, scroll or pinch to zoom. Tap a province for details. Zoom in to see county names.',
-          '#mapwrap', { dripIdx:-1 }); // the hint tour's first stop
-      }
-    }
     FB.news(state, FB.msg('news.life.chronicle_begins',
       '📖 The chronicle of {dynasty} begins in {province}, {year} AD.',
       { dynasty: me.dyn, province: pr.name, year: state.date.year }));
@@ -2234,7 +2231,8 @@ window.FB = window.FB || {};
     } else if (introGroup !== 'christian' && sc.intro_other) {
       introPath = 'intro_other';
     }
-    const introHint = (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
+    const introHint = !firstPlayerOnboarding ||
+      (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
       ? FB.T('The Deeds tab lists your daily focus and one-shot deeds.')
       : FB.T('Watch the Deeds tab: your First steps are listed there.');
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
@@ -2244,6 +2242,9 @@ window.FB = window.FB || {};
       '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
     $('gm-go').addEventListener('click', function () {
       FB.ui.closeModal();
+      if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
+        FB.ui.resumeFirstPlayerTip();
+      }
     });
     FB.save.autosave();
     FB.save.warnIfBlocked();
@@ -2393,6 +2394,14 @@ window.FB = window.FB || {};
       return undefined;
     }
     const p = s.player;
+
+    /* skipFocus means a player-chosen one-shot deed filled this day. This is
+       the authoritative completion point for picker-backed deeds; direct
+       deeds also stamp at execution so their feedback does not depend on the
+       rest of the daily pass succeeding. */
+    if (opts && opts.skipFocus && FB.noteDeedCompleted) {
+      FB.noteDeedCompleted(s);
+    }
 
     if (!G.observe) {
       if (!p.travel) {
@@ -2611,6 +2620,7 @@ window.FB = window.FB || {};
     hideTips:false,
     tipsSeen:{},
     tipsGrandfathered:false,
+    onboardingStarted:false,
     mainTextColor:G.MAIN_TEXT_COLOR_DEFAULT,
     helperTextColor:G.HELPER_TEXT_COLOR_DEFAULT,
     realmHighlightColor:'#e8dec4',
@@ -2626,6 +2636,7 @@ window.FB = window.FB || {};
     actionBindings:{ q:'action:livelihoods' }
   };
   let storedTipsLayer = false;
+  let storedOnboardingLayer = false;
   try {
     const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
@@ -2645,6 +2656,9 @@ window.FB = window.FB || {};
         G.uiPrefs.tipsSeen = storedUiPrefs.tipsSeen;
       }
       G.uiPrefs.tipsGrandfathered = !!storedUiPrefs.tipsGrandfathered;
+      G.uiPrefs.onboardingStarted = !!storedUiPrefs.onboardingStarted;
+      storedOnboardingLayer = Object.prototype.hasOwnProperty.call(
+        storedUiPrefs, 'onboardingStarted');
       storedTipsLayer = Object.prototype.hasOwnProperty.call(
         storedUiPrefs, 'tipsSeen') ||
         Object.prototype.hasOwnProperty.call(storedUiPrefs, 'tipsGrandfathered');
@@ -2710,12 +2724,24 @@ window.FB = window.FB || {};
     try {
       if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
         G.uiPrefs.tipsGrandfathered = true;
+        G.uiPrefs.onboardingStarted = true;
       }
     } catch (e2) { /* storage probe failed: leave tips on */ }
+  }
+  if (!storedOnboardingLayer && !G.uiPrefs.onboardingStarted) {
+    try {
+      if (FB.save && FB.save.hasAnySave && FB.save.hasAnySave()) {
+        G.uiPrefs.onboardingStarted = true;
+      }
+    } catch (e3) { /* storage probe failed: leave onboarding available */ }
   }
   G.saveUiPrefs = function () {
     try { localStorage.setItem('fb_ui', JSON.stringify(G.uiPrefs)); } catch (e) { /* private mode */ }
   };
+  if ((!storedTipsLayer && G.uiPrefs.tipsGrandfathered) ||
+      (!storedOnboardingLayer && G.uiPrefs.onboardingStarted)) {
+    G.saveUiPrefs();
+  }
   G.applyMainTextColor = function (color) {
     if (typeof color !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(color)) {
       color = G.MAIN_TEXT_COLOR_DEFAULT;
@@ -2746,8 +2772,8 @@ window.FB = window.FB || {};
   G.uiPrefs.helperTextColor = G.applyHelperTextColor(G.uiPrefs.helperTextColor);
 
   /* ---------- Tutorial: staged checklist tracks that teach the game ----------
-     Offered to lives created from this version on (player.flags.tutorial is
-     stamped at game start, so old saves never see it). Tracks run in order;
+     Offered only to the first life begun by a fresh browser profile
+     (player.flags.tutorial is stamped at game start). Tracks run in order;
      the first eligible unfinished track shows in the Deeds tab. Steps flip
      from ordinary play — some read live state, some read one-time flags
      written at the action's choke point. FB.tutorialCheck runs from the
@@ -2759,21 +2785,11 @@ window.FB = window.FB || {};
     { id:'first_steps', icon:'🌱', event:null,
       title:function () { return FB.T('First steps'); },
       steps:[
-        { id:'focus',   label:function () { return FB.T('Set a daily focus'); } },
+        { id:'deed',    label:function () {
+          return FB.T('Complete a one-time deed (not a Daily Focus)');
+        } },
         { id:'unpause', label:function () { return FB.T('Let the days flow'); } },
-        { id:'deed',    label:function () { return FB.T('Complete a deed'); } },
-        { id:'event',   label:function () { return FB.T('Answer an event'); } },
-        { id:'gold',    label:function () { return FB.T('Earn your first coin'); } }
-      ] },
-    { id:'making_a_living', icon:'🌾', event:'tut_livelihood',
-      title:function () { return FB.T('Making a living'); },
-      // livelihoods and enterprises belong to the lower stations — landed
-      // rulers (tier 3+) skip straight to the family track
-      when:function (s) { return s.player.tier <= 2; },
-      steps:[
-        { id:'livelihood', label:function () { return FB.T('Take up a livelihood'); } },
-        { id:'enterprise', label:function () { return FB.T('Start an enterprise'); } },
-        { id:'land',       label:function () { return FB.T('Buy your first land plot'); } }
+        { id:'event',   label:function () { return FB.T('Answer an event'); } }
       ] },
     { id:'family_legacy', icon:'👪', event:'tut_legacy',
       title:function () { return FB.T('Family & legacy'); },
@@ -2781,15 +2797,43 @@ window.FB = window.FB || {};
         { id:'kin_tab', label:function () { return FB.T('Meet your household in the Kin tab'); } },
         { id:'wed',     label:function () { return FB.T('Wed a spouse'); } },
         { id:'heir',    label:function () { return FB.T('Welcome a child'); } }
+      ] },
+    { id:'making_a_living', icon:'🌾', event:'tut_livelihood',
+      title:function () { return FB.T('Making a living'); },
+      // livelihoods and enterprises belong to the lower stations — landed
+      // rulers (tier 3+) finish with the family track instead
+      when:function (s) { return s.player.tier <= 2; },
+      steps:[
+        { id:'livelihood', label:function () { return FB.T('Take up a livelihood'); } },
+        { id:'enterprise', label:function () { return FB.T('Start an enterprise'); } },
+        { id:'land',       label:function () { return FB.T('Buy your first land plot'); } }
       ] }
   ];
   function tutorialStepDone(s, id) {
     const p = s.player, flags = p.flags || {};
+    if (flags.tut_family_established &&
+        (id === 'kin_tab' || id === 'wed' || id === 'heir')) return true;
     if (id === 'focus') return !!p.focus;
     if (id === 'unpause') return !!flags.tut_unpause;
-    if (id === 'deed') return !!flags.tut_deed;
+    if (id === 'deed') {
+      if (flags.tut_deed) return true;
+      /* Repair tutorial lives created while modal-backed deeds spent their
+         day without stamping tut_deed. A retained authored deed cooldown is
+         durable evidence that the action was taken; keep this a pure read so
+         tutorial status remains deterministic. */
+      const cooldowns = p.cooldowns || {};
+      for (const action of FB.instants || []) {
+        if (Object.prototype.hasOwnProperty.call(cooldowns, action.id)) {
+          return true;
+        }
+      }
+      /* Some affected modal actions leave no authored cooldown. Do not strand
+         a first-life checklist when every other outcome of the opening loop
+         is already complete; at that point the lesson has done its job. */
+      return p.startGold !== undefined && !!flags.tut_unpause &&
+        !!flags.tut_event && p.gold > p.startGold;
+    }
     if (id === 'event') return !!flags.tut_event;
-    if (id === 'gold') return p.startGold !== undefined && p.gold > p.startGold;
     if (id === 'livelihood') return !!p.profession;
     if (id === 'enterprise') return (p.enterprises || []).length > 0;
     if (id === 'land') return FB.landPlots(s).length > 0;
@@ -2810,6 +2854,12 @@ window.FB = window.FB || {};
   FB.tutorialLife = function (s) {
     return !!(s && s.player && s.player.flags &&
       (s.player.flags.tutorial || s.player.flags.tutorial_done));
+  };
+  FB.noteDeedCompleted = function (s) {
+    if (G.observe || !FB.tutorialLife(s)) return false;
+    s.player.flags = s.player.flags || {};
+    s.player.flags.tut_deed = 1;
+    return true;
   };
   function tutorialTrackStatus(s, track) {
     const steps = [];
@@ -2842,6 +2892,37 @@ window.FB = window.FB || {};
     let allDone = true;
     for (const track of TUTORIAL_TRACKS) {
       if (track.when && !track.when(s)) continue;
+      /* Tracks are instructional stages, not merely a display order. Do not
+         toast, flag, or launch a later chapter because its live-state goal
+         happened early; it becomes guidance only after the prior track. */
+      if (track.id === 'family_legacy' &&
+          !flags.tut_track_first_steps) {
+        allDone = false;
+        continue;
+      }
+      if (track.id === 'making_a_living' &&
+          !flags.tut_track_family_legacy) {
+        allDone = false;
+        continue;
+      }
+      if (track.id === 'family_legacy' && flags.tut_track_first_steps &&
+          !flags.tut_track_family_legacy &&
+          !flags.tut_family_guidance_started &&
+          !flags.tut_family_established) {
+        const me = s.chars[s.player.charId];
+        if (me && me.spouseId) {
+          /* A household already established before this track becomes active
+             needs no courtship tutorial. Complete the whole chapter without
+             inventing a child record or flashing three synthetic toasts. */
+          flags.tut_family_established = 1;
+          flags.tut_kin_tab = 1;
+          flags.tut_seen_kin_tab = 1;
+          flags.tut_seen_wed = 1;
+          flags.tut_seen_heir = 1;
+        } else {
+          flags.tut_family_guidance_started = 1;
+        }
+      }
       const status = tutorialTrackStatus(s, track);
       for (const step of status.steps) {
         if (!step.done || flags['tut_seen_' + step.id]) continue;
@@ -2852,17 +2933,36 @@ window.FB = window.FB || {};
             total:status.total, label:step.label
           });
         }
+        if (step.id === 'enterprise' && FB.ui &&
+            FB.ui.resumeMakingLivingTips) {
+          FB.ui.resumeMakingLivingTips();
+        }
       }
       if (status.done < status.total) { allDone = false; continue; }
       if (flags['tut_track_' + track.id]) continue;
       flags['tut_track_' + track.id] = 1;
-      if (track.event && !hidden) FB.queueEvent(s, track.event, {}); // scripted chain chapter
-      if (!hidden) {
+      if (track.id === 'first_steps' && FB.ui &&
+          FB.ui.resumePostFirstStepsTips) {
+        FB.ui.resumePostFirstStepsTips();
+      }
+      if (track.id === 'family_legacy' && FB.ui &&
+          FB.ui.resumeMakingLivingTips) {
+        FB.ui.resumeMakingLivingTips();
+      }
+      const autoCompletedFamily = track.id === 'family_legacy' &&
+        !!flags.tut_family_established;
+      if (track.event && !hidden && !autoCompletedFamily) {
+        FB.queueEvent(s, track.event, {}); // scripted chain chapter
+      }
+      if (!hidden && !autoCompletedFamily) {
         FB.news(s, FB.msg('news.tutorial.track_done',
           '{icon} {track} — the lessons take root.', {
             icon:track.icon, track:track.title()
           }));
       }
+    }
+    if (FB.ui && FB.ui.resumeFamilyLegacyTips) {
+      FB.ui.resumeFamilyLegacyTips();
     }
     if (!allDone) return;
     flags.tutorial_done = 1;
@@ -2878,11 +2978,6 @@ window.FB = window.FB || {};
     if (!v && FB.state && FB.state.player && FB.state.player.flags &&
         !G.observe) {
       FB.state.player.flags.tut_unpause = 1; // First steps: let the days flow
-      if (FB.ui && FB.ui.maybeHint) {
-        FB.ui.maybeHint('time-flow',
-          'The days now flow on their own. Space (or ⏸) pauses again, F (or ▶▶) skips to the next happening.',
-          '#timebtns');
-      }
     }
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
   };
@@ -2897,8 +2992,6 @@ window.FB = window.FB || {};
       if (FB.ui.eventsBusy()) return; // an event awaits your choice
       if (!$('genmodal').classList.contains('hidden')) return; // a dialog is open
       if (document.hidden) return;
-      if (FB.ui.dailyTip) FB.ui.dailyTip(); // first-time tips: one drip per natural day
-      if (G.paused) return; // a fresh lesson just stilled the days
       G.passDay({ liveTick:true });
     }, G.SPEEDS[G.speedIdx]);
   }
@@ -4181,6 +4274,7 @@ window.FB = window.FB || {};
           entry_type:'resumed-campaign'
         });
       }
+      if (FB.ui.resumeFirstPlayerTip) FB.ui.resumeFirstPlayerTip();
       if (FB.ui.showPendingMarriageResidence) {
         FB.ui.showPendingMarriageResidence();
       }

@@ -486,8 +486,11 @@ the *chief’s* war-band and the shield-ring among the pagans (Christian/Jewish 
 **The tutorial chain is code-queued teaching content.**
 `data/events_tutorial.js` holds three `trigger:{never:true}`, once-per-life chapters
 queued from `FB.tutorialCheck` (js/main.js): `tut_welcome` a couple of days into a
-tutorial life, `tut_livelihood` when the Making-a-living checklist track completes,
-and `tut_legacy` when the final track completes. Stage flags live in `player.flags`
+tutorial life, `tut_legacy` when the Family-and-legacy checklist track completes through
+play, and `tut_livelihood` when the lower-rank Making-a-living track completes. A protagonist
+who is already married when family guidance becomes eligible silently completes that track
+and skips `tut_legacy`, whose child-and-inheritance framing would otherwise be misleading.
+Stage flags live in `player.flags`
 and die with the protagonist; dismissing the checklist stops further chapters.
 Options are small and all-positive so automation scores them sanely.
 

@@ -1857,19 +1857,12 @@ window.FB = window.FB || {};
   /* ================= coachmarks (lessons that point) =================
      A beginner lesson shows as a coachmark: a tooltip anchored to the button
      or area it teaches, with that target lit up, staying open until the
-     player dismisses it — the corner toasts faded before a lesson could sink
-     in. Next pages to the following orientation lesson and Back rewinds,
-     without waiting for the day — but Next stays shut until the lit control
-     has had its touch (lessons marked freeNext, like the pace of days, skip
-     the touch: unpausing could pop an event and break the tour; a lesson can
-     also widen its touch — touchAlso counts using an already-open pane like
-     Deeds or Self, touchHover counts hovering the lit control, like the top
-     bar whose breakdowns show on hover). The menu
-     lessons (controls, guide, save) re-present above the open menu
-     sheet at their own spot in it, since the sheet covers the whole screen
-     on small layouts. While an event or dialog holds the screen the lesson
-     waits its turn (pumped by UI.refresh and the modal close path), and one
-     coachmark shows at a time; later ones queue behind it. */
+     player acknowledges it — the corner toasts faded before a lesson could
+     sink in. Using the lit control counts as learning a first-time tip, while
+     Got it dismisses it and Stop tips opts out in place. touchAlso can widen
+     that interaction to an already-open pane. While an event or dialog holds
+     the screen the lesson waits its turn (pumped by UI.refresh and the modal
+     close path), and one coachmark shows at a time; later ones queue behind it. */
   let coachQueue = [];
   let coachEl = null;
   let coachLit = null;
@@ -1880,6 +1873,80 @@ window.FB = window.FB || {};
   let coachDripIdx = null; // its place in DRIP_TIPS, when it is one
   let coachFirstItem = null;    // the map lesson — the tour's first stop (-1)
   let coachLastTourIdx = null;  // the tour position most recently shown
+  let tipPending = {};     // first-time tips queued or visible, not yet learned
+
+  function coachTelemetry(name, item, extra) {
+    if (!item || !item.hintId || !FB.trackTelemetry) return;
+    const data = {
+      hint_id:item.hintId,
+      hint_kind:item.hintKind || 'guide'
+    };
+    if (extra) for (const key in extra) data[key] = extra[key];
+    FB.trackTelemetry(name, data);
+  }
+
+  function rememberFirstTimeTip(item) {
+    if (!item || !item.tipId || !FB.game || !FB.game.uiPrefs) return;
+    const prefs = FB.game.uiPrefs;
+    if (!prefs.tipsSeen) prefs.tipsSeen = {};
+    prefs.tipsSeen[item.tipId] = 1;
+    delete tipPending[item.tipId];
+    if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
+  }
+
+  function releasePendingTip(item) {
+    if (item && item.tipId) delete tipPending[item.tipId];
+  }
+
+  function acknowledgeCoachmark(action) {
+    const item = coachItem;
+    const followUp = item && item.tipId;
+    rememberFirstTimeTip(item);
+    coachTelemetry('hint-dismissed', item, { dismiss_action:action });
+    dismissCoachmark();
+    if (followUp === 'first-deed' && UI.maybeFirstTimeFlowTip) {
+      UI.maybeFirstTimeFlowTip();
+    } else if (followUp === 'map-controls' && UI.maybeMapHomeTip) {
+      UI.maybeMapHomeTip();
+    } else if (followUp === 'map-home' && UI.maybeMapFiltersTip) {
+      UI.maybeMapFiltersTip();
+    } else if (followUp === 'map-filters' && UI.resumeFirstPlayerTip) {
+      UI.resumeFirstPlayerTip();
+    } else if (followUp === 'area-self' && UI.resumeFamilyLegacyTips) {
+      if (SH.closeSelfDrawer) SH.closeSelfDrawer();
+      UI.resumeFamilyLegacyTips();
+    } else if (followUp === 'area-kin' && UI.resumeFamilyLegacyTips) {
+      UI.resumeFamilyLegacyTips();
+    } else if (followUp === 'making-enterprise' &&
+        UI.resumeMakingLivingTips) {
+      UI.resumeMakingLivingTips();
+    }
+  }
+
+  function stopCoachmarkTips() {
+    const item = coachItem;
+    if (!item || !FB.game || !FB.game.uiPrefs) return;
+    const firstTimeOnly = item.hintKind === 'first-time';
+    if (firstTimeOnly) FB.game.uiPrefs.hideTips = true;
+    else FB.game.uiPrefs.hideBeginnerHints = true;
+    rememberFirstTimeTip(item);
+    const kept = [];
+    for (const queued of coachQueue) {
+      const remove = firstTimeOnly
+        ? queued.hintKind === 'first-time'
+        : !!queued.hintId;
+      if (remove) releasePendingTip(queued);
+      else kept.push(queued);
+    }
+    coachQueue = kept;
+    if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
+    coachTelemetry('tips-disabled', item, {
+      disable_scope:firstTimeOnly ? 'first-time' : 'guide-hints',
+      disable_source:'coachmark'
+    });
+    dismissCoachmark();
+    if (!firstTimeOnly && FB.state && UI.refresh) UI.refresh();
+  }
 
   function coachmarkBlocked(item) {
     const game = $('game');
@@ -1940,14 +2007,22 @@ window.FB = window.FB || {};
     return { text:(item.overText || item.text), target:item.overTarget,
       dripIdx:item.dripIdx, overTarget:item.overTarget,
       overText:item.overText || null, overModal:true, freeNext:true,
-      closeMenuOnNext:true, baseText:item.text, baseTarget:item.target };
+      closeMenuOnNext:true, baseText:item.text, baseTarget:item.target,
+      noNext:item.noNext, hintId:item.hintId, hintKind:item.hintKind,
+      tipId:item.tipId, shownTracked:item.shownTracked,
+      interactedTracked:item.interactedTracked };
   }
   function baseCoachItem(item) { // back from the over-sheet presentation
     return { text:(item.baseText || item.text),
       target:(item.baseTarget || item.target), dripIdx:item.dripIdx,
-      overTarget:item.overTarget, overText:item.overText || null };
+      overTarget:item.overTarget, overText:item.overText || null,
+      noNext:item.noNext, hintId:item.hintId, hintKind:item.hintKind,
+      tipId:item.tipId, shownTracked:item.shownTracked,
+      interactedTracked:item.interactedTracked };
   }
   UI.coachmarkReset = function () {
+    releasePendingTip(coachItem);
+    for (const item of coachQueue) releasePendingTip(item);
     coachQueue = [];
     coachFirstItem = null;
     coachLastTourIdx = null;
@@ -1959,6 +2034,10 @@ window.FB = window.FB || {};
     coachDripIdx = (typeof item.dripIdx === 'number') ? item.dripIdx : null;
     if (coachDripIdx === -1) coachFirstItem = item; // the map lesson itself
     if (coachDripIdx !== null) coachLastTourIdx = coachDripIdx;
+    if (!item.shownTracked) {
+      item.shownTracked = true;
+      coachTelemetry('hint-shown', item);
+    }
     coachEl = document.createElement('div');
     coachEl.className = 'coachmark' + (item.overModal ? ' overmodal' : '');
     coachEl.setAttribute('role', 'status');
@@ -1973,11 +2052,21 @@ window.FB = window.FB || {};
     dismiss.type = 'button';
     dismiss.className = 'btn small coachmark-dismiss';
     dismiss.textContent = FB.T('Got it');
-    dismiss.addEventListener('click', dismissCoachmark);
+    dismiss.addEventListener('click', function () {
+      acknowledgeCoachmark('got-it');
+    });
     const hasNext = hasNextLesson();
     if (hasNext) actions.appendChild(dismiss); // bottom-left while paging
+    if (item.hintId) {
+      const stop = document.createElement('button');
+      stop.type = 'button';
+      stop.className = 'btn small coachmark-stop';
+      stop.textContent = FB.T('Stop tips');
+      stop.addEventListener('click', stopCoachmarkTips);
+      actions.appendChild(stop);
+    }
     // Back rewinds one tour stop — every lesson that has one shows it
-    if (coachTourItem(coachBackIdx())) {
+    if (!item.noNext && coachTourItem(coachBackIdx())) {
       const back = document.createElement('button');
       back.type = 'button';
       back.className = 'btn small coachmark-back';
@@ -2006,7 +2095,7 @@ window.FB = window.FB || {};
     // days) or points at a zero-size corner with nothing to touch. A menu
     // lesson listens for its ☰ touch either way: the touch opens the sheet
     // the lesson re-presents above.
-    const wantsTouch = (coachNext && !item.freeNext) ||
+    const wantsTouch = !!item.hintId || (coachNext && !item.freeNext) ||
       (item.overTarget && !item.overModal);
     if (coachLit && wantsTouch) {
       const r = coachLit.getBoundingClientRect();
@@ -2038,6 +2127,7 @@ window.FB = window.FB || {};
   }
 
   function hasNextLesson() {
+    if (coachItem && coachItem.noNext) return false;
     if (tipsSilenced()) return false; // no paging into a silenced tour
     if (coachDripIdx !== null) return coachDripIdx + 1 < DRIP_TIPS.length;
     return !!nextLessonTip();
@@ -2066,6 +2156,13 @@ window.FB = window.FB || {};
      listeners stay until the lesson closes — a menu lesson's follow-up needs
      the click after the pointerdown. */
   function coachTouched() {
+    if (coachItem && !coachItem.interactedTracked) {
+      coachItem.interactedTracked = true;
+      rememberFirstTimeTip(coachItem);
+      coachTelemetry('hint-interacted', coachItem, {
+        interaction:'highlighted-control'
+      });
+    }
     if (coachNext) {
       coachNext.disabled = false;
       coachNext.removeAttribute('title');
@@ -2113,6 +2210,8 @@ window.FB = window.FB || {};
       idx = tip ? DRIP_TIPS.indexOf(tip) : null;
     }
     const item = coachItem;
+    rememberFirstTimeTip(item);
+    coachTelemetry('hint-dismissed', item, { dismiss_action:'next' });
     dismissCoachmark();
     // the Self/Kin drawer covers the whole screen on small layouts — but keep
     // it open when the next lesson lives inside it (Self → Kin), so the lit
@@ -2183,6 +2282,7 @@ window.FB = window.FB || {};
     }
     coachLit = target;
     target.classList.add('coachmark-lit');
+    if (positionPanelCoachmark(target, rect, vw, vh)) return;
     const w = coachEl.offsetWidth, h = coachEl.offsetHeight;
     // only a truly tall area (the map) is pointed at near its top edge; a
     // full-width but short bar (the mobile time controls) gets the ordinary
@@ -2199,6 +2299,75 @@ window.FB = window.FB || {};
     coachEl.classList.add(below ? 'arrow-top' : 'arrow-bottom');
     const arrow = coachEl.querySelector('.coachmark-arrow');
     arrow.style.left = Math.max(14, Math.min(Math.round(ax - left), w - 14)) + 'px';
+  }
+
+  /* A panel lesson should read against the quiet map, not stack another
+     parchment card over dense panel copy. Place the coachmark inside the
+     visible map and point back toward whichever panel owns the target. A
+     full-screen mobile drawer overlaps the map, so it deliberately falls
+     through to the ordinary anchored placement. */
+  function positionPanelCoachmark(target, rect, vw, vh) {
+    const panel = target.closest && target.closest('#left, #side');
+    const map = $('mapwrap');
+    if (!panel || !map) return false;
+    const mapRect = map.getBoundingClientRect();
+    const overlapW = Math.max(0,
+      Math.min(mapRect.right, panel.getBoundingClientRect().right) -
+      Math.max(mapRect.left, panel.getBoundingClientRect().left));
+    const overlapH = Math.max(0,
+      Math.min(mapRect.bottom, panel.getBoundingClientRect().bottom) -
+      Math.max(mapRect.top, panel.getBoundingClientRect().top));
+    if (overlapW > 8 && overlapH > 8) return false;
+
+    const mapLeft = Math.max(8, Math.round(mapRect.left + 10));
+    const mapRight = Math.min(vw - 8, Math.round(mapRect.right - 10));
+    const mapTop = Math.max(8, Math.round(mapRect.top + 10));
+    const mapBottom = Math.min(vh - 8, Math.round(mapRect.bottom - 10));
+    const mapWidth = mapRight - mapLeft;
+    if (mapWidth < 180) return false;
+    coachEl.style.maxWidth = Math.min(300, mapWidth) + 'px';
+    const w = coachEl.offsetWidth, h = coachEl.offsetHeight;
+    if (mapBottom - mapTop < h) return false;
+
+    const tx = rect.left + rect.width / 2;
+    const ty = rect.top + rect.height / 2;
+    let left, top, direction;
+    if (rect.right <= mapRect.left + 2) {
+      direction = 'left';
+      left = mapLeft;
+      top = Math.max(mapTop,
+        Math.min(Math.round(ty - h / 2), mapBottom - h));
+    } else if (rect.left >= mapRect.right - 2) {
+      direction = 'right';
+      left = mapRight - w;
+      top = Math.max(mapTop,
+        Math.min(Math.round(ty - h / 2), mapBottom - h));
+    } else if (rect.top >= mapRect.bottom - 2) {
+      direction = 'bottom';
+      left = Math.max(mapLeft,
+        Math.min(Math.round(tx - w / 2), mapRight - w));
+      top = mapBottom - h;
+    } else if (rect.bottom <= mapRect.top + 2) {
+      direction = 'top';
+      left = Math.max(mapLeft,
+        Math.min(Math.round(tx - w / 2), mapRight - w));
+      top = mapTop;
+    } else {
+      return false;
+    }
+
+    coachEl.style.left = left + 'px';
+    coachEl.style.top = top + 'px';
+    coachEl.classList.add('arrow-' + direction, 'over-map');
+    const arrow = coachEl.querySelector('.coachmark-arrow');
+    if (direction === 'left' || direction === 'right') {
+      arrow.style.top = Math.max(14,
+        Math.min(Math.round(ty - top), h - 14)) + 'px';
+    } else {
+      arrow.style.left = Math.max(14,
+        Math.min(Math.round(tx - left), w - 14)) + 'px';
+    }
+    return true;
   }
 
   /* On small layouts the Self/Kin tabs sit in a drawer that a portrait tap
@@ -2256,37 +2425,39 @@ window.FB = window.FB || {};
     s.player.flags['hint_' + id] = 1;
     return true;
   };
-  UI.maybeHint = function (id, text, target) {
+  UI.maybeHint = function (id, text, target, opts) {
     if (!UI.hintDue(id)) return false;
-    UI.coachmark(text, target);
+    const coachOpts = {
+      hintId:id,
+      hintKind:'guide',
+      noNext:true
+    };
+    if (opts) for (const key in opts) coachOpts[key] = opts[key];
+    UI.coachmark(text, target, coachOpts);
     return true;
   };
 
   /* ================= first-time player tips =================
-     Short, useful lessons for a brand-new player, told once ever per install:
-     a day-by-day drip of UI orientation on the first natural days (fired from
-     the day ticker), plus contextual one-liners fired from engine choke points
-     the first time a situation occurs. Each lesson shows as a coachmark
-     pointing at the control or area it teaches (the target selectors below),
-     open until dismissed. Fired tips are recorded in the
-     browser-local uiPrefs.tipsSeen, so no save ever re-teaches them. The layer
-     falls silent under its own Settings switch (hideTips), under the wider
-     guide-hints switch (hideBeginnerHints), or when the install was
-     grandfathered in with an existing save (tipsGrandfathered). */
+     A fresh browser profile learns the map, Home, and filters before any
+     other coachmark, then the playable deed/time/event loop and Self. Other areas
+     teach themselves only when the player deliberately opens them. A tip is
+     recorded in browser-local uiPrefs.tipsSeen only after its coachmark is
+     dismissed or its highlighted control is used, never merely when queued.
+     The layer falls silent under its own Settings switch (hideTips), under the
+     wider guide-hints switch (hideBeginnerHints), or when an existing save
+     grandfathered this browser profile out (tipsGrandfathered). */
   const DRIP_TIPS = [
-    { id:'drip-controls', target:'#btn-menu', overTarget:'#m-settings',
-      text:'💡 The game controls live in the Settings. The menu (Esc or ☰) opens the way to them.',
-      overText:'💡 Settings holds the game controls. The speed of the days is set here (on desktop, − and + change it at any time).' },
-    { id:'drip-guide', target:'#btn-menu', overTarget:'#m-help', text:'💡 ❓ How to play in the menu opens the Guide, every system explained in depth.' },
-    { id:'drip-speed', target:'#timebtns', freeNext:true, text:'💡 ▶ Play runs the game one day at a time, while ▶▶ fast forward leaps a full season. Slow or quicken the flow with − and + (or Settings).' },
-    { id:'drip-deeds', target:'#sidetabs .tab[data-tab="actions"]', touchAlso:'#tab-actions', text:'💡 The Deeds tab (D) is where things get done: a daily focus that repeats, and one-shot deeds that spend the day.' },
-    { id:'drip-self', target:'#lefttabs .tab[data-tab="char"]', touchAlso:'#tab-char', text:'💡 The Self tab (S) is your character: skills, traits, and belongings.' },
-    { id:'drip-kin', target:'#lefttabs .tab[data-tab="family"]', text:'💡 The Kin tab (K) is your family: spouse, children, and kin. Tap a child to guide their education.' },
-    { id:'drip-land', target:'#sidetabs .tab[data-tab="prov"]', text:'💡 The Land tab (L) looks at any county up close: buy plots, and manage what you hold.' },
-    { id:'drip-network', target:'#sidetabs .tab[data-tab="network"]', text:'💡 The Network tab (N) lists the ties around your household: connections, retainers, guilds, and courts, and what each tie currently does.' },
-    { id:'drip-chronicle', target:'#sidetabs .tab[data-tab="log"]', text:'💡 The Chronicle tab (C) remembers the story: every piece of news and every choice you make.' },
-    { id:'drip-topbar', target:'#tb-stats', touchHover:true, text:'💡 The top bar keeps the date, the flow of days, and your stats. Hover or tap gold, prestige, piety, or voice for a breakdown.' },
-    { id:'drip-toasts', target:'#toasts', text:'💡 These corner notes fade on their own. Tap one to dismiss it sooner.' }
+    { id:'area-self', tab:'char',
+      target:'#lefttabs .tab[data-tab="char"]', noNext:true,
+      text:'💡 Self shows your character’s skills, traits, equipment, faith, and standing.' },
+    { id:'area-kin', tab:'family', target:'#tab-family', noNext:true,
+      text:'💡 Kin is your household and dynasty. Tap a relative to see their life and guide a child’s education.' },
+    { id:'area-land', tab:'prov', target:'#tab-prov', noNext:true,
+      text:'💡 Land looks closely at the selected county: its settlements, holdings, population, and opportunities.' },
+    { id:'area-network', tab:'network', target:'#tab-network', noNext:true,
+      text:'💡 Network gathers the ties around your house: connections, retainers, guilds, courts, and what each tie does.' },
+    { id:'area-chronicle', tab:'log', target:'#tab-log', noNext:true,
+      text:'💡 The Chronicle remembers the story: every piece of news and every choice you make.' }
   ];
 
   /* the gates under which any first-time tip may fire at all */
@@ -2310,11 +2481,7 @@ window.FB = window.FB || {};
   UI.tipDue = function (id) {
     if (tipsSilenced()) return false;
     const prefs = FB.game.uiPrefs;
-    if (!prefs.tipsSeen) prefs.tipsSeen = {};
-    if (prefs.tipsSeen[id]) return false;
-    prefs.tipsSeen[id] = 1;
-    if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
-    return true;
+    return !(prefs.tipsSeen && prefs.tipsSeen[id]) && !tipPending[id];
   };
   function dripEntryById(id) {
     for (let i = 0; i < DRIP_TIPS.length; i++) {
@@ -2322,22 +2489,231 @@ window.FB = window.FB || {};
     }
     return null;
   }
-  UI.maybeTip = function (id, text, target) {
+  UI.maybeTip = function (id, text, target, opts) {
     if (!UI.tipDue(id)) return false;
+    tipPending[id] = 1;
     const entry = dripEntryById(id);
-    UI.coachmark(text, target, entry ? {
-      dripIdx:entry.idx, freeNext:entry.tip.freeNext,
-      overTarget:entry.tip.overTarget, overText:entry.tip.overText || null,
-      touchAlso:entry.tip.touchAlso || null,
-      touchHover:entry.tip.touchHover || null
-    } : null);
+    const coachOpts = {
+      hintId:id,
+      hintKind:'first-time',
+      tipId:id,
+      noNext:true
+    };
+    if (entry) {
+      coachOpts.dripIdx = entry.idx;
+      coachOpts.freeNext = entry.tip.freeNext;
+      coachOpts.noNext = entry.tip.noNext;
+      coachOpts.overTarget = entry.tip.overTarget;
+      coachOpts.overText = entry.tip.overText || null;
+      coachOpts.touchAlso = entry.tip.touchAlso || null;
+      coachOpts.touchHover = entry.tip.touchHover || null;
+    }
+    if (opts) for (const key in opts) coachOpts[key] = opts[key];
+    UI.coachmark(text, target, coachOpts);
     return true;
   };
-  UI.dailyTip = function () {
-    for (const tip of DRIP_TIPS) {
-      if (UI.maybeTip(tip.id, tip.text, tip.target)) return true;
+
+  UI.maybeFirstTimeFlowTip = function () {
+    return UI.maybeTip('first-time-flow',
+      '💡 After choosing a deed, unpause with Play and let the days flow; the world will bring consequences and choices to your door.',
+      '#timebtns', { freeNext:true, noNext:true });
+  };
+
+  UI.maybeSelfTip = function () {
+    const entry = dripEntryById('area-self');
+    const tip = entry && entry.tip;
+    if (!tip) return false;
+    const text = mobileLayoutNow()
+      ? '💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.'
+      : tip.text;
+    return UI.maybeTip(tip.id, text, tip.target, tip);
+  };
+
+  UI.maybeMapControlsTip = function () {
+    return UI.maybeTip('map-controls',
+      '💡 The map is yours to explore: drag to pan, scroll or pinch to zoom, and tap a province for details.',
+      '#mapwrap', { noNext:true });
+  };
+
+  UI.maybeMapHomeTip = function () {
+    return UI.maybeTip('map-home',
+      '💡 Lost your place? Use Home to recenter the map on your current home county.',
+      '#btn-home', { noNext:true });
+  };
+
+  UI.maybeMapFiltersTip = function () {
+    return UI.maybeTip('map-filters',
+      '💡 Use Map filters (R on desktop) to cycle views of realms, your lands, your liege, de jure titles, and wars.',
+      '#btn-mapmode', { noNext:true });
+  };
+
+  UI.maybeFamilyMatchTip = function () {
+    const s = FB.state;
+    const status = s && FB.instantStatus
+      ? FB.instantStatus(s, 'seek_match') : null;
+    if (!status || !status.shown || !status.can) return false;
+    const exposed = UI.revealDeedAction && UI.revealDeedAction('seek_match');
+    return UI.maybeTip('family-match',
+      '💡 In Life & Family, use Seek a match. Choose someone to pursue so you can begin a household and continue your family line.',
+      exposed ? '#tab-actions [data-action-id="seek_match"]' :
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+  };
+
+  UI.maybeFamilyCourtshipTip = function () {
+    return UI.maybeTip('family-courtship',
+      '💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose.',
+      '#lefttabs .tab[data-tab="family"]', { noNext:true });
+  };
+
+  UI.maybeFamilyProposalTip = function () {
+    const s = FB.state;
+    const status = s && FB.instantStatus
+      ? FB.instantStatus(s, 'propose') : null;
+    if (!status || !status.shown || !status.can) return false;
+    const exposed = UI.revealDeedAction && UI.revealDeedAction('propose');
+    return UI.maybeTip('family-propose',
+      '💡 Your courtship is ready. In Life & Family, use Propose marriage to try to wed your match and secure your family’s future.',
+      exposed ? '#tab-actions [data-action-id="propose"]' :
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+  };
+
+  UI.resumeFamilyLegacyTips = function () {
+    if (tipsSilenced()) return false;
+    const s = FB.state;
+    if (!s || !s.player || !FB.tutorialLife || !FB.tutorialLife(s)) {
+      return false;
+    }
+    const flags = s.player.flags || {};
+    if (!flags.tut_track_first_steps) return false;
+    const me = s.chars && s.chars[s.player.charId];
+    if (!flags.tut_kin_tab || !me || me.spouseId) return false;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['area-kin']) {
+      return UI.maybeTabTip ? UI.maybeTabTip('family') : false;
+    }
+    if (!flags.courting || !s.player.courtingId) {
+      return !seen['family-match'] ? UI.maybeFamilyMatchTip() : false;
+    }
+    const proposal = FB.instantStatus
+      ? FB.instantStatus(s, 'propose') : null;
+    if (proposal && proposal.shown && proposal.can) {
+      return !seen['family-propose'] ? UI.maybeFamilyProposalTip() : false;
+    }
+    return !seen['family-courtship']
+      ? UI.maybeFamilyCourtshipTip() : false;
+  };
+
+  UI.maybeMakingEnterpriseTip = function () {
+    const exposed = UI.revealDeedAction && UI.revealDeedAction('livelihoods');
+    return UI.maybeTip('making-enterprise',
+      '💡 Next, open Work, training & enterprises in Deeds. Choose an enterprise catalogue for a household settlement to buy your first business.',
+      exposed ? '#tab-actions [data-action-id="livelihoods"]' :
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+  };
+
+  UI.maybeMakingLandTip = function () {
+    const s = FB.state;
+    const needsFreedom = s && s.player && s.player.tier === 0;
+    const deed = needsFreedom ? 'buy_freedom' : 'buy_land';
+    const exposed = UI.revealDeedAction && UI.revealDeedAction(deed);
+    const text = needsFreedom
+      ? '💡 Land comes after freedom. In Rank & Realm, save for Buy your freedom; once free, Buy a plot of land appears in the same section.'
+      : '💡 In Rank & Realm, use Buy a plot of land to purchase your first plot. Plots held together in one settlement are more productive.';
+    return UI.maybeTip('making-land', text,
+      exposed ? '#tab-actions [data-action-id="' + deed + '"]' :
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+  };
+
+  UI.resumeMakingLivingTips = function () {
+    if (tipsSilenced()) return false;
+    const s = FB.state;
+    if (!s || !s.player || s.player.tier > 2) return false;
+    const flags = s.player.flags || {};
+    if (!flags.tut_track_family_legacy) return false;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
+      return false;
+    }
+    if (!(s.player.enterprises || []).length) {
+      return !seen['making-enterprise']
+        ? UI.maybeMakingEnterpriseTip() : false;
+    }
+    if (!FB.landPlots(s).length && !seen['making-land']) {
+      return UI.maybeMakingLandTip();
     }
     return false;
+  };
+
+  UI.resumeMapTips = function () {
+    if (tipsSilenced()) return false;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['map-controls']) return UI.maybeMapControlsTip();
+    if (!seen['map-home']) return UI.maybeMapHomeTip();
+    if (!seen['map-filters']) return UI.maybeMapFiltersTip();
+    return UI.resumeFirstPlayerTip();
+  };
+
+  UI.maybeTabTip = function (tab) {
+    if (tab === 'family' && FB.state && FB.state.player) {
+      const flags = FB.state.player.flags || {};
+      const me = FB.state.chars &&
+        FB.state.chars[FB.state.player.charId];
+      if (FB.tutorialLife && FB.tutorialLife(FB.state) &&
+          !flags.tut_track_first_steps) return false;
+      if (flags.tut_family_established ||
+          (me && me.spouseId && !flags.tut_family_guidance_started &&
+            !flags.tut_track_family_legacy)) return false;
+    }
+    if (tab === 'char') return UI.maybeSelfTip();
+    for (const tip of DRIP_TIPS) {
+      if (tip.tab === tab) {
+        return UI.maybeTip(tip.id, tip.text, tip.target, tip);
+      }
+    }
+    return false;
+  };
+
+  UI.resumeFirstPlayerTip = function () {
+    const s = FB.state;
+    if (!s || !s.player || !s.player.flags ||
+        !FB.tutorialLife || !FB.tutorialLife(s)) return false;
+    const flags = s.player.flags;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
+      return UI.resumeMapTips();
+    }
+    if (!flags.tut_deed) {
+      return UI.maybeTip('first-deed',
+        '💡 Begin in Deeds below Daily Focus: open a category and choose one one-time deed. Focus repeats as days pass; a deed is a single action.',
+        '#sidetabs .tab[data-tab="actions"]', {
+          touchAlso:'#tab-actions', noNext:true
+        });
+    }
+    if (!flags.tut_unpause) {
+      return UI.maybeFirstTimeFlowTip();
+    }
+    if (flags.tut_event && !(flags.tut_track_first_steps)) {
+      if (UI.tipDue('first-event-result')) {
+        return UI.maybeTip('first-event-result',
+          '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
+          '#toasts', { noNext:true });
+      }
+      return false;
+    }
+    if (flags.tut_track_first_steps) {
+      return UI.resumePostFirstStepsTips();
+    }
+    return false;
+  };
+
+  UI.resumePostFirstStepsTips = function () {
+    if (tipsSilenced()) return false;
+    const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
+      return UI.resumeMapTips();
+    }
+    if (!seen['area-self']) return UI.maybeSelfTip();
+    return UI.resumeFamilyLegacyTips ? UI.resumeFamilyLegacyTips() : false;
   };
 
   /* ================= map politics hookup ================= */
