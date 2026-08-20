@@ -86,6 +86,10 @@ window.FBDATA = window.FBDATA || {};
         ],
         rationale:'Baseline land rents and settlement values function universally, while agricultural innovations expand demographic carrying capacity, commerce tech unlocks advanced settlement buildings, and fiscal tech scales realm taxation.'
       },
+      earned_starting_stations:{
+        mode:'none',
+        rationale:'Starting-station unlocks are browser-profile recognition of ranks earned in earlier lives, outside the simulated world; no historical innovation credibly governs them.'
+      },
       estates_scutage:{
         mode:'hard', tech:['scutage'], fallback:'customary_service',
         rationale:'Advanced cash substitution for customary military service.'

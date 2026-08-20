@@ -2,16 +2,20 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/save.js',
   'js/model.js',
   'js/ui_modals.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const {
+  START_CODE, startDeterministicGame, unlockStartTier
+} = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  await unlockStartTier(page, 1);
 });
 
 /* Ages the deterministic protagonist past the retirement threshold and gives

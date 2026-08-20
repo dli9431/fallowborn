@@ -414,6 +414,18 @@ part of `FB.state`, a save slot, a start seed, RNG state, or deterministic simul
 Save metadata stores `titleData` and renders its slot label in the locale active at display
 time; older metadata with a frozen `title` remains readable.
 
+Starting-station progression is another browser-local profile preference, stored separately
+as `fb_progression:{v:1,highestAchievedTier}`. It is monotonic during ordinary play and
+unlocks all authored beginnings at or below the highest station a character has earned;
+creating a life at an already-unlocked station never advances it. Because the profile is
+outside `FB.state`, replacing or deleting a save slot does not erase it and it does not alter
+RNG determinism or save format 3. The Settings reset returns it to Serf-only. On restore,
+an older or imported life may advance the profile only when its saved `peakTier` or current
+tier exceeds the tier encoded by its original starting scenario. Thus an old Petty Baron
+start proves nothing by itself, while a Serf start that rose to Baron does. Loading such an
+earned life after a reset restores its earned unlocks. If local storage is blocked, unlocks
+work for the current page lifetime but cannot persist; each web origin has its own profile.
+
 The play host's service-worker Cache Storage is likewise outside `FB.state` and the save
 contract. It stores only a deployable game shell; saves and `fb_lang` remain in `localStorage`.
 Cache Storage is evictable, and clearing site data can remove both stores, so offline readiness

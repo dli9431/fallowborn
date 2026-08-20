@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/save.js',
   'js/settlement.js',
   'data/bookmarks.js',
   'data/settlements.js'
@@ -14,9 +15,11 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
+const { unlockStartTier } = require('../support/game/start');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  await unlockStartTier(page, 1);
 });
 
 /* Title → New Game → fresh seed → first bookmark → Free Farmer → pick screen */

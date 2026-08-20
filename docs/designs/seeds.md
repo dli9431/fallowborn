@@ -56,6 +56,11 @@ erroring. The old five-part format is still accepted and explicitly
 means bookmark 867. Anything else is treated as a bare world seed and proceeds to
 the bookmark picker.
 
+Parsing a code does not override browser-profile starting-station progression. A valid code
+whose scenario tier has not been earned remains in the New Game dialog with an exact locked
+station explanation. Once that station is unlocked, the same code reaches its pre-filled
+character screen and retains its deterministic meaning. World seeds are unaffected.
+
 ## Determinism across presets
 
 A non-`standard` family preset changes the protagonist's birth year (a pure

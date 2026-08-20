@@ -2,13 +2,14 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/save.js',
   'js/model.js',
   'js/world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { startDeterministicGame } = require('../support/game/start');
+const { startDeterministicGame, unlockStartTier } = require('../support/game/start');
 
 async function startWithCode(page, code, name) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
@@ -29,6 +30,7 @@ async function startWithCode(page, code, name) {
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  await unlockStartTier(page, 1);
 });
 
 test('uses sex-aware novice address and recorded Norse patronyms',

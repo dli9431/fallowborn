@@ -20651,6 +20651,26 @@ window.FB = window.FB || {};
   }
 
   /* ================= settings ================= */
+  UI.showResetStartProgression = function () {
+    const h = '<div class="gm-body-text"><p>' + esc(FB.T(
+      'This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned.')) +
+      '</p></div><div class="gm-footer"><button type="button" class="btn danger" ' +
+      'id="reset-starts-confirm">' + esc(FB.T('Reset unlocked beginnings')) +
+      '</button><button type="button" class="btn" id="reset-starts-back">' +
+      esc(FB.T('Back to Settings')) + '</button></div>';
+    openModal(FB.T('Reset unlocked beginnings'), h, {
+      historyView:true,
+      historyBackRender:function () { UI.showSettings(); }
+    });
+    $('reset-starts-confirm').addEventListener('click', function () {
+      if (FB.startProgression) FB.startProgression.reset();
+      modalHistoryBack(function () { UI.showSettings(); });
+    });
+    $('reset-starts-back').addEventListener('click', function () {
+      modalHistoryBack(function () { UI.showSettings(); });
+    });
+  };
+
   UI.showSettings = function () {
     const G = FB.game;
     const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
@@ -20662,6 +20682,11 @@ window.FB = window.FB || {};
     const realmHighlightColor = FB.map.focusColor();
     const realmHighlightOpacity = Math.round((FB.map.focusOpacity
       ? FB.map.focusOpacity() : 1) * 100);
+    const startProgress = FB.startProgression
+      ? FB.startProgression.snapshot() : { highestStartTier:0 };
+    const startTierNames = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
+    const highestStartName = FB.T(
+      startTierNames[startProgress.highestStartTier] || 'Serf');
     let h = '<div class="gm-body-text"><p>' + (desktopKeyboard
       ? esc(FB.T('How quickly the days flow while time runs — on a keyboard, −/+ change it at any time.'))
       : esc(FB.T('How quickly the days flow while time runs.'))) +
@@ -20759,6 +20784,16 @@ window.FB = window.FB || {};
       esc(FB.T('Disable first-time tips')) + '</b><span class="adesc">' +
       esc(FB.T('Stop the short day-by-day and situational tips shown to brand-new players. The guide-hints switch above also silences them.')) +
       '</span></label>';
+    h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
+      esc(FB.T('Beginnings')) + '</p></div><div class="autorow"><b>' +
+      esc(startProgress.highestStartTier > 0
+        ? FB.T('Unlocked through {station}', { station:highestStartName })
+        : FB.T('Serf only')) + '</b><span class="adesc">' + esc(FB.T(
+        'A character who earns a higher station permanently opens every starting role at that station on this browser.')) +
+      '</span></div><button type="button" class="btn danger" ' +
+      'id="set-reset-starts"' +
+      (startProgress.highestStartTier > 0 ? '' : ' disabled') + '>' +
+      esc(FB.T('Reset unlocked beginnings…')) + '</button>';
     if (desktopKeyboard) {
       const bindingCount = Object.keys(shortcutBindings()).length;
       h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
@@ -20897,6 +20932,9 @@ window.FB = window.FB || {};
     });
     if ($('set-shortcuts')) {
       $('set-shortcuts').addEventListener('click', UI.showShortcutSettings);
+    }
+    if ($('set-reset-starts')) {
+      $('set-reset-starts').addEventListener('click', UI.showResetStartProgression);
     }
     if (G.observe) {
       $('set-obsquiet').addEventListener('change', function () { G.obsQuiet = $('set-obsquiet').checked; });

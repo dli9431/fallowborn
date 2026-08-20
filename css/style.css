@@ -216,6 +216,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .scencard h3 { color: #e0c060; font-size: 16px; margin-bottom: 4px; }
 .scencard .diff { color: var(--helper-text-color); font-size: 13px; margin-bottom: 6px; }
 .scencard p { color: var(--main-text-color); }
+.scencard.locked { border-color: #493f33; cursor: default; opacity: .72; }
+.scencard.locked:hover { border-color: #493f33; background: #241d15; }
+.scencard.locked h3 { color: var(--helper-text-color); }
+.scencard .scenario-lock {
+  color: #d5b66a; font-weight: 600; margin-top: 8px;
+}
 
 .cgform { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-bottom: 16px; }
 .cgform label { display: flex; gap: 8px; align-items: center; }

@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/music.js',
   'js/main.js',
+  'js/save.js',
   'js/ui_misc.js',
   'css/style.css',
   'data/music_catalog.js'
@@ -10,6 +11,7 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame, targetUrl } = require('../support/game/navigation');
+const { unlockStartTier } = require('../support/game/start');
 
 const tracks = [
   ['christian-anglo_saxon-folk-hammer-and-lute', 'Hammer And Lute',
@@ -970,6 +972,7 @@ test('phone-sized birthplace and character screens yield the corner to Back',
     await routeSyntheticSoundtrack(page);
     await page.setViewportSize({ width:390, height:844 });
     await openGame(page, testInfo);
+    await unlockStartTier(page, 1);
 
     const controls = page.locator('#title-music-controls');
     await expect(controls).toBeVisible();

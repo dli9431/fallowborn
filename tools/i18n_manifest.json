@@ -54271,7 +54271,9 @@
         "data/cultures.js",
         "data/map_data.js",
         "js/economy.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/events.js",
+        "js/main.js"
       ],
       "source": {
         "text": "Freeholder"
@@ -62375,6 +62377,16 @@
         "text": "Hajji"
       }
     },
+    "src.17999bb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/events.js"
+      ],
+      "source": {
+        "text": "🔓 New beginnings unlocked through {station}."
+      }
+    },
     "src.1799a780": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64351,6 +64363,16 @@
       ],
       "source": {
         "text": "No loan offer fits this household."
+      }
+    },
+    "src.1c0e3575": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned."
       }
     },
     "src.1c116770": {
@@ -87379,6 +87401,16 @@
         "text": "Any direction chosen here remains assigned but is suspended until the war ends."
       }
     },
+    "src.4d4e6f73": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Reset unlocked beginnings…"
+      }
+    },
     "src.4d4ea871": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94996,6 +95028,16 @@
         "text": "Could not store mod: {message}"
       }
     },
+    "src.5d2c2687": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Reset unlocked beginnings"
+      }
+    },
     "src.5d2dd3a3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -95269,6 +95311,16 @@
       ],
       "source": {
         "text": "Only a baron or greater ruler may abdicate through this decision."
+      }
+    },
+    "src.5ddd394a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "A character who earns a higher station permanently opens every starting role at that station on this browser."
       }
     },
     "src.5de430b6": {
@@ -96261,7 +96313,9 @@
         "data/cultures.js",
         "data/map_data.js",
         "js/ui_modals.js",
-        "js/ui_panels.js"
+        "js/ui_panels.js",
+        "js/events.js",
+        "js/main.js"
       ],
       "source": {
         "text": "Baron"
@@ -111738,6 +111792,16 @@
       ],
       "source": {
         "text": "{amount} prestige a season"
+      }
+    },
+    "src.809ff085": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Serf only"
       }
     },
     "src.80a00a13": {
@@ -139967,6 +140031,16 @@
         "text": "{fort} pins passage through the county until breached; it needs {minimum} uncontested besiegers and inflicts {attrition} casualties each active season."
       }
     },
+    "src.bab485d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Beginnings"
+      }
+    },
     "src.babf07ac": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141727,6 +141801,16 @@
       ],
       "source": {
         "text": "Torsion Artillery"
+      }
+    },
+    "src.bed67527": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "Unlocked through {station}"
       }
     },
     "src.bedd429f": {
@@ -147213,6 +147297,16 @@
       ],
       "source": {
         "text": "Intrigue decides the outcome; success lowers Standing by 8, discovery by 20. Spends the day."
+      }
+    },
+    "src.ca8101d2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "That beginning is locked. Reach {station} in any life to use this start code."
       }
     },
     "src.ca82befb": {
@@ -158257,7 +158351,9 @@
         "data/cultures.js",
         "data/map_data.js",
         "js/economy.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/events.js",
+        "js/main.js"
       ],
       "source": {
         "text": "Gentry"
@@ -165582,6 +165678,16 @@
         "text": "Counterweight Trebuchet"
       }
     },
+    "src.f16aba77": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Reach {station} in any life to unlock this beginning."
+      }
+    },
     "src.f16d8f9e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -166894,7 +167000,8 @@
         "data/map_data.js",
         "js/main.js",
         "js/economy.js",
-        "js/ui_modals.js"
+        "js/ui_modals.js",
+        "js/events.js"
       ],
       "source": {
         "text": "Serf"
@@ -177877,6 +177984,14 @@
         "text": "A career record keeps rank and experience even while inactive."
       }
     },
+    "ui:A character who earns a higher station permanently opens every starting role at that station on this browser.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "A character who earns a higher station permanently opens every starting role at that station on this browser."
+      }
+    },
     "ui:A child joins the family": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -180786,6 +180901,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Beginning spends the day and assigns personal attention; a proposal requires +{threshold} Standing."
+      }
+    },
+    "ui:Beginnings": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Beginnings"
       }
     },
     "ui:Begins a visible confirmation election. Appointment and its protected fixed term occur only if the nominee wins.": {
@@ -196149,6 +196272,16 @@
         "text": "Reach the wedding county before deciding where to live."
       }
     },
+    "ui:Reach {station} in any life to unlock this beginning.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "station"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "Reach {station} in any life to unlock this beginning."
+      }
+    },
     "ui:Ready": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -197649,6 +197782,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Reset to Defaults"
+      }
+    },
+    "ui:Reset unlocked beginnings": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Reset unlocked beginnings"
+      }
+    },
+    "ui:Reset unlocked beginnings…": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Reset unlocked beginnings…"
       }
     },
     "ui:Residence": {
@@ -199230,6 +199379,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Serf"
+      }
+    },
+    "ui:Serf only": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Serf only"
       }
     },
     "ui:Serfs cannot take to the road.": {
@@ -200887,6 +201044,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Territory name"
+      }
+    },
+    "ui:That beginning is locked. Reach {station} in any life to use this start code.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "station"
+      ],
+      "location": "js/main.js",
+      "source": {
+        "text": "That beginning is locked. Reach {station} in any life to use this start code."
       }
     },
     "ui:That character cannot receive a visit.": {
@@ -202967,6 +203134,14 @@
         "text": "This browser cannot play the Opus soundtrack."
       }
     },
+    "ui:This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "This browser will return to Serf-only beginnings. Loading a life that genuinely rose above its starting station will restore the ranks it earned."
+      }
+    },
     "ui:This castellany is an appointed office inside the home county; no county is held directly in your hand.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -204136,6 +204311,16 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Unknown until hired"
+      }
+    },
+    "ui:Unlocked through {station}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "station"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "Unlocked through {station}"
       }
     },
     "ui:Unlocks granary choices during famine": {

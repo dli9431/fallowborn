@@ -290,7 +290,19 @@ the persistent, localized **New version available** status banner. Its **Save an
 writes the current playable life synchronously before reloading. First worker installation,
 `file://`, localhost, mirrors, and itch never reveal the banner.
 
-New Game proceeds through bookmark → social scenario → province → character. Bookmark
+New Game proceeds through bookmark → social scenario → province → character. Every
+browser profile begins with Serf as its only playable social scenario. Reaching a higher
+station during a life unlocks every authored starting scenario at that station: Freeholder
+opens Free Farmer, Craftsman's Apprentice, Novice of the Faith, and Man-at-Arms; Gentry
+opens Hedge Knight; Baron opens Petty Baron. Locked cards remain visible and focusable,
+carry `aria-disabled`, and state the exact in-life achievement required. Observe remains
+available because it creates no character. A locked shared start code stays in the New Game
+dialog and explains its missing station instead of bypassing progression. This browser-profile
+recognition is recorded as `earned_starting_stations` with `mode:'none'` in
+`FBDATA.techImpactReviews`: it exists outside the simulated world, so no historical
+technology credibly gates or improves it.
+
+Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario
 cards. Selecting one activates its world before the province picker is shown, so the
 preview owner colors, county details, headings, era help, Observe mode, and character

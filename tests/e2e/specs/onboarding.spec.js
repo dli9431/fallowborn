@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/save.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'data/bookmarks.js',
@@ -10,11 +11,14 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const {
+  START_CODE, startDeterministicGame, unlockStartTier
+} = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
+  await unlockStartTier(page, 1);
 });
 
 test('a new life gets a short intro, a focused orientation, and First steps',
