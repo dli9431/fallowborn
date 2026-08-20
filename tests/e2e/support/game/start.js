@@ -52,22 +52,16 @@ async function startDeterministicGame(page) {
         FB.state.player && FB.state.chars[FB.state.player.charId]);
     }, START_CODE);
   }).toBe(true);
-  // A fresh browser's first life begins with an action-first coachmark;
-  // dismiss it so every spec starts from a clean table. Existing profiles and
-  // specs that pre-seed the guidance switches never get one.
-  const firstCoach = page.locator('.coachmark');
-  const lessonUp = await firstCoach.waitFor({ state:'visible', timeout:800 })
-    .then(function () { return true; }, function () { return false; });
-  if (lessonUp) {
-    await page.getByRole('button', { name:'Got it', exact:true }).click();
-    const followUp = page.locator('.coachmark', { hasText:'unpause with Play' });
-    await expect(followUp).toBeVisible();
-    await followUp.getByRole('button', { name:'Got it', exact:true }).click();
-    await expect(page.locator('.coachmark')).toHaveCount(0);
-  }
-  // Shared gameplay journeys are not onboarding tests; keep later contextual
-  // first-player tips from covering controls those journeys need to exercise.
-  await page.evaluate(function () { FB.game.uiPrefs.hideTips = true; });
+  /* Shared gameplay journeys are not onboarding tests. Silence both hint
+     layers and retire anything queued by the new-game handoff without making
+     this fixture depend on the tutorial's current lesson order. The focused
+     onboarding specs exercise the real map-first sequence separately. */
+  await page.evaluate(function () {
+    FB.game.uiPrefs.hideTips = true;
+    FB.game.uiPrefs.hideBeginnerHints = true;
+    if (FB.ui && FB.ui.coachmarkReset) FB.ui.coachmarkReset();
+  });
+  await expect(page.locator('.coachmark')).toHaveCount(0);
 }
 
 module.exports = {
