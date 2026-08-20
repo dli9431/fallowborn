@@ -1473,6 +1473,8 @@ FBDATA.balance = {
   householdLifestyleMult: [1,1,1,1.25,1.5,2,2.5,3], // higher stations maintain dependants more richly
   socialAttentionCapacity: 1, socialAttentionDailyOpinion: 0.2,
   relationshipOpinionThreshold: 40, // shared readiness gate for friendship and marriage proposals
+  marriageCultureStandingPremium: 20, // extra proposal Standing for a different culture
+  marriageFaithStandingPremium: 30, // extra proposal Standing for a different faith
   rankAccessInfluenceMult: 0.5, // each station beyond ordinary one-rank reach halves cultivation and gift Standing
   rankAccessCashCostMult: 2, // each such station doubles cash gifts and bought-access intrigue costs
   marriageProspectRefreshDays: 30, // protagonist and descendant family searches

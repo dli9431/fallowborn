@@ -26,6 +26,7 @@ window.FB = window.FB || {};
   const councilSeatDesc = SH.councilSeatDesc;
   const councilSeatName = SH.councilSeatName;
   const countyCountText = SH.countyCountText;
+  const cultureName = SH.cultureName;
   const dt = SH.dt;
   const epithetText = SH.epithetText;
   const equipmentBlockedText = SH.equipmentBlockedText;
@@ -1505,7 +1506,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     const c = s && s.chars[cid];
     if (!s || !c || c.dead || !FB.socialVisitPreview) return;
-    const preview = FB.socialVisitPreview(s, c);
+    const preview = FB.socialVisitPreview(s, c, options);
     if (!preview.eligible) {
       UI.toast(preview.reason || FB.T('That visit cannot begin.'));
       return;
@@ -1514,20 +1515,22 @@ window.FB = window.FB || {};
     if (!destination) return;
     const cultivated = FB.socialAttentionTarget(s);
     const continuing = !!(cultivated && cultivated.id === c.id);
+    const threshold = preview.standingThreshold === undefined
+      ? FB.relationshipOpinionThreshold() : preview.standingThreshold;
     let estimate;
     if (preview.daysToThreshold === null) {
       estimate = FB.T('At the current daily rate, Standing is not advancing toward +{threshold}.', {
-        threshold:FB.relationshipOpinionThreshold()
+        threshold:threshold
       });
     } else if (!preview.daysToThreshold) {
       estimate = FB.T('{name} is already at the +{threshold} Standing threshold.', {
-        name:c.name, threshold:FB.relationshipOpinionThreshold()
+        name:c.name, threshold:threshold
       });
     } else {
       estimate = FB.T(
         'At +{rate} Standing per day together, reaching +{threshold} is estimated to take {activeDays} days in one another’s company—about {totalDays} days from departure.', {
           rate:preview.dailyRate,
-          threshold:FB.relationshipOpinionThreshold(),
+          threshold:threshold,
           activeDays:preview.daysToThreshold,
           totalDays:preview.daysFromDeparture
         });
@@ -18137,18 +18140,27 @@ window.FB = window.FB || {};
     });
     if (!cands.length) return;
     const ps = FB.playerStation(s);
+    const province = FB.world.byId[
+      cands[0].suitorProvinceId || s.player.provinceId];
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Kin and gossips name {count} people who would hear your suit:', {
         count:cands.length
-      })) +
+      })) + '</p><p>' + esc(FB.T(
+        'These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household.', {
+          county:province ? province.name : FB.T('this county')
+        })) +
       '</p></div><div class="gm-list">';
     for (const m of cands) {
       const st = FB.stationOf(m);
       const gap = st - ps;
       const age = FB.ageOf(m, s.date.year);
       const details = [
+        cultureName(s, m.culture) + ' · ' + religionName(s, m.religion),
         FB.stationName(st),
-        FB.T('age {age}', { age: age })
+        FB.T('age {age}', { age: age }),
+        FB.T('proposal requires +{standing} Standing', {
+          standing:FB.courtshipStandingThreshold(s, m)
+        })
       ];
       const marriage = FB.marriageTerms(s,
         s.chars[s.player.charId], m);

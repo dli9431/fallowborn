@@ -1,9 +1,16 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmarks.js',
+  'data/cultures.js',
+  'data/map_data.js',
   'js/actions.js',
+  'js/events.js',
   'js/model.js',
-  'js/ui_modals.js'
+  'js/travel.js',
+  'js/ui_misc.js',
+  'js/ui_modals.js',
+  'js/world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -144,6 +151,125 @@ test('Seek a match replaces all three prospects only after its cooldown',
     expect(refreshed.ids.some(function (id) {
       return first.ids.indexOf(id) >= 0;
     })).toBe(false);
+  });
+
+test('Seek a match draws culture-faith identities from the current county and raises mixed proposal thresholds',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const protagonist = state.chars[state.player.charId];
+      state.player.provinceId = 'dublin';
+      protagonist.culture = 'norse';
+      protagonist.religion = 'norse_pagan';
+      const pool = FB.marriageProspectIdentities(state, 'dublin');
+      const candidates = FB.refreshSuitors(state);
+      return {
+        pool:pool.map(function (identity) {
+          return identity.culture + '.' + identity.religion;
+        }),
+        candidates:candidates.map(function (candidate) {
+          const premium = FB.courtshipIdentityStandingPremium(state, candidate);
+          return {
+            profile:candidate.suitorProfile,
+            identity:candidate.culture + '.' + candidate.religion,
+            culturePremium:premium.culture,
+            faithPremium:premium.religion,
+            threshold:FB.courtshipStandingThreshold(state, candidate)
+          };
+        }).sort(function (a, b) { return a.profile - b.profile; }),
+        searchProvinces:candidates.map(function (candidate) {
+          return candidate.suitorProvinceId;
+        }),
+        friendshipThreshold:FB.socialAttentionStandingThreshold(
+          state, candidates[1], false),
+        courtshipThreshold:FB.socialAttentionStandingThreshold(
+          state, candidates[1], true),
+        base:FB.relationshipOpinionThreshold(),
+        culturePremium:FBDATA.balance.marriageCultureStandingPremium,
+        faithPremium:FBDATA.balance.marriageFaithStandingPremium
+      };
+    });
+
+    expect(result.pool).toEqual([
+      'norse.norse_pagan',
+      'gaelic.catholic',
+      'norse.catholic',
+      'gaelic.norse_pagan'
+    ]);
+    expect(result.searchProvinces).toEqual(['dublin', 'dublin', 'dublin']);
+    expect(result.culturePremium).toBe(20);
+    expect(result.faithPremium).toBe(30);
+    expect(result.friendshipThreshold).toBe(result.base);
+    expect(result.courtshipThreshold).toBe(
+      result.base + result.culturePremium + result.faithPremium);
+    expect(result.candidates[0]).toEqual({
+      profile:0,
+      identity:'norse.norse_pagan',
+      culturePremium:0,
+      faithPremium:0,
+      threshold:result.base
+    });
+    expect(result.candidates[1]).toEqual({
+      profile:1,
+      identity:'gaelic.catholic',
+      culturePremium:result.culturePremium,
+      faithPremium:result.faithPremium,
+      threshold:result.base + result.culturePremium + result.faithPremium
+    });
+    expect([
+      'norse.catholic', 'gaelic.norse_pagan'
+    ]).toContain(result.candidates[2].identity);
+    expect(result.candidates[2].profile).toBe(2);
+    expect(result.candidates[2].threshold).toBe(
+      result.base + result.candidates[2].culturePremium +
+      result.candidates[2].faithPremium);
+
+    const reopened = await page.evaluate(function () {
+      const ids = FB.state.player.suitorIds.slice();
+      FB.state.player.provinceId = 'london';
+      const candidates = FB.spawnSuitor(FB.state);
+      candidates[1].homeProvinceId = 'dublin';
+      const friendVisit = FB.socialVisitPreview(FB.state, candidates[1], {
+        readOnly:true
+      });
+      const courtshipVisit = FB.socialVisitPreview(FB.state, candidates[1], {
+        readOnly:true, courtship:true
+      });
+      FB.ui.showSuitorPicker();
+      return {
+        ids:candidates.map(function (candidate) { return candidate.id; }),
+        expected:ids,
+        searchProvinces:candidates.map(function (candidate) {
+          return candidate.suitorProvinceId;
+        }),
+        friendVisit:friendVisit,
+        courtshipVisit:courtshipVisit
+      };
+    });
+    expect(reopened.ids).toEqual(reopened.expected);
+    expect(reopened.searchProvinces).toEqual(['dublin', 'dublin', 'dublin']);
+    expect(reopened.friendVisit.eligible).toBe(true);
+    expect(reopened.friendVisit.standingThreshold).toBe(result.base);
+    expect(reopened.courtshipVisit.eligible).toBe(true);
+    expect(reopened.courtshipVisit.standingThreshold).toBe(
+      result.base + result.culturePremium + result.faithPremium);
+    expect(reopened.courtshipVisit.daysToThreshold).toBeGreaterThan(
+      reopened.friendVisit.daysToThreshold);
+    await expect(page.getByText(
+      'These prospects reflect the cultures and faiths of Dublin; local traditions may mix within one household.',
+      { exact:true }
+    )).toBeVisible();
+    await expect(page.locator('[data-suitor]').nth(0)).toContainText(
+      'Norse · Norse Paganism');
+    await expect(page.locator('[data-suitor]').nth(1)).toContainText(
+      'Gaelic · Latin Christianity');
+    await expect(page.locator('[data-suitor]').nth(2)).toContainText(
+      result.candidates[2].identity === 'norse.catholic'
+        ? 'Norse · Latin Christianity'
+        : 'Gaelic · Norse Paganism');
+    await expect(page.locator('[data-suitor]').nth(1)).toContainText(
+      'proposal requires +' +
+      (result.base + result.culturePremium + result.faithPremium) + ' Standing');
   });
 
 test('age forty adds a fourth adult prospect without capping older age bands',

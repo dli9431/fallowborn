@@ -54770,6 +54770,16 @@
         "text": "The venture in {destination} barely returned a coin."
       }
     },
+    "src.0885608a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/actions.js"
+      ],
+      "source": {
+        "text": "Ask local kin and gossips to find a spouse among the county’s communities."
+      }
+    },
     "src.0886abbb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -61359,16 +61369,6 @@
       ],
       "source": {
         "text": "Ask a mediator to bind a peace. Spends the day."
-      }
-    },
-    "src.15b652af": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/actions.js"
-      ],
-      "source": {
-        "text": "Ask kin and gossips to find you a spouse from your own walk of life."
       }
     },
     "src.15bd0d68": {
@@ -79799,6 +79799,16 @@
       ],
       "source": {
         "text": "The body may follow where will leads."
+      }
+    },
+    "src.3d6610ad": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household."
       }
     },
     "src.3d713847": {
@@ -111790,6 +111800,16 @@
         "text": "Your quiet work costs {name} dearly, and no one can prove a thing."
       }
     },
+    "src.80c8d3d8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_modals.js"
+      ],
+      "source": {
+        "text": "proposal requires +{standing} Standing"
+      }
+    },
     "src.80cc3cf9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133631,7 +133651,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/economy.js"
+        "js/economy.js",
+        "js/ui_modals.js"
       ],
       "source": {
         "text": "this county"
@@ -202856,6 +202877,16 @@
         "text": "These identity rules do not change the child’s recorded mother and father."
       }
     },
+    "ui:These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "county"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "These prospects reflect the cultures and faiths of {county}; local traditions may mix within one household."
+      }
+    },
     "ui:They are not yet of age.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -207913,6 +207944,16 @@
         "text": "preparation"
       }
     },
+    "ui:proposal requires +{standing} Standing": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "standing"
+      ],
+      "location": "js/ui_modals.js",
+      "source": {
+        "text": "proposal requires +{standing} Standing"
+      }
+    },
     "ui:ready at +{threshold}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -208501,7 +208542,7 @@
     "ui:this county": {
       "context": "Explicit UI localization call.",
       "glossary": [],
-      "location": "js/economy.js",
+      "location": "js/ui_modals.js",
       "source": {
         "text": "this county"
       }

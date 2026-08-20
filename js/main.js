@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.143.1';
+  FB.VERSION = '1.143.2';
   FB.CHANGELOG = [
+    { v: '1.143.2', date: '2026-08-20', changes: [
+      'Seek a match now draws prospects from the cultures and faiths of the local county, with mixed matches requiring more Standing.'
+    ] },
     { v: '1.143.1', date: '2026-08-19', changes: [
       'Apostasy previews in the faith conversion picker now read the Church’s saved state directly instead of re-checking the whole world for every candidate faith.'
     ] },

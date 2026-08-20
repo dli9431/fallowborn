@@ -23,7 +23,24 @@ window.FB = window.FB || {};
         ? FB.siblingCourtshipRecord(state, me, target) : null;
       if (record && record.status === 'accepted') return 80;
     }
-    return FB.relationshipOpinionThreshold();
+    const base = FB.relationshipOpinionThreshold();
+    const premium = FB.courtshipIdentityStandingPremium(state, target);
+    return Math.min(100, base + premium.total);
+  };
+
+  /* A different culture or faith is possible, but the prospective spouse's
+     family expects a warmer personal relationship before it will entertain a
+     proposal. Exact identity, rather than broad culture group or faith fold,
+     keeps this gate legible and consistent with the character sheet. */
+  FB.courtshipIdentityStandingPremium = function (state, target) {
+    const me = state && state.player && state.chars[state.player.charId];
+    const culture = me && target && me.culture !== target.culture
+      ? Math.max(0, Number(FBDATA.balance.marriageCultureStandingPremium) || 0)
+      : 0;
+    const religion = me && target && me.religion !== target.religion
+      ? Math.max(0, Number(FBDATA.balance.marriageFaithStandingPremium) || 0)
+      : 0;
+    return { culture:culture, religion:religion, total:culture + religion };
   };
 
   function characterStanding(state, c) {
@@ -444,9 +461,17 @@ window.FB = window.FB || {};
     return value === undefined ? 0.2 : value;
   };
 
-  FB.socialAttentionDaysToThreshold = function (state, c) {
+  FB.socialAttentionStandingThreshold = function (state, c, courtship) {
+    const courting = !!(courtship || state && state.player && c &&
+      state.player.courtingId === c.id);
+    return courting
+      ? FB.courtshipStandingThreshold(state, c)
+      : FB.relationshipOpinionThreshold();
+  };
+
+  FB.socialAttentionDaysToThreshold = function (state, c, courtship) {
     const rate = FB.socialAttentionStatus(state, c).rate;
-    const need = FB.courtshipStandingThreshold(state, c) -
+    const need = FB.socialAttentionStandingThreshold(state, c, courtship) -
       characterStanding(state, c);
     if (need <= 0) return 0;
     if (rate <= 0) return null;
@@ -2042,13 +2067,61 @@ window.FB = window.FB || {};
       return FB.ri(16, 24);
     } }
   ];
+
+  /* Matchmakers draw from the county where the search is made. Authored
+     community pairs come first so every represented people is heard from;
+     then their distinct culture and faith dimensions recombine into plausible
+     mixed local identities. Single-community counties naturally retain their
+     one identity. */
+  FB.marriageProspectIdentities = function (state, pid) {
+    const provinceId = pid || state && state.player && state.player.provinceId;
+    const pr = FB.world && FB.world.byId && FB.world.byId[provinceId];
+    const me = state && state.player && state.chars[state.player.charId];
+    const source = pr && FB.provinceCommunities
+      ? FB.provinceCommunities(pr)
+      : (pr ? [{ culture:pr.culture, religion:pr.religion }] :
+        (me ? [{ culture:me.culture, religion:me.religion }] : []));
+    const out = [], cultures = [], religions = [], seen = {};
+    function add(culture, religion) {
+      const key = culture + '|' + religion;
+      if (!culture || !religion || seen[key]) return;
+      seen[key] = 1;
+      out.push({ culture:culture, religion:religion });
+      if (cultures.indexOf(culture) < 0) cultures.push(culture);
+      if (religions.indexOf(religion) < 0) religions.push(religion);
+    }
+    for (let i = 0; i < source.length; i++) {
+      add(source[i].culture, source[i].religion);
+    }
+    for (let ci = 0; ci < cultures.length; ci++) {
+      for (let ri = 0; ri < religions.length; ri++) {
+        add(cultures[ci], religions[ri]);
+      }
+    }
+    return out;
+  };
+
   FB.spawnSuitor = function (state) {
     const me = state.chars[state.player.charId];
-    const pr = FB.world.byId[state.player.provinceId];
+    let existingOrigin = null;
+    if (Array.isArray(state.player.suitorIds)) {
+      for (let oi = 0; oi < state.player.suitorIds.length; oi++) {
+        const existing = state.chars[state.player.suitorIds[oi]];
+        if (existing && existing.suitorProvinceId) {
+          existingOrigin = existing.suitorProvinceId;
+          break;
+        }
+      }
+    }
+    const searchPid = existingOrigin || state.player.provinceId;
+    const pr = FB.world.byId[searchPid];
     const myAge = FB.ageOf(me, state.date.year);
     const ps = FB.playerStation(state);
     const y = state.date.year;
     const out = [];
+    const identities = FB.marriageProspectIdentities(state, pr && pr.id);
+    const authoredIdentityCount = FB.provinceCommunities
+      ? FB.provinceCommunities(pr).length : 1;
     if (state.player.suitorIds) {
       for (const id of state.player.suitorIds) {
         const m = state.chars[id];
@@ -2070,14 +2143,31 @@ window.FB = window.FB || {};
       if (prof.minPlayerAge !== undefined && myAge < prof.minPlayerAge) continue;
       if (out.some(function (m) { return m.suitorProfile === i; })) continue;
       const st = FB.clamp(ps + prof.dSt, 0, 3);
+      let identity = identities[i];
+      if (i >= authoredIdentityCount) {
+        const mixed = identities.slice(authoredIdentityCount);
+        const unused = mixed.filter(function (candidateIdentity) {
+          return !out.some(function (candidate) {
+            return candidate.culture === candidateIdentity.culture &&
+              candidate.religion === candidateIdentity.religion;
+          });
+        });
+        if (unused.length) identity = FB.pick(unused);
+      }
+      if (!identity) {
+        identity = identities.length
+          ? identities[i % identities.length]
+          : { culture:pr.culture, religion:pr.religion };
+      }
       const c = FB.makeCharacter(state, {
         sex: me.sex === 'm' ? 'f' : 'm',
-        culture: pr.culture, religion: me.religion,
+        culture: identity.culture, religion: identity.religion,
         born: y - prof.age(myAge),
         role: 'suitor', opinion: FB.ri(-10, 25),
         station: st, quality: st + FB.ri(0, 1)
       });
       c.suitorProfile = i;
+      c.suitorProvinceId = pr.id;
       c.epithetMsg = FB.pick(SUITOR_EPITHETS[st][c.sex]);
       if (FB.applyMarriageBackground) FB.applyMarriageBackground(c, st, c.epithetMsg);
       out.push(c);

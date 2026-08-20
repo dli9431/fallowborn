@@ -1,9 +1,12 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/map_data.js',
+  'js/events.js',
   'js/model.js',
   'js/world.js',
   'js/keys.js',
+  'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js'
 ]);
@@ -52,6 +55,34 @@ test('ongoing commitments adapt by layout and route to existing controls',
 
     await page.setViewportSize({ width:1280, height:720 });
     await expect(focusCommitment).toBeHidden();
+
+    const mixedCourtship = await page.evaluate(function () {
+      const s = FB.state;
+      const protagonist = s.chars[s.player.charId];
+      protagonist.culture = 'norse';
+      protagonist.religion = 'norse_pagan';
+      const candidate = FB.makeCharacter(s, {
+        name:'Áine', sex:protagonist.sex === 'm' ? 'f' : 'm',
+        culture:'gaelic', religion:'catholic',
+        born:s.date.year - 24, role:'suitor', opinion:40,
+        station:FB.playerStation(s), traitsN:0
+      });
+      s.player.courtingId = candidate.id;
+      s.player.flags.courting = 1;
+      s.player.socialAttention = {};
+      s.player.socialAttention[candidate.id] = {
+        startedTurn:s.turn, lastTurn:s.turn
+      };
+      FB.ui.refresh();
+      return {
+        threshold:FB.courtshipStandingThreshold(s, candidate),
+        days:FB.socialAttentionDaysToThreshold(s, candidate)
+      };
+    });
+    await waitForUiRefresh(page);
+    await expect(summary.locator(
+      '[data-commitment="personal-attention"]')).toContainText(
+      mixedCourtship.days + ' days to +' + mixedCourtship.threshold);
 
     await summary.locator('[data-commitment="personal-attention"]').click();
     await expect(page.locator('#sidetabs [data-tab="network"]')).toHaveClass(
@@ -663,4 +694,3 @@ test('modal hotkeys toggle open modals and Escape closes any modal',
     await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
-

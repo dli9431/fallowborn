@@ -156,6 +156,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Choosing an authored local culture and faith is baseline character identity, not a capability enabled by research.'
       },
+      local_marriage_prospect_identity:{
+        mode:'none',
+        rationale:'Local courtship networks and mixed household identities are baseline social behavior with no credible technology dependency.'
+      },
       auction_item_lots:{
         mode:'none',
         rationale:'Fine and famed household goods need no additional innovation beyond access to the auction itself.'
