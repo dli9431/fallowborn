@@ -72,8 +72,9 @@ itch and `play.fallowborn.com` (a separate Coolify origin that auto-deploys on e
 `immutable` assets both key on it. Never add `?v=` to the committed `index.html` — query strings
 break `file://`. Both targets and the stamping mechanics: **`docs/deployment.md`**.
 
-**Hard rule — every change to shipped code (`js`/`css`/`data`/`mods`) that lands on `main` bumps
-`FB.VERSION` (top of `js/main.js`), no exceptions** (a docs-only commit ships nothing, so it needs
+**Hard rule — every change to shipped code (`js`/`css`/`data`/`mods`) that lands on `main`, or
+reaches `dev` through a branch merge, bumps `FB.VERSION` (top of `js/main.js`), no exceptions**
+(a docs-only commit ships nothing, so it needs
 no bump — `FB.VERSION` is purely a cache-bust key; see `docs/VERSIONS.md`). It is the cache-bust
 key for *both* distribution targets: the itch `?v=` stamp and
 play.fallowborn.com's immutable asset caching both key on it. Ship changed files without bumping
@@ -89,8 +90,9 @@ same number and collide.
 **Default: commit directly onto `main`.** In the primary working directory, just commit your
 work straight to `main` — do not create a branch, and do not open a PR unless the owner asks.
 
-**Test authoring for `main`.** Before making any commit directly on `main` or finalizing any
-merge into `main`, follow the [main integration workflow](docs/TESTS.md#main-integration-workflow):
+**Test authoring for integration targets.** Before making any commit directly on `main` or
+finalizing any merge into `main` or `dev`, follow the
+[main and dev merge integration workflow](docs/TESTS.md#main-and-dev-merge-integration-workflow):
 
 1. Add or update automated tests for every observable behavior change or bug fix. The tests must
    exercise the expected behavior and land in the same commit or merge as the implementation.
@@ -119,17 +121,19 @@ docs-only commits do not assign one, so those commits are exempt.
 **Never manage git worktrees.** Their lifecycle is owner-controlled. Do not create, add, remove,
 move, prune, repair, or otherwise modify a worktree or its registration.
 
-**When the owner explicitly asks for a new branch and a merge into `main`:**
+**When the owner explicitly asks for a new branch and a merge into `main` or `dev`:**
 
 1. Create the requested temporary branch in the current checkout and commit the work there.
-2. Merge that temporary branch into `main`.
+2. Merge that temporary branch into the requested integration target.
 3. Once the branch is fully merged, switch the current checkout off it if Git requires that,
    then delete **only the branch** with `git branch -d <branch>` (use `-d`, not `-D`, so Git
    refuses if it is not fully merged). Leave every worktree and worktree registration intact.
 
 **The `dev` branch is long-lived — never delete it.** It survives its merges into `main`
-and serves as the owner's test branch for larger changes. Merge it like any other branch,
-but skip step 3's deletion for it.
+and serves as the owner's test branch for larger changes. Every merge of any branch into `dev`
+must use the same test-authoring, version/changelog, i18n regeneration, and commit-message
+workflow as a merge into `main`. A later merge of `dev` into `main` follows that workflow again.
+When `dev` itself is the source branch, skip step 3's deletion for it.
 
 **Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
 touched by *every* change at the same spot, so doing them on a branch guarantees a conflict with
@@ -145,7 +149,8 @@ every other branch in flight (parallel worktrees are unaware of each other):
    `docs/VERSIONS.md`.
 2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — these are prepared
    **only when the owner explicitly asks to commit work directly to `main` or merge a branch
-   into `main`.** Do not run `extract`, `translate`, or `validate` during ordinary implementation,
+   into `main` or `dev`.** Do not run `extract`, `translate`, or `validate` during ordinary
+   implementation,
    review, or other uncommitted work, even when the current checkout is already `main`; an edit
    or test request is not authorization to regenerate catalogs. For a direct commit to `main`,
    run `extract → translate fr de it es → validate` as the final integration step immediately
@@ -284,7 +289,7 @@ English, so the game still runs — but an unrouted string is a bug.
 
 The catalogs (`data/lang_*.js`, `tools/i18n_manifest.json`) are generated integration artifacts.
 Do not run any catalog command during uncommitted implementation or review. Regenerate only as
-the final step of an owner-requested direct commit to `main` or branch merge into `main`
+the final step of an owner-requested direct commit to `main` or branch merge into `main` or `dev`
 (`extract → translate fr de it es → validate`), never on a feature branch, and never hand-merge
 them (see *Git workflow*).
 

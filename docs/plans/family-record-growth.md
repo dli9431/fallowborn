@@ -201,8 +201,8 @@ have code-side fallbacks (`|| 0.75`, `|| 4000`) so saves or mods carrying an old
 
 ## Testing
 
-Per `docs/TESTS.md` (main integration workflow): tests are authored with the change
-and not run by the agent; execution is owner-controlled.
+Per `docs/TESTS.md` (main and dev merge integration workflow): tests are authored with the
+change and not run by the agent; execution is owner-controlled.
 
 New spec under `tests/e2e/` (e.g. `family-growth.spec.js`) covering, with seeded
 deterministic state:

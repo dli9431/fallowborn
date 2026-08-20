@@ -204,9 +204,10 @@ npx playwright test specs/boot.spec.js
 npx playwright test -g "export a life"
 ```
 
-## Main integration workflow
+## Main and dev merge integration workflow
 
-Every direct commit on `main` and every merge into `main` has a test-authoring requirement:
+Every direct commit on `main`, every merge into `main`, and every merge of any branch into `dev`
+has the same test-authoring requirement:
 
 1. Identify each observable behavior added, changed, or fixed.
 2. For a new or materially expanded gameplay capability, record its required hard/soft/none
