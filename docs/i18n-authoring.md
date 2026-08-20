@@ -98,6 +98,9 @@ catalogs. Run the recipe only after the owner explicitly asks for one of these i
 - **Merge a branch into `main`:** never regenerate on the branch. During the requested merge,
   assemble the merged tree without finalizing the merge commit, run the recipe from that merged
   tree, then finalize the integration.
+- **Merge any branch into `dev`:** use the identical merge workflow: never regenerate on the
+  source branch; assemble the merged tree, run the recipe, then finalize the integration. A later
+  merge of `dev` into `main` runs the recipe again from that newly merged tree.
 
 Routing new strings remains part of implementation; English self-heals until integration.
 Regenerating early only creates noisy working-tree changes and, on a branch, guarantees a catalog
@@ -109,5 +112,5 @@ regenerate again from the merged tree, wasting work and a second `translate` bil
 **Resolving a catalog conflict at a merge.** Do not hand-merge the generated files. Take either
 side to clear the markers (`git checkout --theirs -- data/lang_*.js tools/i18n_manifest.json`),
 `git add` them, then regenerate from the *merged source* (`extract → translate → validate`) and
-stage the result. `validate` is the gate — a change reaching `main` with new player-facing text
-but stale catalogs leaves the other languages stale.
+stage the result. `validate` is the gate — a change reaching `main`, or reaching `dev` through a
+branch merge, with new player-facing text but stale catalogs leaves the other languages stale.

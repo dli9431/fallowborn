@@ -53,16 +53,18 @@ Entry format in `FB.CHANGELOG`:
 
 ## Assigning the version (at integration)
 
-The version and its changelog entry are assigned **when a change lands on `main`**, not on the
-branch that makes the change:
+The version and its changelog entry are assigned **when a change lands directly on `main` or a
+branch is merged into `main` or `dev`**, not on the branch that makes the change:
 
 - **Working directly on `main`** (the default) — bump `FB.VERSION` and add the `FB.CHANGELOG`
   entry in the same commit. That commit *is* the integration, and its subject must include the
   assigned version.
-- **On a feature branch or worktree you will merge** — do **not** touch `FB.VERSION` or
-  `FB.CHANGELOG`. Put the player-facing changelog line in the commit/merge description; at the
-  merge, the integrator picks the next free version, adds the entry, and includes the assigned
-  version in the final merge/integration commit subject.
+- **On a feature branch or worktree you will merge into `main` or `dev`** — do **not** touch
+  `FB.VERSION` or `FB.CHANGELOG`. Put the player-facing changelog line in the commit/merge
+  description; at the merge, the integrator picks the next free version, adds the entry, and
+  includes the assigned version in the final merge/integration commit subject. Every branch
+  merge into `dev` follows this same rule; a later merge of `dev` into `main` assigns the next
+  free version again.
 
 Use this subject format for every integration commit that assigns `FB.VERSION`:
 
