@@ -230,6 +230,7 @@ test('Seek a match draws culture-faith identities from the current county and ra
       FB.state.player.provinceId = 'london';
       const candidates = FB.spawnSuitor(FB.state);
       candidates[1].homeProvinceId = 'dublin';
+      candidates[1].epithet = 'the Resolute';
       const friendVisit = FB.socialVisitPreview(FB.state, candidates[1], {
         readOnly:true
       });
@@ -240,6 +241,7 @@ test('Seek a match draws culture-faith identities from the current county and ra
       return {
         ids:candidates.map(function (candidate) { return candidate.id; }),
         expected:ids,
+        peerName:candidates[1].name,
         searchProvinces:candidates.map(function (candidate) {
           return candidate.suitorProvinceId;
         }),
@@ -272,6 +274,10 @@ test('Seek a match draws culture-faith identities from the current county and ra
         ? 'Norse · Latin Christianity'
         : 'Gaelic · Norse Paganism');
     const peerCard = page.locator('[data-suitor-card]').nth(1);
+    await expect(peerCard.locator('.settcard-head > b')).toHaveText(
+      '💍 the Resolute - ' + reopened.peerName);
+    await expect(page.getByRole('dialog', { name:'Seeking a Match' }))
+      .not.toContainText('—');
     await expect(peerCard.locator('.suitor-essentials')).toContainText(
       'Requires +' +
       (result.base + result.culturePremium + result.faithPremium) + ' Standing');

@@ -18183,11 +18183,11 @@ window.FB = window.FB || {};
           percent: Math.round((m.fertility || 1) * FB.traitAgg(m).fert *
             FB.ageFert(m.sex, age) * 100)
         }));
-      if (gap > 0) details.push(FB.T('A step up — a harder suit.'));
-      else if (gap < 0) details.push(FB.T('A step down — folk will mark it.'));
+      if (gap > 0) details.push(FB.T('A step up - a harder suit.'));
+      else if (gap < 0) details.push(FB.T('A step down - folk will mark it.'));
       details.push(childIdentityPreviewText(
         s, s.chars[s.player.charId], m, true));
-      const name = (epithetText(s, m) ? epithetText(s, m) + ' — ' : '') +
+      const name = (epithetText(s, m) ? epithetText(s, m) + ' - ' : '') +
         m.name;
       h += '<div class="asset-owned-row settcard suitor-card" ' +
         'data-suitor-card="' + esc(m.id) + '">' +
