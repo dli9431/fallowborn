@@ -1212,7 +1212,12 @@ window.FB = window.FB || {};
     const legDays = readOnly
       ? FB.travelLegDaysSnapshot(state) : FB.travelLegDays(state);
     const activeDays = FB.socialAttentionDaysToThreshold ?
-      FB.socialAttentionDaysToThreshold(state, c) : null;
+      FB.socialAttentionDaysToThreshold(state, c,
+        options && options.courtship) : null;
+    out.standingThreshold = FB.socialAttentionStandingThreshold
+      ? FB.socialAttentionStandingThreshold(state, c,
+        options && options.courtship)
+      : FB.relationshipOpinionThreshold();
     out.eligible = true;
     out.destinationId = destinationId;
     out.route = route;
@@ -1230,7 +1235,7 @@ window.FB = window.FB || {};
 
   FB.socialVisitStart = function (state, c, options) {
     options = options || {};
-    const preview = FB.socialVisitPreview(state, c);
+    const preview = FB.socialVisitPreview(state, c, options);
     if (!preview.eligible || state.player.gold < preview.cost) return false;
 
     if (options.courtship) {

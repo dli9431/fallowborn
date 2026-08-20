@@ -388,7 +388,9 @@ window.FB = window.FB || {};
       });
     }
     const days = FB.socialAttentionDaysToThreshold(s, target);
-    const threshold = FB.relationshipOpinionThreshold();
+    const threshold = FB.socialAttentionStandingThreshold
+      ? FB.socialAttentionStandingThreshold(s, target)
+      : FB.relationshipOpinionThreshold();
     const progress = days === null
       ? FB.T('not advancing toward +{threshold}', { threshold:threshold })
       : (days

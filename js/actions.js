@@ -1130,7 +1130,7 @@ window.FB = window.FB || {};
     cooldownDays: function () {
       return FB.marriageProspectRefreshDays();
     },
-    desc: function () { return 'Ask kin and gossips to find you a spouse from your own walk of life.'; },
+    desc: function () { return 'Ask local kin and gossips to find a spouse among the county’s communities.'; },
     show: function (s) {
       const m = me(s);
       const clergyCelibate = s.player.profession === 'monk' &&

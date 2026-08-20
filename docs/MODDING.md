@@ -2180,6 +2180,9 @@ player-originated loan families, passive trade partnerships, and self-founded ve
   balance keys. Personal relationships use `socialAttentionCapacity` (core 1),
   `socialAttentionDailyOpinion` (fixed Standing per ordinary day; core 0.2),
   `relationshipOpinionThreshold` (shared Call friend / proposal gate; core 40),
+  `marriageCultureStandingPremium` (extra proposal Standing for a partner of a
+  different culture; core 20), `marriageFaithStandingPremium` (extra proposal
+  Standing for a partner of a different faith; core 30),
   `socialGiftCooldownDays` (one explicit cash or item gift per recipient; core 90),
   `socialCashGiftOpinion` (core 4), and the three-entry `socialItemGiftOpinion`
   array (core `[4,8,12]`). `rankAccessInfluenceMult` (core 0.5) multiplies
@@ -3197,7 +3200,10 @@ The marriage-of-station knobs live there too: `dowryByStation` (gold by the spou
 amount/direction before proposal), `marryUpPrestige` / `marryDownPrestigeLoss` (per step of difference),
 `proposalStationPenalty` (chance lost per step the suitor stands above the player), and
 `marriageProspectRefreshDays` (the shared protagonist and per-descendant family-search
-cooldown; core 30 days).
+cooldown; core 30 days). **Seek a match** takes its prospect identities from the current
+county's ordered `communities`: authored culture/faith pairs come first, then distinct
+local cultures and faiths recombine. A county without an authored list has its single
+principal culture/faith pair.
 `wivesByGroup` is deprecated compatibility data used only when a legacy faith has no
 effective `properties.marriage`; new spouse limits belong in the faith graph.
 Rivalry tuning uses `rivalOpinionThreshold`, `rivalClaimChance`,

@@ -635,8 +635,9 @@ courtship ends. A distant character instead offers **Travel to cultivate…**, o
 The review names the person and county, route, days, cost, 90-day minimum stay,
 rank-access-adjusted daily rate, and estimated time to +40. Confirming assigns attention and
 departs as one operation. The assigned person's sheet repeats their Standing,
-access-adjusted daily rate, and estimated active days to +40. **Call
-friend** and **Propose marriage** remain visibly disabled below the shared threshold.
+access-adjusted daily rate, and estimated active days to the relevant threshold. **Call
+friend** remains visibly disabled below the shared +40 threshold; **Propose marriage**
+uses the candidate's exact courtship threshold, including culture and faith premiums.
 **Offer a gift…** opens a numbered cash-and-armory picker. Cash and every exact armory
 object show their access-adjusted cost and +Standing value and either readiness or
 recipient-specific days remaining

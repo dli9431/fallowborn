@@ -78,8 +78,11 @@ missing-intermediary reason.
 Every ordinary, matchmade, or royal courtship assigns the player's one
 `player.socialAttention` slot to that suitor while leaving the normal work/study focus
 alone. A proposal is unavailable until the suitor reaches the shared
-`balance.relationshipOpinionThreshold` (+40 by default); after that readiness gate, the
-existing proposal probability still weighs Standing, prestige, station, traits, and
+`balance.relationshipOpinionThreshold` (+40 by default). A prospective spouse of a
+different culture adds `balance.marriageCultureStandingPremium` (+20), and a different
+faith adds `balance.marriageFaithStandingPremium` (+30); the two requirements stack, so
+personal trust can overcome a mixed match without making every family equally receptive.
+After that readiness gate, the existing proposal probability still weighs Standing, prestige, station, traits, and
 royal-realm Standing. Starting another suit ends the former one with −20 Standing and records the
 same hostile contact as a manual breakoff. Marriage, refusal, breakoff, death, succession,
 and permanent-relocation cleanup release the assignment.
@@ -171,17 +174,27 @@ older, a step up — fatter dowry, harder suit, fewer childbearing years), a pee
 years, and a young match eight to eighteen years younger and a step down. None has an artificial
 upper-age cap, so every profile stays relative to the protagonist instead of every later-life
 search collapsing to the same 45/40/30 ages. The ordinary age-fertility curve still makes younger
-options more useful for extending the line. Once the protagonist is forty, a fourth step-down
+options more useful for extending the line. Each profile receives an identity from the county
+where **Seek a match** is used (`FB.marriageProspectIdentities`): authored county community
+pairs are offered first, followed by the cartesian combinations of their cultures and faiths.
+Thus 867 Dublin can produce Norse Pagan and Gaelic Catholic prospects as well as Norse
+Catholic or Gaelic Norse Pagan households, while a single-community county stays homogeneous.
+The picker names each prospect's culture, faith, and exact Standing requirement. Once the protagonist is forty, a fourth step-down
 family offers a very young adult aged sixteen to twenty-four. The available candidates persist on
 the player as `suitorIds` until one is chosen in the picker or the next eligible **Seek a match**
 replaces the full pool
 (`FB.refreshSuitors` → `UI.showSuitorPicker` → `FB.pickSuitor`). Merely reopening
-the picker reuses the current records. Searches observe
+the picker reuses the current records and their saved search county even if the player has
+since travelled elsewhere. Searches observe
 `balance.marriageProspectRefreshDays` and spend no day or resources, including
 when the player closes the picker without choosing; the usual meet-and-court
 event flow follows after a choice. Outliving a spouse of higher station queues `widow_settlement` /
 `house_claim` (`FB.spouseDied`, called from the mortality tick and `killRole:'spouse'`;
 payout fns `dower_*`/`claim_*` in events.js — a won claim can lift a commoner to tier 2).
+
+Technology impact review: `local_marriage_prospect_identity` is `mode:'none'` in
+`FBDATA.techImpactReviews`. Local courtship networks and mixed household identities are
+baseline social behavior with no credible research dependency.
 
 `FB.marriageTerms` is the single transfer rule for protagonist and descendant
 marriages: the bride's house pays the displayed dowry. A protagonist courtship

@@ -592,7 +592,9 @@ window.FB = window.FB || {};
     const target = FB.socialAttentionTarget(s);
     const capacity = FB.socialAttentionCapacity();
     const rate = FB.socialAttentionDailyOpinion();
-    const threshold = FB.relationshipOpinionThreshold();
+    const threshold = FB.socialAttentionStandingThreshold
+      ? FB.socialAttentionStandingThreshold(s, target)
+      : FB.relationshipOpinionThreshold();
     if (!target) {
       return FB.T('🤝 Personal attention 0/{capacity} · no assignment · +{rate} Standing/day when assigned', {
         capacity:capacity, rate:rate

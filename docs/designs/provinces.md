@@ -46,6 +46,13 @@ and children. It is preserved in a non-principal start code rather than in a new
 field; the generated character records remain authoritative after play begins. County
 selection and the Land panel show every authored pair in order.
 
+**Seek a match** also reads this county-specific projection. Its prospect pool offers
+the authored pairs first, then may recombine the distinct local cultures and faiths to
+represent mixed households; those combinations are generated character identities, not
+new authored communities or changes to the county's principal identity. The search
+county is stamped on each persistent prospect so reopening the same pool keeps its
+geographic source.
+
 The model is deliberately static. Communities have no percentages, conversion,
 migration, unrest, revolt, or daily/seasonal demographic work. Existing county,
 realm, title, intrigue, advancement, and war mechanics continue to read only the
