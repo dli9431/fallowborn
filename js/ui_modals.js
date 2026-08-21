@@ -7287,6 +7287,8 @@ window.FB = window.FB || {};
       UI.showLiegeModal(returnContext.realmId, returnContext.returnContext);
     } else if (returnContext.view === 'character') {
       UI.showCharModal(returnContext.characterId, returnContext.returnContext);
+    } else if (returnContext.view === 'family-tree') {
+      UI.showFamilyTree(returnContext.familyTreeState);
     } else if (returnContext.view === 'retainer') {
       UI.showRetainerManage(returnContext.characterId,
         returnContext.returnContext);

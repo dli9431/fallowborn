@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.3';
+  FB.VERSION = '1.144.4';
   FB.CHANGELOG = [
+    { v: '1.144.4', date: '2026-08-21', changes: [
+      'The family tree now connects the house founder through recorded ancestry, labels distant kin, and opens on the current character on mobile. Desktop trees fill the available screen, pan by dragging, preview characters on hover, and return from character sheets with Back.'
+    ] },
     { v: '1.144.3', date: '2026-08-21', changes: [
       'Panels and Network now provide clearer keyboard navigation, responsive action details, ruler previews, and more legible map labels across desktop and mobile. Ruler sheets show each side’s war goals, and starting a war makes the opposing ruler Hostile.'
     ] },

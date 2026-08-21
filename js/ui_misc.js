@@ -3619,7 +3619,16 @@ window.FB = window.FB || {};
         }
         return;
       }
-      const row = e.target.closest('.charrow[data-cid], .charcard[data-cid], .ftchip[data-cid]');
+      const familyChip = e.target.closest('.ftchip[data-cid]');
+      if (familyChip && FB.state && !UI.eventsBusy()) {
+        UI.showCharModal(familyChip.getAttribute('data-cid'), {
+          view:'family-tree',
+          familyTreeState:SH.captureFamilyTreeView
+            ? SH.captureFamilyTreeView() : null
+        });
+        return;
+      }
+      const row = e.target.closest('.charrow[data-cid], .charcard[data-cid]');
       if (row && FB.state && !UI.eventsBusy()) UI.showCharModal(row.getAttribute('data-cid'));
     });
     // clicking the dark backdrop closes a dismissable dialog
@@ -3743,10 +3752,25 @@ window.FB = window.FB || {};
         return showSideTip(control,
           UI.councilRulerTooltipHtml(FB.state, rid), { modalLeft:true });
       }
+      function showFamilyTreeCharacterTip(control) {
+        if (!FB.state || !UI.charCardHtml) return false;
+        const chip = control.closest('.ftchip[data-cid]');
+        const c = chip && FB.state.chars[chip.getAttribute('data-cid')];
+        if (!c) return false;
+        return showSideTip(control,
+          '<div class="family-tree-character-tooltip">' +
+          UI.charCardHtml(FB.state, c, false, true) + '</div>');
+      }
       document.addEventListener('mouseover', function (e) {
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
         if (e.target.closest('#tooltip')) {
           cancelHideTip();
+          return;
+        }
+        const familyPortrait = e.target.closest('.ftchip[data-cid] .pface');
+        if (familyPortrait) {
+          if (showFamilyTreeCharacterTip(familyPortrait)) return;
+          scheduleHideTip();
           return;
         }
         const eventChoice = e.target.closest('.event-choice .evopt');
@@ -3844,6 +3868,10 @@ window.FB = window.FB || {};
       });
       document.addEventListener('click', function (e) {
         if (!e.target || !e.target.closest) return;
+        if (e.target.closest('.ftchip[data-cid]')) {
+          hideTipImmediately();
+          return;
+        }
         const fortTech = e.target.closest('[data-fort-tech]');
         if (fortTech && fortTech.dataset.fortTech) {
           hideTipImmediately();
@@ -3868,6 +3896,13 @@ window.FB = window.FB || {};
         if (!e.target || !e.target.closest) return;
         if (e.target.closest('#tooltip')) {
           cancelHideTip();
+          return;
+        }
+        const familyChip = e.target.closest('.ftchip[data-cid]');
+        if (familyChip) {
+          if (showFamilyTreeCharacterTip(
+            familyChip.querySelector('.pface') || familyChip)) return;
+          scheduleHideTip();
           return;
         }
         const bldBtnFocus = e.target.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]');
@@ -3897,6 +3932,7 @@ window.FB = window.FB || {};
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
         if (e.relatedTarget && e.relatedTarget.closest &&
             (e.relatedTarget.closest('#tooltip') ||
+             e.relatedTarget.closest('.ftchip[data-cid]') ||
              e.relatedTarget.closest('[data-ruler-card-tooltip]') ||
              e.relatedTarget.closest('.settcard') ||
              e.relatedTarget.closest('.event-choice .evopt') ||

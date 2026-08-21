@@ -118,6 +118,32 @@ control in a `.gm-footer`. `UI.openModal` normalizes legacy loose Close/Done/Can
 buttons into that footer while leaving substantive choices in the scrolling body. Footer
 controls are centered, 200 px wide, and at least 52 px high on every layout; multiple
 controls wrap as equal-sized rows rather than changing width.
+
+The Family Tree uses its own near-viewport sheet instead of the generic narrow dialog, so
+wide generations have the available desktop map area. Names and relationships remain
+legible on the face of every portrait. Fine-pointer users can drag any non-interactive tree
+background to pan its viewport, and hovering or keyboard-focusing a portrait opens the
+standard character summary in the shared side tooltip. Opening a character from the tree
+creates a modal-history entry: **Back** restores the same tree view, including branch,
+focus and internal scroll state, while **Close** dismisses the complete stack.
+
+The primary canvas roots itself at the nearest recorded common ancestor of the house founder
+and current player, then follows every recorded descendant generation without an arbitrary
+depth cutoff. This keeps a collateral succession connected by its real bloodline rather than
+falsely drawing the founder as the heir's parent. A genuinely disconnected founder from an
+old or modified save shares that canvas with the current recorded lineage instead of creating
+a separate founder scroll area. Direct ancestors beyond grandparents remain identified as
+Great-grandfather or Great-grandmother, then 2× great-grandparent and onward. The same
+recorded-parent paths identify deep descendants, great-aunts and great-uncles,
+great-nieces and great-nephews, and cousins by degree and generational removal. A house
+founder retains the founder role alongside any direct or collateral relationship.
+
+On an initial narrow/mobile opening, the canvas and modal body explicitly center and focus the
+current player after layout rather than depending on nested `scrollIntoView` behavior or
+beginning at the founder. Width-based detection covers mobile WebViews that report an
+incorrect pointer type. Returning from a nested character sheet restores the player's later
+pan position normally.
+
 Compact in-panel edits, such as House rename, sit inline beside the value they change as a
 small bordered icon button with an accessible localized name and tooltip; the icon is
 decorative and the button expands to the 44 px touch target on compact layouts. Its modal

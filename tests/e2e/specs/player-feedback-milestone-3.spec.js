@@ -1,8 +1,11 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'js/actions.js',
   'js/mapview.js',
+  'js/model.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js'
 ]);
@@ -89,11 +92,90 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
     }).toBe('focus-family:farmer-work');
   });
 
-test('family tree searches, collapses, and jumps without changing genealogy',
+test('family tree labels distant kin, connects founders, pans, previews, and returns',
   async function ({ page }) {
     const family = await page.evaluate(function () {
       const s = FB.state;
       const me = s.chars[s.player.charId];
+      const oldParentIds = [me.fatherId, me.motherId];
+      for (const parentId of oldParentIds) {
+        const parent = parentId && s.chars[parentId];
+        if (parent && parent.childrenIds) {
+          parent.childrenIds = parent.childrenIds.filter(function (id) {
+            return id !== me.id;
+          });
+        }
+      }
+      const sharedRoot = FB.makeCharacter(s, {
+        name:'Alfhild Root', sex:'f', born:s.date.year - 185,
+        culture:me.culture, religion:me.religion, dyn:me.dyn
+      });
+      const founder = FB.makeCharacter(s, {
+        name:'Gyda Founder', sex:'f', born:s.date.year - 160,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        motherId:sharedRoot.id
+      });
+      const currentBranch = FB.makeCharacter(s, {
+        name:'Collateral Root', sex:'f', born:s.date.year - 160,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        motherId:sharedRoot.id
+      });
+      sharedRoot.childrenIds.push(founder.id, currentBranch.id);
+      let previous = currentBranch;
+      const ancestorIds = [];
+      for (let i = 0; i < 5; i++) {
+        const generationOptions = {
+          name:'Founder Line ' + (i + 1), sex:i === 2 ? 'm' : 'f',
+          born:s.date.year - 135 + i * 25,
+          culture:me.culture, religion:me.religion, dyn:me.dyn
+        };
+        generationOptions[previous.sex === 'm' ? 'fatherId' : 'motherId'] = previous.id;
+        const generation = FB.makeCharacter(s, generationOptions);
+        previous.childrenIds.push(generation.id);
+        ancestorIds.push(generation.id);
+        previous = generation;
+      }
+      const greatGrandparent = s.chars[ancestorIds[2]];
+      const greatUncle = FB.makeCharacter(s, {
+        name:'Osric Greatbough', sex:'m', born:s.date.year - 60,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        fatherId:greatGrandparent.id
+      });
+      const removedCousin = FB.makeCharacter(s, {
+        name:'Aldith Onceaway', sex:'f', born:s.date.year - 35,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        fatherId:greatUncle.id
+      });
+      const secondCousin = FB.makeCharacter(s, {
+        name:'Wulfric Twicedrawn', sex:'m', born:s.date.year - 10,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        motherId:removedCousin.id
+      });
+      greatGrandparent.childrenIds.push(greatUncle.id);
+      greatUncle.childrenIds.push(removedCousin.id);
+      removedCousin.childrenIds.push(secondCousin.id);
+      me.fatherId = null;
+      me.motherId = previous.id;
+      previous.childrenIds.push(me.id);
+      const sibling = FB.makeCharacter(s, {
+        name:'Eadric Siblingbough', sex:'m', born:s.date.year - 24,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        motherId:previous.id
+      });
+      const niece = FB.makeCharacter(s, {
+        name:'Godgifu Niecebough', sex:'f', born:s.date.year - 16,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        fatherId:sibling.id
+      });
+      const greatNiece = FB.makeCharacter(s, {
+        name:'Leofrun Farbranch', sex:'f', born:s.date.year - 2,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        motherId:niece.id
+      });
+      previous.childrenIds.push(sibling.id);
+      sibling.childrenIds.push(niece.id);
+      niece.childrenIds.push(greatNiece.id);
+      s.player.houseFounderId = founder.id;
       const spouse = FB.makeCharacter(s, {
         name:'Edwin Treeward', sex:'m', born:s.date.year - 26,
         culture:me.culture, religion:me.religion, dyn:'Treeward'
@@ -112,6 +194,11 @@ test('family tree searches, collapses, and jumps without changing genealogy',
         culture:me.culture, religion:me.religion, dyn:me.dyn,
         fatherId:partner.id, motherId:child.id
       });
+      const greatGrandchild = FB.makeCharacter(s, {
+        name:'Matilda Longbranch', sex:'f', born:s.date.year,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        motherId:grandchild.id
+      });
       me.spouseId = spouse.id;
       spouse.spouseId = me.id;
       me.childrenIds.push(child.id);
@@ -120,6 +207,17 @@ test('family tree searches, collapses, and jumps without changing genealogy',
       partner.spouseId = child.id;
       child.childrenIds.push(grandchild.id);
       partner.childrenIds.push(grandchild.id);
+      grandchild.childrenIds.push(greatGrandchild.id);
+      for (let i = 0; i < 14; i++) {
+        const extra = FB.makeCharacter(s, {
+          name:'Pan Child ' + (i + 1), sex:i % 2 ? 'm' : 'f',
+          born:s.date.year - 10 + (i % 3),
+          culture:me.culture, religion:me.religion, dyn:me.dyn,
+          fatherId:spouse.id, motherId:me.id
+        });
+        me.childrenIds.push(extra.id);
+        spouse.childrenIds.push(extra.id);
+      }
       FB.touchFamily();
       const before = JSON.stringify({
         child:[child.fatherId, child.motherId],
@@ -127,10 +225,98 @@ test('family tree searches, collapses, and jumps without changing genealogy',
       });
       FB.ui.showFamilyTree();
       return {
-        meId:me.id, spouseId:spouse.id, childId:child.id,
+        meId:me.id, founderId:founder.id, rootId:sharedRoot.id,
+        greatGrandfatherId:ancestorIds[2],
+        twiceGreatGrandmotherId:ancestorIds[1],
+        greatUncleId:greatUncle.id,
+        removedCousinId:removedCousin.id,
+        secondCousinId:secondCousin.id,
+        greatNieceId:greatNiece.id,
+        greatGrandchildId:greatGrandchild.id,
+        spouseId:spouse.id, childId:child.id,
         grandchildId:grandchild.id, before:before
       };
     });
+
+    const desktopGeometry = await page.evaluate(function () {
+      const card = document.querySelector('#genmodal .modalcard');
+      const chip = document.querySelector('.ftchip[data-cid]');
+      const wrap = document.querySelector('.family-tree-primary');
+      const cardRect = card.getBoundingClientRect();
+      return {
+        modalClass:document.getElementById('genmodal').className,
+        cardWidth:cardRect.width,
+        cardHeight:cardRect.height,
+        viewportWidth:window.innerWidth,
+        viewportHeight:window.innerHeight,
+        nameSize:parseFloat(getComputedStyle(chip.querySelector('.fname')).fontSize),
+        relationSize:parseFloat(getComputedStyle(chip.querySelector('.frel')).fontSize),
+        treeClientWidth:wrap.clientWidth,
+        treeScrollWidth:wrap.scrollWidth
+      };
+    });
+    expect(desktopGeometry.modalClass).toContain('family-tree-modal');
+    await expect(page.locator('#family-tree-search')).toHaveCount(0);
+    expect(desktopGeometry.cardWidth).toBeGreaterThanOrEqual(
+      desktopGeometry.viewportWidth - 18);
+    expect(desktopGeometry.cardHeight).toBeGreaterThanOrEqual(
+      desktopGeometry.viewportHeight - 18);
+    expect(desktopGeometry.nameSize).toBeGreaterThanOrEqual(15);
+    expect(desktopGeometry.relationSize).toBeGreaterThanOrEqual(13);
+    expect(desktopGeometry.treeScrollWidth).toBeGreaterThan(
+      desktopGeometry.treeClientWidth);
+    const primaryTree = page.locator('.family-tree-primary');
+    const founderTreeRoot = primaryTree.locator(
+      ':scope > .fttree > .ftnode').first();
+    await expect(founderTreeRoot.locator(
+      '.ftchip[data-cid="' + family.founderId + '"]')).toHaveCount(1);
+    await expect(founderTreeRoot.locator(
+      '.ftchip[data-cid="' + family.meId + '"]')).toHaveCount(1);
+    await expect(founderTreeRoot.locator(
+      ':scope > .ftcouple .ftchip[data-cid="' + family.rootId + '"]'))
+      .toHaveCount(1);
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.greatGrandfatherId + '"] .frel'))
+      .toContainText('Great-grandfather');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.twiceGreatGrandmotherId + '"] .frel'))
+      .toContainText('2× great-grandmother');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.greatUncleId + '"] .frel'))
+      .toContainText('Great-uncle');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.removedCousinId + '"] .frel'))
+      .toContainText('First cousin once removed');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.secondCousinId + '"] .frel'))
+      .toContainText('Second cousin');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.greatNieceId + '"] .frel'))
+      .toContainText('Great-niece');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.greatGrandchildId + '"] .frel'))
+      .toContainText('Great-granddaughter');
+    await expect(primaryTree.locator(
+      '.ftchip[data-cid="' + family.founderId + '"] .frel'))
+      .toContainText('House founder · 5× great-aunt');
+    await expect(page.locator('#gm-body > .panelh').filter({
+      hasText:'House founder'
+    })).toHaveCount(0);
+
+    const panning = await page.evaluate(function () {
+      const wrap = document.querySelector('.family-tree-primary');
+      wrap.scrollLeft = 100;
+      const before = wrap.scrollLeft;
+      wrap.dispatchEvent(new MouseEvent('mousedown', {
+        bubbles:true, button:0, clientX:600, clientY:400
+      }));
+      document.dispatchEvent(new MouseEvent('mousemove', {
+        bubbles:true, clientX:450, clientY:400
+      }));
+      document.dispatchEvent(new MouseEvent('mouseup', { bubbles:true }));
+      return { before:before, after:wrap.scrollLeft };
+    });
+    expect(panning.after).toBeGreaterThan(panning.before + 100);
 
     const branch = page.locator('[data-ft-toggle="' + family.meId + '"]');
     await branch.click();
@@ -138,20 +324,34 @@ test('family tree searches, collapses, and jumps without changing genealogy',
     await expect(page.locator('.ftchip[data-cid="' + family.grandchildId + '"]')
       .first()).toBeHidden();
 
-    await page.locator('#family-tree-search').fill('Searchleaf');
-    await page.locator('[data-ft-result="' + family.grandchildId + '"]').click();
+    await branch.click();
     await expect(branch).toHaveAttribute('aria-expanded', 'true');
     await expect(page.locator('.ftchip[data-cid="' + family.grandchildId + '"]')
-      .first()).toBeFocused();
+      .first()).toBeVisible();
 
     await page.getByRole('button', { name:'Successor', exact:true }).click();
     await expect(page.locator('.ftchip[data-cid="' + family.childId + '"]')
       .first()).toBeFocused();
     await page.getByRole('button', { name:'Spouse', exact:true }).click();
-    await expect(page.locator('.ftchip[data-cid="' + family.spouseId + '"]')
-      .first()).toBeFocused();
+    const spouseChip = page.locator(
+      '.ftchip[data-cid="' + family.spouseId + '"]').first();
+    await expect(spouseChip).toBeFocused();
+    await page.getByRole('button', { name:'You', exact:true }).focus();
+    await expect(page.locator('#tooltip')).toBeHidden();
+    await spouseChip.locator('.pface').hover();
+    await expect(page.locator('#tooltip')).toBeVisible();
+    await expect(page.locator('#tooltip')).toContainText('Edwin Treeward');
+
+    await spouseChip.focus();
+    await spouseChip.click();
+    await expect(page.locator('#gm-title')).toContainText('Edwin Treeward');
+    await page.getByRole('button', { name:'Back', exact:true }).click();
+    await expect(page.locator('#gm-title')).toHaveText('The Family Tree');
+    await expect(page.locator('#genmodal')).toHaveClass(/family-tree-modal/);
+    await expect(branch).toHaveAttribute('aria-expanded', 'true');
+    await expect(spouseChip).toBeFocused();
     await page.getByRole('button', { name:'House founder', exact:true }).click();
-    await expect(page.locator('.ftchip[data-cid="' + family.meId + '"]')
+    await expect(page.locator('.ftchip[data-cid="' + family.founderId + '"]')
       .first()).toBeFocused();
 
     expect(await page.evaluate(function (ids) {
@@ -164,6 +364,77 @@ test('family tree searches, collapses, and jumps without changing genealogy',
       });
     }, family)).toBe(family.before);
   });
+
+test.describe('mobile-sized family tree', function () {
+  test.use({ viewport:{ width:390, height:740 }, hasTouch:false });
+
+  test('opens on the current player', async function ({ page }) {
+    const family = await page.evaluate(function () {
+      const s = FB.state;
+      const id = s.player.charId;
+      const me = s.chars[id];
+      for (const parentId of [me.fatherId, me.motherId]) {
+        const parent = parentId && s.chars[parentId];
+        if (parent && parent.childrenIds) {
+          parent.childrenIds = parent.childrenIds.filter(function (childId) {
+            return childId !== me.id;
+          });
+        }
+      }
+      let previous = FB.makeCharacter(s, {
+        name:'Mobile Founder', sex:'f', born:s.date.year - 160,
+        culture:me.culture, religion:me.religion, dyn:me.dyn
+      });
+      s.player.houseFounderId = previous.id;
+      for (let i = 0; i < 5; i++) {
+        const generation = FB.makeCharacter(s, {
+          name:'Mobile Generation ' + (i + 1), sex:'f',
+          born:s.date.year - 135 + i * 25,
+          culture:me.culture, religion:me.religion, dyn:me.dyn,
+          motherId:previous.id
+        });
+        previous.childrenIds.push(generation.id);
+        previous = generation;
+      }
+      for (let i = 0; i < 10; i++) {
+        const sibling = FB.makeCharacter(s, {
+          name:'Mobile Branch ' + (i + 1), sex:i % 2 ? 'm' : 'f',
+          born:me.born - 20 + i,
+          culture:me.culture, religion:me.religion, dyn:me.dyn,
+          motherId:previous.id
+        });
+        previous.childrenIds.push(sibling.id);
+      }
+      me.fatherId = null;
+      me.motherId = previous.id;
+      previous.childrenIds.push(me.id);
+      FB.touchFamily();
+      return { meId:id, founderId:s.player.houseFounderId };
+    });
+    await page.getByRole('button', { name:'Kin', exact:true }).click();
+    await page.locator('#btn-ftree').click();
+    const meChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
+      family.meId + '"]').first();
+    await expect(meChip).toBeFocused();
+    await expect(meChip).toBeInViewport();
+    await expect(page.locator('.family-tree-primary .ftchip[data-cid="' +
+      family.founderId + '"] .frel').first()).toContainText(
+      'House founder · 4× great-grandmother');
+    const opening = await meChip.evaluate(function (chip) {
+      const wrapNode = chip.closest('.family-tree-primary');
+      const wrap = wrapNode.getBoundingClientRect();
+      const rect = chip.getBoundingClientRect();
+      return {
+        fullyVisible:rect.left >= wrap.left && rect.right <= wrap.right &&
+          rect.top >= wrap.top && rect.bottom <= wrap.bottom,
+        movedFromOrigin:wrapNode.scrollLeft > 0 || wrapNode.scrollTop > 0 ||
+          document.getElementById('gm-body').scrollTop > 0
+      };
+    });
+    expect(opening.fullyVisible).toBe(true);
+    expect(opening.movedFromOrigin).toBe(true);
+  });
+});
 
 test('war catalogue searches and filters semantic available and blocked causes',
   async function ({ page }) {

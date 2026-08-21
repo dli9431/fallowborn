@@ -232,7 +232,13 @@ Time passes **day by day** (90-day seasons, 360-day years).
    storing a separate army total.
 5. Watch the *Kin* tab fill in: parents, siblings, uncles and aunts, cousins, grandchildren.
    The **🌳 See the family tree** button at the top of that tab draws the whole house as a
-   tree — couples share a box, each brood hangs beneath its parents, † marks the dead.
+   tree, connecting the house founder to the current family through their recorded ancestry
+   and following every descendant generation — couples share a box, each brood hangs beneath
+   its parents, deep blood relations retain great-grandparent, great-aunt or uncle, great-niece
+   or nephew, and precise cousin labels across any recorded depth, and † marks the dead.
+   On desktop, drag the open background to move through a wide tree and hover a portrait for
+   a character summary. Opening a relative's sheet gives you **Back** to the same tree view.
+   On mobile, a fresh tree opens on the character you are currently playing.
    Your kin wed and have children of their own, and when your own line runs out, a sibling,
    nephew, or cousin of the house can carry the name onward.
 

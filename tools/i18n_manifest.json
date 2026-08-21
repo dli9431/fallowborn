@@ -51487,6 +51487,16 @@
         "text": "Forged by dwarves under duress, cursed to drink a life whenever it is drawn. It has never missed."
       }
     },
+    "src.02335ed7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "button, input, select, textarea, a, [tabindex]"
+      }
+    },
     "src.0238a79c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58513,6 +58523,16 @@
         "text": "Corrected priests on doctrine; has presumably gone to check."
       }
     },
+    "src.126e5569": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Cousin of degree {degree}"
+      }
+    },
     "src.126f22a4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -60126,6 +60146,16 @@
       ],
       "source": {
         "text": "Acknowledge the injury and put silver behind the apology."
+      }
+    },
+    "src.15e77552": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Fourth cousin"
       }
     },
     "src.15e7c781": {
@@ -61775,6 +61805,16 @@
       ],
       "source": {
         "text": "Dig the grave yourself."
+      }
+    },
+    "src.19af6f73": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{cousin} once removed"
       }
     },
     "src.19b0be0f": {
@@ -65680,16 +65720,6 @@
         "text": "It is done openly now: {rival} publishes a claim to everything you hold — a worm-eaten genealogy, a bought witness, and promises to every malcontent in the county, with foreign coin behind all of it. Men begin choosing which side to kneel to."
       }
     },
-    "src.22f181ce": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet."
-      }
-    },
     "src.22f2ac9a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66281,6 +66311,16 @@
       ],
       "source": {
         "text": "Cahors"
+      }
+    },
+    "src.2416f1be": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-nephew"
       }
     },
     "src.24186841": {
@@ -71325,16 +71365,6 @@
       ],
       "source": {
         "text": "Patient observation, written down for the nation’s learning."
-      }
-    },
-    "src.301e895c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "btn small"
       }
     },
     "src.301e9611": {
@@ -78846,6 +78876,16 @@
         "text": "Requisition raises abstract supply and damages your name."
       }
     },
+    "src.41d58407": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Fifth cousin"
+      }
+    },
     "src.41d76e90": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -82264,6 +82304,16 @@
       ],
       "source": {
         "text": "' + family + ' ' + attribute + '="
+      }
+    },
+    "src.48de33bf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-grandson"
       }
     },
     "src.48e00230": {
@@ -87961,16 +88011,6 @@
         "text": "Gossip is a currency too."
       }
     },
-    "src.56717f93": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Search family by name"
-      }
-    },
     "src.5675145d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92375,6 +92415,16 @@
         "text": "With the ox pulling, you plough deeper and faster than any neighbor. The extra furlongs pay."
       }
     },
+    "src.607dd7f5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-grandson"
+      }
+    },
     "src.60868b65": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -92704,6 +92754,16 @@
       ],
       "source": {
         "text": "Staffs {work}"
+      }
+    },
+    "src.614d6ba3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-granddaughter"
       }
     },
     "src.6164a10a": {
@@ -93308,6 +93368,16 @@
         "text": ", then arrange home lessons, school, or a tutor. Every option shows its yearly learning chance; schools and personal masters charge each season, while a named tutor’s own skill and habits shape the child. Gentry households with Scholarly Networks can use the costly Noble Academy: it teaches every focus and opens noble connections, but each completed term adds fatality risk at New Year. A Learning education grants literacy at 16."
       }
     },
+    "src.62b2e4cd": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-aunt"
+      }
+    },
     "src.62b3daa2": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -93880,6 +93950,16 @@
       ],
       "source": {
         "text": "You suffered a severe wound during the fighting."
+      }
+    },
+    "src.643dc96e": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Second cousin"
       }
     },
     "src.644be5d8": {
@@ -96859,6 +96939,16 @@
       ],
       "source": {
         "text": "Your name over your own door."
+      }
+    },
+    "src.6af55cd9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-niece"
       }
     },
     "src.6b09195f": {
@@ -110170,6 +110260,16 @@
         "text": "Selling market (Home)"
       }
     },
+    "src.88a6c556": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-grandmother"
+      }
+    },
     "src.88ba9076": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115129,6 +115229,16 @@
         "text": "Debts called, rumors seeded — within a year their fortunes crumble."
       }
     },
+    "src.93c5fcc7": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-grandfather"
+      }
+    },
     "src.93c66cd7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -116870,6 +116980,16 @@
         "text": "you yourself"
       }
     },
+    "src.97d97227": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-aunt"
+      }
+    },
     "src.97ddddfc": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -117683,6 +117803,16 @@
       ],
       "source": {
         "text": ": counter references unknown class"
+      }
+    },
+    "src.99b1157c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-uncle"
       }
     },
     "src.99b32e33": {
@@ -118859,6 +118989,16 @@
         "text": "{trait} — direct rent"
       }
     },
+    "src.9c251ddf": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-niece"
+      }
+    },
     "src.9c306400": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -119770,6 +119910,16 @@
       ],
       "source": {
         "text": "Joined the craft guild."
+      }
+    },
+    "src.9e2fa327": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Third cousin"
       }
     },
     "src.9e357d4b": {
@@ -121545,6 +121695,16 @@
         "text": "Master craftsman"
       }
     },
+    "src.a20edae3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{cousin} {count} times removed"
+      }
+    },
     "src.a20ffe7e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121553,16 +121713,6 @@
       ],
       "source": {
         "text": "' + esc(matchPolicyStation) + '"
-      }
-    },
-    "src.a2133c49": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "The first playable head is kept here even when later generations move beyond the bounded tree."
       }
     },
     "src.a214268d": {
@@ -124334,6 +124484,16 @@
       ],
       "source": {
         "text": "Ulaid"
+      }
+    },
+    "src.a815a3ee": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-uncle"
       }
     },
     "src.a83a54aa": {
@@ -127640,6 +127800,16 @@
         "text": "Category"
       }
     },
+    "src.afb3fcb0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{role} · {relation}"
+      }
+    },
     "src.afbe39d4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128852,6 +129022,16 @@
       ],
       "source": {
         "text": "Adopt"
+      }
+    },
+    "src.b220dd2a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{cousin} twice removed"
       }
     },
     "src.b2266dcb": {
@@ -131330,6 +131510,16 @@
         "text": "✉ A captive is released under a binding private obligation."
       }
     },
+    "src.b773f095": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-granddaughter"
+      }
+    },
     "src.b7857e42": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -132280,6 +132470,16 @@
       ],
       "source": {
         "text": "Kingdom of Hungary"
+      }
+    },
+    "src.b981b58c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-grandmother"
       }
     },
     "src.b98423f2": {
@@ -133576,16 +133776,6 @@
       ],
       "source": {
         "text": "{name} relinquishes the barony to the local count and becomes landless gentry in {destination}."
-      }
-    },
-    "src.bcd7690f": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "No character in the bounded tree matches that name."
       }
     },
     "src.bcd79a80": {
@@ -135569,6 +135759,16 @@
         "text": "Began a personal visit with {visitname} in {destination}."
       }
     },
+    "src.c184f889": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet; hover it for details. Drag the open background to move around."
+      }
+    },
     "src.c18f13cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136577,6 +136777,16 @@
         "text": "{motion} forecast"
       }
     },
+    "src.c3bc8850": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "Great-nephew"
+      }
+    },
     "src.c3c38115": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -136865,6 +137075,16 @@
       ],
       "source": {
         "text": "Estimated cautious payout"
+      }
+    },
+    "src.c476188d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "{count}× great-grandfather"
       }
     },
     "src.c479e807": {
@@ -138037,6 +138257,16 @@
       ],
       "source": {
         "text": "Skeletal stone ribs concentrate vault loads, enabling taller walls and expansive stained glass."
+      }
+    },
+    "src.c730dcc2": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "First cousin"
       }
     },
     "src.c7368e24": {
@@ -149276,16 +149506,6 @@
       ],
       "source": {
         "text": "The clergy ask the estates to protect sanctuary and relief in {province}; the liege’s officers answer that every exemption leaves another household to serve. The hall must decide whether legitimacy is bought with spears, silver, or mercy."
-      }
-    },
-    "src.e102a633": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/ui_panels.js"
-      ],
-      "source": {
-        "text": "Character name"
       }
     },
     "src.e1121e8e": {
@@ -170337,12 +170557,12 @@
         "text": "Blocked now"
       }
     },
-    "ui:Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet.": {
+    "ui:Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet; hover it for details. Drag the open background to move around.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
       "location": "js/ui_panels.js",
       "source": {
-        "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet."
+        "text": "Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet; hover it for details. Drag the open background to move around."
       }
     },
     "ui:Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet.": {
@@ -170927,14 +171147,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Changing careers preserves the inactive record’s rank, experience, specialization, examination cooldown, guild rank, Standing, and start year. Ordinary apprentices train until sixteen; landed rulers keep their former calling as biography."
-      }
-    },
-    "ui:Character name": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Character name"
       }
     },
     "ui:Charter terms": {
@@ -172247,6 +172459,16 @@
       "location": "js/events.js",
       "source": {
         "text": "Courtship changes"
+      }
+    },
+    "ui:Cousin of degree {degree}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "degree"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Cousin of degree {degree}"
       }
     },
     "ui:Craft": {
@@ -174010,6 +174232,14 @@
         "text": "Fields at {settlement}"
       }
     },
+    "ui:Fifth cousin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Fifth cousin"
+      }
+    },
     "ui:Fill research slots automatically": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -174090,6 +174320,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "First copy in this county: {money:cost}."
+      }
+    },
+    "ui:First cousin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "First cousin"
       }
     },
     "ui:First steps": {
@@ -174287,6 +174525,14 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Founded branch"
+      }
+    },
+    "ui:Fourth cousin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Fourth cousin"
       }
     },
     "ui:Freeholder": {
@@ -174782,6 +175028,70 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Great holy war"
+      }
+    },
+    "ui:Great-aunt": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-aunt"
+      }
+    },
+    "ui:Great-granddaughter": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-granddaughter"
+      }
+    },
+    "ui:Great-grandfather": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-grandfather"
+      }
+    },
+    "ui:Great-grandmother": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-grandmother"
+      }
+    },
+    "ui:Great-grandson": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-grandson"
+      }
+    },
+    "ui:Great-nephew": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-nephew"
+      }
+    },
+    "ui:Great-niece": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-niece"
+      }
+    },
+    "ui:Great-uncle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Great-uncle"
       }
     },
     "ui:Guaranteed": {
@@ -177712,14 +178022,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "No buildings yet in {settlement}."
-      }
-    },
-    "ui:No character in the bounded tree matches that name.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "No character in the bounded tree matches that name."
       }
     },
     "ui:No compact": {
@@ -182945,14 +183247,6 @@
         "text": "Search faith or tradition…"
       }
     },
-    "ui:Search family by name": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "Search family by name"
-      }
-    },
     "ui:Search guide": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182991,6 +183285,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Seasonal subsistence and obligations leave little margin; a livelihood keeps the household viable."
+      }
+    },
+    "ui:Second cousin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Second cousin"
       }
     },
     "ui:See income, retinue, piety, church Standing, and appointment authority matter.": {
@@ -185219,14 +185521,6 @@
         "text": "The family armory holds no item to offer."
       }
     },
-    "ui:The first playable head is kept here even when later generations move beyond the bounded tree.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_panels.js",
-      "source": {
-        "text": "The first playable head is kept here even when later generations move beyond the bounded tree."
-      }
-    },
     "ui:The following remote enterprises will lose their workers and become idle:": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -186085,6 +186379,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Think better of it"
+      }
+    },
+    "ui:Third cousin": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "Third cousin"
       }
     },
     "ui:This action is not available in your current role or situation.": {
@@ -191738,6 +192040,117 @@
         "text": "{count} {unit}"
       }
     },
+    "ui:{count}× great-aunt": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-aunt"
+      }
+    },
+    "ui:{count}× great-granddaughter": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-granddaughter"
+      }
+    },
+    "ui:{count}× great-grandfather": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-grandfather"
+      }
+    },
+    "ui:{count}× great-grandmother": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-grandmother"
+      }
+    },
+    "ui:{count}× great-grandson": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-grandson"
+      }
+    },
+    "ui:{count}× great-nephew": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-nephew"
+      }
+    },
+    "ui:{count}× great-niece": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-niece"
+      }
+    },
+    "ui:{count}× great-uncle": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{count}× great-uncle"
+      }
+    },
+    "ui:{cousin} once removed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cousin"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{cousin} once removed"
+      }
+    },
+    "ui:{cousin} twice removed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "cousin"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{cousin} twice removed"
+      }
+    },
+    "ui:{cousin} {count} times removed": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "count",
+        "cousin"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{cousin} {count} times removed"
+      }
+    },
     "ui:{current} of {maximum}": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -193794,6 +194207,17 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "{risk}% risk of total loss. You remain home and continue normal work."
+      }
+    },
+    "ui:{role} · {relation}": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "relation",
+        "role"
+      ],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "{role} · {relation}"
       }
     },
     "ui:{ruler} of {realm}": {

@@ -2873,21 +2873,45 @@ textarea.modjson, textarea.savetext {
 
 /* ---------- family tree modal ----------
    Couples share a box; broods hang beneath their parents on drawn blood
-   lines. Wide trees scroll sideways inside .ftwrap; min-width:max-content
+   lines. Wide trees pan inside .ftwrap; min-width:max-content
    keeps the tree's left edge scroll-reachable (a centered flex box that
    merely overflowed would clip its left side past scroll reach). */
-.ftwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 8px 0 4px; }
+.modal.family-tree-modal {
+  align-items: stretch;
+  padding: max(8px, env(safe-area-inset-top))
+    max(8px, env(safe-area-inset-right))
+    max(8px, env(safe-area-inset-bottom))
+    max(8px, env(safe-area-inset-left));
+}
+.family-tree-modal .modalcard {
+  width: 100%; max-width: none; height: 100%; max-height: none;
+  padding: 16px;
+}
+.family-tree-modal #gm-body { min-width: 0; }
+.ftwrap {
+  overflow: auto; -webkit-overflow-scrolling: touch;
+  padding: 8px 0 4px; overscroll-behavior: contain;
+}
+@media (pointer: fine) {
+  .family-tree-canvas { cursor: grab; }
+  .family-tree-canvas.is-panning {
+    cursor: grabbing; user-select: none;
+  }
+}
+@media (pointer: fine) and (min-height: 521px) {
+  .family-tree-modal .family-tree-primary {
+    min-height: min(56vh, 520px);
+    max-height: calc(100vh - 250px);
+  }
+}
 .family-tree-toolbar {
-  position: sticky; top: 0; z-index: 2; display: grid; gap: 7px;
+  position: sticky; top: 0; z-index: 2;
   padding: 8px; margin: 0 0 8px; background: #1b1711;
   border: 1px solid #4a3b27; border-radius: 8px;
 }
-.family-tree-toolbar > label { display: grid; gap: 4px; color: var(--helper-text-color); font-size: 12px; }
-.family-tree-toolbar input { width: 100%; min-height: 40px; }
-.family-tree-jumps, .family-tree-search-results {
+.family-tree-jumps {
   display: flex; flex-wrap: wrap; gap: 6px;
 }
-.family-tree-search-results[hidden] { display: none; }
 .ftbranch-toggle {
   display: inline-flex; align-items: center; gap: 4px; margin: 3px 0 0;
   padding: 2px 6px; color: var(--helper-text-color); background: #211a13;
@@ -2900,7 +2924,7 @@ textarea.modjson, textarea.savetext {
   .raid-target-toolbar input, .raid-target-toolbar select,
   .enterprise-view-controls select { min-height: 44px; }
 }
-.fttree { display: flex; justify-content: center; min-width: max-content; }
+.fttree { display: flex; justify-content: center; gap: 24px; min-width: max-content; }
 .ftnode { display: flex; flex-direction: column; align-items: center; }
 .ftcouple {
   display: flex; align-items: stretch; gap: 3px;
@@ -2924,21 +2948,25 @@ textarea.modjson, textarea.savetext {
 .ftkids > .ftnode:only-child::after { display: none; }
 .ftchip {
   display: flex; flex-direction: column; align-items: center; gap: 2px;
-  width: 76px; padding: 5px 2px 4px; background: none; border: 1px solid transparent;
+  width: 104px; padding: 7px 3px 6px; background: none; border: 1px solid transparent;
   border-radius: 7px; cursor: pointer; text-align: center; line-height: 1.25;
 }
 .ftchip[data-cid]:hover { border-color: #c9a24a; background: #2c2418; }
 .ftchip .fname {
-  color: var(--main-text-color); font-size: 12px; max-width: 72px;
+  color: var(--main-text-color); font-size: 15px; max-width: 100px;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.ftchip .frel { color: var(--helper-text-color); font-size: 11px; }
+.ftchip .frel { color: var(--helper-text-color); font-size: 13px; }
 .ftchip.me { border-color: #a5842f; background: #332a18; }
 .ftchip.search-hit { border-color: #f0c75a; box-shadow: 0 0 0 2px #6d5620; }
 .ftchip.dead .pface { opacity: 0.55; }
 .ftchip.dead .fname { color: var(--main-text-color); }
 .ftchip.dup { opacity: 0.5; }
 .ftchip.ghost { cursor: default; justify-content: center; min-height: 56px; }
+#tooltip .family-tree-character-tooltip .charcard {
+  margin: 0; padding: 0; border: 0; background: transparent;
+}
+#tooltip .family-tree-character-tooltip .charcard > div { min-width: 0; }
 
 /* the living court beside a realm's ruler - consort and heirs, bounded */
 .court-strip {

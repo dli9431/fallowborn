@@ -2750,7 +2750,9 @@ window.FB = window.FB || {};
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
-    $('btn-ftree').addEventListener('click', UI.showFamilyTree);
+    $('btn-ftree').addEventListener('click', function () {
+      UI.showFamilyTree();
+    });
   }
 
   function networkLevyLabel(s, entry) {
@@ -4077,18 +4079,44 @@ window.FB = window.FB || {};
      The Kin tab names each relation; this modal draws the blood lines so it
      is plain who hangs from whom. Each couple shares a box (current spouses
      first, then dead or former partners their children point back to), and
-     each brood hangs beneath its parents. The main tree grows from the
-     deepest recorded ancestor — grandparents at most, so it stays bounded —
-     and the mother’s parents get a second tree of their own; anyone already
-     drawn above shows dimmed there instead of doubling the line. */
-  UI.showFamilyTree = function () {
+     each brood hangs beneath its parents. The main tree grows from the nearest
+     recorded common ancestor of the house founder and current player through
+     every descendant generation. Other maternal ancestors and stepfamily can
+     still sit in supplementary trees; anyone already drawn above shows dimmed
+     there instead of doubling the line. */
+  SH.captureFamilyTreeView = function () {
+    const gm = $('genmodal');
+    const body = $('gm-body');
+    if (!gm || !body || !gm.classList.contains('family-tree-modal')) return null;
+    const toggles = body.querySelectorAll('[data-ft-toggle]');
+    const wraps = body.querySelectorAll('.ftwrap');
+    const active = document.activeElement;
+    const state = {
+      bodyTop:body.scrollTop,
+      expanded:[], wraps:[], focusCid:null
+    };
+    for (let i = 0; i < toggles.length; i++) {
+      state.expanded.push(toggles[i].getAttribute('aria-expanded') === 'true');
+    }
+    for (let i = 0; i < wraps.length; i++) {
+      state.wraps.push({ left:wraps[i].scrollLeft, top:wraps[i].scrollTop });
+    }
+    if (active && active.classList && active.classList.contains('ftchip')) {
+      state.focusCid = active.getAttribute('data-cid');
+    }
+    return state;
+  };
+
+  UI.showFamilyTree = function (restoreView) {
     if (!FB.state || UI.eventsBusy()) return;
+    /* The Kin button used to pass its click event into this optional state
+       slot. Only a view captured by captureFamilyTreeView is restorable. */
+    const savedView = restoreView && Array.isArray(restoreView.expanded) &&
+      Array.isArray(restoreView.wraps) ? restoreView : null;
     const s = FB.state, me = s.chars[s.player.charId];
     const byId = FB.kinOf(s).byId;
     const drawn = {};
-    const searchIndex = [], searchSeen = {};
     let branchSerial = 0;
-    const MAXDEPTH = 4; // root couple → their great-great-grandchildren
 
     const heirs = FB.heirsOf ? FB.heirsOf(s) : [];
     const successor = heirs.length ? heirs[0] : null;
@@ -4104,19 +4132,120 @@ window.FB = window.FB || {};
       }
     }
     if (!founder) founder = me;
+    const playerAncestorDepth = ancestorDistances(me);
+    const extendedRelationCache = {};
+
+    function ancestorLabel(c, depth) {
+      if (c.sex === 'f') {
+        if (depth === 3) return FB.T('Great-grandmother');
+        return FB.T('{count}× great-grandmother', { count:depth - 2 });
+      }
+      if (depth === 3) return FB.T('Great-grandfather');
+      return FB.T('{count}× great-grandfather', { count:depth - 2 });
+    }
+
+    function descendantLabel(c, depth) {
+      if (c.sex === 'f') {
+        if (depth === 3) return FB.T('Great-granddaughter');
+        return FB.T('{count}× great-granddaughter', { count:depth - 2 });
+      }
+      if (depth === 3) return FB.T('Great-grandson');
+      return FB.T('{count}× great-grandson', { count:depth - 2 });
+    }
+
+    function auntUncleLabel(c, ancestorDepth) {
+      if (c.sex === 'f') {
+        if (ancestorDepth === 3) return FB.T('Great-aunt');
+        return FB.T('{count}× great-aunt', { count:ancestorDepth - 2 });
+      }
+      if (ancestorDepth === 3) return FB.T('Great-uncle');
+      return FB.T('{count}× great-uncle', { count:ancestorDepth - 2 });
+    }
+
+    function nieceNephewLabel(c, descendantDepth) {
+      if (c.sex === 'f') {
+        if (descendantDepth === 3) return FB.T('Great-niece');
+        return FB.T('{count}× great-niece', { count:descendantDepth - 2 });
+      }
+      if (descendantDepth === 3) return FB.T('Great-nephew');
+      return FB.T('{count}× great-nephew', { count:descendantDepth - 2 });
+    }
+
+    function cousinDegreeLabel(degree) {
+      if (degree === 1) return FB.T('First cousin');
+      if (degree === 2) return FB.T('Second cousin');
+      if (degree === 3) return FB.T('Third cousin');
+      if (degree === 4) return FB.T('Fourth cousin');
+      if (degree === 5) return FB.T('Fifth cousin');
+      return FB.T('Cousin of degree {degree}', { degree:degree });
+    }
+
+    function cousinLabel(playerDepth, relativeDepth) {
+      const cousin = cousinDegreeLabel(Math.min(playerDepth, relativeDepth) - 1);
+      const removed = Math.abs(playerDepth - relativeDepth);
+      if (!removed) return cousin;
+      if (removed === 1) return FB.T('{cousin} once removed', { cousin:cousin });
+      if (removed === 2) return FB.T('{cousin} twice removed', { cousin:cousin });
+      return FB.T('{cousin} {count} times removed', {
+        cousin:cousin, count:removed
+      });
+    }
+
+    /* Compare each person with the player through their nearest recorded
+       common ancestor. The two depths distinguish direct lines, siblings of
+       ancestors or descendants, and cousin degree/removal without a limit. */
+    function extendedBloodLabel(c) {
+      if (Object.prototype.hasOwnProperty.call(extendedRelationCache, c.id)) {
+        return extendedRelationCache[c.id];
+      }
+      const relativeAncestorDepth = ancestorDistances(c);
+      let playerDepth = Infinity;
+      let relativeDepth = Infinity;
+      let bestTotal = Infinity;
+      let bestSpan = Infinity;
+      for (const id in playerAncestorDepth) {
+        if (relativeAncestorDepth[id] === undefined) continue;
+        const nextPlayerDepth = playerAncestorDepth[id];
+        const nextRelativeDepth = relativeAncestorDepth[id];
+        const total = nextPlayerDepth + nextRelativeDepth;
+        const span = Math.max(nextPlayerDepth, nextRelativeDepth);
+        if (total < bestTotal || (total === bestTotal && span < bestSpan)) {
+          playerDepth = nextPlayerDepth;
+          relativeDepth = nextRelativeDepth;
+          bestTotal = total;
+          bestSpan = span;
+        }
+      }
+      let label = '';
+      if (relativeDepth === 0 && playerDepth >= 3 && playerDepth < Infinity) {
+        label = ancestorLabel(c, playerDepth);
+      } else if (playerDepth === 0 && relativeDepth >= 3 && relativeDepth < Infinity) {
+        label = descendantLabel(c, relativeDepth);
+      } else if (relativeDepth === 1 && playerDepth >= 3 && playerDepth < Infinity) {
+        label = auntUncleLabel(c, playerDepth);
+      } else if (playerDepth === 1 && relativeDepth >= 3 && relativeDepth < Infinity) {
+        label = nieceNephewLabel(c, relativeDepth);
+      } else if (playerDepth >= 2 && relativeDepth >= 2 &&
+        playerDepth < Infinity && relativeDepth < Infinity) {
+        label = cousinLabel(playerDepth, relativeDepth);
+      }
+      extendedRelationCache[c.id] = label;
+      return label;
+    }
 
     function chip(c, rel, cls) {
-      const sourceLabel = rel || byId[c.id] || '';
-      const label = sourceLabel ? FB.T(sourceLabel) : '';
+      const extendedLabel = extendedBloodLabel(c);
+      let label = rel ? FB.T(rel) : extendedLabel;
+      if (!label && byId[c.id]) label = FB.T(byId[c.id]);
+      if (rel === 'House founder' && extendedLabel) {
+        label = FB.T('{role} · {relation}', {
+          role:FB.T('House founder'), relation:extendedLabel
+        });
+      }
       const meta = c.dead ? '†' : FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
       const again = cls && cls.indexOf('dup') >= 0;
-      if (!searchSeen[c.id]) {
-        searchSeen[c.id] = 1;
-        searchIndex.push(c);
-      }
       return '<button class="ftchip' + (cls || '') + (c.dead ? ' dead' : '') +
-        '" data-cid="' + c.id + '" data-ft-name="' +
-        esc(FB.fullName(c).toLocaleLowerCase()) + '" title="' + esc(FB.fullName(c)) +
+        '" data-cid="' + c.id + '" title="' + esc(FB.fullName(c)) +
         (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 50, 57) +
         '<span class="fname">' + esc(c.name) + '</span>' +
         '<span class="frel">' + esc(label ? label + ' · ' + meta : meta) + '</span>' +
@@ -4141,20 +4270,21 @@ window.FB = window.FB || {};
       return out;
     }
 
-    function unit(c, depth) {
+    function unit(c) {
       if (drawn[c.id]) {
         // already on an earlier branch — point back rather than fork the line
         return '<div class="ftnode"><div class="ftcouple">' + chip(c, null, ' dup') + '</div></div>';
       }
       drawn[c.id] = 1;
-      let couple = c.id === me.id ? chip(c, 'You', ' me') : chip(c);
+      let couple = c.id === me.id ? chip(c, 'You', ' me') :
+        chip(c, c.id === founder.id ? 'House founder' : null);
       for (const sp of matesOf(c)) {
         couple += chip(sp, byId[sp.id] || (sp.sex === 'f' ? 'Wife' : 'Husband'),
           drawn[sp.id] ? ' dup' : '');
         drawn[sp.id] = 1;
       }
       const kids = FB.childrenOf(s, c).sort(function (a, b) { return a.born - b.born; });
-      const grow = kids.length > 0 && depth < MAXDEPTH;
+      const grow = kids.length > 0;
       let h = '<div class="ftnode"><div class="ftcouple">' + couple + '</div>';
       if (grow) {
         const branchId = 'ft-branch-' + (++branchSerial);
@@ -4163,16 +4293,22 @@ window.FB = window.FB || {};
           '"><span aria-hidden="true">−</span><span>' + esc(FB.T(
             'Collapse {name}’s branch', { name:c.name })) + '</span></button>' +
           '<div class="ftstem"></div><div class="ftkids" id="' + branchId + '">';
-        for (const k of kids) h += unit(k, depth + 1);
+        for (const k of kids) h += unit(k);
         h += '</div>';
       }
       return h + '</div>';
     }
 
-    /* the deepest recorded ancestor, father’s line preferred */
+    /* The deepest recorded ancestor, father’s line preferred. A bounded
+       lookup still serves the supplementary maternal tree; the disconnected
+       save fallback walks the complete recorded line. */
     function topOf(c, maxUp) {
       let cur = c;
-      for (let i = 0; i < maxUp; i++) {
+      const seen = {};
+      const limit = maxUp === undefined ? Object.keys(s.chars).length : maxUp;
+      for (let i = 0; i < limit; i++) {
+        if (seen[cur.id]) break;
+        seen[cur.id] = 1;
         const nxt = (cur.fatherId ? s.chars[cur.fatherId] : null) ||
           (cur.motherId ? s.chars[cur.motherId] : null);
         if (!nxt) break;
@@ -4181,11 +4317,48 @@ window.FB = window.FB || {};
       return cur;
     }
 
-    let h = '<div class="family-tree-toolbar"><label for="family-tree-search">' +
-      '<span>' + esc(FB.T('Search family by name')) + '</span>' +
-      '<input type="search" id="family-tree-search" autocomplete="off" ' +
-      'spellcheck="false" placeholder="' + esc(FB.T('Character name')) + '"></label>' +
-      '<div class="family-tree-jumps" role="group" aria-label="' +
+    /* A house can pass to a sibling, nephew, cousin, or adopted collateral.
+       When the founder is not the current head's direct ancestor, root the
+       blood tree at their nearest recorded common ancestor so both branches
+       remain connected without pretending the founder parented the heir. */
+    function ancestorDistances(c) {
+      const distance = {};
+      const queue = [{ c:c, depth:0 }];
+      for (let i = 0; i < queue.length; i++) {
+        const row = queue[i];
+        if (!row.c || distance[row.c.id] !== undefined) continue;
+        distance[row.c.id] = row.depth;
+        if (row.c.fatherId && s.chars[row.c.fatherId]) {
+          queue.push({ c:s.chars[row.c.fatherId], depth:row.depth + 1 });
+        }
+        if (row.c.motherId && s.chars[row.c.motherId]) {
+          queue.push({ c:s.chars[row.c.motherId], depth:row.depth + 1 });
+        }
+      }
+      return distance;
+    }
+
+    function connectingRoot(a, b) {
+      const fromA = ancestorDistances(a);
+      const fromB = ancestorDistances(b);
+      let best = null;
+      let bestTotal = Infinity;
+      let bestSpan = Infinity;
+      for (const id in fromA) {
+        if (fromB[id] === undefined || !s.chars[id]) continue;
+        const total = fromA[id] + fromB[id];
+        const span = Math.max(fromA[id], fromB[id]);
+        if (total < bestTotal || (total === bestTotal && span < bestSpan)) {
+          best = s.chars[id];
+          bestTotal = total;
+          bestSpan = span;
+        }
+      }
+      return best || a;
+    }
+
+    let h = '<div class="family-tree-toolbar"><div class="family-tree-jumps" ' +
+      'role="group" aria-label="' +
       esc(FB.T('Jump through the family tree')) + '">' +
       '<button type="button" class="btn small" data-ft-jump="' + esc(me.id) + '">' +
       esc(FB.T('You')) + '</button>' +
@@ -4196,35 +4369,41 @@ window.FB = window.FB || {};
       esc(spouse ? spouse.id : '') + '"' + (spouse ? '' : ' disabled') + '>' +
       esc(FB.T('Spouse')) + '</button>' +
       '<button type="button" class="btn small" data-ft-jump="' + esc(founder.id) + '">' +
-      esc(FB.T('House founder')) + '</button></div>' +
-      '<div class="family-tree-search-results" id="family-tree-search-results" ' +
-      'aria-live="polite" hidden></div></div>' +
+      esc(FB.T('House founder')) + '</button></div></div>' +
       '<div class="cmeta" style="font-size:13px">' + esc(FB.isTouch
       ? FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet.')
-      : FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet.')) +
+      : FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet; hover it for details. Drag the open background to move around.')) +
       '</div>';
-    const root = topOf(me, 2);
-    h += '<div class="ftwrap"><div class="fttree">';
+    const root = connectingRoot(founder, me);
+    h += '<div class="ftwrap family-tree-canvas family-tree-primary"><div class="fttree">';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
       // safety net: save.js backfills parents on load; a tree can still lack
       // them if a mod stripped the chars — show the brood under a ghost
-      let brood = unit(me, 1);
-      for (const sb of FB.siblingsOf(s, me)) brood += unit(sb, 1);
+      let brood = unit(me);
+      for (const sb of FB.siblingsOf(s, me)) brood += unit(sb);
       h += '<div class="ftnode"><div class="ftcouple"><div class="ftchip ghost">' +
         '<span class="fname">' + esc(FB.T('Unrecorded')) + '</span><span class="frel">' +
         esc(FB.T('your parents')) + '</span></div></div>' +
         '<div class="ftstem"></div><div class="ftkids">' + brood + '</div></div>';
     } else {
-      h += unit(root, 0);
+      h += unit(root);
+    }
+    /* Corrupt mods and old migrated saves can preserve the founder record
+       after severing its parent links. Keep that record and the current
+       lineage in this one primary canvas rather than reviving a detached
+       founder viewport. */
+    if (!drawn[me.id]) {
+      const currentRoot = topOf(me);
+      h += drawn[currentRoot.id] ? unit(me) : unit(currentRoot);
     }
     h += '</div></div>';
-    // the mother’s parents sit outside the father-line tree — give them their own
+    // maternal ancestors above the founder-descendant tree retain a compact supplement
     const mo = me.motherId ? s.chars[me.motherId] : null;
     if (mo && (mo.fatherId || mo.motherId)) {
       const mroot = topOf(mo, 1);
       if (mroot.id !== mo.id && !drawn[mroot.id]) {
         h += panelh('Your mother’s kin') +
-          '<div class="ftwrap"><div class="fttree">' + unit(mroot, 0) + '</div></div>';
+          '<div class="ftwrap"><div class="fttree">' + unit(mroot) + '</div></div>';
       }
     }
     const stepchildren = FB.stepchildrenOf ? FB.stepchildrenOf(s, me) : [];
@@ -4272,18 +4451,45 @@ window.FB = window.FB || {};
           '</div></div></div></div>';
       }
     }
-    if (!drawn[founder.id]) {
-      h += panelh('House founder') +
-        '<div class="cmeta" style="font-size:13px">' + esc(FB.T(
-          'The first playable head is kept here even when later generations move beyond the bounded tree.')) +
-        '</div><div class="ftwrap"><div class="fttree"><div class="ftnode">' +
-        '<div class="ftcouple">' + chip(founder, 'House founder') +
-        '</div></div></div></div>';
-    }
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
-    openModal('The Family Tree', h);
+    openModal('The Family Tree', h, { modalClass:'family-tree-modal' });
     $('gm-cancel').addEventListener('click', UI.closeModal);
     FB.paintFaces($('gm-body'), s);
+
+    /* A wide genealogy is a canvas as much as a list. Mouse users can grab
+       any non-interactive part of a tree viewport and pan in either axis;
+       controls and portraits retain their ordinary click behavior. */
+    if (!FB.isTouch) {
+      const canvases = $('gm-body').querySelectorAll('.ftwrap');
+      for (let i = 0; i < canvases.length; i++) {
+        const canvas = canvases[i];
+        canvas.classList.add('family-tree-canvas');
+        canvas.addEventListener('mousedown', function (event) {
+          if (event.button !== 0 || event.target.closest(
+            'button, input, select, textarea, a, [tabindex]')) return;
+          const startX = event.clientX;
+          const startY = event.clientY;
+          const startLeft = canvas.scrollLeft;
+          const startTop = canvas.scrollTop;
+          canvas.classList.add('is-panning');
+          event.preventDefault();
+
+          function move(moveEvent) {
+            canvas.scrollLeft = startLeft - (moveEvent.clientX - startX);
+            canvas.scrollTop = startTop - (moveEvent.clientY - startY);
+          }
+          function finish() {
+            canvas.classList.remove('is-panning');
+            document.removeEventListener('mousemove', move);
+            document.removeEventListener('mouseup', finish);
+            window.removeEventListener('blur', finish);
+          }
+          document.addEventListener('mousemove', move);
+          document.addEventListener('mouseup', finish);
+          window.addEventListener('blur', finish);
+        });
+      }
+    }
 
     function setBranch(toggle, open) {
       const stem = toggle.nextElementSibling;
@@ -4316,7 +4522,8 @@ window.FB = window.FB || {};
 
     function jumpToCharacter(cid) {
       if (!cid) return;
-      const chips = $('gm-body').querySelectorAll('.ftchip[data-cid]');
+      const body = $('gm-body');
+      const chips = body.querySelectorAll('.ftchip[data-cid]');
       let target = null;
       for (let i = 0; i < chips.length; i++) {
         if (chips[i].getAttribute('data-cid') === cid) {
@@ -4326,11 +4533,26 @@ window.FB = window.FB || {};
       }
       if (!target) return;
       revealChip(target);
-      const previous = $('gm-body').querySelector('.ftchip.search-hit');
+      const previous = body.querySelector('.ftchip.search-hit');
       if (previous) previous.classList.remove('search-hit');
       target.classList.add('search-hit');
-      target.scrollIntoView({ block:'center', inline:'center' });
       target.focus({ preventScroll:true });
+      /* scrollIntoView is inconsistent across nested overflow containers in
+         mobile WebViews. Move the tree canvas and modal body explicitly so
+         the selected person, rather than the canvas origin, opens in view. */
+      const wrap = target.closest('.ftwrap');
+      if (wrap) {
+        const wrapRect = wrap.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        wrap.scrollLeft += targetRect.left + targetRect.width / 2 -
+          (wrapRect.left + wrapRect.width / 2);
+        wrap.scrollTop += targetRect.top + targetRect.height / 2 -
+          (wrapRect.top + wrapRect.height / 2);
+      }
+      const bodyRect = body.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+      body.scrollTop += targetRect.top + targetRect.height / 2 -
+        (bodyRect.top + bodyRect.height / 2);
     }
 
     const toggles = $('gm-body').querySelectorAll('[data-ft-toggle]');
@@ -4346,39 +4568,45 @@ window.FB = window.FB || {};
         jumpToCharacter(jumps[i].getAttribute('data-ft-jump'));
       });
     }
-    const search = $('family-tree-search');
-    const results = $('family-tree-search-results');
-    search.addEventListener('input', function () {
-      const query = search.value.trim().toLocaleLowerCase();
-      results.innerHTML = '';
-      if (!query) {
-        results.hidden = true;
-        return;
+    if (savedView) {
+      for (let i = 0; i < toggles.length && i < savedView.expanded.length; i++) {
+        setBranch(toggles[i], savedView.expanded[i]);
       }
-      let matched = 0;
-      for (const c of searchIndex) {
-        if (FB.fullName(c).toLocaleLowerCase().indexOf(query) < 0) continue;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'btn small';
-        button.setAttribute('data-ft-result', c.id);
-        button.textContent = FB.fullName(c) +
-          (byId[c.id] ? ' · ' + FB.T(byId[c.id]) : '');
-        button.addEventListener('click', function () {
-          jumpToCharacter(c.id);
+      /* openModal's normal first-control focus is queued. Restore the tree
+         viewport immediately after it so Back returns to the exact working
+         position instead of pulling the toolbar into view. */
+      setTimeout(function () {
+        if (savedView.focusCid) {
+          const focusChips = $('gm-body').querySelectorAll('.ftchip[data-cid]');
+          let focusChip = null;
+          for (let i = 0; i < focusChips.length; i++) {
+            if (focusChips[i].getAttribute('data-cid') === savedView.focusCid) {
+              focusChip = focusChips[i];
+              break;
+            }
+          }
+          if (focusChip) focusChip.focus({ preventScroll:true });
+        }
+        const restoredWraps = $('gm-body').querySelectorAll('.ftwrap');
+        for (let i = 0; i < restoredWraps.length && i < savedView.wraps.length; i++) {
+          restoredWraps[i].scrollLeft = savedView.wraps[i].left;
+          restoredWraps[i].scrollTop = savedView.wraps[i].top;
+        }
+        $('gm-body').scrollTop = savedView.bodyTop;
+      }, 0);
+    } else if (FB.isTouch || FB.isSmallScreen()) {
+      /* A lineage-rooted tree can place the active life many generations
+         below and far across the opening viewport. Mobile-sized layouts begin
+         at the person the player is actually controlling even if a WebView
+         reports the wrong pointer type; Back restoration above deliberately
+         keeps the user's later pan position instead. Wait until openModal's
+         queued focus and the tree's first layout have both completed. */
+      setTimeout(function () {
+        window.requestAnimationFrame(function () {
+          jumpToCharacter(me.id);
         });
-        results.appendChild(button);
-        matched++;
-        if (matched >= 8) break;
-      }
-      if (!matched) {
-        const empty = document.createElement('span');
-        empty.className = 'hint';
-        empty.textContent = FB.T('No character in the bounded tree matches that name.');
-        results.appendChild(empty);
-      }
-      results.hidden = false;
-    });
+      }, 0);
+    }
   };
 
   /* ---------- map filters: what a selection highlights ---------- */
