@@ -1769,6 +1769,7 @@ window.FB = window.FB || {};
     document.body.classList.toggle('ng-back-corner',
       id === 'pickprov' || id === 'chargen');
     if (FB.music && FB.music.refreshTitleToggle) FB.music.refreshTitleToggle();
+    if (id === null && UI.resizeMobilePanes) UI.resizeMobilePanes();
     if (id && id !== 'loading') {
       setTimeout(function () {
         const scr = $(id);
@@ -1798,6 +1799,65 @@ window.FB = window.FB || {};
   };
 
   /* ================= toasts (tap one to dismiss it) ================= */
+  let toastLayoutFrame = 0;
+  function layoutMapToastsNow() {
+    toastLayoutFrame = 0;
+    const box = $('toasts');
+    const map = $('mapwrap');
+    if (!box || !map) return;
+    box.classList.remove('toast-rail-overlay');
+    box.style.removeProperty('top');
+    box.style.removeProperty('bottom');
+    box.style.removeProperty('max-height');
+    box.style.removeProperty('transform');
+    const portrait = typeof window.matchMedia === 'function' &&
+      window.matchMedia('(max-width: 820px) and (orientation: portrait)').matches;
+    if (!portrait || !box.children.length) return;
+
+    /* The bounded portrait map has room for either the ordinary bottom toast
+       rail or a large map sheet. When a sheet is open, start the rail just
+       beneath its actual rendered edge; compact CSS keeps a new notice to one
+       readable line in that deliberately narrow remainder. */
+    const overlays = [$('music-controls'), $('map-finder'), $('market-lens-controls')];
+    let overlay = null;
+    for (const candidate of overlays) {
+      if (candidate && !candidate.classList.contains('hidden') &&
+          candidate.getClientRects().length) {
+        overlay = candidate;
+        break;
+      }
+    }
+    const mapRect = map.getBoundingClientRect();
+    if (!overlay) {
+      const anchor = box.querySelector('.event-receipt-toast') || box.lastElementChild;
+      if (!anchor) return;
+      const bottom = parseFloat(window.getComputedStyle(box).bottom) || 10;
+      const shift = mapRect.bottom - bottom - anchor.getBoundingClientRect().bottom;
+      if (Math.abs(shift) > 0.25) box.style.transform = 'translateY(' + shift + 'px)';
+      return;
+    }
+    const overlayRect = overlay.getBoundingClientRect();
+    const top = Math.max(10, Math.ceil(overlayRect.bottom - mapRect.top + 6));
+    box.classList.add('toast-rail-overlay');
+    box.style.top = top + 'px';
+    box.style.bottom = 'auto';
+    box.style.maxHeight = Math.max(0, Math.floor(mapRect.height - top - 10)) + 'px';
+  }
+  UI.layoutMapToasts = function (immediate) {
+    if (toastLayoutFrame) window.cancelAnimationFrame(toastLayoutFrame);
+    toastLayoutFrame = 0;
+    if (immediate) {
+      layoutMapToastsNow();
+      return;
+    }
+    toastLayoutFrame = window.requestAnimationFrame(layoutMapToastsNow);
+  };
+  function removeToastElement(el) {
+    if (!el || !el.parentNode) return;
+    el.parentNode.removeChild(el);
+    UI.layoutMapToasts(true);
+  }
+
   UI.toast = function (text, params) {
     if (UI.suppressEventEffectToasts) return;
     const box = $('toasts');
@@ -1807,11 +1867,12 @@ window.FB = window.FB || {};
     el.textContent = FB.T(text, params);
     el.title = FB.T('Dismiss');
     el.addEventListener('click', function () {
-      if (el.parentNode) el.parentNode.removeChild(el);
+      removeToastElement(el);
     });
     box.appendChild(el);
     while (box.children.length > 5) box.removeChild(box.firstChild);
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
+    UI.layoutMapToasts(true);
+    setTimeout(function () { removeToastElement(el); }, 6000);
   };
   UI.toastMessage = function (message, legacyText) {
     if (UI.suppressEventEffectToasts) return;
@@ -1825,11 +1886,12 @@ window.FB = window.FB || {};
     }) : (legacyText || '');
     el.title = FB.T('Dismiss');
     el.addEventListener('click', function () {
-      if (el.parentNode) el.parentNode.removeChild(el);
+      removeToastElement(el);
     });
     box.appendChild(el);
     while (box.children.length > 5) box.removeChild(box.firstChild);
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
+    UI.layoutMapToasts(true);
+    setTimeout(function () { removeToastElement(el); }, 6000);
   };
 
   let fastForwardReceipt = null;
@@ -1904,11 +1966,12 @@ window.FB = window.FB || {};
       if (UI.eventsBusy && UI.eventsBusy()) return;
       if (UI.showTab) UI.showTab('log');
       if (UI.setChronicleFilter) UI.setChronicleFilter('choices');
-      if (el.parentNode) el.parentNode.removeChild(el);
+      removeToastElement(el);
     });
     box.appendChild(el);
     while (box.children.length > 5) box.removeChild(box.firstChild);
-    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 6000);
+    UI.layoutMapToasts(true);
+    setTimeout(function () { removeToastElement(el); }, 6000);
   };
 
   /* ================= coachmarks (lessons that point) =================
@@ -3405,6 +3468,190 @@ window.FB = window.FB || {};
   };
 
   /* ================= boot-time wiring ================= */
+  function wireMobilePaneResizer() {
+    const handle = $('mobile-pane-resizer');
+    const main = $('main');
+    const mapwrap = $('mapwrap');
+    if (!handle || !main || !mapwrap) return;
+    const snapOrder = ['panel', 'balanced', 'map'];
+    let snap = SH.mobilePaneSnap || 'balanced';
+    let drag = null;
+    let suppressClickUntil = 0;
+
+    function layoutActive() {
+      return typeof window.matchMedia === 'function' &&
+        window.matchMedia('(max-width: 820px) and (orientation: portrait)').matches;
+    }
+
+    function bounds() {
+      const mainHeight = main.getBoundingClientRect().height;
+      const maximum = Math.max(120, mainHeight - 180);
+      const balanced = Math.min(maximum,
+        Math.max(190, Math.min(260, mainHeight * 0.34)));
+      return {
+        main:mainHeight,
+        panel:Math.min(120, maximum),
+        balanced:balanced,
+        map:Math.min(maximum, Math.max(balanced, mainHeight * 0.62))
+      };
+    }
+
+    function stateName(state) {
+      if (state === 'panel') return FB.T('Panel-first');
+      if (state === 'map') return FB.T('Map-first');
+      return FB.T('Balanced');
+    }
+
+    function setAccessibility(state, height, sizes) {
+      const mapPercent = sizes.main
+        ? Math.max(0, Math.min(100, Math.round(height / sizes.main * 100))) : 0;
+      const valueText = state
+        ? stateName(state)
+        : FB.T('Map {map}% · Panels {panels}%', {
+          map:mapPercent, panels:100 - mapPercent
+        });
+      handle.setAttribute('aria-valuenow', mapPercent);
+      handle.setAttribute('aria-valuetext', valueText);
+      const label = FB.T(
+        'Resize map and panels. {state}. Drag or use the arrow keys.', {
+          state:valueText
+        });
+      handle.setAttribute('aria-label', label);
+      handle.title = label;
+    }
+
+    function setHeight(height, state, sizes) {
+      const next = Math.max(sizes.panel, Math.min(sizes.map, height));
+      main.style.setProperty('--mobile-map-height', Math.round(next) + 'px');
+      document.body.classList.toggle('mobile-pane-map-compact', next < 186);
+      document.body.classList.toggle('mobile-pane-map-tall', next >= 324);
+      handle.dataset.snap = state || 'custom';
+      setAccessibility(state, next, sizes);
+      if (UI.layoutMapToasts) UI.layoutMapToasts();
+      return next;
+    }
+
+    function resizeMapAfterLayout() {
+      window.requestAnimationFrame(function () {
+        if (!FB.map || !FB.map.resize) return;
+        FB.map.resize();
+        FB.map.request();
+      });
+    }
+
+    function applySnap(nextSnap) {
+      if (snapOrder.indexOf(nextSnap) < 0) nextSnap = 'balanced';
+      snap = nextSnap;
+      SH.mobilePaneSnap = snap;
+      /* UI.wire runs on the title screen, where #game (and therefore #main)
+         is hidden. Do not turn that zero-height measurement into a 120 px
+         Panel-first map while still labelling the state Balanced. showScreen
+         asks us to measure again immediately after revealing the game. */
+      if (!layoutActive() || main.getBoundingClientRect().height < 1) {
+        main.style.removeProperty('--mobile-map-height');
+        document.body.classList.remove('mobile-pane-map-compact');
+        document.body.classList.remove('mobile-pane-map-tall');
+        if (UI.layoutMapToasts) UI.layoutMapToasts();
+        return;
+      }
+      const sizes = bounds();
+      setHeight(sizes[snap], snap, sizes);
+      resizeMapAfterLayout();
+    }
+
+    function cycleSnap() {
+      const index = snapOrder.indexOf(snap);
+      applySnap(snapOrder[(index + 1) % snapOrder.length]);
+    }
+
+    function nearestSnap(height, sizes) {
+      let nearest = snapOrder[0];
+      let distance = Infinity;
+      for (const candidate of snapOrder) {
+        const nextDistance = Math.abs(height - sizes[candidate]);
+        if (nextDistance < distance) {
+          nearest = candidate;
+          distance = nextDistance;
+        }
+      }
+      return nearest;
+    }
+
+    handle.addEventListener('pointerdown', function (event) {
+      if (!layoutActive() || (event.button !== undefined && event.button !== 0)) return;
+      const sizes = bounds();
+      drag = {
+        id:event.pointerId,
+        startY:event.clientY,
+        startHeight:mapwrap.getBoundingClientRect().height,
+        currentHeight:mapwrap.getBoundingClientRect().height,
+        sizes:sizes,
+        moved:false
+      };
+      if (handle.setPointerCapture) handle.setPointerCapture(event.pointerId);
+      handle.classList.add('is-dragging');
+      document.body.classList.add('mobile-pane-dragging');
+      handle.focus();
+      event.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', function (event) {
+      if (!drag || event.pointerId !== drag.id) return;
+      const delta = event.clientY - drag.startY;
+      if (Math.abs(delta) > 4) drag.moved = true;
+      drag.currentHeight = setHeight(
+        drag.startHeight + delta, null, drag.sizes);
+      event.preventDefault();
+    });
+
+    function finishDrag(event) {
+      if (!drag || event.pointerId !== drag.id) return;
+      const completed = drag;
+      drag = null;
+      handle.classList.remove('is-dragging');
+      document.body.classList.remove('mobile-pane-dragging');
+      suppressClickUntil = Date.now() + 500;
+      if (completed.moved || event.type === 'pointercancel') {
+        applySnap(nearestSnap(completed.currentHeight, completed.sizes));
+      } else {
+        cycleSnap();
+      }
+      event.preventDefault();
+    }
+    handle.addEventListener('pointerup', finishDrag);
+    handle.addEventListener('pointercancel', finishDrag);
+    handle.addEventListener('click', function () {
+      if (Date.now() < suppressClickUntil) return;
+      cycleSnap();
+    });
+    handle.addEventListener('keydown', function (event) {
+      let next = null;
+      const index = snapOrder.indexOf(snap);
+      if (event.key === 'ArrowUp') next = snapOrder[Math.max(0, index - 1)];
+      else if (event.key === 'ArrowDown') {
+        next = snapOrder[Math.min(snapOrder.length - 1, index + 1)];
+      } else if (event.key === 'Home') next = 'panel';
+      else if (event.key === 'End') next = 'map';
+      else if (event.key === 'Enter' || event.key === ' ') {
+        cycleSnap();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      if (!next) return;
+      applySnap(next);
+      event.preventDefault();
+      event.stopPropagation();
+    });
+    window.addEventListener('resize', function () {
+      if (!drag) applySnap(snap);
+    });
+    UI.resizeMobilePanes = function () {
+      if (!drag) applySnap(snap);
+    };
+    applySnap(snap);
+  }
+
   UI.wire = function () {
     FB.fx.on(function (intent) {
       if (intent.kind !== 'toast') return;
@@ -3431,6 +3678,7 @@ window.FB = window.FB || {};
     // index.html's 30x34 attributes are the no-JS layout fallback
     FB.sizeFaceCanvas($('tb-portrait'), 30, 34);
     $('btn-closeself').addEventListener('click', SH.closeSelfDrawer);
+    wireMobilePaneResizer();
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
       const tabKeys = {

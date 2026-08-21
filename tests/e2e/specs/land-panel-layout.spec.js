@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'index.html',
   'js/economy.js',
   'js/population.js',
   'js/ui_misc.js',
@@ -88,6 +89,90 @@ test('Land facts use readable desktop columns and stack on compact layouts',
     expect(compact.columns.trim().split(/\s+/)).toHaveLength(1);
     expect(compact.alignment).toBe('left');
     expect(compact.overflow).toBeLessThanOrEqual(1);
+  });
+
+test('portrait phones give the panel a balanced majority of usable height',
+  async function ({ page }) {
+    const viewports = [
+      { width:390, height:844 },
+      { width:375, height:667 }
+    ];
+    for (const viewport of viewports) {
+      await page.setViewportSize(viewport);
+      await waitForUiRefresh(page);
+      const layout = await page.locator('#main').evaluate(function (main) {
+        const mainRect = main.getBoundingClientRect();
+        const mapRect = document.getElementById('mapwrap').getBoundingClientRect();
+        const panelsRect = document.getElementById('panels').getBoundingClientRect();
+        const sideBodyRect = document.getElementById('sidebody').getBoundingClientRect();
+        const timeRect = document.getElementById('timebtns').getBoundingClientRect();
+        return {
+          mapHeight:mapRect.height,
+          mapShare:mapRect.height / mainRect.height,
+          panelShare:panelsRect.height / mainRect.height,
+          visiblePanelBody:timeRect.top - sideBodyRect.top,
+          fillsMain:Math.abs(mapRect.height + panelsRect.height - mainRect.height) <= 1
+        };
+      });
+      expect(layout.mapHeight).toBeGreaterThanOrEqual(189);
+      expect(layout.mapHeight).toBeLessThanOrEqual(261);
+      expect(layout.mapShare).toBeLessThanOrEqual(0.38);
+      expect(layout.panelShare).toBeGreaterThanOrEqual(0.62);
+      expect(layout.visiblePanelBody).toBeGreaterThanOrEqual(190);
+      expect(layout.fillsMain).toBe(true);
+    }
+  });
+
+test('portrait pane divider drags, snaps, cycles, and supports keyboard resizing',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
+    await waitForUiRefresh(page);
+    const divider = page.locator('#mobile-pane-resizer');
+    const map = page.locator('#mapwrap');
+    const hud = page.locator('#maphud');
+    await expect(divider).toBeVisible();
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Balanced');
+    const balancedHeight = await map.evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    });
+    expect(await hud.locator('.hudbtn').evaluateAll(function (buttons) {
+      return new Set(buttons.map(function (button) {
+        return Math.round(button.getBoundingClientRect().left);
+      })).size;
+    })).toBe(2);
+
+    await divider.focus();
+    await page.keyboard.press('ArrowUp');
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Panel-first');
+    await expect(hud).toBeHidden();
+    const panelFirstHeight = await map.evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    });
+    expect(panelFirstHeight).toBeLessThan(balancedHeight - 50);
+
+    await page.keyboard.press('ArrowDown');
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Balanced');
+    await expect(hud).toBeVisible();
+    const box = await divider.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 180,
+      { steps:5 });
+    await page.mouse.up();
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Map-first');
+    const mapFirstHeight = await map.evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    });
+    expect(mapFirstHeight).toBeGreaterThan(balancedHeight + 100);
+    expect(await hud.locator('.hudbtn').evaluateAll(function (buttons) {
+      return new Set(buttons.map(function (button) {
+        return Math.round(button.getBoundingClientRect().left);
+      })).size;
+    })).toBe(1);
+
+    await divider.click();
+    await expect(divider).toHaveAttribute('aria-valuetext', 'Panel-first');
+    await expect(hud).toBeHidden();
   });
 
 test('desktop sidebars scale evenly while preserving the center map',
@@ -200,5 +285,3 @@ test('Development card folds starting development into settlement growth and pop
     expect(popText).not.toContain('%');
     expect(capText).not.toContain('%');
   });
-
-

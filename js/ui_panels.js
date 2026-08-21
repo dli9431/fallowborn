@@ -4278,7 +4278,9 @@ window.FB = window.FB || {};
       }
       const meta = c.dead ? '†' : FB.T('age {age}', { age: FB.ageOf(c, s.date.year) });
       const again = cls && cls.indexOf('dup') >= 0;
-      return '<button class="ftchip' + (cls || '') + (c.dead ? ' dead' : '') +
+      const founderClass = c.id === founder.id ? ' founder' : '';
+      return '<button class="ftchip' + (cls || '') + founderClass +
+        (c.dead ? ' dead' : '') +
         '" data-cid="' + c.id + '" title="' + esc(FB.fullName(c)) +
         (label ? ' — ' + esc(label) : '') + '">' + FB.faceTag(c, 50, 57) +
         '<span class="fname">' + esc(c.name) + '</span>' +
@@ -4403,11 +4405,7 @@ window.FB = window.FB || {};
       esc(spouse ? spouse.id : '') + '"' + (spouse ? '' : ' disabled') + '>' +
       esc(FB.T('Spouse')) + '</button>' +
       '<button type="button" class="btn small" data-ft-jump="' + esc(founder.id) + '">' +
-      esc(FB.T('House founder')) + '</button></div></div>' +
-      '<div class="cmeta" style="font-size:13px">' + esc(FB.isTouch
-      ? FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet.')
-      : FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet; hover it for details. Drag the open background to move around.')) +
-      '</div>';
+      esc(FB.T('House founder')) + '</button></div></div>';
     const root = connectingRoot(founder, me);
     h += '<div class="ftwrap family-tree-canvas family-tree-primary"><div class="fttree">';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
@@ -4488,6 +4486,47 @@ window.FB = window.FB || {};
     h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
     openModal('The Family Tree', h, { modalClass:'family-tree-modal' });
     $('gm-cancel').addEventListener('click', UI.closeModal);
+    const treeHeading = $('gm-title').parentNode;
+    const treeInfoButton = document.createElement('button');
+    const treeInfoTip = document.createElement('span');
+    const compactTreeInfo = FB.isTouch || FB.isSmallScreen();
+    treeInfoButton.type = 'button';
+    treeInfoButton.className = 'modal-guide-button family-tree-info';
+    treeInfoButton.setAttribute('aria-label', FB.T('About the family tree'));
+    treeInfoButton.setAttribute('aria-expanded', 'false');
+    treeInfoButton.setAttribute('aria-describedby', 'family-tree-info-tooltip');
+    treeInfoButton.textContent = 'i';
+    treeInfoTip.id = 'family-tree-info-tooltip';
+    treeInfoTip.className = 'family-tree-info-tooltip';
+    treeInfoTip.setAttribute('role', 'tooltip');
+    treeInfoTip.textContent = compactTreeInfo
+      ? FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Tap a face to open their sheet.')
+      : FB.T('Blood lines run downward — each brood hangs beneath its parents. † marks the dead. Click a face to open their sheet; hover it for details. Drag the open background to move around.');
+    treeHeading.classList.add('has-modal-guide');
+    treeHeading.appendChild(treeInfoButton);
+    treeInfoButton.appendChild(treeInfoTip);
+    let treeInfoPinned = false;
+    function showTreeInfo(open) {
+      treeInfoTip.classList.toggle('is-open', open);
+      treeInfoButton.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    treeInfoButton.addEventListener('mouseenter', function () {
+      showTreeInfo(true);
+    });
+    treeInfoButton.addEventListener('mouseleave', function () {
+      if (!treeInfoPinned) showTreeInfo(false);
+    });
+    treeInfoButton.addEventListener('focus', function () {
+      showTreeInfo(true);
+    });
+    treeInfoButton.addEventListener('blur', function () {
+      treeInfoPinned = false;
+      showTreeInfo(false);
+    });
+    treeInfoButton.addEventListener('click', function () {
+      treeInfoPinned = !treeInfoPinned;
+      showTreeInfo(treeInfoPinned);
+    });
     FB.paintFaces($('gm-body'), s);
 
     /* A wide genealogy is a canvas as much as a list. Mouse users can grab
@@ -4628,13 +4667,13 @@ window.FB = window.FB || {};
         }
         $('gm-body').scrollTop = savedView.bodyTop;
       }, 0);
-    } else if (FB.isTouch || FB.isSmallScreen()) {
+    } else {
       /* A lineage-rooted tree can place the active life many generations
-         below and far across the opening viewport. Mobile-sized layouts begin
-         at the person the player is actually controlling even if a WebView
-         reports the wrong pointer type; Back restoration above deliberately
-         keeps the user's later pan position instead. Wait until openModal's
-         queued focus and the tree's first layout have both completed. */
+         below and far across the opening viewport. Every fresh opening begins
+         at the person the player is actually controlling; Back restoration
+         above deliberately keeps the user's later pan position instead. Wait
+         until openModal's queued focus and the tree's first layout have both
+         completed. */
       setTimeout(function () {
         window.requestAnimationFrame(function () {
           jumpToCharacter(me.id);
@@ -4712,6 +4751,7 @@ window.FB = window.FB || {};
     if (controls) controls.classList.toggle('hidden', !active);
     if (button) button.classList.toggle('on', active);
     if (active && UI.setMusicOverlay) UI.setMusicOverlay(false);
+    if (UI.layoutMapToasts) UI.layoutMapToasts();
     const selector = $('market-lens-good');
     if (selector && active) {
       const ids = Object.keys(FBDATA.marketGoods || {});

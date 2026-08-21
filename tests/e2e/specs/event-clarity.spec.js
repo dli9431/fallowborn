@@ -1,7 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'js/events.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'data/events_common.js',
   'data/events_world.js'
@@ -364,6 +366,12 @@ test('event result toasts stay in the bottom-left map toast region',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
     await startGame(page, testInfo);
+    await expect(page.locator('#mobile-pane-resizer'))
+      .toHaveAttribute('aria-valuetext', 'Balanced');
+    await expect(page.locator('#maphud')).toBeVisible();
+    expect(await page.locator('#mapwrap').evaluate(function (map) {
+      return map.getBoundingClientRect().height;
+    })).toBeGreaterThanOrEqual(189);
     await openChildFever(page);
 
     await page.locator('#ev-options .event-choice .evopt').first().click();
@@ -382,7 +390,7 @@ test('event result toasts stay in the bottom-left map toast region',
         insideMap:toastRect.top >= mapRect.top &&
           toastRect.right <= mapRect.right &&
           toastRect.bottom <= mapRect.bottom,
-        clearsRightButtons:toastRect.right <= mapRect.right - 44,
+        clearsRightButtons:toastRect.right <= mapRect.right - 90,
         clearsPanels:toastRect.bottom <= panelsRect.top + 1
       };
     });
@@ -391,7 +399,7 @@ test('event result toasts stay in the bottom-left map toast region',
     expect(placement.leftGap).toBeLessThanOrEqual(11);
     expect(placement.bottomGap).toBeGreaterThanOrEqual(9);
     expect(placement.bottomGap).toBeLessThanOrEqual(11);
-    expect(placement.toastWidth).toBeGreaterThanOrEqual(placement.mapWidth - 70);
+    expect(placement.toastWidth).toBeGreaterThanOrEqual(placement.mapWidth - 118);
     expect(placement.insideMap).toBe(true);
     expect(placement.clearsRightButtons).toBe(true);
     expect(placement.clearsPanels).toBe(true);

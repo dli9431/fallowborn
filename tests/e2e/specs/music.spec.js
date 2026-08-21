@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/ui_misc.js',
+  'js/ui_modals.js',
   'css/style.css',
   'data/music_catalog.js'
 ]);
@@ -868,6 +869,9 @@ test('context banks, playback controls, and listening history stay consistent',
           hudGap:parseFloat(getComputedStyle(hud).rowGap),
           hudButtonWidth:Math.round(firstHudButton.width),
           hudButtonHeight:Math.round(firstHudButton.height),
+          hudColumns:new Set(hudButtons.map(function (button) {
+            return Math.round(button.getBoundingClientRect().left);
+          })).size,
           hudButtonsVertical:hudButtons.every(function (button, index) {
             if (!index) return true;
             const previous = hudButtons[index - 1].getBoundingClientRect();
@@ -886,7 +890,8 @@ test('context banks, playback controls, and listening history stay consistent',
       hudGap:2,
       hudButtonWidth:44,
       hudButtonHeight:44,
-      hudButtonsVertical:true,
+      hudColumns:2,
+      hudButtonsVertical:false,
       hudButtonOrder:['btn-music', 'btn-zoomin', 'btn-zoomout', 'btn-home', 'btn-mapmode', 'btn-marketlens', 'btn-find'],
       clearsHud:true
     });
@@ -899,7 +904,9 @@ test('context banks, playback controls, and listening history stay consistent',
         const toast = document.querySelector('#toasts .toast:last-child');
         if (!toast) return false;
         const toastBox = toast.getBoundingClientRect();
-        return toastBox.top >= controlBox.bottom || controlBox.left >= toastBox.right;
+        const mapBox = document.getElementById('mapwrap').getBoundingClientRect();
+        return (toastBox.top >= controlBox.bottom || controlBox.left >= toastBox.right) &&
+          toastBox.bottom <= mapBox.bottom - 9;
       });
     }).toBe(true);
     expect(mobileOverlay.controlsWidth).toBeLessThanOrEqual(300);

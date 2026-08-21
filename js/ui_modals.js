@@ -20299,6 +20299,7 @@ window.FB = window.FB || {};
       }
       UI.renderMusicOverlay();
     }
+    if (UI.layoutMapToasts) UI.layoutMapToasts();
   };
 
   UI.toggleMusicOverlay = function () {
@@ -20721,6 +20722,7 @@ window.FB = window.FB || {};
         button.setAttribute('aria-pressed', 'false');
       }
     }
+    if (UI.layoutMapToasts) UI.layoutMapToasts();
   };
 
   UI.toggleFindOverlay = function () {

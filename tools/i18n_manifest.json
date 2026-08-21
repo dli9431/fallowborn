@@ -54537,6 +54537,7 @@
       "glossary": [],
       "location": [
         "js/keys.js",
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -68455,6 +68456,16 @@
         "text": "A Knife Between Companies"
       }
     },
+    "src.293702c5": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Resize map and panels"
+      }
+    },
     "src.2947a65e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72383,6 +72394,16 @@
       ],
       "source": {
         "text": "{days} days remaining"
+      }
+    },
+    "src.326b8794": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "px)"
       }
     },
     "src.326ba96e": {
@@ -86454,6 +86475,7 @@
       "location": [
         "js/ui_panels.js",
         "js/keys.js",
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -89056,6 +89078,16 @@
       ],
       "source": {
         "text": "Too many hands, too little work."
+      }
+    },
+    "src.5913b2a4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "translateY("
       }
     },
     "src.5914ced9": {
@@ -114803,6 +114835,16 @@
         "text": "Slow, thankless work — until it is suddenly very sharp."
       }
     },
+    "src.92d92e34": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Map {map}% · Panels {panels}%"
+      }
+    },
     "src.92e29218": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -115478,6 +115520,7 @@
       "glossary": [],
       "location": [
         "js/keys.js",
+        "js/ui_misc.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -127820,6 +127863,7 @@
       "location": [
         "js/keys.js",
         "js/main.js",
+        "js/ui_misc.js",
         "js/ui_modals.js",
         "js/ui_panels.js"
       ],
@@ -135237,6 +135281,16 @@
       ],
       "source": {
         "text": "No eligible lost kingdom can be targeted yet, or the faith is still within its cooldown."
+      }
+    },
+    "src.c0cc603d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Balanced"
       }
     },
     "src.c0ceaa34": {
@@ -142838,6 +142892,16 @@
         "text": "The poisoner walks into it, and under questioning gives up a name. The knives stop — and {rival} knows that you know."
       }
     },
+    "src.d2418a32": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "(max-width: 820px) and (orientation: portrait)"
+      }
+    },
     "src.d2420853": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -143036,6 +143100,16 @@
       ],
       "source": {
         "text": "A diplomatic relationship changes"
+      }
+    },
+    "src.d2dd8aaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Map-first"
       }
     },
     "src.d2ea4cbc": {
@@ -145901,6 +145975,16 @@
       ],
       "source": {
         "text": "Prioress"
+      }
+    },
+    "src.d91f1f88": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "modal-guide-button family-tree-info"
       }
     },
     "src.d91f7a99": {
@@ -149302,6 +149386,16 @@
         "text": "Current position"
       }
     },
+    "src.e0e599c6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Panel-first"
+      }
+    },
     "src.e0eba6c9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149310,6 +149404,16 @@
       ],
       "source": {
         "text": "Duchy of Normandy"
+      }
+    },
+    "src.e0eca016": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "Resize map and panels. {state}. Drag or use the arrow keys."
       }
     },
     "src.e0f0ad26": {
@@ -158572,6 +158676,16 @@
       ],
       "source": {
         "text": "Company Standard"
+      }
+    },
+    "src.f62e34d9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_panels.js"
+      ],
+      "source": {
+        "text": "About the family tree"
       }
     },
     "src.f63c8c96": {
@@ -168843,6 +168957,14 @@
         "text": "Abdicate and continue as {name}"
       }
     },
+    "ui:About the family tree": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_panels.js",
+      "source": {
+        "text": "About the family tree"
+      }
+    },
     "ui:About {money:gold}/season": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -170119,6 +170241,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Balance direct land, vassals, liege demands, and succession."
+      }
+    },
+    "ui:Balanced": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Balanced"
       }
     },
     "ui:Baron": {
@@ -176987,6 +177117,25 @@
         "text": "Map filter: {mode} (R)"
       }
     },
+    "ui:Map {map}% · Panels {panels}%": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "map",
+        "panels"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Map {map}% · Panels {panels}%"
+      }
+    },
+    "ui:Map-first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Map-first"
+      }
+    },
     "ui:Market basket": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -179807,6 +179956,14 @@
         "text": "Paid when raised"
       }
     },
+    "ui:Panel-first": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Panel-first"
+      }
+    },
     "ui:Papacy (Pope in Rome) · Excommunication authority": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -182204,6 +182361,16 @@
       "location": "js/ui_panels.js",
       "source": {
         "text": "Resident family"
+      }
+    },
+    "ui:Resize map and panels. {state}. Drag or use the arrow keys.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "state"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "Resize map and panels. {state}. Drag or use the arrow keys."
       }
     },
     "ui:Resolve each asset in order. Claims combine service, vows, occupation, rights, local support, and religious standing. Land winners may receive only one territorial award.": {

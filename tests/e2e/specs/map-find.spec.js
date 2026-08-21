@@ -191,7 +191,7 @@ test('all right-hand HUD buttons stay in a single column without wrapping',
     expect(layout.isSingleColumn).toBe(true);
   });
 
-test('map HUD buttons and find overlay fit within mapwrap on tablet and shallow viewports',
+test('map HUD buttons and find overlay fit balanced portrait and shallow viewports',
   async function ({ page }) {
     const viewports = [
       { name: 'tablet-portrait', width: 768, height: 1024 },
@@ -248,8 +248,10 @@ test('map HUD buttons and find overlay fit within mapwrap on tablet and shallow 
         expect(fitsMap.minimumButtonHeight).toBeGreaterThanOrEqual(44);
         expect(fitsMap.minimumButtonWidth).toBeGreaterThanOrEqual(44);
       }
+      const portraitColumns = vp.width <= 820 && vp.height > vp.width;
+      const shallowLandscapeColumns = vp.height <= 480 && vp.width > vp.height;
       expect(fitsMap.buttonColumns).toBe(
-        vp.height <= 480 && vp.width > vp.height ? 2 : 1);
+        portraitColumns || shallowLandscapeColumns ? 2 : 1);
 
       // Open finder overlay and check it stays within mapwrap
       await page.locator('#btn-find').click();

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.6';
+  FB.VERSION = '1.144.7';
   FB.CHANGELOG = [
+    { v: '1.144.7', date: '2026-08-21', changes: [
+      'The family tree now marks the house founder, opens on the current character, and keeps its guidance in an info tooltip. Portrait play has a draggable balanced map and panel split whose controls and notices realign with the map.'
+    ] },
     { v: '1.144.6', date: '2026-08-21', changes: [
       'New games now open directly on starting date selection, with shared seeds behind a separate option. Starting roles and birthplace selection are clearer and more compact.'
     ] },

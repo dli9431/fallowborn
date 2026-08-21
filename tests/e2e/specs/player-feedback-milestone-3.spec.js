@@ -94,7 +94,7 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
     }).toBe('focus-family:farmer-work');
   });
 
-test('family tree labels distant kin, connects founders, pans, previews, and returns',
+test('family tree highlights and connects founders, opens on you, pans, previews, and returns',
   async function ({ page }) {
     const family = await page.evaluate(function () {
       const s = FB.state;
@@ -269,11 +269,36 @@ test('family tree labels distant kin, connects founders, pans, previews, and ret
     expect(desktopGeometry.relationSize).toBeGreaterThanOrEqual(13);
     expect(desktopGeometry.treeScrollWidth).toBeGreaterThan(
       desktopGeometry.treeClientWidth);
+    const treeInfo = page.locator(
+      '#genmodal .gm-heading > .family-tree-info');
+    const treeInfoTip = page.locator('#family-tree-info-tooltip');
+    await expect(treeInfo).toBeVisible();
+    await expect(page.locator('#gm-body')).not.toContainText(
+      'Blood lines run downward');
+    await treeInfo.hover();
+    await expect(treeInfoTip).toBeVisible();
+    await expect(treeInfoTip).toContainText(
+      'Click a face to open their sheet; hover it for details.');
     const primaryTree = page.locator('.family-tree-primary');
+    const currentChip = primaryTree.locator(
+      '.ftchip[data-cid="' + family.meId + '"]').first();
+    await expect(currentChip).toBeFocused();
+    await expect(currentChip).toBeInViewport();
+    expect(await currentChip.evaluate(function (chip) {
+      const wrap = chip.closest('.family-tree-primary').getBoundingClientRect();
+      const rect = chip.getBoundingClientRect();
+      return rect.left >= wrap.left && rect.right <= wrap.right &&
+        rect.top >= wrap.top && rect.bottom <= wrap.bottom;
+    })).toBe(true);
     const founderTreeRoot = primaryTree.locator(
       ':scope > .fttree > .ftnode').first();
-    await expect(founderTreeRoot.locator(
-      '.ftchip[data-cid="' + family.founderId + '"]')).toHaveCount(1);
+    const founderChip = founderTreeRoot.locator(
+      '.ftchip[data-cid="' + family.founderId + '"]');
+    await expect(founderChip).toHaveCount(1);
+    await expect(founderChip).toHaveClass(/founder/);
+    expect(await founderChip.evaluate(function (chip) {
+      return getComputedStyle(chip).borderTopColor;
+    })).toBe('rgb(184, 115, 51)');
     await expect(founderTreeRoot.locator(
       '.ftchip[data-cid="' + family.meId + '"]')).toHaveCount(1);
     await expect(founderTreeRoot.locator(
@@ -425,6 +450,12 @@ test.describe('mobile-sized family tree', function () {
     await expect(page.locator('.family-tree-primary .ftchip[data-cid="' +
       family.founderId + '"] .frel').first()).toContainText(
       'House founder · 4× great-grandmother');
+    const founderChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
+      family.founderId + '"]').first();
+    await expect(founderChip).toHaveClass(/founder/);
+    expect(await founderChip.evaluate(function (chip) {
+      return getComputedStyle(chip).borderTopColor;
+    })).toBe('rgb(184, 115, 51)');
     const opening = await meChip.evaluate(function (chip) {
       const wrapNode = chip.closest('.family-tree-primary');
       const wrap = wrapNode.getBoundingClientRect();
@@ -438,6 +469,16 @@ test.describe('mobile-sized family tree', function () {
     });
     expect(opening.fullyVisible).toBe(true);
     expect(opening.movedFromOrigin).toBe(true);
+    const treeInfo = page.locator(
+      '#genmodal .gm-heading > .family-tree-info');
+    const treeInfoTip = page.locator('#family-tree-info-tooltip');
+    await expect(treeInfo).toBeVisible();
+    await expect(page.locator('#gm-body')).not.toContainText(
+      'Blood lines run downward');
+    await treeInfo.click();
+    await expect(treeInfoTip).toBeVisible();
+    await expect(treeInfoTip).toContainText(
+      'Tap a face to open their sheet.');
   });
 });
 

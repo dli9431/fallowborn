@@ -138,11 +138,13 @@ recorded-parent paths identify deep descendants, great-aunts and great-uncles,
 great-nieces and great-nephews, and cousins by degree and generational removal. A house
 founder retains the founder role alongside any direct or collateral relationship.
 
-On an initial narrow/mobile opening, the canvas and modal body explicitly center and focus the
-current player after layout rather than depending on nested `scrollIntoView` behavior or
-beginning at the founder. Width-based detection covers mobile WebViews that report an
-incorrect pointer type. Returning from a nested character sheet restores the player's later
-pan position normally.
+On every initial opening, the canvas and modal body explicitly center and focus the current
+player after layout rather than depending on nested `scrollIntoView` behavior or beginning at
+the founder. This applies equally to desktop and narrow/mobile layouts. Returning from a nested
+character sheet restores the player's later pan position normally. The house founder keeps a
+dedicated copper border accent at every viewport size, independent of their relationship label.
+The blood-line, portrait, and panning instructions live behind the title's compact info tooltip
+instead of consuming vertical canvas space; hover, keyboard focus, and tap all expose it.
 
 Compact in-panel edits, such as House rename, sit inline beside the value they change as a
 small bordered icon button with an accessible localized name and tooltip; the icon is
@@ -218,6 +220,19 @@ with safe-area insets. In portrait the topbar wraps to three rows: identity and 
 then the full date (with year) on its own line, then the four resources on their own
 full-width row (`#tb-date` order 4, `#tb-stats` order 5; a single stats row clips its
 leftmost figures on narrow screens, and the date is hidden in the tighter landscape bar).
+Below that bar, portrait play uses a balanced split: the map is bounded to roughly one-third
+of the remaining height (190–260 px) and the Deeds/Land/Network/Chronicle workspace receives
+the rest. A 44 px drag target straddles the boundary without consuming its full height in the
+panel. Dragging it resizes continuously and release snaps to Panel-first, Balanced, or Map-first;
+tapping cycles those states, while Up/Down and Home/End provide the equivalent keyboard path.
+The chosen snap state lasts for the page session and is recalculated when the viewport changes.
+Panel-first leaves a small live map strip and hides its dense HUD and overlays until the map is
+expanded again. The map HUD uses two columns while the map is below 324 px so all seven controls
+retain their 44 px touch targets without forcing the old minimum; dragging into a tall Map-first
+pane returns them to a single right-hand rail. Map overlays and toasts recalculate their clearance
+for the active HUD arrangement. The portrait toast rail remains clipped inside the map; while a
+map sheet is open, new notices compact to one line and sit beneath the sheet instead of covering
+its controls.
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
 
