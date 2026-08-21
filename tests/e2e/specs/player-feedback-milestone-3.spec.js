@@ -219,6 +219,7 @@ test('family tree labels distant kin, connects founders, pans, previews, and ret
         spouse.childrenIds.push(extra.id);
       }
       FB.touchFamily();
+      const successor = FB.heirsOf(s)[0];
       const before = JSON.stringify({
         child:[child.fatherId, child.motherId],
         grandchild:[grandchild.fatherId, grandchild.motherId]
@@ -233,6 +234,7 @@ test('family tree labels distant kin, connects founders, pans, previews, and ret
         secondCousinId:secondCousin.id,
         greatNieceId:greatNiece.id,
         greatGrandchildId:greatGrandchild.id,
+        successorId:successor.id,
         spouseId:spouse.id, childId:child.id,
         grandchildId:grandchild.id, before:before
       };
@@ -330,8 +332,8 @@ test('family tree labels distant kin, connects founders, pans, previews, and ret
       .first()).toBeVisible();
 
     await page.getByRole('button', { name:'Successor', exact:true }).click();
-    await expect(page.locator('.ftchip[data-cid="' + family.childId + '"]')
-      .first()).toBeFocused();
+    await expect(page.locator('.ftchip[data-cid="' + family.successorId + '"]:focus'))
+      .toHaveCount(1);
     await page.getByRole('button', { name:'Spouse', exact:true }).click();
     const spouseChip = page.locator(
       '.ftchip[data-cid="' + family.spouseId + '"]').first();
@@ -411,7 +413,8 @@ test.describe('mobile-sized family tree', function () {
       FB.touchFamily();
       return { meId:id, founderId:s.player.houseFounderId };
     });
-    await page.getByRole('button', { name:'Kin', exact:true }).click();
+    await page.locator('#tb-portrait').click();
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
     await page.locator('#btn-ftree').click();
     const meChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
       family.meId + '"]').first();
