@@ -857,6 +857,8 @@ the Kin-area lesson: it opens **Life & Family** and points to **Seek a match**, 
 active courtship back to the Kin panel for personal attention. Once the authoritative
 proposal gate is ready, it opens **Life & Family** again and points directly to **Propose
 marriage**; it never advertises that action while it is hidden or unavailable.
+The intervening courtship coachmark states the current calculated number of personal-attention
+days required before the proposal gate will be ready.
 If the protagonist is already married when the family track first becomes eligible, all
 three family checklist items complete silently (without inventing a child or showing Kin,
 courtship, proposal, or legacy-event guidance) and the next eligible track takes over.

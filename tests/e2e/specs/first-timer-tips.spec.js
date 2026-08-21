@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
+  'js/events.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -338,19 +339,24 @@ test('the Kin lesson leads through finding a match and proposing marriage',
       .toHaveClass(/coachmark-lit/);
     await match.getByRole('button', { name:'Got it', exact:true }).click();
 
-    expect(await page.evaluate(function () {
+    const courtshipSetup = await page.evaluate(function () {
       const s = FB.state;
       const candidates = FB.spawnSuitor(s);
       const suitor = candidates[1] || candidates[0];
       FB.pickSuitor(s, suitor.id);
       const began = FB.beginCourtship(s, suitor);
+      const days = FB.socialAttentionDaysToThreshold(s, suitor, true);
       FB.ui.refresh();
-      return began;
-    })).toBe(true);
+      return { began:began, days:days };
+    });
+    expect(courtshipSetup.began).toBe(true);
+    expect(courtshipSetup.days).toBeGreaterThan(0);
     const courtship = page.locator('.coachmark', {
       hasText:'person under Courting'
     });
     await expect(courtship).toBeVisible();
+    await expect(courtship).toContainText(
+      'about ' + courtshipSetup.days + ' days before you can propose marriage');
     await expect(page.locator('#lefttabs .tab[data-tab="family"]'))
       .toHaveClass(/coachmark-lit/);
     await courtship.getByRole('button', { name:'Got it', exact:true }).click();

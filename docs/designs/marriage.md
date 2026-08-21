@@ -233,7 +233,10 @@ doctrine-permitted spouse place. **Family & legacy** completes its wedding step 
 first living spouse and explains that further marriages are optional when the effective
 limit is greater than one. In that state **Seek a match** remains intentionally available,
 but reads **Seek an additional spouse…** and its tooltip reports filled versus available
-places. A refused first proposal instead reads **Seek another match…**; while the shared
+places. After a prospect is chosen, the **Family & legacy** courtship coachmark quotes the
+current `FB.socialAttentionDaysToThreshold` result so the player knows how many days of
+personal attention are required before proposing. A refused first proposal instead reads
+**Seek another match…**; while the shared
 prospect-search cooldown remains, its detail states the rejection and exact days left.
 This is doctrine-aware presentation over the existing eligibility rules and has no
 technology impact.

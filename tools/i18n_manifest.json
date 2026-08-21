@@ -107888,6 +107888,16 @@
         "text": "Manners hide as much as they reveal."
       }
     },
+    "src.782da139": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 Open Kin and tap the person under Courting. Give them personal attention for about {days} days before you can propose marriage."
+      }
+    },
     "src.784a2df0": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -122528,6 +122538,16 @@
       ],
       "source": {
         "text": "Post Windmill"
+      }
+    },
+    "src.9627fba6": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/ui_misc.js"
+      ],
+      "source": {
+        "text": "💡 Open Kin and tap the person under Courting. Give them personal attention for about 1 day before you can propose marriage."
       }
     },
     "src.96296c25": {
@@ -215276,6 +215296,32 @@
       "location": "js/actions.js",
       "source": {
         "text": "💍 Seek another match…"
+      }
+    },
+    "ui:💡 Open Kin and tap the person under Courting. Give them personal attention for about 1 day before you can propose marriage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "💡 Open Kin and tap the person under Courting. Give them personal attention for about 1 day before you can propose marriage."
+      }
+    },
+    "ui:💡 Open Kin and tap the person under Courting. Give them personal attention for about {days} days before you can propose marriage.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [
+        "days"
+      ],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "💡 Open Kin and tap the person under Courting. Give them personal attention for about {days} days before you can propose marriage."
+      }
+    },
+    "ui:💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/ui_misc.js",
+      "source": {
+        "text": "💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose."
       }
     },
     "ui:💡 Your faith permits up to {count} spouses at once. Your first marriage completes this lesson; further marriages are optional.": {

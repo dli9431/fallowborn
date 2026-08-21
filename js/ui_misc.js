@@ -2678,8 +2678,22 @@ window.FB = window.FB || {};
   };
 
   UI.maybeFamilyCourtshipTip = function () {
+    const s = FB.state;
+    const target = s && s.player && s.chars &&
+      s.chars[s.player.courtingId];
+    const days = target && FB.socialAttentionDaysToThreshold
+      ? FB.socialAttentionDaysToThreshold(s, target, true) : null;
+    let text = FB.T(
+      '💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose.');
+    if (days !== null && days > 0) {
+      text = days === 1
+        ? FB.T('💡 Open Kin and tap the person under Courting. Give them personal attention for about 1 day before you can propose marriage.')
+        : FB.T('💡 Open Kin and tap the person under Courting. Give them personal attention for about {days} days before you can propose marriage.', {
+          days:days
+        });
+    }
     return UI.maybeTip('family-courtship',
-      '💡 Open Kin and tap the person under Courting. Give them personal attention until your Standing is high enough to propose.',
+      text,
       '#lefttabs .tab[data-tab="family"]', { noNext:true });
   };
 
