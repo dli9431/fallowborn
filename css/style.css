@@ -941,6 +941,10 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .settcard-actions .btn.small.settcard-info { display: none; }
 @media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
   .settcard-actions .btn.small.settcard-info { display: inline-flex; }
+  .settcard-actions .btn.small.settcard-info,
+  .settcard-actions .btn.small.sett-demolish {
+    min-width: 44px; min-height: 44px;
+  }
   .suitor-card .settcard-actions .btn.small.settcard-info,
   .suitor-card .settcard-actions .btn.small.settcard-raise {
     min-width: 44px; min-height: 44px;
@@ -1413,6 +1417,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
 .land-kv > span { color: var(--main-text-color); line-height: 1.35; }
 .land-kv > b { line-height: 1.35; text-align: right; }
 .land-kv-detail { grid-template-columns: minmax(0, 1fr); gap: 1px; padding: 5px 0; }
+.land-kv-detail > b { text-align: left; }
 .land-kv-detail > span { color: var(--helper-text-color); font-size: 12px; }
 .land-section .progressnote { margin: 6px 0 0; }
 .war-card {

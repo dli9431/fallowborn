@@ -4176,16 +4176,16 @@ window.FB = window.FB || {};
     if (/^(?:war_|ghw_)/.test(id)) return 'war';
     if (/^(?:diplomacy_|vassal_|appeal_|county_petition)/.test(id)) return 'diplomacy';
     if (/^(?:plot_|fabricate_claim)/.test(id)) return 'plot';
-    if (/^(?:council_|parliament_|collective_demand)/.test(id)) return 'politics';
+    if (/^(?:council_|parliament_|collective_demand|realm_policy_)/.test(id)) return 'politics';
     if (/^(?:finance_|guild_|distraint_|bondage_|prison_|raid_)/.test(id)) return 'property';
     if (/^(?:agency_|sibling_|begin_courtship|formalize_attention|dower_|claim_)/.test(id)) {
       return 'relationship';
     }
-    if (/^(?:academy_|travel_)/.test(id)) return 'development';
+    if (/^(?:academy_|travel_|frontier_)/.test(id)) return 'development';
     if (/^(?:papal_|bishop_|annul_)/.test(id)) return 'faith';
     if (/^(?:intrigue_)/.test(id)) return 'intrigue';
     if (/^(?:df_|attainder_|hc_|devastation_)/.test(id)) return 'property';
-    if (/^(?:offer_|buy_item|clear_item|find_artifact|loot_item)/.test(id)) return 'item';
+    if (/^(?:offer_|buy_item|clear_item|find_artifact|loot_item|artifact_|open_item_shop)/.test(id)) return 'item';
     return 'story';
   }
 
@@ -4200,13 +4200,13 @@ window.FB = window.FB || {};
   const CORE_CUSTOM_EFFECT_IDS = (
     'academy_introduction academy_student_dip academy_student_focus academy_student_int academy_student_lea academy_student_ste academy_withdraw auction_invitation_available auction_invitation_open ' +
     'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
-    'annul_granted appeal_lose appeal_win attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
+    'annul_granted appeal_lose appeal_win artifact_grant artifact_offering artifact_rumor_pursue artifact_seize attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
     'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
-    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend ' +
+    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend frontier_go_home frontier_milestone ' +
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
-    'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
+    'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item open_item_shop papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
-    'raid_enslave raid_plunder sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
     'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
@@ -4355,6 +4355,65 @@ window.FB = window.FB || {};
     if (id === 'dower_take' || id === 'dower_take_full' ||
         id === 'claim_won' || id === 'claim_sold') {
       return [impact('gold', { reward:true, variable:true })];
+    }
+    if (id === 'artifact_rumor_pursue') {
+      return [impact('queue', { eventId:'artifact_trial' })];
+    }
+    if (id === 'artifact_offering') {
+      const artifactCost = FB.artifactOfferingCost
+        ? FB.artifactOfferingCost(state, ctx && ctx.artifact) : 0;
+      return [
+        impact('gold', { amount:-artifactCost }),
+        impact('item', {
+          action:'add', defId:ctx && ctx.artifact,
+          reward:true, permanent:true
+        })
+      ];
+    }
+    if (id === 'artifact_grant') {
+      return [impact('item', {
+        action:'add', defId:ctx && ctx.artifact,
+        reward:true, permanent:true
+      })];
+    }
+    if (id === 'artifact_seize') {
+      return [impact('item', {
+        action:'remove', defId:ctx && ctx.artifact,
+        cost:true, permanent:true
+      })];
+    }
+    if (id === 'open_item_shop') {
+      return [impact('system', {
+        system:'item', action:'shop', preview:true
+      })];
+    }
+    if (id === 'frontier_milestone') {
+      return [impact('system', {
+        system:'development', action:'frontier_progress', reward:true
+      })];
+    }
+    if (id === 'frontier_go_home') {
+      return [impact('travel', { action:'return' })];
+    }
+    if (id === 'realm_policy_persecution_noted') {
+      return [impact('system', {
+        system:'politics', action:'mistreatment', cost:true, permanent:true
+      })];
+    }
+    if (id === 'realm_policy_settlers_welcome') {
+      return [impact('development', {
+        amount:1, reward:true, variable:true
+      })];
+    }
+    if (id === 'realm_policy_settlers_employ') {
+      return [impact('research', { amount:8, reward:true })];
+    }
+    if (id === 'realm_policy_refugees_welcome' ||
+        id === 'realm_policy_refugees_refused') {
+      return [impact('standing', {
+        amount:id === 'realm_policy_refugees_welcome' ? 3 : -2,
+        targetKind:'foreign_realms', variable:true
+      })];
     }
     if (id === 'find_artifact' || id === 'loot_item' || id === 'plot_loot' ||
         id === 'lifepath_author_work' || id === 'travel_expedition_record') {

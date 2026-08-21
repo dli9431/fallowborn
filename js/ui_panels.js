@@ -244,6 +244,14 @@ window.FB = window.FB || {};
     return true;
   };
 
+  UI.revealTutorialGuidance = function () {
+    setTab('actions', { history:false });
+    const target = document.querySelector('#tutorial-guidance');
+    if (!target) return false;
+    target.scrollIntoView({ block:'start' });
+    return true;
+  };
+
   UI.runDeedItemShortcut = function (key, run, shift) {
     if (!activeActionSection) return false;
     const normalized = String(key || '').toLocaleLowerCase();
@@ -1281,7 +1289,8 @@ window.FB = window.FB || {};
   function tutorialCardHtml(s) {
     const status = FB.tutorialStatus(s);
     if (!status) return ''; // every track finished; the card retires this frame
-    let h = '<div class="progressnote tutorial-card"><div class="tutorial-head">' +
+    let h = '<div class="progressnote tutorial-card" id="tutorial-guidance"' +
+      ' data-tutorial-track="' + esc(status.track.id) + '"><div class="tutorial-head">' +
       '<b>' + esc(status.track.icon) + ' ' + esc(status.track.title) + '</b>' +
       '<button type="button" class="btn small" id="tutorial-dismiss">' +
       esc(FB.T('Dismiss')) + '</button></div>';
@@ -4621,7 +4630,9 @@ window.FB = window.FB || {};
     let hostStatusText;
     if (nextPr && selA.moveLeft > 0) {
       hostStatusText = FB.waterCrossing && FB.waterCrossing(selA.at, nextPid)
-        ? FB.T('⚓ Crossing to {next} — {days}d remaining', { next: nextPr.name, days: selA.moveLeft })
+        ? FB.T('⚓ Preparing the crossing to {next} — {days} days remaining', {
+          next:nextPr.name, days:selA.moveLeft
+        })
         : FB.T('🚩 Marching to {next} — {days}d remaining', { next: nextPr.name, days: selA.moveLeft });
     } else if (selA.holdManual) {
       hostStatusText = FB.T('🚩 Holding at {place}', { place: selPr ? selPr.name : '?' });

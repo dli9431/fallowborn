@@ -445,7 +445,7 @@ test('realm and character sheets show the same Standing value, band, and context
       };
     });
 
-    expect(ids.rounded).toBe('+45.3 (Favorable)');
+    expect(ids.rounded).toBe('+45 (Favorable)');
     expect(ids.clamped).toBe('+100 (Warm)');
     expect(ids.negativeEffect).toBe(true);
     await expect(page.locator(

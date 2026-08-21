@@ -703,6 +703,9 @@ test.describe('starting-family presets', function () {
         'The preset determinism canary runs against the primary file target.');
 
       async function fingerprint(targetPage) {
+        /* Each browser context owns its progression profile. Normalize the
+           shared-code entitlement before comparing deterministic starts. */
+        await unlockStartTier(targetPage, 1);
         await startWithCode(targetPage,
           'ELDER-867-farmer-london-f-Ada-elder', 'Ada');
         return targetPage.evaluate(function () {

@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
   'js/model.js',
+  'js/save.js',
   'js/world.js',
   'data/bookmarks.js'
 ]);
@@ -829,7 +830,9 @@ test('the serialized payload carries no derived court data',
          additive keys (papalElective for the Roman succession, for one),
          and a test that fails on those is testing the wrong thing. What must
          never appear is derived data that belongs in memory. */
-      const expected = ['members', 'order', 'heirId', 'rulerGeneration',
+      /* heirId is deliberately absent from the wire form when canonical
+         order[0] supplies it; restore rehydrates that derived convenience. */
+      const expected = ['members', 'order', 'rulerGeneration',
         'rulerMemberId'];
       return {
         version:data.v,

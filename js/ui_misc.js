@@ -1932,9 +1932,14 @@ window.FB = window.FB || {};
       UI.maybeMapFiltersTip();
     } else if (followUp === 'map-filters' && UI.resumeFirstPlayerTip) {
       UI.resumeFirstPlayerTip();
-    } else if (followUp === 'area-self' && UI.resumeFamilyLegacyTips) {
+    } else if ((followUp === 'first-event-result' ||
+        followUp === 'first-poach') && UI.resumePostFirstStepsTips) {
+      UI.resumePostFirstStepsTips();
+    } else if (followUp === 'family-guidance' && UI.maybeSelfTip) {
+      UI.maybeSelfTip();
+    } else if (followUp === 'area-self' && UI.resumePostFirstStepsTips) {
       if (!usedControl && SH.closeSelfDrawer) SH.closeSelfDrawer();
-      UI.resumeFamilyLegacyTips();
+      UI.resumePostFirstStepsTips();
     } else if (followUp === 'area-kin' && UI.resumeFamilyLegacyTips) {
       UI.resumeFamilyLegacyTips();
     } else if (followUp === 'making-enterprise' &&
@@ -2074,7 +2079,13 @@ window.FB = window.FB || {};
     arrow.className = 'coachmark-arrow';
     const textEl = document.createElement('div');
     textEl.className = 'coachmark-text';
-    textEl.textContent = FB.T(item.text);
+    let displayText = item.text;
+    const displayTarget = coachTargetEl(item.target);
+    if (item.tipId === 'area-self' && displayTarget &&
+        displayTarget.id === 'tb-portrait') {
+      displayText = '💡 Tap your portrait to open Self, where you can review your skills, traits, equipment, faith, and standing.';
+    }
+    textEl.textContent = FB.T(displayText);
     const actions = document.createElement('div');
     actions.className = 'coachmark-actions';
     const dismiss = document.createElement('button');
@@ -2119,6 +2130,10 @@ window.FB = window.FB || {};
     coachEl.appendChild(actions);
     document.body.appendChild(coachEl);
     positionCoachmark(item.target);
+    bindCoachTouch(item);
+  }
+
+  function bindCoachTouch(item) {
     // Next stays shut until the lit control has been touched — unless the
     // lesson is marked freeNext (nothing safe to touch, e.g. the pace of
     // days) or points at a zero-size corner with nothing to touch. A menu
@@ -2129,9 +2144,12 @@ window.FB = window.FB || {};
     if (coachLit && wantsTouch) {
       const r = coachLit.getBoundingClientRect();
       if (r.width > 0 && r.height > 0) {
-        if (coachNext && !item.freeNext) {
+        if (coachNext && !item.freeNext && !item.interactedTracked) {
           coachNext.disabled = true;
           coachNext.title = FB.T('Try the highlighted control first');
+        } else if (coachNext && item.interactedTracked) {
+          coachNext.disabled = false;
+          coachNext.removeAttribute('title');
         }
         coachTouch = coachLit;
         coachTouch.addEventListener('pointerdown', coachTouched, true);
@@ -2154,6 +2172,19 @@ window.FB = window.FB || {};
       }
     }
   }
+
+  /* Deeds and Land refresh by rebuilding their panel DOM. Keep an open
+     lesson attached to the replacement control instead of leaving its glow
+     and capture listeners on the detached node. */
+  UI.refreshCoachmarkTarget = function () {
+    if (!coachEl || !coachItem) return false;
+    clearCoachTouch();
+    if (coachLit) coachLit.classList.remove('coachmark-lit');
+    coachLit = coachTargetEl(coachItem.target);
+    if (coachLit) coachLit.classList.add('coachmark-lit');
+    bindCoachTouch(coachItem);
+    return !!coachLit;
+  };
 
   function hasNextLesson() {
     if (coachItem && coachItem.noNext) return false;
@@ -2488,7 +2519,8 @@ window.FB = window.FB || {};
 
   /* ================= first-time player tips =================
      A fresh browser profile learns the map, Home, and filters before any
-     other coachmark, then the playable deed/time/event loop and Self. Other areas
+     other coachmark, then the playable deed/time/event/poaching loop, the new
+     Family & legacy checklist, and Self. Other areas
      teach themselves only when the player deliberately opens them. A tip is
      recorded in browser-local uiPrefs.tipsSeen only after its coachmark is
      dismissed or its highlighted control is used, never merely when queued.
@@ -2566,6 +2598,43 @@ window.FB = window.FB || {};
     return UI.maybeTip('first-time-flow',
       '💡 After choosing a deed, unpause with Play and let the days flow; the world will bring consequences and choices to your door.',
       '#timebtns', { freeNext:true, noNext:true });
+  };
+
+  UI.maybeFirstEventResultTip = function () {
+    return UI.maybeTip('first-event-result',
+      '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
+      '#toasts', { noNext:true });
+  };
+
+  function openingPoachDone(s) {
+    const flags = (s && s.player && s.player.flags) || {};
+    const cooldowns = (s && s.player && s.player.cooldowns) || {};
+    return !!flags.tut_poach ||
+      Object.prototype.hasOwnProperty.call(cooldowns, 'poach');
+  }
+
+  UI.maybePoachTip = function () {
+    const s = FB.state;
+    if (!s || openingPoachDone(s)) return false;
+    const status = FB.instantStatus ? FB.instantStatus(s, 'poach') : null;
+    if (!status || !status.shown || !status.can) return false;
+    const exposed = UI.revealDeedAction && UI.revealDeedAction('poach');
+    return UI.maybeTip('first-poach',
+      '💡 Now try Poach the lord’s game in Work & Wealth. It is risky, but it shows how a deed can bring an immediate result—or another choice.',
+      exposed ? '#tab-actions [data-action-id="poach"]' :
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
+  };
+
+  UI.maybeFamilyLegacyGuidanceTip = function () {
+    const s = FB.state;
+    const status = s && FB.tutorialStatus ? FB.tutorialStatus(s) : null;
+    if (!status || status.track.id !== 'family_legacy' ||
+        !UI.tipDue('family-guidance')) return false;
+    const exposed = UI.revealTutorialGuidance && UI.revealTutorialGuidance();
+    return UI.maybeTip('family-guidance',
+      '💡 Back in Deeds, the guidance at the top now has Family & legacy tasks: meet your household in Kin, wed, and welcome a child.',
+      exposed ? '#tutorial-guidance' :
+        '#sidetabs .tab[data-tab="actions"]', { noNext:true });
   };
 
   UI.maybeSelfTip = function () {
@@ -2648,13 +2717,14 @@ window.FB = window.FB || {};
       return false;
     }
     const flags = s.player.flags || {};
+    const seen = FB.game.uiPrefs.tipsSeen || {};
     if (!flags.tut_track_first_steps) return false;
+    if (!seen['family-guidance']) return false;
     if (flags.tut_family_established || flags.tut_track_family_legacy) {
       return false;
     }
     const me = s.chars && s.chars[s.player.charId];
     if (!flags.tut_kin_tab || !me) return false;
-    const seen = FB.game.uiPrefs.tipsSeen || {};
     const spouses = FB.spousesSnapshot
       ? FB.spousesSnapshot(s, me) : (me.spouseId ? [me.spouseId] : []);
     if (spouses.length) {
@@ -2704,6 +2774,8 @@ window.FB = window.FB || {};
     const flags = s.player.flags || {};
     if (!flags.tut_track_family_legacy) return false;
     const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!seen['first-event-result'] || !openingPoachDone(s) ||
+        !seen['area-self']) return false;
     if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
       return false;
     }
@@ -2766,11 +2838,7 @@ window.FB = window.FB || {};
       return UI.maybeFirstTimeFlowTip();
     }
     if (flags.tut_event && !(flags.tut_track_first_steps)) {
-      if (UI.tipDue('first-event-result')) {
-        return UI.maybeTip('first-event-result',
-          '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
-          '#toasts', { noNext:true });
-      }
+      if (UI.tipDue('first-event-result')) return UI.maybeFirstEventResultTip();
       return false;
     }
     if (flags.tut_track_first_steps) {
@@ -2781,12 +2849,29 @@ window.FB = window.FB || {};
 
   UI.resumePostFirstStepsTips = function () {
     if (tipsSilenced()) return false;
+    const s = FB.state;
+    const flags = (s && s.player && s.player.flags) || {};
     const seen = FB.game.uiPrefs.tipsSeen || {};
+    if (!flags.tut_track_first_steps) return false;
     if (!seen['map-controls'] || !seen['map-home'] || !seen['map-filters']) {
       return UI.resumeMapTips();
     }
+    if (flags.tut_event && !seen['first-event-result']) {
+      return UI.maybeFirstEventResultTip();
+    }
+    if (!openingPoachDone(s)) {
+      return seen['first-event-result'] ? UI.maybePoachTip() : false;
+    }
+    const status = FB.tutorialStatus ? FB.tutorialStatus(s) : null;
+    if (!seen['family-guidance'] && status &&
+        status.track.id === 'family_legacy') {
+      return UI.maybeFamilyLegacyGuidanceTip();
+    }
     if (!seen['area-self']) return UI.maybeSelfTip();
-    return UI.resumeFamilyLegacyTips ? UI.resumeFamilyLegacyTips() : false;
+    if (status && status.track.id === 'family_legacy') {
+      return UI.resumeFamilyLegacyTips ? UI.resumeFamilyLegacyTips() : false;
+    }
+    return UI.resumeMakingLivingTips ? UI.resumeMakingLivingTips() : false;
   };
 
   /* ================= map politics hookup ================= */

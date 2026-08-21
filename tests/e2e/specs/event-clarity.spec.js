@@ -572,7 +572,7 @@ test('event option buttons do not render helper desc text under label',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
     await page.evaluate(function () {
-      FB.ui.showEventModal({
+      var event = {
         id: 'test_desc_event',
         title: 'A Test Event With Descs',
         text: 'An event testing option helper text omission.',
@@ -588,7 +588,12 @@ test('event option buttons do not render helper desc text under label',
             effects: { popularOpinion: -2 }
           }
         ]
-      }, {});
+      };
+      var eventById = FB.eventById;
+      FB.eventById = function (id) {
+        return id === event.id ? event : eventById(id);
+      };
+      FB.ui.runEvents([{ id:event.id, ctx:{} }]);
     });
 
     var dialog = page.getByRole('dialog', { name: 'A Test Event With Descs' });

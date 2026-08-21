@@ -1133,8 +1133,14 @@ test('Governance county and grant flows return to Domain while Council reservati
     expect(await page.evaluate(function () { return FB.state.turn; }))
       .toBe(turnBeforeLevy + 1);
 
-    await page.locator('#governance-vassals [data-governance-realm="' +
-      result.originalVassal + '"]').first().click();
+    /* The levy control has an interactive hover sheet. Activate the realm
+       row through its keyboard contract so scrolling it into view cannot
+       place the stationary pointer back over that sheet. */
+    const realmRow = page.locator(
+      '#governance-vassals [data-governance-realm="' +
+      result.originalVassal + '"]').first();
+    await realmRow.focus();
+    await page.keyboard.press('Enter');
     await expect(page.locator('#gm-title')).toHaveText(
       result.originalVassalTitle);
     await expect(page.locator('#cm-close')).toHaveText('Back');

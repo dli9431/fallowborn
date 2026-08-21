@@ -7946,10 +7946,13 @@ window.FB = window.FB || {};
         /* The deed itself has resolved even if a newly raised decision keeps
            the following daily pass from advancing. Picker-backed deeds stamp
            only when their eventual confirmation calls passDay(skipFocus). */
-        if (FB.noteDeedCompleted) FB.noteDeedCompleted(state);
+        if (FB.noteDeedCompleted) FB.noteDeedCompleted(state, id);
         FB.game.passDay({ skipFocus: true });
         if (FB.ui && FB.ui.maybeFirstTimeFlowTip) {
           FB.ui.maybeFirstTimeFlowTip();
+        }
+        if (id === 'poach' && FB.ui && FB.ui.resumePostFirstStepsTips) {
+          FB.ui.resumePostFirstStepsTips();
         }
       }
     }

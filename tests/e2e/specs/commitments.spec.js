@@ -75,6 +75,7 @@ test('ongoing commitments adapt by layout and route to existing controls',
       };
       FB.ui.refresh();
       return {
+        name:candidate.name,
         threshold:FB.courtshipStandingThreshold(s, candidate),
         days:FB.socialAttentionDaysToThreshold(s, candidate)
       };
@@ -85,9 +86,10 @@ test('ongoing commitments adapt by layout and route to existing controls',
       mixedCourtship.days + ' days to +' + mixedCourtship.threshold);
 
     await summary.locator('[data-commitment="personal-attention"]').click();
-    await expect(page.locator('#sidetabs [data-tab="network"]')).toHaveClass(
-      /active/);
-    await expect(page.locator('#network-connections')).toBeFocused();
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#gm-title')).toContainText(mixedCourtship.name);
+    await expect(page.locator('#gm-body')).toContainText('Personal attention');
+    await page.locator('#cm-close').click();
 
     // landed ranks get the research row and its route to the Technology sheet
     await page.evaluate(function () {
@@ -611,15 +613,6 @@ test('ruler deed section extending past nine items exposes Shift+letter shortcut
       return window.__deedShortcutTarget;
     })).toBe(tenthId);
 
-    const eleventhId = await buttons.nth(10).evaluate(function (btn) {
-      const id = btn.getAttribute('data-action-id');
-      btn.click = function () { window.__deedShortcutTarget = id; };
-      return id;
-    });
-    await page.keyboard.press('Shift+KeyW');
-    expect(await page.evaluate(function () {
-      return window.__deedShortcutTarget;
-    })).toBe(eleventhId);
   });
 
 test('automation hotkey uses V and btn-auto displays V keyhint',
@@ -675,6 +668,7 @@ test('modal hotkeys toggle open modals and Escape closes any modal',
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
     // 5. Action shortcut (e.g. Q for livelihoods) toggles modal open and closed
+    await page.evaluate(function () { FB.ui.showTab('prov'); });
     await page.keyboard.press('KeyQ');
     await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
 

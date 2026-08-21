@@ -3106,9 +3106,10 @@ window.FB = window.FB || {};
   }
 
   /* Symmetric non-overlapping distribution around the province centroid and
-     clear of any settlement in the province. Each host is >= 2.3 u away from
-     all settlements and adjacent hosts are >= 2.7 u apart. */
-  function hostWorldPosition(state, army, z, dpr, knownLoc, knownSites) {
+     clear of any settlement in the province. Roomy counties use the full
+     authored fan; cramped borders fall back to the clearest valid point. */
+  function hostWorldPosition(state, army, z, dpr, knownLoc, knownSites,
+      knownHosts) {
     const pa = FB.world && FB.world.byId ? FB.world.byId[army.at] : null;
     if (!pa) return [0, 0];
     const loc = knownLoc || hostProvinceIndex(state, army);
@@ -3140,9 +3141,12 @@ window.FB = window.FB || {};
       ang = baseAngle + (index === 0 ? -spread / 2 : spread / 2);
       dist = 2.5 * uW;
     } else if (total === 3) {
-      const spread = 1.4;
+      /* Three banners otherwise crowd together when the county edge pulls
+         the outer rays inward. A wider fan keeps every marker directly
+         tappable even after that boundary correction. */
+      const spread = 2.2;
       ang = baseAngle + (index - 1) * (spread / 2);
-      dist = (index === 1 ? 2.8 : 2.5) * uW;
+      dist = (index === 1 ? 2.8 : 2.7) * uW;
     } else {
       const step = Math.min(Math.PI / 2, 2.6 / total);
       ang = baseAngle + (index - (total - 1) / 2) * step;
@@ -3168,8 +3172,9 @@ window.FB = window.FB || {};
     if (FB.provinceAtGrid && FB.world && FB.world.grid) {
       let testPr = FB.provinceAtGrid(hx, hy);
       if (!testPr || testPr.id !== army.at) {
-        // Step back along the ray toward s0 until inside the county
-        for (let step = 0.9; step >= 0; step -= 0.1) {
+        // Step back along the ray toward s0 until inside the county. Fine
+        // steps preserve useful marker clearance along narrow boundaries.
+        for (let step = 0.95; step >= 0; step -= 0.05) {
           const tx = s0.x + (hx - s0.x) * step;
           const ty = s0.y + (hy - s0.y) * step;
           testPr = FB.provinceAtGrid(tx, ty);
@@ -3184,6 +3189,45 @@ window.FB = window.FB || {};
           hy = s0.y;
         }
       }
+    }
+
+    /* A border clamp can pull an outer banner back onto the county seat even
+       though another angle has ample room. Search a small deterministic ring
+       only when the clamped point is crowded, maximizing its clearance from
+       every visible settlement and banner already placed in this county. */
+    const clearanceFrom = function (x, y) {
+      let clear = Infinity;
+      const occupied = (knownHosts || []).concat(sites);
+      for (let i = 0; i < occupied.length; i++) {
+        const dx = x - occupied[i].x, dy = y - occupied[i].y;
+        clear = Math.min(clear, Math.hypot(dx, dy));
+      }
+      return clear;
+    };
+    const minimumClearance = 16 * dpr / z;
+    let bestClearance = clearanceFrom(hx, hy);
+    if (bestClearance < minimumClearance && FB.provinceAtGrid &&
+        FB.world && FB.world.grid) {
+      let bestX = hx, bestY = hy;
+      const radii = [dist, 2.8 * uW, 2.4 * uW, 2 * uW,
+        1.6 * uW, 1.2 * uW, 1.1 * uW, uW, 0.95 * uW];
+      for (let ri = 0; ri < radii.length; ri++) {
+        for (let ai = 0; ai < 32; ai++) {
+          const candidateAngle = ang + ai * Math.PI / 16;
+          const tx = s0.x + Math.cos(candidateAngle) * radii[ri];
+          const ty = s0.y + Math.sin(candidateAngle) * radii[ri];
+          const candidateProvince = FB.provinceAtGrid(tx, ty);
+          if (!candidateProvince || candidateProvince.id !== army.at) continue;
+          const candidateClearance = clearanceFrom(tx, ty);
+          if (candidateClearance > bestClearance) {
+            bestClearance = candidateClearance;
+            bestX = tx;
+            bestY = ty;
+          }
+        }
+      }
+      hx = bestX;
+      hy = bestY;
     }
 
     return [hx, hy];
@@ -3219,9 +3263,15 @@ window.FB = window.FB || {};
     for (const pid in byProv) {
       const hosts = byProv[pid];
       const sites = provinceSettlementPoints(state, pid);
+      const placed = [];
       for (let i = 0; i < hosts.length; i++) {
         positions[hosts[i].id] = hostWorldPosition(
-          state, hosts[i], z, dpr, { index:i, total:hosts.length }, sites);
+          state, hosts[i], z, dpr, { index:i, total:hosts.length }, sites,
+          placed);
+        placed.push({
+          x:positions[hosts[i].id][0],
+          y:positions[hosts[i].id][1]
+        });
       }
     }
     armyLayoutCache = {
@@ -3352,16 +3402,26 @@ window.FB = window.FB || {};
               }
             }
             if (limiting) {
-              const capstone = orderPlan.crossings.length > 1
-                ? ' (' + FB.T('{count} sea legs', {
-                  count: orderPlan.crossings.length
-                }) + ')' : '';
-              FB.ui.toast('⚓ The host embarks for {province} — {days} days, {coin}{capstone}.', {
+              const params = {
                 province: pr.name,
-                days: limiting.quote.totalDays,
-                coin: FB.moneyText(state, limiting.quote.totalCoin),
-                capstone: capstone
-              });
+                days: orderPlan.totalDays,
+                crossings: orderPlan.waterLegs,
+                from: provName(limiting.from),
+                to: provName(limiting.to),
+                capacity: limiting.quote.effectiveCapacity,
+                cycles: limiting.quote.cycles
+              };
+              if (orderPlan.waterLegs === 1) {
+                FB.ui.toast(params.cycles === 1
+                  ? '🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle.'
+                  : '🚩 The host marches on {province} — about {days} days, with {crossings} water crossing. The {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles.',
+                params);
+              } else {
+                FB.ui.toast(params.cycles === 1
+                  ? '🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycle.'
+                  : '🚩 The host marches on {province} — about {days} days, with {crossings} water crossings. The limiting {from}–{to} crossing carries {capacity} men per cycle and needs {cycles} cycles.',
+                params);
+              }
             }
           } else if (FB.ui) {
             FB.ui.toast('🚩 The host marches to {province} — about {days} days.', {

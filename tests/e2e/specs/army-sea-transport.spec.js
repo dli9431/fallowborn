@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/travel.js',
+  'js/ui_panels.js',
   'js/world.js',
   'data/map_data.js'
 ]);
@@ -410,6 +411,7 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
         hosts:FB.game.auto.hosts,
         style:FB.game.auto.style
       };
+      const originalRf = FB.rf;
       const sovereigns = [];
       for (const rid in state.realms) {
         const realm = state.realms[rid];
@@ -492,11 +494,15 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
       FB.game.auto.hosts = 'manual';
       state.realms[first].war = { enemy:second };
       state.realms[second].capital = 'a';
-      const winner = host('rout_winner', first, 100000, 'd');
+      /* Keep this a rout rather than the separately covered overrun/stack-wipe
+         branch, so the retreat path and its first weighted leg remain live. */
+      const winner = host('rout_winner', first, 1500, 'd');
       const loser = host('rout_loser', second, 1000, 'd');
       state.armies = [winner, loser];
       FB.setRngState(987654321);
+      FB.rf = function () { return 1; };
       FB.armyTick(state);
+      FB.rf = originalRf;
       const routed = state.armies.filter(function (army) {
         return army.id === 'rout_loser';
       })[0];
@@ -513,6 +519,7 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
       state.player.war = playerWar;
       FB.game.auto.hosts = originalAuto.hosts;
       FB.game.auto.style = originalAuto.style;
+      FB.rf = originalRf;
       FB.world = originalWorld;
       return {
         aiRoute:aiRoute,
@@ -537,7 +544,7 @@ test('AI, player automation, prey hunts, and battle routs share weighted timing'
     expect(result.routRoute.moveLeft).toBe(6);
   });
 
-test('orders preserve active countdowns across reload, technology, allegiance, and rerouting',
+test('saved countdowns survive reload and new orders requote current technology and allegiance',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
 
@@ -610,7 +617,7 @@ test('orders preserve active countdowns across reload, technology, allegiance, a
 
     expect(result.rerouted).toBe(true);
     expect(result.afterTechnology).toEqual({
-      next:'b', remainder:['c'], moveLeft:19, from:'a'
+      next:'b', remainder:['c'], moveLeft:7, from:'a'
     });
     expect(result.afterAllegiance).toBe(19);
     expect(result.failed).toBe(false);
@@ -728,10 +735,12 @@ test('technology and host UI explain sea effects with pointer and keyboard parit
       };
       state.armies = [host];
       FB.selectArmy(host.id);
-      FB.ui.showTab('prov');
+      FB.ui.selectProvince(host.at);
       FB.ui.refresh();
     });
-    const status = page.locator('#tab-prov .progressnote').first();
+    const status = page.locator('#land-war-card .land-kv').filter({
+      hasText:'Status'
+    }).first();
     await expect(status).toContainText('Preparing the crossing to Boulogne');
     await expect(status).toContainText('11 days remaining');
     await expect(status).not.toContainText('at sea');

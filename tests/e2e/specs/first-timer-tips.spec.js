@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
+  'js/ui_topbar.js',
   'js/save.js',
   'js/actions.js',
   'css/style.css'
@@ -12,7 +13,9 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const {
+  START_CODE, startDeterministicGame, unlockStartTier
+} = require('../support/game/start');
 const { openMenu, waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
@@ -20,6 +23,7 @@ test.beforeEach(async function ({ page }, testInfo) {
 });
 
 async function startFirstCampaign(page) {
+  await unlockStartTier(page, 1);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
   await page.locator('#ng-seed').fill(START_CODE);
   await page.getByRole('button', { name:/Use this seed/ }).click();
@@ -41,6 +45,22 @@ async function finishOpeningMapTour(page) {
   await filters.getByRole('button', { name:'Got it', exact:true }).click();
   await expect(page.locator('.coachmark', { hasText:'Begin in Deeds' }))
     .toBeVisible();
+}
+
+async function finishOpeningHandoff(page, skipSelf) {
+  await page.evaluate(function (skipSelfTip) {
+    const flags = FB.state.player.flags;
+    const seen = FB.game.uiPrefs.tipsSeen;
+    flags.tut_deed = 1;
+    flags.tut_unpause = 1;
+    flags.tut_event = 1;
+    flags.tut_poach = 1;
+    seen['first-event-result'] = 1;
+    seen['first-poach'] = 1;
+    seen['family-guidance'] = 1;
+    if (skipSelfTip) seen['area-self'] = 1;
+    FB.tutorialCheck(FB.state);
+  }, !!skipSelf);
 }
 
 test('the first prompt begins with the map and is saved only after acknowledgement',
@@ -114,13 +134,14 @@ test('the Deeds lesson hands the player to the flow of days',
     })).toBe(false);
   });
 
-test('the map sequence comes first and Making a living waits for Family & legacy',
+test('the first result leads through poaching and back to Family & legacy',
   async function ({ page }) {
     await startFirstCampaign(page);
     await finishOpeningMapTour(page);
     await page.getByRole('button', { name:'Got it', exact:true }).click();
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
+
     await page.evaluate(function () {
       const flags = FB.state.player.flags;
       flags.tut_deed = 1;
@@ -128,6 +149,56 @@ test('the map sequence comes first and Making a living waits for Family & legacy
       flags.tut_event = 1;
       FB.tutorialCheck(FB.state);
     });
+
+    const result = page.locator('.coachmark', {
+      hasText:'Your choice changed the story'
+    });
+    await expect(result).toBeVisible();
+    await result.getByRole('button', { name:'Got it', exact:true }).click();
+
+    const poach = page.locator('.coachmark', {
+      hasText:'try Poach the lord’s game'
+    });
+    await expect(poach).toBeVisible();
+    await expect(page.locator('[data-action-group="work"]'))
+      .toHaveAttribute('aria-expanded', 'true');
+    const poachButton = page.locator('[data-action-id="poach"]');
+    await expect(poachButton).toHaveClass(/coachmark-lit/);
+    await poachButton.click();
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!FB.state.player.flags.tut_poach;
+      });
+    }).toBe(true);
+
+    if (await page.locator('#eventmodal:not(.hidden)').count()) {
+      await page.locator('#ev-options .evopt').first().click({ delay:400 });
+    }
+
+    const family = page.locator('.coachmark', {
+      hasText:'guidance at the top now has Family & legacy tasks'
+    });
+    await expect(family).toBeVisible();
+    await expect(page.locator('#tab-actions')).toHaveClass(/active/);
+    await expect(page.locator('#tutorial-guidance'))
+      .toHaveAttribute('data-tutorial-track', 'family_legacy');
+    await expect(page.locator('#tutorial-guidance')).toHaveClass(/coachmark-lit/);
+    await expect(page.locator('#tutorial-guidance'))
+      .toContainText('Meet your household in the Kin tab');
+    await family.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(page.locator('.coachmark', {
+      hasText:'Self shows your character'
+    })).toBeVisible();
+  });
+
+test('the map sequence comes first and Making a living waits for Family & legacy',
+  async function ({ page }) {
+    await startFirstCampaign(page);
+    await finishOpeningMapTour(page);
+    await page.getByRole('button', { name:'Got it', exact:true }).click();
+    await page.locator('.coachmark', { hasText:'unpause with Play' })
+      .getByRole('button', { name:'Got it', exact:true }).click();
+    await finishOpeningHandoff(page, false);
     const self = page.locator('.coachmark', {
       hasText:'Self shows your character'
     });
@@ -145,6 +216,11 @@ test('the map sequence comes first and Making a living waits for Family & legacy
     await page.evaluate(function () {
       const s = FB.state;
       const me = s.chars[s.player.charId];
+      /* This journey exercises the serf branch even when the deterministic
+         start seed changes station or carries legacy land. */
+      s.player.tier = 0;
+      s.player.landPlots = [];
+      s.player.landPlotMigration = 1;
       s.player.flags.tut_kin_tab = 1;
       if (!me.spouseId) {
         const spouse = FB.makeCharacter(s, {
@@ -214,13 +290,7 @@ test('compact layouts teach the map before Self through the portrait',
     await page.getByRole('button', { name:'Got it', exact:true }).click();
     await page.locator('.coachmark', { hasText:'unpause with Play' })
       .getByRole('button', { name:'Got it', exact:true }).click();
-    await page.evaluate(function () {
-      const flags = FB.state.player.flags;
-      flags.tut_deed = 1;
-      flags.tut_unpause = 1;
-      flags.tut_event = 1;
-      FB.tutorialCheck(FB.state);
-    });
+    await finishOpeningHandoff(page, false);
 
     const self = page.locator('.coachmark', {
       hasText:'Tap your portrait to open Self'
@@ -249,18 +319,7 @@ test('the Kin lesson leads through finding a match and proposing marriage',
       return !!FB.state.player.flags.tut_seen_kin_tab;
     })).toBe(false);
 
-    await page.evaluate(function () {
-      const s = FB.state;
-      const flags = s.player.flags;
-      const seen = FB.game.uiPrefs.tipsSeen;
-      seen['map-controls'] = 1;
-      seen['map-home'] = 1;
-      seen['map-filters'] = 1;
-      flags.tut_deed = 1;
-      flags.tut_unpause = 1;
-      flags.tut_event = 1;
-      FB.tutorialCheck(s);
-    });
+    await finishOpeningHandoff(page, true);
 
     const kin = page.locator('.coachmark', {
       hasText:'Kin is your household and dynasty'
@@ -340,17 +399,10 @@ test('an established marriage silently skips Family & legacy guidance',
     await page.locator('#lefttabs .tab[data-tab="family"]').click();
     await expect(page.locator('.coachmark')).toHaveCount(0);
 
+    await finishOpeningHandoff(page, true);
     const result = await page.evaluate(function () {
       const s = FB.state;
       const flags = s.player.flags;
-      const seen = FB.game.uiPrefs.tipsSeen;
-      seen['map-controls'] = 1;
-      seen['map-home'] = 1;
-      seen['map-filters'] = 1;
-      flags.tut_deed = 1;
-      flags.tut_unpause = 1;
-      flags.tut_event = 1;
-      FB.tutorialCheck(s);
       return {
         track:FB.tutorialStatus(s).track.id,
         established:!!flags.tut_family_established,

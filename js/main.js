@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.0';
+  FB.VERSION = '1.144.1';
   FB.CHANGELOG = [
+    { v: '1.144.1', date: '2026-08-21', changes: [
+      'New-player guidance now leads through the first story result, poaching, and the Family & legacy checklist. Army feedback and markers, match pickers, shortcuts, and long-life saves now remain reliable across supported layouts and reloads.'
+    ] },
     { v: '1.144.0', date: '2026-08-20', changes: [
       'New games now begin with only the Serf start; reaching Freeholder, Gentry, and Baron across your lives permanently unlocks their starting scenarios in this browser.'
     ] },
@@ -2945,10 +2948,11 @@ window.FB = window.FB || {};
     return !!(s && s.player && s.player.flags &&
       (s.player.flags.tutorial || s.player.flags.tutorial_done));
   };
-  FB.noteDeedCompleted = function (s) {
+  FB.noteDeedCompleted = function (s, id) {
     if (G.observe || !FB.tutorialLife(s)) return false;
     s.player.flags = s.player.flags || {};
     s.player.flags.tut_deed = 1;
+    if (id === 'poach') s.player.flags.tut_poach = 1;
     return true;
   };
   function tutorialTrackStatus(s, track) {

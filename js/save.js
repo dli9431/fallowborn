@@ -16,7 +16,7 @@ window.FB = window.FB || {};
   const CHARACTER_COMPACT_KEYS = {
     id:1, childrenIds:1, traits:1, dead:1, role:1, dyn:1,
     station:1, opinion:1, fertility:1, health:1,
-    fatherId:1, motherId:1, spouseId:1
+    fatherId:1, motherId:1, spouseId:1, faithStandingBase:1
   };
   const REALM_COMPACT_KEYS = {
     id:1, alive:1, liege:1, aggression:1, war:1, op:1
@@ -28,8 +28,10 @@ window.FB = window.FB || {};
     id:1, childIds:1, alive:1, role:1, parentId:1, charId:1,
     childrenIds:1, traits:1, dead:1, dyn:1, station:1, opinion:1,
     fertility:1, health:1, fatherId:1, motherId:1, spouseId:1,
+    faithStandingBase:1,
     liege:1, aggression:1, war:1, op:1, s:1, devGranted:1,
-    reserve:1, active:1, completed:1, progress:1, priorities:1, exposed:1
+    reserve:1, active:1, completed:1, progress:1, priorities:1, exposed:1,
+    heirId:1
   };
 
   function own(o, key) {
@@ -182,6 +184,11 @@ window.FB = window.FB || {};
       own(o, 'reserve'));
   }
 
+  function successionRecord(o) {
+    return !!(o && o.members && Array.isArray(o.order) &&
+      own(o, 'rulerMemberId') && own(o, 'heirId'));
+  }
+
   /* Keep live state explicit, but do not pay for values the restore boundary
      can reconstruct exactly. The member tree's parentId is canonical, derived
      character ids come from member ids, and completed technology already
@@ -224,6 +231,7 @@ window.FB = window.FB || {};
       if (key === 'opinion' && value === 0) return undefined;
       if (key === 'fertility' && value === 1) return undefined;
       if (key === 'health' && value === 8) return undefined;
+      if (key === 'faithStandingBase' && value === 0) return undefined;
       if ((key === 'fatherId' || key === 'motherId' || key === 'spouseId') &&
           value === null) return undefined;
     }
@@ -255,6 +263,10 @@ window.FB = window.FB || {};
       });
       return remaining.length ? remaining : undefined;
     }
+    if (key === 'heirId' && successionRecord(holder) &&
+        value === (holder.order.length ? holder.order[0] : null)) {
+      return undefined;
+    }
     return value;
   }
 
@@ -276,6 +288,7 @@ window.FB = window.FB || {};
       if (!own(c, 'opinion')) c.opinion = 0;
       if (!own(c, 'fertility')) c.fertility = 1;
       if (!own(c, 'health')) c.health = 8;
+      if (!own(c, 'faithStandingBase')) c.faithStandingBase = 0;
       if (!own(c, 'fatherId')) c.fatherId = null;
       if (!own(c, 'motherId')) c.motherId = null;
       if (!own(c, 'spouseId')) c.spouseId = null;
@@ -311,6 +324,10 @@ window.FB = window.FB || {};
       const succession = realm.succession;
       const members = succession && succession.members;
       if (!members) continue;
+      if (!own(succession, 'heirId')) {
+        succession.heirId = succession.order && succession.order.length
+          ? succession.order[0] : null;
+      }
       for (const id in members) {
         const member = members[id];
         if (!member) continue;

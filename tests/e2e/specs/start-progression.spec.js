@@ -58,7 +58,10 @@ test('a fresh profile offers only Serf and refuses locked shared starts',
     await expect(page.getByRole('button', { name:/Observe/ }))
       .not.toHaveAttribute('aria-disabled');
 
-    await farmer.click();
+    /* A locked card is deliberately aria-disabled. Invoke its DOM handler to
+       prove the application also rejects a synthetic activation rather than
+       asking Playwright to perform a pointer click it correctly blocks. */
+    await farmer.evaluate(function (button) { button.click(); });
     await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
     await expect(page.locator('#pickprov')).toHaveClass(/hidden/);
 

@@ -64,7 +64,7 @@ test('late game buildings and technologies validate cleanly and expose expected 
     });
 
     expect(result.validationErrors).toEqual([]);
-    expect(result.techCount).toBe(186);
+    expect(result.techCount).toBe(187);
 
     expect(result.buildingChecks.university.devMin).toBe(7);
     expect(result.buildingChecks.university.requiresTech).toBe('universities');

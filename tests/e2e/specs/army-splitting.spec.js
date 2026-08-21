@@ -226,8 +226,10 @@ test('a host shattered while cut off is destroyed outright, with graver capture 
         at:'x', from:'x', moveLeft:0, path:[], goal:null, supply:100
       };
       const foe = {
-        id:'pocket_foe', realm:enemy, men:2000, size:2000,
-        units:{ levy:2000, arch:0, cav:0, ret:0, mercs:0 },
+        /* Strong enough to shatter sixty men, but below the separately
+           covered overrun threshold so encirclement owns the destruction. */
+        id:'pocket_foe', realm:enemy, men:100, size:100,
+        units:{ levy:100, arch:0, cav:0, ret:0, mercs:0 },
         at:'x', from:'x', moveLeft:0, path:[], goal:null, supply:100
       };
       state.armies = [host, foe];
@@ -416,6 +418,7 @@ test('co-located split groups have sufficient non-overlapping spatial separation
       const distSeatA = Math.hypot(posA[0] - seat.x, posA[1] - seat.y);
       const distSeatB = Math.hypot(posB[0] - seat.x, posB[1] - seat.y);
       const distSeatC = Math.hypot(posC[0] - seat.x, posC[1] - seat.y);
+      const screenScale = FB.map.zoom / (FB.map.dpr || 1);
       const originalRefresh = FB.ui.refresh;
       let exactRefreshes = 0;
       FB.ui.refresh = function (options) {
@@ -442,12 +445,12 @@ test('co-located split groups have sufficient non-overlapping spatial separation
       return {
         hostCount:3,
         home:home,
-        distAB:distAB,
-        distBC:distBC,
-        distCA:distCA,
-        distSeatA:distSeatA,
-        distSeatB:distSeatB,
-        distSeatC:distSeatC,
+        distAB:distAB * screenScale,
+        distBC:distBC * screenScale,
+        distCA:distCA * screenScale,
+        distSeatA:distSeatA * screenScale,
+        distSeatB:distSeatB * screenScale,
+        distSeatC:distSeatC * screenScale,
         provAId:FB.provinceAtGrid(posA[0], posA[1]) ? FB.provinceAtGrid(posA[0], posA[1]).id : null,
         provBId:FB.provinceAtGrid(posB[0], posB[1]) ? FB.provinceAtGrid(posB[0], posB[1]).id : null,
         provCId:FB.provinceAtGrid(posC[0], posC[1]) ? FB.provinceAtGrid(posC[0], posC[1]).id : null,
@@ -689,8 +692,7 @@ test('Army move orders render movement path and destination marker on map',
     const result = await page.evaluate(function () {
       const state = FB.state;
       const home = state.player.provinceId;
-      const homePr = FB.world.byId[home];
-      const adj = homePr.neighbors || homePr.adjacent || [];
+      const adj = Object.keys(FB.world.adj[home] || {});
       const targetPid = adj[0];
       const host = {
         id:'marching_route_host', realm:'player', men:500, size:500,
@@ -741,8 +743,7 @@ test('Ordering army to a second location overrides the path directly instead of 
     const result = await page.evaluate(function () {
       const state = FB.state;
       const home = state.player.provinceId;
-      const homePr = FB.world.byId[home];
-      const adj = homePr.neighbors || homePr.adjacent || [];
+      const adj = Object.keys(FB.world.adj[home] || {});
       const dest1 = adj[0];
       const dest2 = adj.length > 1 ? adj[1] : adj[0];
 
@@ -781,13 +782,36 @@ test('Armies resupply and are friendly in vassal and realm lands',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const state = FB.state;
-      state.player.liege = 'bavaria';
-      state.realms.bavaria = state.realms.bavaria || { id:'bavaria', name:'Bavaria', alive:true, liege:null };
-      state.realms.bavarian_vassal = { id:'bavarian_vassal', name:'Vassal Duke', alive:true, liege:'bavaria' };
+      state.player.liege = 'test_liege';
+      state.realms.test_liege = {
+        id:'test_liege', name:'Test Liege', alive:true, liege:null
+      };
+      state.realms.test_vassal = {
+        id:'test_vassal', name:'Vassal Duke', alive:true, liege:'test_liege'
+      };
+      let enemy = null;
+      for (const rid in state.realms) {
+        const realm = state.realms[rid];
+        if (rid !== 'player' && rid !== 'test_liege' && realm && realm.alive &&
+            !realm.liege) {
+          enemy = rid;
+          break;
+        }
+      }
+      state.player.war = { enemy:enemy, defending:false };
 
-      const vassalPid = 'test_vassal_prov';
-      state.holder[vassalPid] = 'bavarian_vassal';
-      state.owner[vassalPid] = 'bavaria';
+      /* Use a live map county: armiesEnsure correctly rejects invented
+         province ids before the supply pass. Keep it outside the player's
+         personal holdings so the vassal relationship is what makes it
+         friendly. */
+      const playerProvs = state.player.provs || [];
+      const vassalPid = Object.keys(FB.world.byId).find(function (pid) {
+        const province = FB.world.byId[pid];
+        return province && !province.wasteland &&
+          playerProvs.indexOf(pid) < 0 && state.holder[pid] !== 'player';
+      });
+      state.holder[vassalPid] = 'test_vassal';
+      state.owner[vassalPid] = 'test_liege';
 
       const host = {
         id:'vassal_resupply_host', realm:'player', men:400, size:400,

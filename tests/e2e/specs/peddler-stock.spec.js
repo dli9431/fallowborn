@@ -1,7 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/map_data.js',
   'js/economy.js',
+  'js/items.js',
   'js/market.js',
   'js/ui_modals.js',
   'data/economy.js'
@@ -69,7 +71,7 @@ test('bands the peddler’s full-table stock by station and purse',
     expect(counts.richSerf.fine).toBeGreaterThan(counts.serf.fine);
   });
 
-test('keeps heirlooms in a rich house’s stock until the class is exhausted',
+test('keeps famed stock after the unique heirlooms are exhausted',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -91,21 +93,23 @@ test('keeps heirlooms in a rich house’s stock until the class is exhausted',
       s.player.tier = 6;
       s.player.gold = 0;
       const out = {};
-      /* two of three famed uniques collected: the class still rolls at band
-         odds because depletion no longer shrinks it */
+      /* Depleting authored uniques must not shrink the class odds: famed
+         ordinary equipment remains valid stock for a wealthy household. */
       FB.grantItem(s, 'hero_sword');
       FB.grantItem(s, 'crown_of_old');
       out.depleted = sample(200);
-      /* the whole class owned: only then does the crowned house fall back to
-         the remaining classes */
-      FB.grantItem(s, 'holy_relic');
+      for (const id in FBDATA.items) {
+        const def = FBDATA.items[id];
+        if (def.rarity === 'famed' && def.unique && !def.eventOnly) {
+          FB.grantItem(s, id);
+        }
+      }
       out.exhausted = sample(200);
       return out;
     });
 
     expect(counts.depleted.famed).toBeGreaterThanOrEqual(40);
-    expect(counts.exhausted.famed).toBe(0);
-    expect(counts.exhausted.fine).toBeGreaterThan(counts.exhausted.common);
+    expect(counts.exhausted.famed).toBeGreaterThanOrEqual(40);
   });
 
 test('labels the rare aspirational offer and still sells it',

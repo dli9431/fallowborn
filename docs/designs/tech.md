@@ -6,7 +6,7 @@ diffusions of 476–1300. The campaign remains playable after 1300: projects do 
 hard calendar locks, exposure continues, and the historical cost curve becomes a catch-up
 discount rather than stopping.
 
-The live catalogue is `FBDATA.tech` in `data/technology.js`. It contains 186 entries in a
+The live catalogue is `FBDATA.tech` in `data/technology.js`. It contains 187 entries in a
 directed prerequisite graph across seven built-in domains:
 
 - agriculture and animal power;

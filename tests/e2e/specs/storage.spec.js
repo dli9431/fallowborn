@@ -129,7 +129,7 @@ test('an eager-court save stays within the storage budget and reloads whole',
     expect(result.bytes).toBeLessThan(COMPLETE_SAVE_BUDGET);
   });
 
-test('save compaction rehydrates court links and technology exposure',
+test('save compaction rehydrates succession, court links, and technology exposure',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -187,6 +187,7 @@ test('save compaction rehydrates court links and technology exposure',
       liveRealm.op = 0;
       liveMember.alive = true;
       liveChar.health = 8;
+      liveChar.faithStandingBase = 0;
       liveRealm.succession.members[deadMemberId] = {
         id:deadMemberId, name:'Recorded Ancestor', sex:'m', born:800,
         alive:false, parentId:null, childIds:[], charId:null, died:850
@@ -217,6 +218,7 @@ test('save compaction rehydrates court links and technology exposure',
         !own.call(rawRealm, 'aggression') &&
         !own.call(rawRealm, 'war') &&
         !own.call(rawRealm, 'op') &&
+        !own.call(rawSuccession, 'heirId') &&
         !own.call(rawMember, 'id') &&
         !own.call(rawMember, 'charId') &&
         !own.call(rawMember, 'childIds') &&
@@ -232,6 +234,7 @@ test('save compaction rehydrates court links and technology exposure',
         !own.call(rawChar, 'fatherId') &&
         !own.call(rawChar, 'motherId') &&
         !own.call(rawChar, 'health') &&
+        !own.call(rawChar, 'faithStandingBase') &&
         !own.call(rawEmptyChildChar, 'childrenIds') &&
         !own.call(rawTech, 'active') &&
         !own.call(rawTech, 'progress') &&
@@ -257,7 +260,9 @@ test('save compaction rehydrates court links and technology exposure',
         realm:!!restoredRealm && restoredRealm.id === sample.rid &&
           restoredRealm.alive === true && restoredRealm.liege === null &&
           restoredRealm.aggression === 0 && restoredRealm.war === null &&
-          restoredRealm.op === 0,
+          restoredRealm.op === 0 &&
+          restoredRealm.succession.heirId ===
+            (restoredRealm.succession.order[0] || null),
         member:!!restoredMember && restoredMember.id === sample.memberId &&
           restoredMember.charId === sample.charId &&
           restoredMember.alive === true && restoredMember.role === null &&
@@ -270,6 +275,7 @@ test('save compaction rehydrates court links and technology exposure',
           restoredDeadMember.childIds.length === 0,
         character:!!restoredChar && restoredChar.id === sample.charId &&
           restoredChar.dead === false && restoredChar.health === 8 &&
+          restoredChar.faithStandingBase === 0 &&
           restoredChar.role === null && restoredChar.fatherId === null &&
           restoredChar.motherId === null &&
           !!restoredEmptyChildChar &&

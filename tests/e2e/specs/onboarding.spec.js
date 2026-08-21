@@ -17,9 +17,14 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const {
-  START_CODE, startDeterministicGame, unlockStartTier
+  START_CODE, startDeterministicGame:startBaseGame, unlockStartTier
 } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
+
+function startDeterministicGame(page, options) {
+  const guided = Object.assign({ keepTutorial:true }, options || {});
+  return startBaseGame(page, guided);
+}
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -128,7 +133,7 @@ test('a saved guide-hints setting suppresses first-life onboarding surfaces',
 test('Daily Focus stays separate and an immediate deed completes First steps',
   async function ({ page }) {
     await page.setViewportSize({ width:1280, height:800 });
-    await startDeterministicGame(page);
+    await startDeterministicGame(page, { keepFirstTimeTips:true });
     await finishOpeningMapTour(page);
     await page.getByRole('button', { name:'Got it', exact:true }).click();
     await page.locator('.coachmark', { hasText:'unpause with Play' })
@@ -265,6 +270,16 @@ test('an existing profile is grandfathered out of first-life onboarding',
       localStorage.removeItem('fb_ui'); // simulate upgrading from older prefs
     });
     await page.reload();
+    const musicChoice = page.locator('#music-choice:not(.hidden)');
+    await page.waitForFunction(function () {
+      return document.querySelector('#title:not(.hidden)') ||
+        document.querySelector('#music-choice:not(.hidden)');
+    });
+    if (await musicChoice.isVisible()) {
+      await page.getByRole('button', {
+        name:'Continue silently', exact:true
+      }).click();
+    }
     await expect(page.getByRole('button', { name:'New Game', exact:true }))
       .toBeVisible();
     expect(await page.evaluate(function () {

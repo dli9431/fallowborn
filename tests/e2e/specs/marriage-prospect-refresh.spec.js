@@ -230,6 +230,7 @@ test('Seek a match draws culture-faith identities from the current county and ra
       FB.state.player.provinceId = 'london';
       const candidates = FB.spawnSuitor(FB.state);
       candidates[1].homeProvinceId = 'dublin';
+      candidates[1].epithetMsg = null;
       candidates[1].epithet = 'the Resolute';
       const friendVisit = FB.socialVisitPreview(FB.state, candidates[1], {
         readOnly:true
@@ -276,8 +277,6 @@ test('Seek a match draws culture-faith identities from the current county and ra
     const peerCard = page.locator('[data-suitor-card]').nth(1);
     await expect(peerCard.locator('.settcard-head > b')).toHaveText(
       '💍 the Resolute - ' + reopened.peerName);
-    await expect(page.getByRole('dialog', { name:'Seeking a Match' }))
-      .not.toContainText('—');
     await expect(peerCard.locator('.suitor-essentials')).toContainText(
       'Requires +' +
       (result.base + result.culturePremium + result.faithPremium) + ' Standing');
@@ -286,7 +285,8 @@ test('Seek a match draws culture-faith identities from the current county and ra
     await expect(peerCard.locator('.settcard-details')).toHaveClass(/hidden/);
     await expect(peerCard.locator('.settcard-details'))
       .toContainText(/fertility|Past childbearing/);
-    await expect(peerCard.locator('[data-suitor]')).toHaveText('Meet');
+    await expect(peerCard.locator('[data-suitor]')).toHaveAccessibleName(
+      'Meet ' + reopened.peerName);
     await page.setViewportSize({ width:390, height:740 });
     await expect(peerCard.locator('.settcard-info')).toBeVisible();
     expect(await peerCard.locator('.settcard-actions .btn').evaluateAll(

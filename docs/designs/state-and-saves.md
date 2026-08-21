@@ -85,6 +85,8 @@ true, health-8, and empty-array/object defaults are restored explicitly. A build
 an omitted settlement index belongs to the head settlement (`s:0`), matching the legacy
 projection. National `exposed` contains only technologies not already in `completed`,
 because completion implies exposure, and empty technology work containers are recreated.
+The succession `heirId` is omitted when it exactly matches the first id in canonical
+`order`, then restored from that order at the load boundary.
 `S.restore` expands the full live shape before the ordinary ensure chain, so uncompressed
 older version-3 saves pass through unchanged. The replacer never mutates running state.
 It also gates record-shape detection by the small set of keys that can actually be
@@ -519,6 +521,10 @@ religious prior while preserving service, gifts, rivalry, and other earned histo
 version-3 saves: their existing totals receive the current baseline once, then round
 trip unchanged. Newly created neutral characters and realms begin with the baseline;
 an explicit authored `opinion` remains an exact initial total.
+
+Serialization omits a character marker when it is exactly zero; reads already
+treat a missing marker as zero, preserving the score while avoiding a repeated
+default field across large generated courts.
 
 On protagonist succession, every earned character and realm score resets because
 the save stores only relationships with the outgoing protagonist, not an heir/counterpart

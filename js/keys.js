@@ -156,9 +156,16 @@ window.FB = window.FB || {};
       if (k === 'Escape' && genOpen()) { e.preventDefault(); FB.ui.closeModal(); return; }
       /* Checkboxes and radios take no typed text, so a focused one (a
          dialog's first control can be a protection checkbox) swallows
-         everything except the digit hotkeys. */
+         ordinary letters. The key that opened its current modal remains a
+         structural close command, rather than checkbox input. */
       const checkable = t.tagName === 'INPUT' &&
         (t.type === 'checkbox' || t.type === 'radio');
+      if (checkable && genOpen() && FB.ui && FB.ui.modalHotkeyClose &&
+          FB.ui.modalHotkeyClose(k, e.shiftKey)) {
+        e.preventDefault();
+        FB.ui.closeModal();
+        return;
+      }
       if (!checkable || !digit) return;
     }
     const onButton = t && t.tagName === 'BUTTON';

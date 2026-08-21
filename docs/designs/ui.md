@@ -739,7 +739,8 @@ sixteen; inherited enterprises and land still satisfy their live-state objective
 Step state comes from `FB.tutorialStatus` (live state plus one-time flags
 written at each action's single choke point: `G.setPaused`, direct
 `FB.runInstant` resolution or `G.passDay({skipFocus:true})`, the event-option handler,
-`setTab`). Direct deeds stamp completion as soon as their action resolves; picker-backed
+`setTab`). Direct deeds stamp completion as soon as their action resolves, with the
+opening poaching lesson retaining its own `tut_poach` evidence; picker-backed
 deeds stamp only when a confirmed choice actually spends the day. Opening and cancelling a
 picker therefore never completes the lesson. Tutorial
 lives saved before that shared stamp also accept a retained authored deed cooldown as
@@ -789,6 +790,9 @@ the coachmark. Clicking the highlighted control learns and immediately closes a
 one-step tip before the control's own handler runs; this lets the requested deed or
 time action respond to that first click and prevents a lesson hidden behind a picker
 from silently blocking fast-forward.
+If an exact refresh rebuilds the Deeds or Land panel while a lesson is open, the
+coachmark reacquires the replacement target and reattaches its glow and interaction
+listeners; a detached pre-refresh button never becomes the lesson's stale target.
 First-time tips are persisted only at one of those acknowledgement points, not
 when they are queued, so leaving mid-prompt does not lose the lesson; Continue
 reconstructs the unfinished opening prompt from tutorial progress. Nothing
@@ -827,7 +831,11 @@ begin with the map before any other coachmark: map controls hand off in order to
 button (recenter on the current home county) and **Map filters** (cycle realm, personal,
 liege, de jure, and war views); Continue resumes at the first unread lesson in this map
 sequence. The opening then follows the playable loop: do a one-time deed, let time pass,
-answer the queued welcome event, read its result, and review **Self**. On mobile and tablet
+answer the queued welcome event, read its result toast, and try **Poach the lord’s game**.
+When that deed resolves, the coachmark returns to Deeds and highlights the newly active
+**Family & legacy** checklist before continuing to **Self**. A prior opening poach is
+recognized from its tutorial flag or retained cooldown and skips directly to that checklist.
+On mobile and tablet
 layouts the Self lesson targets the always-visible portrait because the Self/Kin drawer tabs
 are hidden. Afterward, ranks 0–2 finish **Family & legacy** before unfinished
 **Making a living** steps hand off to
@@ -843,7 +851,8 @@ marriages are optional while the Deeds action changes to **Seek an additional sp
 A refused proposal changes it to **Seek another match…** and exposes any remaining search
 cooldown in the same guidance. The Kin panel's beginner courtship line follows the same
 gate. If Kin was opened early, its coachmark resumes once the gate clears instead of being
-lost. The Family & legacy handoff then begins when the player acknowledges
+lost. After the checklist handoff and Self, the Family & legacy action guidance begins
+when the player acknowledges
 the Kin-area lesson: it opens **Life & Family** and points to **Seek a match**, then sends an
 active courtship back to the Kin panel for personal attention. Once the authoritative
 proposal gate is ready, it opens **Life & Family** again and points directly to **Propose

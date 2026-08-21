@@ -51,9 +51,11 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
       FB.ui.closeModal();
       FB.state.player.tier = 0;
       FB.state.player.focus = 'rest';
+      FB.ui.showTab('prov');
     });
-    /* keys.js swallows shortcuts while #genmodal is open, and closeModal can
-       flip the class a frame later (history-driven close on WebKit). */
+    /* Semantic bindings are global outside Deeds; that tab deliberately owns
+       W as its second positional item. Close Settings and exercise the
+       binding from Land, where the semantic shortcut contract applies. */
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await page.keyboard.press('w');
     expect(await page.evaluate(function () { return FB.state.player.focus; }))

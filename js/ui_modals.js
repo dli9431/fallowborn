@@ -782,10 +782,8 @@ window.FB = window.FB || {};
       pendingEvents = [];
     }
     nextEvent();
-    if (UI.maybeTip) {
-      UI.maybeTip('first-event-result',
-        '💡 Your choice changed the story. Its gains and losses are summarized here; return to Deeds when you want your next move.',
-        '#toasts', { noNext:true });
+    if (UI.maybeFirstEventResultTip) {
+      UI.maybeFirstEventResultTip();
     }
   }
 
@@ -5270,7 +5268,8 @@ window.FB = window.FB || {};
               change:settlementChangeName(status.change)
             })) + '</p>'
           : '';
-      })() + '</div>';
+      })() + '<p class="hint">' + esc(bookmarkDevelopmentText(s, pid)) +
+      '</p></div>';
     /* household property in the exact slot — read directly so opening a
        sheet never migrates or rewrites saved property */
     const property = [];

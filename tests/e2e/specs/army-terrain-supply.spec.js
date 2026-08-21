@@ -407,7 +407,7 @@ test('the selected host readout reports its supply in the Land tab',
       FB.ui.refresh();
     });
     const panel = page.locator('#tab-prov');
-    await expect(panel).toContainText('Supply:');
-    await expect(panel).toContainText('Low');
+    await expect(panel).toContainText('Supply & Upkeep');
+    await expect(panel).toContainText('Low (20%)');
     await expect(panel).toContainText('days before hunger bites');
   });

@@ -8,7 +8,9 @@ dependsOnRuntime(__filename, [
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
-const { START_CODE, startDeterministicGame } = require('../support/game/start');
+const {
+  START_CODE, startDeterministicGame, unlockStartTier
+} = require('../support/game/start');
 
 test('telemetry accepts only the exact official play origin and stays silent locally',
   async function ({ page }, testInfo) {
@@ -115,7 +117,6 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     expect(events.map(function (event) { return event.name; })).toEqual([
       'campaign-started',
       'hint-shown',
-      'hint-dismissed',
       'active-play-reached-1-minute',
       'active-play-reached-5-minutes',
       'active-play-reached-15-minutes',
@@ -195,6 +196,7 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
       };
     });
 
+    await unlockStartTier(page, 1);
     await page.getByRole('button', { name:'New Game', exact:true }).click();
     await page.locator('#ng-seed').fill(START_CODE);
     await page.getByRole('button', { name:/Use this seed/ }).click();
@@ -217,7 +219,7 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
     const coach = page.locator('.coachmark', { hasText:'Begin in Deeds' });
     await expect(coach).toBeVisible();
     await page.locator('#sidetabs .tab[data-tab="actions"]').click();
-    await coach.getByRole('button', { name:'Got it', exact:true }).click();
+    await expect(coach).toHaveCount(0);
     const flow = page.locator('.coachmark', { hasText:'unpause with Play' });
     await expect(flow).toBeVisible();
     await flow.getByRole('button', { name:'Got it', exact:true }).click();
@@ -257,7 +259,7 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
     }));
     expect(events[2].data).toEqual(expect.objectContaining({
       hint_id:'first-deed',
-      dismiss_action:'got-it'
+      dismiss_action:'highlighted-control'
     }));
     expect(events[3].data).toEqual(expect.objectContaining({
       hint_id:'first-time-flow'

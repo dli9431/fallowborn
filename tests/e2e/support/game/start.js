@@ -10,7 +10,7 @@ async function unlockStartTier(page, tier) {
   }, tier);
 }
 
-async function startDeterministicGame(page) {
+async function startDeterministicGame(page, options) {
   /* CADENCE intentionally remains the long-standing Free Farmer fixture.
      New-player locking has its own focused coverage; established journeys
      explicitly grant the fixture's earned station before using its code. */
@@ -52,16 +52,31 @@ async function startDeterministicGame(page) {
         FB.state.player && FB.state.chars[FB.state.player.charId]);
     }, START_CODE);
   }).toBe(true);
-  /* Shared gameplay journeys are not onboarding tests. Silence both hint
-     layers and retire anything queued by the new-game handoff without making
-     this fixture depend on the tutorial's current lesson order. The focused
-     onboarding specs exercise the real map-first sequence separately. */
-  await page.evaluate(function () {
-    FB.game.uiPrefs.hideTips = true;
-    FB.game.uiPrefs.hideBeginnerHints = true;
-    if (FB.ui && FB.ui.coachmarkReset) FB.ui.coachmarkReset();
-  });
-  await expect(page.locator('.coachmark')).toHaveCount(0);
+  /* Shared gameplay journeys are neither first-time-tip nor tutorial tests.
+     Retire the queued profile tour and opt this synthetic save out of the
+     tutorial, without changing the browser's guide-hints preference. This
+     keeps scripted tutorial chapters and tutorial-only simulation help from
+     perturbing unrelated journeys while Settings still exposes its default.
+     Focused specs can preserve either layer explicitly. */
+  const keepFirstTimeTips = !!(options && options.keepFirstTimeTips);
+  const keepTutorial = keepFirstTimeTips || !!(options && options.keepTutorial);
+  if (!keepFirstTimeTips) {
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideTips = true;
+      if (FB.ui && FB.ui.coachmarkReset) FB.ui.coachmarkReset();
+      if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
+    });
+    await expect(page.locator('.coachmark')).toHaveCount(0);
+  }
+  if (!keepTutorial) {
+    await page.evaluate(function () {
+      if (FB.state && FB.state.player && FB.state.player.flags) {
+        delete FB.state.player.flags.tutorial;
+      }
+      if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+    });
+    await expect(page.locator('.tutorial-card')).toHaveCount(0);
+  }
 }
 
 module.exports = {

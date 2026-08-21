@@ -149,7 +149,8 @@ test('filtered declarations initialize campaign feedback and preserve the catalo
     expect(active.hostMen).toBeGreaterThan(0);
     expect(active.upkeep).toBeGreaterThan(0);
     expect(active.summary).toContain('Your host:');
-    expect(active.summary).toContain('not yet mustered');
+    expect(active.summary).not.toContain('not yet mustered');
+    expect(active.summary).toContain('at ');
     expect(active.summary).not.toContain('Battle record');
 
     await page.evaluate(function () {
