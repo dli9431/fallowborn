@@ -38,8 +38,8 @@ first.
   `K7F29QZ-1066-serf-iona-m-olaf-standard-0-norse.catholic`.
   This
   is what `state.seed` stores (built in `G.start` from the picks actually taken, name
-  edits included) and what the ☰ menu shows; pasting one into New Game lands on a
-  pre-filled character screen.
+  edits included) and what the ☰ menu shows; pasting one through **Use a Seed or
+  Start Code** on the starting-date screen lands on a pre-filled character screen.
 
 Parsing (`parseSeedInput` in `js/main.js`): a six-, seven-, eight-, or nine-part shape
 must fully
@@ -57,9 +57,10 @@ means bookmark 867. Anything else is treated as a bare world seed and proceeds t
 the bookmark picker.
 
 Parsing a code does not override browser-profile starting-station progression. A valid code
-whose scenario tier has not been earned remains in the New Game dialog with an exact locked
-station explanation. Once that station is unlocked, the same code reaches its pre-filled
-character screen and retains its deterministic meaning. World seeds are unaffected.
+whose scenario tier has not been earned remains in the seed dialog above the starting-date
+screen with an exact locked station explanation. Once that station is unlocked, the same code
+reaches its pre-filled character screen and retains its deterministic meaning. World seeds are
+unaffected.
 
 ## Determinism across presets
 

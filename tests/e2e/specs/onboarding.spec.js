@@ -48,8 +48,11 @@ async function finishOpeningMapTour(page) {
 test('a new life gets a short intro, a focused orientation, and First steps',
   async function ({ page }) {
     await page.getByRole('button', { name: 'New Game', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'New Game', exact: true }))
+    await expect(page.getByRole('heading', {
+      name: 'Choose a Starting Date', exact: true
+    }))
       .toBeVisible();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(START_CODE);
     await page.getByRole('button', { name: /Use this seed/ }).click();
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -115,6 +118,7 @@ test('a saved guide-hints setting suppresses first-life onboarding surfaces',
       FB.game.saveUiPrefs();
     });
     await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
     const seedInput = page.locator('#ng-seed');
     await seedInput.fill(START_CODE);
     await seedInput.press('Enter');
@@ -290,6 +294,7 @@ test('an existing profile is grandfathered out of first-life onboarding',
     })).toEqual({ grandfathered:true, onboardingStarted:true });
 
     await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(START_CODE);
     await page.getByRole('button', { name:/Use this seed/ }).click();
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -307,6 +312,7 @@ test('an existing profile is grandfathered out of first-life onboarding',
 test('using a highlighted control learns and closes its one-step coachmark',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(START_CODE);
     await page.getByRole('button', { name:/Use this seed/ }).click();
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();

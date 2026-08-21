@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/holywar.js',
+  'js/keys.js',
   'js/ui_modals.js',
   'css/style.css'
 ]);
@@ -127,12 +128,12 @@ test('the council is keyboard-operable at desktop and mobile widths',
     await expect(statusAction).toBeFocused();
 
     const navigation = [
-      ['d', '#tab-actions'],
-      ['s', '#tab-char'],
-      ['k', '#tab-family'],
-      ['l', '#tab-prov'],
+      ['b', '#tab-actions'],
+      ['t', '#tab-char'],
+      ['g', '#tab-family'],
+      ['y', '#tab-prov'],
       ['n', '#tab-network'],
-      ['c', '#tab-log']
+      ['u', '#tab-log']
     ];
     for (const row of navigation) {
       await page.keyboard.press(row[0]);

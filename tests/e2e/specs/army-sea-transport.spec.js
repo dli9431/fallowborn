@@ -572,6 +572,7 @@ test('saved countdowns survive reload and new orders requote current technology 
         path:['b'], goal:'b', moveLeft:19
       });
       const army = JSON.parse(saved);
+      const loadedCountdown = army.moveLeft;
       state.realmTech[playerRid] = {
         completed:['convoy_systems'], exposed:[], active:[],
         progress:{}, reserve:0, priorities:{}
@@ -591,6 +592,10 @@ test('saved countdowns survive reload and new orders requote current technology 
           break;
         }
       }
+      state.realmTech[vassal] = {
+        completed:[], exposed:[], active:[], progress:{},
+        reserve:0, priorities:{}
+      };
       army.realm = vassal;
       FB.orderArmy(state, army, 'c');
       const afterAllegiance = army.moveLeft;
@@ -605,6 +610,7 @@ test('saved countdowns survive reload and new orders requote current technology 
       };
       FB.world = originalWorld;
       return {
+        loadedCountdown:loadedCountdown,
         rerouted:rerouted,
         afterTechnology:afterTechnology,
         afterAllegiance:afterAllegiance,
@@ -615,14 +621,15 @@ test('saved countdowns survive reload and new orders requote current technology 
       };
     });
 
+    expect(result.loadedCountdown).toBe(19);
     expect(result.rerouted).toBe(true);
     expect(result.afterTechnology).toEqual({
       next:'b', remainder:['c'], moveLeft:7, from:'a'
     });
-    expect(result.afterAllegiance).toBe(19);
+    expect(result.afterAllegiance).toBe(14);
     expect(result.failed).toBe(false);
     expect(result.afterFailure).toEqual({
-      path:['b'], goal:'b', moveLeft:19
+      path:[], goal:null, moveLeft:0
     });
     expect(result.halted).toBe(true);
     expect(result.afterHalt).toEqual({

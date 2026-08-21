@@ -351,7 +351,6 @@ test('first soundtrack boot, title pause, and background playback preserve state
     })).toEqual({ choice:'off', stored:'off', playing:false });
 
     await page.locator('#btn-newgame').click();
-    await page.locator('#ng-fresh').click();
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
     await expect(titleMusic).toBeVisible();
     await page.locator('#btn-bm-back').click();
@@ -1000,9 +999,8 @@ test('phone-sized birthplace and character screens yield the corner to Back',
     const controls = page.locator('#title-music-controls');
     await expect(controls).toBeVisible();
 
-    // title → New Game → fresh seed → first bookmark → Free Farmer → birthplace
+    // title → New Game (fresh seed) → first bookmark → Free Farmer → birthplace
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('#ng-fresh').click();
     await page.locator('#bookmarklist .scencard').first().click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
@@ -1010,7 +1008,7 @@ test('phone-sized birthplace and character screens yield the corner to Back',
 
     // take the county seat straight into the character screen
     await page.getByRole('button', { name:'Random Province', exact:true }).click();
-    await page.locator('#btn-pick-random').click(); // "Begin in {seat}"
+    await page.locator('#btn-pick-random').click(); // Continue with county seat
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     await expect(controls).toBeHidden();
 

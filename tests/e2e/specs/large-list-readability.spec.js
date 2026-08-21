@@ -2,6 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/keys.js',
+  'js/main.js',
+  'js/market.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',

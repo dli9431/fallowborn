@@ -56,6 +56,7 @@ player action or campaign transition directly:
 
 | Event | Meaning and cadence |
 | --- | --- |
+| `new-game-{starting-date,seed-dialog,beginning,birthplace,character}-viewed` | A New Game attempt reached that setup screen. Each screen emits at most once per attempt, so Back navigation does not inflate the funnel; the seed dialog is an optional branch. |
 | `campaign-started` | A new campaign was created. |
 | `campaign-resumed` | A saved campaign was loaded; emitted at most once per page visit. |
 | `observer-mode-started` | A new observer-mode world was started. |
@@ -73,6 +74,9 @@ events add only low-cardinality context such as `entry_type`, `scenario`, `famil
 `active_seconds`, `game_year`, or checkpoint reason. Player and dynasty names, world seeds, province choices,
 rendered death text, and save contents must never be sent. Do Not Track remains respected by the
 Umami loader. Older event names remain only as historical schema-1 rows in Umami.
+Once campaign state exists, every event carrying `start_bookmark` also carries the current
+`game_year`. The pre-campaign New Game screen events are the deliberate exception: they may name
+the selected bookmark before any campaign date exists.
 
 `js/util.js` adds the manifest metadata and `js/main.js` registers `/sw.js` only when the page
 is on `https://play.fallowborn.com`. The worker derives its versioned precache list during the

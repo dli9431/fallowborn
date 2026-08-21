@@ -26,6 +26,7 @@ test.beforeEach(async function ({ page }, testInfo) {
 async function startFirstCampaign(page) {
   await unlockStartTier(page, 1);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(START_CODE);
   await page.getByRole('button', { name:/Use this seed/ }).click();
   await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();

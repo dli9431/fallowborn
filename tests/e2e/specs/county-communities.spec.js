@@ -176,6 +176,7 @@ test.beforeEach(async function ({ page }, testInfo) {
 
 async function useStartCode(page, code) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill(code);
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -183,7 +184,6 @@ async function useStartCode(page, code) {
 
 async function reachIonaCommunityPicker(page) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
-  await page.locator('#ng-fresh').click();
   await page.locator('#bookmarklist .scencard').nth(1).click();
   await page.getByRole('button', { name:/Free Farmer/ }).click();
   await page.evaluate(function () {
@@ -450,6 +450,7 @@ test('a non-principal ninth-part identity shapes an established family and round
 test('a ninth-part identity not authored for that bookmark county is rejected',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(
       'CADENCE-1066-farmer-iona-m-Olaf-standard-0-gaelic.orthodox');
     await page.locator('#ng-seed').press('Enter');
@@ -488,7 +489,6 @@ test('legacy five-part and current six-, seven-, and eight-part codes remain acc
 test('867 Pamplona initializes with Basque Catholic primary identity and Iberian Catholic secondary community',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('#ng-fresh').click();
     await page.locator('#bookmarklist .scencard').first().click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await page.evaluate(function () {
@@ -520,7 +520,6 @@ test('867 Pamplona initializes with Basque Catholic primary identity and Iberian
 test('1066 Granada provides Andalusi, Berber, and Iberian community options',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('#ng-fresh').click();
     await page.locator('#bookmarklist .scencard').nth(1).click();
     await page.getByRole('button', { name:/Free Farmer/ }).click();
     await page.evaluate(function () {

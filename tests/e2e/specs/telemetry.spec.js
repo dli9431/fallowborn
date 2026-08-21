@@ -62,6 +62,79 @@ test('telemetry accepts only the exact official play origin and stays silent loc
     })).toEqual([]);
   });
 
+test('New Game telemetry reports each setup screen once per attempt',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+    await unlockStartTier(page, 1);
+
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    for (let i = 0; i < 2; i++) {
+      await page.locator('#btn-bm-seed').click();
+      await page.getByRole('button', { name:'Cancel', exact:true }).click();
+    }
+    await page.locator('#bookmarklist .scencard').first().click();
+    await page.getByRole('button', { name:/Free Farmer/ }).click();
+    await page.getByRole('button', { name:'Random Province', exact:true }).click();
+    await page.getByRole('button', { name:'Continue', exact:true }).click();
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+
+    // Revisit every guided screen; none should emit a second view.
+    await page.locator('#btn-cg-back').click();
+    await page.locator('#btn-pick-back').click();
+    await page.locator('#btn-pick-back').click();
+    await page.locator('#btn-ng-back').click();
+    await page.locator('#bookmarklist .scencard').first().click();
+
+    const events = await page.evaluate(function () {
+      return window.__telemetryEvents.filter(function (event) {
+        return event.name.indexOf('new-game-') === 0;
+      });
+    });
+    expect(events.map(function (event) { return event.name; })).toEqual([
+      'new-game-starting-date-viewed',
+      'new-game-seed-dialog-viewed',
+      'new-game-beginning-viewed',
+      'new-game-birthplace-viewed',
+      'new-game-character-viewed'
+    ]);
+    expect(events[0].data).toEqual(expect.objectContaining({
+      telemetry_schema:2,
+      game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
+      locale:'en'
+    }));
+    expect(events[2].data).toEqual(expect.objectContaining({
+      start_bookmark:'867'
+    }));
+    expect(events[3].data).toEqual(expect.objectContaining({
+      start_bookmark:'867',
+      scenario:'farmer'
+    }));
+    expect(events[4].data).toEqual(expect.objectContaining({
+      start_bookmark:'867',
+      scenario:'farmer'
+    }));
+    expect(events.filter(function (event) {
+      return Object.prototype.hasOwnProperty.call(event.data, 'start_bookmark');
+    }).every(function (event) {
+      return !Object.prototype.hasOwnProperty.call(event.data, 'game_year');
+    })).toBe(true);
+    expect(events.some(function (event) {
+      return ['name', 'dynasty', 'seed', 'province', 'save'].some(function (key) {
+        return Object.prototype.hasOwnProperty.call(event.data, key);
+      });
+    })).toBe(false);
+  });
+
 test('gameplay telemetry reports descriptive lifecycle and engagement events',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
@@ -83,7 +156,10 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     let events = await page.evaluate(function () {
       return window.__telemetryEvents;
     });
-    expect(events[0]).toEqual({
+    const campaignStarted = events.filter(function (event) {
+      return event.name === 'campaign-started';
+    })[0];
+    expect(campaignStarted).toEqual({
       name:'campaign-started',
       data:expect.objectContaining({
         telemetry_schema:2,
@@ -92,13 +168,14 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
         start_bookmark:'867',
         player_tier:1,
         dynasty_generation:1,
+        game_year:867,
         entry_type:'new-campaign',
         scenario:'farmer',
         family_preset:'standard'
       })
     });
     expect(['name', 'dynasty', 'seed', 'province', 'save'].filter(function (key) {
-      return Object.prototype.hasOwnProperty.call(events[0].data, key);
+      return Object.prototype.hasOwnProperty.call(campaignStarted.data, key);
     })).toEqual([]);
 
     await page.evaluate(function () {
@@ -115,6 +192,9 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       return window.__telemetryEvents;
     });
     expect(events.map(function (event) { return event.name; })).toEqual([
+      'new-game-starting-date-viewed',
+      'new-game-seed-dialog-viewed',
+      'new-game-character-viewed',
       'campaign-started',
       'hint-shown',
       'active-play-reached-1-minute',
@@ -129,6 +209,12 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       checkpoint_reason:'page-hide',
       game_year:867
     }));
+    expect(events.filter(function (event) {
+      return event.name.indexOf('new-game-') !== 0 &&
+        Object.prototype.hasOwnProperty.call(event.data, 'start_bookmark');
+    }).every(function (event) {
+      return Number.isFinite(event.data.game_year);
+    })).toBe(true);
 
     const saved = await page.evaluate(function () {
       return JSON.parse(FB.save.serialize());
@@ -149,6 +235,7 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
         telemetry_schema:2,
         game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
         start_bookmark:'867',
+        game_year:867,
         entry_type:'resumed-campaign'
       })
     });
@@ -178,6 +265,7 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
     expect(events[events.length - 1].data).toEqual(expect.objectContaining({
       game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
       start_bookmark:'867',
+      game_year:867,
       entry_type:'observer-mode'
     }));
   });
@@ -198,6 +286,7 @@ test('first-time hints report shown, interaction, dismissal, and opt-out actions
 
     await unlockStartTier(page, 1);
     await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(START_CODE);
     await page.getByRole('button', { name:/Use this seed/ }).click();
     await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
@@ -304,7 +393,13 @@ test('death telemetry distinguishes succession from a completed saga',
         succeeded:succeeded,
         eventNames:window.__telemetryEvents.filter(function (event) {
           return event.name.indexOf('hint-') !== 0 &&
+            event.name.indexOf('new-game-') !== 0 &&
             event.name !== 'tips-disabled';
+        }).map(function (event) { return event.name; }),
+        missingCampaignYear:window.__telemetryEvents.filter(function (event) {
+          return event.name.indexOf('new-game-') !== 0 &&
+            Object.prototype.hasOwnProperty.call(event.data, 'start_bookmark') &&
+            !Number.isFinite(event.data.game_year);
         }).map(function (event) { return event.name; }),
         finalEvent:window.__telemetryEvents[window.__telemetryEvents.length - 1]
       };
@@ -316,11 +411,14 @@ test('death telemetry distinguishes succession from a completed saga',
         'succession-completed',
         'campaign-ended-no-heir'
       ],
+      missingCampaignYear:[],
       finalEvent:{
         name:'campaign-ended-no-heir',
         data:expect.objectContaining({
           telemetry_schema:2,
           game_version:expect.stringMatching(/^\d+\.\d+\.\d+$/),
+          start_bookmark:'867',
+          game_year:867,
           entry_type:'new-campaign',
           peak_player_tier:1
         })
@@ -360,6 +458,8 @@ test('living succession reports a completed retirement explicitly',
         name:'retirement-completed',
         data:expect.objectContaining({
           telemetry_schema:2,
+          start_bookmark:'867',
+          game_year:867,
           entry_type:'new-campaign',
           dynasty_generation:2
         })

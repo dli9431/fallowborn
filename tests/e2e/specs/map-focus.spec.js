@@ -104,6 +104,8 @@ test('Self rank shows demesne details and Settings changes text and map presenta
     await expect(page.locator('#set-realm-highlight-change')).toHaveCount(0);
     await page.locator('#rank-details-close').click();
 
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await waitForUiRefresh(page);
     await page.locator('#btn-menu').click();
     await page.locator('#m-settings').click();
     await expect(page.getByRole('heading', { name:'Settings', exact:true }))
@@ -118,7 +120,8 @@ test('Self rank shows demesne details and Settings changes text and map presenta
     await expect(page.locator('#set-helper-text-color')).toHaveValue('#c9b991');
     await expect(page.locator('#set-speed-label'))
       .toHaveCSS('color', 'rgb(201, 185, 145)');
-    await expect(page.locator('#tab-actions .actionbtn .adesc').first())
+    await expect(page.locator(
+      '#ongoing-commitments .ongoing-commitments-head p'))
       .toHaveCSS('color', 'rgb(201, 185, 145)');
 
     await page.locator('#set-main-text-color').evaluate(function (input) {
@@ -156,8 +159,8 @@ test('Self rank shows demesne details and Settings changes text and map presenta
           '--helper-text-color'),
         settingsColor:getComputedStyle(
           document.getElementById('set-speed-label')).color,
-        actionColor:getComputedStyle(document.querySelector(
-          '#tab-actions .actionbtn .adesc')).color
+        deedsColor:getComputedStyle(document.querySelector(
+          '#ongoing-commitments .ongoing-commitments-head p')).color
       };
     });
     expect(helperText).toEqual({
@@ -165,7 +168,7 @@ test('Self rank shows demesne details and Settings changes text and map presenta
       stored:'#d7f0ff',
       property:'#d7f0ff',
       settingsColor:'rgb(215, 240, 255)',
-      actionColor:'rgb(215, 240, 255)'
+      deedsColor:'rgb(215, 240, 255)'
     });
 
     await expect(page.locator('#set-realm-highlight-change')).toBeVisible();

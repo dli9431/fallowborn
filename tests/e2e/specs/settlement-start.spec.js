@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/settlement.js',
+  'css/style.css',
   'data/bookmarks.js',
   'data/settlements.js'
 ]);
@@ -22,17 +23,50 @@ test.beforeEach(async function ({ page }, testInfo) {
   await unlockStartTier(page, 1);
 });
 
-/* Title → New Game → fresh seed → first bookmark → Free Farmer → pick screen */
+test('New Game opens on starting dates and keeps shared seeds secondary',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
+    await expect(page.getByRole('heading', {
+      name:'Choose a Starting Date', exact:true
+    })).toBeVisible();
+    const bookmarkTitle = page.locator('#bookmarklist .scencard h3').first();
+    await expect(bookmarkTitle).toContainText(':');
+    await expect(bookmarkTitle).not.toContainText('—');
+    expect(await bookmarkTitle.evaluate(function (heading) {
+      return getComputedStyle(heading).fontSize;
+    })).toBe('19px');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    expect(await page.evaluate(function () {
+      return FB.game.pending && FB.game.pending.seed;
+    })).toMatch(/^[A-Z0-9]+$/);
+
+    await page.getByRole('button', {
+      name:'Use a Seed or Start Code', exact:true
+    }).click();
+    await expect(page.getByRole('heading', {
+      name:'Use a Seed or Start Code', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#ng-seed')).toBeVisible();
+    await page.getByRole('button', { name:'Cancel', exact:true }).click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
+  });
+
+/* Title → New Game (fresh seed) → first bookmark → Free Farmer → pick screen */
 async function reachPickScreen(page) {
   await page.getByRole('button', { name: 'New Game', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'New Game', exact: true }))
+  await expect(page.getByRole('heading', {
+    name: 'Choose a Starting Date', exact: true
+  }))
     .toBeVisible();
-  await page.locator('#ng-fresh').click();
   await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
   await page.locator('#bookmarklist .scencard').first().click();
   await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
   await page.getByRole('button', { name: /Free Farmer/ }).click();
   await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+  await expect(page.locator('#pickprov > .hint')).toHaveText(
+    'Tap a province on the map. Your culture and faith follow your homeland.');
 }
 
 /* Begin Your Story → intro modal → Begin (no orientation sheet anymore) */
@@ -46,7 +80,7 @@ async function beginAndDismiss(page) {
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 }
 
-test('a tapped settlement becomes the birthplace and lands in state and the start code',
+test('a selected settlement becomes the birthplace and lands in state and the start code',
   async function ({ page }) {
     await reachPickScreen(page);
 
@@ -56,28 +90,43 @@ test('a tapped settlement becomes the birthplace and lands in state and the star
       return page.evaluate(function () { return FB.game.pickStage; });
     }).toBe('settlement');
 
-    // the info bar lists exactly the settlements visible at the start
+    // the compact select lists exactly the settlements visible at the start
     const wanted = await page.evaluate(function () {
       return FB.settlementsOf(null, FB.game.pending.provinceId)
         .map(function (st) { return st.name; });
     });
     expect(wanted.length).toBeGreaterThan(1);
-    const buttons = page.locator('#pickinfo .picksett');
-    await expect(buttons).toHaveCount(wanted.length);
-    await expect(buttons.first()).toContainText(wanted[0]);
-    // the primary button offers the county seat by name
-    await expect(page.locator('#btn-pick-random'))
-      .toContainText('Begin in ' + wanted[0]);
+    const select = page.locator('#pick-settlement');
+    await expect(select.locator('option')).toHaveCount(wanted.length);
+    await expect(select.locator('option').first()).toContainText(wanted[0]);
+    await expect(select.locator('option').first()).toContainText('County seat');
+    await expect(select).toHaveValue('0');
+    await expect(page.locator('#pickinfo')).not.toContainText('Now tap');
+    await expect(page.locator('#pickinfo')).not.toContainText('—');
+    await expect(page.locator('#pickinfo .pick-location-title'))
+      .toHaveCSS('font-size', '19px');
+    await expect(page.locator('#btn-pick-random')).toHaveText('Continue');
 
-    // pick the second settlement; it becomes the pending birthplace slot
+    // select the second settlement, then commit it with Continue
     const pid = await page.evaluate(function () {
       return FB.game.pending.provinceId;
     });
-    await buttons.nth(1).click();
+    await select.selectOption('1');
+    expect(await page.evaluate(function () {
+      return FB.game.pending.settlementIdx;
+    })).toBe(1);
+    await expect(page.locator('#pickprov:not(.hidden)')).toBeVisible();
+    await page.locator('#btn-pick-random').click();
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     expect(await page.evaluate(function () {
       return FB.game.pending.settlementIdx;
     })).toBe(1);
+
+    // Back to the same county preserves the explicit dropdown choice.
+    await page.locator('#btn-cg-back').click();
+    await expect(page.locator('#pick-settlement')).toHaveValue('1');
+    await page.locator('#btn-pick-random').click();
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
 
     await beginAndDismiss(page);
     const after = await page.evaluate(function () {
@@ -120,7 +169,8 @@ test('Back walks the stages and the county seat remains the default start',
     await expect.poll(function () {
       return page.evaluate(function () { return FB.game.pickStage; });
     }).toBe('settlement');
-    await page.locator('#btn-pick-random').click(); // "Begin in {seat}"
+    await expect(page.locator('#pick-settlement')).toHaveValue('0');
+    await page.locator('#btn-pick-random').click(); // Continue with county seat
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
     expect(await page.evaluate(function () {
       return FB.game.pending.settlementIdx;
@@ -143,6 +193,7 @@ test('a start code carries the birthplace settlement',
   async function ({ page }) {
     const code = 'CADENCE-867-farmer-london-f-Ada-standard-1';
     await page.getByRole('button', { name: 'New Game', exact: true }).click();
+    await page.locator('#btn-bm-seed').click();
     const seedInput = page.locator('#ng-seed');
     await seedInput.fill(code);
     await seedInput.press('Enter');
@@ -164,6 +215,7 @@ test('a start code carries the birthplace settlement',
 test('a start code with an oversized settlement slot clamps instead of failing',
   async function ({ page }) {
     await page.getByRole('button', { name: 'New Game', exact: true }).click();
+    await page.locator('#btn-bm-seed').click();
     const seedInput = page.locator('#ng-seed');
     await seedInput.fill('CADENCE-867-farmer-london-f-Ada-standard-99');
     await seedInput.press('Enter');
@@ -179,6 +231,7 @@ test('a start code with an oversized settlement slot clamps instead of failing',
 test('a start code with a malformed settlement part is rejected',
   async function ({ page }) {
     await page.getByRole('button', { name: 'New Game', exact: true }).click();
+    await page.locator('#btn-bm-seed').click();
     const seedInput = page.locator('#ng-seed');
     await seedInput.fill('CADENCE-867-farmer-london-f-Ada-standard-x');
     await seedInput.press('Enter');

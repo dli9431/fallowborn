@@ -13,7 +13,10 @@ const { startDeterministicGame, unlockStartTier } = require('../support/game/sta
 
 async function startWithCode(page, code, name) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
-  await page.getByRole('heading', { name:'New Game', exact:true }).waitFor();
+  await page.locator('#btn-bm-seed').click();
+  await page.getByRole('heading', {
+    name:'Use a Seed or Start Code', exact:true
+  }).waitFor();
   await page.locator('#ng-seed').fill(code);
   await page.getByRole('button', { name:/Use this seed/ }).click();
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -245,7 +248,7 @@ test('records ordinary and royal stepchildren without changing inheritance',
     expect(ordinary.heir).toBe(false);
     expect(ordinary.household).toBe(false);
     expect(ordinary.affinity).toBe('affinity');
-    await page.getByRole('button', { name:'Kin', exact:true }).click();
+    await page.locator('#lefttabs .tab[data-tab="family"]').click();
     await expect(page.locator('#tab-family')).toContainText('Stepchildren');
     await expect(page.locator('#tab-family')).toContainText(ordinary.childName);
     await page.evaluate(function () { FB.ui.showFamilyTree(); });

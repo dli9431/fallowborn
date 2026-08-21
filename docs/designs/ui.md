@@ -356,31 +356,47 @@ the persistent, localized **New version available** status banner. Its **Save an
 writes the current playable life synchronously before reloading. First worker installation,
 `file://`, localhost, mirrors, and itch never reveal the banner.
 
-New Game proceeds through bookmark → social scenario → province → character. Every
+New Game proceeds directly through bookmark → social scenario → province → character,
+rolling a fresh seed before the starting-date screen so the ordinary path has no preliminary
+choice dialog. The starting-date screen keeps **Use a Seed or Start Code** as a secondary
+action; it opens the paste field for shared full starts or world seeds without placing that
+advanced choice in every new player's path. Every
 browser profile begins with Serf as its only playable social scenario. Reaching a higher
 station during a life unlocks every authored starting scenario at that station: Freeholder
 opens Free Farmer, Craftsman's Apprentice, Novice of the Faith, and Man-at-Arms; Gentry
 opens Hedge Knight; Baron opens Petty Baron. Locked cards remain visible and focusable,
-carry `aria-disabled`, and state the exact in-life achievement required. Observe remains
-available because it creates no character. A locked shared start code stays in the New Game
-dialog and explains its missing station instead of bypassing progression. This browser-profile
+carry `aria-disabled`, use a clearly greyed presentation, and state the exact in-life
+achievement required at the bottom. Beginning cards use a prominent role name and one short,
+factual flavor sentence without a difficulty rating. Observe follows the same compact shape.
+Observe remains
+available because it creates no character. A locked shared start code stays in the seed dialog
+above the starting-date screen and explains its missing station instead of bypassing progression.
+This browser-profile
 recognition is recorded as `earned_starting_stations` with `mode:'none'` in
 `FBDATA.techImpactReviews`: it exists outside the simulated world, so no historical
 technology credibly gates or improves it.
 
 Bookmark
 cards use the same responsive grid and native-button keyboard behavior as scenario
-cards. Selecting one activates its world before the province picker is shown, so the
+cards. Their date and bookmark name use a colon rather than a dash, and their heading
+size matches the beginning-role cards. Selecting one activates its world before the
+province picker is shown, so the
 preview owner colors, county details, headings, era help, Observe mode, and character
-birth year all read the same active definition. Tapping a settled birthplace or choosing
-**Random Province** proceeds directly to character creation; there is no redundant Next
-step. The province pick bar lists all authored communities, and character creation uses
+birth year all read the same active definition. The birthplace screen asks only for a
+province on the map; **Random Province** remains available without being advertised in
+the instructional sentence. Once a county is chosen, its compact summary emphasizes the
+county name, places realm and terrain beneath it without a dash, and offers one native
+settlement select defaulted to the county seat. **Continue** commits that selection. The
+province pick bar lists all authored communities, and character creation uses
 native coupled culture-and-faith radio choices in the same authored order when more than one
 community is present. A single-community county omits that redundant picker and selects its
 principal pair; Back to the same county preserves the chosen pair. Family cards carry their own
 age and household summaries, while the final card shows only the world seed and points to the full
 shareable start code in the in-game menu. Returning from scenarios goes back to the bookmark list
-without wiring another set of map listeners.
+without wiring another set of map listeners. Hosted telemetry emits a distinct viewed event for
+starting date, the optional seed dialog, beginning, birthplace, and character creation. Each
+screen emits once per New Game attempt, so revisiting it with Back does not inflate the setup
+funnel; bookmark and scenario are the only step-specific context.
 
 Hover-only affordances need a tap path (item chips toast their description).
 The enterprise catalogue shows every known enterprise for the selected settlement rather

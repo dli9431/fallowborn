@@ -3,7 +3,9 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
   'js/actions.js',
+  'js/main.js',
   'js/mapview.js',
+  'js/market.js',
   'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',

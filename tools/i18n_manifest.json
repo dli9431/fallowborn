@@ -50279,15 +50279,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb."
-      }
-    },
-    "scenario.apprentice.diff.default": {
-      "context": "New-game scenario apprentice, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★★★★ hard"
+        "text": "Train in a skilled trade under a master."
       }
     },
     "scenario.apprentice.intro.default": {
@@ -50314,15 +50306,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "A drafty tower, a hundred spears, and a liege watching your loyalty. The traditional start."
-      }
-    },
-    "scenario.baron.diff.default": {
-      "context": "New-game scenario baron, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★ classic"
+        "text": "Rule a small barony under a powerful liege."
       }
     },
     "scenario.baron.intro.default": {
@@ -50350,15 +50334,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "A small plot, a strong back, and your own name in the rolls. Freedom is a start — now make it into wealth."
-      }
-    },
-    "scenario.farmer.diff.default": {
-      "context": "New-game scenario farmer, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★★★★ hard"
+        "text": "Free, with a small plot and modest savings."
       }
     },
     "scenario.farmer.intro.default": {
@@ -50385,15 +50361,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted."
-      }
-    },
-    "scenario.knight.diff.default": {
-      "context": "New-game scenario knight, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★★ fair"
+        "text": "A trained warrior of noble birth with little money."
       }
     },
     "scenario.knight.intro.default": {
@@ -50419,15 +50387,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat."
-      }
-    },
-    "scenario.monk.diff.default": {
-      "context": "New-game scenario monk, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★★★ tricky"
+        "text": "Begin in religious service with education and piety."
       }
     },
     "scenario.monk.intro.default": {
@@ -50487,15 +50447,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for."
-      }
-    },
-    "scenario.serf.diff.default": {
-      "context": "New-game scenario serf, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★★★★★ hardest"
+        "text": "Bound to the land, with no property or freedom."
       }
     },
     "scenario.serf.intro.default": {
@@ -50522,15 +50474,7 @@
       "glossary": [],
       "location": "js/main.js",
       "source": {
-        "text": "Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them."
-      }
-    },
-    "scenario.soldier.diff.default": {
-      "context": "New-game scenario soldier, diff.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "★★★ tricky"
+        "text": "Earn wages and status through military service."
       }
     },
     "scenario.soldier.intro.default": {
@@ -58323,6 +58267,16 @@
         "text": "Starving — hunger thins the host daily."
       }
     },
+    "src.1212be1b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Choose Your Beginning in {year} AD"
+      }
+    },
     "src.1213f417": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -64374,16 +64328,6 @@
         "text": "County tax, levy, development, domain capacity, and liege Standing become central."
       }
     },
-    "src.1fbe32eb": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "★★ fair"
-      }
-    },
     "src.1fc1f575": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65540,6 +65484,16 @@
         "text": "The Small Hunter"
       }
     },
+    "src.22528a61": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Begin in religious service with education and piety."
+      }
+    },
     "src.2266b46b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -66181,16 +66135,6 @@
       ],
       "source": {
         "text": "⌂ Center on home"
-      }
-    },
-    "src.23c99f6d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Choose Your Beginning — Anno Domini {year}"
       }
     },
     "src.23cd6500": {
@@ -69682,16 +69626,6 @@
         "text": "👑 Your marriage to {name} binds your dynasty to {realm}; only the designated heir’s branch can transmit its crown."
       }
     },
-    "src.2c244d1d": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "btn small picksett"
-      }
-    },
     "src.2c29d15d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72261,16 +72195,6 @@
         "text": "Geometrical Optics"
       }
     },
-    "src.320771df": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "no one, watching"
-      }
-    },
     "src.320cb228": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -73021,16 +72945,6 @@
       ],
       "source": {
         "text": "Middle Eastern & North African"
-      }
-    },
-    "src.33c20343": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "★★★★★ hardest"
       }
     },
     "src.33c7a14b": {
@@ -79165,6 +79079,16 @@
       ],
       "source": {
         "text": "value"
+      }
+    },
+    "src.4265e17f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Rule a small barony under a powerful liege."
       }
     },
     "src.4269df28": {
@@ -93187,16 +93111,6 @@
         "text": "Lethal risk to a child"
       }
     },
-    "src.6244b997": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat."
-      }
-    },
     "src.6245b1b4": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -94715,16 +94629,6 @@
       ],
       "source": {
         "text": "Their own lord’s problem remains his own; your neighbors note the charter’s worth."
-      }
-    },
-    "src.662b1710": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "…or play a start someone shared:"
       }
     },
     "src.66326905": {
@@ -96659,6 +96563,16 @@
       ],
       "source": {
         "text": "No living children. Without an heir, your story ends with you."
+      }
+    },
+    "src.6a5b5970": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Free, with a small plot and modest savings."
       }
     },
     "src.6a5ef2f8": {
@@ -100246,16 +100160,6 @@
         "text": "A Famed Mark"
       }
     },
-    "src.72d9ccdd": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "A small plot, a strong back, and your own name in the rolls. Freedom is a start — now make it into wealth."
-      }
-    },
     "src.72dc0607": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -103224,16 +103128,6 @@
         "text": "Imports / exports"
       }
     },
-    "src.796b5474": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions."
-      }
-    },
     "src.7972fad3": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -105270,16 +105164,6 @@
       ],
       "source": {
         "text": "Brave"
-      }
-    },
-    "src.7e101526": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "★★★★ hard"
       }
     },
     "src.7e190fb8": {
@@ -108604,16 +108488,6 @@
         "text": "Rename house"
       }
     },
-    "src.84fda532": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "🌱 Fresh start"
-      }
-    },
     "src.84fdf35e": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -109808,16 +109682,6 @@
       ],
       "source": {
         "text": "Keep your hands clean and your seat low."
-      }
-    },
-    "src.87b2bf1c": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "A drafty tower, a hundred spears, and a liege watching your loyalty. The traditional start."
       }
     },
     "src.87b904e7": {
@@ -115019,6 +114883,16 @@
         "text": "Half-ready proves ready enough — barely. What you sought, you seize, and the talkers fall silent."
       }
     },
+    "src.931febb8": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Earn wages and status through military service."
+      }
+    },
     "src.932de978": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -118332,8 +118206,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "index.html",
-        "js/main.js"
+        "index.html"
       ],
       "source": {
         "text": "New Game"
@@ -121143,6 +121016,16 @@
         "text": "Silk or rotten wool — the hammer decides."
       }
     },
+    "src.a0d9c273": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Tap a province on the map. Your culture and faith follow your homeland."
+      }
+    },
     "src.a0e163f8": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -121292,6 +121175,16 @@
       ],
       "source": {
         "text": "Pilgrimage"
+      }
+    },
+    "src.a1419728": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Train in a skilled trade under a master."
       }
     },
     "src.a144a913": {
@@ -125836,6 +125729,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "js/main.js",
         "js/ui_modals.js",
         "index.html"
       ],
@@ -126344,6 +126238,16 @@
       ],
       "source": {
         "text": "scripted event at index"
+      }
+    },
+    "src.ac83862c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Paste a shared start code to recreate every choice, or enter a world seed and choose the rest yourself."
       }
     },
     "src.ac84a1b3": {
@@ -128223,6 +128127,16 @@
         "text": "A permanent writing office carries the crown beyond one household."
       }
     },
+    "src.b06db1bb": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Bound to the land, with no property or freedom."
+      }
+    },
     "src.b074f660": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -128582,16 +128496,6 @@
       ],
       "source": {
         "text": "Demand payment"
-      }
-    },
-    "src.b10e75e9": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "row gap wrap"
       }
     },
     "src.b116e272": {
@@ -132603,6 +132507,16 @@
         "text": "The old qadi has died, and the district needs a judge — a man of learning, piety, and patience. The notables gather, and many eyes turn to you."
       }
     },
+    "src.b9eb88fa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "{season} {year}: {name}"
+      }
+    },
     "src.b9efe2d7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135024,6 +134938,16 @@
         "text": "Send a rich first gift. ({money:15})"
       }
     },
+    "src.c005544b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "A trained warrior of noble birth with little money."
+      }
+    },
     "src.c00b4e84": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -135303,16 +135227,6 @@
       ],
       "source": {
         "text": "{fort} foundations"
-      }
-    },
-    "src.c0c8acb8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "★★★ tricky"
       }
     },
     "src.c0cb31d9": {
@@ -137356,16 +137270,6 @@
       ],
       "source": {
         "text": "Put it to the estates."
-      }
-    },
-    "src.c4f63fa0": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them."
       }
     },
     "src.c4f67b73": {
@@ -139423,16 +139327,6 @@
       ],
       "source": {
         "text": "shrine"
-      }
-    },
-    "src.c9baf6a7": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "A new seed is rolled — choose which age will be yours to shape."
       }
     },
     "src.c9c3e490": {
@@ -146521,16 +146415,6 @@
         "text": "💡 Now try Poach the lord’s game in Work & Wealth. It is risky, but it shows how a deed can bring an immediate result—or another choice."
       }
     },
-    "src.da2e9e20": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "★ classic"
-      }
-    },
     "src.da306fa7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -149198,16 +149082,6 @@
         "text": "Organized Naval Levies"
       }
     },
-    "src.e05b41da": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "Tap a province on the map, or leave fate to decide. Your culture and faith follow your homeland."
-      }
-    },
     "src.e06995c7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150347,16 +150221,6 @@
         "text": "Currently assigned"
       }
     },
-    "src.e3030716": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "{season} {year} — {name}"
-      }
-    },
     "src.e3035ec9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -150815,6 +150679,16 @@
       ],
       "source": {
         "text": "age 30 · a head start, fewer years left"
+      }
+    },
+    "src.e461f897": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Watch the world without a playable character or personal events."
       }
     },
     "src.e4656ad4": {
@@ -152099,16 +151973,6 @@
         "text": "(max-width: 1100px), (max-height: 520px)"
       }
     },
-    "src.e718bf29": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Now tap the settlement you were born in — or begin in the county seat."
-      }
-    },
     "src.e71a1bc9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -152989,16 +152853,6 @@
         "text": "A quarrel between two companies ends with a knife in the mud and both sides reaching for spears. The whole camp waits on the judgment."
       }
     },
-    "src.e8c170ff": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted."
-      }
-    },
     "src.e8d1d3b9": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -153399,6 +153253,16 @@
       ],
       "source": {
         "text": "{prestige} Prestige"
+      }
+    },
+    "src.ea1c1978": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "County seat"
       }
     },
     "src.ea226fbc": {
@@ -156910,6 +156774,16 @@
         "text": "The Qadi’s Seat"
       }
     },
+    "src.f1cbffc1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Birthplace"
+      }
+    },
     "src.f1cf5d80": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -160064,16 +159938,6 @@
         "text": "Story state changes"
       }
     },
-    "src.f96f3703": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for."
-      }
-    },
     "src.f970a182": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -160604,6 +160468,17 @@
       ],
       "source": {
         "text": "Shared work, shared honey, stronger friendship."
+      }
+    },
+    "src.fa927222": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html",
+        "js/main.js"
+      ],
+      "source": {
+        "text": "Use a Seed or Start Code"
       }
     },
     "src.fa9dac7e": {
@@ -161708,16 +161583,6 @@
         "text": "replacement drilling"
       }
     },
-    "src.fd2438ee": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Begin in {settlement}"
-      }
-    },
     "src.fd27e559": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -162730,16 +162595,6 @@
       ],
       "source": {
         "text": "Trust to merit alone."
-      }
-    },
-    "src.ffa27832": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "js/main.js"
-      ],
-      "source": {
-        "text": "Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb."
       }
     },
     "src.ffa4cff6": {
@@ -170324,14 +170179,6 @@
         "text": "Battle losses"
       }
     },
-    "ui:Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions."
-      }
-    },
     "ui:Beard": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -170378,16 +170225,6 @@
       "location": "js/events.js",
       "source": {
         "text": "Begin a courtship before making a proposal."
-      }
-    },
-    "ui:Begin in {settlement}": {
-      "context": "Explicit UI localization call.",
-      "glossary": [
-        "settlement"
-      ],
-      "location": "js/main.js",
-      "source": {
-        "text": "Begin in {settlement}"
       }
     },
     "ui:Begin scheme": {
@@ -170529,6 +170366,14 @@
       "location": "js/actions.js",
       "source": {
         "text": "Bind {name} to your house by oath — for life."
+      }
+    },
+    "ui:Birthplace": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Birthplace"
       }
     },
     "ui:Bishop": {
@@ -171252,14 +171097,14 @@
         "text": "Choices"
       }
     },
-    "ui:Choose Your Beginning — Anno Domini {year}": {
+    "ui:Choose Your Beginning in {year} AD": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "year"
       ],
       "location": "js/main.js",
       "source": {
-        "text": "Choose Your Beginning — Anno Domini {year}"
+        "text": "Choose Your Beginning in {year} AD"
       }
     },
     "ui:Choose Your Conquest": {
@@ -172398,6 +172243,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "County of {province}"
+      }
+    },
+    "ui:County seat": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "County seat"
       }
     },
     "ui:County tax, levy, development, domain capacity, and liege Standing become central.": {
@@ -179059,14 +178912,6 @@
         "text": "Novice"
       }
     },
-    "ui:Now tap the settlement you were born in — or begin in the county seat.": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "Now tap the settlement you were born in — or begin in the county seat."
-      }
-    },
     "ui:Object · spend 1 settlement standing · {odds}% chance for the runner-up · {leader} loses 10 Standing": {
       "context": "Explicit UI localization call.",
       "glossary": [
@@ -180013,6 +179858,14 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Passes {n} counties ({f} forts)"
+      }
+    },
+    "ui:Paste a shared start code to recreate every choice, or enter a world seed and choose the rest yourself.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Paste a shared start code to recreate every choice, or enter a world seed and choose the rest yourself."
       }
     },
     "ui:Paste a start code or world seed": {
@@ -187735,6 +187588,14 @@
         "text": "Watch the Deeds tab: your First steps are listed there."
       }
     },
+    "ui:Watch the world without a playable character or personal events.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "Watch the world without a playable character or personal events."
+      }
+    },
     "ui:Watches for schemes against you; your own plots weave faster": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -190130,14 +189991,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "no one"
-      }
-    },
-    "ui:no one, watching": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/main.js",
-      "source": {
-        "text": "no one, watching"
       }
     },
     "ui:no parent’s house": {
@@ -194327,7 +194180,7 @@
         "text": "{season} {year}"
       }
     },
-    "ui:{season} {year} — {name}": {
+    "ui:{season} {year}: {name}": {
       "context": "Explicit UI localization call.",
       "glossary": [
         "name",
@@ -194336,7 +194189,7 @@
       ],
       "location": "js/main.js",
       "source": {
-        "text": "{season} {year} — {name}"
+        "text": "{season} {year}: {name}"
       }
     },
     "ui:{season}, {year}": {

@@ -710,7 +710,9 @@ fresh recipient while save/restore preserves a living ruler's cooldown. Invalid,
 self, malformed, and stale-generation references are discarded lazily. `player.retainers`
 stores compact
 `{charId,office,pay,startedTurn,unpaid}` contracts, while every personal attribute
-remains on the referenced character. `player.guildFavorTurns` bounds guild calls by
+remains on the referenced character. Fresh playable and observer states eagerly include
+the empty array so opening a character or ruler sheet is a read-only operation; older
+saves still create it lazily. `player.guildFavorTurns` bounds guild calls by
 character and `player.vassalLevyFavors` maps realm ids to expiry turns. Succession clears
 friendship, cultivated contacts, social attention, both gift-clock maps, and exceptional vassal
 favors, but retains paid service contracts with a loyalty penalty. A freeholder/gentry
@@ -803,7 +805,9 @@ seasons. Restore remaps vectors by goods id, drops removed baskets and invalid s
 references, and initializes newly added baskets at a two-season reserve and price 1.
 No production report, rendered route, overlay, endowment resolution, demand breakdown,
 or adjacency cache is serialized. Missing market state therefore self-heals without RNG
-or a save-version migration. See [markets.md](markets.md).
+or a save-version migration. Fresh playable and observer states run this normalization
+after population initialization, before any panel can read market-backed values; older
+saves retain the lazy compatibility path. See [markets.md](markets.md).
 
 Related: [mods.md](mods.md) for how saves are stamped with the active mod set,
 [i18n.md](i18n.md) for the message-descriptor shape behind structured chronicle entries,

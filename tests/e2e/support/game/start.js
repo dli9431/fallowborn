@@ -16,7 +16,13 @@ async function startDeterministicGame(page, options) {
      explicitly grant the fixture's earned station before using its code. */
   await unlockStartTier(page, 1);
   await page.getByRole('button', { name:'New Game', exact:true }).click();
-  await expect(page.getByRole('heading', { name:'New Game', exact:true })).toBeVisible();
+  await expect(page.getByRole('heading', {
+    name:'Choose a Starting Date', exact:true
+  })).toBeVisible();
+  await page.locator('#btn-bm-seed').click();
+  await expect(page.getByRole('heading', {
+    name:'Use a Seed or Start Code', exact:true
+  })).toBeVisible();
   const seedInput = page.locator('#ng-seed');
   await seedInput.fill(START_CODE);
   if (await seedInput.inputValue() !== START_CODE) {
@@ -25,7 +31,7 @@ async function startDeterministicGame(page, options) {
   await expect(seedInput).toHaveValue(START_CODE);
   // The input's Enter handler is the same player path as the button. It also
   // avoids WebKit occasionally waiting forever for the modal button to become
-  // geometrically stable while the title screen finishes its first paint.
+  // geometrically stable while the starting-date screen finishes its paint.
   await seedInput.press('Enter');
 
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();

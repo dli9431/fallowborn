@@ -491,12 +491,15 @@ test.describe('sibling and collateral-household agency', function () {
 
 test.describe('starting-family presets', function () {
 
-  /* Drives the shared-code path: paste a start code, reach the character
-     screen, and begin. Mirrors startDeterministicGame's modal sequence. */
+  /* Drives the shared-code path from its secondary starting-date action:
+     paste a start code, reach the character screen, and begin. */
   async function startWithCode(page, code, name) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await expect(page.getByRole('heading', { name:'New Game', exact:true }))
+    await expect(page.getByRole('heading', {
+      name:'Choose a Starting Date', exact:true
+    }))
       .toBeVisible();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill(code);
     await page.locator('#ng-seed').press('Enter');
     await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -559,8 +562,11 @@ test.describe('starting-family presets', function () {
     async function ({ page }, testInfo) {
       // an unknown preset id must be refused, not silently become another world
       await page.getByRole('button', { name:'New Game', exact:true }).click();
-      await expect(page.getByRole('heading', { name:'New Game', exact:true }))
+      await expect(page.getByRole('heading', {
+        name:'Choose a Starting Date', exact:true
+      }))
         .toBeVisible();
+      await page.locator('#btn-bm-seed').click();
       await page.locator('#ng-seed').fill('CADENCE-867-farmer-london-f-Ada-nope');
       await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#ng-seed-err'))
@@ -570,6 +576,7 @@ test.describe('starting-family presets', function () {
       for (const preset of ['established', 'elder']) {
         await openGame(page, testInfo); // back to a fresh title screen
         await page.getByRole('button', { name:'New Game', exact:true }).click();
+        await page.locator('#btn-bm-seed').click();
         await page.locator('#ng-seed')
           .fill('CADENCE-867-farmer-london-f-Ada-' + preset);
         await page.locator('#ng-seed').press('Enter');
@@ -581,6 +588,7 @@ test.describe('starting-family presets', function () {
       // a six-part code still parses and implies the standard preset
       await openGame(page, testInfo);
       await page.getByRole('button', { name:'New Game', exact:true }).click();
+      await page.locator('#btn-bm-seed').click();
       await page.locator('#ng-seed').fill(START_CODE);
       await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -591,6 +599,7 @@ test.describe('starting-family presets', function () {
   test('the character screen picker shows each preset and feeds the start code',
     async function ({ page }) {
       await page.getByRole('button', { name:'New Game', exact:true }).click();
+      await page.locator('#btn-bm-seed').click();
       await page.locator('#ng-seed').fill(START_CODE);
       await page.locator('#ng-seed').press('Enter');
       await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();

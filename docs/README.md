@@ -418,8 +418,9 @@ a scenario, choose the authored Spring 867 or Spring 1066 world. The latter begi
 Harold Godwinson's coronation and before the Norwegian and Norman invasions; those invasion
 chains are not yet scripted.
 
-**Sharing a start (seeds):** New Game offers a **Fresh start** or **🔑 Use this seed**.
-Paste a friend's full start code to begin with their exact bookmark, world,
+**Sharing a start (seeds):** New Game goes directly to the starting dates with a fresh
+seed. Choose **Use a Seed or Start Code** there to paste a friend's full code and begin
+with their exact bookmark, world,
 scenario, province, character, family preset, birthplace settlement, and—where a
 county has more than one—the chosen culture-and-faith community. Six-part principal
 starts keep their compact spelling; optional preset, settlement, and community fields

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.5';
+  FB.VERSION = '1.144.6';
   FB.CHANGELOG = [
+    { v: '1.144.6', date: '2026-08-21', changes: [
+      'New games now open directly on starting date selection, with shared seeds behind a separate option. Starting roles and birthplace selection are clearer and more compact.'
+    ] },
     { v: '1.144.5', date: '2026-08-21', changes: [
       'Panel tabs, especially Deeds, now switch faster by retaining unchanged content and avoiding work for unopened deed groups.'
     ] },
@@ -1048,6 +1051,15 @@ window.FB = window.FB || {};
   let telemetrySession = null;
   let telemetryTimer = null;
   let telemetryResumeReported = false;
+  let newGameTelemetrySeen = null;
+
+  const NEW_GAME_TELEMETRY_EVENTS = {
+    'starting-date':'new-game-starting-date-viewed',
+    'seed-dialog':'new-game-seed-dialog-viewed',
+    'beginning':'new-game-beginning-viewed',
+    'birthplace':'new-game-birthplace-viewed',
+    'character':'new-game-character-viewed'
+  };
 
   function telemetryEnabled() {
     return !!(FB.telemetry &&
@@ -1062,7 +1074,6 @@ window.FB = window.FB || {};
       game_version:FB.VERSION,
       locale:FB.locale || 'en'
     };
-    if (s && s.start && s.start.id) data.start_bookmark = String(s.start.id);
     if (s && s.player) {
       data.player_tier = Number(s.player.tier) || 0;
       data.dynasty_generation = Number(s.generation) || 1;
@@ -1074,6 +1085,18 @@ window.FB = window.FB || {};
         }
       }
     }
+    /* Campaign context wins over event-specific fields so every active event
+       that names its bookmark also reports the matching current game year.
+       Pre-campaign setup events have no state yet and remain intentionally
+       bookmark-only. */
+    if (s && s.start && s.start.id) {
+      data.start_bookmark = String(s.start.id);
+      if (s.date && Number.isFinite(Number(s.date.year))) {
+        data.game_year = Number(s.date.year);
+      } else if (Number.isFinite(Number(s.start.year))) {
+        data.game_year = Number(s.start.year);
+      }
+    }
     return data;
   }
 
@@ -1083,6 +1106,13 @@ window.FB = window.FB || {};
     return FB.telemetry.track(name, telemetryData(extra));
   }
   FB.trackTelemetry = trackTelemetry;
+
+  function trackNewGameScreen(screen, extra) {
+    const eventName = NEW_GAME_TELEMETRY_EVENTS[screen];
+    if (!eventName || !newGameTelemetrySeen || newGameTelemetrySeen[screen]) return;
+    newGameTelemetrySeen[screen] = true;
+    trackTelemetry(eventName, extra);
+  }
 
   function clearTelemetryTimer() {
     if (telemetryTimer) clearInterval(telemetryTimer);
@@ -1286,35 +1316,35 @@ window.FB = window.FB || {};
 
   /* ================= scenarios ================= */
   G.SCENARIOS = [
-    { id: 'serf', name: 'Serf', diff: '★★★★★ hardest',
-      desc: 'Bound to the soil, owning nothing — not even yourself. Every step upward must be bought, begged, or bled for.',
+    { id: 'serf', name: 'Serf',
+      desc: 'Bound to the land, with no property or freedom.',
       tier: 0, profession: 'farmer', gold: 5, prestige: 0, piety: 0,
       intro: 'You are {name}, a serf of {province}. The lord owns your labor; the church owns your Sundays; the soil will own your bones — unless you claw your way to something more.' },
-    { id: 'farmer', name: 'Free Farmer', diff: '★★★★ hard',
-      desc: 'A small plot, a strong back, and your own name in the rolls. Freedom is a start — now make it into wealth.',
+    { id: 'farmer', name: 'Free Farmer',
+      desc: 'Free, with a small plot and modest savings.',
       tier: 1, profession: 'farmer', gold: 20, prestige: 5, piety: 0,
       intro: 'You are {name}, a free farmer of {province}. Your land is small, your debts are few, and your ambitions need not be.' },
-    { id: 'apprentice', name: 'Craftsman’s Apprentice', diff: '★★★★ hard',
-      desc: 'Sawdust, burns, and a trade worth silver. Guilds and town councils are ladders for those who can climb.',
+    { id: 'apprentice', name: 'Craftsman’s Apprentice',
+      desc: 'Train in a skilled trade under a master.',
       tier: 1, profession: 'craftsman', gold: 15, prestige: 5, piety: 0,
       intro: 'You are {name}, apprenticed to a master of the craft in {province}. Your hands are learning what your purse will someday know.' },
-    { id: 'monk', name: 'Novice of the Faith', diff: '★★★ tricky',
-      desc: 'The path of learning — the only career open to talent regardless of birth. In Christian lands a monk bound for the mitre; in Muslim lands a madrasa student bound for the qadi’s seat.',
+    { id: 'monk', name: 'Novice of the Faith',
+      desc: 'Begin in religious service with education and piety.',
       tier: 1, profession: 'monk', gold: 2, prestige: 0, piety: 25,
       intro: 'You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
       intro_f: 'You are Sister {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
       intro_muslim: 'You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house.',
       intro_other: 'You are {name}, a novice of the faith in {province}. Letters, devotion, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.' },
-    { id: 'soldier', name: 'Man-at-Arms', diff: '★★★ tricky',
-      desc: 'Paid to stand where the arrows land. Glory is quick, death is quicker, and lords remember men who save them.',
+    { id: 'soldier', name: 'Man-at-Arms',
+      desc: 'Earn wages and status through military service.',
       tier: 1, profession: 'soldier', gold: 10, prestige: 10, piety: 0, mar: 3, sex: 'm',
       intro: 'You are {name}, a spear in the service of the lord of {province}. Wages are thin, but battlefields are where nobodies become somebodies.' },
-    { id: 'knight', name: 'Hedge Knight', diff: '★★ fair',
-      desc: 'Gentle blood, empty purse. A horse, a blade, and admittance to halls where futures are granted.',
+    { id: 'knight', name: 'Hedge Knight',
+      desc: 'A trained warrior of noble birth with little money.',
       tier: 2, profession: 'noble', gold: 40, prestige: 60, piety: 0, mar: 4, focus: 'train_arms',
       intro: 'You are {name}, gently born and poorly landed. The gentry’s door is open; the baron’s hall is the next to force.' },
-    { id: 'baron', name: 'Petty Baron', diff: '★ classic',
-      desc: 'A drafty tower, a hundred spears, and a liege watching your loyalty. The traditional start.',
+    { id: 'baron', name: 'Petty Baron',
+      desc: 'Rule a small barony under a powerful liege.',
       tier: 3, profession: 'noble', gold: 80, prestige: 150, piety: 0,
       intro: 'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
   ];
@@ -1569,6 +1599,7 @@ window.FB = window.FB || {};
     $('btn-help').addEventListener('click', function () { FB.ui.showHelp(); });
     $('btn-changelog').addEventListener('click', function () { FB.ui.showChangelog(); });
     $('btn-bm-back').addEventListener('click', function () { FB.ui.showScreen('title'); });
+    $('btn-bm-seed').addEventListener('click', function () { showSeedInput(); });
     $('btn-ng-back').addEventListener('click', function () { showBookmarks(); });
     $('btn-pick-back').addEventListener('click', function () {
       /* with a county chosen, Back steps from the settlement stage to the
@@ -1587,9 +1618,12 @@ window.FB = window.FB || {};
       FB.ui.showScreen('newgame');
     });
     $('btn-pick-random').addEventListener('click', function () {
-      /* settlement stage: the primary button settles for the county seat */
+      /* settlement stage: the primary button commits the dropdown choice */
       if (G.pickStage === 'settlement' && G.pending && G.pending.provinceId) {
-        G.pickSettlement({ pid: G.pending.provinceId, index: 0 });
+        G.pickSettlement({
+          pid:G.pending.provinceId,
+          index:G.pending.settlementIdx || 0
+        });
         return;
       }
       const cands = FB.world.provs.filter(function (p) { return !p.wasteland; });
@@ -1608,14 +1642,23 @@ window.FB = window.FB || {};
     $('btn-cg-start').addEventListener('click', function () { G.start(); });
   }
 
-  /* New Game opens here: roll a fresh seed, or play one someone shared.
-     Errors show inline — toasts live on the game screen, hidden at title. */
+  /* The ordinary path starts at the first real choice. A fresh seed is ready
+     before the player chooses a date; shared starts stay available as a
+     secondary action on that screen. */
   function showNewGame() {
-    let h = '<div class="gm-list">' +
-      '<button class="actionbtn" id="ng-fresh">🌱 Fresh start' +
-      '<span class="adesc">A new seed is rolled — choose which age will be yours to shape.</span></button>' +
-      '</div>' +
-      '<div class="gm-body-text" style="margin-top:10px"><p>…or play a start someone shared:</p></div>' +
+    newGameTelemetrySeen = {};
+    G.pending = { seed:freshSeed() };
+    showBookmarks();
+  }
+
+  /* Shared starts are an advanced path behind the starting-date screen, so
+     they do not add a decision to every ordinary new game. Errors show inline
+     because toasts live on the hidden game screen. */
+  function showSeedInput() {
+    trackNewGameScreen('seed-dialog');
+    let h = '<div class="gm-body-text"><p>' + FB.esc(FB.T(
+      'Paste a shared start code to recreate every choice, or enter a world seed and choose the rest yourself.')) +
+      '</p></div>' +
       '<input id="ng-seed" type="text" maxlength="128" placeholder="' +
       FB.esc(FB.T('Paste a start code or world seed')) + '">' +
       '<div id="ng-seed-err" class="hint"></div>' +
@@ -1623,12 +1666,7 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="ng-seed-go">🔑 Use this seed</button>' +
       '</div>' +
       '<button class="btn" id="ng-cancel">Cancel</button>';
-    FB.ui.openModal('New Game', h);
-    $('ng-fresh').addEventListener('click', function () {
-      FB.ui.closeModal();
-      G.pending = { seed: freshSeed() };
-      showBookmarks();
-    });
+    FB.ui.openModal('Use a Seed or Start Code', h);
     $('ng-cancel').addEventListener('click', FB.ui.closeModal);
     function useSeed() {
       const r = parseSeedInput($('ng-seed').value);
@@ -1691,13 +1729,14 @@ window.FB = window.FB || {};
   }
 
   function showBookmarks() {
+    trackNewGameScreen('starting-date');
     const box = $('bookmarklist');
     box.innerHTML = '';
     const bookmarks = FB.bookmarks(false);
     for (const bookmark of bookmarks) {
       const el = document.createElement('button');
       el.className = 'scencard';
-      el.innerHTML = '<h3>' + FB.esc(FB.T('{season} {year} — {name}', {
+      el.innerHTML = '<h3>' + FB.esc(FB.T('{season} {year}: {name}', {
         season:FB.seasonName(bookmark.date.season),
         year:bookmark.date.year, name:FB.L(bookmark.name || bookmark.id)
       })) + '</h3><p>' + FB.esc(FB.L(bookmark.desc || '')) + '</p>';
@@ -1717,7 +1756,8 @@ window.FB = window.FB || {};
 
   function showScenarios() {
     const bookmark = FB.activeBookmark;
-    $('ng-heading').textContent = FB.T('Choose Your Beginning — Anno Domini {year}', {
+    trackNewGameScreen('beginning', { start_bookmark:bookmark.id });
+    $('ng-heading').textContent = FB.T('Choose Your Beginning in {year} AD', {
       year:bookmark.date.year
     });
     const box = $('scenariolist');
@@ -1729,8 +1769,7 @@ window.FB = window.FB || {};
       el.className = 'scencard' + (locked ? ' locked' : '');
       if (locked) el.setAttribute('aria-disabled', 'true');
       el.innerHTML = '<h3>' + (locked ? '🔒 ' : '') + FB.esc(FB.L(sc.name)) +
-        '</h3><div class="diff">' + FB.esc(FB.L(sc.diff)) + '</div><p>' +
-        FB.esc(FB.L(sc.desc)) + '</p>' + (locked
+        '</h3><p>' + FB.esc(FB.L(sc.desc)) + '</p>' + (locked
           ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
           : '');
       if (!locked) {
@@ -1751,9 +1790,8 @@ window.FB = window.FB || {};
     // observe mode: no province, no character — just a world to watch
     const obs = document.createElement('button');
     obs.className = 'scencard';
-    obs.innerHTML = '<h3>' + FB.esc(FB.T('👁 Observe')) + '</h3><div class="diff">' +
-      FB.esc(FB.T('no one, watching')) + '</div><p>' +
-      FB.esc(FB.T('Be born as no one. The centuries flow and the realms war, rise, and ruin while you simply watch the map. No character, no events, no interruptions.')) +
+    obs.innerHTML = '<h3>' + FB.esc(FB.T('👁 Observe')) + '</h3><p>' +
+      FB.esc(FB.T('Watch the world without a playable character or personal events.')) +
       '</p>';
     obs.addEventListener('click', function () { G.startObserve(); });
     box.appendChild(obs);
@@ -1771,6 +1809,10 @@ window.FB = window.FB || {};
   G.pickStage = 'province';
 
   function showPickProv() {
+    trackNewGameScreen('birthplace', {
+      start_bookmark:G.pending && G.pending.bookmarkId,
+      scenario:G.pending && G.pending.scenario && G.pending.scenario.id
+    });
     FB.ui.showScreen('pickprov');
     $('pickprov').classList.add('asbar');
     $('game').classList.remove('hidden');
@@ -1863,36 +1905,47 @@ window.FB = window.FB || {};
     const pr = FB.world.byId[G.pending.provinceId];
     const realm = FBDATA.realms.filter(function (r) { return r.id === pr.realm0; })[0];
     const communities = FB.provinceCommunities(pr);
-    el.innerHTML = '<b>' + FB.esc(FB.L(pr.name)) + '</b> — ' +
+    el.innerHTML = '<div class="pick-location-title">' +
+      FB.esc(FB.L(pr.name)) + '</div>' +
+      '<div class="pick-location-meta">' +
       FB.esc(realm ? FB.L(realm.name) : FB.T('independent')) + ' · ' +
-      FB.esc(FB.terrainName(pr.terrain)) + '<br>' +
-      FB.esc(FB.T('Communities: {communities}', {
+      FB.esc(FB.terrainName(pr.terrain)) + '</div>' +
+      '<div class="pick-community">' + FB.esc(FB.T('Communities: {communities}', {
         communities:communities.map(communityLabel).join(' → ')
-      })) + '<br>' +
-      FB.esc(FB.T(
-        'Now tap the settlement you were born in — or begin in the county seat.'));
-    /* the same settlements as focusable buttons: keyboard access, and a
-       reliable target where markers crowd together on a small screen */
+      })) + '</div>';
+    /* One compact native picker replaces the settlement button row. The
+       county seat is index 0 and every newly selected county resets to it. */
     const kindName = FB.ui._shared.settlementKindName;
     const setts = FB.settlementsOf(null, pr.id);
-    const row = document.createElement('div');
-    row.className = 'row gap wrap';
+    const field = document.createElement('label');
+    field.className = 'picksett-field';
+    const label = document.createElement('span');
+    label.textContent = FB.T('Birthplace');
+    const select = document.createElement('select');
+    select.id = 'pick-settlement';
     setts.forEach(function (st, i) {
-      const b = document.createElement('button');
-      b.className = 'btn small picksett';
-      b.type = 'button';
-      b.textContent = st.name + ' (' + kindName(st.kind) + ')';
-      b.addEventListener('click', function () {
-        G.pickSettlement({ pid: pr.id, index: i });
-      });
-      row.appendChild(b);
+      const option = document.createElement('option');
+      option.value = String(i);
+      option.textContent = st.name + ' (' + kindName(st.kind) + ')' +
+        (i === 0 ? ' · ' + FB.T('County seat') : '');
+      select.appendChild(option);
     });
-    el.appendChild(row);
-    $('btn-pick-random').textContent =
-      FB.T('Begin in {settlement}', { settlement: setts.length ? setts[0].name : FB.L(pr.name) });
+    G.pending.settlementIdx = clampSettlementIdx(pr.id, G.pending.settlementIdx);
+    select.value = String(G.pending.settlementIdx);
+    select.addEventListener('change', function () {
+      G.pending.settlementIdx = clampSettlementIdx(pr.id, parseInt(select.value, 10));
+    });
+    field.appendChild(label);
+    field.appendChild(select);
+    el.appendChild(field);
+    $('btn-pick-random').textContent = FB.T('Continue');
   }
 
   function showChargen() {
+    trackNewGameScreen('character', {
+      start_bookmark:G.pending && G.pending.bookmarkId,
+      scenario:G.pending && G.pending.scenario && G.pending.scenario.id
+    });
     /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
        and disables the other; any other scenario leaves both free */
     const scenSex = G.pending.scenario && G.pending.scenario.sex;
@@ -2076,7 +2129,7 @@ window.FB = window.FB || {};
         localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
-        holdings: [], enterprises: [], householdStandards: {},
+        holdings: [], enterprises: [], retainers: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {
           enabled:false, minStation:0, maxDowry:null,
@@ -2207,6 +2260,7 @@ window.FB = window.FB || {};
 
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
+    if (FB.ensureMarket) FB.ensureMarket(state);
 
     if (sc.tier >= 3) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
@@ -2325,7 +2379,7 @@ window.FB = window.FB || {};
         rivalContacts: {}, rivalPeace: {}, rivalry: null,
         provs: [], war: null, greatHolyWar: null, plot: null,
         aggressiveWars: [],
-        focus: null, dead: false, holdings: [],
+        focus: null, dead: false, holdings: [], retainers: [],
         localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
@@ -2355,6 +2409,7 @@ window.FB = window.FB || {};
     state.player.charId = me.id;
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
+    if (FB.ensureMarket) FB.ensureMarket(state);
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(state);
     }

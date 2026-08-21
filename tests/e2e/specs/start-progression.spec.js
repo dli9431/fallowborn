@@ -23,7 +23,6 @@ test.beforeEach(async function ({ page }, testInfo) {
 
 async function openScenarioPicker(page) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
-  await page.locator('#ng-fresh').click();
   await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
   await page.locator('#bookmarklist .scencard').first().click();
   await expect(page.locator('#newgame:not(.hidden)')).toBeVisible();
@@ -31,6 +30,7 @@ async function openScenarioPicker(page) {
 
 async function startSerfLife(page) {
   await page.getByRole('button', { name:'New Game', exact:true }).click();
+  await page.locator('#btn-bm-seed').click();
   await page.locator('#ng-seed').fill('ASCENT-867-serf-london-f-Ada');
   await page.locator('#ng-seed').press('Enter');
   await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
@@ -51,12 +51,25 @@ test('a fresh profile offers only Serf and refuses locked shared starts',
     const knight = page.getByRole('button', { name:/Hedge Knight/ });
     const baron = page.getByRole('button', { name:/Petty Baron/ });
     await expect(serf).not.toHaveAttribute('aria-disabled');
+    expect(await serf.locator('h3').evaluate(function (heading) {
+      return getComputedStyle(heading).fontSize;
+    })).toBe('19px');
+    await expect(serf.locator('.diff')).toHaveCount(0);
+    await expect(serf.locator('p'))
+      .toHaveText('Bound to the land, with no property or freedom.');
     await expect(farmer).toHaveAttribute('aria-disabled', 'true');
+    await expect(farmer).toHaveClass(/locked/);
+    await expect(farmer.locator('.diff')).toHaveCount(0);
+    await expect(farmer).toContainText('Free, with a small plot and modest savings.');
+    await expect(farmer.locator('p')).toHaveCount(2);
     await expect(farmer).toContainText('Reach Freeholder');
     await expect(knight).toContainText('Reach Gentry');
     await expect(baron).toContainText('Reach Baron');
     await expect(page.getByRole('button', { name:/Observe/ }))
       .not.toHaveAttribute('aria-disabled');
+    await expect(page.locator('#scenariolist')).not.toContainText('★');
+    await expect(page.locator('#ng-heading'))
+      .toHaveText('Choose Your Beginning in 867 AD');
 
     /* A locked card is deliberately aria-disabled. Invoke its DOM handler to
        prove the application also rejects a synthetic activation rather than
@@ -68,6 +81,7 @@ test('a fresh profile offers only Serf and refuses locked shared starts',
     await page.locator('#btn-ng-back').click();
     await page.locator('#btn-bm-back').click();
     await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
     await page.locator('#ng-seed').fill('CADENCE-867-farmer-london-f-Ada');
     await page.locator('#ng-seed').press('Enter');
     await expect(page.locator('#ng-seed-err')).toContainText(
