@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/keys.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
   'css/style.css'
@@ -302,7 +304,7 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     await expect(page.locator('#enterprise-worker-lock')).not.toBeChecked();
   });
 
-test('Network combines same-section roles while retaining cross-section context',
+test('Network limits section hotkeys to actions and discloses status context',
   async function ({ page }, testInfo) {
     await startListGame(page, testInfo);
     var fixture = await makeLargeListFixture(page);
@@ -310,8 +312,94 @@ test('Network combines same-section roles while retaining cross-section context'
       FB.ui.showTab('network', { history:false });
     });
 
-    await expect(page.locator('#network-list-search')).toBeVisible();
+    await expect(page.locator('#network-list-search')).toHaveCount(0);
+    await expect(page.locator('#tab-network [data-list-filter]')).toHaveCount(0);
     await expect(page.locator('[data-list-section]')).toHaveCount(5);
+    const householdToggle = page.locator('[data-list-toggle="household"]');
+    const tradeToggle = page.locator('[data-list-toggle="trade"]');
+    expect(await page.locator('.large-list-section-keyhint').allTextContents())
+      .toEqual(['1', '2', '3', '4', '5']);
+    await expect(householdToggle).toHaveAttribute('aria-current', 'true');
+    const householdPlan = page.locator('#network-household-plan');
+    const householdPlanRow = householdPlan.locator('..');
+    await expect(householdPlan.locator('.network-item-keyhint'))
+      .toHaveText('Q');
+    await expect(householdPlan).toHaveClass(/network-main-action/);
+    await expect(householdPlan.locator('.adesc')).toHaveCount(0);
+    await expect(householdPlanRow.locator('.network-action-details'))
+      .toContainText('Review education, work, assignments');
+    expect(await householdPlan.evaluate(function (button) {
+      const style = getComputedStyle(button);
+      return { fontSize:style.fontSize, fontWeight:style.fontWeight };
+    })).toEqual({ fontSize:'16px', fontWeight:'600' });
+    await householdPlan.hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('Review education, work, assignments');
+    await expect.poll(function () {
+      return page.locator('#tooltip').evaluate(function (tooltip) {
+        return getComputedStyle(tooltip).fontSize;
+      });
+    }).toBe('15px');
+    await expect(page.locator('#network-hire .network-item-keyhint'))
+      .toHaveText('W');
+    await expect(page.locator('#network-hire .adesc')).toHaveCount(0);
+    await expect(page.locator(
+      '[data-list-section="household"] button[data-cid] ' +
+      '.network-item-keyhint')).toHaveCount(0);
+    var playerHouseholdRow = page.locator(
+      '[data-list-section="household"] [data-list-identity="' +
+      fixture.headId + '"]');
+    await expect(playerHouseholdRow).toContainText('You — Household head');
+    await expect(playerHouseholdRow.locator('.settcard-details'))
+      .toContainText('You — Household head');
+    var establishedRow = page.locator(
+      '[data-list-section="household"] [data-list-identity="' +
+      fixture.guildWorkerId + '"]');
+    await expect(establishedRow.locator('.large-list-state')).toHaveCount(0);
+    await expect(establishedRow.locator('.settcard-details'))
+      .toContainText('Established');
+    await expect(establishedRow.locator('.settcard-details'))
+      .toContainText('Age ');
+    await expect(establishedRow.locator('.settcard-details'))
+      .toContainText('Standing ');
+    await expect(establishedRow.locator('.settcard-info'))
+      .toHaveAttribute('aria-controls');
+    await establishedRow.hover();
+    await expect(page.locator('#tooltip')).toContainText('Established');
+    await expect(page.locator('#tooltip')).toContainText('Age ');
+    var vacancyRow = page.locator(
+      '[data-list-section="household"] ' +
+      '[data-list-identity="retainer-vacancy"]');
+    await expect(vacancyRow.locator('.large-list-state')).toHaveCount(0);
+    await expect(vacancyRow.locator('.settcard-details'))
+      .toContainText('Vacancy');
+    await expect(vacancyRow.locator('.settcard-details'))
+      .toContainText('household service slots are open');
+    var routineConnection = page.locator(
+      '[data-list-section="connections"] [data-list-identity="' +
+      fixture.secondId + '"]');
+    await expect(routineConnection.locator('.large-list-state')).toHaveCount(0);
+    await expect(routineConnection.locator('.settcard-details'))
+      .toContainText('Known tie');
+    await expect(routineConnection.locator('.settcard-details'))
+      .toContainText('Cultivated connection');
+    await expect(routineConnection.locator('.settcard-details'))
+      .toContainText('Standing ');
+    await routineConnection.hover();
+    await expect(page.locator('#tooltip')).toContainText('Known tie');
+    await expect(page.locator('#tooltip'))
+      .toContainText('affects friendship, courtship, marriage');
+    await page.setViewportSize({ width:900, height:720 });
+    await householdPlanRow.locator('.settcard-info').click();
+    await expect(householdPlanRow.locator('.network-action-details'))
+      .toBeVisible();
+    await householdPlanRow.locator('.settcard-info').click();
+    await expect(householdPlanRow.locator('.network-action-details'))
+      .toBeHidden();
+    await establishedRow.locator('.settcard-info').click();
+    await expect(establishedRow.locator('.settcard-details')).toBeVisible();
+    await establishedRow.locator('.settcard-info').click();
+    await expect(establishedRow.locator('.settcard-details')).toBeHidden();
     await expect(page.locator(
       '[data-list-section="connections"] .large-list-section-count'))
       .toContainText('3 total');
@@ -325,6 +413,21 @@ test('Network combines same-section roles while retaining cross-section context'
     await expect(sharedConnection).toContainText('Your friend');
     await expect(sharedConnection).toContainText('Rival');
     await expect(sharedConnection).toContainText('Suitor');
+    await page.keyboard.press('Digit2');
+    await expect(page.locator(
+      '[data-list-section="connections"] .network-item-keyhint'))
+      .toHaveCount(0);
+    await sharedConnection.locator('button[data-cid]').evaluate(
+      function (button) {
+        button.click = function () {
+          window.__networkInfoShortcutTarget = 'character';
+        };
+      });
+    await page.keyboard.press('q');
+    expect(await page.evaluate(function () {
+      return window.__networkInfoShortcutTarget;
+    })).toBeUndefined();
+    await page.keyboard.press('Digit1');
 
     await expect(page.locator(
       '[data-list-section="household"] [data-list-identity="' +
@@ -365,28 +468,53 @@ test('Network combines same-section roles while retaining cross-section context'
       '[data-list-section="household"] .large-list-attention-count'))
       .toBeVisible();
 
-    await page.getByRole('button', { name:'People', exact:true }).click();
-    await expect(page.getByRole('button', { name:'People', exact:true }))
-      .toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Digit3');
+    await expect(tradeToggle).toBeFocused();
+    await expect(tradeToggle).toHaveAttribute('aria-current', 'true');
+    await expect(householdToggle).not.toHaveAttribute('aria-current', 'true');
+    await expect(page.locator('#network-market .network-item-keyhint'))
+      .toHaveText('Q');
+    await expect(page.locator('#network-work .network-item-keyhint'))
+      .toHaveText('W');
     await expect(page.locator(
-      '[data-list-section="realm"] .large-list-no-results')).toBeVisible();
+      '[data-list-section="trade"] button[data-cid] ' +
+      '.network-item-keyhint')).toHaveCount(0);
+    await page.evaluate(function () {
+      document.getElementById('network-market').click = function () {
+        window.__networkShortcutTarget = 'market';
+      };
+    });
+    await page.keyboard.press('q');
+    expect(await page.evaluate(function () {
+      return window.__networkShortcutTarget;
+    })).toBe('market');
 
-    await page.locator('#network-list-search').fill('Searchable Network Witness');
+    await page.keyboard.press('Digit3');
     await expect(page.locator(
-      '[data-list-section="connections"] [data-large-list-row]:visible'))
-      .toHaveCount(1);
-    await page.locator('[data-list-clear]').click();
-    await expect(page.locator('#network-list-search')).toHaveValue('');
-    await page.locator('#network-list-search').fill('Rival');
+      '[data-list-section="trade"] .large-list-section-body')).toBeHidden();
+    await page.keyboard.press('Digit3');
     await expect(page.locator(
-      '[data-list-section="connections"] [data-large-list-row]:visible'))
-      .toHaveCount(1);
-    await page.locator('#network-list-search').fill('no such visible relationship');
-    await expect(page.locator(
-      '[data-list-section="connections"] .large-list-no-results')).toBeVisible();
+      '[data-list-section="trade"] .large-list-section-body')).toBeVisible();
+    await expect(tradeToggle).toBeFocused();
+
+    var warRealm = await page.evaluate(function () {
+      var s = FB.state;
+      var rid = Object.keys(s.realms).filter(function (id) {
+        return id !== 'player' && s.realms[id] && s.realms[id].alive;
+      })[0];
+      s.player.war = { enemy:rid, defending:true };
+      FB.ui.refresh();
+      return { id:rid, name:s.realms[rid].name };
+    });
+    var warRealmRow = page.locator(
+      '[data-list-section="realm"] [data-list-identity="' +
+      warRealm.id + '"]');
+    await expect(warRealmRow).toContainText('At war with ' + warRealm.name);
+    await expect(warRealmRow.locator('.large-list-state')).toHaveCount(0);
+    await expect(warRealmRow).not.toContainText('Warning');
   });
 
-test('filters, search, collapse, Back, and narrow rendering do not mutate play state',
+test('Work filters and Network navigation do not mutate play state',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:740 });
     await startListGame(page, testInfo);
@@ -414,10 +542,9 @@ test('filters, search, collapse, Back, and narrow rendering do not mutate play s
     await page.evaluate(function () {
       FB.ui.showTab('network', { history:false });
     });
-    await page.locator('#sidebody [data-list-filter="attention"]').click();
+    await expect(page.locator('#network-list-search')).toHaveCount(0);
+    await expect(page.locator('#sidebody [data-list-filter]')).toHaveCount(0);
     await page.locator('[data-list-toggle="trade"]').click();
-    await page.locator('#network-list-search').fill(
-      'Alexandria Extremely-Long Connection Name');
     var networkTarget = page.locator(
       '[data-list-section="connections"] button[data-cid="' +
       fixture.sharedId + '"]');
@@ -429,10 +556,7 @@ test('filters, search, collapse, Back, and narrow rendering do not mutate play s
     await expect(page.locator('.character-interaction-modal')).toBeVisible();
     await page.locator('#cm-close').click();
     await expect(networkTarget).toBeFocused();
-    await expect(page.locator('#sidebody [data-list-filter="attention"]'))
-      .toHaveAttribute('aria-pressed', 'true');
-    await expect(page.locator('#network-list-search')).toHaveValue(
-      'Alexandria Extremely-Long Connection Name');
+    await expect(page.locator('#network-list-search')).toHaveCount(0);
     await expect(page.locator(
       '[data-list-section="trade"] .large-list-section-body')).toBeHidden();
     await expect.poll(function () {

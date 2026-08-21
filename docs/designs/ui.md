@@ -92,7 +92,8 @@ The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily 
 `2`–`6` select Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War &
 Diplomacy respectively. Selection opens a closed category, scrolls its heading to the top of
 the panel, focuses and highlights it, and assigns `Q W E / A S D / Z X C` to its first nine
-rendered focuses or deeds. Daily Focus is the active section by default when a life opens on
+rendered focuses or deeds. Pressing the active section's number again collapses it; its next
+press reopens it. Daily Focus is the active, expanded section by default when a life opens on
 desktop, so its letter badges and shortcuts are present from the panel's first render rather
 than appearing after the first click. Touch layouts have no default keyboard section. If a
 section extends beyond nine items, subsequent items are
@@ -101,10 +102,12 @@ assigned `Shift+Q, Shift+W, Shift+E, Shift+A, Shift+S, Shift+D, Shift+Z, Shift+X
 letters take precedence over panel, time, autoresolve, and configurable semantic shortcuts
 while that Deeds section is active; modal and event digit handling still takes precedence over
 the panel layer. Shift+digit does not extend the Deeds list.
-Desktop panel tabs render the matching label letter as a compact keycap (`[S]elf`, `[K]in`,
-`[D]eeds`, `[L]and`, `[N]etwork`, `[C]hronicle`) rather than repeating it in the remaining
-text; narrow or short non-desktop layouts and coarse-pointer touch layouts keep the ordinary
-localized labels because keyboard hints do not apply.
+Panel tabs keep their full localized titles on every layout: Self, Kin, Deeds, Land, Network,
+and Chronicle. Desktop navigation uses `T`, `G`, `B`, `Y`, `N`, and `U` respectively, shown
+as separate trailing key badges beside those titles in the same style as the fast-forward
+control's `F` badge. Touch layouts retain the plain titles without badges. These six letters
+are reserved from semantic action bindings so panel navigation cannot be intercepted by an
+older saved shortcut.
 `UI.openModal` also takes `{modalClass}` to tag `#genmodal` with a per-dialog CSS modifier
 (cleared on the next open): the Changelog uses `changelog-modal`, and the Menu, Automation,
 and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see below).
@@ -136,7 +139,8 @@ button stays hidden and hovering or focusing the card opens the shared `#tooltip
 side panel just right of the card (flipping left near the viewport edge); the pointer
 may move onto the tooltip without closing it, so buttons rendered inside it — the
 fort card's `data-fort-tech` technology link and `data-fort-start` construction
-button — stay clickable from the tooltip itself. On touch and tablet-width or short
+button — stay clickable from the tooltip itself. Shared tooltip copy is 15 px so
+supplemental information remains legible without competing with the card face. On touch and tablet-width or short
 layouts the hover tooltip never opens and the `?` button toggles the same details
 inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of the
 switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
@@ -146,6 +150,29 @@ One-time deed rows use this convention too: the card face keeps only the enlarge
 name, with gold, green, or blue-green border accents distinguishing day-spending immediate,
 choice-backed, and no-day immediate actions. Timing and descriptive copy live together in
 the hidden details, exposed through the desktop side tooltip or compact-layout `?`.
+Daily Focus rows use the same enlarged action-name treatment and move their descriptive
+helper copy into that disclosure. Network management actions match the Deeds action-name
+size and weight and likewise keep helper, eligibility, cost, and duration prose in their
+desktop tooltip or compact `?` disclosure instead of beneath the button label.
+Technology detail sheets use the same convention for the seven-field national-research
+audit (owner, scope, setup and recurring costs, effect, transfer, and expiry), leaving
+historical dates, exposure, progress, prerequisites, and controls on the sheet face.
+Royal Council seat and candidate heraldry use the shared ruler-card tooltip on desktop
+hover. Occupied heraldry also supports keyboard focus and opens that ruler's full sheet
+when activated; candidate heraldry remains part of its assignment action. The preview is
+placed outside the modal's left edge to keep the seat actions clear. Mobile Back restores
+the originating occupied heraldry and its exact Council scroll position.
+Network uses the same disclosure for routine **Established**, **Known tie**, and **Vacancy**
+labels instead of rendering those words as face chips. Household and Connections
+disclosures add the character's age, home, section-relevant roles or ties, standing, and
+the gameplay significance of that relationship. Political-bloc disclosures add the
+bloc's definition, leader, influence, any current forecast or posture, the four most
+influential member houses, and the three strongest interest reasons. Larger member and
+interest lists show their omitted count and direct the player to the complete Governance
+breakdown instead of creating a viewport-height tooltip. Urgent warnings, opportunities,
+and active commitments remain visible on the card face, except a realm's redundant war
+warning chip: its visible war-status line already carries that state. The player's own Household entry
+is explicitly identified as **You — Household head** on both its card and disclosure.
 
 **Responsive layout lives in css/style.css.** `#panels` wraps the two side panels — invisible
 on desktop (`display:contents`). From the 821 px desktop breakpoint through 1440 px, the
@@ -393,10 +420,13 @@ Every reigning ruler uses the standard character sheet, rather than a duplicate
 realm-ruler sheet. Their title, **Realm muster** line, court, political actions, and
 personal actions share that one sheet; the muster names the current approximate troops
 the realm can raise. An active war is the first notice under the card, and the Land tab
-places the same notice directly below its county heading. The notice's realm links always
+places the same linked status line directly below its county heading. The notice's realm links always
 open the linked ruler's sheet — including the player's own realm, whose self sheet wears
 the same ruler frame (rank title, muster, war notice) while still skipping the foreign
-Standing and diplomacy card. A sheet reached through a return chain shows both **Back**
+Standing and diplomacy card. Each ruler notice follows the live war record with a compact
+goal for the attacker and defender (or both great-holy-war coalitions), so either linked
+sheet explains what both sides are trying to achieve. A sheet reached through a return
+chain shows both **Back**
 (walk the chain) and **Close** (dismiss the modal outright), so linked sheets can never
 trap the player in a back-and-forth loop. The larger skill line carries
 the same compact Skills Guide icon as an ordinary character sheet. Every
@@ -1139,17 +1169,18 @@ Work & Enterprises and Network share a render-only large-list grammar. Every sem
 section is a native, independently collapsible button with a total and a needs-attention
 count. Rows are ordered by attention state, stable role/state priority, their existing
 meaningful order, and stable identity; changing income, Standing, or another daily number
-does not reorder otherwise equivalent rows. Filters, disclosure, search, focus, and scroll
-are in-memory UI state only. They consume no RNG and never enter a save.
+does not reorder otherwise equivalent rows. Disclosure, focus, and scroll, plus Work's
+filters and search, are in-memory UI state only. They consume no RNG and never enter a save.
 
-The shared large-list threshold is **12 total rows per surface**. Above it, an explicitly
-labeled literal local search appears and each section initially shows every
-needs-attention row plus **5 routine rows**. **Show all {count}** reveals the remaining
-routine rows in that section. Search and non-All filters show every match rather than
-applying the routine budget. All and Needs attention are shared filters; Work adds
-Assigned, Staffed, Idle, and Unavailable, while Network adds People and Realms. Empty
-sections distinguish no records from a filter/search with no matches. Hidden rows use the
-native `hidden` state, receive no number-key position, and leave the accessibility tree.
+The shared large-list threshold is **12 total rows per surface**. Above it, each section
+initially shows every needs-attention row plus **5 routine rows**. **Show all {count}**
+reveals the remaining routine rows in that section. Work also exposes an explicitly labeled
+literal local search and All, Needs attention, Assigned, Staffed, Idle, and Unavailable
+filters; search and non-All filters show every match rather than applying the routine
+budget. Network omits this toolbar so its five sections remain the navigation. Work
+distinguishes no records from a filter/search with no matches; Network simply explains an
+empty section. Hidden rows use the native `hidden` state, receive no positional shortcut,
+and leave the accessibility tree.
 
 Work adds a session-only enterprise view on top of that grammar. Its compact default
 keeps idle and blocked property before staffed property; alternate deterministic sorts
@@ -1175,7 +1206,13 @@ section for a genuinely different context. Character and ruler rows open the con
 authoritative cards; Governance, Household Plan, Council, guild favors, vassal favors, and
 other focused management routes remain separate. Section attention covers active
 commitments, warnings, opportunities, missed retainer pay, and vacancies even when routine
-context is collapsed.
+context is collapsed. On desktop, `1`-`5` select those sections in order, opening a closed
+section, scrolling its heading to the top, and focusing and highlighting it. Pressing the
+active section's number again collapses it; its next press reopens it. The active
+section assigns `Q W E / A S D / Z X C`, then their Shift variants, to its first 18 visible
+management actions, matching Deeds. Character, ruler, and political-bloc rows that only
+open an information sheet never receive a letter shortcut. Household is active by default
+for a newly opened life; touch layouts show no keyboard selection or badges.
 
 Network → Household also opens the responsive **Household Plan**. Its desktop modal uses a
 wide seven-column table ordered as household head, resident family, then paid retainers.
@@ -1313,10 +1350,13 @@ Card builders are read-only derived projections. They may call status and
 preview adapters but never assign attention, spend resources or days,
 materialize a character, start travel, send an envoy, or declare war.
 `interactionActionRow` renders every action as a native button with a stable
-semantic id and accessible name. Detail text states exact cost, duration,
-Standing effect, cooldown, and replacement consequence supplied by the owning
-system. An unavailable row shows its authoritative blocking reason alone,
-rather than repeating its normal detail and consequence text. Clicking routes
+semantic id and accessible name. Its face keeps only a Deeds-sized primary
+label; desktop number hints sit immediately after that label. Detail text states
+exact cost, duration, Standing effect, cooldown, and replacement consequence
+supplied by the owning system, using the shared hover/focus tooltip on roomy
+desktop layouts and the shared `?` disclosure on touch, narrow, or short layouts.
+An unavailable row shows its authoritative blocking reason alone, rather than
+repeating its normal detail and consequence text. Clicking routes
 to the existing action or confirmation, which
 revalidates its own gate.
 

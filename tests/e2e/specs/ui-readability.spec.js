@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/technology.js',
+  'js/technology.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -65,6 +67,54 @@ test('major information sheets expose contextual Guide routes', async function (
   await expect(page.locator('#household-guide')).toHaveAttribute(
     'aria-label', 'Guide: careers and household work');
 });
+
+test('technology details move the national research audit into responsive help',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const home = p.provinceId;
+      p.tier = 4;
+      p.liege = null;
+      p.provs = [home];
+      s.owner[home] = 'player';
+      s.holder[home] = 'player';
+      FB.foundPlayerRealm(s);
+      s.realms.player.alive = true;
+      s.realms.player.rank = 1;
+      s.realms.player.liege = null;
+      s.realms.player.capital = home;
+      s.realms.player.name = 'Test Sovereignty';
+      FB.invalidateRealmCache();
+      FB.ui.showTechDetail('ribbed_vaulting');
+    });
+
+    const facts = page.locator('.tech-detail-facts');
+    const details = facts.locator('.settcard-details');
+    await expect(facts).toBeVisible();
+    await expect(facts).toContainText('Research details');
+    await expect(details).toBeHidden();
+    await expect(page.locator(
+      '#gm-body > .gm-body-text > .asset-effect-summary')).toHaveCount(0);
+    await facts.hover();
+    const tooltip = page.locator('#tooltip');
+    for (const label of [
+      'Owner', 'Scope', 'Setup cost', 'Recurring cost', 'Effect',
+      'Transfer rule', 'Expiry'
+    ]) {
+      await expect(tooltip).toContainText(label);
+    }
+    await expect(tooltip).toContainText('Test Sovereignty');
+    await expect(tooltip).toContainText(
+      'Occupies one national research slot while active');
+
+    await page.setViewportSize({ width:900, height:720 });
+    const disclosure = facts.locator('.settcard-info');
+    await expect(disclosure).toBeVisible();
+    await disclosure.click();
+    await expect(details).toBeVisible();
+    await expect(details).toContainText('Permanent national knowledge once completed');
+  });
 
 test('Self skill Guide links close back to Self on desktop and phones',
   async function ({ page }) {

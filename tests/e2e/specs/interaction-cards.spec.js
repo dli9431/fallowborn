@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'js/actions.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -161,6 +162,18 @@ test('character cards use the shared grammar and authoritative blocked reasons',
     await expect(page.locator(
       '[data-interaction-action="gift.character"]')).toHaveAttribute(
       'aria-label', /Standing/);
+    var giftAction = page.locator(
+      '[data-interaction-action="gift.character"]');
+    await expect(giftAction.locator(
+      '.interaction-action-label > .keyhint')).toBeVisible();
+    await expect(giftAction.locator(
+      '.interaction-action-detail')).toHaveCount(0);
+    expect(await giftAction.evaluate(function (button) {
+      return window.getComputedStyle(button).fontSize;
+    })).toBe('16px');
+    await giftAction.hover();
+    await expect(page.locator('#tooltip')).toBeVisible();
+    await expect(page.locator('#tooltip')).toContainText('Standing');
     await expect(page.locator(
       '.character-interaction-modal [data-character-home]')).toHaveCount(1);
 
@@ -691,7 +704,7 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
       return { rid:rid };
     });
 
-    await page.locator('[data-council-realm]').click();
+    await page.locator('.council-ruler-heraldry-button').click();
     await expect(page.locator(
       '.character-interaction-modal .interaction-card')).toBeVisible();
     await page.locator('#cm-close').click();
@@ -714,6 +727,18 @@ test('cards preserve modal origins and remain keyboard-safe on a narrow screen',
     await expect(page.locator(
       '[data-interaction-action="feudal.council"]')).toBeVisible();
     expect(rulerId).toBeTruthy();
+
+    var insultEntry = page.locator(
+      '[data-interaction-action="relationship.hostility.insult"]').locator('..');
+    await expect(insultEntry.locator('.settcard-info')).toBeVisible();
+    await expect(insultEntry.locator(
+      '.interaction-action-details')).toBeHidden();
+    await insultEntry.locator('.settcard-info').click();
+    await expect(insultEntry.locator(
+      '.interaction-action-details')).toBeVisible();
+    expect((await insultEntry.locator(
+      '.interaction-action-details').textContent()).trim().length)
+      .toBeGreaterThan(0);
 
     await page.locator(
       '[data-interaction-action="feudal.council"]').click();
@@ -860,7 +885,11 @@ test('war-realm links open the full ruler sheet, even for your own realm',
       s.player.panelIntrosSeen.prov = 1;
       s.player.roleOrientationsSeen = s.player.roleOrientationsSeen || {};
       s.player.roleOrientationsSeen['role-tier-' + p.tier] = 1;
-      return { enemyId:enemyId, enemyCapital:enemyCapital };
+      return {
+        enemyId:enemyId,
+        enemyCapital:enemyCapital,
+        enemyCapitalName:FB.world.byId[enemyCapital].name
+      };
     });
 
     // the land panel war notice under the county name: your own realm's link
@@ -880,6 +909,14 @@ test('war-realm links open the full ruler sheet, even for your own realm',
       .toContainText('Realm muster');
     await expect(page.locator(
       '.character-interaction-modal .character-current-war')).toBeVisible();
+    await expect(page.locator('.character-interaction-modal ' +
+      '.character-war-goal')).toHaveCount(2);
+    await expect(page.locator('.character-interaction-modal ' +
+      '.character-war-goal').nth(0)).toContainText(
+      'Take ' + setup.enemyCapitalName + ' under a fabricated claim.');
+    await expect(page.locator('.character-interaction-modal ' +
+      '.character-war-goal').nth(1)).toContainText(
+      'Hold ' + setup.enemyCapitalName);
 
     // ruler sheet v ruler sheet: the self sheet's war box links out to the
     // enemy ruler's sheet, and the enemy sheet's war box links back

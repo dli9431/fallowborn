@@ -4732,6 +4732,9 @@ window.FB = window.FB || {};
         used.player = activeHosts.player = 1;
         used[enemyRealm] = activeHosts[enemyRealm] = 1;
         if (playerRealm) used[playerRealm] = 1;
+        if (FB.applyPlayerWarEnemyStanding) {
+          FB.applyPlayerWarEnemyStanding(state, pw, 'war:repair');
+        }
         if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
       }
     }
@@ -5813,6 +5816,9 @@ window.FB = window.FB || {};
   FB.warFooting = function (state) {
     const p = state.player;
     if (p.war) playerWarEventId(state);
+    if (p.war && FB.applyPlayerWarEnemyStanding) {
+      FB.applyPlayerWarEnemyStanding(state, p.war, 'war:declaration');
+    }
     if (p.focus !== 'lead_host') { p.focusBack = p.focus; p.focus = 'lead_host'; }
     if (FB.raisePlayerHost) FB.raisePlayerHost(state);
     if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);

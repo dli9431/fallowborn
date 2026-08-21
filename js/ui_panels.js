@@ -64,6 +64,12 @@ window.FB = window.FB || {};
   const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
   let activeActionSection = null;
   let activeActionState = null;
+  let focusSectionOpen = true;
+  const NETWORK_SECTIONS = [
+    'household', 'connections', 'trade', 'politics', 'realm'
+  ];
+  let activeNetworkSection = null;
+  let activeNetworkState = null;
   const DEED_GROUP = {
     poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
     petition_monopoly:'work',
@@ -98,7 +104,7 @@ window.FB = window.FB || {};
     swear_fealty:'war'
   };
   const ACTION_SHORTCUT_KEYS = [
-    'a', 'b', 'g', 'i', 'j', 'o', 'p', 'q', 't', 'u', 'w', 'x', 'y', 'z'
+    'a', 'i', 'j', 'o', 'p', 'q', 'w', 'x', 'z'
   ];
 
   function focusShortcutTarget(focus) {
@@ -113,9 +119,14 @@ window.FB = window.FB || {};
 
   function shortcutBindings() {
     const prefs = FB.game && FB.game.uiPrefs;
-    return prefs && prefs.actionBindings &&
+    const saved = prefs && prefs.actionBindings &&
       typeof prefs.actionBindings === 'object'
       ? prefs.actionBindings : {};
+    const available = {};
+    for (const key of ACTION_SHORTCUT_KEYS) {
+      if (saved[key]) available[key] = saved[key];
+    }
+    return available;
   }
 
   function shortcutKeyFor(target) {
@@ -162,9 +173,11 @@ window.FB = window.FB || {};
   }
 
   function actionSectionButtons(box, id) {
-    if (id === 'focus') return box.querySelectorAll('[data-focus-id]');
     const body = box.querySelector('[data-action-group-body="' + id + '"]');
-    return body ? body.querySelectorAll('[data-action-id]') : [];
+    if (!body || body.hidden) return [];
+    return id === 'focus'
+      ? body.querySelectorAll('[data-focus-id]')
+      : body.querySelectorAll('[data-action-id]');
   }
 
   function refreshDeedPanelShortcuts() {
@@ -219,7 +232,8 @@ window.FB = window.FB || {};
     const id = index === 0 ? 'focus' : ACTION_GROUPS[index - 1].id;
     const header = box.querySelector('[data-action-section="' + id + '"]');
     if (!header) return true;
-    if (id !== 'focus' && header.getAttribute('aria-expanded') === 'false') {
+    if (header.getAttribute('aria-expanded') === 'false' ||
+        activeActionSection === id) {
       header.click();
     } else {
       setActiveActionSection(id);
@@ -267,6 +281,91 @@ window.FB = window.FB || {};
         UI._gmModalAction = actId;
         UI._gmModalTarget = 'action:' + actId;
       }
+      buttons[index].click();
+    }
+    return true;
+  };
+
+  function networkSectionButtons(box, id) {
+    const section = box.querySelector('[data-list-section="' + id + '"]');
+    const body = section && section.querySelector('.large-list-section-body');
+    if (!body || body.hidden) return [];
+    const candidates = body.querySelectorAll('[data-network-action]');
+    return Array.prototype.filter.call(candidates, function (button) {
+      let node = button;
+      while (node && node !== body) {
+        if (node.hidden) return false;
+        node = node.parentElement;
+      }
+      return true;
+    });
+  }
+
+  function refreshNetworkPanelShortcuts() {
+    const box = $('tab-network');
+    if (!box) return;
+    const headings = box.querySelectorAll('[data-list-toggle]');
+    let activeFound = false;
+    for (let i = 0; i < headings.length; i++) {
+      const active = headings[i].getAttribute('data-list-toggle') ===
+        activeNetworkSection;
+      headings[i].classList.toggle('network-section-active', active);
+      if (active) {
+        activeFound = true;
+        headings[i].setAttribute('aria-current', 'true');
+      } else {
+        headings[i].removeAttribute('aria-current');
+      }
+    }
+    if (activeNetworkSection && !activeFound) activeNetworkSection = null;
+    const oldHints = box.querySelectorAll('.network-item-keyhint');
+    for (let i = 0; i < oldHints.length; i++) {
+      oldHints[i].parentNode.removeChild(oldHints[i]);
+    }
+    if (FB.isTouch || !activeNetworkSection) return;
+    const buttons = networkSectionButtons(box, activeNetworkSection);
+    for (let i = 0; i < buttons.length && i < DEED_ITEM_KEYS.length * 2; i++) {
+      buttons[i].insertAdjacentHTML('afterbegin',
+        deedItemHintFor(i).replace('deed-item-keyhint',
+          'deed-item-keyhint network-item-keyhint'));
+    }
+  }
+
+  function setActiveNetworkSection(id) {
+    activeNetworkSection = id;
+    refreshNetworkPanelShortcuts();
+  }
+
+  UI.activateNetworkSection = function (index) {
+    if (index < 0 || index >= NETWORK_SECTIONS.length) return false;
+    const box = $('tab-network');
+    if (!box) return true;
+    const id = NETWORK_SECTIONS[index];
+    const heading = box.querySelector('[data-list-toggle="' + id + '"]');
+    if (!heading) return true;
+    if (heading.getAttribute('aria-expanded') === 'false' ||
+        activeNetworkSection === id) {
+      heading.click();
+    } else {
+      setActiveNetworkSection(id);
+    }
+    heading.scrollIntoView({ block:'start' });
+    heading.focus({ preventScroll:true });
+    return true;
+  };
+
+  UI.runNetworkItemShortcut = function (key, run, shift) {
+    if (!activeNetworkSection) return false;
+    const normalized = String(key || '').toLocaleLowerCase();
+    let index = DEED_ITEM_KEYS.indexOf(normalized);
+    if (index < 0) return false;
+    if (shift) index += DEED_ITEM_KEYS.length;
+    const box = $('tab-network');
+    const buttons = box ? networkSectionButtons(box, activeNetworkSection) : [];
+    if (run !== false && index < buttons.length && !buttons[index].disabled) {
+      UI._gmModalKey = (shift ? 'shift+' : '') + normalized;
+      UI._gmModalAction = null;
+      UI._gmModalTarget = null;
       buttons[index].click();
     }
     return true;
@@ -901,6 +1000,7 @@ window.FB = window.FB || {};
     if (activeActionState !== s) {
       activeActionState = s;
       activeActionSection = FB.isTouch ? null : 'focus';
+      focusSectionOpen = true;
     }
     let h = '';
     if (FB.tutorialActive && FB.tutorialActive(s) &&
@@ -1129,34 +1229,70 @@ window.FB = window.FB || {};
       }
       return body;
     }
-    function appendFocus(f) {
+    function appendFocus(f, container) {
       const cur = s.player.focus === f.id;
+      const row = document.createElement('div');
       const btn = document.createElement('button');
-      btn.className = 'actionbtn' + (cur ? ' focused' : '');
+      const detailsId = 'focus-details-' + f.id;
+      row.className = 'deed-entry focus-entry settcard';
+      btn.className = 'actionbtn deed-main-action' +
+        (cur ? ' focused' : '');
       btn.setAttribute('data-focus-id', f.id);
+      btn.setAttribute('aria-describedby', detailsId);
       btn.innerHTML = shortcutHintFor(focusShortcutTarget(f)) +
-        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label')) +
-        '<span class="adesc">' + esc(FB.translateKnown(f.desc(s))) + '</span>';
+        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label'));
       (function (id) {
         btn.addEventListener('click', function () {
           setActiveActionSection('focus');
           FB.setFocus(FB.state, id);
         });
       })(f.id);
-      box.appendChild(btn);
+      const actions = document.createElement('span');
+      actions.className = 'settcard-actions';
+      const detailsButton = document.createElement('button');
+      detailsButton.type = 'button';
+      detailsButton.className = 'btn small settcard-info deed-info';
+      detailsButton.textContent = '?';
+      detailsButton.title = FB.T('Details');
+      detailsButton.setAttribute('aria-label', FB.T('Details'));
+      detailsButton.setAttribute('aria-expanded', 'false');
+      detailsButton.setAttribute('aria-controls', detailsId);
+      actions.appendChild(detailsButton);
+      const details = document.createElement('div');
+      details.id = detailsId;
+      details.className = 'settcard-details deed-details hidden';
+      details.textContent = FB.translateKnown(f.desc(s));
+      row.appendChild(btn);
+      row.appendChild(actions);
+      row.appendChild(details);
+      container.appendChild(row);
     }
     if (focuses.length) {
-      const fh = document.createElement('div');
-      fh.className = 'actionsubhead';
+      const fh = document.createElement('button');
+      fh.className = 'actiongroup-toggle';
       fh.id = 'daily-focus-list';
-      fh.tabIndex = -1;
-      fh.setAttribute('role', 'heading');
-      fh.setAttribute('aria-level', '3');
       fh.setAttribute('data-action-section', 'focus');
-      fh.innerHTML = actionSectionHintFor('focus') +
-        esc(FB.T('Daily Focus — repeats automatically whenever a day passes'));
+      fh.setAttribute('aria-expanded', focusSectionOpen ? 'true' : 'false');
+      fh.innerHTML = '<span>' + actionSectionHintFor('focus') +
+        esc(FB.T('Daily Focus — repeats automatically whenever a day passes')) +
+        '</span><span>' + esc(String(focuses.length)) + ' ' +
+        (focusSectionOpen ? '▾' : '▸') + '</span>';
+      const focusBody = document.createElement('div');
+      focusBody.className = 'actiongroup-body';
+      focusBody.setAttribute('data-action-group-body', 'focus');
+      focusBody.hidden = !focusSectionOpen;
+      fh.addEventListener('click', function () {
+        setActiveActionSection('focus');
+        focusSectionOpen = !focusSectionOpen;
+        fh.setAttribute('aria-expanded', focusSectionOpen ? 'true' : 'false');
+        fh.lastElementChild.textContent = String(focuses.length) + ' ' +
+          (focusSectionOpen ? '▾' : '▸');
+        focusBody.hidden = !focusSectionOpen;
+        refreshDeedPanelShortcuts();
+      });
       box.appendChild(fh);
-      for (const f of focuses) appendFocus(f);
+      for (const f of focuses) appendFocus(f, focusBody);
+      box.appendChild(focusBody);
     }
     for (const group of ACTION_GROUPS) {
       const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
@@ -1238,7 +1374,8 @@ window.FB = window.FB || {};
         button.addEventListener('click', function () {
           const commitment = button.dataset.commitment;
           if (commitment === 'focus') {
-            setActiveActionSection('focus');
+            if (!focusSectionOpen) $('daily-focus-list').click();
+            else setActiveActionSection('focus');
             focusActionControl('#daily-focus-list', null, 'start');
           } else if (commitment === 'personal-attention') {
             const target = FB.socialAttentionTarget(s);
@@ -2700,6 +2837,91 @@ window.FB = window.FB || {};
     return FB.T('levy');
   }
 
+  function networkStatePresentation(record, detailsKey, fallbackLabel) {
+    const label = record.stateLabel || fallbackLabel;
+    if (record.hideStateFace && !record.stateInDetails) {
+      return { cardClass:'', face:'', details:'' };
+    }
+    if (!record.stateInDetails) {
+      return {
+        cardClass:'',
+        face:largeListStateLabel(label, record.attention),
+        details:''
+      };
+    }
+    const detailsId = 'network-state-' + String(detailsKey || record.identity ||
+      'row').replace(/[^a-zA-Z0-9_-]/g, '-');
+    return {
+      cardClass:' settcard network-state-details',
+      face:'',
+      details:'<span class="settcard-actions network-state-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' +
+        '<div class="settcard-details hidden" id="' + esc(detailsId) + '">' +
+        '<b>' + esc(label) + '</b>' + (record.stateDetails || '') + '</div>'
+    };
+  }
+
+  function networkContextDetailsHtml(lines) {
+    let html = '<div class="network-state-context">';
+    for (const line of lines || []) {
+      if (line) html += '<div>' + esc(line) + '</div>';
+    }
+    return html + '</div>';
+  }
+
+  function networkContextSectionHtml(title, lines, itemClass) {
+    let html = '<div class="network-state-context-section"><div ' +
+      'class="network-state-context-heading">' + esc(title) + '</div>';
+    for (const line of lines || []) {
+      if (!line) continue;
+      html += '<div' + (itemClass ? ' class="' + esc(itemClass) + '"' : '') +
+        '>' + esc(line) + '</div>';
+    }
+    return html + '</div>';
+  }
+
+  function networkCharacterStateDetails(s, record) {
+    const c = record.character;
+    const lines = [FB.T('Age {age}', { age:FB.ageOf(c, s.date.year) })];
+    const home = c.homeProvinceId && FB.world.byId[c.homeProvinceId];
+    if (home) {
+      lines.push(FB.T('Home: {province}', { province:home.name }));
+    }
+    for (const item of record.detailMeta || record.meta || []) {
+      lines.push(item);
+    }
+    lines.push(FB.T('Standing {standing}', {
+      standing:standingText(FB.standingOf(s, {
+        kind:'character', id:c.id
+      }))
+    }));
+    if (c.id !== s.player.charId && SH.characterStandingContext) {
+      lines.push(SH.characterStandingContext(s, c));
+    }
+    return networkContextDetailsHtml(lines);
+  }
+
+  function networkActionHtml(detailsKey, buttonAttrs, labelHtml, detailsHtml,
+    options) {
+    const opts = options || {};
+    const detailsId = 'network-action-' + String(detailsKey || 'action')
+      .replace(/[^a-zA-Z0-9_-]/g, '-');
+    return '<div class="network-action-entry settcard' +
+      (opts.wrapperClass || '') + '"' + (opts.wrapperAttrs || '') + '>' +
+      '<button type="button" class="actionbtn network-main-action" ' +
+      (buttonAttrs || '') + ' aria-describedby="' + esc(detailsId) + '">' +
+      labelHtml + '</button><span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + esc(detailsId) +
+      '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span>' +
+      '<div class="settcard-details network-action-details hidden" id="' +
+      esc(detailsId) + '">' + detailsHtml + '</div></div>';
+  }
+
   function networkReadablePersonRow(s, sectionId, record) {
     const c = record.character;
     const attrs = largeListRowAttrs({
@@ -2708,7 +2930,11 @@ window.FB = window.FB || {};
       identity:c.id
     });
     const standing = FB.standingOf(s, { kind:'character', id:c.id });
-    return '<div class="large-list-entry network-list-entry"' + attrs + '>' +
+    const state = networkStatePresentation(record,
+      sectionId + '-person-' + c.id,
+      record.attention ? FB.T('Needs attention') : FB.T('Routine'));
+    return '<div class="large-list-entry network-list-entry' +
+      state.cardClass + '"' + attrs + '>' +
       '<button type="button" class="charrow large-list-target-button" data-cid="' +
       esc(c.id) + '" data-list-focus-key="' + esc(sectionId + '-person-' + c.id) +
       '" title="' + esc(FB.T('Open the authoritative character sheet')) + '">' +
@@ -2718,10 +2944,8 @@ window.FB = window.FB || {};
       esc(record.meta.join(' · ')) + '</span></span>' +
       '<span class="cop ' + standingClass(standing) + '">' +
       esc(standingValue(standing)) + '</span>' +
-      largeListStateLabel(record.stateLabel ||
-        (record.attention ? FB.T('Needs attention') : FB.T('Routine')),
-      record.attention) + '</button>' +
-      (record.actionHtml || '') + '</div>';
+      state.face + '</button>' +
+      (record.actionHtml || '') + state.details + '</div>';
   }
 
   function networkReadableRealmRow(s, record) {
@@ -2731,7 +2955,11 @@ window.FB = window.FB || {};
       states:['realms', record.state || 'routine'],
       identity:record.rid
     });
-    return '<div class="large-list-entry network-list-entry"' + attrs + '>' +
+    const state = networkStatePresentation(record,
+      'realm-' + record.rid,
+      record.attention ? FB.T('Needs attention') : FB.T('Routine'));
+    return '<div class="large-list-entry network-list-entry' +
+      state.cardClass + '"' + attrs + '>' +
       '<button type="button" class="actionbtn large-list-target-button" data-liege="' +
       esc(record.rid) + '" data-list-focus-key="realm-target-' +
       esc(record.rid) + '" title="' +
@@ -2739,10 +2967,8 @@ window.FB = window.FB || {};
       '<span class="large-list-row-copy"><span class="large-list-row-title">' +
       esc(r ? r.name : record.rid) + '</span><span class="adesc">' +
       esc(record.meta.join(' · ')) + '</span></span>' +
-      largeListStateLabel(record.stateLabel ||
-        (record.attention ? FB.T('Needs attention') : FB.T('Routine')),
-      record.attention) + '</button>' +
-      (record.actionHtml || '') + '</div>';
+      state.face + '</button>' +
+      (record.actionHtml || '') + state.details + '</div>';
   }
 
   function networkReadableStaticRow(record) {
@@ -2751,15 +2977,18 @@ window.FB = window.FB || {};
       states:[record.kind || 'other', record.state || 'routine'],
       identity:record.identity
     });
+    const state = networkStatePresentation(record,
+      'static-' + record.identity,
+      record.attention ? FB.T('Needs attention') : FB.T('Context'));
     return '<div class="large-list-entry network-list-entry ' +
-      'large-list-static-row"' + attrs + '><div class="large-list-row-copy">' +
+      'large-list-static-row' + state.cardClass + '"' + attrs +
+      (record.stateInDetails ? ' tabindex="0"' : '') +
+      '><div class="large-list-row-copy">' +
       '<span class="large-list-row-title">' + esc(record.title) + '</span>' +
       (record.meta && record.meta.length
         ? '<span class="cmeta">' + esc(record.meta.join(' · ')) + '</span>'
         : '') + '</div>' +
-      largeListStateLabel(record.stateLabel ||
-        (record.attention ? FB.T('Needs attention') : FB.T('Context')),
-      record.attention) + '</div>';
+      state.face + state.details + '</div>';
   }
 
   function sortReadableRows(rows) {
@@ -2775,6 +3004,10 @@ window.FB = window.FB || {};
   function renderNetwork() {
     const s = FB.state;
     const box = $('tab-network');
+    if (activeNetworkState !== s) {
+      activeNetworkState = s;
+      activeNetworkSection = FB.isTouch ? null : NETWORK_SECTIONS[0];
+    }
     const me = s.chars[s.player.charId];
     const family = FB.householdMembers(s);
     const retainers = FB.retainerRecords(s);
@@ -2817,7 +3050,7 @@ window.FB = window.FB || {};
       const def = career && FBDATA.careers[career.profession];
       const meta = [];
       if (source.family) {
-        meta.push(c.id === me.id ? FB.T('Household head') :
+        meta.push(c.id === me.id ? FB.T('You — Household head') :
           (relationText(s, c) || FB.T('Resident family')));
       }
       if (source.retainer) {
@@ -2846,10 +3079,12 @@ window.FB = window.FB || {};
         attention:!!unpaid,
         state:unpaid ? 'warning' : 'routine',
         stateLabel:unpaid ? FB.T('Pay warning') : FB.T('Established'),
+        stateInDetails:!unpaid,
         priority:source.retainer ? 1 : 0,
         index:source.index,
         identity:c.id
       };
+      model.stateDetails = networkCharacterStateDetails(s, model);
       model.html = networkReadablePersonRow(s, 'household', model);
       householdRows.push(model);
     }
@@ -2858,24 +3093,29 @@ window.FB = window.FB || {};
       const vacancy = {
         attention:true,
         state:'vacancy',
+        stateLabel:FB.T('Vacancy'),
         priority:-1,
         index:0,
         identity:'retainer-vacancy',
         html:''
       };
-      vacancy.html = '<div class="large-list-entry network-list-entry"' +
-        largeListRowAttrs({
+      const vacancyAttrs = largeListRowAttrs({
           attention:true,
           states:['people', 'vacancy'],
           identity:'retainer-vacancy'
-        }) + '><button type="button" class="actionbtn large-list-target-button" ' +
-        'id="network-hire" data-list-focus-key="household-retainer-vacancy">' +
-        '<span class="large-list-row-copy"><span class="large-list-row-title">' +
-        esc(FB.T('Hire a retainer…')) + '</span><span class="adesc">' +
-        esc(FB.T('{count} household service slots are open. Service is paid each season.', {
+        });
+      vacancy.html = networkActionHtml('hire-retainer',
+        'id="network-hire" data-network-action ' +
+        'data-list-focus-key="household-retainer-vacancy"',
+        esc(FB.T('Hire a retainer…')),
+        '<b>' + esc(FB.T('Vacancy')) + '</b><br>' +
+        esc(FB.T(
+          '{count} household service slots are open. Service is paid each season.', {
           count:vacancyCount
-        })) + '</span></span>' +
-        largeListStateLabel(FB.T('Vacancy'), true) + '</button></div>';
+        })), {
+          wrapperClass:' network-list-entry network-list-action-row',
+          wrapperAttrs:vacancyAttrs
+        });
       householdRows.push(vacancy);
     }
     sortReadableRows(householdRows);
@@ -2896,11 +3136,11 @@ window.FB = window.FB || {};
       householdSummary += kv('Retainer contracts each season',
         esc(FB.money(FB.retainerSeasonCost(s))));
     }
-    householdSummary += '<button class="actionbtn" id="network-household-plan">📋 ' +
-      esc(FB.T('Household Plan…')) + '<span class="adesc">' +
+    householdSummary += networkActionHtml('household-plan',
+      'id="network-household-plan" data-network-action',
+      '📋 ' + esc(FB.T('Household Plan…')),
       esc(FB.T(
-        'Review education, work, assignments, matches, and equipment for every managed person.')) +
-      '</span></button>';
+        'Review education, work, assignments, matches, and equipment for every managed person.')));
     if (!capacity) {
       householdSummary += '<div class="hint">' + esc(FB.T(
         'A serf household cannot yet maintain paid servants.')) + '</div>';
@@ -2963,11 +3203,14 @@ window.FB = window.FB || {};
     for (const cid in connectionById) {
       const record = connectionById[cid];
       record.meta = record.labels.slice();
+      record.detailMeta = record.labels.slice();
       record.meta.push(FB.T('Standing {standing}', {
         standing:standingValue(FB.standingOf(s, {
           kind:'character', id:record.character.id
         }))
       }));
+      record.stateInDetails = !record.attention;
+      record.stateDetails = networkCharacterStateDetails(s, record);
       record.html = networkReadablePersonRow(s, 'connections', record);
       connectionRows.push(record);
     }
@@ -3167,12 +3410,7 @@ window.FB = window.FB || {};
           'Personal work perk: guild membership adds {money:amount} to each season at the bench.',
           { amount:1 }));
       }
-      const actionHtml = '<button type="button" class="btn small ' +
-        'large-list-inline-action" data-guild-favor="' + esc(c.id) + '"' +
-        (!favor || !favor.ready ? ' disabled' : '') +
-        ' data-list-focus-key="guild-favor-' + esc(c.id) + '">' +
-        esc(FB.T('Call in guild commissions')) + '<span class="adesc">' +
-        esc(!favor ? FB.T('No guild favor is available.')
+      const favorDetails = !favor ? FB.T('No guild favor is available.')
           : !favor.cooldownReady ? FB.T('Only one guild favor may be called each year.')
           : favor.standing < favor.cost ? FB.T(
             'Requires {standing} standing; currently {current}. Active guild work restores {gain} each New Year, up to {maximum}.', {
@@ -3185,7 +3423,14 @@ window.FB = window.FB || {};
             }) : FB.T(
               'Spend {standing} standing for commissions worth {money:amount}; one favor may be called each year. (spends the day)', {
                 standing:favor.cost, amount:favor.amount
-              })) + '</span></button>';
+              });
+      const actionHtml = networkActionHtml('guild-favor-' + c.id,
+        'data-network-action data-guild-favor="' + esc(c.id) + '"' +
+        (!favor || !favor.ready ? ' disabled' : '') +
+        ' data-list-focus-key="guild-favor-' + esc(c.id) + '"',
+        esc(FB.T('Call in guild commissions')), esc(favorDetails), {
+          wrapperClass:' network-inline-action'
+        });
       const record = {
         character:c,
         meta:meta,
@@ -3240,33 +3485,35 @@ window.FB = window.FB || {};
     }
     sortReadableRows(tradeRows);
     let tradeSummary =
-      '<button class="actionbtn" id="network-market">⚖ ' +
-      esc(FB.T('Market…')) + '<span class="adesc">' +
-      esc(FB.T('Inspect local prices, stocks, historical endowments, ventures, and charters.')) +
-      '</span></button>' +
-      '<button class="actionbtn" id="network-work">🧰 ' +
-      esc(FB.T('Work & Enterprises…')) + '<span class="adesc">' +
-      esc(FB.T(
-        'Open the authoritative career, office, enterprise, and staffing controls.')) +
-      '</span></button>';
-    if (FB.financeUiRelevant(s)) {
-      tradeSummary += '<button class="actionbtn" id="network-finance">📜 ' +
-        esc(FB.T('Finance…')) + '<span class="adesc">' +
+      networkActionHtml('market',
+        'id="network-market" data-network-action',
+        '⚖ ' + esc(FB.T('Market…')),
         esc(FB.T(
-          'Review loans, trade partnerships, dispatched ventures, and coinage.')) +
-        '</span></button>';
+          'Inspect local prices, stocks, historical endowments, ventures, and charters.'))) +
+      networkActionHtml('work',
+        'id="network-work" data-network-action',
+        '🧰 ' + esc(FB.T('Work & Enterprises…')),
+        esc(FB.T(
+          'Open the authoritative career, office, enterprise, and staffing controls.')));
+    if (FB.financeUiRelevant(s)) {
+      tradeSummary += networkActionHtml('finance',
+        'id="network-finance" data-network-action',
+        '📜 ' + esc(FB.T('Finance…')),
+        esc(FB.T(
+          'Review loans, trade partnerships, dispatched ventures, and coinage.')));
     }
     if (FB.privilegeSummary) {
       const privilegeCount = FB.privilegeSummary(s).length;
       const demandSummary = FB.collectiveDemandSummary
         ? FB.collectiveDemandSummary(s) : { opposition:[] };
-      tradeSummary += '<button class="actionbtn" id="network-privileges">📜 ' +
-        esc(FB.T('Privileges & charters…')) + '<span class="adesc">' +
+      tradeSummary += networkActionHtml('privileges',
+        'id="network-privileges" data-network-action',
+        '📜 ' + esc(FB.T('Privileges & charters…')),
         esc(FB.T(
           '{count} active legal contracts · {opposition} organized constituencies. Review holders, scope, exact effects, terms, and revocation.', {
             count:privilegeCount,
             opposition:demandSummary.opposition.length
-          })) + '</span></button>';
+          })));
     }
     if (incomingMonopoly || outgoingMonopoly) {
       tradeSummary += '<div class="hint">' + esc(FB.T(
@@ -3302,12 +3549,11 @@ window.FB = window.FB || {};
           : '<div class="hint">' + esc(politics.forecasts
             ? FB.T('No motion is pending; current allegiances and ordinary Estates forecasts are shown below.')
             : FB.T('No motion is pending; current allegiances and influence are shown below.')) +
-            '</div>') +
-        '<button class="actionbtn" id="network-politics">🏛 ' +
-        esc(FB.T('Open political blocs in Governance…')) +
-        '<span class="adesc">' + esc(FB.T(
-          'Review leaders, member houses, interests, influence, and any pending vote forecast.')) +
-        '</span></button>';
+            '</div>') + networkActionHtml('politics',
+          'id="network-politics" data-network-action',
+          '🏛 ' + esc(FB.T('Open political blocs in Governance…')),
+          esc(FB.T(
+            'Review leaders, member houses, interests, influence, and any pending vote forecast.')));
       const displayedBlocs = politics.motion
         ? politics.motion.blocs : politics.blocs;
       for (let i = 0; i < displayedBlocs.length; i++) {
@@ -3347,6 +3593,63 @@ window.FB = window.FB || {};
         }
         const attention = !!(politics.motion &&
           bloc.posture === 'undecided');
+        const overviewLines = [];
+        if (def.desc) {
+          overviewLines.push(dt(s, 'politicalBloc', bloc.archetypeId,
+            def, 'desc'));
+        }
+        let leader = null;
+        for (const house of politics.houses || []) {
+          if (house.id === bloc.leaderHouseId) {
+            leader = house;
+            break;
+          }
+        }
+        if (leader) {
+          overviewLines.push(FB.T('Leader: {leader}', {
+            leader:leader.name
+          }));
+        }
+        overviewLines.push(meta.join(' · '));
+        let politicalDetails = networkContextSectionHtml(
+          FB.T('Overview'), overviewLines);
+        if (bloc.members && bloc.members.length) {
+          const memberPreview = bloc.members.slice(0, 4).map(function (house) {
+            return house.name;
+          }).join(', ');
+          politicalDetails += networkContextSectionHtml(FB.T('Members'), [
+            bloc.members.length > 4
+              ? FB.T('{members} (+{count} more)', {
+                members:memberPreview,
+                count:bloc.members.length - 4
+              })
+              : memberPreview
+          ]);
+        }
+        if (bloc.interests && bloc.interests.length &&
+            SH.politicalInterestReason) {
+          const interestLimit = 3;
+          const rankedInterests = bloc.interests.map(function (item, index) {
+            return { item:item, index:index };
+          }).sort(function (a, b) {
+            return Math.abs(Number(b.item.value) || 0) -
+              Math.abs(Number(a.item.value) || 0) || a.index - b.index;
+          });
+          const interestLines = rankedInterests.slice(0, interestLimit).map(
+            function (item) {
+              return SH.politicalInterestReason(s, politics, item.item);
+            });
+          politicalDetails += networkContextSectionHtml(
+            FB.T('Key interests'), interestLines,
+            'network-state-interest-preview');
+          if (bloc.interests.length > interestLimit) {
+            politicalDetails += '<div class="network-state-context-more">' +
+              esc(FB.T(
+                '+{count} more interests. Open Governance for the full breakdown.', {
+                  count:bloc.interests.length - interestLimit
+                })) + '</div>';
+          }
+        }
         const attrs = largeListRowAttrs({
           attention:attention,
           states:['realms', attention ? 'opportunity' : 'routine'],
@@ -3357,12 +3660,18 @@ window.FB = window.FB || {};
           state:attention ? 'opportunity' : 'routine',
           stateLabel:politics.motion
             ? SH.politicalPostureText(bloc.posture) : FB.T('Established'),
+          stateInDetails:!politics.motion,
+          stateDetails:'<div class="network-state-context">' +
+            politicalDetails + '</div>',
           priority:i,
           index:i,
           identity:'political-' + bloc.id,
           kind:'realms'
         };
-        row.html = '<div class="large-list-entry network-list-entry"' +
+        const blocState = networkStatePresentation(row,
+          'political-' + bloc.id, FB.T('Established'));
+        row.html = '<div class="large-list-entry network-list-entry' +
+          blocState.cardClass + '"' +
           attrs + '><button type="button" class="actionbtn ' +
           'large-list-target-button" data-network-political-bloc="' +
           esc(bloc.id) + '" data-list-focus-key="political-' +
@@ -3370,8 +3679,8 @@ window.FB = window.FB || {};
           '<span class="large-list-row-title">' + (def.icon || '') + ' ' +
           esc(SH.politicalBlocName(s, politics, bloc)) + '</span>' +
           '<span class="adesc">' + esc(meta.join(' · ')) +
-          '</span></span>' + largeListStateLabel(
-            row.stateLabel, row.attention) + '</button></div>';
+          '</span></span>' + blocState.face + '</button>' +
+          blocState.details + '</div>';
         politicalRows.push(row);
       }
     }
@@ -3420,11 +3729,11 @@ window.FB = window.FB || {};
       realmSpecialRows.push(councilRecord);
     }
     if (governance) {
-      realmSummary += '<button class="actionbtn" id="network-governance">🏛 ' +
-        esc(FB.T('Governance…')) + '<span class="adesc">' +
+      realmSummary += networkActionHtml('governance',
+        'id="network-governance" data-network-action',
+        '🏛 ' + esc(FB.T('Governance…')),
         esc(FB.T(
-          'Open the authoritative view of your political position, domain, obligations, vassals, institution, and realm actions.')) +
-        '</span></button>';
+          'Open the authoritative view of your political position, domain, obligations, vassals, institution, and realm actions.')));
     }
     if (FB.councilActive && FB.councilActive(s)) {
       const council = s.council;
@@ -3443,8 +3752,9 @@ window.FB = window.FB || {};
       } else {
         vacancies = FB.councilSeats().length;
       }
-      realmSummary += '<button class="actionbtn" id="network-council">🏛 ' +
-        esc(FB.T('Royal Council')) + '<span class="adesc">' +
+      realmSummary += networkActionHtml('council',
+        'id="network-council" data-network-action',
+        '🏛 ' + esc(FB.T('Royal Council')),
         esc(council
           ? FB.T(
             '{count} officers · {vacancies} vacancies or inactive seats · crown authority {authority}/100 · open the Council to manage the great offices.', {
@@ -3452,13 +3762,13 @@ window.FB = window.FB || {};
               authority:Math.round(council.authority)
             })
           : FB.T(
-            'The great offices have not formed yet. Open the Council to establish them.')) +
-        '</span></button>';
+            'The great offices have not formed yet. Open the Council to establish them.')));
       if (vacancies) {
         const vacancyRecord = {
           attention:true,
           state:'vacancy',
           stateLabel:FB.T('Vacancy'),
+          stateInDetails:true,
           priority:0,
           index:0,
           identity:'council-vacancies',
@@ -3473,11 +3783,11 @@ window.FB = window.FB || {};
       }
     }
     if (FB.parliamentActive && FB.parliamentActive(s)) {
-      realmSummary += '<button class="actionbtn" id="network-estates">📜 ' +
-        esc(FB.T('The Estates…')) + '<span class="adesc">' +
+      realmSummary += networkActionHtml('estates',
+        'id="network-estates" data-network-action',
+        '📜 ' + esc(FB.T('The Estates…')),
         esc(FB.T(
-          'Open the authoritative assembly view for aid, scutage, and current terms.')) +
-        '</span></button>';
+          'Open the authoritative assembly view for aid, scutage, and current terms.')));
     }
     const realmById = {};
     let realmOrder = 0;
@@ -3535,12 +3845,7 @@ window.FB = window.FB || {};
           record.state = 'commitment';
           record.stateLabel = FB.T('Active commitment');
         }
-        record.actionHtml = '<button type="button" class="btn small ' +
-          'large-list-inline-action" data-vassal-favor="' + esc(rid) + '"' +
-          (!readyFavor ? ' disabled' : '') +
-          ' data-list-focus-key="vassal-favor-' + esc(rid) + '">' +
-          esc(FB.T('Ask for an exceptional levy')) + '<span class="adesc">' +
-          esc(activeFavor
+        const favorDetails = activeFavor
             ? FB.T('The exceptional levy is already promised.')
             : FB.standingOf(s, { kind:'realm', id:rid }) < 40
               ? FB.T('Requires 40 Standing; currently {standing}.', {
@@ -3552,7 +3857,14 @@ window.FB = window.FB || {};
                 'For one year this vassal sends an extra {percent}% of its levy; lowers Standing by 15. (spends the day)', {
                   percent:Math.round(
                     (FBDATA.balance.vassalLevyFavorRate || 0.05) * 100)
-                })) + '</span></button>';
+                });
+        record.actionHtml = networkActionHtml('vassal-favor-' + rid,
+          'data-network-action data-vassal-favor="' + esc(rid) + '"' +
+          (!readyFavor ? ' disabled' : '') +
+          ' data-list-focus-key="vassal-favor-' + esc(rid) + '"',
+          esc(FB.T('Ask for an exceptional levy')), esc(favorDetails), {
+            wrapperClass:' network-inline-action'
+          });
       }
     }
 
@@ -3584,6 +3896,7 @@ window.FB = window.FB || {};
         ? 'warning' : 'commitment';
       record.stateLabel = record.state === 'warning'
         ? FB.T('Warning') : FB.T('Active commitment');
+      record.hideStateFace = record.state === 'warning';
     }
 
     const realmRows = [];
@@ -3642,6 +3955,7 @@ window.FB = window.FB || {};
     const markup = intro + largeListSurfaceHtml('network', [
       {
         id:'household',
+        hotkey:1,
         title:FB.T('Household'),
         summary:householdSummary,
         rows:householdRows,
@@ -3649,6 +3963,7 @@ window.FB = window.FB || {};
       },
       {
         id:'connections',
+        hotkey:2,
         headingId:'network-connections',
         title:FB.T('Connections'),
         summary:connectionsSummary,
@@ -3657,6 +3972,7 @@ window.FB = window.FB || {};
       },
       {
         id:'trade',
+        hotkey:3,
         title:FB.T('Trade & Guild'),
         summary:tradeSummary,
         rows:tradeRows,
@@ -3664,6 +3980,7 @@ window.FB = window.FB || {};
       },
       {
         id:'politics',
+        hotkey:4,
         title:FB.T('Political blocs'),
         summary:politicalSummary,
         rows:politicalRows,
@@ -3671,24 +3988,34 @@ window.FB = window.FB || {};
       },
       {
         id:'realm',
+        hotkey:5,
         title:FB.T('Realm'),
         summary:realmSummary,
         rows:realmRows,
         empty:FB.T('No realm ties.')
       }
-    ], [
-      { id:'all', label:FB.T('All') },
-      { id:'attention', label:FB.T('Needs attention') },
-      { id:'people', label:FB.T('People') },
-      { id:'realms', label:FB.T('Realms') }
-    ]);
+    ], [], { searchable:false });
     if (!replacePanelMarkup('network', box, markup)) {
       FB.paintFaces(box, s);
+      refreshNetworkPanelShortcuts();
       return;
     }
     FB.localizeTree(box);
     FB.paintFaces(box, s);
     initLargeListSurface('network', { restoreFocus:true });
+    if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
+    const sectionToggles = box.querySelectorAll('[data-list-toggle]');
+    for (let i = 0; i < sectionToggles.length; i++) {
+      sectionToggles[i].addEventListener('click', function () {
+        setActiveNetworkSection(
+          sectionToggles[i].getAttribute('data-list-toggle'));
+      });
+    }
+    const showAllButtons = box.querySelectorAll('[data-list-show-all]');
+    for (let i = 0; i < showAllButtons.length; i++) {
+      showAllButtons[i].addEventListener('click', refreshNetworkPanelShortcuts);
+    }
+    refreshNetworkPanelShortcuts();
 
     const householdPlan = $('network-household-plan');
     if (householdPlan) {

@@ -135,7 +135,9 @@ own buildings and property. The explicit county-targeting modes (travel,
 armies) still receive the parent county. The new-game pick is the one
 exception: it is two stages — a county tap zooms into the county (zoom 14, so
 its settlements draw with emblems and labels straight from the compiled
-bookmark data), and a second tap on a marker in the chosen county, or the
+bookmark data). Detailed-zoom settlement names render at 12.5 CSS px for cities
+and 11.5 CSS px for towns and villages, scaled by the device pixel ratio before
+canvas drawing. A second tap on a marker in the chosen county, or the
 matching button in the pick bar, settles the birthplace slot. The slot is
 stored as `player.homeSettlement` (0, the county head, is the default and the
 only value older saves know), steers the farmer start's plot, and spells the

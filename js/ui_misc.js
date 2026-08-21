@@ -822,7 +822,11 @@ window.FB = window.FB || {};
       'data-list-toggle="' + esc(section.id) + '" data-list-focus-key="toggle-' +
       esc(section.id) + '" aria-expanded="' + (!state.collapsed) +
       '" aria-controls="' + bodyId + '" aria-label="' + esc(ariaLabel) + '">' +
-      '<span class="large-list-section-title">' + esc(section.title) + '</span>' +
+      '<span class="large-list-section-title">' +
+      (section.hotkey && !FB.isTouch
+        ? '<span class="keyhint large-list-section-keyhint">' +
+          esc(String(section.hotkey)) + '</span>'
+        : '') + esc(section.title) + '</span>' +
       '<span class="large-list-section-count">' + esc(countText) + '</span>' +
       '<span class="large-list-attention-count' +
       (attention ? '' : ' none') + '">' + esc(attentionText) + '</span>' +
@@ -871,12 +875,15 @@ window.FB = window.FB || {};
     const large = total > LARGE_LIST_THRESHOLD;
     const opts = options || {};
     const controlsHtml = opts.controlsHtml || '';
+    const searchable = opts.searchable !== false;
+    if (!searchable) view.search = '';
+    if (!filters || !filters.length) view.filter = 'all';
     const collapsibleFilters = opts.collapsibleFilters !== undefined
       ? !!opts.collapsibleFilters
       : (surface === 'work');
 
     let toolbarHtml = '';
-    if (large) {
+    if (large && searchable) {
       const searchId = surface + '-list-search';
       toolbarHtml += '<div class="large-list-search"><label for="' + searchId + '">' +
         esc(FB.T('Search this list')) + '</label><div>' +
@@ -1361,21 +1368,35 @@ window.FB = window.FB || {};
         return !!part && parts.indexOf(part) === index;
       });
     const accessible = accessibleParts.join('. ');
-    return '<button type="button" class="actionbtn interaction-action" ' +
+    const detailsId = 'interaction-action-details-' + String(action.id)
+      .replace(/[^A-Za-z0-9_-]/g, '-');
+    let details = '';
+    if (visibleDetail) {
+      details += '<div class="interaction-action-detail">' +
+        esc(visibleDetail) + '</div>';
+    }
+    if (blocked) {
+      details += '<div class="interaction-blocked">' +
+        esc(FB.T('Unavailable: {reason}', { reason:blocked })) + '</div>';
+    }
+    if (visibleConsequence) {
+      details += '<div class="interaction-consequence">' +
+        esc(visibleConsequence) + '</div>';
+    }
+    return '<div class="settcard interaction-action-entry">' +
+      '<button type="button" class="actionbtn interaction-action" ' +
       'data-interaction-action="' + esc(action.id) + '"' +
       (action.domId ? ' id="' + esc(action.domId) + '"' : '') +
       (enabled ? '' : ' disabled') +
       ' aria-label="' + esc(accessible) + '">' +
       '<span class="interaction-action-label">' + esc(action.label) +
-      '</span>' +
-      (visibleDetail ? '<span class="adesc interaction-action-detail">' +
-        esc(visibleDetail) + '</span>' : '') +
-      (blocked ? '<span class="adesc interaction-blocked">' +
-        esc(FB.T('Unavailable: {reason}', { reason:blocked })) +
-        '</span>' : '') +
-      (visibleConsequence ? '<span class="adesc interaction-consequence">' +
-        esc(visibleConsequence) + '</span>' : '') +
-      '</button>';
+      '</span></button><span class="settcard-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + esc(detailsId) +
+      '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span>' +
+      '<div class="settcard-details interaction-action-details hidden" id="' +
+      esc(detailsId) + '">' + details + '</div></div>';
   }
   UI.interactionActionRow = interactionActionRow;
 
@@ -1433,12 +1454,23 @@ window.FB = window.FB || {};
   UI.interactionCardHtml = interactionCardHtml;
 
   function wireInteractionCard(model, handler) {
-    const buttons = document.querySelectorAll(
-      '[data-interaction-kind="' + model.target.kind + '"] ' +
-      '[data-interaction-action]');
+    const card = document.querySelector(
+      '[data-interaction-kind="' + model.target.kind + '"]');
+    if (!card) return;
+    bindCardInfoToggles(card);
+    const buttons = card.querySelectorAll('[data-interaction-action]');
     const byId = {};
     for (const action of model.actions || []) byId[action.id] = action;
     for (let i = 0; i < buttons.length; i++) {
+      let hint = null;
+      for (let ci = 0; ci < buttons[i].children.length; ci++) {
+        if (buttons[i].children[ci].classList.contains('keyhint')) {
+          hint = buttons[i].children[ci];
+          break;
+        }
+      }
+      const label = buttons[i].querySelector('.interaction-action-label');
+      if (hint && label) label.appendChild(hint);
       buttons[i].addEventListener('click', function () {
         const action = byId[buttons[i].dataset.interactionAction];
         if (action && action.enabled !== false) handler(action);
@@ -3401,28 +3433,21 @@ window.FB = window.FB || {};
     $('btn-closeself').addEventListener('click', SH.closeSelfDrawer);
     window.addEventListener('popstate', mobileNavPop);
     if (!FB.isTouch) {
-      const hot = {
-        actions: { key: 'D', label: 'Deeds' },
-        char: { key: 'S', label: 'Self' },
-        family: { key: 'K', label: 'Kin' },
-        prov: { key: 'L', label: 'Land' },
-        network: { key: 'N', label: 'Network' },
-        log: { key: 'C', label: 'Chronicle' }
+      const tabKeys = {
+        char:'T', family:'G', actions:'B', prov:'Y', network:'N', log:'U'
       };
-      document.querySelectorAll('#sidetabs .tab, #lefttabs .tab').forEach(function (t) {
-        const item = hot[t.dataset.tab];
-        if (item) {
-          const label = FB.T(item.label);
-          const keyAt = label.toUpperCase().indexOf(item.key);
-          const before = keyAt >= 0 ? label.slice(0, keyAt) : '';
-          const after = keyAt >= 0 ? label.slice(keyAt + 1) : label;
-          t.setAttribute('aria-label', label);
-          t.innerHTML = '<span class="tabfulllabel">' + esc(label) + '</span>' +
-            '<span class="tabhotkeylabel" aria-hidden="true">' + esc(before) +
-            '<span class="keyhint tabkeyhint">' + item.key + '</span>' +
-            esc(after) + '</span>';
-        }
-      });
+      document.querySelectorAll('#sidetabs .tab, #lefttabs .tab').forEach(
+        function (tab) {
+          const key = tabKeys[tab.dataset.tab];
+          if (!key) return;
+          const label = FB.T(tab.getAttribute('data-i18n') ||
+            tab.textContent.trim());
+          tab.classList.add('tab-keyed');
+          tab.setAttribute('aria-label', label + ' (' + key + ')');
+          tab.innerHTML = '<span class="tablabel">' + esc(label) + '</span>' +
+            '<span class="keyhint tabkeyhint" aria-hidden="true">' + key +
+            '</span>';
+        });
     }
     $('btn-endturn').addEventListener('click', function () {
       if (!UI.eventsBusy()) FB.game.togglePause();
@@ -3636,13 +3661,21 @@ window.FB = window.FB || {};
         tip.style.overflowY = '';
         tip.style.boxSizing = '';
       }
-      function showSideTip(anchorEl, detailsHtml) {
+      function showSideTip(anchorEl, detailsHtml, options) {
         if (!detailsHtml) return false;
+        const opts = options || {};
         cancelHideTip();
         const edge = 8;
         const gap = 10;
-        const width = Math.min(320, Math.max(180,
+        let width = Math.min(320, Math.max(180,
           window.innerWidth - edge * 2));
+        const modalCard = opts.modalLeft && anchorEl.closest
+          ? anchorEl.closest('.modalcard') : null;
+        const modalRect = modalCard && modalCard.getBoundingClientRect();
+        const modalLeftRoom = modalRect
+          ? modalRect.left - edge - gap : 0;
+        const placeLeftOfModal = !!(modalRect && modalLeftRoom >= 180);
+        if (placeLeftOfModal) width = Math.min(width, modalLeftRoom);
         tip.style.boxSizing = 'border-box';
         tip.style.width = width + 'px';
         tip.style.maxWidth = width + 'px';
@@ -3650,12 +3683,21 @@ window.FB = window.FB || {};
         tip.style.maxHeight = maxH + 'px';
         tip.style.overflowY = 'auto';
         tip.innerHTML = detailsHtml;
+        if (FB.paintFaces && FB.state &&
+            tip.querySelector('canvas.pface, canvas.crest')) {
+          FB.paintFaces(tip, FB.state, { immediate:true });
+        }
         tip.classList.remove('hidden');
         const r = anchorEl.getBoundingClientRect();
         const tr = tip.getBoundingClientRect();
-        let left = r.right + gap;
-        if (left + tr.width > window.innerWidth - edge) {
-          left = r.left - gap - tr.width;
+        let left;
+        if (placeLeftOfModal) {
+          left = modalRect.left - gap - tr.width;
+        } else {
+          left = r.right + gap;
+          if (left + tr.width > window.innerWidth - edge) {
+            left = r.left - gap - tr.width;
+          }
         }
         left = Math.max(edge, Math.min(
           window.innerWidth - edge - tr.width, left));
@@ -3693,6 +3735,14 @@ window.FB = window.FB || {};
         const card = (btn && btn.closest('.settcard')) || (infoBtn.closest && infoBtn.closest('.settcard')) || infoBtn;
         return showSideTip(card, details.innerHTML);
       }
+      function showRulerCardTip(control) {
+        if (eventChoiceUsesDisclosure() || !UI.councilRulerTooltipHtml ||
+            !FB.state) return false;
+        const rid = control.getAttribute('data-ruler-card-tooltip');
+        if (!rid) return false;
+        return showSideTip(control,
+          UI.councilRulerTooltipHtml(FB.state, rid), { modalLeft:true });
+      }
       document.addEventListener('mouseover', function (e) {
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
         if (e.target.closest('#tooltip')) {
@@ -3708,6 +3758,12 @@ window.FB = window.FB || {};
         const bldBtn = e.target.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]');
         if (bldBtn) {
           if (showBuildingActionTip(bldBtn)) return;
+          scheduleHideTip();
+          return;
+        }
+        const rulerHeraldry = e.target.closest('[data-ruler-card-tooltip]');
+        if (rulerHeraldry) {
+          if (showRulerCardTip(rulerHeraldry)) return;
           scheduleHideTip();
           return;
         }
@@ -3820,6 +3876,12 @@ window.FB = window.FB || {};
           scheduleHideTip();
           return;
         }
+        const rulerHeraldry = e.target.closest('[data-ruler-card-tooltip]');
+        if (rulerHeraldry) {
+          if (showRulerCardTip(rulerHeraldry)) return;
+          scheduleHideTip();
+          return;
+        }
         const settCardFocus = e.target.closest('.settcard');
         if (settCardFocus) {
           if (showSettCardTip(settCardFocus)) return;
@@ -3835,6 +3897,7 @@ window.FB = window.FB || {};
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }
         if (e.relatedTarget && e.relatedTarget.closest &&
             (e.relatedTarget.closest('#tooltip') ||
+             e.relatedTarget.closest('[data-ruler-card-tooltip]') ||
              e.relatedTarget.closest('.settcard') ||
              e.relatedTarget.closest('.event-choice .evopt') ||
              e.relatedTarget.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]'))) {

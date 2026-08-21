@@ -3375,20 +3375,26 @@ window.FB = window.FB || {};
 
   function warCausePickerConsequenceText(s, preview) {
     if (!preview) return '';
+    const enemyStanding = preview.enemyStanding
+      ? FB.T(' Enemy-ruler Standing is capped at {standing} on declaration.', {
+        standing:standingText(preview.enemyStanding.after)
+      }) : '';
     if (preview.aggression) {
       const consequence = preview.aggression;
       return FB.T(
-        'Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.', {
+        'Immediate: {prestige} prestige, {voice} Common Voice, direct-vassal Standing {vassal}, and foreign-sovereign Standing {foreign}. These ranges include normal Standing bounds. The war itself grants no declaration or victory prestige and burdens the county with Conquered Without Right.{enemyStanding}', {
           prestige:signedNumber(consequence.prestigeChange),
           voice:signedNumber(consequence.commonVoiceChange),
           vassal:standingChangeRange(consequence.vassals),
-          foreign:standingChangeRange(consequence.foreign)
+          foreign:standingChangeRange(consequence.foreign),
+          enemyStanding:enemyStanding
         });
     }
     return FB.T(
-      'Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier.', {
+      'Recognized cause: {declaration} prestige on declaration and {victory} prestige on victory; no unjust-conquest modifier.{enemyStanding}', {
         declaration:signedNumber(preview.declarationPrestige),
-        victory:signedNumber(preview.victoryPrestige)
+        victory:signedNumber(preview.victoryPrestige),
+        enemyStanding:enemyStanding
       });
   }
 
@@ -3744,7 +3750,10 @@ window.FB = window.FB || {};
         prestige:signedNumber(consequence.prestigeChange)
       })) + '</li><li>' + esc(FB.T('{voice} Common Voice.', {
         voice:signedNumber(consequence.commonVoiceChange)
-      })) + '</li><li>' + esc(vassalText) + '</li><li>' +
+      })) + '</li><li>' + esc(FB.T(
+        'The enemy ruler’s Standing is capped at {standing}.', {
+          standing:standingText(preview.enemyStanding.after)
+        })) + '</li><li>' + esc(vassalText) + '</li><li>' +
       esc(foreignText) + '</li></ul><p>' + esc(recentText) +
       '</p><h4>' + esc(FB.T('Continuing consequences')) +
       '</h4><p>' + esc(FB.T(
@@ -7270,7 +7279,8 @@ window.FB = window.FB || {};
       UI.showGovernance(returnContext.section || 'position');
     } else if (returnContext.view === 'council') {
       UI.showCouncil(returnContext.returnView,
-        returnContext.returnContext);
+        returnContext.returnContext, false,
+        returnContext.councilRestore);
     } else if (returnContext.view === 'estates') {
       UI.showParliament(returnContext.returnView);
     } else if (returnContext.view === 'realm') {
@@ -10054,6 +10064,20 @@ window.FB = window.FB || {};
     });
   };
 
+  function councilRulerTooltipHtml(s, rid) {
+    const realm = rid && s.realms[rid];
+    if (!realm || !realm.alive) return '';
+    const ruler = interactionRealmRulerCharacter(s, rid);
+    return ruler
+      ? UI.charCardHtml(s, ruler, false, true, {
+        cardClass:'realm-ruler-card',
+        namePrefix:FB.realmRankTitle(s, realm),
+        realmMuster:realmMusterText(s, rid)
+      })
+      : UI.realmCardHtml(s, rid);
+  }
+  UI.councilRulerTooltipHtml = councilRulerTooltipHtml;
+
   function councilAssignmentCard(s, seat, rid, oldRid, selected, data,
       recommended) {
     const realm = rid && s.realms[rid];
@@ -10077,7 +10101,9 @@ window.FB = window.FB || {};
     }
     return personAssignmentCard({
       name:realm.ruler.name,
-      art:FB.crestTag(rid, 34, 40),
+      art:'<span class="council-assignment-heraldry" ' +
+        'data-ruler-card-tooltip="' + esc(rid) + '">' +
+        FB.crestTag(rid, 34, 40) + '</span>',
       selected:selected,
       disabled:selected || !!(appointment && !appointment.ready),
       eligibility:selected ? FB.T('Current officer') :
@@ -10110,7 +10136,8 @@ window.FB = window.FB || {};
   /* the Royal Council (tier 6+): the great officers of the crown — seats,
      holders, tempers, and crown authority. Gifts and dismissals act at once;
      appointment cards preview vacant seats and deliberate replacements. */
-  UI.showCouncil = function (returnView, returnContext, replaceView) {
+  UI.showCouncil = function (returnView, returnContext, replaceView,
+      restoreContext) {
     if (returnView !== 'governance') returnView = null;
     const s = FB.state;
     const projection = FB.councilSummary(s);
@@ -10182,7 +10209,14 @@ window.FB = window.FB || {};
         const term = electionStore && electionStore[seat.id];
         const dismissal = FB.councilDismissalStatus
           ? FB.councilDismissalStatus(s, seat.id) : { ready:true };
-        h += '<div class="charcard"><canvas class="pface" width="56" height="64" id="crest_' + esc(seat.id) + '"></canvas>' +
+        h += '<div class="charcard"><div class="council-ruler-heraldry">' +
+          '<button type="button" class="council-ruler-heraldry-button" ' +
+          'data-council-realm="' + esc(rid) + '" data-ruler-card-tooltip="' +
+          esc(rid) + '" data-council-seat="' + esc(seat.id) + '" aria-label="' +
+          esc(FB.T('Open ruler card for {ruler}', {
+            ruler:r.ruler.name
+          })) + '"><canvas class="pface" width="56" height="64" id="crest_' +
+          esc(seat.id) + '"></canvas></button></div>' +
           '<div><div class="ccname">' + esc(r.ruler.name) + '</div>' +
           '<div class="ccmeta">' + esc(r.name) + (trait ? ' · ' + esc(trait) : '') + '</div>' +
           '<div class="ccmeta ' + standingClass(op) + '">' +
@@ -10248,6 +10282,25 @@ window.FB = window.FB || {};
       if (cv && seats[seat.id]) FB.drawCrest(cv, seats[seat.id]);
     }
     FB.paintCrests($('gm-body'));
+    if (restoreContext) {
+      const restoreTarget = restoreContext.seatId &&
+        $('gm-body').querySelector(
+          '.council-ruler-heraldry-button[data-council-seat="' +
+          String(restoreContext.seatId).replace(/"/g, '\\"') + '"]');
+      if (isFinite(Number(restoreContext.scrollTop))) {
+        $('gm-body').scrollTop = Math.max(0,
+          Number(restoreContext.scrollTop));
+      }
+      /* openModal schedules its generic first-control focus. Restore the
+         semantic Council target one tick later so that deferred autofocus
+         cannot steal focus after a nested ruler card returns. */
+      if (restoreTarget) setTimeout(function () {
+        if (document.documentElement.contains(restoreTarget) &&
+            !$('genmodal').classList.contains('hidden')) {
+          restoreTarget.focus({ preventScroll:true });
+        }
+      }, 0);
+    }
     const electionButton = $('council-election');
     if (electionButton) electionButton.addEventListener('click', function () {
       UI.showElection({
@@ -10256,10 +10309,20 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('[data-council-realm]').forEach(function (btn) {
       btn.addEventListener('click', function () {
+        const councilRestore = btn.dataset.councilSeat ? {
+          seatId:btn.dataset.councilSeat,
+          scrollTop:$('gm-body').scrollTop
+        } : null;
+        /* A nested mobile modal captures the current Council DOM before the
+           browser's Back entry is pushed. Explicitly anchor that snapshot to
+           the activated crest: synthetic clicks and some touch browsers do
+           not reliably move focus as part of click dispatch. */
+        if (councilRestore) btn.focus({ preventScroll:true });
         UI.showLiegeModal(btn.dataset.councilRealm, {
           view:'council',
           returnView:returnView,
-          returnContext:returnContext
+          returnContext:returnContext,
+          councilRestore:councilRestore
         });
       });
     });
@@ -16133,21 +16196,32 @@ window.FB = window.FB || {};
     const effects = techScalarEffects(def);
     const unlocks = techGameplayUnlocks(s, id, def);
     const gameplayEffects = effects.concat(unlocks).join(' · ');
+    const factsId = 'tech-research-details-' +
+      String(id).replace(/[^a-zA-Z0-9_-]/g, '-');
+    const factsHtml = assetEffectSummary({
+      owner:realm ? realm.name : rid,
+      scope:FB.T('Sovereign nation and every realm using its knowledge'),
+      setupCost:researchCostText,
+      recurringCost:item.completed
+        ? FB.T('None')
+        : FB.T('Occupies one national research slot while active'),
+      effect:gameplayEffects,
+      transferRule:FB.T('Follows sovereign allegiance, not dynasty or county ownership'),
+      expiry:FB.T('Permanent national knowledge once completed')
+    });
     let h = '<div class="tech-detail-meta">' +
       esc(techDomainName(def.domain)) + ' · ' + esc(techStatusText(item)) +
       '</div><div class="gm-body-text"><p>' +
       esc(dt(s, 'tech', id, def, 'desc')) + '</p>' +
-      assetEffectSummary({
-        owner:realm ? realm.name : rid,
-        scope:FB.T('Sovereign nation and every realm using its knowledge'),
-        setupCost:researchCostText,
-        recurringCost:item.completed
-          ? FB.T('None')
-          : FB.T('Occupies one national research slot while active'),
-        effect:gameplayEffects,
-        transferRule:FB.T('Follows sovereign allegiance, not dynasty or county ownership'),
-        expiry:FB.T('Permanent national knowledge once completed')
-      }) + '</div>' +
+      '<div class="asset-owned-row settcard tech-detail-facts" tabindex="0" ' +
+      'aria-describedby="' + esc(factsId) + '"><div class="settcard-head"><b>' +
+      'ⓘ ' + esc(FB.T('Research details')) + '</b>' +
+      '<span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      esc(factsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<div class="settcard-details hidden" id="' + esc(factsId) + '">' +
+      factsHtml + '</div></div></div>' +
       kv('First attested', esc(FB.T('{from}–{to}', {
         from:techYear(cost.attested[0]), to:techYear(cost.attested[1])
       }))) +
@@ -16189,6 +16263,7 @@ window.FB = window.FB || {};
         guide:guideModalOption('tech-detail-guide', 'technology',
           'Guide: technology')
       });
+    bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-tech-jump]').forEach(function (button) {
       button.addEventListener('click', function () {
         UI.showTechDetail(button.dataset.techJump, returnContext);
@@ -17120,12 +17195,145 @@ window.FB = window.FB || {};
     });
   }
 
+  function ordinaryWarContext(s, rid) {
+    const sovereign = rid === 'player' && (!s.realms.player ||
+      !s.realms.player.alive) ? FB.playerRealmId(s) : FB.topRealm(s, rid);
+    if (!sovereign) return null;
+    const playerWar = s.player && s.player.war;
+    if (playerWar) {
+      const playerRealm = FB.playerRealmId(s);
+      const enemyRealm = FB.topRealm(s, playerWar.enemy);
+      if (sovereign === playerRealm || sovereign === 'player' ||
+          sovereign === enemyRealm) {
+        return {
+          attacker:playerWar.defending ? enemyRealm : playerRealm,
+          defender:playerWar.defending ? playerRealm : enemyRealm,
+          war:playerWar
+        };
+      }
+    }
+    for (const id in s.realms) {
+      const realm = s.realms[id];
+      if (!realm || !realm.alive || !realm.war) continue;
+      const attacker = FB.topRealm(s, id);
+      const defender = FB.topRealm(s, realm.war.enemy);
+      if (sovereign === attacker || sovereign === defender) {
+        return { attacker:attacker, defender:defender, war:realm.war };
+      }
+    }
+    return null;
+  }
+
+  function ordinaryWarGoalText(s, context, attackerGoal) {
+    const war = context.war || {};
+    const casus = war.casus || {};
+    const type = casus.type || '';
+    const attackerRealm = s.realms[context.attacker];
+    const defenderRealm = s.realms[context.defender];
+    const attacker = attackerRealm ? attackerRealm.name : context.attacker;
+    const defender = defenderRealm ? defenderRealm.name : context.defender;
+    const targetId = war.target || casus.target;
+    const target = targetId && FB.world.byId[targetId];
+    if (type === 'independence' || type === 'defection' ||
+        casus.label === 'Breakaway war') {
+      return attackerGoal
+        ? FB.T('Restore {attacker}’s rule over {defender}.', {
+          attacker:attacker, defender:defender
+        })
+        : FB.T('Keep {defender} independent of {attacker}.', {
+          defender:defender, attacker:attacker
+        });
+    }
+    if (type === 'caliphate') {
+      const title = FB.religiousHeadTitle(s, 'sunni');
+      return attackerGoal
+        ? FB.T('Claim {title} from {defender}.', {
+          title:title, defender:defender
+        })
+        : FB.T('Keep {title} out of {attacker}’s hands.', {
+          title:title, attacker:attacker
+        });
+    }
+    if (type === 'restoration') {
+      const title = casus.titleName ||
+        (defenderRealm ? defenderRealm.name : defender);
+      return attackerGoal
+        ? FB.T('Restore the crown of {title}.', { title:title })
+        : FB.T('Deny {attacker} the crown of {title}.', {
+          attacker:attacker, title:title
+        });
+    }
+    if (target) {
+      if (!attackerGoal) {
+        return FB.T('Hold {county} and force {attacker} to withdraw.', {
+          county:target.name, attacker:attacker
+        });
+      }
+      if (type === 'aggression') {
+        return FB.T('Conquer {county} without a recognized claim.', {
+          county:target.name
+        });
+      }
+      if (type === 'fabricated') {
+        return FB.T('Take {county} under a fabricated claim.', {
+          county:target.name
+        });
+      }
+      if (type === 'dejure') {
+        return FB.T('Take {county} under a de jure right.', {
+          county:target.name
+        });
+      }
+      return FB.T('Conquer {county}.', { county:target.name });
+    }
+    return attackerGoal
+      ? FB.T('Seize border territory from {defender}.', {
+        defender:defender
+      })
+      : FB.T('Repel {attacker} and hold the border.', {
+        attacker:attacker
+      });
+  }
+
+  function realmWarGoalsHtml(s, rid) {
+    const campaign = s.greatHolyWar;
+    const camp = FB.greatHolyWarCamp && FB.greatHolyWarCamp(s, rid);
+    if (campaign && camp) {
+      const kingdom = FBDATA.kingdoms[campaign.targetKingdom];
+      const target = kingdom ? kingdom.name : campaign.targetKingdom;
+      return '<div class="character-war-goals">' +
+        '<div class="character-war-goal"><b>' +
+        esc(FB.T('Attackers’ goal')) + '</b><span>' +
+        esc(FB.T('Take control of {kingdom} for the attacking coalition.', {
+          kingdom:target
+        })) + '</span></div>' +
+        '<div class="character-war-goal"><b>' +
+        esc(FB.T('Defenders’ goal')) + '</b><span>' +
+        esc(FB.T('Hold {kingdom} against the attacking coalition.', {
+          kingdom:target
+        })) + '</span></div></div>';
+    }
+    const context = ordinaryWarContext(s, rid);
+    if (!context) return '';
+    const attackerRealm = s.realms[context.attacker];
+    const defenderRealm = s.realms[context.defender];
+    const attacker = attackerRealm ? attackerRealm.name : context.attacker;
+    const defender = defenderRealm ? defenderRealm.name : context.defender;
+    return '<div class="character-war-goals">' +
+      '<div class="character-war-goal"><b>' +
+      esc(FB.T('Goal: {realm}', { realm:attacker })) + '</b><span>' +
+      esc(ordinaryWarGoalText(s, context, true)) + '</span></div>' +
+      '<div class="character-war-goal"><b>' +
+      esc(FB.T('Goal: {realm}', { realm:defender })) + '</b><span>' +
+      esc(ordinaryWarGoalText(s, context, false)) + '</span></div></div>';
+  }
+
   function realmWarNoticeHtml(s, rid) {
     if (!rid || !FB.isRealmAtWar(s, rid)) return '';
     return '<div class="progressnote warnote character-current-war" ' +
       'data-current-war="' + esc(rid) + '"><b>' +
       esc(FB.T('Current war')) + '</b><br>⚔ ' +
-      FB.warStatusLinkHtml(s, rid) + '</div>';
+      FB.warStatusLinkHtml(s, rid) + realmWarGoalsHtml(s, rid) + '</div>';
   }
 
   function bindWarRealmLinks(root, s, rid, cid, returnContext) {
@@ -19837,7 +20045,7 @@ window.FB = window.FB || {};
     }
     if (!rows.length) rows.push({ key:'', target:'' });
     let body = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Global shortcuts follow named deeds and focus families outside the Deeds panel. In Deeds, 1–6 select a section and Q W E / A S D / Z X C activate its first nine entries.')) +
+      'Global shortcuts follow named deeds and focus families outside the Deeds panel. Panel navigation reserves T, G, B, Y, N, and U. In Deeds, 1–6 select a section and Q W E / A S D / Z X C activate its first nine entries.')) +
       '</p><p class="hint">' + esc(FB.T(
         'The Farming work focus follows the family from Toil in the lord’s fields to Work your land after promotion. Unavailable actions keep their key and explain the current block.')) +
       '</p></div><div class="shortcut-bindings" id="shortcut-bindings">';
@@ -21810,7 +22018,7 @@ window.FB = window.FB || {};
       '<p><b>Great holy wars</b> are global two-camp campaigns called by an active Pope or Caliph after their historical unlock. Freeholders and greater ranks may answer during the 180-day gathering, promise one to three years of service, and name a hoped-for crown, sacred custody, exact duchy or county, beneficiary, or honor. Sovereigns field their own host, while vassals and unlanded volunteers serve through expedition events. Attackers must occupy the sacred places, at least half the target counties, and 60% of its development before the eight-year deadline. After an attacker victory, a settlement council weighs contribution beside the vow, occupation, rights, local support, and religious standing before any land changes hands.</p>' +
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
-      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>D S K L C</b> open the Deeds / Self / Kin / Land / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
+      '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
       '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu, beside 📤 Export / 📥 Import — a life kept as text survives browsers that wipe their storage, and travels to other devices.</p>' +
       '</div><button class="btn primary" id="gm-ok">Close</button>',
       { historyView:true });
@@ -21918,6 +22126,7 @@ window.FB = window.FB || {};
   SH.politicalBlocName = politicalBlocName;
   SH.politicalCompactForecast = politicalCompactForecast;
   SH.politicalForecastBloc = politicalForecastBloc;
+  SH.politicalInterestReason = politicalInterestReason;
   SH.politicalMotionName = politicalMotionName;
   SH.politicalPostureText = politicalPostureText;
   SH.politicalTotalsText = politicalTotalsText;

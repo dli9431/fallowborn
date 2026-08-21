@@ -643,6 +643,57 @@ test('clicking a panel tab leaves Space as the pause hotkey', async function ({ 
   }).toBe(false);
 });
 
+test('desktop panel tabs keep full titles with trailing reserved key badges',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.uiPrefs.actionBindings = {
+        b:'action:livelihoods',
+        g:'action:livelihoods',
+        t:'action:livelihoods',
+        u:'action:livelihoods',
+        y:'action:livelihoods'
+      };
+      FB.ui.refresh();
+    });
+
+    const tabs = [
+      ['char', 'Self', 'T'],
+      ['family', 'Kin', 'G'],
+      ['actions', 'Deeds', 'B'],
+      ['prov', 'Land', 'Y'],
+      ['network', 'Network', 'N'],
+      ['log', 'Chronicle', 'U']
+    ];
+    for (const item of tabs) {
+      const tab = page.locator('.tab[data-tab="' + item[0] + '"]');
+      await expect(tab.locator('.tablabel')).toHaveText(item[1]);
+      await expect(tab.locator('.keyhint')).toHaveText(item[2]);
+      await expect(tab).toHaveAttribute(
+        'aria-label', item[1] + ' (' + item[2] + ')');
+    }
+
+    await page.keyboard.press('KeyG');
+    await expect(page.locator('.tab[data-tab="family"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyT');
+    await expect(page.locator('.tab[data-tab="char"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyY');
+    await expect(page.locator('.tab[data-tab="prov"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyB');
+    await expect(page.locator('.tab[data-tab="actions"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyN');
+    await expect(page.locator('.tab[data-tab="network"]')).toHaveClass(/active/);
+    await page.keyboard.press('KeyU');
+    await expect(page.locator('.tab[data-tab="log"]')).toHaveClass(/active/);
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
 test('desktop play button fits its full label and keyhint without truncation',
   async function ({ page }) {
     await startDeterministicGame(page);

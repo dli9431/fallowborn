@@ -2,7 +2,10 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/politics.js',
+  'js/ui_misc.js',
+  'js/ui_panels.js',
   'js/ui_modals.js',
+  'css/style.css',
   'data/political_blocs.js',
   'data/policies.js'
 ]);
@@ -563,8 +566,32 @@ test('Network, Governance, and Estates share blocs without state or RNG drift',
     await startPoliticsGame(page, testInfo);
     await configurePolitics(page);
     await page.locator('.tab[data-tab="network"]').click();
-    await expect(page.locator('[data-network-political-bloc]').first())
-      .toBeVisible();
+    var networkBloc = page.locator('[data-network-political-bloc]').first();
+    var networkBlocCard = networkBloc.locator('..');
+    await expect(networkBloc).toBeVisible();
+    await expect(networkBlocCard.locator('.large-list-state')).toHaveCount(0);
+    await expect(networkBlocCard.locator('.settcard-details'))
+      .toContainText('Established');
+    await expect(networkBlocCard.locator('.settcard-details'))
+      .toContainText('Leader:');
+    await expect(networkBlocCard.locator('.settcard-details'))
+      .toContainText('Members');
+    await expect(networkBlocCard.locator('.settcard-details'))
+      .toContainText('Key interests');
+    var truncatedBlocCard = page.locator('.network-list-entry').filter({
+      has:page.locator('.network-state-context-more')
+    }).first();
+    var truncatedBloc = truncatedBlocCard.locator(
+      '[data-network-political-bloc]');
+    await expect(truncatedBlocCard.locator(
+      '.network-state-interest-preview'))
+      .toHaveCount(3);
+    await expect(truncatedBlocCard.locator('.network-state-context-more'))
+      .toContainText('Open Governance for the full breakdown');
+    await truncatedBloc.hover();
+    await expect(page.locator('#tooltip')).toContainText('Key interests');
+    await expect(page.locator('#tooltip'))
+      .toContainText('Open Governance for the full breakdown');
     await page.locator('.tab[data-tab="actions"]').click();
     var before = await page.evaluate(function () {
       return {
@@ -591,6 +618,8 @@ test('Network, Governance, and Estates share blocs without state or RNG drift',
       'Redress of the Aid posture');
     await expect(page.locator('#governance-blocs')).toContainText(
       'Scutage posture');
+    expect(await page.locator(
+      '#governance-blocs .political-reasons li').count()).toBeGreaterThan(3);
     var governance = await page.evaluate(function () {
       var cards = Array.prototype.slice.call(
         document.querySelectorAll('[data-political-bloc]'));

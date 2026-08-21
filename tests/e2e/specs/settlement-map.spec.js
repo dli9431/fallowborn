@@ -699,6 +699,11 @@ test('zoom tiers control settlement hit targets and visibility',
         allEmblems:allEmblems,
         romaHead:!!romaHead,
         blockedRects:FB.map._rectCount,
+        labelSizes:[
+          FB.map.settlementLabelCssPx(0),
+          FB.map.settlementLabelCssPx(1),
+          FB.map.settlementLabelCssPx(2)
+        ],
         smoothing:FB.map.ctx.imageSmoothingEnabled,
         flatBase:!!FB.map.baseFlat && FB.map.baseFlat.width === FB.world.W
       };
@@ -707,6 +712,7 @@ test('zoom tiers control settlement hit targets and visibility',
     expect(detailed.allVisible).toBe(true);
     expect(detailed.allEmblems).toBe(true);
     expect(detailed.romaHead).toBe(true);
+    expect(detailed.labelSizes).toEqual([11.5, 11.5, 12.5]);
     /* label collision may reject labels but never removes markers, and every
        drawn emblem blocks later labels with its own rect */
     expect(detailed.blockedRects).toBeGreaterThanOrEqual(detailed.targets);

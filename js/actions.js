@@ -6323,6 +6323,37 @@ window.FB = window.FB || {};
     return out;
   }
 
+  FB.warEnemyStandingPreview = function (state, enemy, projectedStanding) {
+    const current = projectedStanding === undefined
+      ? FB.standingOf(state, { kind:'realm', id:enemy })
+      : Number(projectedStanding) || 0;
+    const configured = FBDATA.balance.warEnemyStandingCeiling;
+    const ceiling = FB.clamp(configured === undefined ? -60 :
+      Number(configured) || 0, -100, 100);
+    const after = Math.min(current, ceiling);
+    return {
+      enemy:enemy,
+      current:current,
+      after:after,
+      change:after - current,
+      ceiling:ceiling
+    };
+  };
+
+  /* War itself makes the opposing ruler Hostile, independently of whether
+     the cause is lawful. The stamp makes this one declaration consequence,
+     not a seasonal drain; a later war receives its own fresh record. */
+  FB.applyPlayerWarEnemyStanding = function (state, war, source) {
+    if (!state || !war || !war.enemy || war.enemyStandingApplied) return null;
+    const preview = FB.warEnemyStandingPreview(state, war.enemy);
+    if (preview.change) {
+      FB.adjustStanding(state, { kind:'realm', id:war.enemy },
+        preview.change, source || 'war:enemy');
+    }
+    war.enemyStandingApplied = 1;
+    return preview;
+  };
+
   function aggressionOpposition(state, commonVoiceChange, vassals, foreign) {
     const out = [];
     if (commonVoiceChange < 0) {
@@ -6391,6 +6422,7 @@ window.FB = window.FB || {};
           ? FB.religiousHeadBalance('religiousHeadClaimWarPrestige', 100)
           : 100;
       }
+      out.enemyStanding = FB.warEnemyStandingPreview(state, out.enemy);
       return out;
     }
     const B = FBDATA.balance;
@@ -6446,6 +6478,17 @@ window.FB = window.FB || {};
         fx:modifier.fx || {}
       } : null
     };
+    let enemyStanding = FB.standingOf(state, {
+      kind:'realm', id:out.enemy
+    });
+    for (let i = 0; i < foreign.length; i++) {
+      if (foreign[i].realmId === out.enemy) {
+        enemyStanding = foreign[i].after;
+        break;
+      }
+    }
+    out.enemyStanding = FB.warEnemyStandingPreview(
+      state, out.enemy, enemyStanding);
     return out;
   };
 

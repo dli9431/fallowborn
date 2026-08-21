@@ -8,7 +8,8 @@ dependsOnRuntime(__filename, [
   'js/keys.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
-  'js/ui_modals.js'
+  'js/ui_modals.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -209,29 +210,51 @@ test('the commitments title collapses and restores its ledger',
     }).toBe(false);
   });
 
-test('daily focuses stay together and Settings can disable guide hints',
+test('daily focuses use deed disclosures and Settings can disable guide hints',
   async function ({ page }) {
     const structure = await page.locator('#tab-actions').evaluate(
       function (panel) {
         const children = Array.prototype.slice.call(panel.children);
-        const focusIndexes = [];
+        const focusBody = panel.querySelector(
+          '[data-action-group-body="focus"]');
+        const focusIndex = children.indexOf(focusBody);
         let firstGroup = -1;
         for (let i = 0; i < children.length; i++) {
-          if (children[i].matches('[data-focus-id]')) focusIndexes.push(i);
           if (firstGroup < 0 &&
               children[i].matches('[data-action-group]')) firstGroup = i;
         }
         return {
-          focusCount:focusIndexes.length,
+          focusCount:focusBody
+            ? focusBody.querySelectorAll('[data-focus-id]').length : 0,
           firstGroup:firstGroup,
-          allBeforeGroups:focusIndexes.every(function (index) {
-            return firstGroup < 0 || index < firstGroup;
-          })
+          allBeforeGroups:focusIndex >= 0 &&
+            (firstGroup < 0 || focusIndex < firstGroup)
         };
       });
     expect(structure.focusCount).toBeGreaterThan(0);
     expect(structure.firstGroup).toBeGreaterThanOrEqual(0);
     expect(structure.allBeforeGroups).toBe(true);
+
+    const focusButton = page.locator('[data-focus-id]').first();
+    const focusRow = focusButton.locator('..');
+    await expect(focusButton).toHaveClass(/deed-main-action/);
+    await expect(focusButton.locator('.adesc')).toHaveCount(0);
+    const focusDetails = (await focusRow.locator('.deed-details')
+      .textContent()).trim();
+    expect(focusDetails.length).toBeGreaterThan(0);
+    expect(await focusButton.evaluate(function (button) {
+      const style = getComputedStyle(button);
+      return { fontSize:style.fontSize, fontWeight:style.fontWeight };
+    })).toEqual({ fontSize:'16px', fontWeight:'600' });
+    await focusButton.hover();
+    await expect(page.locator('#tooltip')).toContainText(focusDetails);
+    await page.setViewportSize({ width:900, height:720 });
+    const focusInfo = focusRow.locator('.deed-info');
+    await expect(focusInfo).toBeVisible();
+    await focusInfo.click();
+    await expect(focusRow.locator('.deed-details')).toBeVisible();
+    await focusInfo.click();
+    await expect(focusRow.locator('.deed-details')).toBeHidden();
 
     const pathHint = page.locator('#tab-actions .path-hint');
     await expect(pathHint).toBeVisible();
@@ -262,7 +285,7 @@ test('daily focuses stay together and Settings can disable guide hints',
     }).toEqual({ preference:true, stored:true });
   });
 
-test('deed section keys scroll, activate, and use a local QWE-ASD-ZXC grid',
+test('deed section keys toggle, scroll, and use a local QWE-ASD-ZXC grid',
   async function ({ page }) {
     await page.evaluate(function () {
       const s = FB.state;
@@ -293,6 +316,14 @@ test('deed section keys scroll, activate, and use a local QWE-ASD-ZXC grid',
     await page.keyboard.press('Digit1');
     await expect(focusList).toBeFocused();
     await expect(focusList).toHaveAttribute('aria-current', 'true');
+    await expect(focusList).toHaveAttribute('aria-expanded', 'false');
+    await expect(panel.locator('[data-action-group-body="focus"]')).toBeHidden();
+    await expect(panel.locator('[data-focus-id] .deed-item-keyhint'))
+      .toHaveCount(0);
+    await page.keyboard.press('Digit1');
+    await expect(focusList).toBeFocused();
+    await expect(focusList).toHaveAttribute('aria-expanded', 'true');
+    await expect(panel.locator('[data-action-group-body="focus"]')).toBeVisible();
     const focusKeys = await panel.locator('[data-focus-id]').evaluateAll(
       function (buttons) {
         return buttons.map(function (button) {
@@ -394,12 +425,12 @@ test('deed section keys scroll, activate, and use a local QWE-ASD-ZXC grid',
 
     await lifeBody.locator('[data-action-id]').first().evaluate(
       function (button) { button._deedsAccordionProbe = true; });
-    await life.click();
+    await page.keyboard.press('Digit3');
     await expect(life).toHaveAttribute('aria-expanded', 'false');
     await expect(lifeBody).toHaveCount(0);
     await expect(life).toBeFocused();
 
-    await life.click();
+    await page.keyboard.press('Digit3');
     await expect(lifeBody).toHaveCount(1);
     const reopened = await lifeBody.locator('[data-action-id]').first()
       .evaluate(function (button) { return !!button._deedsAccordionProbe; });

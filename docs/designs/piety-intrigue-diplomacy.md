@@ -131,6 +131,11 @@ envoy success and multiplies the annual chance that an adjacent AI realm attacks
 player, but never forbids war. All predecessor Standing and political directions clear on
 protagonist succession; state-level pacts do not.
 
+An ordinary player war caps Standing with the enemy ruler at −60 (Hostile) when
+hostilities begin. This applies to offensive and defensive wars, including rebellion and
+defection, through the canonical typed Standing facade. It is a one-time declaration
+consequence rather than continuing decay, and peace does not erase the grievance.
+
 **The realm interaction card is the diplomatic counterpart surface.**
 `FB.foreignPolicyTargetStatus`, `FB.envoyStatus`, and
 `FB.allianceOfferStatus` expose the owning mechanics' capacity, adjacency,

@@ -58,6 +58,11 @@ window.FB = window.FB || {};
   const SITE_HIT_MOUSE = 7;
   const SITE_HIT_TOUCH = 15;
 
+  function settlementLabelCssPx(rank) {
+    return rank === 2 ? 12.5 : 11.5;
+  }
+  M.settlementLabelCssPx = settlementLabelCssPx;
+
   M.init = function (canvas) {
     if (M.canvas) {
       M.useWorld();
@@ -816,7 +821,7 @@ window.FB = window.FB || {};
         // label, emblem band only: deterministic rectangle rejection in
         // priority order, below the emblem first, above only under pressure
         if (detail) {
-          const fs = Math.round((rank === 2 ? 10.5 : 9.5) * dpr);
+          const fs = Math.round(settlementLabelCssPx(rank) * dpr);
           ctx.font = fs + 'px Georgia';
           const tw = ctx.measureText(site.name).width;
           const lx = scrX;

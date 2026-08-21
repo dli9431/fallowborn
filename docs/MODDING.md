@@ -3127,6 +3127,10 @@ resource or Standing bounds. Recent declarations also multiply player-crown vass
 breakaway pressure; negative Standing compounds that pressure. Non-negative window and
 multiplier values are enforced at runtime, and zero recent declarations preserve the
 ordinary `breakawayChance`.
+Every ordinary player war also applies `warEnemyStandingCeiling` (-60) once when
+hostilities begin. If Standing with the opposing ruler is higher, it falls to this
+ceiling; a worse existing relationship is not improved. Old active wars receive the
+same one-time adjustment during save repair.
 Guild-monopoly terms use this moddable table (fractional bonuses, base-gold fees):
 
 | Grantor tier | `years` | `enterpriseBonus` | `rulerFee` | `taxBonus` | `popularOpinion` |

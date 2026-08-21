@@ -4,8 +4,10 @@ dependsOnRuntime(__filename, [
   'js/council.js',
   'js/parliament.js',
   'js/politics.js',
+  'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
   'css/style.css'
 ]);
 
@@ -1231,7 +1233,9 @@ test('vassal Governance consolidates Deeds and returns through Estates without m
     });
     await page.locator('.tab[data-tab="network"]').click();
     await expect(page.locator('#network-governance')).toBeVisible();
-    await expect(page.locator('#network-governance')).toContainText(
+    await expect(page.locator('#network-governance')).not.toContainText(
+      'authoritative view');
+    await expect(page.locator('#network-action-governance')).toContainText(
       'authoritative view');
     await page.locator('#network-governance').click();
     await expect(page.getByRole('heading', {
@@ -1334,6 +1338,7 @@ test('institution summaries stay read-only until their existing actions run',
 
 test('Council, realm, and character views agree with Governance Standing',
   async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:1200, height:800 });
     await startGovernanceGame(page, testInfo);
     const setup = await configureGovernance(page, 'king');
     const identity = await page.evaluate(function (ids) {
@@ -1351,9 +1356,26 @@ test('Council, realm, and character views agree with Governance Standing',
     });
     await expect(page.locator('#gm-body')).toContainText(
       'Standing +48 (Favorable)');
-    await page.evaluate(function (rid) {
-      FB.ui.showLiegeModal(rid);
-    }, setup.vassalId);
+    const heraldry = page.locator('.council-ruler-heraldry').first();
+    await expect(heraldry.locator('.council-ruler-heraldry-button'))
+      .toHaveAttribute('aria-label', /Open ruler card for/);
+    await heraldry.hover();
+    await expect(page.locator('#tooltip .realm-ruler-card')).toBeVisible();
+    await expect(page.locator('#tooltip .realm-ruler-card'))
+      .toContainText('Realm muster');
+    await expect(page.locator('#tooltip .realm-ruler-card'))
+      .toContainText('+48 (Favorable)');
+    await expect(page.locator('#tooltip .realm-ruler-card canvas.pface'))
+      .toBeVisible();
+    const previewPlacement = await page.evaluate(function () {
+      var tooltip = document.getElementById('tooltip').getBoundingClientRect();
+      var modal = document.querySelector('#genmodal .modalcard')
+        .getBoundingClientRect();
+      return { tooltipRight:tooltip.right, modalLeft:modal.left };
+    });
+    expect(previewPlacement.tooltipRight)
+      .toBeLessThanOrEqual(previewPlacement.modalLeft + 1);
+    await heraldry.locator('.council-ruler-heraldry-button').click();
     await expect(page.locator('#gm-body')).toContainText(
       '+48 (Favorable)');
     await page.evaluate(function (cid) {
@@ -1508,6 +1530,29 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     await expect(page.getByRole('heading', {
       name:'The Royal Council', exact:true
     })).toBeVisible();
+    const councilHeraldry = page.locator(
+      '.council-ruler-heraldry-button').last();
+    const councilScroll = await councilHeraldry.evaluate(function (button) {
+      button.scrollIntoView({ block:'center' });
+      return document.getElementById('gm-body').scrollTop;
+    });
+    const councilSeat = await councilHeraldry.getAttribute(
+      'data-council-seat');
+    await councilHeraldry.click();
+    await expect(page.locator('.character-interaction-modal')).toBeVisible();
+    await page.locator('#cm-close').click();
+    await expect(page.getByRole('heading', {
+      name:'The Royal Council', exact:true
+    })).toBeVisible();
+    const restoredHeraldry = page.locator(
+      '.council-ruler-heraldry-button[data-council-seat="' +
+      councilSeat + '"]');
+    await expect(restoredHeraldry).toBeFocused();
+    await expect.poll(function () {
+      return page.locator('#gm-body').evaluate(function (body) {
+        return body.scrollTop;
+      });
+    }).toBeGreaterThanOrEqual(Math.max(0, councilScroll - 5));
     await page.evaluate(function () {
       history.back();
     });

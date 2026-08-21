@@ -202,6 +202,11 @@ test('aggression is explicit, read-only to review, and subordinate to real claim
         lawfulTypes:lawful.map(function (item) { return item.type; }),
         started:started,
         casus:s.player.war && s.player.war.casus.type,
+        enemyStanding:FB.standingOf(s, {
+          kind:'realm', id:setup.enemyId
+        }),
+        enemyStandingApplied:s.player.war &&
+          s.player.war.enemyStandingApplied,
         prestigeChange:s.player.prestige - prestigeBefore,
         aggressionHistory:s.player.aggressiveWars.length
       };
@@ -221,6 +226,8 @@ test('aggression is explicit, read-only to review, and subordinate to real claim
       lawfulTypes:['fabricated'],
       started:true,
       casus:'fabricated',
+      enemyStanding:-60,
+      enemyStandingApplied:1,
       prestigeChange:5,
       aggressionHistory:0
     });
@@ -252,7 +259,8 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
           return FB.standingOf(s, {
             kind:'realm',
             id:entry.realmId
-          }) === entry.after;
+          }) === (entry.realmId === setup.enemyId
+            ? preview.enemyStanding.after : entry.after);
         });
       var startedCasus = p.war && p.war.casus.type;
       FB.endPlayerWar(s);
@@ -291,6 +299,9 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
         voiceChange:p.pop - voiceBefore,
         expectedVoice:preview.aggression.commonVoiceChange,
         exactStandings:exactStandings,
+        enemyStanding:FB.standingOf(s, {
+          kind:'realm', id:setup.enemyId
+        }),
         historyCount:recent.length,
         historyRecord:recent[0],
         firstMultiplier:preview.aggression.escalationMultiplier,
@@ -312,6 +323,7 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
     expect(result.prestigeChange).toBe(result.expectedPrestige);
     expect(result.voiceChange).toBe(result.expectedVoice);
     expect(result.exactStandings).toBe(true);
+    expect(result.enemyStanding).toBe(-60);
     expect(result.historyCount).toBe(1);
     expect(result.historyRecord).toMatchObject({
       charId:expect.any(String),
@@ -327,6 +339,56 @@ test('confirmed aggression applies exact visible costs and escalates revolt pres
     expect(result.hostileBreakaway).toBeGreaterThan(
       result.baseBreakaway);
     expect(result.standingsRecorded).toBe(true);
+  });
+
+test('defensive and repaired wars make the enemy ruler Hostile once',
+  async function ({ page }, testInfo) {
+    await startWarGame(page, testInfo);
+    var ids = await configureAggressionWar(page);
+    var result = await page.evaluate(function (setup) {
+      var s = FB.state;
+      var p = s.player;
+      FB.setRealmRulerStanding(s, setup.enemyId, 45);
+      p.war = {
+        enemy:setup.enemyId, target:null, defending:true,
+        wins:0, losses:0, seasons:0
+      };
+      FB.warFooting(s);
+      var defensive = FB.standingOf(s, {
+        kind:'realm', id:setup.enemyId
+      });
+      var stamped = p.war.enemyStandingApplied;
+      FB.setRealmRulerStanding(s, setup.enemyId, -55);
+      FB.warFooting(s);
+      var noRepeatedDrain = FB.standingOf(s, {
+        kind:'realm', id:setup.enemyId
+      });
+
+      FB.endPlayerWar(s);
+      FB.setRealmRulerStanding(s, setup.enemyId, 30);
+      p.war = {
+        enemy:setup.enemyId, target:null, defending:true,
+        wins:0, losses:0, seasons:0
+      };
+      FB.repairWars(s);
+      return {
+        defensive:defensive,
+        stamped:stamped,
+        noRepeatedDrain:noRepeatedDrain,
+        repaired:FB.standingOf(s, {
+          kind:'realm', id:setup.enemyId
+        }),
+        repairStamped:p.war && p.war.enemyStandingApplied
+      };
+    }, ids);
+
+    expect(result).toEqual({
+      defensive:-60,
+      stamped:1,
+      noRepeatedDrain:-55,
+      repaired:-60,
+      repairStamped:1
+    });
   });
 
 test('war status names every opposing realm', async function ({ page }, testInfo) {
@@ -400,7 +462,10 @@ test('war notices lead unified ruler sheets and the Land tab',
       s.player.roleOrientationsSeen =
         s.player.roleOrientationsSeen || {};
       s.player.roleOrientationsSeen['role-tier-' + s.player.tier] = 1;
-      s.realms[data.foreignId].war = { enemy:data.enemyId };
+      s.realms[data.foreignId].war = {
+        enemy:data.enemyId,
+        casus:{ type:'border', label:'Border war' }
+      };
       FB.ui.showLiegeModal(data.foreignId);
       return {
         muster:FB.T('Realm muster: ~{troops}', {
@@ -420,9 +485,22 @@ test('war notices lead unified ruler sheets and the Land tab',
       .toHaveCount(2);
     await expect(sheet.locator(
       '#gm-body > .charcard + [data-current-war]')).toBeVisible();
+    await expect(sheet.locator('.character-war-goal')).toHaveCount(2);
+    await expect(sheet.locator('.character-war-goal').nth(0))
+      .toContainText('Goal: Blue Crown');
+    await expect(sheet.locator('.character-war-goal').nth(0))
+      .toContainText('Seize border territory from Red March.');
+    await expect(sheet.locator('.character-war-goal').nth(1))
+      .toContainText('Goal: Red March');
+    await expect(sheet.locator('.character-war-goal').nth(1))
+      .toContainText('Repel Blue Crown and hold the border.');
     await sheet.locator('[data-war-realm="' + ids.enemyId + '"]').click();
     await expect(sheet.locator('.realm-ruler-card .ccname')).toContainText(
       setup.enemyRuler);
+    await expect(sheet.locator('.character-war-goal').nth(0))
+      .toContainText('Goal: Blue Crown');
+    await expect(sheet.locator('.character-war-goal').nth(1))
+      .toContainText('Goal: Red March');
 
     await page.evaluate(function (data) {
       FB.ui.closeModal();

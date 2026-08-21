@@ -33,11 +33,12 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   provinces for details.
 - **Desktop (keyboard only):** fully playable without a mouse —
   arrows pan · Shift+arrows hop between neighboring provinces · `PgUp`/`PgDn` zoom · `H` center
-  home · `Enter` selects the province at screen center · `D` `S` `K` `L` `N` `C` open the
-  Deeds/Self/Kin/Land/Network/Chronicle panels (hotkey letter underlined in-game) · in Deeds,
+  home · `Enter` selects the province at screen center · `T` `G` `B` `Y` `N` `U` open the
+  Self/Kin/Deeds/Land/Network/Chronicle panels (shown in badges beside the tab titles) · in Deeds,
   `1–6` select Daily Focus and the five deed sections, then `Q W E` / `A S D` / `Z X C`
   activate the first nine entries in that section (and `Shift+Q W E` / `A S D` / `Z X C` for
-  items 10–18) · in events and dialogs, `1–9` choose an
+  items 10–18) · Network uses `1–5` and the same letter grid for management actions only ·
+  in events and dialogs, `1–9` choose an
   item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
   `V` opens autoresolve settings · `R` cycles the map filter (Realm / Mine / Liege /
@@ -206,10 +207,9 @@ Time passes **day by day** (90-day seasons, 360-day years).
    also be Lettered and meet Learning requirements, so literacy supports the wider career
    ladder rather than acting only as a small skill bonus.
    The **Network** tab gathers household, personal, guild, trade, vassal, and foreign ties.
-   Its Household, Connections, Trade & Guild, and Realm sections show total and
-   needs-attention counts and collapse independently. Large networks add literal local
-   search, All/Needs attention/People/Realms filters, and a **Show all** route after the
-   first five routine rows; warnings and active commitments stay visible first.
+   Its Household, Connections, Trade & Guild, Political Blocs, and Realm sections show total
+   and needs-attention counts and collapse independently. Large sections add a **Show all**
+   route after the first five routine rows; warnings and active commitments stay visible first.
    Its household block also shows active standard icons/levels and their seasonal upkeep.
    Open **Household Plan…** there to scan every living managed family member and retainer
    in one place: education, instruction and fees, work and standing, enterprise or office

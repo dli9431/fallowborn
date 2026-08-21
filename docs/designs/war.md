@@ -59,6 +59,19 @@ and its vassal hierarchy intact. Defeat does not consume the right. Independence
 its existing dedicated action and cause. AI wars do not maintain claim ledgers; they
 store only a descriptive `border` cause.
 
+Ruler sheets summarize both sides beneath the linked **Current war** notice. Player wars
+name the saved semantic objective where one exists, while AI border wars describe the
+attacker's territorial aim and the defender's goal of holding the border. Independence,
+defection, restoration, Caliphate succession, and great holy wars receive cause-specific
+two-sided summaries. These are read-only projections of the live war record and never
+add a second objective store.
+
+Every ordinary war involving the protagonist makes the enemy ruler immediately Hostile:
+the shared Standing score is capped at `warEnemyStandingCeiling` (−60 by default) when
+the war begins, regardless of whether the player attacks, defends, rebels, or presses a
+recognized right. The war record stamps that one-time consequence so wartime does not
+become a seasonal Standing drain; repaired old active wars receive it once on load.
+
 The `caliphate` cause is the religious twin of restoration, offered by the Claim the
 Caliphate deed while a sitting Caliph holds the Sunni office (`FB.caliphateWarCause`:
 a sovereign Sunni player king or emperor against the holder's sovereign realm, even

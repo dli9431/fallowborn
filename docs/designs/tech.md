@@ -123,11 +123,13 @@ reserve the project would receive on the next seasonal distribution. The estimat
 include time spent completing missing prerequisites and may shorten when another active
 project completes.
 
-The detail sheet's shared asset/effect row identifies the sovereign nation and
-vassal-wide scope, effective research setup cost, occupied slot while active,
-concrete effects and unlocks, allegiance-based access rule, and permanent
-completion. Historical dates, exposure, progress, and clickable prerequisites
-remain separate supporting rows.
+The detail sheet's compact **Research details** disclosure identifies the sovereign
+nation and vassal-wide scope, effective research setup cost, occupied slot while active,
+concrete effects and unlocks, allegiance-based access rule, and permanent completion.
+Roomy desktop layouts present that seven-field audit as a hover/focus tooltip; touch,
+tablet-width, and short layouts expose the same content through the card's inline `?`
+button. Historical dates, exposure, progress, and clickable prerequisites remain visible
+as separate supporting rows.
 
 Catalogue discovery is generated from the same definitions as the detail sheet.
 The text index includes localized names and descriptions, domain names, concrete

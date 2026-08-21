@@ -26,6 +26,14 @@ test('semantic shortcuts reject conflicts, explain blocks, persist, and follow p
     await expect(rows.first().locator('[data-shortcut-target]'))
       .toHaveValue('action:livelihoods');
     await expect(page.locator('#shortcut-reset')).toBeVisible();
+    await expect(page.locator('#gm-body')).toContainText(
+      'Panel navigation reserves T, G, B, Y, N, and U');
+    const offeredKeys = await rows.first().locator(
+      '[data-shortcut-key] option').evaluateAll(function (options) {
+        return options.map(function (option) { return option.value; });
+      });
+    expect(offeredKeys).toEqual(
+      ['', 'a', 'i', 'j', 'o', 'p', 'q', 'w', 'x', 'z']);
 
     await page.locator('#shortcut-add').click();
     await rows.nth(1).locator('[data-shortcut-key]').selectOption('q');

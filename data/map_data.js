@@ -1300,6 +1300,7 @@ FBDATA.balance = {
   warAggressionVassalStanding: -10, warAggressionForeignStanding: -5,
   warAggressionEscalationPerRecent: 0.5,
   warAggressionBreakawayPerRecent: 0.5,
+  warEnemyStandingCeiling: -60, // every ordinary war begins at Hostile or worse
   /* field armies (js/armies.js): hosts on the map */
   armyMarchDays: 6, // days for a host to cross one province
   armySeaTransportBase: 250, // men carried per crossing cycle before national technology

@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.2';
+  FB.VERSION = '1.144.3';
   FB.CHANGELOG = [
+    { v: '1.144.3', date: '2026-08-21', changes: [
+      'Panels and Network now provide clearer keyboard navigation, responsive action details, ruler previews, and more legible map labels across desktop and mobile. Ruler sheets show each side’s war goals, and starting a war makes the opposing ruler Hostile.'
+    ] },
     { v: '1.144.2', date: '2026-08-21', changes: [
       'Family & legacy guidance now shows how many days of personal attention a courtship needs before a marriage proposal.'
     ] },

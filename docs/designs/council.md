@@ -136,6 +136,13 @@ the focused `UI.showCouncil` modal: the authority meter, every seat with its hol
 trait and Standing, term protection where applicable, and the levers — offer a gift,
 dismiss, nominate, or appoint to vacant seats. The confirmation sheet exposes the office,
 electorate, term, candidates, expected support, campaign tactic, and final tally.
+Each occupied seat and assignment candidate's heraldry previews the shared ruler card on
+desktop hover. An occupied seat also exposes the preview to keyboard focus and opens the
+full ruler sheet when activated; candidate heraldry remains part of its assignment card.
+The desktop preview sits outside the modal's left edge so it does not cover Council
+actions. On mobile, returning from an occupied heraldry's ruler sheet restores that exact
+seat and scroll position.
+The named **Ruler card…** action remains as the explicit textual route.
 `FB.councilSummary` is the deterministic, locale-neutral read model shared by both
 surfaces. It reads the saved seats as they stand and never calls `FB.councilEnsure`,
 repairs rulers, fills vacancies, consumes RNG, or writes Chronicle news. Formation and

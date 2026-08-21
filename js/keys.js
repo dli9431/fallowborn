@@ -1,10 +1,11 @@
 /* Fallowborn — desktop keyboard controls.
    Arrows pan · Shift+arrows jump to a neighboring province · PgUp/PgDn zoom ·
    +/- game speed (zoom on the start-picker map) · H home · Enter select
-   province at screen center · in Deeds, 1-6 select a section and QWE / ASD /
-   ZXC activate its first nine items (Shift+QWE / ASD / ZXC for items 10-18) ·
+   province at screen center · in Deeds and Network, digits select a section and
+   QWE / ASD / ZXC activate its first nine items (Shift+QWE / ASD / ZXC for
+   items 10-18) ·
    dialogs use 1-9 and Shift+1-9 · Space or E play/pause · F skip to the next
-   happening · V autoresolve settings · D/S/K/L/N/C open Deeds/Self/Kin/Land/
+   happening · V autoresolve settings · T/G/B/Y/N/U open Self/Kin/Deeds/Land/
    Network/Chronicle panels · configurable unused letters fire semantic action
    bindings · [ ] cycle panels · Esc menu / back / close dialog. */
 window.FB = window.FB || {};
@@ -261,6 +262,26 @@ window.FB = window.FB || {};
       }
     }
 
+    /* Network mirrors Deeds: digits select its five sections and the local
+       letter grid activates visible controls in the selected section. */
+    const networkActive = FB.state &&
+      $('tab-network').classList.contains('active');
+    if (!travelOpen() && !raidOpen() &&
+        !(FB.game && FB.game.pickMode) && networkActive) {
+      if (digit) {
+        e.preventDefault();
+        if (!e.repeat && FB.ui && FB.ui.activateNetworkSection) {
+          FB.ui.activateNetworkSection(digit - 1);
+        }
+        return;
+      }
+      if (FB.ui && FB.ui.runNetworkItemShortcut &&
+          FB.ui.runNetworkItemShortcut(k, !e.repeat, e.shiftKey)) {
+        e.preventDefault();
+        return;
+      }
+    }
+
     /* User bindings are semantic deed/focus targets. Digits never enter this
        path, so positional modal navigation keeps its independent meaning. */
     if (!travelOpen() && !raidOpen() && !(FB.game && FB.game.pickMode) &&
@@ -290,12 +311,12 @@ window.FB = window.FB || {};
         e.preventDefault();
         if (e.shiftKey) moveSelection(1, 0); else M.panBy(PAN, 0);
         return;
-      case 'd': case 'D': if (FB.state) FB.ui.showTab('actions'); return;
-      case 's': case 'S': if (FB.state) FB.ui.showTab('char'); return;
-      case 'k': case 'K': if (FB.state) FB.ui.showTab('family'); return;
-      case 'l': case 'L': if (FB.state) FB.ui.showTab('prov'); return;
+      case 't': case 'T': if (FB.state) FB.ui.showTab('char'); return;
+      case 'g': case 'G': if (FB.state) FB.ui.showTab('family'); return;
+      case 'b': case 'B': if (FB.state) FB.ui.showTab('actions'); return;
+      case 'y': case 'Y': if (FB.state) FB.ui.showTab('prov'); return;
       case 'n': case 'N': if (FB.state) FB.ui.showTab('network'); return;
-      case 'c': case 'C': if (FB.state) FB.ui.showTab('log'); return;
+      case 'u': case 'U': if (FB.state) FB.ui.showTab('log'); return;
       case '+': case '=':
         e.preventDefault();
         if (FB.state) FB.game.setSpeed(1); else M.zoomIn();
