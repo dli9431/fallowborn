@@ -15,7 +15,11 @@ description follow the shared card-details convention (hover/focus side tooltip 
 an immediate deed such as Poach is visibly different from a picker-backed deed such as Go
 into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
-eventual day-spending choice completes it. Focus-based skill training applies the shared
+eventual day-spending choice completes it.
+The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
+may request visibility-only entries for collapsed accordion groups, postponing cooldown,
+technology, and other eligibility work until those controls are opened.
+Focus-based skill training applies the shared
 `balance.focusSkillGainRate` multiplier (0.75 by default) to its seasonal chance; other
 focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,
 `stand_guard`, `train_arms`) are male-only; women instead get `keep_house` (tier ≤ 2,

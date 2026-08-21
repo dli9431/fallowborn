@@ -311,12 +311,12 @@ window.FB = window.FB || {};
         e.preventDefault();
         if (e.shiftKey) moveSelection(1, 0); else M.panBy(PAN, 0);
         return;
-      case 't': case 'T': if (FB.state) FB.ui.showTab('char'); return;
-      case 'g': case 'G': if (FB.state) FB.ui.showTab('family'); return;
-      case 'b': case 'B': if (FB.state) FB.ui.showTab('actions'); return;
-      case 'y': case 'Y': if (FB.state) FB.ui.showTab('prov'); return;
-      case 'n': case 'N': if (FB.state) FB.ui.showTab('network'); return;
-      case 'u': case 'U': if (FB.state) FB.ui.showTab('log'); return;
+      case 't': case 'T': if (FB.state) FB.ui.showTab('char', { reuse:true }); return;
+      case 'g': case 'G': if (FB.state) FB.ui.showTab('family', { reuse:true }); return;
+      case 'b': case 'B': if (FB.state) FB.ui.showTab('actions', { reuse:true }); return;
+      case 'y': case 'Y': if (FB.state) FB.ui.showTab('prov', { reuse:true }); return;
+      case 'n': case 'N': if (FB.state) FB.ui.showTab('network', { reuse:true }); return;
+      case 'u': case 'U': if (FB.state) FB.ui.showTab('log', { reuse:true }); return;
       case '+': case '=':
         e.preventDefault();
         if (FB.state) FB.game.setSpeed(1); else M.zoomIn();

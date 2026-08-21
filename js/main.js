@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.4';
+  FB.VERSION = '1.144.5';
   FB.CHANGELOG = [
+    { v: '1.144.5', date: '2026-08-21', changes: [
+      'Panel tabs, especially Deeds, now switch faster by retaining unchanged content and avoiding work for unopened deed groups.'
+    ] },
     { v: '1.144.4', date: '2026-08-21', changes: [
       'The family tree now connects the house founder through recorded ancestry, labels distant kin, and opens on the current character on mobile. Desktop trees fill the available screen, pan by dragging, preview characters on hover, and return from character sheets with Back.'
     ] },

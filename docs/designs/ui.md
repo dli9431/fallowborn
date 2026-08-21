@@ -470,8 +470,14 @@ module-local record of the state reference, locale, and unlocalized HTML used fo
 last insertion. An identical refresh preserves the existing nodes and listeners, skips
 localization and large-list setup, and still calls `FB.paintFaces`; the portrait target
 stamp then decides whether a retained canvas needs new pixels. A state replacement or
-locale transition resets these records. This optimization is deliberately limited to
-the four named panels and does not cover active forms, event choices, or modal history.
+locale transition resets these records. This content-equivalence optimization is
+deliberately limited to the four named panels and does not cover active forms, event choices,
+or modal history.
+Direct tab navigation renders only the newly selected pane. It does not recompute the
+other desktop panel column: right-side navigation therefore leaves Self/Kin untouched,
+and Self/Kin navigation leaves Deeds/Land/Network/Chronicle untouched. Exact UI refreshes
+after game-state changes still update both visible columns, while opening the mobile
+Self/Kin drawer renders its selected pane immediately.
 For a count or higher, the selected current seat is marked **capital and home**.
 Every other directly held demesne county shows **Move capital here…**; the native
 button remains visible but disabled with the exact prestige, journey, campaign, or
@@ -767,6 +773,13 @@ rebuilding the commitments, focus, or other group controls. Every available dail
 appears together in one block above the category accordions; the accordions split and count
 only deeds by category. The stable `1`–`6` section keys do not renumber when a role has no
 actions in one category, preserving muscle memory across promotions and temporary states.
+Building Deeds first evaluates only each deed's visibility so every accordion retains an
+exact count. Cooldowns, technology gates, and potentially expensive eligibility reasons are
+evaluated only for open groups, when their controls are constructed. Returning through a
+player tab click or panel-cycle shortcut reuses the mounted Deeds tree if no UI refresh has
+been requested since its last render, preserving its controls, listeners, disclosure state,
+and expanded details. Any exact or natural state refresh marks that tree stale immediately;
+the next Deeds visit then performs the full exact render before reuse is allowed again.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
 a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the

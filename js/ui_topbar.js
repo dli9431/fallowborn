@@ -35,6 +35,9 @@ window.FB = window.FB || {};
   }
   UI.refresh = function (options) {
     const refreshKind = options && options.liveTick ? 1 : 2;
+    /* Mark Deeds stale at request time, before coalescing or deferral, so a
+       tab click cannot reuse it while a state-changing refresh is pending. */
+    if (SH.markActionsDirty) SH.markActionsDirty();
     if (FB.game && FB.game.fastForwarding) {
       refreshDeferredForFastForward = true;
       return;

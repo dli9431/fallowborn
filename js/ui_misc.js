@@ -3417,7 +3417,7 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('#sidetabs .tab[data-tab], #lefttabs .tab[data-tab]').forEach(function (t) {
       t.addEventListener('click', function (ev) {
-        SH.setTab(t.dataset.tab);
+        SH.setTab(t.dataset.tab, { reuse:true });
         /* A pointer click leaves the tab focused, and a focused button swallows
            Space/Enter as native activation — stealing the pause hotkey until
            focus moves elsewhere. Keyboard activation (detail 0) keeps focus. */

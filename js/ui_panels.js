@@ -64,7 +64,13 @@ window.FB = window.FB || {};
   const DEED_ITEM_KEYS = ['q', 'w', 'e', 'a', 's', 'd', 'z', 'x', 'c'];
   let activeActionSection = null;
   let activeActionState = null;
+  let actionsRenderedState = null;
+  let actionsRenderedLocale = '';
+  let actionsDirty = true;
   let focusSectionOpen = true;
+  function markActionsDirty() {
+    actionsDirty = true;
+  }
   const NETWORK_SECTIONS = [
     'household', 'connections', 'trade', 'politics', 'realm'
   ];
@@ -838,25 +844,31 @@ window.FB = window.FB || {};
       !flags.tut_kin_tab));
   }
 
+  function renderTab(name, reuse) {
+    if (name === 'char') renderChar();
+    else if (name === 'family') renderFamily();
+    else if (name === 'actions') renderActions(reuse);
+    else if (name === 'prov') renderProv();
+    else if (name === 'network') renderNetwork();
+    else renderLog();
+  }
+
   function renderActiveTab() {
     /* The game chrome can be shown with no life behind it (title-screen and
        soundtrack harnesses drive it directly): every tab render dereferences
        the state, so with none there is nothing to paint. */
     if (!FB.state) return;
     if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
-      if (SH.activeTab === 'prov') renderProv(); else renderLog();
+      renderTab(SH.activeTab === 'prov' ? 'prov' : 'log');
       return;
     }
     // on phones Self/Kin is a closed drawer most of the time (display:none →
     // offsetParent null): skip its rebuild and portrait repaints while it
     // cannot be seen — setTab renders it the moment it opens
     if ($('leftbody').offsetParent !== null) {
-      if (activeLeftTab === 'char') renderChar(); else renderFamily();
+      renderTab(activeLeftTab);
     }
-    if (SH.activeTab === 'actions') renderActions();
-    else if (SH.activeTab === 'prov') renderProv();
-    else if (SH.activeTab === 'network') renderNetwork();
-    else renderLog();
+    renderTab(SH.activeTab);
     updateTabNudges(FB.state);
   }
 
@@ -992,8 +1004,15 @@ window.FB = window.FB || {};
     return cardHtml;
   }
 
-  function renderActions() {
+  function renderActions(reuse) {
     const s = FB.state, box = $('tab-actions');
+    /* A player returning to Deeds without an intervening refresh can keep the
+       mounted controls, listeners, and disclosure state.
+       Programmatic callers and dirty state always take the exact rebuild. */
+    if (reuse && !actionsDirty && actionsRenderedState === s &&
+        actionsRenderedLocale === FB.locale && box.hasChildNodes()) {
+      return;
+    }
     /* Give desktop players a complete, stable keyboard map as soon as a life
        opens. Touch layouts keep no active keyboard section, and rerenders of
        the same life preserve whichever section the player selected. */
@@ -1147,7 +1166,10 @@ window.FB = window.FB || {};
       });
     }
     const focuses = FB.listFocuses(s);
-    const instants = FB.listInstants(s);
+    /* Closed accordion groups need their visible count, not every cooldown,
+       technology, and eligibility explanation. Defer that deeper work until
+       a group's controls are actually constructed. */
+    const instants = FB.listInstants(s, { deferEligibility:true });
     function deedFlow(action) {
       const label = String(action && action.label || '');
       if ((action && action.opensChoices) || label.indexOf('…') >= 0) {
@@ -1168,7 +1190,16 @@ window.FB = window.FB || {};
       ih.className = 'actionsubhead';
       ih.textContent = FB.T('One-time deeds');
       body.appendChild(ih);
-      for (const item of items) {
+      for (const listedItem of items) {
+        let item = listedItem;
+        if (listedItem.statusDeferred) {
+          const status = FB.instantStatus(s, listedItem.a.id);
+          item = {
+            a:listedItem.a,
+            can:status.can,
+            reason:status.reason
+          };
+        }
         const row = document.createElement('div');
         const btn = document.createElement('button');
         const flow = deedFlow(item.a);
@@ -1417,6 +1448,9 @@ window.FB = window.FB || {};
     });
     FB.localizeTree(box);
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
+    actionsRenderedState = s;
+    actionsRenderedLocale = FB.locale;
+    actionsDirty = false;
   }
 
   /* the tutorial checklist: staged tracks that teach the game to a new life.
@@ -5892,7 +5926,10 @@ window.FB = window.FB || {};
 
   function openSelfDrawerRaw() {
     document.body.classList.add('showself');
-    renderActiveTab();
+    if (FB.state && !(FB.game && FB.game.observe)) {
+      renderTab(activeLeftTab);
+      updateTabNudges(FB.state);
+    }
   }
 
   function closeSelfDrawerRaw() {
@@ -5920,7 +5957,19 @@ window.FB = window.FB || {};
     // on phones Self/Kin is a drawer (body.showself); the class is inert on desktop
     if (isLeft) document.body.classList.add('showself');
     else document.body.classList.remove('showself');
-    renderActiveTab();
+    /* A tab switch changes only one retained panel column. Rendering the
+       other column here used to make a Deeds/Land rebuild part of every
+       Self/Kin switch, and repeated all Self/Kin calculations and portrait
+       checks when moving among the right-hand tabs. Full UI.refresh calls
+       still update both visible columns after actual game-state changes. */
+    if (FB.state) {
+      if (FB.game && FB.game.observe) {
+        renderTab(name === 'prov' ? 'prov' : 'log');
+      } else {
+        renderTab(name, !!(opts && opts.reuse));
+        updateTabNudges(FB.state);
+      }
+    }
     if (isLeft && !drawerWasOpen) {
       mobileNavPush('self-drawer', closeSelfDrawerRaw, openSelfDrawerRaw,
         selfDrawerOpen, function () { return true; });
@@ -5929,8 +5978,8 @@ window.FB = window.FB || {};
     }
     if (!isLeft && name !== previousTab && !(opts && opts.history === false)) {
       mobileNavPush('panel-tab',
-        function () { setTab(previousTab, { history:false }); },
-        function () { setTab(name, { history:false }); },
+        function () { setTab(previousTab, { history:false, reuse:true }); },
+        function () { setTab(name, { history:false, reuse:true }); },
         function () { return SH.activeTab === name && !selfDrawerOpen(); },
         function () { return true; });
     }
@@ -5947,7 +5996,7 @@ window.FB = window.FB || {};
     let i = order.indexOf(SH.activeTab) + dir;
     if (i < 0) i = order.length - 1;
     if (i >= order.length) i = 0;
-    setTab(order[i]);
+    setTab(order[i], { reuse:true });
   };
 
   UI.showTab = function (name, opts) { setTab(name, opts); };
@@ -5963,6 +6012,7 @@ window.FB = window.FB || {};
   SH.itemSlotLabel = itemSlotLabel;
   SH.itemWearerText = itemWearerText;
   SH.livelihoodNote = livelihoodNote;
+  SH.markActionsDirty = markActionsDirty;
   SH.mapGroupOf = mapGroupOf;
   SH.mapHighlightColorOf = mapHighlightColorOf;
   SH.relationText = relationText;

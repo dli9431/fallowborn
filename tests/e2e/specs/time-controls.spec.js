@@ -27,6 +27,7 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
@@ -642,6 +643,142 @@ test('clicking a panel tab leaves Space as the pause hotkey', async function ({ 
     return page.evaluate(function () { return FB.game.paused; });
   }).toBe(false);
 });
+
+test('tab switches render only the selected desktop panel column',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    const result = await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.setPaused(true);
+
+      FB.ui.showTab('char', { history:false });
+      FB.ui.showTab('actions', { history:false });
+
+      const originalPaintFaces = FB.paintFaces;
+      const painted = [];
+      FB.paintFaces = function (root) {
+        painted.push(root && root.id);
+        return originalPaintFaces.apply(this, arguments);
+      };
+
+      FB.ui.showTab('prov', { history:false });
+      const rightSwitchPainted = painted.slice();
+
+      painted.length = 0;
+      FB.ui.showTab('actions', { history:false });
+      const sentinel = document.createElement('i');
+      sentinel.id = 'right-panel-switch-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+      painted.length = 0;
+      FB.ui.showTab('family', { history:false });
+
+      const leftSwitchPainted = painted.slice();
+      const rightPanelPreserved = !!document.getElementById(
+        'right-panel-switch-sentinel');
+      FB.paintFaces = originalPaintFaces;
+      return {
+        rightSwitchPainted:rightSwitchPainted,
+        leftSwitchPainted:leftSwitchPainted,
+        rightPanelPreserved:rightPanelPreserved
+      };
+    });
+
+    expect(result.rightSwitchPainted).toEqual(['tab-prov']);
+    expect(result.leftSwitchPainted).toEqual(['tab-family']);
+    expect(result.rightPanelPreserved).toBe(true);
+  });
+
+test('returning to clean Deeds reuses its mounted tree until a refresh request',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+    });
+    await waitForUiRefresh(page);
+    await page.evaluate(function () {
+      FB.ui.showTab('actions', { history:false });
+      window.__originalListInstants = FB.listInstants;
+      window.__deedsListCalls = 0;
+      FB.listInstants = function () {
+        window.__deedsListCalls++;
+        return window.__originalListInstants.apply(this, arguments);
+      };
+      const sentinel = document.createElement('i');
+      sentinel.id = 'clean-deeds-tree-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+    });
+
+    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await expect(page.locator('#clean-deeds-tree-sentinel')).toHaveCount(1);
+    expect(await page.evaluate(function () {
+      return window.__deedsListCalls;
+    })).toBe(0);
+
+    await page.locator('#sidetabs .tab[data-tab="prov"]').click();
+    await page.evaluate(function () {
+      FB.state.player.gold++;
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+    await page.locator('#sidetabs .tab[data-tab="actions"]').click();
+    await expect(page.locator('#clean-deeds-tree-sentinel')).toHaveCount(0);
+    expect(await page.evaluate(function () {
+      return window.__deedsListCalls;
+    })).toBe(1);
+    await page.evaluate(function () {
+      FB.listInstants = window.__originalListInstants;
+      delete window.__originalListInstants;
+      delete window.__deedsListCalls;
+    });
+  });
+
+test('collapsed Deeds groups defer eligibility work until opened',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const beforeOpen = await page.evaluate(function () {
+      FB.ui.showTab('actions', { history:false });
+      const realmToggle = document.querySelector(
+        '#tab-actions [data-action-group="realm"]');
+      if (realmToggle && realmToggle.getAttribute('aria-expanded') === 'true') {
+        realmToggle.click();
+      }
+      const action = FB.instants.filter(function (candidate) {
+        return candidate.id === 'buy_land';
+      })[0];
+      window.__originalBuyLandCan = action.can;
+      window.__buyLandCanCalls = 0;
+      action.can = function () {
+        window.__buyLandCanCalls++;
+        return window.__originalBuyLandCan.apply(this, arguments);
+      };
+      FB.ui.showTab('actions', { history:false });
+      return window.__buyLandCanCalls;
+    });
+    expect(beforeOpen).toBe(0);
+
+    await page.locator('#tab-actions [data-action-group="realm"]').click();
+    expect(await page.evaluate(function () {
+      return window.__buyLandCanCalls;
+    })).toBe(1);
+    await expect(page.locator('#tab-actions [data-action-id="buy_land"]'))
+      .toBeVisible();
+    await page.evaluate(function () {
+      const action = FB.instants.filter(function (candidate) {
+        return candidate.id === 'buy_land';
+      })[0];
+      action.can = window.__originalBuyLandCan;
+      delete window.__originalBuyLandCan;
+      delete window.__buyLandCanCalls;
+    });
+  });
 
 test('desktop panel tabs keep full titles with trailing reserved key badges',
   async function ({ page }) {

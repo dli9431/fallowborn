@@ -7821,18 +7821,8 @@ window.FB = window.FB || {};
     return all;
   };
 
-  FB.instantStatus = function (state, id) {
-    let action = null;
-    for (const candidate of FB.instants) {
-      if (candidate.id === id) {
-        action = candidate;
-        break;
-      }
-    }
-    if (!action) return {
-      action:null, shown:false, can:false, reason:''
-    };
-    const shown = !!action.show(state);
+  function instantStatusForAction(state, action, shown) {
+    shown = shown === undefined ? !!action.show(state) : !!shown;
     let can = shown, reason = '';
     if (shown && action.cd !== undefined) {
       const cooldownDays = action.cooldownDays
@@ -7865,18 +7855,40 @@ window.FB = window.FB || {};
       can:can,
       reason:reason
     };
+  }
+
+  FB.instantStatus = function (state, id) {
+    let action = null;
+    for (const candidate of FB.instants) {
+      if (candidate.id === id) {
+        action = candidate;
+        break;
+      }
+    }
+    if (!action) return {
+      action:null, shown:false, can:false, reason:''
+    };
+    return instantStatusForAction(state, action);
   };
 
-  FB.listInstants = function (state) {
+  FB.listInstants = function (state, options) {
+    const deferEligibility = !!(options && options.deferEligibility);
     const out = [];
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
           'travel_settle_here', 'frontier_settle_here'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
-      const status = FB.instantStatus(state, a.id);
-      if (!status.shown) continue;
-      out.push({ a:a, can:status.can, reason:status.reason });
+      const shown = !!a.show(state);
+      if (!shown) continue;
+      if (deferEligibility) {
+        out.push({ a:a, statusDeferred:true });
+      } else {
+        /* The definition is already in hand: resolve it directly instead of
+           repeating instantStatus's id scan for every listed deed. */
+        const status = instantStatusForAction(state, a, true);
+        out.push({ a:a, can:status.can, reason:status.reason });
+      }
     }
     return out;
   };
