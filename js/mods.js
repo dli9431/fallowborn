@@ -159,6 +159,7 @@ window.FBMODS = window.FBMODS || [];
      are generated artifacts or engine aliases are intentionally absent. */
   const PUBLIC_KEYS = {
     name:true, bookmarks:true, defaultBookmark:true,
+    startScenarios:true, familyPresets:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
     events:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, religions:true, traits:true,
@@ -225,6 +226,292 @@ window.FBMODS = window.FBMODS || [];
       if (seen[id]) fail(path, 'must not repeat ' + id + '.');
       if (known && !own(known, id)) fail(path, 'references unknown id ' + id + '.');
       seen[id] = true;
+    }
+  }
+
+  function combinedList(base, additions, path) {
+    if (!Array.isArray(additions)) fail(path, 'must be an array.');
+    const out = (base || []).slice();
+    const supplied = {};
+    for (let i = 0; i < additions.length; i++) {
+      const item = additions[i];
+      if (!plainObject(item) || typeof item.id !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(item.id)) {
+        fail(path + '[' + i + '].id', 'must be a lowercase start-code id.');
+      }
+      if (supplied[item.id]) fail(path, 'must not repeat ' + item.id + '.');
+      supplied[item.id] = true;
+      let replaced = false;
+      for (let j = 0; j < out.length; j++) {
+        if (out[j].id === item.id) {
+          out[j] = item;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) out.push(item);
+    }
+    return out;
+  }
+
+  function requiredText(value, path) {
+    if (typeof value !== 'string' || !value.trim()) {
+      fail(path, 'must be a non-empty string.');
+    }
+  }
+
+  function integerRange(value, min, max, path) {
+    if (!finiteNumber(value) || Math.floor(value) !== value ||
+        value < min || value > max) {
+      fail(path, 'must be an integer from ' + min + ' to ' + max + '.');
+    }
+  }
+
+  function startItemFits(def, slot) {
+    if (!def || typeof def.slot !== 'string') return false;
+    if (def.slot === 'hand') return slot === 'leftHand' || slot === 'rightHand';
+    return def.slot === slot;
+  }
+
+  function validateStartEffects(effects, scenario, refs, path) {
+    if (effects === undefined) return;
+    onlyFields(effects, {
+      landPlots:true, holdings:true, careerRank:true, careerExperience:true,
+      flags:true, warService:true, items:true, skills:true, focus:true
+    }, path);
+    if (own(effects, 'landPlots')) {
+      integerRange(effects.landPlots, 0, 20, path + '.landPlots');
+    }
+    if (own(effects, 'holdings')) {
+      validateIdList(effects.holdings, path + '.holdings', refs.holdings, true);
+      for (let i = 0; i < effects.holdings.length; i++) {
+        if (!plainObject(refs.holdings[effects.holdings[i]])) {
+          fail(path + '.holdings[' + i + ']', 'must resolve to a holding definition.');
+        }
+      }
+    }
+    if (own(effects, 'careerRank')) {
+      const career = refs.careers[scenario.profession];
+      if (typeof effects.careerRank !== 'string' || !career || !career.ranks ||
+          !own(career.ranks, effects.careerRank)) {
+        fail(path + '.careerRank', 'references an unknown rank for ' +
+          scenario.profession + '.');
+      }
+    }
+    if (own(effects, 'careerExperience')) {
+      integerRange(effects.careerExperience, 0, 200,
+        path + '.careerExperience');
+    }
+    if (own(effects, 'flags')) {
+      if (!plainObject(effects.flags)) fail(path + '.flags', 'must be an object.');
+      for (const flag in effects.flags) {
+        if (!own(effects.flags, flag)) continue;
+        if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(flag)) {
+          fail(path + '.flags.' + flag, 'has an invalid flag id.');
+        }
+        const value = effects.flags[flag];
+        if (typeof value !== 'boolean' && typeof value !== 'string' &&
+            !finiteNumber(value)) {
+          fail(path + '.flags.' + flag, 'must be a string, number, or boolean.');
+        }
+      }
+    }
+    if (own(effects, 'warService')) {
+      integerRange(effects.warService, 0, 1000, path + '.warService');
+    }
+    if (own(effects, 'skills')) {
+      if (!plainObject(effects.skills)) fail(path + '.skills', 'must be an object.');
+      for (const skill in effects.skills) {
+        if (!own(effects.skills, skill)) continue;
+        if (['dip','mar','ste','int','lea'].indexOf(skill) < 0) {
+          fail(path + '.skills.' + skill, 'is not a recognized skill.');
+        }
+        integerRange(effects.skills[skill], -20, 20,
+          path + '.skills.' + skill);
+      }
+    }
+    if (own(effects, 'focus')) {
+      if (typeof effects.focus !== 'string' || !own(refs.focuses, effects.focus)) {
+        fail(path + '.focus', 'references unknown focus ' + effects.focus + '.');
+      }
+    }
+    if (own(effects, 'items')) {
+      if (!Array.isArray(effects.items) || effects.items.length > 20) {
+        fail(path + '.items', 'must be an array of at most 20 entries.');
+      }
+      for (let i = 0; i < effects.items.length; i++) {
+        const entry = effects.items[i];
+        const itemPath = path + '.items[' + i + ']';
+        onlyFields(entry, { item:true, pool:true, quality:true, equip:true }, itemPath);
+        if ((own(entry, 'item') ? 1 : 0) + (own(entry, 'pool') ? 1 : 0) !== 1) {
+          fail(itemPath, 'must name exactly one item or pool.');
+        }
+        let ids;
+        if (own(entry, 'item')) {
+          if (typeof entry.item !== 'string' || !own(refs.items, entry.item) ||
+              !plainObject(refs.items[entry.item])) {
+            fail(itemPath + '.item', 'references unknown item ' + entry.item + '.');
+          }
+          ids = [entry.item];
+        } else {
+          if (typeof entry.pool !== 'string' || !own(refs.itemPools, entry.pool)) {
+            fail(itemPath + '.pool', 'references unknown item pool ' + entry.pool + '.');
+          }
+          ids = refs.itemPools[entry.pool];
+        }
+        for (let j = 0; j < ids.length; j++) {
+          if (!own(refs.items, ids[j]) || !plainObject(refs.items[ids[j]])) {
+            fail(itemPath, 'references unknown item ' + ids[j] + '.');
+          }
+        }
+        if (own(entry, 'quality') &&
+            ['plain','well','masterwork'].indexOf(entry.quality) < 0) {
+          fail(itemPath + '.quality', 'must be plain, well, or masterwork.');
+        }
+        if (own(entry, 'equip')) {
+          if (typeof entry.equip !== 'string' ||
+              ['head','neck','body','waist','feet','leftHand','rightHand','ring']
+                .indexOf(entry.equip) < 0) {
+            fail(itemPath + '.equip', 'is not a recognized loadout slot.');
+          }
+          for (let j = 0; j < ids.length; j++) {
+            if (!startItemFits(refs.items[ids[j]], entry.equip)) {
+              fail(itemPath + '.equip', 'does not fit item ' + ids[j] + '.');
+            }
+          }
+        }
+      }
+    }
+  }
+
+  function validateStartScenarios(mod) {
+    const scenarios = combinedList(FBDATA.startScenarios,
+      mod.startScenarios, 'startScenarios');
+    const refs = {
+      careers:combinedTable(FBDATA.careers, mod.careers, 'careers'),
+      holdings:combinedTable(FBDATA.holdings, mod.holdings, 'holdings'),
+      items:combinedTable(FBDATA.items, mod.items, 'items'),
+      itemPools:combinedTable(FBDATA.itemPools, mod.itemPools, 'itemPools'),
+      focuses:{}
+    };
+    for (const focus of (FB.focuses || [])) refs.focuses[focus.id] = focus;
+    const baselineTiers = {
+      serf:0, farmer:1, apprentice:1, monk:1, soldier:1, knight:2, baron:3
+    };
+    const found = {};
+    for (let i = 0; i < scenarios.length; i++) {
+      const scenario = scenarios[i];
+      const path = 'startScenarios.' + (scenario && scenario.id || i);
+      onlyFields(scenario, {
+        id:true, name:true, desc:true, tier:true, profession:true,
+        gold:true, prestige:true, piety:true, sex:true,
+        intro:true, intro_f:true, intro_muslim:true, intro_other:true,
+        startEffects:true
+      }, path);
+      if (!/^[a-z][a-z0-9_]*$/.test(scenario.id || '')) {
+        fail(path + '.id', 'must be a lowercase start-code id.');
+      }
+      if (found[scenario.id]) fail('startScenarios', 'must not repeat ' + scenario.id + '.');
+      found[scenario.id] = scenario;
+      requiredText(scenario.name, path + '.name');
+      requiredText(scenario.desc, path + '.desc');
+      requiredText(scenario.intro, path + '.intro');
+      for (const introField of ['intro_f','intro_muslim','intro_other']) {
+        if (own(scenario, introField)) {
+          requiredText(scenario[introField], path + '.' + introField);
+        }
+      }
+      integerRange(scenario.tier, 0, 3, path + '.tier');
+      if (typeof scenario.profession !== 'string' ||
+          !own(refs.careers, scenario.profession) ||
+          !plainObject(refs.careers[scenario.profession])) {
+        fail(path + '.profession', 'references unknown profession ' +
+          scenario.profession + '.');
+      }
+      const career = refs.careers[scenario.profession];
+      if (career.maleOnly && scenario.sex !== 'm') {
+        fail(path + '.profession', 'requires a male-only scenario.');
+      }
+      if ((career.tierMin !== undefined && scenario.tier < career.tierMin) ||
+          (career.tierMax !== undefined && scenario.tier > career.tierMax)) {
+        fail(path + '.profession', 'is unavailable at tier ' + scenario.tier + '.');
+      }
+      for (const resource of ['gold','prestige','piety']) {
+        if (!finiteNumber(scenario[resource]) || scenario[resource] < 0) {
+          fail(path + '.' + resource, 'must be a non-negative number.');
+        }
+      }
+      if (own(scenario, 'sex') && scenario.sex !== 'm' && scenario.sex !== 'f') {
+        fail(path + '.sex', 'must be m or f.');
+      }
+      validateStartEffects(scenario.startEffects, scenario, refs,
+        path + '.startEffects');
+    }
+    for (const id in baselineTiers) {
+      if (!found[id]) fail('startScenarios', 'must retain baseline id ' + id + '.');
+      if (found[id].tier !== baselineTiers[id]) {
+        fail('startScenarios.' + id + '.tier', 'must remain ' + baselineTiers[id] + '.');
+      }
+    }
+  }
+
+  function validateFamilyPresets(mod) {
+    const presets = combinedList(FBDATA.familyPresets,
+      mod.familyPresets, 'familyPresets');
+    const found = {};
+    for (let i = 0; i < presets.length; i++) {
+      const preset = presets[i];
+      const path = 'familyPresets.' + (preset && preset.id || i);
+      onlyFields(preset, {
+        id:true, name:true, diff:true, desc:true, age:true,
+        spouseAge:true, children:true, eldestMin:true
+      }, path);
+      if (!/^[a-z][a-z0-9_]*$/.test(preset.id || '')) {
+        fail(path + '.id', 'must be a lowercase start-code id.');
+      }
+      if (found[preset.id]) fail('familyPresets', 'must not repeat ' + preset.id + '.');
+      found[preset.id] = preset;
+      requiredText(preset.name, path + '.name');
+      requiredText(preset.diff, path + '.diff');
+      requiredText(preset.desc, path + '.desc');
+      if (preset.id === 'standard') {
+        if (preset.age !== 0 || own(preset, 'spouseAge') ||
+            own(preset, 'children') || own(preset, 'eldestMin')) {
+          fail(path, 'must retain the historical age and unmarried family shape.');
+        }
+        continue;
+      }
+      integerRange(preset.age, 16, 80, path + '.age');
+      const hasFamily = own(preset, 'spouseAge') || own(preset, 'children') ||
+        own(preset, 'eldestMin');
+      if (!hasFamily) continue;
+      if (!Array.isArray(preset.spouseAge) || preset.spouseAge.length !== 2) {
+        fail(path + '.spouseAge', 'must be a two-integer range.');
+      }
+      integerRange(preset.spouseAge[0], -40, 40, path + '.spouseAge[0]');
+      integerRange(preset.spouseAge[1], -40, 40, path + '.spouseAge[1]');
+      if (preset.spouseAge[0] > preset.spouseAge[1] ||
+          preset.age + preset.spouseAge[0] < 16 ||
+          preset.age + preset.spouseAge[1] > 80) {
+        fail(path + '.spouseAge', 'must keep every possible spouse aged 16 to 80.');
+      }
+      if (!Array.isArray(preset.children) || preset.children.length !== 2) {
+        fail(path + '.children', 'must be a two-integer range.');
+      }
+      integerRange(preset.children[0], 0, 8, path + '.children[0]');
+      integerRange(preset.children[1], 0, 8, path + '.children[1]');
+      if (preset.children[0] > preset.children[1]) {
+        fail(path + '.children', 'must run from minimum to maximum.');
+      }
+      integerRange(preset.eldestMin, 1, 64, path + '.eldestMin');
+      const oldestPossible = Math.min(preset.age,
+        preset.age + preset.spouseAge[0]) - 16;
+      if (preset.children[1] > 0 && preset.eldestMin > oldestPossible) {
+        fail(path + '.eldestMin', 'must fit both parents’ possible ages.');
+      }
+    }
+    for (const id of ['standard','established','elder']) {
+      if (!found[id]) fail('familyPresets', 'must retain baseline id ' + id + '.');
     }
   }
 
@@ -390,6 +677,8 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'itemPools')) validateItemPools(mod);
     if (own(mod, 'rulerTraits')) validateRulerTraits(mod);
     if (own(mod, 'raidingTraditions')) validateRaidingTraditions(mod);
+    if (own(mod, 'startScenarios')) validateStartScenarios(mod);
+    if (own(mod, 'familyPresets')) validateFamilyPresets(mod);
   }
 
   /* Cap groups are configuration maps rather than atomic definitions. A mod
@@ -619,6 +908,12 @@ window.FBMODS = window.FBMODS || [];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];
     if (mod.itemPools) mergeTable(FBDATA.itemPools, mod.itemPools);
+    if (mod.startScenarios) {
+      mergeById(FBDATA.startScenarios, mod.startScenarios, 'id');
+    }
+    if (mod.familyPresets) {
+      mergeById(FBDATA.familyPresets, mod.familyPresets, 'id');
+    }
     if (own(mod, 'rulerTraits')) {
       FBDATA.rulerTraits = mod.rulerTraits.slice();
       FB.RULER_TRAITS = FBDATA.rulerTraits;

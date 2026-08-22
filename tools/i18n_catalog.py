@@ -28,6 +28,7 @@ HASH_SCHEMA = 1
 CATALOG_SCHEMA = 1
 EVENT_FILES = sorted(DATA.glob("events_*.js"))
 BOOKMARK_FILE = DATA / "bookmarks.js"
+STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
 SOURCE_FILES = [
     ROOT / "index.html",
@@ -980,7 +981,9 @@ def extract_structured(inv: Inventory) -> None:
                 (),
             )
 
-    scenarios = node_array(find_assignment(JS / "main.js", "G", "SCENARIOS")) or []
+    scenarios = node_array(
+        find_assignment(STARTS_FILE, "FBDATA", "startScenarios")
+    ) or []
     for index, item_node in enumerate(scenarios):
         item = node_object(item_node) or {}
         item_id = node_string(item.get("id")) or str(index)
@@ -992,8 +995,24 @@ def extract_structured(inv: Inventory) -> None:
                 inv.add(
                     f"scenario.{item_id}.{field}.{branch}",
                     record,
-                    f"js/main.js:{line}",
+                    f"data/starts.js:{line}",
                     f"New-game scenario {item_id}, {field}.",
+                    TOKEN_RE.findall(record["text"]),
+                )
+
+    family_presets = node_array(
+        find_assignment(STARTS_FILE, "FBDATA", "familyPresets")
+    ) or []
+    for index, item_node in enumerate(family_presets):
+        item = node_object(item_node) or {}
+        item_id = node_string(item.get("id")) or str(index)
+        for field in ("name", "diff", "desc"):
+            for branch, record, line in branch_records(item.get(field)):
+                inv.add(
+                    f"familyPreset.{item_id}.{field}.{branch}",
+                    record,
+                    f"data/starts.js:{line}",
+                    f"New-game family preset {item_id}, {field}.",
                     TOKEN_RE.findall(record["text"]),
                 )
 
@@ -1115,10 +1134,10 @@ def extract_literal_aliases(inv: Inventory) -> None:
             continue
         source_text = path.read_text(encoding="utf-8")
         # The release changelog is intentionally English-only. Find the first
-        # gameplay-data assignment instead of relying on a brittle line number:
-        # every new changelog entry moves the start of G.SCENARIOS.
+        # gameplay declaration instead of relying on a brittle line number:
+        # every new changelog entry moves the end of FB.CHANGELOG.
         gameplay_start = (
-            source_text.find("G.SCENARIOS")
+            source_text.find("const TELEMETRY_MILESTONES")
             if path.name == "main.js"
             else -1
         )

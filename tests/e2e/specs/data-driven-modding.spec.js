@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js',
+  'data/starts.js',
   'data/cultures.js',
   'data/traits.js',
   'data/intrigue.js',
@@ -12,7 +13,8 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'js/council.js',
   'js/intrigue.js',
-  'js/mods.js'
+  'js/mods.js',
+  'js/main.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -240,5 +242,174 @@ test('milestone-zero mod validation rejects unknown data before mutation',
     expect(result.errors.every(function (entry) {
       return !!entry && entry.matched;
     })).toBe(true);
+    expect(result.unchanged).toBe(true);
+  });
+
+test('milestone-one mod starts materialize bounded scenario and family data',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      FB.mods.apply({
+        itemPools:{ e2e_start_books:['book_of_remedies'] },
+        startScenarios:[{
+          id:'e2e_scribe', name:'Village Scribe',
+          desc:'A data-driven campaign beginning.',
+          tier:0, profession:'farmer', gold:37, prestige:11, piety:9,
+          sex:'f',
+          intro:'You are {name}, keeper of the village record in {province}.',
+          startEffects:{
+            landPlots:2, holdings:['letters'], careerRank:'master',
+            careerExperience:6, flags:{ e2e_origin:'scribe' },
+            warService:3, skills:{ lea:4, ste:2 }, focus:'study',
+            items:[
+              { item:'ash_spear', quality:'well', equip:'rightHand' },
+              { pool:'e2e_start_books', quality:'plain' }
+            ]
+          }
+        }],
+        familyPresets:[{
+          id:'e2e_household', name:'Young Household',
+          diff:'age 32 · a settled beginning',
+          desc:'Married, with one child.',
+          age:32, spouseAge:[-2, 2], children:[1, 1], eldestMin:4
+        }]
+      });
+    });
+
+    const code = 'ORIGIN-867-e2e_scribe-london-f-Ada-e2e_household';
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
+    await page.locator('#ng-seed').fill(code);
+    await page.locator('#ng-seed').press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await expect(page.locator(
+      'input[name=cg-family][value="e2e_household"]')).toBeChecked();
+    await page.getByRole('button', {
+      name:'Begin Your Story', exact:true
+    }).click();
+    await expect(page.getByRole('heading', {
+      name:'Your Story Begins', exact:true
+    })).toBeVisible();
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const spouse = s.chars[me.spouseId];
+      return {
+        aliases:FB.game.SCENARIOS === FBDATA.startScenarios &&
+          FB.game.FAMILY_PRESETS === FBDATA.familyPresets,
+        seed:s.seed,
+        player:{
+          tier:s.player.tier, profession:s.player.profession,
+          gold:s.player.gold, prestige:s.player.prestige, piety:s.player.piety,
+          warService:s.player.warService, focus:s.player.focus,
+          origin:s.player.flags.e2e_origin,
+          holdings:s.player.holdings.slice(),
+          plots:s.player.landPlots.map(function (plot) {
+            return [plot.provinceId, plot.settlement];
+          })
+        },
+        career:{
+          rank:me.career.rank, experience:me.career.experience
+        },
+        skills:{ lea:me.skills.lea, ste:me.skills.ste },
+        items:s.player.items.map(function (ref) {
+          const item = FB.resolveItem(s, ref);
+          return { id:item.defId, quality:item.quality || null };
+        }),
+        rightHand:FB.resolveItem(s,
+          FB.loadoutOf(s, me.id).rightHand).defId,
+        age:s.date.year - me.born,
+        spouse:!!spouse && spouse.spouseId === me.id,
+        children:me.childrenIds.length
+      };
+    });
+
+    expect(result.aliases).toBe(true);
+    expect(result.seed).toBe(code);
+    expect(result.player).toEqual({
+      tier:0, profession:'farmer', gold:37, prestige:11, piety:9,
+      warService:3, focus:'study', origin:'scribe', holdings:['letters'],
+      plots:[['london', 0], ['london', 0]]
+    });
+    expect(result.career).toEqual({ rank:'master', experience:6 });
+    expect(result.skills.lea).toBeGreaterThanOrEqual(4);
+    expect(result.skills.ste).toBeGreaterThanOrEqual(2);
+    expect(result.items).toEqual([
+      { id:'ash_spear', quality:'well' },
+      { id:'book_of_remedies', quality:'plain' }
+    ]);
+    expect(result.rightHand).toBe('ash_spear');
+    expect(result.age).toBe(32);
+    expect(result.spouse).toBe(true);
+    expect(result.children).toBe(1);
+  });
+
+test('milestone-one validation protects baseline starts and rejects bad references',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function copy(value) { return JSON.parse(JSON.stringify(value)); }
+      function scenario(id) {
+        const out = copy(FBDATA.startScenarios[0]);
+        out.id = id;
+        out.name = 'Validation fixture';
+        out.desc = 'Rejected before application.';
+        out.intro = 'A validation fixture for {name} in {province}.';
+        return out;
+      }
+      const farmer = copy(FBDATA.startScenarios.filter(function (entry) {
+        return entry.id === 'farmer';
+      })[0]);
+      farmer.tier = 2;
+      const badProfession = scenario('e2e_bad_profession');
+      badProfession.profession = 'missing_profession';
+      const badFocus = scenario('e2e_bad_focus');
+      badFocus.startEffects = { focus:'missing_focus' };
+      const badItem = scenario('e2e_bad_item');
+      badItem.startEffects = { items:[{ item:'missing_item' }] };
+      const badHolding = scenario('e2e_bad_holding');
+      badHolding.startEffects = { holdings:['missing_holding'] };
+      const badRange = copy(FBDATA.familyPresets.filter(function (entry) {
+        return entry.id === 'established';
+      })[0]);
+      badRange.id = 'e2e_bad_range';
+      badRange.children = [3, 1];
+      const badStandard = copy(FBDATA.familyPresets.filter(function (entry) {
+        return entry.id === 'standard';
+      })[0]);
+      badStandard.age = 18;
+      const before = JSON.stringify({
+        scenarios:FBDATA.startScenarios,
+        presets:FBDATA.familyPresets
+      });
+      const cases = [
+        { data:{ startScenarios:[farmer] }, includes:'must remain 1' },
+        { data:{ startScenarios:[badProfession] }, includes:'unknown profession' },
+        { data:{ startScenarios:[badFocus] }, includes:'unknown focus' },
+        { data:{ startScenarios:[badItem] }, includes:'unknown item' },
+        { data:{ startScenarios:[badHolding] }, includes:'unknown id missing_holding' },
+        { data:{ familyPresets:[badRange] }, includes:'minimum to maximum' },
+        { data:{ familyPresets:[badStandard] }, includes:'historical age' }
+      ];
+      const errors = cases.map(function (entry) {
+        try {
+          FB.mods.apply(entry.data);
+          return null;
+        } catch (error) {
+          return error.message.indexOf(entry.includes) >= 0;
+        }
+      });
+      return {
+        errors:errors,
+        unchanged:before === JSON.stringify({
+          scenarios:FBDATA.startScenarios,
+          presets:FBDATA.familyPresets
+        })
+      };
+    });
+
+    expect(result.errors).toEqual([true, true, true, true, true, true, true]);
     expect(result.unchanged).toBe(true);
   });

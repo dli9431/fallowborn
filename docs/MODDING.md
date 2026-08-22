@@ -132,6 +132,8 @@ A JSON mod is one object with any of these keys:
   "name": "My Mod (cosmetic, optional)",
   "bookmarks": { "my_start": { ...complete bookmark... } },
   "defaultBookmark": "my_start",
+  "startScenarios": [ { "id": "my_beginning", ... } ],
+  "familyPresets": [ { "id": "my_household", ... } ],
   "provinces": [ ... ],
   "realms":    [ ... ],
   "empires":   { "id": { ... } },
@@ -204,7 +206,7 @@ second one.
 
 The listed keys are the complete public top-level runtime-mod API. An unrecognized key,
 including a generated-only table or internal compatibility alias, rejects that mod
-before any of its data mutates `FBDATA`. The milestone-zero configuration records below
+before any of its data mutates `FBDATA`. The validated configuration records below
 also reject unknown fields and cross-references at application time.
 
 `bookmarks` is an atomic replacement table. Each keyed value replaces that complete
@@ -218,6 +220,94 @@ screen instead of silently falling back to another start.
 > a life from waking up on the wrong map, every save is stamped with a fingerprint of the
 > active mod set — loading it under a different mod set is refused with a message saying
 > which world it needs (the load dialog marks such slots too).
+
+## Starting scenarios and family presets
+
+`FBDATA.startScenarios` and `FBDATA.familyPresets` live in `data/starts.js` and merge
+by stable `id`. A replacement is complete rather than a partial patch. New definitions
+are consumed only when creating a campaign; the resulting character, family, equipment,
+and property are ordinary save-format-3 state.
+
+A scenario has this shape:
+
+```json
+{
+  "startScenarios": [{
+    "id": "village_scribe",
+    "name": "Village Scribe",
+    "desc": "Begin with letters, a small household, and little status.",
+    "tier": 1,
+    "profession": "scholar",
+    "gold": 12,
+    "prestige": 4,
+    "piety": 2,
+    "intro": "You are {name}, keeper of a few precious pages in {province}.",
+    "startEffects": {
+      "landPlots": 1,
+      "holdings": ["letters"],
+      "careerRank": "apprentice",
+      "careerExperience": 2,
+      "flags": { "village_scribe": 1 },
+      "warService": 0,
+      "items": [
+        { "item": "book_of_remedies", "quality": "plain" },
+        { "pool": "authoredWorks", "equip": "rightHand" }
+      ],
+      "skills": { "lea": 3, "ste": 1 },
+      "focus": "study"
+    }
+  }]
+}
+```
+
+- `id` is a lowercase `a-z`, `0-9`, `_` start-code id. `name`, `desc`, and `intro`
+  are localized display sources. Optional `intro_f`, `intro_muslim`, and `intro_other`
+  retain the core faith/sex introduction routing.
+- `tier` is 0–3. `profession` must name an effective `careers` entry; `gold`,
+  `prestige`, and `piety` are non-negative. Optional `sex` is `m` or `f`.
+- `landPlots` creates that many plots at the selected birthplace. `holdings` grants
+  existing household-holding ids. `careerRank` must exist on the selected profession,
+  and `careerExperience` is a non-negative integer.
+- `flags` accepts scalar string, number, or boolean values under ordinary identifier
+  keys. `warService` sets the initial personal-service counter.
+- Each `items` entry names exactly one `item` or `itemPools` pool. Optional `quality`
+  is `plain`, `well`, or `masterwork`; optional `equip` is a fixed loadout slot and
+  every possible pooled item must fit it. Exact entries add no selection draw. A pool
+  deliberately makes one seeded pick in authored order.
+- `skills` adjusts only `dip`, `mar`, `ste`, `int`, or `lea`; `focus` must name an
+  existing built-in focus. This bounded vocabulary cannot invoke event effects or
+  inject arbitrary state.
+
+The seven baseline scenario ids cannot be removed or renamed, and replacements must
+retain their original tiers because old-life progression repair derives the starting
+station from the saved start code. Other fields may be replaced. Same-mod career,
+holding, item, and item-pool additions resolve before mutation.
+
+A family preset is presentation plus one supported household shape:
+
+```json
+{
+  "familyPresets": [{
+    "id": "young_householder",
+    "name": "Young Householder",
+    "diff": "age 24 · a family already begun",
+    "desc": "Married, with one infant child.",
+    "age": 24,
+    "spouseAge": [-2, 2],
+    "children": [1, 1],
+    "eldestMin": 1
+  }]
+}
+```
+
+`age` is 16–80. Omitting all three family-shape fields creates an unmarried start and
+adds no family RNG draws. Otherwise `spouseAge` is the inclusive age offset from the
+protagonist, `children` is an inclusive count range, and `eldestMin` is the first
+child's minimum age; validation keeps every possible spouse adult and the child ages
+possible. Presets never contain prebuilt character objects. The baseline `standard`,
+`established`, and `elder` ids remain present. `standard` is special: its `age:0` means
+`balance.startAge`, it must remain unmarried, and it preserves the historical no-extra-
+draw six-part start code.
 
 ## Currency presentation
 

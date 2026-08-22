@@ -167,7 +167,7 @@ fires only events tagged `childhood:true` (the childhood section of events_commo
 age-neutral events like sickness and plague) until they come of age.
 
 **Starting families are authored presets, not an editor.** The character screen offers
-`G.FAMILY_PRESETS` (`js/main.js`): `standard` (sixteen, unmarried, parents and
+`FBDATA.familyPresets` (`data/starts.js`): `standard` (sixteen, unmarried, parents and
 siblings — the historical start), `established` (thirty, spouse and young children),
 and `elder` (forty-eight, spouse and grown children). Ages and family shapes are
 fixed fields on each preset; the player picks a preset, never an age or a headcount.
@@ -179,6 +179,10 @@ choice is deterministic under the start code, which carries it as an optional
 seventh part (see [seeds.md](seeds.md)); the parents' usual 20–40/20–34 year
 seniority still applies, so an elder start can have quite elderly living parents.
 Each preset discloses its difficulty right on its card.
+
+Mods may add another adult unmarried shape or an age/spouse/child-range shape, but the
+constructor still creates every person and link. Presets cannot inject character objects.
+The `standard` id remains the historical age-from-balance, unmarried, no-extra-draw start.
 
 **Unmarried grandchildren share the managed household.** `FB.playerDescendantKind`
 is the common relationship test for a current protagonist's children and grandchildren.

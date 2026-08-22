@@ -4,7 +4,8 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/model.js',
-  'js/ui_modals.js'
+  'js/ui_modals.js',
+  'data/starts.js'
 ]);
 
 const { test, expect } = require('../support/fixture');

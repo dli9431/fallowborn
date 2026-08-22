@@ -23,7 +23,7 @@ first.
   (for example,
   `K7F29QZ-1066-serf-kent-m-aelfric`). Names encode spaces as `_` and drop dashes so
   the six-part split stays unambiguous. The optional seventh part names a
-  starting-family preset (`G.FAMILY_PRESETS` in `js/main.js` — see
+  starting-family preset (`FBDATA.familyPresets` in `data/starts.js` — see
   [characters.md](characters.md)); it is omitted for the `standard` preset, so a
   pre-presets six-part code still spells — and reproduces — the exact same start.
   The optional eighth part is the birthplace settlement slot chosen on the pick
@@ -75,6 +75,13 @@ are likewise pure parameters: the slot steers state (the farmer's starting plot,
 The start is still re-seeded immediately beforehand. Identical seed + identical picks —
 preset and community included — remains
 an identical start.
+
+Scenario and family definitions are data-driven and may be replaced or extended by the
+active mod set. Baseline ids and scenario tiers are validated for old-code repair, while
+`standard` retains its historical no-extra-draw shape. Exact scenario effects add no
+selection draws; each named starting-item pool deliberately adds one seeded pick. Thus
+unmodified baseline codes keep their established stream, while a modded code remains
+deterministic under that exact mod fingerprint.
 
 ## Scoped sub-streams
 

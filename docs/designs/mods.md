@@ -190,6 +190,17 @@ ordered generated-ruler pool. Their validators resolve same-mod `items`, `plots`
 no saved fields: exact item instances, ruler traits, schemes, and raid state retain their
 existing shapes and active mods remain protected by the save fingerprint.
 
+New-campaign content uses the same boundary. `startScenarios` and `familyPresets`
+merge complete definitions by stable id before the player opens the beginning picker.
+Scenario `startEffects` are deliberately bounded to constructor-owned state: birthplace
+plots, holding ids, career rank/experience, scalar flags, war service, exact items or
+named item pools, skill adjustments, and one known focus. The engine still owns seeded
+selection, item instancing/equipment, character and kin wiring, and save construction.
+The seven baseline scenario ids retain their original tiers, all three baseline family
+ids remain, and `standard` retains its age-zero, unmarried, no-extra-draw meaning.
+Cross-references resolve against same-mod careers, holdings, items, and pools before any
+mutation. Missing or malformed definitions reject the mod before world activation.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of
@@ -225,7 +236,7 @@ is:
 
 | Classification | Top-level keys | Contract |
 | --- | --- | --- |
-| Public runtime-mod API | `ailments`, `auctionLotTypes`, `balance`, `bookmarks`, `bounds`, `buildings`, `careers`, `collectiveDemands`, `crossingClasses`, `cultures`, `cultureTraditions`, `currency`, `defaultBookmark`, `duchies`, `elections`, `empires`, `enterprises`, `events`, `feudalServiceCharters`, `finance`, `forts`, `holdings`, `householdStandards`, `intrigue`, `itemPools`, `items`, `kingdoms`, `land`, `localCouncilMotions`, `marketEndowments`, `marketEndowmentTypes`, `marketGoods`, `modifiers`, `papacy`, `plots`, `policies`, `politicalBlocs`, `positions`, `privileges`, `provinces`, `raidingTraditions`, `realms`, `religions`, `rivers`, `rulerTraits`, `schooling`, `scripted`, `seas`, `settlementNames`, `settlementSites`, `straits`, `tech`, `techCaps`, `techDomains`, `techImpactReviews`, `techTraditions`, `titles`, `traits`, `travelPurposes`, `travelSites`, `unitClasses` | Accepted by `M.apply` with the merge/atomic behavior documented here and in `docs/MODDING.md`. `settlementSites` is partly generated in core but remains a public shared site table. |
+| Public runtime-mod API | `ailments`, `auctionLotTypes`, `balance`, `bookmarks`, `bounds`, `buildings`, `careers`, `collectiveDemands`, `crossingClasses`, `cultures`, `cultureTraditions`, `currency`, `defaultBookmark`, `duchies`, `elections`, `empires`, `enterprises`, `events`, `familyPresets`, `feudalServiceCharters`, `finance`, `forts`, `holdings`, `householdStandards`, `intrigue`, `itemPools`, `items`, `kingdoms`, `land`, `localCouncilMotions`, `marketEndowments`, `marketEndowmentTypes`, `marketGoods`, `modifiers`, `papacy`, `plots`, `policies`, `politicalBlocs`, `positions`, `privileges`, `provinces`, `raidingTraditions`, `realms`, `religions`, `rivers`, `rulerTraits`, `schooling`, `scripted`, `seas`, `settlementNames`, `settlementSites`, `startScenarios`, `straits`, `tech`, `techCaps`, `techDomains`, `techImpactReviews`, `techTraditions`, `titles`, `traits`, `travelPurposes`, `travelSites`, `unitClasses` | Accepted by `M.apply` with the merge/atomic behavior documented here and in `docs/MODDING.md`. `settlementSites` is partly generated in core but remains a public shared site table. |
 | Generated-only | `lang`, `musicCatalog` | Produced by the localization and soundtrack catalog pipelines. Runtime mods may author ordinary English display fields, but may not replace core locale caches or the shipped media manifest. |
 | Intentionally internal | `fortLevels`, `unitClassAliases` | `fortLevels` is the live compatibility alias of `forts.levels`; mods use `forts`. Unit aliases normalize legacy saved or authored class ids; mods use canonical `unitClasses`. |
 

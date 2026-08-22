@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'js/save.js',
   'js/travel.js',
   'js/ui_modals.js',
+  'data/starts.js',
   'data/events_travel.js'
 ]);
 

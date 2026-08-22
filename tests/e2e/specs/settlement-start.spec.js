@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/settlement.js',
   'css/style.css',
   'data/bookmarks.js',
+  'data/starts.js',
   'data/settlements.js'
 ]);
 

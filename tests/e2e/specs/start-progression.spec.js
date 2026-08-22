@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/save.js',
   'js/ui_modals.js',
   'css/style.css',
+  'data/starts.js',
   'data/technology.js'
 ]);
 

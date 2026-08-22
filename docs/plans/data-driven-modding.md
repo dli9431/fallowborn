@@ -1,6 +1,6 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestone 0 implemented
+Status: active; milestones 0–1 implemented
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -207,6 +207,30 @@ not inject prebuilt character objects.
   start code.
 
 No save-format bump is required.
+
+### Milestone 1 implementation
+
+Implemented on 2026-08-22:
+
+- `data/starts.js` owns the seven baseline `FBDATA.startScenarios` and three baseline
+  `FBDATA.familyPresets`; `main.js` retains only compatibility aliases and constructor
+  behavior.
+- Scenario-id branches for Free Farmer land and Soldier/Hedge Knight equipment are
+  replaced by bounded `startEffects`: land plots, holdings, career rank/experience,
+  scalar flags, war service, exact items or named item pools, skill adjustments, and
+  focus.
+- Runtime mods may add or completely replace definitions. Validation protects baseline
+  ids and tiers, the historical `standard` family meaning, supported household ranges,
+  and same-mod career, holding, item, pool, focus, slot, and rank references before any
+  mutation.
+- Baseline exact-item starts preserve their grant order and RNG sequence. Unmarried
+  presets add no family draws; a named item pool adds one explicit seeded selection.
+- Scenario and family display fields have stable structured-localization owners, while
+  untranslated mod prose continues to fall back to its effective English source.
+
+Save format remains 3. No technology-impact ledger entry is required: this is a modding
+and authoring boundary applied before a world exists, and it does not change baseline
+gameplay eligibility.
 
 ## Milestone 2: religious progression paths
 

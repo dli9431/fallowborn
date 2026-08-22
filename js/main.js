@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.146.1';
+  FB.VERSION = '1.147.0';
   FB.CHANGELOG = [
+    { v: '1.147.0', date: '2026-08-22', changes: [
+      'Starting scenarios and family presets are now data-driven, letting mods add validated beginnings, resources, equipment, careers, and household shapes.'
+    ] },
     { v: '1.146.1', date: '2026-08-22', changes: [
       'Preview translations now stay active while new or changed records temporarily fall back to English.'
     ] },
@@ -1334,39 +1337,10 @@ window.FB = window.FB || {};
   function $(id) { return document.getElementById(id); }
 
   /* ================= scenarios ================= */
-  G.SCENARIOS = [
-    { id: 'serf', name: 'Serf',
-      desc: 'Bound to the land, with no property or freedom.',
-      tier: 0, profession: 'farmer', gold: 5, prestige: 0, piety: 0,
-      intro: 'You are {name}, a serf of {province}. The lord owns your labor; the church owns your Sundays; the soil will own your bones — unless you claw your way to something more.' },
-    { id: 'farmer', name: 'Free Farmer',
-      desc: 'Free, with a small plot and modest savings.',
-      tier: 1, profession: 'farmer', gold: 20, prestige: 5, piety: 0,
-      intro: 'You are {name}, a free farmer of {province}. Your land is small, your debts are few, and your ambitions need not be.' },
-    { id: 'apprentice', name: 'Craftsman’s Apprentice',
-      desc: 'Train in a skilled trade under a master.',
-      tier: 1, profession: 'craftsman', gold: 15, prestige: 5, piety: 0,
-      intro: 'You are {name}, apprenticed to a master of the craft in {province}. Your hands are learning what your purse will someday know.' },
-    { id: 'monk', name: 'Novice of the Faith',
-      desc: 'Begin in religious service with education and piety.',
-      tier: 1, profession: 'monk', gold: 2, prestige: 0, piety: 25,
-      intro: 'You are Brother {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
-      intro_f: 'You are Sister {name} of {province}, newly sworn. Letters, prayer, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.',
-      intro_muslim: 'You are {name}, a student of the madrasa of {province}. Ink, memory, and the law can raise a nobody higher than any sword — and unlike the Christians’ monks, a scholar may yet marry and found a house.',
-      intro_other: 'You are {name}, a novice of the faith in {province}. Letters, devotion, and patience can raise a nobody higher than any sword — but a dynasty will need... arrangements.' },
-    { id: 'soldier', name: 'Man-at-Arms',
-      desc: 'Earn wages and status through military service.',
-      tier: 1, profession: 'soldier', gold: 10, prestige: 10, piety: 0, mar: 3, sex: 'm',
-      intro: 'You are {name}, a spear in the service of the lord of {province}. Wages are thin, but battlefields are where nobodies become somebodies.' },
-    { id: 'knight', name: 'Hedge Knight',
-      desc: 'A trained warrior of noble birth with little money.',
-      tier: 2, profession: 'noble', gold: 40, prestige: 60, piety: 0, mar: 4, focus: 'train_arms',
-      intro: 'You are {name}, gently born and poorly landed. The gentry’s door is open; the baron’s hall is the next to force.' },
-    { id: 'baron', name: 'Petty Baron',
-      desc: 'Rule a small barony under a powerful liege.',
-      tier: 3, profession: 'noble', gold: 80, prestige: 150, piety: 0,
-      intro: 'You are {name}, Baron in {province}, sworn to {realm}. Your tower is small and your ambitions are welcome to be otherwise.' }
-  ];
+  /* Compatibility aliases for console helpers and older integrations. The
+     public authored source and runtime-mod surface are the FBDATA tables. */
+  G.SCENARIOS = FBDATA.startScenarios;
+  G.FAMILY_PRESETS = FBDATA.familyPresets;
 
   const START_TIER_NAMES = ['Serf', 'Freeholder', 'Gentry', 'Baron'];
 
@@ -1394,23 +1368,8 @@ window.FB = window.FB || {};
      fixed order after the shared parents/siblings. Ages are authored fields,
      never player-edited; every preset keeps the protagonist an adult (>= 16)
      and leaves siblings and/or children behind as heirs. */
-  G.FAMILY_PRESETS = [
-    { id: 'standard', name: 'Youth',
-      diff: 'age 16 · the whole road ahead',
-      desc: 'Unmarried. Your parents and siblings are beside you.',
-      age: 0 }, // 0 = FBDATA.balance.startAge
-    { id: 'established', name: 'Established',
-      diff: 'age 30 · a head start, fewer years left',
-      desc: 'Married, with young children in the cradle.',
-      age: 30, spouseAge: [-4, 4], children: [1, 2], eldestMin: 1 },
-    { id: 'elder', name: 'Elder',
-      diff: 'age 48 · an adult heir, little time left',
-      desc: 'Married, with grown children ready to inherit.',
-      age: 48, spouseAge: [-4, 4], children: [2, 3], eldestMin: 16 }
-  ];
-
   function familyPresetById(id) {
-    return G.FAMILY_PRESETS.filter(function (p) { return p.id === id; })[0] || null;
+    return FBDATA.familyPresets.filter(function (p) { return p.id === id; })[0] || null;
   }
 
   /* ================= seeds =================
@@ -1494,7 +1453,7 @@ window.FB = window.FB || {};
       const provincePart = legacy ? 2 : 3;
       const sexPart = legacy ? 3 : 4;
       const namePart = legacy ? 4 : 5;
-      const scen = G.SCENARIOS.filter(function (s) {
+      const scen = FBDATA.startScenarios.filter(function (s) {
         return s.id === parts[scenarioPart].toLowerCase();
       })[0];
       const prov = bookmark && bookmark.provinces.filter(function (p) {
@@ -1846,14 +1805,17 @@ window.FB = window.FB || {};
     });
     const box = $('scenariolist');
     box.innerHTML = '';
-    for (const sc of G.SCENARIOS) {
+    for (const sc of FBDATA.startScenarios) {
       const el = document.createElement('button');
       const locked = !scenarioUnlocked(sc);
       el.type = 'button';
       el.className = 'scencard' + (locked ? ' locked' : '');
       if (locked) el.setAttribute('aria-disabled', 'true');
-      el.innerHTML = '<h3>' + (locked ? '🔒 ' : '') + FB.esc(FB.L(sc.name)) +
-        '</h3><p>' + FB.esc(FB.L(sc.desc)) + '</p>' + (locked
+      el.innerHTML = '<h3>' + (locked ? '🔒 ' : '') +
+        FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'name', {})) +
+        '</h3><p>' +
+        FB.esc(FB.dataText(null, null, 'scenario', sc.id, sc, 'desc', {})) +
+        '</p>' + (locked
           ? '<p class="scenario-lock">' + FB.esc(scenarioUnlockText(sc, false)) + '</p>'
           : '');
       if (!locked) {
@@ -2096,12 +2058,16 @@ window.FB = window.FB || {};
        code's preset (or a pick made before stepping Back) survives */
     const famBox = $('cg-family');
     famBox.innerHTML = '';
-    for (const fp of G.FAMILY_PRESETS) {
+    for (const fp of FBDATA.familyPresets) {
       const label = document.createElement('label');
       label.className = 'radio cgfamily-card';
       label.innerHTML = '<input type="radio" name="cg-family" value="' + fp.id + '">' +
-        '<span><b>' + FB.esc(FB.L(fp.name)) + '</b> — ' + FB.esc(FB.L(fp.diff)) +
-        '<br><span class="hint">' + FB.esc(FB.L(fp.desc)) + '</span></span>';
+        '<span><b>' + FB.esc(FB.dataText(null, null, 'familyPreset', fp.id,
+          fp, 'name', {})) + '</b> — ' +
+        FB.esc(FB.dataText(null, null, 'familyPreset', fp.id, fp, 'diff', {})) +
+        '<br><span class="hint">' +
+        FB.esc(FB.dataText(null, null, 'familyPreset', fp.id, fp, 'desc', {})) +
+        '</span></span>';
       famBox.appendChild(label);
     }
     const wantedPreset = familyPresetById(G.pending.familyPreset) ? G.pending.familyPreset : 'standard';
@@ -2118,7 +2084,7 @@ window.FB = window.FB || {};
 
   function selectedFamilyPreset() {
     const r = document.querySelector('input[name=cg-family]:checked');
-    return (r && familyPresetById(r.value)) || G.FAMILY_PRESETS[0];
+    return (r && familyPresetById(r.value)) || familyPresetById('standard');
   }
 
   function selectedCommunity() {
@@ -2177,6 +2143,37 @@ window.FB = window.FB || {};
     });
   }
 
+  function startFlags(effects) {
+    const out = {};
+    for (const key in ((effects && effects.flags) || {})) {
+      if (Object.prototype.hasOwnProperty.call(effects.flags, key)) {
+        out[key] = effects.flags[key];
+      }
+    }
+    return out;
+  }
+
+  function startLandPlots(effects, provinceId, settlementIdx) {
+    const out = [];
+    const count = effects && effects.landPlots ? effects.landPlots : 0;
+    for (let i = 0; i < count; i++) {
+      out.push({ provinceId:provinceId, settlement:settlementIdx });
+    }
+    return out;
+  }
+
+  function grantStartingItems(state, character, effects) {
+    const entries = (effects && effects.items) || [];
+    for (const entry of entries) {
+      const pool = entry.pool && FBDATA.itemPools[entry.pool];
+      const defId = entry.item || (pool && pool.length ? FB.pick(pool) : null);
+      if (!defId) continue;
+      const ref = FB.grantItem(state, defId,
+        entry.quality ? { quality:entry.quality } : undefined);
+      if (ref && entry.equip) FB.equipItem(state, character.id, entry.equip, ref);
+    }
+  }
+
   G.start = function () {
     G.observe = false;
     document.body.classList.remove('observing');
@@ -2185,6 +2182,7 @@ window.FB = window.FB || {};
       showScenarios();
       return false;
     }
+    const startEffects = sc.startEffects || {};
     // re-seed before politics and characters draw on the RNG, so anyone holding
     // the same seed and making the same picks gets this exact start
     const seedStr = (G.pending && G.pending.seed) || freshSeed();
@@ -2235,12 +2233,13 @@ window.FB = window.FB || {};
         provinceId: provId, homeSettlement: settIdx, liege: null, liegeOp: 0, liegeOps: {}, pop: 0,
         faithStandingMigration:0, realmStandingFaithBases:{},
         foreignPolicy: {},
-        warService: 0, liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
+        warService: startEffects.warService || 0,
+        liegeGrants: 0, gentryGeneration: sc.tier >= 2 ? 0 : null,
         developmentBaselineMigration: 1,
         militaryCommand:null,
         lineDepth: 1,
         traitProgress: {},
-        flags: {}, cooldowns: {}, fired: {}, courtingId: null,
+        flags: startFlags(startEffects), cooldowns: {}, fired: {}, courtingId: null,
         courtshipTerms: null, suitorIds: null,
         socialAttention: {}, friendContacts: {}, socialGiftTurns: {}, realmGiftTurns: {},
         giftDeliveries: [],
@@ -2251,7 +2250,8 @@ window.FB = window.FB || {};
         localCouncil:null, castellany:null,
         capitalRelocation: null,
         protections: {},
-        holdings: [], enterprises: [], retainers: [], householdStandards: {},
+        holdings: (startEffects.holdings || []).slice(),
+        enterprises: [], retainers: [], householdStandards: {},
         educationPolicy: { focus:null, instructionMode:'manual', feeCap:0 },
         matchPolicy: {
           enabled:false, minStation:0, maxDowry:null,
@@ -2259,7 +2259,7 @@ window.FB = window.FB || {};
         },
         guildMonopolies: { incoming:null, outgoing:null },
         items: [], loadouts: {}, itemMigration: 1,
-        landPlots: sc.id === 'farmer' ? [{ provinceId:provId, settlement:settIdx }] : [],
+        landPlots: startLandPlots(startEffects, provId, settIdx),
         landPlotMigration: 1, manor: null, fabricatedClaim: null, auction: null, royalCompact: null
       },
       pregnant: null, peakTier: sc.tier, peakTitleData: null,
@@ -2282,24 +2282,22 @@ window.FB = window.FB || {};
     });
     me.health = 8;
     me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex);
-    if (sc.mar) me.skills.mar = Math.max(0, me.skills.mar + sc.mar);
+    for (const skill in (startEffects.skills || {})) {
+      if (Object.prototype.hasOwnProperty.call(startEffects.skills, skill)) {
+        me.skills[skill] = Math.max(0, me.skills[skill] + startEffects.skills[skill]);
+      }
+    }
     state.player.charId = me.id;
     state.player.houseFounderId = me.id;
-    FB.setCareer(state, me, sc.profession, 'journeyman');
-
-    /* Issued kit is ordinary gear, not an immortal named artifact. Its
-       quality is authored by the start and its appearance is saved normally. */
-    if (sc.id === 'soldier') {
-      const spear = FB.grantItem(state, 'ash_spear', { quality:'plain' });
-      const jack = FB.grantItem(state, 'padded_jack', { quality:'plain' });
-      if (spear) FB.equipItem(state, me.id, 'rightHand', spear);
-      if (jack) FB.equipItem(state, me.id, 'body', jack);
-    } else if (sc.id === 'knight') {
-      const sword = FB.grantItem(state, 'broad_sword', { quality:'well' });
-      const shield = FB.grantItem(state, 'round_shield', { quality:'plain' });
-      if (sword) FB.equipItem(state, me.id, 'rightHand', sword);
-      if (shield) FB.equipItem(state, me.id, 'leftHand', shield);
+    FB.setCareer(state, me, sc.profession,
+      startEffects.careerRank || 'journeyman');
+    if (me.career && startEffects.careerExperience !== undefined) {
+      me.career.experience = startEffects.careerExperience;
     }
+
+    /* Issued kit is ordinary exact-instance gear. Exact definitions consume
+       the historical item draws; a named pool adds one deliberate seeded pick. */
+    grantStartingItems(state, me, startEffects);
 
     // parents — the first rung of the kin tree
     const dad = FB.makeCharacter(state, {
@@ -2349,10 +2347,10 @@ window.FB = window.FB || {};
       dad.childrenIds.push(sib.id); mom.childrenIds.push(sib.id);
     }
 
-    /* Family presets beyond 'standard' add a spouse and children here, in a
-       fixed draw order after the shared kin, so the default start's stream —
-       and every old start code — reproduces bit-for-bit. */
-    if (preset.id !== 'standard') {
+    /* A preset with a spouse shape adds its family here, in a fixed draw order
+       after the shared kin. Standard and custom unmarried shapes add no draws,
+       so every old standard code reproduces bit-for-bit. */
+    if (preset.spouseAge) {
       const spouse = FB.makeCharacter(state, {
         sex: me.sex === 'm' ? 'f' : 'm',
         culture: cultureId, religion: religionId,
@@ -2395,7 +2393,7 @@ window.FB = window.FB || {};
     if (FB.ensureIntrigue) FB.ensureIntrigue(state);
     if (FB.ensurePolitics) FB.ensurePolitics(state);
     if (FB.ensureInstitutions) FB.ensureInstitutions(state, { silent:true });
-    state.player.focus = sc.focus || FB.defaultFocus(state);
+    state.player.focus = startEffects.focus || FB.defaultFocus(state);
     const firstPlayerOnboarding = !G.uiPrefs.tipsGrandfathered &&
       !G.uiPrefs.onboardingStarted;
     if (firstPlayerOnboarding) {

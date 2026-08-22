@@ -137,7 +137,7 @@ window.FB = window.FB || {};
 
   function scenarioStartTier(state) {
     const id = scenarioIdFromStart(state);
-    const scenarios = FB.game && FB.game.SCENARIOS;
+    const scenarios = FBDATA.startScenarios;
     if (!id || !Array.isArray(scenarios)) return null;
     for (let i = 0; i < scenarios.length; i++) {
       if (scenarios[i].id === id) return scenarios[i].tier;
