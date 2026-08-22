@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'index.html',
   'js/music.js',
   'js/main.js',
   'js/save.js',
@@ -134,21 +135,22 @@ test('first soundtrack boot, title pause, and background playback preserve state
     await page.setViewportSize({ width:320, height:800 });
     await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
 
+    await expect(page.locator('#title:not(.hidden)')).toBeVisible();
     await expect(page.locator('#music-choice:not(.hidden)')).toBeVisible();
     await expect(page.locator('#music-choice-copy')).toContainText('average song');
     await expect(page.locator('#music-choice-copy')).toContainText('complete soundtrack');
-    const bootChoiceLayout = await page.locator('#loading').evaluate(function (loading) {
+    const bootChoiceLayout = await page.locator('#title').evaluate(function (title) {
       function insideViewport(element) {
         const box = element.getBoundingClientRect();
         return box.top >= 0 && box.left >= 0 &&
           box.right <= window.innerWidth && box.bottom <= window.innerHeight;
       }
       return {
-        titleInside:insideViewport(loading.querySelector('.gametitle')),
+        titleInside:insideViewport(title.querySelector('.gametitle')),
         choiceInside:insideViewport(document.getElementById('music-choice')),
         playInside:insideViewport(document.getElementById('music-choice-play')),
         silentInside:insideViewport(document.getElementById('music-choice-silent')),
-        horizontalScroll:loading.scrollWidth > loading.clientWidth
+        horizontalScroll:title.scrollWidth > title.clientWidth
       };
     });
     expect(bootChoiceLayout).toEqual({

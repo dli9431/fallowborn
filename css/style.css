@@ -90,7 +90,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .screen::before, .screen::after { content: ''; margin: auto 0; }
 /* Loading owns one explicit viewport-height wrapper. Opera's mobile device
    emulation can lose flex content that is centered between auto-margin pseudo
-   elements when the music choice expands the screen after boot. */
+   elements when progress text expands the screen during world construction. */
 #loading { padding: 0; }
 #loading::before, #loading::after { display: none; }
 .loading-content {
@@ -132,6 +132,17 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .music-choice h2 { text-align: center; }
 .music-choice > p { margin-bottom: 10px; color: var(--main-text-color); }
 .music-choice .row { justify-content: center; }
+.title-boot-status {
+  margin-bottom: 12px; color: var(--helper-text-color);
+  font-size: 14px; font-style: italic;
+}
+#title .music-choice {
+  width: min(100%, 560px); margin: 0 0 clamp(10px, 2vh, 18px);
+}
+html.music-choice-pending #title .menubtns,
+html.music-choice-pending #title .credits,
+html.music-choice-pending .title-music-controls { display: none !important; }
+html.music-choice-resolved #music-choice { display: none !important; }
 
 .menubtns { display: flex; flex-direction: column; gap: 12px; width: min(80vw, 300px); }
 .bigbtn {
@@ -265,6 +276,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .radio { font-size: 15px; }
 
 /* chargen starting-family presets: one stacked, tappable card per preset */
+.screen.start-pending { cursor:progress; }
+.screen.start-pending .cgform,
+.screen.start-pending > .row { opacity:.62; }
+
 .cgfamily { display: flex; flex-direction: column; gap: 6px; width: min(100%, 420px); }
 .cgfamily-card { align-items: flex-start !important; text-align: left; }
 .cgfamily-card input { margin-top: 3px; }
@@ -3368,7 +3383,7 @@ textarea.modjson, textarea.savetext {
   }
   .market-lens-picker { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   .market-lens-actions {
-    grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px;
   }
   .market-lens-picker label, .market-sheet-label {
     font-size: 11px; letter-spacing: .04em; line-height: 1.2; text-transform: uppercase;
@@ -3377,7 +3392,7 @@ textarea.modjson, textarea.savetext {
   .market-price-legend { min-height: 44px; }
   .market-lens-controls select { font-size: 14px; }
   .market-lens-controls #market-lens-details {
-    width: 100%; padding-inline: 8px; font-size: 13px;
+    width: 100%; min-height: 44px; padding-inline: 8px; font-size: 13px;
   }
   .market-price-legend {
     grid-template-columns: repeat(3, minmax(0, 1fr));

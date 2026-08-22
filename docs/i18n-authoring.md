@@ -83,24 +83,35 @@ The pipeline's tracked working state lives under `i18n/`. `extract` refreshes
 text, never request headers or credentials, and their changes land with the generated catalogs.
 Historical `translate*.log` files are progress output only and are not consumed by the tool.
 
-`extract` and `validate` are network-free, while `translate` calls a translation API; all three
-still obey the integration-only timing rule below. If you cannot run `translate` during an
-authorized integration, **say so** — English fallback keeps the game correct, but the owner must
-regenerate before the Preview locales are current for release.
+`extract` and `validate` are network-free, while `translate` calls an unauthenticated translation
+endpoint that may return `429 Too Many Requests`. All three still obey the integration-only timing
+rule below. If `translate` is unavailable, say so and stop the catalog recipe. English fallback
+keeps the game correct, and the surrounding commit or merge may proceed without regenerated
+catalogs. If `extract` already modified tracked generated files, restore or exclude those partial
+outputs before committing. Missing cache entries remain discoverable by the next successful
+translation run.
 
 **When to run it — authorization and timing are strict.** Do not run `extract`, `translate`, or
 `validate` during ordinary implementation, review, diagnostics, or other uncommitted work merely
-because the checkout is `main`. An edit or test request is not authorization to regenerate the
-catalogs. Run the recipe only after the owner explicitly asks for one of these integrations:
+because the checkout is `main`. A commit, merge, edit, or test request is not authorization to
+regenerate the catalogs. The owner must ask for i18n regeneration separately. When requested, run
+the recipe only as part of one of these integrations:
 
-- **Commit directly to `main`:** finalize the source changes first, then run the recipe as the
-  last integration step immediately before the requested commit so the generated files land in it.
+- **Commit directly to `main` or `dev`:** finalize the source changes first, then run the recipe
+  as the last integration step immediately before the requested commit so the generated files
+  land in it.
 - **Merge a branch into `main`:** never regenerate on the branch. During the requested merge,
   assemble the merged tree without finalizing the merge commit, run the recipe from that merged
   tree, then finalize the integration.
 - **Merge any branch into `dev`:** use the identical merge workflow: never regenerate on the
   source branch; assemble the merged tree, run the recipe, then finalize the integration. A later
   merge of `dev` into `main` runs the recipe again from that newly merged tree.
+
+Catalog regeneration is optional for every integration path. `validate` is mandatory only
+when regenerated artifacts are going into the integration. A failed or skipped translation does
+not block committing the source changes; Preview locales fall back to current English for missing
+or stale records. If catalogs are caught up in a later standalone integration, bump `FB.VERSION`
+so deployed immutable locale assets receive a new cache key.
 
 Routing new strings remains part of implementation; English self-heals until integration.
 Regenerating early only creates noisy working-tree changes and, on a branch, guarantees a catalog
@@ -110,7 +121,9 @@ regenerate again from the merged tree, wasting work and a second `translate` bil
 [../AGENTS.md](../AGENTS.md).)
 
 **Resolving a catalog conflict at a merge.** Do not hand-merge the generated files. Take either
-side to clear the markers (`git checkout --theirs -- data/lang_*.js tools/i18n_manifest.json`),
-`git add` them, then regenerate from the *merged source* (`extract → translate → validate`) and
-stage the result. `validate` is the gate — a change reaching `main`, or reaching `dev` through a
-branch merge, with new player-facing text but stale catalogs leaves the other languages stale.
+side to clear the markers (`git checkout --theirs -- data/lang_*.js tools/i18n_manifest.json`). If
+the owner requested i18n regeneration, regenerate from the *merged source*
+(`extract → translate → validate`) and stage the result. Otherwise retain one complete generated
+side and let current English fallback cover missing or stale records until a later successful
+regeneration. `validate` is the gate for regenerated artifacts, not for the surrounding source
+integration.

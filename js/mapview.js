@@ -120,9 +120,14 @@ window.FB = window.FB || {};
 
   M.resize = function () {
     const el = M.canvas;
+    if (!el) return;
     M.dpr = window.devicePixelRatio || 1;
     const w = el.clientWidth, h = el.clientHeight;
     if (w && h) { el.width = Math.round(w * M.dpr); el.height = Math.round(h * M.dpr); }
+    /* The title shell deliberately paints before any bookmark is activated.
+       A viewport change there still sizes the visible canvas, but there is no
+       world raster from which to derive a minimum zoom yet. */
+    if (!FB.world) return;
     M.minZoom = Math.min(el.width / FB.world.W, el.height / FB.world.H) * 0.85;
   };
 
@@ -636,6 +641,59 @@ window.FB = window.FB || {};
     return pr._outline;
   };
 
+  /* A county-only selection does not need the realm focus raster. Cache the
+     crisp path inside the county bounds so travel list taps avoid allocating
+     and scanning a world-sized ImageData buffer. */
+  function provincePixelOutline(pid) {
+    const w = FB.world;
+    if (!w || !w.byId || !w.grid) return null;
+    const pr = w.byId[pid];
+    if (!pr) return null;
+    if (pr._pixelOutline) return pr._pixelOutline;
+    const bounds = FB.provinceBounds(pid);
+    if (!bounds) return null;
+    const selectedIndex = pr.idx + 1;
+    const outline = new Path2D();
+    for (let y = bounds.minY; y <= bounds.maxY; y++) {
+      for (let x = bounds.minX; x <= bounds.maxX; x++) {
+        const k = y * w.W + x;
+        if (w.grid[k] !== selectedIndex) continue;
+        const l = x > 0 ? w.grid[k - 1] : 0;
+        const r = x + 1 < w.W ? w.grid[k + 1] : 0;
+        const u = y > 0 ? w.grid[k - w.W] : 0;
+        const dn = y + 1 < w.H ? w.grid[k + w.W] : 0;
+        if (l !== selectedIndex) {
+          outline.moveTo(x, y); outline.lineTo(x, y + 1);
+        }
+        if (r !== selectedIndex) {
+          outline.moveTo(x + 1, y); outline.lineTo(x + 1, y + 1);
+        }
+        if (u !== selectedIndex) {
+          outline.moveTo(x, y); outline.lineTo(x + 1, y);
+        }
+        if (dn !== selectedIndex) {
+          outline.moveTo(x, y + 1); outline.lineTo(x + 1, y + 1);
+        }
+      }
+    }
+    pr._pixelOutline = outline;
+    return outline;
+  }
+
+  M.selectProvince = function (provId, highlightColor) {
+    M.selected = provId;
+    M.highlightColor = (typeof highlightColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(highlightColor))
+      ? highlightColor.toLowerCase() : null;
+    M.hiliteCtx.clearRect(0, 0, M.hilite.width, M.hilite.height);
+    M.focusMembers = null;
+    M.focusGroupActive = false;
+    M.groupOutline = null;
+    M.groupOutlineSmooth = null;
+    M.selectedOutline = provId ? provincePixelOutline(provId) : null;
+    M.selectedOutlineSmooth = provId ? FB.provinceOutline(provId) : null;
+    M.request();
+  };
+
   M.select = function (provId, groupOf, highlightColor) {
     M.selected = provId;
     M.highlightColor = (typeof highlightColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(highlightColor))
@@ -868,6 +926,7 @@ window.FB = window.FB || {};
 
   /* ---------- render loop ---------- */
   M.request = function () {
+    if (!M.canvas || !FB.world) return;
     if (FB.game && FB.game.fastForwarding) {
       M._fastForwardRenderPending = true;
       return;
@@ -907,7 +966,7 @@ window.FB = window.FB || {};
 
   M.render = function () {
     const ctx = M.ctx, el = M.canvas;
-    if (!el.width) return;
+    if (!el || !FB.world || !el.width) return;
     ctx.fillStyle = '#1c3550';
     ctx.fillRect(0, 0, el.width, el.height);
     /* close zoom cross-fades the noisy base raster into its flat sibling —
@@ -940,7 +999,7 @@ window.FB = window.FB || {};
       ctx.save();
       ctx.scale(M.zoom, M.zoom);
       ctx.translate(-sx, -sy);
-      ctx.drawImage(M.hilite, 0, 0);
+      if (M.focusGroupActive) ctx.drawImage(M.hilite, 0, 0);
       const focusColor = M.focusColor();
       /* close zoom strokes the smoothed contours so the highlight lies
          exactly on the vector border lines; lower zooms keep the crisp

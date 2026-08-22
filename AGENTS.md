@@ -56,6 +56,11 @@ bounds it to the whole-runtime canaries and directly changed test code. Never im
 game scripts in Node. Baseline, line-ending, and helper-authoring details are documented in
 `docs/TESTS.md`.
 
+Treat shared test helpers as fan-out boundaries. If behavior belongs to one locale, browser,
+viewport, or scenario, keep its setup in that specification or a leaf helper imported only by
+the affected specifications. Do not change `support/game/navigation.js`, the universal fixture,
+or the page contract to solve a scenario-local test unless their shared contract truly changed.
+
 These commands are for owner-initiated manual runs. AI coding agents must author or update
 relevant tests, but must not install test browsers or dependencies and must not execute
 `npm run check`, Playwright, the static-server regression, runtime verification, or any other
@@ -131,8 +136,9 @@ move, prune, repair, or otherwise modify a worktree or its registration.
 
 **The `dev` branch is long-lived — never delete it.** It survives its merges into `main`
 and serves as the owner's test branch for larger changes. Every merge of any branch into `dev`
-must use the same test-authoring, version/changelog, i18n regeneration, and commit-message
-workflow as a merge into `main`. A later merge of `dev` into `main` follows that workflow again.
+must use the same test-authoring, version/changelog, optional i18n regeneration, and
+commit-message workflow as a merge into `main`. A later merge of `dev` into `main` follows that
+workflow again.
 When `dev` itself is the source branch, skip step 3's deletion for it.
 
 **Integration-owned artifacts — assign them at the merge, never on the branch.** A few things are
@@ -147,23 +153,22 @@ every other branch in flight (parallel worktrees are unaware of each other):
    feature and hint where the player runs into it, not the full mechanics. Players read it in
    the in-game changelog modal; they want a pointer to the new thing, not a spec. See
    `docs/VERSIONS.md`.
-2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) — these are prepared
-   **only when the owner explicitly asks to commit work directly to `main` or merge a branch
-   into `main` or `dev`.** Do not run `extract`, `translate`, or `validate` during ordinary
-   implementation,
-   review, or other uncommitted work, even when the current checkout is already `main`; an edit
-   or test request is not authorization to regenerate catalogs. For a direct commit to `main`,
-   run `extract → translate fr de it es → validate` as the final integration step immediately
-   before the requested commit. For a requested branch merge, assemble the merged tree without
-   finalizing the merge commit, then run the same recipe from that merged tree immediately before
-   finalizing the integration. `validate` is the gate. The commands also maintain tracked
-   translation caches and coverage reports under `i18n/`; include any resulting updates in the
-   integration. Land the catalogs and this pipeline state in the *same*
-   `FB.VERSION` as the integration — they cache-bust on that version, so pushing code without
-   them serves stale/English-fallback locales until the next bump. An integration with no
-   player-facing text change is a no-op `validate` confirms. Never regenerate on a feature branch
-   or hand-merge these files. Recipe and rationale: `docs/i18n-authoring.md`; see
-   **Internationalization (i18n)** below.
+2. **The i18n catalogs** (`data/lang_*.js`, `tools/i18n_manifest.json`) - catalog regeneration is
+   optional for commits and merges into `main` or `dev` while the unauthenticated translation
+   endpoint is unreliable. A commit or merge request alone does not authorize catalog commands.
+   Run them only when the owner also explicitly asks to regenerate or update i18n. Do not run
+   `extract`, `translate`, or `validate` during ordinary implementation or review. When requested,
+   run `extract → translate fr de it es → validate` as the final integration step from the fully
+   assembled source tree. `validate` remains the gate for including regenerated artifacts, but an
+   unavailable translation service or stale Preview catalog does not block the surrounding code
+   commit. If `extract` changed tracked files before `translate` failed, restore or exclude those
+   partial pipeline outputs rather than committing an unvalidated generated set. New or changed
+   records safely fall back to English and remain missing from the tracked locale caches, so the
+   next successful translation run discovers them. Include all resulting catalog, cache, manifest,
+   and coverage updates together. If catalog changes land later in a separate integration, assign
+   a new `FB.VERSION` so deployed immutable assets are refreshed.
+   Never regenerate on a feature branch or hand-merge generated files. Recipe and rationale:
+   `docs/i18n-authoring.md`; see **Internationalization (i18n)** below.
 
 On the branch, describe the change in the commit message and route any new player-facing text
 through the i18n layer — but leave the version, changelog, and catalogs for the merge. Anything
@@ -192,14 +197,18 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
   `data/music_catalog.js`, then the event packs (including `events_lifepaths.js`
   after `events_paths.js`, and
   `events_intrigue.js` after tournament events and before ruler-agency events).
-- Engine second, all writing to `window.FB`: `util → messages → i18n → English catalog →
+- Engine second, all writing to `window.FB`: `util → messages → i18n →
   model → music → portrait → siteart → world → settlement → fortifications → holywar → population → modifiers →
   economy → market → papacy → armies → travel → mapview → events → items → actions → intrigue →
   technology → council → agency → politics → parliament → institutions →
-  ui (ui_misc → ui_panels → ui_topbar → ui_modals) → keys → save → mods →
-  main`. The four `ui_*.js` files are one system split for size: `ui_misc.js` loads first
-  and owns the shared internals (`FB.ui._shared`) the other three bind at load, so their
-  relative order matters too.
+  ui (ui_misc → ui_panels → ui_topbar) → keys → save → mods → main`. The generated English
+  catalog is absent from an ordinary English boot; a translated boot dynamically loads it
+  before the selected locale. The four `ui_*.js` files are one system split for size:
+  `ui_misc.js` loads first and owns the shared internals (`FB.ui._shared`) the other three
+  bind at load. An inert hidden asset pointer keeps `ui_modals.js` available to deployment
+  stamping and offline precaching without requesting it speculatively. `main.js` appends the
+  script after the title shell has had a chance to paint and before setting `FB.game.bootReady`.
+  Preserve that dependency order when changing boot.
 
 ## Design decisions
 
@@ -288,10 +297,12 @@ into saved state, mutate a `FBDATA` display field, or put grammar in JS. New Eng
 English, so the game still runs — but an unrouted string is a bug.
 
 The catalogs (`data/lang_*.js`, `tools/i18n_manifest.json`) are generated integration artifacts.
-Do not run any catalog command during uncommitted implementation or review. Regenerate only as
-the final step of an owner-requested direct commit to `main` or branch merge into `main` or `dev`
+Do not run any catalog command during uncommitted implementation or review. Catalog regeneration
+is optional for a commit or merge into `main` or `dev` and requires a separate explicit owner
+request. When requested, run it as the final integration step
 (`extract → translate fr de it es → validate`), never on a feature branch, and never hand-merge
-them (see *Git workflow*).
+generated files. If translation is unavailable, report it and allow the code integration to
+proceed with English fallback (see *Git workflow*).
 
 **Full authoring guide + the catalog regenerate/merge recipe: `docs/i18n-authoring.md`.
 Architecture and locale lifecycle: `docs/designs/i18n.md`. Schema: `docs/MODDING.md`.**

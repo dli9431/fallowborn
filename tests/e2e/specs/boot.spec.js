@@ -8,12 +8,16 @@ dependsOnRuntime(__filename, [
 ]);
 
 const { test, expect } = require('../support/fixture');
-const { openGame } = require('../support/game/navigation');
+const { openGame, targetUrl } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
 test('boots the real game without browser, asset, or network errors',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
+    await page.evaluate(function () {
+      /* The title no longer creates a world. Resizing it must remain safe. */
+      window.dispatchEvent(new Event('resize'));
+    });
 
     const contract = await page.evaluate(async function () {
       let registrations = null;
@@ -30,10 +34,16 @@ test('boots the real game without browser, asset, or network errors',
       return {
         protocol: location.protocol,
         version: FB.VERSION,
-        bookmark: FB.activeBookmark && FB.activeBookmark.id,
+        bookmark: FB.activeBookmark ? FB.activeBookmark.id : null,
         state: FB.state,
         scripts: scripts.length,
         stylesheets: document.styleSheets.length,
+        fullStylesReady: document.getElementById('full-stylesheet')
+          .getAttribute('data-ready') === 'true',
+        bootReady: FB.game.bootReady,
+        englishCatalogLoaded: !!(FBDATA.lang && FBDATA.lang.en),
+        deferredModals: !!document.querySelector('script[data-deferred-ui="modals"]'),
+        modalUiReady: typeof FB.ui.showMenu === 'function',
         platform: FB.platform,
         platformOrder: scripts.indexOf('js/util.js') < scripts.indexOf('js/main.js'),
         musicOrder: scripts.indexOf('data/music_catalog.js') < scripts.indexOf('js/music.js') &&
@@ -55,10 +65,15 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.protocol).toBe(
       testInfo.project.name === 'chromium-file' ? 'file:' : 'http:');
     expect(contract.version).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(contract.bookmark).toBe('867');
+    expect(contract.bookmark).toBeNull();
     expect(contract.state).toBeNull();
     expect(contract.scripts).toBeGreaterThan(40);
-    expect(contract.stylesheets).toBe(1);
+    expect(contract.stylesheets).toBeGreaterThanOrEqual(2);
+    expect(contract.fullStylesReady).toBe(true);
+    expect(contract.bootReady).toBe(true);
+    expect(contract.englishCatalogLoaded).toBe(false);
+    expect(contract.deferredModals).toBe(true);
+    expect(contract.modalUiReady).toBe(true);
     expect(contract.platform.name).toBe('local');
     expect(contract.platform.isPlay).toBe(false);
     expect(contract.platform.isItch).toBe(false);
@@ -89,6 +104,74 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.offlineStatusHidden).toBe(true);
     expect(contract.updateBannerHidden).toBe(true);
     expect([null, -1, 0]).toContain(contract.registrations);
+  });
+
+test('a translated boot loads the English source manifest before its locale',
+  async function ({ page }, testInfo) {
+    await page.addInitScript(function () {
+      localStorage.setItem('fb_lang', 'fr');
+      localStorage.setItem('fb_ui', JSON.stringify({ musicChoice:'off' }));
+    });
+    /* This scenario intentionally boots in French. Keep its locale-specific
+       readiness contract here instead of widening the universal English
+       journey helper and selecting every specification that imports it. */
+    await page.goto(targetUrl(testInfo), { waitUntil:'domcontentloaded' });
+    await expect(page.locator('#title:not(.hidden)')).toBeVisible({
+      timeout:30 * 1000
+    });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!(window.FB && FB.game && FB.game.bootReady && FB.ui && FB.save);
+      });
+    }).toBe(true);
+    await expect(page.locator('#btn-newgame')).toBeVisible();
+    await expect(page.locator('#btn-newgame')).toBeEnabled();
+
+    const localeBoot = await page.evaluate(function () {
+      const scripts = Array.from(document.scripts).map(function (script) {
+        return script.src || '';
+      });
+      const englishAt = scripts.findIndex(function (src) {
+        return /\/data\/lang_en\.js(?:\?|$)/.test(src);
+      });
+      const frenchAt = scripts.findIndex(function (src) {
+        return /\/data\/lang_fr\.js(?:\?|$)/.test(src);
+      });
+      return {
+        locale:FB.locale,
+        english:!!FBDATA.lang.en,
+        french:!!FBDATA.lang.fr,
+        sourceBeforeLocale:englishAt >= 0 && frenchAt > englishAt,
+        bookmark:FB.activeBookmark ? FB.activeBookmark.id : null
+      };
+    });
+
+    expect(localeBoot).toEqual({
+      locale:'fr', english:true, french:true,
+      sourceBeforeLocale:true, bookmark:null
+    });
+  });
+
+test('world construction yields across expensive raster phases',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const progressCounts = await page.evaluate(function () {
+      return new Promise(function (resolve, reject) {
+        const counts = {};
+        FB.activateBookmark('867', function (fraction, message) {
+          counts[message] = (counts[message] || 0) + 1;
+        }, function (error) {
+          if (error) { reject(error); return; }
+          resolve(counts);
+        });
+      });
+    });
+
+    expect(progressCounts['Raising the continents…']).toBeGreaterThan(1);
+    expect(progressCounts['Filling the seas…']).toBeGreaterThan(1);
+    expect(progressCounts['Carving provinces…']).toBeGreaterThan(10);
+    expect(progressCounts['Drawing borders…']).toBeGreaterThan(5);
+    expect(progressCounts['Surveying settlements…']).toBeGreaterThan(1);
   });
 
 test('the hosted update banner is play-only and saves a live campaign before reload',

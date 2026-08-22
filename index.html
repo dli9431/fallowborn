@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="boot-loading">
   <head>
     <meta charset="UTF-8" />
     <meta
@@ -16,7 +16,81 @@
       href="static/favicon-32.png"
     />
     <link rel="apple-touch-icon" href="static/apple-touch-icon.png" />
-    <link rel="stylesheet" href="css/style.css" />
+    <script>
+      (function () {
+        "use strict";
+        var choice = null;
+        try {
+          var saved = JSON.parse(localStorage.getItem("fb_ui") || "null");
+          choice = saved && (saved.musicChoice === "on" ||
+            saved.musicChoice === "off") ? saved.musicChoice : null;
+        } catch (error) { /* keep the first-visit choice visible */ }
+        document.documentElement.classList.add(choice
+          ? "music-choice-resolved" : "music-choice-pending");
+      })();
+    </script>
+    <style id="critical-shell">
+      :root { --main-text-color:#f2eadb; --helper-text-color:#c9b991; }
+      * { box-sizing:border-box; margin:0; padding:0; }
+      html, body { height:100%; overflow:hidden; }
+      body {
+        background:#171310; color:var(--main-text-color);
+        font:16px/1.5 Georgia, 'Times New Roman', serif;
+      }
+      .hidden { display:none !important; }
+      .screen {
+        position:fixed; inset:0; z-index:40; display:flex;
+        flex-direction:column; align-items:center; padding:20px;
+        overflow-y:auto; overflow-x:hidden; text-align:center;
+        background:radial-gradient(ellipse at 50% 30%, #2a221a 0%, #171310 70%);
+      }
+      .screen::before, .screen::after { content:''; margin:auto 0; }
+      #title { padding-block:clamp(10px, 2vh, 20px); }
+      #titlecrest { width:clamp(78px, 12vh, 120px); height:auto; }
+      .gametitle {
+        margin-bottom:clamp(2px, 1vh, 8px); color:#d8b24a;
+        font-size:clamp(30px, min(13vw, 7vh), 60px); line-height:1.1;
+        letter-spacing:2px; text-shadow:0 2px 8px #000;
+      }
+      .subtitle {
+        margin-bottom:clamp(10px, 2.5vh, 26px);
+        color:var(--helper-text-color); font-style:italic;
+      }
+      .title-boot-status {
+        margin-bottom:12px; color:var(--helper-text-color);
+        font-size:14px; font-style:italic;
+      }
+      .music-choice {
+        width:min(100%, 560px); margin:0 0 18px; padding:16px;
+        border:1px solid #66522f; border-radius:10px;
+        background:#241d15; box-shadow:0 8px 28px rgba(0,0,0,.35);
+        text-align:left;
+      }
+      .music-choice h2 { margin-bottom:10px; color:#d8b24a; text-align:center; }
+      .music-choice p { margin-bottom:10px; }
+      .music-choice .row { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+      .menubtns { display:flex; flex-direction:column; width:min(80vw, 300px); gap:8px; }
+      .bigbtn, .btn {
+        border:1px solid #66522f; border-radius:7px; background:#33291d;
+        color:var(--main-text-color); font:inherit; cursor:pointer;
+      }
+      .bigbtn { min-height:42px; padding:8px 22px; font-size:16px; }
+      .btn { min-height:40px; padding:9px 14px; }
+      .btn.primary { border-color:#a5842f; background:#4c3b1e; }
+      button:disabled { opacity:.4; cursor:default; }
+      html.music-choice-pending #title .menubtns,
+      html.music-choice-pending #title .credits,
+      html.music-choice-pending .title-music-controls { display:none !important; }
+      html.music-choice-resolved #music-choice { display:none !important; }
+    </style>
+    <link
+      id="full-stylesheet"
+      rel="stylesheet"
+      href="css/style.css"
+      media="print"
+      onload="this.onload=null;this.media='all';this.setAttribute('data-ready','true')"
+      onerror="this.setAttribute('data-error','true')"
+    />
     <!-- Umami analytics: play.fallowborn.com only -->
     <script>
       (function () {
@@ -79,6 +153,7 @@
     </script>
   </head>
   <body>
+    <a id="ui-modals-source" href="js/ui_modals.js" hidden></a>
     <aside
       id="update-banner"
       class="update-banner hidden"
@@ -109,44 +184,18 @@
     </aside>
     <div id="app">
       <!-- ======== LOADING ======== -->
-      <div id="loading" class="screen">
+      <div id="loading" class="screen hidden">
         <div class="loading-content">
           <h1 class="gametitle">Fallowborn</h1>
           <p id="loadmsg" data-i18n="Drawing the known world…">
             Drawing the known world&hellip;
           </p>
           <div class="loadbarwrap"><div id="loadbar"></div></div>
-          <div id="music-choice" class="music-choice hidden">
-            <h2 data-i18n="Music">Music</h2>
-            <p
-              data-i18n="The game and title theme are ready. Soundtrack music downloads as you play and is cached after it arrives."
-            >
-              The game and title theme are ready. Soundtrack music downloads as
-              you play and is cached after it arrives.
-            </p>
-            <p id="music-choice-copy" class="hint"></p>
-            <div class="row gap wrap">
-              <button
-                id="music-choice-play"
-                class="btn primary"
-                data-i18n="Play music"
-              >
-                Play music
-              </button>
-              <button
-                id="music-choice-silent"
-                class="btn"
-                data-i18n="Continue silently"
-              >
-                Continue silently
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
       <!-- ======== TITLE ======== -->
-      <div id="title" class="screen hidden">
+      <div id="title" class="screen" aria-busy="true">
         <canvas id="titlecrest" width="120" height="140"></canvas>
         <h1 class="gametitle">Fallowborn</h1>
         <p
@@ -155,35 +204,72 @@
         >
           From serf to sovereign &mdash; a dynasty saga of the early Middle Ages
         </p>
+        <p
+          id="title-boot-status"
+          class="title-boot-status"
+          role="status"
+          aria-live="polite"
+          data-i18n="Preparing the chronicle…"
+        >
+          Preparing the chronicle&hellip;
+        </p>
+        <div id="music-choice" class="music-choice">
+          <h2 data-i18n="Music">Music</h2>
+          <p
+            data-i18n="Choose whether to play with music while the chronicle is prepared. Soundtrack music downloads as you play and is cached after it arrives."
+          >
+            Choose whether to play with music while the chronicle is prepared.
+            Soundtrack music downloads as you play and is cached after it arrives.
+          </p>
+          <p id="music-choice-copy" class="hint"></p>
+          <div class="row gap wrap">
+            <button
+              id="music-choice-play"
+              class="btn primary"
+              data-i18n="Play music"
+              disabled
+            >
+              Play music
+            </button>
+            <button
+              id="music-choice-silent"
+              class="btn"
+              data-i18n="Continue silently"
+              disabled
+            >
+              Continue silently
+            </button>
+          </div>
+        </div>
         <p id="title-mods" class="modnote hidden"></p>
         <div class="menubtns">
-          <button id="btn-continue" class="bigbtn hidden">
+          <button id="btn-continue" class="bigbtn hidden" disabled>
             <span class="title-menu-icon" aria-hidden="true"
               >&#9654;&#65039;</span
             ><span data-i18n="Continue">Continue</span>
           </button>
-          <button id="btn-newgame" class="bigbtn">
+          <button id="btn-newgame" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#127793;</span
             ><span data-i18n="New Game">New Game</span>
           </button>
-          <button id="btn-load" class="bigbtn">
+          <button id="btn-load" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#128194;</span
             ><span data-i18n="Load Game">Load Game</span>
           </button>
-          <button id="btn-mods" class="bigbtn">
+          <button id="btn-mods" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#129513;</span
             ><span data-i18n="Mods">Mods</span>
           </button>
-          <button id="btn-settings" class="bigbtn">
+          <button id="btn-settings" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true"
               >&#9881;&#65039;</span
             ><span data-i18n="Settings">Settings</span>
           </button>
-          <button id="btn-help" class="bigbtn">
+          <button id="btn-help" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#128214;</span
             ><span data-i18n="How to Play">How to Play</span>
           </button>
-          <button id="btn-changelog" class="bigbtn">
+          <button id="btn-changelog" class="bigbtn" disabled>
             <span class="title-menu-icon" aria-hidden="true">&#128220;</span
             ><span data-i18n="Changelog">Changelog</span>
           </button>
@@ -767,7 +853,6 @@
     <script src="js/util.js"></script>
     <script src="js/messages.js"></script>
     <script src="js/i18n.js"></script>
-    <script src="data/lang_en.js"></script>
     <script src="js/model.js"></script>
     <script src="js/music.js"></script>
     <script src="js/portrait.js"></script>
@@ -797,7 +882,6 @@
     <script src="js/ui_misc.js"></script>
     <script src="js/ui_panels.js"></script>
     <script src="js/ui_topbar.js"></script>
-    <script src="js/ui_modals.js"></script>
     <script src="js/keys.js"></script>
     <script src="js/save.js"></script>
     <script src="js/mods.js"></script>

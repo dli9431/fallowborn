@@ -9,15 +9,16 @@ xwēdōdah recognition before spending a day. The proposal review shows the
 compact, and alliance, plus child health-risk bands. The Guide's Family
 category preserves the complete rule summary and searchable trait list.
 
-**Where the UI code lives.** The former `js/ui.js` is split into four files that load
-consecutively in this order and augment one `FB.ui` namespace:
+**Where the UI code lives.** The former `js/ui.js` is split into four files that augment one
+`FB.ui` namespace. The first three load consecutively; the modal sheet is deferred until
+after the initial title paint:
 
 | File | Contents |
 | --- | --- |
 | `js/ui_misc.js` | Shared name/format/standing helpers, large-list surfaces, interaction cards, mobile back navigation, screens, toasts, hint coachmarks, the generic modal engine, boot wiring. Loads first and owns `FB.ui._shared`, the internal namespace the other three bind at load. |
 | `js/ui_panels.js` | The retained panels — Deeds, Self, Kin, Network, Land, Chronicle — plus tabs, drawers, and the family tree. |
 | `js/ui_topbar.js` | Top bar refresh: stats and per-season breakdowns, portrait, date, pause/skip controls. |
-| `js/ui_modals.js` | The event modal, autoresolve, and every dialog sheet: pickers, coin & credit, household, technology, character sheets, death, menu, settings, save/load, the Guide. |
+| `js/ui_modals.js` | Deferred by the title boot, then loaded before `FB.game.bootReady`; owns the event modal, autoresolve, and every dialog sheet: pickers, coin & credit, household, technology, character sheets, death, menu, settings, save/load, the Guide. |
 
 Cross-file module state (`travelPicker`, `activeTab`, `logRenderedTail`,
 `logRenderedLen`, `portraitKey`) lives as properties of `FB.ui._shared`; shared
@@ -25,11 +26,27 @@ functions are exported onto that object by their owning file and bound by later
 files at load. Keep new cross-file internals on `FB.ui._shared` rather than
 inventing a second channel.
 
-The loading screen keeps its title, progress state, and first-visit music choice inside one
-explicit dynamic-viewport-height wrapper. It does not use the other pregame screens’
-auto-margin pseudo-elements, because mobile device emulation in Opera can drop flex content
-when the music choice expands that scroll container. The wrapper remains vertically centered
-when it fits and scrolls from a reachable top edge when narrow or translated copy makes it tall.
+The committed HTML renders a complete critical title shell before the full stylesheet or game
+scripts finish. A tiny head script reads only the saved music-choice flag so returning players
+do not see the first-visit card flash. First-time players see that card immediately; its buttons
+remain disabled until localization, mods, the deferred modal sheet, and title wiring are ready.
+Choosing music is still the browser gesture that starts the title theme and permits contextual
+music to continue in play. Choosing silence hides the card and records the same persistent
+preference. The title menu is hidden behind the unresolved first-visit choice and is disabled
+during boot for returning players.
+
+The title boot does not activate a default bookmark. New Game activates the date the player
+chooses, while Continue and Load activate the bookmark stored in that save. The loading screen
+is reserved for those real world-construction paths and keeps its title and progress state inside
+one explicit dynamic-viewport-height wrapper. The critical CSS in `index.html` owns only the
+initial title/card geometry; `css/style.css` remains the full source of presentation and loads
+without blocking that first paint.
+
+Committing character creation first locks and visibly dims the complete form, then lets that
+pending state paint before synchronous seeded campaign creation begins. The public `G.start()`
+operation remains synchronous so deterministic callers retain one atomic state transition; only
+the player-facing button adds the painted handoff. The form unlocks after success or failure, so
+returning to character creation never inherits stale disabled controls.
 
 The Papacy deed opens `fullsheet-modal papacy-modal`: a responsive two-column summary
 collapses to one column on narrow/short screens, and the College grid does the same.
@@ -1353,6 +1370,10 @@ rank, then a map picker
 with marked valid destinations and a synchronized, focusable destination list.
 Map taps and list buttons select the same county and preview the settled-only
 route; the final confirmation states county legs, days each way, and exact cost.
+List selection updates its pressed state, summary, and Continue eligibility before scheduling
+the map work after that paint. Travel uses `FB.map.selectProvince`, which draws cached crisp and
+smooth outlines inside the selected county's bounds without allocating the ordinary world-sized
+realm-focus raster. The route and destination marker retain their existing map presentation.
 It also states the 90-day destination stay and whether this character’s one lifetime
 permanent move remains available. Freeholders and gentry see every ordinary
 purpose; barons and higher see pilgrimage and study, while relationship travel

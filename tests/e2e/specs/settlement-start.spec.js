@@ -80,6 +80,37 @@ async function beginAndDismiss(page) {
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 }
 
+test('campaign start paints a locked character form before creating the life',
+  async function ({ page }) {
+    await reachPickScreen(page);
+    await page.getByRole('button', { name:'Random Province', exact:true }).click();
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.game.pickStage; });
+    }).toBe('settlement');
+    await page.locator('#btn-pick-random').click();
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+
+    const immediate = await page.evaluate(function () {
+      document.getElementById('btn-cg-start').click();
+      const controls = Array.from(document.querySelectorAll(
+        '#chargen button, #chargen input, #chargen select'));
+      return {
+        busy:document.getElementById('chargen').getAttribute('aria-busy'),
+        pending:document.getElementById('chargen').classList.contains('start-pending'),
+        controlsLocked:controls.every(function (control) { return control.disabled; }),
+        state:FB.state
+      };
+    });
+    expect(immediate).toEqual({
+      busy:'true', pending:true, controlsLocked:true, state:null
+    });
+
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    await expect(page.locator('#chargen')).toHaveAttribute('aria-busy', 'false');
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
 test('a selected settlement becomes the birthplace and lands in state and the start code',
   async function ({ page }) {
     await reachPickScreen(page);

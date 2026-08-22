@@ -18,6 +18,13 @@ fallback (Venice's lagoon islands). Adjacency, coastal flags, and centroids are
 derived from the corrected raster. Changing `FBDATA.provinces` (authored as compact rows in
 `data/counties.js`) reshapes the map automatically.
 
+World construction is callback-sliced without changing its traversal order. Land and sea
+polygons yield individually, nearest-seed assignment and adjacency advance in 12-row bands, and
+settlement compilation advances 16 counties at a time. Connected-component repair and its orphan
+flood keep their proven synchronous traversal intact, with a yield between those phases, because
+pausing either traversal midway risks changing raster ownership. Every slice resumes the same
+arrays and sorted seeds, so timing cannot enter generated world state.
+
 A county's authored `terrain` (farmland, forest, hills, mountains, desert, steppe,
 marsh, tundra) is load-bearing well beyond its map color: population carrying capacity
 and market yields read it, and warfare reads it directly — battle quality per unit

@@ -791,6 +791,26 @@ window.FB = window.FB || {};
 
   /* ================= overland travel picker ================= */
   SH.travelPicker = null;
+  let travelMapSelectionSerial = 0;
+
+  function scheduleTravelMapSelection(pid, route, center) {
+    const serial = ++travelMapSelectionSerial;
+    requestAnimationFrame(function () {
+      /* A timer from the frame callback puts the map work after the browser
+         has painted the pressed destination and updated summary. */
+      setTimeout(function () {
+        if (serial !== travelMapSelectionSerial || !SH.travelPicker ||
+            !SH.travelPicker.selected ||
+            SH.travelPicker.selected.destinationId !== pid) return;
+        FB.map.travelSelected = pid;
+        FB.map.travelPreview = route;
+        if (FB.map.selectProvince) FB.map.selectProvince(pid);
+        else FB.map.select(pid, function (id) { return id; });
+        if (center) FB.map.centerOn(pid, FB.map.zoom);
+        FB.map.request();
+      }, 0);
+    });
+  }
 
   function travelPurposeText(s, id, path) {
     const def = FBDATA.travelPurposes[id];
@@ -857,6 +877,7 @@ window.FB = window.FB || {};
     }
     const wasPaused = FB.game.paused;
     FB.game.setPaused(true);
+    travelMapSelectionSerial++;
     SH.travelPicker = {
       kind:opts.kind || 'travel',
       purpose:opts.purpose || null,
@@ -1061,10 +1082,6 @@ window.FB = window.FB || {};
       return false;
     }
     SH.travelPicker.selected = item;
-    FB.map.travelSelected = pid;
-    FB.map.travelPreview = [FB.state.player.provinceId].concat(item.route);
-    FB.map.select(pid, function (id) { return id; });
-    if (center) FB.map.centerOn(pid, FB.map.zoom);
     let selectedButton = null;
     document.querySelectorAll('[data-travel-destination]').forEach(function (button) {
       const selected = button.getAttribute('data-travel-destination') === pid;
@@ -1099,7 +1116,8 @@ window.FB = window.FB || {};
           });
     }
     $('travel-picker-continue').disabled = !affordable;
-    FB.map.request();
+    scheduleTravelMapSelection(pid,
+      [FB.state.player.provinceId].concat(item.route), center);
     return true;
   };
 
@@ -1610,6 +1628,7 @@ window.FB = window.FB || {};
   function closeTravelPicker(restorePause) {
     const closed = SH.travelPicker;
     const wasPaused = SH.travelPicker ? SH.travelPicker.wasPaused : true;
+    travelMapSelectionSerial++;
     SH.travelPicker = null;
     document.body.classList.remove('travel-picking');
     $('travel-picker').classList.add('hidden');

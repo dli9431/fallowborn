@@ -585,23 +585,29 @@ window.FB = window.FB || {};
 
     const steps = [];
 
+    let landPolyAt = 0;
     steps.push(function () {
       progress(0.1, 'Raising the continents…');
-      for (let li = 0; li < FBDATA.land.length; li++) {
-        const pts = projectPoly(FBDATA.land[li]);
-        fillPolyScanline(land, W, H, pts, 1);
-        fillPolyScanline(landmass, W, H, pts, li + 1);
-      }
+      const li = landPolyAt++;
+      const pts = projectPoly(FBDATA.land[li]);
+      fillPolyScanline(land, W, H, pts, 1);
+      fillPolyScanline(landmass, W, H, pts, li + 1);
+      return landPolyAt < FBDATA.land.length ? 'repeat' : null;
     });
+
+    let seaPolyAt = 0, seedSnapAt = 0;
     steps.push(function () {
       progress(0.25, 'Filling the seas…');
-      for (const poly of FBDATA.seas) {
-        const pts = projectPoly(poly);
+      if (seaPolyAt < FBDATA.seas.length) {
+        const pts = projectPoly(FBDATA.seas[seaPolyAt++]);
         fillPolyScanline(land, W, H, pts, 0);
         fillPolyScanline(landmass, W, H, pts, 0);
+        return 'repeat';
       }
       // snap seeds that fell in water to nearest land pixel
-      for (const pr of provs) {
+      const end = Math.min(provs.length, seedSnapAt + 32);
+      for (; seedSnapAt < end; seedSnapAt++) {
+        const pr = provs[seedSnapAt];
         pr.sx = FB.clamp(pr.sx, 0, W - 1); pr.sy = FB.clamp(pr.sy, 0, H - 1);
         if (!land[pr.sy * W + pr.sx]) {
           let found = false;
@@ -619,6 +625,7 @@ window.FB = window.FB || {};
         }
         pr.landmass = landmass[pr.sy * W + pr.sx];
       }
+      return seedSnapAt < provs.length ? 'repeat' : null;
     });
 
     // Nearest-seed assignment in row bands. A seed competes only on its
@@ -627,7 +634,7 @@ window.FB = window.FB || {};
     // falls back to all seeds so mod-added scenery remains visible.
     // Seeds are sorted by x so each pixel only scans the x-window that can
     // beat its current best (ties still go to the lowest province index).
-    const BAND = 80;
+    const BAND = 12;
     let bandStart = 0;
     let sorted = null, sxArr = null, landmassSeeds = null;
     function assignBand() {
@@ -670,31 +677,21 @@ window.FB = window.FB || {};
       bandStart = yEnd;
       return bandStart >= H;
     }
-    // queue bands as steps
-    const nBands = Math.ceil(1000 / BAND) + 20; // upper bound; loop breaks when done
-    for (let b = 0; b < nBands; b++) {
-      steps.push(function () {
-        progress(0.3 + 0.55 * Math.min(1, bandStart / H), 'Carving provinces…');
-        let finished = false;
-        for (let k = 0; k < 1 && !finished; k++) finished = assignBand();
-        return finished ? 'skiprest' : null;
-      });
-    }
+    steps.push(function () {
+      progress(0.3 + 0.55 * Math.min(1, bandStart / H), 'Carving provinces…');
+      return assignBand() ? null : 'repeat';
+    });
 
+    let orphan = null;
     steps.push(function () {
       progress(0.9, 'Drawing borders…');
-      /* Nearest-seed assignment on the single Afro-Eurasian land polygon lets
-         a county win land across a carved sea wherever the far shore has no
-         nearer seed (Tangier held the Gibraltar shore, Mecca the Nubian
-         coast). No 867 county spanned such waters, so a fragment cut off
-         from its seed on the same landmass passes to the neighboring county
-         it actually borders. Fragments on another authored land polygon
-         stay: that is the unseeded-polygon fallback that hands islands to
-         their nearest county (Venice's lagoon islands). */
+      /* Keep the proven synchronous ownership traversal intact. It yields
+         before and after the phase, but never suspends a component midway
+         through its DFS. */
       const seedAt = {};
       for (const pr of provs) seedAt[pr.idx] = pr.sy * W + pr.sx;
       const seen = new Uint8Array(W * H);
-      const orphan = new Uint8Array(W * H);
+      orphan = new Uint8Array(W * H);
       const stack = [];
       for (let i = 0; i < W * H; i++) {
         const v = grid[i];
@@ -718,10 +715,10 @@ window.FB = window.FB || {};
           if (landmass[c] === seedLm) orphan[c] = 1;
         }
       }
-      /* Multi-source flood: an orphan cell adopts the keeper county it
-         borders; the flood carries that county into the fragment's interior.
-         Orphans ringed only by water or other orphans (an unseeded island)
-         are unreachable and keep their assigned county. */
+    });
+
+    steps.push(function () {
+      progress(0.92, 'Drawing borders…');
       const queue = [], qOwner = [];
       function adopt(c, owner) {
         const old = provs[grid[c] - 1], nw = provs[owner - 1];
@@ -751,6 +748,10 @@ window.FB = window.FB || {};
         if (cy > 0 && orphan[c - W]) adopt(c - W, owner);
         if (cy < H - 1 && orphan[c + W]) adopt(c + W, owner);
       }
+    });
+
+    steps.push(function () {
+      progress(0.94, 'Drawing borders…');
       // centroids
       for (const pr of provs) {
         if (pr.area > 0) { pr.cx = Math.round(pr.cx / pr.area); pr.cy = Math.round(pr.cy / pr.area); }
@@ -759,23 +760,34 @@ window.FB = window.FB || {};
         const at = grid[pr.cy * W + pr.cx];
         if (at !== pr.idx + 1) { pr.cx = pr.sx; pr.cy = pr.sy; }
       }
+    });
+
+    const adj = {}, waterAdj = {};
+    let adjacencyY = 0, adjacencyReady = false;
+    steps.push(function () {
+      progress(0.95, 'Drawing borders…');
       // adjacency + coastal
-      const adj = {}, waterAdj = {};
-      for (const pr of provs) {
-        adj[pr.id] = {};
-        waterAdj[pr.id] = {};
+      if (!adjacencyReady) {
+        for (const pr of provs) {
+          adj[pr.id] = {};
+          waterAdj[pr.id] = {};
+        }
+        adjacencyReady = true;
       }
-      for (let y = 0; y < H - 1; y++) {
+      const yEnd = Math.min(H - 1, adjacencyY + 12);
+      for (let y = adjacencyY; y < yEnd; y++) {
         for (let x = 0; x < W - 1; x++) {
           const a = grid[y * W + x];
-          const r = grid[y * W + x + 1], d = grid[(y + 1) * W + x];
           if (!a) continue;
           const pa = provs[a - 1];
+          const r = grid[y * W + x + 1], d = grid[(y + 1) * W + x];
           if (!r || !d) pa.coastal = true;
           if (r && r !== a) { adj[pa.id][provs[r - 1].id] = 1; adj[provs[r - 1].id][pa.id] = 1; }
           if (d && d !== a) { adj[pa.id][provs[d - 1].id] = 1; adj[provs[d - 1].id][pa.id] = 1; }
         }
       }
+      adjacencyY = yEnd;
+      if (adjacencyY < H - 1) return 'repeat';
       for (const s of (FBDATA.straits || [])) {
         if (adj[s[0]] && adj[s[1]]) {
           const key = s[0] < s[1] ? s[0] + '|' + s[1] : s[1] + '|' + s[0];
@@ -791,18 +803,21 @@ window.FB = window.FB || {};
         W: W, H: H, grid: grid, land: land, landmass: landmass, provs: provs, byId: byId,
         adj: adj, waterAdj: waterAdj
       };
+    });
+
+    let siteCompilation = null;
+    steps.push(function () {
       progress(0.97, 'Surveying settlements…');
-      siteFaults = compileSites(FB.world);
+      if (!siteCompilation) siteCompilation = beginSiteCompilation(FB.world);
+      if (!compileSiteBatch(siteCompilation, 16)) return 'repeat';
+      siteFaults = siteCompilation.faults;
     });
 
     let si = 0;
     function step() {
       while (si < steps.length) {
-        const res = steps[si](); si++;
-        if (res === 'skiprest') {
-          // skip remaining band steps (they're all band fns until the final step)
-          while (si < steps.length - 1) si++;
-        }
+        const res = steps[si]();
+        if (res !== 'repeat') si++;
         if (si < steps.length) { setTimeout(step, 0); return; }
       }
       progress(1, 'The world is made.');
@@ -1155,16 +1170,21 @@ window.FB = window.FB || {};
     return a.index - b.index;
   }
 
-  function compileSites(world) {
-    var faults = [];
+  function beginSiteCompilation(world) {
     world.sites = [];
     world.sitesByProv = {};
-    for (var pi = 0; pi < world.provs.length; pi++) {
-      var pr = world.provs[pi];
+    return { world:world, faults:[], provinceAt:0, complete:false };
+  }
+
+  function compileSiteBatch(job, batchSize) {
+    var world = job.world;
+    var end = Math.min(world.provs.length, job.provinceAt + batchSize);
+    for (; job.provinceAt < end; job.provinceAt++) {
+      var pr = world.provs[job.provinceAt];
       if (pr.wasteland) continue;
       var compiled = compileProvinceSites(world, pr);
       for (var fi = 0; fi < compiled.faults.length; fi++) {
-        faults.push(compiled.faults[fi]);
+        job.faults.push(compiled.faults[fi]);
       }
       world.sitesByProv[pr.id] = {
         list: compiled.records,
@@ -1175,8 +1195,16 @@ window.FB = window.FB || {};
         world.sites.push(compiled.records[ri]);
       }
     }
+    if (job.provinceAt < world.provs.length) return false;
     world.sitesRender = world.sites.slice().sort(siteRenderCompare);
-    return faults;
+    job.complete = true;
+    return true;
+  }
+
+  function compileSites(world) {
+    var job = beginSiteCompilation(world);
+    while (!compileSiteBatch(job, world.provs.length || 1)) { /* one synchronous pass */ }
+    return job.faults;
   }
 
   /* A wasteland converted during play was skipped by boot compilation. Give it

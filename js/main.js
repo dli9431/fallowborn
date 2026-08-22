@@ -7,10 +7,14 @@ window.FB = window.FB || {};
   const G = {};
   FB.game = G;
   FB.state = null;
+  G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.145.0';
+  FB.VERSION = '1.145.1';
   FB.CHANGELOG = [
+    { v: '1.145.1', date: '2026-08-22', changes: [
+      'The title appears sooner, campaign creation gives immediate feedback, and map travel interactions stay responsive.'
+    ] },
     { v: '1.145.0', date: '2026-08-22', changes: [
       'Cultures are now fully data-driven, with new regional identities and historically grounded paired communities across the 867 and 1066 worlds.'
     ] },
@@ -1534,6 +1538,77 @@ window.FB = window.FB || {};
   }
 
   /* ================= boot ================= */
+  function loadDeferredUi(done) {
+    if (FB.ui && FB.ui.showMenu) { done(null); return; }
+    const source = $('ui-modals-source');
+    const script = document.createElement('script');
+    script.src = source && source.href ? source.href : 'js/ui_modals.js';
+    script.setAttribute('data-deferred-ui', 'modals');
+    script.onload = function () { done(null); };
+    script.onerror = function () {
+      done(new Error(FB.T('The interface could not be prepared. Reload to try again.')));
+    };
+    document.head.appendChild(script);
+  }
+
+  function waitForFullStyles(done) {
+    const link = $('full-stylesheet');
+    if (!link || link.getAttribute('data-ready') === 'true') { done(null); return; }
+    if (link.getAttribute('data-error') === 'true') {
+      done(new Error(FB.T('The interface styles could not be loaded. Reload to try again.')));
+      return;
+    }
+    function finish(error) {
+      link.removeEventListener('load', loaded);
+      link.removeEventListener('error', failed);
+      done(error);
+    }
+    function loaded() { finish(null); }
+    function failed() {
+      finish(new Error(FB.T('The interface styles could not be loaded. Reload to try again.')));
+    }
+    link.addEventListener('load', loaded);
+    link.addEventListener('error', failed);
+  }
+
+  function resolveMusicChoiceShell() {
+    const root = document.documentElement;
+    root.classList.remove('music-choice-pending');
+    root.classList.add('music-choice-resolved');
+    const choice = $('music-choice');
+    if (choice) {
+      choice.classList.add('hidden');
+      choice.querySelectorAll('button').forEach(function (button) {
+        button.disabled = true;
+      });
+    }
+  }
+
+  function finishTitleBoot() {
+    refreshTitle();
+    FB.ui.showScreen('title');
+    resolveMusicChoiceShell();
+    if (FB.music) FB.music.showTitle();
+  }
+
+  function readyTitleShell() {
+    FB.map.init($('map'));
+    FB.ui.wire();
+    wireMenus();
+    FB.drawCrest($('titlecrest'), 'Fallowborn');
+    refreshTitle();
+    FB.ui.showScreen('title');
+    document.documentElement.classList.remove('boot-loading');
+    $('title').setAttribute('aria-busy', 'false');
+    $('title-boot-status').classList.add('hidden');
+    document.querySelectorAll('#title button[disabled]').forEach(function (button) {
+      button.disabled = false;
+    });
+    G.bootReady = true;
+    if (FB.music && FB.music.offerBootChoice(finishTitleBoot)) return;
+    finishTitleBoot();
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     // the one legitimate Math.random(): seed the game RNG once at boot, so
     // pre-game draws (random province, name suggestions) differ per visit;
@@ -1548,30 +1623,24 @@ window.FB = window.FB || {};
       if (FB.indexEventMessages) FB.indexEventMessages();
       FB.finalizeLocale(loaded);
       refreshOfflineStatus();
-      FB.activateBookmark(FBDATA.defaultBookmark === undefined
-        ? '867' : FBDATA.defaultBookmark,
-        function (frac, msg) {
-          $('loadbar').style.width = Math.round(frac * 100) + '%';
-          $('loadmsg').textContent = FB.T(msg);
-        },
-        function (error) {
+      /* Let the static title shell paint before parsing the large modal sheet.
+         New Game and save loading already activate their selected bookmark,
+         so the title no longer constructs an unused default world. */
+      setTimeout(function () {
+        loadDeferredUi(function (error) {
           if (error) {
-            $('loadmsg').textContent = error.message;
+            $('title-boot-status').textContent = error.message;
             return;
           }
-          FB.map.init($('map'));
-          FB.ui.wire();
-          wireMenus();
-          FB.drawCrest($('titlecrest'), 'Fallowborn');
-          function finishBoot() {
-            refreshTitle();
-            FB.ui.showScreen('title');
-            if (FB.music) FB.music.showTitle();
-          }
-          if (FB.music && FB.music.offerBootChoice(finishBoot)) return;
-          finishBoot();
-        }
-      );
+          waitForFullStyles(function (styleError) {
+            if (styleError) {
+              $('title-boot-status').textContent = styleError.message;
+              return;
+            }
+            readyTitleShell();
+          });
+        });
+      }, 0);
     });
   });
 
@@ -1645,7 +1714,7 @@ window.FB = window.FB || {};
       });
     });
     $('btn-cg-back').addEventListener('click', function () { showPickProv(); });
-    $('btn-cg-start').addEventListener('click', function () { G.start(); });
+    $('btn-cg-start').addEventListener('click', function () { beginCampaignStart(); });
   }
 
   /* The ordinary path starts at the first real choice. A fresh seed is ready
@@ -2061,6 +2130,44 @@ window.FB = window.FB || {};
   }
 
   /* ================= new game ================= */
+  let campaignStartPending = false;
+  function lockCampaignStart(locked) {
+    const screen = $('chargen');
+    if (!screen) return;
+    campaignStartPending = locked;
+    screen.classList.toggle('start-pending', locked);
+    screen.setAttribute('aria-busy', locked ? 'true' : 'false');
+    screen.querySelectorAll('button, input, select').forEach(function (control) {
+      if (locked) {
+        if (!control.disabled) {
+          control.disabled = true;
+          control.setAttribute('data-start-lock', 'true');
+        }
+      } else if (control.getAttribute('data-start-lock') === 'true') {
+        control.disabled = false;
+        control.removeAttribute('data-start-lock');
+      }
+    });
+  }
+
+  /* The click must produce a paint before deterministic campaign creation and
+     first-map setup occupy the main thread. G.start itself stays synchronous
+     for seed tests and internal callers; only the player gesture takes this
+     painted handoff. */
+  function beginCampaignStart() {
+    if (campaignStartPending) return;
+    lockCampaignStart(true);
+    requestAnimationFrame(function () {
+      setTimeout(function () {
+        try {
+          G.start();
+        } finally {
+          lockCampaignStart(false);
+        }
+      }, 0);
+    });
+  }
+
   G.start = function () {
     G.observe = false;
     document.body.classList.remove('observing');

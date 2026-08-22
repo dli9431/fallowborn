@@ -188,6 +188,12 @@ directly so an unrelated helper change does not fan out through a barrel file. T
 last-failed path deliberately favors a fast repair loop after a failure; run `test:all` for the
 authoritative whole-suite result.
 
+Before editing a shared helper, check how many specifications import it. Locale-, browser-,
+viewport-, and scenario-specific readiness belongs in the affected specification or in a new leaf
+helper with only those importers. In particular, `support/game/navigation.js`, `support/fixture.js`,
+and `support/page-contract.js` are suite-wide fan-out boundaries and should change only when their
+shared contract changes.
+
 Playwright starts and stops the test server automatically. Tests run headlessly unless a
 Playwright command-line option requests another mode.
 

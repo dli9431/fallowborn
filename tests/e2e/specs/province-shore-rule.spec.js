@@ -19,6 +19,14 @@ const { openGame } = require('../support/game/navigation');
 test('counties do not span carved seas; cross-polygon island gains stay',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
+    await page.evaluate(function () {
+      return new Promise(function (resolve, reject) {
+        FB.activateBookmark('867', function () {}, function (error) {
+          if (error) { reject(error); return; }
+          resolve();
+        });
+      });
+    });
 
     const report = await page.evaluate(function () {
       const world = FB.world;

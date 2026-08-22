@@ -829,6 +829,7 @@ test('the Market lens and sheet are keyboard/touch accessible and storage stays 
       optionsContained:true
     });
     await page.setViewportSize({ width:390, height:844 });
+    await waitForUiRefresh(page);
     await page.getByRole('button', { name:'Done', exact:true }).click();
 
     const result = await page.evaluate(function () {

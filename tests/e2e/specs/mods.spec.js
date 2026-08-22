@@ -179,7 +179,7 @@ test('runtime mods merge definitions and the complete technology configuration',
     });
   });
 
-test('a stored mod can select the default bookmark before world generation',
+test('a stored mod configures the default bookmark without generating a title world',
   async function ({ page }, testInfo) {
     test.skip(testInfo.project.name !== 'chromium-served',
       'Origin-backed localStorage is required for the reload contract.');
@@ -197,11 +197,13 @@ test('a stored mod can select the default bookmark before world generation',
       return {
         configured:FBDATA.defaultBookmark,
         active:FB.activeBookmarkId,
+        worldBuilt:!!FB.world,
         count:FB.mods.count()
       };
     })).toEqual({
       configured:'1066',
-      active:'1066',
+      active:null,
+      worldBuilt:false,
       count:1
     });
   });

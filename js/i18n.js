@@ -817,6 +817,19 @@ window.FBDATA = window.FBDATA || {};
     const def = localeDef(code);
     return def ? def.status : 'unknown';
   };
+  function catalogUrl(file) {
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      return file + '?v=' + encodeURIComponent(FB.VERSION);
+    }
+    return file;
+  }
+  function loadCatalog(file, done) {
+    const script = document.createElement('script');
+    script.src = catalogUrl(file);
+    script.onload = function () { done(true); };
+    script.onerror = function () { done(false); };
+    document.head.appendChild(script);
+  }
   FB.loadSelectedLocale = function (done) {
     try { requested = localStorage.getItem(LANG_KEY) || 'en'; } catch (e) { requested = 'en'; }
     const def = localeDef(requested);
@@ -824,19 +837,26 @@ window.FBDATA = window.FBDATA || {};
       requested = 'en';
       try { localStorage.setItem(LANG_KEY, 'en'); } catch (e) { /* storage may be unavailable */ }
     }
-    if (requested === 'en') { pendingCatalog = FBDATA.lang.en || null; done(true); return; }
-    const script = document.createElement('script');
-    let src = localeDef(requested).file;
-    if (location.protocol === 'http:' || location.protocol === 'https:') {
-      src += '?v=' + encodeURIComponent(FB.VERSION);
+    /* English rendering reads the authored source directly and the durable
+       message registry owns opaque English fallbacks. Keep the generated
+       2 MB validation manifest off the ordinary English startup path. Other
+       locales still need it for exact source aliases and coverage checks. */
+    if (requested === 'en') { pendingCatalog = null; done(true); return; }
+    function loadRequested() {
+      loadCatalog(localeDef(requested).file, function (loaded) {
+        pendingCatalog = loaded ? FBDATA.lang[requested] || null : null;
+        done(!!pendingCatalog);
+      });
     }
-    script.src = src;
-    script.onload = function () {
-      pendingCatalog = FBDATA.lang[requested] || null;
-      done(!!pendingCatalog);
-    };
-    script.onerror = function () { pendingCatalog = null; done(false); };
-    document.head.appendChild(script);
+    if (FBDATA.lang.en) { loadRequested(); return; }
+    loadCatalog('data/lang_en.js', function (loaded) {
+      if (!loaded || !FBDATA.lang.en) {
+        pendingCatalog = null;
+        done(false);
+        return;
+      }
+      loadRequested();
+    });
   };
   FB.finalizeLocale = function (loaded) {
     diagnostics.length = 0;

@@ -56318,6 +56318,16 @@
         "text": "Uses one political-attention assignment until set to Neutral."
       }
     },
+    "src.0ced1df0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The interface could not be prepared. Reload to try again."
+      }
+    },
     "src.0cf16e55": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -56556,6 +56566,16 @@
       ],
       "source": {
         "text": "Permanent Urban Markets"
+      }
+    },
+    "src.0d2f6165": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Preparing the chronicle…"
       }
     },
     "src.0d44996d": {
@@ -112444,6 +112464,16 @@
         "text": "Journey costs are multiplied by 0.60; each county leg takes 1 day."
       }
     },
+    "src.8ca5d440": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "The interface styles could not be loaded. Reload to try again."
+      }
+    },
     "src.8ca85cff": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -127548,6 +127578,16 @@
         "text": "Gain item: {item}"
       }
     },
+    "src.aeaca79f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/main.js"
+      ],
+      "source": {
+        "text": "button, input, select"
+      }
+    },
     "src.aebc436b": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133293,16 +133333,6 @@
       ],
       "source": {
         "text": "The village oven is hot, and the baker has raised the customary toll. He points to the cold clay ovens behind the cottages: none may bake while {lord}’s fire burns."
-      }
-    },
-    "src.bae7c8a8": {
-      "context": "Generated exact-English source alias used by display chokepoints.",
-      "glossary": [],
-      "location": [
-        "index.html"
-      ],
-      "source": {
-        "text": "The game and title theme are ready. Soundtrack music downloads as you play and is cached after it arrives."
       }
     },
     "src.bae91836": {
@@ -147402,6 +147432,16 @@
       ],
       "source": {
         "text": "a royal or ruling house"
+      }
+    },
+    "src.db91b2b4": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "index.html"
+      ],
+      "source": {
+        "text": "Choose whether to play with music while the chronicle is prepared. Soundtrack music downloads as you play and is cached after it arrives."
       }
     },
     "src.db91e43f": {
@@ -185973,6 +186013,22 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "The interest score locks this bloc’s vote."
+      }
+    },
+    "ui:The interface could not be prepared. Reload to try again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "The interface could not be prepared. Reload to try again."
+      }
+    },
+    "ui:The interface styles could not be loaded. Reload to try again.": {
+      "context": "Explicit UI localization call.",
+      "glossary": [],
+      "location": "js/main.js",
+      "source": {
+        "text": "The interface styles could not be loaded. Reload to try again."
       }
     },
     "ui:The journey costs {money:cost}; you have {money:current}.": {

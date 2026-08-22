@@ -2,6 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/mapview.js',
+  'js/travel.js',
+  'js/ui_modals.js',
   'js/settlement.js',
   'js/siteart.js',
   'js/world.js',
@@ -24,6 +26,94 @@ async function startGame(page, testInfo) {
   await openGame(page, testInfo);
   await startDeterministicGame(page);
 }
+
+test('travel selection paints before using the county-only map highlight',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    const result = await page.evaluate(async function () {
+      const s = FB.state;
+      const home = s.player.provinceId;
+      const pid = Object.keys(FB.world.adj[home])[0];
+      const item = {
+        destinationId:pid, route:[pid], cost:0, days:1, legs:1
+      };
+      const shared = FB.ui._shared;
+      const oldPicker = shared.travelPicker;
+      const realFastSelect = FB.map.selectProvince;
+      const realFullSelect = FB.map.select;
+      const highlightContext = FB.map.hiliteCtx;
+      const realCreateImageData = highlightContext.createImageData;
+      let imageAllocations = 0;
+      highlightContext.createImageData = function () {
+        imageAllocations++;
+        return realCreateImageData.apply(highlightContext, arguments);
+      };
+      realFastSelect(pid);
+      const fastPath = {
+        selected:FB.map.selected,
+        focusGroupActive:FB.map.focusGroupActive,
+        crispOutline:!!FB.map.selectedOutline,
+        smoothOutline:!!FB.map.selectedOutlineSmooth,
+        imageAllocations:imageAllocations,
+        boundsReady:FB.world._provinceBoundsReady
+      };
+      highlightContext.createImageData = realCreateImageData;
+      let fastSelection = null, fullSelections = 0;
+      shared.travelPicker = {
+        kind:'travel', purpose:'visit', choices:[item], selected:null,
+        wasPaused:true
+      };
+      FB.map.selectProvince = function (id) { fastSelection = id; };
+      FB.map.select = function () { fullSelections++; };
+      try {
+        const accepted = FB.ui.travelPickProvince(pid, false);
+        const beforePaint = {
+          accepted:accepted,
+          selected:shared.travelPicker.selected.destinationId,
+          fastSelection:fastSelection,
+          fullSelections:fullSelections
+        };
+        await new Promise(function (resolve) {
+          requestAnimationFrame(function () { setTimeout(resolve, 10); });
+        });
+        return {
+          fastPath:fastPath,
+          beforePaint:beforePaint,
+          afterPaint:{
+            fastSelection:fastSelection,
+            fullSelections:fullSelections,
+            travelSelected:FB.map.travelSelected
+          }
+        };
+      } finally {
+        highlightContext.createImageData = realCreateImageData;
+        FB.map.selectProvince = realFastSelect;
+        FB.map.select = realFullSelect;
+        shared.travelPicker = oldPicker;
+        FB.map.travelSelected = null;
+        FB.map.travelPreview = null;
+      }
+    });
+
+    expect(result.fastPath).toEqual({
+      selected:result.afterPaint.fastSelection,
+      focusGroupActive:false,
+      crispOutline:true,
+      smoothOutline:true,
+      imageAllocations:0,
+      boundsReady:true
+    });
+    expect(result.beforePaint).toEqual({
+      accepted:true,
+      selected:result.afterPaint.fastSelection,
+      fastSelection:null,
+      fullSelections:0
+    });
+    expect(result.afterPaint.fastSelection).toBeTruthy();
+    expect(result.afterPaint.fullSelections).toBe(0);
+    expect(result.afterPaint.travelSelected).toBe(result.afterPaint.fastSelection);
+  });
 
 /* ---------- data and validation ---------- */
 
