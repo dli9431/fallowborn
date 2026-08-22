@@ -106,7 +106,7 @@ test('boots the real game without browser, asset, or network errors',
     expect([null, -1, 0]).toContain(contract.registrations);
   });
 
-test('a translated boot loads the English source manifest before its locale',
+test('a translated boot loads English first and keeps incomplete Preview coverage active',
   async function ({ page }, testInfo) {
     await page.addInitScript(function () {
       localStorage.setItem('fb_lang', 'fr');
@@ -137,18 +137,42 @@ test('a translated boot loads the English source manifest before its locale',
       const frenchAt = scripts.findIndex(function (src) {
         return /\/data\/lang_fr\.js(?:\?|$)/.test(src);
       });
+      const sourceEntries = FBDATA.lang.en.entries;
+      const frenchEntries = FBDATA.lang.fr.entries;
+      const missingKey = Object.keys(sourceEntries).find(function (key) {
+        return key.indexOf('ui:') === 0 && typeof sourceEntries[key].text === 'string' &&
+          !!frenchEntries[key];
+      });
+      const source = sourceEntries[missingKey];
+      const aliasKey = FB.i18nSourceKey(source.text);
+      const removed = {};
+      [missingKey, aliasKey].forEach(function (key) {
+        if (frenchEntries[key]) {
+          removed[key] = frenchEntries[key];
+          delete frenchEntries[key];
+        }
+      });
+      const incompleteLocale = FB.finalizeLocale(true);
+      const englishFallback = FB.renderKey(missingKey, source) === source.text;
+      Object.keys(removed).forEach(function (key) {
+        frenchEntries[key] = removed[key];
+      });
       return {
         locale:FB.locale,
         english:!!FBDATA.lang.en,
         french:!!FBDATA.lang.fr,
         sourceBeforeLocale:englishAt >= 0 && frenchAt > englishAt,
-        bookmark:FB.activeBookmark ? FB.activeBookmark.id : null
+        bookmark:FB.activeBookmark ? FB.activeBookmark.id : null,
+        incompleteLocale:incompleteLocale,
+        missingReported:FB.i18nReport.missing.indexOf(missingKey) >= 0,
+        englishFallback:englishFallback
       };
     });
 
     expect(localeBoot).toEqual({
       locale:'fr', english:true, french:true,
-      sourceBeforeLocale:true, bookmark:null
+      sourceBeforeLocale:true, bookmark:null,
+      incompleteLocale:'fr', missingReported:true, englishFallback:true
     });
   });
 

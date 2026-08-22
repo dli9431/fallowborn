@@ -476,7 +476,7 @@ test('save-format-3 restore lazily repairs malformed intrigue state and conduct'
     expect(result.conduct).toEqual({ schemes:3, deceit:-3, cruelty:0 });
   });
 
-test('a quota-shaped storage failure advises export, not a generic error',
+test('a quota-shaped storage failure advises a save-file download, not a generic error',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -499,7 +499,7 @@ test('a quota-shaped storage failure advises export, not a generic error',
 
     expect(result.stored).toBe(false);
     expect(result.texts.some(function (t) {
-      return t.indexOf('outgrown') >= 0 && t.indexOf('Export') >= 0;
+      return t.indexOf('outgrown') >= 0 && t.indexOf('Download save file') >= 0;
     })).toBe(true);
   });
 

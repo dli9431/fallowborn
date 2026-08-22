@@ -872,7 +872,12 @@ window.FBDATA = window.FBDATA || {};
       setDocumentMeta(requested, activeCatalog.dir);
     }
     FB.i18nReport = FB.validateLocaleCoverage(FB.locale);
-    if (FB.locale !== 'en' && FB.i18nReport.translated !== FB.i18nReport.total) {
+    const activeDef = localeDef(FB.locale);
+    /* Preview catalogs deliberately remain selectable between translation
+       runs. Their missing or stale records fall back one entry at a time in
+       lookup(); only a locale advertised as supported is all-or-nothing. */
+    if (FB.locale !== 'en' && activeDef && activeDef.status === 'supported' &&
+      !FB.i18nReport.supported) {
       useEnglish('catalog coverage validation failed');
       FB.i18nReport = FB.validateLocaleCoverage('en');
     }

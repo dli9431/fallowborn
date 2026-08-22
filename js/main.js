@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.146.0';
+  FB.VERSION = '1.146.1';
   FB.CHANGELOG = [
+    { v: '1.146.1', date: '2026-08-22', changes: [
+      'Preview translations now stay active while new or changed records temporarily fall back to English.'
+    ] },
     { v: '1.146.0', date: '2026-08-22', changes: [
       'Runtime mods can now configure intrigue, raiding traditions, authored-work pools, and generated ruler traits, with invalid definitions rejected before play.'
     ] },
