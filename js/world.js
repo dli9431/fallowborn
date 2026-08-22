@@ -1462,10 +1462,9 @@ window.FB = window.FB || {};
     return '#' + ((1 << 24) + (c((n >> 16) & 255) << 16) + (c((n >> 8) & 255) << 8) + c(n & 255)).toString(16).slice(1);
   }
 
-  /* the tempers of generated rulers — a house's personality, read by the
-     royal council (schemers, flatterers, loyal men) at king tier and up */
-  FB.RULER_TRAITS = ['ambitious', 'content', 'greedy', 'generous', 'cruel', 'kind',
-    'deceitful', 'honest', 'proud', 'humble', 'zealous', 'cynical', 'wrathful', 'patient'];
+  /* Compatibility alias for older engine callers and bundled extensions.
+     Runtime mod application refreshes it when the data-backed pool changes. */
+  FB.RULER_TRAITS = FBDATA.rulerTraits;
 
   function makeRuler(culture, authored, year) {
     if (authored) {
@@ -1488,7 +1487,7 @@ window.FB = window.FB || {};
       born: year === undefined ? undefined : year - age,
       age: age,
       mar: FB.ri(2, 14),
-      trait: FB.pick(FB.RULER_TRAITS),
+      trait: FB.pick(FBDATA.rulerTraits),
       generation: 1
     };
   }
@@ -3744,15 +3743,22 @@ window.FB = window.FB || {};
     return !!(r && r.alive && !r.liege);
   };
 
+  FB.hasRaidingTradition = function (culture, faith, state) {
+    const rules = FBDATA.raidingTraditions || {};
+    const cultures = rules.cultures || [];
+    const faiths = rules.faiths || [];
+    const faithGroups = rules.faithGroups || [];
+    return !!((culture && cultures.indexOf(culture) >= 0) ||
+      (faith && (faiths.indexOf(faith) >= 0 ||
+        (FB.faithGroup && faithGroups.indexOf(
+          FB.faithGroup(faith, state)) >= 0))));
+  };
+
   FB.aiRaidTick = function (state, rid, r, B) {
     if (!state || !r || !r.alive || r.liege || FB.isRealmAtWar(state, rid)) return;
     const cult = r.culture || (r.ruler && r.ruler.culture);
     const faith = r.religion || (r.ruler && r.ruler.religion);
-    const traditions = (FBDATA.raidingTraditions && FBDATA.raidingTraditions.cultures) ||
-      ['norse', 'magyar', 'turkic', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'];
-    const isRaider = (cult && traditions.indexOf(cult) >= 0) ||
-      (faith && ((FBDATA.raidingTraditions && FBDATA.raidingTraditions.faiths && FBDATA.raidingTraditions.faiths.indexOf(faith) >= 0) ||
-        (FB.faithGroup && FB.faithGroup(faith, state) === 'pagan')));
+    const isRaider = FB.hasRaidingTradition(cult, faith, state);
     if (!isRaider) return;
 
     const baseChance = (B && B.aiRaidChance) || 0.12;

@@ -172,7 +172,14 @@ A JSON mod is one object with any of these keys:
     "tradePartnership": { ... }, "tradeVenture": { ... }
   },
   "plots":     { "id": { ... } },
+  "intrigue":  { "maxAiSchemes": 4, "methodProfiles": { ... } },
   "items":     { "id": { ... } },
+  "itemPools": { "authoredWorks": ["item_id"] },
+  "rulerTraits": ["ambitious", "patient"],
+  "raidingTraditions": {
+    "cultures": ["norse"], "faiths": ["norse_pagan"],
+    "faithGroups": ["pagan"]
+  },
   "politicalBlocs": {
     "crown": { "name": "Crown", "motions": { "redress": -20, "scutage": -10 }, ... }
   },
@@ -194,6 +201,11 @@ A JSON mod is one object with any of these keys:
 `name` is cosmetic: it labels the mod on the title screen and in the Mods dialog, and
 re-applying a mod with the same name **replaces** the stored copy instead of stacking a
 second one.
+
+The listed keys are the complete public top-level runtime-mod API. An unrecognized key,
+including a generated-only table or internal compatibility alias, rejects that mod
+before any of its data mutates `FBDATA`. The milestone-zero configuration records below
+also reject unknown fields and cross-references at application time.
 
 `bookmarks` is an atomic replacement table. Each keyed value replaces that complete
 start world; bookmark definitions do not merge by province or realm. The older
@@ -2397,6 +2409,34 @@ unmarried children:
   offer above the band's home class queues `item_offer` with `offerClass:'aspirational'`
   (otherwise `'other'`), a forms selector the event text may branch on.
 
+### Named item acquisition pools
+
+`FBDATA.itemPools` (mod key `itemPools`) maps a stable pool id to an ordered, non-empty
+array of item-definition ids. A later mod replaces one complete same-id array and leaves
+other pools intact. Every entry must resolve after that mod's `items` additions are
+included, and duplicate or unknown ids reject the mod before application.
+
+The core `authoredWorks` pool contains the four family treatises awarded by the Author
+specialization and its later commissioned-work life path. Mods may replace that pool or
+add an item and select it in the same mod:
+
+```json
+{
+  "items": {
+    "annals_of_the_vale": {
+      "name":"Annals of the Vale", "icon":"book", "rarity":"fine",
+      "value":30, "unique":false, "eventOnly":true, "slot":"hand",
+      "fx":{"lea":1}, "qualityFx":{"lea":1}, "art":{"kind":"book"},
+      "desc":"A family account of one valley and its people."
+    }
+  },
+  "itemPools": { "authoredWorks":["annals_of_the_vale"] }
+}
+```
+
+Pool selection still uses the saved game RNG, and item creation still goes through
+`FB.grantItem`; pool data never owns an exact instance or saved reference.
+
 ## Plots, blessings, and pacts
 
 **Plots** (`FBDATA.plots` in `data/map_data.js` and `data/intrigue.js`) drive the intrigue game. The "Begin a
@@ -2447,6 +2487,32 @@ political-foothold stamps remain attached; invalidation ends the plot without su
 The three core `profile` ids read defaults from `FBDATA.intrigue.methodProfiles`;
 method-local fields override those defaults, so a mod can reuse the common math with a
 scheme-specific `name` or deliberately tune one method.
+
+The top-level `intrigue` object exposes the bounded shared configuration. It merges
+scalar fields individually and merges `methodProfiles` by profile id:
+
+```json
+{
+  "intrigue": {
+    "maxAiSchemes":4,
+    "aiStartsPerYear":1,
+    "aiPlayerFacingPerYear":1,
+    "aiActorCooldownYears":3,
+    "leverageDays":540,
+    "captiveRansoms":[5,10,20,40,80],
+    "methodProfiles": {
+      "patient":{"progress":0.7,"success":0.15,"discovery":-6}
+    }
+  }
+}
+```
+
+`maxAiSchemes`, `aiStartsPerYear`, and `aiPlayerFacingPerYear` remain bounded by the
+engine's saved-state limits (0-6, 0-2, and 0-1). Cooldown years and ransom amounts are
+non-negative, leverage days is a positive integer, and profile `progress` is positive.
+`success` and `discovery` are finite numbers; `stationCost` and `martial` are optional
+booleans. A hostile method's `profile` must name a resulting profile. Unknown fields,
+invalid bounds, and missing profile references reject the whole mod before mutation.
 
 The shared hostile chance is
 `clamp(baseChance + actorIntrigue*0.035 - targetIntrigue*0.02 +
@@ -2693,6 +2759,18 @@ back to `other`; replacement definitions that omit it retain an existing culture
 membership for legacy-mod compatibility. Unknown declared traditions fail bookmark
 activation. See `data/cultures.js` and `data/traits.js` for the full culture and trait
 shapes.
+
+`FBDATA.rulerTraits` (mod key `rulerTraits`) is the ordered, non-empty trait-id pool used
+when the world creates an AI ruler or repairs a missing vassal-ruler temperament. The
+complete array is last-mod-wins; each id must exist after the same mod's `traits` table
+is included. Existing saved rulers keep their stored trait.
+
+`FBDATA.raidingTraditions` (mod key `raidingTraditions`) has three independently
+replaceable arrays: `cultures`, exact `faiths`, and root `faithGroups`. Omitted arrays
+retain their current value, while an explicit empty array disables that route. Culture
+and faith ids must exist after same-mod additions; a faith-group id must be an existing
+root religion definition. Player and AI raid eligibility consult the same resulting
+record. These lists do not change raid range, spoils, cooldown, or technology effects.
 
 A trait definition may use this extended shape:
 

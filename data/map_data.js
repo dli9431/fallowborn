@@ -585,6 +585,14 @@ FBDATA.realms = [
 {id:'crete', name:'Emirate of Crete', color:'#5fbf8f', capital:'candia', aggression:1, rank:2}
 ];
 
+/* Ordered personality pool for generated AI rulers. Runtime mods may replace
+   the complete list, but every id must resolve in FBDATA.traits. */
+FBDATA.rulerTraits = [
+  'ambitious', 'content', 'greedy', 'generous', 'cruel', 'kind',
+  'deceitful', 'honest', 'proud', 'humble', 'zealous', 'cynical',
+  'wrathful', 'patient'
+];
+
 /* Extra adjacency across water: [countyId, countyId] */
 FBDATA.straits = [
 ['canterbury','boulogne'], ['dorset','caen'], ['lewes','rouen'],
@@ -1128,6 +1136,15 @@ FBDATA.items = {
     fx:{ battle:0.03, prestige:2, gold:-2 },
     art:{ kind:'spear', woods:['#4a2e1e'], cloths:['#8b2635','#b89042'], metals:['#c8a04a'] },
     desc:'Kaveh the smith’s apron raised as a banner against a tyrant, and flown by emperors since. Its keepers must keep a court worthy of it.' }
+};
+
+/* Named acquisition pools keep content selection in data while the engine
+   continues to own grants, exact instances, and deterministic RNG draws. */
+FBDATA.itemPools = {
+  authoredWorks:[
+    'book_of_laws', 'chronicle_of_princes',
+    'treatise_on_virtue', 'compendium_of_nature'
+  ]
 };
 
 /* Plots (the intrigue game) — begun with the "Begin a plot…" deed, woven

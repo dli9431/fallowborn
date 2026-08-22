@@ -181,6 +181,15 @@ ranges, but should use the exact-instance APIs in `js/items.js` rather than muta
 `player.items` or `c.items`. Mod effects may grant a definition through `giveItem`; the
 subsystem creates an instance automatically when that definition is repeatable.
 
+Small configuration registries now share the same pre-world mod boundary. `itemPools`
+merges complete ordered item-id arrays by pool id; `intrigue` merges bounded scalar
+tuning and method profiles by profile id; `raidingTraditions` replaces any supplied
+culture, exact-faith, or root-faith-group list; and `rulerTraits` atomically replaces the
+ordered generated-ruler pool. Their validators resolve same-mod `items`, `plots`,
+`cultures`, `religions`, and `traits` additions before anything mutates. These tables add
+no saved fields: exact item instances, ruler traits, schemes, and raid state retain their
+existing shapes and active mods remain protected by the save fingerprint.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of
@@ -207,3 +216,22 @@ Temporary modifier definitions merge under the top-level `modifiers` key. A late
 replaces the complete same-id record rather than deep-merging `scope`, duration, upkeep,
 or `fx`; runtime state stores only the stable id and optional expiry. `name` and `desc`
 remain localized structured display fields. See [modifiers.md](modifiers.md).
+
+## Top-level `FBDATA` ownership audit
+
+`js/mods.js` keeps one explicit allowlist and rejects any other top-level JSON-mod key
+before applying the mod. The audit of every table authored or installed under `FBDATA`
+is:
+
+| Classification | Top-level keys | Contract |
+| --- | --- | --- |
+| Public runtime-mod API | `ailments`, `auctionLotTypes`, `balance`, `bookmarks`, `bounds`, `buildings`, `careers`, `collectiveDemands`, `crossingClasses`, `cultures`, `cultureTraditions`, `currency`, `defaultBookmark`, `duchies`, `elections`, `empires`, `enterprises`, `events`, `feudalServiceCharters`, `finance`, `forts`, `holdings`, `householdStandards`, `intrigue`, `itemPools`, `items`, `kingdoms`, `land`, `localCouncilMotions`, `marketEndowments`, `marketEndowmentTypes`, `marketGoods`, `modifiers`, `papacy`, `plots`, `policies`, `politicalBlocs`, `positions`, `privileges`, `provinces`, `raidingTraditions`, `realms`, `religions`, `rivers`, `rulerTraits`, `schooling`, `scripted`, `seas`, `settlementNames`, `settlementSites`, `straits`, `tech`, `techCaps`, `techDomains`, `techImpactReviews`, `techTraditions`, `titles`, `traits`, `travelPurposes`, `travelSites`, `unitClasses` | Accepted by `M.apply` with the merge/atomic behavior documented here and in `docs/MODDING.md`. `settlementSites` is partly generated in core but remains a public shared site table. |
+| Generated-only | `lang`, `musicCatalog` | Produced by the localization and soundtrack catalog pipelines. Runtime mods may author ordinary English display fields, but may not replace core locale caches or the shipped media manifest. |
+| Intentionally internal | `fortLevels`, `unitClassAliases` | `fortLevels` is the live compatibility alias of `forts.levels`; mods use `forts`. Unit aliases normalize legacy saved or authored class ids; mods use canonical `unitClasses`. |
+
+The barber hair, beard-kind, beard-cut, family, and composed-style catalogues remain
+inside `js/items.js` for this milestone. Their ids are accepted saved appearance values
+and must also be understood by `js/portrait.js`; exposing only the picker lists would
+pretend unsupported renderer ids were generic data. Cosmetic modding therefore remains
+an independent feature requiring a shared renderer/schema decision, not an unvalidated
+milestone-zero registry.

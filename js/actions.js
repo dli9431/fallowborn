@@ -6710,21 +6710,13 @@ window.FB = window.FB || {};
     if (state.player.tier < 1) return false;
 
     const cult = c.culture;
-    const traditions = (FBDATA.raidingTraditions && FBDATA.raidingTraditions.cultures) ||
-      ['norse', 'magyar', 'turkic', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'];
-    if (traditions.indexOf(cult) >= 0) return true;
-
     const faith = c.religion;
-    const faiths = (FBDATA.raidingTraditions && FBDATA.raidingTraditions.faiths) ||
-      ['norse_pagan', 'tengri', 'baltic_pagan', 'slavic_pagan'];
-    if (faiths.indexOf(faith) >= 0) return true;
-    if (FB.faithGroup && FB.faithGroup(faith, state) === 'pagan') return true;
+    if (FB.hasRaidingTradition(cult, faith, state)) return true;
 
     const realmId = FB.playerRealmId ? FB.playerRealmId(state) : null;
     const r = realmId && state.realms && state.realms[realmId];
     if (r) {
-      if (r.culture && traditions.indexOf(r.culture) >= 0) return true;
-      if (r.religion && (faiths.indexOf(r.religion) >= 0 || (FB.faithGroup && FB.faithGroup(r.religion, state) === 'pagan'))) return true;
+      if (FB.hasRaidingTradition(r.culture, r.religion, state)) return true;
     }
     return false;
   };

@@ -25,9 +25,9 @@ FBDATA.plots.assassination = {
   hostile:true, scope:'character_same_sovereign', offense:'attempted_murder',
   target:'intrigue_character', accomplice:true, outcome:'death', baseChance:0.20,
   methods:[
-    { id:'careful', name:'Poison', profile:'careful', progress:0.8, success:0.10, discovery:-4 },
-    { id:'bought', name:'Staged Accident', profile:'bought_access', progress:1.2, success:0.05, discovery:0, stationCost:true },
-    { id:'forceful', name:'Ambush', profile:'forceful', progress:1.5, success:-0.05, discovery:10, martial:true }
+    { id:'careful', name:'Poison', profile:'careful' },
+    { id:'bought', name:'Staged Accident', profile:'bought_access' },
+    { id:'forceful', name:'Ambush', profile:'forceful' }
   ]
 };
 
@@ -37,9 +37,9 @@ FBDATA.plots.abduction = {
   hostile:true, scope:'character_same_sovereign', offense:'abduction',
   target:'intrigue_character', accomplice:true, outcome:'captive', baseChance:0.25,
   methods:[
-    { id:'careful', name:'False Summons', profile:'careful', progress:0.8, success:0.10, discovery:-4 },
-    { id:'bought', name:'Bribed Guards', profile:'bought_access', progress:1.2, success:0.05, discovery:0, stationCost:true },
-    { id:'forceful', name:'Road Seizure', profile:'forceful', progress:1.5, success:-0.05, discovery:10, martial:true }
+    { id:'careful', name:'False Summons', profile:'careful' },
+    { id:'bought', name:'Bribed Guards', profile:'bought_access' },
+    { id:'forceful', name:'Road Seizure', profile:'forceful' }
   ]
 };
 
@@ -49,9 +49,9 @@ FBDATA.plots.blackmail = {
   hostile:true, scope:'character_same_sovereign', offense:'blackmail',
   target:'intrigue_character', accomplice:true, outcome:'leverage', baseChance:0.35,
   methods:[
-    { id:'careful', name:'Stolen Letters', profile:'careful', progress:0.8, success:0.10, discovery:-4 },
-    { id:'bought', name:'Bribed Servant', profile:'bought_access', progress:1.2, success:0.05, discovery:0, stationCost:true },
-    { id:'forceful', name:'Close Surveillance', profile:'forceful', progress:1.5, success:-0.05, discovery:10, martial:true }
+    { id:'careful', name:'Stolen Letters', profile:'careful' },
+    { id:'bought', name:'Bribed Servant', profile:'bought_access' },
+    { id:'forceful', name:'Close Surveillance', profile:'forceful' }
   ]
 };
 
@@ -61,9 +61,9 @@ FBDATA.plots.fabricated_charge = {
   hostile:true, scope:'character_same_sovereign', offense:'false_charge',
   target:'intrigue_character', accomplice:true, outcome:'foothold', baseChance:0.30,
   methods:[
-    { id:'careful', name:'Forged Record', profile:'careful', progress:0.8, success:0.10, discovery:-4 },
-    { id:'bought', name:'Suborned Witnesses', profile:'bought_access', progress:1.2, success:0.05, discovery:0, stationCost:true },
-    { id:'forceful', name:'Planted Evidence', profile:'forceful', progress:1.5, success:-0.05, discovery:10, martial:true }
+    { id:'careful', name:'Forged Record', profile:'careful' },
+    { id:'bought', name:'Suborned Witnesses', profile:'bought_access' },
+    { id:'forceful', name:'Planted Evidence', profile:'forceful' }
   ]
 };
 
@@ -73,9 +73,9 @@ FBDATA.plots.sabotage = {
   hostile:true, scope:'county_or_adjacent_foreign_border', offense:'sabotage',
   target:'intrigue_county', accomplice:true, outcome:'covert_sabotage', baseChance:0.35,
   methods:[
-    { id:'careful', name:'Corrupt Stores', profile:'careful', progress:0.8, success:0.10, discovery:-4 },
-    { id:'bought', name:'Bribe Workers', profile:'bought_access', progress:1.2, success:0.05, discovery:0, stationCost:true },
-    { id:'forceful', name:'Night Arson', profile:'forceful', progress:1.5, success:-0.05, discovery:10, martial:true }
+    { id:'careful', name:'Corrupt Stores', profile:'careful' },
+    { id:'bought', name:'Bribe Workers', profile:'bought_access' },
+    { id:'forceful', name:'Night Arson', profile:'forceful' }
   ]
 };
 

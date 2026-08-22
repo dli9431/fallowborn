@@ -568,7 +568,7 @@ tick): the fief escheats to the liege unless a bordering player of the same sove
 wins the scramble (Standing with the liege, prestige, service) — and heirless fiefs of the
 player's own vassals simply return to the player's hand.
 AI realms retain a lightweight `realm.ruler` projection (name, culture, age, effective
-Martial, and a `trait` from `FB.RULER_TRAITS` — the house's temper, which the royal
+Martial, and a `trait` from the ordered `FBDATA.rulerTraits` pool — the house's temper, which the royal
 council reads at king tier and up), but every living ruler is backed by a full eager
 character. The Deeds banner's "vassal of X" links to their realm sheet via
 `UI.showLiegeModal` (`data-liege` click delegation); both the top identity card and
@@ -578,6 +578,13 @@ the ordinary relationship visit to the current capital, including normal route c
 the 90-day minimum stay; attention advances only while the player is physically there. See
 [council.md](council.md) for how the player monarch's own vassal rulers sit as great
 officers of the crown.
+
+Runtime mods may replace the complete ruler-trait pool after adding trait definitions in
+the same mod. Application rejects an empty list, duplicate ids, or unresolved traits.
+The baseline order is unchanged, world creation still makes exactly one seeded pick per
+generated ruler, Council repair consumes the same pool, and existing saves retain their
+stored ruler traits. `FB.RULER_TRAITS` remains a refreshed compatibility alias for older
+callers, not the source definition.
 
 Every living AI ruler sheet offers the same cash-or-armory gift picker. Cash prices follow
 realm rank through `balance.rulerCashGiftCostByRank` (Count 10, Duke 15, King 25, Emperor

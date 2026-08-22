@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
+  'data/map_data.js',
   'css/style.css'
 ]);
 

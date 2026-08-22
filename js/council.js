@@ -54,7 +54,9 @@ window.FB = window.FB || {};
     if (c.authority === undefined) c.authority = 60;
     for (const vid of FB.playerVassals(state)) {
       const r = state.realms[vid];
-      if (r && r.ruler && !r.ruler.trait) r.ruler.trait = FB.pick(FB.RULER_TRAITS);
+      if (r && r.ruler && !r.ruler.trait) {
+        r.ruler.trait = FB.pick(FBDATA.rulerTraits);
+      }
     }
     // a seat whose holder no longer kneels falls vacant
     for (const s of SEATS) {

@@ -215,3 +215,17 @@ actor, no duplicate lethal/abduction target, and a four-year actor cooldown. A m
 abduction attempt against the protagonist or managed household always pauses at a clue
 event before final resolution. Investigation, paid security, and a counter-trap can
 identify, weaken, or cancel it; ignoring it preserves the lethal possibility.
+
+The shared hostile limits, cooldown, leverage duration, ransom ladder, and named method
+profiles live in `FBDATA.intrigue`. Runtime mods merge the scalar fields and merge
+profiles by id only after validating their bounded types and every hostile method's
+profile reference. No sequencing moved into data: yearly candidate ordering, target
+validation, preview math, resolution, repair, and all RNG calls remain in
+`js/intrigue.js`, and no saved field was added.
+
+Raid eligibility is likewise one validated configuration record rather than duplicated
+culture and faith literals. `FBDATA.raidingTraditions` owns ordered culture, exact-faith,
+and root-faith-group lists; `FB.hasRaidingTradition` is the shared player/AI reader.
+Range, technology extensions, spoils, cooldowns, AI cadence, and raid resolution remain
+engine behavior. This configuration exposure changes no baseline capability, so it does
+not add a technology-impact ledger entry.

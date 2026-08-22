@@ -155,6 +155,243 @@ window.FBMODS = window.FBMODS || [];
     for (const k in additions) if (own(additions, k)) table[k] = additions[k];
   }
 
+  /* This is the complete public top-level runtime-mod surface. Tables that
+     are generated artifacts or engine aliases are intentionally absent. */
+  const PUBLIC_KEYS = {
+    name:true, bookmarks:true, defaultBookmark:true,
+    provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
+    events:true, straits:true, crossingClasses:true, scripted:true,
+    cultureTraditions:true, cultures:true, religions:true, traits:true,
+    ailments:true, modifiers:true, buildings:true, forts:true,
+    techDomains:true, techTraditions:true, tech:true, techCaps:true,
+    techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
+    positions:true, localCouncilMotions:true, feudalServiceCharters:true,
+    schooling:true, enterprises:true, auctionLotTypes:true,
+    householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
+    marketEndowments:true, travelPurposes:true, travelSites:true,
+    finance:true, plots:true, intrigue:true, items:true, itemPools:true,
+    rulerTraits:true, raidingTraditions:true, politicalBlocs:true,
+    policies:true, elections:true, privileges:true, collectiveDemands:true,
+    settlementNames:true, settlementSites:true, titles:true, papacy:true,
+    currency:true, balance:true, land:true, seas:true, rivers:true,
+    bounds:true
+  };
+
+  function plainObject(value) {
+    return !!value && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function fail(path, message) {
+    throw new Error('Mod data ' + path + ' ' + message);
+  }
+
+  function onlyFields(value, allowed, path) {
+    if (!plainObject(value)) fail(path, 'must be an object.');
+    for (const key in value) {
+      if (own(value, key) && !allowed[key]) {
+        fail(path + '.' + key, 'is not recognized.');
+      }
+    }
+  }
+
+  function combinedTable(base, additions, path) {
+    const out = {};
+    for (const key in (base || {})) {
+      if (own(base, key)) out[key] = base[key];
+    }
+    if (additions !== undefined) {
+      if (!plainObject(additions)) fail(path, 'must be an object.');
+      for (const key in additions) {
+        if (own(additions, key)) out[key] = additions[key];
+      }
+    }
+    return out;
+  }
+
+  function finiteNumber(value) {
+    return typeof value === 'number' && isFinite(value);
+  }
+
+  function validateIdList(list, path, known, allowEmpty) {
+    if (!Array.isArray(list) || (!allowEmpty && !list.length)) {
+      fail(path, 'must be ' + (allowEmpty ? 'an array.' : 'a non-empty array.'));
+    }
+    const seen = {};
+    for (let i = 0; i < list.length; i++) {
+      const id = list[i];
+      if (typeof id !== 'string' || !id) {
+        fail(path + '[' + i + ']', 'must be a non-empty id.');
+      }
+      if (seen[id]) fail(path, 'must not repeat ' + id + '.');
+      if (known && !own(known, id)) fail(path, 'references unknown id ' + id + '.');
+      seen[id] = true;
+    }
+  }
+
+  function mergedIntrigue(additions) {
+    const base = FBDATA.intrigue || {};
+    const out = {};
+    for (const key in base) if (own(base, key)) out[key] = base[key];
+    out.methodProfiles = combinedTable(base.methodProfiles,
+      additions && additions.methodProfiles, 'intrigue.methodProfiles');
+    if (additions) {
+      for (const key in additions) {
+        if (own(additions, key) && key !== 'methodProfiles') {
+          out[key] = additions[key];
+        }
+      }
+    }
+    return out;
+  }
+
+  function validateIntrigue(mod) {
+    const additions = own(mod, 'intrigue') ? mod.intrigue : null;
+    if (additions) {
+      onlyFields(additions, {
+        maxAiSchemes:true, aiStartsPerYear:true,
+        aiPlayerFacingPerYear:true, aiActorCooldownYears:true,
+        leverageDays:true, captiveRansoms:true, methodProfiles:true
+      }, 'intrigue');
+    } else if (own(mod, 'intrigue')) {
+      fail('intrigue', 'must be an object.');
+    }
+    const effective = mergedIntrigue(additions);
+    const boundedIntegers = {
+      maxAiSchemes:6, aiStartsPerYear:2, aiPlayerFacingPerYear:1
+    };
+    for (const key in boundedIntegers) {
+      const value = effective[key];
+      if (!finiteNumber(value) || Math.floor(value) !== value || value < 0 ||
+          value > boundedIntegers[key]) {
+        fail('intrigue.' + key, 'must be an integer from 0 to ' +
+          boundedIntegers[key] + '.');
+      }
+    }
+    if (!finiteNumber(effective.aiActorCooldownYears) ||
+        effective.aiActorCooldownYears < 0) {
+      fail('intrigue.aiActorCooldownYears', 'must be a non-negative number.');
+    }
+    if (!finiteNumber(effective.leverageDays) ||
+        Math.floor(effective.leverageDays) !== effective.leverageDays ||
+        effective.leverageDays < 1) {
+      fail('intrigue.leverageDays', 'must be a positive integer.');
+    }
+    if (!Array.isArray(effective.captiveRansoms) ||
+        !effective.captiveRansoms.length) {
+      fail('intrigue.captiveRansoms', 'must be a non-empty array.');
+    }
+    for (let i = 0; i < effective.captiveRansoms.length; i++) {
+      if (!finiteNumber(effective.captiveRansoms[i]) ||
+          effective.captiveRansoms[i] < 0) {
+        fail('intrigue.captiveRansoms[' + i + ']',
+          'must be a non-negative number.');
+      }
+    }
+    const profileFields = {
+      progress:true, success:true, discovery:true,
+      stationCost:true, martial:true
+    };
+    for (const profileId in effective.methodProfiles) {
+      if (!own(effective.methodProfiles, profileId)) continue;
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(profileId)) {
+        fail('intrigue.methodProfiles.' + profileId,
+          'has an invalid profile id.');
+      }
+      const profile = effective.methodProfiles[profileId];
+      onlyFields(profile, profileFields,
+        'intrigue.methodProfiles.' + profileId);
+      if (own(profile, 'progress') &&
+          (!finiteNumber(profile.progress) || profile.progress <= 0)) {
+        fail('intrigue.methodProfiles.' + profileId + '.progress',
+          'must be a positive number.');
+      }
+      for (const field of ['success','discovery']) {
+        if (own(profile, field) && !finiteNumber(profile[field])) {
+          fail('intrigue.methodProfiles.' + profileId + '.' + field,
+            'must be a number.');
+        }
+      }
+      for (const field of ['stationCost','martial']) {
+        if (own(profile, field) && typeof profile[field] !== 'boolean') {
+          fail('intrigue.methodProfiles.' + profileId + '.' + field,
+            'must be true or false.');
+        }
+      }
+    }
+    const plots = combinedTable(FBDATA.plots, mod.plots, 'plots');
+    for (const plotId in plots) {
+      const methods = plots[plotId] && plots[plotId].methods;
+      if (!Array.isArray(methods)) continue;
+      for (let i = 0; i < methods.length; i++) {
+        const profileId = methods[i] && methods[i].profile;
+        if (profileId && !own(effective.methodProfiles, profileId)) {
+          fail('plots.' + plotId + '.methods[' + i + '].profile',
+            'references unknown intrigue profile ' + profileId + '.');
+        }
+      }
+    }
+  }
+
+  function validateItemPools(mod) {
+    const items = combinedTable(FBDATA.items, mod.items, 'items');
+    const pools = combinedTable(FBDATA.itemPools, mod.itemPools, 'itemPools');
+    for (const poolId in pools) {
+      if (!own(pools, poolId)) continue;
+      if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(poolId)) {
+        fail('itemPools.' + poolId, 'has an invalid pool id.');
+      }
+      validateIdList(pools[poolId], 'itemPools.' + poolId, items, false);
+    }
+  }
+
+  function validateRulerTraits(mod) {
+    const traits = combinedTable(FBDATA.traits, mod.traits, 'traits');
+    validateIdList(mod.rulerTraits, 'rulerTraits', traits, false);
+  }
+
+  function validateRaidingTraditions(mod) {
+    onlyFields(mod.raidingTraditions, {
+      cultures:true, faiths:true, faithGroups:true
+    }, 'raidingTraditions');
+    const rules = {};
+    const base = FBDATA.raidingTraditions || {};
+    for (const key of ['cultures','faiths','faithGroups']) {
+      rules[key] = own(mod.raidingTraditions, key)
+        ? mod.raidingTraditions[key] : base[key];
+    }
+    const cultures = combinedTable(FBDATA.cultures, mod.cultures, 'cultures');
+    const religions = combinedTable(FBDATA.religions, mod.religions, 'religions');
+    validateIdList(rules.cultures, 'raidingTraditions.cultures',
+      cultures, true);
+    validateIdList(rules.faiths, 'raidingTraditions.faiths',
+      religions, true);
+    validateIdList(rules.faithGroups, 'raidingTraditions.faithGroups',
+      religions, true);
+    for (let i = 0; i < rules.faithGroups.length; i++) {
+      const groupId = rules.faithGroups[i];
+      if (religions[groupId] && religions[groupId].group) {
+        fail('raidingTraditions.faithGroups[' + i + ']',
+          'must name a root faith group.');
+      }
+    }
+  }
+
+  function validateBeforeApply(mod) {
+    if (!plainObject(mod)) throw new Error('Mod data must be an object.');
+    for (const key in mod) {
+      if (own(mod, key) && !PUBLIC_KEYS[key]) {
+        fail(key, 'is not a supported top-level mod key.');
+      }
+    }
+    if (own(mod, 'name') && (typeof mod.name !== 'string' || !mod.name)) {
+      fail('name', 'must be a non-empty string.');
+    }
+    if (own(mod, 'intrigue') || own(mod, 'plots')) validateIntrigue(mod);
+    if (own(mod, 'itemPools')) validateItemPools(mod);
+    if (own(mod, 'rulerTraits')) validateRulerTraits(mod);
+    if (own(mod, 'raidingTraditions')) validateRaidingTraditions(mod);
+  }
+
   /* Cap groups are configuration maps rather than atomic definitions. A mod
      can raise one unit/cost cap without silently dropping every sibling cap. */
   function mergeTechCaps(additions) {
@@ -202,6 +439,7 @@ window.FBMODS = window.FBMODS || [];
   }
 
   M.apply = function (mod) {
+    validateBeforeApply(mod);
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {
       const marketGoods = own(mod, 'marketGoods')
@@ -380,6 +618,29 @@ window.FBMODS = window.FBMODS || [];
     if (mod.finance) for (const k in mod.finance) FBDATA.finance[k] = mod.finance[k];
     if (mod.plots) for (const k in mod.plots) FBDATA.plots[k] = mod.plots[k];
     if (mod.items) for (const k in mod.items) FBDATA.items[k] = mod.items[k];
+    if (mod.itemPools) mergeTable(FBDATA.itemPools, mod.itemPools);
+    if (own(mod, 'rulerTraits')) {
+      FBDATA.rulerTraits = mod.rulerTraits.slice();
+      FB.RULER_TRAITS = FBDATA.rulerTraits;
+    }
+    if (mod.raidingTraditions) {
+      for (const key of ['cultures','faiths','faithGroups']) {
+        if (own(mod.raidingTraditions, key)) {
+          FBDATA.raidingTraditions[key] = mod.raidingTraditions[key].slice();
+        }
+      }
+    }
+    if (mod.intrigue) {
+      for (const key in mod.intrigue) {
+        if (!own(mod.intrigue, key)) continue;
+        if (key === 'methodProfiles') {
+          mergeTable(FBDATA.intrigue.methodProfiles,
+            mod.intrigue.methodProfiles);
+        } else {
+          FBDATA.intrigue[key] = mod.intrigue[key];
+        }
+      }
+    }
     if (mod.titles) {
       for (const k in mod.titles) {
         FBDATA.titles[k] = mod.titles[k];

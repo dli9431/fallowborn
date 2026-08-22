@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.145.2';
+  FB.VERSION = '1.146.0';
   FB.CHANGELOG = [
+    { v: '1.146.0', date: '2026-08-22', changes: [
+      'Runtime mods can now configure intrigue, raiding traditions, authored-work pools, and generated ruler traits, with invalid definitions rejected before play.'
+    ] },
     { v: '1.145.2', date: '2026-08-22', changes: [
       'Save Game now downloads a text file, and Load Game accepts that file while keeping pasted saves compatible.'
     ] },

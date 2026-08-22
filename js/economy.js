@@ -8,10 +8,6 @@ window.FB = window.FB || {};
   const CAREER_RANK_ORDER = {
     unassigned:0, apprentice:1, journeyman:2, master:3
   };
-  const AUTHORED_WORKS = [
-    'book_of_laws', 'chronicle_of_princes',
-    'treatise_on_virtue', 'compendium_of_nature'
-  ];
   const RELIGIOUS_PATHS = {
     catholic_lay: [
       { id:'parishioner', pietyYield:0 },
@@ -574,7 +570,8 @@ window.FB = window.FB || {};
       state.player.prestige += 15;
       if (status.definition.authoredWork && !career.authoredWorkRef &&
           FB.grantItem) {
-        const ref = FB.grantItem(state, FB.pick(AUTHORED_WORKS));
+        const ref = FB.grantItem(state,
+          FB.pick(FBDATA.itemPools.authoredWorks));
         if (ref) {
           career.authoredWorkRef = ref;
           FB.news(state, FB.msg('news.career.work_authored',
@@ -616,7 +613,8 @@ window.FB = window.FB || {};
   FB.fns.lifepath_author_work = function (state) {
     const c = playerChar(state);
     if (!c || !FB.grantItem) return false;
-    const ref = FB.grantItem(state, FB.pick(AUTHORED_WORKS));
+    const ref = FB.grantItem(state,
+      FB.pick(FBDATA.itemPools.authoredWorks));
     if (!ref) return false;
     FB.news(state, FB.msg('news.career.work_completed',
       '📖 {name} completes {item}, another work for the family to preserve.', {

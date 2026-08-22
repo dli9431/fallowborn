@@ -47,6 +47,13 @@ commissioned treatises (`lifepath_author_work`), the expedition's Travel Journal
 the mercenary Company Standard (both granted once per protagonist life by their owning
 travel handlers).
 
+The Author reward no longer owns a catalogue in economy code. Its four baseline
+definitions live in the ordered `FBDATA.itemPools.authoredWorks` acquisition pool.
+Runtime mods merge `itemPools` by pool id and validation requires every ordered entry to
+resolve after same-mod item additions. The economy still performs one seeded `FB.pick`
+and one ordinary `FB.grantItem`, so the baseline RNG draw count, exact-instance shape,
+quality roll, and save format are unchanged.
+
 **Only worn objects grant power.** Skill and health effects apply to the wearer:
 `FB.skillOf` reads their equipped skill bonuses and yearly NPC mortality reads their
 health protection. Battle, gold, prestige, and piety effects count only when worn by the
