@@ -16,19 +16,68 @@ window.FB = window.FB || {};
 
   FB.cultureOf = function (id) { return FBDATA.cultures[id] || FBDATA.cultures.frankish; };
 
-  const CULTURE_GROUPS = {
-    frankish:'west_european', german:'west_european', english:'west_european', norse:'west_european',
-    gaelic:'celtic', brezhon:'celtic',
-    iberian:'romance', basque:'romance', italian:'romance',
-    greek:'byzantine_caucasian', armenian:'byzantine_caucasian', georgian:'byzantine_caucasian',
-    slavic:'slavic_baltic', baltic:'slavic_baltic',
-    magyar:'steppe', turkic:'steppe',
-    andalusi:'middle_eastern', arabic:'middle_eastern', berber:'middle_eastern', persian:'middle_eastern',
-    nubian:'african'
+  FB.cultureGroup = function (cid) {
+    const culture = FBDATA.cultures && FBDATA.cultures[cid];
+    const id = culture && culture.tradition;
+    return id && FBDATA.cultureTraditions &&
+      Object.prototype.hasOwnProperty.call(FBDATA.cultureTraditions, id)
+      ? id : 'other';
   };
 
-  FB.cultureGroup = function (cid) {
-    return CULTURE_GROUPS[cid] || 'other';
+  FB.cultureTraditionOf = function (cid) {
+    const id = FB.cultureGroup(cid);
+    return FBDATA.cultureTraditions && FBDATA.cultureTraditions[id] ||
+      FBDATA.cultureTraditions && FBDATA.cultureTraditions.other || null;
+  };
+
+  FB.validateCultureData = function () {
+    const errors = [];
+    const traditions = FBDATA.cultureTraditions;
+    const cultures = FBDATA.cultures;
+    const slug = /^[a-z0-9]+(?:_[a-z0-9]+)*$/;
+    if (!traditions || typeof traditions !== 'object' || Array.isArray(traditions)) {
+      return ['Culture data: FBDATA.cultureTraditions must be an object keyed by tradition id.'];
+    }
+    if (!Object.prototype.hasOwnProperty.call(traditions, 'other')) {
+      errors.push('Culture data: missing other tradition.');
+    }
+    for (const tid in traditions) {
+      if (!Object.prototype.hasOwnProperty.call(traditions, tid)) continue;
+      const tradition = traditions[tid];
+      if (!slug.test(tid)) errors.push('Culture data: invalid tradition id ' + tid + '.');
+      if (!tradition || typeof tradition !== 'object' || Array.isArray(tradition)) {
+        errors.push('Culture data: tradition ' + tid + ' must be an object.');
+        continue;
+      }
+      if (typeof tradition.name !== 'string' || !tradition.name) {
+        errors.push('Culture data: tradition ' + tid + ' requires a name.');
+      }
+      if (tradition.icon !== undefined && typeof tradition.icon !== 'string') {
+        errors.push('Culture data: tradition ' + tid + ' icon must be a string.');
+      }
+      if (tradition.order !== undefined &&
+          (typeof tradition.order !== 'number' || !isFinite(tradition.order))) {
+        errors.push('Culture data: tradition ' + tid + ' order must be finite.');
+      }
+    }
+    if (!cultures || typeof cultures !== 'object' || Array.isArray(cultures)) {
+      errors.push('Culture data: FBDATA.cultures must be an object keyed by culture id.');
+      return errors;
+    }
+    for (const cid in cultures) {
+      if (!Object.prototype.hasOwnProperty.call(cultures, cid)) continue;
+      const culture = cultures[cid];
+      if (!culture || typeof culture !== 'object' || Array.isArray(culture)) {
+        errors.push('Culture data: culture ' + cid + ' must be an object.');
+        continue;
+      }
+      if (culture.tradition !== undefined &&
+          !Object.prototype.hasOwnProperty.call(traditions, culture.tradition)) {
+        errors.push('Culture data: culture ' + cid + ' has invalid tradition ' +
+          culture.tradition + '.');
+      }
+    }
+    return errors;
   };
 
   FB.cultureRelation = function (state, observerId, targetId) {

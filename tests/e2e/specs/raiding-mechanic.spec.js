@@ -48,6 +48,11 @@ test('raiding eligibility respects historical cultures and pagan religions',
       me.religion = 'tengri';
       var magyarEligible = FB.canRaid(s);
 
+      // Jewish Khazar culture retains the old Turkic core's raiding tradition
+      me.culture = 'khazar';
+      me.religion = 'jewish';
+      var khazarEligible = FB.canRaid(s);
+
       // Berber Muslim
       me.culture = 'berber';
       me.religion = 'sunni';
@@ -81,6 +86,7 @@ test('raiding eligibility respects historical cultures and pagan religions',
       return {
         norse: norseEligible,
         magyar: magyarEligible,
+        khazar: khazarEligible,
         berber: berberEligible,
         baltic: balticEligible,
         gaelic: gaelicEligible,
@@ -92,6 +98,7 @@ test('raiding eligibility respects historical cultures and pagan religions',
 
     expect(result.norse).toBe(true);
     expect(result.magyar).toBe(true);
+    expect(result.khazar).toBe(true);
     expect(result.berber).toBe(true);
     expect(result.baltic).toBe(true);
     expect(result.gaelic).toBe(true);

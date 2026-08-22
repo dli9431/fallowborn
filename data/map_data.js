@@ -1588,7 +1588,7 @@ FBDATA.balance = {
 };
 
 FBDATA.raidingTraditions = {
-  cultures: ['norse', 'magyar', 'turkic', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'],
+  cultures: ['norse', 'magyar', 'turkic', 'khazar', 'berber', 'andalusi', 'arabic', 'baltic', 'gaelic', 'brezhon'],
   faiths: ['norse_pagan', 'tengri', 'baltic_pagan', 'slavic_pagan'],
   faithGroups: ['pagan']
 };

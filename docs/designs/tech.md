@@ -75,6 +75,13 @@ exclusive civilization levels. The built-ins are Latin West, Byzantine, Islamic
 Mediterranean, Persianate, Slavic, Nordic, Steppe, Baltic-Finnic, Caucasian, and Northeast
 African. A realm may have more than one.
 
+Built-in culture membership follows the culture catalogue: Norman, Occitan, and Lombard
+join Latin West; Rus joins Slavic; Khazar joins Steppe; Finnic and Sámi join
+Baltic-Finnic; Syriac joins Byzantine; and Coptic joins Northeast African. These are
+knowledge-transmission defaults, independent of the culture-affinity traditions used by
+conversion. Bookmark realms may still author overlaps when a court crossed several
+routes of transmission.
+
 `techTraditions` and `techSeed:{complete,expose,omit}` may be authored on a bookmark realm.
 Otherwise traditions derive from the capital/ruler culture and religion. On a fresh
 bookmark, `FB.seedRealmTechnologies`:

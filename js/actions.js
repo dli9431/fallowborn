@@ -5261,7 +5261,8 @@ window.FB = window.FB || {};
     if (FB.faithIsA(c.religion, 'slavic_pagan', state)) return 'steppe_riders';
     if (FB.faithIsA(c.religion, 'tengri', state)) return 'rus_raiders';
     if (FB.faithIsA(c.religion, 'jewish', state) &&
-        (c.culture === 'turkic' || c.culture === 'magyar')) {
+        (c.culture === 'turkic' || c.culture === 'magyar' ||
+          c.culture === 'khazar')) {
       return 'rus_raiders';
     }
     if (c.culture === 'persian' || c.culture === 'armenian' ||
@@ -5269,7 +5270,8 @@ window.FB = window.FB || {};
       return 'steppe_riders';
     }
     if (c.culture === 'norse' || c.culture === 'baltic') return 'saxon_host';
-    if (c.culture === 'turkic' || c.culture === 'magyar') return 'rus_raiders';
+    if (c.culture === 'turkic' || c.culture === 'magyar' ||
+        c.culture === 'khazar') return 'rus_raiders';
     if (c.culture === 'arabic' || c.culture === 'andalusi' ||
         c.culture === 'berber') return 'cross_banners';
     return 'rival_raiders';
@@ -5287,7 +5289,8 @@ window.FB = window.FB || {};
       pr.culture === 'frankish' || pr.culture === 'english' ||
       FB.faithIsA(pr.religion, 'christian', state);
     if (profile === 'steppe_riders') return pr.culture === 'turkic' ||
-      pr.culture === 'magyar' || FB.faithIsA(pr.religion, 'tengri', state);
+      pr.culture === 'magyar' || pr.culture === 'khazar' ||
+      FB.faithIsA(pr.religion, 'tengri', state);
     if (profile === 'rus_raiders') return pr.culture === 'slavic' ||
       pr.culture === 'norse' ||
       FB.faithIsA(pr.religion, 'slavic_pagan', state) ||

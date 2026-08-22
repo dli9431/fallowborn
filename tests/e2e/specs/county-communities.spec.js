@@ -1,7 +1,14 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/bookmarks.js',
+  'data/counties.js',
+  'data/cultures.js',
+  'data/technology.js',
+  'data/units.js',
+  'js/events.js',
   'js/main.js',
+  'js/model.js',
   'js/save.js',
   'js/population.js',
   'js/world.js',
@@ -20,6 +27,8 @@ const { unlockStartTier } = require('../support/game/start');
 
 const EXPECTED = {
   '867':{
+    halogaland:'norse.norse_pagan>sami.norse_pagan',
+    norrland:'sami.norse_pagan>norse.norse_pagan',
     iona:'gaelic.catholic>norse.norse_pagan',
     man:'norse.norse_pagan>gaelic.catholic',
     lewis:'norse.norse_pagan>gaelic.catholic',
@@ -58,9 +67,11 @@ const EXPECTED = {
     bayonne:'frankish.catholic>basque.catholic',
     palermo:'arabic.sunni>greek.orthodox',
     messina:'greek.orthodox>arabic.sunni',
-    novgorod:'slavic.slavic_pagan>norse.norse_pagan',
-    ladoga:'slavic.slavic_pagan>norse.norse_pagan',
-    kiev:'slavic.slavic_pagan>norse.norse_pagan',
+    novgorod:'slavic.slavic_pagan>norse.norse_pagan>rus.slavic_pagan>finnic.baltic_pagan',
+    ladoga:'slavic.slavic_pagan>norse.norse_pagan>rus.slavic_pagan>finnic.baltic_pagan',
+    beloozero:'slavic.slavic_pagan>finnic.baltic_pagan',
+    kiev:'slavic.slavic_pagan>norse.norse_pagan>rus.slavic_pagan',
+    atil:'khazar.jewish>khazar.tengri>turkic.tengri',
     tunis:'berber.sunni>arabic.sunni',
     kairouan:'berber.sunni>arabic.sunni',
     split:'italian.catholic>slavic.catholic',
@@ -77,9 +88,28 @@ const EXPECTED = {
     serdica:'slavic.orthodox>greek.orthodox',
     philippopolis:'slavic.orthodox>greek.orthodox',
     caesarea:'greek.orthodox>armenian.eastern',
-    sebasteia:'greek.orthodox>armenian.eastern'
+    sebasteia:'greek.orthodox>armenian.eastern',
+    alexandria:'arabic.sunni>coptic.eastern',
+    rosetta:'arabic.sunni>coptic.eastern',
+    fustat:'arabic.sunni>coptic.eastern',
+    fayyum:'arabic.sunni>coptic.eastern',
+    asyut:'arabic.sunni>coptic.eastern',
+    luxor:'arabic.sunni>coptic.eastern',
+    aswan:'arabic.sunni>coptic.eastern',
+    mosul:'arabic.sunni>syriac.eastern',
+    amida:'arabic.sunni>syriac.eastern',
+    edessa:'arabic.sunni>syriac.eastern'
   },
   '1066':{
+    halogaland:'norse.catholic>sami.norse_pagan',
+    norrland:'norse.catholic>sami.norse_pagan',
+    metz:'frankish.catholic>ashkenazi.jewish',
+    trier:'frankish.catholic>ashkenazi.jewish',
+    troyes:'frankish.catholic>ashkenazi.jewish',
+    cologne:'german.catholic>ashkenazi.jewish',
+    mainz:'german.catholic>ashkenazi.jewish',
+    worms:'german.catholic>ashkenazi.jewish',
+    regensburg:'german.catholic>ashkenazi.jewish',
     iona:'gaelic.catholic>norse.catholic',
     man:'norse.catholic>gaelic.catholic',
     lewis:'norse.catholic>gaelic.catholic',
@@ -131,6 +161,7 @@ const EXPECTED = {
     brindisi:'greek.orthodox>italian.catholic',
     reggio:'greek.orthodox>italian.catholic',
     cosenza:'greek.orthodox>italian.catholic',
+    foggia:'italian.catholic>norman.catholic',
     tunis:'berber.sunni>arabic.sunni',
     kairouan:'berber.sunni>arabic.sunni',
     split:'slavic.catholic>italian.catholic',
@@ -165,7 +196,21 @@ const EXPECTED = {
     caesarea:'greek.orthodox>armenian.eastern',
     sebasteia:'armenian.eastern>greek.orthodox',
     tarsos:'greek.orthodox>armenian.eastern>arabic.sunni',
-    adana:'greek.orthodox>armenian.eastern>arabic.sunni'
+    adana:'greek.orthodox>armenian.eastern>arabic.sunni',
+    novgorod:'rus.orthodox>finnic.baltic_pagan',
+    ladoga:'rus.orthodox>finnic.baltic_pagan',
+    beloozero:'rus.orthodox>finnic.baltic_pagan',
+    atil:'turkic.tengri>khazar.tengri>khazar.jewish',
+    alexandria:'arabic.shia>coptic.eastern',
+    rosetta:'arabic.shia>coptic.eastern',
+    fustat:'arabic.shia>coptic.eastern',
+    fayyum:'arabic.shia>coptic.eastern',
+    asyut:'arabic.shia>coptic.eastern',
+    luxor:'arabic.shia>coptic.eastern',
+    aswan:'arabic.shia>coptic.eastern',
+    mosul:'arabic.sunni>syriac.eastern',
+    amida:'arabic.sunni>syriac.eastern',
+    edessa:'arabic.sunni>syriac.eastern'
   }
 };
 
@@ -223,9 +268,126 @@ test('both bookmark manifests validate and expose every curated record in order'
     expect(result.errors['867']).toEqual([]);
     expect(result.errors['1066']).toEqual([]);
     expect(result.manifests).toEqual(EXPECTED);
-    expect(result.counts).toEqual({ '867':58, '1066':86 });
-    expect(result.counts['867'] + result.counts['1066']).toBe(144);
+    expect(result.counts).toEqual({ '867':72, '1066':110 });
+    expect(result.counts['867'] + result.counts['1066']).toBe(182);
     expect(result.ionaArraysAliased).toBe(false);
+  });
+
+test('regional cultures seed their historical bookmark cores and supporting systems',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      function province(bookmarkId, id) {
+        return FB.bookmark(bookmarkId).provinces.filter(function (candidate) {
+          return candidate.id === id;
+        })[0];
+      }
+      function principal(bookmarkId, ids) {
+        const out = {};
+        ids.forEach(function (id) { out[id] = province(bookmarkId, id).culture; });
+        return out;
+      }
+      function rulers(bookmarkId, ids) {
+        const bookmark = FB.bookmark(bookmarkId), byId = {}, out = {};
+        bookmark.realms.forEach(function (realm) { byId[realm.id] = realm; });
+        ids.forEach(function (id) { out[id] = byId[id].ruler.culture; });
+        return out;
+      }
+      const cultureIds = [
+        'norman','coptic','syriac','khazar','finnic','sami','occitan','lombard','rus'
+      ];
+      const cultures = {};
+      cultureIds.forEach(function (id) {
+        const definition = FBDATA.cultures[id];
+        cultures[id] = {
+          tradition:FB.cultureGroup(id),
+          maleNames:definition.male.length,
+          femaleNames:definition.female.length,
+          settlementParts:!!(FBDATA.settlementNames[id] &&
+            FBDATA.settlementNames[id].pre.length &&
+            FBDATA.settlementNames[id].suf.length)
+        };
+      });
+      return {
+        cultures:cultures,
+        principals867:principal('867', [
+          'rouen','toulouse','benevento','turku','norrland','atil','kiev'
+        ]),
+        principals1066:principal('1066', [
+          'rouen','toulouse','benevento','turku','norrland','atil','kiev'
+        ]),
+        rulers867:rulers('867', [
+          'benevento','finland','karelia','khazaria'
+        ]),
+        rulers1066:rulers('1066', [
+          'normandy','benevento_1066','apulia_1066','kiev_1066',
+          'finland_1066','karelia_1066'
+        ]),
+        pairedMinorities:{
+          coptic867:province('867', 'alexandria').communities[1],
+          coptic1066:province('1066', 'alexandria').communities[1],
+          syriac867:province('867', 'mosul').communities[1],
+          syriac1066:province('1066', 'mosul').communities[1],
+          sami1066:province('1066', 'norrland').communities[1],
+          finnic1066:province('1066', 'novgorod').communities[1]
+        },
+        techTraditions:{
+          latin:FBDATA.techTraditions.latin.cultures,
+          byzantine:FBDATA.techTraditions.byzantine.cultures,
+          slavic:FBDATA.techTraditions.slavic.cultures,
+          steppe:FBDATA.techTraditions.steppe.cultures,
+          balticFinnic:FBDATA.techTraditions.baltic_finnic.cultures,
+          northeastAfrican:FBDATA.techTraditions.northeast_african.cultures
+        },
+        khazarHorseArchers:
+          FBDATA.unitClasses.horsearcher.cultures.indexOf('khazar') >= 0
+      };
+    });
+
+    const expectedTraditions = {
+      norman:'west_european', coptic:'african', syriac:'middle_eastern',
+      khazar:'steppe', finnic:'uralic', sami:'uralic', occitan:'romance',
+      lombard:'romance', rus:'slavic_baltic'
+    };
+    for (const id of Object.keys(expectedTraditions)) {
+      expect(result.cultures[id].tradition).toBe(expectedTraditions[id]);
+      expect(result.cultures[id].maleNames).toBeGreaterThanOrEqual(30);
+      expect(result.cultures[id].femaleNames).toBeGreaterThanOrEqual(30);
+      expect(result.cultures[id].settlementParts).toBe(true);
+    }
+    expect(result.principals867).toEqual({
+      rouen:'frankish', toulouse:'occitan', benevento:'lombard',
+      turku:'finnic', norrland:'sami', atil:'khazar', kiev:'slavic'
+    });
+    expect(result.principals1066).toEqual({
+      rouen:'norman', toulouse:'occitan', benevento:'lombard',
+      turku:'finnic', norrland:'norse', atil:'turkic', kiev:'rus'
+    });
+    expect(result.rulers867).toEqual({
+      benevento:'lombard', finland:'finnic', karelia:'finnic', khazaria:'khazar'
+    });
+    expect(result.rulers1066).toEqual({
+      normandy:'norman', benevento_1066:'lombard', apulia_1066:'norman',
+      kiev_1066:'rus', finland_1066:'finnic', karelia_1066:'finnic'
+    });
+    expect(result.pairedMinorities).toEqual({
+      coptic867:{ culture:'coptic', religion:'eastern', paired:true },
+      coptic1066:{ culture:'coptic', religion:'eastern', paired:true },
+      syriac867:{ culture:'syriac', religion:'eastern', paired:true },
+      syriac1066:{ culture:'syriac', religion:'eastern', paired:true },
+      sami1066:{ culture:'sami', religion:'norse_pagan', paired:true },
+      finnic1066:{ culture:'finnic', religion:'baltic_pagan', paired:true }
+    });
+    expect(result.techTraditions.latin).toEqual(expect.arrayContaining([
+      'norman','occitan','lombard'
+    ]));
+    expect(result.techTraditions.byzantine).toContain('syriac');
+    expect(result.techTraditions.slavic).toContain('rus');
+    expect(result.techTraditions.steppe).toContain('khazar');
+    expect(result.techTraditions.balticFinnic).toEqual(expect.arrayContaining([
+      'finnic','sami'
+    ]));
+    expect(result.techTraditions.northeastAfrican).toContain('coptic');
+    expect(result.khazarHorseArchers).toBe(true);
   });
 
 test('community schema faults are actionable and ordinary counties normalize to one pair',
@@ -260,6 +422,9 @@ test('community schema faults are actionable and ordinary counties normalize to 
         faith:definitionWith('london', [
           { culture:'english', religion:'christian' }
         ]),
+        paired:definitionWith('london', [
+          { culture:'english', religion:'catholic', paired:'yes' }
+        ]),
         principal:definitionWith('london', [
           { culture:'norse', religion:'norse_pagan' }
         ]),
@@ -289,6 +454,7 @@ test('community schema faults are actionable and ordinary counties normalize to 
     expect(result.errors.duplicate).toContain('repeats community english/catholic');
     expect(result.errors.culture).toContain('has invalid culture missing_culture');
     expect(result.errors.faith).toContain('has invalid or unassignable faith christian');
+    expect(result.errors.paired).toContain('paired must be a boolean');
     expect(result.errors.principal)
       .toContain('principal community must match its culture and religion');
     expect(result.errors.wasteland).toContain('wasteland');
@@ -299,6 +465,46 @@ test('community schema faults are actionable and ordinary counties normalize to 
     expect(result.provinceCulture).toBe('english');
     expect(result.secondRead).toEqual([
       { culture:'english', religion:'catholic' }
+    ]);
+  });
+
+test('a 1066 Ashkenazi start keeps its Jewish identity paired in matchmaking',
+  async function ({ page }) {
+    await useStartCode(page,
+      'HOUSEHOLD-1066-farmer-mainz-f-Sarah-established-0-ashkenazi.jewish');
+    await page.getByRole('button', { name:'Begin Your Story', exact:true }).click();
+    await expect(page.locator('#game:not(.hidden)')).toBeVisible();
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const me = state.chars[state.player.charId];
+      const parents = [me.fatherId, me.motherId].map(function (id) {
+        const parent = id && state.chars[id];
+        return parent && parent.culture + '.' + parent.religion;
+      });
+      return {
+        identity:me.culture + '.' + me.religion,
+        parents:parents,
+        tradition:FB.cultureGroup(me.culture),
+        communities:FB.provinceCommunities(FB.world.byId.mainz),
+        prospectPool:FB.marriageProspectIdentities(state, 'mainz').map(
+          function (identity) {
+            return identity.culture + '.' + identity.religion;
+          })
+      };
+    });
+
+    expect(result.identity).toBe('ashkenazi.jewish');
+    expect(result.parents).toEqual(['ashkenazi.jewish', 'ashkenazi.jewish']);
+    expect(result.tradition).toBe('west_european');
+    expect(result.communities).toEqual([
+      { culture:'german', religion:'catholic' },
+      { culture:'ashkenazi', religion:'jewish', paired:true }
+    ]);
+    expect(result.prospectPool).toEqual([
+      'german.catholic',
+      'ashkenazi.jewish'
     ]);
   });
 

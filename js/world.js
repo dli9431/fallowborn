@@ -54,7 +54,9 @@ window.FB = window.FB || {};
       ? province.communities
       : [{ culture:province.culture, religion:province.religion }];
     return source.map(function (entry) {
-      return { culture:entry.culture, religion:entry.religion };
+      var normalized = { culture:entry.culture, religion:entry.religion };
+      if (entry.paired === true) normalized.paired = true;
+      return normalized;
     });
   };
 
@@ -85,6 +87,10 @@ window.FB = window.FB || {};
     if (FB.validateTechnologyData) {
       var technologyErrors = FB.validateTechnologyData();
       for (var te = 0; te < technologyErrors.length; te++) errors.push(technologyErrors[te]);
+    }
+    if (FB.validateCultureData) {
+      var cultureErrors = FB.validateCultureData();
+      for (var ce = 0; ce < cultureErrors.length; ce++) errors.push(cultureErrors[ce]);
     }
     if (FB.validateReligionData) {
       var religionErrors = FB.validateReligionData(null);
@@ -200,6 +206,10 @@ window.FB = window.FB || {};
                 !FB.faithAssignable(community.religion, null)) {
               fault(where + ' has invalid or unassignable faith ' +
                 community.religion + '.');
+            }
+            if (community.paired !== undefined &&
+                typeof community.paired !== 'boolean') {
+              fault(where + ' paired must be a boolean.');
             }
             var communityKey = community.culture + '|' + community.religion;
             if (seenCommunities[communityKey]) {

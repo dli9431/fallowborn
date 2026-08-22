@@ -1,10 +1,12 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/actions.js',
   'js/armies.js',
   'js/events.js',
   'js/world.js',
-  'data/events_war.js'
+  'data/cultures.js',
+  'data/events_world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -31,7 +33,7 @@ test('the extraordinary raid selector is pure and cultures every non-ruler profi
         { religion:'slavic_pagan', culture:'slavic', profile:'steppe_riders', word:'Mounted raiders' },
         { religion:'tengri', culture:'turkic', profile:'rus_raiders', word:'river-boats' },
         { religion:'zoroastrian', culture:'persian', profile:'steppe_riders', word:'Mounted raiders' },
-        { religion:'jewish', culture:'turkic', profile:'rus_raiders', word:'river-boats' },
+        { religion:'jewish', culture:'khazar', profile:'rus_raiders', word:'river-boats' },
         { religion:'jewish', culture:'english', profile:'rival_raiders', word:'enemy war-band' }
       ];
       var opener = FB.eventById('historic_raid');

@@ -411,7 +411,10 @@ shareable start code in the in-game menu. Returning from scenarios goes back to 
 without wiring another set of map listeners. Hosted telemetry emits a distinct viewed event for
 starting date, the optional seed dialog, beginning, birthplace, and character creation. Each
 screen emits once per New Game attempt, so revisiting it with Back does not inflate the setup
-funnel; bookmark and scenario are the only step-specific context.
+funnel; bookmark and scenario are the only step-specific context. Once character creation
+commits the campaign, `campaign-started` records stable internal IDs for the starting county and
+the character's selected culture and religion so start preferences can be compared without
+sending names or the world seed.
 
 Hover-only affordances need a tap path (item chips toast their description).
 The enterprise catalogue shows every known enterprise for the selected settlement rather

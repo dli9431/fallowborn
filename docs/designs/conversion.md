@@ -101,6 +101,12 @@ encountered through organic gameplay interactions:
 Distant, unencountered traditions remain hidden from the picker and gated until the player
 comes into contact with them through marriage, expansion, diplomacy, or travel.
 
+Culture affinity is data-driven. Each `FBDATA.cultures` record may name one
+`tradition`, resolved through `FBDATA.cultureTraditions`; missing memberships fall back
+to `other` for legacy and newly added mod cultures. The same records supply both
+same-tradition conversion distance and the picker's localized heading, icon, and order,
+so engine and UI grouping cannot drift apart.
+
 ## Implementation notes
 
 - `FB.conversionStatus(state, kind, targetId, scope)` in `js/actions.js` is the single

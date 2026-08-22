@@ -41,6 +41,7 @@ STRUCTURED_DATA = {
     "traits": "trait",
     "ailments": "ailment",
     "modifiers": "modifier",
+    "cultureTraditions": "cultureTradition",
     "cultures": "culture",
     "religions": "religion",
     "buildings": "building",
@@ -670,7 +671,7 @@ def extract_structured(inv: Inventory) -> None:
         else:
             path = DATA / ("traits.js" if data_name in ("traits", "ailments") else
                            "modifiers.js" if data_name == "modifiers" else
-                           "cultures.js" if data_name in ("cultures", "religions") else
+                           "cultures.js" if data_name in ("cultureTraditions", "cultures", "religions") else
                            "units.js" if data_name == "unitClasses" else
                            "economy.js" if data_name in (
                                "careers", "positions", "schooling", "enterprises",

@@ -590,3 +590,32 @@ test('culture conversion modal renders grouped regional traditions, scope contro
   await closeBtn.click();
   await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 });
+
+test('culture conversion grouping reads mod-authored tradition data',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      const state = FB.state;
+      FBDATA.cultureTraditions.riverlands = {
+        name:'River Traditions', icon:'🌊', order:0
+      };
+      FBDATA.cultures.riverlander = {
+        name:'Riverlander', tradition:'riverlands', dyn:'of_place',
+        male:['Aldo'], female:['Alba']
+      };
+      state.chars[state.player.charId].culture = 'riverlander';
+      FBDATA.cultures.rhenish = {
+        name:'Rhenish', tradition:'riverlands', dyn:'of_place',
+        male:['Otto'], female:['Oda']
+      };
+      state.player.prestige = 500;
+      FB.ui.showConversionPicker('culture');
+    });
+
+    const section = page.locator('.conversion-section-title', {
+      hasText:'River Traditions'
+    });
+    await expect(section).toBeVisible();
+    await expect(section).toContainText('🌊');
+    await expect(page.locator(
+      '.conversion-card[data-conv-target="rhenish"]')).toBeVisible();
+  });

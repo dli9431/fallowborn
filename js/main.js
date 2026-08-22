@@ -9,8 +9,11 @@ window.FB = window.FB || {};
   FB.state = null;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.144.7';
+  FB.VERSION = '1.145.0';
   FB.CHANGELOG = [
+    { v: '1.145.0', date: '2026-08-22', changes: [
+      'Cultures are now fully data-driven, with new regional identities and historically grounded paired communities across the 867 and 1066 worlds.'
+    ] },
     { v: '1.144.7', date: '2026-08-21', changes: [
       'The family tree now marks the house founder, opens on the current character, and keeps its guidance in an info tooltip. Portrait play has a draggable balanced map and panel split whose controls and notices realign with the map.'
     ] },
@@ -2324,7 +2327,10 @@ window.FB = window.FB || {};
     trackTelemetry('campaign-started', {
       entry_type:'new-campaign',
       scenario:sc.id,
-      family_preset:preset.id
+      family_preset:preset.id,
+      starting_location:provId,
+      starting_culture:me.culture,
+      starting_religion:me.religion
     });
   };
 

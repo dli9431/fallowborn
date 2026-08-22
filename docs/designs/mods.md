@@ -59,6 +59,13 @@ before locale validation so newly added mod text always has an English fallback.
 authored name, description, and prose remain English unless they exactly match a known
 catalog source; translation packs for third-party mods are outside the core v1 contract.
 
+Culture definitions replace or add atomically by id under `cultures`, while cultural
+affinity definitions replace or add by id under `cultureTraditions`. A culture's
+optional `tradition` points at the resulting table; new definitions without one fall
+back to `other`. For compatibility, a replacement of an existing culture that omits
+`tradition` retains that culture's previous membership. Tradition `name`, `icon`, and
+`order` drive conversion grouping and their labels use structured-data localization.
+
 Religion definitions replace or add atomically by id under `religions`, then compile as
 one inheritance graph after the complete mod stack is applied. `group` is the parent
 definition, broad `assignable:false` nodes can hold shared doctrine, and nested

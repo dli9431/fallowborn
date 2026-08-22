@@ -1726,6 +1726,14 @@
         "text": "Armenian"
       }
     },
+    "culture.ashkenazi.name.default": {
+      "context": "culture ashkenazi, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Ashkenazi"
+      }
+    },
     "culture.baltic.name.default": {
       "context": "culture baltic, name, faith branch default.",
       "glossary": [],
@@ -1758,12 +1766,28 @@
         "text": "Brythonic"
       }
     },
+    "culture.coptic.name.default": {
+      "context": "culture coptic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Coptic"
+      }
+    },
     "culture.english.name.default": {
       "context": "culture english, name, faith branch default.",
       "glossary": [],
       "location": "data/cultures.js",
       "source": {
         "text": "Anglo-Saxon"
+      }
+    },
+    "culture.finnic.name.default": {
+      "context": "culture finnic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Finnic"
       }
     },
     "culture.frankish.name.default": {
@@ -1822,12 +1846,36 @@
         "text": "Italian"
       }
     },
+    "culture.khazar.name.default": {
+      "context": "culture khazar, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Khazar"
+      }
+    },
+    "culture.lombard.name.default": {
+      "context": "culture lombard, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Lombard"
+      }
+    },
     "culture.magyar.name.default": {
       "context": "culture magyar, name, faith branch default.",
       "glossary": [],
       "location": "data/cultures.js",
       "source": {
         "text": "Magyar"
+      }
+    },
+    "culture.norman.name.default": {
+      "context": "culture norman, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Norman"
       }
     },
     "culture.norse.name.default": {
@@ -1846,12 +1894,36 @@
         "text": "Nubian"
       }
     },
+    "culture.occitan.name.default": {
+      "context": "culture occitan, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Occitan"
+      }
+    },
     "culture.persian.name.default": {
       "context": "culture persian, name, faith branch default.",
       "glossary": [],
       "location": "data/cultures.js",
       "source": {
         "text": "Persian"
+      }
+    },
+    "culture.rus.name.default": {
+      "context": "culture rus, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Rus"
+      }
+    },
+    "culture.sami.name.default": {
+      "context": "culture sami, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Sámi"
       }
     },
     "culture.slavic.name.default": {
@@ -1862,12 +1934,100 @@
         "text": "Slavic"
       }
     },
+    "culture.syriac.name.default": {
+      "context": "culture syriac, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Syriac"
+      }
+    },
     "culture.turkic.name.default": {
       "context": "culture turkic, name, faith branch default.",
       "glossary": [],
       "location": "data/cultures.js",
       "source": {
         "text": "Turkic"
+      }
+    },
+    "cultureTradition.african.name.default": {
+      "context": "cultureTradition african, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "African Traditions"
+      }
+    },
+    "cultureTradition.byzantine_caucasian.name.default": {
+      "context": "cultureTradition byzantine_caucasian, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Byzantine & Caucasian"
+      }
+    },
+    "cultureTradition.celtic.name.default": {
+      "context": "cultureTradition celtic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Celtic Traditions"
+      }
+    },
+    "cultureTradition.middle_eastern.name.default": {
+      "context": "cultureTradition middle_eastern, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Middle Eastern & North African"
+      }
+    },
+    "cultureTradition.other.name.default": {
+      "context": "cultureTradition other, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Other Cultures"
+      }
+    },
+    "cultureTradition.romance.name.default": {
+      "context": "cultureTradition romance, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Romance & Iberian"
+      }
+    },
+    "cultureTradition.slavic_baltic.name.default": {
+      "context": "cultureTradition slavic_baltic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Slavic & Baltic"
+      }
+    },
+    "cultureTradition.steppe.name.default": {
+      "context": "cultureTradition steppe, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Steppe & Nomad"
+      }
+    },
+    "cultureTradition.uralic.name.default": {
+      "context": "cultureTradition uralic, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Uralic & Sámi"
+      }
+    },
+    "cultureTradition.west_european.name.default": {
+      "context": "cultureTradition west_european, name, faith branch default.",
+      "glossary": [],
+      "location": "data/cultures.js",
+      "source": {
+        "text": "Western & Northern Europe"
       }
     },
     "currency.gold.label.default": {
@@ -54282,6 +54442,16 @@
         "text": "Masterwork"
       }
     },
+    "src.08b7d528": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Lombard"
+      }
+    },
     "src.08b8067a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -58759,6 +58929,16 @@
         "text": "Known tolls and protected market days regularize local exchange."
       }
     },
+    "src.12d4cb44": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Finnic"
+      }
+    },
     "src.12d97eaa": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -62553,6 +62733,16 @@
         "text": "Take ordinary court service instead."
       }
     },
+    "src.1b9bc4d1": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/world.js"
+      ],
+      "source": {
+        "text": "paired must be a boolean."
+      }
+    },
     "src.1ba57068": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -65533,6 +65723,16 @@
       ],
       "source": {
         "text": "No vassal is free to appoint."
+      }
+    },
+    "src.22871897": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Coptic"
       }
     },
     "src.228cf2d8": {
@@ -70240,6 +70440,16 @@
         "text": "💡 Technology…"
       }
     },
+    "src.2d627aaa": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Culture data: FBDATA.cultureTraditions must be an object keyed by tradition id."
+      }
+    },
     "src.2d67473f": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -72962,7 +73172,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Middle Eastern & North African"
@@ -74246,6 +74456,16 @@
         "text": "Choose a chartered corridor"
       }
     },
+    "src.3734719a": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Occitan"
+      }
+    },
     "src.37357b76": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -74260,7 +74480,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "African Traditions"
@@ -74520,7 +74740,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Celtic Traditions"
@@ -85651,6 +85871,16 @@
         "text": "Abundant paper makes correspondence, drafts, and working libraries cheaper."
       }
     },
+    "src.515232f0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "has invalid tradition"
+      }
+    },
     "src.5158aa6d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -86643,6 +86873,16 @@
         "text": "Levy Exemption"
       }
     },
+    "src.53ab45c3": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Culture data: tradition"
+      }
+    },
     "src.53b0f8cb": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -87348,7 +87588,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Western & Northern Europe"
@@ -88115,6 +88355,16 @@
       ],
       "source": {
         "text": "Build Where?"
+      }
+    },
+    "src.56de244c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Norman"
       }
     },
     "src.56dfde64": {
@@ -88964,7 +89214,8 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/market.js"
+        "js/market.js",
+        "js/model.js"
       ],
       "source": {
         "text": "must be an object."
@@ -92114,7 +92365,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Byzantine & Caucasian"
@@ -104498,6 +104749,16 @@
         "text": "Give them a place in the line."
       }
     },
+    "src.7c9d92f9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Uralic & Sámi"
+      }
+    },
     "src.7c9dd80a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -112508,7 +112769,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Steppe & Nomad"
@@ -114613,6 +114874,16 @@
       ],
       "source": {
         "text": "Scorched but standing. You saved the most of it."
+      }
+    },
+    "src.9257ee49": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Rus"
       }
     },
     "src.925874af": {
@@ -123215,6 +123486,16 @@
         "text": "{heir} keeps the barony and family home. {former} and {spouse} remain married and live in {destination}."
       }
     },
+    "src.a575460d": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Culture data: invalid tradition id"
+      }
+    },
     "src.a57603a7": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -123526,6 +123807,16 @@
       ],
       "source": {
         "text": "📈 Your martial improves ({value})."
+      }
+    },
+    "src.a624d95b": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Ashkenazi"
       }
     },
     "src.a62749a9": {
@@ -129762,6 +130053,16 @@
         "text": "Ravenna"
       }
     },
+    "src.b3a4f6d0": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Syriac"
+      }
+    },
     "src.b3aae7ee": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -129931,6 +130232,16 @@
       ],
       "source": {
         "text": "Ringwork"
+      }
+    },
+    "src.b409566c": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "icon must be a string."
       }
     },
     "src.b40a81a9": {
@@ -130149,7 +130460,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Slavic & Baltic"
@@ -130677,6 +130988,16 @@
         "text": "' + esc(FB.T('Worn at death')) + '"
       }
     },
+    "src.b5bd6502": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Khazar"
+      }
+    },
     "src.b5bdd13c": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -131032,6 +131353,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
+        "data/cultures.js",
         "js/ui_modals.js"
       ],
       "source": {
@@ -133555,6 +133877,16 @@
         "text": "Political role"
       }
     },
+    "src.bc92358f": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "data/cultures.js"
+      ],
+      "source": {
+        "text": "Sámi"
+      }
+    },
     "src.bc96e15a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -133784,6 +134116,16 @@
       ],
       "source": {
         "text": "Signet Ring"
+      }
+    },
+    "src.bd0ae985": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Culture data: culture"
       }
     },
     "src.bd11a4b4": {
@@ -136419,7 +136761,7 @@
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
       "location": [
-        "js/ui_modals.js"
+        "data/cultures.js"
       ],
       "source": {
         "text": "Romance & Iberian"
@@ -141818,6 +142160,16 @@
         "text": "Three years · 12 seasons"
       }
     },
+    "src.cf12dcea": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Culture data: FBDATA.cultures must be an object keyed by culture id."
+      }
+    },
     "src.cf159a3a": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -141976,6 +142328,16 @@
       ],
       "source": {
         "text": "The townsfolk mutter that the council needs a man of sense — your name comes up more than once."
+      }
+    },
+    "src.cfbbcebe": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "order must be finite."
       }
     },
     "src.cfc20f04": {
@@ -146346,6 +146708,16 @@
       ],
       "source": {
         "text": "In the field at {place}"
+      }
+    },
+    "src.d9e32769": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "requires a name."
       }
     },
     "src.d9e53851": {
@@ -157966,6 +158338,16 @@
         "text": "Serf"
       }
     },
+    "src.f4b21eb9": {
+      "context": "Generated exact-English source alias used by display chokepoints.",
+      "glossary": [],
+      "location": [
+        "js/model.js"
+      ],
+      "source": {
+        "text": "Culture data: missing other tradition."
+      }
+    },
     "src.f4ba5e0d": {
       "context": "Generated exact-English source alias used by display chokepoints.",
       "glossary": [],
@@ -169291,14 +169673,6 @@
         "text": "Affected direct vassals ({count}): {vassals}."
       }
     },
-    "ui:African Traditions": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "African Traditions"
-      }
-    },
     "ui:After a year of local life, permanent settlement may become available. Each character can relocate the household only once in their lifetime.": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -170780,14 +171154,6 @@
         "text": "Buy your freedom, then your first land plot"
       }
     },
-    "ui:Byzantine & Caucasian": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Byzantine & Caucasian"
-      }
-    },
     "ui:Caliphate (Caliph in Baghdad) · Sacred leadership": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -171072,14 +171438,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Celibate"
-      }
-    },
-    "ui:Celtic Traditions": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Celtic Traditions"
       }
     },
     "ui:Center map on {name}’s home county": {
@@ -177412,14 +177770,6 @@
         "text": "Methods change speed, chance, cost, and exposure. Forceful methods use Martial."
       }
     },
-    "ui:Middle Eastern & North African": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Middle Eastern & North African"
-      }
-    },
     "ui:Moderate Risk": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -179840,14 +180190,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Organized opposition"
-      }
-    },
-    "ui:Other Cultures": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Other Cultures"
       }
     },
     "ui:Other Traditions": {
@@ -182985,14 +183327,6 @@
         "text": "Roman"
       }
     },
-    "ui:Romance & Iberian": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Romance & Iberian"
-      }
-    },
     "ui:Root tradition": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -183806,14 +184140,6 @@
         "text": "Skills"
       }
     },
-    "ui:Slavic & Baltic": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Slavic & Baltic"
-      }
-    },
     "ui:Social and religious roles": {
       "context": "Explicit UI localization call.",
       "glossary": [],
@@ -184319,14 +184645,6 @@
       "location": "js/ui_modals.js",
       "source": {
         "text": "Stay sworn"
-      }
-    },
-    "ui:Steppe & Nomad": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Steppe & Nomad"
       }
     },
     "ui:Stewardship turns land, labor, and property into reliable value.": {
@@ -187830,14 +188148,6 @@
       "location": "js/items.js",
       "source": {
         "text": "Well-made {item}"
-      }
-    },
-    "ui:Western & Northern Europe": {
-      "context": "Explicit UI localization call.",
-      "glossary": [],
-      "location": "js/ui_modals.js",
-      "source": {
-        "text": "Western & Northern Europe"
       }
     },
     "ui:What distraint means": {

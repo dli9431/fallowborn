@@ -58,7 +58,7 @@ window.FBDATA = window.FBDATA || {};
     italy:profile('Louis II','italian',825,11,'proud'),
     burgundy:profile('Boso','frankish',841,8,'ambitious'),
     papacy:profile('Nicholas I','italian',800,4,'zealous'),
-    benevento:profile('Adelchis','italian',820,10,'patient'),
+    benevento:profile('Adelchis','lombard',820,10,'patient'),
     venice:profile('Orso I Participazio','italian',820,7,'greedy'),
     sardinia:profile('Torchitorio of Cagliari','italian',822,6,'content'),
     asturias:profile('Alfonso III','iberian',848,10,'ambitious'),
@@ -93,8 +93,8 @@ window.FBDATA = window.FBDATA || {};
     prussia:profile('Widewuto of Sambia','baltic',820,9,'zealous'),
     lithuania:profile('Kukovaitis','baltic',825,9,'ambitious'),
     livonia:profile('Daugirutis','baltic',825,8,'content'),
-    finland:profile('Kauko of Suomi','baltic',825,8,'patient'),
-    karelia:profile('Väinö of Karelia','baltic',825,8,'content'),
+    finland:profile('Kauko of Suomi','finnic',825,8,'patient'),
+    karelia:profile('Väinö of Karelia','finnic',825,8,'content'),
     rus_novgorod:profile('Rurik','norse',830,12,'ambitious'),
     rus_kiev:profile('Askold','norse',820,11,'ambitious'),
     polotsk:profile('Rogvolod','slavic',830,9,'proud'),
@@ -108,7 +108,7 @@ window.FBDATA = window.FBDATA || {};
     georgia:profile('Bagrat I','georgian',822,9,'patient'),
     alania:profile('Saros of Alania','turkic',825,9,'proud'),
     byzantium:profile('Basil I','greek',811,14,'ambitious'),
-    khazaria:profile('Benjamin','turkic',820,10,'patient'),
+    khazaria:profile('Benjamin','khazar',820,10,'patient'),
     volga_bulgaria:profile('Aydar','turkic',820,9,'ambitious'),
     abbasid:profile('al-Mu’tazz','arabic',847,7,'proud'),
     tahirids:profile('Muhammad ibn Tahir','persian',824,7,'content'),
@@ -153,7 +153,7 @@ window.FBDATA = window.FBDATA || {};
     realm('france','Kingdom of France','#4f7fd0','paris',1,3,
       ruler1066('Philip I','frankish',1052,5,'patient')),
     realm('normandy','Duchy of Normandy','#6f91c8','rouen',2,2,
-      ruler1066('William the Bastard','frankish',1028,14,'ambitious'),'france'),
+      ruler1066('William the Bastard','norman',1028,14,'ambitious'),'france'),
     realm('aquitaine_1066','Duchy of Aquitaine','#4f9fd0','bordeaux',1,2,
       ruler1066('William VIII','frankish',1025,10,'proud'),'france'),
     realm('brittany_1066','Duchy of Brittany','#a8a8b8','rennes',0,2,
@@ -175,9 +175,9 @@ window.FBDATA = window.FBDATA || {};
     realm('venice_1066','Republic of Venice','#2f8f8f','venezia',0,2,
       ruler1066('Domenico Contarini','italian',985,6,'patient')),
     realm('benevento_1066','Principality of Benevento','#c98f4a','benevento',0,2,
-      ruler1066('Landulf VI','italian',1030,8,'patient')),
+      ruler1066('Landulf VI','lombard',1030,8,'patient')),
     realm('apulia_1066','Duchy of Apulia','#b87945','foggia',2,2,
-      ruler1066('Robert Guiscard','italian',1015,14,'ambitious')),
+      ruler1066('Robert Guiscard','norman',1015,14,'ambitious')),
     realm('sicily_1066','Emirates of Sicily','#5f9f72','palermo',1,2,
       ruler1066('Ibn al-Hawas','arabic',1020,10,'proud')),
     realm('sardinia_1066','Judgedoms of Sardinia','#8fae7f','cagliari',0,2,
@@ -259,17 +259,17 @@ window.FBDATA = window.FBDATA || {};
     realm('alania_1066','Alania','#a08f5f','magas',0,2,
       ruler1066('Durgulel','turkic',1020,9,'proud')),
     realm('kiev_1066','Kiev Rus','#c05f1f','kiev',1,3,
-      ruler1066('Iziaslav I','slavic',1024,10,'patient')),
+      ruler1066('Iziaslav I','rus',1024,10,'patient')),
     realm('novgorod_1066','Novgorod','#d06f2f','novgorod',1,2,
-      ruler1066('Mstislav Izyaslavich','slavic',1043,8,'proud'),'kiev_1066'),
+      ruler1066('Mstislav Izyaslavich','rus',1043,8,'proud'),'kiev_1066'),
     realm('chernigov_1066','Chernigov','#b07f3f','chernigov',1,2,
-      ruler1066('Sviatoslav II','slavic',1027,12,'ambitious'),'kiev_1066'),
+      ruler1066('Sviatoslav II','rus',1027,12,'ambitious'),'kiev_1066'),
     realm('pereyaslavl_1066','Pereyaslavl','#ad7650','pereyaslavl',1,2,
-      ruler1066('Vsevolod I','slavic',1030,11,'patient'),'kiev_1066'),
+      ruler1066('Vsevolod I','rus',1030,11,'patient'),'kiev_1066'),
     realm('polotsk_1066','Polotsk','#a06f4f','polotsk',1,2,
-      ruler1066('Vseslav','slavic',1039,11,'ambitious')),
+      ruler1066('Vseslav','rus',1039,11,'ambitious')),
     realm('turov_1066','Turov and Volhynia','#907f5f','turov',0,2,
-      ruler1066('Yaropolk Izyaslavich','slavic',1043,8,'patient'),'kiev_1066'),
+      ruler1066('Yaropolk Izyaslavich','rus',1043,8,'patient'),'kiev_1066'),
     realm('prussia_1066','Old Prussians','#6f6f4f','sambia',0,2,
       ruler1066('Skomantas of Sambia','baltic',1020,9,'zealous')),
     realm('lithuania_1066','Lithuanians','#8f6f2f','vilnius',1,2,
@@ -277,9 +277,9 @@ window.FBDATA = window.FBDATA || {};
     realm('livonia_1066','Livonians','#7f5f3f','riga',0,2,
       ruler1066('Daugirutis','baltic',1020,8,'content')),
     realm('finland_1066','Suomi','#9fb8c8','turku',0,2,
-      ruler1066('Kauko of Suomi','baltic',1020,8,'patient')),
+      ruler1066('Kauko of Suomi','finnic',1020,8,'patient')),
     realm('karelia_1066','Karelians','#8fa8b8','kexholm',0,2,
-      ruler1066('Väinö of Karelia','baltic',1020,8,'content')),
+      ruler1066('Väinö of Karelia','finnic',1020,8,'content')),
     realm('cumans_1066','Cuman Confederation','#9f8753','sarkel',2,3,
       ruler1066('Sharukan','turkic',1010,13,'ambitious')),
     realm('volga_bulgaria_1066','Volga Bulgaria','#7f6f3f','bolghar',1,2,
@@ -478,12 +478,14 @@ window.FBDATA = window.FBDATA || {};
     out.religion = source.religion;
     out.dev = DEV_1066[source.id] || Math.min(10, (source.dev || 1) + 1);
 
+    if (source.duchy === 'd_normandy') out.culture = 'norman';
+
     if (CATHOLIC_DUCHIES[source.duchy]) out.religion = 'catholic';
     if (ORTHODOX_DUCHIES[source.duchy]) out.religion = 'orthodox';
     if (out.realm === 'kiev_1066' || out.realm === 'novgorod_1066' ||
         out.realm === 'chernigov_1066' || out.realm === 'pereyaslavl_1066' ||
         out.realm === 'polotsk_1066' || out.realm === 'turov_1066') {
-      out.culture = 'slavic';
+      out.culture = 'rus';
       out.religion = 'orthodox';
     }
     if (out.realm === 'hungary_1066') {
@@ -520,10 +522,20 @@ window.FBDATA = window.FBDATA || {};
      culture/religion so every existing world mechanic keeps using it. */
   function communityList() {
     var out = [];
-    for (var i = 0; i < arguments.length; i += 2) {
-      out.push({ culture:arguments[i], religion:arguments[i + 1] });
+    for (var i = 0; i < arguments.length;) {
+      if (arguments[i] && typeof arguments[i] === 'object') {
+        out.push(arguments[i]);
+        i++;
+      } else {
+        out.push({ culture:arguments[i], religion:arguments[i + 1] });
+        i += 2;
+      }
     }
     return out;
+  }
+
+  function pairedCommunity(culture, religion) {
+    return { culture:culture, religion:religion, paired:true };
   }
 
   function applyCommunityManifest(provinces, manifest) {
@@ -535,7 +547,9 @@ window.FBDATA = window.FBDATA || {};
       if (!province) throw new Error('data/bookmarks.js: community county missing ' + id);
       var source = manifest[id];
       province.communities = source.map(function (entry) {
-        return { culture:entry.culture, religion:entry.religion };
+        var community = { culture:entry.culture, religion:entry.religion };
+        if (entry.paired === true) community.paired = true;
+        return community;
       });
       province.culture = province.communities[0].culture;
       province.religion = province.communities[0].religion;
@@ -543,6 +557,8 @@ window.FBDATA = window.FBDATA || {};
   }
 
   var COMMUNITIES_867 = {
+    halogaland:communityList('norse','norse_pagan',pairedCommunity('sami','norse_pagan')),
+    norrland:communityList(pairedCommunity('sami','norse_pagan'),'norse','norse_pagan'),
     iona:communityList('gaelic','catholic','norse','norse_pagan'),
     man:communityList('norse','norse_pagan','gaelic','catholic'),
     lewis:communityList('norse','norse_pagan','gaelic','catholic'),
@@ -581,9 +597,16 @@ window.FBDATA = window.FBDATA || {};
     bayonne:communityList('frankish','catholic','basque','catholic'),
     palermo:communityList('arabic','sunni','greek','orthodox'),
     messina:communityList('greek','orthodox','arabic','sunni'),
-    novgorod:communityList('slavic','slavic_pagan','norse','norse_pagan'),
-    ladoga:communityList('slavic','slavic_pagan','norse','norse_pagan'),
-    kiev:communityList('slavic','slavic_pagan','norse','norse_pagan'),
+    novgorod:communityList('slavic','slavic_pagan','norse','norse_pagan',
+      pairedCommunity('rus','slavic_pagan'),pairedCommunity('finnic','baltic_pagan')),
+    ladoga:communityList('slavic','slavic_pagan','norse','norse_pagan',
+      pairedCommunity('rus','slavic_pagan'),pairedCommunity('finnic','baltic_pagan')),
+    beloozero:communityList('slavic','slavic_pagan',
+      pairedCommunity('finnic','baltic_pagan')),
+    kiev:communityList('slavic','slavic_pagan','norse','norse_pagan',
+      pairedCommunity('rus','slavic_pagan')),
+    atil:communityList(pairedCommunity('khazar','jewish'),
+      'khazar','tengri','turkic','tengri'),
     tunis:communityList('berber','sunni','arabic','sunni'),
     kairouan:communityList('berber','sunni','arabic','sunni'),
     split:communityList('italian','catholic','slavic','catholic'),
@@ -600,10 +623,29 @@ window.FBDATA = window.FBDATA || {};
     serdica:communityList('slavic','orthodox','greek','orthodox'),
     philippopolis:communityList('slavic','orthodox','greek','orthodox'),
     caesarea:communityList('greek','orthodox','armenian','eastern'),
-    sebasteia:communityList('greek','orthodox','armenian','eastern')
+    sebasteia:communityList('greek','orthodox','armenian','eastern'),
+    alexandria:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    rosetta:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    fustat:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    fayyum:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    asyut:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    luxor:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    aswan:communityList('arabic','sunni',pairedCommunity('coptic','eastern')),
+    mosul:communityList('arabic','sunni',pairedCommunity('syriac','eastern')),
+    amida:communityList('arabic','sunni',pairedCommunity('syriac','eastern')),
+    edessa:communityList('arabic','sunni',pairedCommunity('syriac','eastern'))
   };
 
   var COMMUNITIES_1066 = {
+    halogaland:communityList('norse','catholic',pairedCommunity('sami','norse_pagan')),
+    norrland:communityList('norse','catholic',pairedCommunity('sami','norse_pagan')),
+    metz:communityList('frankish','catholic',pairedCommunity('ashkenazi','jewish')),
+    trier:communityList('frankish','catholic',pairedCommunity('ashkenazi','jewish')),
+    troyes:communityList('frankish','catholic',pairedCommunity('ashkenazi','jewish')),
+    cologne:communityList('german','catholic',pairedCommunity('ashkenazi','jewish')),
+    mainz:communityList('german','catholic',pairedCommunity('ashkenazi','jewish')),
+    worms:communityList('german','catholic',pairedCommunity('ashkenazi','jewish')),
+    regensburg:communityList('german','catholic',pairedCommunity('ashkenazi','jewish')),
     iona:communityList('gaelic','catholic','norse','catholic'),
     man:communityList('norse','catholic','gaelic','catholic'),
     lewis:communityList('norse','catholic','gaelic','catholic'),
@@ -655,6 +697,7 @@ window.FBDATA = window.FBDATA || {};
     brindisi:communityList('greek','orthodox','italian','catholic'),
     reggio:communityList('greek','orthodox','italian','catholic'),
     cosenza:communityList('greek','orthodox','italian','catholic'),
+    foggia:communityList('italian','catholic','norman','catholic'),
     tunis:communityList('berber','sunni','arabic','sunni'),
     kairouan:communityList('berber','sunni','arabic','sunni'),
     split:communityList('slavic','catholic','italian','catholic'),
@@ -689,7 +732,22 @@ window.FBDATA = window.FBDATA || {};
     caesarea:communityList('greek','orthodox','armenian','eastern'),
     sebasteia:communityList('armenian','eastern','greek','orthodox'),
     tarsos:communityList('greek','orthodox','armenian','eastern','arabic','sunni'),
-    adana:communityList('greek','orthodox','armenian','eastern','arabic','sunni')
+    adana:communityList('greek','orthodox','armenian','eastern','arabic','sunni'),
+    novgorod:communityList('rus','orthodox',pairedCommunity('finnic','baltic_pagan')),
+    ladoga:communityList('rus','orthodox',pairedCommunity('finnic','baltic_pagan')),
+    beloozero:communityList('rus','orthodox',pairedCommunity('finnic','baltic_pagan')),
+    atil:communityList('turkic','tengri','khazar','tengri',
+      pairedCommunity('khazar','jewish')),
+    alexandria:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    rosetta:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    fustat:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    fayyum:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    asyut:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    luxor:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    aswan:communityList('arabic','shia',pairedCommunity('coptic','eastern')),
+    mosul:communityList('arabic','sunni',pairedCommunity('syriac','eastern')),
+    amida:communityList('arabic','sunni',pairedCommunity('syriac','eastern')),
+    edessa:communityList('arabic','sunni',pairedCommunity('syriac','eastern'))
   };
 
   var empires1066 = copyMap(FBDATA.empires);

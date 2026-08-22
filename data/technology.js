@@ -23,12 +23,15 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techTraditions = {
     latin:{
       name:'Latin West',
-      cultures:['frankish','german','english','gaelic','brezhon','iberian','italian','basque'],
+      cultures:[
+        'frankish','german','norman','english','gaelic','brezhon',
+        'iberian','italian','lombard','occitan','basque'
+      ],
       religions:['catholic']
     },
     byzantine:{
       name:'Byzantine',
-      cultures:['greek'],
+      cultures:['greek','syriac'],
       religions:['orthodox']
     },
     islamic:{
@@ -37,12 +40,17 @@ window.FBDATA = window.FBDATA || {};
       religions:['sunni','shia']
     },
     persianate:{ name:'Persianate', cultures:['persian'], religions:[] },
-    slavic:{ name:'Slavic', cultures:['slavic'], religions:['slavic_pagan'] },
+    slavic:{ name:'Slavic', cultures:['slavic','rus'], religions:['slavic_pagan'] },
     nordic:{ name:'Nordic', cultures:['norse'], religions:['norse_pagan'] },
-    steppe:{ name:'Steppe', cultures:['magyar','turkic'], religions:['tengri'] },
-    baltic_finnic:{ name:'Baltic-Finnic', cultures:['baltic'], religions:['baltic_pagan'] },
+    steppe:{ name:'Steppe', cultures:['magyar','turkic','khazar'], religions:['tengri'] },
+    baltic_finnic:{
+      name:'Baltic-Finnic', cultures:['baltic','finnic','sami'],
+      religions:['baltic_pagan']
+    },
     caucasian:{ name:'Caucasian', cultures:['armenian','georgian'], religions:[] },
-    northeast_african:{ name:'Northeast African', cultures:['nubian'], religions:[] }
+    northeast_african:{
+      name:'Northeast African', cultures:['nubian','coptic'], religions:[]
+    }
   };
 
   /* All accumulated scalar effects are clamped by the engine. Inherited

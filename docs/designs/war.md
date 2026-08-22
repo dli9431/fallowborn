@@ -218,7 +218,7 @@ are **levy** (the dev-driven mass — untrained foot raised for the campaign),
 marked `hired: true` — never mustered from the levy). Beyond them, gated classes join
 a realm's muster automatically through `FB.unitClassUnlocked`: **crossbowmen**
 (tech `crossbows`), **pikemen** (tech `infantry_polearms`), **horse archers**
-(cultures `magyar`/`turkic`), **huscarls** (cultures `norse`/`english`), **camel
+(cultures `magyar`/`turkic`/`khazar`), **huscarls** (cultures `norse`/`english`), **camel
 riders** (cultures `arabic`/`berber`), and **cataphracts** (cultures
 `greek`/`armenian` plus tech `cataphract_armor`). An unlocked class converts its
 `share` of the mustered levy into its own companies — the headcount is unchanged,
@@ -818,7 +818,7 @@ or captor succession removes that penalty.
 
 ## Raiding expeditions
 
-Historical cultures (`norse`, `magyar`, `turkic`, `berber`, `andalusi`, `arabic`,
+Historical cultures (`norse`, `magyar`, `turkic`, `khazar`, `berber`, `andalusi`, `arabic`,
 `baltic`, `gaelic`, `brezhon`) and pagan faiths (`norse_pagan`, `tengri`, `baltic_pagan`,
 `slavic_pagan`, and all pagan traditions) possess the ability to launch raiding expeditions
 against foreign counties (`FB.canRaid`, `FB.raidTargets`, `FB.calculateRaidSpoils`, `FB.executeRaid`).

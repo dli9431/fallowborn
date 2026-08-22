@@ -280,20 +280,26 @@ window.FB = window.FB || {};
   FB.PORTRAIT_BEARD_KINDS = APPEARANCE_BEARD_KINDS.slice();
   FB.PORTRAIT_BEARD_CUTS = APPEARANCE_BEARD_CUTS.slice();
   var CULTURE_TONE = {
-    norse:.3,english:.5,german:.5,frankish:.6,slavic:.7,baltic:.65,
-    gaelic:.4,brezhon:.5,magyar:.8,iberian:1.3,basque:1.2,italian:1.2,greek:1.3,
-    armenian:1.4,georgian:1.35,turkic:1.5,andalusi:1.9,arabic:2.2,
-    berber:2.3,persian:2,nubian:3.7
+    norse:.3,english:.5,german:.5,frankish:.6,norman:.55,ashkenazi:1,
+    slavic:.7,rus:.65,baltic:.65,finnic:.45,sami:.55,
+    gaelic:.4,brezhon:.5,magyar:.8,khazar:1.3,iberian:1.3,basque:1.2,
+    occitan:1.1,italian:1.2,lombard:1.1,greek:1.3,armenian:1.4,
+    georgian:1.35,turkic:1.5,andalusi:1.9,arabic:2.2,syriac:1.8,
+    berber:2.3,persian:2,coptic:2.4,nubian:3.7
   };
   var CULTURE_FAIR = {
-    norse:.68,english:.48,german:.55,frankish:.42,slavic:.46,baltic:.5,
-    gaelic:.4,brezhon:.42,magyar:.32,iberian:.08,basque:.1,italian:.1,greek:.07,
-    armenian:.05,georgian:.06,turkic:.05,andalusi:.04,arabic:.02,
-    berber:.02,persian:.03,nubian:.01
+    norse:.68,english:.48,german:.55,frankish:.42,norman:.45,ashkenazi:.18,
+    slavic:.46,rus:.5,baltic:.5,finnic:.6,sami:.45,
+    gaelic:.4,brezhon:.42,magyar:.32,khazar:.08,iberian:.08,basque:.1,
+    occitan:.12,italian:.1,lombard:.12,greek:.07,armenian:.05,georgian:.06,
+    turkic:.05,andalusi:.04,arabic:.02,syriac:.03,berber:.02,persian:.03,
+    coptic:.02,nubian:.01
   };
   var CULTURE_RED = {
-    norse:.18,english:.1,german:.07,frankish:.07,slavic:.05,baltic:.06,
-    gaelic:.34,brezhon:.2,magyar:.05,basque:.05
+    norse:.18,english:.1,german:.07,frankish:.07,norman:.08,ashkenazi:.08,
+    slavic:.05,rus:.06,baltic:.06,finnic:.08,sami:.08,
+    gaelic:.34,brezhon:.2,magyar:.05,khazar:.03,basque:.05,occitan:.06,
+    lombard:.05,syriac:.02,coptic:.02
   };
   var TONE_RGB = [[241,205,175],[219,172,128],[184,132,92],
     [136,92,62],[94,63,47]];

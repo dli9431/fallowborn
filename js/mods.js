@@ -297,7 +297,28 @@ window.FBMODS = window.FBMODS || [];
         if (!replaced) FBDATA.scripted.push(item);
       }
     }
-    if (mod.cultures) for (const k in mod.cultures) FBDATA.cultures[k] = mod.cultures[k];
+    if (mod.cultureTraditions) {
+      mergeTable(FBDATA.cultureTraditions, mod.cultureTraditions);
+    }
+    if (mod.cultures) {
+      for (const k in mod.cultures) {
+        if (!own(mod.cultures, k)) continue;
+        const nextCulture = mod.cultures[k];
+        const previousCulture = FBDATA.cultures[k];
+        if (previousCulture && previousCulture.tradition && nextCulture &&
+            typeof nextCulture === 'object' && !Array.isArray(nextCulture) &&
+            !own(nextCulture, 'tradition')) {
+          const compatibleCulture = {};
+          for (const field in nextCulture) {
+            if (own(nextCulture, field)) compatibleCulture[field] = nextCulture[field];
+          }
+          compatibleCulture.tradition = previousCulture.tradition;
+          FBDATA.cultures[k] = compatibleCulture;
+        } else {
+          FBDATA.cultures[k] = nextCulture;
+        }
+      }
+    }
     if (mod.settlementNames) for (const k in mod.settlementNames) FBDATA.settlementNames[k] = mod.settlementNames[k];
     /* Physical settlement sites merge by site id into the shared table.
        Per-county `settlements` presentations ride inside complete bookmark or

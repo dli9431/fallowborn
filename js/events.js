@@ -2072,8 +2072,9 @@ window.FB = window.FB || {};
   /* Matchmakers draw from the county where the search is made. Authored
      community pairs come first so every represented people is heard from;
      then their distinct culture and faith dimensions recombine into plausible
-     mixed local identities. Single-community counties naturally retain their
-     one identity. */
+     mixed local identities. A paired community remains one indivisible identity
+     and does not contribute either half to recombination. Single-community
+     counties naturally retain their one identity. */
   FB.marriageProspectIdentities = function (state, pid) {
     const provinceId = pid || state && state.player && state.player.provinceId;
     const pr = FB.world && FB.world.byId && FB.world.byId[provinceId];
@@ -2083,16 +2084,17 @@ window.FB = window.FB || {};
       : (pr ? [{ culture:pr.culture, religion:pr.religion }] :
         (me ? [{ culture:me.culture, religion:me.religion }] : []));
     const out = [], cultures = [], religions = [], seen = {};
-    function add(culture, religion) {
+    function add(culture, religion, paired) {
       const key = culture + '|' + religion;
       if (!culture || !religion || seen[key]) return;
       seen[key] = 1;
       out.push({ culture:culture, religion:religion });
+      if (paired) return;
       if (cultures.indexOf(culture) < 0) cultures.push(culture);
       if (religions.indexOf(religion) < 0) religions.push(religion);
     }
     for (let i = 0; i < source.length; i++) {
-      add(source[i].culture, source[i].religion);
+      add(source[i].culture, source[i].religion, source[i].paired);
     }
     for (let ci = 0; ci < cultures.length; ci++) {
       for (let ri = 0; ri < religions.length; ri++) {

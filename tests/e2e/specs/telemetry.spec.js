@@ -171,7 +171,10 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
         game_year:867,
         entry_type:'new-campaign',
         scenario:'farmer',
-        family_preset:'standard'
+        family_preset:'standard',
+        starting_location:'london',
+        starting_culture:'english',
+        starting_religion:'catholic'
       })
     });
     expect(['name', 'dynasty', 'seed', 'province', 'save'].filter(function (key) {

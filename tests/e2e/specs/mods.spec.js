@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/cultures.js',
+  'js/model.js',
   'js/mods.js',
   'js/save.js',
   'js/ui_modals.js'
@@ -9,6 +11,48 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+
+test('runtime mods add culture traditions and retain a replaced core culture affinity',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      const germanReplacement = {
+        name:'Mod German', dyn:'of_place', male:['Otto'], female:['Oda']
+      };
+      const riverCulture = {
+        name:'Riverlander', tradition:'riverlands', dyn:'of_place',
+        male:['Aldo'], female:['Alba']
+      };
+      FB.mods.apply({
+        cultureTraditions:{
+          riverlands:{ name:'River Traditions', icon:'🌊', order:0 }
+        },
+        cultures:{ german:germanReplacement, riverlander:riverCulture }
+      });
+      const valid = FB.validateCultureData();
+      FBDATA.cultures.riverlander.tradition = 'missing_tradition';
+      const invalid = FB.validateCultureData();
+      FBDATA.cultures.riverlander.tradition = 'riverlands';
+      return {
+        coreReplacementWasCopied:FBDATA.cultures.german !== germanReplacement,
+        coreTradition:FB.cultureGroup('german'),
+        addedTradition:FB.cultureGroup('riverlander'),
+        label:FB.dataText(null, null, 'cultureTradition', 'riverlands',
+          FBDATA.cultureTraditions.riverlands, 'name', {}),
+        valid:valid,
+        invalid:invalid
+      };
+    });
+
+    expect(result.coreReplacementWasCopied).toBe(true);
+    expect(result.coreTradition).toBe('west_european');
+    expect(result.addedTradition).toBe('riverlands');
+    expect(result.label).toBe('River Traditions');
+    expect(result.valid).toEqual([]);
+    expect(result.invalid).toContain(
+      'Culture data: culture riverlander has invalid tradition missing_tradition.');
+  });
 
 test('runtime mods merge definitions and the complete technology configuration',
   async function ({ page }, testInfo) {

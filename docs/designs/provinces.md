@@ -26,17 +26,26 @@ marching into the county, and the supply drain of campaigning across it
 (`balance.terrainBattleFactors`, `terrainDefenseBonus`, `terrainMarchMult`, and
 `supplyDrainTerrain`; see [war.md](war.md)).
 
+Principal culture is bookmark data rather than a ruler proxy. The 867 county table now
+uses distinct Occitan, Lombard, Finnic, Sámi, and Khazar cores where the older generic
+labels were too broad; 1066 derivation supplies Norman Normandy and Rus realm counties.
+Definitions, personal and settlement name pools, dynasty rules, affinity traditions,
+and supporting technology memberships remain keyed by culture id, so adding a culture
+does not require another engine-side grouping switch.
+
 ## County communities
 
 A settled bookmark province has one principal culture and faith in its existing
 `culture` and `religion` fields. It may also carry an ordered `communities` array of
-`{culture, religion}` pairs. The first entry is always the principal population and
-must repeat those two province fields; later entries are other historically grounded
-local identities. `FB.provinceCommunities(province)` is the normalized read interface:
+`{culture, religion, paired?}` records. The first entry is always the principal
+population and must repeat those two province fields; later entries are other
+historically grounded local identities. `FB.provinceCommunities(province)` is the normalized read interface:
 it returns the authored order, or a one-entry principal fallback when the optional
 field is absent. Bookmark validation rejects an empty/non-array field, repeated pairs,
-unknown cultures, invalid or unassignable faiths, and a first entry that disagrees with
-the province.
+unknown cultures, invalid or unassignable faiths, a non-boolean `paired`, and a first
+entry that disagrees with the province. `paired:true` marks a culture-faith identity
+whose two components should not be split apart by systems that synthesize local
+identities; it does not change its availability as a start.
 
 New Game presents each pair as one coupled community choice. Changing counties resets
 the choice to that county's principal entry, while returning to the same county keeps
@@ -48,16 +57,18 @@ selection and the Land panel show every authored pair in order.
 
 **Seek a match** also reads this county-specific projection. Its prospect pool offers
 the authored pairs first, then may recombine the distinct local cultures and faiths to
-represent mixed households; those combinations are generated character identities, not
-new authored communities or changes to the county's principal identity. The search
-county is stamped on each persistent prospect so reopening the same pool keeps its
-geographic source.
+represent mixed households. A `paired:true` community remains an indivisible authored
+identity and contributes neither half to that recombination, preventing combinations
+such as Ashkenazi/Catholic or German/Jewish from being invented. Generated combinations
+are character identities, not new authored communities or changes to the county's
+principal identity. The search county is stamped on each persistent prospect so
+reopening the same pool keeps its geographic source.
 
 The model is deliberately static. Communities have no percentages, conversion,
 migration, unrest, revolt, or daily/seasonal demographic work. Existing county,
 realm, title, intrigue, advancement, and war mechanics continue to read only the
 principal province identity. They already provide the route by which a character from
-another local community can gain power beneath or displace a foreign ruler. The 144
+another local community can gain power beneath or displace a foreign ruler. The 182
 core bookmark-county records and their evidence are listed in
 [county-communities.md](../research/county-communities.md).
 

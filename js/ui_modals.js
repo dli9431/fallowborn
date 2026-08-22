@@ -2052,28 +2052,18 @@ window.FB = window.FB || {};
     return { id:'other', icon:'✨', name:FB.T('Other Traditions'), order:7 };
   }
 
-  const CONVERSION_CULTURE_GROUPS = {
-    frankish:'west_european', german:'west_european', english:'west_european', norse:'west_european',
-    gaelic:'celtic', brezhon:'celtic',
-    iberian:'romance', basque:'romance', italian:'romance',
-    greek:'byzantine_caucasian', armenian:'byzantine_caucasian', georgian:'byzantine_caucasian',
-    slavic:'slavic_baltic', baltic:'slavic_baltic',
-    magyar:'steppe', turkic:'steppe',
-    andalusi:'middle_eastern', arabic:'middle_eastern', berber:'middle_eastern', persian:'middle_eastern',
-    nubian:'african'
-  };
-
   function conversionCultureGroup(s, cid) {
-    const gid = CONVERSION_CULTURE_GROUPS[cid] || 'other';
-    if (gid === 'west_european') return { id:'west_european', icon:'🏰', name:FB.T('Western & Northern Europe'), order:1 };
-    if (gid === 'celtic') return { id:'celtic', icon:'☘', name:FB.T('Celtic Traditions'), order:2 };
-    if (gid === 'romance') return { id:'romance', icon:'🏛', name:FB.T('Romance & Iberian'), order:3 };
-    if (gid === 'byzantine_caucasian') return { id:'byzantine_caucasian', icon:'☦', name:FB.T('Byzantine & Caucasian'), order:4 };
-    if (gid === 'slavic_baltic') return { id:'slavic_baltic', icon:'🌲', name:FB.T('Slavic & Baltic'), order:5 };
-    if (gid === 'steppe') return { id:'steppe', icon:'🐎', name:FB.T('Steppe & Nomad'), order:6 };
-    if (gid === 'middle_eastern') return { id:'middle_eastern', icon:'🕌', name:FB.T('Middle Eastern & North African'), order:7 };
-    if (gid === 'african') return { id:'african', icon:'☀️', name:FB.T('African Traditions'), order:8 };
-    return { id:'other', icon:'🌍', name:FB.T('Other Cultures'), order:9 };
+    const gid = FB.cultureGroup ? FB.cultureGroup(cid) : 'other';
+    const traditions = FBDATA.cultureTraditions || {};
+    const def = traditions[gid] || traditions.other || {
+      name:'Other Cultures', icon:'🌍', order:999
+    };
+    return {
+      id:traditions[gid] ? gid : 'other',
+      icon:def.icon || '',
+      name:dt(s, 'cultureTradition', traditions[gid] ? gid : 'other', def, 'name'),
+      order:isFinite(def.order) ? def.order : 999
+    };
   }
 
   function conversionFaithTooltipHtml(s, fid) {

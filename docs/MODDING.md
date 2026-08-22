@@ -141,6 +141,7 @@ A JSON mod is one object with any of these keys:
   "straits":   [ ["provA","provB"] ],
   "crossingClasses": { "provA|provB": "coastal" },
   "scripted":  [ ... ],
+  "cultureTraditions": { "id": { "name": "...", "icon": "...", "order": 1 } },
   "cultures":  { "id": { ... } },
   "religions": { "id": { ... } },
   "traits":    { "id": { ... } },
@@ -344,12 +345,15 @@ province objects; mods merge full objects as before:
   initialize fresh games only; an existing save's `state.dev` values remain
   authoritative.
 - `wasteland: true` — impassable scenery, no realm/culture needed.
-- `communities` — optional ordered culture-and-faith pairs for a settled county, e.g.
+- `communities` — optional ordered culture-and-faith records for a settled county, e.g.
   `"communities": [{ "culture": "gaelic", "religion": "catholic" },
   { "culture": "norse", "religion": "norse_pagan" }]`. The first record is
   the principal population and must exactly repeat the province's `culture` and
   `religion`; existing county mechanics continue to use those principal fields.
-  Later records are static identities available during character creation. Lists
+  Later records are static identities available during character creation. An optional
+  boolean `paired:true` keeps that record's culture and faith indivisible when local
+  matchmaking synthesizes mixed identities; use it for an established identity such as
+  Ashkenazi/Jewish rather than for ordinary coexisting populations. Lists
   may not be empty or contain a repeated pair, and every culture and assignable
   faith must exist. Counties without the field normalize to their single principal
   pair through `FB.provinceCommunities(province)`.
@@ -2298,8 +2302,8 @@ and keeps its current settlement names, kinds, and indices.
 ordered `communities` list shown in *Adding a province*. It replaces that county's
 community list for the bookmark; there is no cross-bookmark merge by entry. Activation
 rejects empty or non-array values, duplicate culture/faith pairs, unknown cultures,
-invalid or unassignable faiths, lists on wasteland, and principal entries that disagree
-with the province's `culture`/`religion`. The list is character-start identity only:
+invalid or unassignable faiths, non-boolean `paired` values, lists on wasteland, and
+principal entries that disagree with the province's `culture`/`religion`. The list is character-start identity only:
 mods should not infer population shares, conversion, migration, or demographic ticks
 from its order.
 
@@ -2678,7 +2682,17 @@ re-added.
 
 ## Cultures, religions, traits, titles, balance
 
-See `data/cultures.js` and `data/traits.js` for the exact culture and trait shapes.
+Culture definitions are complete records replaced by id. Their core shape is
+`{name, tradition?, dyn, male, female, family?}`: `dyn` selects the dynasty naming
+pattern, `male` and `female` are personal-name lists, and `family` supplies surnames for
+the `plain` pattern. `tradition` refers to a `cultureTraditions` record shaped as
+`{name, icon?, order?}`. The tradition controls cultural affinity, conversion distance,
+and conversion-picker grouping. Its `name` is localized structured data; `icon` and
+finite numeric `order` are display metadata. New cultures that omit `tradition` fall
+back to `other`; replacement definitions that omit it retain an existing culture's
+membership for legacy-mod compatibility. Unknown declared traditions fail bookmark
+activation. See `data/cultures.js` and `data/traits.js` for the full culture and trait
+shapes.
 
 A trait definition may use this extended shape:
 

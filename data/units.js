@@ -91,7 +91,7 @@ FBDATA.unitClasses = {
   horsearcher: { name:'Horse archers', icon:'🏇', quality:1.9,
     attack:2.0, defense:1.8, upkeepPer100:2.2,
     casualtyOrder:6, share:0.25, professional:true, replaceDays:150,
-    cultures:['magyar','turkic'],
+    cultures:['magyar','turkic','khazar'],
     counters:{ levy:1.2, arch:1.15 },
     terrainFactors:{ farmland:1.1, forest:0.7, hills:0.9, mountains:0.7,
       desert:1.15, steppe:1.25, marsh:0.7, tundra:1 },

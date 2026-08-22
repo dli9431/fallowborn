@@ -21,6 +21,18 @@ class StaticHtmlExtractionTests(unittest.TestCase):
 
 
 class StructuredDataExtractionTests(unittest.TestCase):
+    def test_culture_tradition_names_use_their_own_namespace(self):
+        inventory = i18n_catalog.Inventory()
+
+        i18n_catalog.extract_structured(inventory)
+
+        self.assertEqual(
+            inventory.entries[
+                'cultureTradition.west_european.name.default'
+            ]['text'],
+            'Western & Northern Europe',
+        )
+
     def test_privilege_display_fields_use_the_privilege_namespace(self):
         inventory = i18n_catalog.Inventory()
 

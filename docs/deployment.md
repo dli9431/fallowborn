@@ -57,7 +57,7 @@ player action or campaign transition directly:
 | Event | Meaning and cadence |
 | --- | --- |
 | `new-game-{starting-date,seed-dialog,beginning,birthplace,character}-viewed` | A New Game attempt reached that setup screen. Each screen emits at most once per attempt, so Back navigation does not inflate the funnel; the seed dialog is an optional branch. |
-| `campaign-started` | A new campaign was created. |
+| `campaign-started` | A new campaign was created. Carries the committed starting county, culture, and religion as stable IDs for comparing start popularity. |
 | `campaign-resumed` | A saved campaign was loaded; emitted at most once per page visit. |
 | `observer-mode-started` | A new observer-mode world was started. |
 | `active-play-reached-{1,5,15,30}-minute(s)` | The current gameplay session reached that much visible, active play. |
@@ -70,10 +70,13 @@ player action or campaign transition directly:
 
 Every event carries `telemetry_schema`, `game_version`, and `locale`. When available, the shared
 campaign properties are `start_bookmark`, `player_tier`, and `dynasty_generation`; lifecycle
-events add only low-cardinality context such as `entry_type`, `scenario`, `family_preset`,
-`active_seconds`, `game_year`, or checkpoint reason. Player and dynasty names, world seeds, province choices,
-rendered death text, and save contents must never be sent. Do Not Track remains respected by the
-Umami loader. Older event names remain only as historical schema-1 rows in Umami.
+events add only bounded context such as `entry_type`, `scenario`, `family_preset`,
+`starting_location`, `starting_culture`, `starting_religion`, `active_seconds`, `game_year`, or
+checkpoint reason. The three `starting_*` properties appear only on `campaign-started`, use
+stable internal IDs, and describe the character's committed start. Player and dynasty names,
+world seeds, later locations, rendered death text, and save contents must never be sent. Do Not
+Track remains respected by the Umami loader. Older event names remain only as historical schema-1
+rows in Umami.
 Once campaign state exists, every event carrying `start_bookmark` also carries the current
 `game_year`. The pre-campaign New Game screen events are the deliberate exception: they may name
 the selected bookmark before any campaign date exists.
