@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.147.0';
+  FB.VERSION = '1.147.1';
   FB.CHANGELOG = [
+    { v: '1.147.1', date: '2026-08-22', changes: [
+      'Plot-only runtime mods now validate their intrigue method references correctly.'
+    ] },
     { v: '1.147.0', date: '2026-08-22', changes: [
       'Starting scenarios and family presets are now data-driven, letting mods add validated beginnings, resources, equipment, careers, and household shapes.'
     ] },

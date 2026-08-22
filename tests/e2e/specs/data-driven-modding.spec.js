@@ -242,6 +242,8 @@ test('milestone-zero mod validation rejects unknown data before mutation',
     expect(result.errors.every(function (entry) {
       return !!entry && entry.matched;
     })).toBe(true);
+    expect(result.errors[5].message).toContain(
+      'unknown intrigue profile missing_profile');
     expect(result.unchanged).toBe(true);
   });
 

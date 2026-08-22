@@ -82,8 +82,8 @@ test('a player can export a life and import it from the title screen',
 
     await openMenu(page);
     await page.getByRole('button', { name: /Save game/ }).click();
-    await page.getByRole('button', { name: /Export this life/ }).click();
-    await expect(page.getByRole('heading', { name: 'Export Save', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: /Download save file/ }).click();
+    await expect(page.getByRole('heading', { name: 'Save File', exact: true })).toBeVisible();
     const exported = await page.locator('#sl-xtext').inputValue();
     expect(exported).toMatch(/^FBS2\./);
 
@@ -96,10 +96,10 @@ test('a player can export a life and import it from the title screen',
 
     await page.getByRole('button', { name: 'Load Game', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Load Game', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: /Import a life/ }).click();
-    await expect(page.getByRole('heading', { name: 'Import Save', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: /Load save file/ }).click();
+    await expect(page.getByRole('heading', { name: 'Load Save File', exact: true })).toBeVisible();
     await page.locator('#sl-itext').fill(exported);
-    await page.getByRole('button', { name: /Load this life/ }).click();
+    await page.getByRole('button', { name: /Load pasted save/ }).click();
 
     await expect.poll(function () {
       return lifeSnapshot(page);

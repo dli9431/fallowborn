@@ -520,7 +520,8 @@ window.FBMODS = window.FBMODS || [];
     const out = {};
     for (const key in base) if (own(base, key)) out[key] = base[key];
     out.methodProfiles = combinedTable(base.methodProfiles,
-      additions && additions.methodProfiles, 'intrigue.methodProfiles');
+      additions ? additions.methodProfiles : undefined,
+      'intrigue.methodProfiles');
     if (additions) {
       for (const key in additions) {
         if (own(additions, key) && key !== 'methodProfiles') {
