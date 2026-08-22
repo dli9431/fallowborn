@@ -227,13 +227,16 @@ from the displayed `FB.VERSION` (see [../VERSIONS.md](../VERSIONS.md)). The addi
 discipline throughout this doc is what lets new state land without touching it. A boot-time probe (`S.available`) detects browsers
 that refuse localStorage outright (iOS in-app webviews, blocked cookies) so the UI can
 warn instead of failing silently; ephemeral storage (private mode, third-party-iframe
-eviction) passes the probe — for those, `S.exportState` / `S.parseExport` carry a life
-as compressed base64 text (`FBS2.` prefix, same v3 payload) that wakes through the same
-`G.loadData` path as a slot load and is planted back into the autosave slot; the legacy
-uncompressed `FBS1.` form remains importable forever. The ☰ menu's
+eviction) passes the probe. For those, `S.exportState` / `S.parseExport` carry a life
+as compressed base64 text (`FBS2.` prefix, same v3 payload). Save Game downloads that
+payload as a `.txt` file, and Load Game reads it with `FileReader` before waking it through
+the same `G.loadData` path as a slot load and planting it back into the autosave slot.
+The visible text and paste path remain as fallbacks, and the legacy uncompressed `FBS1.`
+form remains importable forever. The ☰ menu's
 🐞 Report-a-bug dialog (`UI.showReport`) reuses that export: the copied report bundles the
 player's description (bug or suggestion) with `FB.VERSION`, `state.seed`, the mod signature,
-and the current life as `FBS2.` text, so a reported moment can be reopened exactly via Import.
+and the current life as `FBS2.` text, so a reported moment can be reopened exactly through
+Load save file's paste fallback.
 
 Management protections are additive player state at save format 3:
 `player.protections[scope]` is an array of stable string ids. The built-in scopes are
@@ -275,8 +278,8 @@ a later task; a newer autosave supersedes a still-pending one, and `S.flushPendi
 never run another timer. Manual slot saves stay fully synchronous. If a save still
 hits the quota, `S.toSlot` recognizes
 the quota-shaped error
-and points the player at 📤 Export, which preserves the life as text when storage no
-longer can.
+and points the player at Download save file, which preserves the life as a `.txt` file
+when storage no longer can.
 
 Political-bloc state is additive and keeps save format 3.
 `state.politics = {polityId,allegiances,pendingMotion}` is created

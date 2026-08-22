@@ -606,7 +606,7 @@ window.FB = window.FB || {};
   S.warnIfBlocked = function () {
     if (S.available || S._warned || !FB.ui) return;
     S._warned = true;
-    FB.ui.toast('⚠ This browser is blocking save storage — lives won’t persist here. Menu → 💾 Save game → 📤 Export keeps a life as text.');
+    FB.ui.toast('⚠ This browser is blocking save storage. Lives won’t persist here, so use Menu → 💾 Save game → 💾 Download save file.');
   };
 
   S.serialize = function () {
@@ -641,9 +641,9 @@ window.FB = window.FB || {};
     }
   };
 
-  /* the quota case deserves its own message: the life has outgrown the
+  /* The quota case deserves its own message: the life has outgrown the
      browser's storage (legacy code 22, Firefox NS_ERROR_DOM_QUOTA_REACHED
-     1014), and Export is the one path that still preserves it. The name test
+     1014), and a downloaded save file still preserves it. The name test
      is a regex on purpose: a bare 'QuotaExceededError' literal would be
      extracted into the translation catalogs as if it were display text. */
   function isQuotaError(e) {
@@ -653,9 +653,9 @@ window.FB = window.FB || {};
 
   function reportSaveError(e) {
     if (!FB.ui) return;
-    if (isQuotaError(e)) FB.ui.toast('⚠ This life’s records have outgrown the browser’s save storage — 📤 Export (Menu → 💾 Save game) still keeps the life as text.');
+    if (isQuotaError(e)) FB.ui.toast('⚠ This life’s records have outgrown the browser’s save storage. Use 💾 Download save file in Menu → 💾 Save game.');
     else if (S.available) FB.ui.toast('Save failed: {message}', { message: e.message });
-    else FB.ui.toast('⚠ This browser is blocking save storage — use 📤 Export (Menu → 💾 Save game) to keep your life as text.');
+    else FB.ui.toast('⚠ This browser is blocking save storage. Use 💾 Download save file in Menu → 💾 Save game.');
   }
 
   S.toSlot = function (slot) {
@@ -712,11 +712,11 @@ window.FB = window.FB || {};
     setTimeout(flushAutosave, 0);
   };
 
-  /* export/import — a life as portable text. localStorage is a hostage on
+  /* Export/import - a life as portable text. localStorage is a hostage on
      some mobile browsers (evicted in third-party iframes and in-app webviews,
-     dropped in private mode); a copied string outlives all of that and moves
-     a life between devices. FBS2 is compressed base64 (about a quarter of
-     the old text, which matters for mobile copy-paste); FBS1 is the legacy
+     dropped in private mode); a downloaded text file outlives all of that and
+     moves a life between devices without a long copy-paste. FBS2 is compressed
+     base64 (about a quarter of the old text); FBS1 is the legacy
      uncompressed UTF-8/base64 wrap and remains importable forever. The tag
      marks the format and catches stray pastes. */
   const XPRE = 'FBS1.';

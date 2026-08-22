@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.145.1';
+  FB.VERSION = '1.145.2';
   FB.CHANGELOG = [
+    { v: '1.145.2', date: '2026-08-22', changes: [
+      'Save Game now downloads a text file, and Load Game accepts that file while keeping pasted saves compatible.'
+    ] },
     { v: '1.145.1', date: '2026-08-22', changes: [
       'The title appears sooner, campaign creation gives immediate feedback, and map travel interactions stay responsive.'
     ] },
@@ -4552,7 +4555,7 @@ window.FB = window.FB || {};
     G.loadData(data);
   };
 
-  /* shared wake-up for a save read from a slot or pasted as export text;
+  /* shared wake-up for a save read from a slot, file, or pasted export text;
      false when the life belongs to another mod world */
   G.loadData = function (data, afterLoad) {
     // a life cannot wake up in the wrong world: the map ids would not fit

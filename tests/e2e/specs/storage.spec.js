@@ -370,6 +370,46 @@ test('legacy plain slots and FBS1 exports still load; fresh exports are FBS2',
     });
   });
 
+test('save and load dialogs exchange a life through a text file',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The portable file contract belongs to the served origin.');
+
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    await page.evaluate(function () { FB.ui.showExport(); });
+    const exported = await page.locator('#sl-xtext').inputValue();
+    const originalGold = await page.evaluate(function () {
+      return FB.state.player.gold;
+    });
+    expect(exported.slice(0, 5)).toBe('FBS2.');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.locator('#sl-xdownload').click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe('fallowborn-save.txt');
+    const stream = await download.createReadStream();
+    const chunks = [];
+    for await (const chunk of stream) chunks.push(chunk);
+    expect(Buffer.concat(chunks).toString('utf8')).toBe(exported);
+
+    await page.evaluate(function () {
+      FB.state.player.gold += 777;
+      FB.ui.showImport();
+    });
+    await page.locator('#sl-ifile').setInputFiles({
+      name:'fallowborn-save.txt',
+      mimeType:'text/plain',
+      buffer:Buffer.from(exported, 'utf8')
+    });
+    await page.locator('#sl-ifileload').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect.poll(function () {
+      return page.evaluate(function () { return FB.state.player.gold; });
+    }).toBe(originalGold);
+  });
+
 test('save-format-3 restore lazily repairs malformed intrigue state and conduct',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);

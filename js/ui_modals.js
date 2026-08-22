@@ -21229,15 +21229,15 @@ window.FB = window.FB || {};
         esc(FB.T(saving ? '💾 Save to slot {slot}' : '📂 Load slot {slot}', { slot: i })) +
         '<span class="adesc">' + esc(description) + '</span></button>';
     }
-    // a life as text outlives a browser that forgets its storage
+    // a downloaded life outlives a browser that forgets its storage
     h += saving ?
-      '<button class="actionbtn" id="sl-export">📤 Export this life' +
-      '<span class="adesc">copy it as text — safe if this browser wipes its saves, or to move devices</span></button>' :
-      '<button class="actionbtn" id="sl-import">📥 Import a life' +
-      '<span class="adesc">paste back an exported save text</span></button>';
+      '<button class="actionbtn" id="sl-export">💾 Download save file' +
+      '<span class="adesc">keep a .txt backup if this browser wipes its saves, or move it to another device</span></button>' :
+      '<button class="actionbtn" id="sl-import">📂 Load save file' +
+      '<span class="adesc">choose an exported .txt file, or paste older save text</span></button>';
     h += '</div>';
     if (!FB.save.available) {
-      h += '<div class="hint" style="text-align:center;margin:8px auto 0">⚠ This browser is blocking save storage — slots may vanish. Export keeps a life as text.</div>';
+      h += '<div class="hint" style="text-align:center;margin:8px auto 0">⚠ This browser is blocking save storage. Slots may vanish, so download a save file.</div>';
     }
     h += '<button class="btn" id="gm-back">Back</button>';
     openModal(saving ? 'Save Game' : 'Load Game', h, { historyView:true });
@@ -21259,17 +21259,44 @@ window.FB = window.FB || {};
     });
   };
 
-  /* a life as copyable text — the escape hatch for browsers that wipe
-     localStorage (iPhone in-app webviews, iframe-blocked storage) and the
-     way to move a life between devices */
+  /* A .txt download is the primary escape hatch for browsers that wipe
+     localStorage (iPhone in-app webviews, iframe-blocked storage). The raw
+     text remains visible as a fallback and for old copy-paste workflows. */
   UI.showExport = function () {
-    openModal('Export Save',
-      '<div class="gm-body-text"><p>This text <b>is</b> your current life. Copy it somewhere safe — a note, an email to yourself — then paste it back with 📥 Import on any device or browser. It is long; that is normal.</p></div>' +
+    openModal('Save File',
+      '<div class="gm-body-text"><p>Download your current life as a text file, then keep it somewhere safe. Load that file on any device or browser to continue.</p></div>' +
+      '<div class="gm-list">' +
+      '<button class="actionbtn" id="sl-xdownload">💾 Download .txt save file' +
+      '<span class="adesc">recommended for phones and long-lived campaigns</span></button></div>' +
+      '<div class="gm-body-text"><p>Or copy the save text:</p></div>' +
       '<textarea id="sl-xtext" class="savetext" readonly rows="6"></textarea>' +
-      '<div class="gm-list"><button class="actionbtn" id="sl-xcopy">📋 Copy to clipboard</button></div>' +
+      '<div class="gm-list">' +
+      '<button class="actionbtn" id="sl-xcopy">📋 Copy save text' +
+      '<span class="adesc">fallback for devices that cannot download files</span></button></div>' +
       '<button class="btn" id="gm-back">Back</button>', { historyView:true });
     const ta = $('sl-xtext');
     ta.value = FB.save.exportState();
+    $('sl-xdownload').addEventListener('click', function () {
+      if (!window.Blob || !window.URL || !URL.createObjectURL) {
+        UI.toast('This browser cannot download the save file. Copy the save text instead.');
+        return;
+      }
+      try {
+        const url = URL.createObjectURL(new Blob([ta.value], {
+          type:'text/plain;charset=utf-8'
+        }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'fallowborn-save.txt';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+        UI.toast('💾 Save file downloaded.');
+      } catch (e) {
+        UI.toast('This browser could not download the save file. Copy the save text instead.');
+      }
+    });
     $('sl-xcopy').addEventListener('click', function () {
       ta.select();
       ta.setSelectionRange(0, 9999999); // iOS ignores select() without this
@@ -21285,20 +21312,40 @@ window.FB = window.FB || {};
     });
   };
 
+  function loadImportedLife(text, invalidMessage) {
+    const data = FB.save.parseExport(text);
+    if (!data) { UI.toast(invalidMessage); return; }
+    if (FB.game.loadData(data, function () {
+      FB.save.autosave(); // plant the imported life after its world has activated
+    })) {
+      UI.closeModal();
+    }
+  }
+
   UI.showImport = function () {
-    openModal('Import Save',
-      '<div class="gm-body-text"><p>Paste an exported save text below, then load it. The life wakes where it left off — and lands in the autosave slot too.</p></div>' +
+    openModal('Load Save File',
+      '<div class="gm-body-text"><p>Choose an exported .txt save file. The life wakes where it left off and lands in the autosave slot too.</p></div>' +
+      '<p style="margin:8px 0"><input type="file" id="sl-ifile" accept=".txt,text/plain" aria-label="Fallowborn save file"></p>' +
+      '<div class="gm-list"><button class="actionbtn" id="sl-ifileload">📂 Load selected file</button></div>' +
+      '<div class="gm-body-text"><p>Or paste exported save text:</p></div>' +
       '<textarea id="sl-itext" class="savetext" rows="6" placeholder="FBS2.…"></textarea>' +
-      '<div class="gm-list"><button class="actionbtn" id="sl-iload">📥 Load this life</button></div>' +
+      '<div class="gm-list"><button class="actionbtn" id="sl-iload">📥 Load pasted save</button></div>' +
       '<button class="btn" id="gm-back">Back</button>', { historyView:true });
+    $('sl-ifileload').addEventListener('click', function () {
+      const file = $('sl-ifile').files[0];
+      if (!file) { UI.toast('Choose a Fallowborn save file first.'); return; }
+      const reader = new FileReader();
+      reader.onload = function () {
+        loadImportedLife(reader.result, 'That file is not a Fallowborn save.');
+      };
+      reader.onerror = function () {
+        UI.toast('That save file could not be read.');
+      };
+      reader.readAsText(file);
+    });
     $('sl-iload').addEventListener('click', function () {
-      const data = FB.save.parseExport($('sl-itext').value);
-      if (!data) { UI.toast('That text is not a Fallowborn save.'); return; }
-      if (FB.game.loadData(data, function () {
-        FB.save.autosave(); // plant the imported life after its world has activated
-      })) {
-        UI.closeModal();
-      }
+      loadImportedLife($('sl-itext').value,
+        'That text is not a Fallowborn save.');
     });
     $('gm-back').addEventListener('click', function () {
       modalHistoryBack(function () { UI.showSaveLoad(false); });
@@ -21307,9 +21354,10 @@ window.FB = window.FB || {};
 
   /* a bug or idea as copyable text — the player’s words bundled with everything
      needed to reproduce it: game version, start seed, mod set, and the current
-     life as save text (the same FBS2. blob Import wakes). There is no server to
-     send it to; the player pastes it on Discord, in an email, or as a GitHub
-     issue. A watcher has no life to attach, so observe mode skips the save. */
+     life as save text (the same FBS2. payload Load Save File wakes). There is
+     no server to send it to; the player pastes it on Discord, in an email, or
+     as a GitHub issue. A watcher has no life to attach, so observe mode skips
+     the save. */
   UI.showReport = function () {
     const withLife = FB.state && !FB.game.observe;
     const h = '<div class="gm-body-text"><p>' +
@@ -21346,7 +21394,7 @@ window.FB = window.FB || {};
       if (FB.state && FB.state.seed) report += 'Start seed: ' + FB.state.seed + '\n';
       report += 'Mods: ' + (FB.mods.sig() || 'none (vanilla)') + '\n';
       if (withLife) {
-        report += 'Save (Menu → Load game → 📥 Import wakes this exact moment):\n' +
+        report += 'Save (Menu → Load game → 📂 Load save file wakes this exact moment):\n' +
           FB.save.exportState() + '\n';
       }
       const done = function () { UI.toast('📋 Report copied — paste it on Discord, in an email, or a GitHub issue.'); };
@@ -22032,7 +22080,7 @@ window.FB = window.FB || {};
       '<h4>Keyboard (desktop)</h4>' +
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
-      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu, beside 📤 Export / 📥 Import — a life kept as text survives browsers that wipe their storage, and travels to other devices.</p>' +
+      '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback.</p>' +
       '</div><button class="btn primary" id="gm-ok">Close</button>',
       { historyView:true });
     $('gm-ok').addEventListener('click', function () {
