@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.149.1';
+  FB.VERSION = '1.150.0';
   FB.CHANGELOG = [
+    { v: '1.150.0', date: '2026-08-22', changes: [
+      'Runtime mods can now customize existing focuses and deeds while their protected behavior and save identities remain intact.'
+    ] },
     { v: '1.149.1', date: '2026-08-22', changes: [
       'Focuses and deeds now use validated data catalogues while keeping their existing behavior and save identities.'
     ] },

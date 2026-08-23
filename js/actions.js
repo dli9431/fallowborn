@@ -2430,6 +2430,14 @@ window.FB = window.FB || {};
   const DEED_BASELINE_IDS = DEED_HANDLERS.map(function (handler) {
     return handler.id;
   });
+  const FOCUS_CORE_LABELS = {};
+  const DEED_CORE_LABELS = {};
+  for (const definition of FBDATA.focuses) {
+    FOCUS_CORE_LABELS[definition.id] = definition.label;
+  }
+  for (const definition of FBDATA.deeds) {
+    DEED_CORE_LABELS[definition.id] = definition.label;
+  }
   let focusById = {};
   let deedById = {};
 
@@ -2438,16 +2446,135 @@ window.FB = window.FB || {};
     return Array.isArray(value) ? value : [value];
   }
 
-  function validateActionRecords(records, handlers, baselineIds, kind) {
+  function actionOwn(value, key) {
+    return Object.prototype.hasOwnProperty.call(value, key);
+  }
+
+  function validateActionIdList(value, path, known, errors, flags) {
+    if (!Array.isArray(value) || !value.length || value.length > 64) {
+      errors.push(path + ' must be an array of 1 to 64 ids.');
+      return;
+    }
+    const seen = {};
+    for (let i = 0; i < value.length; i++) {
+      const id = value[i];
+      if (typeof id !== 'string' || !id ||
+          (flags && !/^[a-z][a-z0-9_]*$/.test(id))) {
+        errors.push(path + '[' + i + '] has an invalid id.');
+      } else if (actionOwn(seen, id)) {
+        errors.push(path + ' must not repeat ' + id + '.');
+      } else if (known && !actionOwn(known, id)) {
+        errors.push(path + ' references unknown id ' + id + '.');
+      }
+      seen[id] = 1;
+    }
+  }
+
+  function validateActionEligibility(value, path, references, errors) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      errors.push(path + ' must be an object.');
+      return;
+    }
+    const allowed = {
+      reason:1, ageMin:1, ageMax:1, tierMin:1, tierMax:1, sex:1,
+      professions:1, traitsAll:1, traitsAny:1, traitsNone:1,
+      faiths:1, cultures:1, flagsAll:1, flagsAny:1, flagsNone:1,
+      atWar:1, independent:1, traveling:1
+    };
+    let restrictions = 0;
+    for (const key in value) {
+      if (!actionOwn(value, key)) continue;
+      if (!actionOwn(allowed, key)) errors.push(path + '.' + key + ' is not recognized.');
+      else if (key !== 'reason') restrictions++;
+    }
+    if (typeof value.reason !== 'string' || !value.reason.trim()) {
+      errors.push(path + '.reason must be a non-empty string.');
+    }
+    if (!restrictions) errors.push(path + ' must declare at least one restriction.');
+    for (const key of ['ageMin','ageMax']) {
+      if (value[key] !== undefined &&
+          (typeof value[key] !== 'number' || Math.floor(value[key]) !== value[key] ||
+            value[key] < 0 || value[key] > 120)) {
+        errors.push(path + '.' + key + ' must be an integer from 0 to 120.');
+      }
+    }
+    for (const key of ['tierMin','tierMax']) {
+      if (value[key] !== undefined &&
+          (typeof value[key] !== 'number' || Math.floor(value[key]) !== value[key] ||
+            value[key] < 0 || value[key] > 7)) {
+        errors.push(path + '.' + key + ' must be an integer from 0 to 7.');
+      }
+    }
+    if (typeof value.ageMin === 'number' && typeof value.ageMax === 'number' &&
+        value.ageMin > value.ageMax) {
+      errors.push(path + ' ageMin must not exceed ageMax.');
+    }
+    if (typeof value.tierMin === 'number' && typeof value.tierMax === 'number' &&
+        value.tierMin > value.tierMax) {
+      errors.push(path + ' tierMin must not exceed tierMax.');
+    }
+    if (value.sex !== undefined && value.sex !== 'm' && value.sex !== 'f') {
+      errors.push(path + '.sex must be m or f.');
+    }
+    for (const key of ['atWar','independent','traveling']) {
+      if (value[key] !== undefined && typeof value[key] !== 'boolean') {
+        errors.push(path + '.' + key + ' must be boolean.');
+      }
+    }
+    const lists = {
+      professions:references.careers,
+      traitsAll:references.traits,
+      traitsAny:references.traits,
+      traitsNone:references.traits,
+      faiths:references.religions,
+      cultures:references.cultures
+    };
+    for (const key in lists) {
+      if (value[key] !== undefined) {
+        validateActionIdList(value[key], path + '.' + key,
+          lists[key], errors, false);
+      }
+    }
+    for (const key of ['flagsAll','flagsAny','flagsNone']) {
+      if (value[key] !== undefined) {
+        validateActionIdList(value[key], path + '.' + key,
+          null, errors, true);
+      }
+    }
+  }
+
+  function validateActionTechRequirements(value, path, known, errors) {
+    if (value === undefined) return;
+    const ids = actionRequirementIds(value);
+    if ((typeof value !== 'string' && !Array.isArray(value)) || ids.length > 64) {
+      errors.push(path + ' must be one technology id or an array of up to 64 ids.');
+      return;
+    }
+    const seen = {};
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      if (typeof id !== 'string' || !id) {
+        errors.push(path + '[' + i + '] has an invalid technology id.');
+      } else if (actionOwn(seen, id)) {
+        errors.push(path + ' must not repeat ' + id + '.');
+      } else if (!known || !actionOwn(known, id)) {
+        errors.push(path + ' references unknown technology ' + id + '.');
+      }
+      seen[id] = 1;
+    }
+  }
+
+  function validateActionRecords(records, handlers, baselineIds, kind, references) {
     const errors = [];
     const seen = {};
+    const seenOrders = {};
     const allowedGroups = { work:1, life:1, faith:1, realm:1, war:1 };
     const allowedFlows = { immediate:1, no_day:1, choices:1 };
     const allowedFields = kind === 'focus'
       ? { id:1, label:1, desc:1, order:1, vocational:1,
-          shortcutFamily:1, handler:1 }
+          shortcutFamily:1, eligibility:1, handler:1 }
       : { id:1, label:1, desc:1, order:1, group:1, flow:1,
-          cooldownDays:1, requiresTech:1, handler:1 };
+          cooldownDays:1, requiresTech:1, eligibility:1, handler:1 };
     if (!Array.isArray(records)) return [kind + ' catalogue must be an array.'];
     for (let i = 0; i < records.length; i++) {
       const def = records[i];
@@ -2457,28 +2584,33 @@ window.FB = window.FB || {};
         continue;
       }
       for (const key in def) {
-        if (Object.prototype.hasOwnProperty.call(def, key) && !allowedFields[key]) {
+        if (Object.prototype.hasOwnProperty.call(def, key) &&
+            !actionOwn(allowedFields, key)) {
           errors.push(path + '.' + key + ' is not recognized.');
         }
       }
       if (typeof def.id !== 'string' ||
-          !/^[a-z][a-z0-9_]*$/.test(def.id) || seen[def.id]) {
+          !/^[a-z][a-z0-9_]*$/.test(def.id) || actionOwn(seen, def.id)) {
         errors.push(path + ' must have one unique lowercase id.');
         continue;
       }
       seen[def.id] = 1;
-      if (baselineIds[i] === undefined) {
+      if (baselineIds.indexOf(def.id) < 0) {
         errors.push(kind + ' catalogue cannot add id ' + def.id + '.');
-      } else if (def.id !== baselineIds[i]) {
-        errors.push(kind + ' catalogue must retain baseline id ' +
-          baselineIds[i] + ' at index ' + i + '.');
       }
-      if (def.order !== i) errors.push(kind + '.' + def.id + ' order must remain ' + i + '.');
-      if (typeof def.label !== 'string' || !def.label) {
+      if (typeof def.order !== 'number' || Math.floor(def.order) !== def.order ||
+          def.order < 0 || def.order >= baselineIds.length) {
+        errors.push(kind + '.' + def.id + ' order must be an integer from 0 to ' +
+          (baselineIds.length - 1) + '.');
+      } else if (actionOwn(seenOrders, def.order)) {
+        errors.push(kind + ' catalogue must not repeat order ' + def.order + '.');
+      }
+      seenOrders[def.order] = 1;
+      if (typeof def.label !== 'string' || !def.label.trim()) {
         errors.push(kind + '.' + def.id + ' must have a label.');
       }
       if (def.desc !== undefined &&
-          (typeof def.desc !== 'string' || !def.desc)) {
+          (typeof def.desc !== 'string' || !def.desc.trim())) {
         errors.push(kind + '.' + def.id + ' description must be a non-empty string.');
       }
       if (def.handler !== def.id || !handlers[def.handler]) {
@@ -2497,7 +2629,7 @@ window.FB = window.FB || {};
               (typeof vocation !== 'string' || !vocation)) {
             errors.push(kind + '.' + def.id + ' has an invalid vocation.');
           } else if (vocation !== undefined &&
-              (!FBDATA.careers || !FBDATA.careers[vocation])) {
+              (!references.careers || !actionOwn(references.careers, vocation))) {
             errors.push(kind + '.' + def.id +
               ' references unknown vocation ' + vocation + '.');
           }
@@ -2510,10 +2642,10 @@ window.FB = window.FB || {};
         if (typeof handler.show !== 'function' || typeof handler.run !== 'function') {
           errors.push(kind + '.' + def.id + ' handler is incomplete.');
         }
-        if (!allowedGroups[def.group]) {
+        if (!actionOwn(allowedGroups, def.group)) {
           errors.push(kind + '.' + def.id + ' has an invalid group.');
         }
-        if (!allowedFlows[def.flow]) {
+        if (!actionOwn(allowedFlows, def.flow)) {
           errors.push(kind + '.' + def.id + ' has an invalid flow.');
         }
         const handlerFlow = handler.opensChoices ? 'choices'
@@ -2523,80 +2655,182 @@ window.FB = window.FB || {};
         }
         if (def.cooldownDays !== undefined &&
             (typeof def.cooldownDays !== 'number' ||
-              !isFinite(def.cooldownDays) || def.cooldownDays < 0)) {
-          errors.push(kind + '.' + def.id + ' has an invalid cooldown.');
+              Math.floor(def.cooldownDays) !== def.cooldownDays ||
+              def.cooldownDays < 0 || def.cooldownDays > 36000)) {
+          errors.push(kind + '.' + def.id +
+            ' cooldownDays must be an integer from 0 to 36000.');
         }
-        for (const techId of actionRequirementIds(def.requiresTech)) {
-          if (typeof techId !== 'string' || !FBDATA.tech || !FBDATA.tech[techId]) {
-            errors.push(kind + '.' + def.id + ' references unknown technology ' + techId + '.');
-          }
+        if (def.cooldownDays !== undefined &&
+            typeof handler.cooldownDays === 'function') {
+          errors.push(kind + '.' + def.id +
+            ' uses a protected dynamic cooldown.');
         }
+        validateActionTechRequirements(def.requiresTech,
+          kind + '.' + def.id + '.requiresTech', references.tech, errors);
+      }
+      if (def.eligibility !== undefined) {
+        validateActionEligibility(def.eligibility,
+          kind + '.' + def.id + '.eligibility', references, errors);
       }
       if (def.desc === undefined && typeof handler.desc !== 'function') {
         errors.push(kind + '.' + def.id + ' must have a description source.');
       }
     }
     for (const id in handlers) {
-      if (Object.prototype.hasOwnProperty.call(handlers, id) && !seen[id]) {
+      if (Object.prototype.hasOwnProperty.call(handlers, id) &&
+          !actionOwn(seen, id)) {
         errors.push(kind + ' catalogue must retain baseline id ' + id + '.');
       }
     }
     return errors;
   }
 
-  FB.validateActionData = function () {
-    return validateActionRecords(FBDATA.focuses, FOCUS_HANDLER_BY_ID,
-      FOCUS_BASELINE_IDS, 'focus').concat(
-        validateActionRecords(FBDATA.deeds, DEED_HANDLER_BY_ID,
-          DEED_BASELINE_IDS, 'deed'));
+  FB.validateActionData = function (focusDefinitions, deedDefinitions, references) {
+    const refs = references || FBDATA;
+    return validateActionRecords(focusDefinitions || FBDATA.focuses,
+      FOCUS_HANDLER_BY_ID, FOCUS_BASELINE_IDS, 'focus', refs).concat(
+        validateActionRecords(deedDefinitions || FBDATA.deeds,
+          DEED_HANDLER_BY_ID, DEED_BASELINE_IDS, 'deed', refs));
   };
 
-  function projectActionDefinition(def, handler, kind) {
+  function actionEligibilityMet(state, eligibility) {
+    if (!eligibility) return true;
+    const character = state.chars[state.player.charId];
+    const age = FB.ageOf(character, state.date.year);
+    const traits = character.traits || [];
+    const flags = state.player.flags || {};
+    if (eligibility.ageMin !== undefined && age < eligibility.ageMin) return false;
+    if (eligibility.ageMax !== undefined && age > eligibility.ageMax) return false;
+    if (eligibility.tierMin !== undefined && state.player.tier < eligibility.tierMin) return false;
+    if (eligibility.tierMax !== undefined && state.player.tier > eligibility.tierMax) return false;
+    if (eligibility.sex && character.sex !== eligibility.sex) return false;
+    if (eligibility.professions &&
+        eligibility.professions.indexOf(state.player.profession) < 0) return false;
+    if (eligibility.traitsAll && !eligibility.traitsAll.every(function (id) {
+      return traits.indexOf(id) >= 0;
+    })) return false;
+    if (eligibility.traitsAny && !eligibility.traitsAny.some(function (id) {
+      return traits.indexOf(id) >= 0;
+    })) return false;
+    if (eligibility.traitsNone && eligibility.traitsNone.some(function (id) {
+      return traits.indexOf(id) >= 0;
+    })) return false;
+    if (eligibility.faiths && eligibility.faiths.indexOf(character.religion) < 0) return false;
+    if (eligibility.cultures && eligibility.cultures.indexOf(character.culture) < 0) return false;
+    if (eligibility.flagsAll && !eligibility.flagsAll.every(function (id) {
+      return actionOwn(flags, id) && !!flags[id];
+    })) return false;
+    if (eligibility.flagsAny && !eligibility.flagsAny.some(function (id) {
+      return actionOwn(flags, id) && !!flags[id];
+    })) return false;
+    if (eligibility.flagsNone && eligibility.flagsNone.some(function (id) {
+      return actionOwn(flags, id) && !!flags[id];
+    })) return false;
+    if (eligibility.atWar !== undefined &&
+        (!!state.player.war) !== eligibility.atWar) return false;
+    if (eligibility.independent !== undefined &&
+        (!state.player.liege) !== eligibility.independent) return false;
+    if (eligibility.traveling !== undefined &&
+        (!!state.player.travel) !== eligibility.traveling) return false;
+    return true;
+  }
+
+  function actionEligibilityReason(state, kind, def) {
+    return FB.dataText(state, state.player.charId, kind, def.id, def,
+      'eligibility.reason', {});
+  }
+
+  function projectActionDefinition(def, handler, kind, coreLabels) {
     const out = {};
     for (const key in def) {
       if (!Object.prototype.hasOwnProperty.call(def, key) ||
           key === 'desc' || key === 'cooldownDays') continue;
       out[key] = def[key];
     }
-    if (def.cooldownDays !== undefined) out.cd = def.cooldownDays;
     for (const key in handler) {
       if (Object.prototype.hasOwnProperty.call(handler, key) && key !== 'id') {
         out[key] = handler[key];
       }
     }
-    if (typeof handler.desc !== 'function') {
+    if (def.cooldownDays !== undefined) out.cd = def.cooldownDays;
+    if (def.desc !== undefined) {
       out.desc = function (state) {
         return FB.dataText(state, state && state.player && state.player.charId,
           kind, def.id, def, 'desc', {});
       };
     }
+    if (typeof handler.uiLabel === 'function' &&
+        def.label !== coreLabels[def.id]) delete out.uiLabel;
+    if (def.eligibility && kind === 'focus') {
+      const handlerShow = out.show;
+      out.show = function (state) {
+        return !!handlerShow(state) && actionEligibilityMet(state, def.eligibility);
+      };
+    } else if (def.eligibility) {
+      const handlerCan = out.can;
+      out.can = function (state) {
+        const guarded = handlerCan ? handlerCan(state) : true;
+        if (guarded !== true) return guarded;
+        return actionEligibilityMet(state, def.eligibility)
+          ? true : actionEligibilityReason(state, kind, def);
+      };
+    }
     return out;
   }
 
-  FB.rebuildActionCatalogs = function () {
-    const errors = FB.validateActionData();
+  function buildActionCatalogs(focusDefinitions, deedDefinitions, references) {
+    const errors = FB.validateActionData(focusDefinitions, deedDefinitions, references);
     if (errors.length) throw new Error('Invalid action catalogue: ' + errors.join(' '));
+    const orderedFocusDefinitions = focusDefinitions.slice().sort(function (a, b) {
+      return a.order - b.order;
+    });
+    const orderedDeedDefinitions = deedDefinitions.slice().sort(function (a, b) {
+      return a.order - b.order;
+    });
     const focuses = [];
     const deeds = [];
     const nextFocusById = {};
     const nextDeedById = {};
-    for (const def of FBDATA.focuses) {
+    for (const def of orderedFocusDefinitions) {
       const projected = projectActionDefinition(def,
-        FOCUS_HANDLER_BY_ID[def.handler], 'focus');
+        FOCUS_HANDLER_BY_ID[def.handler], 'focus', FOCUS_CORE_LABELS);
       focuses.push(projected);
       nextFocusById[projected.id] = projected;
     }
-    for (const def of FBDATA.deeds) {
+    for (const def of orderedDeedDefinitions) {
       const projected = projectActionDefinition(def,
-        DEED_HANDLER_BY_ID[def.handler], 'action');
+        DEED_HANDLER_BY_ID[def.handler], 'action', DEED_CORE_LABELS);
       deeds.push(projected);
       nextDeedById[projected.id] = projected;
     }
-    focusById = nextFocusById;
-    deedById = nextDeedById;
-    FB.focuses = focuses;
-    FB.instants = deeds;
+    return {
+      focusDefinitions:orderedFocusDefinitions,
+      deedDefinitions:orderedDeedDefinitions,
+      focuses:focuses,
+      deeds:deeds,
+      focusById:nextFocusById,
+      deedById:nextDeedById
+    };
+  }
+
+  function installActionCatalogs(built) {
+    FBDATA.focuses = built.focusDefinitions;
+    FBDATA.deeds = built.deedDefinitions;
+    focusById = built.focusById;
+    deedById = built.deedById;
+    FB.focuses = built.focuses;
+    FB.instants = built.deeds;
     FB.actionCatalogRevision = (FB.actionCatalogRevision || 0) + 1;
+  }
+
+  FB.installActionData = function (focusDefinitions, deedDefinitions) {
+    const built = buildActionCatalogs(focusDefinitions, deedDefinitions, FBDATA);
+    installActionCatalogs(built);
+  };
+
+  FB.rebuildActionCatalogs = function () {
+    const built = buildActionCatalogs(FBDATA.focuses, FBDATA.deeds, FBDATA);
+    installActionCatalogs(built);
   };
 
   FB.rebuildActionCatalogs();

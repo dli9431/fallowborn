@@ -160,6 +160,7 @@ window.FBMODS = window.FBMODS || [];
   const PUBLIC_KEYS = {
     name:true, bookmarks:true, defaultBookmark:true,
     startScenarios:true, familyPresets:true,
+    focuses:true, deeds:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
     events:true, straits:true, crossingClasses:true, scripted:true,
     cultureTraditions:true, cultures:true, religions:true, religiousPaths:true,
@@ -191,7 +192,7 @@ window.FBMODS = window.FBMODS || [];
   function onlyFields(value, allowed, path) {
     if (!plainObject(value)) fail(path, 'must be an object.');
     for (const key in value) {
-      if (own(value, key) && !allowed[key]) {
+      if (own(value, key) && !own(allowed, key)) {
         fail(path + '.' + key, 'is not recognized.');
       }
     }
@@ -254,6 +255,84 @@ window.FBMODS = window.FBMODS || [];
       if (!replaced) out.push(item);
     }
     return out;
+  }
+
+  function cloneActionDefinition(definition) {
+    const out = {};
+    for (const key in definition) {
+      if (!own(definition, key)) continue;
+      const value = definition[key];
+      if (key === 'eligibility' && plainObject(value)) {
+        const eligibility = {};
+        for (const field in value) {
+          if (!own(value, field)) continue;
+          eligibility[field] = Array.isArray(value[field])
+            ? value[field].slice() : value[field];
+        }
+        out[key] = eligibility;
+      } else {
+        out[key] = Array.isArray(value) ? value.slice() : value;
+      }
+    }
+    return out;
+  }
+
+  function actionOverrides(base, additions, kind) {
+    const out = (base || []).map(cloneActionDefinition);
+    if (additions === undefined) return out;
+    if (!Array.isArray(additions)) fail(kind, 'must be an array.');
+    const allowed = kind === 'focuses'
+      ? { id:true, label:true, desc:true, order:true, eligibility:true }
+      : { id:true, label:true, desc:true, order:true, group:true,
+          cooldownDays:true, requiresTech:true, eligibility:true };
+    const indexes = {};
+    const supplied = {};
+    for (let i = 0; i < out.length; i++) indexes[out[i].id] = i;
+    for (let i = 0; i < additions.length; i++) {
+      const override = additions[i];
+      const path = kind + '[' + i + ']';
+      onlyFields(override, allowed, path);
+      if (typeof override.id !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(override.id)) {
+        fail(path + '.id', 'must be a lowercase action id.');
+      }
+      if (own(supplied, override.id)) fail(kind, 'must not repeat ' + override.id + '.');
+      if (!own(indexes, override.id)) {
+        fail(path + '.id', 'cannot add unknown baseline id ' + override.id + '.');
+      }
+      supplied[override.id] = true;
+      const next = cloneActionDefinition(out[indexes[override.id]]);
+      for (const key in override) {
+        if (!own(override, key) || key === 'id') continue;
+        if (key === 'eligibility' && plainObject(override[key])) {
+          next[key] = cloneActionDefinition({ eligibility:override[key] }).eligibility;
+        } else {
+          next[key] = Array.isArray(override[key])
+            ? override[key].slice() : override[key];
+        }
+      }
+      out[indexes[override.id]] = next;
+    }
+    return out;
+  }
+
+  function prepareActionCatalogs(mod) {
+    if (!own(mod, 'focuses') && !own(mod, 'deeds')) return null;
+    if (!FB.validateActionData || !FB.installActionData) {
+      fail('actions', 'cannot be configured before the action engine loads.');
+    }
+    const focuses = actionOverrides(FBDATA.focuses, mod.focuses, 'focuses');
+    const deeds = actionOverrides(FBDATA.deeds, mod.deeds, 'deeds');
+    const references = {
+      tech:combinedTable(FBDATA.tech, mod.tech, 'tech'),
+      careers:combinedTable(FBDATA.careers, mod.careers, 'careers'),
+      traits:combinedTable(FBDATA.traits, mod.traits, 'traits'),
+      religions:combinedTable(FBDATA.religions, mod.religions, 'religions'),
+      cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures')
+    };
+    const errors = FB.validateActionData(focuses, deeds, references);
+    if (errors.length) fail('actions', errors.join(' '));
+    return { focuses:focuses, deeds:deeds };
   }
 
   function requiredText(value, path) {
@@ -880,7 +959,7 @@ window.FBMODS = window.FBMODS || [];
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
-      if (own(mod, key) && !PUBLIC_KEYS[key]) {
+      if (own(mod, key) && !own(PUBLIC_KEYS, key)) {
         fail(key, 'is not a supported top-level mod key.');
       }
     }
@@ -899,6 +978,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
       validateCouncilDefinitions(mod);
     }
+    return { actions:prepareActionCatalogs(mod) };
   }
 
   /* Cap groups are configuration maps rather than atomic definitions. A mod
@@ -948,7 +1028,7 @@ window.FBMODS = window.FBMODS || [];
   }
 
   M.apply = function (mod) {
-    validateBeforeApply(mod);
+    const prepared = validateBeforeApply(mod);
     if (own(mod, 'marketGoods') || own(mod, 'marketEndowmentTypes') ||
         own(mod, 'marketEndowments')) {
       const marketGoods = own(mod, 'marketGoods')
@@ -1213,6 +1293,9 @@ window.FBMODS = window.FBMODS || [];
     if (mod.seas) FBDATA.seas = mod.seas;
     if (mod.rivers) FBDATA.rivers = mod.rivers;
     if (own(mod, 'defaultBookmark')) FBDATA.defaultBookmark = mod.defaultBookmark;
+    if (prepared.actions) {
+      FB.installActionData(prepared.actions.focuses, prepared.actions.deeds);
+    }
     if ((mod.items || mod.cultures || mod.religions || mod.traits || mod.ailments) &&
         FB.clearPortraitCache) FB.clearPortraitCache();
     if ((mod.religions || mod.titles) && FB.invalidateReligionData) {

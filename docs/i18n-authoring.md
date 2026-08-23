@@ -31,6 +31,10 @@ though the game still *runs*.
   Baseline focus and deed labels plus static descriptions live in `data/actions.js` under
   stable `focus.<id>` and `action.<id>` owners. A truly state-dependent description remains
   in its private `js/actions.js` handler and routes its complete phrases through `FB.T`.
+  Runtime action overrides keep those owners; an optional static eligibility explanation
+  renders under `focus.<id>.eligibility.reason` or
+  `action.<id>.eligibility.reason`. Changed mod English invalidates a stale generated
+  translation by source hash and falls back to that effective English.
   Formal privilege names and descriptions in `data/political_institutions.js` use the
   `privilege` structured-data namespace, including when technology details list them as unlocks.
   Fortification tier names in `FBDATA.fortLevels` use the `fort` namespace and are addressed by

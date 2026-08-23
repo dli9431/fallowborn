@@ -134,6 +134,8 @@ A JSON mod is one object with any of these keys:
   "defaultBookmark": "my_start",
   "startScenarios": [ { "id": "my_beginning", ... } ],
   "familyPresets": [ { "id": "my_household", ... } ],
+  "focuses": [ { "id": "rest", "label": "Rest by the fire", ... } ],
+  "deeds": [ { "id": "give_alms", "cooldownDays": 14, ... } ],
   "provinces": [ ... ],
   "realms":    [ ... ],
   "empires":   { "id": { ... } },
@@ -311,6 +313,103 @@ possible. Presets never contain prebuilt character objects. The baseline `standa
 `established`, and `elder` ids remain present. `standard` is special: its `age:0` means
 `balance.startAge`, it must remain unmarried, and it preserves the historical no-extra-
 draw six-part start code.
+
+## Focus and deed overrides
+
+Runtime mods may customize the 28 built-in daily focuses and 78 built-in deeds through
+partial records under `focuses` and `deeds`. These keys override existing actions only:
+they cannot add, remove, or rename an action id, and they cannot replace executable game
+behavior.
+
+```json
+{
+  "name": "House Rules",
+  "focuses": [
+    {
+      "id": "rest",
+      "label": "🛌 Rest by the fire",
+      "desc": "Keep close to the hearth and recover.",
+      "order": 3,
+      "eligibility": {
+        "reason": "Only members of the household guard may choose this focus.",
+        "professions": ["soldier"],
+        "flagsAll": ["household_guard"]
+      }
+    },
+    { "id": "pray", "order": 2 }
+  ],
+  "deeds": [
+    {
+      "id": "give_alms",
+      "label": "🕯 Endow the poor",
+      "desc": "Give bread and coin at the gate.",
+      "group": "work",
+      "cooldownDays": 14,
+      "requiresTech": [],
+      "eligibility": {
+        "reason": "The almoner serves independent rulers.",
+        "independent": true
+      }
+    }
+  ]
+}
+```
+
+A focus override accepts `id` plus any of `label`, `desc`, `order`, and
+`eligibility`. A deed override accepts `id` plus any of `label`, `desc`, `order`,
+`group`, `cooldownDays`, `requiresTech`, and `eligibility`.
+
+- `label` and `desc` are localized display sources. They replace even a built-in
+  state-dependent label or description. Their stable owners remain
+  `focus.<id>.label`, `focus.<id>.desc`, `action.<id>.label`, and
+  `action.<id>.desc`; a translation catalogue whose source hash no longer matches
+  falls back to the mod's English.
+- `order` is a unique integer from 0 through 27 for focuses or 0 through 77 for
+  deeds. The complete effective catalogue must remain a permutation, so moving one
+  action generally requires giving the displaced action the old order in the same
+  mod, as in the focus example above.
+- A deed `group` is one of `work`, `life`, `faith`, `realm`, or `war`.
+- `cooldownDays` is a fixed integer from 0 through 36000. A deed whose core handler
+  calculates a dynamic cooldown cannot replace it with a fixed value.
+- `requiresTech` is one technology id or an array of up to 64 unique technology ids;
+  every id must exist after applying the same mod's `tech` additions. An empty array
+  removes a built-in fixed technology requirement.
+
+`eligibility` adds static restrictions. It must contain a non-empty localized `reason`
+and at least one of these fields:
+
+| Field | Accepted value |
+|---|---|
+| `ageMin`, `ageMax` | integer 0–120; the minimum cannot exceed the maximum |
+| `tierMin`, `tierMax` | integer 0–7; the minimum cannot exceed the maximum |
+| `sex` | `m` or `f` |
+| `professions` | non-empty array of effective career ids |
+| `traitsAll`, `traitsAny`, `traitsNone` | non-empty arrays of effective trait ids |
+| `faiths` | non-empty array of effective religion ids |
+| `cultures` | non-empty array of effective culture ids |
+| `flagsAll`, `flagsAny`, `flagsNone` | non-empty arrays of lowercase player-flag ids |
+| `atWar`, `independent`, `traveling` | boolean |
+
+All supplied fields must pass together. `traitsAll` and `flagsAll` require every
+listed id, `traitsAny` and `flagsAny` require at least one, and `traitsNone` and
+`flagsNone` require none. Career, trait, faith, culture, and technology references may
+name definitions supplied by the same mod. Flag ids are deliberately namespaced only
+by convention; use a distinctive lowercase prefix and arrange for another supported
+piece of content to set them.
+
+Static focus eligibility hides the focus when it fails. Static deed eligibility leaves
+an otherwise visible deed disabled and displays `reason`. The built-in handler's own
+visibility and eligibility checks always run as protected invariant guards. Data rules
+can narrow availability, but cannot expose an action without the rival, realm, journey,
+office, resources, or other context its implementation expects.
+
+The private `handler`, deed `flow`, `noConsume`, picker and confirmation behavior,
+cooldown timing callbacks, tutorial behavior, and every executable callback are not
+public mod fields. Supplying any of them rejects the entire mod before either action
+catalogue changes. Successful overrides rebuild both compatibility catalogues and their
+id indexes together. Saves remain format 3: existing focus ids and cooldown keys keep
+their meanings, and the active-mod fingerprint continues to prevent loading a life
+under the wrong definitions.
 
 ## Religious progression paths
 

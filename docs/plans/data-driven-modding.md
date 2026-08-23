@@ -1,6 +1,6 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestones 0–3 and phase 4A implemented
+Status: active; milestones 0–3 and phases 4A–4B implemented
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -405,6 +405,17 @@ A successful mod application must rebuild the projections and id indexes atomica
 Labels and descriptions use stable `focus.<id>.*` and `action.<id>.*` localization owners;
 untranslated mod text falls back to its effective English source. Save format remains 3:
 saved focus ids and cooldown keys keep their existing meanings.
+
+Implemented in v1.150.0. `focuses` and `deeds` accept partial overrides for existing
+ids while the private handler binding and flow capabilities remain inaccessible. The
+effective catalogues validate as complete order permutations and resolve same-mod
+technology, career, trait, faith, and culture references before mutation. Static age,
+tier, sex, profession, trait, faith, culture, flag, war, independence, and travel rules
+compose with protected handler guards; focus failures hide the focus and deed failures
+return their localized explanation. Successful application installs the two definitions,
+compatibility projections, and id indexes as one catalogue rebuild. Stable localization
+owners, action ids, cooldown keys, the active-mod fingerprint, and save format 3 are
+unchanged.
 
 ### Phase 4C: new declarative immediate deeds
 

@@ -925,16 +925,6 @@ test('milestone-four phase A rejects malformed internal action data without muta
         records[index] = original;
         return message;
       }
-      function validateFocusSwap() {
-        const first = FBDATA.focuses[0];
-        const second = FBDATA.focuses[1];
-        FBDATA.focuses[0] = Object.assign({}, second, { order:0 });
-        FBDATA.focuses[1] = Object.assign({}, first, { order:1 });
-        const message = FB.validateActionData().join(' ');
-        FBDATA.focuses[0] = first;
-        FBDATA.focuses[1] = second;
-        return message;
-      }
       const cases = [
         validatePatch('focus', 0, { order:99 }),
         validatePatch('focus', 0, { handler:'rest' }),
@@ -942,7 +932,7 @@ test('milestone-four phase A rejects malformed internal action data without muta
         validatePatch('deed', 0, { flow:'choices' }),
         validatePatch('deed', 0, { requiresTech:'missing_technology' }),
         validatePatch('deed', 0, { cooldownDays:-1 }),
-        validateFocusSwap(),
+        validatePatch('focus', 0, { order:1 }),
         validatePatch('focus', 4, { vocational:'missing_vocation' })
       ];
       const beforeFocuses = FB.focuses;
@@ -963,22 +953,10 @@ test('milestone-four phase A rejects malformed internal action data without muta
       const beforeData = JSON.stringify({
         focuses:FBDATA.focuses, deeds:FBDATA.deeds
       });
-      const rejectedModKeys = ['focuses', 'deeds'].map(function (key) {
-        const mod = {};
-        mod[key] = [];
-        try {
-          FB.mods.apply(mod);
-          return false;
-        } catch (error) {
-          return error.message === 'Mod data ' + key +
-            ' is not a supported top-level mod key.';
-        }
-      });
       return {
         cases:cases,
         rebuildError:rebuildError,
         rebuildAtomic:rebuildAtomic,
-        rejectedModKeys:rejectedModKeys,
         dataUnchanged:beforeData === JSON.stringify({
           focuses:FBDATA.focuses, deeds:FBDATA.deeds
         }),
@@ -986,17 +964,260 @@ test('milestone-four phase A rejects malformed internal action data without muta
       };
     });
 
-    expect(result.cases[0]).toContain('order must remain 0');
+    expect(result.cases[0]).toContain('order must be an integer from 0 to 27');
     expect(result.cases[1]).toContain('must retain its baseline handler');
     expect(result.cases[2]).toContain('extra is not recognized');
     expect(result.cases[3]).toContain('flow must match its baseline handler');
     expect(result.cases[4]).toContain('unknown technology missing_technology');
-    expect(result.cases[5]).toContain('invalid cooldown');
-    expect(result.cases[6]).toContain('retain baseline id study at index 0');
+    expect(result.cases[5]).toContain('cooldownDays must be an integer from 0 to 36000');
+    expect(result.cases[6]).toContain('must not repeat order 1');
     expect(result.cases[7]).toContain('unknown vocation missing_vocation');
     expect(result.rebuildError).toContain('Invalid action catalogue');
     expect(result.rebuildAtomic).toBe(true);
-    expect(result.rejectedModKeys).toEqual([true, true]);
     expect(result.dataUnchanged).toBe(true);
     expect(result.validAfter).toEqual([]);
+  });
+
+test('milestone-four phase B composes bounded overrides with protected action handlers',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const character = s.chars[p.charId];
+      const originalBorn = character.born;
+      const originalProfession = p.profession;
+      const originalFocus = FB.focuses.filter(function (focus) {
+        return focus.id === 'rest';
+      })[0];
+      const originalDeed = FB.instants.filter(function (deed) {
+        return deed.id === 'give_alms';
+      })[0];
+      p.flags.e2e_action_ready = 1;
+      delete p.flags.e2e_action_blocked;
+      character.traits.push('e2e_action_ready_trait');
+      const eligibility = {
+        reason:'The action charter is not satisfied.',
+        ageMin:0, ageMax:100, tierMin:0, tierMax:7,
+        sex:character.sex, professions:[originalProfession],
+        traitsAll:['e2e_action_ready_trait'],
+        traitsAny:['e2e_action_ready_trait'],
+        traitsNone:['e2e_action_blocked_trait'], faiths:[character.religion],
+        cultures:[character.culture], flagsAll:['e2e_action_ready'],
+        flagsAny:['e2e_action_ready'], flagsNone:['e2e_action_blocked'],
+        atWar:false, independent:!p.liege, traveling:false
+      };
+      FB.mods.apply({
+        traits:{
+          e2e_action_ready_trait:{
+            name:'Action Ready', desc:'A same-mod action eligibility trait.',
+            class:'condition', noRandom:true
+          },
+          e2e_action_blocked_trait:{
+            name:'Action Blocked', desc:'A same-mod exclusion trait.',
+            class:'condition', noRandom:true
+          }
+        },
+        focuses:[
+          { id:'rest', order:3, label:'🛌 Chartered rest',
+            desc:'Rest under the action charter.', eligibility:eligibility },
+          { id:'pray', order:2 }
+        ],
+        deeds:[
+          { id:'give_alms', order:27, label:'🕯 Chartered alms',
+            desc:'Give alms under the action charter.', group:'work',
+            cooldownDays:7, requiresTech:[], eligibility:eligibility },
+          { id:'begin_plot', order:26 },
+          { id:'seek_match', label:'💍 Chartered match',
+            desc:'Use the chartered marriage search.' }
+        ]
+      });
+      const rest = FB.focuses.filter(function (focus) {
+        return focus.id === 'rest';
+      })[0];
+      const alms = FB.instants.filter(function (deed) {
+        return deed.id === 'give_alms';
+      })[0];
+      const match = FB.instants.filter(function (deed) {
+        return deed.id === 'seek_match';
+      })[0];
+      p.gold = 100;
+      const ready = FB.instantStatus(s, 'give_alms');
+      const projected = {
+        focusOrder:FB.focuses.map(function (focus) { return focus.id; })
+          .slice(0, 4),
+        deedOrder:FB.instants.map(function (deed) { return deed.id; })
+          .slice(25, 28),
+        focusLabel:FB.dataText(s, p.charId, 'focus', 'rest', rest, 'label'),
+        focusDesc:rest.desc(s),
+        deedLabel:FB.dataText(s, p.charId, 'action', 'give_alms', alms, 'label'),
+        deedDesc:alms.desc(s),
+        group:alms.group,
+        cooldown:alms.cd,
+        requirements:alms.requiresTech,
+        focusVisible:FB.listFocuses(s).some(function (focus) {
+          return focus.id === 'rest';
+        }),
+        deedReady:ready.shown && ready.can,
+        sameModTrait:!!FBDATA.traits.e2e_action_ready_trait,
+        focusHandlerStable:rest.tick === originalFocus.tick,
+        deedHandlerStable:alms.run === originalDeed.run,
+        dynamicPresentationOverridden:match.uiLabel === undefined &&
+          match.label === '💍 Chartered match' &&
+          match.desc(s) === 'Use the chartered marriage search.'
+      };
+
+      p.gold = 0;
+      const handlerBlocked = FB.instantStatus(s, 'give_alms').reason;
+      p.gold = 100;
+      delete p.flags.e2e_action_ready;
+      const dataBlocked = FB.instantStatus(s, 'give_alms');
+      const focusBlocked = !FB.listFocuses(s).some(function (focus) {
+        return focus.id === 'rest';
+      });
+      p.flags.e2e_action_ready = 1;
+      character.born = s.date.year - 10;
+      const protectedFocusGuard = !FB.listFocuses(s).some(function (focus) {
+        return focus.id === 'rest';
+      });
+      character.born = originalBorn;
+
+      p.focus = 'rest';
+      const beforeTurn = s.turn;
+      const beforeGold = p.gold;
+      FB.runInstant(s, 'give_alms');
+      const execution = {
+        turn:s.turn - beforeTurn,
+        gold:p.gold - beforeGold,
+        cooldown:p.cooldowns.give_alms,
+        expectedCooldown:beforeTurn
+      };
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      return {
+        projected:projected,
+        handlerBlocked:handlerBlocked,
+        dataBlocked:{ can:dataBlocked.can, reason:dataBlocked.reason },
+        focusBlocked:focusBlocked,
+        protectedFocusGuard:protectedFocusGuard,
+        execution:execution,
+        restored:{
+          version:payload.v,
+          focus:FB.state.player.focus,
+          cooldown:FB.state.player.cooldowns.give_alms,
+          label:FB.instants.filter(function (deed) {
+            return deed.id === 'give_alms';
+          })[0].label
+        }
+      };
+    });
+
+    expect(result.projected).toEqual({
+      focusOrder:['study', 'play', 'pray', 'rest'],
+      deedOrder:['great_holy_war_settlement', 'begin_plot', 'give_alms'],
+      focusLabel:'🛌 Chartered rest',
+      focusDesc:'Rest under the action charter.',
+      deedLabel:'🕯 Chartered alms',
+      deedDesc:'Give alms under the action charter.',
+      group:'work', cooldown:7, requirements:[],
+      focusVisible:true, deedReady:true, sameModTrait:true,
+      focusHandlerStable:true, deedHandlerStable:true,
+      dynamicPresentationOverridden:true
+    });
+    expect(result.handlerBlocked).toBe('Nothing to spare.');
+    expect(result.dataBlocked).toEqual({
+      can:false, reason:'The action charter is not satisfied.'
+    });
+    expect(result.focusBlocked).toBe(true);
+    expect(result.protectedFocusGuard).toBe(true);
+    expect(result.execution).toEqual({
+      turn:1, gold:-10,
+      cooldown:result.execution.expectedCooldown,
+      expectedCooldown:result.execution.expectedCooldown
+    });
+    expect(result.restored).toEqual({
+      version:3,
+      focus:'rest',
+      cooldown:result.execution.expectedCooldown,
+      label:'🕯 Chartered alms'
+    });
+  });
+
+test('milestone-four phase B rejects unsafe overrides before any catalogue mutation',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function attempt(data, expected) {
+        const before = JSON.stringify({
+          focuses:FBDATA.focuses, deeds:FBDATA.deeds
+        });
+        const focusProjection = FB.focuses;
+        const deedProjection = FB.instants;
+        const revision = FB.actionCatalogRevision;
+        let message = '';
+        try {
+          FB.mods.apply(data);
+        } catch (error) {
+          message = error.message;
+        }
+        return {
+          rejected:message.indexOf(expected) >= 0,
+          unchanged:before === JSON.stringify({
+            focuses:FBDATA.focuses, deeds:FBDATA.deeds
+          }) && focusProjection === FB.focuses &&
+            deedProjection === FB.instants &&
+            revision === FB.actionCatalogRevision
+        };
+      }
+      return [
+        attempt({ focuses:[{ id:'e2e_new_focus', label:'Unsafe' }] },
+          'cannot add unknown baseline id'),
+        attempt({ focuses:[{ id:'constructor', label:'Unsafe' }] },
+          'cannot add unknown baseline id constructor'),
+        attempt({ deeds:[{ id:'poach', handler:'poach' }] },
+          'handler is not recognized'),
+        attempt({ deeds:[{ id:'poach', constructor:true }] },
+          'constructor is not recognized'),
+        attempt({ deeds:[{ id:'poach', flow:'no_day' }] },
+          'flow is not recognized'),
+        attempt({ focuses:[{ id:'study', order:1 }] },
+          'must not repeat order 1'),
+        attempt({ deeds:[{ id:'poach', cooldownDays:36001 }] },
+          'cooldownDays must be an integer from 0 to 36000'),
+        attempt({ deeds:[{ id:'seek_match', cooldownDays:10 }] },
+          'uses a protected dynamic cooldown'),
+        attempt({ deeds:[{ id:'poach', group:'unknown' }] },
+          'has an invalid group'),
+        attempt({ deeds:[{ id:'poach', group:'constructor' }] },
+          'has an invalid group'),
+        attempt({ deeds:[{ id:'poach', requiresTech:'missing_technology' }] },
+          'unknown technology missing_technology'),
+        attempt({ deeds:[{ id:'poach', requiresTech:['crop_rotation', 'crop_rotation'] }] },
+          'must not repeat crop_rotation'),
+        attempt({ focuses:[{ id:'rest', eligibility:{
+          reason:'Blocked.', professions:['missing_career']
+        } }] }, 'unknown id missing_career'),
+        attempt({ focuses:[{ id:'rest', eligibility:{
+          reason:'Blocked.', traitsAll:['missing_trait']
+        } }] }, 'unknown id missing_trait'),
+        attempt({ focuses:[{ id:'rest', eligibility:{
+          reason:'Blocked.', faiths:['missing_faith']
+        } }] }, 'unknown id missing_faith'),
+        attempt({ focuses:[{ id:'rest', eligibility:{
+          reason:'Blocked.', cultures:['missing_culture']
+        } }] }, 'unknown id missing_culture'),
+        attempt({ focuses:[{ id:'rest', eligibility:{
+          reason:'Blocked.', flagsAll:['BadFlag']
+        } }] }, 'has an invalid id'),
+        attempt({ focuses:[{ id:'rest', eligibility:{ ageMin:18 } }] },
+          'reason must be a non-empty string')
+      ];
+    });
+
+    expect(result.every(function (entry) {
+      return entry.rejected && entry.unchanged;
+    })).toBe(true);
   });

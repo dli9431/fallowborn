@@ -23,9 +23,12 @@ baseline id, order, and handler binding is protected. Fixed cooldowns, technolog
 requirements, group, and explicit `immediate` / `no_day` / `choices` flow are data; day
 consumption, deferred cooldowns, compatibility aliases, modal behavior, callbacks, and RNG
 remain handler capabilities. `FB.rebuildActionCatalogs` replaces both projections and their
-id indexes atomically, so even a same-length internal catalogue replacement cannot retain a
-stale focus or deed. These catalogues remain internal in Phase 4A and are not accepted as
-runtime-mod keys.
+id indexes atomically, so even a same-length catalogue replacement cannot retain a stale
+focus or deed. Phase 4B accepts partial runtime-mod overrides for baseline ids:
+presentation, order, deed group, fixed cooldown, technology requirements, and bounded
+static eligibility. Static rules compose with the private handler guard and therefore
+can only narrow an action's availability. Handler callbacks, UI flow, day consumption,
+dynamic cooldowns, and every baseline id remain protected.
 The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
 may request visibility-only entries for collapsed accordion groups, postponing cooldown,
 technology, and other eligibility work until those controls are opened.
