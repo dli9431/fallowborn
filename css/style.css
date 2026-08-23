@@ -785,6 +785,8 @@ a.actionbtn { text-decoration: none; }
 .deed-entry .deed-details > b { color: #d8b24a; }
 .deed-entry[data-deed-flow="choices"] .deed-details > b { color: #b8ca8e; }
 .deed-entry[data-deed-flow="no-day"] .deed-details > b { color: #9dc4c8; }
+.deed-details .action-preview { margin-top: 8px; }
+.deed-details .action-preview > b { display: block; margin-bottom: 3px; }
 .network-action-entry {
   display: grid; grid-template-columns: minmax(0, 1fr) auto;
   align-items: stretch; gap: 7px; margin-bottom: 7px;

@@ -1169,7 +1169,8 @@ window.FB = window.FB || {};
           item = {
             a:listedItem.a,
             can:status.can,
-            reason:status.reason
+            reason:status.reason,
+            preview:status.preview
           };
         }
         const row = document.createElement('div');
@@ -1211,6 +1212,24 @@ window.FB = window.FB || {};
         details.className = 'settcard-details deed-details hidden';
         details.innerHTML = '<b>' + esc(deedFlowText(flow)) + '</b><br>' +
           esc(detailText);
+        if (item.preview) {
+          const previewSections = [
+            { label:FB.T('Costs'), records:item.preview.costs || [] },
+            { label:FB.T('Effects'), records:item.preview.effects || [] }
+          ];
+          for (const section of previewSections) {
+            if (!section.records.length) continue;
+            let previewHtml = '<div class="action-preview"><b>' +
+              esc(section.label) + '</b><div class="event-impact-chips">';
+            for (const record of section.records) {
+              previewHtml += '<span class="event-impact-chip ' +
+                receiptImpactClass(record) + '">' +
+                esc(FB.eventImpactText(s, record, 'resolved')) + '</span>';
+            }
+            previewHtml += '</div></div>';
+            details.innerHTML += previewHtml;
+          }
+        }
         row.appendChild(btn);
         row.appendChild(actions);
         row.appendChild(details);

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.150.0';
+  FB.VERSION = '1.151.0';
   FB.CHANGELOG = [
+    { v: '1.151.0', date: '2026-08-22', changes: [
+      'Runtime mods can now add safe manual deeds with exact resource previews, fixed cooldowns, static eligibility, or a queued story.'
+    ] },
     { v: '1.150.0', date: '2026-08-22', changes: [
       'Runtime mods can now customize existing focuses and deeds while their protected behavior and save identities remain intact.'
     ] },

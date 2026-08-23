@@ -317,9 +317,9 @@ draw six-part start code.
 ## Focus and deed overrides
 
 Runtime mods may customize the 28 built-in daily focuses and 78 built-in deeds through
-partial records under `focuses` and `deeds`. These keys override existing actions only:
-they cannot add, remove, or rename an action id, and they cannot replace executable game
-behavior.
+partial records under `focuses` and `deeds`. Baseline records cannot be removed or
+renamed, and their executable behavior cannot be replaced. New focuses remain unsupported;
+new deeds use the separate declarative contract below.
 
 ```json
 {
@@ -364,10 +364,11 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   `focus.<id>.label`, `focus.<id>.desc`, `action.<id>.label`, and
   `action.<id>.desc`; a translation catalogue whose source hash no longer matches
   falls back to the mod's English.
-- `order` is a unique integer from 0 through 27 for focuses or 0 through 77 for
-  deeds. The complete effective catalogue must remain a permutation, so moving one
-  action generally requires giving the displaced action the old order in the same
-  mod, as in the focus example above.
+- `order` is a unique integer from 0 through 27 for focuses. Deed order runs from 0
+  through the effective deed count minus one (0 through 77 without added deeds). The
+  complete effective catalogue must remain a permutation, so moving one action generally
+  requires giving the displaced action the old order in the same mod, as in the focus
+  example above.
 - A deed `group` is one of `work`, `life`, `faith`, `realm`, or `war`.
 - `cooldownDays` is a fixed integer from 0 through 36000. A deed whose core handler
   calculates a dynamic cooldown cannot replace it with a fixed value.
@@ -403,13 +404,98 @@ visibility and eligibility checks always run as protected invariant guards. Data
 can narrow availability, but cannot expose an action without the rival, realm, journey,
 office, resources, or other context its implementation expects.
 
-The private `handler`, deed `flow`, `noConsume`, picker and confirmation behavior,
-cooldown timing callbacks, tutorial behavior, and every executable callback are not
-public mod fields. Supplying any of them rejects the entire mod before either action
-catalogue changes. Successful overrides rebuild both compatibility catalogues and their
-id indexes together. Saves remain format 3: existing focus ids and cooldown keys keep
-their meanings, and the active-mod fingerprint continues to prevent loading a life
-under the wrong definitions.
+For baseline actions, the private `handler`, deed `flow`, `noConsume`, picker and
+confirmation behavior, cooldown timing callbacks, tutorial behavior, and every executable
+callback are not public mod fields. Supplying any of them rejects the entire mod before
+either action catalogue changes. Successful overrides rebuild both compatibility
+catalogues and their id indexes together. Saves remain format 3: existing focus ids and
+cooldown keys keep their meanings, and the active-mod fingerprint continues to prevent
+loading a life under the wrong definitions.
+
+### New declarative deeds
+
+A mod may append manual, immediate deeds by supplying a complete record whose handler is
+exactly `declarative_deed`. This is the only public handler and cannot be used to replace a
+built-in deed.
+
+```json
+{
+  "events": [{
+    "id": "charter_audience",
+    "title": "The charter audience",
+    "text": "The petitioners assemble.",
+    "trigger": { "never": true },
+    "options": [{ "label": "Hear them", "effects": {} }]
+  }],
+  "deeds": [
+    {
+      "id": "endow_wayfarers",
+      "handler": "declarative_deed",
+      "label": "Endow the wayfarers",
+      "desc": "Set coin aside for travelers and pilgrims.",
+      "order": 78,
+      "group": "faith",
+      "cooldownDays": 90,
+      "spendsDay": false,
+      "requiresTech": "road_surveys",
+      "visibility": { "tierMin": 1 },
+      "eligibility": {
+        "reason": "The household must first promise its support.",
+        "flagsAll": ["my_mod_wayfarer_support"]
+      },
+      "costs": { "gold": 12, "prestige": 2 },
+      "effects": { "piety": 5 }
+    },
+    {
+      "id": "seek_charter_audience",
+      "handler": "declarative_deed",
+      "label": "Seek a charter audience",
+      "desc": "Pay the clerks to arrange a hearing.",
+      "order": 79,
+      "group": "realm",
+      "cooldownDays": 30,
+      "spendsDay": true,
+      "costs": { "gold": 5 },
+      "queueEvent": "charter_audience"
+    }
+  ]
+}
+```
+
+Every new record requires `id`, `handler`, `label`, `desc`, `order`, `group`,
+`cooldownDays`, and boolean `spendsDay`. `requiresTech`, `visibility`, `eligibility`,
+and `costs` are optional. It must then declare exactly one of:
+
+- `effects`: one or more non-zero `gold`, `prestige`, or `piety` changes; each is a
+  finite number from -1,000,000 through 1,000,000.
+- `queueEvent`: one effective event id. The event may be added by the same mod. The deed
+  queues it with the ordinary protagonist and location context; the event owns every
+  later choice and consequence.
+
+`costs` uses the same three resource keys, accepts non-negative values through 1,000,000,
+and must contain at least one non-zero cost. Costs are separate from effects: the Deeds
+panel shows both sections and the net execution pays costs before applying effects.
+Resource values clamp at zero exactly as previewed.
+
+`visibility` accepts the same restriction fields as `eligibility`, but has no `reason`:
+failure removes the deed from the list. `eligibility` requires its localized `reason` and
+leaves the visible deed disabled when it fails. Technology, cooldown, and affordable-cost
+checks are composed into that same status. These checks and the preview are pure and make
+no RNG draws.
+
+`order` participates in the complete effective deed permutation. The first added deed is
+normally 78, the next 79, and so on; later mods adding deeds append after every effective
+definition. A later mod replacing a declarative deed must restate the complete record.
+This avoids silently inheriting costs or effects from a different mod load order.
+
+The engine derives `immediate` or `no_day` flow from `spendsDay`. Mods cannot supply
+`flow`, `manualOnly`, modal/picker flags, cooldown callbacks, JavaScript callbacks, custom
+handlers, or any broader event trigger/effect vocabulary on the deed. Execution rechecks
+the projected status, pays and applies the one transaction, queues the optional event,
+then records cooldown and tutorial completion before the optional day pass. Once it
+returns, no deed is in flight. Save format remains 3; if the definition later disappears,
+its saved cooldown key stays inert and becomes meaningful again only with the matching
+active mod.
 
 ## Religious progression paths
 

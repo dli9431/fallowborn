@@ -1,6 +1,6 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestones 0–3 and phases 4A–4B implemented
+Status: active; milestones 0–3 and phases 4A–4C implemented
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -439,6 +439,18 @@ and the day in the existing order.
 
 If a definition disappears, its cooldown key remains inert. No generic deed is considered
 in flight after `runInstant` returns, so this phase adds no saved action record.
+
+Implemented in v1.151.0. Runtime mods may append complete deed records only through the
+fixed `declarative_deed` handler. The validated schema admits pure visibility and
+eligibility predicates, fixed technology and gold/prestige/piety costs, one exact scalar
+effect map or one effective event to queue, a bounded cooldown, and a required day-spend
+choice. A shared status projection drives hidden/disabled state and exact Deeds-panel cost
+and effect chips; execution rechecks it, commits once, and preserves the established
+cooldown, tutorial, and optional day order. Same-mod event references validate before
+mutation and invalidate the lazy event index after merge. Later definitions are complete
+replacements, missing definitions leave cooldown keys inert, save format remains 3, and
+status/application add no RNG draws. The `data_defined_deeds` technology review is `none`;
+individual definitions retain optional `requiresTech` gates.
 
 ### Phase 4D: new declarative focuses
 

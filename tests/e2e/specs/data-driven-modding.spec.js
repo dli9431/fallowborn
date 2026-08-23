@@ -8,11 +8,14 @@ dependsOnRuntime(__filename, [
   'data/political_institutions.js',
   'data/traits.js',
   'data/intrigue.js',
+  'data/technology.js',
   'js/model.js',
   'js/i18n.js',
   'js/world.js',
   'js/items.js',
   'js/economy.js',
+  'js/events.js',
+  'js/technology.js',
   'data/actions.js',
   'js/actions.js',
   'js/council.js',
@@ -20,8 +23,10 @@ dependsOnRuntime(__filename, [
   'js/save.js',
   'js/mods.js',
   'js/ui_misc.js',
+  'js/ui_panels.js',
   'js/ui_modals.js',
-  'js/main.js'
+  'js/main.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -1214,6 +1219,378 @@ test('milestone-four phase B rejects unsafe overrides before any catalogue mutat
         } }] }, 'has an invalid id'),
         attempt({ focuses:[{ id:'rest', eligibility:{ ageMin:18 } }] },
           'reason must be a non-empty string')
+      ];
+    });
+
+    expect(result.every(function (entry) {
+      return entry.rejected && entry.unchanged;
+    })).toBe(true);
+  });
+
+test('milestone-four phase C adds previewable declarative deeds with atomic execution',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const rngBefore = JSON.stringify(FB.getRngState());
+      const eventWasAbsent = FB.eventById('e2e_declarative_followup') === null;
+      FB.mods.apply({
+        events:[{
+          id:'e2e_declarative_followup',
+          title:'A promised audience',
+          text:'The promised audience is ready.',
+          trigger:{ never:true },
+          options:[{ label:'Attend', effects:{} }]
+        }],
+        deeds:[
+          {
+            id:'e2e_declarative_exchange', handler:'declarative_deed',
+            label:'Make the chartered exchange',
+            desc:'Trade coin and standing for a pious endowment.',
+            order:78, group:'life', cooldownDays:12, spendsDay:false,
+            requiresTech:'crop_rotation',
+            visibility:{ flagsAll:['e2e_deed_visible'] },
+            eligibility:{
+              reason:'The charter has not yet been signed.',
+              flagsAll:['e2e_deed_eligible']
+            },
+            costs:{ gold:10, prestige:2 },
+            effects:{ gold:3, piety:4 }
+          },
+          {
+            id:'e2e_declarative_day', handler:'declarative_deed',
+            label:'Spend a day on the charter',
+            desc:'Complete one bounded day-spending deed.',
+            order:79, group:'life', cooldownDays:0, spendsDay:true,
+            effects:{ prestige:1 }
+          },
+          {
+            id:'e2e_declarative_story', handler:'declarative_deed',
+            label:'Request the promised audience',
+            desc:'Pay for one authored follow-up event.',
+            order:80, group:'life', cooldownDays:5, spendsDay:false,
+            costs:{ piety:1 }, queueEvent:'e2e_declarative_followup'
+          }
+        ]
+      });
+
+      const hidden = FB.instantStatus(s, 'e2e_declarative_exchange');
+      p.flags.e2e_deed_visible = 1;
+      const tech = FB.realmTechRecord(s);
+      const completedIndex = tech.completed.indexOf('crop_rotation');
+      if (completedIndex >= 0) tech.completed.splice(completedIndex, 1);
+      const techBlocked = FB.instantStatus(s, 'e2e_declarative_exchange');
+      tech.completed.push('crop_rotation');
+      const eligibilityBlocked = FB.instantStatus(
+        s, 'e2e_declarative_exchange');
+      p.flags.e2e_deed_eligible = 1;
+      p.gold = 5;
+      p.prestige = 1;
+      const costBlocked = FB.instantStatus(s, 'e2e_declarative_exchange');
+      p.gold = 30;
+      p.prestige = 10;
+      p.piety = 5;
+      const ready = FB.instantStatus(s, 'e2e_declarative_exchange');
+      const storyReady = FB.instantStatus(s, 'e2e_declarative_story');
+      const revision = FB.actionCatalogRevision;
+      let partialReplacementRejected = false;
+      try {
+        FB.mods.apply({ deeds:[{
+          id:'e2e_declarative_day', label:'Incomplete replacement'
+        }] });
+      } catch (error) {
+        partialReplacementRejected =
+          error.message.indexOf('must use the declarative_deed handler') >= 0 &&
+          FB.actionCatalogRevision === revision;
+      }
+      FB.ui.refresh();
+      return {
+        eventWasAbsent:eventWasAbsent,
+        sameModEvent:FB.eventById('e2e_declarative_followup').title,
+        count:FBDATA.deeds.length,
+        hidden:{ shown:hidden.shown, preview:hidden.preview || null },
+        techBlocked:{ can:techBlocked.can, reason:techBlocked.reason },
+        eligibilityBlocked:{
+          shown:eligibilityBlocked.shown,
+          can:eligibilityBlocked.can,
+          reason:eligibilityBlocked.reason
+        },
+        costBlocked:{ can:costBlocked.can, reason:costBlocked.reason },
+        ready:{
+          shown:ready.shown, can:ready.can,
+          flow:ready.action.flow, noConsume:ready.action.noConsume,
+          manualOnly:ready.action.manualOnly,
+          declarative:ready.action.declarative,
+          preview:ready.preview
+        },
+        storyPreview:storyReady.preview,
+        partialReplacementRejected:partialReplacementRejected,
+        rngUnchanged:rngBefore === JSON.stringify(FB.getRngState())
+      };
+    });
+
+    expect(setup.eventWasAbsent).toBe(true);
+    expect(setup.sameModEvent).toBe('A promised audience');
+    expect(setup.count).toBe(81);
+    expect(setup.hidden).toEqual({ shown:false, preview:null });
+    expect(setup.techBlocked).toEqual({
+      can:false,
+      reason:'A required national technology has not been completed.'
+    });
+    expect(setup.eligibilityBlocked).toEqual({
+      shown:true, can:false, reason:'The charter has not yet been signed.'
+    });
+    expect(setup.costBlocked.can).toBe(false);
+    expect(setup.costBlocked.reason).toContain('Requires');
+    expect(setup.ready).toEqual({
+      shown:true, can:true, flow:'no_day', noConsume:true,
+      manualOnly:true, declarative:true,
+      preview:{
+        costs:[
+          { type:'gold', amount:-10, cost:true },
+          { type:'prestige', amount:-2, cost:true }
+        ],
+        effects:[
+          { type:'gold', amount:3, reward:true },
+          { type:'piety', amount:4, reward:true }
+        ],
+        queueEvent:null, spendsDay:false
+      }
+    });
+    expect(setup.rngUnchanged).toBe(true);
+    expect(setup.partialReplacementRejected).toBe(true);
+    expect(setup.storyPreview).toEqual({
+      costs:[{ type:'piety', amount:-1, cost:true }],
+      effects:[{ type:'queue', eventId:'e2e_declarative_followup' }],
+      queueEvent:'e2e_declarative_followup', spendsDay:false
+    });
+
+    await page.locator('#sidetabs [data-tab="actions"]').click();
+    await page.locator('[data-action-group="life"]').click();
+    const exchangeRow = page.locator(
+      '[data-action-id="e2e_declarative_exchange"]').locator('xpath=..');
+    await expect(exchangeRow).toHaveAttribute('data-deed-flow', 'no-day');
+    await expect(exchangeRow.locator('.deed-details')).toContainText('Costs');
+    await expect(exchangeRow.locator('.deed-details')).toContainText('Effects');
+    await expect(exchangeRow.locator('.deed-details')).toContainText('Money');
+    await expect(exchangeRow.locator('.deed-details')).toContainText('Prestige');
+    await expect(exchangeRow.locator('.deed-details')).toContainText('Piety +4');
+    const storyRow = page.locator(
+      '[data-action-id="e2e_declarative_story"]').locator('xpath=..');
+    await expect(storyRow.locator('.deed-details')).toContainText(
+      'Queues event: A promised audience');
+
+    const execution = await page.evaluate(function () {
+      let s = FB.state;
+      let p = s.player;
+      p.flags.tutorial = 1;
+      delete p.flags.tutorial_done;
+      delete p.flags.tut_deed;
+      const beforeExchange = {
+        turn:s.turn, gold:p.gold, prestige:p.prestige, piety:p.piety,
+        rng:JSON.stringify(FB.getRngState())
+      };
+      FB.runInstant(s, 'e2e_declarative_exchange');
+      const exchange = {
+        turn:s.turn - beforeExchange.turn,
+        gold:p.gold - beforeExchange.gold,
+        prestige:p.prestige - beforeExchange.prestige,
+        piety:p.piety - beforeExchange.piety,
+        cooldown:p.cooldowns.e2e_declarative_exchange,
+        tutorial:p.flags.tut_deed,
+        rngUnchanged:beforeExchange.rng === JSON.stringify(FB.getRngState())
+      };
+
+      const queueBefore = s.eventQueue.length;
+      const storyTurn = s.turn;
+      const storyPiety = p.piety;
+      FB.runInstant(s, 'e2e_declarative_story');
+      const story = {
+        turn:s.turn - storyTurn,
+        piety:p.piety - storyPiety,
+        queued:s.eventQueue.length - queueBefore,
+        eventId:s.eventQueue[s.eventQueue.length - 1].id,
+        cooldown:p.cooldowns.e2e_declarative_story
+      };
+
+      delete p.flags.tut_deed;
+      const dayTurn = s.turn;
+      const dayPrestige = p.prestige;
+      const originalPassDay = FB.game.passDay;
+      let observed = null;
+      FB.game.passDay = function (options) {
+        observed = {
+          skipFocus:!!(options && options.skipFocus),
+          prestige:p.prestige,
+          cooldown:p.cooldowns.e2e_declarative_day,
+          tutorial:p.flags.tut_deed
+        };
+        s.turn++;
+      };
+      try {
+        FB.runInstant(s, 'e2e_declarative_day');
+      } finally {
+        FB.game.passDay = originalPassDay;
+      }
+      const day = {
+        turn:s.turn - dayTurn,
+        prestige:p.prestige - dayPrestige,
+        observed:observed
+      };
+
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      s = FB.state;
+      p = s.player;
+      const restored = {
+        version:payload.v,
+        exchange:p.cooldowns.e2e_declarative_exchange,
+        story:p.cooldowns.e2e_declarative_story,
+        day:p.cooldowns.e2e_declarative_day
+      };
+      FB.installActionData(FBDATA.focuses, FBDATA.deeds.filter(function (def) {
+        return def.handler !== 'declarative_deed';
+      }));
+      const missing = FB.instantStatus(s, 'e2e_declarative_exchange');
+      return {
+        beforeTurn:beforeExchange.turn,
+        exchange:exchange,
+        story:story,
+        storyTurn:storyTurn,
+        dayTurn:dayTurn,
+        day:day,
+        restored:restored,
+        disappearance:{
+          action:missing.action, shown:missing.shown, can:missing.can,
+          cooldowns:[
+            p.cooldowns.e2e_declarative_exchange,
+            p.cooldowns.e2e_declarative_story,
+            p.cooldowns.e2e_declarative_day
+          ]
+        }
+      };
+    });
+
+    expect(execution.exchange).toEqual({
+      turn:0, gold:-7, prestige:-2, piety:4,
+      cooldown:execution.beforeTurn, tutorial:1, rngUnchanged:true
+    });
+    expect(execution.story).toEqual({
+      turn:0, piety:-1, queued:1,
+      eventId:'e2e_declarative_followup', cooldown:execution.storyTurn
+    });
+    expect(execution.day).toEqual({
+      turn:1, prestige:1,
+      observed:{
+        skipFocus:true, prestige:9,
+        cooldown:execution.dayTurn, tutorial:1
+      }
+    });
+    expect(execution.restored).toEqual({
+      version:3,
+      exchange:execution.beforeTurn,
+      story:execution.storyTurn,
+      day:execution.dayTurn
+    });
+    expect(execution.disappearance).toEqual({
+      action:null, shown:false, can:false,
+      cooldowns:[execution.beforeTurn, execution.storyTurn, execution.dayTurn]
+    });
+  });
+
+test('milestone-four phase C rejects unsafe declarative deeds without mutation',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function deed(patch) {
+        return Object.assign({
+          id:'e2e_unsafe_deed', handler:'declarative_deed',
+          label:'Unsafe deed', desc:'A rejected declarative deed.',
+          order:78, group:'life', cooldownDays:1, spendsDay:false,
+          effects:{ piety:1 }
+        }, patch || {});
+      }
+      function without(field) {
+        const value = deed();
+        delete value[field];
+        return value;
+      }
+      function attempt(data, expected) {
+        const before = JSON.stringify({
+          focuses:FBDATA.focuses, deeds:FBDATA.deeds, events:FBDATA.events
+        });
+        const focusProjection = FB.focuses;
+        const deedProjection = FB.instants;
+        const revision = FB.actionCatalogRevision;
+        let message = '';
+        try {
+          FB.mods.apply(data);
+        } catch (error) {
+          message = error.message;
+        }
+        return {
+          rejected:message.indexOf(expected) >= 0,
+          message:message,
+          unchanged:before === JSON.stringify({
+            focuses:FBDATA.focuses, deeds:FBDATA.deeds, events:FBDATA.events
+          }) && focusProjection === FB.focuses &&
+            deedProjection === FB.instants &&
+            revision === FB.actionCatalogRevision
+        };
+      }
+      const both = deed({ queueEvent:'birth' });
+      const neither = without('effects');
+      return [
+        attempt({ focuses:[{ id:'e2e_unsafe_focus', label:'Unsafe' }] },
+          'cannot add unknown baseline id'),
+        attempt({ deeds:[{ id:'e2e_unsafe_deed', label:'Unsafe' }] },
+          'cannot add unknown baseline id'),
+        attempt({ deeds:[deed({ handler:'poach' })] },
+          'handler is not recognized'),
+        attempt({ deeds:[deed({ id:'constructor' })] },
+          'must have one unique lowercase id'),
+        attempt({ deeds:[deed({ flow:'choices' })] },
+          'flow is not recognized'),
+        attempt({ deeds:[deed({ run:'custom' })] },
+          'run is not recognized'),
+        attempt({ deeds:[deed({ manualOnly:false })] },
+          'manualOnly is not recognized'),
+        attempt({ deeds:[without('desc')] },
+          'must have a description source'),
+        attempt({ deeds:[deed({ spendsDay:'yes' })] },
+          'spendsDay must be boolean'),
+        attempt({ deeds:[deed({ order:77 })] },
+          'must not repeat order 77'),
+        attempt({ deeds:[deed({ visibility:{
+          reason:'Hidden.', flagsAll:['e2e_hidden']
+        } })] }, 'visibility.reason is not recognized'),
+        attempt({ deeds:[deed({ eligibility:{ flagsAll:['e2e_ready'] } })] },
+          'reason must be a non-empty string'),
+        attempt({ deeds:[deed({ costs:{ gold:-1 } })] },
+          'costs.gold must be a number from 0'),
+        attempt({ deeds:[deed({ effects:{ influence:1 } })] },
+          'effects.influence is not recognized'),
+        attempt({ deeds:[deed({ effects:{ piety:0 } })] },
+          'must contain at least one non-zero resource'),
+        attempt({ deeds:[both] },
+          'must declare exactly one of effects or queueEvent'),
+        attempt({ deeds:[neither] },
+          'must declare exactly one of effects or queueEvent'),
+        attempt({ deeds:[deed({ effects:undefined,
+          queueEvent:'e2e_missing_event' })] },
+          'references unknown event e2e_missing_event'),
+        attempt({
+          events:[{
+            id:'e2e_uncommitted_event', title:'Uncommitted event',
+            text:'This event must not merge.', trigger:{ never:true },
+            options:[{ label:'Close', effects:{} }]
+          }],
+          deeds:[deed({ costs:{ gold:-1 } })]
+        }, 'costs.gold must be a number from 0')
       ];
     });
 

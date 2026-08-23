@@ -343,6 +343,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Attack and defense values are intrinsic doctrine of each unit class in core battle resolution, available to every realm from the baseline; no period technology credibly blocks a class fighting differently on the attack than on the defense, so no dependency is invented.'
       },
+      data_defined_deeds:{
+        mode:'none',
+        rationale:'The bounded mod-authoring facility is not an in-world capability and has no credible technology dependency; individual declarative deeds may retain their own explicit technology requirements.'
+      },
       professional_replacement_cohorts:{
         mode:'none',
         rationale:'Re-drilling slain professionals at a reinforcement premium is core war play owned by the realm; the unit classes themselves already carry their technology gates, so a second gate on replacing them would double-lock the same content.'

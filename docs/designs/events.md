@@ -63,6 +63,14 @@ docs/MODDING.md). New effect/trigger keys must be added there *and* documented i
 docs/MODDING.md. Events fired from code use `trigger:{never:true}` and are queued via
 `FB.queueEvent` / effect `queue`.
 
+Phase 4C declarative mod deeds may name one effective event to queue instead of applying
+their small scalar effect map. The deed validates that reference, including a same-mod
+event, but does not inherit the event interpreter vocabulary: its own record cannot carry
+triggers, custom handlers, choices, identity mutation, or arbitrary effects. It pays any
+fixed deed costs and queues the event with ordinary protagonist/location context; the
+event definition remains the sole owner of later choices and consequences. Replacing a
+mod event invalidates the lazy event-id index before a queued deed can resolve it.
+
 The daily picker moves at most one valid queued event into the UI. A random slot event
 is selected only when no queued event claimed that day, so a pause after resolving one
 choice stops the stream with later events still in the serializable queue. As a second

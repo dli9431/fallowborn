@@ -29,6 +29,15 @@ presentation, order, deed group, fixed cooldown, technology requirements, and bo
 static eligibility. Static rules compose with the private handler guard and therefore
 can only narrow an action's availability. Handler callbacks, UI flow, day consumption,
 dynamic cooldowns, and every baseline id remain protected.
+
+Phase 4C adds new mod deeds only through the fixed `declarative_deed` adapter. They are
+manual-only, cannot open or defer UI, and derive their visible timing from a required
+`spendsDay` boolean. One pure status record supplies visibility, the disabled reason, fixed
+resource costs, and exact effects. Execution rechecks that record, applies its transaction
+once, stamps cooldown and tutorial completion, and only then invokes the existing
+`passDay({skipFocus:true})` path when requested. A no-day deed completes at return; there is
+no new in-flight save state.
+
 The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
 may request visibility-only entries for collapsed accordion groups, postponing cooldown,
 technology, and other eligibility work until those controls are opened.

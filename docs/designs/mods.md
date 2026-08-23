@@ -230,6 +230,18 @@ replaces definitions, projections, and id indexes together. The stable action id
 the save-format-3 focus and cooldown identities. This authoring boundary changes no
 baseline gameplay eligibility, so it requires no technology-impact ledger entry.
 
+Phase 4C permits appended deed ids through one fixed `declarative_deed` adapter. Each
+complete record is manual-only and derives its immediate/no-day flow from `spendsDay`.
+Pure static visibility and eligibility compose with technology, cooldown, and affordable
+fixed costs into one status projection. That projection also owns an exact preview of the
+gold, prestige, and piety transaction, or names one validated effective event that will be
+queued. Execution rechecks the status and commits payment/effects once before cooldown,
+tutorial completion, and an optional day pass. No callback, picker, deferred commitment,
+identity mutation, or specialized baseline handler crosses the JSON boundary. Later mods
+must completely replace mod-added deed records, and missing definitions leave their saved
+cooldown keys inert under save format 3. The facility itself has a `none` technology review;
+an individual deed may still name its own `requiresTech`.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of

@@ -4035,8 +4035,8 @@ window.FB = window.FB || {};
     return out;
   };
 
-  /* id → event index, built on first use — mods merge into FBDATA.events at
-     boot (storing one reloads the page), before any event resolves */
+  /* id → event index, built on first use. Mod merges explicitly invalidate it
+     so same-page validation/tools and ordinary boot share one lookup contract. */
   let eventIndex = null;
   FB.eventById = function (id) {
     if (!eventIndex) {
@@ -4045,6 +4045,7 @@ window.FB = window.FB || {};
     }
     return eventIndex[id] || null;
   };
+  FB.invalidateEventIndex = function () { eventIndex = null; };
 
   /* Shadow index from an effects object to its durable event-log key. It is
      rebuilt after mods apply, without writing metadata into moddable data.
@@ -5223,6 +5224,13 @@ window.FB = window.FB || {};
       return FB.T('Long shot');
     }
     if (record.type === 'none') return FB.T('No direct mechanical change');
+    if (record.type === 'queue') {
+      const queued = FB.eventById(record.eventId);
+      const queuedTitle = queued
+        ? FB.eventText(state, state.player.charId, queued, 'title', {})
+        : record.eventId;
+      return FB.T('Queues event: {event}', { event:queuedTitle });
+    }
     if (record.type === 'gold') {
       if (concealedGain) return FB.T('Money may increase');
       const moneyChange = (amount > 0 ? '+' : '−') + FB.money(Math.abs(amount));

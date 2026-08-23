@@ -262,14 +262,15 @@ window.FBMODS = window.FBMODS || [];
     for (const key in definition) {
       if (!own(definition, key)) continue;
       const value = definition[key];
-      if (key === 'eligibility' && plainObject(value)) {
-        const eligibility = {};
+      if ((key === 'visibility' || key === 'eligibility' ||
+          key === 'costs' || key === 'effects') && plainObject(value)) {
+        const nested = {};
         for (const field in value) {
           if (!own(value, field)) continue;
-          eligibility[field] = Array.isArray(value[field])
+          nested[field] = Array.isArray(value[field])
             ? value[field].slice() : value[field];
         }
-        out[key] = eligibility;
+        out[key] = nested;
       } else {
         out[key] = Array.isArray(value) ? value.slice() : value;
       }
@@ -281,37 +282,64 @@ window.FBMODS = window.FBMODS || [];
     const out = (base || []).map(cloneActionDefinition);
     if (additions === undefined) return out;
     if (!Array.isArray(additions)) fail(kind, 'must be an array.');
-    const allowed = kind === 'focuses'
+    const baselineAllowed = kind === 'focuses'
       ? { id:true, label:true, desc:true, order:true, eligibility:true }
       : { id:true, label:true, desc:true, order:true, group:true,
           cooldownDays:true, requiresTech:true, eligibility:true };
+    const declarativeAllowed = {
+      id:true, handler:true, label:true, desc:true, order:true, group:true,
+      cooldownDays:true, spendsDay:true, requiresTech:true, visibility:true,
+      eligibility:true, costs:true, effects:true, queueEvent:true
+    };
     const indexes = {};
     const supplied = {};
     for (let i = 0; i < out.length; i++) indexes[out[i].id] = i;
     for (let i = 0; i < additions.length; i++) {
       const override = additions[i];
       const path = kind + '[' + i + ']';
-      onlyFields(override, allowed, path);
+      if (!plainObject(override)) fail(path, 'must be an object.');
       if (typeof override.id !== 'string' ||
           !/^[a-z][a-z0-9_]*$/.test(override.id)) {
         fail(path + '.id', 'must be a lowercase action id.');
       }
       if (own(supplied, override.id)) fail(kind, 'must not repeat ' + override.id + '.');
-      if (!own(indexes, override.id)) {
+      const existing = own(indexes, override.id)
+        ? out[indexes[override.id]] : null;
+      const declarative = kind === 'deeds' &&
+        ((!existing && override.handler === 'declarative_deed') ||
+          (existing && existing.handler === 'declarative_deed'));
+      onlyFields(override, declarative ? declarativeAllowed : baselineAllowed,
+        path);
+      if (!existing && !declarative) {
         fail(path + '.id', 'cannot add unknown baseline id ' + override.id + '.');
       }
       supplied[override.id] = true;
-      const next = cloneActionDefinition(out[indexes[override.id]]);
+      if (declarative && override.handler !== 'declarative_deed') {
+        fail(path + '.handler', 'must be declarative_deed.');
+      }
+      /* Added deeds and later replacements are complete records. Inheriting
+         an omitted executable field from an earlier mod would make meaning
+         depend on load order and hide the effective transaction from review. */
+      const next = declarative ? { id:override.id } :
+        cloneActionDefinition(existing);
       for (const key in override) {
         if (!own(override, key) || key === 'id') continue;
-        if (key === 'eligibility' && plainObject(override[key])) {
-          next[key] = cloneActionDefinition({ eligibility:override[key] }).eligibility;
+        if ((key === 'visibility' || key === 'eligibility' ||
+            key === 'costs' || key === 'effects') && plainObject(override[key])) {
+          const wrapped = {};
+          wrapped[key] = override[key];
+          next[key] = cloneActionDefinition(wrapped)[key];
         } else {
           next[key] = Array.isArray(override[key])
             ? override[key].slice() : override[key];
         }
       }
-      out[indexes[override.id]] = next;
+      if (declarative) next.flow = next.spendsDay ? 'immediate' : 'no_day';
+      if (existing) out[indexes[override.id]] = next;
+      else {
+        indexes[override.id] = out.length;
+        out.push(next);
+      }
     }
     return out;
   }
@@ -328,7 +356,9 @@ window.FBMODS = window.FBMODS || [];
       careers:combinedTable(FBDATA.careers, mod.careers, 'careers'),
       traits:combinedTable(FBDATA.traits, mod.traits, 'traits'),
       religions:combinedTable(FBDATA.religions, mod.religions, 'religions'),
-      cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures')
+      cultures:combinedTable(FBDATA.cultures, mod.cultures, 'cultures'),
+      events:(FBDATA.events || []).concat(own(mod, 'events')
+        ? combinedList([], mod.events, 'events') : [])
     };
     const errors = FB.validateActionData(focuses, deeds, references);
     if (errors.length) fail('actions', errors.join(' '));
@@ -1092,7 +1122,10 @@ window.FBMODS = window.FBMODS || [];
       }
     }
     if (changesLegacyWorld && !supplies1066) legacyBookmarkLimited = true;
-    if (mod.events) mergeById(FBDATA.events, mod.events, 'id');
+    if (mod.events) {
+      mergeById(FBDATA.events, mod.events, 'id');
+      if (FB.invalidateEventIndex) FB.invalidateEventIndex();
+    }
     if (mod.provinces) {
       retainLegacySettlementPresentation(mod.provinces);
       mergeById(FBDATA.provinces, mod.provinces, 'id');
