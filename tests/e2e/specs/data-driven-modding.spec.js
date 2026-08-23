@@ -1303,7 +1303,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
         }] });
       } catch (error) {
         partialReplacementRejected =
-          error.message.indexOf('must use the declarative_deed handler') >= 0 &&
+          error.message.indexOf('handler must be declarative_deed') >= 0 &&
           FB.actionCatalogRevision === revision;
       }
       FB.ui.refresh();
