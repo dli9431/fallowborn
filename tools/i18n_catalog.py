@@ -1016,6 +1016,27 @@ def extract_structured(inv: Inventory) -> None:
                     TOKEN_RE.findall(record["text"]),
                 )
 
+    religious_paths_file = DATA / "economy.js"
+    religious_paths = node_object(
+        find_assignment(religious_paths_file, "FBDATA", "religiousPaths")
+    ) or {}
+    for path_id, path_node in religious_paths.items():
+        path_def = node_object(path_node) or {}
+        for rank_index, rank_node in enumerate(node_array(path_def.get("ranks")) or []):
+            rank = node_object(rank_node) or {}
+            rank_id = node_string(rank.get("id")) or str(rank_index)
+            for field in ("name", "name_f"):
+                for branch, record, line in branch_records(rank.get(field)):
+                    inv.add(
+                        f"religiousPath.{path_id}.ranks.{rank_id}."
+                        f"{field}.{branch}",
+                        record,
+                        f"data/economy.js:{line}",
+                        f"Religious path {path_id}, rank {rank_id}, "
+                        f"{field}, faith branch {branch}.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
+
     for prop, namespace in (("focuses", "focus"), ("instants", "action")):
         values = node_array(find_assignment(JS / "actions.js", "FB", prop)) or []
         for index, item_node in enumerate(values):

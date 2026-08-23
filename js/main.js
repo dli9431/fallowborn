@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.147.1';
+  FB.VERSION = '1.148.0';
   FB.CHANGELOG = [
+    { v: '1.148.0', date: '2026-08-22', changes: [
+      'Religious progression paths and rank names are now data-driven, letting mods add validated faith and vocation ladders without changing existing saves.'
+    ] },
     { v: '1.147.1', date: '2026-08-22', changes: [
       'Plot-only runtime mods now validate their intrigue method references correctly.'
     ] },

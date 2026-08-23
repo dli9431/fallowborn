@@ -41,6 +41,8 @@ The initial property vocabulary is intentionally extensible rather than a closed
   faith-flavored `words.partnership` label;
 - `roles` for monastic, priestly, episcopal, cardinal, abbatial, and qadi titles,
   plus `clergyMarriage`;
+- `religiousPaths.lay` and `religiousPaths.professions` for the validated
+  character-progression paths defined in `FBDATA.religiousPaths`;
 - `systems` capability flags such as `papacy`;
 - optional `head` metadata, including a stable office, holder-sex eligibility,
   recovery, and great holy wars.

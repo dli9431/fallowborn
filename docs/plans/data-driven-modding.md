@@ -1,6 +1,6 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestones 0–1 implemented
+Status: active; milestones 0–2 implemented
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -263,6 +263,32 @@ Characters currently store `religiousRanks[pathId]` as a numeric rank index. The
 
 The baseline paths and ranks should be required by validation. Mods may add paths and
 replace presentation or costs, but removing a baseline rank is unsafe.
+
+### Milestone 2 implementation
+
+Implemented on 2026-08-22:
+
+- `FBDATA.religiousPaths` in `data/economy.js` owns the six unchanged Catholic and
+  Muslim ladders. Every rank has a stable id and localized default/female name while
+  retaining its historical numeric position, gates, rewards, yield, station, tier, and
+  compatibility flag.
+- Effective religion `properties.religiousPaths` route a lay path and exact profession
+  ids to vocation paths. Optional path-level faith ancestors, faith-system capabilities,
+  and professions bound reusable paths without returning routing switches to the engine.
+- Runtime mods may add or completely replace paths. Validation resolves same-mod paths,
+  faiths, and careers, protects every baseline rank prefix, bounds rank requirements and
+  side effects, and rejects malformed religion routes before mutation.
+- The engine continues to own advancement, resource payment, contested Abbot/Bishop
+  appointments, tier/station changes, compatibility mirrors, repair, and seasonal piety.
+  Stable core path/rank ids keep those special consumers explicit.
+- Save format remains 3. Legacy numeric rank indexes restore unchanged, appended ranks are
+  safe, and a missing path becomes inactive without deleting its saved progress. No RNG
+  sequence changes.
+- Religious rank localization uses stable path/rank owners; untranslated mod rank names
+  fall back to their effective authored English.
+
+No technology-impact ledger entry is required: this exposes existing progression content
+to validated data and mods without changing baseline gameplay eligibility.
 
 ## Milestone 3: Royal Council definitions
 

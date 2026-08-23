@@ -8,70 +8,6 @@ window.FB = window.FB || {};
   const CAREER_RANK_ORDER = {
     unassigned:0, apprentice:1, journeyman:2, master:3
   };
-  const RELIGIOUS_PATHS = {
-    catholic_lay: [
-      { id:'parishioner', pietyYield:0 },
-      { id:'almsgiver', age:16, piety:10, gold:5, prestigeGain:2, pietyYield:0.25 },
-      { id:'pilgrim', age:16, piety:30, gold:20, prestigeGain:5, pietyYield:0.5 },
-      { id:'church_patron', age:18, piety:80, prestige:25, gold:80,
-        prestigeGain:10, pietyYield:1 }
-    ],
-    catholic_monastic: [
-      { id:'novice', pietyYield:0.25 },
-      { id:'professed', age:16, years:2, learning:4, piety:25,
-        prestigeGain:3, pietyYield:0.5 },
-      { id:'prior', age:20, years:6, learning:7, piety:60, prestige:20,
-        prestigeGain:8, pietyYield:1, station:1 },
-      { id:'abbot', age:24, years:10, learning:9, piety:100, prestige:40,
-        prestigeGain:15, pietyYield:1.5, station:2, tier:2, flag:'abbot' },
-      { id:'bishop', age:30, years:14, learning:12, piety:160, prestige:80,
-        prestigeGain:25, pietyYield:2.5, station:3, tier:3, flag:'bishop', maleOnly:true }
-    ],
-    catholic_clerical: [
-      { id:'clerk', pietyYield:0.25 },
-      { id:'acolyte', age:16, years:1, learning:3, piety:10,
-        prestigeGain:2, pietyYield:0.5 },
-      { id:'deacon', age:19, years:3, learning:5, piety:30,
-        prestigeGain:4, pietyYield:0.75 },
-      { id:'priest', age:24, years:5, learning:7, piety:50,
-        prestigeGain:7, pietyYield:1, station:1 },
-      { id:'archpriest', age:28, years:9, learning:9, piety:90, prestige:30,
-        prestigeGain:12, pietyYield:1.5, station:2 },
-      { id:'bishop', age:30, years:14, learning:12, piety:160, prestige:80,
-        prestigeGain:25, pietyYield:2.5, station:3, tier:3, flag:'bishop' }
-    ],
-    muslim_lay: [
-      { id:'believer', pietyYield:0 },
-      { id:'almsgiver', age:16, piety:10, gold:5, prestigeGain:2, pietyYield:0.25 },
-      { id:'hajji', age:18, piety:35, gold:35, prestigeGain:6, pietyYield:0.5 },
-      { id:'waqf_patron', age:18, piety:80, prestige:25, gold:100,
-        prestigeGain:10, pietyYield:1 }
-    ],
-    muslim_scholar: [
-      { id:'student', pietyYield:0.25 },
-      { id:'licensed_scholar', age:16, years:2, learning:5, piety:20,
-        prestigeGain:4, pietyYield:0.5 },
-      { id:'mudarris', age:20, years:6, learning:8, piety:50, prestige:15,
-        prestigeGain:8, pietyYield:1, station:1 },
-      { id:'mufti', age:24, years:9, learning:10, piety:80, prestige:30,
-        prestigeGain:12, pietyYield:1.5, station:2 },
-      { id:'qadi', age:26, years:12, learning:11, piety:110, prestige:50, gold:25,
-        prestigeGain:18, pietyYield:2, station:2, tier:2, flag:'qadi', maleOnly:true },
-      { id:'chief_qadi', age:30, years:16, learning:13, piety:170, prestige:90, gold:100,
-        prestigeGain:28, pietyYield:3, station:3, tier:3, flag:'chief_qadi', maleOnly:true }
-    ],
-    muslim_mosque: [
-      { id:'mosque_servant', pietyYield:0.25 },
-      { id:'muezzin', age:16, years:1, learning:3, piety:15,
-        prestigeGain:2, pietyYield:0.5 },
-      { id:'imam', age:20, years:4, learning:6, piety:40,
-        prestigeGain:6, pietyYield:1, station:1 },
-      { id:'khatib', age:24, years:8, learning:8, piety:75, prestige:25,
-        prestigeGain:10, pietyYield:1.5, station:2 },
-      { id:'chief_imam', age:28, years:12, learning:10, piety:120, prestige:50, gold:50,
-        prestigeGain:18, pietyYield:2, station:2 }
-    ]
-  };
   const LEGACY_ENTERPRISES = {
     orchard:'orchard_business',
     press:'press_business',
@@ -752,47 +688,64 @@ window.FB = window.FB || {};
     return out;
   };
 
-  function religiousPathId(state, c) {
+  function religiousPathAllowed(state, c, pathId) {
+    const def = FBDATA.religiousPaths && FBDATA.religiousPaths[pathId];
+    if (!def || !Array.isArray(def.ranks) || !def.ranks.length) return false;
+    if (Array.isArray(def.faiths) && !def.faiths.some(function (faithId) {
+      return FB.faithIsA(c.religion, faithId, state);
+    })) return false;
+    if (Array.isArray(def.systems) && !def.systems.every(function (systemId) {
+      return FB.faithHasSystem(c.religion, systemId, state);
+    })) return false;
     const career = FB.careerOf(state, c);
-    if (!career) return null;
-    if (FB.faithHasSystem(c.religion, 'papacy', state)) {
-      if (career.profession === 'monk') return 'catholic_monastic';
-      if (career.profession === 'priest') return 'catholic_clerical';
-      return 'catholic_lay';
-    }
-    if (FB.faithIsA(c.religion, 'muslim', state)) {
-      if (career.profession === 'monk') return 'muslim_scholar';
-      if (career.profession === 'priest') return 'muslim_mosque';
-      return 'muslim_lay';
-    }
-    return null;
+    return !Array.isArray(def.professions) || !!(career &&
+      def.professions.indexOf(career.profession) >= 0);
+  }
+
+  function religiousRoutes(state, c) {
+    const religion = c && FB.religionOf(c.religion, state);
+    const routes = religion && religion.religiousPaths;
+    return routes && typeof routes === 'object' ? routes : null;
+  }
+
+  function religiousLayPathId(state, c) {
+    const routes = religiousRoutes(state, c);
+    const pathId = routes && routes.lay;
+    return pathId && religiousPathAllowed(state, c, pathId) ? pathId : null;
+  }
+
+  function religiousPathId(state, c) {
+    const career = c && FB.careerOf(state, c);
+    const routes = religiousRoutes(state, c);
+    if (!career || !routes) return null;
+    const byProfession = routes.professions;
+    const pathId = byProfession && byProfession[career.profession] || routes.lay;
+    return pathId && religiousPathAllowed(state, c, pathId) ? pathId : null;
   }
 
   function religiousRankIndex(state, c, pathId) {
     const ranks = c.religiousRanks || {};
     let index = ranks[pathId] || 0;
+    const def = FBDATA.religiousPaths && FBDATA.religiousPaths[pathId];
+    const steps = def && def.ranks;
+    if (!steps || !steps.length) return 0;
     if (state.player && c.id === state.player.charId) {
       const flags = state.player.flags || {};
-      if (pathId === 'catholic_monastic') {
-        if (flags.abbot) index = Math.max(index, 3);
-        if (flags.bishop) index = Math.max(index, 4);
-      } else if (pathId === 'catholic_clerical' && flags.bishop) {
-        index = Math.max(index, 5);
-      } else if (pathId === 'muslim_scholar') {
-        if (flags.qadi) index = Math.max(index, 4);
-        if (flags.chief_qadi) index = Math.max(index, 5);
+      for (let i = 0; i < steps.length; i++) {
+        if (steps[i].flag && flags[steps[i].flag]) index = Math.max(index, i);
       }
     }
-    index = FB.clamp(index, 0, RELIGIOUS_PATHS[pathId].length - 1);
-    return index;
+    return Math.floor(FB.clamp(Number(index) || 0, 0, steps.length - 1));
   }
 
   function religiousPathRecord(state, c, pathId) {
-    const steps = RELIGIOUS_PATHS[pathId];
-    if (!steps) return null;
+    const def = FBDATA.religiousPaths && FBDATA.religiousPaths[pathId];
+    const steps = def && def.ranks;
+    if (!steps || !steps.length) return null;
     const index = religiousRankIndex(state, c, pathId);
     return {
-      id:pathId, steps:steps, index:index, step:steps[index],
+      id:pathId, kind:def.kind, def:def, steps:steps,
+      index:index, step:steps[index],
       next:index + 1 < steps.length ? steps[index + 1] : null
     };
   }
@@ -818,8 +771,7 @@ window.FB = window.FB || {};
     if (!c) return [];
     const activeId = religiousPathId(state, c);
     if (!activeId) return [];
-    const layId = FB.faithHasSystem(c.religion, 'papacy', state) ? 'catholic_lay' :
-      (FB.faithIsA(c.religion, 'muslim', state) ? 'muslim_lay' : null);
+    const layId = religiousLayPathId(state, c);
     const out = [];
     if (layId) out.push({ kind:'lay', path:religiousPathRecord(state, c, layId) });
     if (activeId !== layId) {
@@ -833,36 +785,9 @@ window.FB = window.FB || {};
     if (FB.isCardinal && FB.isCardinal(state, c)) return FB.T('Cardinal');
     path = path || FB.religiousPathOf(state, c);
     if (!path || !path.step) return '';
-    const id = path.step.id;
-    if (id === 'parishioner') return FB.T('Parishioner');
-    if (id === 'believer') return FB.T('Believer');
-    if (id === 'almsgiver') return FB.T('Almsgiver');
-    if (id === 'pilgrim') return FB.T('Pilgrim');
-    if (id === 'church_patron') return FB.T('Church Patron');
-    if (id === 'hajji') return c.sex === 'f' ? FB.T('Hajja') : FB.T('Hajji');
-    if (id === 'waqf_patron') return FB.T('Waqf Patron');
-    if (id === 'novice') return FB.T('Novice');
-    if (id === 'professed') return c.sex === 'f' ? FB.T('Professed Sister') : FB.T('Professed Brother');
-    if (id === 'prior') return c.sex === 'f' ? FB.T('Prioress') : FB.T('Prior');
-    if (id === 'abbot') return c.sex === 'f' ? FB.T('Abbess') : FB.T('Abbot');
-    if (id === 'clerk') return FB.T('Clerk');
-    if (id === 'acolyte') return FB.T('Acolyte');
-    if (id === 'deacon') return FB.T('Deacon');
-    if (id === 'priest') return FB.T('Priest');
-    if (id === 'archpriest') return FB.T('Archpriest');
-    if (id === 'bishop') return FB.T('Bishop');
-    if (id === 'student') return FB.T('Student of the Faith');
-    if (id === 'licensed_scholar') return FB.T('Licensed Scholar');
-    if (id === 'mudarris') return FB.T('Mudarris');
-    if (id === 'mufti') return FB.T('Mufti');
-    if (id === 'qadi') return FB.T('Qadi');
-    if (id === 'chief_qadi') return FB.T('Chief Qadi');
-    if (id === 'mosque_servant') return FB.T('Mosque Servant');
-    if (id === 'muezzin') return FB.T('Muezzin');
-    if (id === 'imam') return FB.T('Imam');
-    if (id === 'khatib') return FB.T('Khatib');
-    if (id === 'chief_imam') return FB.T('Chief Imam');
-    return '';
+    const field = c.sex === 'f' && path.step.name_f ? 'name_f' : 'name';
+    return FB.dataText(state, c.id, 'religiousPath',
+      path.id + '.ranks.' + path.step.id, path.step, field, {});
   };
 
   FB.religiousAdvance = function (state, c) {
@@ -895,8 +820,7 @@ window.FB = window.FB || {};
   }
 
   function layStandingIndex(state, c) {
-    const pathId = FB.faithHasSystem(c.religion, 'papacy', state) ? 'catholic_lay' :
-      (FB.faithIsA(c.religion, 'muslim', state) ? 'muslim_lay' : null);
+    const pathId = religiousLayPathId(state, c);
     return pathId ? religiousRankIndex(state, c, pathId) : 0;
   }
 
@@ -996,8 +920,13 @@ window.FB = window.FB || {};
     const activeId = religiousPathId(state, c);
     const pathId = activeId === 'catholic_monastic'
       ? activeId : 'catholic_clerical';
+    const def = FBDATA.religiousPaths[pathId];
+    let bishopIndex = def.ranks.length - 1;
+    for (let i = 0; i < def.ranks.length; i++) {
+      if (def.ranks[i].id === 'bishop') bishopIndex = i;
+    }
     c.religiousRanks = c.religiousRanks || {};
-    c.religiousRanks[pathId] = RELIGIOUS_PATHS[pathId].length - 1;
+    c.religiousRanks[pathId] = bishopIndex;
   }
 
   FB.installBishopric = function (state, c, status, opts) {
@@ -1170,7 +1099,10 @@ window.FB = window.FB || {};
     c = c || playerChar(state);
     const path = c && FB.religiousPathOf(state, c);
     const step = path && path.next;
-    const visible = !!(c && FB.faithHasSystem(c.religion, 'papacy', state) && step &&
+    const corePath = path && (path.id === 'catholic_monastic' ||
+      path.id === 'catholic_clerical');
+    const visible = !!(c && corePath &&
+      FB.faithHasSystem(c.religion, 'papacy', state) && step &&
       step.id === 'bishop');
     if (!visible) return { visible:false, ready:false, missing:[] };
     const cfg = catholicOfficeBalance('bishopric');
@@ -1327,8 +1259,10 @@ window.FB = window.FB || {};
     if (!advance || advance.blocked) return false;
     const path = advance.path;
     const step = advance.step;
+    const coreBishop = (path.id === 'catholic_monastic' ||
+      path.id === 'catholic_clerical') && step.id === 'bishop';
     if ((path.id === 'catholic_monastic' && step.id === 'abbot') ||
-        step.id === 'bishop') return false; // contested offices use appointment flows
+        coreBishop) return false; // core contested offices use appointment flows
     state.player.gold -= step.gold || 0;
     state.player.prestige += step.prestigeGain || 0;
     c.religiousRanks = c.religiousRanks || {};
@@ -1337,7 +1271,7 @@ window.FB = window.FB || {};
       c.station = Math.max(FB.stationOf(c), step.station);
     }
     const career = FB.careerOf(state, c);
-    if (path.id.indexOf('_lay') < 0 && path.index + 1 >= 2 &&
+    if (path.kind !== 'lay' && path.index + 1 >= 2 &&
       career.rank === 'journeyman') career.rank = 'master';
     if (c.id === state.player.charId) promotePlayerReligiously(state, step);
     FB.news(state, FB.msg('news.religion.advanced',

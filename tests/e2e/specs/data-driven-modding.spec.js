@@ -4,16 +4,20 @@ dependsOnRuntime(__filename, [
   'data/map_data.js',
   'data/starts.js',
   'data/cultures.js',
+  'data/economy.js',
   'data/traits.js',
   'data/intrigue.js',
   'js/model.js',
+  'js/i18n.js',
   'js/world.js',
   'js/items.js',
   'js/economy.js',
   'js/actions.js',
   'js/council.js',
   'js/intrigue.js',
+  'js/save.js',
   'js/mods.js',
+  'js/ui_modals.js',
   'js/main.js'
 ]);
 
@@ -408,6 +412,180 @@ test('milestone-one validation protects baseline starts and rejects bad referenc
         unchanged:before === JSON.stringify({
           scenarios:FBDATA.startScenarios,
           presets:FBDATA.familyPresets
+        })
+      };
+    });
+
+    expect(result.errors).toEqual([true, true, true, true, true, true, true]);
+    expect(result.unchanged).toBe(true);
+  });
+
+test('milestone-two religious paths route, advance, localize, and restore by index',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      FB.mods.apply({
+        religiousPaths:{
+          e2e_devotion:{
+            kind:'lay', faiths:['e2e_way'],
+            ranks:[
+              { id:'hearer', name:'Hearer', pietyYield:0 },
+              { id:'patron', name:'Way Patron', name_f:'Way Patroness',
+                age:16, piety:5, gold:2, prestigeGain:1, pietyYield:0.25 }
+            ]
+          },
+          e2e_vocation:{
+            kind:'vocation', faiths:['e2e_way'], professions:['monk'],
+            ranks:[
+              { id:'listener', name:'Listener', pietyYield:0.25 },
+              { id:'keeper', name:'Keeper', age:16, years:2, learning:5,
+                piety:7, prestige:3, gold:4, prestigeGain:6,
+                pietyYield:0.75, station:1, flag:'e2e_keeper' }
+            ]
+          }
+        },
+        religions:{
+          e2e_way:{
+            name:'The Recorded Way', icon:'◇',
+            properties:{
+              religiousPaths:{
+                lay:'e2e_devotion', professions:{ monk:'e2e_vocation' }
+              }
+            }
+          }
+        }
+      });
+      const s = FB.state;
+      let me = s.chars[s.player.charId];
+      me.religion = 'e2e_way';
+      me.sex = 'f';
+      me.religiousRanks = { e2e_devotion:1, removed_mod_path:4 };
+      me.career.profession = 'farmer';
+      const lay = FB.religiousPathOf(s, me);
+      const layTitle = FB.religiousRankTitle(s, me, lay);
+      FB.ui.showCareerPicker(me.id);
+      const layHelp = document.querySelector('#career-religious .adesc')
+        .textContent;
+      FB.ui.closeModal();
+      me.career.profession = 'monk';
+      me.career.rank = 'journeyman';
+      me.career.experience = 2;
+      me.skills.lea = Math.max(Number(me.skills.lea) || 0, 5);
+      s.player.gold = 20;
+      s.player.prestige = 3;
+      s.player.piety = 7;
+      const before = FB.religiousAdvance(s, me);
+      const advanced = FB.takeReligiousStep(s, me);
+      const vocation = FB.religiousPathOf(s, me);
+      const progressed = {
+        gold:s.player.gold, prestige:s.player.prestige,
+        flag:s.player.flags.e2e_keeper, station:FB.stationOf(me),
+        title:FB.religiousRankTitle(s, me, vocation)
+      };
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      const restored = FB.state;
+      me = restored.chars[restored.player.charId];
+      const restoredPath = FB.religiousPathOf(restored, me);
+      const restoredTitle = FB.religiousRankTitle(restored, me, restoredPath);
+      const savedIndex = me.religiousRanks.e2e_vocation;
+      me.religion = 'orthodox';
+      const inactive = FB.religiousPathOf(restored, me);
+      return {
+        lay:{ id:lay.id, kind:lay.kind, title:layTitle,
+          requirements:layHelp.indexOf('Requires age 16, 5 piety') >= 0 &&
+            layHelp.indexOf('Learning') < 0 },
+        before:{ id:before.path.id, rank:before.step.id, blocked:before.blocked },
+        advanced:advanced,
+        vocation:{ id:vocation.id, rank:vocation.step.id,
+          title:progressed.title },
+        resources:progressed,
+        restore:{ version:payload.v, index:savedIndex, title:restoredTitle },
+        missingPath:{ inactive:inactive === null,
+          progress:me.religiousRanks.removed_mod_path }
+      };
+    });
+
+    expect(result.lay).toEqual({
+      id:'e2e_devotion', kind:'lay', title:'Way Patroness', requirements:true
+    });
+    expect(result.before).toEqual({
+      id:'e2e_vocation', rank:'keeper', blocked:false
+    });
+    expect(result.advanced).toBe(true);
+    expect(result.vocation).toEqual({
+      id:'e2e_vocation', rank:'keeper', title:'Keeper'
+    });
+    expect(result.resources).toEqual({
+      gold:16, prestige:9, flag:1, station:1, title:'Keeper'
+    });
+    expect(result.restore).toEqual({ version:3, index:1, title:'Keeper' });
+    expect(result.missingPath).toEqual({ inactive:true, progress:4 });
+  });
+
+test('milestone-two validation preserves rank indexes and rejects bad routes',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function copy(value) { return JSON.parse(JSON.stringify(value)); }
+      function path(id) {
+        const out = {};
+        out[id] = {
+          kind:'lay', ranks:[{ id:'first', name:'First', pietyYield:0 }]
+        };
+        return out;
+      }
+      const reordered = copy(FBDATA.religiousPaths.catholic_lay);
+      const swap = reordered.ranks[0];
+      reordered.ranks[0] = reordered.ranks[1];
+      reordered.ranks[1] = swap;
+      const unknownFaith = path('e2e_unknown_faith');
+      unknownFaith.e2e_unknown_faith.faiths = ['missing_faith'];
+      const unknownProfession = path('e2e_unknown_profession');
+      unknownProfession.e2e_unknown_profession.kind = 'vocation';
+      unknownProfession.e2e_unknown_profession.professions = ['missing_job'];
+      const badCost = path('e2e_bad_cost');
+      badCost.e2e_bad_cost.ranks[0].gold = -1;
+      const wrongProfession = copy(FBDATA.religiousPaths.catholic_monastic);
+      const before = JSON.stringify({
+        paths:FBDATA.religiousPaths, religions:FBDATA.religions
+      });
+      const cases = [
+        { data:{ religiousPaths:{ catholic_lay:reordered } },
+          includes:'must remain parishioner' },
+        { data:{ religiousPaths:unknownFaith },
+          includes:'unknown id missing_faith' },
+        { data:{ religiousPaths:unknownProfession },
+          includes:'unknown id missing_job' },
+        { data:{ religiousPaths:badCost },
+          includes:'number from 0 to 100000' },
+        { data:{ religions:{ e2e_bad_route:{ name:'Bad route', properties:{
+          religiousPaths:{ lay:'missing_path', professions:{} }
+        } } } }, includes:'unknown religious path missing_path' },
+        { data:{ religions:{ e2e_bad_kind:{ name:'Bad kind', properties:{
+          religiousPaths:{ lay:'catholic_monastic', professions:{} }
+        } } } }, includes:'must reference a lay path' },
+        { data:{ religiousPaths:{ e2e_wrong_profession:wrongProfession },
+          religions:{ e2e_bad_profession:{ name:'Bad profession', properties:{
+            religiousPaths:{ lay:'catholic_lay',
+              professions:{ priest:'e2e_wrong_profession' } }
+          } } } }, includes:'path that allows profession priest' }
+      ];
+      const errors = cases.map(function (entry) {
+        try {
+          FB.mods.apply(entry.data);
+          return null;
+        } catch (error) {
+          return error.message.indexOf(entry.includes) >= 0;
+        }
+      });
+      return {
+        errors:errors,
+        unchanged:before === JSON.stringify({
+          paths:FBDATA.religiousPaths, religions:FBDATA.religions
         })
       };
     });

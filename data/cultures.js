@@ -182,6 +182,10 @@ FBDATA.religions = {
     relationToParent:'schismatic', icon:'✝',
     properties:{
       systems:{ papacy:true },
+      religiousPaths:{
+        lay:'catholic_lay',
+        professions:{ monk:'catholic_monastic', priest:'catholic_clerical' }
+      },
       roles:{ bishop:'Bishop', cardinal:'Cardinal' },
       head:{
         officeId:'catholic', realm:'papacy', title:'Pope', holderSex:'m',
@@ -220,6 +224,10 @@ FBDATA.religions = {
         partnership:'Qirad partnership' },
       roles:{ monasticM:'Scholar', monasticF:'Scholar', priestM:'Imam', priestF:'Imam',
         qadi:'Qadi', grandQadi:'Grand Qadi' },
+      religiousPaths:{
+        lay:'muslim_lay',
+        professions:{ monk:'muslim_scholar', priest:'muslim_mosque' }
+      },
       clergyMarriage:true
     } },
   sunni: { name:'Islam (Sunni)', group:'muslim',

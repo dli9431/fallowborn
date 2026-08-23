@@ -13868,9 +13868,12 @@ window.FB = window.FB || {};
         const faithTitle = FB.religiousRankTitle(s, c, {
           id:religiousAdvance.path.id, step:faithStep
         });
-        const abbotStatus = faithStep.id === 'abbot' &&
+        const abbotStatus = religiousAdvance.path.id === 'catholic_monastic' &&
+          faithStep.id === 'abbot' &&
           FB.abbotAppointmentStatus ? FB.abbotAppointmentStatus(s, c) : null;
-        const bishopStatus = faithStep.id === 'bishop' &&
+        const coreBishopPath = religiousAdvance.path.id === 'catholic_monastic' ||
+          religiousAdvance.path.id === 'catholic_clerical';
+        const bishopStatus = coreBishopPath && faithStep.id === 'bishop' &&
           FB.bishopAppointmentStatus ? FB.bishopAppointmentStatus(s, c) : null;
         const officeStatus = bishopStatus || abbotStatus;
         /* Appointment rows remain inspectable when ineligible so the modal
@@ -13903,7 +13906,7 @@ window.FB = window.FB || {};
               : FB.T('Unmet: {requirements}', {
                 requirements:officeStatus.missing.join('; ')
               }))
-            : religiousAdvance.path.id.indexOf('_lay') >= 0
+            : religiousAdvance.path.kind === 'lay'
             ? FB.T('Requires age {age}, {piety} piety, {prestige} prestige, and {money:gold} from the household.', {
               age:faithStep.age || 0, piety:faithStep.piety || 0,
               prestige:faithStep.prestige || 0, gold:faithStep.gold || 0
@@ -14004,11 +14007,14 @@ window.FB = window.FB || {};
     const religious = $('career-religious');
     if (religious) religious.addEventListener('click', function () {
       const advance = FB.religiousAdvance(s, c);
-      if (advance && advance.step.id === 'abbot') {
+      if (advance && advance.path.id === 'catholic_monastic' &&
+          advance.step.id === 'abbot') {
         UI.showAbbotElection(c.id, returnContext);
         return;
       }
-      if (advance && advance.step.id === 'bishop') {
+      if (advance && (advance.path.id === 'catholic_monastic' ||
+          advance.path.id === 'catholic_clerical') &&
+          advance.step.id === 'bishop') {
         UI.showBishopAppointment(c.id, returnContext);
         return;
       }

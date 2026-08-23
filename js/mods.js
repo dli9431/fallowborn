@@ -162,7 +162,8 @@ window.FBMODS = window.FBMODS || [];
     startScenarios:true, familyPresets:true,
     provinces:true, realms:true, empires:true, kingdoms:true, duchies:true,
     events:true, straits:true, crossingClasses:true, scripted:true,
-    cultureTraditions:true, cultures:true, religions:true, traits:true,
+    cultureTraditions:true, cultures:true, religions:true, religiousPaths:true,
+    traits:true,
     ailments:true, modifiers:true, buildings:true, forts:true,
     techDomains:true, techTraditions:true, tech:true, techCaps:true,
     techImpactReviews:true, unitClasses:true, holdings:true, careers:true,
@@ -664,6 +665,169 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  const BASELINE_RELIGIOUS_RANKS = {
+    catholic_lay:['parishioner','almsgiver','pilgrim','church_patron'],
+    catholic_monastic:['novice','professed','prior','abbot','bishop'],
+    catholic_clerical:['clerk','acolyte','deacon','priest','archpriest','bishop'],
+    muslim_lay:['believer','almsgiver','hajji','waqf_patron'],
+    muslim_scholar:[
+      'student','licensed_scholar','mudarris','mufti','qadi','chief_qadi'
+    ],
+    muslim_mosque:['mosque_servant','muezzin','imam','khatib','chief_imam']
+  };
+
+  function localReligiousRoutes(def) {
+    if (!plainObject(def)) return undefined;
+    if (plainObject(def.properties) && own(def.properties, 'religiousPaths')) {
+      return def.properties.religiousPaths;
+    }
+    return own(def, 'religiousPaths') ? def.religiousPaths : undefined;
+  }
+
+  function validateReligiousPaths(mod) {
+    const paths = combinedTable(FBDATA.religiousPaths,
+      mod.religiousPaths, 'religiousPaths');
+    const religions = combinedTable(FBDATA.religions,
+      mod.religions, 'religions');
+    const careers = combinedTable(FBDATA.careers, mod.careers, 'careers');
+    for (const pathId in paths) {
+      if (!own(paths, pathId)) continue;
+      const path = 'religiousPaths.' + pathId;
+      if (!/^[a-z][a-z0-9_]*$/.test(pathId)) {
+        fail(path, 'has an invalid path id.');
+      }
+      const def = paths[pathId];
+      onlyFields(def, {
+        kind:true, faiths:true, systems:true, professions:true, ranks:true
+      }, path);
+      if (def.kind !== 'lay' && def.kind !== 'vocation') {
+        fail(path + '.kind', 'must be lay or vocation.');
+      }
+      if (own(def, 'faiths')) {
+        validateIdList(def.faiths, path + '.faiths', religions, false);
+      }
+      if (own(def, 'systems')) {
+        validateIdList(def.systems, path + '.systems', null, false);
+        for (let i = 0; i < def.systems.length; i++) {
+          if (!/^[a-z][a-z0-9_]*$/.test(def.systems[i])) {
+            fail(path + '.systems[' + i + ']',
+              'must be a lowercase system id.');
+          }
+        }
+      }
+      if (own(def, 'professions')) {
+        validateIdList(def.professions, path + '.professions', careers, false);
+      }
+      if (!Array.isArray(def.ranks) || !def.ranks.length ||
+          def.ranks.length > 20) {
+        fail(path + '.ranks', 'must be an array of 1 to 20 ranks.');
+      }
+      const rankIds = {};
+      const flags = {};
+      for (let i = 0; i < def.ranks.length; i++) {
+        const rank = def.ranks[i];
+        const rankPath = path + '.ranks[' + i + ']';
+        onlyFields(rank, {
+          id:true, name:true, name_f:true, age:true, years:true,
+          learning:true, gold:true, prestige:true, piety:true,
+          prestigeGain:true, pietyYield:true, station:true, tier:true,
+          flag:true, maleOnly:true
+        }, rankPath);
+        if (typeof rank.id !== 'string' ||
+            !/^[a-z][a-z0-9_]*$/.test(rank.id)) {
+          fail(rankPath + '.id', 'must be a lowercase rank id.');
+        }
+        if (rankIds[rank.id]) fail(path + '.ranks',
+          'must not repeat rank id ' + rank.id + '.');
+        rankIds[rank.id] = true;
+        requiredText(rank.name, rankPath + '.name');
+        if (own(rank, 'name_f')) requiredText(rank.name_f, rankPath + '.name_f');
+        for (const field of ['age','years','learning']) {
+          if (own(rank, field)) integerRange(rank[field], 0, 100,
+            rankPath + '.' + field);
+        }
+        for (const field of [
+          'gold','prestige','piety','prestigeGain','pietyYield'
+        ]) {
+          if (own(rank, field) && (!finiteNumber(rank[field]) ||
+              rank[field] < 0 || rank[field] > 100000)) {
+            fail(rankPath + '.' + field,
+              'must be a number from 0 to 100000.');
+          }
+        }
+        if (own(rank, 'station')) integerRange(rank.station, 0, 4,
+          rankPath + '.station');
+        if (own(rank, 'tier')) integerRange(rank.tier, 0, 7,
+          rankPath + '.tier');
+        if (own(rank, 'maleOnly') && typeof rank.maleOnly !== 'boolean') {
+          fail(rankPath + '.maleOnly', 'must be true or false.');
+        }
+        if (own(rank, 'flag')) {
+          if (typeof rank.flag !== 'string' ||
+              !/^[A-Za-z][A-Za-z0-9_]*$/.test(rank.flag)) {
+            fail(rankPath + '.flag', 'has an invalid compatibility flag id.');
+          }
+          if (flags[rank.flag]) fail(path + '.ranks',
+            'must not repeat compatibility flag ' + rank.flag + '.');
+          flags[rank.flag] = true;
+        }
+      }
+    }
+    for (const pathId in BASELINE_RELIGIOUS_RANKS) {
+      const expected = BASELINE_RELIGIOUS_RANKS[pathId];
+      const def = paths[pathId];
+      if (!def) fail('religiousPaths', 'must retain baseline id ' + pathId + '.');
+      if (def.ranks.length < expected.length) {
+        fail('religiousPaths.' + pathId + '.ranks',
+          'must retain every baseline rank.');
+      }
+      for (let i = 0; i < expected.length; i++) {
+        if (def.ranks[i].id !== expected[i]) {
+          fail('religiousPaths.' + pathId + '.ranks[' + i + '].id',
+            'must remain ' + expected[i] + '.');
+        }
+      }
+    }
+    for (const religionId in religions) {
+      if (!own(religions, religionId)) continue;
+      const routes = localReligiousRoutes(religions[religionId]);
+      if (routes === undefined || routes === null) continue;
+      const path = 'religions.' + religionId + '.properties.religiousPaths';
+      onlyFields(routes, { lay:true, professions:true }, path);
+      if (typeof routes.lay !== 'string' || !own(paths, routes.lay)) {
+        fail(path + '.lay', 'references unknown religious path ' +
+          routes.lay + '.');
+      }
+      if (paths[routes.lay].kind !== 'lay') {
+        fail(path + '.lay', 'must reference a lay path.');
+      }
+      if (!plainObject(routes.professions)) {
+        fail(path + '.professions', 'must be an object.');
+      }
+      for (const profession in routes.professions) {
+        if (!own(routes.professions, profession)) continue;
+        const pathId = routes.professions[profession];
+        if (!own(careers, profession)) {
+          fail(path + '.professions.' + profession,
+            'references unknown profession ' + profession + '.');
+        }
+        if (typeof pathId !== 'string' || !own(paths, pathId)) {
+          fail(path + '.professions.' + profession,
+            'references unknown religious path ' + pathId + '.');
+        }
+        if (paths[pathId].kind !== 'vocation') {
+          fail(path + '.professions.' + profession,
+            'must reference a vocation path.');
+        }
+        if (Array.isArray(paths[pathId].professions) &&
+            paths[pathId].professions.indexOf(profession) < 0) {
+          fail(path + '.professions.' + profession,
+            'must reference a path that allows profession ' + profession + '.');
+        }
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -680,6 +844,9 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'raidingTraditions')) validateRaidingTraditions(mod);
     if (own(mod, 'startScenarios')) validateStartScenarios(mod);
     if (own(mod, 'familyPresets')) validateFamilyPresets(mod);
+    if (own(mod, 'religiousPaths') || own(mod, 'religions')) {
+      validateReligiousPaths(mod);
+    }
   }
 
   /* Cap groups are configuration maps rather than atomic definitions. A mod
@@ -852,6 +1019,8 @@ window.FBMODS = window.FBMODS || [];
        Per-county `settlements` presentations ride inside complete bookmark or
        legacy province replacements, never as a standalone patch. */
     if (mod.settlementSites) mergeTable(FBDATA.settlementSites, mod.settlementSites);
+    if (mod.religiousPaths) mergeTable(FBDATA.religiousPaths,
+      mod.religiousPaths);
     if (mod.religions) for (const k in mod.religions) FBDATA.religions[k] = mod.religions[k];
     if (mod.traits) for (const k in mod.traits) FBDATA.traits[k] = mod.traits[k];
     if (mod.ailments) for (const k in mod.ailments) FBDATA.ailments[k] = mod.ailments[k];

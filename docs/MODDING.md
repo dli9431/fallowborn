@@ -146,6 +146,7 @@ A JSON mod is one object with any of these keys:
   "cultureTraditions": { "id": { "name": "...", "icon": "...", "order": 1 } },
   "cultures":  { "id": { ... } },
   "religions": { "id": { ... } },
+  "religiousPaths": { "id": { "kind": "lay", "ranks": [ ... ] } },
   "traits":    { "id": { ... } },
   "ailments":  { "id": { ... } },
   "buildings": { "id": { ... } },
@@ -308,6 +309,98 @@ possible. Presets never contain prebuilt character objects. The baseline `standa
 `established`, and `elder` ids remain present. `standard` is special: its `age:0` means
 `balance.startAge`, it must remain unmarried, and it preserves the historical no-extra-
 draw six-part start code.
+
+## Religious progression paths
+
+`FBDATA.religiousPaths` lives in `data/economy.js` and merges complete path
+definitions by stable table id. Faith definitions route characters into those paths
+through inherited `properties.religiousPaths`; the engine still owns advancement,
+payment, appointments, promotion side effects, state repair, and seasonal application.
+
+```json
+{
+  "religiousPaths": {
+    "village_devotion": {
+      "kind": "lay",
+      "faiths": ["catholic"],
+      "systems": ["papacy"],
+      "ranks": [
+        { "id": "hearer", "name": "Hearer", "pietyYield": 0 },
+        {
+          "id": "benefactor",
+          "name": "Benefactor",
+          "name_f": "Benefactress",
+          "age": 16,
+          "piety": 10,
+          "prestige": 5,
+          "gold": 8,
+          "prestigeGain": 2,
+          "pietyYield": 0.25,
+          "station": 1,
+          "tier": 2,
+          "flag": "village_benefactor",
+          "maleOnly": false
+        }
+      ]
+    },
+    "village_clergy": {
+      "kind": "vocation",
+      "faiths": ["catholic"],
+      "professions": ["priest"],
+      "ranks": [
+        { "id": "reader", "name": "Reader", "pietyYield": 0.25 },
+        {
+          "id": "teacher", "name": "Teacher", "age": 18,
+          "years": 3, "learning": 6, "piety": 25,
+          "prestigeGain": 4, "pietyYield": 0.5
+        }
+      ]
+    }
+  },
+  "religions": {
+    "village_faith": {
+      "name": "Village Faith",
+      "properties": {
+        "religiousPaths": {
+          "lay": "village_devotion",
+          "professions": { "priest": "village_clergy" }
+        }
+      }
+    }
+  }
+}
+```
+
+- `kind` is `lay` or `vocation`. `faiths` optionally requires any listed faith
+  ancestor, `systems` requires every listed faith capability, and `professions`
+  optionally restricts the path to exact career ids. All same-mod references resolve
+  before mutation.
+- A faith route contains one `lay` path and a `professions` object from exact career id
+  to vocation path. An unlisted profession uses the lay path. Inherited faith
+  properties inherit this routing normally; a path's `faiths` and `systems` gates still
+  apply to the effective character faith.
+- `ranks` is ordered and contains 1â€“20 complete records. Every rank has a stable
+  lowercase `id` and localized `name`; optional `name_f` is used for a woman. Core
+  extraction keys are
+  `religiousPath.<pathId>.ranks.<rankId>.<name|name_f>.<branch>`.
+- `age`, `years` of vocation experience, and `learning` are personal requirements.
+  `gold`, `prestige`, and `piety` are household requirements; advancement consumes
+  only `gold`. `prestigeGain` is awarded on advancement and `pietyYield` is the
+  seasonal standing yield. All are bounded non-negative numbers.
+- `station` may raise the character's social station from 0â€“4. `tier` may raise the
+  protagonist on the existing 0â€“7 ladder. `flag` is a compatibility mirror used by
+  existing events and old saves; it is not an arbitrary effect. `maleOnly` gates that
+  rank. The appointment engine still recognizes the stable core `abbot` and `bishop`
+  rank ids, and Catholic/Muslim office consumers retain their stable path ids.
+- `character.religiousRanks[pathId]` remains the attained numeric array index in save
+  format 3. Every baseline path must remain, and every baseline rank must remain at its
+  original index; a replacement may change presentation or requirements and may append
+  ranks. Unknown saved path ids are left untouched and inactive. Reads accept legacy
+  numeric values and clamp them to the effective path without rewriting saved progress.
+
+Lay standing and an active vocation remain separate. `FB.religiousStandings` exposes
+both, while seasonal piety applies only the higher attained yield. A new path cannot
+install an arbitrary callback or bypass the engine's live requirement checks.
 
 ## Currency presentation
 
@@ -1821,12 +1914,10 @@ character can learn and perform:
   `FB.householdMedicalProtection` returns the single best locally present provider's
   yearly mortality reduction.
 
-Core Catholic and Muslim religious ladders live in `js/economy.js`, separately from moddable
-career rank labels. Per-character progress is saved in `character.religiousRanks`; unsupported
-faiths simply receive no core ladder. Lay standing and the active vocation remain separate;
-`FB.religiousStandings` exposes both and seasonal piety uses the higher rank yield rather
-than stacking them. Formal religious offices may raise `character.station`. Abbot/qadi and
-chief-qadi milestones preserve their legacy player tiers and flags.
+Religious ladders are the validated `religiousPaths` registry documented above, separate
+from career rank labels. Unsupported faiths receive no routed ladder. Formal religious
+offices may raise `character.station`; Abbot/Qadi and Chief Qadi retain their legacy
+player tiers and flags.
 
 Catholic Bishop is a core personal office saved in `character.bishopric`, not an ordinary
 career rank or province title. `FB.bishopricOf`, `FB.hasBishopric`,

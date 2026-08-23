@@ -761,15 +761,19 @@ another household. Marriage removes a descendant from this managed household. Th
 expense model, not a room-capacity simulation: births are never blocked for lack of a housing
 slot.
 
-**Religious standing belongs to characters too.** Catholic and Muslim household members
-lazily carry `c.religiousRanks`, a map from path id to attained step. Changing occupations
-selects a different path without erasing progress on the old one. Ordinary careers use a
-lay path built around almsgiving, pilgrimage, and patronage; `monk` and `priest` select a
-vocation path. The title and next step appear beside the character's livelihood. Lay and
-vocation standings remain visible together; seasonal piety uses whichever attained standing
-has the higher yield instead of stacking both. The household may sponsor advancement when
-that character meets its personal age, Learning, and vocational-experience requirements and
-the house meets the shared piety and prestige thresholds.
+**Religious standing belongs to characters too.** `FBDATA.religiousPaths` owns the
+ordered Catholic and Muslim ladders, their localized rank names, requirements, yields,
+station changes, and compatibility flags. Effective faith
+`properties.religiousPaths` route the lay path and exact professions to vocation paths;
+optional path-level faith, capability, and profession requirements keep that routing
+bounded. Household members lazily carry `c.religiousRanks`, a map from path id to the
+legacy attained numeric index. Changing occupations selects a different path without
+erasing progress on the old one. The title and next step appear beside the character's
+livelihood. Lay and vocation standings remain visible together; seasonal piety uses
+whichever attained standing has the higher yield instead of stacking both. The household
+may sponsor advancement when that character meets its personal age, Learning, and
+vocational-experience requirements and the house meets the shared piety and prestige
+thresholds.
 
 The paths are deliberately not symmetrical ordination trees. Catholic monastic standing is
 novice → professed brother/sister → prior/prioress → abbot/abbess, with a male abbot able to
@@ -796,6 +800,16 @@ those lay titles. On death or elevation to Pope, the see returns to the Church; 
 heir resumes as gentry and keeps the family's private property. Legacy
 `player.flags.abbot/bishop/qadi/chief_qadi` remain compatibility mirrors for old events and
 saves.
+
+Every baseline path and rank remains at its historical index. Each rank now also has a
+stable id for localization and special office consumers; mods may append ranks but cannot
+reorder or remove the baseline prefix. A path missing after a mod is removed is inactive
+without deleting its saved numeric progress. Restore and read paths remain deterministic
+and RNG-neutral, and save format stays 3. The engine continues to own live gate checks,
+resource payment, appointments, promotion side effects, and repair.
+
+This data/modding boundary has no technology-impact entry: it neither changes baseline
+religious eligibility nor adds a separately gateable player capability.
 
 **The character interaction card owns dealings with one full character.**
 It derives identity context, residence, occupation, faith, station, typed

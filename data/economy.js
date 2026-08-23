@@ -4,6 +4,108 @@
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 
+/* Religious progression is character state keyed by path id and a legacy
+   numeric rank index. Baseline rank order is therefore a compatibility
+   boundary even though every rank also has its own stable id. */
+FBDATA.religiousPaths = {
+  catholic_lay: {
+    kind:'lay', faiths:['catholic'], systems:['papacy'],
+    ranks:[
+      { id:'parishioner', name:'Parishioner', pietyYield:0 },
+      { id:'almsgiver', name:'Almsgiver', age:16, piety:10, gold:5,
+        prestigeGain:2, pietyYield:0.25 },
+      { id:'pilgrim', name:'Pilgrim', age:16, piety:30, gold:20,
+        prestigeGain:5, pietyYield:0.5 },
+      { id:'church_patron', name:'Church Patron', age:18, piety:80,
+        prestige:25, gold:80, prestigeGain:10, pietyYield:1 }
+    ]
+  },
+  catholic_monastic: {
+    kind:'vocation', faiths:['catholic'], systems:['papacy'],
+    professions:['monk'],
+    ranks:[
+      { id:'novice', name:'Novice', pietyYield:0.25 },
+      { id:'professed', name:'Professed Brother', name_f:'Professed Sister',
+        age:16, years:2, learning:4, piety:25,
+        prestigeGain:3, pietyYield:0.5 },
+      { id:'prior', name:'Prior', name_f:'Prioress', age:20, years:6,
+        learning:7, piety:60, prestige:20, prestigeGain:8,
+        pietyYield:1, station:1 },
+      { id:'abbot', name:'Abbot', name_f:'Abbess', age:24, years:10,
+        learning:9, piety:100, prestige:40, prestigeGain:15,
+        pietyYield:1.5, station:2, tier:2, flag:'abbot' },
+      { id:'bishop', name:'Bishop', age:30, years:14, learning:12,
+        piety:160, prestige:80, prestigeGain:25, pietyYield:2.5,
+        station:3, tier:3, flag:'bishop', maleOnly:true }
+    ]
+  },
+  catholic_clerical: {
+    kind:'vocation', faiths:['catholic'], systems:['papacy'],
+    professions:['priest'],
+    ranks:[
+      { id:'clerk', name:'Clerk', pietyYield:0.25 },
+      { id:'acolyte', name:'Acolyte', age:16, years:1, learning:3,
+        piety:10, prestigeGain:2, pietyYield:0.5 },
+      { id:'deacon', name:'Deacon', age:19, years:3, learning:5,
+        piety:30, prestigeGain:4, pietyYield:0.75 },
+      { id:'priest', name:'Priest', age:24, years:5, learning:7,
+        piety:50, prestigeGain:7, pietyYield:1, station:1 },
+      { id:'archpriest', name:'Archpriest', age:28, years:9,
+        learning:9, piety:90, prestige:30, prestigeGain:12,
+        pietyYield:1.5, station:2 },
+      { id:'bishop', name:'Bishop', age:30, years:14, learning:12,
+        piety:160, prestige:80, prestigeGain:25, pietyYield:2.5,
+        station:3, tier:3, flag:'bishop' }
+    ]
+  },
+  muslim_lay: {
+    kind:'lay', faiths:['muslim'],
+    ranks:[
+      { id:'believer', name:'Believer', pietyYield:0 },
+      { id:'almsgiver', name:'Almsgiver', age:16, piety:10, gold:5,
+        prestigeGain:2, pietyYield:0.25 },
+      { id:'hajji', name:'Hajji', name_f:'Hajja', age:18, piety:35,
+        gold:35, prestigeGain:6, pietyYield:0.5 },
+      { id:'waqf_patron', name:'Waqf Patron', age:18, piety:80,
+        prestige:25, gold:100, prestigeGain:10, pietyYield:1 }
+    ]
+  },
+  muslim_scholar: {
+    kind:'vocation', faiths:['muslim'], professions:['monk'],
+    ranks:[
+      { id:'student', name:'Student of the Faith', pietyYield:0.25 },
+      { id:'licensed_scholar', name:'Licensed Scholar', age:16, years:2,
+        learning:5, piety:20, prestigeGain:4, pietyYield:0.5 },
+      { id:'mudarris', name:'Mudarris', age:20, years:6, learning:8,
+        piety:50, prestige:15, prestigeGain:8, pietyYield:1, station:1 },
+      { id:'mufti', name:'Mufti', age:24, years:9, learning:10,
+        piety:80, prestige:30, prestigeGain:12, pietyYield:1.5, station:2 },
+      { id:'qadi', name:'Qadi', age:26, years:12, learning:11,
+        piety:110, prestige:50, gold:25, prestigeGain:18, pietyYield:2,
+        station:2, tier:2, flag:'qadi', maleOnly:true },
+      { id:'chief_qadi', name:'Chief Qadi', age:30, years:16,
+        learning:13, piety:170, prestige:90, gold:100,
+        prestigeGain:28, pietyYield:3, station:3, tier:3,
+        flag:'chief_qadi', maleOnly:true }
+    ]
+  },
+  muslim_mosque: {
+    kind:'vocation', faiths:['muslim'], professions:['priest'],
+    ranks:[
+      { id:'mosque_servant', name:'Mosque Servant', pietyYield:0.25 },
+      { id:'muezzin', name:'Muezzin', age:16, years:1, learning:3,
+        piety:15, prestigeGain:2, pietyYield:0.5 },
+      { id:'imam', name:'Imam', age:20, years:4, learning:6,
+        piety:40, prestigeGain:6, pietyYield:1, station:1 },
+      { id:'khatib', name:'Khatib', age:24, years:8, learning:8,
+        piety:75, prestige:25, prestigeGain:10, pietyYield:1.5, station:2 },
+      { id:'chief_imam', name:'Chief Imam', age:28, years:12,
+        learning:10, piety:120, prestige:50, gold:50,
+        prestigeGain:18, pietyYield:2, station:2 }
+    ]
+  }
+};
+
 FBDATA.careers = {
   farmer: {
     name:'Farming', icon:'🌾', skill:'ste', apprenticeAge:10, apprenticeCost:0, requiresTech:'scratch_plough',
