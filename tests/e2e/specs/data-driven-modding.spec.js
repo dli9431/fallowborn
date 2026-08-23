@@ -461,13 +461,15 @@ test('milestone-two religious paths route, advance, localize, and restore by ind
       let me = s.chars[s.player.charId];
       me.religion = 'e2e_way';
       me.sex = 'f';
-      me.religiousRanks = { e2e_devotion:1, removed_mod_path:4 };
+      me.religiousRanks = { e2e_devotion:0, removed_mod_path:4 };
       me.career.profession = 'farmer';
       const lay = FB.religiousPathOf(s, me);
-      const layTitle = FB.religiousRankTitle(s, me, lay);
+      const layTitle = FB.religiousRankTitle(s, me, {
+        id:lay.id, step:lay.next
+      });
       FB.ui.showCareerPicker(me.id);
-      const layHelp = document.querySelector('#career-religious .adesc')
-        .textContent;
+      const layButton = document.getElementById('career-religious');
+      const layHelp = layButton ? layButton.textContent : '';
       FB.ui.closeModal();
       me.career.profession = 'monk';
       me.career.rank = 'journeyman';
@@ -495,6 +497,7 @@ test('milestone-two religious paths route, advance, localize, and restore by ind
       const inactive = FB.religiousPathOf(restored, me);
       return {
         lay:{ id:lay.id, kind:lay.kind, title:layTitle,
+          row:!!layButton,
           requirements:layHelp.indexOf('Requires age 16, 5 piety') >= 0 &&
             layHelp.indexOf('Learning') < 0 },
         before:{ id:before.path.id, rank:before.step.id, blocked:before.blocked },
@@ -509,7 +512,8 @@ test('milestone-two religious paths route, advance, localize, and restore by ind
     });
 
     expect(result.lay).toEqual({
-      id:'e2e_devotion', kind:'lay', title:'Way Patroness', requirements:true
+      id:'e2e_devotion', kind:'lay', title:'Way Patroness', row:true,
+      requirements:true
     });
     expect(result.before).toEqual({
       id:'e2e_vocation', rank:'keeper', blocked:false
