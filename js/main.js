@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.153.2';
+  FB.VERSION = '1.153.3';
   FB.CHANGELOG = [
+    { v: '1.153.3', date: '2026-08-23', changes: [
+      'Manual field command now lets you select, halt, and march the entrusted host without its orders reverting to AI control.'
+    ] },
     { v: '1.153.2', date: '2026-08-23', changes: [
       'Network and dense dialog details now use hover or tap tooltips, leaving their primary choices easier to scan.',
       'Fast-forwarding stays more responsive by retaining unchanged event, political, army, and interface state between days.'

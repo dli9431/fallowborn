@@ -26,7 +26,8 @@ window.FB = window.FB || {};
        only when the leg completes; the map marker stays on `at`. size is the
        mustered strength a resting host refills toward. huntPrey (player host
        only) is a realm id whose host is tracked and re-pathed onto each day.
-       manual / holdManual (player host only) mark a hand-tapped route still
+       manual / holdManual (player-realm or commanded patron host) mark a
+       hand-tapped route still
        playing out and a hand-given halt — the automated stances never touch
        either.
        units: { <classId>: men } — the host's composition, keyed by
@@ -559,9 +560,36 @@ window.FB = window.FB || {};
     const patron = record.patronRealmId && state.realms[record.patronRealmId];
     if (!patron || !patron.alive || patron.rank < 1 ||
         FB.topRealm(state, record.patronRealmId) !== record.sovereignRealmId ||
-        !FB.isRealmAtWar(state, record.sovereignRealmId) ||
-        !FB.hostOf(state, record.sovereignRealmId)) return null;
+        !FB.isRealmAtWar(state, record.sovereignRealmId)) return null;
+    let host = null;
+    if (record.hostId) {
+      for (const army of state.armies || []) {
+        if (army.id === record.hostId &&
+            army.realm === record.sovereignRealmId) {
+          host = army;
+          break;
+        }
+      }
+    } else {
+      /* Commands saved before hostId was recorded remain attached to the
+         realm's primary banner until the next command begins. */
+      host = FB.hostOf(state, record.sovereignRealmId);
+    }
+    if (!host) return null;
     return record;
+  };
+
+  /* A field-command host still belongs to its sovereign realm, but map
+     interaction belongs to the protagonist for as long as that command is
+     valid. Keep ownership and control separate: economy, muster, losses,
+     diplomacy, and peace continue to key on the host's real realm. */
+  FB.playerControlsHost = function (state, host) {
+    if (!host) return false;
+    if (host.realm === 'player') return true;
+    const command = FB.activeMilitaryCommand(state);
+    if (!command || host.realm !== command.sovereignRealmId) return false;
+    if (command.hostId) return host.id === command.hostId;
+    return FB.hostOf(state, command.sovereignRealmId) === host;
   };
 
   FB.militaryCommandStatus = function (state) {
@@ -619,12 +647,25 @@ window.FB = window.FB || {};
     const status = FB.militaryCommandStatus(state);
     if (!status.ready) return false;
     const p = state.player;
+    const host = FB.hostOf(state, status.sovereignRealmId);
+    if (!host) return false;
     p.militaryCommand = {
       charId:p.charId,
       patronRealmId:status.patronRealmId,
       sovereignRealmId:status.sovereignRealmId,
+      hostId:host.id,
       startedTurn:state.turn
     };
+    /* Taking command is a real handoff. Do not let an AI route chosen on
+       the preceding day carry the host away before the player can issue
+       the first manual order. */
+    host.path = [];
+    host.goal = null;
+    host.moveLeft = 0;
+    host.huntPrey = null;
+    host.manual = 0;
+    host.holdManual = 1;
+    requestMap();
     if (p.focus !== 'lead_host') {
       p.focusBack = p.focus;
       p.focus = 'lead_host';
@@ -2798,8 +2839,10 @@ window.FB = window.FB || {};
   FB.armyTick = function (state) {
     FB.armiesEnsure(state);
     const p = state.player;
-    if (p.militaryCommand && !FB.activeMilitaryCommand(state)) {
-      FB.endMilitaryCommand(state);
+    let militaryCommand = null;
+    if (p.militaryCommand) {
+      militaryCommand = FB.activeMilitaryCommand(state);
+      if (!militaryCommand) FB.endMilitaryCommand(state);
     }
     const sovereignIds = sovereignRealmIds(state);
     const warring = warringMap(state, sovereignIds);
@@ -2867,7 +2910,9 @@ window.FB = window.FB || {};
       const r = state.realms[id];
       const hosts = hostsByRealm[id];
       if (!warring[id] || !hosts || hosts.length !== 1 ||
-          hosts.length >= aiMaxHosts) continue;
+          hosts.length >= aiMaxHosts ||
+          (militaryCommand &&
+            id === militaryCommand.sovereignRealmId)) continue;
       const offensive = !!(r.war && r.war.enemy) ||
         (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, id) === 'attackers');
       if (!offensive) continue;
@@ -2933,12 +2978,16 @@ window.FB = window.FB || {};
         a.goal = null;
         a.moveLeft = 0;
       }
-      if (a.realm !== 'player') {
+      const commandedByPlayer = !!(militaryCommand &&
+        a.realm === militaryCommand.sovereignRealmId &&
+        (!militaryCommand.hostId || a.id === militaryCommand.hostId));
+      if (a.realm !== 'player' && !commandedByPlayer) {
         const goal = aiGoal(state, a, warring, primaryByRealm);
         if (goal !== a.goal || ((!a.path || !a.path.length) && goal !== a.at && a.moveLeft <= 0)) {
           FB.orderArmy(state, a, goal);
         }
-      } else if (autoHosts && autoHosts !== 'manual') {
+      } else if (a.realm === 'player' && autoHosts &&
+          autoHosts !== 'manual') {
         /* automated command: the stance steers only an idle host — a route
            tapped by hand (a.manual) plays out untouched, a hand-halted host
            (a.holdManual) holds, and the council's hunt is superseded */
@@ -3081,7 +3130,8 @@ window.FB = window.FB || {};
     /* Rendering asks this on every pan frame. Army repair belongs to load
        and the daily tick; selection only needs the already-live id lookup. */
     for (const a of state.armies || []) {
-      if (a.id === selId && a.realm === 'player' && a.men > 0) return a;
+      if (a.id === selId && a.men > 0 &&
+          FB.playerControlsHost(state, a)) return a;
     }
     selId = null;
     return null;
@@ -3306,13 +3356,21 @@ window.FB = window.FB || {};
     const z = (FB.map && FB.map.zoom) || 1;
     const dpr = (FB.map && FB.map.dpr) || 1;
     const layout = armyRenderLayout(state, z, dpr);
+    const command = state.player && state.player.militaryCommand &&
+      FB.activeMilitaryCommand(state);
     let best = null, bd = tol * tol;
     for (const a of state.armies) {
       const pos = layout.positions[a.id] || hostWorldPosition(state, a, z, dpr);
       const d = (pos[0] - wx) * (pos[0] - wx) + (pos[1] - wy) * (pos[1] - wy);
       if (d > bd) continue;
-      // on a tie or close distance, your own host wins the tap
-      if (d < bd || !best || (a.realm === 'player' && best.realm !== 'player')) {
+      // on a tie or close distance, a host under your command wins the tap
+      const controlled = a.realm === 'player' ||
+        !!(command && a.realm === command.sovereignRealmId &&
+          (!command.hostId || a.id === command.hostId));
+      const bestControlled = best && (best.realm === 'player' ||
+        !!(command && best.realm === command.sovereignRealmId &&
+          (!command.hostId || best.id === command.hostId)));
+      if (d < bd || !best || (controlled && !bestControlled)) {
         bd = d;
         best = a;
       }
@@ -3332,7 +3390,9 @@ window.FB = window.FB || {};
       // keyboard taps carry no pointer position: cycle or select in the tapped province
       const here = FB.armiesAt(state, pr.id);
       const stack = [];
-      for (const a of here) if (a.realm === 'player') stack.push(a);
+      for (const a of here) {
+        if (FB.playerControlsHost(state, a)) stack.push(a);
+      }
       if (stack.length) {
         const selIndex = sel ? stack.indexOf(sel) : -1;
         if (selIndex >= 0 && selIndex < stack.length - 1) {
@@ -3356,7 +3416,7 @@ window.FB = window.FB || {};
         }
       }
     }
-    if (hit && hit.realm === 'player') {
+    if (hit && FB.playerControlsHost(state, hit)) {
       if (sel && sel === hit) {
         // tapping the already selected host halts it
         hit.path = []; hit.goal = null; hit.moveLeft = 0; hit.huntPrey = null;
@@ -3479,6 +3539,20 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !s.armies || !s.armies.length) return;
     const sel = FB.selectedArmy(s);
+    const command = s.player && s.player.militaryCommand &&
+      FB.activeMilitaryCommand(s);
+    const commandedRealm = command && command.sovereignRealmId;
+    let commandedHost = null;
+    if (commandedRealm) {
+      for (const host of s.armies) {
+        if (host.realm === commandedRealm &&
+            (!command.hostId || host.id === command.hostId)) {
+          commandedHost = host;
+          break;
+        }
+      }
+    }
+    const commandedHostId = commandedHost && commandedHost.id;
     const layout = armyRenderLayout(s, z, dpr);
 
     // Helper to draw a host's planned movement route on the map
@@ -3539,7 +3613,8 @@ window.FB = window.FB || {};
     const drawnHosts = {};
     for (let ai = 0; ai < s.armies.length; ai++) {
       const a = s.armies[ai];
-      if ((a.realm === 'player' || a === sel) && a.path && a.path.length) {
+      if ((a.realm === 'player' || a.id === commandedHostId || a === sel) &&
+          a.path && a.path.length) {
         drawArmyRoute(a, a.path, false);
         drawnHosts[a.id] = true;
       }
@@ -3595,9 +3670,10 @@ window.FB = window.FB || {};
         let provColor = '#888888';
         for (let hi = 0; hi < hostsInProv.length; hi++) {
           const h = hostsInProv[hi];
-          if (h.realm === 'player') {
+          if (h.realm === 'player' || h.id === commandedHostId) {
             hasPlayer = true;
-          } else if (s.player.war && s.player.war.enemy === h.realm) {
+          } else if ((s.player.war && s.player.war.enemy === h.realm) ||
+              (commandedHost && FB.armiesHostile(s, commandedHost, h))) {
             hasHostile = true;
           } else if (!hasPlayer && !hasHostile) {
             const r = s.realms[h.realm];
@@ -3636,7 +3712,7 @@ window.FB = window.FB || {};
       const x = sc[0];
       const y = sc[1];
       if (x < -40 || y < -40 || x > ctx.canvas.width + 40 || y > ctx.canvas.height + 40) continue;
-      const mine = a.realm === 'player';
+      const mine = a.realm === 'player' || a.id === commandedHostId;
       const realm = mine ? null : s.realms[a.realm];
       if (greatCampByRealm[a.realm] === undefined) {
         greatCampByRealm[a.realm] = FB.greatHolyWarCamp
@@ -3645,7 +3721,8 @@ window.FB = window.FB || {};
       const armyGreatCamp = greatCampByRealm[a.realm];
       const hostileToMe = !mine &&
         ((playerGreatCamp && armyGreatCamp && playerGreatCamp !== armyGreatCamp) ||
-         (s.player.war && s.player.war.enemy === a.realm));
+         (s.player.war && s.player.war.enemy === a.realm) ||
+         (commandedHost && FB.armiesHostile(s, commandedHost, a)));
       const friendlyToMe = !mine && playerGreatCamp &&
         armyGreatCamp === playerGreatCamp;
       // your side always marches in green, your war enemy in red; everyone

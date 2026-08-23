@@ -5301,6 +5301,8 @@ window.FB = window.FB || {};
   function renderWarCard(s, selA, pr) {
     if (!selA) return '';
     const isPlayerHost = selA.realm === 'player';
+    const playerControlsHost = isPlayerHost ||
+      !!(FB.playerControlsHost && FB.playerControlsHost(s, selA));
     const hostRealm = (s.realms && s.realms[selA.realm]) ? s.realms[selA.realm].name : selA.realm;
     const cardTitle = isPlayerHost
       ? FB.T('War & Host — {men}', { men: menText(s, selA.men) })
@@ -5319,7 +5321,7 @@ window.FB = window.FB || {};
     } else if (selA.holdManual) {
       hostStatusText = FB.T('🚩 Holding at {place}', { place: selPr ? selPr.name : '?' });
     } else {
-      hostStatusText = isPlayerHost
+      hostStatusText = playerControlsHost
         ? FB.T('🚩 Ready at {place}', { place: selPr ? selPr.name : '?' })
         : FB.T('🚩 Stationed at {place}', { place: selPr ? selPr.name : '?' });
     }
@@ -5479,14 +5481,15 @@ window.FB = window.FB || {};
       cardHtml += landKv('Battle & Losses', esc(warLossSummary));
     }
 
-    if (isPlayerHost && FB.hostCutOff && FB.hostCutOff(s, selA)) {
+    if (playerControlsHost && FB.hostCutOff && FB.hostCutOff(s, selA)) {
       cardHtml += '<div class="progressnote warnote">✂ ' + esc(FB.T(
         'Cut off — no road home. If this host shatters here it is destroyed outright.')) + '</div>';
     }
 
     cardHtml += '<div class="settcard-details hidden" id="war-card-details">' + detailsHtml + '</div>';
 
-    // Host Decisions / Action buttons (player host only)
+    // Realm-owned host decisions remain player-host only. A patron's host
+    // under personal field command exposes only the shared manual halt.
     if (isPlayerHost) {
       const splitStatus = FB.splitHostStatus ? FB.splitHostStatus(s, selA) : null;
       if (splitStatus) {
@@ -5506,6 +5509,8 @@ window.FB = window.FB || {};
             'Join the {men} men of the second banner into this one.', {
               men: menText(s, mergePartner.men) })) + '</span></button>';
       }
+    }
+    if (playerControlsHost) {
       cardHtml += '<button type="button" class="actionbtn" id="btn-host-halt">' +
         esc(FB.T('🚩 Hold here')) +
         '<span class="adesc">' + esc(FB.T(
@@ -5541,8 +5546,12 @@ window.FB = window.FB || {};
     }
     const selA = FB.selectedArmy ? FB.selectedArmy(s) : null;
     const hostsHere = FB.armiesAt ? FB.armiesAt(s, pid) : [];
-    const playerHostHere = hostsHere.find(function (a) { return a.realm === 'player'; });
-    const hostToShow = (selA && (selA.at === pid || !hostsHere.length)) ? selA : (playerHostHere || hostsHere[0] || selA);
+    const playerHostHere = hostsHere.find(function (a) {
+      return a.realm === 'player' ||
+        (FB.playerControlsHost && FB.playerControlsHost(s, a));
+    });
+    const hostToShow = (selA && (selA.at === pid || !hostsHere.length)) ?
+      selA : (playerHostHere || hostsHere[0] || selA);
     if (hostToShow) {
       h += renderWarCard(s, hostToShow, pr);
     }
@@ -5788,7 +5797,9 @@ window.FB = window.FB || {};
         h += '<div class="progressnote warnote">' + esc(FB.T('⚔ Hosts in the field here:')) +
           ' ' + hostsHere.map(function (a) {
             const owner = a.realm === 'player' ? FB.T('Your host') :
-              (s.realms[a.realm] ? s.realms[a.realm].name : '?');
+              (FB.playerControlsHost && FB.playerControlsHost(s, a)
+                ? FB.T('Host under your command')
+                : (s.realms[a.realm] ? s.realms[a.realm].name : '?'));
             return esc(FB.T('{owner} (~{men})',
               { owner: owner, men: menText(s, a.men) }));
           }).join(' · ') + '</div>';

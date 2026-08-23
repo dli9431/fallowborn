@@ -4,6 +4,10 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/model.js',
   'js/world.js',
+  'js/armies.js',
+  'js/mapview.js',
+  'js/ui_misc.js',
+  'js/ui_panels.js',
   'js/ui_modals.js'
 ]);
 
@@ -254,7 +258,7 @@ test('a serf marked for battlefield knighting can rise only during a live war',
     });
   });
 
-test('a battle-proven founder can win a first-life barony by real field command',
+test('a battle-proven founder can manually march and win by real field command',
   async function ({ page }) {
     await startDeterministicGame(page);
     const result = await page.evaluate(function () {
@@ -288,11 +292,21 @@ test('a battle-proven founder can win a first-life barony by real field command'
         fw:0,
         fl:0
       };
-      s.armies = [{
+      const commandHost = {
         id:'founder-command-host', realm:sovereignId, men:400, size:400,
         units:{ levy:300, arch:40, cav:20, ret:40, mercs:0 },
-        at:s.realms[sovereignId].capital, path:[], moveLeft:0
-      }];
+        at:s.realms[sovereignId].capital,
+        from:s.realms[sovereignId].capital,
+        path:[s.realms[enemyId].capital],
+        goal:s.realms[enemyId].capital,
+        moveLeft:9,
+        supply:100
+      };
+      s.armies = [commandHost];
+      s.armyDown = {};
+      Object.keys(s.realms).forEach(function (id) {
+        s.armyDown[id] = s.turn;
+      });
 
       const ordinary = FB.instantStatus(s, 'petition_barony');
       const savedRank = patron.rank;
@@ -302,13 +316,49 @@ test('a battle-proven founder can win a first-life barony by real field command'
       const ready = FB.militaryCommandStatus(s);
       const began = FB.beginMilitaryCommand(s);
       const personallyAtWar = FB.atWarPersonally(s);
+      const exactHostBound = p.militaryCommand.hostId === commandHost.id;
       const wrongWinner = FB.noteMilitaryCommandVictory(s,
         { realm:enemyId }, { realm:sovereignId }, p.provinceId);
       const activeAfterWrongWinner = !!FB.activeMilitaryCommand(s);
+
+      /* Taking command halts the inherited AI route. In manual mode the same
+         map-tap path used by the canvas must select the sovereign-owned host,
+         accept a new route, and advance it without AI replacing the goal. */
+      const inheritedRouteHalted = commandHost.path.length === 0 &&
+        commandHost.moveLeft === 0 && commandHost.holdManual === 1;
+      FB.game.auto.hosts = 'manual';
+      FB.selectArmy(null);
+      const commandHostPos = FB.armyWorldPos(s, commandHost);
+      FB.armyTap(s, FB.world.byId[commandHost.at],
+        commandHostPos[0], commandHostPos[1]);
+      const selectedCommandHost = FB.selectedArmy(s) === commandHost;
+      FB.map.select(commandHost.at);
+      FB.ui.showTab('prov');
+      FB.ui.refresh();
+      const haltControlVisible = !!document.getElementById('btn-host-halt');
+      const marchTarget = Object.keys(FB.world.adj[commandHost.at] || {}).filter(
+        function (pid) {
+          return FB.world.byId[pid] && !FB.world.byId[pid].wasteland;
+        })[0];
+      const marchProvince = FB.world.byId[marchTarget];
+      const orderAccepted = FB.armyTap(s, marchProvince,
+        marchProvince.cx, marchProvince.cy);
+      const orderedDays = commandHost.moveLeft;
+      FB.armyTick(s);
+      const manualGoalKept = commandHost.goal === marchTarget &&
+        (commandHost.at === marchTarget ||
+          commandHost.path[0] === marchTarget);
+      const manualMarchAdvanced = commandHost.at === marchTarget ||
+        commandHost.moveLeft === Math.max(0, orderedDays - 1);
+
+      commandHost.path = [];
+      commandHost.goal = null;
+      commandHost.moveLeft = 0;
+      commandHost.holdManual = 1;
       s.armies.push({
         id:'command-enemy-host', realm:enemyId, men:1, size:1,
         units:{ levy:1, arch:0, cav:0, ret:0, mercs:0 },
-        at:s.realms[sovereignId].capital, path:[], moveLeft:0
+        at:commandHost.at, from:commandHost.at, path:[], moveLeft:0
       });
       FB.armyTick(s);
       const queued = s.eventQueue.filter(function (item) {
@@ -324,8 +374,15 @@ test('a battle-proven founder can win a first-life barony by real field command'
         patron:ready.patronRealmId === patronId,
         began:began,
         personallyAtWar:personallyAtWar,
+        exactHostBound:exactHostBound,
         wrongWinner:wrongWinner,
         activeAfterWrongWinner:activeAfterWrongWinner,
+        inheritedRouteHalted:inheritedRouteHalted,
+        selectedCommandHost:selectedCommandHost,
+        haltControlVisible:haltControlVisible,
+        orderAccepted:orderAccepted,
+        manualGoalKept:manualGoalKept,
+        manualMarchAdvanced:manualMarchAdvanced,
         won:!!queued,
         queued:!!queued,
         commandCleared:!p.militaryCommand,
@@ -342,8 +399,15 @@ test('a battle-proven founder can win a first-life barony by real field command'
       patron:true,
       began:true,
       personallyAtWar:true,
+      exactHostBound:true,
       wrongWinner:false,
       activeAfterWrongWinner:true,
+      inheritedRouteHalted:true,
+      selectedCommandHost:true,
+      haltControlVisible:true,
+      orderAccepted:true,
+      manualGoalKept:true,
+      manualMarchAdvanced:true,
       won:true,
       queued:true,
       commandCleared:true,

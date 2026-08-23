@@ -645,9 +645,17 @@ that character has both seen battle and won the lord's personal favor, and after
 configured Martial and prestige thresholds are met. The local patron resolved through
 `state.holder` must be a living count or greater; their top realm must be at war with a
 live AI host. Accepting saves `player.militaryCommand:{charId,patronRealmId,
-sovereignRealmId,startedTurn}`, changes focus to `lead_host`, counts as personal wartime,
-and lets the protagonist's Martial improve that AI host when it exceeds the realm
-ruler's. `resolveBattle` is the only victory writer: when that exact sovereign host wins
+sovereignRealmId,hostId,startedTurn}`, changes focus to `lead_host`, counts as
+personal wartime,
+and hands map control of that sovereign host to the protagonist. The handoff cancels its
+inherited AI route and holds the banner in place; while the command remains valid, the
+host is selectable and receives province-tap routes exactly like a player-realm host,
+its manual route advances without AI replacement, and the Land card exposes the shared
+halt control without granting realm-owned split, merge, muster, or logistics decisions.
+Its route and marker use the player-controlled green treatment, while ownership,
+diplomacy, supply, casualties, and peace remain with the sovereign realm. The
+protagonist's Martial improves that host when it exceeds the realm ruler's.
+`resolveBattle` is the only victory writer: when that exact sovereign host wins
 a hostile map battle, it clears the command and queues `military_barony_victory` for the
 snapshotted patron. No event roll, abstract soldier story, tournament, player war, or
 another realm's victory satisfies it. If the host is destroyed, the war ends, the
