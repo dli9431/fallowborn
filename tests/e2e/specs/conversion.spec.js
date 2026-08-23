@@ -490,10 +490,10 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   await expect(page.locator('.conversion-section-title', { hasText:'Islamic Traditions' })).toBeVisible();
   await expect(page.locator('.conversion-section-title', { hasText:'Pagan Traditions' })).toBeVisible();
 
-  // Cards display icon, name, relation badge, highlighted cost without multiplier parentheses
+  // Cards keep only the decision-critical name and cost on their face.
   const orthodoxCard = page.locator('.conversion-card[data-conv-target="orthodox"]');
   await expect(orthodoxCard).toBeVisible();
-  await expect(orthodoxCard.locator('.conversion-badge.schismatic')).toBeVisible();
+  await expect(orthodoxCard.locator('.conversion-badge')).toHaveCount(0);
   await expect(orthodoxCard.locator('.conversion-card-cost')).toContainText('80 piety');
   await expect(orthodoxCard.locator('.cost-highlight')).toHaveText('80 piety');
   await expect(orthodoxCard.locator('.conversion-card-cost')).not.toContainText('(×');
@@ -510,6 +510,8 @@ test('faith conversion modal renders grouped traditions, segmented scope control
   await expect(tip).toContainText('Authority');
   await expect(tip).toContainText('Marriage');
   await expect(tip).toContainText('Clergy');
+  await expect(tip).toContainText('Relation');
+  await expect(tip).toContainText('Schismatic');
 
   // Switching scope updates costs and description
   await page.locator('[data-conv-scope="household"]').click();
@@ -572,7 +574,7 @@ test('culture conversion modal renders grouped regional traditions, scope contro
   // stays hidden on this layout
   const norseCard = page.locator('.conversion-card[data-conv-target="norse"]');
   await expect(norseCard).toBeVisible();
-  await expect(norseCard.locator('.conversion-badge.in-fold')).toBeVisible();
+  await expect(norseCard.locator('.conversion-badge')).toHaveCount(0);
   await expect(norseCard.locator('.conversion-card-cost')).toContainText('120 prestige');
   await expect(norseCard.locator('.cost-highlight')).toHaveText('120 prestige');
   await expect(norseCard.locator('.conversion-card-cost')).not.toContainText('(×');
@@ -580,6 +582,7 @@ test('culture conversion modal renders grouped regional traditions, scope contro
   await norseCard.hover();
   await expect(page.locator('#tooltip')).toContainText('Dynasty style');
   await expect(page.locator('#tooltip')).toContainText('Patronymic');
+  await expect(page.locator('#tooltip')).toContainText('Related Tradition');
 
   // Digit keys do not select culture cards
   await page.keyboard.press('1');

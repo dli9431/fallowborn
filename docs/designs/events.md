@@ -82,6 +82,14 @@ the unread tail is returned to `state.eventQueue` instead of being opened immedi
 Context validation runs both when the picker dequeues an event and immediately before
 the modal displays it.
 
+Random slot selection keeps an unsaved index of effective, non-`never` event definitions,
+split by the wartime and childhood gates that otherwise reject most of the catalogue. Mod
+event replacement invalidates this index beside the event-id index. Within one selection
+pass, immutable trigger reads such as age, role, technologies, holdings, buildings, and
+vassal status are retained, and each named context selector is evaluated at most once.
+These caches are discarded after the pass: they neither enter saves nor change trigger,
+chance-roll, weighting, or authored-order semantics.
+
 **Guild-path stories stay declarative.** An event may use
 `trigger.career:{profession,specialization,guildRankMin,guildStandingMin}` to require
 the protagonist's current working career. This is distinct from broad `professions`:

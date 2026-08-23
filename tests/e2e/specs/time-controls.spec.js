@@ -239,6 +239,73 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
     await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('499');
   });
 
+test('natural ticks retain Self and Network trees until an exact refresh',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.setViewportSize({ width:1280, height:800 });
+    await page.evaluate(function () {
+      FB.game.setPaused(true);
+      FB.ui.showTab('char', { history:false });
+      FB.ui.showTab('network', { history:false });
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+
+    await page.evaluate(function () {
+      const selfSentinel = document.createElement('i');
+      selfSentinel.id = 'self-live-tick-sentinel';
+      document.getElementById('tab-char').appendChild(selfSentinel);
+      const networkSentinel = document.createElement('i');
+      networkSentinel.id = 'network-live-tick-sentinel';
+      document.getElementById('tab-network').appendChild(networkSentinel);
+      FB.state.turn++;
+      FB.ui.refresh({ liveTick:true });
+    });
+    await waitForUiRefresh(page);
+    await expect(page.locator('#self-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#network-live-tick-sentinel')).toHaveCount(1);
+
+    await page.evaluate(function () {
+      FB.ui._shared.resetPanelMarkup();
+      FB.ui.refresh();
+    });
+    await waitForUiRefresh(page);
+    await expect(page.locator('#self-live-tick-sentinel')).toHaveCount(0);
+    await expect(page.locator('#network-live-tick-sentinel')).toHaveCount(0);
+  });
+
+test('daily focus validation skips presentation preview work',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.travel = null;
+      const focus = FB.listFocuses(s)[0];
+      s.player.focus = focus.id;
+      const originalPreview = focus.preview;
+      let calls = 0;
+      focus.preview = function () {
+        calls++;
+        return originalPreview ? originalPreview.apply(this, arguments) : {};
+      };
+      FB.validateFocus(s);
+      const dailyCalls = calls;
+      FB.focusStatus(s, focus.id);
+      const explicitCalls = calls;
+      if (originalPreview) focus.preview = originalPreview;
+      else delete focus.preview;
+      return {
+        focusId:focus.id,
+        dailyCalls:dailyCalls,
+        explicitCalls:explicitCalls
+      };
+    });
+
+    expect(result.focusId).toBeTruthy();
+    expect(result.dailyCalls).toBe(0);
+    expect(result.explicitCalls).toBe(1);
+  });
+
 test('autoresolving fast-forward advances a paused game to the next season',
   async function ({ page }) {
     await startDeterministicGame(page);
@@ -289,6 +356,75 @@ test('autoresolving fast-forward advances a paused game to the next season',
     expect(after.paused).toBe(true);
     expect(after.autoresolved).toBe(true);
     await expect(page.locator('.event-receipt-toast')).toHaveCount(1);
+  });
+
+test('fast-forward completion updates chrome without rebuilding a large active panel',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.auto.all = true;
+      FB.game.setPaused(true);
+      FB.ui.showTab('actions', { history:false });
+    });
+    await waitForUiRefresh(page);
+    const before = await page.evaluate(function () {
+      const sentinel = document.createElement('i');
+      sentinel.id = 'fast-forward-panel-sentinel';
+      document.getElementById('tab-actions').appendChild(sentinel);
+      return {
+        turn:FB.state.turn,
+        dateText:document.getElementById('tb-date').textContent
+      };
+    });
+
+    await page.locator('#btn-skip').click();
+    await expect.poll(function () {
+      return page.evaluate(function () { return !FB.game.fastForwarding; });
+    }).toBe(true);
+    await waitForUiRefresh(page);
+
+    const after = await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        dateText:document.getElementById('tb-date').textContent,
+        paused:FB.game.paused
+      };
+    });
+    expect(after.turn).toBeGreaterThan(before.turn);
+    expect(after.dateText).not.toBe(before.dateText);
+    expect(after.paused).toBe(true);
+    await expect(page.locator('#fast-forward-panel-sentinel')).toHaveCount(1);
+
+    await page.evaluate(function () { FB.ui.refresh(); });
+    await waitForUiRefresh(page);
+    await expect(page.locator('#fast-forward-panel-sentinel')).toHaveCount(0);
+  });
+
+test('daily maintenance skips vassal discovery for non-landed households',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    expect(await page.evaluate(function () {
+      const original = FB.playerVassals;
+      let calls = 0;
+      FB.playerVassals = function () {
+        calls++;
+        return original.apply(this, arguments);
+      };
+      try {
+        FB.state.player.tier = 0;
+        FB.state.player.localCouncil = null;
+        FB.state.player.castellany = null;
+        delete FB.state.player.flags.councilman;
+        FB.localGovernmentDay(FB.state);
+        return calls;
+      } finally {
+        FB.playerVassals = original;
+      }
+    })).toBe(0);
   });
 
 test('fast-forward records news immediately but renders only its final five toasts afterward',
@@ -360,6 +496,7 @@ test('fast-forward matches individual days and avoids invariant repair loops',
       const counts = {
         localGovernment:0,
         politicalCourt:0,
+        institutionPolicies:0,
         papacy:0,
         religiousHeads:0,
         modifiers:0,
@@ -370,6 +507,7 @@ test('fast-forward matches individual days and avoids invariant repair loops',
       const wrapped = [
         ['ensureLocalGovernment', 'localGovernment'],
         ['politicalCourt', 'politicalCourt'],
+        ['realmPolicySync', 'institutionPolicies'],
         ['ensurePapacy', 'papacy'],
         ['ensureReligiousHeads', 'religiousHeads'],
         ['ensureModifiers', 'modifiers'],
@@ -446,6 +584,7 @@ test('fast-forward matches individual days and avoids invariant repair loops',
     expect(result.paused).toBe(true);
     expect(result.counts.localGovernment).toBe(0);
     expect(result.counts.politicalCourt).toBe(0);
+    expect(result.counts.institutionPolicies).toBeLessThanOrEqual(2);
     expect(result.counts.papacy).toBeLessThanOrEqual(5);
     expect(result.counts.religiousHeads).toBeLessThanOrEqual(5);
     expect(result.counts.modifiers).toBeLessThanOrEqual(2);

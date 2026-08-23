@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.153.1';
+  FB.VERSION = '1.153.2';
   FB.CHANGELOG = [
+    { v: '1.153.2', date: '2026-08-23', changes: [
+      'Network and dense dialog details now use hover or tap tooltips, leaving their primary choices easier to scan.',
+      'Fast-forwarding stays more responsive by retaining unchanged event, political, army, and interface state between days.'
+    ] },
     { v: '1.153.1', date: '2026-08-23', changes: [
       'Preview French, German, Italian, and Spanish translations have been refreshed for recent game and modding updates.'
     ] },
@@ -2760,7 +2764,10 @@ window.FB = window.FB || {};
          and promotion checks. Do not repeat that whole post-event pass. */
       return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
     }
-    G.afterEvents({ syncRulers:seasonBoundary });
+    G.afterEvents({
+      syncRulers:seasonBoundary,
+      liveTick:!!(opts && opts.liveTick)
+    });
     return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
   };
 
@@ -2783,11 +2790,17 @@ window.FB = window.FB || {};
     let daysLeft = 92;
     function finishFastForward() {
       G.fastForwarding = false;
-      if (!G.paused) G.setPaused(true);
+      /* The burst already deferred every intermediate refresh. Ending it with
+         setPaused() promoted that work into an exact panel rebuild, so a
+         large data-driven Deeds catalogue could monopolize the first usable
+         frame after the simulation had actually finished. The live refresh
+         below updates the date, resources, controls, and Chronicle while
+         retaining the same panel trees ordinary flowing time retains. */
+      G.paused = true;
       if (FB.ui && FB.ui.fastForwardFinished) {
-        FB.ui.fastForwardFinished();
+        FB.ui.fastForwardFinished({ liveTick:true });
       } else {
-        if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+        if (FB.ui && FB.ui.refresh) FB.ui.refresh({ liveTick:true });
         if (FB.map && FB.map.request) FB.map.request();
       }
     }
@@ -2804,7 +2817,7 @@ window.FB = window.FB || {};
       while (daysLeft > 0) {
         daysLeft--;
         daysThisFrame++;
-        const r = G.passDay();
+        const r = G.passDay({ liveTick:true });
         if (r !== 'day' || G.paused) {
           finishFastForward();
           return;
@@ -3408,7 +3421,7 @@ window.FB = window.FB || {};
       return;
     }
     checkPromotionsWhenChanged(s, !!options.forcePromotionCheck);
-    FB.ui.refresh();
+    FB.ui.refresh(options.liveTick ? { liveTick:true } : undefined);
   };
 
   /* ---------- yearly aging, mortality, coming of age ---------- */

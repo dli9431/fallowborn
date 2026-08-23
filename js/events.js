@@ -3577,17 +3577,43 @@ window.FB = window.FB || {};
   };
 
   /* ---------- trigger evaluation ---------- */
-  FB.checkTrigger = function (state, tg, ctx) {
+  function triggerSnapshotValue(snapshot, key, build) {
+    if (!snapshot) return build();
+    if (!Object.prototype.hasOwnProperty.call(snapshot, key)) {
+      snapshot[key] = build();
+    }
+    return snapshot[key];
+  }
+
+  function triggerSnapshotLookup(snapshot, bucket, key, build) {
+    if (!snapshot) return build();
+    let values = snapshot[bucket];
+    if (!values) values = snapshot[bucket] = Object.create(null);
+    if (!Object.prototype.hasOwnProperty.call(values, key)) {
+      values[key] = build();
+    }
+    return values[key];
+  }
+
+  /* Random-event selection evaluates hundreds of immutable definitions in
+     one synchronous pass. The optional snapshot retains shared, pure reads
+     for that pass only; standalone trigger checks keep their old behavior. */
+  FB.checkTrigger = function (state, tg, ctx, snapshot) {
     if (!tg) return true;
     if (tg.never) return false;
     const p = state.player;
     const me = state.chars[p.charId];
-    const age = FB.ageOf(me, state.date.year);
+    const age = triggerSnapshotValue(snapshot, 'age', function () {
+      return FB.ageOf(me, state.date.year);
+    });
     const pr = FB.world.byId[p.provinceId];
 
     if (tg.tierMin !== undefined && p.tier < tg.tierMin) return false;
     if (tg.tierMax !== undefined && p.tier > tg.tierMax) return false;
-    if (tg.societalRoles && tg.societalRoles.indexOf(FB.societalRole(state)) < 0) return false;
+    if (tg.societalRoles && tg.societalRoles.indexOf(
+      triggerSnapshotValue(snapshot, 'societalRole', function () {
+        return FB.societalRole(state);
+      })) < 0) return false;
     /* Profession requirements describe personally practicing a vocation.
        Landed careers survive as biography, but no longer satisfy work gates. */
     if (tg.professions && (p.tier >= 3 ||
@@ -3597,7 +3623,9 @@ window.FB = window.FB || {};
        which declare it, and a landed former calling never qualifies. */
     if (tg.career) {
       const requirement = tg.career;
-      const career = FB.careerOf ? FB.careerOf(state, me) : null;
+      const career = triggerSnapshotValue(snapshot, 'career', function () {
+        return FB.careerOf ? FB.careerOf(state, me) : null;
+      });
       const guildOrder = { none:0, member:1, master:2, officer:3, guildmaster:4 };
       if (p.tier >= 3 || !career || !career.chosen ||
           career.rank === 'unassigned' || career.rank === 'apprentice') return false;
@@ -3618,7 +3646,9 @@ window.FB = window.FB || {};
     if (tg.yearMin !== undefined && state.date.year < tg.yearMin) return false;
     if (tg.yearMax !== undefined && state.date.year > tg.yearMax) return false;
     if (tg.married !== undefined) {
-      const married = !!FB.spouseOf(state, me);
+      const married = !!triggerSnapshotValue(snapshot, 'spouse', function () {
+        return FB.spouseOf(state, me);
+      });
       if (married !== tg.married) return false;
     }
     if (tg.maxSeasonsSinceMarriage !== undefined) {
@@ -3642,7 +3672,9 @@ window.FB = window.FB || {};
     if (tg.prestigeMin !== undefined && p.prestige < tg.prestigeMin) return false;
     if (tg.pietyMin !== undefined && p.piety < tg.pietyMin) return false;
     if (tg.marriageEndReady) {
-      const marriageSpouse = FB.spouseOf(state, me);
+      const marriageSpouse = triggerSnapshotValue(snapshot, 'spouse', function () {
+        return FB.spouseOf(state, me);
+      });
       if (!marriageSpouse) return false;
       if (!(ctx && ctx.marriageEndInitiated)) {
         if (!FB.marriageEndStatus(state, marriageSpouse).ready) return false;
@@ -3661,8 +3693,10 @@ window.FB = window.FB || {};
     if (tg.leaMin !== undefined && FB.skillOf(me, 'lea') < tg.leaMin) return false;
     if (tg.flags) for (const fl of tg.flags) if (!p.flags[fl]) return false;
     if (tg.notFlags) for (const fl of tg.notFlags) if (p.flags[fl]) return false;
-    if (tg.buildings) for (const b of tg.buildings) if (!FB.hasBuilding(state, b)) return false;
-    if (tg.notBuildings) for (const b of tg.notBuildings) if (FB.hasBuilding(state, b)) return false;
+    if (tg.buildings) for (const b of tg.buildings) if (!triggerSnapshotLookup(
+      snapshot, 'buildings', b, function () { return FB.hasBuilding(state, b); })) return false;
+    if (tg.notBuildings) for (const b of tg.notBuildings) if (triggerSnapshotLookup(
+      snapshot, 'buildings', b, function () { return FB.hasBuilding(state, b); })) return false;
     if (tg.hasModifier !== undefined) {
       const spec = typeof tg.hasModifier === 'string'
         ? { id:tg.hasModifier } : tg.hasModifier;
@@ -3672,10 +3706,21 @@ window.FB = window.FB || {};
       if (!def || !FB.hasModifier ||
           !FB.hasModifier(state, spec.id, def.scope === 'county' ? pid : null)) return false;
     }
-    if (tg.techs) for (const t of tg.techs) if (FB.techList(state).indexOf(t) < 0) return false;
-    if (tg.notTechs) for (const t of tg.notTechs) if (FB.techList(state).indexOf(t) >= 0) return false;
-    if (tg.holdings) for (const hd of tg.holdings) if (!FB.hasHouseholdAsset(state, hd)) return false;
-    if (tg.notHoldings) for (const hd of tg.notHoldings) if (FB.hasHouseholdAsset(state, hd)) return false;
+    if (tg.techs || tg.notTechs) {
+      const technologies = triggerSnapshotValue(snapshot, 'technologies', function () {
+        return FB.techList(state);
+      });
+      if (tg.techs) for (const t of tg.techs) if (technologies.indexOf(t) < 0) return false;
+      if (tg.notTechs) for (const t of tg.notTechs) if (technologies.indexOf(t) >= 0) return false;
+    }
+    if (tg.holdings) for (const hd of tg.holdings) if (!triggerSnapshotLookup(
+      snapshot, 'holdings', hd, function () {
+        return FB.hasHouseholdAsset(state, hd);
+      })) return false;
+    if (tg.notHoldings) for (const hd of tg.notHoldings) if (triggerSnapshotLookup(
+      snapshot, 'holdings', hd, function () {
+        return FB.hasHouseholdAsset(state, hd);
+      })) return false;
     if (tg.religionGroup && !FB.faithIsA(me.religion, tg.religionGroup, state)) return false;
     if (tg.religionGroups && !tg.religionGroups.some(function (id) {
       return FB.faithIsA(me.religion, id, state);
@@ -3688,18 +3733,27 @@ window.FB = window.FB || {};
     if (tg.coastal && (!pr || !pr.coastal)) return false;
     if (tg.atWar !== undefined && (!!p.war) !== tg.atWar) return false;
     if (tg.realmAtWar !== undefined) {
-      const rid = state.owner[p.provinceId];
-      const at = rid ? FB.isRealmAtWar(state, rid) : false;
+      const at = triggerSnapshotValue(snapshot, 'realmAtWar', function () {
+        const rid = state.owner[p.provinceId];
+        return rid ? FB.isRealmAtWar(state, rid) : false;
+      });
       if (at !== tg.realmAtWar) return false;
     }
     if (tg.isVassal !== undefined && (!!p.liege) !== tg.isVassal) return false;
-    if (tg.isLiege !== undefined && (FB.playerVassals(state).length > 0) !== tg.isLiege) return false;
+    if (tg.isLiege !== undefined && (triggerSnapshotValue(
+      snapshot, 'hasPlayerVassals', function () {
+        return FB.playerVassals(state).length > 0;
+      })) !== tg.isLiege) return false;
     if (tg.liegeAtWar !== undefined) {
-      const at = p.liege ? FB.isRealmAtWar(state, p.liege) : false;
+      const at = triggerSnapshotValue(snapshot, 'liegeAtWar', function () {
+        return p.liege ? FB.isRealmAtWar(state, p.liege) : false;
+      });
       if (at !== tg.liegeAtWar) return false;
     }
-    if (tg.hasRole && !FB.getRole(state, tg.hasRole, false)) return false;
-    if (tg.noRole && FB.getRole(state, tg.noRole, false)) return false;
+    if (tg.hasRole && !triggerSnapshotLookup(snapshot, 'roles', tg.hasRole,
+      function () { return FB.getRole(state, tg.hasRole, false); })) return false;
+    if (tg.noRole && triggerSnapshotLookup(snapshot, 'roles', tg.noRole,
+      function () { return FB.getRole(state, tg.noRole, false); })) return false;
     if (tg.roleOpinionAbove) {
       const c = FB.getRole(state, tg.roleOpinionAbove.role, false);
       if (!c || characterStanding(state, c) < tg.roleOpinionAbove.value) {
@@ -3934,6 +3988,24 @@ window.FB = window.FB || {};
      Queued events fire at once. Random events land on 1-2 pre-rolled "slot
      days" per season (scheduled in main.js), keeping the old seasonal pacing
      while days tick by. Event cooldowns in data are in seasons (90 days). */
+  let randomEventPools = null;
+  function randomEventPool(wartime, child) {
+    if (!randomEventPools) {
+      randomEventPools = { ordinary:[], wartime:[], childhood:[], wartimeChildhood:[] };
+      for (const ev of FBDATA.events) {
+        if (!ev.trigger || ev.trigger.never) continue;
+        randomEventPools.ordinary.push(ev);
+        if (ev.wartime) randomEventPools.wartime.push(ev);
+        if (ev.childhood) randomEventPools.childhood.push(ev);
+        if (ev.wartime && ev.childhood) randomEventPools.wartimeChildhood.push(ev);
+      }
+    }
+    if (wartime) {
+      return child ? randomEventPools.wartimeChildhood : randomEventPools.wartime;
+    }
+    return child ? randomEventPools.childhood : randomEventPools.ordinary;
+  }
+
   FB.pickDailyEvents = function (state) {
     const out = [];
     FB.queueStationFarewellIfReady(state);
@@ -3988,18 +4060,25 @@ window.FB = window.FB || {};
     // personally at war: only wartime-tagged events fire; the rest of life waits
     const wartime = FB.atWarPersonally(state);
     // a child leads a child's life: only childhood-tagged events fire before 16
-    const child = FB.ageOf(state.chars[state.player.charId], state.date.year) < 16;
+    const protagonistAge = FB.ageOf(
+      state.chars[state.player.charId], state.date.year);
+    const child = protagonistAge < 16;
     const eligible = [];
-    for (const ev of FBDATA.events) {
-      if (!ev.trigger || ev.trigger.never) continue;
-      if (wartime && !ev.wartime) continue;
-      if (child && !ev.childhood) continue;
+    const triggerSnapshot = { age:protagonistAge };
+    const contextOptions = Object.create(null);
+    function selectorOptions(selector) {
+      if (!Object.prototype.hasOwnProperty.call(contextOptions, selector)) {
+        contextOptions[selector] = FB.eventContextOptions
+          ? FB.eventContextOptions(state, selector) : [];
+      }
+      return contextOptions[selector];
+    }
+    for (const ev of randomEventPool(wartime, child)) {
       if (ev.once && state.player.fired[ev.id]) continue;
       if (ev.cooldown && state.player.cooldowns[ev.id] !== undefined &&
         state.turn - state.player.cooldowns[ev.id] < ev.cooldown * 90) continue;
-      if (!FB.checkTrigger(state, ev.trigger)) continue;
-      if (ev.contextSelector && (!FB.eventContextOptions ||
-          !FB.eventContextOptions(state, ev.contextSelector).length)) continue;
+      if (!FB.checkTrigger(state, ev.trigger, undefined, triggerSnapshot)) continue;
+      if (ev.contextSelector && !selectorOptions(ev.contextSelector).length) continue;
       if (ev.trigger.chance !== undefined && !FB.chance(ev.trigger.chance)) continue;
       eligible.push(ev);
     }
@@ -4013,8 +4092,8 @@ window.FB = window.FB || {};
         if (roll <= 0) { chosen = eligible[i]; break; }
       }
       let selectedContext = {};
-      if (chosen.contextSelector && FB.eventContextOptions) {
-        const contexts = FB.eventContextOptions(state, chosen.contextSelector);
+      if (chosen.contextSelector) {
+        const contexts = selectorOptions(chosen.contextSelector);
         if (!contexts.length) return out;
         selectedContext = FB.pick(contexts);
       }
@@ -4045,7 +4124,10 @@ window.FB = window.FB || {};
     }
     return eventIndex[id] || null;
   };
-  FB.invalidateEventIndex = function () { eventIndex = null; };
+  FB.invalidateEventIndex = function () {
+    eventIndex = null;
+    randomEventPools = null;
+  };
 
   /* Shadow index from an effects object to its durable event-log key. It is
      rebuilt after mods apply, without writing metadata into moddable data.

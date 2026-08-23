@@ -265,15 +265,19 @@ its controls.
 The play/pause button shows only ▶/❚❚ and its `Space` badge — the running date is not
 repeated there, so the button never changes width as the days flow.
 
-Natural clock ticks use a low-priority `UI.refresh({ liveTick:true })`: the lightweight
-topbar and date remain daily, but the expensive Deeds and Land trees stay mounted without
-an automatic repaint while natural time flows. A changing host value otherwise makes Land
-recompute and replace the host card, county economy, settlements, population, people, and
-all their bindings; Deeds likewise reconstructs every action and eligibility description.
-Those whole-panel frame spikes matter more than their average frequency, so the live clock
-does not invoke either renderer. An ordinary refresh — used by pauses, tab/selection
+Natural clock ticks and the completion handoff from fast-forward use a low-priority
+`UI.refresh({ liveTick:true })`: the lightweight topbar and date remain current, but the retained Self, Kin, Deeds, Land, and Network trees
+stay mounted without an automatic repaint while natural time flows. A changing host value
+otherwise makes Land recompute and replace the host card, county economy, settlements,
+population, people, and all their bindings; Deeds reconstructs every action and eligibility
+description; and the other retained panels repeat household, relationship, tooltip, and
+portrait projection work even when their visible facts did not change. The Chronicle is
+the live exception: its bounded renderer appends new entries without rebuilding the other
+panel column. These whole-panel frame spikes matter more than their average frequency, so
+the live clock does not invoke the calculation-heavy renderers. An ordinary refresh — used by pauses, tab/selection
 changes, orders, deeds, and modal outcomes — bypasses the live snapshot and makes every
-value exact immediately.
+value exact immediately. The topbar portrait still checks its live visual key, but does so
+once rather than deriving the same descriptor separately for the crest and portrait paths.
 
 Live refreshes also never compete with a direct map gesture. While a pointer drag, pinch,
 or wheel-zoom is active, refresh requests retain the last completed topbar and panel DOM
@@ -349,6 +353,17 @@ empty prose. Keep the immediate cost, gate, or consequence beside an action; put
 rules, background, and exceptions behind the modal's contextual Guide icon (or an existing
 tap-safe tooltip). This keeps the first screen scannable without hiding information from
 desktop, keyboard, or touch players.
+
+Repeated modal cards follow the same **critical face, explanatory detail** rule as panel
+cards. Their face keeps only identity plus the state, immediate cost, current/proposed
+assignment, or other fact needed to choose safely. Eligibility explanations, full effect
+ledgers, replacement consequences, faction interests, and other audit prose live in the
+project-standard hover/focus side tooltip on roomy pointer layouts and the matching `?`
+inline disclosure on touch, narrow, or short layouts. A disabled primary action leaves its
+card focusable so desktop keyboard users can still inspect its explanation; the touch
+disclosure remains a separate enabled control. The generic modal renderer binds these
+disclosures idempotently, including cards inserted by a modal-specific rerender.
+
 Desktop scroll containers share narrow, rounded bronze thumbs over transparent tracks so
 panels, sheets, lists, and modals retain the parchment styling without prominent scrollbars.
 Modal-owned scroll bodies keep a small content gutter before that track so prose, sliders,
@@ -448,8 +463,10 @@ sending names or the world seed.
 Hover-only affordances need a tap path (item chips toast their description).
 The enterprise catalogue shows every known enterprise for the selected settlement rather
 than hiding geography-, development-, ownership-, technology-, or money-blocked choices.
-Purchasable rows come first. Every row carries a compact Ready, Can buy—will be idle, or
-Unavailable state and its primary explanation. An unavailable row remains a native,
+Purchasable rows come first. Every row keeps its Ready, Can buy—will be idle, or
+Unavailable state plus setup cost and base seasonal yield on the face; its description,
+primary explanation, and full owner/scope/effect/transfer ledger use the shared tooltip or
+touch disclosure. An unavailable row remains a native,
 keyboard- and touch-activatable button whose action is to open a compact requirements
 sheet; it never attempts a purchase. That sheet lists every simultaneous blocker with
 current and required values, links to missing technology when the player's role can inspect
@@ -466,8 +483,9 @@ same parchment treatment as the Market basket picker. Each staffed enterprise ha
 this enterprise** checkbox; locked pairings are marked in both this sheet and Household
 Plan. Whenever an owned enterprise is idle, **Staff all idle enterprisesâ€¦** opens a
 no-day static review of the maximum-yield result across all unlocked assignments. The
-review shows current/proposed totals, every kept or changed pairing, and every unresolved
-enterprise with its eligibility, lock-contention, or higher-yield-allocation reason.
+review shows current/proposed totals and pairings on the face. Each row's kept/changed state,
+eligibility, lock-contention, or higher-yield-allocation reason uses the shared tooltip or
+touch disclosure.
 Owned enterprise rows and management sheets consume `FB.enterpriseStaffingStatus`: their
 compact text and detail view therefore agree on remote residence, missing vocation,
 missing guild rank, and reassignment availability. A management sheet with no candidate
@@ -724,10 +742,11 @@ enterprise, and equipment controls use managed household eligibility at both ren
 action time, so a stale sheet cannot manage someone who has married out or otherwise left.
 
 Person-selection flows for education tutors, enterprise workers, household retainers,
-and council offices use the shared `UI.personAssignmentCard`. The component is a
-render-only native button: it consistently presents the candidate, eligibility,
-expected benefit or yield, cost or pay, present occupation or assignment, relevant
-Standing, and any replacement consequence. Each picker still computes eligibility and
+and council offices use the shared `UI.personAssignmentCard`. The component keeps the
+candidate and concise assigned/eligible/unavailable state on its native-button face. Its
+authoritative eligibility explanation, expected benefit or yield, cost or pay, present
+occupation or assignment, relevant Standing, and any replacement consequence use the
+shared tooltip or touch disclosure. Each picker still computes eligibility and
 performs assignment through its own existing mechanic, so the common presentation does
 not merge the underlying roles. Cards retain modal number keys, native keyboard
 activation, focus styling, and a stacked narrow-screen layout.
@@ -1091,10 +1110,11 @@ number-keyed choices in a scrolling `.gm-list` and **Not now** in the sticky foo
 choosing a motion or appointment tenure immediately rolls the result and spends the day,
 both sheets initially focus the dialog container instead of preselecting the first action.
 
-Political Blocs consumes `FB.politicalSummary` directly. Its full cards show
-each archetype, leader and member-ruler links, influence, interests, current
-motion reasons, locked or pledged posture, natural uncertainty, pledged
-totals, and the strict-majority threshold. Network consumes that same summary
+Political Blocs consumes `FB.politicalSummary` directly. Each card face keeps
+its archetype, leader, influence, and current posture. Member-ruler links, interests,
+motion reasons, locked or pledged detail, and natural uncertainty use the shared tooltip
+or touch disclosure; pledged totals and the strict-majority threshold remain above the
+cards as decision-critical sheet context. Network consumes that same summary
 in compact rows and routes the row or section action back to Governance's
 Political Blocs tab; it does not keep a second faction projection.
 The Estates sheet replaces "Vote chance" with bloc totals and "Lobbying
@@ -1127,6 +1147,10 @@ Details button. Touch, tablet-width, and short layouts never depend on hover: a
 question-mark control with an accessible Details label toggles that breakdown inline and
 remains at least 44 pixels high. The event surface is an `aria-modal` dialog labelled by
 its title and description, and expanded details remain inside the modal's scroll area.
+Declarative resource-choice modals use the same presentation: the face keeps the choice
+label and a plain immediate-cost or unavailable line, while authored explanation and the
+full cost/effect breakdown live in the shared tooltip or touch disclosure rather than a
+second row of visible consequence chips.
 Authored `showWhenTechLocked` choices stay in their original order with an exact requirement;
 they are disabled below tier 3 and act only as technology-detail links for tier-3+ players.
 Autoresolve excludes them until the technology is complete.
@@ -1268,11 +1292,16 @@ office record and consume no RNG. Empty sections explain what is absent rather t
 placeholder people.
 
 Work & Enterprises and Network share a render-only large-list grammar. Every semantic
-section is a native, independently collapsible button with a total and a needs-attention
-count. Rows are ordered by attention state, stable role/state priority, their existing
-meaningful order, and stable identity; changing income, Standing, or another daily number
-does not reorder otherwise equivalent rows. Disclosure, focus, and scroll, plus Work's
-filters and search, are in-memory UI state only. They consume no RNG and never enter a save.
+section is a native, independently collapsible button. Both surfaces move total and
+needs-attention counts into the project-standard hover/focus tooltip on desktop and `?`
+disclosure on touch/tablet so their navigation stays uncluttered. Work row faces keep a
+plain critical career/staffing state, while guild history, assignment explanations, base
+value, locks, and other audit prose use the same tooltip/disclosure path. Rows are ordered
+by attention state, stable role/state
+priority, their existing meaningful order, and stable identity; changing income, Standing,
+or another daily number does not reorder otherwise equivalent rows. Disclosure, focus, and
+scroll, plus Work's filters and search, are in-memory UI state only. They consume no RNG and
+never enter a save.
 
 The shared large-list threshold is **12 total rows per surface**. Above it, each section
 initially shows every needs-attention row plus **5 routine rows**. **Show all {count}**
@@ -1306,9 +1335,11 @@ distinct. A person or realm
 appears once within a section with combined role labels, but may still appear in another
 section for a genuinely different context. Character and ruler rows open the consolidated
 authoritative cards; Governance, Household Plan, Council, guild favors, vassal favors, and
-other focused management routes remain separate. Section attention covers active
-commitments, warnings, opportunities, missed retainer pay, and vacancies even when routine
-context is collapsed. On desktop, `1`-`5` select those sections in order, opening a closed
+other focused management routes remain separate. Row states such as open slots, warnings,
+commitments, opportunities, and vacancies use the same desktop tooltip or touch/tablet
+disclosure instead of face chips. Section attention still covers active commitments,
+warnings, opportunities, missed retainer pay, and vacancies even when routine context is
+collapsed. On desktop, `1`-`5` select those sections in order, opening a closed
 section, scrolling its heading to the top, and focusing and highlighting it. Pressing the
 active section's number again collapses it; its next press reopens it. The active
 section assigns `Q W E / A S D / Z X C`, then their Shift variants, to its first 18 visible

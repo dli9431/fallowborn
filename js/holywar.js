@@ -2658,6 +2658,8 @@ window.FB = window.FB || {};
   var sacredLossState = null;
   var sacredLossRealmRevision = -1;
   var sacredLossHeadStamp = null;
+  var idleCheckState = null;
+  var idleCheckNextTurn = -Infinity;
 
   function religiousHeadStamp(state) {
     var heads = state && state.religiousHeads;
@@ -2936,10 +2938,14 @@ window.FB = window.FB || {};
 
   FB.greatHolyWarTick = function (state) {
     FB.ensureGreatHolyWar(state);
-    trackSacredLosses(state);
+    var sacredControlChanged = trackSacredLosses(state);
     var campaign = state.greatHolyWar;
     if (!campaign) {
       var history = ensureHistory(state);
+      if (!sacredControlChanged && idleCheckState === state &&
+          state.turn < idleCheckNextTurn) return;
+      idleCheckState = state;
+      idleCheckNextTurn = Infinity;
       /* a checked religion is retired forever (unlockChecked is only ever
          set, never cleared), so the own-head source test — and its per-day
          faithValue allocations — only runs for religions still waiting; the
@@ -2950,7 +2956,16 @@ window.FB = window.FB || {};
         var candidateId = allReligionIds[candidateIndex];
         if (history.unlockChecked[candidateId]) continue;
         var candidateConf = config(state, candidateId);
-        if (!candidateConf || !dateReached(state, candidateConf.minDate)) continue;
+        if (!candidateConf) continue;
+        if (!dateReached(state, candidateConf.minDate)) {
+          var futureDays = dateNumber(candidateConf.minDate) -
+            dateNumber(state.date);
+          if (futureDays > 0) {
+            idleCheckNextTurn = Math.min(idleCheckNextTurn,
+              state.turn + futureDays);
+          }
+          continue;
+        }
         var candidateSource = FB.faithValue(state, candidateId, 'head.greatHolyWar').sourceId;
         if (candidateSource && candidateSource !== candidateId) continue;
         unlockIds.push(candidateId);
@@ -2979,7 +2994,12 @@ window.FB = window.FB || {};
       for (var religionId in history.headState) {
         var conf = config(state, religionId), hs = history.headState[religionId];
         if (!conf || history.firstLaunched[religionId] || !hs ||
-            !isFinite(hs.restoredTurn) || state.turn - hs.restoredTurn < 360) continue;
+            !isFinite(hs.restoredTurn)) continue;
+        var restoredDueTurn = Number(hs.restoredTurn) + 360;
+        if (state.turn < restoredDueTurn) {
+          idleCheckNextTurn = Math.min(idleCheckNextTurn, restoredDueTurn);
+          continue;
+        }
         var head = FB.religiousHeadOf(state, religionId);
         var targets = FB.greatHolyWarTargets(state, religionId);
         if (!(papalFaith(state, religionId) && FB.playerPope &&
@@ -2990,6 +3010,9 @@ window.FB = window.FB || {};
           FB.callGreatHolyWar(state, religionId, targets[0].kingdomId, head.id);
           return;
         }
+        /* Once a restored head is due, non-calendar requirements can change
+           independently. Preserve the former daily retry in that rare state. */
+        idleCheckNextTurn = Math.min(idleCheckNextTurn, state.turn + 1);
       }
       return;
     }

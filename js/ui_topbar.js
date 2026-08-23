@@ -24,15 +24,6 @@ window.FB = window.FB || {};
   function mapInteractionActive() {
     return !!(FB.map && FB.map.isInteracting && FB.map.isInteracting());
   }
-  function activePanelShouldRender(liveTick) {
-    const tab = SH.activeTab;
-    const heavy = tab === 'actions' || tab === 'prov';
-    /* These renderers are whole-panel operations. One changing supply value
-       causes Land to rebuild the county, settlements and people, while Deeds
-       reconstructs every action and eligibility description. Keep that DOM
-       mounted during natural time flow; exact refreshes still repaint it. */
-    return !liveTick || !heavy;
-  }
   UI.refresh = function (options) {
     const refreshKind = options && options.liveTick ? 1 : 2;
     /* Mark Deeds stale at request time, before coalescing or deferral, so a
@@ -72,10 +63,13 @@ window.FB = window.FB || {};
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     });
   };
-  UI.flushFastForwardRefresh = function () {
+  UI.flushFastForwardRefresh = function (options) {
     if (!refreshDeferredForFastForward && refreshQueued) return;
     refreshDeferredForFastForward = false;
-    UI.refresh();
+    /* Fast-forward completion deliberately supplies a live-tick refresh: the
+       visible catalogue/panel stays mounted while chrome catches up. Other
+       callers retain the exact-refresh default. */
+    UI.refresh(options);
   };
   UI.flushMapInteractionRefresh = function () {
     if (!refreshDeferredForMapInteraction) return;
@@ -141,11 +135,10 @@ window.FB = window.FB || {};
     return h;
   }
 
-  SH.portraitKey = '';
+  SH.crestKey = '';
   function refreshNow(liveTick) {
     const s = FB.state;
     if (!s || s.player.dead) return;
-    const renderPanel = activePanelShouldRender(liveTick);
     // the fast-forward button's F hotkey badge (desktop only) — rendered every
     // refresh so it holds in both observe and normal modes and in every locale
     $('btn-skip').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">F</span> ') + '▶▶';
@@ -159,7 +152,7 @@ window.FB = window.FB || {};
       })) + '</span>';
       $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
         '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
-      if (renderPanel) renderActiveTab();
+      renderActiveTab(liveTick ? { liveTick:true } : undefined);
       return;
     }
     const me = s.chars[s.player.charId];
@@ -167,11 +160,14 @@ window.FB = window.FB || {};
       ? me.papalName || me.name : FB.fullName(me);
     // The portrait's target stamp makes this call a no-op while unchanged;
     // the separate crest key avoids redrawing heraldry on ordinary refreshes.
-    const pk = FB.characterVisualKey(s, me);
-    if (pk !== SH.portraitKey) {
-      SH.portraitKey = pk;
+    const crestKey = me.dyn || me.name;
+    if (crestKey !== SH.crestKey) {
+      SH.crestKey = crestKey;
       FB.drawCrest($('crest'), me.dyn || me.name);
     }
+    /* paintPortrait already derives and checks its visual key. Calling
+       characterVisualKey first duplicated the full portrait descriptor on
+       every live day even when the retained canvas was already current. */
     FB.paintPortrait($('tb-portrait'), me, s.date.year, {
       state:s, profession:s.player.profession, tier:s.player.tier,
       ill:!!s.player.flags.ill
@@ -203,7 +199,7 @@ window.FB = window.FB || {};
           FB.game.auto.hosts !== 'manual') ||
         (autoAccess.build && FB.game.auto.build) ||
         (autoAccess.research && FB.game.auto.research)) ? '✓' : '');
-    if (renderPanel) renderActiveTab();
+    renderActiveTab(liveTick ? { liveTick:true } : undefined);
   }
 
   /* ===== shared exports (bound by the later UI files) ===== */

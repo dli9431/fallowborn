@@ -693,11 +693,56 @@ window.FB = window.FB || {};
 
   var repairedState = null;
   var repairedRealmRevision = -1;
+  var repairedInputSignature = '';
+  var repairedYear = -Infinity;
+  var politicsInputRevision = 0;
+
+  FB.invalidatePoliticsState = function () {
+    politicsInputRevision++;
+  };
+
+  function politicsInputSignature(state) {
+    var p = state.player;
+    var me = state.chars && state.chars[p.charId];
+    var career = me && me.career || {};
+    var monopolies = p.guildMonopolies || {};
+    var investments = state.economy && Array.isArray(state.economy.investments)
+      ? state.economy.investments : [];
+    var activeTrade = 0;
+    for (var investmentIndex = 0; investmentIndex < investments.length;
+        investmentIndex++) {
+      var investment = investments[investmentIndex];
+      if (investment && investment.status === 'active' &&
+          (!investment.kind || investment.kind === 'trade_partnership' ||
+           investment.kind === 'trade_venture')) activeTrade++;
+    }
+    /* Central relationship mutations advance a transient revision. This avoids
+       serializing every peer relation and scanning every realm's favor here. */
+    return [
+      p.charId, p.tier, p.liege || '', p.provinceId || '',
+      me && me.culture || '', me && me.religion || '',
+      me && Array.isArray(me.traits) ? me.traits.join(',') : '',
+      career.profession || p.profession || '', career.guildRank || '',
+      p.flags && p.flags.guild_member ? 1 : 0,
+      Array.isArray(p.enterprises) ? p.enterprises.length : 0,
+      activeTrade,
+      monopolies.incoming && (monopolies.incoming.contractId ||
+        monopolies.incoming.id) || '',
+      monopolies.outgoing && (monopolies.outgoing.contractId ||
+        monopolies.outgoing.id) || '',
+      Number(p.liegeOp) || 0,
+      JSON.stringify(state.council || null),
+      politicsInputRevision,
+      FB.modifierStateRevision ? FB.modifierStateRevision() : state.turn
+    ].join('|');
+  }
 
   function rememberRepair(state, politics) {
     repairedState = state;
     repairedRealmRevision = FB.realmStateRevision
       ? FB.realmStateRevision() : state.turn;
+    repairedInputSignature = politicsInputSignature(state);
+    repairedYear = state.date.year;
     return politics;
   }
 
@@ -776,9 +821,19 @@ window.FB = window.FB || {};
     var pendingDue = !!(pending && !pending.result &&
       (!isFinite(Number(pending.expiresTurn)) ||
        state.turn >= Number(pending.expiresTurn)));
-    /* An ineligible player has no political court to reevaluate. Active
-       courts still run their daily reconciliation because Standing,
-       commerce, modifiers, and offices can change without a realm mutation. */
+    var inputSignature = politicsInputSignature(state);
+    /* Court alignment has no turn-based drift. Between an actual realm,
+       standing, commerce, council, modifier, relationship, or yearly change,
+       the complete evaluation would reproduce the same answer. Retaining it
+       removes the largest peaceful daily whole-realm calculation. */
+    if (politics && typeof politics === 'object' &&
+        !Array.isArray(politics) && repairedState === state &&
+        repairedRealmRevision === revision && repairedYear === state.date.year &&
+        repairedInputSignature === inputSignature && !pendingDue) {
+      return politics;
+    }
+    /* Ineligible players have no court. Eligible courts fall through only
+       after one of the compact inputs above changes or a motion becomes due. */
     if (politics && typeof politics === 'object' &&
         !Array.isArray(politics) && repairedState === state &&
         repairedRealmRevision === revision &&

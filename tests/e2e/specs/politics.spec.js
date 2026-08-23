@@ -1,6 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'js/actions.js',
+  'js/agency.js',
+  'js/modifiers.js',
   'js/politics.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
@@ -204,6 +207,42 @@ async function configurePolitics(page) {
     };
   });
 }
+
+test('quiet landed days retain political court alignment until an input changes',
+  async function ({ page }, testInfo) {
+    await startPoliticsGame(page, testInfo);
+    await configurePolitics(page);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const original = FB.politicalCourt;
+      let calls = 0;
+      FB.politicalCourt = function () {
+        calls++;
+        return original.apply(this, arguments);
+      };
+      for (let i = 0; i < 20; i++) {
+        s.turn++;
+        FB.politicsDay(s);
+      }
+      const quietCalls = calls;
+      const court = original(s);
+      const vassal = court.houses.filter(function (house) {
+        return !house.isRuler && !house.isPlayer;
+      })[0];
+      FB.adjustRulerRegard(s, vassal.id, court.polityId, 5,
+        'test:politics-cache');
+      s.turn++;
+      FB.politicsDay(s);
+      FB.politicalCourt = original;
+      return {
+        quietCalls:quietCalls,
+        changedCalls:calls
+      };
+    });
+
+    expect(result.quietCalls).toBe(0);
+    expect(result.changedCalls).toBeGreaterThan(result.quietCalls);
+  });
 
 test('direct-court scope, affiliation interests, and influence are authoritative',
   async function ({ page }, testInfo) {
@@ -621,6 +660,15 @@ test('Network, Governance, and Estates share blocs without state or RNG drift',
       'Scutage posture');
     expect(await page.locator(
       '#governance-blocs .political-reasons li').count()).toBeGreaterThan(3);
+    var governanceBlocCard = page.locator(
+      '#governance-blocs .political-bloc-card').first();
+    await expect(governanceBlocCard.locator('.political-posture'))
+      .toHaveCount(0);
+    await expect(governanceBlocCard.locator('.political-bloc-details'))
+      .toBeHidden();
+    await governanceBlocCard.hover();
+    await expect(page.locator('#tooltip')).toContainText('Member houses');
+    await expect(page.locator('#tooltip')).toContainText('Interests');
     var governance = await page.evaluate(function () {
       var cards = Array.prototype.slice.call(
         document.querySelectorAll('[data-political-bloc]'));
@@ -1001,9 +1049,19 @@ test('political bloc and lobbying controls remain usable on a narrow touch layou
       FB.ui.showGovernance('blocs');
     });
     await expect(page.locator('#governance-blocs')).toBeVisible();
-    await expect(page.locator('.political-bloc-card').first()).toBeVisible();
-    var cardGeometry = await page.locator(
-      '.political-bloc-card').first().evaluate(function (card) {
+    var touchBlocCard = page.locator('.political-bloc-card').first();
+    await expect(touchBlocCard).toBeVisible();
+    var touchDetails = touchBlocCard.locator('.political-bloc-details');
+    await expect(touchDetails).toBeHidden();
+    var touchInfo = touchBlocCard.locator('.settcard-info');
+    await expect(touchInfo).toBeVisible();
+    await touchInfo.click();
+    await expect(touchDetails).toBeVisible();
+    await expect(touchDetails).toContainText('Member houses');
+    await expect(touchDetails).toContainText('Interests');
+    await touchInfo.click();
+    await expect(touchDetails).toBeHidden();
+    var cardGeometry = await touchBlocCard.evaluate(function (card) {
         var rect = card.getBoundingClientRect();
         return {
           left:rect.left,

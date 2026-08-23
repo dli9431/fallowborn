@@ -176,10 +176,15 @@ window.FB = window.FB || {};
     for (rid in agency.rulerAims) {
       if (!liveRulers[rid]) delete agency.rulerAims[rid];
     }
+    var relationsRepaired = false;
     for (var relationId in agency.relations) {
       if (!currentRulerRelation(state, agency.relations[relationId])) {
         delete agency.relations[relationId];
+        relationsRepaired = true;
       }
+    }
+    if (relationsRepaired && FB.invalidatePoliticsState) {
+      FB.invalidatePoliticsState();
     }
 
     var managed = {};
@@ -322,6 +327,7 @@ window.FB = window.FB || {};
     if (from && from.liege === toRid) {
       from.favor = FB.clamp(Number(from.favor || 0) + Number(amount || 0),
         -100, 100);
+      if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
       return from.favor;
     }
     var agency = state.agency || FB.ensureAgency(state);
@@ -334,6 +340,7 @@ window.FB = window.FB || {};
       value:FB.clamp(current + Number(amount || 0), -100, 100),
       lastYear:state.date.year, reason:reason || 'cultivation'
     };
+    if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
     return agency.relations[key].value;
   };
 
@@ -702,12 +709,17 @@ window.FB = window.FB || {};
       FB.adjustRulerRegard(state, from.id, to.id, peerAmount,
         'agency:court_cultivation');
     }
+    var relationsChanged = false;
     for (var key in agency.relations) {
       var record = agency.relations[key];
       if (!currentRulerRelation(state, record) ||
           state.date.year - Number(record.lastYear || 0) > 8) {
         delete agency.relations[key];
+        relationsChanged = true;
       }
+    }
+    if (relationsChanged && FB.invalidatePoliticsState) {
+      FB.invalidatePoliticsState();
     }
   }
 

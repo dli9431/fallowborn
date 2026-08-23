@@ -49,7 +49,6 @@ window.FB = window.FB || {};
   const itemWearerText = SH.itemWearerText;
   const kv = SH.kv;
   const largeListRowAttrs = SH.largeListRowAttrs;
-  const largeListStateLabel = SH.largeListStateLabel;
   const captureModalView = SH.captureModalView;
   const largeListSurfaceHtml = SH.largeListSurfaceHtml;
   const largeListViews = SH.largeListViews;
@@ -828,12 +827,37 @@ window.FB = window.FB || {};
         : FB.T('Confirm one choice. Its transaction resolves before the day is spent.')) +
       '</p><div class="gm-list declarative-choice-list">';
     for (const item of choices) {
-      const details = item.can ? item.desc : item.reason;
-      h += '<div class="settcard declarative-choice-card"><button type="button" ' +
+      const detailText = item.can ? item.desc : item.reason;
+      const detailsId = 'declarative-choice-details-' + item.choice.id;
+      const criticalCosts = item.preview && item.preview.costs
+        ? item.preview.costs.filter(function (record) {
+            return !FB.eventImpactVisible || FB.eventImpactVisible(record);
+          }) : [];
+      const criticalText = item.can
+        ? (criticalCosts.length
+          ? criticalCosts.map(function (record) {
+              return FB.eventImpactText(s, record, 'preview');
+            }).join(' · ')
+          : FB.T('Available'))
+        : FB.T('Unavailable');
+      const detailHtml = (detailText
+        ? '<p class="cmeta">' + esc(detailText) + '</p>' : '') +
+        declarativeChoicePreviewHtml(s, item.preview);
+      h += '<div class="settcard declarative-choice-card"' +
+        (item.can ? '' : ' tabindex="0" aria-describedby="' +
+          esc(detailsId) + '"') + '><button type="button" ' +
         'class="actionbtn" data-declarative-choice="' + esc(item.choice.id) + '"' +
-        (item.can ? '' : ' disabled') + '>' + esc(item.label) + '</button>' +
-        (details ? '<p class="cmeta">' + esc(details) + '</p>' : '') +
-        declarativeChoicePreviewHtml(s, item.preview) + '</div>';
+        (item.can ? '' : ' disabled') + ' aria-describedby="' +
+        esc(detailsId) + '">' + esc(item.label) +
+        '<span class="declarative-choice-state">' + esc(criticalText) +
+        '</span></button>' +
+        '<span class="settcard-actions declarative-choice-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' +
+        '<div class="settcard-details declarative-choice-details hidden" id="' +
+        esc(detailsId) + '">' + detailHtml + '</div></div>';
     }
     h += '</div><button type="button" class="btn gm-footer" ' +
       'id="declarative-choice-cancel">' + esc(FB.T('Cancel')) + '</button>';
@@ -2104,28 +2128,28 @@ window.FB = window.FB || {};
     return parts.join(' + ');
   }
 
-  function conversionRelationBadge(relation) {
+  function conversionRelationText(relation) {
     if (relation === 'in_fold') {
-      return '<span class="conversion-badge in-fold">' + esc(FB.T('In-Fold · −40% cost')) + '</span>';
+      return FB.T('In-Fold · −40% cost');
     }
     if (relation === 'schismatic') {
-      return '<span class="conversion-badge schismatic">' + esc(FB.T('Schismatic · −20% cost')) + '</span>';
+      return FB.T('Schismatic · −20% cost');
     }
     if (relation === 'foreign') {
-      return '<span class="conversion-badge foreign">' + esc(FB.T('Foreign Tradition')) + '</span>';
+      return FB.T('Foreign Tradition');
     }
     if (relation === 'hostile') {
-      return '<span class="conversion-badge hostile">' + esc(FB.T('Hostile · +25% cost')) + '</span>';
+      return FB.T('Hostile · +25% cost');
     }
     return '';
   }
 
-  function conversionCultureRelationBadge(relation) {
+  function conversionCultureRelationText(relation) {
     if (relation === 'same_group') {
-      return '<span class="conversion-badge in-fold">' + esc(FB.T('Related Tradition · −20% cost')) + '</span>';
+      return FB.T('Related Tradition · −20% cost');
     }
     if (relation === 'foreign') {
-      return '<span class="conversion-badge foreign">' + esc(FB.T('Foreign Culture · +25% cost')) + '</span>';
+      return FB.T('Foreign Culture · +25% cost');
     }
     return '';
   }
@@ -2378,21 +2402,19 @@ window.FB = window.FB || {};
           const relDef = kind === 'faith' ? FB.religionOf(id, s) : null;
           const icon = relDef ? (relDef.icon || '') : '🌍';
           const detId = 'conv-det-' + esc(id);
-          const tooltipHtml = kind === 'faith'
+          let tooltipHtml = kind === 'faith'
             ? conversionFaithTooltipHtml(s, id)
             : conversionCultureTooltipHtml(s, id);
-
-          let localBadge = '';
-          const pres = FB.conversionTargetPresence ? FB.conversionTargetPresence(s, kind, id) : null;
-          if (pres && pres.kind !== 'tradition' && pres.kind !== 'self') {
-            localBadge = '<span class="conversion-badge local">' + esc(pres.label) + '</span>';
+          const relationText = kind === 'faith' && st.relation
+            ? conversionRelationText(st.relation)
+            : (kind === 'culture' && st.relation
+              ? conversionCultureRelationText(st.relation) : '');
+          if (relationText) {
+            tooltipHtml += '<div class="conversion-relation-detail"><b>' +
+              esc(FB.T('Relation')) + ':</b> ' + esc(relationText) + '</div>';
           }
 
-          const relationBadge = kind === 'faith' && st.relation
-            ? conversionRelationBadge(st.relation)
-            : (kind === 'culture' && st.relation ? conversionCultureRelationBadge(st.relation) : '');
-
-          h += '<div class="conversion-card settcard' + (st.ok ? '' : ' disabled') + '" data-conv-target="' + esc(id) + '" role="button" tabindex="' + (st.ok ? '0' : '-1') + '">' +
+          h += '<div class="conversion-card settcard' + (st.ok ? '' : ' disabled') + '" data-conv-target="' + esc(id) + '" role="button" tabindex="0">' +
             '<div class="settcard-head">' +
             '<b>' + (icon ? esc(icon) + ' ' : '') + esc(name) + '</b>' +
             '<span class="settcard-actions">' +
@@ -2400,9 +2422,6 @@ window.FB = window.FB || {};
             '<button type="button" class="btn small convcard-select" data-conv-select="' + esc(id) + '"' + (st.ok ? '' : ' disabled') + '>' +
             esc(FB.T('Select')) + '</button>' +
             '</span></div>' +
-            '<div class="conversion-card-meta">' +
-            relationBadge + localBadge +
-            '</div>' +
             '<div class="conversion-card-cost' + (st.ok ? '' : ' unaffordable') + '">' +
             (st.ok
               ? '<span class="cost-highlight">' + esc(conversionCostText(st)) + '</span>'
@@ -8761,43 +8780,50 @@ window.FB = window.FB || {};
       const def = FBDATA.politicalBlocs[bloc.archetypeId] || {};
       const leader = politicalHouseById(
         politics, bloc.leaderHouseId);
-      h += '<article class="political-bloc-card" data-political-bloc="' +
-        esc(bloc.id) + '"><div class="political-bloc-head"><h5>' +
+      const detailsId = 'political-bloc-details-' + bloc.id;
+      let details = '<div class="political-members"><b>' +
+        esc(FB.T('Member houses')) + '</b><div>';
+      for (const member of bloc.members) {
+        details += politicalHouseLink(s, member, 'blocs') +
+          ' <span class="cmeta">(' + member.influence + ')</span> ';
+      }
+      details += '</div></div><div class="political-reasons"><b>' +
+        esc(FB.T('Interests')) + '</b><ul>';
+      for (const item of bloc.interests) {
+        details += '<li>' + esc(politicalInterestReason(
+          s, politics, item)) + '</li>';
+      }
+      details += '</ul></div>';
+      if (forecast) {
+        details += governanceBlocMotionHtml(
+          s, bloc, forecast.motionId, true);
+      } else {
+        for (const item of readyForecasts) {
+          details += governanceBlocMotionHtml(s, politicalForecastBloc(
+            item.forecast, bloc.id), item.id, false);
+        }
+      }
+      h += '<article class="political-bloc-card settcard" ' +
+        'data-political-bloc="' + esc(bloc.id) + '" tabindex="0" ' +
+        'aria-describedby="' + esc(detailsId) + '">' +
+        '<div class="political-bloc-head"><h5>' +
         (def.icon || '') + ' ' +
         esc(politicalBlocName(s, politics, bloc)) + '</h5>' +
         (forecast
-          ? '<span class="political-posture political-posture-' +
+          ? '<span class="political-posture-text political-posture-' +
             esc(bloc.posture) + '">' +
             esc(politicalPostureText(bloc.posture)) + '</span>'
-          : '') + '</div>' +
+          : '') + '<span class="settcard-actions political-bloc-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span></div>' +
         kv('Leader', politicalHouseLink(s, leader, 'blocs')) +
         kv('Influence', esc(FB.T('{influence} of {total}', {
           influence:bloc.influence,
           total:politics.totalInfluence
-        }))) +
-        '<div class="political-members"><b>' +
-        esc(FB.T('Member houses')) + '</b><div>';
-      for (const member of bloc.members) {
-        h += politicalHouseLink(s, member, 'blocs') +
-          ' <span class="cmeta">(' + member.influence + ')</span> ';
-      }
-      h += '</div></div><div class="political-reasons"><b>' +
-        esc(FB.T('Interests')) + '</b><ul>';
-      for (const item of bloc.interests) {
-        h += '<li>' + esc(politicalInterestReason(
-          s, politics, item)) + '</li>';
-      }
-      h += '</ul></div>';
-      if (forecast) {
-        h += governanceBlocMotionHtml(
-          s, bloc, forecast.motionId, true);
-      } else {
-        for (const item of readyForecasts) {
-          h += governanceBlocMotionHtml(s, politicalForecastBloc(
-            item.forecast, bloc.id), item.id, false);
-        }
-      }
-      h += '</article>';
+        }))) + '<div class="settcard-details political-bloc-details hidden" ' +
+        'id="' + esc(detailsId) + '">' + details + '</div></article>';
     }
     return h;
   }
@@ -13550,14 +13576,31 @@ window.FB = window.FB || {};
         identity:c.id,
         focusKey:'work-person-' + c.id
       });
-      const html = '<button type="button" class="actionbtn large-list-row ' +
-        'large-list-person-row" data-career="' + esc(c.id) + '"' + attrs + '>' +
+      const detailsId = 'work-person-details-' + c.id;
+      let detailsHtml = '<b>' + esc(stateLabel) + '</b>';
+      for (const line of metadata) {
+        if (line) detailsHtml += '<div>' + esc(line) + '</div>';
+      }
+      const faceMetadata = metadata.slice(0, 2).filter(function (line) {
+        return !!line;
+      }).join(' · ');
+      const html = '<div class="large-list-work-card settcard"><button ' +
+        'type="button" class="actionbtn large-list-row ' +
+        'large-list-person-row" data-career="' + esc(c.id) + '"' + attrs +
+        ' aria-describedby="' + esc(detailsId) + '">' +
         '<span class="large-list-row-main">' + FB.faceTag(c, 34, 40) +
         '<span class="large-list-row-copy"><span class="large-list-row-title">' +
         esc(c.id === me.id ? FB.T('{name} (you)', { name:c.name }) : c.name) +
-        '</span><span class="adesc">' + esc(metadata.join(' · ')) +
-        '</span></span></span>' + largeListStateLabel(stateLabel, attention) +
-        '</button>';
+        '</span><span class="adesc">' + esc(faceMetadata) +
+        '</span></span></span><span class="large-list-face-state' +
+        (attention ? ' needs-attention' : '') + '">' + esc(stateLabel) +
+        '</span></button><span class="settcard-actions large-list-work-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' +
+        '<div class="settcard-details large-list-work-details hidden" id="' +
+        esc(detailsId) + '">' + detailsHtml + '</div></div>';
       workModels.push({
         html:html, attention:attention, priority:attention ? 0 :
           (unavailable ? 2 : 1), index:workIndex++, identity:c.id
@@ -13613,22 +13656,40 @@ window.FB = window.FB || {};
         identity:e.uid,
         focusKey:'work-enterprise-' + e.uid
       });
-      const html = '<button type="button" class="actionbtn large-list-row ' +
+      const detailsId = 'work-enterprise-details-' + e.uid;
+      const faceText = FB.T('{worker} · {place} · about {money:amount}/season', {
+        worker:worker ? FB.T('Worked by {name}', { name:worker.name }) : stateLabel,
+        place:enterprisePlace(s, e),
+        amount:Math.round(liveYield * 10) / 10
+      });
+      const detailsText = FB.T(
+        '{worker} · {place} · base value {money:value} · about {money:amount}/season{lock}', {
+          worker:workerText,
+          place:enterprisePlace(s, e),
+          value:def.cost,
+          amount:Math.round(liveYield * 10) / 10,
+          lock:e.workerLocked && unresolved ? FB.T(' · 🔒 lock recorded') : ''
+        });
+      const html = '<div class="large-list-work-card settcard"><button ' +
+        'type="button" class="actionbtn large-list-row ' +
         'large-list-enterprise-row" data-enterprise="' + esc(e.uid) + '"' +
-        attrs + '><span class="large-list-row-main">' +
+        attrs + ' aria-describedby="' + esc(detailsId) + '">' +
+        '<span class="large-list-row-main">' +
         '<span class="large-list-enterprise-icon" aria-hidden="true">' +
         esc(def.icon) + '</span><span class="large-list-row-copy">' +
         '<span class="large-list-row-title">' +
         esc(dt(s, 'enterprise', e.type, def, 'name')) +
-        '</span><span class="adesc">' + esc(FB.T(
-          '{worker} · {place} · base value {money:value} · about {money:amount}/season{lock}', {
-            worker:workerText,
-            place:enterprisePlace(s, e),
-            value:def.cost,
-            amount:Math.round(liveYield * 10) / 10,
-            lock:e.workerLocked && unresolved ? FB.T(' · 🔒 lock recorded') : ''
-          })) + '</span></span></span>' +
-        largeListStateLabel(stateLabel, attention) + '</button>';
+        '</span><span class="adesc">' + esc(faceText) +
+        '</span></span></span><span class="large-list-face-state' +
+        (attention ? ' needs-attention' : '') + '">' + esc(stateLabel) +
+        '</span></button><span class="settcard-actions large-list-work-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' +
+        '<div class="settcard-details large-list-work-details hidden" id="' +
+        esc(detailsId) + '"><b>' + esc(stateLabel) + '</b><div>' +
+        esc(detailsText) + '</div></div></div>';
       enterpriseModels.push({
         html:html, attention:attention,
         priority:state === 'idle' ? 0 : (state === 'unavailable' ? 1 : 2),
@@ -15223,13 +15284,12 @@ window.FB = window.FB || {};
           'Review requirements for {enterprise}. Unavailable: {reason}', {
             enterprise:name, reason:state.detail
           })) + '"';
-    return '<button type="button" class="actionbtn enterprise-purchase-option ' +
-      state.className + '"' + action + '>' +
-      '<span class="enterprise-purchase-head"><span>' +
-      esc(FB.T('{icon} {name}', { icon:def.icon, name:name })) +
-      '</span><span class="enterprise-purchase-state">' +
-      esc(state.label) + '</span></span>' +
-      '<span class="adesc enterprise-purchase-desc">' +
+    const detailsId = 'enterprise-purchase-details-' + status.id;
+    const critical = FB.T(
+      '{state} · setup {money:cost} · base {money:yield} each season', {
+        state:state.label, cost:status.cost, yield:def.yield || 0
+      });
+    const details = '<span class="adesc enterprise-purchase-desc">' +
       esc(dt(s, 'enterprise', status.id, def, 'desc')) + '</span>' +
       '<span class="adesc enterprise-purchase-reason">' +
       esc(state.detail) + '</span>' + (!status.ready
@@ -15244,7 +15304,22 @@ window.FB = window.FB || {};
         effect:enterpriseEffectText(s, preview, def, true),
         transferRule:enterpriseTransferRule(),
         expiry:FB.T('No fixed end')
-      }) + '</button>';
+      });
+    return '<div class="enterprise-purchase-shell settcard ' +
+      state.className + '"><button type="button" ' +
+      'class="actionbtn enterprise-purchase-option ' + state.className +
+      '"' + action + ' aria-describedby="' + esc(detailsId) + '">' +
+      '<span class="enterprise-purchase-head"><span>' +
+      esc(FB.T('{icon} {name}', { icon:def.icon, name:name })) +
+      '</span></span><span class="enterprise-purchase-critical">' +
+      esc(critical) + '</span></button>' +
+      '<span class="settcard-actions enterprise-purchase-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + esc(detailsId) +
+      '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span>' +
+      '<div class="settcard-details enterprise-purchase-details hidden" id="' +
+      esc(detailsId) + '">' + details + '</div></div>';
   }
 
   UI.showEnterpriseRequirements = function (type, settlement, returnContext) {
@@ -15664,13 +15739,21 @@ window.FB = window.FB || {};
       const reason = row.status === 'unresolved'
         ? enterpriseStaffingReason(s, row) : '';
       const change = enterpriseStaffingChange(s, row, rowByUid);
-      h += '<div class="enterprise-staffing-row ' +
+      const detailsId = 'enterprise-staffing-details-' + row.uid;
+      h += '<div class="enterprise-staffing-row settcard ' +
         (row.status === 'unresolved' ? 'unresolved' :
           (row.status === 'locked' || row.status === 'reserved'
-            ? 'locked' : '')) + '">' +
+            ? 'locked' : '')) + '" tabindex="0" aria-describedby="' +
+        esc(detailsId) + '">' +
         '<div class="enterprise-staffing-head"><span class="enterprise-staffing-name">' +
-        esc(label.icon + ' ' + label.name) + '</span><span class="enterprise-staffing-status">' +
-        esc(enterpriseStaffingStatus(row)) + '</span></div>' +
+        esc(label.icon + ' ' + label.name) + '</span>' +
+        '<span class="enterprise-staffing-state">' +
+        esc(enterpriseStaffingStatus(row)) + '</span>' +
+        '<span class="settcard-actions enterprise-staffing-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + esc(detailsId) +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span></div>' +
         '<div class="enterprise-staffing-place">' + esc(label.place) + '</div>' +
         '<div class="enterprise-staffing-comparison"><div><span>' +
         esc(FB.T('Current')) + '</span><b>' +
@@ -15679,13 +15762,13 @@ window.FB = window.FB || {};
         '</small></div><div><span>' + esc(FB.T('Proposed')) + '</span><b>' +
         esc(proposed ? proposed.name : FB.T('Unresolved')) + '</b><small>' +
         esc(FB.T('{money:amount} each season', { amount:row.proposedYield })) +
-        '</small></div></div>' +
-        '<div class="enterprise-staffing-change">' +
-        esc(change) + '</div>' +
+        '</small></div></div><div class="settcard-details ' +
+        'enterprise-staffing-details hidden" id="' + esc(detailsId) + '">' +
+        '<b>' + esc(enterpriseStaffingStatus(row)) + '</b>' +
+        '<div class="enterprise-staffing-change">' + esc(change) + '</div>' +
         (reason && reason !== change
           ? '<div class="enterprise-staffing-reason">' + esc(reason) + '</div>'
-          : '') +
-        '</div>';
+          : '') + '</div></div>';
     }
     h += '</div><div class="gm-footer">' +
       '<button type="button" class="btn" id="enterprise-staffing-apply"' +

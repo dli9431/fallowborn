@@ -171,7 +171,12 @@ exemptions, obligations, protected duration, revocation rule, and semantic sourc
 describes the institutional holder and estates-vote revocation rule. This is provenance,
 not a second modifier or law calculation. Load-time institution repair discovers legacy
 modifier provenance; the normalized modifier APIs maintain it afterward, so the daily
-institution pass does not rescan every county merely to rediscover the same records.
+institution pass does not rescan every county merely to rediscover the same records. Its
+normalized policy, election, privilege, demand, guild, and council inputs are retained
+while unchanged, with the next saved expiry or cooldown waking repair on its exact turn.
+Political-court alignment follows the same rule: realm, Standing, commerce, council,
+relationship, and modifier changes invalidate the retained evaluation, while quiet days
+do not rebuild every house's territory and adjacency interests.
 
 The four authored institution agendas use the same county contract. Market settlements
 grant Market Charter or Contested Tolls; wartime service grants Muster Burden, Levy

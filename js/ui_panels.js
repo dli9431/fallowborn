@@ -23,7 +23,6 @@ window.FB = window.FB || {};
   const initLargeListSurface = SH.initLargeListSurface;
   const kv = SH.kv;
   const largeListRowAttrs = SH.largeListRowAttrs;
-  const largeListStateLabel = SH.largeListStateLabel;
   const largeListSurfaceHtml = SH.largeListSurfaceHtml;
   const menText = SH.menText;
   const mobileNavClosed = SH.mobileNavClosed;
@@ -827,13 +826,25 @@ window.FB = window.FB || {};
     else renderLog();
   }
 
-  function renderActiveTab() {
+  function renderActiveTab(options) {
     /* The game chrome can be shown with no life behind it (title-screen and
        soundtrack harnesses drive it directly): every tab render dereferences
        the state, so with none there is nothing to paint. */
     if (!FB.state) return;
+    const liveTick = !!(options && options.liveTick);
     if (FB.game && FB.game.observe) { // a watcher needs only the land and the chronicle
-      renderTab(SH.activeTab === 'prov' ? 'prov' : 'log');
+      if (!liveTick || SH.activeTab === 'log') {
+        renderTab(SH.activeTab === 'prov' ? 'prov' : 'log');
+      }
+      return;
+    }
+    /* Natural days change the lightweight topbar immediately. Retain all
+       calculation-heavy panel trees until an exact/player-driven refresh;
+       the Chronicle is the exception because its renderer appends only new
+       entries and does not rebuild the other panel column. */
+    if (liveTick) {
+      if (SH.activeTab === 'log') renderLog();
+      updateTabNudges(FB.state);
       return;
     }
     // on phones Self/Kin is a closed drawer most of the time (display:none →
@@ -2930,18 +2941,10 @@ window.FB = window.FB || {};
 
   function networkStatePresentation(record, detailsKey, fallbackLabel) {
     const label = record.stateLabel || fallbackLabel;
-    if (record.hideStateFace && !record.stateInDetails) {
-      return { cardClass:'', face:'', details:'' };
-    }
-    if (!record.stateInDetails) {
-      return {
-        cardClass:'',
-        face:largeListStateLabel(label, record.attention),
-        details:''
-      };
-    }
     const detailsId = 'network-state-' + String(detailsKey || record.identity ||
       'row').replace(/[^a-zA-Z0-9_-]/g, '-');
+    const context = record.stateDetails || networkContextDetailsHtml(
+      record.detailMeta || record.meta || []);
     return {
       cardClass:' settcard network-state-details',
       face:'',
@@ -2951,7 +2954,7 @@ window.FB = window.FB || {};
         '" title="' + esc(FB.T('Details')) + '" aria-label="' +
         esc(FB.T('Details')) + '">?</button></span>' +
         '<div class="settcard-details hidden" id="' + esc(detailsId) + '">' +
-        '<b>' + esc(label) + '</b>' + (record.stateDetails || '') + '</div>'
+        '<b>' + esc(label) + '</b>' + context + '</div>'
     };
   }
 
@@ -3073,7 +3076,7 @@ window.FB = window.FB || {};
       record.attention ? FB.T('Needs attention') : FB.T('Context'));
     return '<div class="large-list-entry network-list-entry ' +
       'large-list-static-row' + state.cardClass + '"' + attrs +
-      (record.stateInDetails ? ' tabindex="0"' : '') +
+      ' tabindex="0"' +
       '><div class="large-list-row-copy">' +
       '<span class="large-list-row-title">' + esc(record.title) + '</span>' +
       (record.meta && record.meta.length
@@ -3170,7 +3173,6 @@ window.FB = window.FB || {};
         attention:!!unpaid,
         state:unpaid ? 'warning' : 'routine',
         stateLabel:unpaid ? FB.T('Pay warning') : FB.T('Established'),
-        stateInDetails:!unpaid,
         priority:source.retainer ? 1 : 0,
         index:source.index,
         identity:c.id
@@ -3300,7 +3302,6 @@ window.FB = window.FB || {};
           kind:'character', id:record.character.id
         }))
       }));
-      record.stateInDetails = !record.attention;
       record.stateDetails = networkCharacterStateDetails(s, record);
       record.html = networkReadablePersonRow(s, 'connections', record);
       connectionRows.push(record);
@@ -3751,7 +3752,6 @@ window.FB = window.FB || {};
           state:attention ? 'opportunity' : 'routine',
           stateLabel:politics.motion
             ? SH.politicalPostureText(bloc.posture) : FB.T('Established'),
-          stateInDetails:!politics.motion,
           stateDetails:'<div class="network-state-context">' +
             politicalDetails + '</div>',
           priority:i,
@@ -3859,7 +3859,6 @@ window.FB = window.FB || {};
           attention:true,
           state:'vacancy',
           stateLabel:FB.T('Vacancy'),
-          stateInDetails:true,
           priority:0,
           index:0,
           identity:'council-vacancies',
@@ -3987,7 +3986,6 @@ window.FB = window.FB || {};
         ? 'warning' : 'commitment';
       record.stateLabel = record.state === 'warning'
         ? FB.T('Warning') : FB.T('Active commitment');
-      record.hideStateFace = record.state === 'warning';
     }
 
     const realmRows = [];

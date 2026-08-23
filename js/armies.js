@@ -2807,6 +2807,17 @@ window.FB = window.FB || {};
        mutates the pledge, the campaign, or the player's sovereignty */
     const playerGhwHost = !!(FB.playerGreatHolyWarHostActive &&
       FB.playerGreatHolyWarHostActive(state));
+    let anyWar = false;
+    for (const warringRealm in warring) {
+      if (warring[warringRealm]) { anyWar = true; break; }
+    }
+    /* In peacetime there is no host to raise, order, supply, reinforce, or
+       match for battle. Replacement cohorts still mature on their exact day,
+       but the rest of the field-army pipeline is pure no-op work. */
+    if (!state.armies.length && !anyWar && !playerGhwHost) {
+      cohortTick(state);
+      return;
+    }
     const hostsByRealm = {};
     for (const a of state.armies) {
       (hostsByRealm[a.realm] = hostsByRealm[a.realm] || []).push(a);

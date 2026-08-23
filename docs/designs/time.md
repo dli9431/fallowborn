@@ -60,6 +60,9 @@ ordinary built-in fallback. Status and score projection are pure and consume no 
 The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
 may request visibility-only entries for collapsed accordion groups, postponing cooldown,
 technology, and other eligibility work until those controls are opened.
+Daily focus validation likewise requests availability only. Mechanical preview ledgers and
+seasonal projections are presentation data and are materialized only for an explicit focus
+status or the open Deeds panel, never merely to let the active focus advance another day.
 Focus-based skill training applies the shared
 `balance.focusSkillGainRate` multiplier (0.75 by default) to its seasonal chance; other
 focus outcomes and non-focus skill gains are unaffected. Martial *training* foci (`militia`, `drill`,
@@ -77,21 +80,28 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
 It still executes the authoritative daily tick for every date, but invariant
-repair work is retained between relevant mutations: political courts key off
-the unsaved realm revision only while no court is eligible (active courts keep
-their daily reconciliation), stable Papal and religious offices bypass their
-full repair until an election or vacancy is due, and a normalized Papal office
-answers player-decision checks and advances due AI conclave ballots directly
-without re-entering that world-wide repair. Institution legacy scans run once
-per loaded state. Scripted history likewise retains its next due date, and
-materialized ruler synchronization reuses each ruler projection within a pass.
-These retained paths never batch RNG-bearing mechanics or move expiry boundaries;
-focus, travel, armies, events, and dated transitions keep their ordinary
-per-day order. The player-facing skip is frame-sliced to an eight-millisecond
+repair work is retained between relevant mutations. Political courts key off
+the realm revision plus compact Standing, commerce, council, relationship, and
+modifier inputs, so an eligible landed court is not rebuilt, territorially
+rescanned, and adjacency-rescored on every unchanged day. Institutions
+fingerprint their small saved policy, election, privilege, demand, council, and
+guild records, then wake at the exact next term, cooldown, privilege, or
+mistreatment deadline. Stable Papal and religious offices bypass their full
+repair until an election or vacancy is due, while idle great-holy-war
+eligibility sleeps until its next authored date or restored-head deadline and
+wakes early on sacred-control changes. Scripted history likewise retains its
+next due date, and materialized ruler synchronization reuses each ruler
+projection within a pass. These retained paths never batch RNG-bearing
+mechanics or move expiry boundaries; focus, travel, armies, events, and dated
+transitions keep their ordinary per-day order. The player-facing skip is
+frame-sliced to an eight-millisecond
 budget (and at most six days per frame), with UI refreshes, political-map base
 rebuilds, canvas renders, transient Chronicle-news toasts, and the replaceable
-autoresolve receipt toast deferred until the burst ends. Chronicle entries are
-still recorded on their exact simulation day; only the last five notices that
+autoresolve receipt toast deferred until the burst ends. Completion refreshes
+the lightweight date, resources, controls, and incremental Chronicle while
+retaining the mounted panel tree, just like an ordinary live tick; it does not
+turn a large data-driven Deeds catalogue into a synchronous end-of-skip rebuild.
+Chronicle entries are still recorded on their exact simulation day; only the last five notices that
 the live toast rail could have retained are rendered afterward. This keeps input
 and painting responsive without making
 wall-clock timing part of simulation state. A coachmark raised during an active

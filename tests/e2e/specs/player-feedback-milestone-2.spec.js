@@ -4,8 +4,10 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/economy.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
-  'js/ui_panels.js'
+  'js/ui_panels.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -49,7 +51,9 @@ test('technology search discovers unlocks and locked links follow role access',
       '[data-enterprise-explain="workshop_business"]');
     await expect(lockedWorkshop).toBeVisible();
     await expect(lockedWorkshop).toContainText('Workshop');
-    await expect(lockedWorkshop).toContainText('Requires Horizontal Loom');
+    await expect(lockedWorkshop).toContainText('Unavailable');
+    await lockedWorkshop.locator('..').hover();
+    await expect(page.locator('#tooltip')).toContainText('Requires Horizontal Loom');
     await expect(lockedWorkshop).toHaveAttribute(
       'data-enterprise-available', 'false');
     await expect(lockedWorkshop).toBeEnabled();
@@ -72,7 +76,9 @@ test('technology search discovers unlocks and locked links follow role access',
     await expect(commonWorkshop).toBeEnabled();
     await expect(commonWorkshop).toHaveAttribute(
       'data-enterprise-available', 'false');
-    await expect(commonWorkshop).toContainText('Requires Horizontal Loom');
+    await expect(commonWorkshop).toContainText('Unavailable');
+    await commonWorkshop.locator('..').hover();
+    await expect(page.locator('#tooltip')).toContainText('Requires Horizontal Loom');
     await commonWorkshop.click();
     await expect(page.locator('[data-enterprise-blocker="technology"]'))
       .toContainText('Requires Horizontal Loom');
@@ -134,7 +140,15 @@ test('enterprise catalogue keeps blocked choices explainable and idle warnings a
     const blockedWorkshop = page.locator(
       '[data-enterprise-explain="workshop_business"]');
     await expect(blockedWorkshop).toContainText('Unavailable');
-    await expect(blockedWorkshop).toContainText('Needs county development');
+    await expect(blockedWorkshop).toContainText('setup');
+    await expect(blockedWorkshop).not.toContainText('Needs county development');
+    const blockedCard = blockedWorkshop.locator('..');
+    await expect(blockedCard.locator('.enterprise-purchase-state'))
+      .toHaveCount(0);
+    await blockedCard.hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('Needs county development');
+    await expect(page.locator('#tooltip')).toContainText('Transfer rule');
     await blockedWorkshop.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { name:'Workshop requirements' }))
@@ -155,8 +169,10 @@ test('enterprise catalogue keeps blocked choices explainable and idle warnings a
     const idlePurchase = page.locator(
       '[data-enterprise-buy="idle_purchase_fixture"]');
     await expect(idlePurchase).toContainText('Can buy — will be idle');
-    await expect(idlePurchase).toContainText('eligible for Trade work');
-    await expect(idlePurchase).toContainText('it will stand idle');
+    await expect(idlePurchase).not.toContainText('eligible for Trade work');
+    await idlePurchase.locator('..').hover();
+    await expect(page.locator('#tooltip')).toContainText('eligible for Trade work');
+    await expect(page.locator('#tooltip')).toContainText('it will stand idle');
     await page.evaluate(function () {
       FB.state.player.gold = 0;
     });

@@ -786,11 +786,6 @@ window.FB = window.FB || {};
       (opts.focusKey ? ' data-list-focus-key="' + esc(opts.focusKey) + '"' : '');
   }
 
-  function largeListStateLabel(label, attention) {
-    return '<span class="large-list-state' +
-      (attention ? ' needs-attention' : '') + '">' + esc(label) + '</span>';
-  }
-
   function largeListSectionHtml(surface, section) {
     const rows = section.rows || [];
     let attention = 0;
@@ -799,32 +794,39 @@ window.FB = window.FB || {};
     const headingId = section.headingId ||
       surface + '-list-heading-' + section.id;
     const bodyId = surface + '-list-body-' + section.id;
+    const detailsId = surface + '-list-details-' + section.id;
     const countText = FB.T('{count} total', { count:rows.length });
     const attentionText = FB.T('{count} need attention', { count:attention });
-    const ariaLabel = FB.T(
-      '{section}: {total}; {attention}. {action} section.', {
-        section:section.title,
-        total:countText,
-        attention:attentionText,
-        action:state.collapsed ? FB.T('Expand') : FB.T('Collapse')
-      });
+    const ariaLabel = FB.T('{section}: {action} section.', {
+      section:section.title,
+      action:state.collapsed ? FB.T('Expand') : FB.T('Collapse')
+    });
     let h = '<section class="large-list-section" data-list-section="' +
-      esc(section.id) + '"><h4 id="' + headingId + '" tabindex="-1" ' +
+      esc(section.id) + '" data-list-title="' + esc(section.title) +
+      '">' +
+      '<div class="large-list-section-heading settcard">' +
+      '<h4 id="' + headingId + '" tabindex="-1" ' +
       'data-list-focus-key="heading-' + esc(section.id) + '">' +
       '<button type="button" class="large-list-section-toggle" ' +
       'data-list-toggle="' + esc(section.id) + '" data-list-focus-key="toggle-' +
       esc(section.id) + '" aria-expanded="' + (!state.collapsed) +
-      '" aria-controls="' + bodyId + '" aria-label="' + esc(ariaLabel) + '">' +
+      '" aria-controls="' + bodyId + '" aria-label="' + esc(ariaLabel) + '"' +
+      ' aria-describedby="' + detailsId + '">' +
       '<span class="large-list-section-title">' +
       (section.hotkey && !FB.isTouch
         ? '<span class="keyhint large-list-section-keyhint">' +
           esc(String(section.hotkey)) + '</span>'
         : '') + esc(section.title) + '</span>' +
-      '<span class="large-list-section-count">' + esc(countText) + '</span>' +
-      '<span class="large-list-attention-count' +
-      (attention ? '' : ' none') + '">' + esc(attentionText) + '</span>' +
       '<span class="large-list-section-caret" aria-hidden="true">' +
       (state.collapsed ? '▸' : '▾') + '</span></button></h4>' +
+      '<span class="settcard-actions large-list-section-actions">' +
+      '<button type="button" class="btn small settcard-info" ' +
+      'aria-expanded="false" aria-controls="' + detailsId + '" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span><div class="settcard-details ' +
+      'large-list-section-details hidden" id="' + detailsId + '"><b>' +
+      esc(section.title) + '</b><div>' + esc(countText) + '</div><div>' +
+      esc(attentionText) + '</div></div></div>' +
       '<div class="large-list-section-body" id="' + bodyId + '"' +
       (state.collapsed ? ' hidden' : '') + ' aria-labelledby="' + headingId + '">';
     if (section.summary) {
@@ -952,7 +954,8 @@ window.FB = window.FB || {};
     if (row._largeListSearchText !== undefined) {
       return row._largeListSearchText;
     }
-    const copy = row.cloneNode(true);
+    const source = row.closest('.large-list-work-card') || row;
+    const copy = source.cloneNode(true);
     const hints = copy.querySelectorAll('.keyhint');
     for (let i = hints.length - 1; i >= 0; i--) {
       hints[i].parentNode.removeChild(hints[i]);
@@ -1007,15 +1010,11 @@ window.FB = window.FB || {};
       body.hidden = !!state.collapsed;
       toggle.setAttribute('aria-expanded', state.collapsed ? 'false' : 'true');
       const sectionTitle = section.querySelector('.large-list-section-title');
-      const sectionCount = section.querySelector('.large-list-section-count');
-      const attentionCount = section.querySelector(
-        '.large-list-attention-count');
+      const sectionLabel = section.getAttribute('data-list-title') ||
+        (sectionTitle ? sectionTitle.textContent : sectionId);
       toggle.setAttribute('aria-label', FB.T(
-        '{section}: {total}; {attention}. {action} section.', {
-          section:sectionTitle ? sectionTitle.textContent : sectionId,
-          total:sectionCount ? sectionCount.textContent : '',
-          attention:attentionCount ? attentionCount.textContent :
-            FB.T('{count} need attention', { count:0 }),
+        '{section}: {action} section.', {
+          section:sectionLabel,
           action:state.collapsed ? FB.T('Expand') : FB.T('Collapse')
         }));
       if (caret) caret.textContent = state.collapsed ? '▸' : '▾';
@@ -1045,6 +1044,8 @@ window.FB = window.FB || {};
           }
         }
         row.hidden = !show;
+        const card = row.closest('.large-list-work-card');
+        if (card) card.hidden = !show;
       }
       const empty = section.querySelector('.large-list-empty');
       const noResults = section.querySelector('.large-list-no-results');
@@ -1265,6 +1266,8 @@ window.FB = window.FB || {};
 
   function bindCardInfoToggles(root) {
     root.querySelectorAll('.settcard-info').forEach(function (btn) {
+      if (btn._settcardInfoBound) return;
+      btn._settcardInfoBound = true;
       btn.addEventListener('click', function () {
         const det = $(btn.getAttribute('aria-controls'));
         if (!det) return;
@@ -1281,6 +1284,7 @@ window.FB = window.FB || {};
   /* Shared presentation for choosing a person for a role. Callers supply the
      mechanic-specific eligibility and preview rows; the card owns only safe
      markup, selection state, and the common keyboard/mobile button shape. */
+  let personAssignmentCardSeq = 0;
   function personAssignmentCard(options) {
     const opts = options || {};
     const eligible = opts.eligible !== false;
@@ -1293,6 +1297,10 @@ window.FB = window.FB || {};
         (eligible ? FB.T('Eligible') : FB.T('Unavailable')));
     const data = opts.data || {};
     const rows = opts.rows || [];
+    const detailsId = opts.detailsId ||
+      'person-assignment-details-' + (++personAssignmentCardSeq);
+    const faceState = selected ? FB.T('Currently assigned') :
+      (eligible ? FB.T('Eligible') : FB.T('Unavailable'));
     let attrs = '';
     for (const key in data) {
       if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
@@ -1306,28 +1314,39 @@ window.FB = window.FB || {};
       art = '<span class="person-assignment-icon" aria-hidden="true">' +
         esc(opts.icon) + '</span>';
     }
-    let h = '<button type="button" class="actionbtn person-assignment-card' +
-      (selected ? ' selected' : '') + (!eligible ? ' unavailable' : '') +
-      '"' + attrs + (disabled ? ' disabled' : '') +
-      ' aria-pressed="' + (selected ? 'true' : 'false') + '">' +
-      '<span class="person-assignment-head">' +
-      '<span class="person-assignment-choice" aria-hidden="true">' +
-      (selected ? '◉' : '○') + '</span>' + art +
-      '<span class="person-assignment-name">' + esc(name) + '</span>' +
-      '<span class="person-assignment-eligibility">' + esc(eligibility) + '</span>' +
-      '</span>';
+    let details = '<div class="person-assignment-detail-status"><b>' +
+      esc(FB.T('Status')) + '</b><span>' + esc(eligibility) + '</span></div>';
     if (rows.length) {
-      h += '<span class="person-assignment-rows">';
+      details += '<span class="person-assignment-rows">';
       for (const row of rows) {
         if (!row || row.value === undefined || row.value === null || row.value === '') continue;
-        h += '<span class="person-assignment-row' +
+        details += '<span class="person-assignment-row' +
           (row.kind === 'consequence' ? ' consequence' : '') + '">' +
           '<span class="person-assignment-label">' + esc(FB.T(row.label)) + '</span>' +
           '<span class="person-assignment-value">' + esc(row.value) + '</span></span>';
       }
-      h += '</span>';
+      details += '</span>';
     }
-    return h + '</button>';
+    let h = '<div class="person-assignment-shell settcard"' +
+      (disabled ? ' tabindex="0" aria-describedby="' + esc(detailsId) + '"' : '') +
+      '><button type="button" ' +
+      'class="actionbtn person-assignment-card' +
+      (selected ? ' selected' : '') + (!eligible ? ' unavailable' : '') +
+      '"' + attrs + (disabled ? ' disabled' : '') +
+      ' aria-pressed="' + (selected ? 'true' : 'false') +
+      ' aria-describedby="' + esc(detailsId) + '">' +
+      '<span class="person-assignment-head">' +
+      '<span class="person-assignment-choice" aria-hidden="true">' +
+      (selected ? '◉' : '○') + '</span>' + art +
+      '<span class="person-assignment-name">' + esc(name) + '</span>' +
+      '<span class="person-assignment-state">' + esc(faceState) + '</span>' +
+      '</span></button><span class="settcard-actions person-assignment-actions">' +
+      '<button type="button" class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="' + esc(detailsId) + '" title="' + esc(FB.T('Details')) +
+      '" aria-label="' + esc(FB.T('Details')) + '">?</button></span>' +
+      '<div class="settcard-details person-assignment-details hidden" id="' +
+      esc(detailsId) + '">' + details + '</div></div>';
+    return h;
   }
   UI.personAssignmentCard = personAssignmentCard;
 
@@ -1781,7 +1800,7 @@ window.FB = window.FB || {};
     UI.showScreen(null);
     document.body.classList.remove('showself');
     mobileNavStart();
-    SH.portraitKey = ''; // a new life or loaded save must never keep the old face
+    SH.crestKey = ''; // a new life or loaded save must never keep the old crest
     resetPanelMarkup();
     if (FB.clearPortraitCache) FB.clearPortraitCache();
     SH.logRenderedTail = null; SH.logRenderedLen = -1;
@@ -2998,13 +3017,13 @@ window.FB = window.FB || {};
       mapDirtyNow();
     });
   };
-  UI.fastForwardFinished = function () {
+  UI.fastForwardFinished = function (options) {
     if (mapDirtyDeferredForFastForward) {
       mapDirtyDeferredForFastForward = false;
       UI.mapDirty();
     }
-    if (UI.flushFastForwardRefresh) UI.flushFastForwardRefresh();
-    else if (UI.refresh) UI.refresh();
+    if (UI.flushFastForwardRefresh) UI.flushFastForwardRefresh(options);
+    else if (UI.refresh) UI.refresh(options);
     if (FB.map && FB.map.flushFastForwardRender) {
       FB.map.flushFastForwardRender();
     } else if (FB.map && FB.map.request) FB.map.request();
@@ -3349,6 +3368,7 @@ window.FB = window.FB || {};
     $('gm-body').innerHTML = bodyHtml;
     normalizeModalFooter($('gm-body'));
     FB.localizeTree($('gm-body'));
+    bindCardInfoToggles($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
     if (!FB.isTouch && !UI._gmNoHotkeys) {
       const btns = $('gm-body').querySelectorAll('.actionbtn, .settcard-raise');
@@ -4323,7 +4343,6 @@ window.FB = window.FB || {};
   SH.interactionCardHtml = interactionCardHtml;
   SH.kv = kv;
   SH.largeListRowAttrs = largeListRowAttrs;
-  SH.largeListStateLabel = largeListStateLabel;
   SH.largeListSurfaceHtml = largeListSurfaceHtml;
   SH.largeListViews = largeListViews;
   SH.menText = menText;

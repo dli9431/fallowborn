@@ -4,6 +4,9 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/economy.js',
+  'js/ui_misc.js',
+  'js/ui_modals.js',
+  'css/style.css',
   'data/economy.js'
 ]);
 
@@ -319,9 +322,14 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
     }, fixture);
     await expect(page.locator('.enterprise-management-status.idle'))
       .toContainText('each currently works another enterprise');
-    await expect(page.locator(
-      '[data-enterprise-worker="' + fixture.workerId + '"]'))
-      .toContainText('Current assignment');
+    const candidate = page.locator(
+      '[data-enterprise-worker="' + fixture.workerId + '"]');
+    await expect(candidate).toContainText('Eligible');
+    await expect(candidate.locator('.person-assignment-eligibility'))
+      .toHaveCount(0);
+    await candidate.locator('..').hover();
+    await expect(page.locator('#tooltip')).toContainText('Current assignment');
+    await expect(page.locator('#tooltip')).toContainText('Expected yield');
   });
 
 test('enterprise statuses explain purchase and staffing blockers without mutation',

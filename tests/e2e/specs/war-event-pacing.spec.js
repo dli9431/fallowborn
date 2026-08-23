@@ -3,12 +3,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/events_war.js',
   'data/map_data.js',
+  'data/technology.js',
   'data/units.js',
   'js/armies.js',
   'js/events.js',
   'js/fortifications.js',
   'js/holywar.js',
   'js/main.js',
+  'js/technology.js',
   'js/ui_modals.js',
   'js/world.js'
 ]);
@@ -90,6 +92,110 @@ test('the daily picker yields one blocking event and leaves the rest queued',
     expect(result.picked).toEqual(['field_battle_won']);
     expect(result.queued).toEqual(['field_battle_lost']);
     expect(result.slotDays).toEqual([]);
+  });
+
+test('slot-day selection reuses its event pool and shared trigger reads',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const originalEvents = FBDATA.events;
+      const originalCheckTrigger = FB.checkTrigger;
+      const originalTechList = FB.techList;
+      const originalContextOptions = FB.eventContextOptions;
+      let triggerCalls = 0;
+      let techListCalls = 0;
+      let contextCalls = 0;
+      try {
+        const events = [];
+        for (let i = 0; i < 100; i++) {
+          events.push({ id:'synthetic_never_' + i, trigger:{ never:true } });
+        }
+        events.push({
+          id:'synthetic_fast_a', weight:5,
+          trigger:{ notTechs:['synthetic_missing_technology'] },
+          contextSelector:'synthetic_shared'
+        });
+        events.push({
+          id:'synthetic_fast_b', weight:5,
+          trigger:{ notTechs:['synthetic_missing_technology'] },
+          contextSelector:'synthetic_shared'
+        });
+        FBDATA.events = events;
+        FB.invalidateEventIndex();
+        FB.checkTrigger = function () {
+          triggerCalls++;
+          return originalCheckTrigger.apply(this, arguments);
+        };
+        FB.techList = function () {
+          techListCalls++;
+          return originalTechList.apply(this, arguments);
+        };
+        FB.eventContextOptions = function (state, selector) {
+          if (selector === 'synthetic_shared') {
+            contextCalls++;
+            return [{ marker:'shared' }];
+          }
+          return originalContextOptions(state, selector);
+        };
+        s.chars[s.player.charId].born = s.date.year - 20;
+        s.player.war = null;
+        s.player.travel = null;
+        s.player.stationFarewell = null;
+        s.eventQueue = [];
+        s.slotDays = [s.date.day];
+        const picked = FB.pickDailyEvents(s);
+        return {
+          picked:picked[0] && picked[0].id,
+          marker:picked[0] && picked[0].ctx.marker,
+          triggerCalls:triggerCalls,
+          techListCalls:techListCalls,
+          contextCalls:contextCalls
+        };
+      } finally {
+        FBDATA.events = originalEvents;
+        FB.checkTrigger = originalCheckTrigger;
+        FB.techList = originalTechList;
+        FB.eventContextOptions = originalContextOptions;
+        FB.invalidateEventIndex();
+      }
+    });
+
+    expect(['synthetic_fast_a', 'synthetic_fast_b']).toContain(result.picked);
+    expect(result.marker).toBe('shared');
+    expect(result.triggerCalls).toBe(2);
+    expect(result.techListCalls).toBe(1);
+    expect(result.contextCalls).toBe(1);
+  });
+
+test('a peaceful day with no hosts bypasses the field-army pipeline',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.war = null;
+      s.player.militaryCommand = null;
+      s.greatHolyWar = null;
+      s.armies = [];
+      for (const rid in s.realms) {
+        if (s.realms[rid]) s.realms[rid].war = null;
+      }
+      const originalPlayerHost = FB.playerHost;
+      let playerHostCalls = 0;
+      FB.playerHost = function () {
+        playerHostCalls++;
+        return originalPlayerHost.apply(this, arguments);
+      };
+      try {
+        FB.armyTick(s);
+        return {
+          playerHostCalls:playerHostCalls,
+          armies:s.armies.length
+        };
+      } finally {
+        FB.playerHost = originalPlayerHost;
+      }
+    });
+
+    expect(result).toEqual({ playerHostCalls:0, armies:0 });
   });
 
 test('pausing an open event defers an unread batch instead of opening it',

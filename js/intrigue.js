@@ -1281,6 +1281,7 @@ window.FB = window.FB || {};
       var realm = state.realms[foothold.realmId];
       if (realm && realm.liege) {
         realm.favor = FB.clamp(finite(realm.favor, 0) - 25, -100, 100);
+        if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
         return true;
       }
     }
@@ -1322,6 +1323,7 @@ window.FB = window.FB || {};
           var r = rid && state.realms[rid];
           if (r && r.liege) {
             r.favor = FB.clamp(finite(r.favor, 0) - 25, -100, 100);
+            if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
             return true;
           }
           if (FB.adjustStanding) {

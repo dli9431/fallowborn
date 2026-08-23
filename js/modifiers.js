@@ -13,6 +13,7 @@ window.FB = window.FB || {};
   let tickCampaign = null;
   let tickCampaignModifiers = null;
   let tickNextExpiry = -Infinity;
+  let modifierRevision = 0;
 
   function own(obj, key) {
     return Object.prototype.hasOwnProperty.call(obj, key);
@@ -115,6 +116,16 @@ window.FB = window.FB || {};
     tickCampaignModifiers = null;
     tickNextExpiry = -Infinity;
   }
+
+  function noteModifierMutation() {
+    modifierRevision++;
+    invalidateTickCache();
+  }
+
+  /* Politics and institutions can retain their expensive derived views until
+     a county/campaign modifier actually changes. The counter is transient:
+     state identity handles loads, while every supported mutation advances it. */
+  FB.modifierStateRevision = function () { return modifierRevision; };
 
   function rememberTickState(state) {
     tickState = state;
@@ -239,7 +250,7 @@ window.FB = window.FB || {};
       if (def.scope === 'county' && FB.recordModifierPrivilege) {
         FB.recordModifierPrivilege(state, id, pid, options || {});
       }
-      invalidateTickCache();
+      noteModifierMutation();
       return true;
     }
     record = { id:id };
@@ -253,7 +264,7 @@ window.FB = window.FB || {};
       FB.recordModifierPrivilege(state, id, pid, options || {});
     }
     if (!(options && options.silent)) notice(state, id, def.scope, pid, true);
-    invalidateTickCache();
+    noteModifierMutation();
     return true;
   };
 
@@ -273,7 +284,7 @@ window.FB = window.FB || {};
       FB.removePrivilegeForModifier(state, id, pid);
     }
     if (removed && options && options.notice) notice(state, id, def.scope, pid, false);
-    if (removed) invalidateTickCache();
+    if (removed) noteModifierMutation();
     return removed;
   };
 
@@ -457,6 +468,7 @@ window.FB = window.FB || {};
     if (tickCacheCurrent(state) && state.turn < tickNextExpiry) return;
     FB.ensureModifiers(state);
     const county = state.modifiers.county;
+    let changed = false;
     for (const pid in county) {
       if (!own(county, pid)) continue;
       const list = county[pid];
@@ -464,6 +476,7 @@ window.FB = window.FB || {};
         if (!active(list[i], state)) {
           const id = list[i].id;
           list.splice(i, 1);
+          changed = true;
           notice(state, id, 'county', pid, false);
         }
       }
@@ -475,10 +488,12 @@ window.FB = window.FB || {};
         if (!active(campaign.modifiers[j], state)) {
           const id = campaign.modifiers[j].id;
           campaign.modifiers.splice(j, 1);
+          changed = true;
           notice(state, id, 'campaign', null, false);
         }
       }
     }
+    if (changed) noteModifierMutation();
     rememberTickState(state);
   };
 })();

@@ -185,7 +185,10 @@ single `warring` map (and hosts into a `hostsByRealm` lookup) once per tick. The
 sovereign-realm ids are an unsaved derived index retained until realm death or hierarchy
 mutation advances the shared realm revision. Daily war discovery and host raising thus
 visit the dozens of sovereigns rather than every generated count and duke, keeping the
-hot path O(sovereigns + armies) even with dozens of hosts on the map.
+hot path O(sovereigns + armies) even with dozens of hosts on the map. When that
+warring lookup is empty and no hosts are fielded, the daily tick matures any
+pending professional-replacement cohorts and exits before order, reinforcement,
+supply, province-camp, and battle work.
 
 **A host may divide, and divided hosts may rejoin.** A halted player host of at least
 twice `balance.armyMinMen` can split (`FB.splitHost`, from the selected-host card in the
@@ -808,7 +811,10 @@ service to honor. Sacred custody is stored on its awarded realm and pays the pla
 2 piety per season while their realm or a vassal holds it and its sovereign bloc still
 controls a listed site. Sacred-loss clocks are recomputed when realm control or the
 religious-head assignment changes; unchanged daily ticks retain that derived snapshot
-without moving the saved loss date or its yearly guarantee boundary.
+without moving the saved loss date or its yearly guarantee boundary. With no campaign
+active, the call scheduler also retains the next authored unlock or restored-head
+deadline; it wakes early when sacred control or religious-head state changes, preserving
+the exact launch day without rescanning every faith on every skipped day.
 
 Intrigue captivity blocks a ruler from initiating an ordinary war, an independence
 rising, or a great-holy-war call. An already-running war continues because capture does

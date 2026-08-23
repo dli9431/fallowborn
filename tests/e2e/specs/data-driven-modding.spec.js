@@ -2146,12 +2146,20 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
     await expect(page.locator('[data-declarative-choice="locked"]')).toBeDisabled();
     await expect(page.locator('[data-declarative-choice="technical"]')).toBeDisabled();
     await expect(page.locator('[data-declarative-choice="costly"]')).toBeDisabled();
-    await expect(page.locator('#gm-body')).toContainText(
-      'The household has not assented.');
-    await expect(page.locator('#gm-body')).toContainText(
-      'Requires Two-Course Rotation.');
-    await expect(page.locator('#gm-body')).toContainText('Money');
-    await expect(page.locator('#gm-body')).toContainText('Piety +4');
+    const lockedChoice = page.locator('[data-declarative-choice="locked"]');
+    await expect(lockedChoice).toContainText('Unavailable');
+    await lockedChoice.locator('..').hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('The household has not assented.');
+    const endowChoice = page.locator('[data-declarative-choice="endow"]');
+    const endowCard = endowChoice.locator('..');
+    await expect(endowChoice).toContainText('Money');
+    await expect(endowCard.locator(':scope > .event-impact-chips'))
+      .toHaveCount(0);
+    await endowCard.hover();
+    await expect(page.locator('#tooltip')).toContainText('Piety +4');
+    await expect(page.locator('#tooltip'))
+      .toContainText('Exchange coin for a pious endowment.');
 
     const openState = await page.evaluate(function () {
       const s = FB.state;

@@ -3445,6 +3445,15 @@ window.FB = window.FB || {};
   const LOCAL_COUNCIL_DAYS = 360;
   const FEUDAL_TERM_DAYS = 3600;
   const FEUDAL_RENEWAL_WINDOW = 90;
+  let localGovernmentDayState = null;
+  let localGovernmentDayRealmRevision = -1;
+  let localGovernmentDayTier = -1;
+  let localGovernmentNextDue = -Infinity;
+
+  function invalidateLocalGovernmentDay() {
+    localGovernmentDayState = null;
+    localGovernmentNextDue = -Infinity;
+  }
 
   function localCouncilCareer(profession) {
     return ['merchant', 'craftsman', 'administration'].indexOf(profession) >= 0;
@@ -3901,6 +3910,7 @@ window.FB = window.FB || {};
       expiryTurn:tenure === 'term' ? state.turn + FEUDAL_TERM_DAYS : null,
       renewal:null
     };
+    invalidateLocalGovernmentDay();
     return realm.feudalContract;
   }
 
@@ -3923,6 +3933,7 @@ window.FB = window.FB || {};
     const realm = state.realms[rid];
     realm.feudalContract.expiryTurn += FEUDAL_TERM_DAYS;
     realm.feudalContract.renewal = null;
+    invalidateLocalGovernmentDay();
     FB.news(state, FB.msg('news.feudal.tenure_renewed',
       '📜 The fixed-term grant of {realm} is renewed for another ten years.', {
         realm:realm.name
@@ -3934,6 +3945,7 @@ window.FB = window.FB || {};
     const rid = ctx && ctx.realmId;
     if (!FB.feudalRenewalValid(state, rid)) return false;
     state.realms[rid].feudalContract.renewal = 'declined';
+    invalidateLocalGovernmentDay();
     return true;
   };
 
@@ -3994,7 +4006,18 @@ window.FB = window.FB || {};
       FB.localCouncilValidate(state, false);
     }
     if (p.castellany) FB.castellanyValidate(state, false);
+    /* Common and gentle households cannot have direct feudal vassals. Avoid
+       asking the realm hierarchy for an empty index on every ordinary day;
+       their two personal offices above remain validated when present. */
+    if (p.tier < 3) return;
+    const realmRevision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    if (localGovernmentDayState === state &&
+        localGovernmentDayRealmRevision === realmRevision &&
+        localGovernmentDayTier === p.tier &&
+        state.turn < localGovernmentNextDue) return;
     const vassals = FB.playerVassals(state).slice();
+    let nextDue = Infinity;
     for (const rid of vassals) {
       const realm = state.realms[rid];
       if (!realm.feudalContract || typeof realm.feudalContract !== 'object' ||
@@ -4009,6 +4032,7 @@ window.FB = window.FB || {};
         FB.revertFeudalRealm(state, rid, 'fixed-term');
         continue;
       }
+      nextDue = Math.min(nextDue, contract.expiryTurn);
       if (contract.expiryTurn - state.turn <= FEUDAL_RENEWAL_WINDOW &&
           !contract.renewal) {
         realm.feudalContract.renewal = 'queued';
@@ -4018,8 +4042,16 @@ window.FB = window.FB || {};
           ruler:realm.ruler ? realm.ruler.name : realm.name,
           days:contract.expiryTurn - state.turn
         });
+      } else if (!contract.renewal) {
+        nextDue = Math.min(nextDue,
+          contract.expiryTurn - FEUDAL_RENEWAL_WINDOW);
       }
     }
+    localGovernmentDayState = state;
+    localGovernmentDayRealmRevision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    localGovernmentDayTier = p.tier;
+    localGovernmentNextDue = nextDue;
   };
 
   FB.countySettlementTax = function (state, pid) {
@@ -5217,6 +5249,7 @@ window.FB = window.FB || {};
     }
     p.realmStandingFaithBases = newBases;
     p.faithStandingMigration = 1;
+    if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
     return true;
   };
 
@@ -8753,7 +8786,7 @@ window.FB = window.FB || {};
       (!!focus.declarative && !!focus.supportsAfield);
   }
 
-  function focusStatusForAction(state, focus) {
+  function focusStatusForAction(state, focus, options) {
     const shown = !state.player.travel && !!focus.show(state) &&
       focusContextPermits(state, focus);
     let can = shown;
@@ -8777,7 +8810,8 @@ window.FB = window.FB || {};
       shown:shown,
       can:can,
       reason:reason,
-      preview:shown && focus.preview ? focus.preview(state) : null
+      preview:shown && focus.preview && !(options && options.deferPreview)
+        ? focus.preview(state) : null
     };
   }
 
@@ -8800,9 +8834,12 @@ window.FB = window.FB || {};
   };
 
   FB.listFocuses = function (state) {
-    return FB.listFocusChoices(state).filter(function (status) {
-      return status.can;
-    }).map(function (status) { return status.action; });
+    const out = [];
+    for (const focus of FB.focuses) {
+      const status = focusStatusForAction(state, focus, { deferPreview:true });
+      if (status.can) out.push(status.action);
+    }
+    return out;
   };
 
   function instantStatusForAction(state, action, shown) {
@@ -8942,7 +8979,13 @@ window.FB = window.FB || {};
     // menu is pared to a whitelist that show() alone can't see, so take the
     // full sweep and let a now-irrelevant home focus fall through to a soldier's.
     if (cur && !afield(state)) {
-      if (focusStatusForAction(state, currentDefinition).can) return;
+      /* Daily validation needs only availability. Declarative focus previews
+         allocate effect ledgers and calculate seasonal projections for the
+         Deeds UI; doing that work for the active focus on every day changed
+         no simulation result. */
+      if (focusStatusForAction(state, currentDefinition, {
+        deferPreview:true
+      }).can) return;
     }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === cur) return;

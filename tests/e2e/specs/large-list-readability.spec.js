@@ -214,7 +214,10 @@ test('small Work roster keeps all ordinary rows visible without search',
     expect(visibleRows).toBe(smallRows);
     await expect(page.locator(
       '[data-list-section="household-work"] .large-list-section-count'))
-      .toContainText(smallRows + ' total');
+      .toHaveCount(0);
+    await page.locator(
+      '[data-list-section="household-work"] .large-list-section-heading').hover();
+    await expect(page.locator('#tooltip')).toContainText(smallRows + ' total');
     await expect(page.locator(
       '[data-list-section="family-enterprises"] .large-list-empty')).toBeVisible();
     await expect(page.locator(
@@ -234,13 +237,39 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     await expect(page.locator('#work-list-search')).toBeVisible();
     await expect(page.locator(
       '[data-list-section="household-work"] .large-list-section-count'))
-      .toContainText('15 total');
+      .toHaveCount(0);
     await expect(page.locator(
       '[data-list-section="household-work"] .large-list-attention-count'))
-      .toContainText('2 need attention');
+      .toHaveCount(0);
+    await page.locator(
+      '[data-list-section="household-work"] .large-list-section-heading').hover();
+    await expect(page.locator('#tooltip')).toContainText('15 total');
+    await expect(page.locator('#tooltip')).toContainText('2 need attention');
     await expect(page.locator(
       '[data-list-section="family-enterprises"] .large-list-section-count'))
-      .toContainText('9 total');
+      .toHaveCount(0);
+    await page.locator(
+      '[data-list-section="family-enterprises"] .large-list-section-heading').hover();
+    await expect(page.locator('#tooltip')).toContainText('9 total');
+    await expect(page.locator('[data-large-list-surface="work"] .large-list-state'))
+      .toHaveCount(0);
+    await page.locator('#work-list-search').fill('Guild Standing 55');
+    await expect(page.locator(
+      '[data-list-identity="' + fixture.guildWorkerId + '"]')).toBeVisible();
+    await page.locator('[data-list-clear]').click();
+    await expect(page.locator('#enterprise-staffing-preview')).toBeVisible();
+    await page.locator('#enterprise-staffing-preview').click();
+    const staffingRow = page.locator('.enterprise-staffing-row').first();
+    await expect(staffingRow).toBeVisible();
+    await expect(staffingRow.locator('.enterprise-staffing-status'))
+      .toHaveCount(0);
+    await expect(staffingRow.locator('.enterprise-staffing-comparison'))
+      .toBeVisible();
+    const staffingChange = (await staffingRow.locator(
+      '.enterprise-staffing-change').textContent()).trim();
+    await staffingRow.hover();
+    await expect(page.locator('#tooltip')).toContainText(staffingChange);
+    await page.locator('#enterprise-staffing-back').click();
     await expect(page.locator('#enterprise-staffing-preview')).toBeVisible();
 
     var workOrder = await page.locator(
@@ -258,6 +287,9 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     var head = page.locator('[data-list-identity="' + fixture.headId + '"]');
     await expect(head).toHaveAttribute('data-list-attention', 'false');
     await expect(head).toContainText('Former calling');
+    await head.hover();
+    await expect(page.locator('#tooltip'))
+      .toContainText('A landed ruler keeps this calling as life history.');
 
     var enterpriseOrder = await page.locator(
       '[data-list-section="family-enterprises"] [data-large-list-row]')
@@ -304,9 +336,18 @@ test('large Work roster counts choices, orders attention, and preserves exact en
 
     await page.locator('[data-enterprise="' + fixture.unlockedUid + '"]').click();
     await expect(page.locator('#enterprise-worker-lock')).not.toBeChecked();
+    await page.locator('#gm-cancel').click();
+    await page.setViewportSize({ width:900, height:720 });
+    var touchWorkCard = page.locator(
+      '[data-enterprise="' + fixture.unlockedUid + '"]').locator('..');
+    var touchWorkDetails = touchWorkCard.locator('.large-list-work-details');
+    await expect(touchWorkCard.locator('.settcard-info')).toBeVisible();
+    await touchWorkCard.locator('.settcard-info').click();
+    await expect(touchWorkDetails).toBeVisible();
+    await expect(touchWorkDetails).toContainText('base value');
   });
 
-test('Network limits section hotkeys to actions and discloses status context',
+test('Network limits section hotkeys to actions and moves chips into tooltips',
   async function ({ page }, testInfo) {
     await startListGame(page, testInfo);
     var fixture = await makeLargeListFixture(page);
@@ -318,10 +359,20 @@ test('Network limits section hotkeys to actions and discloses status context',
     await expect(page.locator('#tab-network [data-list-filter]')).toHaveCount(0);
     await expect(page.locator('[data-list-section]')).toHaveCount(5);
     const householdToggle = page.locator('[data-list-toggle="household"]');
+    const connectionsToggle = page.locator('[data-list-toggle="connections"]');
     const tradeToggle = page.locator('[data-list-toggle="trade"]');
     expect(await page.locator('.large-list-section-keyhint').allTextContents())
       .toEqual(['1', '2', '3', '4', '5']);
     await expect(householdToggle).toHaveAttribute('aria-current', 'true');
+    await expect(page.locator(
+      '#tab-network .large-list-section-count')).toHaveCount(0);
+    await expect(page.locator(
+      '#tab-network .large-list-attention-count')).toHaveCount(0);
+    await expect(page.locator('#tab-network .large-list-state')).toHaveCount(0);
+    await connectionsToggle.hover();
+    await expect(page.locator('#tooltip')).toContainText('Connections');
+    await expect(page.locator('#tooltip')).toContainText('3 total');
+    await expect(page.locator('#tooltip')).toContainText('1 need attention');
     const householdPlan = page.locator('#network-household-plan');
     const householdPlanRow = householdPlan.locator('..');
     await expect(householdPlan.locator('.network-item-keyhint'))
@@ -377,6 +428,10 @@ test('Network limits section hotkeys to actions and discloses status context',
       .toContainText('Vacancy');
     await expect(vacancyRow.locator('.settcard-details'))
       .toContainText('household service slots are open');
+    await vacancyRow.hover();
+    await expect(page.locator('#tooltip')).toContainText('Vacancy');
+    await expect(page.locator('#tooltip'))
+      .toContainText('household service slots are open');
     var routineConnection = page.locator(
       '[data-list-section="connections"] [data-list-identity="' +
       fixture.secondId + '"]');
@@ -391,6 +446,12 @@ test('Network limits section hotkeys to actions and discloses status context',
     await expect(page.locator('#tooltip')).toContainText('Known tie');
     await expect(page.locator('#tooltip'))
       .toContainText('affects friendship, courtship, marriage');
+    var openSlotRow = page.locator(
+      '[data-list-section="trade"] ' +
+      '[data-list-identity="monopoly-outgoing"]');
+    await expect(openSlotRow.locator('.large-list-state')).toHaveCount(0);
+    await openSlotRow.hover();
+    await expect(page.locator('#tooltip')).toContainText('Open slot');
     await page.setViewportSize({ width:900, height:720 });
     await householdPlanRow.locator('.settcard-info').click();
     await expect(householdPlanRow.locator('.network-action-details'))
@@ -402,12 +463,17 @@ test('Network limits section hotkeys to actions and discloses status context',
     await expect(establishedRow.locator('.settcard-details')).toBeVisible();
     await establishedRow.locator('.settcard-info').click();
     await expect(establishedRow.locator('.settcard-details')).toBeHidden();
+    var connectionSectionInfo = page.locator(
+      '[data-list-section="connections"] .large-list-section-actions ' +
+      '.settcard-info');
+    await connectionSectionInfo.click();
     await expect(page.locator(
-      '[data-list-section="connections"] .large-list-section-count'))
+      '[data-list-section="connections"] .large-list-section-details'))
       .toContainText('3 total');
     await expect(page.locator(
-      '[data-list-section="connections"] .large-list-attention-count'))
+      '[data-list-section="connections"] .large-list-section-details'))
       .toContainText('1 need attention');
+    await connectionSectionInfo.click();
     var sharedConnection = page.locator(
       '[data-list-section="connections"] [data-list-identity="' +
       fixture.sharedId + '"]');
@@ -467,8 +533,8 @@ test('Network limits section hotkeys to actions and discloses status context',
     await expect(page.locator('[data-list-toggle="household"]'))
       .toHaveAttribute('aria-expanded', 'false');
     await expect(page.locator(
-      '[data-list-section="household"] .large-list-attention-count'))
-      .toBeVisible();
+      '[data-list-section="household"] .large-list-section-details'))
+      .toContainText('need attention');
 
     await page.keyboard.press('Digit3');
     await expect(tradeToggle).toBeFocused();
@@ -513,7 +579,13 @@ test('Network limits section hotkeys to actions and discloses status context',
       warRealm.id + '"]');
     await expect(warRealmRow).toContainText('At war with ' + warRealm.name);
     await expect(warRealmRow.locator('.large-list-state')).toHaveCount(0);
-    await expect(warRealmRow).not.toContainText('Warning');
+    await expect(warRealmRow.locator(':scope > .large-list-target-button'))
+      .not.toContainText('Warning');
+    await warRealmRow.locator('.settcard-info').click();
+    await expect(warRealmRow.locator('.settcard-details'))
+      .toContainText('Warning');
+    await expect(warRealmRow.locator('.settcard-details'))
+      .toContainText('At war with ' + warRealm.name);
   });
 
 test('Work filters and Network navigation do not mutate play state',

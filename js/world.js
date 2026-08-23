@@ -2753,6 +2753,7 @@ window.FB = window.FB || {};
       p.liegeOps = p.liegeOps || {};
       p.liegeOps[rid] = value;
     }
+    if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
     return value;
   }
 
@@ -5274,7 +5275,10 @@ window.FB = window.FB || {};
         FB.papacyClaimantForRealm(state, id);
       if (!papalTerritorialRealm) tickRoyalFamily(state, id, familyLinks);
       // a vassal house's standing at its liege's court drifts with the years
-      if (r.liege) r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
+      if (r.liege) {
+        r.favor = FB.clamp((r.favor || 0) + FB.ri(-9, 9), -100, 100);
+        if (FB.invalidatePoliticsState) FB.invalidatePoliticsState();
+      }
       // ruler ages & dies
       r.ruler.age++;
       const q = Math.max(0, (r.ruler.age > 70 ? 0.18 : r.ruler.age > 55 ? 0.07 : 0.02) -

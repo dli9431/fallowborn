@@ -2343,6 +2343,74 @@ window.FB = window.FB || {};
   };
 
   var dailyRepairState = null;
+  var dailyRepairSignature = '';
+  var dailyRepairNextDue = -Infinity;
+
+  function institutionInputSignature(state) {
+    var p = state.player;
+    var me = state.chars && state.chars[p.charId];
+    var countyFaiths = [];
+    var provs = Array.isArray(p.provs) ? p.provs : [];
+    for (var provinceIndex = 0; provinceIndex < provs.length; provinceIndex++) {
+      var province = FB.world && FB.world.byId && FB.world.byId[provs[provinceIndex]];
+      countyFaiths.push(provs[provinceIndex] + ':' +
+        (province && province.religion || ''));
+    }
+    var liege = p.liege && state.realms[p.liege];
+    return [
+      FB.realmStateRevision ? FB.realmStateRevision() : state.turn,
+      FB.modifierStateRevision ? FB.modifierStateRevision() : state.turn,
+      state.date.year, p.charId, p.tier, p.liege || '', p.provinceId || '',
+      provs.join(','), countyFaiths.join(','),
+      me && me.religion || '', me && me.culture || '',
+      JSON.stringify(me && me.career || null),
+      JSON.stringify(state.realmPolicies || null),
+      JSON.stringify(state.elections || null),
+      JSON.stringify(state.privileges || null),
+      JSON.stringify(state.collectiveDemands || null),
+      JSON.stringify(p.guildMonopolies || null),
+      JSON.stringify(state.council || null),
+      JSON.stringify(liege && liege.obl || null)
+    ].join('|');
+  }
+
+  function institutionNextDueTurn(state) {
+    var next = Infinity;
+    function note(value) {
+      value = Number(value);
+      if (isFinite(value) && value >= state.turn && value < next) next = value;
+    }
+    var elections = state.elections || {};
+    var cooldowns = elections.cooldowns || {};
+    for (var cooldownId in cooldowns) {
+      if (own(cooldowns, cooldownId)) note(cooldowns[cooldownId]);
+    }
+    if (elections.active) note(elections.active.expiresTurn);
+    var guildScopes = elections.guildScopes || {};
+    for (var scopeId in guildScopes) {
+      if (!own(guildScopes, scopeId)) continue;
+      var offices = guildScopes[scopeId] && guildScopes[scopeId].offices || {};
+      for (var officeId in offices) {
+        if (own(offices, officeId)) note(offices[officeId] && offices[officeId].endTurn);
+      }
+    }
+    var councilTerms = elections.councilTerms || {};
+    for (var seatId in councilTerms) {
+      if (own(councilTerms, seatId)) note(councilTerms[seatId] && councilTerms[seatId].endTurn);
+    }
+    var privileges = state.privileges || [];
+    for (var privilegeIndex = 0; privilegeIndex < privileges.length;
+        privilegeIndex++) note(privileges[privilegeIndex] && privileges[privilegeIndex].endTurn);
+    var mistreatment = state.collectiveDemands &&
+      state.collectiveDemands.mistreatment || [];
+    for (var mistreatmentIndex = 0; mistreatmentIndex < mistreatment.length;
+        mistreatmentIndex++) {
+      var turn = Number(mistreatment[mistreatmentIndex] &&
+        mistreatment[mistreatmentIndex].turn);
+      if (isFinite(turn)) note(turn + MISTREATMENT_DAYS + 1);
+    }
+    return next;
+  }
 
   FB.ensureInstitutions = function (state, options) {
     if (!state || !state.player) return null;
@@ -2361,11 +2429,22 @@ window.FB = window.FB || {};
   };
 
   FB.institutionsDay = function (state) {
+    var signature = institutionInputSignature(state);
+    if (dailyRepairState === state && dailyRepairSignature === signature &&
+        state.turn < dailyRepairNextDue) {
+      return {
+        elections:state.elections,
+        privileges:state.privileges,
+        demands:state.collectiveDemands
+      };
+    }
     var skipLegacyRepairs = dailyRepairState === state;
     var result = FB.ensureInstitutions(state, {
       skipLegacyRepairs:skipLegacyRepairs
     });
     dailyRepairState = state;
+    dailyRepairSignature = institutionInputSignature(state);
+    dailyRepairNextDue = institutionNextDueTurn(state);
     return result;
   };
 
