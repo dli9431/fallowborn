@@ -1,6 +1,7 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestones 0–3 and phases 4A–4C implemented
+Status: **completed and archived 2026-08-23**. All scoped milestones through phase 4E
+are implemented; explicitly deferred follow-ups remain independent future work.
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -22,7 +23,7 @@ content-shaped registries while leaving correctness-sensitive machinery in code.
 
 ## Current boundary
 
-The public mod loader in [`js/mods.js`](../../js/mods.js) already merges a broad set of
+The public mod loader in [`js/mods.js`](../../../js/mods.js) already merges a broad set of
 tables over `FBDATA`: world and bookmark definitions, events, cultures, religions,
 traits, ailments, modifiers, buildings, forts, holdings, items, technologies, unit
 classes, careers, positions, schooling, enterprises, travel, finance, political
@@ -41,8 +42,8 @@ like data but still live inside an engine file.
 ## Items are already data-driven
 
 Items do not need a general hardcoded-to-data conversion. `FBDATA.items` in
-[`data/map_data.js`](../../data/map_data.js) is exposed through the runtime mod key
-`items`, and its schema is documented in [MODDING.md](../MODDING.md#items).
+[`data/map_data.js`](../../../data/map_data.js) is exposed through the runtime mod key
+`items`, and its schema is documented in [MODDING.md](../../MODDING.md#items).
 
 A mod can already define:
 
@@ -57,7 +58,7 @@ A mod can already define:
 - negative as well as positive artifact effects;
 - direct acquisition through the ordinary `giveItem` event effect.
 
-The engine in [`js/items.js`](../../js/items.js) deliberately remains code-driven. It
+The engine in [`js/items.js`](../../../js/items.js) deliberately remains code-driven. It
 owns exact instance references, quality rolls, ownership, loadouts, two-handed
 assignment, gifting, pledging, sale, shops, artifact uniqueness, and procedural drawing.
 Existing saves depend on those invariants.
@@ -72,7 +73,7 @@ Existing saves depend on those invariants.
 - Barber hair and beard catalogues, which are cosmetic character appearance rather than
   item definitions.
 - The fixed Author-work pool in `AUTHORED_WORKS` inside
-  [`js/economy.js`](../../js/economy.js).
+  [`js/economy.js`](../../../js/economy.js).
 - Ownership and departure behavior for gifts, sales, collateral, raids, and artifacts.
 
 ### Safe item follow-ups
@@ -156,7 +157,7 @@ configuration without changing baseline gameplay eligibility or RNG sequencing.
 ## Milestone 1: starting scenarios and family presets
 
 Move `G.SCENARIOS` and `G.FAMILY_PRESETS` from
-[`js/main.js`](../../js/main.js) to:
+[`js/main.js`](../../../js/main.js) to:
 
 - `FBDATA.startScenarios`;
 - `FBDATA.familyPresets`.
@@ -234,7 +235,7 @@ gameplay eligibility.
 
 ## Milestone 2: religious progression paths
 
-Move `RELIGIOUS_PATHS` from [`js/economy.js`](../../js/economy.js) to
+Move `RELIGIOUS_PATHS` from [`js/economy.js`](../../../js/economy.js) to
 `FBDATA.religiousPaths`. Move the hardcoded faith/profession routing into religion
 properties, for example a faith's lay, monastic, clerical, or scholarly path ids.
 
@@ -292,7 +293,7 @@ to validated data and mods without changing baseline gameplay eligibility.
 
 ## Milestone 3: Royal Council definitions
 
-Centralize the five hardcoded seats from [`js/council.js`](../../js/council.js) and their
+Centralize the five hardcoded seats from [`js/council.js`](../../../js/council.js) and their
 separate UI name/description switches into `FBDATA.councilSeats`.
 
 The initial data boundary should cover:
@@ -338,7 +339,7 @@ capability to validated data and mods without changing baseline gameplay eligibi
 
 ## Milestone 4: staged focus and deed definitions
 
-Focuses and one-time deeds in [`js/actions.js`](../../js/actions.js) offer the greatest
+Focuses and one-time deeds in [`js/actions.js`](../../../js/actions.js) offer the greatest
 eventual modding payoff, but their current definitions contain executable `show`, `tick`,
 `can`, `gain`, and `run` callbacks. They cannot safely move wholesale into JSON.
 
