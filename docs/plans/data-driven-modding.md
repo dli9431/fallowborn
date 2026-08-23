@@ -342,15 +342,130 @@ Focuses and one-time deeds in [`js/actions.js`](../../js/actions.js) offer the g
 eventual modding payoff, but their current definitions contain executable `show`, `tick`,
 `can`, `gain`, and `run` callbacks. They cannot safely move wholesale into JSON.
 
-Use four stages:
+The current catalogue contains 28 focuses and 78 deeds. Every focus executes a daily
+`tick` callback and every deed executes `show` and `run`; many also own dynamic
+descriptions, eligibility reasons, projected income, UI routes, or delayed cooldown
+commitment. Implement this milestone as separately shippable phases. Do not begin a
+later phase until the preceding phase preserves baseline behavior and determinism.
 
-1. Move presentation, ordering, grouping, cooldown, and simple static gates into
-   `FBDATA.focuses` and `FBDATA.deeds`.
-2. Bind each baseline definition to an existing stable JS `handler` id.
-3. Add declarative triggers, costs, gains, and effects by reusing only validated pieces
-   of the event trigger/effect vocabulary.
-4. Permit fully new mod actions only after deterministic execution, UI preview parity,
-   automation scoring, and test coverage are complete.
+### Phase 4A: core catalogues and compatibility adapters
+
+Move the non-executable parts of the baseline definitions into `FBDATA.focuses` and
+`FBDATA.deeds`, preferably in a dedicated data file loaded before `js/actions.js`:
+
+- stable id, localized label and static description variants;
+- explicit order and deed group;
+- fixed cooldown and technology requirement;
+- focus vocation and shortcut-family metadata;
+- one stable private JS `handler` id.
+
+Keep executable behavior in private focus and deed handler registries. Materialize the
+existing `FB.focuses` and `FB.instants` shapes as compatibility projections that combine
+validated data with those handlers, so current consumers do not all change at once.
+Dynamic descriptions may remain presentation handlers until their source variants and
+parameters have a real data contract.
+
+Protect all 28 focus ids, all 78 deed ids, their order, and their baseline handler
+bindings. Do not permit new mod ids in this phase. Do not rewrite callback bodies: each
+unchanged baseline action must call the same function once, at the same point, and make
+the same RNG draws. Replace the current length-only focus lookup cache with explicit
+registry invalidation so a same-size definition replacement cannot leave stale data.
+
+Execution flags are handler capabilities, not ordinary presentation fields.
+`noConsume`, `deferCooldown`, picker/confirmation flow, compatibility aliases, and
+tutorial-finalization behavior remain protected in code. The Deeds UI must use an
+explicit flow projection instead of inferring behavior from an ellipsis in the label.
+
+### Phase 4B: bounded customization of baseline actions
+
+Expose `focuses` and `deeds` as validated runtime-mod keys, but still reject new ids.
+Mods may replace localized presentation, order, group, fixed cooldown, technology
+requirements, and a bounded set of static eligibility fields. A handler retains a
+non-overridable invariant guard; data eligibility is composed with that guard and cannot
+make a handler dereference a missing rival, journey, realm, office, or other context.
+
+Validate the complete effective catalogues before mutation, including:
+
+- lowercase unique ids and preservation of every baseline id;
+- the protected baseline id-to-handler binding;
+- bounded order, cooldown, group, and eligibility values;
+- same-mod technology, career, trait, faith, flag, and other declared references;
+- consistency between the handler's capabilities and its projected UI flow.
+
+A successful mod application must rebuild the projections and id indexes atomically.
+Labels and descriptions use stable `focus.<id>.*` and `action.<id>.*` localization owners;
+untranslated mod text falls back to its effective English source. Save format remains 3:
+saved focus ids and cooldown keys keep their existing meanings.
+
+### Phase 4C: new declarative immediate deeds
+
+Permit new deed ids only through one public `declarative_deed` handler. These first new
+deeds are manual-only and resolve immediately; they cannot open a modal, defer a
+cooldown, invoke a custom function, or bind to a specialized baseline handler.
+
+Give that handler a deliberately smaller vocabulary than events:
+
+- pure, RNG-free visibility and eligibility requirements;
+- validated fixed resource costs and technology requirements;
+- a previewable whitelist of scalar gains and losses, or one validated event to queue;
+- explicit fixed cooldown and whether the completed deed spends one day.
+
+Do not expose the entire event trigger/effect vocabulary. In particular, exclude custom
+handlers, identity and ownership mutation, succession, realm transfer, arbitrary saved
+record writes, and any effect without an exact UI preview. One status projection must
+produce visibility, eligibility reason, costs, and expected effects from the same record;
+execution rechecks it, pays and applies once, then commits cooldown, tutorial completion,
+and the day in the existing order.
+
+If a definition disappears, its cooldown key remains inert. No generic deed is considered
+in flight after `runInstant` returns, so this phase adds no saved action record.
+
+### Phase 4D: new declarative focuses
+
+Permit new focus ids only through one public `declarative_focus` handler. Its schema may
+declare supported contexts, vocation, fixed seasonal resource projections, and a bounded
+set of daily effects and seeded skill-training chances. The displayed seasonal projection
+must be derived from the same values the daily tick consumes.
+
+All chance rolls use the saved `FB.rng` stream. Adding a mod focus may change a modded
+campaign's future only while that focus is active; unchanged baseline focuses retain their
+exact draw count and order. `FB.defaultFocus` ignores mod-added focuses unless a later
+explicit fallback-priority contract says otherwise, and new focuses are unavailable while
+afield unless their validated context declares that support.
+
+A removed current focus falls through `FB.validateFocus` to the ordinary deterministic
+default without deleting unrelated cooldown or focus-back data. The active-mod fingerprint
+continues to protect saves that intentionally depend on mod-added focus ids.
+
+### Phase 4E: specialized UI and automation capabilities
+
+Only after the immediate deed and focus contracts are proven may new definitions request
+specialized behavior. Expose capabilities individually through a reviewed registry rather
+than allowing a mod to call arbitrary core handlers. Each UI route needs an explicit
+transaction contract for open, confirm, cancel, cooldown commitment, day consumption,
+tutorial completion, save/load, and mobile Back behavior.
+
+New actions remain `manualOnly` by default. The current automation system does not choose
+ordinary deeds or arbitrary focuses, so do not invent a score merely to admit a mod
+record. Any future automated capability must declare a side-effect-free eligibility and
+score projection, deterministic tie-breaking, and a safe manual fallback. Fully new
+picker-backed, delayed, or automated actions are admitted only in this phase after their
+specific capability and tests exist.
+
+### Phase gates and technology impact
+
+Each phase needs focused coverage for malformed definitions before mutation, baseline
+ordering and behavior, localization fallback, old-save restoration, removed definitions,
+UI preview/execution parity, cooldown and day commitment, and unchanged baseline RNG.
+Phase 4A must also cover every direct consumer of `FB.focuses` and `FB.instants`; later
+phases add mod replacement and addition cases without weakening those canaries.
+
+Phases 4A and 4B are authoring refactors and require no technology-impact ledger entry.
+Before 4C and 4D ship, record separate `none` reviews for data-defined deeds and focuses:
+the modding facility has no credible in-world research dependency, while an individual
+definition may still declare and visibly explain `requiresTech`. Phase 4E updates one of
+those reviews when it expands the same capability, or adds a separate review only for a
+genuinely independently gateable action capability.
 
 Saved focus and cooldown references already use action ids. Compatibility still
 requires every baseline id to remain, unknown focuses to fall back through
@@ -399,7 +514,8 @@ reviewable JavaScript.
 2. Move family presets and start scenarios into validated data.
 3. Move religious paths and localized rank names into validated data.
 4. Centralize Council seat definitions while retaining special consumers by stable id.
-5. Build the staged focus/deed schema.
+5. Build the focus/deed schema through phases 4A–4E, keeping each phase independently
+   shippable.
 6. Leave core simulation and persistence algorithms in code.
 
 This order produces useful modding surface at every milestone while keeping all changes
