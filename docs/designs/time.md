@@ -38,6 +38,16 @@ once, stamps cooldown and tutorial completion, and only then invokes the existin
 `passDay({skipFocus:true})` path when requested. A no-day deed completes at return; there is
 no new in-flight save state.
 
+Phase 4D similarly admits new focus ids only through the fixed `declarative_focus`
+adapter. A complete record declares home and/or afield context plus at least one bounded
+seasonal resource yield, daily health change, or seeded seasonal skill-training chance.
+One pure status projection owns visibility, disabled eligibility and technology reasons,
+and the exact preview; the daily tick consumes those same authored values. Resource yields
+are divided across 90 days, health clamps daily, and skill chances use the saved RNG in
+fixed `dip`, `mar`, `ste`, `int`, `lea` order. New focuses are manual-only and excluded
+from deterministic default selection. Removing an active definition falls back to the
+ordinary built-in default without consuming RNG or clearing unrelated action state.
+
 The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
 may request visibility-only entries for collapsed accordion groups, postponing cooldown,
 technology, and other eligibility work until those controls are opened.

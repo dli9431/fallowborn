@@ -318,8 +318,8 @@ draw six-part start code.
 
 Runtime mods may customize the 28 built-in daily focuses and 78 built-in deeds through
 partial records under `focuses` and `deeds`. Baseline records cannot be removed or
-renamed, and their executable behavior cannot be replaced. New focuses remain unsupported;
-new deeds use the separate declarative contract below.
+renamed, and their executable behavior cannot be replaced. New focuses and deeds use the
+separate declarative contracts below.
 
 ```json
 {
@@ -496,6 +496,77 @@ then records cooldown and tutorial completion before the optional day pass. Once
 returns, no deed is in flight. Save format remains 3; if the definition later disappears,
 its saved cooldown key stays inert and becomes meaningful again only with the matching
 active mod.
+
+### New declarative focuses
+
+A mod may append a manual daily focus by supplying a complete record whose handler is
+exactly `declarative_focus`. This is the only public focus handler and cannot replace a
+built-in focus.
+
+```json
+{
+  "focuses": [
+    {
+      "id": "keep_charter_books",
+      "handler": "declarative_focus",
+      "label": "Keep the charter books",
+      "desc": "Work through the estate's accounts and correspondence.",
+      "order": 28,
+      "contexts": ["home"],
+      "vocational": "administration",
+      "requiresTech": "authenticated_seals",
+      "visibility": { "tierMin": 2 },
+      "eligibility": {
+        "reason": "The household must first entrust you with its records.",
+        "flagsAll": ["my_mod_charter_keeper"]
+      },
+      "seasonal": { "gold": 9, "prestige": 3 },
+      "dailyEffects": { "health": -0.002 },
+      "skillChances": { "dip": 0.25, "lea": 0.5 }
+    }
+  ]
+}
+```
+
+Every new record requires `id`, `handler`, `label`, `desc`, `order`, and `contexts`.
+`contexts` is a non-empty array containing unique `home` and/or `afield` values. Travel
+never supports a daily focus, and a focus is unavailable while afield unless it explicitly
+includes `afield`. `vocational`, `requiresTech`, `visibility`, and `eligibility` are
+optional and use the same effective career, technology, and static-condition references
+as declarative deeds. `vocational` accepts one effective career id or a non-empty array of
+unique career ids; its multiplier applies when the player's current profession matches.
+A focus must then declare at least one of:
+
+- `seasonal`: one or more non-zero `gold`, `prestige`, or `piety` yields. Each is a
+  finite number from 0 through 1,000,000 and is applied in equal daily portions over the
+  90-day season.
+- `dailyEffects`: currently one non-zero `health` change from -0.1 through 0.1. Health
+  clamps to the ordinary 0-10 range each day.
+- `skillChances`: one or more non-zero seasonal chances from 0 through 1 for `dip`,
+  `mar`, `ste`, `int`, or `lea`. The shared `focusSkillGainRate` balance multiplier is
+  applied before converting each authored value to a daily chance.
+
+The Deeds panel derives its seasonal resource, daily health, and 90-day training previews
+from the same values consumed by the tick. Vocational matching applies the ordinary
+household-work multiplier to positive resource yields, but not to health or training.
+Skill rolls always use the saved RNG stream in canonical `dip`, `mar`, `ste`, `int`, `lea`
+order, independent of object field order; each successful roll then uses the ordinary
+diminishing-return skill gain.
+
+`visibility` has no `reason` and hides a focus when it fails. `eligibility` requires its
+localized `reason` and leaves the focus visible but disabled, as does a missing technology.
+These checks and every preview are pure and make no RNG draws. New definitions are
+`manualOnly`: the deterministic default-focus selection ignores them, and no automation
+chooses them.
+
+`order` participates in the complete effective focus permutation. The first added focus
+is normally 28, the next 29, and so on. A later mod replacing a declarative focus must
+restate the complete record, so it cannot silently inherit effects from another load
+order. Mods cannot supply callbacks, shortcut families, custom handlers, or specialized
+UI and automation capabilities. If the active definition disappears, focus validation
+chooses the ordinary built-in default without clearing unrelated cooldown or focus-back
+data. Save format remains 3, and the active-mod fingerprint continues to protect saves
+whose current focus uses a mod-added id.
 
 ## Religious progression paths
 

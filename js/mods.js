@@ -263,7 +263,9 @@ window.FBMODS = window.FBMODS || [];
       if (!own(definition, key)) continue;
       const value = definition[key];
       if ((key === 'visibility' || key === 'eligibility' ||
-          key === 'costs' || key === 'effects') && plainObject(value)) {
+          key === 'costs' || key === 'effects' || key === 'seasonal' ||
+          key === 'dailyEffects' || key === 'skillChances') &&
+          plainObject(value)) {
         const nested = {};
         for (const field in value) {
           if (!own(value, field)) continue;
@@ -286,10 +288,15 @@ window.FBMODS = window.FBMODS || [];
       ? { id:true, label:true, desc:true, order:true, eligibility:true }
       : { id:true, label:true, desc:true, order:true, group:true,
           cooldownDays:true, requiresTech:true, eligibility:true };
-    const declarativeAllowed = {
+    const declarativeDeedAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, group:true,
       cooldownDays:true, spendsDay:true, requiresTech:true, visibility:true,
       eligibility:true, costs:true, effects:true, queueEvent:true
+    };
+    const declarativeFocusAllowed = {
+      id:true, handler:true, label:true, desc:true, order:true, contexts:true,
+      vocational:true, requiresTech:true, visibility:true, eligibility:true,
+      seasonal:true, dailyEffects:true, skillChances:true
     };
     const indexes = {};
     const supplied = {};
@@ -305,19 +312,23 @@ window.FBMODS = window.FBMODS || [];
       if (own(supplied, override.id)) fail(kind, 'must not repeat ' + override.id + '.');
       const existing = own(indexes, override.id)
         ? out[indexes[override.id]] : null;
-      const declarative = kind === 'deeds' &&
-        ((!existing && override.handler === 'declarative_deed') ||
-          (existing && existing.handler === 'declarative_deed'));
-      onlyFields(override, declarative ? declarativeAllowed : baselineAllowed,
-        path);
+      const declarativeHandler = kind === 'focuses'
+        ? 'declarative_focus' : 'declarative_deed';
+      const declarative =
+        (!existing && override.handler === declarativeHandler) ||
+        (existing && existing.handler === declarativeHandler);
+      const declarativeAllowed = kind === 'focuses'
+        ? declarativeFocusAllowed : declarativeDeedAllowed;
+      onlyFields(override, declarative ? declarativeAllowed
+        : baselineAllowed, path);
       if (!existing && !declarative) {
         fail(path + '.id', 'cannot add unknown baseline id ' + override.id + '.');
       }
       supplied[override.id] = true;
-      if (declarative && override.handler !== 'declarative_deed') {
-        fail(path + '.handler', 'must be declarative_deed.');
+      if (declarative && override.handler !== declarativeHandler) {
+        fail(path + '.handler', 'must be ' + declarativeHandler + '.');
       }
-      /* Added deeds and later replacements are complete records. Inheriting
+      /* Added actions and later replacements are complete records. Inheriting
          an omitted executable field from an earlier mod would make meaning
          depend on load order and hide the effective transaction from review. */
       const next = declarative ? { id:override.id } :
@@ -325,7 +336,9 @@ window.FBMODS = window.FBMODS || [];
       for (const key in override) {
         if (!own(override, key) || key === 'id') continue;
         if ((key === 'visibility' || key === 'eligibility' ||
-            key === 'costs' || key === 'effects') && plainObject(override[key])) {
+            key === 'costs' || key === 'effects' || key === 'seasonal' ||
+            key === 'dailyEffects' || key === 'skillChances') &&
+            plainObject(override[key])) {
           const wrapped = {};
           wrapped[key] = override[key];
           next[key] = cloneActionDefinition(wrapped)[key];
@@ -334,7 +347,9 @@ window.FBMODS = window.FBMODS || [];
             ? override[key].slice() : override[key];
         }
       }
-      if (declarative) next.flow = next.spendsDay ? 'immediate' : 'no_day';
+      if (declarative && kind === 'deeds') {
+        next.flow = next.spendsDay ? 'immediate' : 'no_day';
+      }
       if (existing) out[indexes[override.id]] = next;
       else {
         indexes[override.id] = out.length;
@@ -506,6 +521,13 @@ window.FBMODS = window.FBMODS || [];
       focuses:{}
     };
     for (const focus of (FB.focuses || [])) refs.focuses[focus.id] = focus;
+    if (Array.isArray(mod.focuses)) {
+      for (const focus of mod.focuses) {
+        if (plainObject(focus) && typeof focus.id === 'string') {
+          refs.focuses[focus.id] = focus;
+        }
+      }
+    }
     const baselineTiers = {
       serf:0, farmer:1, apprentice:1, monk:1, soldier:1, knight:2, baron:3
     };

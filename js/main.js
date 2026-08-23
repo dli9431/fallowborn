@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.151.0';
+  FB.VERSION = '1.152.0';
   FB.CHANGELOG = [
+    { v: '1.152.0', date: '2026-08-22', changes: [
+      'Runtime mods can now add safe daily focuses with exact effect previews, explicit contexts, and deterministic skill training.'
+    ] },
     { v: '1.151.0', date: '2026-08-22', changes: [
       'Runtime mods can now add safe manual deeds with exact resource previews, fixed cooldowns, static eligibility, or a queued story.'
     ] },

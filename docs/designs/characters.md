@@ -143,7 +143,9 @@ previously hidden by the old 40-point read ceiling become effective immediately.
 Never write `c.skills[k]++` directly outside `FB.gainSkill`. Daily focus training
 applies `balance.focusSkillGainRate` (0.75) to its authored seasonal chance before
 this diminishing-return roll; event, education, and coming-of-age gains are
-unaffected.
+unaffected. Declarative mod focuses use that same rate and `FB.gainSkill` path. Their
+daily rolls always consume the saved RNG stream in `dip`, `mar`, `ste`, `int`, `lea`
+order, so authored object-key order cannot alter determinism.
 
 The in-game Guide gives every skill a short conceptual purpose and names its major
 current consumers without claiming to enumerate event scripts. Character skill labels

@@ -242,6 +242,17 @@ must completely replace mod-added deed records, and missing definitions leave th
 cooldown keys inert under save format 3. The facility itself has a `none` technology review;
 an individual deed may still name its own `requiresTech`.
 
+Phase 4D permits appended focus ids through one fixed `declarative_focus` adapter. Each
+complete record declares its home/afield contexts and at least one bounded seasonal
+resource yield, daily health change, or saved-RNG skill-training chance. Static visibility,
+eligibility, and technology checks compose into the same pure status that supplies the
+Deeds-panel preview; execution divides seasonal yields into daily values, clamps health,
+and rolls skills in canonical order. Later mods must completely replace a mod-added focus,
+new definitions remain manual-only and outside default selection, and a removed active id
+falls back without deleting focus-back or cooldown state. The active-mod fingerprint and
+save format 3 remain sufficient. The facility has a separate `none` technology review;
+individual focus definitions may still name and visibly explain `requiresTech`.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of

@@ -1139,7 +1139,10 @@ window.FB = window.FB || {};
         renderActions();
       });
     }
-    const focuses = FB.listFocuses(s);
+    const focuses = FB.listFocusChoices ? FB.listFocusChoices(s)
+      : FB.listFocuses(s).map(function (focus) {
+        return { action:focus, can:true, reason:'', preview:null };
+      });
     /* Closed accordion groups need their visible count, not every cooldown,
        technology, and eligibility explanation. Defer that deeper work until
        a group's controls are actually constructed. */
@@ -1251,7 +1254,50 @@ window.FB = window.FB || {};
       }
       return body;
     }
-    function appendFocus(f, container) {
+    function focusPreviewHtml(preview) {
+      if (!preview) return '';
+      let html = '';
+      if (preview.seasonal && preview.seasonal.length) {
+        html += '<div class="action-preview"><b>' +
+          esc(FB.T('Seasonal effects')) +
+          '</b><div class="event-impact-chips">';
+        for (const record of preview.seasonal) {
+          html += '<span class="event-impact-chip ' +
+            receiptImpactClass(record) + '">' +
+            esc(FB.eventImpactText(s, record, 'resolved')) + '</span>';
+        }
+        html += '</div></div>';
+      }
+      if (preview.daily && preview.daily.length) {
+        html += '<div class="action-preview"><b>' +
+          esc(FB.T('Daily effects')) +
+          '</b><div class="event-impact-chips">';
+        for (const record of preview.daily) {
+          const rounded = Math.round(record.amount * 1000) / 1000;
+          const change = (rounded > 0 ? '+' : '') + String(rounded);
+          html += '<span class="event-impact-chip ' +
+            receiptImpactClass(record) + '">' + esc(FB.T(
+              'Health {change} per day', { change:change })) + '</span>';
+        }
+        html += '</div></div>';
+      }
+      if (preview.training && preview.training.length) {
+        html += '<div class="action-preview"><b>' +
+          esc(FB.T('Seasonal training chances')) +
+          '</b><div class="event-impact-chips">';
+        for (const training of preview.training) {
+          html += '<span class="event-impact-chip gain">' + esc(FB.T(
+            '{skill}: {chance}% chance per season', {
+              skill:FB.skillName(training.skill),
+              chance:Math.round(training.seasonChance * 1000) / 10
+            })) + '</span>';
+        }
+        html += '</div></div>';
+      }
+      return html;
+    }
+    function appendFocus(item, container) {
+      const f = item.action;
       const cur = s.player.focus === f.id;
       const row = document.createElement('div');
       const btn = document.createElement('button');
@@ -1261,6 +1307,7 @@ window.FB = window.FB || {};
         (cur ? ' focused' : '');
       btn.setAttribute('data-focus-id', f.id);
       btn.setAttribute('aria-describedby', detailsId);
+      btn.disabled = !item.can;
       btn.innerHTML = shortcutHintFor(focusShortcutTarget(f)) +
         (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label'));
       (function (id) {
@@ -1283,11 +1330,26 @@ window.FB = window.FB || {};
       const details = document.createElement('div');
       details.id = detailsId;
       details.className = 'settcard-details deed-details hidden';
-      details.textContent = FB.translateKnown(f.desc(s));
+      details.innerHTML = esc(FB.translateKnown(
+        item.can ? f.desc(s) : item.reason)) + focusPreviewHtml(item.preview);
       row.appendChild(btn);
       row.appendChild(actions);
       row.appendChild(details);
       container.appendChild(row);
+      if (FB.techUiRelevant(s) && !item.can && f.requiresTech &&
+          !FB.techRequirementMet(s, f.requiresTech)) {
+        const techId = firstMissingTech(s, f.requiresTech);
+        const techButton = document.createElement('button');
+        techButton.className = 'btn small contextual-help-link';
+        techButton.setAttribute('data-focus-tech', techId);
+        techButton.textContent = FB.T('View prerequisite: {technology}', {
+          technology:technologyName(s, techId)
+        });
+        techButton.addEventListener('click', function () {
+          UI.showTechDetail(techId);
+        });
+        container.appendChild(techButton);
+      }
     }
     if (focuses.length) {
       const fh = document.createElement('button');
@@ -1313,7 +1375,7 @@ window.FB = window.FB || {};
         refreshDeedPanelShortcuts();
       });
       box.appendChild(fh);
-      for (const f of focuses) appendFocus(f, focusBody);
+      for (const item of focuses) appendFocus(item, focusBody);
       box.appendChild(focusBody);
     }
     for (const group of ACTION_GROUPS) {

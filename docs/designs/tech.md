@@ -393,10 +393,11 @@ Runtime mods are normalized before validation: `branch` becomes `domain`, scalar
 `req` is accepted, and `yearMin` becomes an inferred soft history window rather than a
 lock. Existing `cultures` and `notCultures` restrictions remain supported.
 
-Declarative mod deeds record `data_defined_deeds` as `none`. Exposing a bounded authoring
-facility is not an in-world capability and has no credible research dependency. Each deed
-may nevertheless declare `requiresTech`; that explicit content gate remains visible and
-uses the effective sovereign's ordinary technology record.
+Declarative mod deeds and focuses record separate `data_defined_deeds` and
+`data_defined_focuses` reviews as `none`. Exposing either bounded authoring facility is not
+an in-world capability and has no credible research dependency. Each definition may
+nevertheless declare `requiresTech`; that explicit content gate remains visible and uses
+the effective sovereign's ordinary technology record.
 
 Related: [state-and-saves.md](state-and-saves.md), [development.md](development.md),
 [war.md](war.md), [finance.md](finance.md), [markets.md](markets.md), [time.md](time.md),

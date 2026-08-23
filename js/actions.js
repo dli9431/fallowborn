@@ -2430,6 +2430,12 @@ window.FB = window.FB || {};
   const DEED_BASELINE_IDS = DEED_HANDLERS.map(function (handler) {
     return handler.id;
   });
+  const DECLARATIVE_FOCUS_HANDLER = {
+    id:'declarative_focus',
+    show:function () { return false; },
+    tick:function () {}
+  };
+  FOCUS_HANDLER_BY_ID.declarative_focus = DECLARATIVE_FOCUS_HANDLER;
   const DECLARATIVE_DEED_HANDLER = {
     id:'declarative_deed',
     show:function () { return false; },
@@ -2644,6 +2650,83 @@ window.FB = window.FB || {};
     }
   }
 
+  function validateDeclarativeFocus(def, references, errors) {
+    if (def.desc === undefined) {
+      errors.push('focus.' + def.id + ' must have a description source.');
+    }
+    if (!Array.isArray(def.contexts) || !def.contexts.length ||
+        def.contexts.length > 2) {
+      errors.push('focus.' + def.id +
+        ' contexts must be a non-empty array of home and/or afield.');
+    } else {
+      const seenContexts = {};
+      for (const context of def.contexts) {
+        if ((context !== 'home' && context !== 'afield') ||
+            actionOwn(seenContexts, context)) {
+          errors.push('focus.' + def.id +
+            ' contexts must contain unique home or afield values.');
+        }
+        seenContexts[context] = 1;
+      }
+    }
+    if (def.visibility !== undefined) {
+      validateActionConditions(def.visibility,
+        'focus.' + def.id + '.visibility', references, errors, false);
+    }
+    if (def.seasonal !== undefined) {
+      validateDeclarativeResourceMap(def.seasonal,
+        'focus.' + def.id + '.seasonal', errors, true);
+    }
+    if (def.dailyEffects !== undefined) {
+      const daily = def.dailyEffects;
+      if (!daily || typeof daily !== 'object' || Array.isArray(daily)) {
+        errors.push('focus.' + def.id + '.dailyEffects must be an object.');
+      } else {
+        let useful = 0;
+        for (const key in daily) {
+          if (!actionOwn(daily, key)) continue;
+          if (key !== 'health') {
+            errors.push('focus.' + def.id + '.dailyEffects.' + key +
+              ' is not recognized.');
+          } else if (typeof daily[key] !== 'number' || !isFinite(daily[key]) ||
+              daily[key] < -0.1 || daily[key] > 0.1) {
+            errors.push('focus.' + def.id +
+              '.dailyEffects.health must be a number from -0.1 to 0.1.');
+          } else if (daily[key]) useful++;
+        }
+        if (!useful) errors.push('focus.' + def.id +
+          '.dailyEffects must contain a non-zero health change.');
+      }
+    }
+    if (def.skillChances !== undefined) {
+      const chances = def.skillChances;
+      const skills = { dip:1, mar:1, ste:1, int:1, lea:1 };
+      if (!chances || typeof chances !== 'object' || Array.isArray(chances)) {
+        errors.push('focus.' + def.id + '.skillChances must be an object.');
+      } else {
+        let useful = 0;
+        for (const key in chances) {
+          if (!actionOwn(chances, key)) continue;
+          if (!actionOwn(skills, key)) {
+            errors.push('focus.' + def.id + '.skillChances.' + key +
+              ' is not recognized.');
+          } else if (typeof chances[key] !== 'number' ||
+              !isFinite(chances[key]) || chances[key] < 0 || chances[key] > 1) {
+            errors.push('focus.' + def.id + '.skillChances.' + key +
+              ' must be a number from 0 to 1.');
+          } else if (chances[key]) useful++;
+        }
+        if (!useful) errors.push('focus.' + def.id +
+          '.skillChances must contain at least one non-zero chance.');
+      }
+    }
+    if (def.seasonal === undefined && def.dailyEffects === undefined &&
+        def.skillChances === undefined) {
+      errors.push('focus.' + def.id +
+        ' must declare seasonal, dailyEffects, or skillChances.');
+    }
+  }
+
   function validateActionRecords(records, handlers, baselineIds, kind, references) {
     const errors = [];
     const seen = {};
@@ -2660,6 +2743,11 @@ window.FB = window.FB || {};
       cooldownDays:1, requiresTech:1, visibility:1, eligibility:1,
       costs:1, effects:1, queueEvent:1, spendsDay:1, handler:1
     };
+    const declarativeFocusFields = {
+      id:1, label:1, desc:1, order:1, handler:1, contexts:1,
+      vocational:1, requiresTech:1, visibility:1, eligibility:1,
+      seasonal:1, dailyEffects:1, skillChances:1
+    };
     if (!Array.isArray(records)) return [kind + ' catalogue must be an array.'];
     for (let i = 0; i < records.length; i++) {
       const def = records[i];
@@ -2670,9 +2758,13 @@ window.FB = window.FB || {};
       }
       const baseline = typeof def.id === 'string' &&
         baselineIds.indexOf(def.id) >= 0;
-      const declarative = kind === 'deed' && !baseline &&
+      const declarativeFocus = kind === 'focus' && !baseline &&
+        def.handler === 'declarative_focus';
+      const declarativeDeed = kind === 'deed' && !baseline &&
         def.handler === 'declarative_deed';
-      const allowedFields = declarative ? declarativeDeedFields : baselineFields;
+      const declarative = declarativeFocus || declarativeDeed;
+      const allowedFields = declarativeFocus ? declarativeFocusFields
+        : (declarativeDeed ? declarativeDeedFields : baselineFields);
       for (const key in def) {
         if (Object.prototype.hasOwnProperty.call(def, key) &&
             !actionOwn(allowedFields, key)) {
@@ -2704,12 +2796,14 @@ window.FB = window.FB || {};
           (typeof def.desc !== 'string' || !def.desc.trim())) {
         errors.push(kind + '.' + def.id + ' description must be a non-empty string.');
       }
+      const expectedDeclarativeHandler = kind === 'focus'
+        ? 'declarative_focus' : 'declarative_deed';
       if ((baseline && def.handler !== def.id) ||
-          (declarative && def.handler !== 'declarative_deed') ||
+          (declarative && def.handler !== expectedDeclarativeHandler) ||
           !handlers[def.handler]) {
         errors.push(kind + '.' + def.id + (baseline
           ? ' must retain its baseline handler.'
-          : ' must use the declarative_deed handler.'));
+          : ' must use the ' + expectedDeclarativeHandler + ' handler.'));
         continue;
       }
       const handler = handlers[def.handler];
@@ -2719,19 +2813,37 @@ window.FB = window.FB || {};
         }
         const vocations = Array.isArray(def.vocational)
           ? def.vocational : [def.vocational];
+        const seenVocations = {};
+        if (Array.isArray(def.vocational) &&
+            (!vocations.length || vocations.length > 64)) {
+          errors.push(kind + '.' + def.id +
+            ' vocation list must contain 1 to 64 ids.');
+        }
         for (const vocation of vocations) {
           if (vocation !== undefined &&
               (typeof vocation !== 'string' || !vocation)) {
             errors.push(kind + '.' + def.id + ' has an invalid vocation.');
           } else if (vocation !== undefined &&
+              actionOwn(seenVocations, vocation)) {
+            errors.push(kind + '.' + def.id +
+              ' must not repeat vocation ' + vocation + '.');
+          } else if (vocation !== undefined &&
               (!references.careers || !actionOwn(references.careers, vocation))) {
             errors.push(kind + '.' + def.id +
               ' references unknown vocation ' + vocation + '.');
+          }
+          if (vocation !== undefined && typeof vocation === 'string') {
+            seenVocations[vocation] = 1;
           }
         }
         if (def.shortcutFamily !== undefined &&
             (typeof def.shortcutFamily !== 'string' || !def.shortcutFamily)) {
           errors.push(kind + '.' + def.id + ' has an invalid shortcut family.');
+        }
+        validateActionTechRequirements(def.requiresTech,
+          kind + '.' + def.id + '.requiresTech', references.tech, errors);
+        if (declarativeFocus) {
+          validateDeclarativeFocus(def, references, errors);
         }
       } else {
         if (typeof handler.show !== 'function' || typeof handler.run !== 'function') {
@@ -2743,7 +2855,7 @@ window.FB = window.FB || {};
         if (!actionOwn(allowedFlows, def.flow)) {
           errors.push(kind + '.' + def.id + ' has an invalid flow.');
         }
-        const handlerFlow = declarative
+        const handlerFlow = declarativeDeed
           ? (def.spendsDay ? 'immediate' : 'no_day')
           : (handler.opensChoices ? 'choices'
             : (handler.noConsume ? 'no_day' : 'immediate'));
@@ -2765,7 +2877,7 @@ window.FB = window.FB || {};
         }
         validateActionTechRequirements(def.requiresTech,
           kind + '.' + def.id + '.requiresTech', references.tech, errors);
-        if (declarative) validateDeclarativeDeed(def, path, references, errors);
+        if (declarativeDeed) validateDeclarativeDeed(def, path, references, errors);
       }
       if (def.eligibility !== undefined) {
         validateActionConditions(def.eligibility,
@@ -2912,6 +3024,60 @@ window.FB = window.FB || {};
     return true;
   }
 
+  const DECLARATIVE_SKILLS = ['dip','mar','ste','int','lea'];
+
+  function declarativeFocusDailySkillChance(def, skill) {
+    const authored = def.skillChances && def.skillChances[skill] || 0;
+    const rate = FBDATA.balance.focusSkillGainRate;
+    const effectiveRate = typeof rate === 'number' && isFinite(rate) ? rate : 1;
+    return FB.clamp(authored * effectiveRate / D, 0, 1);
+  }
+
+  function declarativeFocusPreview(state, def) {
+    const seasonal = [];
+    const daily = [];
+    const training = [];
+    const mult = vocationalMultiplier(state, def);
+    for (const key of DECLARATIVE_RESOURCES) {
+      const amount = def.seasonal && def.seasonal[key] || 0;
+      if (amount) seasonal.push({
+        type:key, amount:amount * mult, reward:true
+      });
+    }
+    const health = def.dailyEffects && def.dailyEffects.health || 0;
+    if (health) {
+      const current = Number(me(state).health) || 0;
+      const target = current + health;
+      const next = FB.clamp(target, 0, 10);
+      const applied = next === target ? health : next - current;
+      daily.push({ type:'health', amount:applied });
+    }
+    for (const skill of DECLARATIVE_SKILLS) {
+      const dailyChance = declarativeFocusDailySkillChance(def, skill);
+      if (!dailyChance) continue;
+      training.push({
+        skill:skill,
+        dailyChance:dailyChance,
+        seasonChance:1 - Math.pow(1 - dailyChance, D)
+      });
+    }
+    return { seasonal:seasonal, daily:daily, training:training };
+  }
+
+  function tickDeclarativeFocus(state, def) {
+    const seasonal = def.seasonal || {};
+    for (const key of DECLARATIVE_RESOURCES) {
+      state.player[key] = (Number(state.player[key]) || 0) +
+        (seasonal[key] || 0) / D;
+    }
+    const health = def.dailyEffects && def.dailyEffects.health || 0;
+    if (health) me(state).health = FB.clamp(me(state).health + health, 0, 10);
+    for (const skill of DECLARATIVE_SKILLS) {
+      const chance = declarativeFocusDailySkillChance(def, skill);
+      if (chance && FB.chance(chance)) skillUp(state, skill);
+    }
+  }
+
   function projectActionDefinition(def, handler, kind, coreLabels) {
     const out = {};
     for (const key in def) {
@@ -2933,7 +3099,36 @@ window.FB = window.FB || {};
     }
     if (typeof handler.uiLabel === 'function' &&
         def.label !== coreLabels[def.id]) delete out.uiLabel;
-    if (def.handler === 'declarative_deed') {
+    if (def.handler === 'declarative_focus') {
+      out.definition = def;
+      out.declarative = true;
+      out.manualOnly = true;
+      out.supportsAfield = def.contexts.indexOf('afield') >= 0;
+      out.show = function (state) {
+        const context = afield(state) ? 'afield' : 'home';
+        return def.contexts.indexOf(context) >= 0 &&
+          (!def.visibility || actionEligibilityMet(state, def.visibility));
+      };
+      out.can = function (state) {
+        return (!def.eligibility || actionEligibilityMet(state, def.eligibility))
+          ? true : actionEligibilityReason(state, kind, def);
+      };
+      if (def.seasonal) {
+        out.gain = function () {
+          const gain = {};
+          for (const key of DECLARATIVE_RESOURCES) {
+            if (def.seasonal[key]) gain[key] = def.seasonal[key];
+          }
+          return gain;
+        };
+      }
+      out.preview = function (state) {
+        return declarativeFocusPreview(state, def);
+      };
+      out.tick = function (state) {
+        tickDeclarativeFocus(state, def);
+      };
+    } else if (def.handler === 'declarative_deed') {
       out.definition = def;
       out.declarative = true;
       out.manualOnly = true;
@@ -4112,6 +4307,8 @@ window.FB = window.FB || {};
     if (state.player.travel) return null;
     for (const f of FB.focuses) {
       if (f.id === state.player.focus) {
+        if (f.declarative && FB.focusStatus &&
+            !FB.focusStatus(state, f.id).can) return null;
         if (!f.gain) return null;
         const raw = f.gain(state);
         if (!raw) return null;
@@ -8332,16 +8529,63 @@ window.FB = window.FB || {};
     return true;
   };
 
-  FB.listFocuses = function (state) {
-    if (state.player.travel) return [];
-    const all = FB.focuses.filter(function (f) { return f.show(state); });
-    // afield in disguise, the household/market/court focuses make no sense —
-    // pare the menu down to a soldier's day: drill, mend, and prayers
-    if (afield(state)) {
-      const wl = { drill: 1, rest: 1, pray: 1 };
-      return all.filter(function (f) { return wl[f.id]; });
+  function focusContextPermits(state, focus) {
+    if (!afield(state)) return true;
+    const whitelist = { drill:1, rest:1, pray:1 };
+    return !!whitelist[focus.id] ||
+      (!!focus.declarative && !!focus.supportsAfield);
+  }
+
+  function focusStatusForAction(state, focus) {
+    const shown = !state.player.travel && !!focus.show(state) &&
+      focusContextPermits(state, focus);
+    let can = shown;
+    let reason = '';
+    if (can && focus.requiresTech &&
+        !FB.techRequirementMet(state, focus.requiresTech)) {
+      can = false;
+      reason = FB.techRequirementReason
+        ? FB.techRequirementReason(state, focus.requiresTech)
+        : FB.T('A required national technology has not been completed.');
     }
-    return all;
+    if (can && focus.can) {
+      const result = focus.can(state);
+      if (result !== true) {
+        can = false;
+        reason = result;
+      }
+    }
+    return {
+      action:focus,
+      shown:shown,
+      can:can,
+      reason:reason,
+      preview:shown && focus.preview ? focus.preview(state) : null
+    };
+  }
+
+  FB.focusStatus = function (state, id) {
+    const focus = focusById[id] || null;
+    if (!focus) return {
+      action:null, shown:false, can:false, reason:'', preview:null
+    };
+    return focusStatusForAction(state, focus);
+  };
+
+  FB.listFocusChoices = function (state) {
+    if (state.player.travel) return [];
+    const out = [];
+    for (const focus of FB.focuses) {
+      const status = focusStatusForAction(state, focus);
+      if (status.shown) out.push(status);
+    }
+    return out;
+  };
+
+  FB.listFocuses = function (state) {
+    return FB.listFocusChoices(state).filter(function (status) {
+      return status.can;
+    }).map(function (status) { return status.action; });
   };
 
   function instantStatusForAction(state, action, shown) {
@@ -8414,13 +8658,10 @@ window.FB = window.FB || {};
   };
 
   FB.setFocus = function (state, id) {
-    for (const f of FB.focuses) {
-      if (f.id === id && f.show(state)) {
-        state.player.focus = id;
-        if (FB.ui && FB.ui.refresh) FB.ui.refresh();
-        return;
-      }
-    }
+    const status = FB.focusStatus(state, id);
+    if (!status.can) return;
+    state.player.focus = id;
+    if (FB.ui && FB.ui.refresh) FB.ui.refresh();
   };
 
   FB.defaultFocus = function (state) {
@@ -8449,7 +8690,8 @@ window.FB = window.FB || {};
     }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === want) return want;
-    return shown.length ? shown[0].id : null;
+    for (const f of shown) if (!f.declarative) return f.id;
+    return null;
   };
 
   /* Explicitly rebuilt with the data-backed compatibility projections. A
@@ -8462,13 +8704,17 @@ window.FB = window.FB || {};
     if (state.player.travel) return;
     if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(state);
     const cur = state.player.focus;
+    const currentDefinition = focusDef(cur);
+    if (cur && !currentDefinition) {
+      state.player.focus = FB.defaultFocus(state);
+      return;
+    }
     // daily hot path: if the current focus is still offered, skip the full
     // listFocuses sweep (all ~27 show() callbacks) entirely. While afield the
     // menu is pared to a whitelist that show() alone can't see, so take the
     // full sweep and let a now-irrelevant home focus fall through to a soldier's.
     if (cur && !afield(state)) {
-      const f = focusDef(cur);
-      if (f && f.show(state)) return;
+      if (focusStatusForAction(state, currentDefinition).can) return;
     }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === cur) return;

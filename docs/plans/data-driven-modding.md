@@ -469,6 +469,17 @@ A removed current focus falls through `FB.validateFocus` to the ordinary determi
 default without deleting unrelated cooldown or focus-back data. The active-mod fingerprint
 continues to protect saves that intentionally depend on mod-added focus ids.
 
+Implemented in v1.152.0. Runtime mods may append complete focus records only through the
+fixed `declarative_focus` handler. The schema admits explicit home/afield contexts, optional
+vocation and technology gates, pure visibility and disabled eligibility predicates,
+non-negative seasonal resource yields, bounded daily health changes, and seeded seasonal
+skill-training chances. A shared status projection drives selection and exact panel
+previews; the tick divides resource yields over 90 days, clamps health, and rolls skills
+through the saved RNG in canonical order. Default selection ignores new focuses, later
+definitions are complete replacements, and a removed active id falls back without clearing
+unrelated action state. Save format remains 3. The `data_defined_focuses` technology review
+is `none`; individual definitions retain optional visible `requiresTech` gates.
+
 ### Phase 4E: specialized UI and automation capabilities
 
 Only after the immediate deed and focus contracts are proven may new definitions request

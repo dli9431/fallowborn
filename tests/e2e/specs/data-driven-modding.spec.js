@@ -1598,3 +1598,344 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
       return entry.rejected && entry.unchanged;
     })).toBe(true);
   });
+
+test('milestone-four phase D adds deterministic declarative focuses and restores safely',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const character = s.chars[p.charId];
+      const originalRest = FB.focuses.filter(function (focus) {
+        return focus.id === 'rest';
+      })[0];
+      p.profession = 'merchant';
+      character.health = 5;
+      delete p.flags.e2e_focus_visible;
+      delete p.flags.e2e_focus_eligible;
+      const rngBefore = FB.getRngState();
+      FB.mods.apply({
+        focuses:[
+          {
+            id:'e2e_declarative_study', handler:'declarative_focus',
+            label:'Keep the charter books',
+            desc:'Work through a safe, authored daily routine.',
+            order:28, contexts:['home'], vocational:'farmer',
+            requiresTech:'crop_rotation',
+            visibility:{ flagsAll:['e2e_focus_visible'] },
+            eligibility:{
+              reason:'The charter books remain locked.',
+              flagsAll:['e2e_focus_eligible']
+            },
+            seasonal:{ gold:9, prestige:3, piety:1.5 },
+            dailyEffects:{ health:0.01 },
+            skillChances:{ lea:1, dip:1 }
+          },
+          {
+            id:'e2e_declarative_afield', handler:'declarative_focus',
+            label:'Keep the field journal',
+            desc:'A focus explicitly supported while afield.',
+            order:29, contexts:['afield'], seasonal:{ piety:9 }
+          }
+        ]
+      });
+
+      const hidden = FB.focusStatus(s, 'e2e_declarative_study');
+      p.flags.e2e_focus_visible = 1;
+      const tech = FB.realmTechRecord(s);
+      const completedIndex = tech.completed.indexOf('crop_rotation');
+      if (completedIndex >= 0) tech.completed.splice(completedIndex, 1);
+      const techBlocked = FB.focusStatus(s, 'e2e_declarative_study');
+      tech.completed.push('crop_rotation');
+      const eligibilityBlocked = FB.focusStatus(s, 'e2e_declarative_study');
+      p.flags.e2e_focus_eligible = 1;
+      const ready = FB.focusStatus(s, 'e2e_declarative_study');
+      const ordinaryDefault = FB.defaultFocus(s);
+
+      p.flags.polly_1 = 1;
+      const afieldChoices = FB.listFocusChoices(s).map(function (status) {
+        return status.action.id;
+      });
+      delete p.flags.polly_1;
+
+      const revision = FB.actionCatalogRevision;
+      let partialReplacementRejected = false;
+      try {
+        FB.mods.apply({ focuses:[{
+          id:'e2e_declarative_study', label:'Incomplete replacement'
+        }] });
+      } catch (error) {
+        partialReplacementRejected =
+          error.message.indexOf('handler must be declarative_focus') >= 0 &&
+          FB.actionCatalogRevision === revision;
+      }
+      const rest = FB.focuses.filter(function (focus) {
+        return focus.id === 'rest';
+      })[0];
+      const rngPure = FB.getRngState() === rngBefore;
+      FB.ui.refresh();
+      return {
+        count:FBDATA.focuses.length,
+        hidden:{ shown:hidden.shown, can:hidden.can, preview:hidden.preview },
+        techBlocked:{
+          shown:techBlocked.shown, can:techBlocked.can,
+          reason:techBlocked.reason
+        },
+        eligibilityBlocked:{
+          shown:eligibilityBlocked.shown, can:eligibilityBlocked.can,
+          reason:eligibilityBlocked.reason
+        },
+        ready:{
+          shown:ready.shown, can:ready.can,
+          declarative:ready.action.declarative,
+          manualOnly:ready.action.manualOnly,
+          supportsAfield:ready.action.supportsAfield,
+          seasonal:ready.preview.seasonal,
+          daily:ready.preview.daily,
+          training:ready.preview.training.map(function (entry) {
+            return entry.skill;
+          })
+        },
+        ordinaryDefault:ordinaryDefault,
+        afieldChoices:afieldChoices,
+        homeMissingAfield:afieldChoices.indexOf('e2e_declarative_study') < 0,
+        baselineHandlerStable:rest.tick === originalRest.tick,
+        partialReplacementRejected:partialReplacementRejected,
+        rngPure:rngPure
+      };
+    });
+
+    expect(setup.count).toBe(30);
+    expect(setup.hidden).toEqual({ shown:false, can:false, preview:null });
+    expect(setup.techBlocked).toEqual({
+      shown:true, can:false, reason:'Requires Two-Course Rotation.'
+    });
+    expect(setup.eligibilityBlocked).toEqual({
+      shown:true, can:false, reason:'The charter books remain locked.'
+    });
+    expect(setup.ready).toEqual({
+      shown:true, can:true, declarative:true, manualOnly:true,
+      supportsAfield:false,
+      seasonal:[
+        { type:'gold', amount:9, reward:true },
+        { type:'prestige', amount:3, reward:true },
+        { type:'piety', amount:1.5, reward:true }
+      ],
+      daily:[{ type:'health', amount:0.01 }],
+      training:['dip', 'lea']
+    });
+    expect(setup.ordinaryDefault).toBe('trade_run');
+    expect(setup.afieldChoices).toContain('e2e_declarative_afield');
+    expect(setup.homeMissingAfield).toBe(true);
+    expect(setup.baselineHandlerStable).toBe(true);
+    expect(setup.partialReplacementRejected).toBe(true);
+    expect(setup.rngPure).toBe(true);
+
+    await page.locator('#sidetabs [data-tab="actions"]').click();
+    const focusToggle = page.locator('#daily-focus-list');
+    if (await focusToggle.getAttribute('aria-expanded') === 'false') {
+      await focusToggle.click();
+    }
+    const focusRow = page.locator(
+      '[data-focus-id="e2e_declarative_study"]').locator('xpath=..');
+    await expect(focusRow).toBeVisible();
+    await expect(focusRow.locator('.deed-details')).toContainText(
+      'Seasonal effects');
+    await expect(focusRow.locator('.deed-details')).toContainText('Money');
+    await expect(focusRow.locator('.deed-details')).toContainText(
+      'Health +0.01 per day');
+    await expect(focusRow.locator('.deed-details')).toContainText(
+      'Seasonal training chances');
+    await expect(focusRow.locator('.deed-details')).toContainText('Diplomacy');
+
+    const execution = await page.evaluate(function () {
+      let s = FB.state;
+      let p = s.player;
+      let character = s.chars[p.charId];
+      character.skills.dip = 0;
+      character.skills.lea = 0;
+      FB.setFocus(s, 'e2e_declarative_study');
+      const income = FB.focusIncome(s);
+      const before = {
+        gold:p.gold, prestige:p.prestige, piety:p.piety,
+        health:character.health, rng:FB.getRngState()
+      };
+      FB.tickFocus(s);
+      const actualRng = FB.getRngState();
+      FB.setRngState(before.rng);
+      FB.rng();
+      FB.rng();
+      const expectedRng = FB.getRngState();
+      FB.setRngState(actualRng);
+      const tick = {
+        focus:p.focus,
+        gold:p.gold - before.gold,
+        prestige:p.prestige - before.prestige,
+        piety:p.piety - before.piety,
+        health:character.health - before.health,
+        exactDrawCount:actualRng === expectedRng
+      };
+
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      s = FB.state;
+      p = s.player;
+      character = s.chars[p.charId];
+      const restored = {
+        version:payload.v,
+        focus:p.focus,
+        label:FB.focusStatus(s, p.focus).action.label
+      };
+
+      p.focusBack = 'rest';
+      p.cooldowns = p.cooldowns || {};
+      p.cooldowns.e2e_unrelated_focus_marker = 42;
+      FB.installActionData(FBDATA.focuses.filter(function (def) {
+        return def.handler !== 'declarative_focus';
+      }), FBDATA.deeds);
+      FB.validateFocus(s);
+      const fallbackStatus = FB.focusStatus(s, p.focus);
+      return {
+        income:income,
+        tick:tick,
+        restored:restored,
+        fallback:{
+          focus:p.focus,
+          declarative:!!(fallbackStatus.action &&
+            fallbackStatus.action.declarative),
+          focusBack:p.focusBack,
+          cooldown:p.cooldowns.e2e_unrelated_focus_marker,
+          removed:FB.focusStatus(s, 'e2e_declarative_study').action
+        }
+      };
+    });
+
+    expect(execution.income).toEqual({ gold:9, prestige:3, piety:1.5 });
+    expect(execution.tick.focus).toBe('e2e_declarative_study');
+    expect(execution.tick.gold).toBeCloseTo(0.1, 10);
+    expect(execution.tick.prestige).toBeCloseTo(3 / 90, 10);
+    expect(execution.tick.piety).toBeCloseTo(1.5 / 90, 10);
+    expect(execution.tick.health).toBeCloseTo(0.01, 10);
+    expect(execution.tick.exactDrawCount).toBe(true);
+    expect(execution.restored).toEqual({
+      version:3, focus:'e2e_declarative_study',
+      label:'Keep the charter books'
+    });
+    expect(execution.fallback).toEqual({
+      focus:'trade_run', declarative:false, focusBack:'rest',
+      cooldown:42, removed:null
+    });
+  });
+
+test('milestone-four phase D rejects unsafe declarative focuses without mutation',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function focus(patch) {
+        return Object.assign({
+          id:'e2e_unsafe_focus', handler:'declarative_focus',
+          label:'Unsafe focus', desc:'A rejected declarative focus.',
+          order:28, contexts:['home'], seasonal:{ gold:1 }
+        }, patch || {});
+      }
+      function without(field) {
+        const value = focus();
+        delete value[field];
+        return value;
+      }
+      function attempt(data, expected) {
+        const before = JSON.stringify({
+          focuses:FBDATA.focuses, deeds:FBDATA.deeds
+        });
+        const focusProjection = FB.focuses;
+        const deedProjection = FB.instants;
+        const revision = FB.actionCatalogRevision;
+        let message = '';
+        try {
+          FB.mods.apply(data);
+        } catch (error) {
+          message = error.message;
+        }
+        return {
+          rejected:message.indexOf(expected) >= 0,
+          message:message,
+          unchanged:before === JSON.stringify({
+            focuses:FBDATA.focuses, deeds:FBDATA.deeds
+          }) && focusProjection === FB.focuses &&
+            deedProjection === FB.instants &&
+            revision === FB.actionCatalogRevision
+        };
+      }
+      return [
+        attempt({ focuses:[{ id:'e2e_unsafe_focus', label:'Unsafe' }] },
+          'cannot add unknown baseline id'),
+        attempt({ focuses:[focus({ handler:'rest' })] },
+          'handler is not recognized'),
+        attempt({ focuses:[focus({ id:'constructor' })] },
+          'must have one unique lowercase id'),
+        attempt({ focuses:[focus({ tick:'custom' })] },
+          'tick is not recognized'),
+        attempt({ focuses:[focus({ gain:'custom' })] },
+          'gain is not recognized'),
+        attempt({ focuses:[focus({ show:'custom' })] },
+          'show is not recognized'),
+        attempt({ focuses:[focus({ manualOnly:false })] },
+          'manualOnly is not recognized'),
+        attempt({ focuses:[focus({ shortcutFamily:'unsafe' })] },
+          'shortcutFamily is not recognized'),
+        attempt({ focuses:[without('desc')] },
+          'must have a description source'),
+        attempt({ focuses:[without('contexts')] },
+          'contexts must be a non-empty array'),
+        attempt({ focuses:[focus({ contexts:['home','home'] })] },
+          'contexts must contain unique home or afield values'),
+        attempt({ focuses:[focus({ contexts:['travel'] })] },
+          'contexts must contain unique home or afield values'),
+        attempt({ focuses:[focus({ order:27 })] },
+          'must not repeat order 27'),
+        attempt({ focuses:[focus({ seasonal:{ gold:-1 } })] },
+          'seasonal.gold must be a number from 0'),
+        attempt({ focuses:[focus({ seasonal:{ influence:1 } })] },
+          'seasonal.influence is not recognized'),
+        attempt({ focuses:[focus({ seasonal:{ gold:0 } })] },
+          'must contain at least one non-zero resource'),
+        attempt({ focuses:[focus({ seasonal:undefined,
+          dailyEffects:{ health:0.2 } })] },
+          'dailyEffects.health must be a number from -0.1 to 0.1'),
+        attempt({ focuses:[focus({ seasonal:undefined,
+          dailyEffects:{ prestige:0.01 } })] },
+          'dailyEffects.prestige is not recognized'),
+        attempt({ focuses:[focus({ seasonal:undefined,
+          skillChances:{ command:0.5 } })] },
+          'skillChances.command is not recognized'),
+        attempt({ focuses:[focus({ seasonal:undefined,
+          skillChances:{ dip:2 } })] },
+          'skillChances.dip must be a number from 0 to 1'),
+        attempt({ focuses:[focus({ seasonal:undefined,
+          skillChances:{ dip:0 } })] },
+          'must contain at least one non-zero chance'),
+        attempt({ focuses:[focus({ seasonal:undefined })] },
+          'must declare seasonal, dailyEffects, or skillChances'),
+        attempt({ focuses:[focus({ requiresTech:'missing_technology' })] },
+          'unknown technology missing_technology'),
+        attempt({ focuses:[focus({ vocational:'missing_career' })] },
+          'unknown vocation missing_career'),
+        attempt({ focuses:[focus({ vocational:[] })] },
+          'vocation list must contain 1 to 64 ids'),
+        attempt({ focuses:[focus({ vocational:['farmer','farmer'] })] },
+          'must not repeat vocation farmer'),
+        attempt({ focuses:[focus({ visibility:{
+          reason:'Hidden.', flagsAll:['e2e_hidden']
+        } })] }, 'visibility.reason is not recognized'),
+        attempt({ focuses:[focus({ eligibility:{ flagsAll:['e2e_ready'] } })] },
+          'reason must be a non-empty string')
+      ];
+    });
+
+    expect(result.every(function (entry) {
+      return entry.rejected && entry.unchanged;
+    })).toBe(true);
+  });

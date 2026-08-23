@@ -196,9 +196,13 @@ name, with gold, green, or blue-green border accents distinguishing day-spending
 choice-backed, and no-day immediate actions. Timing and descriptive copy live together in
 the hidden details, exposed through the desktop side tooltip or compact-layout `?`.
 Daily Focus rows use the same enlarged action-name treatment and move their descriptive
-helper copy into that disclosure. Network management actions match the Deeds action-name
-size and weight and likewise keep helper, eligibility, cost, and duration prose in their
-desktop tooltip or compact `?` disclosure instead of beneath the button label.
+helper copy into that disclosure. Declarative mod focuses remain visible but disabled when
+their static eligibility or technology gate fails; the disclosure shows that exact reason
+and, when available, links the first missing technology. Their seasonal resources, daily
+health change, and exact 90-day training chances use the same preview-chip treatment as
+declarative deed transactions. Network management actions match the Deeds action-name size
+and weight and likewise keep helper, eligibility, cost, and duration prose in their desktop
+tooltip or compact `?` disclosure instead of beneath the button label.
 Technology detail sheets use the same convention for the seven-field national-research
 audit (owner, scope, setup and recurring costs, effect, transfer, and expiry), leaving
 historical dates, exposure, progress, prerequisites, and controls on the sheet face.
