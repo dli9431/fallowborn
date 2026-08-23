@@ -253,6 +253,18 @@ falls back without deleting focus-back or cooldown state. The active-mod fingerp
 save format 3 remain sufficient. The facility has a separate `none` technology review;
 individual focus definitions may still name and visibly explain `requiresTech`.
 
+Phase 4E adds a closed declarative-capability registry rather than exposing private action
+handlers. `resource_choice` gives a declarative deed one bounded generic picker whose
+choices repeat the exact Phase 4C transaction, reference, visibility, eligibility, and
+preview contracts. Open/cancel/Back mutate nothing; confirmation rechecks and commits once
+through `runInstant`, after which its existing cooldown/tutorial/day ordering applies.
+`fallback_focus` gives a declarative focus one fixed fallback score. The normal role focus
+still wins; only eligible opt-in fallbacks are ranked, with action order and id breaking
+ties deterministically. No callback, arbitrary route, delayed record, general deed
+automation, or score function enters data. Neither capability adds save state, and both
+expand their existing `none` technology-impact reviews rather than creating a new in-world
+capability.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of

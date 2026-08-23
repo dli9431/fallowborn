@@ -70,6 +70,9 @@ triggers, custom handlers, choices, identity mutation, or arbitrary effects. It 
 fixed deed costs and queues the event with ordinary protagonist/location context; the
 event definition remains the sole owner of later choices and consequences. Replacing a
 mod event invalidates the lazy event-id index before a queued deed can resolve it.
+Phase 4E `resource_choice` options may use that same single-event transaction. The selected
+option is revalidated before queuing, while merely opening or cancelling its picker never
+touches the event queue.
 
 The daily picker moves at most one valid queued event into the UI. A random slot event
 is selected only when no queued event claimed that day, so a pause after resolving one

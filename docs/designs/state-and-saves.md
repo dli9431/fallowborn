@@ -1,5 +1,13 @@
 # Game state & saves
 
+Phase 4E action capabilities add no serialized state. A `resource_choice` deed picker is
+only a generic-modal view: opening, cancelling, mobile Back, saving, or reloading before
+confirmation leaves no pending-action record. Confirmation completes synchronously through
+the ordinary declarative-deed transaction and stores only its established cooldown and
+resulting gameplay changes. `fallback_focus` stores the same stable current focus id as any
+other focus; its fixed score remains effective mod data protected by the active-mod
+fingerprint. Save format stays 3.
+
 The item shop and legendary artifacts are additive save-format-3 data, both lazily
 ensured without a version bump. `state.player.shopStock` holds the current seasonal
 stall record (`{pid, kind, seasonKey, offers:[{ref, price}]}`); its materialized

@@ -203,6 +203,14 @@ health change, and exact 90-day training chances use the same preview-chip treat
 declarative deed transactions. Network management actions match the Deeds action-name size
 and weight and likewise keep helper, eligibility, cost, and duration prose in their desktop
 tooltip or compact `?` disclosure instead of beneath the button label.
+
+The only mod-authored action route is Phase 4E's generic `resource_choice` sheet. It renders
+one to 12 native choice buttons with exact cost/effect chips and disabled reasons, opens
+without focusing a substantive choice, and keeps Cancel in the normalized footer. Opening
+and closing are state-free. Compact-layout Back closes the same generic-modal layer and
+restores the originating deed control; selecting an enabled choice closes the sheet before
+the engine rechecks and commits it. Mods cannot select a modal implementation or inject
+markup, callbacks, footer controls, or nested routes.
 Technology detail sheets use the same convention for the seven-field national-research
 audit (owner, scope, setup and recurring costs, effect, transfer, and expiry), leaving
 historical dates, exposure, progress, prerequisites, and controls on the sheet face.

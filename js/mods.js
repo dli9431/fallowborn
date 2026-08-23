@@ -262,7 +262,11 @@ window.FBMODS = window.FBMODS || [];
     for (const key in definition) {
       if (!own(definition, key)) continue;
       const value = definition[key];
-      if ((key === 'visibility' || key === 'eligibility' ||
+      if (key === 'choices' && Array.isArray(value)) {
+        out[key] = value.map(function (choice) {
+          return plainObject(choice) ? cloneActionDefinition(choice) : choice;
+        });
+      } else if ((key === 'visibility' || key === 'eligibility' ||
           key === 'costs' || key === 'effects' || key === 'seasonal' ||
           key === 'dailyEffects' || key === 'skillChances') &&
           plainObject(value)) {
@@ -291,12 +295,14 @@ window.FBMODS = window.FBMODS || [];
     const declarativeDeedAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, group:true,
       cooldownDays:true, spendsDay:true, requiresTech:true, visibility:true,
-      eligibility:true, costs:true, effects:true, queueEvent:true
+      eligibility:true, costs:true, effects:true, queueEvent:true,
+      capability:true, choices:true
     };
     const declarativeFocusAllowed = {
       id:true, handler:true, label:true, desc:true, order:true, contexts:true,
       vocational:true, requiresTech:true, visibility:true, eligibility:true,
-      seasonal:true, dailyEffects:true, skillChances:true
+      seasonal:true, dailyEffects:true, skillChances:true,
+      capability:true, fallbackScore:true
     };
     const indexes = {};
     const supplied = {};
@@ -335,7 +341,11 @@ window.FBMODS = window.FBMODS || [];
         cloneActionDefinition(existing);
       for (const key in override) {
         if (!own(override, key) || key === 'id') continue;
-        if ((key === 'visibility' || key === 'eligibility' ||
+        if (key === 'choices' && Array.isArray(override[key])) {
+          const wrappedChoices = {};
+          wrappedChoices.choices = override[key];
+          next[key] = cloneActionDefinition(wrappedChoices).choices;
+        } else if ((key === 'visibility' || key === 'eligibility' ||
             key === 'costs' || key === 'effects' || key === 'seasonal' ||
             key === 'dailyEffects' || key === 'skillChances') &&
             plainObject(override[key])) {
@@ -348,7 +358,8 @@ window.FBMODS = window.FBMODS || [];
         }
       }
       if (declarative && kind === 'deeds') {
-        next.flow = next.spendsDay ? 'immediate' : 'no_day';
+        next.flow = next.capability === 'resource_choice'
+          ? 'choices' : (next.spendsDay ? 'immediate' : 'no_day');
       }
       if (existing) out[indexes[override.id]] = next;
       else {

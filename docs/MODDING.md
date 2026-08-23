@@ -568,6 +568,98 @@ chooses the ordinary built-in default without clearing unrelated cooldown or foc
 data. Save format remains 3, and the active-mod fingerprint continues to protect saves
 whose current focus uses a mod-added id.
 
+### Reviewed action capabilities
+
+Phase 4E adds a private engine registry for individually reviewed extensions. A mod names
+one public `capability` id; it never names a JavaScript function, built-in handler, modal,
+or automation callback. The current registry contains exactly `resource_choice` for deeds
+and `fallback_focus` for focuses. Every other capability id or cross-kind use rejects the
+whole mod before either action catalogue changes.
+
+#### Resource-choice deeds
+
+`resource_choice` turns a complete `declarative_deed` into a bounded picker:
+
+```json
+{
+  "deeds": [{
+    "id": "choose_charter_grant",
+    "handler": "declarative_deed",
+    "capability": "resource_choice",
+    "label": "Choose a charter grant",
+    "desc": "Select one grant to confirm.",
+    "order": 78,
+    "group": "realm",
+    "cooldownDays": 90,
+    "spendsDay": true,
+    "choices": [
+      {
+        "id": "endow",
+        "label": "Endow the chapel",
+        "desc": "Exchange coin for a pious foundation.",
+        "costs": { "gold": 12 },
+        "effects": { "piety": 6 }
+      },
+      {
+        "id": "audience",
+        "label": "Request an audience",
+        "requiresTech": "authenticated_seals",
+        "costs": { "prestige": 2 },
+        "queueEvent": "charter_audience"
+      }
+    ]
+  }]
+}
+```
+
+The deed retains the ordinary top-level `requiresTech`, `visibility`, and `eligibility`
+gates. It must not declare top-level `costs`, `effects`, or `queueEvent`; the picker owns
+one to 12 ordered choices instead. Every choice requires a unique lowercase `id`, a
+localized `label`, and exactly one of the existing bounded `effects` or `queueEvent`
+transactions. `desc`, `requiresTech`, `visibility`, `eligibility`, and `costs` are optional
+and use the same validation and exact previews as an immediate declarative deed. Choice
+labels and descriptions use stable
+`action.<action-id>.choice.<choice-id>.*` localization owners.
+
+Opening the picker spends no resource, creates no cooldown, completes no tutorial step,
+passes no day, and consumes no RNG. Cancel and mobile Back simply close it. Confirmation
+rechecks the top-level deed and selected choice, pays and applies exactly one transaction,
+then follows the existing cooldown, tutorial, and `spendsDay` order. A stale, hidden,
+disabled, unaffordable, or forged choice id commits nothing. The engine derives the
+`choices` UI flow; mods cannot supply `flow`, picker functions, callbacks, or deferred
+state. No picker record is serialized, so save format remains 3 and loading while the
+picker was open returns to ordinary play.
+
+#### Deterministic focus fallback
+
+`fallback_focus` opts a complete `declarative_focus` into deterministic default selection:
+
+```json
+{
+  "focuses": [{
+    "id": "keep_charter_books",
+    "handler": "declarative_focus",
+    "capability": "fallback_focus",
+    "fallbackScore": 100,
+    "label": "Keep the charter books",
+    "desc": "Take up the records when ordinary work is unavailable.",
+    "order": 28,
+    "contexts": ["home"],
+    "seasonal": { "gold": 3 }
+  }]
+}
+```
+
+`fallbackScore` is a fixed integer from 1 through 1,000,000. The ordinary built-in focus
+for the player's role is always tried first. Only when that preferred focus is unavailable
+does the engine consider eligible `fallback_focus` definitions, choosing the highest fixed
+score, then lowest action order, then lexical id. If none qualify, the ordinary built-in
+fallback remains. Visibility, context, technology, and eligibility are the side-effect-free
+eligibility projection; the score is authored data, so selection makes no RNG draws and
+cannot call mod code. Declarative focuses without this capability remain `manualOnly` and
+ignored by defaults. Mods still cannot automate deeds, replace general focus selection,
+provide score callbacks, or request any unregistered picker, delayed action, or UI route.
+
 ## Religious progression paths
 
 `FBDATA.religiousPaths` lives in `data/economy.js` and merges complete path

@@ -2614,6 +2614,101 @@ window.FB = window.FB || {};
     return !!events && actionOwn(events, id);
   }
 
+  /* Reviewed public capabilities. The registry maps data ids to one bounded
+     engine contract; it never exposes a core handler or an arbitrary UI
+     function to mod data. */
+  const DECLARATIVE_CAPABILITY_BY_ID = {
+    resource_choice:{ kind:'deed' },
+    fallback_focus:{ kind:'focus' }
+  };
+
+  function validateDeclarativeCapability(def, kind, path, errors) {
+    if (def.capability === undefined) return null;
+    if (typeof def.capability !== 'string' ||
+        !actionOwn(DECLARATIVE_CAPABILITY_BY_ID, def.capability)) {
+      errors.push(path + '.capability is not a recognized declarative capability.');
+      return null;
+    }
+    const capability = DECLARATIVE_CAPABILITY_BY_ID[def.capability];
+    if (capability.kind !== kind) {
+      errors.push(path + '.capability ' + def.capability +
+        ' is not available to a ' + kind + '.');
+      return null;
+    }
+    return capability;
+  }
+
+  function validateDeclarativeTransaction(def, path, references, errors) {
+    if (def.costs !== undefined) {
+      validateDeclarativeResourceMap(def.costs, path + '.costs', errors, true);
+    }
+    if (def.effects !== undefined) {
+      validateDeclarativeResourceMap(def.effects, path + '.effects', errors, false);
+    }
+    const hasEffects = def.effects !== undefined;
+    const hasEvent = def.queueEvent !== undefined;
+    if (hasEffects === hasEvent) {
+      errors.push(path + ' must declare exactly one of effects or queueEvent.');
+    }
+    if (hasEvent && (typeof def.queueEvent !== 'string' ||
+        !/^[a-z][a-z0-9_]*$/.test(def.queueEvent) ||
+        !actionEventKnown(references.events, def.queueEvent))) {
+      errors.push(path + ' references unknown event ' + def.queueEvent + '.');
+    }
+  }
+
+  function validateDeclarativeChoices(def, references, errors) {
+    const choices = def.choices;
+    const path = 'deed.' + def.id + '.choices';
+    if (!Array.isArray(choices) || !choices.length || choices.length > 12) {
+      errors.push(path + ' must be an array of 1 to 12 choices.');
+      return;
+    }
+    const seen = {};
+    const allowed = {
+      id:1, label:1, desc:1, requiresTech:1, visibility:1,
+      eligibility:1, costs:1, effects:1, queueEvent:1
+    };
+    for (let i = 0; i < choices.length; i++) {
+      const choice = choices[i];
+      const choicePath = path + '[' + i + ']';
+      if (!choice || typeof choice !== 'object' || Array.isArray(choice)) {
+        errors.push(choicePath + ' must be an object.');
+        continue;
+      }
+      for (const key in choice) {
+        if (actionOwn(choice, key) && !actionOwn(allowed, key)) {
+          errors.push(choicePath + '.' + key + ' is not recognized.');
+        }
+      }
+      if (typeof choice.id !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(choice.id) ||
+          actionOwn(Object.prototype, choice.id) || actionOwn(seen, choice.id)) {
+        errors.push(choicePath + ' must have one unique lowercase id.');
+        continue;
+      }
+      seen[choice.id] = 1;
+      if (typeof choice.label !== 'string' || !choice.label.trim()) {
+        errors.push(choicePath + ' must have a label.');
+      }
+      if (choice.desc !== undefined &&
+          (typeof choice.desc !== 'string' || !choice.desc.trim())) {
+        errors.push(choicePath + '.desc must be a non-empty string.');
+      }
+      validateActionTechRequirements(choice.requiresTech,
+        choicePath + '.requiresTech', references.tech, errors);
+      if (choice.visibility !== undefined) {
+        validateActionConditions(choice.visibility,
+          choicePath + '.visibility', references, errors, false);
+      }
+      if (choice.eligibility !== undefined) {
+        validateActionConditions(choice.eligibility,
+          choicePath + '.eligibility', references, errors, true);
+      }
+      validateDeclarativeTransaction(choice, choicePath, references, errors);
+    }
+  }
+
   function validateDeclarativeDeed(def, path, references, errors) {
     if (def.desc === undefined) {
       errors.push('deed.' + def.id + ' must have a description source.');
@@ -2628,25 +2723,21 @@ window.FB = window.FB || {};
       validateActionConditions(def.visibility,
         'deed.' + def.id + '.visibility', references, errors, false);
     }
-    if (def.costs !== undefined) {
-      validateDeclarativeResourceMap(def.costs,
-        'deed.' + def.id + '.costs', errors, true);
-    }
-    if (def.effects !== undefined) {
-      validateDeclarativeResourceMap(def.effects,
-        'deed.' + def.id + '.effects', errors, false);
-    }
-    const hasEffects = def.effects !== undefined;
-    const hasEvent = def.queueEvent !== undefined;
-    if (hasEffects === hasEvent) {
-      errors.push('deed.' + def.id +
-        ' must declare exactly one of effects or queueEvent.');
-    }
-    if (hasEvent && (typeof def.queueEvent !== 'string' ||
-        !/^[a-z][a-z0-9_]*$/.test(def.queueEvent) ||
-        !actionEventKnown(references.events, def.queueEvent))) {
-      errors.push('deed.' + def.id + ' references unknown event ' +
-        def.queueEvent + '.');
+    validateDeclarativeCapability(def, 'deed', 'deed.' + def.id, errors);
+    if (def.capability === 'resource_choice') {
+      if (def.costs !== undefined || def.effects !== undefined ||
+          def.queueEvent !== undefined) {
+        errors.push('deed.' + def.id +
+          ' resource_choice transactions must live on choices.');
+      }
+      validateDeclarativeChoices(def, references, errors);
+    } else {
+      if (def.choices !== undefined) {
+        errors.push('deed.' + def.id +
+          ' choices require the resource_choice capability.');
+      }
+      validateDeclarativeTransaction(def, 'deed.' + def.id,
+        references, errors);
     }
   }
 
@@ -2672,6 +2763,18 @@ window.FB = window.FB || {};
     if (def.visibility !== undefined) {
       validateActionConditions(def.visibility,
         'focus.' + def.id + '.visibility', references, errors, false);
+    }
+    validateDeclarativeCapability(def, 'focus', 'focus.' + def.id, errors);
+    if (def.capability === 'fallback_focus') {
+      if (typeof def.fallbackScore !== 'number' ||
+          Math.floor(def.fallbackScore) !== def.fallbackScore ||
+          def.fallbackScore < 1 || def.fallbackScore > 1000000) {
+        errors.push('focus.' + def.id +
+          '.fallbackScore must be an integer from 1 to 1000000.');
+      }
+    } else if (def.fallbackScore !== undefined) {
+      errors.push('focus.' + def.id +
+        ' fallbackScore requires the fallback_focus capability.');
     }
     if (def.seasonal !== undefined) {
       validateDeclarativeResourceMap(def.seasonal,
@@ -2741,12 +2844,14 @@ window.FB = window.FB || {};
     const declarativeDeedFields = {
       id:1, label:1, desc:1, order:1, group:1, flow:1,
       cooldownDays:1, requiresTech:1, visibility:1, eligibility:1,
-      costs:1, effects:1, queueEvent:1, spendsDay:1, handler:1
+      costs:1, effects:1, queueEvent:1, spendsDay:1, handler:1,
+      capability:1, choices:1
     };
     const declarativeFocusFields = {
       id:1, label:1, desc:1, order:1, handler:1, contexts:1,
       vocational:1, requiresTech:1, visibility:1, eligibility:1,
-      seasonal:1, dailyEffects:1, skillChances:1
+      seasonal:1, dailyEffects:1, skillChances:1,
+      capability:1, fallbackScore:1
     };
     if (!Array.isArray(records)) return [kind + ' catalogue must be an array.'];
     for (let i = 0; i < records.length; i++) {
@@ -2856,7 +2961,8 @@ window.FB = window.FB || {};
           errors.push(kind + '.' + def.id + ' has an invalid flow.');
         }
         const handlerFlow = declarativeDeed
-          ? (def.spendsDay ? 'immediate' : 'no_day')
+          ? (def.capability === 'resource_choice' ? 'choices'
+            : (def.spendsDay ? 'immediate' : 'no_day'))
           : (handler.opensChoices ? 'choices'
             : (handler.noConsume ? 'no_day' : 'immediate'));
         if (def.flow !== handlerFlow) {
@@ -2976,7 +3082,7 @@ window.FB = window.FB || {};
     };
   }
 
-  function declarativeDeedPreview(state, def) {
+  function declarativeDeedPreview(state, def, spendsDay) {
     const costs = [];
     const effects = [];
     const afterCosts = {};
@@ -3002,16 +3108,13 @@ window.FB = window.FB || {};
       costs:costs,
       effects:effects,
       queueEvent:def.queueEvent || null,
-      spendsDay:def.spendsDay
+      spendsDay:spendsDay === undefined ? def.spendsDay : spendsDay
     };
   }
 
-  function runDeclarativeDeed(state, def) {
-    const status = FB.instantStatus(state, def.id);
-    if (!status.shown || !status.can || !status.action ||
-        status.action.definition !== def) return false;
-    const costs = def.costs || {};
-    const effects = def.effects || {};
+  function applyDeclarativeTransaction(state, transaction) {
+    const costs = transaction.costs || {};
+    const effects = transaction.effects || {};
     for (const key of DECLARATIVE_RESOURCES) {
       state.player[key] = Math.max(0,
         (Number(state.player[key]) || 0) - (costs[key] || 0));
@@ -3020,7 +3123,108 @@ window.FB = window.FB || {};
       state.player[key] = Math.max(0,
         (Number(state.player[key]) || 0) + (effects[key] || 0));
     }
-    if (def.queueEvent) FB.queueEvent(state, def.queueEvent, {});
+    if (transaction.queueEvent) FB.queueEvent(state, transaction.queueEvent, {});
+  }
+
+  function declarativeChoiceById(def, id) {
+    if (!def || !Array.isArray(def.choices)) return null;
+    for (const choice of def.choices) if (choice.id === id) return choice;
+    return null;
+  }
+
+  function declarativeChoiceVisible(state, choice) {
+    return !choice.visibility || actionEligibilityMet(state, choice.visibility);
+  }
+
+  function declarativeChoiceText(state, def, choice, path) {
+    return FB.dataText(state, state.player.charId, 'action',
+      def.id + '.choice.' + choice.id, choice, path, {});
+  }
+
+  function declarativeChoiceStatusForDefinition(state, def, choice) {
+    if (!choice) return {
+      choice:null, shown:false, can:false, reason:'', preview:null,
+      label:'', desc:''
+    };
+    const shown = declarativeChoiceVisible(state, choice);
+    let can = shown;
+    let reason = '';
+    if (can && choice.requiresTech &&
+        !FB.techRequirementMet(state, choice.requiresTech)) {
+      can = false;
+      reason = FB.techRequirementReason
+        ? FB.techRequirementReason(state, choice.requiresTech)
+        : FB.T('A required national technology has not been completed.');
+    }
+    if (can && choice.eligibility &&
+        !actionEligibilityMet(state, choice.eligibility)) {
+      can = false;
+      reason = declarativeChoiceText(state, def, choice,
+        'eligibility.reason');
+    }
+    if (can) {
+      const cost = declarativeCostStatus(state, choice);
+      if (!cost.ready) {
+        can = false;
+        reason = cost.reason;
+      }
+    }
+    return {
+      choice:choice,
+      shown:shown,
+      can:can,
+      reason:reason,
+      preview:shown
+        ? declarativeDeedPreview(state, choice, def.spendsDay) : null,
+      label:shown ? declarativeChoiceText(state, def, choice, 'label') : '',
+      desc:shown && choice.desc !== undefined
+        ? declarativeChoiceText(state, def, choice, 'desc') : ''
+    };
+  }
+
+  FB.declarativeChoiceStatus = function (state, actionId, choiceId) {
+    const action = deedById[actionId];
+    const def = action && action.definition;
+    if (!def || def.capability !== 'resource_choice') {
+      return declarativeChoiceStatusForDefinition(state, null, null);
+    }
+    return declarativeChoiceStatusForDefinition(state, def,
+      declarativeChoiceById(def, choiceId));
+  };
+
+  FB.declarativeChoiceStatuses = function (state, actionId) {
+    const action = deedById[actionId];
+    const def = action && action.definition;
+    if (!def || def.capability !== 'resource_choice') return [];
+    const out = [];
+    for (const choice of def.choices) {
+      const status = declarativeChoiceStatusForDefinition(state, def, choice);
+      if (status.shown) out.push(status);
+    }
+    return out;
+  };
+
+  function runDeclarativeDeed(state, def, options) {
+    const status = FB.instantStatus(state, def.id);
+    if (!status.shown || !status.can || !status.action ||
+        status.action.definition !== def) return false;
+    if (def.capability === 'resource_choice') {
+      const choiceId = options && options.choiceId;
+      if (!choiceId) {
+        if (FB.ui && FB.ui.showDeclarativeActionChoices) {
+          FB.ui.showDeclarativeActionChoices(def.id);
+        }
+        return false;
+      }
+      const choiceStatus = declarativeChoiceStatusForDefinition(state, def,
+        declarativeChoiceById(def, choiceId));
+      if (!choiceStatus.shown || !choiceStatus.can || !choiceStatus.choice) {
+        return false;
+      }
+      applyDeclarativeTransaction(state, choiceStatus.choice);
+      return true;
+    }
+    applyDeclarativeTransaction(state, def);
     return true;
   }
 
@@ -3102,7 +3306,10 @@ window.FB = window.FB || {};
     if (def.handler === 'declarative_focus') {
       out.definition = def;
       out.declarative = true;
-      out.manualOnly = true;
+      out.manualOnly = def.capability !== 'fallback_focus';
+      if (def.capability === 'fallback_focus') {
+        out.fallbackScore = def.fallbackScore;
+      }
       out.supportsAfield = def.contexts.indexOf('afield') >= 0;
       out.show = function (state) {
         const context = afield(state) ? 'afield' : 'home';
@@ -3133,8 +3340,16 @@ window.FB = window.FB || {};
       out.declarative = true;
       out.manualOnly = true;
       out.noConsume = !def.spendsDay;
+      out.opensChoices = def.capability === 'resource_choice';
       out.show = function (state) {
-        return !def.visibility || actionEligibilityMet(state, def.visibility);
+        if (def.visibility && !actionEligibilityMet(state, def.visibility)) {
+          return false;
+        }
+        if (def.capability !== 'resource_choice') return true;
+        for (const choice of def.choices) {
+          if (declarativeChoiceVisible(state, choice)) return true;
+        }
+        return false;
       };
       out.can = function (state) {
         if (def.eligibility && !actionEligibilityMet(state, def.eligibility)) {
@@ -3144,10 +3359,12 @@ window.FB = window.FB || {};
         return cost.ready ? true : cost.reason;
       };
       out.preview = function (state) {
-        return declarativeDeedPreview(state, def);
+        return def.capability === 'resource_choice'
+          ? { choices:def.choices.length, spendsDay:def.spendsDay }
+          : declarativeDeedPreview(state, def);
       };
-      out.run = function (state) {
-        return runDeclarativeDeed(state, def);
+      out.run = function (state, options) {
+        return runDeclarativeDeed(state, def, options);
       };
     } else if (def.eligibility && kind === 'focus') {
       const handlerShow = out.show;
@@ -8666,10 +8883,10 @@ window.FB = window.FB || {};
 
   FB.defaultFocus = function (state) {
     const p = state.player;
-    if (!adult(state)) return 'study';
-    if (afield(state)) return 'drill'; // disguised in the ranks — train at arms
     let want;
-    if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
+    if (!adult(state)) want = 'study';
+    else if (afield(state)) want = 'drill'; // disguised in the ranks — train at arms
+    else if (FB.playerBishopricOnly && FB.playerBishopricOnly(state)) {
       want = 'shepherd_diocese';
     }
     else if (p.tier >= 3) want = 'govern';
@@ -8690,6 +8907,17 @@ window.FB = window.FB || {};
     }
     const shown = FB.listFocuses(state);
     for (const f of shown) if (f.id === want) return want;
+    let fallback = null;
+    for (const f of shown) {
+      if (!f.declarative || f.capability !== 'fallback_focus') continue;
+      if (!fallback || f.fallbackScore > fallback.fallbackScore ||
+          (f.fallbackScore === fallback.fallbackScore &&
+            (f.order < fallback.order ||
+              (f.order === fallback.order && f.id < fallback.id)))) {
+        fallback = f;
+      }
+    }
+    if (fallback) return fallback.id;
     for (const f of shown) if (!f.declarative) return f.id;
     return null;
   };

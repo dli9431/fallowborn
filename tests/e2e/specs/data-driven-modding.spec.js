@@ -1939,3 +1939,435 @@ test('milestone-four phase D rejects unsafe declarative focuses without mutation
       return entry.rejected && entry.unchanged;
     })).toBe(true);
   });
+
+test('milestone-four phase E adds bounded choice deeds and scored focus fallbacks',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      p.profession = 'merchant';
+      p.gold = 10;
+      p.piety = 5;
+      p.flags.e2e_trade_allowed = 1;
+      delete p.flags.e2e_high_fallback;
+      const rngBefore = FB.getRngState();
+      FB.mods.apply({
+        events:[{
+          id:'e2e_choice_followup', title:'A chosen audience',
+          text:'The selected petition reaches the hall.',
+          trigger:{ never:true },
+          options:[{ label:'Attend', effects:{} }]
+        }],
+        focuses:[
+          {
+            id:'trade_run',
+            eligibility:{
+              reason:'The market road is closed.',
+              flagsAll:['e2e_trade_allowed']
+            }
+          },
+          {
+            id:'e2e_fallback_first', handler:'declarative_focus',
+            capability:'fallback_focus', fallbackScore:20,
+            label:'Keep the fallback ledger',
+            desc:'The first equally scored safe fallback.',
+            order:28, contexts:['home'], seasonal:{ gold:1 }
+          },
+          {
+            id:'e2e_fallback_second', handler:'declarative_focus',
+            capability:'fallback_focus', fallbackScore:20,
+            label:'Keep the second ledger',
+            desc:'The later equally scored safe fallback.',
+            order:29, contexts:['home'], seasonal:{ prestige:1 }
+          },
+          {
+            id:'e2e_fallback_high', handler:'declarative_focus',
+            capability:'fallback_focus', fallbackScore:30,
+            label:'Keep the high-priority ledger',
+            desc:'A higher score that remains statically gated.',
+            order:30, contexts:['home'],
+            eligibility:{
+              reason:'The high ledger remains sealed.',
+              flagsAll:['e2e_high_fallback']
+            },
+            seasonal:{ piety:1 }
+          }
+        ],
+        deeds:[
+          {
+            id:'e2e_choice_deed', handler:'declarative_deed',
+            capability:'resource_choice',
+            label:'Choose a charter grant',
+            desc:'Select one bounded grant to confirm.',
+            order:78, group:'life', cooldownDays:15, spendsDay:false,
+            choices:[
+              {
+                id:'hidden', label:'Hidden grant',
+                visibility:{ flagsAll:['e2e_hidden_choice'] },
+                effects:{ gold:1 }
+              },
+              {
+                id:'locked', label:'Locked grant',
+                desc:'This grant needs household assent.',
+                eligibility:{
+                  reason:'The household has not assented.',
+                  flagsAll:['e2e_choice_assent']
+                },
+                effects:{ prestige:2 }
+              },
+              {
+                id:'technical', label:'Technical grant',
+                requiresTech:'crop_rotation', effects:{ piety:2 }
+              },
+              {
+                id:'costly', label:'Costly grant',
+                costs:{ gold:50 }, effects:{ prestige:3 }
+              },
+              {
+                id:'endow', label:'Endow the grant',
+                desc:'Exchange coin for a pious endowment.',
+                costs:{ gold:5 }, effects:{ piety:4 }
+              },
+              {
+                id:'audience', label:'Request an audience',
+                costs:{ piety:1 }, queueEvent:'e2e_choice_followup'
+              }
+            ]
+          },
+          {
+            id:'e2e_choice_day', handler:'declarative_deed',
+            capability:'resource_choice',
+            label:'Choose a day-long grant',
+            desc:'Confirm one grant that occupies the day.',
+            order:79, group:'life', cooldownDays:4, spendsDay:true,
+            choices:[{
+              id:'accept', label:'Accept the grant', effects:{ prestige:2 }
+            }]
+          }
+        ]
+      });
+
+      const roleDefault = FB.defaultFocus(s);
+      delete p.flags.e2e_trade_allowed;
+      const tiedFallback = FB.defaultFocus(s);
+      p.flags.e2e_high_fallback = 1;
+      const highFallback = FB.defaultFocus(s);
+      delete p.flags.e2e_high_fallback;
+
+      const tech = FB.realmTechRecord(s);
+      const completedIndex = tech.completed.indexOf('crop_rotation');
+      if (completedIndex >= 0) tech.completed.splice(completedIndex, 1);
+      const choices = FB.declarativeChoiceStatuses(s, 'e2e_choice_deed');
+      const action = FB.instantStatus(s, 'e2e_choice_deed').action;
+      const dayAction = FB.instantStatus(s, 'e2e_choice_day').action;
+      const fallback = FB.focusStatus(s, 'e2e_fallback_first').action;
+      FB.ui.refresh();
+      return {
+        counts:[FBDATA.focuses.length, FBDATA.deeds.length],
+        defaults:[roleDefault, tiedFallback, highFallback],
+        action:{
+          flow:action.flow, opensChoices:action.opensChoices,
+          manualOnly:action.manualOnly, noConsume:action.noConsume
+        },
+        dayAction:{ flow:dayAction.flow, noConsume:dayAction.noConsume },
+        fallback:{
+          manualOnly:fallback.manualOnly,
+          capability:fallback.capability,
+          score:fallback.fallbackScore
+        },
+        choices:choices.map(function (item) {
+          return {
+            id:item.choice.id, can:item.can, reason:item.reason,
+            label:item.label, desc:item.desc, preview:item.preview
+          };
+        }),
+        hiddenAbsent:choices.every(function (item) {
+          return item.choice.id !== 'hidden';
+        }),
+        rngPure:rngBefore === FB.getRngState()
+      };
+    });
+
+    expect(setup.counts).toEqual([31, 80]);
+    expect(setup.defaults).toEqual([
+      'trade_run', 'e2e_fallback_first', 'e2e_fallback_high'
+    ]);
+    expect(setup.action).toEqual({
+      flow:'choices', opensChoices:true, manualOnly:true, noConsume:true
+    });
+    expect(setup.dayAction).toEqual({ flow:'choices', noConsume:false });
+    expect(setup.fallback).toEqual({
+      manualOnly:false, capability:'fallback_focus', score:20
+    });
+    expect(setup.hiddenAbsent).toBe(true);
+    expect(setup.choices.map(function (item) { return item.id; })).toEqual([
+      'locked', 'technical', 'costly', 'endow', 'audience'
+    ]);
+    expect(setup.choices[0].reason).toBe('The household has not assented.');
+    expect(setup.choices[1].reason).toBe('Requires Two-Course Rotation.');
+    expect(setup.choices[2].reason).toContain('Requires');
+    expect(setup.choices[3]).toEqual({
+      id:'endow', can:true, reason:'', label:'Endow the grant',
+      desc:'Exchange coin for a pious endowment.',
+      preview:{
+        costs:[{ type:'gold', amount:-5, cost:true }],
+        effects:[{ type:'piety', amount:4, reward:true }],
+        queueEvent:null, spendsDay:false
+      }
+    });
+    expect(setup.choices[4].preview).toEqual({
+      costs:[{ type:'piety', amount:-1, cost:true }],
+      effects:[{ type:'queue', eventId:'e2e_choice_followup' }],
+      queueEvent:'e2e_choice_followup', spendsDay:false
+    });
+    expect(setup.rngPure).toBe(true);
+
+    await page.locator('#sidetabs [data-tab="actions"]').click();
+    await page.locator('[data-action-group="life"]').click();
+    const beforeOpen = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.flags.tutorial = 1;
+      delete s.player.flags.tutorial_done;
+      delete s.player.flags.tut_deed;
+      return {
+        turn:s.turn, gold:s.player.gold, prestige:s.player.prestige,
+        piety:s.player.piety,
+        cooldown:s.player.cooldowns.e2e_choice_deed,
+        tutorial:s.player.flags.tut_deed,
+        rng:FB.getRngState()
+      };
+    });
+    await page.locator('[data-action-id="e2e_choice_deed"]').click();
+    await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
+    await expect(page.locator('#gm-title')).toHaveText('Choose a charter grant');
+    await expect(page.locator('[data-declarative-choice="locked"]')).toBeDisabled();
+    await expect(page.locator('[data-declarative-choice="technical"]')).toBeDisabled();
+    await expect(page.locator('[data-declarative-choice="costly"]')).toBeDisabled();
+    await expect(page.locator('#gm-body')).toContainText(
+      'The household has not assented.');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Requires Two-Course Rotation.');
+    await expect(page.locator('#gm-body')).toContainText('Money');
+    await expect(page.locator('#gm-body')).toContainText('Piety +4');
+
+    const openState = await page.evaluate(function () {
+      const s = FB.state;
+      const payload = JSON.parse(FB.save.serialize());
+      return {
+        turn:s.turn, gold:s.player.gold, prestige:s.player.prestige,
+        piety:s.player.piety,
+        cooldown:s.player.cooldowns.e2e_choice_deed,
+        tutorial:s.player.flags.tut_deed,
+        rng:FB.getRngState(), version:payload.v,
+        noPending:payload.state.player.pendingDeclarativeAction === undefined
+      };
+    });
+    expect(openState).toEqual(Object.assign({}, beforeOpen, {
+      version:3, noPending:true
+    }));
+    await page.locator('#declarative-choice-cancel').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    const cancelled = await page.evaluate(function () {
+      const s = FB.state;
+      return {
+        turn:s.turn, gold:s.player.gold, prestige:s.player.prestige,
+        piety:s.player.piety,
+        cooldown:s.player.cooldowns.e2e_choice_deed,
+        tutorial:s.player.flags.tut_deed,
+        rng:FB.getRngState()
+      };
+    });
+    expect(cancelled).toEqual(beforeOpen);
+
+    await page.locator('[data-action-id="e2e_choice_deed"]').click();
+    await page.locator('[data-declarative-choice="endow"]').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    const committed = await page.evaluate(function () {
+      let s = FB.state;
+      const after = {
+        turn:s.turn, gold:s.player.gold, prestige:s.player.prestige,
+        piety:s.player.piety,
+        cooldown:s.player.cooldowns.e2e_choice_deed,
+        tutorial:s.player.flags.tut_deed,
+        rng:FB.getRngState()
+      };
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      s = FB.state;
+      after.restored = {
+        version:payload.v,
+        cooldown:s.player.cooldowns.e2e_choice_deed,
+        gold:s.player.gold, prestige:s.player.prestige,
+        piety:s.player.piety
+      };
+      return after;
+    });
+    expect(committed).toEqual({
+      turn:beforeOpen.turn,
+      gold:beforeOpen.gold - 5,
+      prestige:beforeOpen.prestige,
+      piety:beforeOpen.piety + 4,
+      cooldown:beforeOpen.turn,
+      tutorial:1,
+      rng:beforeOpen.rng,
+      restored:{
+        version:3, cooldown:beforeOpen.turn,
+        gold:beforeOpen.gold - 5, prestige:beforeOpen.prestige,
+        piety:beforeOpen.piety + 4
+      }
+    });
+
+    const dayCommit = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const forgedBefore = JSON.stringify({
+        turn:s.turn, prestige:p.prestige,
+        cooldown:p.cooldowns.e2e_choice_day
+      });
+      FB.runInstant(s, 'e2e_choice_day', { choiceId:'missing' });
+      const forgedRejected = forgedBefore === JSON.stringify({
+        turn:s.turn, prestige:p.prestige,
+        cooldown:p.cooldowns.e2e_choice_day
+      });
+      delete p.flags.tut_deed;
+      const before = { turn:s.turn, prestige:p.prestige };
+      const originalPassDay = FB.game.passDay;
+      let observed = null;
+      FB.game.passDay = function (options) {
+        observed = {
+          skipFocus:!!(options && options.skipFocus),
+          prestige:p.prestige,
+          cooldown:p.cooldowns.e2e_choice_day,
+          tutorial:p.flags.tut_deed
+        };
+        s.turn++;
+      };
+      try {
+        FB.runInstant(s, 'e2e_choice_day', { choiceId:'accept' });
+      } finally {
+        FB.game.passDay = originalPassDay;
+      }
+      return {
+        forgedRejected:forgedRejected,
+        turn:s.turn - before.turn,
+        prestige:p.prestige - before.prestige,
+        observed:observed
+      };
+    });
+    expect(dayCommit).toEqual({
+      forgedRejected:true, turn:1, prestige:2,
+      observed:{
+        skipFocus:true,
+        prestige:committed.prestige + 2,
+        cooldown:committed.turn,
+        tutorial:1
+      }
+    });
+  });
+
+test('milestone-four phase E rejects unregistered action capabilities atomically',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function choice(patch) {
+        return Object.assign({
+          id:'accept', label:'Accept', effects:{ gold:1 }
+        }, patch || {});
+      }
+      function deed(patch) {
+        return Object.assign({
+          id:'e2e_capability_deed', handler:'declarative_deed',
+          capability:'resource_choice', label:'Capability deed',
+          desc:'A bounded picker-backed deed.', order:78, group:'life',
+          cooldownDays:1, spendsDay:false, choices:[choice()]
+        }, patch || {});
+      }
+      function focus(patch) {
+        return Object.assign({
+          id:'e2e_capability_focus', handler:'declarative_focus',
+          capability:'fallback_focus', fallbackScore:10,
+          label:'Capability focus', desc:'A bounded fallback focus.',
+          order:28, contexts:['home'], seasonal:{ gold:1 }
+        }, patch || {});
+      }
+      function attempt(data, expected) {
+        const before = JSON.stringify({
+          focuses:FBDATA.focuses, deeds:FBDATA.deeds
+        });
+        const focusProjection = FB.focuses;
+        const deedProjection = FB.instants;
+        const revision = FB.actionCatalogRevision;
+        let message = '';
+        try {
+          FB.mods.apply(data);
+        } catch (error) {
+          message = error.message;
+        }
+        return {
+          rejected:message.indexOf(expected) >= 0,
+          message:message,
+          unchanged:before === JSON.stringify({
+            focuses:FBDATA.focuses, deeds:FBDATA.deeds
+          }) && focusProjection === FB.focuses &&
+            deedProjection === FB.instants &&
+            revision === FB.actionCatalogRevision
+        };
+      }
+      const thirteen = [];
+      for (let i = 0; i < 13; i++) thirteen.push(choice({ id:'choice_' + i }));
+      return [
+        attempt({ deeds:[deed({ capability:'custom_picker' })] },
+          'capability is not a recognized declarative capability'),
+        attempt({ deeds:[deed({ capability:'fallback_focus' })] },
+          'fallback_focus is not available to a deed'),
+        attempt({ focuses:[focus({ capability:'resource_choice' })] },
+          'resource_choice is not available to a focus'),
+        attempt({ deeds:[deed({ choices:[] })] },
+          'must be an array of 1 to 12 choices'),
+        attempt({ deeds:[deed({ choices:thirteen })] },
+          'must be an array of 1 to 12 choices'),
+        attempt({ deeds:[deed({ choices:[null] })] },
+          'choices[0] must be an object'),
+        attempt({ deeds:[deed({ choices:[choice(), choice()] })] },
+          'must have one unique lowercase id'),
+        attempt({ deeds:[deed({ choices:[choice({ run:'custom' })] })] },
+          'choices[0].run is not recognized'),
+        attempt({ deeds:[deed({ choices:[choice({ label:'' })] })] },
+          'choices[0] must have a label'),
+        attempt({ deeds:[deed({ choices:[choice({
+          effects:undefined, queueEvent:undefined
+        })] })] }, 'must declare exactly one of effects or queueEvent'),
+        attempt({ deeds:[deed({ choices:[choice({ queueEvent:'missing_event',
+          effects:undefined })] })] }, 'references unknown event missing_event'),
+        attempt({ deeds:[deed({ choices:[choice({
+          requiresTech:'missing_technology'
+        })] })] }, 'references unknown technology missing_technology'),
+        attempt({ deeds:[deed({ choices:[choice({ visibility:{
+          reason:'Hidden.', flagsAll:['e2e_hidden']
+        } })] })] }, 'visibility.reason is not recognized'),
+        attempt({ deeds:[deed({ choices:[choice({ eligibility:{
+          flagsAll:['e2e_ready']
+        } })] })] }, 'reason must be a non-empty string'),
+        attempt({ deeds:[deed({ effects:{ gold:1 } })] },
+          'transactions must live on choices'),
+        attempt({ deeds:[deed({ capability:undefined,
+          effects:{ gold:1 } })] }, 'choices require the resource_choice capability'),
+        attempt({ focuses:[focus({ fallbackScore:0 })] },
+          'fallbackScore must be an integer from 1 to 1000000'),
+        attempt({ focuses:[focus({ capability:undefined })] },
+          'fallbackScore requires the fallback_focus capability'),
+        attempt({ focuses:[focus({ automationScore:10 })] },
+          'automationScore is not recognized'),
+        attempt({ deeds:[deed({ picker:'custom' })] },
+          'picker is not recognized')
+      ];
+    });
+
+    expect(result.every(function (entry) {
+      return entry.rejected && entry.unchanged;
+    })).toBe(true);
+  });

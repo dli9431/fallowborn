@@ -495,6 +495,16 @@ score projection, deterministic tie-breaking, and a safe manual fallback. Fully 
 picker-backed, delayed, or automated actions are admitted only in this phase after their
 specific capability and tests exist.
 
+Implemented in v1.153.0 with two closed registry entries. `resource_choice` gives a
+declarative deed a bounded one-to-12-option picker whose choices repeat Phase 4C's exact
+transaction and static-gate vocabulary. Open, cancel, save, load, and mobile Back create no
+commitment; confirmation rechecks and then uses the established cooldown, tutorial, and day
+order. `fallback_focus` lets an opt-in declarative focus provide a fixed fallback score. The
+normal role focus remains first, eligible candidates rank by score then order/id, and the
+built-in fallback remains last. Both projections are pure and RNG-free. Arbitrary handlers,
+routes, delayed records, score callbacks, and general deed automation remain rejected; save
+format stays 3, and the existing data-defined deed/focus `none` reviews are expanded.
+
 ### Phase gates and technology impact
 
 Each phase needs focused coverage for malformed definitions before mutation, baseline

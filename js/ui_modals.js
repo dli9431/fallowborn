@@ -789,6 +789,79 @@ window.FB = window.FB || {};
 
   UI.eventsBusy = function () { return eventOpen; };
 
+  /* ================= declarative action choices =================
+     Phase 4E's only public picker route. Mod data supplies bounded resource
+     transactions; this view owns open/cancel/confirm and delegates the final
+     recheck and commitment back to FB.runInstant. */
+  function declarativeChoicePreviewHtml(s, preview) {
+    if (!preview) return '';
+    const sections = [
+      { label:FB.T('Costs'), records:preview.costs || [] },
+      { label:FB.T('Effects'), records:preview.effects || [] }
+    ];
+    let h = '';
+    for (const section of sections) {
+      if (!section.records.length) continue;
+      h += '<div class="action-preview"><b>' + esc(section.label) +
+        '</b><div class="event-impact-chips full">';
+      for (const record of section.records) {
+        h += consequenceChipHtml(s, record, 'resolved');
+      }
+      h += '</div></div>';
+    }
+    return h;
+  }
+
+  UI.showDeclarativeActionChoices = function (actionId) {
+    const s = FB.state;
+    const actionStatus = s && FB.instantStatus
+      ? FB.instantStatus(s, actionId) : null;
+    const action = actionStatus && actionStatus.action;
+    if (!actionStatus || !actionStatus.shown || !actionStatus.can || !action ||
+        !action.declarative || action.capability !== 'resource_choice' ||
+        !FB.declarativeChoiceStatuses) return false;
+    const choices = FB.declarativeChoiceStatuses(s, actionId);
+    if (!choices.length) return false;
+    let h = '<p>' + esc(FB.translateKnown(action.desc(s))) + '</p>' +
+      '<p class="hint">' + esc(action.noConsume
+        ? FB.T('Confirm one choice. It resolves immediately without spending a day.')
+        : FB.T('Confirm one choice. Its transaction resolves before the day is spent.')) +
+      '</p><div class="gm-list declarative-choice-list">';
+    for (const item of choices) {
+      const details = item.can ? item.desc : item.reason;
+      h += '<div class="settcard declarative-choice-card"><button type="button" ' +
+        'class="actionbtn" data-declarative-choice="' + esc(item.choice.id) + '"' +
+        (item.can ? '' : ' disabled') + '>' + esc(item.label) + '</button>' +
+        (details ? '<p class="cmeta">' + esc(details) + '</p>' : '') +
+        declarativeChoicePreviewHtml(s, item.preview) + '</div>';
+    }
+    h += '</div><button type="button" class="btn gm-footer" ' +
+      'id="declarative-choice-cancel">' + esc(FB.T('Cancel')) + '</button>';
+    openModal(actionLabel(s, actionId, action), h, {
+      noFocus:true,
+      modalAction:actionId,
+      modalTarget:'action:' + actionId
+    });
+    const cancel = $('declarative-choice-cancel');
+    if (cancel) cancel.addEventListener('click', UI.closeModal);
+    const buttons = $('gm-body').querySelectorAll('[data-declarative-choice]');
+    for (const button of buttons) {
+      button.addEventListener('click', function () {
+        const choiceId = button.getAttribute('data-declarative-choice');
+        const currentState = FB.state;
+        const current = FB.declarativeChoiceStatus(currentState,
+          actionId, choiceId);
+        if (!current.can) {
+          if (!UI.showDeclarativeActionChoices(actionId)) UI.closeModal();
+          return;
+        }
+        UI.closeModal();
+        FB.runInstant(currentState, actionId, { choiceId:choiceId });
+      });
+    }
+    return true;
+  };
+
   /* ================= overland travel picker ================= */
   SH.travelPicker = null;
   let travelMapSelectionSerial = 0;

@@ -48,6 +48,15 @@ fixed `dip`, `mar`, `ste`, `int`, `lea` order. New focuses are manual-only and e
 from deterministic default selection. Removing an active definition falls back to the
 ordinary built-in default without consuming RNG or clearing unrelated action state.
 
+Phase 4E exposes two individually registered capabilities without opening the handler
+boundary. A `resource_choice` declarative deed derives `choices` flow from one to 12 fixed
+transactions. Opening, cancelling, and mobile Back are state-free; confirmation rechecks
+the deed and choice before applying one transaction, then uses the existing cooldown,
+tutorial, and optional day-spend sequence. There is no saved in-flight picker record.
+`fallback_focus` is the only automated focus capability: after the normal role focus fails,
+eligible opt-in definitions compete by fixed score, then action order and id, before the
+ordinary built-in fallback. Status and score projection are pure and consume no RNG.
+
 The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
 may request visibility-only entries for collapsed accordion groups, postponing cooldown,
 technology, and other eligibility work until those controls are opened.

@@ -397,7 +397,9 @@ Declarative mod deeds and focuses record separate `data_defined_deeds` and
 `data_defined_focuses` reviews as `none`. Exposing either bounded authoring facility is not
 an in-world capability and has no credible research dependency. Each definition may
 nevertheless declare `requiresTech`; that explicit content gate remains visible and uses
-the effective sovereign's ordinary technology record.
+the effective sovereign's ordinary technology record. Phase 4E expands those same reviews:
+resource-choice options may carry their own visible technology gate, and deterministic
+focus fallback is still authoring behavior rather than research available to the dynasty.
 
 Related: [state-and-saves.md](state-and-saves.md), [development.md](development.md),
 [war.md](war.md), [finance.md](finance.md), [markets.md](markets.md), [time.md](time.md),

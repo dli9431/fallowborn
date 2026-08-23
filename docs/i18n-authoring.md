@@ -35,6 +35,9 @@ though the game still *runs*.
   renders under `focus.<id>.eligibility.reason` or
   `action.<id>.eligibility.reason`. Changed mod English invalidates a stale generated
   translation by source hash and falls back to that effective English.
+  Declarative `resource_choice` labels, descriptions, and eligibility reasons use stable
+  `action.<action-id>.choice.<choice-id>.*` owners; choice ids, costs, and effects remain
+  locale-neutral.
   Formal privilege names and descriptions in `data/political_institutions.js` use the
   `privilege` structured-data namespace, including when technology details list them as unlocks.
   Fortification tier names in `FBDATA.fortLevels` use the `fort` namespace and are addressed by

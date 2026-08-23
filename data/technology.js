@@ -345,11 +345,11 @@ window.FBDATA = window.FBDATA || {};
       },
       data_defined_deeds:{
         mode:'none',
-        rationale:'The bounded mod-authoring facility is not an in-world capability and has no credible technology dependency; individual declarative deeds may retain their own explicit technology requirements.'
+        rationale:'The bounded mod-authoring facility, including its reviewed resource-choice picker, is not an in-world capability and has no credible technology dependency; individual declarative deeds and choices may retain their own explicit technology requirements.'
       },
       data_defined_focuses:{
         mode:'none',
-        rationale:'The bounded mod-authoring facility is not an in-world capability and has no credible technology dependency; individual declarative focuses may retain their own explicit technology requirements.'
+        rationale:'The bounded mod-authoring facility, including explicit deterministic fallback selection, is not an in-world capability and has no credible technology dependency; individual declarative focuses may retain their own explicit technology requirements.'
       },
       professional_replacement_cohorts:{
         mode:'none',
