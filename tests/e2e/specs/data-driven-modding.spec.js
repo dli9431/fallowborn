@@ -970,7 +970,8 @@ test('milestone-four phase A rejects malformed internal action data without muta
           FB.mods.apply(mod);
           return false;
         } catch (error) {
-          return error.message.indexOf(key + ' is not recognized') >= 0;
+          return error.message === 'Mod data ' + key +
+            ' is not a supported top-level mod key.';
         }
       });
       return {
