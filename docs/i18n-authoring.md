@@ -28,6 +28,9 @@ though the game still *runs*.
   the same `FB.dataText` path as `name` and `desc`.
   Career rank names, learned-license names, and specialty names are nested structured
   display fields and must also render through their exact `FB.dataText` paths.
+  Baseline focus and deed labels plus static descriptions live in `data/actions.js` under
+  stable `focus.<id>` and `action.<id>` owners. A truly state-dependent description remains
+  in its private `js/actions.js` handler and routes its complete phrases through `FB.T`.
   Formal privilege names and descriptions in `data/political_institutions.js` use the
   `privilege` structured-data namespace, including when technology details list them as unlocks.
   Fortification tier names in `FBDATA.fortLevels` use the `fort` namespace and are addressed by

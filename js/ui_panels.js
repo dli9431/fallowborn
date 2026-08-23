@@ -76,39 +76,6 @@ window.FB = window.FB || {};
   ];
   let activeNetworkSection = null;
   let activeNetworkState = null;
-  const DEED_GROUP = {
-    poach:'work', go_to_town:'work', better_household:'work', livelihoods:'work',
-    petition_monopoly:'work',
-    buy_freedom:'realm', buy_land:'realm', declare_manor:'realm',
-    build:'realm', adopt_tech:'realm',
-    squeeze_taxes:'realm', hold_court:'realm', petition_barony:'realm',
-    bring_council_motion:'realm', seek_castellany:'realm',
-    renew_castellany:'realm', resign_castellany:'realm',
-    seek_field_command:'war',
-    grant_monopoly:'realm',
-    petition_liege:'realm', petition_county:'realm', buy_county:'realm',
-    settle_waste:'realm', grant_land:'realm', demand_taxes:'realm',
-    revoke_county:'realm', governance:'realm', royal_council:'realm',
-    coin_credit:'work',
-    debase_coinage:'realm',
-    seek_match:'life', propose:'life', mediate:'life', swear_friend:'life',
-    scheme_rival:'life', begin_plot:'life', intrigue_assets:'life', take_road:'life', travel_turn_back:'life',
-    travel_return_cargo:'life', travel_marriage_residence:'life', travel_settle_here:'life',
-    frontier_settle_here:'life',
-    seek_blessing:'faith', seek_absolution:'faith', papacy:'faith',
-    bishopric:'faith', visit_diocese:'faith', ecclesiastical_court:'faith',
-    convene_synod:'faith', extraordinary_tithe:'faith',
-    restore_papacy:'faith',
-    convert_faith:'faith', adopt_culture:'life',
-    claim_caliphate:'faith', call_great_holy_war:'faith',
-    join_great_holy_war:'faith', renew_great_holy_war_vow:'faith',
-    withdraw_great_holy_war:'faith', give_alms:'faith', hold_feast:'faith',
-    great_holy_war_status:'war', great_holy_war_settlement:'war',
-    send_envoy:'war', foreign_policy:'war', muster_host:'war', hire_mercs:'war', declare_war:'war',
-    raid_expedition:'war',
-    declare_independence:'war', pay_homage:'war', appeal_lord:'war',
-    swear_fealty:'war'
-  };
   const ACTION_SHORTCUT_KEYS = [
     'a', 'i', 'j', 'o', 'p', 'q', 'w', 'x', 'z'
   ];
@@ -253,7 +220,14 @@ window.FB = window.FB || {};
      control is on screen. Keep this routing inside the Deeds panel, which
      owns its grouping and retained disclosure state. */
   UI.revealDeedAction = function (id) {
-    const group = DEED_GROUP[id] || 'realm';
+    let action = null;
+    for (const candidate of FB.instants || []) {
+      if (candidate.id === id) {
+        action = candidate;
+        break;
+      }
+    }
+    const group = action && action.group || 'realm';
     actionGroupsOpen[group] = true;
     activeActionSection = group;
     setTab('actions', { history:false });
@@ -1171,11 +1145,9 @@ window.FB = window.FB || {};
        a group's controls are actually constructed. */
     const instants = FB.listInstants(s, { deferEligibility:true });
     function deedFlow(action) {
-      const label = String(action && action.label || '');
-      if ((action && action.opensChoices) || label.indexOf('…') >= 0) {
-        return 'choices';
-      }
-      return action && action.noConsume ? 'no-day' : 'now';
+      if (action && action.flow === 'choices') return 'choices';
+      if (action && action.flow === 'no_day') return 'no-day';
+      return 'now';
     }
     function deedFlowText(flow) {
       if (flow === 'choices') return FB.T('Opens choices…');
@@ -1326,7 +1298,9 @@ window.FB = window.FB || {};
       box.appendChild(focusBody);
     }
     for (const group of ACTION_GROUPS) {
-      const ga = instants.filter(function (item) { return (DEED_GROUP[item.a.id] || 'realm') === group.id; });
+      const ga = instants.filter(function (item) {
+        return (item.a.group || 'realm') === group.id;
+      });
       if (!ga.length) continue;
       const toggle = document.createElement('button');
       const open = !!actionGroupsOpen[group.id];

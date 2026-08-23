@@ -2,6 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js',
+  'data/actions.js',
+  'js/actions.js',
   'js/events.js',
   'js/model.js',
   'js/world.js',

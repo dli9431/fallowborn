@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/events_tutorial.js',
   'js/main.js',
+  'data/actions.js',
   'js/actions.js',
   'js/armies.js',
   'js/economy.js',

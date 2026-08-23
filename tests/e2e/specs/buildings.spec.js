@@ -1,6 +1,8 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/actions.js',
+  'js/actions.js',
   'js/settlement.js',
   'js/world.js',
   'js/ui_misc.js',

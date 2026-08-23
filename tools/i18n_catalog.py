@@ -30,6 +30,7 @@ EVENT_FILES = sorted(DATA.glob("events_*.js"))
 BOOKMARK_FILE = DATA / "bookmarks.js"
 STARTS_FILE = DATA / "starts.js"
 TECHNOLOGY_FILE = DATA / "technology.js"
+ACTIONS_FILE = DATA / "actions.js"
 SOURCE_FILES = [
     ROOT / "index.html",
     *[
@@ -1040,19 +1041,20 @@ def extract_structured(inv: Inventory) -> None:
                         TOKEN_RE.findall(record["text"]),
                     )
 
-    for prop, namespace in (("focuses", "focus"), ("instants", "action")):
-        values = node_array(find_assignment(JS / "actions.js", "FB", prop)) or []
+    for prop, namespace in (("focuses", "focus"), ("deeds", "action")):
+        values = node_array(find_assignment(ACTIONS_FILE, "FBDATA", prop)) or []
         for index, item_node in enumerate(values):
             item = node_object(item_node) or {}
             item_id = node_string(item.get("id")) or str(index)
-            for branch, record, line in branch_records(item.get("label")):
-                inv.add(
-                    f"{namespace}.{item_id}.label.{branch}",
-                    record,
-                    f"js/actions.js:{line}",
-                    f"{namespace} {item_id}, visible label.",
-                    TOKEN_RE.findall(record["text"]),
-                )
+            for field in ("label", "desc"):
+                for branch, record, line in branch_records(item.get(field)):
+                    inv.add(
+                        f"{namespace}.{item_id}.{field}.{branch}",
+                        record,
+                        f"data/actions.js:{line}",
+                        f"{namespace} {item_id}, visible {field}.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
 
     for path in sorted(JS.glob("*.js")):
         tokens = lex_js(path.read_text(encoding="utf-8"))

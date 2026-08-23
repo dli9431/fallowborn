@@ -107,12 +107,12 @@ window.FB = window.FB || {};
      gain (optional): the focus's expected per-season gold/prestige/piety,
      shown in the topbar stat breakdown. It mirrors tick's trickle (random
      ranges at their midpoint) — a changed tick wants its gain changed too. */
-  FB.focuses = [
+  const FOCUS_HANDLERS = [
 
-  { id: 'study', label: '📖 Study', desc: function () { return 'Learn from whoever will teach you.'; },
+  { id: 'study',
     show: function (s) { return !adult(s); },
     tick: function (s) { if (skillDch(0.5)) skillUp(s, FB.pick(['lea', 'ste', 'dip'])); } },
-  { id: 'play', label: '🪁 Play', desc: function () { return 'Childhood is short. Spend it well.'; },
+  { id: 'play',
     show: function (s) { return !adult(s); },
     tick: function (s) {
       me(s).health = FB.clamp(me(s).health + 0.012, 0, 10);
@@ -120,10 +120,10 @@ window.FB = window.FB || {};
       if (skillDch(0.3)) skillUp(s, me(s).sex === 'f' ? 'dip' : 'mar');
     } },
 
-  { id: 'rest', label: '🛌 Rest and mend', desc: function () { return 'Recover strength, slowly.'; },
+  { id: 'rest',
     show: adult,
     tick: function (s) { me(s).health = FB.clamp(me(s).health + 0.014, 0, 10); } },
-  { id: 'pray', label: '🙏 Keep the faith', desc: function () { return 'Daily devotions. (+piety)'; },
+  { id: 'pray',
     show: adult,
     tick: function (s) {
       const z = me(s).traits.indexOf('zealous') >= 0 ? 2 : 0;
@@ -133,9 +133,7 @@ window.FB = window.FB || {};
         'focus:pray');
     },
     gain: function (s) { return { piety: 3 + (me(s).traits.indexOf('zealous') >= 0 ? 2 : 0) }; } },
-  { id: 'toil', label: '🌾 Toil in the lord’s fields', shortcutFamily:'farmer-work',
-    vocational: 'farmer',
-    desc: function () { return 'Hard bread, hard-earned.'; },
+  { id: 'toil',
     show: function (s) { return s.player.tier === 0 && adult(s); },
     tick: function (s) {
       s.player.gold += FB.rf(FBDATA.balance.serfWage[0], FBDATA.balance.serfWage[1]) / D;
@@ -147,14 +145,11 @@ window.FB = window.FB || {};
     gain: function () {
       return { gold: (FBDATA.balance.serfWage[0] + FBDATA.balance.serfWage[1]) / 2 };
     } },
-  { id: 'militia', label: '🛡 Drill with the levy',
-    desc: function () { return 'Spear practice on the green. (+martial over time)'; },
+  { id: 'militia',
     show: function (s) { return s.player.tier <= 1 && adult(s) && s.player.profession !== 'monk' && !female(s); },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
 
-  { id: 'work_land', label: '🌾 Work your land', shortcutFamily:'farmer-work',
-    vocational: 'farmer',
-    desc: function () { return 'Your own soil, your own sweat.'; },
+  { id: 'work_land',
     show: function (s) { return s.player.tier === 1 && s.player.profession === 'farmer'; },
     tick: function (s) {
       let g = FB.rf(FBDATA.balance.freeWage[0], FBDATA.balance.freeWage[1]);
@@ -166,17 +161,14 @@ window.FB = window.FB || {};
       if (s.player.flags.own_ox) g += 1;
       return { gold: g };
     } },
-  { id: 'market', label: '⚖ Haggle at market',
-    vocational: 'merchant',
-    desc: function () { return 'Turn surplus into silver. (stewardship pays)'; },
+  { id: 'market',
     show: function (s) { return s.player.tier === 1 && adult(s); },
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
       if (skillDch(0.35)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
-  { id: 'keep_house', label: '🧶 Keep the household',
-    desc: function () { return 'Keys, stores, and spinning — a well-run house turns thrift into coin. (stewardship pays)'; },
+  { id: 'keep_house',
     show: function (s) { return female(s) && adult(s) && s.player.tier <= 2; },
     tick: function (s) {
       s.player.gold += (1 + FB.skillOf(me(s), 'ste') / 3) / D;
@@ -184,9 +176,7 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { gold: 1 + FB.skillOf(me(s), 'ste') / 3 }; } },
 
-  { id: 'craft_work', label: '🔨 Work the bench',
-    vocational: 'craftsman',
-    desc: function () { return 'Steady hands, steady coin.'; },
+  { id: 'craft_work',
     show: function (s) { return s.player.profession === 'craftsman' && s.player.tier <= 2; },
     tick: function (s) {
       s.player.gold += (FB.rf(2, 5) + (s.player.flags.guild_member ? 1 : 0) +
@@ -197,8 +187,7 @@ window.FB = window.FB || {};
       return { gold:3.5 + (s.player.flags.guild_member ? 1 : 0) +
         craftTradeFocusGold(s) };
     } },
-  { id: 'trade_run', label: '🐫 Run trade ventures',
-    vocational: 'merchant',
+  { id: 'trade_run',
     desc: function (s) { return s.player.gold < 10 ? 'Little stock, little profit — but a start.' : 'Buy low here, sell high there.'; },
     show: function (s) { return s.player.profession === 'merchant' && s.player.tier <= 2; },
     tick: function (s) {
@@ -217,11 +206,7 @@ window.FB = window.FB || {};
       return { gold:Math.max(0.5, g) + craftTradeFocusGold(s) };
     } },
 
-  { id: 'keep_records', label: '📜 Keep records',
-    vocational:'administration',
-    desc: function () {
-      return 'Draft accounts, instruments, and judgments. (Learning and Stewardship pay)';
-    },
+  { id: 'keep_records',
     show: function (s) {
       return s.player.tier <= 2 && qualifiedCareer(s, 'administration');
     },
@@ -237,11 +222,7 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { gold:administrationGold(s) }; } },
 
-  { id: 'practice_physic', label: '🌿 Practice physic',
-    vocational:'physician',
-    desc: function () {
-      return 'Diagnose, prescribe, and tend the sick. (Learning pays; qualified care protects the household)';
-    },
+  { id: 'practice_physic',
     show: function (s) {
       return s.player.tier <= 2 && qualifiedCareer(s, 'physician');
     },
@@ -251,11 +232,7 @@ window.FB = window.FB || {};
     },
     gain: function (s) { return { gold:medicineGold(s) }; } },
 
-  { id: 'scholarly_work', label: '📚 Study and write',
-    vocational:'scholar',
-    desc: function () {
-      return 'Copy, argue, observe, and write for patrons. (adds national research)';
-    },
+  { id: 'scholarly_work',
     show: function (s) {
       return s.player.tier <= 2 && qualifiedCareer(s, 'scholar');
     },
@@ -273,9 +250,7 @@ window.FB = window.FB || {};
       };
     } },
 
-  { id: 'drill', label: '⚔ Drill at arms',
-    vocational: 'soldier',
-    desc: function () { return 'The sergeant’s stick teaches quickly.'; },
+  { id: 'drill',
     show: function (s) {
       return afield(s) ||
         (s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s));
@@ -285,9 +260,7 @@ window.FB = window.FB || {};
       if (skillDch(0.7)) skillUp(s, 'mar');
     },
     gain: function () { return { gold: 1 }; } },
-  { id: 'stand_guard', label: '🏰 Stand garrison duty',
-    vocational: 'soldier',
-    desc: function () { return 'Dull, cold, and paid.'; },
+  { id: 'stand_guard',
     show: function (s) {
       return s.player.tier <= 2 && s.player.profession === 'soldier' && !female(s);
     },
@@ -299,9 +272,7 @@ window.FB = window.FB || {};
     },
     gain: function () { return { gold: 2 }; } },
 
-  { id: 'copy_books', label: '✒ Copy manuscripts',
-    vocational: ['monk', 'priest'],
-    desc: function () { return 'Letters, slowly mastered. (+learning, +piety)'; },
+  { id: 'copy_books',
     show: function (s) {
       return s.player.tier <= 2 &&
         (s.player.profession === 'monk' || s.player.profession === 'priest');
@@ -312,9 +283,7 @@ window.FB = window.FB || {};
       if (dch(0.6)) FB.addTrait(me(s), 'literate');
     },
     gain: function () { return { piety: 2 }; } },
-  { id: 'serve_church', label: '🕯 Serve the faithful',
-    vocational: ['monk', 'priest'],
-    desc: function () { return 'Alms, sermons, and burials.'; },
+  { id: 'serve_church',
     show: function (s) {
       return s.player.tier <= 2 &&
         (s.player.profession === 'monk' || s.player.profession === 'priest');
@@ -326,9 +295,7 @@ window.FB = window.FB || {};
     },
     gain: function () { return { piety: 4, prestige: 2 }; } },
 
-  { id: 'manage_manor', label: '🏡 Manage the manor',
-    vocational: 'noble',
-    desc: function () { return 'Rents, reeves, and repairs.'; },
+  { id: 'manage_manor',
     show: function (s) { return s.player.tier === 2; },
     tick: function (s) {
       const B = FBDATA.balance;
@@ -338,9 +305,7 @@ window.FB = window.FB || {};
       const B = FBDATA.balance;
       return { gold: (B.manorIncome[0] + B.manorIncome[1]) / 2 + FB.skillOf(me(s), 'ste') / 4 };
     } },
-  { id: 'serve_lord', label: '🤝 Attend the lord’s hall',
-    vocational: 'noble',
-    desc: function () { return 'Be seen, be useful, be remembered.'; },
+  { id: 'serve_lord',
     show: function (s) { return s.player.tier === 2; },
     tick: function (s) {
       const lord = FB.getRole(s, 'lord', true);
@@ -352,9 +317,7 @@ window.FB = window.FB || {};
     gain: function () { return { prestige: 2 }; } },
   /* the chatelaine's road: noblewomen command through the household and the
      court, not the drill yard — Standing and polish instead of swordplay */
-  { id: 'courtly_graces', label: '🕊 Cultivate the court',
-    vocational: 'noble',
-    desc: function () { return 'Hawking, letters, and patronage — Standing is won in hall and garden. (+liege Standing, +prestige)'; },
+  { id: 'courtly_graces',
     show: function (s) { return female(s) && adult(s) && s.player.tier >= 2; },
     tick: function (s) {
       if (s.player.liege) {
@@ -370,11 +333,10 @@ window.FB = window.FB || {};
       if (skillDch(0.5)) skillUp(s, 'dip');
     },
     gain: function () { return { prestige: 2 }; } },
-  { id: 'train_arms', label: '⚔ Train at arms',
-    desc: function () { return 'A blade kept sharp.'; },
+  { id: 'train_arms',
     show: function (s) { return s.player.tier >= 2 && adult(s) && !female(s); },
     tick: function (s) { if (skillDch(0.6)) skillUp(s, 'mar'); } },
-  { id: 'lead_host', label: '🚩 Lead the host',
+  { id: 'lead_host',
     desc: function (s) {
       return s.player.war ? 'Command your men in the field. (steadies the host for the next field battle)'
         : (FB.playerGreatHolyWarHostActive && FB.playerGreatHolyWarHostActive(s))
@@ -400,7 +362,7 @@ window.FB = window.FB || {};
       }
       if (skillDch(0.5)) skillUp(s, 'mar');
     } },
-  { id: 'scheming', label: '🕸 Advance the plot',
+  { id: 'scheming',
     desc: function (s) {
       const pl = s.player.plot;
       if (!pl) return 'No plot in motion.';
@@ -462,10 +424,7 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'shepherd_diocese', label: '🕯 Shepherd the diocese',
-    desc: function () {
-      return 'Visit, teach, correct, and reconcile. (+piety, +Common Voice, +Learning over time)';
-    },
+  { id: 'shepherd_diocese',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
@@ -475,10 +434,7 @@ window.FB = window.FB || {};
       if (skillDch(0.35)) skillUp(s, 'lea');
     },
     gain: function () { return { piety:4 }; } },
-  { id: 'administer_temporalities', label: '🔑 Administer the temporalities',
-    desc: function () {
-      return 'Oversee episcopal rents, officers, and obligations. (+income, +liege Standing, +Stewardship over time)';
-    },
+  { id: 'administer_temporalities',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
@@ -491,8 +447,7 @@ window.FB = window.FB || {};
       if (skillDch(0.30)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold:FB.bishopricIncome(s) * 0.15 }; } },
-  { id: 'govern', label: '🏛 Govern the demesne',
-    desc: function () { return 'Ledgers, judgments, and roads. (+revenue, +standing)'; },
+  { id: 'govern',
     show: function (s) {
       return s.player.tier >= 3 &&
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
@@ -503,7 +458,7 @@ window.FB = window.FB || {};
       if (skillDch(0.25)) skillUp(s, 'ste');
     },
     gain: function (s) { return { gold: FB.playerTax(s) * 0.15 }; } },
-  { id: 'patronize', label: '📜 Patronize scholars',
+  { id: 'patronize',
     desc: function (s) {
       const record = FB.realmTechRecord(s);
       const activeId = record.active && record.active[0];
@@ -1089,16 +1044,15 @@ window.FB = window.FB || {};
   }
 
   /* ================= INSTANTS (one-shot deeds) ================= */
-  FB.instants = [
+  const DEED_HANDLERS = [
 
-  { id: 'poach', label: '🏹 Poach the lord’s game', cd: 30,
-    desc: function () { return 'Meat and coin — if the forester is elsewhere.'; },
+  { id: 'poach',
     show: function (s) { return s.player.tier <= 1 && adult(s); },
     run: function (s) {
       if (FB.chance(0.65)) FB.applyEffects(s, { gold: FB.ri(2, 5), skills: { int: FB.chance(0.4) ? 1 : 0 } });
       else FB.queueEvent(s, 'caught_poaching', {});
     } },
-  { id: 'scheme_rival', label: '🗡 Scheme against {rival}', cd: 60,
+  { id: 'scheme_rival',
     desc: function (s) {
       const r = FB.getRole(s, 'rival');
       return r
@@ -1125,7 +1079,7 @@ window.FB = window.FB || {};
           'The scheme unravels, and fingers point at you.', {}));
       }
     } },
-  { id: 'seek_match', label: '💍 Seek a match', opensChoices:true,
+  { id: 'seek_match', opensChoices:true,
     cd: FB.marriageProspectRefreshDays(), noConsume: true,
     cooldownDays: function () {
       return FB.marriageProspectRefreshDays();
@@ -1183,8 +1137,7 @@ window.FB = window.FB || {};
         FB.queueEvent(s, 'meet_suitor', {});
       }
     } },
-  { id: 'propose', label: '💒 Propose marriage', cd: 20,
-    desc: function () { return 'Ask for their hand. Standing and wealth weigh heavily.'; },
+  { id: 'propose',
     show: function (s) { return suitorReady(s) && FB.canPropose(s); },
     run: function (s) {
       const p = s.player, m = s.chars[p.charId];
@@ -1200,12 +1153,11 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'go_to_town', label: '🏘 Go into town…', cd: 30, noConsume: true,
-    desc: function () { return 'Spend a day at one of the province’s settlements — markets, pulpits, and hiring fairs, as fits your station.'; },
+  { id: 'go_to_town', opensChoices:true, noConsume: true,
     show: function (s) { return adult(s); },
     can: function (s) { return FB.settlementsOf(s, s.player.provinceId).length ? true : 'Only wilderness here.'; },
     run: function (s) { if (FB.ui && FB.ui.showSettlements) FB.ui.showSettlements(); } },
-  { id: 'attend_auction', label: '⚖ Attend auction…', noConsume:true,
+  { id: 'attend_auction', opensChoices:true, noConsume:true,
     desc: function (s) {
       let description = FB.T(
         'Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.');
@@ -1239,7 +1191,7 @@ window.FB = window.FB || {};
         if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
       }
     } },
-  { id: 'take_road', label: '🧭 Take to the road…', noConsume: true,
+  { id: 'take_road', opensChoices:true, noConsume: true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {
       return !s.player.travel && s.player.tier >= 1 && adult(s);
@@ -1251,7 +1203,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showTravelPurposes) FB.ui.showTravelPurposes();
     } },
-  { id: 'travel_turn_back', label: '↩ Turn back toward home', noConsume: true,
+  { id: 'travel_turn_back', noConsume: true,
     desc: function (s) {
       return s.player.travel && s.player.travel.phase === 'return'
         ? FB.T('You are already traveling home.')
@@ -1279,7 +1231,7 @@ window.FB = window.FB || {};
       }
       if (FB.travelTurnBack) FB.travelTurnBack(s);
     } },
-  { id: 'travel_return_cargo', label: '📦 Buy return cargo…', noConsume: true,
+  { id: 'travel_return_cargo', opensChoices:true, noConsume: true,
     desc: function (s) {
       const t = s.player.travel;
       if (t && t.returnVenture) {
@@ -1313,7 +1265,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showReturnCargoSetup) FB.ui.showReturnCargoSetup();
     } },
-  { id: 'travel_marriage_residence', label: '💍 Stay after marriage…', noConsume: true,
+  { id: 'travel_marriage_residence', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Reconsider abdication and residence in the wedding county before this journey ends.');
     },
@@ -1330,7 +1282,7 @@ window.FB = window.FB || {};
         FB.ui.showMarriageResidence();
       }
     } },
-  { id: 'travel_settle_here', label: '🏠 Settle here permanently…', noConsume: true,
+  { id: 'travel_settle_here', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Move the household here. Each character may make this permanent move only once in their lifetime.');
     },
@@ -1348,7 +1300,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showTravelSettlement) FB.ui.showTravelSettlement();
     } },
-  { id: 'frontier_settle_here', label: '🛖 Found the frontier homestead…', noConsume: true,
+  { id: 'frontier_settle_here', opensChoices:true, noConsume: true,
     desc: function (s) {
       const status = FB.frontierStatus ? FB.frontierStatus(s) : null;
       return FB.T('Turn this proven corner of the waste into a real frontier county — your household’s permanent home under the lord of {gateway}, with a starter land plot but no title. Each character may make this permanent move only once in their lifetime.', {
@@ -1369,7 +1321,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showFrontierSettlement) FB.ui.showFrontierSettlement();
     } },
-  { id: 'retire', label: '👴 Hand over the house…', noConsume: true,
+  { id: 'retire', opensChoices:true, noConsume: true,
     desc: function (s) {
       return FB.T('Retire in favor of an adult successor. {name} remains in the family at home as a retired elder.', {
         name: FB.fullName(me(s))
@@ -1387,7 +1339,7 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showRetirement) FB.ui.showRetirement();
     } },
 
-  { id: 'seek_blessing', label: '🕊 Seek a blessing', cd: 90,
+  { id: 'seek_blessing',
     desc: function (s) {
       return FB.T('Bring your piety to the {temple} and ask for grace.',
         { temple: FB.templeWord(me(s).religion) });
@@ -1398,7 +1350,7 @@ window.FB = window.FB || {};
         ? FB.T('The excommunicated may not seek a blessing.') : true;
     },
     run: function (s) { FB.queueEvent(s, 'seek_blessing', {}); } },
-  { id: 'seek_absolution', label: '🕊 Seek absolution…', noConsume: true,
+  { id: 'seek_absolution', opensChoices:true, noConsume: true,
     desc: function (s) {
       const status = FB.papalAbsolutionStatus &&
         FB.papalAbsolutionStatus(s, s.player.charId);
@@ -1438,7 +1390,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showAbsolution) FB.ui.showAbsolution();
     } },
-  { id: 'papacy', label: '⛪ Papacy & College…', noConsume: true,
+  { id: 'papacy', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience.');
     },
@@ -1457,7 +1409,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showPapacy) FB.ui.showPapacy();
     } },
-  { id: 'restore_papacy', label: '✝ Restore the Papacy…', noConsume: true,
+  { id: 'restore_papacy', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication.', {
         piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
@@ -1488,7 +1440,7 @@ window.FB = window.FB || {};
         FB.ui.showReligiousHeadRestoration('catholic');
       }
     } },
-  { id: 'claim_caliphate', label: '☪ Claim the Caliphate…', noConsume: true,
+  { id: 'claim_caliphate', opensChoices:true, noConsume: true,
     desc: function (s) {
       if (s && !FB.religiousHeadVacancy(s, 'sunni')) {
         const cause = FB.caliphateWarCause(s);
@@ -1567,7 +1519,7 @@ window.FB = window.FB || {};
         FB.ui.showReligiousHeadClaim('sunni');
       }
     } },
-  { id: 'convert_faith', label: '✝ Convert faith…', noConsume: true,
+  { id: 'convert_faith', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Turn to another faith — privately, with your household, or across your whole realm. Piety and prestige pay the price, and the old faithful will not forgive it.');
     },
@@ -1578,7 +1530,7 @@ window.FB = window.FB || {};
         FB.ui.showConversionPicker('faith');
       }
     } },
-  { id: 'adopt_culture', label: '🌍 Adopt a new culture…', noConsume: true,
+  { id: 'adopt_culture', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Take up the language and customs of another people — yourself alone, or your whole household. Prestige pays the price, and your neighbors will mark the change.');
     },
@@ -1589,7 +1541,7 @@ window.FB = window.FB || {};
         FB.ui.showConversionPicker('culture');
       }
     } },
-  { id: 'call_great_holy_war', label: '📯 Call great holy war…', noConsume: true,
+  { id: 'call_great_holy_war', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.');
     },
@@ -1630,7 +1582,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarTargets) FB.ui.showGreatHolyWarTargets();
     } },
-  { id: 'join_great_holy_war', label: '📯 Answer the great holy war…', noConsume: true,
+  { id: 'join_great_holy_war', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Take the campaign vow before the gathering ends. Freeholders and greater ranks may serve.');
     },
@@ -1644,7 +1596,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarJoin) FB.ui.showGreatHolyWarJoin();
     } },
-  { id: 'great_holy_war_status', label: '⚔ Great holy war campaign…', noConsume: true,
+  { id: 'great_holy_war_status', opensChoices:true, noConsume: true,
     desc: function (s) {
       const campaign = s.greatHolyWar;
       return campaign && campaign.phase === 'preparation'
@@ -1655,7 +1607,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarPanel) FB.ui.showGreatHolyWarPanel();
     } },
-  { id: 'renew_great_holy_war_vow', label: '📯 Renew the inherited vow…', noConsume: true,
+  { id: 'renew_great_holy_war_vow', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Keep your dynasty’s contribution and territorial eligibility under its new leader.');
     },
@@ -1666,7 +1618,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarRenewal) FB.ui.showGreatHolyWarRenewal();
     } },
-  { id: 'withdraw_great_holy_war', label: '🏳 Withdraw from great holy war…', noConsume: true,
+  { id: 'withdraw_great_holy_war', opensChoices:true, noConsume: true,
     desc: function (s) {
       const cost = FB.greatHolyWarWithdrawalCost
         ? FB.greatHolyWarWithdrawalCost(s)
@@ -1691,7 +1643,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGreatHolyWarWithdraw) FB.ui.showGreatHolyWarWithdraw();
     } },
-  { id: 'great_holy_war_settlement', label: '👑 Enter the settlement council…', noConsume: true,
+  { id: 'great_holy_war_settlement', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Take your seat in the settlement council or decide a final territorial grant.');
     },
@@ -1704,7 +1656,7 @@ window.FB = window.FB || {};
         FB.ui.showGreatHolyWarSettlement();
       }
     } },
-  { id: 'give_alms', label: '🕯 Give alms', cd: 30,
+  { id: 'give_alms',
     desc: function (s) {
       return FB.T('Bread and coin for the poor at the {temple} gate. ({money:10})',
         { temple: FB.templeWord(me(s).religion) });
@@ -1715,22 +1667,19 @@ window.FB = window.FB || {};
       FB.applyEffects(s, { gold: -10, piety: 8, popularOpinion: 3 });
       FB.news(s, FB.msg('news.action.alms', '🕯 Gave alms to the poor.', {}));
     } },
-  { id: 'begin_plot', label: '🕸 Begin a plot…', noConsume: true,
-    desc: function () { return 'Patience, whispers, and a long knife. Occupies your focus until sprung.'; },
+  { id: 'begin_plot', opensChoices:true, noConsume: true,
     show: function (s) { return adult(s) && !s.player.plot &&
       !s.player.flags.in_prison && !(FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(s, s.player.charId)); },
     can: function (s) { return FB.plotAvailable(s).length ? true : 'No plot within your reach.'; },
     run: function (s) { if (FB.ui && FB.ui.showPlots) FB.ui.showPlots(); } },
-  { id: 'intrigue_assets', label: '🕸 Intrigue affairs…', noConsume: true,
-    desc: function () { return 'Review an active hostile scheme, captive, or exact leverage.'; },
+  { id: 'intrigue_assets', opensChoices:true, noConsume: true,
     show: function (s) { return !!(FB.intrigueAssetsAvailable &&
       FB.intrigueAssetsAvailable(s)); },
     run: function () {
       if (FB.ui && FB.ui.showIntrigueAssets) FB.ui.showIntrigueAssets();
     } },
-  { id: 'mediate', label: '🤝 Mediate a quarrel', cd: 60,
-    desc: function () { return 'Neighbors at odds trust a fair tongue.'; },
+  { id: 'mediate',
     show: function (s) { return s.player.tier <= 2 && adult(s); },
     run: function (s) {
       const dip = FB.skillOf(me(s), 'dip');
@@ -1744,7 +1693,7 @@ window.FB = window.FB || {};
           '🤝 Both sides leave angrier — at each other, and at you.', {}));
       }
     } },
-  { id: 'swear_friend', label: '🔗 Swear brotherhood with {friend}',
+  { id: 'swear_friend',
     desc: function (s) {
       const f = FB.getRole(s, 'friend', false);
       return f
@@ -1765,8 +1714,7 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.action.brotherhood',
         'Swore an oath of brotherhood.', {}));
     } },
-  { id: 'send_envoy', label: '🕊 Send an envoy…', noConsume: true,
-    desc: function () { return 'Offer a peace pact — or, as an independent king or emperor, one defensive alliance.'; },
+  { id: 'send_envoy', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && FB.isPlayerSovereign(s); },
     can: function (s) {
       const peace = FB.envoyTargets(s), alliance = FB.allianceOfferTargets(s);
@@ -1777,16 +1725,14 @@ window.FB = window.FB || {};
         : FB.T('An envoy without {money:10} in gifts insults his host.');
     },
     run: function (s) { if (FB.ui && FB.ui.showEnvoys) FB.ui.showEnvoys(); } },
-  { id: 'foreign_policy', label: '🕊 Foreign policy…', noConsume: true,
-    desc: function () { return 'Direct your court to improve or provoke relations with neighboring sovereigns.'; },
+  { id: 'foreign_policy', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && FB.isPlayerSovereign(s); },
     can: function (s) {
       return FB.foreignPolicyTargets(s).length ? true : 'No neighboring sovereign court lies within reach.';
     },
     run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
-  { id: 'better_household', label: '🏠 Better the household…', noConsume: true,
-    desc: function () { return 'Maintain living standards and work outfits, or buy permanent household property.'; },
+  { id: 'better_household', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier <= 2 && adult(s); },
     can: function (s) {
       return ((FBDATA.householdStandards && FB.householdStandardIds().length) ||
@@ -1797,7 +1743,7 @@ window.FB = window.FB || {};
       else if (FB.ui && FB.ui.showHoldings) FB.ui.showHoldings();
     } },
 
-  { id: 'livelihoods', label: '🧰 Work, training & enterprises…', noConsume: true,
+  { id: 'livelihoods', opensChoices:true, noConsume: true,
     desc: function (s) {
       return s.player.tier >= 3
         ? 'Manage household occupations, apprenticeships, workers, and family businesses.'
@@ -1809,9 +1755,8 @@ window.FB = window.FB || {};
     },
     run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
 
-  { id: 'petition_monopoly', label: '📜 Petition for a guild monopoly', cd: 360,
+  { id: 'petition_monopoly',
     noConsume:true, deferCooldown:true,
-    requiresTech:'guild_charters',
     desc: function (s) {
       const status = FB.guildMonopolyPetitionStatus(s, true);
       if (!status.ready) return status.reason;
@@ -1837,7 +1782,7 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'buy_freedom', label: '⛓ Buy your freedom',
+  { id: 'buy_freedom',
     desc: function () {
       return FB.T('Pay {money:gold} to be struck from the serf-roll.',
         { gold: FBDATA.balance.freedomCost });
@@ -1859,7 +1804,7 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.action.freedom_bought',
         'Bought freedom from serfdom!', {}));
     } },
-  { id: 'buy_land', label: '🌾 Buy a plot of land…', noConsume: true,
+  { id: 'buy_land', opensChoices:true, noConsume: true,
     desc: function (s) {
       return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
         { gold: FB.landPlotCost(s) });
@@ -1873,7 +1818,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showLandMarket) FB.ui.showLandMarket();
     } },
-  { id: 'declare_manor', label: '🏡 Declare a manor',
+  { id: 'declare_manor',
     desc: function () {
       return FB.T('Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.',
         { plots: FBDATA.balance.manorPlotRequirement, prestige: FBDATA.balance.manorPrestige });
@@ -1890,7 +1835,7 @@ window.FB = window.FB || {};
     run: function (s) {
       FB.declareManor(s);
     } },
-  { id: 'petition_barony', label: '📜 Petition for a barony', cd: 360,
+  { id: 'petition_barony',
     desc: function (s) {
       return FB.T('Ask {lord} for lands and a banner.',
         { lord: (FB.getRole(s, 'lord', true) || {}).name || FB.T('your lord') });
@@ -1926,7 +1871,7 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'bring_council_motion', label: '⚖ Bring a motion before the council…',
+  { id: 'bring_council_motion', opensChoices:true,
     noConsume:true,
     desc: function (s) {
       const status = FB.localCouncilMotionStatus(s);
@@ -1946,7 +1891,7 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'seek_castellany', label: '🏰 Seek appointment as Castellan…',
+  { id: 'seek_castellany', opensChoices:true,
     noConsume:true,
     desc: function (s) {
       const status = FB.castellanAppointmentStatus(s, 'term');
@@ -1964,7 +1909,7 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showCastellanPetition) FB.ui.showCastellanPetition();
     } },
 
-  { id: 'renew_castellany', label: '🏰 Petition to renew the Castellan appointment',
+  { id: 'renew_castellany',
     desc: function (s) {
       const status = FB.castellanRenewalStatus(s);
       return status.ready
@@ -1979,12 +1924,12 @@ window.FB = window.FB || {};
     },
     run: function (s) { FB.renewCastellany(s); } },
 
-  { id: 'resign_castellany', label: '🏰 Resign the Castellan appointment',
+  { id: 'resign_castellany',
     desc: function () { return FB.T('Lay down the castle keys and return the household to the gentry.'); },
     show: function (s) { return !!FB.castellanyOf(s); },
     run: function (s) { FB.endCastellany(s, 'resignation'); } },
 
-  { id: 'seek_field_command', label: '🚩 Take a field command',
+  { id: 'seek_field_command',
     desc: function (s) {
       const status = FB.militaryCommandStatus(s);
       const patron = status.patronRealmId && s.realms[status.patronRealmId];
@@ -2002,15 +1947,13 @@ window.FB = window.FB || {};
     },
     run: function (s) { FB.beginMilitaryCommand(s); } },
 
-  { id: 'hold_court', label: '⚖ Hold court', cd: 90,
-    desc: function () { return 'Hear petitions and render judgment.'; },
+  { id: 'hold_court',
     show: function (s) {
       return s.player.tier >= 3 &&
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
     },
     run: function (s) { FB.queueEvent(s, 'hold_court_event', {}); } },
-  { id: 'squeeze_taxes', label: '💰 Squeeze the taxes', cd: 180,
-    desc: function () { return 'Extra silver now; grumbling later.'; },
+  { id: 'squeeze_taxes',
     show: function (s) {
       return s.player.tier >= 3 &&
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
@@ -2019,8 +1962,7 @@ window.FB = window.FB || {};
       const tax = Math.max(4, Math.round(FB.playerTax(s) * 0.8));
       FB.applyEffects(s, { gold: tax, popularOpinion: -6 });
     } },
-  { id: 'grant_monopoly', label: '📜 Grant a guild monopoly…', noConsume: true,
-    requiresTech:'guild_charters',
+  { id: 'grant_monopoly', opensChoices:true, noConsume: true,
     desc: function (s) {
       const status = FB.guildMonopolyIssueStatus(s);
       if (!status.ready) return status.reason;
@@ -2045,7 +1987,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGuildMonopolyGrant) FB.ui.showGuildMonopolyGrant();
     } },
-  { id: 'build', label: '🏗 Raise a building…', noConsume: true,
+  { id: 'build', opensChoices:true, noConsume: true,
     desc: function (s) {
       return s.player.flags.mason_visit ? 'The master mason waits — a quarter off your next work.'
         : 'Mills, walls, markets — stone outlasts silver.';
@@ -2056,36 +1998,24 @@ window.FB = window.FB || {};
       return 'Nothing more can be raised in your lands.';
     },
     run: function (s) { if (FB.ui && FB.ui.showBuildings) FB.ui.showBuildings(); } },
-  { id: 'bishopric', label: '⛪ The Bishopric…', noConsume: true,
-    desc: function () {
-      return 'Review the see, investiture, temporalities, episcopal household, powers, and path to the College of Cardinals.';
-    },
+  { id: 'bishopric', opensChoices:true, noConsume: true,
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     run: function () {
       if (FB.ui && FB.ui.showBishopric) FB.ui.showBishopric();
     } },
-  { id: 'visit_diocese', label: '🛤 Visit the diocese', cd: 180,
-    desc: function () {
-      return 'Make a pastoral circuit, inspect the clergy, or receive local notables.';
-    },
+  { id: 'visit_diocese',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     run: function (s) { FB.queueEvent(s, 'bishop_visit_diocese', {}); } },
-  { id: 'ecclesiastical_court', label: '⚖ Hold ecclesiastical court', cd: 90,
-    desc: function () {
-      return 'Judge under canon law: mercifully, strictly, or for customary fees.';
-    },
+  { id: 'ecclesiastical_court',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     run: function (s) { FB.queueEvent(s, 'bishop_ecclesiastical_court', {}); } },
-  { id: 'convene_synod', label: '📜 Convene a synod', cd: 360,
-    desc: function () {
-      return 'Spend 10 gold to gather the clergy for reform, learning, or alms.';
-    },
+  { id: 'convene_synod',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
@@ -2096,15 +2026,12 @@ window.FB = window.FB || {};
       s.player.gold -= 10;
       FB.queueEvent(s, 'bishop_synod', {});
     } },
-  { id: 'extraordinary_tithe', label: '🪙 Levy an extraordinary tithe', cd: 360,
-    desc: function () {
-      return 'Collect fully, moderate the demand, or remit it for pastoral standing.';
-    },
+  { id: 'extraordinary_tithe',
     show: function (s) {
       return !!(FB.hasBishopric && FB.hasBishopric(s, me(s)));
     },
     run: function (s) { FB.queueEvent(s, 'bishop_extraordinary_tithe', {}); } },
-  { id: 'adopt_tech', label: '💡 Technology…', noConsume: true,
+  { id: 'adopt_tech', opensChoices:true, noConsume: true,
     desc: function (s) {
       const rid = FB.techRealmId(s);
       const realm = s.realms[rid];
@@ -2121,7 +2048,7 @@ window.FB = window.FB || {};
        Commoners see named household gates, not the national catalogue. */
     show: function (s) { return FB.techUiRelevant(s); },
     run: function (s) { if (FB.ui && FB.ui.showTech) FB.ui.showTech(); } },
-  { id: 'hold_feast', label: '🍗 Hold a feast', cd: 180,
+  { id: 'hold_feast',
     desc: function (s) {
       return FB.faithIsA(me(s).religion, 'muslim', s)
         ? 'Meat, sherbet, and politics.' : 'Meat, mead, and politics.';
@@ -2129,7 +2056,7 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 3; },
     can: function (s) { return s.player.gold >= 5 ? true : 'Too poor to feast anyone.'; },
     run: function (s) { FB.queueEvent(s, 'court_feast', {}); } },
-  { id: 'petition_liege', label: '👑 Petition the liege for title', cd: 1440,
+  { id: 'petition_liege',
     desc: function (s) {
       const liege = s.player.liege && s.realms[s.player.liege];
       if (s.player.tier >= 4 && liege && liege.alive && liege.rank < 3) {
@@ -2157,7 +2084,7 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { FB.queueEvent(s, 'title_request', {}); } },
-  { id: 'petition_county', label: '🤝 Petition for a neighbor’s fief…', cd: 720, noConsume: true,
+  { id: 'petition_county', opensChoices:true, noConsume: true,
     desc: function (s) {
       return FB.T('Ask the liege to strip a disgraced neighbor and invest you with his county. Service in the liege’s wars: {service}.',
         { service: s.player.warService || 0 });
@@ -2191,8 +2118,7 @@ window.FB = window.FB || {};
         FB.ui.showPetitionCounty(options && options.returnContext);
       }
     } },
-  { id: 'buy_county', label: '💰 Buy out a weak neighbor…', cd: 720, noConsume: true,
-    desc: function () { return 'Money talks: a small, struggling neighbor sells his county and retires to obscurity.'; },
+  { id: 'buy_county', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && !!s.player.liege; },
     can: function (s) {
       const standing = FB.standingOf(s, {
@@ -2214,8 +2140,7 @@ window.FB = window.FB || {};
         FB.ui.showBuyCounty(options && options.returnContext);
       }
     } },
-  { id: 'settle_waste', label: '🌱 Settle the wasteland…', cd: 360, noConsume: true,
-    desc: function () { return 'Found a new holding on empty land bordering your demesne.'; },
+  { id: 'settle_waste', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4; },
     can: function (s) {
       const B = FBDATA.balance;
@@ -2233,7 +2158,7 @@ window.FB = window.FB || {};
         FB.ui.showSettleWaste(options && options.returnContext);
       }
     } },
-  { id: 'muster_host', label: '🚩 Muster the host',
+  { id: 'muster_host',
     desc: function (s) {
       const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
       let text = FB.T('Raise your levies and hired companies as a field host — ~{men} men at your seat. Then tap the host on the map and tap a province to march it.',
@@ -2264,7 +2189,7 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { if (FB.raisePlayerHost) FB.raisePlayerHost(s); } },
-  { id: 'demuster_host', label: '🏳 De-muster the host',
+  { id: 'demuster_host',
     desc: function (s) {
       const prev = FB.demusterPreview ? FB.demusterPreview(s) : null;
       if (!prev) return FB.T('Send the field host home.');
@@ -2287,7 +2212,7 @@ window.FB = window.FB || {};
       return !!(FB.playerHost && FB.playerHost(s));
     },
     run: function (s) { if (FB.demusterPlayerHost) FB.demusterPlayerHost(s); } },
-  { id: 'hire_mercs', label: '⚔ Hire a mercenary company', cd: 45,
+  { id: 'hire_mercs',
     desc: function (s) {
       const w = s.player.war;
       const n = (w && w.mercCos) || 0;
@@ -2319,8 +2244,7 @@ window.FB = window.FB || {};
       s.player.gold -= 15;
       FB.fns.war_mercs(s);
     } },
-  { id: 'declare_war', label: '⚔ Declare war…', noConsume: true,
-    desc: function () { return 'Compare lawful causes or accept the political cost of a War of Aggression.'; },
+  { id: 'declare_war', opensChoices:true, noConsume: true,
     show: function (s) {
       const me = s.chars[s.player.charId];
       return !(FB.playerBishopricOnly && FB.playerBishopricOnly(s)) &&
@@ -2334,7 +2258,7 @@ window.FB = window.FB || {};
         FB.ui.showWarTargets(null, options && options.returnContext);
       }
     } },
-  { id: 'raid_expedition', label: '⚔ Launch a raid…', noConsume: true,
+  { id: 'raid_expedition', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Cross border or sea to plunder foreign wealth, livestock, goods, and thralls without a formal war.');
     },
@@ -2359,7 +2283,7 @@ window.FB = window.FB || {};
         FB.ui.showRaidTargets(options && options.returnContext);
       }
     } },
-  { id: 'abandon_claim', label: '📜 Abandon fabricated claim', noConsume: true,
+  { id: 'abandon_claim', noConsume: true,
     desc: function (s) {
       const claim = FB.fabricatedClaimOf(s);
       const pr = claim && FB.world.byId[claim.pid];
@@ -2368,7 +2292,7 @@ window.FB = window.FB || {};
     },
     show: function (s) { return !!FB.fabricatedClaimOf(s); },
     run: function (s) { FB.abandonFabricatedClaim(s); } },
-  { id: 'declare_independence', label: '⚑ Declare independence…', noConsume: true,
+  { id: 'declare_independence', opensChoices:true, noConsume: true,
     desc: function (s) {
       const lg = s.realms[s.player.liege];
       return lg
@@ -2391,16 +2315,14 @@ window.FB = window.FB || {};
         FB.ui.showIndependence(options && options.returnContext);
       }
     } },
-  { id: 'pay_homage', label: '🙇 Pay homage…', noConsume: true, cd: 180,
-    desc: function () { return 'Bend the knee at your liege’s court — or a court above his. (+Standing)'; },
+  { id: 'pay_homage', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 3 && !!s.player.liege && !s.player.war; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showHomage) {
         FB.ui.showHomage(options && options.returnContext);
       }
     } },
-  { id: 'appeal_lord', label: '⚖ Appeal over your liege’s head…', noConsume: true, cd: 360,
-    desc: function () { return 'Carry your suit to a higher lord: escape a harsh liege, or rise under a greater one.'; },
+  { id: 'appeal_lord', opensChoices:true, noConsume: true,
     show: function (s) {
       return s.player.tier >= 4 && !!s.player.liege && !s.player.war &&
         FB.liegeChain(s, s.player.liege).length >= 2;
@@ -2410,8 +2332,7 @@ window.FB = window.FB || {};
         FB.ui.showAppeal(options && options.returnContext);
       }
     } },
-  { id: 'swear_fealty', label: '🤝 Swear fealty…', noConsume: true,
-    desc: function () { return 'Offer your sword and your lands to a neighboring sovereign.'; },
+  { id: 'swear_fealty', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 4 && s.player.provs && s.player.provs.length && !s.player.war; },
     can: function (s) { return FB.fealtyTargets(s).length ? true : 'No neighboring sovereign would take your oath.'; },
     run: function (s, options) {
@@ -2419,16 +2340,14 @@ window.FB = window.FB || {};
         FB.ui.showFealty(options && options.returnContext);
       }
     } },
-  { id: 'grant_land', label: '🎁 Grant land…', noConsume: true,
-    desc: function () { return 'Enfeoff a new loyal vassal or an adult relative with a county — or a whole duchy. Vassals pay taxes, send levies — and remember.'; },
+  { id: 'grant_land', opensChoices:true, noConsume: true,
     show: function (s) { return s.realms.player && s.realms.player.alive && s.player.provs && s.player.provs.length >= 2; },
     run: function (s, options) {
       if (FB.ui && FB.ui.showGrantLand) {
         FB.ui.showGrantLand(options && options.returnContext);
       }
     } },
-  { id: 'demand_taxes', label: '💰 Demand extraordinary taxes', cd: 90,
-    desc: function () { return 'Squeeze your vassals for four seasons’ taxes at once. They will not love it.'; },
+  { id: 'demand_taxes',
     show: function (s) { return FB.playerVassals(s).length >= 1; },
     can: function (s) {
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
@@ -2438,8 +2357,7 @@ window.FB = window.FB || {};
       return true;
     },
     run: function (s) { FB.demandTaxes(s); } },
-  { id: 'revoke_county', label: '📜 Revoke a county…', noConsume: true,
-    desc: function () { return 'Take a fief back from a vassal — by law if he bends, by force if he rises.'; },
+  { id: 'revoke_county', opensChoices:true, noConsume: true,
     show: function (s) { return FB.playerVassals(s).length >= 1 && !s.player.war; },
     can: function (s) {
       if (FB.councilNeedsConsent && FB.councilNeedsConsent(s)) {
@@ -2453,7 +2371,7 @@ window.FB = window.FB || {};
         FB.ui.showRevoke(options && options.returnContext);
       }
     } },
-  { id: 'governance', label: '🏛 Governance…', noConsume: true,
+  { id: 'governance', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Your political position, domain, obligations, vassals, institution, and currently available realm actions.');
     },
@@ -2463,23 +2381,20 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showGovernance) FB.ui.showGovernance();
     } },
-  { id: 'the_estates', label: '🏛 The Estates…', noConsume: true,
+  { id: 'the_estates', opensChoices:true, noConsume: true,
     compatibilityAlias:true,
     desc: function () {
       return FB.T('The assembled lords of the realm — your voice among them, and the terms of your service: the liege’s aid, and silver in place of spears.');
     },
     show: function (s) { return FB.parliamentActive && FB.parliamentActive(s); },
     run: function (s) { if (FB.ui && FB.ui.showParliament) FB.ui.showParliament(); } },
-  { id: 'coin_credit', label: '💰 Coin & Credit…', noConsume: true,
+  { id: 'coin_credit', opensChoices:true, noConsume: true,
     desc: function () {
       return FB.T('Prices, reliable income, loans, pledged property, and trade ventures.');
     },
     show: function (s) { return adult(s) && FB.financeUiRelevant(s); },
     run: function () { if (FB.ui && FB.ui.showFinance) FB.ui.showFinance(); } },
-  { id: 'debase_coinage', label: '💰 Debase the coinage…', noConsume: true,
-    desc: function () {
-      return 'Emergency silver for an independent crown — at the price of confidence, standing, and rising prices.';
-    },
+  { id: 'debase_coinage', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 6 && !s.player.liege; },
     can: function (s) {
       return FB.financeCanDebase(s) ? true :
@@ -2490,12 +2405,201 @@ window.FB = window.FB || {};
         FB.ui.showDebasement(options && options.returnContext);
       }
     } },
-  { id: 'royal_council', label: '🏛 The Royal Council…', noConsume: true,
+  { id: 'royal_council', opensChoices:true, noConsume: true,
     compatibilityAlias:true,
-    desc: function () { return 'Your great officers of the crown — their offices, their tempers, and the weight they throw around.'; },
     show: function (s) { return s.player.tier >= 6; },
     run: function (s) { if (FB.ui && FB.ui.showCouncil) FB.ui.showCouncil(); } }
   ];
+
+  function actionHandlerMap(list, kind) {
+    const out = {};
+    for (const handler of list) {
+      if (!handler || !handler.id || out[handler.id]) {
+        throw new Error('Invalid ' + kind + ' handler catalogue.');
+      }
+      out[handler.id] = handler;
+    }
+    return out;
+  }
+
+  const FOCUS_HANDLER_BY_ID = actionHandlerMap(FOCUS_HANDLERS, 'focus');
+  const DEED_HANDLER_BY_ID = actionHandlerMap(DEED_HANDLERS, 'deed');
+  const FOCUS_BASELINE_IDS = FOCUS_HANDLERS.map(function (handler) {
+    return handler.id;
+  });
+  const DEED_BASELINE_IDS = DEED_HANDLERS.map(function (handler) {
+    return handler.id;
+  });
+  let focusById = {};
+  let deedById = {};
+
+  function actionRequirementIds(value) {
+    if (value === undefined) return [];
+    return Array.isArray(value) ? value : [value];
+  }
+
+  function validateActionRecords(records, handlers, baselineIds, kind) {
+    const errors = [];
+    const seen = {};
+    const allowedGroups = { work:1, life:1, faith:1, realm:1, war:1 };
+    const allowedFlows = { immediate:1, no_day:1, choices:1 };
+    const allowedFields = kind === 'focus'
+      ? { id:1, label:1, desc:1, order:1, vocational:1,
+          shortcutFamily:1, handler:1 }
+      : { id:1, label:1, desc:1, order:1, group:1, flow:1,
+          cooldownDays:1, requiresTech:1, handler:1 };
+    if (!Array.isArray(records)) return [kind + ' catalogue must be an array.'];
+    for (let i = 0; i < records.length; i++) {
+      const def = records[i];
+      const path = kind + '[' + i + ']';
+      if (!def || typeof def !== 'object' || Array.isArray(def)) {
+        errors.push(path + ' must be an object.');
+        continue;
+      }
+      for (const key in def) {
+        if (Object.prototype.hasOwnProperty.call(def, key) && !allowedFields[key]) {
+          errors.push(path + '.' + key + ' is not recognized.');
+        }
+      }
+      if (typeof def.id !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(def.id) || seen[def.id]) {
+        errors.push(path + ' must have one unique lowercase id.');
+        continue;
+      }
+      seen[def.id] = 1;
+      if (baselineIds[i] === undefined) {
+        errors.push(kind + ' catalogue cannot add id ' + def.id + '.');
+      } else if (def.id !== baselineIds[i]) {
+        errors.push(kind + ' catalogue must retain baseline id ' +
+          baselineIds[i] + ' at index ' + i + '.');
+      }
+      if (def.order !== i) errors.push(kind + '.' + def.id + ' order must remain ' + i + '.');
+      if (typeof def.label !== 'string' || !def.label) {
+        errors.push(kind + '.' + def.id + ' must have a label.');
+      }
+      if (def.desc !== undefined &&
+          (typeof def.desc !== 'string' || !def.desc)) {
+        errors.push(kind + '.' + def.id + ' description must be a non-empty string.');
+      }
+      if (def.handler !== def.id || !handlers[def.handler]) {
+        errors.push(kind + '.' + def.id + ' must retain its baseline handler.');
+        continue;
+      }
+      const handler = handlers[def.handler];
+      if (kind === 'focus') {
+        if (typeof handler.show !== 'function' || typeof handler.tick !== 'function') {
+          errors.push(kind + '.' + def.id + ' handler is incomplete.');
+        }
+        const vocations = Array.isArray(def.vocational)
+          ? def.vocational : [def.vocational];
+        for (const vocation of vocations) {
+          if (vocation !== undefined &&
+              (typeof vocation !== 'string' || !vocation)) {
+            errors.push(kind + '.' + def.id + ' has an invalid vocation.');
+          } else if (vocation !== undefined &&
+              (!FBDATA.careers || !FBDATA.careers[vocation])) {
+            errors.push(kind + '.' + def.id +
+              ' references unknown vocation ' + vocation + '.');
+          }
+        }
+        if (def.shortcutFamily !== undefined &&
+            (typeof def.shortcutFamily !== 'string' || !def.shortcutFamily)) {
+          errors.push(kind + '.' + def.id + ' has an invalid shortcut family.');
+        }
+      } else {
+        if (typeof handler.show !== 'function' || typeof handler.run !== 'function') {
+          errors.push(kind + '.' + def.id + ' handler is incomplete.');
+        }
+        if (!allowedGroups[def.group]) {
+          errors.push(kind + '.' + def.id + ' has an invalid group.');
+        }
+        if (!allowedFlows[def.flow]) {
+          errors.push(kind + '.' + def.id + ' has an invalid flow.');
+        }
+        const handlerFlow = handler.opensChoices ? 'choices'
+          : (handler.noConsume ? 'no_day' : 'immediate');
+        if (def.flow !== handlerFlow) {
+          errors.push(kind + '.' + def.id + ' flow must match its baseline handler.');
+        }
+        if (def.cooldownDays !== undefined &&
+            (typeof def.cooldownDays !== 'number' ||
+              !isFinite(def.cooldownDays) || def.cooldownDays < 0)) {
+          errors.push(kind + '.' + def.id + ' has an invalid cooldown.');
+        }
+        for (const techId of actionRequirementIds(def.requiresTech)) {
+          if (typeof techId !== 'string' || !FBDATA.tech || !FBDATA.tech[techId]) {
+            errors.push(kind + '.' + def.id + ' references unknown technology ' + techId + '.');
+          }
+        }
+      }
+      if (def.desc === undefined && typeof handler.desc !== 'function') {
+        errors.push(kind + '.' + def.id + ' must have a description source.');
+      }
+    }
+    for (const id in handlers) {
+      if (Object.prototype.hasOwnProperty.call(handlers, id) && !seen[id]) {
+        errors.push(kind + ' catalogue must retain baseline id ' + id + '.');
+      }
+    }
+    return errors;
+  }
+
+  FB.validateActionData = function () {
+    return validateActionRecords(FBDATA.focuses, FOCUS_HANDLER_BY_ID,
+      FOCUS_BASELINE_IDS, 'focus').concat(
+        validateActionRecords(FBDATA.deeds, DEED_HANDLER_BY_ID,
+          DEED_BASELINE_IDS, 'deed'));
+  };
+
+  function projectActionDefinition(def, handler, kind) {
+    const out = {};
+    for (const key in def) {
+      if (!Object.prototype.hasOwnProperty.call(def, key) ||
+          key === 'desc' || key === 'cooldownDays') continue;
+      out[key] = def[key];
+    }
+    if (def.cooldownDays !== undefined) out.cd = def.cooldownDays;
+    for (const key in handler) {
+      if (Object.prototype.hasOwnProperty.call(handler, key) && key !== 'id') {
+        out[key] = handler[key];
+      }
+    }
+    if (typeof handler.desc !== 'function') {
+      out.desc = function (state) {
+        return FB.dataText(state, state && state.player && state.player.charId,
+          kind, def.id, def, 'desc', {});
+      };
+    }
+    return out;
+  }
+
+  FB.rebuildActionCatalogs = function () {
+    const errors = FB.validateActionData();
+    if (errors.length) throw new Error('Invalid action catalogue: ' + errors.join(' '));
+    const focuses = [];
+    const deeds = [];
+    const nextFocusById = {};
+    const nextDeedById = {};
+    for (const def of FBDATA.focuses) {
+      const projected = projectActionDefinition(def,
+        FOCUS_HANDLER_BY_ID[def.handler], 'focus');
+      focuses.push(projected);
+      nextFocusById[projected.id] = projected;
+    }
+    for (const def of FBDATA.deeds) {
+      const projected = projectActionDefinition(def,
+        DEED_HANDLER_BY_ID[def.handler], 'action');
+      deeds.push(projected);
+      nextDeedById[projected.id] = projected;
+    }
+    focusById = nextFocusById;
+    deedById = nextDeedById;
+    FB.focuses = focuses;
+    FB.instants = deeds;
+    FB.actionCatalogRevision = (FB.actionCatalogRevision || 0) + 1;
+  };
+
+  FB.rebuildActionCatalogs();
 
   /* ================= shared helpers ================= */
 
@@ -7850,13 +7954,7 @@ window.FB = window.FB || {};
   }
 
   FB.instantStatus = function (state, id) {
-    let action = null;
-    for (const candidate of FB.instants) {
-      if (candidate.id === id) {
-        action = candidate;
-        break;
-      }
-    }
+    const action = deedById[id] || null;
     if (!action) return {
       action:null, shown:false, can:false, reason:''
     };
@@ -7924,14 +8022,9 @@ window.FB = window.FB || {};
     return shown.length ? shown[0].id : null;
   };
 
-  /* id → focus def, lazily built (and rebuilt if the list ever changes size):
-     the daily validate/tick path looked defs up by linear scan */
-  let focusById = null;
+  /* Explicitly rebuilt with the data-backed compatibility projections. A
+     same-length catalogue replacement must never retain a stale definition. */
   function focusDef(id) {
-    if (!focusById || focusById._n !== FB.focuses.length) {
-      focusById = { _n: FB.focuses.length };
-      for (const f of FB.focuses) focusById[f.id] = f;
-    }
     return focusById[id] || null;
   }
 

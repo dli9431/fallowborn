@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'data/bookmarks.js',
   'data/cultures.js',
   'data/map_data.js',
+  'data/actions.js',
   'js/actions.js',
   'js/events.js',
   'js/model.js',

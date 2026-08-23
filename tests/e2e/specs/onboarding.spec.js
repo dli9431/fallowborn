@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
+  'data/actions.js',
   'js/actions.js',
   'css/style.css',
   'data/bookmarks.js',

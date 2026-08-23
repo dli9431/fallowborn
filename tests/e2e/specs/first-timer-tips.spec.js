@@ -8,6 +8,7 @@ dependsOnRuntime(__filename, [
   'js/ui_panels.js',
   'js/ui_topbar.js',
   'js/save.js',
+  'data/actions.js',
   'js/actions.js',
   'css/style.css'
 ]);

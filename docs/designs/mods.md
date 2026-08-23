@@ -218,6 +218,12 @@ effectiveness, and bonus behavior, while the baseline special consumers continue
 their stable office ids. Saved holders remain keyed by id and an absent mod seat stays
 inert without deleting its value, so no save migration is required.
 
+Focus and deed metadata now lives under `FBDATA.focuses` and `FBDATA.deeds`, but Phase 4A
+keeps both catalogues internal. Boot-time validation protects all baseline ids, array order,
+private handler bindings, and handler/flow consistency before `js/actions.js` projects the
+compatible `FB.focuses` and `FB.instants` arrays. Runtime mods cannot supply either key yet;
+bounded replacement belongs to the separately reviewed Phase 4B contract.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of
@@ -255,7 +261,7 @@ is:
 | --- | --- | --- |
 | Public runtime-mod API | `ailments`, `auctionLotTypes`, `balance`, `bookmarks`, `bounds`, `buildings`, `careers`, `collectiveDemands`, `councilRules`, `councilSeats`, `crossingClasses`, `cultures`, `cultureTraditions`, `currency`, `defaultBookmark`, `duchies`, `elections`, `empires`, `enterprises`, `events`, `familyPresets`, `feudalServiceCharters`, `finance`, `forts`, `holdings`, `householdStandards`, `intrigue`, `itemPools`, `items`, `kingdoms`, `land`, `localCouncilMotions`, `marketEndowments`, `marketEndowmentTypes`, `marketGoods`, `modifiers`, `papacy`, `plots`, `policies`, `politicalBlocs`, `positions`, `privileges`, `provinces`, `raidingTraditions`, `realms`, `religions`, `religiousPaths`, `rivers`, `rulerTraits`, `schooling`, `scripted`, `seas`, `settlementNames`, `settlementSites`, `startScenarios`, `straits`, `tech`, `techCaps`, `techDomains`, `techImpactReviews`, `techTraditions`, `titles`, `traits`, `travelPurposes`, `travelSites`, `unitClasses` | Accepted by `M.apply` with the merge/atomic behavior documented here and in `docs/MODDING.md`. `settlementSites` is partly generated in core but remains a public shared site table. |
 | Generated-only | `lang`, `musicCatalog` | Produced by the localization and soundtrack catalog pipelines. Runtime mods may author ordinary English display fields, but may not replace core locale caches or the shipped media manifest. |
-| Intentionally internal | `fortLevels`, `unitClassAliases` | `fortLevels` is the live compatibility alias of `forts.levels`; mods use `forts`. Unit aliases normalize legacy saved or authored class ids; mods use canonical `unitClasses`. |
+| Intentionally internal | `deeds`, `focuses`, `fortLevels`, `unitClassAliases` | Phase 4A action catalogues are validated core metadata and do not become runtime-mod keys until Phase 4B. `fortLevels` is the live compatibility alias of `forts.levels`; mods use `forts`. Unit aliases normalize legacy saved or authored class ids; mods use canonical `unitClasses`. |
 
 The barber hair, beard-kind, beard-cut, family, and composed-style catalogues remain
 inside `js/items.js` for this milestone. Their ids are accepted saved appearance values

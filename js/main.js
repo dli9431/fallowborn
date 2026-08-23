@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.149.0';
+  FB.VERSION = '1.149.1';
   FB.CHANGELOG = [
+    { v: '1.149.1', date: '2026-08-22', changes: [
+      'Focuses and deeds now use validated data catalogues while keeping their existing behavior and save identities.'
+    ] },
     { v: '1.149.0', date: '2026-08-22', changes: [
       'Royal Council offices are now data-driven, letting mods add validated seats, bonuses, activation ranks, and schemer traits while existing special offices keep their identities.'
     ] },

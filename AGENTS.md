@@ -186,7 +186,8 @@ globals. **Load order matters** — do not reorder the `<script>` tags casually:
 - Data files first, all writing to `window.FBDATA`: `data/map_data.js` (land polygons, de
   jure empires/kingdoms/duchies, realms, straits, scripted history, `FBDATA.balance`),
   `data/counties.js` (the ~460-county table, expanding itself into `FBDATA.provinces`),
-  `data/cultures.js`, `data/technology.js`, `data/units.js` (the unit-class table:
+  `data/cultures.js`, `data/technology.js`, `data/actions.js` (the baseline focus/deed
+  metadata projected through private handlers in `js/actions.js`), `data/units.js` (the unit-class table:
   composition quality, upkeep, casualty order, counters, and tech/culture gates),
   `data/bookmarks.js` (the atomic 867/1066 world
   definitions), `data/settlements.js` (the shared physical-site table plus the per-bookmark

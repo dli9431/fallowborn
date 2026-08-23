@@ -13,6 +13,7 @@ dependsOnRuntime(__filename, [
   'js/world.js',
   'js/items.js',
   'js/economy.js',
+  'data/actions.js',
   'js/actions.js',
   'js/council.js',
   'js/intrigue.js',
@@ -777,4 +778,224 @@ test('milestone-three council validation rejects malformed definitions before mu
 
     expect(result.errors).toEqual([true, true, true, true, true, true, true]);
     expect(result.unchanged).toBe(true);
+  });
+
+test('milestone-four phase A projects protected baseline action catalogues and rebuilds indexes',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      function sameValue(left, right) {
+        return JSON.stringify(left) === JSON.stringify(right);
+      }
+      function hasFunction(value) {
+        if (typeof value === 'function') return true;
+        if (!value || typeof value !== 'object') return false;
+        for (const key in value) {
+          if (Object.prototype.hasOwnProperty.call(value, key) &&
+              hasFunction(value[key])) return true;
+        }
+        return false;
+      }
+      const protectedFields = [
+        'show', 'tick', 'gain', 'can', 'run', 'noConsume',
+        'deferCooldown', 'opensChoices', 'compatibilityAlias'
+      ];
+      const focusMetadata = FBDATA.focuses.every(function (def, index) {
+        const projected = FB.focuses[index];
+        return def.order === index && projected.id === def.id &&
+          projected.label === def.label &&
+          sameValue(projected.vocational, def.vocational) &&
+          projected.shortcutFamily === def.shortcutFamily &&
+          typeof projected.show === 'function' &&
+          typeof projected.tick === 'function' &&
+          typeof projected.desc === 'function';
+      });
+      const deedMetadata = FBDATA.deeds.every(function (def, index) {
+        const projected = FB.instants[index];
+        return def.order === index && projected.id === def.id &&
+          projected.label === def.label && projected.group === def.group &&
+          projected.flow === def.flow &&
+          (def.cooldownDays === undefined ||
+            projected.cd === def.cooldownDays) &&
+          sameValue(projected.requiresTech, def.requiresTech) &&
+          typeof projected.show === 'function' &&
+          typeof projected.run === 'function' &&
+          typeof projected.desc === 'function' &&
+          def.flow === (projected.opensChoices ? 'choices'
+            : (projected.noConsume ? 'no_day' : 'immediate'));
+      });
+      const recordsAreMetadataOnly = !hasFunction(FBDATA.focuses) &&
+        !hasFunction(FBDATA.deeds) &&
+        FBDATA.focuses.concat(FBDATA.deeds).every(function (def) {
+          return protectedFields.every(function (field) {
+            return !Object.prototype.hasOwnProperty.call(def, field);
+          });
+        });
+
+      const focusIndex = 2;
+      const deedIndex = 0;
+      const originalFocusDef = FBDATA.focuses[focusIndex];
+      const originalDeedDef = FBDATA.deeds[deedIndex];
+      const originalFocus = FB.focuses[focusIndex];
+      const originalDeed = FB.instants[deedIndex];
+      const originalFocusShow = originalFocus.show;
+      const originalPlayerFocus = FB.state.player.focus;
+      const revision = FB.actionCatalogRevision;
+      let rebuilt;
+      try {
+        originalFocus.show = function () { return false; };
+        FBDATA.focuses[focusIndex] = Object.assign({}, originalFocusDef, {
+          label:'Indexed Rest', desc:'A rebuilt focus description.'
+        });
+        FBDATA.deeds[deedIndex] = Object.assign({}, originalDeedDef, {
+          label:'Indexed Poach', desc:'A rebuilt deed description.'
+        });
+        FB.rebuildActionCatalogs();
+        const projectedFocus = FB.focuses[focusIndex];
+        const projectedDeed = FB.instants[deedIndex];
+        const rebuiltFocuses = FB.focuses;
+        FB.state.player.focus = 'rest';
+        FB.focuses = FB.focuses.filter(function (focus) {
+          return focus.id !== 'rest';
+        });
+        FB.validateFocus(FB.state);
+        const focusIndexFresh = FB.state.player.focus === 'rest';
+        FB.focuses = rebuiltFocuses;
+        rebuilt = {
+          revision:FB.actionCatalogRevision === revision + 1,
+          focusLabel:projectedFocus.label,
+          focusDesc:projectedFocus.desc(FB.state),
+          deedLabel:projectedDeed.label,
+          deedDesc:projectedDeed.desc(FB.state),
+          focusIndexFresh:focusIndexFresh,
+          deedIndexFresh:FB.instantStatus(FB.state, 'poach').action === projectedDeed,
+          focusHandlerStable:projectedFocus.show === originalFocusShow &&
+            projectedFocus.tick === originalFocus.tick,
+          deedHandlerStable:projectedDeed.show === originalDeed.show &&
+            projectedDeed.run === originalDeed.run
+        };
+      } finally {
+        FBDATA.focuses[focusIndex] = originalFocusDef;
+        FBDATA.deeds[deedIndex] = originalDeedDef;
+        FB.rebuildActionCatalogs();
+        FB.state.player.focus = originalPlayerFocus;
+      }
+      return {
+        counts:[FBDATA.focuses.length, FBDATA.deeds.length],
+        validation:FB.validateActionData(),
+        focusMetadata:focusMetadata,
+        deedMetadata:deedMetadata,
+        recordsAreMetadataOnly:recordsAreMetadataOnly,
+        rebuilt:rebuilt,
+        restored:[FB.focuses[focusIndex].label, FB.instants[deedIndex].label]
+      };
+    });
+
+    expect(result.counts).toEqual([28, 78]);
+    expect(result.validation).toEqual([]);
+    expect(result.focusMetadata).toBe(true);
+    expect(result.deedMetadata).toBe(true);
+    expect(result.recordsAreMetadataOnly).toBe(true);
+    expect(result.rebuilt).toEqual({
+      revision:true,
+      focusLabel:'Indexed Rest',
+      focusDesc:'A rebuilt focus description.',
+      deedLabel:'Indexed Poach',
+      deedDesc:'A rebuilt deed description.',
+      focusIndexFresh:true,
+      deedIndexFresh:true,
+      focusHandlerStable:true,
+      deedHandlerStable:true
+    });
+    expect(result.restored).toEqual(['🛌 Rest and mend', '🏹 Poach the lord’s game']);
+  });
+
+test('milestone-four phase A rejects malformed internal action data without mutation',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function validatePatch(kind, index, patch) {
+        const records = kind === 'focus' ? FBDATA.focuses : FBDATA.deeds;
+        const original = records[index];
+        records[index] = Object.assign({}, original, patch);
+        const message = FB.validateActionData().join(' ');
+        records[index] = original;
+        return message;
+      }
+      function validateFocusSwap() {
+        const first = FBDATA.focuses[0];
+        const second = FBDATA.focuses[1];
+        FBDATA.focuses[0] = Object.assign({}, second, { order:0 });
+        FBDATA.focuses[1] = Object.assign({}, first, { order:1 });
+        const message = FB.validateActionData().join(' ');
+        FBDATA.focuses[0] = first;
+        FBDATA.focuses[1] = second;
+        return message;
+      }
+      const cases = [
+        validatePatch('focus', 0, { order:99 }),
+        validatePatch('focus', 0, { handler:'rest' }),
+        validatePatch('focus', 0, { extra:true }),
+        validatePatch('deed', 0, { flow:'choices' }),
+        validatePatch('deed', 0, { requiresTech:'missing_technology' }),
+        validatePatch('deed', 0, { cooldownDays:-1 }),
+        validateFocusSwap(),
+        validatePatch('focus', 4, { vocational:'missing_vocation' })
+      ];
+      const beforeFocuses = FB.focuses;
+      const beforeInstants = FB.instants;
+      const beforeRevision = FB.actionCatalogRevision;
+      const original = FBDATA.deeds[0];
+      let rebuildError = '';
+      FBDATA.deeds[0] = Object.assign({}, original, { extra:true });
+      try {
+        FB.rebuildActionCatalogs();
+      } catch (error) {
+        rebuildError = error.message;
+      }
+      FBDATA.deeds[0] = original;
+      const rebuildAtomic = FB.focuses === beforeFocuses &&
+        FB.instants === beforeInstants &&
+        FB.actionCatalogRevision === beforeRevision;
+      const beforeData = JSON.stringify({
+        focuses:FBDATA.focuses, deeds:FBDATA.deeds
+      });
+      const rejectedModKeys = ['focuses', 'deeds'].map(function (key) {
+        const mod = {};
+        mod[key] = [];
+        try {
+          FB.mods.apply(mod);
+          return false;
+        } catch (error) {
+          return error.message.indexOf(key + ' is not recognized') >= 0;
+        }
+      });
+      return {
+        cases:cases,
+        rebuildError:rebuildError,
+        rebuildAtomic:rebuildAtomic,
+        rejectedModKeys:rejectedModKeys,
+        dataUnchanged:beforeData === JSON.stringify({
+          focuses:FBDATA.focuses, deeds:FBDATA.deeds
+        }),
+        validAfter:FB.validateActionData()
+      };
+    });
+
+    expect(result.cases[0]).toContain('order must remain 0');
+    expect(result.cases[1]).toContain('must retain its baseline handler');
+    expect(result.cases[2]).toContain('extra is not recognized');
+    expect(result.cases[3]).toContain('flow must match its baseline handler');
+    expect(result.cases[4]).toContain('unknown technology missing_technology');
+    expect(result.cases[5]).toContain('invalid cooldown');
+    expect(result.cases[6]).toContain('retain baseline id study at index 0');
+    expect(result.cases[7]).toContain('unknown vocation missing_vocation');
+    expect(result.rebuildError).toContain('Invalid action catalogue');
+    expect(result.rebuildAtomic).toBe(true);
+    expect(result.rejectedModKeys).toEqual([true, true]);
+    expect(result.dataUnchanged).toBe(true);
+    expect(result.validAfter).toEqual([]);
   });

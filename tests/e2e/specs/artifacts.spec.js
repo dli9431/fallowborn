@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/items.js',
+  'data/actions.js',
   'js/actions.js',
   'js/events.js',
   'js/world.js',

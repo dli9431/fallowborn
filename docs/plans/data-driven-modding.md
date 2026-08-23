@@ -1,6 +1,6 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestones 0–3 implemented
+Status: active; milestones 0–3 and phase 4A implemented
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -375,6 +375,15 @@ Execution flags are handler capabilities, not ordinary presentation fields.
 `noConsume`, `deferCooldown`, picker/confirmation flow, compatibility aliases, and
 tutorial-finalization behavior remain protected in code. The Deeds UI must use an
 explicit flow projection instead of inferring behavior from an ellipsis in the label.
+
+Implemented in v1.149.1. `data/actions.js` owns all 28 focus and 78 deed metadata
+records. Boot-time schema validation protects their ids, order, allowed fields, private
+handler bindings, referenced technologies, and deed flow/capability agreement before
+building the compatibility projections. Static descriptions use structured localization;
+dynamic descriptions remain private handlers. The Deeds panel now consumes the projected
+group and explicit flow, and catalogue rebuilds replace both arrays and id indexes even
+when record counts do not change. `focuses` and `deeds` remain rejected runtime-mod keys,
+so this phase changes ownership without expanding mod authority or save format 3.
 
 ### Phase 4B: bounded customization of baseline actions
 

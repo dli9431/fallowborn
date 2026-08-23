@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/market.js',
   'js/population.js',
+  'data/actions.js',
   'js/actions.js',
   'js/events.js',
   'js/save.js',

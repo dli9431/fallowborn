@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
+  'data/actions.js',
   'js/actions.js',
   'js/main.js',
   'js/mapview.js',

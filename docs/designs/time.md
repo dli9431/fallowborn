@@ -3,7 +3,7 @@
 ## Daily time, focuses, and deeds
 
 **Time is daily** (`G.passDay` in main.js): 90-day seasons, 360-day years; `state.turn`
-counts days. Each day the player's **focus** ticks (`FB.focuses` in actions.js — continuous
+counts days. Each day the player's **focus** ticks (`FB.focuses` — continuous
 activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds that normally
 spend the day or open the interface where a final action is chosen, and may use day-based
 cooldowns (`cd`). The Deeds panel presents this as a strong
@@ -16,6 +16,16 @@ an immediate deed such as Poach is visibly different from a picker-backed deed s
 into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
+The 28 baseline focus records and 78 baseline deed records keep their non-executable
+metadata in `data/actions.js`. `js/actions.js` owns private handler registries and validates
+and projects those records into the compatible `FB.focuses` / `FB.instants` shapes. Every
+baseline id, order, and handler binding is protected. Fixed cooldowns, technology
+requirements, group, and explicit `immediate` / `no_day` / `choices` flow are data; day
+consumption, deferred cooldowns, compatibility aliases, modal behavior, callbacks, and RNG
+remain handler capabilities. `FB.rebuildActionCatalogs` replaces both projections and their
+id indexes atomically, so even a same-length internal catalogue replacement cannot retain a
+stale focus or deed. These catalogues remain internal in Phase 4A and are not accepted as
+runtime-mod keys.
 The full deed-list API resolves visible definitions in one linear pass. The Deeds panel
 may request visibility-only entries for collapsed accordion groups, postponing cooldown,
 technology, and other eligibility work until those controls are opened.
