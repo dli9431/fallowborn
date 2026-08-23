@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js',
   'css/style.css',
   'data/political_blocs.js',
+  'data/political_institutions.js',
   'data/policies.js'
 ]);
 

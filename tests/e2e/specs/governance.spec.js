@@ -9,6 +9,7 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js',
   'js/ui_panels.js',
   'data/map_data.js',
+  'data/political_institutions.js',
   'css/style.css'
 ]);
 

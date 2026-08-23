@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'css/style.css',
+  'data/political_institutions.js',
   'js/actions.js',
   'js/main.js',
   'js/ui_misc.js',

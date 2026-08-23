@@ -1,19 +1,34 @@
 # The Royal Council
 
-**At tier 6 (King) the player no longer rules alone.** `js/council.js` forms the royal
-council — five great officers of the crown drawn from the player's own vassal realms:
+**At tier 6 (King) the player no longer rules alone.** The validated
+`FBDATA.councilSeats` registry in `data/political_institutions.js` defines the royal
+council's offices, while `js/council.js` owns appointments and effects. Core data ships
+five great officers of the crown drawn from the player's own vassal realms:
 **Seneschal** (+10% taxes), **Constable** (+10% levy), **Treasurer** (buildings 15%
 cheaper), **Almoner** (+1 piety/season), **Chamberlain** (watches for schemes; the
 player's own plots weave faster). Offices are historical household great-offices, not a
-modern cabinet. A seat's bonus (`FB.councilBonus`) holds only while its holder is a
-living vassal not in open disgrace (Standing above −50).
+modern cabinet. Each definition owns its stable id, localized presentation, basic bonus,
+activation tier, and ordinary holder eligibility. A seat's bonus (`FB.councilBonus`)
+holds only while its holder is a living vassal not in open disgrace (Standing above
+−50).
 
 **Councillors are people, not chairs.** Generated rulers (`realm.ruler`, world.js) carry
-a `trait` from `FB.RULER_TRAITS` — the house's temper. Ambitious, deceitful, proud,
-envious, cruel, or wrathful officers with cold Standing become **schemers**; warm ones
-become **sycophants** who ingratiate themselves with gifts and flattery. This is a deliberate enrichment
+a `trait` from `FB.RULER_TRAITS` — the house's temper. Traits listed by
+`FBDATA.councilRules.schemerTraits` classify officers with cold Standing as
+**schemers**; warm ones become **sycophants** who ingratiate themselves with gifts and
+flattery. This is a deliberate enrichment
 of the lightweight ruler object (see [realms.md](realms.md)) — vassal rulers are still
 not full characters.
+
+Runtime mods may add complete seat definitions or replace them by stable id. Added seats
+use the generic vacancy, direct-vassal appointment, Standing, effectiveness, and bonus
+flows; `tierMin` controls when each definition becomes active. The baseline seat ids are
+protected. Treasurer, Constable, Almoner, and Chamberlain remain explicit capability ids
+for their existing events, institution terms, and special consumers; an arbitrary new
+bonus key does not create new engine behavior. `state.council.seats` continues to store
+holders by seat id. If a mod definition is later absent, its saved holder remains inert
+instead of being deleted, and becomes active again if the definition returns. This keeps
+save format 3 and the active-mod fingerprint sufficient.
 
 **Crown authority is the axis of the minigame** (`state.council.authority`, 0–100,
 starts 60). High-handed acts — extraordinary taxes (+4), revoking a fief (+6), dismissing
@@ -56,6 +71,11 @@ Sealing the institutional Charter of Liberties and creating Confirmation of Grea
 requires `representative_estates`, while defiance and the appointed Council remain
 available. Locked mixed-event choices stay visible and route eligible rulers to the missing
 technology. Existing privileges and protected terms are grandfathered.
+
+Making the existing office catalogue and schemer classification data-driven records no
+new technology-impact entry: it changes mod authoring and routing, not baseline gameplay
+eligibility. Each seat's existing `tierMin` is an institutional rank gate rather than a
+research dependency.
 
 Triggers and effects are the `council_*` custom fns in `js/council.js`; like the older
 vassal events, slot-day council events stay archetypal (no named ruler tokens) and let

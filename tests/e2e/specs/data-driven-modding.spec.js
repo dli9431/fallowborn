@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'data/starts.js',
   'data/cultures.js',
   'data/economy.js',
+  'data/political_institutions.js',
   'data/traits.js',
   'data/intrigue.js',
   'js/model.js',
@@ -17,6 +18,7 @@ dependsOnRuntime(__filename, [
   'js/intrigue.js',
   'js/save.js',
   'js/mods.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'js/main.js'
 ]);
@@ -590,6 +592,185 @@ test('milestone-two validation preserves rank indexes and rejects bad routes',
         errors:errors,
         unchanged:before === JSON.stringify({
           paths:FBDATA.religiousPaths, religions:FBDATA.religions
+        })
+      };
+    });
+
+    expect(result.errors).toEqual([true, true, true, true, true, true, true]);
+    expect(result.unchanged).toBe(true);
+  });
+
+test('milestone-three council seats activate, appoint, localize, and restore by id',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      FB.mods.apply({
+        traits:{
+          e2e_watchful:{
+            name:'Watchful', class:'disposition', noRandom:true, int:1
+          }
+        },
+        councilSeats:{
+          e2e_justiciar:{
+            name:'Justiciar', icon:'§',
+            desc:'+2.5 judgment while this officer serves',
+            bonusKey:'judgment', bonusAmount:2.5,
+            tierMin:7, holderEligibility:'direct_vassal'
+          }
+        },
+        councilRules:{ schemerTraits:['e2e_watchful'] }
+      });
+    });
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const home = FB.world.byId[s.player.provinceId];
+      s.player.tier = 6;
+      for (let i = 0; i < 6; i++) {
+        const id = 'e2e_council_' + i;
+        s.realms[id] = {
+          id:id, name:'Test March ' + i, alive:true, liege:'player', rank:1,
+          capital:s.player.provinceId, color:'#705435', aggression:0,
+          culture:home.culture, religion:home.religion, favor:0,
+          ruler:{
+            name:'Officer ' + i, sex:'m', culture:home.culture,
+            age:35 + i, mar:5, trait:'e2e_watchful', generation:1
+          }
+        };
+        FB.setRealmRulerStanding(s, id, 0);
+      }
+      if (FB.invalidateRealmCache) FB.invalidateRealmCache();
+      s.council = { authority:60, seats:{ e2e_justiciar:null } };
+      FB.councilEnsure(s);
+      const kingSeats = FB.councilSeats(s).map(function (seat) {
+        return seat.id;
+      });
+      const kingSavedValue = s.council.seats.e2e_justiciar;
+      s.player.tier = 7;
+      FB.councilEnsure(s);
+      const holderId = s.council.seats.e2e_justiciar;
+      s.realms[holderId].ruler.trait = 'e2e_watchful';
+      FB.setRealmRulerStanding(s, holderId, -10);
+      const summary = FB.councilSummary(s);
+      FB.ui.showCouncil();
+      const sheet = document.getElementById('gm-body').textContent;
+      FB.ui.closeModal();
+      const seatResult = {
+        bonus:FB.councilBonus(s, 'judgment'),
+        name:FB.councilSeatName(s, 'e2e_justiciar'),
+        desc:FB.councilSeatDescription(s, 'e2e_justiciar'),
+        schemer:summary.schemerIds.indexOf(holderId) >= 0,
+        ui:sheet.indexOf('Justiciar') >= 0 &&
+          sheet.indexOf('+2.5 judgment while this officer serves') >= 0
+      };
+      const payload = JSON.parse(FB.save.serialize());
+      FB.save.restore(payload);
+      const restored = FB.state;
+      const restoredSummary = FB.councilSummary(restored);
+      const restoredHolder = restored.council.seats.e2e_justiciar;
+      delete FBDATA.councilSeats.e2e_justiciar;
+      const withoutDefinition = FB.councilSummary(restored);
+      return {
+        activation:{
+          kingHas:kingSeats.indexOf('e2e_justiciar') >= 0,
+          kingSavedValue:kingSavedValue,
+          emperorHas:summary.seats.some(function (seat) {
+            return seat.id === 'e2e_justiciar';
+          })
+        },
+        seat:{
+          holder:holderId,
+          bonus:seatResult.bonus,
+          name:seatResult.name,
+          desc:seatResult.desc,
+          schemer:seatResult.schemer,
+          ui:seatResult.ui
+        },
+        restore:{
+          version:payload.v,
+          holder:restoredHolder,
+          visible:restoredSummary.seats.some(function (seat) {
+            return seat.id === 'e2e_justiciar' &&
+              seat.holderId === restoredHolder;
+          })
+        },
+        removed:{
+          saved:restored.council.seats.e2e_justiciar,
+          visible:withoutDefinition.seats.some(function (seat) {
+            return seat.id === 'e2e_justiciar';
+          })
+        }
+      };
+    });
+
+    expect(result.activation).toEqual({
+      kingHas:false, kingSavedValue:null, emperorHas:true
+    });
+    expect(result.seat.holder).toMatch(/^e2e_council_/);
+    expect(result.seat).toEqual({
+      holder:result.seat.holder,
+      bonus:2.5,
+      name:'Justiciar',
+      desc:'+2.5 judgment while this officer serves',
+      schemer:true,
+      ui:true
+    });
+    expect(result.restore).toEqual({
+      version:3, holder:result.seat.holder, visible:true
+    });
+    expect(result.removed).toEqual({
+      saved:result.seat.holder, visible:false
+    });
+  });
+
+test('milestone-three council validation rejects malformed definitions before mutation',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+
+    const result = await page.evaluate(function () {
+      function seat() {
+        return {
+          name:'Test Office', icon:'§', desc:'A test office.',
+          bonusKey:'test', bonusAmount:1,
+          tierMin:6, holderEligibility:'direct_vassal'
+        };
+      }
+      const before = JSON.stringify({
+        seats:FBDATA.councilSeats, rules:FBDATA.councilRules
+      });
+      const cases = [
+        { data:{ councilSeats:{ BadSeat:seat() } },
+          includes:'invalid seat id' },
+        { data:{ councilSeats:{ e2e_missing_name:Object.assign(seat(), {
+          name:''
+        }) } }, includes:'must be a non-empty string' },
+        { data:{ councilSeats:{ e2e_bad_bonus:Object.assign(seat(), {
+          bonusAmount:-1
+        }) } }, includes:'number from 0 to 100' },
+        { data:{ councilSeats:{ e2e_bad_tier:Object.assign(seat(), {
+          tierMin:8
+        }) } }, includes:'integer from 0 to 7' },
+        { data:{ councilSeats:{ e2e_bad_holder:Object.assign(seat(), {
+          holderEligibility:'courtier'
+        }) } }, includes:'must be direct_vassal' },
+        { data:{ councilRules:{ schemerTraits:['missing_trait'] } },
+          includes:'unknown id missing_trait' },
+        { data:{ councilRules:{ schemerTraits:[], extra:true } },
+          includes:'extra is not recognized' }
+      ];
+      const errors = cases.map(function (entry) {
+        try {
+          FB.mods.apply(entry.data);
+          return null;
+        } catch (error) {
+          return error.message.indexOf(entry.includes) >= 0;
+        }
+      });
+      return {
+        errors:errors,
+        unchanged:before === JSON.stringify({
+          seats:FBDATA.councilSeats, rules:FBDATA.councilRules
         })
       };
     });

@@ -94,7 +94,7 @@ window.FB = window.FB || {};
   function councilSeatId(state, polityId, houseId) {
     if (polityId !== 'player' || houseId === 'player' ||
         !state.council || !state.council.seats) return null;
-    var seats = FB.councilSeats ? FB.councilSeats() : [];
+    var seats = FB.councilSeats ? FB.councilSeats(state) : [];
     for (var i = 0; i < seats.length; i++) {
       if (state.council.seats[seats[i].id] === houseId) return seats[i].id;
     }

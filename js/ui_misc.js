@@ -441,18 +441,11 @@ window.FB = window.FB || {};
     });
   }
   function councilSeatName(id) {
-    return id === 'seneschal' ? FB.T('Seneschal')
-      : id === 'constable' ? FB.T('Constable')
-      : id === 'treasurer' ? FB.T('Treasurer')
-      : id === 'almoner' ? FB.T('Almoner')
-      : FB.T('Chamberlain');
+    return FB.councilSeatName ? FB.councilSeatName(FB.state, id) : id;
   }
   function councilSeatDesc(id) {
-    return id === 'seneschal' ? FB.T('+10% taxes while he serves')
-      : id === 'constable' ? FB.T('+10% levy while he serves')
-      : id === 'treasurer' ? FB.T('Buildings cost 15% less while he serves')
-      : id === 'almoner' ? FB.T('+1 piety a season while he serves')
-      : FB.T('Watches for schemes against you; your own plots weave faster');
+    return FB.councilSeatDescription
+      ? FB.councilSeatDescription(FB.state, id) : '';
   }
   const TERRAIN_NAMES = {
     farmland: 'farmland', forest: 'forest', hills: 'hills', mountains: 'mountains',

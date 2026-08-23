@@ -147,6 +147,8 @@ A JSON mod is one object with any of these keys:
   "cultures":  { "id": { ... } },
   "religions": { "id": { ... } },
   "religiousPaths": { "id": { "kind": "lay", "ranks": [ ... ] } },
+  "councilSeats": { "id": { "name": "...", "bonusKey": "tax", ... } },
+  "councilRules": { "schemerTraits": ["ambitious", "deceitful"] },
   "traits":    { "id": { ... } },
   "ailments":  { "id": { ... } },
   "buildings": { "id": { ... } },
@@ -1446,6 +1448,54 @@ settlement), the standing county modifiers `persecuted_minorities`,
 gated slot-day stories (`realm_policy_persecution_unrest`,
 `realm_policy_settlers_arrive`, `realm_policy_refugees_shelter`) with their
 `realm_policy_*` trigger and effect fns.
+
+## Royal Council seats and rules
+
+`FBDATA.councilSeats` and `FBDATA.councilRules` live in
+`data/political_institutions.js`. A runtime mod may add a seat or replace a complete
+same-id seat definition. The five core ids (`seneschal`, `constable`, `treasurer`,
+`almoner`, and `chamberlain`) must remain present. `councilRules` is one atomic rules
+record: when supplied, it replaces the complete effective record after validation.
+
+```json
+{
+  "councilSeats": {
+    "justiciar": {
+      "name": "Justiciar",
+      "icon": "⚖",
+      "desc": "+5% taxes while this officer serves",
+      "bonusKey": "tax",
+      "bonusAmount": 0.05,
+      "tierMin": 7,
+      "holderEligibility": "direct_vassal"
+    }
+  },
+  "councilRules": {
+    "schemerTraits": ["ambitious", "deceitful", "proud"]
+  }
+}
+```
+
+Seat ids and `bonusKey` values are lowercase stable ids. `name`, `icon`, and `desc`
+are required display fields; `bonusAmount` is a number from 0 through 100, and
+`tierMin` is an integer player tier from 0 through 7. The first schema supports only
+`holderEligibility:"direct_vassal"`. The rules record supports only
+`schemerTraits`, an id list resolved against the effective trait table, including traits
+declared by the same mod. Unknown fields, references, or enum values reject the whole mod
+before mutation.
+
+The generic engine exposes active definitions through `FB.councilSeats(state)` and
+`FB.councilSeat(id, state)`. An added seat receives ordinary vacancy, appointment,
+Standing, effectiveness, saved-holder, and `FB.councilBonus` behavior. A seat activates
+when the player's tier reaches `tierMin`; inactive or missing definitions do not erase an
+existing `state.council.seats[id]` value. Display text uses stable
+`councilSeat.<id>.<name|desc>.default` localization keys and falls back to the effective
+English definition.
+
+The five core ids are also capability contracts. Treasurer, Constable, Almoner, and
+Chamberlain retain explicit event, institution, and special-effect consumers addressed
+by those ids. A new `bonusKey` participates in generic `FB.councilBonus` summation, but it
+does not invent a special engine consumer by itself.
 
 ## Elections, privileges, and collective demands
 

@@ -12,19 +12,43 @@ window.FB = window.FB || {};
 (function () {
   'use strict';
 
-  /* the five great offices. bonusKey/bonusAmt feed FB.councilBonus and hold
-     while the seat is filled by a living vassal not in open disgrace */
-  var SEATS = [
-    { id: 'seneschal', icon: '⚖', bonusKey: 'tax', bonusAmt: 0.10 },
-    { id: 'constable', icon: '🗡', bonusKey: 'levy', bonusAmt: 0.10 },
-    { id: 'treasurer', icon: '💰', bonusKey: 'build', bonusAmt: 0.15 },
-    { id: 'almoner', icon: '🕯', bonusKey: 'piety', bonusAmt: 1 },
-    { id: 'chamberlain', icon: '🗝', bonusKey: 'plot', bonusAmt: 0.08 }
-  ];
-  FB.councilSeats = function () { return SEATS; };
-  FB.councilSeat = function (id) {
-    for (const s of SEATS) if (s.id === id) return s;
-    return null;
+  function seatRecord(id, def) {
+    const seat = { id:id };
+    for (const key in def) {
+      if (Object.prototype.hasOwnProperty.call(def, key)) seat[key] = def[key];
+    }
+    return seat;
+  }
+
+  /* Definitions stay in insertion order so the five baseline offices keep
+     their historical filling and UI order. Passing state filters seats whose
+     activation tier has not been reached; no-state callers receive the full
+     catalogue for validation and compatibility inspection. */
+  FB.councilSeats = function (state) {
+    const out = [];
+    const table = FBDATA.councilSeats || {};
+    for (const id in table) {
+      if (!Object.prototype.hasOwnProperty.call(table, id)) continue;
+      const def = table[id];
+      if (!def || (state && state.player.tier < def.tierMin)) continue;
+      out.push(seatRecord(id, def));
+    }
+    return out;
+  };
+  FB.councilSeat = function (id, state) {
+    const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
+    if (!def || (state && state.player.tier < def.tierMin)) return null;
+    return seatRecord(id, def);
+  };
+  FB.councilSeatName = function (state, id) {
+    const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
+    return def ? FB.dataText(state, state && state.player.charId,
+      'councilSeat', id, def, 'name', {}) : id;
+  };
+  FB.councilSeatDescription = function (state, id) {
+    const def = FBDATA.councilSeats && FBDATA.councilSeats[id];
+    return def ? FB.dataText(state, state && state.player.charId,
+      'councilSeat', id, def, 'desc', {}) : '';
   };
 
   function standing(state, rid) {
@@ -36,10 +60,22 @@ window.FB = window.FB || {};
       'council:' + source);
   }
 
-  /* traits that make a councillor dangerous when his love runs cold */
-  var SCHEMER_TRAITS = ['ambitious', 'deceitful', 'proud', 'envious', 'cruel', 'wrathful'];
+  function schemerTraits() {
+    const rules = FBDATA.councilRules || {};
+    return Array.isArray(rules.schemerTraits) ? rules.schemerTraits : [];
+  }
 
-  FB.councilActive = function (state) { return state.player.tier >= 6; };
+  function holderEligible(state, seat, rid, appointment) {
+    const realm = rid && state.realms[rid];
+    if (!seat || seat.holderEligibility !== 'direct_vassal' ||
+        !realm || !realm.alive || realm.liege !== 'player') return false;
+    return !(appointment && FB.intrigueRealmRulerCaptive &&
+      FB.intrigueRealmRulerCaptive(state, rid));
+  }
+
+  FB.councilActive = function (state) {
+    return !!(state && state.player && FB.councilSeats(state).length);
+  };
 
   /* create/heal the council: forms when the player is crowned (also heals
      old saves), drops seat-holders who died or turned, fills ordinary
@@ -52,22 +88,25 @@ window.FB = window.FB || {};
     const c = state.council;
     if (!c.seats) c.seats = {};
     if (c.authority === undefined) c.authority = 60;
+    const seats = FB.councilSeats(state);
     for (const vid of FB.playerVassals(state)) {
       const r = state.realms[vid];
       if (r && r.ruler && !r.ruler.trait) {
         r.ruler.trait = FB.pick(FBDATA.rulerTraits);
       }
     }
-    // a seat whose holder no longer kneels falls vacant
-    for (const s of SEATS) {
+    // a seat whose holder no longer kneels, or already holds an earlier
+    // active office, falls vacant
+    const seated = {};
+    for (const s of seats) {
       const rid = c.seats[s.id];
-      if (rid && (!state.realms[rid] || !state.realms[rid].alive || state.realms[rid].liege !== 'player')) {
+      if (rid && (!holderEligible(state, s, rid, false) || seated[rid])) {
         c.seats[s.id] = null;
+      } else if (rid) {
+        seated[rid] = 1;
       }
     }
     // fill ordinary vacancies: the greatest vassals first (rank, then Standing)
-    const seated = {};
-    for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     const cand = FB.playerVassals(state).filter(function (vid) {
       return !seated[vid] && !FB.isProtected(state, 'councilRealm', vid);
     });
@@ -77,7 +116,7 @@ window.FB = window.FB || {};
       return standing(state, b) - standing(state, a) ||
         (a < b ? -1 : a > b ? 1 : 0);
     });
-    for (const s of SEATS) {
+    for (const s of seats) {
       if (!c.seats[s.id] && cand.length &&
           !(FB.councilSeatRequiresConfirmation &&
             FB.councilSeatRequiresConfirmation(state, s.id))) {
@@ -96,7 +135,7 @@ window.FB = window.FB || {};
     const c = FB.councilEnsure(state);
     const out = [];
     if (!c) return out;
-    for (const s of SEATS) {
+    for (const s of FB.councilSeats(state)) {
       const rid = c.seats[s.id];
       if (rid && state.realms[rid]) out.push({ seat: s, rid: rid, realm: state.realms[rid] });
     }
@@ -113,20 +152,21 @@ window.FB = window.FB || {};
     const seated = {};
     const schemers = [];
     const sycophants = [];
+    const traits = schemerTraits();
     let memberStanding = 0;
     let memberCount = 0;
-    for (const seat of SEATS) {
+    for (const seat of FB.councilSeats(state)) {
       const holderId = council && council.seats &&
         council.seats[seat.id] || null;
       const realm = holderId && state.realms[holderId];
-      const valid = !!(realm && realm.alive && realm.liege === 'player');
+      const valid = holderEligible(state, seat, holderId, false);
       const value = valid ? standing(state, holderId) : 0;
       const effective = valid && value > -50;
       if (valid) {
         seated[holderId] = seat.id;
         memberStanding += value;
         memberCount++;
-        if (SCHEMER_TRAITS.indexOf((realm.ruler || {}).trait) >= 0 &&
+        if (traits.indexOf((realm.ruler || {}).trait) >= 0 &&
             value <= -1) schemers.push(holderId);
         if (value >= 20) sycophants.push(holderId);
       }
@@ -137,7 +177,7 @@ window.FB = window.FB || {};
         standing:value,
         effective:effective,
         bonusKey:seat.bonusKey,
-        bonusAmount:effective ? seat.bonusAmt : 0
+        bonusAmount:effective ? seat.bonusAmount : 0
       });
     }
     const vassalIds = FB.playerVassals(state).slice().sort();
@@ -172,11 +212,11 @@ window.FB = window.FB || {};
      automatic filling and this suggestion, but never prevent manual choice. */
   FB.councilRecommendation = function (state, seatId) {
     const summary = FB.councilSummary(state);
-    if (!summary || !FB.councilSeat(seatId)) return null;
+    const seat = FB.councilSeat(seatId, state);
+    if (!summary || !seat) return null;
     const candidates = FB.playerVassals(state).filter(function (rid) {
       return !summary.seated[rid] &&
-        !(FB.intrigueRealmRulerCaptive &&
-          FB.intrigueRealmRulerCaptive(state, rid)) &&
+        holderEligible(state, seat, rid, true) &&
         !FB.isProtected(state, 'councilRealm', rid);
     });
     candidates.sort(function (a, b) {
@@ -237,11 +277,9 @@ window.FB = window.FB || {};
   FB.councilAppoint = function (state, seatId, rid, options) {
     options = options || {};
     const c = FB.councilEnsure(state);
-    const seat = FB.councilSeat(seatId);
+    const seat = FB.councilSeat(seatId, state);
     const r = rid && state.realms[rid];
-    if (!c || !seat || !r || !r.alive || r.liege !== 'player' ||
-        (FB.intrigueRealmRulerCaptive &&
-          FB.intrigueRealmRulerCaptive(state, rid))) return;
+    if (!c || !seat || !r || !holderEligible(state, seat, rid, true)) return;
     if (!options.confirmed && FB.councilAppointmentStatus) {
       const status = FB.councilAppointmentStatus(state, seatId, rid);
       if (!status.ready) return false;
@@ -251,7 +289,9 @@ window.FB = window.FB || {};
       }
     }
     // no man holds two offices; the displaced go back to the benches
-    for (const s of SEATS) if (c.seats[s.id] === rid) c.seats[s.id] = null;
+    for (const s of FB.councilSeats(state)) {
+      if (c.seats[s.id] === rid) c.seats[s.id] = null;
+    }
     const old = c.seats[seatId];
     c.seats[seatId] = rid;
     adjustStanding(state, rid, 10, 'appointment');
@@ -264,7 +304,7 @@ window.FB = window.FB || {};
 
   FB.councilDismiss = function (state, seatId) {
     const c = FB.councilEnsure(state);
-    const seat = FB.councilSeat(seatId);
+    const seat = FB.councilSeat(seatId, state);
     if (!c || !seat) return;
     const rid = c.seats[seatId];
     if (!rid) return;
@@ -314,7 +354,7 @@ window.FB = window.FB || {};
       const realm = state.realms[seat.holderId];
       if (!realm) continue;
       out.push({
-        seat:FB.councilSeat(seat.id),
+        seat:FB.councilSeat(seat.id, state),
         rid:seat.holderId,
         realm:realm
       });
@@ -413,10 +453,13 @@ window.FB = window.FB || {};
   FB.fns.council_has_unseated = function (state) {
     const c = FB.councilEnsure(state);
     if (!c) return false;
+    const seats = FB.councilSeats(state);
+    const traits = schemerTraits();
     const seated = {};
-    for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
+    for (const s of seats) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     for (const vid of FB.playerVassals(state)) {
-      if (!seated[vid] && SCHEMER_TRAITS.indexOf((state.realms[vid].ruler || {}).trait) >= 0) return true;
+      if (!seated[vid] &&
+          traits.indexOf((state.realms[vid].ruler || {}).trait) >= 0) return true;
     }
     return false;
   };
@@ -442,19 +485,25 @@ window.FB = window.FB || {};
   FB.fns.council_seat_demand_yes = function (state) {
     const c = FB.councilEnsure(state);
     if (!c) return;
+    const seats = FB.councilSeats(state);
+    const traits = schemerTraits();
     const seated = {};
-    for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
+    for (const s of seats) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     let who = null;
     for (const vid of FB.playerVassals(state)) {
-      if (!seated[vid] && SCHEMER_TRAITS.indexOf((state.realms[vid].ruler || {}).trait) >= 0) { who = vid; break; }
+      if (!seated[vid] &&
+          traits.indexOf((state.realms[vid].ruler || {}).trait) >= 0) {
+        who = vid;
+        break;
+      }
     }
     if (!who) return;
     // a vacant office first; else he elbows out the least-loved officer
     let seatId = null;
-    for (const s of SEATS) if (!c.seats[s.id]) { seatId = s.id; break; }
+    for (const s of seats) if (!c.seats[s.id]) { seatId = s.id; break; }
     if (!seatId) {
       let worstOp = Infinity;
-      for (const s of SEATS) {
+      for (const s of seats) {
         const op = standing(state, c.seats[s.id]);
         if (op < worstOp) { worstOp = op; seatId = s.id; }
       }
@@ -467,10 +516,13 @@ window.FB = window.FB || {};
   FB.fns.council_seat_demand_no = function (state) {
     const c = FB.councilEnsure(state);
     if (!c) return;
+    const seats = FB.councilSeats(state);
+    const traits = schemerTraits();
     const seated = {};
-    for (const s of SEATS) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
+    for (const s of seats) if (c.seats[s.id]) seated[c.seats[s.id]] = 1;
     for (const vid of FB.playerVassals(state)) {
-      if (!seated[vid] && SCHEMER_TRAITS.indexOf((state.realms[vid].ruler || {}).trait) >= 0) {
+      if (!seated[vid] &&
+          traits.indexOf((state.realms[vid].ruler || {}).trait) >= 0) {
         adjustStanding(state, vid, -12, 'seat_demand_no');
         break;
       }

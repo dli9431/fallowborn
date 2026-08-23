@@ -4,6 +4,48 @@
    derived by js/institutions.js. */
 window.FBDATA = window.FBDATA || {};
 
+/* Great offices are stable save ids. Added seats receive the Council's
+   ordinary vacancy, appointment, Standing, and effectiveness behavior;
+   special institutional/event consumers continue to name their core ids. */
+FBDATA.councilSeats = {
+  seneschal: {
+    name:'Seneschal', icon:'⚖',
+    desc:'+10% taxes while he serves',
+    bonusKey:'tax', bonusAmount:0.10,
+    tierMin:6, holderEligibility:'direct_vassal'
+  },
+  constable: {
+    name:'Constable', icon:'🗡',
+    desc:'+10% levy while he serves',
+    bonusKey:'levy', bonusAmount:0.10,
+    tierMin:6, holderEligibility:'direct_vassal'
+  },
+  treasurer: {
+    name:'Treasurer', icon:'💰',
+    desc:'Buildings cost 15% less while he serves',
+    bonusKey:'build', bonusAmount:0.15,
+    tierMin:6, holderEligibility:'direct_vassal'
+  },
+  almoner: {
+    name:'Almoner', icon:'🕯',
+    desc:'+1 piety a season while he serves',
+    bonusKey:'piety', bonusAmount:1,
+    tierMin:6, holderEligibility:'direct_vassal'
+  },
+  chamberlain: {
+    name:'Chamberlain', icon:'🗝',
+    desc:'Watches for schemes against you; your own plots weave faster',
+    bonusKey:'plot', bonusAmount:0.08,
+    tierMin:6, holderEligibility:'direct_vassal'
+  }
+};
+
+FBDATA.councilRules = {
+  schemerTraits:[
+    'ambitious','deceitful','proud','envious','cruel','wrathful'
+  ]
+};
+
 FBDATA.elections = {
   guild_officer: {
     name:'Guild Officer Election', icon:'🏅', kind:'guild', office:'officer',

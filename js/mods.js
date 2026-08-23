@@ -172,7 +172,8 @@ window.FBMODS = window.FBMODS || [];
     householdStandards:true, marketGoods:true, marketEndowmentTypes:true,
     marketEndowments:true, travelPurposes:true, travelSites:true,
     finance:true, plots:true, intrigue:true, items:true, itemPools:true,
-    rulerTraits:true, raidingTraditions:true, politicalBlocs:true,
+    rulerTraits:true, raidingTraditions:true, councilSeats:true,
+    councilRules:true, politicalBlocs:true,
     policies:true, elections:true, privileges:true, collectiveDemands:true,
     settlementNames:true, settlementSites:true, titles:true, papacy:true,
     currency:true, balance:true, land:true, seas:true, rivers:true,
@@ -828,6 +829,54 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  const BASELINE_COUNCIL_SEATS = [
+    'seneschal','constable','treasurer','almoner','chamberlain'
+  ];
+
+  function validateCouncilDefinitions(mod) {
+    const seats = combinedTable(FBDATA.councilSeats,
+      mod.councilSeats, 'councilSeats');
+    const traits = combinedTable(FBDATA.traits, mod.traits, 'traits');
+    for (const seatId in seats) {
+      if (!own(seats, seatId)) continue;
+      const path = 'councilSeats.' + seatId;
+      if (!/^[a-z][a-z0-9_]*$/.test(seatId)) {
+        fail(path, 'has an invalid seat id.');
+      }
+      const def = seats[seatId];
+      onlyFields(def, {
+        name:true, desc:true, icon:true, bonusKey:true, bonusAmount:true,
+        tierMin:true, holderEligibility:true
+      }, path);
+      requiredText(def.name, path + '.name');
+      requiredText(def.desc, path + '.desc');
+      requiredText(def.icon, path + '.icon');
+      if (def.icon.length > 16) fail(path + '.icon', 'must be at most 16 characters.');
+      if (typeof def.bonusKey !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(def.bonusKey)) {
+        fail(path + '.bonusKey', 'must be a lowercase bonus key.');
+      }
+      if (!finiteNumber(def.bonusAmount) || def.bonusAmount < 0 ||
+          def.bonusAmount > 100) {
+        fail(path + '.bonusAmount', 'must be a number from 0 to 100.');
+      }
+      integerRange(def.tierMin, 0, 7, path + '.tierMin');
+      if (def.holderEligibility !== 'direct_vassal') {
+        fail(path + '.holderEligibility', 'must be direct_vassal.');
+      }
+    }
+    for (const seatId of BASELINE_COUNCIL_SEATS) {
+      if (!own(seats, seatId)) {
+        fail('councilSeats', 'must retain baseline id ' + seatId + '.');
+      }
+    }
+    const rules = own(mod, 'councilRules')
+      ? mod.councilRules : FBDATA.councilRules;
+    onlyFields(rules, { schemerTraits:true }, 'councilRules');
+    validateIdList(rules.schemerTraits, 'councilRules.schemerTraits',
+      traits, true);
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -846,6 +895,9 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'familyPresets')) validateFamilyPresets(mod);
     if (own(mod, 'religiousPaths') || own(mod, 'religions')) {
       validateReligiousPaths(mod);
+    }
+    if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
+      validateCouncilDefinitions(mod);
     }
   }
 
@@ -1084,6 +1136,8 @@ window.FBMODS = window.FBMODS || [];
     if (mod.familyPresets) {
       mergeById(FBDATA.familyPresets, mod.familyPresets, 'id');
     }
+    if (mod.councilSeats) mergeTable(FBDATA.councilSeats, mod.councilSeats);
+    if (own(mod, 'councilRules')) FBDATA.councilRules = mod.councilRules;
     if (own(mod, 'rulerTraits')) {
       FBDATA.rulerTraits = mod.rulerTraits.slice();
       FB.RULER_TRAITS = FBDATA.rulerTraits;

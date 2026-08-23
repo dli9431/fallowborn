@@ -3973,10 +3973,6 @@ window.FB = window.FB || {};
     } else if (def.target === 'council_schemer') {
       if (FB.councilSchemers) {
         for (const member of FB.councilSchemers(state)) {
-          const seatNames = {
-            seneschal:'Seneschal', constable:'Constable', treasurer:'Treasurer',
-            almoner:'Almoner', chamberlain:'Chamberlain'
-          };
           const traitDef = FBDATA.traits &&
             FBDATA.traits[member.realm.ruler.trait];
           out.push(plotOption(
@@ -3989,7 +3985,8 @@ window.FB = window.FB || {};
               ruler:member.realm.ruler.name, realm:member.realm.name
             }),
             FB.T('{office} · {trait} · Standing {standing}', {
-              office:FB.T(seatNames[member.seat.id] || member.seat.id),
+              office:FB.councilSeatName
+                ? FB.councilSeatName(state, member.seat.id) : member.seat.id,
               trait:traitDef && FB.dataText
                 ? FB.dataText(state, state.player.charId, 'trait',
                   member.realm.ruler.trait, traitDef, 'name', {})

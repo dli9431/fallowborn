@@ -921,7 +921,7 @@ window.FB = window.FB || {};
       ? electionDef(councilElectionDefinition(seatId)) : null;
     var realm = rid && state.realms[rid];
     var missing = [];
-    if (!FB.councilSeat || !FB.councilSeat(seatId)) {
+    if (!FB.councilSeat || !FB.councilSeat(seatId, state)) {
       missing.push(FB.T('That great office does not exist.'));
     }
     if (!realm || !realm.alive || realm.liege !== 'player') {

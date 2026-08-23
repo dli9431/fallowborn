@@ -9212,7 +9212,7 @@ window.FB = window.FB || {};
           })) + '</div>';
       }
       for (const seat of council.seats) {
-        const def = FB.councilSeat(seat.id);
+        const def = FB.councilSeat(seat.id, s);
         const realm = seat.holderId && s.realms[seat.holderId];
         h += '<div class="governance-seat' +
           (!realm || !seat.effective ? ' governance-seat-warning' : '') +
@@ -10187,7 +10187,7 @@ window.FB = window.FB || {};
         'High-handed acts raise authority but sour the magnates; pressed too far, they will demand a charter of liberties. Weak authority ties the crown’s hands.')) + '</p>';
     }
     const seated = {};
-    for (const seat of FB.councilSeats()) {
+    for (const seat of FB.councilSeats(s)) {
       if (seats[seat.id]) seated[seats[seat.id]] = 1;
     }
     const unseated = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
@@ -10207,7 +10207,7 @@ window.FB = window.FB || {};
           ? FB.T('Reserved') : FB.T('Automatic allowed')) + '</button>';
     }
     h += '</div>';
-    for (const seat of FB.councilSeats()) {
+    for (const seat of FB.councilSeats(s)) {
       const rid = seats[seat.id];
       const r = rid ? s.realms[rid] : null;
       h += '<div class="panelh">' + seat.icon + ' ' + esc(councilSeatName(seat.id)) + '</div>';
@@ -10288,7 +10288,7 @@ window.FB = window.FB || {};
     councilOptions.guide = guideModalOption('council-guide', 'government',
       'Guide: government');
     openModal(FB.T('The Royal Council'), h, councilOptions);
-    for (const seat of FB.councilSeats()) {
+    for (const seat of FB.councilSeats(s)) {
       const cv = $('crest_' + seat.id);
       if (cv && seats[seat.id]) FB.drawCrest(cv, seats[seat.id]);
     }
@@ -10398,7 +10398,7 @@ window.FB = window.FB || {};
   UI.showCouncilCandidates = function (seatId, returnView, returnContext) {
     const s = FB.state;
     const projection = FB.councilSummary(s);
-    const seat = FB.councilSeat(seatId);
+    const seat = FB.councilSeat(seatId, s);
     if (!projection || !seat) return;
     const seats = {};
     for (const projectedSeat of projection.seats) {
@@ -10406,7 +10406,7 @@ window.FB = window.FB || {};
     }
     const oldRid = seats[seatId] || null;
     const seated = {};
-    for (const item of FB.councilSeats()) {
+    for (const item of FB.councilSeats(s)) {
       if (seats[item.id]) seated[seats[item.id]] = 1;
     }
     const candidates = FB.playerVassals(s).filter(function (rid) {

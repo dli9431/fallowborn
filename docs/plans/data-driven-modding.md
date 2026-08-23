@@ -1,6 +1,6 @@
 # Plan: expand data-driven modding safely
 
-Status: active; milestones 0–2 implemented
+Status: active; milestones 0–3 implemented
 Baseline: Fallowborn v1.145.2, 2026-08-22
 
 ## Purpose
@@ -312,6 +312,29 @@ Do not claim all seats are generic in the first pass. Treasurer, constable, almo
 and chamberlain still have explicit event, institution, and special-effect consumers.
 Those references should keep working through stable ids. A later capability registry
 may replace them only after every consumer has a declared data contract.
+
+### Milestone 3 implementation
+
+Implemented on 2026-08-22:
+
+- `FBDATA.councilSeats` in `data/political_institutions.js` owns the five baseline office
+  definitions: stable id, localized name and description, icon, basic bonus, activation
+  tier, and direct-vassal holder eligibility. The protected baseline ids are unchanged.
+- `FBDATA.councilRules.schemerTraits` owns the former engine-only classification list.
+  Runtime mods may add or completely replace seats and atomically replace the rules
+  record. Validation bounds every field, resolves same-mod trait references, and rejects
+  malformed records before mutation.
+- Council engine, governance, institution, action, and modal consumers enumerate active
+  definitions through shared data-backed accessors. Added seats receive the generic
+  vacancy, appointment, Standing, effectiveness, and bonus flows; special Treasurer,
+  Constable, Almoner, and Chamberlain behavior continues through stable ids.
+- Seat names and descriptions use stable structured-localization owners and untranslated
+  mod text falls back to its effective English source.
+- Save format remains 3. Council holders remain keyed by seat id; a missing definition is
+  ignored without deleting its saved value, so restoring the same mod reactivates it.
+
+No technology-impact ledger entry is required: this exposes the existing Council
+capability to validated data and mods without changing baseline gameplay eligibility.
 
 ## Milestone 4: staged focus and deed definitions
 

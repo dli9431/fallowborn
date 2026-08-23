@@ -210,6 +210,14 @@ the engine retains advancement, costs, appointments, compatibility side effects,
 seasonal application. Saved `character.religiousRanks` maps remain numeric and unknown
 path ids stay inert, so the existing mod fingerprint and save format remain sufficient.
 
+Royal Council definitions use two validated pre-world keys. `councilSeats` merges complete
+seat records by stable id and protects all five baseline ids; `councilRules` atomically
+replaces the schemer-trait list. Same-mod trait references resolve before mutation. Added
+seats receive generic activation, vacancy, direct-vassal appointment, Standing,
+effectiveness, and bonus behavior, while the baseline special consumers continue to use
+their stable office ids. Saved holders remain keyed by id and an absent mod seat stays
+inert without deleting its value, so no save migration is required.
+
 County market definitions are three atomic top-level values: `marketGoods`,
 `marketEndowmentTypes`, and `marketEndowments`. Supplying one replaces that complete
 table; it is validated together with the two effective companion tables before any of
@@ -245,7 +253,7 @@ is:
 
 | Classification | Top-level keys | Contract |
 | --- | --- | --- |
-| Public runtime-mod API | `ailments`, `auctionLotTypes`, `balance`, `bookmarks`, `bounds`, `buildings`, `careers`, `collectiveDemands`, `crossingClasses`, `cultures`, `cultureTraditions`, `currency`, `defaultBookmark`, `duchies`, `elections`, `empires`, `enterprises`, `events`, `familyPresets`, `feudalServiceCharters`, `finance`, `forts`, `holdings`, `householdStandards`, `intrigue`, `itemPools`, `items`, `kingdoms`, `land`, `localCouncilMotions`, `marketEndowments`, `marketEndowmentTypes`, `marketGoods`, `modifiers`, `papacy`, `plots`, `policies`, `politicalBlocs`, `positions`, `privileges`, `provinces`, `raidingTraditions`, `realms`, `religions`, `religiousPaths`, `rivers`, `rulerTraits`, `schooling`, `scripted`, `seas`, `settlementNames`, `settlementSites`, `startScenarios`, `straits`, `tech`, `techCaps`, `techDomains`, `techImpactReviews`, `techTraditions`, `titles`, `traits`, `travelPurposes`, `travelSites`, `unitClasses` | Accepted by `M.apply` with the merge/atomic behavior documented here and in `docs/MODDING.md`. `settlementSites` is partly generated in core but remains a public shared site table. |
+| Public runtime-mod API | `ailments`, `auctionLotTypes`, `balance`, `bookmarks`, `bounds`, `buildings`, `careers`, `collectiveDemands`, `councilRules`, `councilSeats`, `crossingClasses`, `cultures`, `cultureTraditions`, `currency`, `defaultBookmark`, `duchies`, `elections`, `empires`, `enterprises`, `events`, `familyPresets`, `feudalServiceCharters`, `finance`, `forts`, `holdings`, `householdStandards`, `intrigue`, `itemPools`, `items`, `kingdoms`, `land`, `localCouncilMotions`, `marketEndowments`, `marketEndowmentTypes`, `marketGoods`, `modifiers`, `papacy`, `plots`, `policies`, `politicalBlocs`, `positions`, `privileges`, `provinces`, `raidingTraditions`, `realms`, `religions`, `religiousPaths`, `rivers`, `rulerTraits`, `schooling`, `scripted`, `seas`, `settlementNames`, `settlementSites`, `startScenarios`, `straits`, `tech`, `techCaps`, `techDomains`, `techImpactReviews`, `techTraditions`, `titles`, `traits`, `travelPurposes`, `travelSites`, `unitClasses` | Accepted by `M.apply` with the merge/atomic behavior documented here and in `docs/MODDING.md`. `settlementSites` is partly generated in core but remains a public shared site table. |
 | Generated-only | `lang`, `musicCatalog` | Produced by the localization and soundtrack catalog pipelines. Runtime mods may author ordinary English display fields, but may not replace core locale caches or the shipped media manifest. |
 | Intentionally internal | `fortLevels`, `unitClassAliases` | `fortLevels` is the live compatibility alias of `forts.levels`; mods use `forts`. Unit aliases normalize legacy saved or authored class ids; mods use canonical `unitClasses`. |
 

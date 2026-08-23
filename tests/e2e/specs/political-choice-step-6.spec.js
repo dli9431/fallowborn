@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'js/council.js',
   'js/parliament.js',
   'js/politics.js',
+  'data/political_institutions.js',
   'data/events_politics.js'
 ]);
 
@@ -173,7 +174,7 @@ test('Council remains appointive by default and chartered offices require confir
       const direct = FB.councilAppoint(s, 'treasurer', 'choice_vassal_a');
       const directHolder = s.council.seats.treasurer;
       const directDismissed = FB.councilDismiss(s, 'treasurer');
-      const seatsAfterDismissal = FB.councilSeats().filter(function (seat) {
+      const seatsAfterDismissal = FB.councilSeats(s).filter(function (seat) {
         return s.council.seats[seat.id] === 'choice_vassal_a';
       }).map(function (seat) { return seat.id; });
       FB.grantPrivilege(s, 'office_confirmation', {

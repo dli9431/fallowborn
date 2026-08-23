@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.148.0';
+  FB.VERSION = '1.149.0';
   FB.CHANGELOG = [
+    { v: '1.149.0', date: '2026-08-22', changes: [
+      'Royal Council offices are now data-driven, letting mods add validated seats, bonuses, activation ranks, and schemer traits while existing special offices keep their identities.'
+    ] },
     { v: '1.148.0', date: '2026-08-22', changes: [
       'Religious progression paths and rank names are now data-driven, letting mods add validated faith and vocation ladders without changing existing saves.'
     ] },

@@ -3775,7 +3775,7 @@ window.FB = window.FB || {};
       const council = s.council;
       let officers = 0, vacancies = 0;
       if (council && council.seats) {
-        for (const seat of FB.councilSeats()) {
+        for (const seat of FB.councilSeats(s)) {
           const rid = council.seats[seat.id];
           const realm = rid && s.realms[rid];
           if (realm && realm.alive && realm.liege === 'player' &&
@@ -3786,7 +3786,7 @@ window.FB = window.FB || {};
           }
         }
       } else {
-        vacancies = FB.councilSeats().length;
+        vacancies = FB.councilSeats(s).length;
       }
       realmSummary += networkActionHtml('council',
         'id="network-council" data-network-action',
