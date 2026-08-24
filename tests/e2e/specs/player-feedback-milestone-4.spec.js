@@ -56,6 +56,7 @@ test('blocks retirement while imprisoned, at war, traveling, or on campaign',
         };
         FB.ui.showRetirement();
         out.modalText = document.getElementById('gm-body').textContent;
+        out.exitText = document.getElementById('retire-close').textContent;
         FB.ui.closeModal();
         teardown();
         return out;
@@ -78,6 +79,7 @@ test('blocks retirement while imprisoned, at war, traveling, or on campaign',
     expect(result.prison.eligible).toBe(false);
     expect(result.prison.can).toMatch(/prisoner/);
     expect(result.prison.modalText).toMatch(/prisoner/);
+    expect(result.prison.exitText).toBe('Close');
     expect(result.war.eligible).toBe(false);
     expect(result.war.can).toMatch(/peace/);
     expect(result.travel.eligible).toBe(false);
@@ -85,6 +87,9 @@ test('blocks retirement while imprisoned, at war, traveling, or on campaign',
     expect(result.campaign.eligible).toBe(false);
     expect(result.campaign.can).toMatch(/campaign/);
     expect(result.eligibleAfter).toBe(true);
+    await page.evaluate(function () { FB.ui.showRetirement(); });
+    await expect(page.locator('#gm-body > .gm-footer > #retire-cancel'))
+      .toHaveText('Cancel');
   });
 
 test('retirement hands control to an adult heir without death dues',

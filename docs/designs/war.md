@@ -883,7 +883,15 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   - *Market System*: Hauls away commodities matching the target's endowments and applies a
     severe 4-season market shock (`FB.addMarketShock`), disrupting victim production.
   - *Diplomacy*: Reduces Standing with the victim sovereign by 25 and leaves retaliatory grievances.
-- **Expedition Interface & Map Targeting**: The Raiding modal provides a unified `.raid-target-toolbar`
-  with strategy selector dropdown, search filter, and a dedicated **Select on Map** action:
+- **Expedition Interface & Map Targeting**: The Raiding modal keeps its longer rules and current
+  reach behind the shared header tooltip, leaving the target choice itself compact. Its toolbar
+  uses one 44 px control height for strategy, search, map, sorting, last-target, and preference
+  controls. Name sorting folds diacritics into their base letter, so Á/Å remain with A and É with
+  E in both directions. The toolbar also provides distance/value sorting, a dedicated **Select on
+  Map** action, and a saved last-target shortcut. Target previews and toolbar rerenders are read-only:
+  random wounds and devastation roll only when the expedition launches. **Keep raiding** pins that
+  last target for the next eligible expedition without bypassing the normal cooldown. **Skip raid
+  summary** suppresses the result sheet while retaining the Chronicle entry and its ordinary
+  outcome toast:
   - *Target List*: Each candidate row summarizes the march route (e.g. `Passes 2 counties (1 fort)` or `Direct landing`), destination fort tier (e.g. `🏰 Stone Keep (Tier 2)`), garrison size, and combat risk assessment.
   - *Interactive Map Overlay*: When selecting on the map, reachable unfortified counties are illuminated with clean pips, while fortified counties display distinct square fortress badges with `🏰` emblems. Selecting a target renders the full dotted march path through intermediate counties, highlighting intermediate forts along the march route and displaying live spoils and defender counts in the floating `#raid-picker` card.

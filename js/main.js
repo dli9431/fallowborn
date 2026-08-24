@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.153.3';
+  FB.VERSION = '1.153.4';
   FB.CHANGELOG = [
+    { v: '1.153.4', date: '2026-08-23', changes: [
+      'Raiding expeditions now offer target sorting, last-target reuse, repeat-raiding and summary preferences, with compact header guidance.',
+      'Deed cooldowns stay current during flowing time and fast-forward, and modal exits now use consistent Close, Back, and Cancel labels.'
+    ] },
     { v: '1.153.3', date: '2026-08-23', changes: [
       'Manual field command now lets you select, halt, and march the entrusted host without its orders reverting to AI control.'
     ] },

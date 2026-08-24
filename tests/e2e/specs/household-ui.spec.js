@@ -52,6 +52,8 @@ test('keeps the household overview and standard choice compact',
     await expect(page.locator(
       '#household-property .household-entry-owned')).toHaveCount(1);
     await expect(page.locator('#gm-body .asset-effect-summary')).toHaveCount(0);
+    await expect(page.locator('#gm-body > .gm-footer > #gm-cancel'))
+      .toHaveText('Close');
 
     const board = page.locator('[data-household-standard="board"]');
     await expect(board).toContainText('Level 1: Full Larder');

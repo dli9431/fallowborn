@@ -274,9 +274,9 @@ test('captive resolution options function correctly for bonding and ransoming',
     expect(result.ransomGoldPaid).toBe(result.ransomReportExtra);
   });
 
-test('raiding expedition modal renders styled toolbar with strategy select and search filter',
+test('raiding expedition modal uses header details and offers sorting, last target, and summary preferences',
   async function ({ page }) {
-    await page.evaluate(function () {
+    const previewRng = await page.evaluate(function () {
       var s = FB.state;
       var p = s.player;
       var me = s.chars[p.charId];
@@ -288,11 +288,19 @@ test('raiding expedition modal renders styled toolbar with strategy select and s
       var record = FB.realmTechRecord(s, realmId);
       record.completed.push('longships');
 
+      FB.setRngState(24680);
+      var before = FB.getRngState();
       FB.ui.showRaidTargets();
+      return { before:before, after:FB.getRngState() };
     });
+    expect(previewRng.after).toBe(previewRng.before);
 
     const toolbar = page.locator('#raid-target-toolbar');
     await expect(toolbar).toBeVisible();
+    await expect(page.locator('#gm-body > .gm-body-text')).toHaveCount(0);
+    await expect(page.locator('#gm-title-details')).toContainText('Plunder foreign wealth');
+    await expect(page.locator('.gm-heading .modal-title-info')).toHaveAttribute(
+      'aria-controls', 'gm-title-details');
 
     const strategySelect = page.locator('#raid-strategy-select');
     await expect(strategySelect).toBeVisible();
@@ -308,6 +316,66 @@ test('raiding expedition modal renders styled toolbar with strategy select and s
     const searchClear = page.locator('#raid-search-clear');
     await expect(searchClear).toHaveClass(/hidden/);
 
+    const sortSelect = page.locator('#raid-target-sort');
+    await expect(sortSelect).toHaveValue('value-desc');
+    const optionPalettes = await page.evaluate(function () {
+      var strategy = getComputedStyle(
+        document.querySelector('#raid-strategy-select option'));
+      var sorting = getComputedStyle(
+        document.querySelector('#raid-target-sort option'));
+      return {
+        strategy:{ background:strategy.backgroundColor, color:strategy.color },
+        sorting:{ background:sorting.backgroundColor, color:sorting.color }
+      };
+    });
+    expect(optionPalettes.sorting).toEqual(optionPalettes.strategy);
+
+    function foldedName(name) {
+      return String(name).toLocaleLowerCase().normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '').replace(/æ/g, 'ae')
+        .replace(/ø/g, 'o').replace(/ð/g, 'd').replace(/þ/g, 'th')
+        .replace(/ł/g, 'l');
+    }
+    async function visibleTargetNames() {
+      return page.locator('.raid-target-row').evaluateAll(function (rows) {
+        return rows.map(function (row) {
+          return FB.world.byId[row.getAttribute('data-target-pid')].name;
+        });
+      });
+    }
+
+    await sortSelect.selectOption('name-asc');
+    const ascendingNames = await visibleTargetNames();
+    const ascendingKeys = ascendingNames.map(foldedName);
+    expect(ascendingKeys).toEqual(ascendingKeys.slice().sort());
+
+    await sortSelect.selectOption('name-desc');
+    const descendingNames = await visibleTargetNames();
+    const descendingKeys = descendingNames.map(foldedName);
+    expect(descendingKeys).toEqual(descendingKeys.slice().sort().reverse());
+    expect(await page.evaluate(function () { return FB.getRngState(); })).toBe(
+      previewRng.before);
+
+    const controlSizes = await page.locator(
+      '#raid-strategy-select, #raid-target-search, #raid-pick-map, ' +
+      '#raid-target-sort, #raid-last-target, .raid-option').evaluateAll(
+      function (controls) {
+        return controls.map(function (control) {
+          const box = control.getBoundingClientRect();
+          return { width:Math.round(box.width), height:Math.round(box.height) };
+        });
+      });
+    expect(controlSizes.every(function (size) { return size.height === 44; })).toBe(true);
+    expect(controlSizes[2].width).toBe(controlSizes[3].width);
+    expect(controlSizes[3].width).toBe(controlSizes[4].width);
+    expect(controlSizes[5].width).toBe(controlSizes[6].width);
+
+    await expect(page.locator('#raid-last-target')).toBeDisabled();
+    await page.locator('#raid-keep-target').check();
+    await expect(page.locator('#raid-keep-target')).toBeChecked();
+    await page.locator('#raid-skip-summary').check();
+    await expect(page.locator('#raid-skip-summary')).toBeChecked();
+
     // Type a query that matches targets
     await searchInput.fill('paris');
     await expect(searchClear).not.toHaveClass(/hidden/);
@@ -316,6 +384,37 @@ test('raiding expedition modal renders styled toolbar with strategy select and s
     await searchClear.click();
     await expect(searchInput).toHaveValue('');
     await expect(searchClear).toHaveClass(/hidden/);
+  });
+
+test('raid execution records the last target and skip summary avoids the result sheet',
+  async function ({ page }) {
+    const target = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      p.tier = 3;
+      me.culture = 'norse';
+      me.religion = 'norse_pagan';
+
+      var realmId = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
+      FB.realmTechRecord(s, realmId).completed.push('longships');
+      FB.ui.showRaidTargets();
+      var pid = FB.raidTargets(s)[0].pid;
+      return { pid:pid, name:FB.world.byId[pid].name };
+    });
+
+    await page.locator('#raid-skip-summary').check();
+    await page.locator('.raid-target-row[data-target-pid="' + target.pid + '"]').click();
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+
+    const lastRaid = await page.evaluate(function () {
+      FB.ui.showRaidTargets();
+      return FB.state.player.lastRaid;
+    });
+    expect(lastRaid.targetPid).toBe(target.pid);
+    expect(lastRaid.strategy).toBe('sack');
+    expect(typeof lastRaid.turn).toBe('number');
+    await expect(page.locator('#raid-last-target')).toContainText(target.name);
   });
 
 test('selecting raid target on map opens floating picker, highlights in-range counties, and allows launching raid',
@@ -370,8 +469,8 @@ test('selecting raid target on map opens floating picker, highlights in-range co
     await launchBtn.click();
     await expect(raidPicker).toHaveClass(/hidden/);
 
-    const resolutionDone = page.locator('#gm-raid-done');
-    await expect(resolutionDone).toBeVisible();
+    const resolutionClose = page.locator('#gm-raid-close');
+    await expect(resolutionClose).toHaveText('Close');
   });
 
 test('raid against overwhelming garrison resistance is repelled with troop casualties',

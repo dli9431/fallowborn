@@ -388,7 +388,7 @@ test('election and privilege sheets expose constituencies, terms, and revocation
       FB.ui.showElectionResult(result, { view:'career' });
     });
     await expect(page.locator(
-      '#gm-body > .gm-footer > #election-result-close')).toBeVisible();
+      '#gm-body > .gm-footer > #election-result-back')).toHaveText('Back');
 
     await page.evaluate(function () {
       const s = FB.state;

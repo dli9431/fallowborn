@@ -8004,7 +8004,7 @@ window.FB = window.FB || {};
     return null;
   };
 
-  FB.calculateRaidSpoils = function (state, targetPid, strategy, charId) {
+  FB.calculateRaidSpoils = function (state, targetPid, strategy, charId, preview) {
     const pr = FB.world.byId[targetPid];
     const dev = (state.dev && state.dev[targetPid]) || (pr && (pr.dev0 || pr.dev)) || 1;
     const pop = FB.countyPopulation ? FB.countyPopulation(state, targetPid) : 6000;
@@ -8142,7 +8142,7 @@ window.FB = window.FB || {};
         const cas = Math.max(15, Math.round(currentMen * Math.min(0.70, casFrac)));
         totalCasualties += cas;
         currentMen = Math.max(0, currentMen - cas);
-        if (FB.chance(0.55)) wounded = true;
+        if (!preview && FB.chance(0.55)) wounded = true;
         marchSkirmishes.push({
           pid: stepPid,
           name: stepPr.name,
@@ -8163,12 +8163,12 @@ window.FB = window.FB || {};
           fortAssaultBase += (0.55 - stepAdv) * 0.40; // Heavy assault resistance
         }
         cas = Math.max(12 * stepFortLevel, Math.round(currentMen * Math.min(0.55, fortAssaultBase)));
-        if (stepFortLevel >= 2 && FB.chance(0.25)) wounded = true;
+        if (!preview && stepFortLevel >= 2 && FB.chance(0.25)) wounded = true;
       } else if (stepAdv < 0.48) {
         // Contested field skirmish
         const casFrac = 0.08 + (0.55 - stepAdv) * 0.28;
         cas = Math.max(5, Math.round(currentMen * Math.min(0.22, casFrac)));
-        if (FB.chance(0.15)) wounded = true;
+        if (!preview && FB.chance(0.15)) wounded = true;
       } else if (stepFortLevel > 0 || effectiveDef > 100) {
         // Light attrition against garrisons / outer crofts
         cas = Math.max(2, Math.round(currentMen * 0.045));
@@ -8246,14 +8246,14 @@ window.FB = window.FB || {};
     if (success && isSack && buildings.length) {
       const ruinChance = Math.max(0.15, 0.45 - fortLevel * 0.08);
       for (let i = 0; i < buildings.length; i++) {
-        if (FB.chance(ruinChance)) {
+        if (!preview && FB.chance(ruinChance)) {
           ruinedBuildingIds.push(buildings[i].id);
         }
       }
     }
 
     let devLoss = false;
-    if (success && isSack && dev >= 3 && fortLevel <= 1 && FB.chance(0.20)) {
+    if (!preview && success && isSack && dev >= 3 && fortLevel <= 1 && FB.chance(0.20)) {
       devLoss = true;
     }
 
@@ -8381,6 +8381,12 @@ window.FB = window.FB || {};
 
     const cdDays = (FBDATA.balance && FBDATA.balance.raidCooldownDays) || 180;
     p.raidCooldownUntil = state.turn + cdDays;
+    p.lastRaid = {
+      targetPid: targetPid,
+      strategy: strategy,
+      turn: state.turn,
+      success: spoils.success
+    };
 
     if (FB.chronicle) {
       FB.chronicle(state, spoils.success ? 'raid_completed' : 'raid_repelled', {

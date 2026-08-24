@@ -3024,6 +3024,9 @@ window.FB = window.FB || {};
     }
     if (UI.flushFastForwardRefresh) UI.flushFastForwardRefresh(options);
     else if (UI.refresh) UI.refresh(options);
+    if (SH.refreshVisibleDeedStatuses) {
+      SH.refreshVisibleDeedStatuses({ force:true });
+    }
     if (FB.map && FB.map.flushFastForwardRender) {
       FB.map.flushFastForwardRender();
     } else if (FB.map && FB.map.request) FB.map.request();
@@ -3135,6 +3138,34 @@ window.FB = window.FB || {};
     heading.appendChild(button);
   }
 
+  function setModalTitleDetails(enabled) {
+    const heading = $('gm-title').parentNode;
+    const existing = heading.querySelector('.modal-title-actions');
+    if (existing) heading.removeChild(existing);
+    heading.classList.remove('settcard', 'has-modal-title-details');
+    heading.removeAttribute('tabindex');
+    heading.removeAttribute('aria-describedby');
+    if (!enabled || !$('gm-title-details')) return;
+    const actions = document.createElement('span');
+    const button = document.createElement('button');
+    actions.className = 'settcard-actions modal-title-actions';
+    button.type = 'button';
+    button.className = 'btn small settcard-info modal-title-info';
+    button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-controls', 'gm-title-details');
+    button.setAttribute('aria-label', FB.T('Details'));
+    button.title = FB.T('Details');
+    button.textContent = '?';
+    actions.appendChild(button);
+    heading.classList.add('settcard', 'has-modal-title-details');
+    if (!eventChoiceUsesDisclosure()) {
+      heading.tabIndex = 0;
+      heading.setAttribute('aria-describedby', 'gm-title-details');
+    }
+    heading.appendChild(actions);
+    bindCardInfoToggles(heading);
+  }
+
   function captureModalView(view) {
     const body = $('gm-body');
     view.title = $('gm-title').textContent;
@@ -3151,6 +3182,7 @@ window.FB = window.FB || {};
     view.noFocus = !!(genericNavSnapshot && genericNavSnapshot.noFocus);
     view.token = genericNavSnapshot && genericNavSnapshot.token;
     view.guide = modalGuideConfig(genericNavSnapshot && genericNavSnapshot.guide);
+    view.titleDetails = !!(genericNavSnapshot && genericNavSnapshot.titleDetails);
     view.focus = document.activeElement && $('genmodal').contains(document.activeElement)
       ? document.activeElement : null;
     while (body.firstChild) view.body.appendChild(body.firstChild);
@@ -3161,8 +3193,9 @@ window.FB = window.FB || {};
     const body = $('gm-body');
     while (body.firstChild) body.removeChild(body.firstChild);
     $('gm-title').textContent = view.title;
-    setModalGuide(view.guide);
     body.appendChild(view.body);
+    setModalGuide(view.guide);
+    setModalTitleDetails(view.titleDetails);
     body.scrollTop = view.scrollTop || 0;
     setModalClasses(gm, view.modalClass);
     UI._gmDismiss = view.dismiss;
@@ -3179,7 +3212,8 @@ window.FB = window.FB || {};
       modalClass:view.modalClass,
       noFocus:view.noFocus,
       token:view.token,
-      guide:modalGuideConfig(view.guide)
+      guide:modalGuideConfig(view.guide),
+      titleDetails:view.titleDetails
     };
     gm.classList.remove('hidden');
     setTimeout(function () {
@@ -3205,7 +3239,7 @@ window.FB = window.FB || {};
 
   /* Dialog builders historically put exit controls in several places:
      loose after the body, inside an action list, or in a real footer. Gather
-     Close/Done/Cancel/Back-style controls into one footer without making
+     Close/Cancel/Back and legacy terminal controls into one footer without making
      substantive choices (confirm, buy, appoint, etc.) look like exits. */
   function normalizeModalFooter(root) {
     if (!root) return;
@@ -3365,9 +3399,13 @@ window.FB = window.FB || {};
     FB.localizeTree($('gm-title'));
     const guide = modalGuideConfig(opts && opts.guide);
     setModalGuide(guide);
-    $('gm-body').innerHTML = bodyHtml;
+    $('gm-body').innerHTML = opts && opts.titleDetailsHtml
+      ? '<div class="settcard-details modal-title-details hidden" id="gm-title-details">' +
+        opts.titleDetailsHtml + '</div>' + bodyHtml
+      : bodyHtml;
     normalizeModalFooter($('gm-body'));
     FB.localizeTree($('gm-body'));
+    setModalTitleDetails(!!(opts && opts.titleDetailsHtml));
     bindCardInfoToggles($('gm-body'));
     $('gm-body').scrollTop = 0; // a reused body keeps the last dialog's scroll
     if (!FB.isTouch && !UI._gmNoHotkeys) {
@@ -3400,7 +3438,8 @@ window.FB = window.FB || {};
       modalClass:UI._gmModalClass,
       noFocus:!!(opts && opts.noFocus),
       token:currentViewToken,
-      guide:guide
+      guide:guide,
+      titleDetails:!!(opts && opts.titleDetailsHtml)
     };
     if (previousView) {
       const currentView = {};
@@ -3443,7 +3482,7 @@ window.FB = window.FB || {};
       return true;
     }
 
-    if (!shift && normalized === 'v' && $('ar-done')) {
+    if (!shift && normalized === 'v' && $('ar-close')) {
       return true;
     }
     if (!shift && normalized === 'm' && ($('m-resume') || $('m-close'))) {

@@ -131,10 +131,14 @@ and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see bel
 `modalClass` may contain multiple whitespace-separated classes; open and history-restore
 paths apply and clear each token individually. A dialog
 that dismisses, cancels, goes back, finishes, or begins from a terminal control puts that
-control in a `.gm-footer`. `UI.openModal` normalizes legacy loose Close/Done/Cancel/Back
-buttons into that footer while leaving substantive choices in the scrolling body. Footer
-controls are centered, 200 px wide, and at least 52 px high on every layout; multiple
-controls wrap as equal-sized rows rather than changing width.
+control in a `.gm-footer`. `UI.openModal` normalizes legacy loose terminal
+buttons into that footer while leaving substantive choices in the scrolling body. Labels
+state navigation precisely: **Close** is the only label for dismissing a root or
+informational modal, **Back** appears only when it restores a real preceding modal view,
+and **Cancel** abandons an uncommitted picker, draft, or confirmation. Flat modals do not
+gain a redundant Back button, and completed summaries do not use Done as an alias for
+Close. Footer controls are centered, 200 px wide, and at least 52 px high on every layout;
+multiple controls wrap as equal-sized rows rather than changing width.
 
 The Family Tree uses its own near-viewport sheet instead of the generic narrow dialog, so
 wide generations have the available desktop map area. Names and relationships remain
@@ -169,7 +173,10 @@ decorative and the button expands to the 44 px touch target on compact layouts. 
 form keeps only Rename/Cancel-style terminal controls in the shared sticky `.gm-footer`,
 never in an ad-hoc action row in the scrolling body.
 
-**Card details follow one tooltip convention per layout — never both.** The most
+**Card details follow one tooltip convention per layout — never both.** Generic
+modal titles may opt into the same system through `titleDetailsHtml`: the heading
+becomes the desktop hover/focus anchor, while compact layouts expose the shared
+`?` disclosure and place its details at the top of the modal body. The most
 crucial facts stay visible on the card face at all times — identity, standing, and
 the numbers a player acts on — while supplementary detail (audit tables,
 descriptions, charter and tenure terms, siege math) lives in a hidden
@@ -266,8 +273,11 @@ The play/pause button shows only ▶/❚❚ and its `Space` badge — the runnin
 repeated there, so the button never changes width as the days flow.
 
 Natural clock ticks and the completion handoff from fast-forward use a low-priority
-`UI.refresh({ liveTick:true })`: the lightweight topbar and date remain current, but the retained Self, Kin, Deeds, Land, and Network trees
-stay mounted without an automatic repaint while natural time flows. A changing host value
+`UI.refresh({ liveTick:true })`: the lightweight topbar and date remain current, while the retained Self, Kin, Deeds, Land, and Network trees
+stay mounted. An open Deeds panel performs a bounded status-only pass every seven game days
+and once when fast-forward ends, updating its mounted deed buttons and cooldown explanations
+without rebuilding the catalogue; a rare change to which deeds are visible promotes that
+pass to an exact Deeds render. A changing host value
 otherwise makes Land recompute and replace the host card, county economy, settlements,
 population, people, and all their bindings; Deeds reconstructs every action and eligibility
 description; and the other retained panels repeat household, relationship, tooltip, and
@@ -862,6 +872,9 @@ player tab click or panel-cycle shortcut reuses the mounted Deeds tree if no UI 
 been requested since its last render, preserving its controls, listeners, disclosure state,
 and expanded details. Any exact or natural state refresh marks that tree stale immediately;
 the next Deeds visit then performs the full exact render before reuse is allowed again.
+While Deeds remains open, natural time updates mounted deed statuses every seven game days
+and at fast-forward completion; collapsed groups still calculate their current status only
+when opened.
 The promotion-path note is new-player guidance rather than a mechanic. Settings offers
 a browser-local **Disable guide hints** preference (`fb_ui`) so experienced players can
 remove it without changing progression or available deeds. The preference covers the

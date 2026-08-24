@@ -137,6 +137,8 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
       }];
       FB.selectArmy('live_panel_host');
       FB.map.select(home);
+      s.player.cooldowns = s.player.cooldowns || {};
+      s.player.cooldowns.go_to_town = s.turn;
       FB.ui.showTab('actions');
       FB.ui.refresh();
     });
@@ -146,6 +148,8 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
       });
     });
     await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#deed-details-go_to_town'))
+      .toContainText('Ready in 30 days');
 
     await page.evaluate(function () {
       const sentinel = document.createElement('i');
@@ -162,9 +166,11 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
     });
     await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(1);
     await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#deed-details-go_to_town'))
+      .toContainText('Ready in 30 days');
 
-    /* Even many natural days must not trigger the all-or-nothing Deeds
-       renderer merely because supply changed. */
+    /* A bounded live pass updates visible deed eligibility without triggering
+       the all-or-nothing Deeds renderer merely because supply changed. */
     await page.evaluate(function () {
       FB.state.turn += 20;
       FB.ui.refresh({ liveTick:true });
@@ -176,6 +182,8 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
     });
     await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(1);
     await expect(page.locator('#deeds-war-card')).toContainText('82%');
+    await expect(page.locator('#deed-details-go_to_town'))
+      .toContainText('Ready in 9 days');
 
     await page.evaluate(function () { FB.ui.refresh(); });
     await expect(page.locator('#deeds-live-tick-sentinel')).toHaveCount(0);
@@ -358,7 +366,7 @@ test('autoresolving fast-forward advances a paused game to the next season',
     await expect(page.locator('.event-receipt-toast')).toHaveCount(1);
   });
 
-test('fast-forward completion updates chrome without rebuilding a large active panel',
+test('fast-forward completion refreshes visible deeds without rebuilding the panel',
   async function ({ page }) {
     await startDeterministicGame(page);
     await page.evaluate(function () {
@@ -366,6 +374,8 @@ test('fast-forward completion updates chrome without rebuilding a large active p
       FB.state.player.flags.tutorial_done = 1;
       FB.state.eventQueue = [];
       FB.state.slotDays = [];
+      FB.state.player.cooldowns = FB.state.player.cooldowns || {};
+      FB.state.player.cooldowns.go_to_town = FB.state.turn;
       FB.game.auto.all = true;
       FB.game.setPaused(true);
       FB.ui.showTab('actions', { history:false });
@@ -377,7 +387,9 @@ test('fast-forward completion updates chrome without rebuilding a large active p
       document.getElementById('tab-actions').appendChild(sentinel);
       return {
         turn:FB.state.turn,
-        dateText:document.getElementById('tb-date').textContent
+        dateText:document.getElementById('tb-date').textContent,
+        deedText:document.querySelector(
+          '#deed-details-go_to_town .deed-status-text').textContent
       };
     });
 
@@ -398,6 +410,8 @@ test('fast-forward completion updates chrome without rebuilding a large active p
     expect(after.dateText).not.toBe(before.dateText);
     expect(after.paused).toBe(true);
     await expect(page.locator('#fast-forward-panel-sentinel')).toHaveCount(1);
+    await expect(page.locator('#deed-details-go_to_town .deed-status-text'))
+      .not.toHaveText(before.deedText);
 
     await page.evaluate(function () { FB.ui.refresh(); });
     await waitForUiRefresh(page);

@@ -634,7 +634,7 @@ test('Land and settlement market entry points keep county-wide access in county 
     await landMarket.click();
     await expect(page.getByRole('heading', { name:/London market$/i })).toBeVisible();
     await expect(page.locator('#market-sheet-good')).toHaveAttribute('data-good', 'provisions');
-    await page.getByRole('button', { name:'Done', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
 
     const settlements = await page.evaluate(function () {
       const list = FB.settlementsOf(FB.state, 'london');
@@ -646,7 +646,7 @@ test('Land and settlement market entry points keep county-wide access in county 
     await expect(page.locator('#settlement-market')).toBeVisible();
     await page.locator('#settlement-market').click();
     await expect(page.getByRole('heading', { name:/London market$/i })).toBeVisible();
-    await page.getByRole('button', { name:'Done', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
 
     await page.evaluate(function () { FB.ui.showSettlement('london', 1); });
     await expect(page.locator('#gm-title')).toContainText(settlements[1]);
@@ -830,7 +830,7 @@ test('the Market lens and sheet are keyboard/touch accessible and storage stays 
     });
     await page.setViewportSize({ width:390, height:844 });
     await waitForUiRefresh(page);
-    await page.getByRole('button', { name:'Done', exact:true }).click();
+    await page.getByRole('button', { name:'Close', exact:true }).click();
 
     const result = await page.evaluate(function () {
       const s = FB.state;

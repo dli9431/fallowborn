@@ -1825,6 +1825,17 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .gm-heading.has-modal-guide .modal-guide-button {
   margin-left: 8px; vertical-align: top; transform: translateY(2px);
 }
+.gm-heading.has-modal-title-details .modal-title-actions { margin-left: auto; }
+.gm-heading.has-modal-title-details:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 3px; border-radius: 4px;
+}
+.modal-title-details {
+  margin: 0 0 10px; padding: 9px 10px;
+  border: 1px solid #55452a; border-radius: 8px; background: #2a2216;
+  color: var(--main-text-color); font-size: 13px; line-height: 1.4;
+}
+.modal-title-details p { margin: 0; }
+.modal-title-details p + p { margin-top: 6px; color: var(--helper-text-color); }
 .panel-inline-icon-button {
   flex: 0 0 28px; width: 28px; min-height: 28px; height: 28px;
   font: 18px/1 Georgia, serif;
@@ -2207,7 +2218,7 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   color: #d8b24a; font-size: 14px; line-height: 1; pointer-events: none;
 }
 .raid-target-toolbar select {
-  width: 100%; height: 38px; min-height: 38px; padding: 6px 32px 6px 9px;
+  width: 100%; height: 44px; min-height: 44px; padding: 6px 32px 6px 9px;
   -webkit-appearance: none; appearance: none; box-sizing: border-box;
   border: 1px solid #66522f; border-radius: 6px;
   background: linear-gradient(180deg, #3b3020, #2a2218); color: var(--main-text-color);
@@ -2234,7 +2245,7 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 }
 .raid-target-toolbar input[type="search"],
 .raid-target-toolbar input[type="text"] {
-  width: 100%; height: 38px; min-height: 38px; padding: 6px 28px 6px 28px;
+  width: 100%; height: 44px; min-height: 44px; padding: 6px 28px 6px 28px;
   box-sizing: border-box;
   border: 1px solid #66522f; border-radius: 6px;
   background: #201a13; color: var(--main-text-color);
@@ -2253,7 +2264,41 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .raid-search-clear:hover { opacity: 1; }
 .raid-search-clear.hidden { display: none; }
 .raid-target-toolbar-extra {
-  display: flex; justify-content: flex-end; margin-bottom: 8px;
+  display: grid; gap: 8px; margin-bottom: 8px;
+}
+.raid-target-actions, .raid-target-options {
+  display: grid; gap: 8px; align-items: stretch;
+}
+.raid-target-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.raid-target-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.raid-target-toolbar-extra .raid-sort-label { display: block; min-width: 0; }
+.raid-target-actions .btn,
+.raid-target-toolbar-extra select,
+.raid-option {
+  box-sizing: border-box; width: 100%; height: 44px; min-height: 44px; margin: 0;
+  font-size: 13px;
+}
+.raid-target-toolbar-extra select {
+  padding: 6px 32px 6px 9px; border: 1px solid #66522f; border-radius: 6px;
+  -webkit-appearance: none; appearance: none;
+  background: linear-gradient(180deg, #3b3020, #2a2218); color: var(--main-text-color);
+  color-scheme: dark; font: inherit; font-size: 13px;
+}
+.raid-target-toolbar-extra select option {
+  background: #2a2218; color: var(--main-text-color);
+}
+.raid-target-actions .btn {
+  min-width: 0; padding: 6px 8px; overflow: hidden;
+  white-space: nowrap; text-overflow: ellipsis;
+}
+.raid-option {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 0 10px; border: 1px solid #66522f; border-radius: 6px;
+  background: #211a13; color: var(--main-text-color); cursor: pointer;
+}
+.raid-option:hover { border-color: #c9a24a; background: #2a2218; }
+.raid-option input {
+  flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: #d8b24a;
 }
 
 /* Household Plan: one wide, scan-friendly ledger on desktop. Each actionable
@@ -3721,6 +3766,7 @@ textarea.modjson, textarea.savetext {
   .war-target-toolbar { position: static; grid-template-columns: 1fr 1fr; }
   .war-target-search { grid-column: 1 / -1; }
   .raid-target-toolbar { position: static; grid-template-columns: 1fr; }
+  .raid-target-actions, .raid-target-options { width: 100%; }
   .shortcut-binding-row { grid-template-columns: 72px minmax(0, 1fr); }
   .shortcut-binding-row > .btn { grid-column: 1 / -1; }
   .large-list-row.actionbtn, .large-list-target-button,

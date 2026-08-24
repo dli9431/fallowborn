@@ -144,7 +144,7 @@ test('common households do not see ruler-only technology or automation controls'
     await expect(page.locator('#ar-research-mode')).toHaveCount(0);
     await expect(page.locator('#gm-body')).not.toContainText(
       'Only a sovereign player chooses national technology');
-    await page.locator('#ar-done').click();
+    await page.locator('#ar-close').click();
 
     await page.evaluate(function () {
       FB.ui.showGuide({ closeToGame:true });
@@ -519,6 +519,8 @@ test('conditional commitments expose travel, finance, and political management',
       name:'Foreign Policy',
       exact:true
     })).toBeVisible();
+    await expect(page.locator('#gm-body > .gm-footer > #gm-cancel'))
+      .toHaveText('Close');
   });
 
 test('ongoing commitments remain within a narrow mobile panel',
@@ -661,8 +663,8 @@ test('automation hotkey uses V and btn-auto displays V keyhint',
 
     await page.keyboard.press('KeyV');
     await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#ar-done')).toBeVisible();
-    await page.locator('#ar-done').click();
+    await expect(page.locator('#ar-close')).toHaveText('Close');
+    await page.locator('#ar-close').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
@@ -673,7 +675,7 @@ test('modal hotkeys toggle open modals and Escape closes any modal',
     // 1. Automation hotkey V toggles modal open and closed
     await page.keyboard.press('KeyV');
     await expect(page.locator('#genmodal')).not.toHaveClass(/hidden/);
-    await expect(page.locator('#ar-done')).toBeVisible();
+    await expect(page.locator('#ar-close')).toBeVisible();
 
     await page.keyboard.press('KeyV');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);

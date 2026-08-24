@@ -65,7 +65,11 @@ window.FB = window.FB || {};
   let activeActionState = null;
   let actionsRenderedState = null;
   let actionsRenderedLocale = '';
+  let actionsVisibleSignature = '';
+  let deedStatusRefreshedState = null;
+  let deedStatusRefreshedTurn = 0;
   let actionsDirty = true;
+  const LIVE_DEED_STATUS_DAYS = 7;
   let focusSectionOpen = true;
   function markActionsDirty() {
     actionsDirty = true;
@@ -839,11 +843,12 @@ window.FB = window.FB || {};
       return;
     }
     /* Natural days change the lightweight topbar immediately. Retain all
-       calculation-heavy panel trees until an exact/player-driven refresh;
-       the Chronicle is the exception because its renderer appends only new
-       entries and does not rebuild the other panel column. */
+       calculation-heavy panel trees until an exact/player-driven refresh.
+       Chronicle appends only new entries; Deeds uses a bounded status-only
+       pass that leaves its catalogue and listeners mounted. */
     if (liveTick) {
-      if (SH.activeTab === 'log') renderLog();
+      if (SH.activeTab === 'actions') refreshVisibleDeedStatuses();
+      else if (SH.activeTab === 'log') renderLog();
       updateTabNudges(FB.state);
       return;
     }
@@ -1158,6 +1163,9 @@ window.FB = window.FB || {};
        technology, and eligibility explanation. Defer that deeper work until
        a group's controls are actually constructed. */
     const instants = FB.listInstants(s, { deferEligibility:true });
+    const visibleSignature = instants.map(function (item) {
+      return item.a.id;
+    }).join('|');
     function deedFlow(action) {
       if (action && action.flow === 'choices') return 'choices';
       if (action && action.flow === 'no_day') return 'no-day';
@@ -1225,7 +1233,7 @@ window.FB = window.FB || {};
         details.id = detailsId;
         details.className = 'settcard-details deed-details hidden';
         details.innerHTML = '<b>' + esc(deedFlowText(flow)) + '</b><br>' +
-          esc(detailText);
+          '<span class="deed-status-text">' + esc(detailText) + '</span>';
         if (item.preview) {
           const previewSections = [
             { label:FB.T('Costs'), records:item.preview.costs || [] },
@@ -1516,7 +1524,53 @@ window.FB = window.FB || {};
     if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(box);
     actionsRenderedState = s;
     actionsRenderedLocale = FB.locale;
+    actionsVisibleSignature = visibleSignature;
+    deedStatusRefreshedState = s;
+    deedStatusRefreshedTurn = s.turn;
     actionsDirty = false;
+  }
+
+  /* Flowing time changes cooldown and resource eligibility much more often
+     than it changes the shape of the Deeds catalogue. Refresh only mounted
+     deed rows on a bounded cadence, preserving the panel tree and listeners.
+     A visibility change is rare and requires an exact rebuild so actions are
+     neither stranded nor exposed after their authored show gate changes. */
+  function refreshVisibleDeedStatuses(options) {
+    const s = FB.state;
+    const box = $('tab-actions');
+    if (!s || SH.activeTab !== 'actions' || !box || !box.hasChildNodes()) return;
+    const force = !!(options && options.force);
+    if (!force && deedStatusRefreshedState === s &&
+        s.turn - deedStatusRefreshedTurn < LIVE_DEED_STATUS_DAYS) return;
+    deedStatusRefreshedState = s;
+    deedStatusRefreshedTurn = s.turn;
+
+    const visible = FB.listInstants(s, { deferEligibility:true });
+    const signature = visible.map(function (item) {
+      return item.a.id;
+    }).join('|');
+    if (signature !== actionsVisibleSignature) {
+      renderActions();
+      return;
+    }
+
+    const buttons = box.querySelectorAll('[data-action-id]');
+    for (let i = 0; i < buttons.length; i++) {
+      const btn = buttons[i];
+      const id = btn.getAttribute('data-action-id');
+      const status = FB.instantStatus(s, id);
+      if (!status.action || !status.shown) {
+        renderActions();
+        return;
+      }
+      btn.disabled = !status.can;
+      const details = $('deed-details-' + id);
+      const statusText = details && details.querySelector('.deed-status-text');
+      if (statusText) {
+        statusText.textContent = FB.translateKnown(status.can
+          ? status.action.desc(s) : status.reason);
+      }
+    }
   }
 
   /* the tutorial checklist: staged tracks that teach the game to a new life.
@@ -4536,7 +4590,7 @@ window.FB = window.FB || {};
           '</div></div></div></div>';
       }
     }
-    h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
+    h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' + esc(FB.T('Close')) + '</button>';
     openModal('The Family Tree', h, { modalClass:'family-tree-modal' });
     $('gm-cancel').addEventListener('click', UI.closeModal);
     const treeHeading = $('gm-title').parentNode;
@@ -6122,6 +6176,7 @@ window.FB = window.FB || {};
   SH.relationText = relationText;
   SH.renderActions = renderActions;
   SH.renderActiveTab = renderActiveTab;
+  SH.refreshVisibleDeedStatuses = refreshVisibleDeedStatuses;
   SH.setTab = setTab;
   SH.shortcutBindings = shortcutBindings;
   SH.shortcutFamilyLabel = shortcutFamilyLabel;

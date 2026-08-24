@@ -459,6 +459,8 @@ test('succession and child identity explanations use the live family rules',
       .toContainText('Eligible: living child');
     await expect(page.locator('.succession-review')).toContainText(
       'marriage joins the household');
+    await expect(page.locator('#gm-body > .gm-footer > #hp-cancel'))
+      .toHaveText('Cancel');
   });
 
 test('settlement growth reports every derived threshold and the bookmark baseline',

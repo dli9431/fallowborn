@@ -99,8 +99,11 @@ budget (and at most six days per frame), with UI refreshes, political-map base
 rebuilds, canvas renders, transient Chronicle-news toasts, and the replaceable
 autoresolve receipt toast deferred until the burst ends. Completion refreshes
 the lightweight date, resources, controls, and incremental Chronicle while
-retaining the mounted panel tree, just like an ordinary live tick; it does not
-turn a large data-driven Deeds catalogue into a synchronous end-of-skip rebuild.
+retaining the mounted panel tree. If Deeds is open, its already-mounted deed
+rows receive one status-only cooldown and eligibility pass; the same pass runs
+at most every seven game days during ordinary flowing time. It does not turn a
+large data-driven Deeds catalogue into a synchronous end-of-skip rebuild, and
+only a rare change in deed visibility promotes the pass to an exact render.
 Chronicle entries are still recorded on their exact simulation day; only the last five notices that
 the live toast rail could have retained are rendered afterward. This keeps input
 and painting responsive without making

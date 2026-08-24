@@ -396,7 +396,7 @@ window.FB = window.FB || {};
         'Only a sovereign player chooses national technology; your sovereign selects the project.')) +
         '</div>';
     }
-    h += '<div class="gm-footer"><button class="btn primary" id="ar-done">Done</button></div>';
+    h += '<div class="gm-footer"><button class="btn primary" id="ar-close">' + esc(FB.T('Close')) + '</button></div>';
     openModal('⚙ Automation', h, { modalClass: 'fullsheet-modal', modalKey: 'v' });
     function sync() {
       a.minor = $('ar-minor').checked;
@@ -426,7 +426,7 @@ window.FB = window.FB || {};
     });
     document.querySelectorAll('input[name=ar-style]').forEach(function (r) { r.addEventListener('change', sync); });
     document.querySelectorAll('input[name=ar-hosts]').forEach(function (r) { r.addEventListener('change', sync); });
-    $('ar-done').addEventListener('click', function () { sync(); UI.closeModal(); });
+    $('ar-close').addEventListener('click', function () { sync(); UI.closeModal(); });
   };
 
   /* ================= event modal ================= */
@@ -3981,6 +3981,9 @@ window.FB = window.FB || {};
 
   let raidViewStrategy = 'sack';
   let raidViewSearch = '';
+  let raidViewSort = 'value-desc';
+  let raidViewKeepTarget = false;
+  let raidViewSkipSummary = false;
 
   function raidStrategyHint(strat) {
     return strat === 'sack'
@@ -3988,27 +3991,78 @@ window.FB = window.FB || {};
       : FB.T('Fast hit-and-run reaving across open countryside and herds with low casualty risk.');
   }
 
+  function raidNameSortKey(name) {
+    let key = String(name || '').toLocaleLowerCase();
+    if (key.normalize) key = key.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return key.replace(/æ/g, 'ae').replace(/ø/g, 'o').replace(/ð/g, 'd')
+      .replace(/þ/g, 'th').replace(/ł/g, 'l');
+  }
+
+  function compareRaidNames(a, b) {
+    const aKey = raidNameSortKey(a.name);
+    const bKey = raidNameSortKey(b.name);
+    return (aKey < bKey ? -1 : (aKey > bKey ? 1 : 0)) ||
+      a.name.localeCompare(b.name) || String(a.pid).localeCompare(String(b.pid));
+  }
+
+  function sortRaidTargets(targets, lastPid) {
+    const sorted = targets.slice();
+    sorted.sort(function (a, b) {
+      if (raidViewKeepTarget && lastPid) {
+        if (a.pid === lastPid && b.pid !== lastPid) return -1;
+        if (b.pid === lastPid && a.pid !== lastPid) return 1;
+      }
+      if (raidViewSort === 'name-asc' || raidViewSort === 'name-desc') {
+        const nameOrder = compareRaidNames(a, b);
+        return raidViewSort === 'name-desc' ? -nameOrder : nameOrder;
+      }
+      if (raidViewSort === 'distance-asc' || raidViewSort === 'distance-desc') {
+        const distanceOrder = a.distance - b.distance;
+        if (distanceOrder) return raidViewSort === 'distance-desc' ? -distanceOrder : distanceOrder;
+      } else {
+        const valueOrder = a.wealthScore - b.wealthScore;
+        if (valueOrder) return raidViewSort === 'value-asc' ? valueOrder : -valueOrder;
+      }
+      return compareRaidNames(a, b);
+    });
+    return sorted;
+  }
+
+  function finishRaid(report, returnContext) {
+    if (!raidViewSkipSummary) {
+      UI.showRaidResolution(report, returnContext);
+      return;
+    }
+    UI.closeModal();
+    if (FB.ui && FB.ui.refresh) FB.ui.refresh();
+  }
+
   UI.showRaidTargets = function (returnContext) {
     const s = FB.state;
     if (!s || !s.player) return;
-    const targets = FB.raidTargets ? FB.raidTargets(s) : [];
+    let targets = FB.raidTargets ? FB.raidTargets(s) : [];
     const maxRange = FB.raidRange ? FB.raidRange(s) : 2;
     const playerRealm = FB.playerRealmId ? FB.playerRealmId(s) : 'player';
     const hasLongships = FB.hasTech && FB.hasTech(s, 'longships', playerRealm);
-
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
+    const titleDetails = '<p>' + esc(FB.T(
       'Plunder foreign wealth, provisions, and thralls across borders or waterways without formal war. Raids cause market shortages, drain population, and risk damaging settlement buildings.'
-    )) + '</p><p class="hint">' + esc(FB.T(
+    )) + '</p><p>' + esc(FB.T(
       'Raid reach: {range} provinces away. {navalStatus}', {
         range: maxRange,
         navalStatus: hasLongships
           ? FB.T('Longships active for open sea and river routes.')
           : FB.T('Longships tech unlocks distant overseas reach.')
       }
-    )) + '</p></div>';
+    )) + '</p>';
+    const lastRaid = s.player.lastRaid;
+    const lastPid = lastRaid && lastRaid.targetPid;
+    const lastTarget = lastPid && FB.world && FB.world.byId[lastPid];
+    const reachableLast = lastPid && targets.some(function (target) {
+      return target.pid === lastPid;
+    });
+    targets = sortRaidTargets(targets, lastPid);
 
-    // Toolbar: Strategy selector & search bar
-    h += '<div class="raid-target-toolbar" id="raid-target-toolbar">' +
+    let h = '<div class="raid-target-toolbar" id="raid-target-toolbar">' +
       '<label class="raid-strategy-label"><span>' + esc(FB.T('Expedition Strategy')) + '</span>' +
       '<div class="raid-strategy-select-wrap">' +
       '<select class="raid-strategy-select" id="raid-strategy-select" aria-label="' + esc(FB.T('Expedition Strategy')) + '">' +
@@ -4031,8 +4085,27 @@ window.FB = window.FB || {};
       '</div></label>' +
       '</div>' +
       '<div class="raid-target-toolbar-extra">' +
+      '<div class="raid-target-actions">' +
       '<button type="button" class="btn secondary" id="raid-pick-map">🗺 ' + esc(FB.T('Select on Map')) + '</button>' +
-      '</div>';
+      '<label class="raid-sort-label raid-strategy-select-wrap">' +
+      '<select id="raid-target-sort" aria-label="' + esc(FB.T('Sort targets')) + '">' +
+      '<option value="name-asc"' + (raidViewSort === 'name-asc' ? ' selected' : '') + '>' + esc(FB.T('Name (A–Z)')) + '</option>' +
+      '<option value="name-desc"' + (raidViewSort === 'name-desc' ? ' selected' : '') + '>' + esc(FB.T('Name (Z–A)')) + '</option>' +
+      '<option value="distance-desc"' + (raidViewSort === 'distance-desc' ? ' selected' : '') + '>' + esc(FB.T('Distance (furthest)')) + '</option>' +
+      '<option value="distance-asc"' + (raidViewSort === 'distance-asc' ? ' selected' : '') + '>' + esc(FB.T('Distance (closest)')) + '</option>' +
+      '<option value="value-desc"' + (raidViewSort === 'value-desc' ? ' selected' : '') + '>' + esc(FB.T('Value (high–low)')) + '</option>' +
+      '<option value="value-asc"' + (raidViewSort === 'value-asc' ? ' selected' : '') + '>' + esc(FB.T('Value (low–high)')) + '</option>' +
+      '</select></label>' +
+      '<button type="button" class="btn small raid-last-target" id="raid-last-target"' +
+      (reachableLast ? '' : ' disabled') + '>' + esc(lastTarget
+        ? FB.T('Last raided: {province}', { province:lastTarget.name })
+        : FB.T('Last raided: None')) + '</button>' +
+      '</div><div class="raid-target-options">' +
+      '<label class="raid-option"><input type="checkbox" id="raid-keep-target"' +
+      (raidViewKeepTarget ? ' checked' : '') + '> <span>' + esc(FB.T('Keep raiding')) + '</span></label>' +
+      '<label class="raid-option"><input type="checkbox" id="raid-skip-summary"' +
+      (raidViewSkipSummary ? ' checked' : '') + '> <span>' + esc(FB.T('Skip raid summary')) + '</span></label>' +
+      '</div></div>';
 
     h += '<div class="gm-list raid-target-list" id="raid-target-list">';
     if (!targets.length) {
@@ -4040,7 +4113,7 @@ window.FB = window.FB || {};
     } else {
       for (let i = 0; i < targets.length; i++) {
         const t = targets[i];
-        const spoilsPreview = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, t.pid, raidViewStrategy) : { gold:0, captives:0 };
+        const spoilsPreview = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, t.pid, raidViewStrategy, null, true) : { gold:0, captives:0 };
         const endNames = (t.endowments || []).map(function (eid) {
           const ed = FBDATA.marketEndowmentTypes && FBDATA.marketEndowmentTypes[eid];
           return ed ? ed.name : eid;
@@ -4096,10 +4169,49 @@ window.FB = window.FB || {};
 
     openModal(FB.T('Launch a Raiding Expedition'), h, {
       historyView:!!returnContext,
+      titleDetailsHtml:titleDetails,
       historyBackRender:function () {
         interactionReturn(returnContext);
       }
     });
+
+    const sortSelect = $('raid-target-sort');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', function () {
+        raidViewSort = sortSelect.value;
+        UI.showRaidTargets(returnContext);
+      });
+    }
+
+    const keepTarget = $('raid-keep-target');
+    if (keepTarget) {
+      keepTarget.addEventListener('change', function () {
+        raidViewKeepTarget = keepTarget.checked;
+        UI.showRaidTargets(returnContext);
+      });
+    }
+
+    const skipSummary = $('raid-skip-summary');
+    if (skipSummary) {
+      skipSummary.addEventListener('change', function () {
+        raidViewSkipSummary = skipSummary.checked;
+      });
+    }
+
+    const lastTargetBtn = $('raid-last-target');
+    if (lastTargetBtn && reachableLast) {
+      lastTargetBtn.addEventListener('click', function () {
+        raidViewSearch = '';
+        const search = $('raid-target-search');
+        if (search) search.value = '';
+        applyRaidSearch();
+        const row = document.querySelector('.raid-target-row[data-target-pid="' + lastPid + '"]');
+        if (row) {
+          row.scrollIntoView({ block:'center' });
+          row.focus();
+        }
+      });
+    }
 
     const strategySelect = $('raid-strategy-select');
     if (strategySelect) {
@@ -4150,7 +4262,7 @@ window.FB = window.FB || {};
           const pid = btn.getAttribute('data-target-pid');
           if (!pid) return;
           const report = FB.executeRaid(FB.state, pid, raidViewStrategy);
-          UI.showRaidResolution(report, returnContext);
+          finishRaid(report, returnContext);
         });
       })(rows[k]);
     }
@@ -4289,7 +4401,7 @@ window.FB = window.FB || {};
     }
 
     const strat = ($('raid-picker-strategy') && $('raid-picker-strategy').value) || raidViewStrategy || 'sack';
-    const spoils = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, pid, strat) : { gold: 0, captives: 0 };
+    const spoils = FB.calculateRaidSpoils ? FB.calculateRaidSpoils(s, pid, strat, null, true) : { gold: 0, captives: 0 };
     const pr = FB.world.byId[pid];
 
     const riskLabel = (spoils.combatAdvantage < 0.40)
@@ -4335,7 +4447,7 @@ window.FB = window.FB || {};
     const returnCtx = raidMapPickerContext;
     UI.closeRaidMapPicker(false);
     const report = FB.executeRaid(FB.state, targetPid, strat);
-    UI.showRaidResolution(report, returnCtx);
+    finishRaid(report, returnCtx);
   };
 
   UI.showRaidResolution = function (report, returnContext) {
@@ -4434,7 +4546,7 @@ window.FB = window.FB || {};
     }
 
     h += '</div><div class="gm-footer">' +
-      '<button class="btn primary" id="gm-raid-done">' + esc(FB.T('Done')) + '</button>' +
+      '<button class="btn primary" id="gm-raid-close">' + esc(FB.T('Close')) + '</button>' +
       '</div>';
 
     const modalTitle = report.success
@@ -4447,9 +4559,9 @@ window.FB = window.FB || {};
       historyView:false
     });
 
-    const doneBtn = $('gm-raid-done');
-    if (doneBtn) {
-      doneBtn.addEventListener('click', function () {
+    const closeBtn = $('gm-raid-close');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
         UI.closeModal();
         if (FB.ui && FB.ui.refresh) FB.ui.refresh();
       });
@@ -5015,7 +5127,7 @@ window.FB = window.FB || {};
         })) + '</div>';
     }
     h += '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Done')) + '</button></div>';
+      esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('{county} market', { county:pr.name }), h, {
       guide:guideModalOption('market-guide', 'resources', 'Guide: resources and markets')
     });
@@ -5493,7 +5605,7 @@ window.FB = window.FB || {};
       (idx === 0 ? '<button class="btn" id="settlement-market">' +
         esc(FB.T('County market')) + '</button>' : '') +
       '<button class="btn" id="gm-cancel">' +
-      esc(FB.T('Done')) + '</button></div>';
+      esc(FB.T('Close')) + '</button></div>';
     openModal(SETT_ICON[st.kind] + ' ' + st.name, h, {
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
@@ -6161,7 +6273,7 @@ window.FB = window.FB || {};
             status: foreignPolicyStatusText(s, rid)
           })) + '</span></button>';
     }
-    h += '</div><button class="btn gm-footer" id="gm-cancel">' + esc(FB.T('Done')) + '</button>';
+    h += '</div><button class="btn gm-footer" id="gm-cancel">' + esc(FB.T('Close')) + '</button>';
     openModal(FB.T('Foreign Policy'), h, {
       guide:guideModalOption('foreign-policy-guide', 'government', 'Guide: government')
     });
@@ -9793,14 +9905,14 @@ window.FB = window.FB || {};
         '</b></div>';
     }
     h += '<div class="gm-footer"><button type="button" class="btn primary" ' +
-      'id="election-result-close">' + esc(FB.T('Continue')) +
+      'id="election-result-back">' + esc(FB.T('Back')) +
       '</button></div>';
     openModal((def.icon || '🗳') + ' ' + FB.T('Election result'), h, {
       historyView:true,
       replaceView:true,
       historyBackRender:function () { electionReturn(returnContext); }
     });
-    $('election-result-close').addEventListener('click', function () {
+    $('election-result-back').addEventListener('click', function () {
       modalHistoryBack(function () { electionReturn(returnContext); });
     });
     UI.refresh();
@@ -11601,7 +11713,7 @@ window.FB = window.FB || {};
     }
     h += '</div></section>' + permanentHoldingsHtml(s) +
       '<div class="gm-footer"><button class="btn" id="gm-cancel">' +
-      esc(FB.T('Done')) + '</button></div>';
+      esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('🏠 Household standards & property'), h, {
       modalClass:'fullsheet-modal household-modal',
       guide:guideModalOption('household-guide', 'careers',
@@ -18729,7 +18841,7 @@ window.FB = window.FB || {};
         esc(FB.T('This treasure is pledged to a lender. It cannot be sold or given away until the loan is cleared.')) +
         '</div>';
     }
-    h += '<button class="btn" id="gm-cancel" style="margin-top:10px">Close</button>';
+    h += '<button class="btn" id="gm-cancel" style="margin-top:10px">' + esc(FB.T('Close')) + '</button>';
     openModal(name, h);
     FB.paintFaces($('gm-body'), s);
     const eq = $('im-equip');
@@ -19704,8 +19816,8 @@ window.FB = window.FB || {};
           esc(heirEligibilityText(s, row)) + '</span></div>';
       }
     }
-    h += '</div><div class="gm-footer"><button class="btn" id="hp-close">' +
-      esc(FB.T('Decide later')) + '</button></div>';
+    h += '</div><div class="gm-footer"><button class="btn" id="hp-cancel">' +
+      esc(FB.T('Cancel')) + '</button></div>';
     openModal(FB.T('📜 Name Your Heir'), h, {
       guide:guideModalOption('heir-guide', 'inheritance', 'Guide: inheritance')
     });
@@ -19721,7 +19833,7 @@ window.FB = window.FB || {};
         UI.closeModal();
       });
     });
-    $('hp-close').addEventListener('click', UI.closeModal);
+    $('hp-cancel').addEventListener('click', UI.closeModal);
   };
 
   /* ---------- voluntary retirement ---------- */
@@ -19730,8 +19842,8 @@ window.FB = window.FB || {};
     if (!s || !FB.game || !FB.game.retirePreview) return false;
     const me = s.chars[s.player.charId];
     const preview = FB.game.retirePreview();
-    const footer = '<div class="gm-footer"><button class="btn" id="retire-close">' +
-      esc(FB.T('Decide later')) + '</button></div>';
+    const closeFooter = '<div class="gm-footer"><button class="btn" id="retire-close">' +
+      esc(FB.T('Close')) + '</button></div>';
 
     if (!preview.eligible) {
       let blocked = '<div class="gm-body-text"><p>' + esc(FB.T(
@@ -19740,7 +19852,7 @@ window.FB = window.FB || {};
         blocked += '<p>• ' + esc(reason) + '</p>';
       }
       blocked += '</div>';
-      openModal(FB.T('👴 Hand over the house'), blocked + footer, {
+      openModal(FB.T('👴 Hand over the house'), blocked + closeFooter, {
         guide:guideModalOption('retire-guide', 'inheritance',
           'Guide: inheritance')
       });
@@ -19775,8 +19887,9 @@ window.FB = window.FB || {};
         '<span class="adesc">' + esc(details + ' · ' +
           heirEligibilityText(s, reviewById[c.id])) + '</span></button>';
     }
-    h += '</div>';
-    openModal(FB.T('👴 Hand over the house'), h + footer, {
+    h += '</div><div class="gm-footer"><button class="btn" id="retire-cancel">' +
+      esc(FB.T('Cancel')) + '</button></div>';
+    openModal(FB.T('👴 Hand over the house'), h, {
       guide:guideModalOption('retire-guide', 'inheritance',
         'Guide: inheritance')
     });
@@ -19791,7 +19904,7 @@ window.FB = window.FB || {};
         }
       });
     });
-    $('retire-close').addEventListener('click', UI.closeModal);
+    $('retire-cancel').addEventListener('click', UI.closeModal);
     return true;
   };
 
@@ -19823,7 +19936,7 @@ window.FB = window.FB || {};
     openModal(t.icon + ' ' + traitName,
       '<div class="gm-body-text"><p><i>' + esc(traitDesc) + '</i></p>' + meta +
       (fx || '<p class="hint">No lasting effects — only a story people tell about you.</p>') +
-      '</div><button class="btn" id="tm-close">Close</button>');
+      '</div><button class="btn" id="tm-close">' + esc(FB.T('Close')) + '</button>');
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 
@@ -19877,7 +19990,7 @@ window.FB = window.FB || {};
       '<p class="hint">' + esc(FB.T(!a || a.kind === 'sickness' ?
         'A sickness — it must run its course; rest and time are the only physic.' :
         'A wound — it knits as your strength returns, a year or so at most.')) +
-      '</p></div><button class="btn" id="tm-close">Close</button>');
+      '</p></div><button class="btn" id="tm-close">' + esc(FB.T('Close')) + '</button>');
     $('tm-close').addEventListener('click', UI.closeModal);
   };
 
@@ -19891,7 +20004,7 @@ window.FB = window.FB || {};
       stat === 'prestige' ? FB.T('⭐ Prestige each season') :
       FB.religionOf(me.religion, s).icon + ' ' + FB.T('Piety each season');
     openModal(title, statBreakdownHtml(stat) +
-      '<button class="btn" id="stat-close">Close</button>', {
+      '<button class="btn" id="stat-close">' + esc(FB.T('Close')) + '</button>', {
         guide:guideModalOption('stat-guide', 'resources', 'Guide: resources and reputation')
       });
     $('stat-close').addEventListener('click', UI.closeModal);
@@ -20096,7 +20209,7 @@ window.FB = window.FB || {};
         '<div class="seedrow"><label for="m-seed">🔑 Start seed — tap to copy &amp; share</label>' +
         '<input id="m-seed" type="text" readonly value="' + esc(FB.state.seed) + '"></div>' : '') +
       '<div class="hint" style="text-align:center;margin:10px auto 0">v' + esc(FB.VERSION) + '</div>' +
-      '<div class="gm-footer"><button class="btn primary" id="m-close">✕ Close</button></div>';
+      '<div class="gm-footer"><button class="btn primary" id="m-close">✕ ' + esc(FB.T('Close')) + '</button></div>';
     openModal('Menu', h, { modalClass: 'fullsheet-modal', modalKey: 'm' });
     $('m-resume').addEventListener('click', UI.closeModal);
     $('m-close').addEventListener('click', UI.closeModal);
@@ -22243,7 +22356,7 @@ window.FB = window.FB || {};
       '<p><b>Arrows</b> pan the map · <b>Shift+arrows</b> hop between neighboring provinces · <b>PgUp/PgDn</b> zoom · <b>H</b> center home · <b>Enter</b> select the province at screen center.</p>' +
       '<p><b>Space</b> plays / pauses the flow of days · <b>−</b>/<b>+</b> slow and quicken the days (also in menu → Settings) · <b>F</b> skips to the next happening (and pauses) · <b>T G B Y N U</b> open the Self / Kin / Deeds / Land / Network / Chronicle panels · in Deeds, <b>1–6</b> select a section and <b>Q W E / A S D / Z X C</b> activate its first nine entries · in Network, <b>1–5</b> select a section and use the same letter grid for management actions only · <b>1–9</b> choose event and dialog items · <b>[</b> and <b>]</b> cycle panels · <b>Esc</b> menu / back / close · <b>Tab</b> moves between buttons.</p>' +
       '<h4>Saving</h4><p>The game autosaves each spring. Manual slots live in the menu beside Download save file / Load save file. A .txt backup survives browsers that wipe their storage and travels to other devices; copy and paste remains available as a fallback.</p>' +
-      '</div><button class="btn primary" id="gm-ok">Close</button>',
+      '</div><button class="btn primary" id="gm-ok">' + esc(FB.T('Close')) + '</button>',
       { historyView:true });
     $('gm-ok').addEventListener('click', function () {
       modalHistoryBack(function () { if (FB.state) UI.showMenu(); else UI.closeModal(); });
@@ -22261,7 +22374,7 @@ window.FB = window.FB || {};
       for (const c of rel.changes) h += '<li>' + esc(c) + '</li>';
       h += '</ul>';
     }
-    h += '</div><div class="gm-footer"><button class="btn primary" id="gm-ok">Close</button></div>';
+    h += '</div><div class="gm-footer"><button class="btn primary" id="gm-ok">' + esc(FB.T('Close')) + '</button></div>';
     openModal('Changelog', h, {
       modalClass:'changelog-modal',
       historyView:true
@@ -22312,7 +22425,7 @@ window.FB = window.FB || {};
       '<div class="row gap wrap" style="margin-top:8px">' +
       '<button class="btn primary" id="mod-apply">Apply &amp; reload</button>' +
       (mods.length || bundled.some(function (m) { return FB.mods.isEnabled(m.id); }) ? '<button class="btn danger" id="mod-clear">Remove all mods</button>' : '') +
-      '<button class="btn" id="gm-ok2">Close</button></div>' +
+      '<button class="btn" id="gm-ok2">' + esc(FB.T('Close')) + '</button></div>' +
       '<p class="hint" style="margin-top:8px">Re-applying a mod of the same name replaces it. Adding or removing reloads the page.</p>';
     openModal('Mods', h, { historyView:true });
     bundled.forEach(function (mod, i) {
