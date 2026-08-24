@@ -175,6 +175,11 @@ through the i18n layer — but leave the version, changelog, and catalogs for th
 else that conflicts is genuine overlapping content (same code or design doc edited twice); that
 needs real merge judgment, not a workflow rule.
 
+Commit authorization is scoped to the changes currently in view when the owner asks. After that
+commit is complete, leave any later fixes, follow-ups, or newly produced changes uncommitted unless
+the owner explicitly asks for another commit; an earlier commit request is never standing permission
+to keep committing subsequent work.
+
 Pushing is a separate step — commit when asked to commit; only push when asked to push (a push
 to `main` auto-deploys play.fallowborn.com).
 
