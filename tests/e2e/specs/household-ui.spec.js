@@ -154,7 +154,7 @@ test('adjusts living standards and work outfits inline with tooltip terms',
       '[data-household-standard-id="outfit_farmer"]' +
       '[data-household-standard-adjust="-1"]');
     await expect(outfitDecrease).toBeEnabled();
-    await outfitDecrease.click();
+    await outfitDecrease.press('Enter');
     expect(await page.evaluate(function () {
       return FB.householdStandardLevel(FB.state, 'outfit_farmer');
     })).toBe(0);
