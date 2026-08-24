@@ -94,8 +94,9 @@ next due date, and materialized ruler synchronization reuses each ruler
 projection within a pass. These retained paths never batch RNG-bearing
 mechanics or move expiry boundaries; focus, travel, armies, events, and dated
 transitions keep their ordinary per-day order. The player-facing skip is
-frame-sliced to an eight-millisecond
-budget (and at most six days per frame), with UI refreshes, political-map base
+frame-sliced to a four-millisecond
+budget (and at most two days per frame), with per-day UI refresh requests,
+political-map base
 rebuilds, canvas renders, transient Chronicle-news toasts, and the replaceable
 autoresolve receipt toast deferred until the burst ends. Completion refreshes
 the lightweight date, resources, controls, and incremental Chronicle while

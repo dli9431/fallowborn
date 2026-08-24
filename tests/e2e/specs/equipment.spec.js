@@ -2,15 +2,17 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/items.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
-  'js/ui_panels.js'
+  'js/ui_panels.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
 
-test('previews and applies Equip Best for one managed character',
+test('applies Equip Best immediately for one managed character',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
     await startDeterministicGame(page);
@@ -57,7 +59,6 @@ test('previews and applies Equip Best for one managed character',
       FB.ui.showEquipmentModal(spouse.id, 'close');
       return {
         headId:head.id,
-        headName:FB.fullName(head),
         targetId:spouse.id,
         targetName:FB.fullName(spouse),
         weak:weak,
@@ -105,26 +106,201 @@ test('previews and applies Equip Best for one managed character',
     })).toBeVisible();
     await expect(page.locator('[data-equip-cid="' + setup.targetId + '"]'))
       .toHaveCount(8);
+
+    const desktopLayout = await page.locator('.equip-grid').evaluate(function (grid) {
+      const cards = grid.querySelectorAll('.equip-slot-card');
+      const area = grid.getBoundingClientRect();
+      const first = cards[0].getBoundingClientRect();
+      const second = cards[1].getBoundingClientRect();
+      return {
+        gridWidth:area.width,
+        firstWidth:first.width,
+        secondWidth:second.width,
+        firstHeight:first.height,
+        secondHeight:second.height,
+        firstTop:first.top,
+        secondTop:second.top
+      };
+    });
+    expect(desktopLayout.firstWidth).toBeGreaterThan(desktopLayout.gridWidth * 0.45);
+    expect(Math.abs(desktopLayout.firstWidth - desktopLayout.secondWidth))
+      .toBeLessThan(1);
+    expect(Math.abs(desktopLayout.firstTop - desktopLayout.secondTop))
+      .toBeLessThan(1);
+    expect(Math.abs(desktopLayout.firstHeight - desktopLayout.secondHeight))
+      .toBeLessThan(1);
+    expect(desktopLayout.firstHeight).toBeGreaterThanOrEqual(58);
+
+    const tooltip = page.locator('#tooltip');
+    const rightHand = page.getByRole('button', {
+      name:'Right hand: Plain Round Shield',
+      exact:true
+    });
+    await expect(rightHand).toHaveAttribute('aria-describedby',
+      'equipment-slot-details-' + setup.targetId + '-rightHand');
+    await rightHand.hover();
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Right hand');
+    await expect(tooltip).toContainText('Plain Round Shield');
+    await expect(tooltip).toContainText('Plain');
+    await expect(tooltip).toContainText('Worth about');
+    await expect(tooltip).toContainText(
+      'Select this slot to choose an exact object from the family armory.');
+
+    const headSlot = page.getByRole('button', {
+      name:'Head: Empty',
+      exact:true
+    });
+    await headSlot.hover();
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Head');
+    await expect(tooltip).toContainText('Empty slot.');
+
+    await rightHand.focus();
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText('Plain Round Shield');
+
+    await page.setViewportSize({ width:800, height:700 });
+    await page.locator('#gm-title').hover();
+    await expect(tooltip).toBeHidden();
+    const tabletLayout = await page.locator('.equip-grid').evaluate(function (grid) {
+      const cards = grid.querySelectorAll('.equip-slot-card');
+      const area = grid.getBoundingClientRect();
+      const first = cards[0].getBoundingClientRect();
+      const second = cards[1].getBoundingClientRect();
+      return {
+        gridWidth:area.width,
+        firstWidth:first.width,
+        secondWidth:second.width,
+        firstHeight:first.height,
+        secondHeight:second.height,
+        firstTop:first.top,
+        secondTop:second.top
+      };
+    });
+    expect(tabletLayout.firstWidth).toBeGreaterThan(tabletLayout.gridWidth * 0.45);
+    expect(Math.abs(tabletLayout.firstWidth - tabletLayout.secondWidth))
+      .toBeLessThan(1);
+    expect(Math.abs(tabletLayout.firstTop - tabletLayout.secondTop))
+      .toBeLessThan(1);
+    expect(Math.abs(tabletLayout.firstHeight - tabletLayout.secondHeight))
+      .toBeLessThan(1);
+    expect(tabletLayout.firstHeight).toBeGreaterThanOrEqual(58);
+    expect(await page.locator('#gm-title').evaluate(function (title) {
+      return getComputedStyle(title).justifyContent;
+    })).toBe('center');
+
+    const rightHandCard = rightHand.locator('xpath=../..');
+    const info = rightHandCard.locator('.equip-slot-info');
+    const inlineDetails = rightHandCard.locator('.equip-slot-details');
+    await expect(page.locator('.equip-slot-info')).toHaveCount(8);
+    await expect(info).toBeVisible();
+    await expect(info).toHaveText('?');
+    await expect(info).toBeEnabled();
+    await expect(headSlot.locator('xpath=../..').locator('.equip-slot-info'))
+      .toBeVisible();
+    const infoLayout = await rightHandCard.evaluate(function (card) {
+      const slot = card.querySelector('.equip-slot').getBoundingClientRect();
+      const button = card.querySelector('.equip-slot-info');
+      const glyph = button.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      return {
+        width:glyph.width,
+        height:glyph.height,
+        centerOffset:Math.abs((glyph.top + glyph.height / 2) -
+          (slot.top + slot.height / 2)),
+        background:style.backgroundColor,
+        border:style.borderTopColor
+      };
+    });
+    expect(infoLayout.width).toBeGreaterThanOrEqual(44);
+    expect(infoLayout.height).toBeGreaterThanOrEqual(44);
+    expect(infoLayout.centerOffset).toBeLessThan(1);
+    expect(infoLayout.background).toBe('rgba(0, 0, 0, 0)');
+    expect(infoLayout.border).toBe('rgba(0, 0, 0, 0)');
+    await expect(info).toHaveAttribute('aria-expanded', 'false');
+    await expect(inlineDetails).toBeHidden();
+
+    await rightHand.hover();
+    await expect(tooltip).toBeHidden();
+
+    await info.click();
+    await expect(info).toHaveAttribute('aria-expanded', 'true');
+    await expect(inlineDetails).toBeVisible();
+    await expect(inlineDetails).toContainText('Right hand');
+    await expect(inlineDetails).toContainText('Plain Round Shield');
+    await expect(inlineDetails).toContainText('Worth about');
+    const expandedOffsets = await page.locator('.equip-slot-card')
+      .evaluateAll(function (cards) {
+        return cards.map(function (card) {
+          const slot = card.querySelector('.equip-slot').getBoundingClientRect();
+          const glyph = card.querySelector('.equip-slot-info').getBoundingClientRect();
+          return Math.abs((glyph.top + glyph.height / 2) -
+            (slot.top + slot.height / 2));
+        });
+      });
+    expect(Math.max.apply(Math, expandedOffsets)).toBeLessThan(1);
+    expect(await page.evaluate(function () {
+      return JSON.stringify(FB.state.player.loadouts);
+    })).toBe(setup.before);
+
+    await info.click();
+    await expect(info).toHaveAttribute('aria-expanded', 'false');
+    await expect(inlineDetails).toBeHidden();
+
+    await page.setViewportSize({ width:390, height:740 });
+    await expect(info).toBeVisible();
+    await expect(headSlot.locator('xpath=../..').locator('.equip-slot-info'))
+      .toBeVisible();
+    const phoneLayout = await page.locator('.equip-grid').evaluate(function (grid) {
+      const cards = grid.querySelectorAll('.equip-slot-card');
+      const area = grid.getBoundingClientRect();
+      const first = cards[0].getBoundingClientRect();
+      const second = cards[1].getBoundingClientRect();
+      return {
+        gridWidth:area.width,
+        firstWidth:first.width,
+        secondWidth:second.width,
+        firstHeight:first.height,
+        secondHeight:second.height,
+        firstTop:first.top,
+        secondTop:second.top
+      };
+    });
+    expect(phoneLayout.firstWidth).toBeGreaterThan(phoneLayout.gridWidth * 0.45);
+    expect(Math.abs(phoneLayout.firstWidth - phoneLayout.secondWidth))
+      .toBeLessThan(1);
+    expect(Math.abs(phoneLayout.firstTop - phoneLayout.secondTop)).toBeLessThan(1);
+    expect(Math.abs(phoneLayout.firstHeight - phoneLayout.secondHeight))
+      .toBeLessThan(1);
+    expect(phoneLayout.firstHeight).toBeGreaterThanOrEqual(58);
+
     await page.getByRole('button', { name:/Equip Best/ }).click();
 
-    await expect(page.getByRole('heading', {
-      name:'Equip Best for ' + setup.targetName,
-      exact:true
-    })).toBeVisible();
-    const movements = page.locator('.equip-best-movements');
-    await expect(movements).toContainText(
-      'Blade with a Name moves from ' + setup.headName);
-    await expect(movements).toContainText(
-      'Plain Round Shield returns from ' + setup.targetName + ' to the family armory.');
-    await expect(movements).toContainText(
-      'Plain Keen Seax moves from the family armory');
-
-    await page.getByRole('button', { name:'Apply Equip Best', exact:true }).click();
-
-    await expect(page.getByRole('heading', {
-      name:'Equipment for ' + setup.targetName,
-      exact:true
-    })).toBeVisible();
+    await expect(page.locator('#genmodal')).toHaveClass(/equipment-modal/);
+    await expect(page.locator('#genmodal')).not.toHaveClass(/equip-best-modal/);
+    await expect(page.locator('#equip-best-apply, .equip-best-movements'))
+      .toHaveCount(0);
+    await expect(page.locator('#gm-title')).toHaveText(
+      setup.targetName + String.fromCharCode(10) + 'Equipment');
+    const titleGeometry = await page.locator('#gm-title').evaluate(function (title) {
+      const heading = title.parentNode.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(title);
+      const content = range.getBoundingClientRect();
+      const style = getComputedStyle(title);
+      return {
+        justify:style.justifyContent,
+        textAlign:style.textAlign,
+        centerOffset:Math.abs((content.left + content.width / 2) -
+          (heading.left + heading.width / 2))
+      };
+    });
+    expect(titleGeometry.justify).toBe('center');
+    expect(titleGeometry.textAlign).toBe('center');
+    expect(titleGeometry.centerOffset).toBeLessThan(2);
+    await expect(page.locator('#toasts')).toContainText(
+      'Best available equipment applied to ' + setup.targetName + '.');
     const applied = await page.evaluate(function (ids) {
       const s = FB.state;
       const loadout = FB.loadoutOf(s, ids.targetId);

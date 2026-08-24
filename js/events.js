@@ -6136,6 +6136,28 @@ window.FB = window.FB || {};
     };
   };
 
+  const RECEIPT_ROLE_PARAMS = [
+    'lord', 'priest', 'friend', 'rival', 'spouse', 'suitor', 'partner'
+  ];
+
+  /* Relationship effects can clear or replace a role before the durable
+     outcome descriptor is built. Keep only concrete pre-effect names; nested
+     fallback descriptors still come from the post-effect message. */
+  function preserveReceiptRoleParams(message, beforeEffects) {
+    if (!message || !beforeEffects || !beforeEffects.params) return message;
+    const params = FB.messageParams(message.params);
+    let changed = false;
+    for (let i = 0; i < RECEIPT_ROLE_PARAMS.length; i++) {
+      const key = RECEIPT_ROLE_PARAMS[i];
+      const value = beforeEffects.params[key];
+      if (typeof value === 'string' && value) {
+        params[key] = value;
+        changed = true;
+      }
+    }
+    return changed ? FB.message(message.key, params) : message;
+  }
+
   /* One roll, one effect order, one durable receipt. Manual event buttons and
      autoresolve both call this function; callers only decide how to present
      the returned receipt and when to advance to the next queued dialog. */
@@ -6151,6 +6173,7 @@ window.FB = window.FB || {};
     let succeeded = null;
     let branch = null;
     let branchName = null;
+    let outcomeBeforeEffects = null;
     if (FB.suppressNewsToasts) FB.suppressNewsToasts(true);
     const oldUiSuppression = FB.ui && FB.ui.suppressEventEffectToasts;
     if (FB.ui) FB.ui.suppressEventEffectToasts = true;
@@ -6164,6 +6187,11 @@ window.FB = window.FB || {};
         if (option.chance === 'battle' || option.chance === 'war_battle') {
           delete state.player.flags.blessed_war;
         }
+      }
+      if (branch && branch.text && optionIndex >= 0) {
+        const outcomePath = 'options.' + optionIndex + '.' + branchName + '.text';
+        outcomeBeforeEffects = FB.eventMessage(state, state.player.charId,
+          ev, outcomePath, ctx);
       }
       if (option.effects) ledgers.push(FB.applyEffects(state, option.effects, ctx, ev));
       if (branch && branch.effects) {
@@ -6181,6 +6209,8 @@ window.FB = window.FB || {};
         FB.prepareEventPath(state, ev, outcomePath, ctx);
         outcomeMessage = FB.eventMessage(state, state.player.charId,
           ev, outcomePath, ctx);
+        outcomeMessage = preserveReceiptRoleParams(
+          outcomeMessage, outcomeBeforeEffects);
       } else if (branch.text) {
         outcomeMessage = FB.msg(
           succeeded ? 'fx.event.autoresolve.success' : 'fx.event.autoresolve.failure',

@@ -247,7 +247,7 @@ test('natural clock ticks keep heavy warfare panels mounted until an exact refre
     await expect(page.locator('#land-war-card .settcard-head > b')).toContainText('499');
   });
 
-test('natural ticks retain Self and Network trees until an exact refresh',
+test('natural ticks retain Self and Network trees while updating visible Self values',
   async function ({ page }) {
     await startDeterministicGame(page);
     await page.setViewportSize({ width:1280, height:800 });
@@ -259,19 +259,34 @@ test('natural ticks retain Self and Network trees until an exact refresh',
     });
     await waitForUiRefresh(page);
 
-    await page.evaluate(function () {
+    const liveValues = await page.evaluate(function () {
       const selfSentinel = document.createElement('i');
       selfSentinel.id = 'self-live-tick-sentinel';
       document.getElementById('tab-char').appendChild(selfSentinel);
       const networkSentinel = document.createElement('i');
       networkSentinel.id = 'network-live-tick-sentinel';
       document.getElementById('tab-network').appendChild(networkSentinel);
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      me.born = s.date.year - 42;
+      me.health = 4;
+      s.player.pop = 73;
       FB.state.turn++;
       FB.ui.refresh({ liveTick:true });
+      return {
+        age:String(FB.ageOf(me, s.date.year)),
+        voice:String(Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop))
+      };
     });
     await waitForUiRefresh(page);
     await expect(page.locator('#self-live-tick-sentinel')).toHaveCount(1);
     await expect(page.locator('#network-live-tick-sentinel')).toHaveCount(1);
+    await expect(page.locator('#tab-char .kv:has(span:text-is("Age")) b'))
+      .toHaveText(liveValues.age);
+    await expect(page.locator('#tab-char .kv:has(span:text-is("Health")) b'))
+      .toHaveText('4 / 10 ' + String.fromCharCode(183) + ' Grievously wounded');
+    await expect(page.locator('#tab-char .kv:has(span:text-is("Common Voice")) b'))
+      .toHaveText(liveValues.voice);
 
     await page.evaluate(function () {
       FB.ui._shared.resetPanelMarkup();
@@ -416,6 +431,56 @@ test('fast-forward completion refreshes visible deeds without rebuilding the pan
     await page.evaluate(function () { FB.ui.refresh(); });
     await waitForUiRefresh(page);
     await expect(page.locator('#fast-forward-panel-sentinel')).toHaveCount(0);
+  });
+
+test('fast-forward yields after two days without requesting per-day UI refreshes',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      delete FB.state.player.flags.tutorial;
+      FB.state.player.flags.tutorial_done = 1;
+      FB.state.eventQueue = [];
+      FB.state.slotDays = [];
+      FB.game.paused = true;
+
+      const originalAnimationFrame = window.requestAnimationFrame;
+      const originalRefresh = FB.ui.refresh;
+      const callbacks = [];
+      let refreshes = 0;
+      window.requestAnimationFrame = function (callback) {
+        callbacks.push(callback);
+        return callbacks.length;
+      };
+      FB.ui.refresh = function () {
+        refreshes++;
+        return originalRefresh.apply(this, arguments);
+      };
+      const before = FB.state.turn;
+      try {
+        FB.game.skipAhead();
+        const scheduledBeforeWork = callbacks.length;
+        callbacks.shift()();
+        return {
+          scheduledBeforeWork:scheduledBeforeWork,
+          days:FB.state.turn - before,
+          refreshes:refreshes,
+          stillRunning:FB.game.fastForwarding,
+          continuationQueued:callbacks.length
+        };
+      } finally {
+        window.requestAnimationFrame = originalAnimationFrame;
+        FB.ui.refresh = originalRefresh;
+        FB.game.fastForwarding = false;
+        FB.game.paused = true;
+      }
+    });
+
+    expect(result.scheduledBeforeWork).toBe(1);
+    expect(result.days).toBeGreaterThan(0);
+    expect(result.days).toBeLessThanOrEqual(2);
+    expect(result.refreshes).toBe(0);
+    expect(result.stillRunning).toBe(true);
+    expect(result.continuationQueued).toBe(1);
   });
 
 test('daily maintenance skips vassal discovery for non-landed households',

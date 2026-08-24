@@ -4057,12 +4057,21 @@ window.FB = window.FB || {};
         if (!details) return false;
         return showSideTip(control, details.innerHTML);
       }
-      function showBuildingActionTip(control) {
+      function showActionTip(control) {
         const btn = control && control.closest
-          ? control.closest('.actionbtn') : null;
-        const details = btn && btn.querySelector('.event-choice-details');
+          ? control.closest('[data-action-tooltip], .actionbtn') : null;
+        if (btn && eventChoiceUsesDisclosure() &&
+            (btn.classList.contains('household-standard-step-control') ||
+             btn.classList.contains('equip-slot'))) {
+          return false;
+        }
+        const detailsId = btn && btn.getAttribute('aria-describedby');
+        const details = btn && ((detailsId && $(detailsId)) ||
+          btn.querySelector('.event-choice-details'));
         if (!details) return false;
-        return showSideTip(btn, details.innerHTML);
+        return showSideTip(btn, details.innerHTML,
+          btn.hasAttribute('data-action-tooltip')
+            ? { modalLeft:true } : undefined);
       }
       function showSettCardTip(infoBtn) {
         if (eventChoiceUsesDisclosure()) return false;
@@ -4109,9 +4118,10 @@ window.FB = window.FB || {};
           scheduleHideTip();
           return;
         }
-        const bldBtn = e.target.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]');
+        const bldBtn = e.target.closest('#gm-body .actionbtn[data-build], ' +
+          '#gm-body .actionbtn[data-bquick], #gm-body [data-action-tooltip]');
         if (bldBtn) {
-          if (showBuildingActionTip(bldBtn)) return;
+          if (showActionTip(bldBtn)) return;
           scheduleHideTip();
           return;
         }
@@ -4202,6 +4212,10 @@ window.FB = window.FB || {};
           hideTipImmediately();
           return;
         }
+        if (e.target.closest('[data-action-tooltip]')) {
+          hideTipImmediately();
+          return;
+        }
         const fortTech = e.target.closest('[data-fort-tech]');
         if (fortTech && fortTech.dataset.fortTech) {
           hideTipImmediately();
@@ -4235,9 +4249,10 @@ window.FB = window.FB || {};
           scheduleHideTip();
           return;
         }
-        const bldBtnFocus = e.target.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]');
+        const bldBtnFocus = e.target.closest('#gm-body .actionbtn[data-build], ' +
+          '#gm-body .actionbtn[data-bquick], #gm-body [data-action-tooltip]');
         if (bldBtnFocus) {
-          if (showBuildingActionTip(bldBtnFocus)) return;
+          if (showActionTip(bldBtnFocus)) return;
           scheduleHideTip();
           return;
         }
@@ -4266,7 +4281,8 @@ window.FB = window.FB || {};
              e.relatedTarget.closest('[data-ruler-card-tooltip]') ||
              e.relatedTarget.closest('.settcard') ||
              e.relatedTarget.closest('.event-choice .evopt') ||
-             e.relatedTarget.closest('#gm-body .actionbtn[data-build], #gm-body .actionbtn[data-bquick]'))) {
+             e.relatedTarget.closest('#gm-body .actionbtn[data-build], ' +
+               '#gm-body .actionbtn[data-bquick], #gm-body [data-action-tooltip]'))) {
           return;
         }
         scheduleHideTip();

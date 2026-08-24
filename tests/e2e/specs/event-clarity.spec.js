@@ -233,6 +233,71 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
     expect(result.unknownFallback).toBe(true);
   });
 
+test('wedding receipts retain the named suitor after marriage clears courtship',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    var result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var suitor = FB.makeCharacter(s, {
+        name:'Aelfred',
+        dyn:'Ash',
+        sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture,
+        religion:me.religion,
+        born:s.date.year - 22,
+        traitsN:0,
+        role:'suitor'
+      });
+      p.gold = 1000;
+      p.courtingId = suitor.id;
+      p.flags.courting = 1;
+      p.courtshipTerms = null;
+
+      var proposal = FBDATA.events.filter(function (event) {
+        return event.id === 'proposal_made';
+      })[0];
+      var authored = proposal.options[0];
+      var option = {
+        label:authored.label,
+        desc:authored.desc,
+        chance:1,
+        success:authored.success,
+        failure:authored.failure
+      };
+      var event = {
+        id:proposal.id,
+        title:proposal.title,
+        text:proposal.text,
+        options:[option]
+      };
+
+      /* Ordinary English boot has no generated lang_en catalog. The source
+         registered by eventMessage must be sufficient to render every param. */
+      delete FBDATA.lang.en;
+      var receipt = FB.resolveEventOption(s, event, option, {}, {
+        automated:false
+      });
+      return {
+        rendered:FB.renderMessage(receipt.outcome, {
+          state:s,
+          viewer:p.charId
+        }),
+        suitorParam:receipt.outcome.params.suitor,
+        courtingId:p.courtingId,
+        spouseLinked:suitor.spouseId === me.id
+      };
+    });
+
+    expect(result.rendered).toContain('Aelfred Ash');
+    expect(result.rendered).not.toContain('fx.param.');
+    expect(result.suitorParam).toBe('Aelfred Ash');
+    expect(result.courtingId).toBeNull();
+    expect(result.spouseLinked).toBe(true);
+  });
+
 test('desktop choices keep side tooltips visible and separate from resolution',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);

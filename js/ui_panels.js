@@ -847,6 +847,7 @@ window.FB = window.FB || {};
        Chronicle appends only new entries; Deeds uses a bounded status-only
        pass that leaves its catalogue and listeners mounted. */
     if (liveTick) {
+      refreshLiveSelfValues();
       if (SH.activeTab === 'actions') refreshVisibleDeedStatuses();
       else if (SH.activeTab === 'log') renderLog();
       updateTabNudges(FB.state);
@@ -1020,7 +1021,7 @@ window.FB = window.FB || {};
     if (s.player.war) {
       h += renderDeedsWarCard(s);
     }
-    if (s.greatHolyWar) {
+    if (s.greatHolyWar && FB.playerGreatHolyWarCamp(s)) {
       const great = s.greatHolyWar;
       const greatReligion = FB.religionOf(great.callingReligion, s);
       const greatName = greatReligion
@@ -1711,6 +1712,31 @@ window.FB = window.FB || {};
       hp >= 3 ? 'Grievously wounded' : 'At death’s door');
   }
 
+  function selfValue(panel, label) {
+    const rows = panel ? panel.querySelectorAll('.kv') : [];
+    const translated = FB.T(label);
+    for (let i = 0; i < rows.length; i++) {
+      const rowLabel = rows[i].querySelector('span');
+      if (rowLabel && rowLabel.textContent === translated) {
+        return rows[i].querySelector('b');
+      }
+    }
+    return null;
+  }
+
+  function refreshLiveSelfValues() {
+    const s = FB.state;
+    const panel = $('tab-char');
+    const me = s && s.player && s.chars[s.player.charId];
+    if (!me || !panel || panel.offsetParent === null) return;
+    const age = selfValue(panel, 'Age');
+    const health = selfValue(panel, 'Health');
+    const voice = selfValue(panel, 'Common Voice');
+    if (age) age.textContent = FB.ageOf(me, s.date.year);
+    if (health) health.textContent = Math.round(me.health) + ' / 10 ' + String.fromCharCode(183) + ' ' + healthWord(me.health);
+    if (voice) voice.textContent = Math.round(FB.popEffective ? FB.popEffective(s) : s.player.pop);
+  }
+
   /* the named wounds & sicknesses the player carries (see FBDATA.ailments) */
   function ailmentChips(s, me) {
     const ails = FB.ailmentsOf(me);
@@ -1854,6 +1880,35 @@ window.FB = window.FB || {};
       (summary ? '' : ' class="cmeta"') + '>' +
       esc(summary || FB.T('No equipment bonuses.')) + '</div></div>';
   }
+
+  function equipmentSlotDetailsHtml(s, slot, ref, item, blocked) {
+    let h = '<b>' + esc(itemSlotLabel(slot)) + '</b>';
+    if (item) {
+      const quality = item.ordinary
+        ? FB.itemQualityName(item.quality) : SH.rarityName(item.def.rarity);
+      const fx = SH.itemFxText(item) || FB.T('No mechanical effect');
+      h += '<p><b>' + item.def.icon + ' ' + esc(FB.itemName(s, ref)) +
+        '</b> · ' + esc(quality) + '</p>' +
+        '<p>' + esc(dt(s, 'item', item.defId, item.def, 'desc')) + '</p>' +
+        '<p><i>' + esc(fx) + '</i></p>' +
+        '<p class="cmeta">' + esc(FB.T('Worth about {money:gold}.', {
+          gold:item.value
+        })) + '</p>' +
+        (item.grip === 2 ? '<p class="cmeta">' +
+          esc(FB.T('Occupies both hands.')) + '</p>' : '') +
+        (FB.isProtected && FB.isProtected(s, 'equipmentItem', ref)
+          ? '<p class="cmeta">' + esc(FB.T(
+            'Protected from automatic equipment changes.')) + '</p>' : '');
+    } else {
+      h += '<p>' + esc(FB.T('Empty slot.')) + '</p>';
+    }
+    h += '<p class="cmeta">' + esc(blocked
+      ? equipmentBlockedText(blocked)
+      : FB.T('Select this slot to choose an exact object from the family armory.')) +
+      '</p>';
+    return h;
+  }
+
   function equipmentSheetHtml(s, c) {
     const loadout = FB.loadoutOf(s, c.id);
     const blocked = FB.equipmentBlockedReason ? FB.equipmentBlockedReason(s) : null;
@@ -1874,10 +1929,22 @@ window.FB = window.FB || {};
         slot:itemSlotLabel(slot),
         item:item ? FB.itemName(s, ref) : FB.T('Empty')
       });
-      h += '<button type="button" class="equip-slot" data-equip-cid="' + c.id +
-        '" data-equip-slot="' + slot + '" aria-label="' + esc(aria) + '"' +
+      const detailsId = 'equipment-slot-details-' + c.id + '-' + slot;
+      h += '<div class="equip-slot-card settcard">' +
+        '<div class="equip-slot-face">' +
+        '<button type="button" class="equip-slot" data-equip-cid="' + c.id +
+        '" data-equip-slot="' + slot + '" data-action-tooltip="' + detailsId +
+        '" aria-describedby="' + detailsId + '" aria-label="' + esc(aria) + '"' +
         (blocked ? ' disabled' : '') + '><span>' + esc(itemSlotLabel(slot)) +
-        '</span><b>' + esc(value) + '</b></button>';
+        '</span><b>' + esc(value) + '</b></button>' +
+        '<span class="settcard-actions equip-slot-actions">' +
+        '<button type="button" class="btn small settcard-info equip-slot-info" ' +
+        'aria-expanded="false" aria-controls="' + detailsId + '" title="' +
+        esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+        '">?</button></span></div>' +
+        '<div class="settcard-details equip-slot-details hidden" id="' +
+        detailsId + '">' +
+        equipmentSlotDetailsHtml(s, slot, ref, item, blocked) + '</div></div>';
     }
     h += '</div>' + (blocked ? '<div class="progressnote warnote">' +
       esc(equipmentBlockedText(blocked)) + '</div>' :

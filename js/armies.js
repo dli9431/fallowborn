@@ -2762,15 +2762,56 @@ window.FB = window.FB || {};
      balance.supplyRecoverRate, faster beside a friendly fort and slower on
      a war-worn county. Abroad it drains at balance.supplyDrainBase scaled by
      the terrain crossed, winter, and the depth of the march past the
-     friendly frontier (one reverse-BFS distance map per host realm per
-     tick). At 0 supply the host starves: balance.supplyAttritionPerDay of
+     friendly frontier (one reverse-BFS distance map per host realm, retained
+     until its friendly origins change). At 0 supply the host starves:
+     balance.supplyAttritionPerDay of
      its men melt away daily and it fights at balance.supplyStarvedPowerMult.
      A besieging host pinned on hostile ground simply drains at the foreign
      rate — the siege's own seasonal attrition is unchanged, never doubled.
      AI hosts follow the same rules through this one path. */
 
-  /* counties-from-friendly-land for the host's realm; one map per realm per
-     tick, shared through distCache */
+  /* Friendly supply origins change only with territorial/hierarchy mutations
+     or alliances. Retain their reverse-BFS maps across ordinary days instead
+     of rebuilding the same world-wide distance field for every host realm on
+     every day of a fast-forward. */
+  let supplyCacheState = null;
+  let supplyCacheRealmRevision = -1;
+  let supplyCacheAllianceSignature = '';
+  let supplyCacheMaps = {};
+
+  function supplyAllianceSignature(state) {
+    if (FB.repairAlliances) FB.repairAlliances(state);
+    const alliances = state && Array.isArray(state.alliances)
+      ? state.alliances : [];
+    const parts = [];
+    for (let i = 0; i < alliances.length; i++) {
+      const alliance = alliances[i];
+      if (!alliance) continue;
+      parts.push([
+        alliance.a || '', alliance.b || '', alliance.aGen || 0,
+        alliance.bGen || 0
+      ].join(':'));
+    }
+    return parts.join('|');
+  }
+
+  function retainedSupplyDistanceMaps(state) {
+    const realmRevision = FB.realmStateRevision
+      ? FB.realmStateRevision() : state.turn;
+    const allianceSignature = supplyAllianceSignature(state);
+    if (supplyCacheState !== state ||
+        supplyCacheRealmRevision !== realmRevision ||
+        supplyCacheAllianceSignature !== allianceSignature) {
+      supplyCacheState = state;
+      supplyCacheRealmRevision = realmRevision;
+      supplyCacheAllianceSignature = allianceSignature;
+      supplyCacheMaps = {};
+    }
+    return supplyCacheMaps;
+  }
+
+  /* counties-from-friendly-land for the host's realm; one retained map per
+     realm, shared by every same-realm host */
   function supplyDistanceMap(state, army, distCache) {
     const adj = (FB.world && FB.world.adj) || {};
     let map = distCache[army.realm];
@@ -3149,9 +3190,10 @@ window.FB = window.FB || {};
        phase runs after the day's march so the price is paid at the ground
        the host ends on, and after reinforcement so a host that limped home
        at 0 supply eats before it fills its ranks; battles below still read
-       today's supply. One friendly-distance map per host realm per tick.
+       today's supply. One friendly-distance map per host realm is retained
+       until borders, hierarchy, development, or alliances change.
        Starvation can disband a host, so the loop walks a snapshot. */
-    const supplyDistances = {};
+    const supplyDistances = retainedSupplyDistanceMaps(state);
     for (const a of state.armies.slice()) {
       supplyTickHost(state, a, supplyDistances);
     }

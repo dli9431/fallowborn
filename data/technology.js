@@ -253,6 +253,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Withdrawing into an empty wasteland and proving a homestead is a core recovery and life-path choice for freeholders and gentry; it rides ordinary travel, holdings, and the shared wasteland materialization, and no innovation credibly unlocks walking onto empty land.'
       },
+      gentry_freehold_expansion:{
+        mode:'none',
+        rationale:'Continuing to buy ordinary family plots after declaring a manor extends baseline property accumulation across adjacent commoner ranks; no innovation credibly gates buying land already offered in the local market.'
+      },
       building_university:{
         mode:'hard', tech:['universities'], fallback:'library',
         rationale:'Corporate university centers require organized universities knowledge; ordinary libraries remain available.'

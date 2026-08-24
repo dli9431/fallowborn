@@ -312,7 +312,8 @@ county whose development has been beaten below its bookmark baseline (floored at
 `balance.supplyDrainBase` × the terrain being crossed (`balance.supplyDrainTerrain`) ×
 the winter multiplier (`balance.supplyWinterDrainMult`, season 3) × (1 +
 `balance.supplyDistanceDepth` per county of distance from the nearest friendly land —
-one reverse-BFS map per host realm per tick). The capped national `fx.supply`
+one reverse-BFS map per host realm, retained until territorial, hierarchy,
+development, or alliance inputs change). The capped national `fx.supply`
 technologies (pack saddles, iron-tired carts, military magazines) shrink the drain and
 quicken the refill. At 0 supply the host starves: `balance.supplyAttritionPerDay` of
 its men melt away daily through `FB.applyHostLosses`, its battle power falls to
@@ -747,7 +748,10 @@ Two code-queued wartime events make those transitions unmissable without automat
 `ghw_called` announces the Pope's Crusade or Caliph's Jihad on the call day, and
 `ghw_muster_complete` announces the march on the first active day after the army tick
 has raised the gathered sovereign hosts. They are informational events; joining and
-campaign review remain in the Deeds tab.
+campaign review remain in the Deeds tab. The compact Deeds campaign-progress notice is
+personal: it appears only while the player has a live, campaign-matched pledge. A global
+campaign may still be announced and offer an eligible join action without being shown as
+one of a nonparticipant's current commitments.
 
 Sovereign attackers and defenders with a live player-controlled campaign host may also
 draw two ordinary wartime events. `ghw_pilgrims_under_arms` is a rare, effectively

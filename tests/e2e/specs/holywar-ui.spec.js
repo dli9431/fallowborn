@@ -179,6 +179,36 @@ test.beforeEach(async function ({ page }, testInfo) {
   await injectHolyWarHarness(page);
 });
 
+test('Deeds shows great holy-war progress only for a matching player pledge',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      var campaign = FBTEST.makeGreatHolyWar({
+        id:'deeds_visibility',
+        phase:'preparation',
+        includePlayer:false,
+        capturedCounties:[]
+      });
+      campaign.launchTurn = FB.state.turn + 179;
+      FB.ui.refresh();
+    });
+
+    var deeds = page.locator('#tab-actions');
+    await expect(deeds.getByText(/gathering days remain/)).toHaveCount(0);
+
+    await page.evaluate(function () {
+      var campaign = FBTEST.makeGreatHolyWar({
+        id:'deeds_visibility',
+        phase:'preparation',
+        includePlayer:true,
+        capturedCounties:[]
+      });
+      campaign.launchTurn = FB.state.turn + 179;
+      FB.ui.refresh();
+    });
+
+    await expect(deeds.getByText('179 gathering days remain')).toBeVisible();
+  });
+
 test('the council explains claims, previews moves, and records prior awards',
   async function ({ page }) {
     await page.evaluate(function () {

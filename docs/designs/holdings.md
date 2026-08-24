@@ -36,23 +36,35 @@ again at full setup cost. Every purchase and lapse writes a locale-neutral durab
 Chronicle descriptor.
 
 The household sheet is a compact catalogue rather than a stack of complete
-asset ledgers. Each row keeps the icon, name, current level, current or next
-effect, next setup price, and live upkeep visible in the same scan pattern as
-the technology catalogue. Opening a standard shows its current state once,
-keeps the invariant work/general scope, succession/no-resale rule, and lapse
-condition in one shared note, and limits the next-level choice to the changing
-name, effect, setup cost, and upkeep. Purchase and reduction confirmations may
-repeat the complete terms beside their projected finances. Permanent property
-uses the same compact row in the catalogue, with owned property visually
-distinguished from purchases. This is presentation only; the level map and
-seasonal lapse order remain authoritative.
+asset ledgers. Each maintained living standard or work outfit is one three-part
+stepper: a minus button on the left, a read-only current-state card in the
+middle, and a plus button on the right. The card keeps the icon, name, current
+level, current or next effect, next setup price, and live upkeep visible in the
+same scan pattern as the technology catalogue; it is no longer a large
+navigation action.
+
+Hovering or focusing the plus button shows the complete next-level ownership,
+scope, transfer, expiry, affordability, and projected-finance terms in the
+shared tooltip. Activating it purchases one level immediately after engine
+revalidation and refreshes the same household sheet. A blocked plus remains
+focusable with `aria-disabled` so its exact reason is still disclosed. Hovering
+or focusing the minus button shows the level that will be lost, the no-refund
+rule, the resulting effect and upkeep, and the projected finances; activating
+it gives up one level immediately. The minus button is disabled at baseline.
+On touch, tablet-width, and short layouts, button hover tooltips are suppressed
+and one visible 44 px `?` control on the current-state card toggles both adjustment
+breakdowns inline; roomy pointer layouts hide that disclosure control. There are
+no separate standard-detail or confirmation sheets. Permanent property
+continues to use its distinct compact purchase and owned rows. This is presentation
+only; the level map, purchase eligibility, no-refund reduction, and seasonal lapse
+order remain authoritative.
 
 Profession outfits multiply positive vocational focus resources, resident-family wages
 or clerical yield, and matching staffed-enterprise output. Soldier outfits affect paid
 work only. Permanent Pack Mule, Fine Tools, Good Mail, Warhorse, and other holding/item
 effects remain separate productive or combat property.
 
-**Freeholders assemble land before they can claim a manor.** Repeatable plots live in
+**Freeholders and gentry assemble family land.** Repeatable plots live in
 `player.landPlots` as `{provinceId, settlement}` and pass to heirs. The Buy Freehold Land
 deed places each purchase in one of the home county's stable derived settlements. A
 completed frontier homestead (the *Withdraw into the wastes* journey — see
@@ -71,13 +83,26 @@ each. The Free Farmer start owns its promised first plot. Legacy `has_farm` save
 one plot lazily, and legacy tier-2 saves built around the old assumed manor receive a
 complete holding unless their station came from the abbot/qadi path.
 
-The land market uses the same asset/effect row for each settlement, showing
-dynastic ownership, exact site, next-plot affordability, no upkeep, before/after
-seasonal yield, inheritance, and permanence. Permanent holdings and enterprises
-use that row as well, while retaining their separate pledge and staffing rules.
-When two or more plots remain before the manor threshold, the settlement also offers
-an explicit batch purchase. Its confirmation previews the plot count, total price,
-resulting seasonal yield, completed cluster/manor progress, and remaining purse.
+Declaring the first manor does not close the family land market. Gentry may continue
+buying plots in the home county up to each settlement's ordinary cap, including the
+same atomic complete-the-holding purchase available to freeholders. Manor declaration
+remains a one-time Freeholder promotion; titled ranks use county domains and buildings
+instead of buying commoner freehold plots. The technology impact is **none**
+(`gentry_freehold_expansion`): ordinary local land purchases need no credible research
+gate.
+
+The land market keeps each settlement purchase compact: its action face shows the
+settlement and plot progress plus only the live cost and before/after seasonal yield.
+The full dynastic ownership, exact site, affordability, upkeep, inheritance, and
+permanence terms move to the shared desktop hover/focus tooltip. Unaffordable and
+complete single-plot actions remain focusable for that disclosure but expose
+`aria-disabled` and revalidate without purchasing when activated. Permanent holdings
+and enterprises retain their separate pledge and staffing rules.
+When two or more plots remain before the relevant target — the manor threshold for a
+Freeholder or the settlement cap for Gentry — the settlement also offers an explicit
+batch purchase with the same compact cost/yield face and full tooltip. Its confirmation
+previews the plot count, total price, resulting seasonal yield, completed holding/manor
+progress, and remaining purse.
 `FB.manorPlotPurchasePlan` is read-only; `FB.buyRemainingManorPlots` revalidates the
 reviewed starting count and full affordability, then buys the batch atomically and
 writes one Chronicle entry. It never substitutes for the existing one-plot purchase.

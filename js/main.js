@@ -10,8 +10,18 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.154.0';
+  FB.VERSION = '1.154.1';
   FB.CHANGELOG = [
+    { v: '1.154.1', date: '2026-08-24', changes: [
+      'The Self panel now keeps Age, Health, and Common Voice current while time is flowing or fast-forwarding.',
+      'Fast-forward yields more often and reuses unchanged army supply routes to keep the interface responsive.',
+      'Wedding and marriage-ending outcomes retain the named partner after relationship state changes.',
+      'Household standards now use inline −/+ controls, with desktop tooltips and compact ? disclosures replacing separate sheets.',
+      'Equipment slots use even rows and desktop or compact details; Equip Best now applies immediately from the same centered sheet.',
+      'Freehold-land choices now keep cost and seasonal yield on the row and move their complete terms into tooltips.',
+      'Great holy-war progress now appears in Deeds only when your character has joined that campaign.',
+      'Gentry households can continue buying available freehold plots after declaring their first manor.'
+    ] },
     { v: '1.154.0', date: '2026-08-24', changes: [
       'Chronicle war, battle, and raid notices now open compact saved result reports; wartime map orders show enemy movement and resolve battles only when hostile hosts share a county.',
       'Dense Governance, Council, Papacy, conquest, and privilege sheets now use consistent controls, navigation, and tooltips.'
@@ -2608,7 +2618,8 @@ window.FB = window.FB || {};
   G.scheduleSlots = scheduleSlots;
 
   /* Advance one day. opts.skipFocus: an instant deed filled this day instead;
-     opts.liveTick: the natural clock may leave heavy panel DOM mounted.
+     opts.liveTick: the natural clock may leave heavy panel DOM mounted;
+     opts.deferUi: an active fast-forward owns the completion refresh.
      Returns 'event' | 'dead' | 'season' | 'day' (or undefined if blocked). */
   G.passDay = function (opts) {
     const s = FB.state;
@@ -2677,7 +2688,9 @@ window.FB = window.FB || {};
       FB.armyTick(s);
       if (FB.greatHolyWarTick) FB.greatHolyWarTick(s);
       s.eventQueue.length = 0;
-      FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
+      if (!(opts && opts.deferUi)) {
+        FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
+      }
       return seasonBoundary ? 'season' : 'day';
     }
 
@@ -2766,7 +2779,9 @@ window.FB = window.FB || {};
     }
 
     const events = FB.pickDailyEvents(s);
-    FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
+    if (!(opts && opts.deferUi)) {
+      FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
+    }
     if (events.length) {
       // runEvents reports whether a modal actually opened; autoresolved
       // events pass silently and the day keeps flowing
@@ -2777,7 +2792,8 @@ window.FB = window.FB || {};
     }
     G.afterEvents({
       syncRulers:seasonBoundary,
-      liveTick:!!(opts && opts.liveTick)
+      liveTick:!!(opts && opts.liveTick),
+      deferUi:!!(opts && opts.deferUi)
     });
     return p.dead ? 'dead' : (seasonBoundary ? 'season' : 'day');
   };
@@ -2785,8 +2801,8 @@ window.FB = window.FB || {};
   /* Fast-forward until something happens: an event, a new season, or death.
      The simulation remains one authoritative day at a time, but a whole
      autoresolved season must not monopolize the browser's main thread. */
-  const FAST_FORWARD_FRAME_BUDGET = 8;
-  const FAST_FORWARD_MAX_DAYS_PER_FRAME = 6;
+  const FAST_FORWARD_FRAME_BUDGET = 4;
+  const FAST_FORWARD_MAX_DAYS_PER_FRAME = 2;
   G.fastForwarding = false;
 
   G.skipAhead = function () {
@@ -2828,7 +2844,7 @@ window.FB = window.FB || {};
       while (daysLeft > 0) {
         daysLeft--;
         daysThisFrame++;
-        const r = G.passDay({ liveTick:true });
+        const r = G.passDay({ liveTick:true, deferUi:true });
         if (r !== 'day' || G.paused) {
           finishFastForward();
           return;
@@ -3432,7 +3448,9 @@ window.FB = window.FB || {};
       return;
     }
     checkPromotionsWhenChanged(s, !!options.forcePromotionCheck);
-    FB.ui.refresh(options.liveTick ? { liveTick:true } : undefined);
+    if (!options.deferUi) {
+      FB.ui.refresh(options.liveTick ? { liveTick:true } : undefined);
+    }
   };
 
   /* ---------- yearly aging, mortality, coming of age ---------- */

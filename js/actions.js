@@ -1809,7 +1809,7 @@ window.FB = window.FB || {};
       return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
         { gold: FB.landPlotCost(s) });
     },
-    show: function (s) { return s.player.tier === 1 && adult(s); },
+    show: function (s) { return canBuyFreeholdLand(s) && adult(s); },
     can: function (s) {
       if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
       if (s.player.gold < FB.landPlotCost(s)) return FB.T('Not enough money.');
@@ -6730,6 +6730,10 @@ window.FB = window.FB || {};
      Repeatable family plots belong to one stable derived settlement and pass
      to heirs. Contiguous holdings are worked more efficiently; five plots in
      one place may be declared a manor and raise the family into the gentry. */
+  function canBuyFreeholdLand(state) {
+    return state.player.tier === 1 || state.player.tier === 2;
+  }
+
   FB.landPlotCost = function (state, quantity) {
     const plots = Math.max(1, Math.floor(Number(quantity) || 1));
     const raw = (FBDATA.balance.landPlotCost ||
@@ -6815,7 +6819,7 @@ window.FB = window.FB || {};
 
   FB.landAvailable = function (state) {
     const p = state.player;
-    if (p.tier !== 1) return [];
+    if (!canBuyFreeholdLand(state)) return [];
     const out = [];
     const max = FBDATA.balance.landPlotMaxSettlement ||
       FBDATA.balance.manorPlotRequirement || 5;
@@ -6833,14 +6837,16 @@ window.FB = window.FB || {};
   FB.manorPlotPurchasePlan = function (state, settlement) {
     const p = state.player;
     settlement = Number(settlement);
-    if (p.tier !== 1 || settlement < 0 ||
+    if (!canBuyFreeholdLand(state) || settlement < 0 ||
         settlement !== Math.floor(settlement)) return null;
     const need = FBDATA.balance.manorPlotRequirement || 5;
     const max = FBDATA.balance.landPlotMaxSettlement || need;
     const settlements = FB.settlementsOf(state, p.provinceId);
     if (max < need || !settlements[settlement]) return null;
     const count = FB.landCountAt(state, p.provinceId, settlement);
-    const plots = need - count;
+    const manorEligible = p.tier === 1;
+    const target = manorEligible ? need : max;
+    const plots = target - count;
     if (plots <= 1) return null;
     const totalCost = FB.landPlotCost(state, plots);
     return {
@@ -6851,6 +6857,8 @@ window.FB = window.FB || {};
       plots:plots,
       resultingCount:count + plots,
       manorRequirement:need,
+      maxPlots:max,
+      manorEligible:manorEligible,
       totalCost:totalCost,
       currentYield:FB.landGroupYield(count),
       resultingYield:FB.landGroupYield(count + plots),

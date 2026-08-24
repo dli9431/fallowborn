@@ -389,6 +389,10 @@ callers that ignore its return value, but now returns semantic before/after impa
 actual clamp-aware deltas. Resolution suppresses transient effect toasts, not their durable
 Chronicle messages, and adds one `kind:"choice"` entry containing the event/option/outcome
 descriptors plus the complete player-facing impact ledger.
+For outcome prose, concrete named-character role parameters are snapshotted before effects
+run and merged into the otherwise post-effect descriptor. Marriage, annulment, friendship,
+and similar relationship mutations can therefore clear their live role without replacing
+the person named in the durable outcome with a generic fallback.
 An autoresolved queue performs the shared post-event health, ruler-standing,
 and promotion reconciliation once after the queue drains. The daily driver
 does not repeat that pass after `runEvents` has already completed it.

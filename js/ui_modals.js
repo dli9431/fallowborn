@@ -11810,76 +11810,6 @@ window.FB = window.FB || {};
     return FB.T('Passes to the next household head; cannot be sold or pledged');
   }
 
-  function householdStandardRules(s, def) {
-    return '<div class="household-standard-rules" role="note">' +
-      '<b>' + esc(householdStandardScope(s, def)) + '</b><span>' +
-      esc(FB.T(
-        'Passes to the next household head; cannot be sold or pledged. It may lapse when upkeep cannot be paid.')) +
-      '</span></div>';
-  }
-
-  function householdStandardCurrent(s, id, level, current, active) {
-    const levelText = level
-      ? FB.T('Level {level}: {name}', {
-        level:level, name:householdStandardLevelName(s, id, level)
-      })
-      : FB.T('Baseline');
-    const upkeepParts = level && active && FB.householdStandardsUpkeepParts
-      ? FB.householdStandardsUpkeepParts(s) : null;
-    let quotedUpkeep = current ? Number(current.upkeep) || 0 : 0;
-    if (upkeepParts) {
-      for (let i = 0; i < upkeepParts.lines.length; i++) {
-        if (upkeepParts.lines[i].id === id) quotedUpkeep = upkeepParts.lines[i].amount;
-      }
-    }
-    const upkeep = level && active && current
-      ? FB.T('{money:amount}/season', { amount:quotedUpkeep })
-      : level ? FB.T('None while dormant') : FB.T('No upkeep');
-    const effect = level && active
-      ? householdStandardLevelDesc(s, id, level)
-      : level ? FB.T('Dormant — no current benefit') :
-        FB.T('No maintained improvement');
-    return '<section class="household-standard-current" ' +
-      'aria-labelledby="household-standard-current-title">' +
-      '<span class="household-standard-eyebrow" ' +
-      'id="household-standard-current-title">' + esc(FB.T('Current level')) +
-      '</span><div class="household-standard-current-line"><b>' +
-      esc(levelText) + '</b><span>' + esc(upkeep) + '</span></div>' +
-      '<p>' + esc(effect) + '</p></section>';
-  }
-
-  function householdStandardUpgradeChoice(s, id, level, next, availability) {
-    const standardDef = FBDATA.householdStandards[id];
-    const nextCost = FB.householdStandardUpgradeCost ?
-      FB.householdStandardUpgradeCost(s, id) : Number(next.cost) || 0;
-    const nextUpkeep = FB.marketCostQuote ? FB.marketCostQuote(s,
-      Number(next.upkeep) || 0, next.marketBasket || standardDef.marketBasket,
-      s.player.provinceId) : Number(next.upkeep) || 0;
-    const setup = assetSummaryValue(assetMoneyCost(nextCost,
-      s.player.gold >= nextCost), '');
-    return '<button class="actionbtn household-standard-choice" ' +
-      'id="household-standard-upgrade"' +
-      (availability === true ? '' : ' disabled') + '>' +
-      '<span class="household-standard-choice-head"><b>' +
-      esc(FB.T('Improve to level {level}: {name}', {
-        level:level + 1,
-        name:householdStandardLevelName(s, id, level + 1)
-      })) + '</b><span aria-hidden="true">›</span></span>' +
-      '<span class="household-standard-choice-effect">' +
-      esc(householdStandardLevelDesc(s, id, level + 1)) + '</span>' +
-      '<span class="household-standard-choice-terms">' +
-      '<span><small>' + esc(FB.T('Setup cost')) + '</small><b' +
-      (setup.tone ? ' class="' + esc(setup.tone) + '"' : '') + '>' +
-      esc(setup.text) + '</b></span><span><small>' +
-      esc(FB.T('Recurring cost')) + '</small><b>' +
-      esc(FB.T('{money:amount}/season', {
-        amount:nextUpkeep
-      })) + '</b></span></span>' +
-      (availability === true ? '' :
-        '<span class="adesc household-standard-choice-blocked">' +
-        esc(availability) + '</span>') + '</button>';
-  }
-
   function holdingEffectText(def) {
     const fx = (def && def.fx) || {};
     const parts = [];
@@ -11935,6 +11865,7 @@ window.FB = window.FB || {};
     const current = level && def.levels[level - 1];
     const active = FB.householdStandardActive(s, id);
     const next = level < def.levels.length ? def.levels[level] : null;
+    const availability = FB.householdStandardUpgradeAvailable(s, id);
     const status = level
       ? FB.T('Level {level}: {name}', {
         level:level, name:householdStandardLevelName(s, id, level)
@@ -11961,7 +11892,41 @@ window.FB = window.FB || {};
       }
     }
     const short = next && s.player.gold < nextCost;
-    return '<button class="actionbtn household-entry household-standard' +
+    const reduceDetailsId = 'household-standard-reduce-details-' + id;
+    const upgradeDetailsId = 'household-standard-upgrade-details-' + id;
+    const adjustmentDetailsId = 'household-standard-adjustment-details-' + id;
+    const reduceLabel = FB.T('Reduce {standard} by one level', {
+      standard:householdStandardName(s, id)
+    });
+    const upgradeLabel = next
+      ? FB.T('Increase {standard} to level {level}: {name}', {
+        standard:householdStandardName(s, id), level:level + 1,
+        name:householdStandardLevelName(s, id, level + 1)
+      })
+      : FB.T('{standard} is already at its highest level', {
+        standard:householdStandardName(s, id)
+      });
+    const reductionDetails = level
+      ? householdStandardReductionDetails(s, id, level)
+      : '<p>' + esc(FB.T('Already at baseline.')) + '</p>';
+    const upgradeDetails = next
+      ? householdStandardUpgradeDetails(s, id, level, next, availability)
+      : '<p>' + esc(availability) + '</p>';
+    const adjustmentDetails =
+      '<div class="household-standard-adjustment-section"><b>' +
+      esc(FB.T('Decrease one level')) + '</b>' + reductionDetails + '</div>' +
+      '<div class="household-standard-adjustment-section"><b>' +
+      esc(FB.T('Increase one level')) + '</b>' + upgradeDetails + '</div>';
+    return '<div class="household-standard-stepper settcard" ' +
+      'data-household-standard-row="' + esc(id) + '">' +
+      '<button type="button" class="actionbtn household-standard-step-control ' +
+      'household-standard-decrease" data-household-standard-adjust="-1" ' +
+      'data-household-standard-id="' + esc(id) + '" aria-label="' +
+      esc(reduceLabel) + '"' + (level
+        ? ' data-action-tooltip="' + reduceDetailsId +
+          '" aria-describedby="' + reduceDetailsId + '"'
+        : ' disabled') + '><span aria-hidden="true">−</span></button>' +
+      '<div class="household-entry household-standard' +
       (level && active ? ' household-entry-active' : '') +
       (level && !active ? ' household-entry-dormant' : '') +
       '" data-household-standard="' + esc(id) + '">' +
@@ -11980,7 +11945,24 @@ window.FB = window.FB || {};
           })
           : level ? FB.T('Dormant') : FB.T('No upkeep'),
         unaffordable:short
-      }) + '</button>';
+      }) + '<span class="settcard-actions household-standard-info-actions">' +
+        '<button type="button" class="btn small settcard-info" ' +
+        'aria-expanded="false" aria-controls="' + adjustmentDetailsId +
+        '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<button type="button" class="actionbtn household-standard-step-control ' +
+      'household-standard-increase" data-household-standard-adjust="1" ' +
+      'data-household-standard-id="' + esc(id) + '" data-action-tooltip="' +
+      upgradeDetailsId + '" aria-describedby="' + upgradeDetailsId + '" ' +
+      'aria-label="' + esc(upgradeLabel) + '"' +
+      (availability === true ? '' : ' aria-disabled="true"') +
+      '><span aria-hidden="true">+</span></button>' +
+      (level ? '<div class="event-choice-details hidden" id="' +
+        reduceDetailsId + '">' + reductionDetails + '</div>' : '') +
+      '<div class="event-choice-details hidden" id="' + upgradeDetailsId + '">' +
+      upgradeDetails + '</div>' +
+      '<div class="settcard-details household-standard-adjustment-details hidden" id="' +
+      adjustmentDetailsId + '">' + adjustmentDetails + '</div></div>';
   }
 
   function householdStandardPreview(s, id, level) {
@@ -12000,6 +11982,75 @@ window.FB = window.FB || {};
       else delete map[id];
     }
     return preview;
+  }
+
+  function householdStandardUpgradeDetails(s, id, level, next, availability) {
+    const def = FBDATA.householdStandards[id];
+    const preview = householdStandardPreview(s, id, level + 1);
+    const netAfter = preview.net;
+    const setupCost = FB.householdStandardUpgradeCost
+      ? FB.householdStandardUpgradeCost(s, id) : Number(next.cost) || 0;
+    const recurringCost = FB.marketCostQuote ? FB.marketCostQuote(s,
+      Number(next.upkeep) || 0, next.marketBasket || def.marketBasket,
+      s.player.provinceId) : Number(next.upkeep) || 0;
+    const projected = s.player.gold - setupCost + netAfter;
+    return assetEffectSummary({
+      owner:FB.T('Household dynasty'),
+      scope:householdStandardScope(s, def),
+      setupCost:assetMoneyCost(setupCost, s.player.gold >= setupCost),
+      recurringCost:assetSeasonalMoneyCost(recurringCost),
+      effect:householdStandardLevelDesc(s, id, level + 1),
+      transferRule:householdStandardTransferRule(),
+      expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+    }) +
+      kv('Projected seasonal net', '<span class="' +
+        (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
+        esc(fmtAmt(netAfter, true)) + '</span>') +
+      kv('Projected purse after next season', '<span class="' +
+        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) +
+        '</span>') +
+      (availability === true ? '' : '<p class="op-bad">' +
+        esc(availability) + '</p>') +
+      (projected < 0 ? '<p class="op-bad">' + esc(FB.T(
+        'Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep.')) +
+        '</p>' : '');
+  }
+
+  function householdStandardReductionDetails(s, id, level) {
+    const def = FBDATA.householdStandards[id];
+    const previous = level > 1 ? def.levels[level - 2] : null;
+    const active = FB.householdStandardActive(s, id);
+    const preview = householdStandardPreview(s, id, level - 1);
+    const netAfter = preview.net;
+    const projected = s.player.gold + netAfter;
+    const resultName = level > 1
+      ? householdStandardLevelName(s, id, level - 1) : FB.T('Baseline');
+    const previousUpkeep = previous && FB.marketCostQuote ? FB.marketCostQuote(s,
+      Number(previous.upkeep) || 0, previous.marketBasket || def.marketBasket,
+      s.player.provinceId) : previous ? Number(previous.upkeep) || 0 : 0;
+    return '<p class="op-bad">' + esc(FB.T(
+      'The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again.', {
+        name:householdStandardLevelName(s, id, level)
+      })) + '</p>' +
+      kv('New level', esc(resultName)) +
+      assetEffectSummary({
+        owner:FB.T('Household dynasty'),
+        scope:householdStandardScope(s, def),
+        setupCost:FB.T('No refund; repurchase later at full setup cost'),
+        recurringCost:active && previous
+          ? assetSeasonalMoneyCost(previousUpkeep) : FB.T('None'),
+        effect:previous
+          ? householdStandardLevelDesc(s, id, level - 1)
+          : FB.T('No maintained improvement'),
+        transferRule:householdStandardTransferRule(),
+        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
+      }) +
+      kv('Projected seasonal net', '<span class="' +
+        (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
+        esc(fmtAmt(netAfter, true)) + '</span>') +
+      kv('Projected purse after next season', '<span class="' +
+        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) +
+        '</span>');
   }
 
   function permanentHoldingsHtml(s) {
@@ -12071,7 +12122,7 @@ window.FB = window.FB || {};
       kv('Projected purse after one season', '<span class="' +
         (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
       '</div><p class="household-intro">' + esc(FB.T(
-        'Open a row for its effect, ownership, upkeep, and lapse terms.')) +
+        'Use − and + beside a standard to change it by one level. Hover or focus a control for its full effect, ownership, upkeep, and lapse terms.')) +
       '</p>' + (projected < 0 ? '<p class="household-warning op-bad">' + esc(FB.T(
         'The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.')) +
         '</p>' : '');
@@ -12111,12 +12162,26 @@ window.FB = window.FB || {};
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('🏠 Household standards & property'), h, {
       modalClass:'fullsheet-modal household-modal',
+      noHotkeys:true,
+      noFocus:true,
       guide:guideModalOption('household-guide', 'careers',
         'Guide: careers and household work')
     });
-    document.querySelectorAll('[data-household-standard]').forEach(function (button) {
+    document.querySelectorAll('[data-household-standard-adjust]').forEach(function (button) {
       button.addEventListener('click', function () {
-        UI.showHouseholdStandard(button.getAttribute('data-household-standard'));
+        if (button.disabled || button.getAttribute('aria-disabled') === 'true') return;
+        const id = button.getAttribute('data-household-standard-id');
+        const delta = parseInt(button.getAttribute('data-household-standard-adjust'), 10);
+        const modalBody = $('gm-body');
+        const scrollTop = modalBody ? modalBody.scrollTop : 0;
+        const changed = delta > 0
+          ? FB.buyHouseholdStandard(s, id)
+          : FB.reduceHouseholdStandard(s, id);
+        if (!changed) return;
+        UI.refresh();
+        UI.showHousehold();
+        const refreshedBody = $('gm-body');
+        if (refreshedBody) refreshedBody.scrollTop = scrollTop;
       });
     });
     document.querySelectorAll('[data-holding]').forEach(function (button) {
@@ -12132,165 +12197,87 @@ window.FB = window.FB || {};
   /* Compatibility for older deeds and third-party UI calls. */
   UI.showHoldings = UI.showHousehold;
 
-  UI.showHouseholdStandard = function (id) {
-    const s = FB.state;
-    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
-    if (!def) { UI.showHousehold(); return; }
-    const level = FB.householdStandardLevel(s, id);
-    const current = level && def.levels[level - 1];
-    const active = FB.householdStandardActive(s, id);
-    const availability = FB.householdStandardUpgradeAvailable(s, id);
-    const next = level < def.levels.length ? def.levels[level] : null;
-    let h = '<div class="gm-body-text household-standard-detail">' +
-      '<p class="household-standard-description">' +
-      esc(dt(s, 'householdStandard', id, def, 'desc')) + '</p>' +
-      householdStandardCurrent(s, id, level, current, active) +
-      householdStandardRules(s, def) + '</div>' +
-      '<div class="gm-list household-standard-options">';
-    if (next) {
-      h += householdStandardUpgradeChoice(s, id, level, next, availability);
-    }
-    if (level) {
-      h += '<button class="actionbtn danger" id="household-standard-reduce">' +
-        esc(FB.T('Reduce this standard by one level…')) +
-        '<span class="adesc">' + esc(FB.T(
-          'No refund. The lost level and its setup investment must be purchased again.')) +
-        '</span></button>';
-    }
-    h += '</div><div class="gm-footer"><button class="btn" ' +
-      'id="household-standard-back">' +
-      esc(FB.T('Back')) + '</button></div>';
-    openModal((def.icon || '🏠') + ' ' + householdStandardName(s, id), h, {
-      historyView:true,
-      modalClass:'fullsheet-modal household-standard-modal',
-      historyBackRender:function () { UI.showHousehold(); }
-    });
-    const upgrade = $('household-standard-upgrade');
-    if (upgrade) upgrade.addEventListener('click', function () {
-      UI.showHouseholdStandardUpgrade(id);
-    });
-    const reduce = $('household-standard-reduce');
-    if (reduce) reduce.addEventListener('click', function () {
-      UI.showHouseholdStandardReduction(id);
-    });
-    $('household-standard-back').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showHousehold(); });
-    });
+  UI.showHouseholdStandard = function () {
+    UI.showHousehold();
   };
 
-  UI.showHouseholdStandardUpgrade = function (id) {
-    const s = FB.state;
-    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
-    const level = def ? FB.householdStandardLevel(s, id) : 0;
-    const next = def && def.levels[level];
-    if (!def || !next || FB.householdStandardUpgradeAvailable(s, id) !== true) {
-      UI.showHouseholdStandard(id);
-      return;
-    }
-    const preview = householdStandardPreview(s, id, level + 1);
-    const netAfter = preview.net;
-    const setupCost = FB.householdStandardUpgradeCost ?
-      FB.householdStandardUpgradeCost(s, id) : Number(next.cost) || 0;
-    const recurringCost = FB.marketCostQuote ? FB.marketCostQuote(s,
-      Number(next.upkeep) || 0, next.marketBasket || def.marketBasket,
-      s.player.provinceId) : Number(next.upkeep) || 0;
-    const projected = s.player.gold - setupCost + netAfter;
-    let h = '<div class="gm-body-text">' +
-      assetEffectSummary({
-        owner:FB.T('Household dynasty'),
-        scope:householdStandardScope(s, def),
-        setupCost:assetMoneyCost(setupCost, true),
-        recurringCost:assetSeasonalMoneyCost(recurringCost),
-        effect:householdStandardLevelDesc(s, id, level + 1),
-        transferRule:householdStandardTransferRule(),
-        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
-      }) +
-      kv('Projected seasonal net', '<span class="' +
-        (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
-        esc(fmtAmt(netAfter, true)) + '</span>') +
-      kv('Projected purse after next season', '<span class="' +
-        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
-      (projected < 0 ? '<p class="op-bad">' + esc(FB.T(
-        'Warning: this projection is negative. The purchase is allowed, but standards will be reduced automatically if the purse cannot meet their upkeep.')) +
-        '</p>' : '') + '</div><div class="gm-list">' +
-      '<button class="actionbtn" id="household-standard-confirm">' +
-      esc(FB.T('Pay {money:cost} and establish {name}', {
-        cost:setupCost,
-        name:householdStandardLevelName(s, id, level + 1)
-      })) + '</button><button class="actionbtn" id="household-standard-cancel">' +
-      esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Improve {standard}?', {
-      standard:householdStandardName(s, id)
-    }), h, {
-      historyView:true,
-      modalClass:'fullsheet-modal',
-      historyBackRender:function () { UI.showHouseholdStandard(id); }
-    });
-    $('household-standard-confirm').addEventListener('click', function () {
-      if (!FB.buyHouseholdStandard(s, id)) return;
-      UI.refresh();
-      UI.showHousehold();
-    });
-    $('household-standard-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showHouseholdStandard(id); });
-    });
-  };
+  UI.showHouseholdStandardReduction = UI.showHouseholdStandard;
 
-  UI.showHouseholdStandardReduction = function (id) {
-    const s = FB.state;
-    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
-    const level = def ? FB.householdStandardLevel(s, id) : 0;
-    if (!def || !level) { UI.showHouseholdStandard(id); return; }
-    const previous = level > 1 ? def.levels[level - 2] : null;
-    const active = FB.householdStandardActive(s, id);
-    const preview = householdStandardPreview(s, id, level - 1);
-    const netAfter = preview.net;
-    const projected = s.player.gold + netAfter;
-    const resultName = level > 1
-      ? householdStandardLevelName(s, id, level - 1) : FB.T('Baseline');
-    const h = '<div class="gm-body-text"><p class="op-bad">' + esc(FB.T(
-      'The household will lose {name}. Its setup cost is not refunded, and restoring it later requires paying that full cost again.', {
-        name:householdStandardLevelName(s, id, level)
-      })) + '</p>' +
-      kv('New level', esc(resultName)) +
-      assetEffectSummary({
-        owner:FB.T('Household dynasty'),
-        scope:householdStandardScope(s, def),
-        setupCost:FB.T('No refund; repurchase later at full setup cost'),
-        recurringCost:active && previous
-          ? assetSeasonalMoneyCost(previous.upkeep) : FB.T('None'),
-        effect:previous
-          ? householdStandardLevelDesc(s, id, level - 1)
-          : FB.T('No maintained improvement'),
-        transferRule:householdStandardTransferRule(),
-        expiry:FB.T('No fixed end; may lapse when upkeep cannot be paid')
-      }) +
-      kv('Projected seasonal net', '<span class="' +
-        (netAfter < 0 ? 'op-bad' : netAfter > 0 ? 'op-good' : '') + '">' +
-        esc(fmtAmt(netAfter, true)) + '</span>') +
-      kv('Projected purse after next season', '<span class="' +
-        (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
-      '</div><div class="gm-list"><button class="actionbtn danger" ' +
-      'id="household-standard-reduce-confirm">' +
-      esc(FB.T('Give up this level with no refund')) +
-      '</button><button class="actionbtn" id="household-standard-reduce-cancel">' +
-      esc(FB.T('Keep it')) + '</button></div>';
-    openModal(FB.T('Reduce {standard}?', {
-      standard:householdStandardName(s, id)
-    }), h, {
-      historyView:true,
-      modalClass:'fullsheet-modal',
-      historyBackRender:function () { UI.showHouseholdStandard(id); }
+  function landPlotChoiceTerms(cost, effect) {
+    const quotedCost = assetSummaryValue(cost, '');
+    return '<span class="household-standard-choice-terms land-plot-choice-net">' +
+      '<span><small>' + esc(FB.T('Cost')) + '</small><b' +
+      (quotedCost.tone ? ' class="' + esc(quotedCost.tone) + '"' : '') + '>' +
+      esc(quotedCost.text) + '</b></span><span><small>' +
+      esc(FB.T('Effect')) + '</small><b>' + esc(effect) +
+      '</b></span></span>';
+  }
+
+  function landPlotDetails(place, cost, affordable, before, after, full) {
+    return assetEffectSummary({
+      compact:true,
+      owner:FB.T('Household dynasty'),
+      scope:place,
+      setupCost:full ? FB.T('Holding complete') :
+        assetMoneyCost(cost, affordable),
+      recurringCost:FB.T('None'),
+      effect:full
+        ? FB.T(
+          '{money:amount} seasonal yield from this holding; shown in Money each season', {
+            amount:before
+          })
+        : FB.T(
+          '{money:before} → {money:after} seasonal yield here; shown in Money each season', {
+            before:before, after:after
+          }),
+      transferRule:FB.T('Passes to heirs as family land in this settlement'),
+      expiry:FB.T('No fixed end')
     });
-    $('household-standard-reduce-confirm').addEventListener('click', function () {
-      if (!FB.reduceHouseholdStandard(s, id)) return;
-      UI.refresh();
-      UI.showHousehold();
-    });
-    $('household-standard-reduce-cancel').addEventListener('click', function () {
-      modalHistoryBack(function () { UI.showHouseholdStandard(id); });
-    });
-  };
+  }
+
+  function landPlotBatchDetails(place, batch) {
+    const before = Math.round(batch.currentYield * 10) / 10;
+    const after = Math.round(batch.resultingYield * 10) / 10;
+    const progress = landPlotBatchProgress(batch);
+    return assetEffectSummary({
+      compact:true,
+      owner:FB.T('Household dynasty'),
+      scope:place,
+      setupCost:assetMoneyCost(batch.totalCost, batch.affordable),
+      recurringCost:FB.T('None'),
+      effect:FB.T(
+        '{money:before} → {money:after} seasonal yield here; shown in Money each season', {
+          before:before, after:after
+        }),
+      transferRule:FB.T('Passes to heirs as family land in this settlement'),
+      expiry:FB.T('No fixed end')
+    }) +
+      kv('Plots in this purchase', esc(FB.T('{count} plots', {
+        count:batch.plots
+      }))) +
+      kv(progress.label, esc(progress.text)) +
+      kv('Money remaining after purchase', '<span class="' +
+        (batch.moneyAfter < 0 ? 'op-bad' : '') + '">' +
+        esc(FB.T('{money:amount}', { amount:batch.moneyAfter })) + '</span>');
+  }
+
+  function landPlotBatchProgress(batch) {
+    if (batch.manorEligible) {
+      return {
+        label:'Resulting cluster and manor progress',
+        text:FB.T(
+          '{count}/{needed} plots — ready to declare a manor once the household has enough standing', {
+            count:batch.resultingCount, needed:batch.manorRequirement
+          })
+      };
+    }
+    return {
+      label:'Resulting holding',
+      text:FB.T('{count}/{maximum} plots — holding complete', {
+        count:batch.resultingCount, maximum:batch.maxPlots
+      })
+    };
+  }
 
   /* ================= freehold land market ================= */
   UI.showLandMarket = function () {
@@ -12300,12 +12287,16 @@ window.FB = window.FB || {};
     const max = FBDATA.balance.landPlotMaxSettlement ||
       FBDATA.balance.manorPlotRequirement;
     const settlements = FB.settlementsOf(s, p.provinceId);
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor.',
-      {
-        bonus:Math.round((FBDATA.balance.landConsolidationBonus || 0.10) * 100),
-        needed:FBDATA.balance.manorPlotRequirement
-      })) +
+    const bonus = Math.round(
+      (FBDATA.balance.landConsolidationBonus || 0.10) * 100);
+    const introduction = p.tier === 1
+      ? FB.T(
+        'Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; gather {needed} together to declare a manor.',
+        { bonus:bonus, needed:FBDATA.balance.manorPlotRequirement })
+      : FB.T(
+        'Plots pass to your heirs and earn produce each season. Each additional plot in the same settlement makes the whole holding {bonus}% more productive; each settlement can hold up to {maximum} family plots.',
+        { bonus:bonus, maximum:max });
+    let h = '<div class="gm-body-text"><p>' + esc(introduction) +
       '</p></div><div class="gm-list">';
     for (let i = 0; i < settlements.length; i++) {
       const count = FB.landCountAt(s, p.provinceId, i);
@@ -12318,43 +12309,50 @@ window.FB = window.FB || {};
         settlement:settlements[i].name,
         province:FB.world.byId[p.provinceId].name
       });
-      h += '<button class="actionbtn" data-land-settlement="' + i + '"' +
-        (full || short ? ' disabled' : '') + '>🌾 ' +
+      const detailsId = 'land-plot-details-' + i;
+      const costText = full
+        ? FB.T('Holding complete') : assetMoneyCost(cost, !short);
+      const effectText = full
+        ? FB.T('{money:amount}/season', { amount:before })
+        : FB.T('{money:before} → {money:after}/season', {
+          before:before, after:after
+        });
+      h += '<button class="actionbtn household-standard-choice land-plot-choice" ' +
+        'data-land-settlement="' + i + '" data-action-tooltip="' +
+        detailsId + '" aria-describedby="' + detailsId + '"' +
+        (full || short ? ' aria-disabled="true"' : '') + '>' +
+        '<span class="household-standard-choice-head"><b>🌾 ' +
         esc(FB.T('{settlement} — {count}/{max} plots', {
           settlement:settlements[i].name, count:count, max:max
-        })) + (full ? '<span class="adesc">' +
-          esc(FB.T('A manor-sized holding is assembled here.')) + '</span>' : '') +
-        assetEffectSummary({
-          compact:true,
-          owner:FB.T('Household dynasty'),
-          scope:place,
-          setupCost:full ? FB.T('Holding complete') : assetMoneyCost(cost, !short),
-          recurringCost:FB.T('None'),
-          effect:full
-            ? FB.T(
-              '{money:amount} seasonal yield from this holding; shown in Money each season', {
-                amount:before
-              })
-            : FB.T(
-              '{money:before} → {money:after} seasonal yield here; shown in Money each season', {
-              before:before, after:after
-            }),
-          transferRule:FB.T('Passes to heirs as family land in this settlement'),
-          expiry:FB.T('No fixed end')
-        }) + '</button>';
+        })) + '</b><span aria-hidden="true">' + (full ? '✓' : '+') +
+        '</span></span>' +
+        landPlotChoiceTerms(costText, effectText) + '</button>' +
+        '<div class="event-choice-details hidden" id="' + detailsId + '">' +
+        landPlotDetails(place, cost, !short, before, after, full) + '</div>';
       if (batch) {
-        h += '<button type="button" class="actionbtn" data-land-batch="' + i + '">' +
+        const batchDetailsId = 'land-batch-details-' + i;
+        const batchEffect = FB.T('{money:before} → {money:after}/season', {
+          before:Math.round(batch.currentYield * 10) / 10,
+          after:Math.round(batch.resultingYield * 10) / 10
+        });
+        h += '<button type="button" ' +
+          'class="actionbtn household-standard-choice land-plot-choice" ' +
+          'data-land-batch="' + i + '" data-action-tooltip="' +
+          batchDetailsId + '" aria-describedby="' + batchDetailsId + '">' +
+          '<span class="household-standard-choice-head"><b>' +
           esc(FB.T('Buy remaining plots here…')) +
-          '<span class="adesc">' + esc(FB.T(
-            '{plots} plots for {money:cost}. Review the complete purchase before paying.', {
-              plots:batch.plots, cost:batch.totalCost
-            })) + '</span></button>';
+          '</b><span aria-hidden="true">›</span></span>' +
+          landPlotChoiceTerms(assetMoneyCost(batch.totalCost,
+            batch.affordable), batchEffect) + '</button>' +
+          '<div class="event-choice-details hidden" id="' +
+          batchDetailsId + '">' + landPlotBatchDetails(place, batch) + '</div>';
       }
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Not now')) + '</button>';
     openModal(FB.T('🌾 Buy Freehold Land'), h);
     document.querySelectorAll('[data-land-settlement]').forEach(function (button) {
       button.addEventListener('click', function () {
+        if (button.getAttribute('aria-disabled') === 'true') return;
         if (!FB.buyLandPlot(FB.state, parseInt(button.dataset.landSettlement, 10))) return;
         UI.refresh();
         UI.showLandMarket();
@@ -12376,10 +12374,7 @@ window.FB = window.FB || {};
       return;
     }
     const resultingYield = Math.round(plan.resultingYield * 10) / 10;
-    const progress = FB.T(
-      '{count}/{needed} plots — ready to declare a manor once the household has enough standing', {
-        count:plan.resultingCount, needed:plan.manorRequirement
-      });
+    const progress = landPlotBatchProgress(plan);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'This purchases every plot still needed at {settlement} in one transaction. Review the complete result before confirming.', {
         settlement:plan.settlementName
@@ -12393,7 +12388,7 @@ window.FB = window.FB || {};
       kv('Resulting seasonal yield', esc(FB.T('{money:amount} each season', {
         amount:resultingYield
       }))) +
-      kv('Resulting cluster and manor progress', esc(progress)) +
+      kv(progress.label, esc(progress.text)) +
       kv('Money remaining after purchase', '<span class="' +
         (plan.moneyAfter < 0 ? 'op-bad' : '') + '">' +
         esc(FB.T('{money:amount}', { amount:plan.moneyAfter })) + '</span>') +
@@ -18619,7 +18614,28 @@ window.FB = window.FB || {};
     FB.paintFaces($('gm-body'), s);
     wireEquipmentButtons($('gm-body'), returnMode);
     $('equipment-best').addEventListener('click', function () {
-      UI.showEquipBestPreview(cid, exitMode, returnContext);
+      const plan = FB.equipBestPreview(s, cid);
+      if (!plan.ok) {
+        UI.toast(equipmentBlockedText(plan.code) || FB.T(
+          'Equipment cannot be optimized right now.'));
+        return;
+      }
+      if (!plan.changed) {
+        UI.toast(FB.T(
+          'Nothing will move. This character already wears the best available outfit.'));
+        return;
+      }
+      const result = FB.applyEquipBest(s, plan);
+      if (!result.ok) {
+        UI.toast(FB.T('The equipment plan can no longer be applied.'));
+        return;
+      }
+      UI.refresh();
+      UI.showEquipmentModal(cid, exitMode, returnContext);
+      mobileNavClosedAll('modal-view', true);
+      UI.toast(FB.T('Best available equipment applied to {name}.', {
+        name:FB.fullName(c)
+      }));
     });
     const barber = $('equipment-barber');
     if (barber) barber.addEventListener('click', function () {
@@ -18890,138 +18906,6 @@ window.FB = window.FB || {};
       });
     });
     updatePreview();
-  };
-
-  function equipmentSlotsText(slots) {
-    if (!slots || !slots.length) return FB.T('Family armory');
-    if (slots.indexOf('leftHand') >= 0 && slots.indexOf('rightHand') >= 0) {
-      return FB.T('Both hands');
-    }
-    return itemSlotLabel(slots[0]);
-  }
-
-  function equipBestMovementText(s, target, movement) {
-    const item = FB.resolveItem(s, movement.ref);
-    const itemName = item ? FB.itemName(s, movement.ref) : movement.ref;
-    const source = movement.fromCid && s.chars[movement.fromCid];
-    if (!movement.toCid) {
-      return FB.T('{item} returns from {source} to the family armory.', {
-        item:itemName,
-        source:source ? FB.fullName(source) : FB.T('its current wearer')
-      });
-    }
-    const slots = equipmentSlotsText(movement.toSlots);
-    if (!movement.fromCid) {
-      return FB.T('{item} moves from the family armory to {name} ({slots}).', {
-        item:itemName,
-        name:FB.fullName(target),
-        slots:slots
-      });
-    }
-    if (movement.fromCid === target.id) {
-      return FB.T('{item} moves from {from} to {to}.', {
-        item:itemName,
-        from:equipmentSlotsText(movement.fromSlots),
-        to:slots
-      });
-    }
-    return FB.T('{item} moves from {source} to {name} ({slots}).', {
-      item:itemName,
-      source:source ? FB.fullName(source) : FB.T('its current wearer'),
-      name:FB.fullName(target),
-      slots:slots
-    });
-  }
-
-  function equipBestProposedSource(s, target, entry) {
-    if (!entry.fromCid) return FB.T('From the family armory');
-    const source = s.chars[entry.fromCid];
-    if (entry.fromCid === target.id) {
-      return FB.T('Already worn by {name}', { name:FB.fullName(target) });
-    }
-    return FB.T('Currently worn by {name}', {
-      name:source ? FB.fullName(source) : FB.T('another household member')
-    });
-  }
-
-  UI.showEquipBestPreview = function (cid, exitMode, returnContext, notice) {
-    const s = FB.state;
-    const c = s && s.chars[cid];
-    if (!s || !c || c.dead || !FB.isHouseholdCharacter(s, cid)) return;
-    const plan = FB.equipBestPreview(s, cid);
-    if (!plan.ok) {
-      UI.toast(equipmentBlockedText(plan.code) || FB.T(
-        'Equipment cannot be optimized right now.'));
-      return;
-    }
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Review the strongest age-valid, unpledged equipment for {name}. Mechanical effects outrank value, and applying this plan costs no day.', {
-        name:FB.fullName(c)
-      })) + '</p></div>' +
-      (notice ? '<div class="hint equip-best-notice">' + esc(notice) + '</div>' : '') +
-      '<div class="equip-best-section"><h4>' + esc(FB.T('Proposed outfit')) +
-      '</h4><div class="equip-best-list">';
-    if (plan.proposed.length) {
-      for (let i = 0; i < plan.proposed.length; i++) {
-        const entry = plan.proposed[i];
-        const item = FB.resolveItem(s, entry.ref);
-        h += '<article class="equip-best-row"><strong>' +
-          esc((item ? item.def.icon + ' ' : '') + FB.itemName(s, entry.ref)) +
-          '</strong><span>' + esc(equipmentSlotsText(entry.slots)) +
-          '</span><small>' + esc(equipBestProposedSource(s, c, entry)) +
-          '</small></article>';
-      }
-    } else {
-      h += '<p class="hint">' + esc(FB.T(
-        'No age-valid, unpledged equipment is available for this character.')) +
-        '</p>';
-    }
-    h += '</div></div><div class="equip-best-section"><h4>' +
-      esc(FB.T('Items that will move')) + '</h4><div class="equip-best-movements">';
-    if (plan.movements.length) {
-      for (let i = 0; i < plan.movements.length; i++) {
-        h += '<div class="equip-best-movement">' +
-          esc(equipBestMovementText(s, c, plan.movements[i])) + '</div>';
-      }
-    } else {
-      h += '<p class="hint">' + esc(FB.T(
-        'Nothing will move. This character already wears the best available outfit.')) +
-        '</p>';
-    }
-    h += '</div></div><div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="equip-best-apply"' +
-      (!plan.changed ? ' disabled' : '') + '>' +
-      esc(FB.T('Apply Equip Best')) + '</button>' +
-      '<button type="button" class="btn" id="equip-best-back">' +
-      esc(FB.T('Back')) + '</button></div>';
-    openModal(FB.T('Equip Best for {name}', { name:FB.fullName(c) }), h, {
-      historyView:true,
-      modalClass:'fullsheet-modal equip-best-modal',
-      historyBackRender:function () {
-        UI.showEquipmentModal(cid, exitMode, returnContext);
-      }
-    });
-    $('equip-best-apply').addEventListener('click', function () {
-      const result = FB.applyEquipBest(s, plan);
-      if (!result.ok) {
-        UI.showEquipBestPreview(cid, exitMode, returnContext,
-          result.code === 'stale'
-            ? FB.T('Equipment assignments changed after this review. A fresh plan is shown; review it before applying.')
-            : FB.T('The equipment plan can no longer be applied.'));
-        return;
-      }
-      UI.refresh();
-      UI.showEquipmentModal(cid, exitMode, returnContext);
-      mobileNavClosedAll('modal-view', true);
-      UI.toast(FB.T('Best available equipment applied to {name}.', {
-        name:FB.fullName(c)
-      }));
-    });
-    $('equip-best-back').addEventListener('click', function () {
-      modalHistoryBack(function () {
-        UI.showEquipmentModal(cid, exitMode, returnContext);
-      });
-    });
   };
 
   /* ================= arranged match picker =================

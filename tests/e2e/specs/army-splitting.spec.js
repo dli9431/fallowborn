@@ -874,3 +874,57 @@ test('Armies resupply and are friendly in vassal and realm lands',
     expect(result.isFriendly).toBe(true);
     expect(result.supplyAfter).toBeGreaterThan(50);
   });
+
+test('Supply distance maps persist until realm inputs change',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const home = state.player.provinceId;
+      let enemy = null;
+      for (const rid in state.realms) {
+        const realm = state.realms[rid];
+        if (rid !== 'player' && realm && realm.alive && !realm.liege) {
+          enemy = rid;
+          break;
+        }
+      }
+      const foreign = Object.keys(FB.world.byId).find(function (pid) {
+        const province = FB.world.byId[pid];
+        return province && !province.wasteland && pid !== home &&
+          !FB.armyFriendlyProvince(state, { realm:'player' }, pid);
+      });
+      state.player.war = {
+        enemy:enemy, defending:false, target:null, wins:0, losses:0, seasons:0
+      };
+      state.armies = [{
+        id:'supply_cache_host', realm:'player', men:400, size:400,
+        units:{ levy:400 }, at:foreign, from:foreign, moveLeft:0,
+        path:[], goal:null, supply:80, holdManual:true
+      }];
+      FB.game.auto.hosts = 'manual';
+
+      const originalFriendly = FB.armyFriendlyProvince;
+      const calls = [0, 0, 0];
+      let phase = 0;
+      FB.armyFriendlyProvince = function () {
+        calls[phase]++;
+        return originalFriendly.apply(this, arguments);
+      };
+      try {
+        FB.invalidateRealmCache();
+        FB.armyTick(state);
+        phase = 1;
+        FB.armyTick(state);
+        phase = 2;
+        FB.invalidateRealmCache();
+        FB.armyTick(state);
+      } finally {
+        FB.armyFriendlyProvince = originalFriendly;
+      }
+      return { calls:calls, provinces:Object.keys(FB.world.adj).length };
+    });
+
+    expect(result.calls[0]).toBeGreaterThan(result.provinces);
+    expect(result.calls[1]).toBeLessThan(result.calls[0]);
+    expect(result.calls[2]).toBeGreaterThan(result.calls[1]);
+  });

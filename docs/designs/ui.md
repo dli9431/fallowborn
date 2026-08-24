@@ -188,8 +188,14 @@ decorative and the button expands to the 44 px touch target on compact layouts. 
 form keeps only Rename/Cancel-style terminal controls in the shared sticky `.gm-footer`,
 never in an ad-hoc action row in the scrolling body.
 
-**Card details follow one tooltip convention per layout — never both.** Generic
-modal titles may opt into the same system through `titleDetailsHtml`: the heading
+**Card details follow one tooltip convention per layout — never both.** Any request
+to add a tooltip, including one phrased only as hover behavior, is incomplete until
+both modes are implemented: hover/focus through the shared tooltip on roomy fine-pointer
+layouts, and an enabled, visible, minimum-44-pixel `?` control that toggles the same
+details inline on touch, tablet-width, and short layouts. New tooltip work must use
+the shared layout switch and include regression coverage for both modes; a desktop-only
+tooltip is a UI bug. Generic modal titles may opt into the same system through
+`titleDetailsHtml`: the heading
 becomes the desktop hover/focus anchor, while compact layouts expose the shared
 `?` disclosure and place its details at the top of the modal body. The most
 crucial facts stay visible on the card face at all times — identity, standing, and
@@ -212,7 +218,9 @@ layouts the hover tooltip never opens and the `?` button toggles the same detail
 inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of the
 switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
 `css/style.css` is the CSS half; event-choice stakes follow the same rule with their
-`.event-details-button`.
+`.event-details-button`. Better Household standard steppers use that same switch:
+roomy pointers get action-specific hover/focus terms, while compact layouts get one
+44 px `?` that expands both decrease and increase consequences inline.
 One-time deed rows use this convention too: the card face keeps only the enlarged action
 name, with gold, green, or blue-green border accents distinguishing day-spending immediate,
 choice-backed, and no-day immediate actions. Timing and descriptive copy live together in
@@ -293,7 +301,9 @@ repeated there, so the button never changes width as the days flow.
 
 Natural clock ticks and the completion handoff from fast-forward use a low-priority
 `UI.refresh({ liveTick:true })`: the lightweight topbar and date remain current, while the retained Self, Kin, Deeds, Land, and Network trees
-stay mounted. An open Deeds panel performs a bounded status-only pass every seven game days
+stay mounted. The visible retained Self tree patches Age, Health, and Common Voice on every live
+tick, so those changing values remain exact without rebuilding its portraits, sections,
+or listeners. An open Deeds panel performs a bounded status-only pass every seven game days
 and once when fast-forward ends, updating its mounted deed buttons and cooldown explanations
 without rebuilding the catalogue; a rare change to which deeds are visible promotes that
 pass to an exact Deeds render. A changing host value
@@ -674,8 +684,8 @@ second temporary face canvas. Only the most recently rendered opaque figure is r
 so reopening an unchanged sheet is one MRU blit rather than another cold illustration.
 The modal is centered on desktop
 and becomes a scrolling full-screen sheet with a bottom-pinned close control on mobile.
-Its centered title stacks the character's full name above **Equipment**, keeping the heading
-readable on narrow screens.
+Its compact heading explicitly centers its flex content and stacks the character's full
+name above **Equipment**, keeping both lines visually centered on tablet and mobile layouts.
 The Self overview places its skill bars beside the compact portrait; both the portrait and
 the narrow button directly beneath it open the equipment sheet. Traits sit below the
 overview, before the full identity and household details. Self and full character sheets
@@ -731,16 +741,26 @@ ventures, charters, and hardship duplicate every canvas meaning for keyboard, to
 screen-reader, and color-vision access. See [markets.md](markets.md).
 Every slot button is at least 44 px high, participates in ordinary Tab/Enter/Space
 navigation, and opens a numbered compatible-armory list over the still-visible equipment
-sheet; no drag-and-drop path is required.
+sheet; no drag-and-drop path is required. On roomy fine-pointer layouts, hovering or
+keyboard-focusing a slot shows its current exact object, description, quality, effects,
+value, two-handed or automatic-protection state when applicable, and selection guidance;
+empty slots disclose that state and the same guidance. Touch, tablet-width, and short
+layouts suppress that hover/focus side tooltip and expose an enabled 44 px `?` beside
+every slot, including disabled and empty slots, to toggle those same details inline.
+Slot cards retain two equal grid columns at every supported width. Each wrapped action
+fills its complete cell and reserves the same two-line item-name height, keeping every
+closed row even without clipping the slot label. On compact layouts the `?` keeps its
+44 px hit target but has no visible box: its glyph floats vertically centered at the
+trailing edge of a fixed-height slot face. The expandable detail is a sibling below that
+face, never the icon's positioning container, so opening either card in a two-column row
+cannot move its own glyph or the paired card's glyph into the detail area.
 Choosing an object applies the equipment change immediately; displaced objects return to
 the armory without a second confirmation. Equipment controls disable during travel or an
 unresolved event.
-The same sheet’s **Equip Best…** button opens a keyboard- and mobile-safe review instead of
-mutating immediately. The review lists the proposed outfit, names the armory or current
-wearer for each selected object, and spells out every move and displaced object before an
-explicit apply. If an assignment changes while the review is open, it shows a fresh plan
-and requires another confirmation. Applying returns to the selected character’s equipment
-sheet; manual slot buttons remain the primary fine-grained control.
+The same sheet’s **Equip Best…** button computes the deterministic current plan, immediately
+revalidates and applies it, then refreshes that equipment sheet with a completion toast.
+It opens no review or confirmation modal, costs no day, and consumes no RNG. Manual slot
+buttons remain the primary fine-grained control.
 Only the current protagonist's Equipment sheet also shows **Visit Barber…**. Its nested
 full-sheet picker paints a large equipment- and headwear-free bust. The preview, whole-coin
 gold quote, and status stay stationary while only the adjacent options pane scrolls.
@@ -803,9 +823,10 @@ across freehold plots, enterprises, buildings, items, temporary modifiers,
 technology, and purchase confirmations. Household-standard details are the
 deliberate compact exception: they show the current state once, keep invariant
 scope, succession, no-resale, and lapse rules in one note, and limit the
-next-level choice to its changing name, effect, setup cost, and upkeep. The
-upgrade and reduction confirmations still repeat the complete terms beside
-their projected finances. Dense catalogue overviews may likewise summarize
+next-level choice to its changing name, effect, setup cost, and upkeep. Its
+inline minus and plus controls expose the complete reduction or upgrade terms
+beside projected finances through the standard tooltip/disclosure convention,
+without another confirmation sheet. Dense catalogue overviews may likewise summarize
 self-evident fields and keep rule differences inline; Better Household does so
 to keep standards and permanent property scannable. Callers supply live values
 from their own APIs; renderers escape and label them, apply the shared

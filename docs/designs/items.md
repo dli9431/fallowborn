@@ -158,17 +158,20 @@ permanently leaves family ownership. Chronicle messages store a semantic item sn
 event gifts do not use these explicit-recipient clocks. The equipment sheet totals the
 powers that mechanically apply to its wearer and shows them beneath the full-body figure;
 head-only battle and seasonal-resource powers are omitted when another household member is
-shown.
+shown. Roomy fine-pointer layouts show the exact current object's localized description,
+quality, effects, value, two-handed and automatic-protection state when applicable, plus
+slot-selection guidance when a slot is hovered or keyboard-focused. Touch, tablet-width,
+and short layouts instead place an enabled minimum-44-pixel `?` beside every slot,
+including disabled and empty slots, to toggle those same details inline.
 
 Each managed character’s equipment sheet also offers **Equip Best**. It uses the same
 deterministic optimizer as succession: mechanical effects outrank value, hand equipment is
 considered as either the best one-handed pair or one two-handed object, and age-gated or
-pledged gear is excluded. The action first previews the full proposed outfit and every
-object that would leave the armory, move from another named wearer, change slots, or return
-to the armory. Only an explicit confirmation applies that reviewed plan; a changed
-assignment makes the preview stale and requires another review. Applying costs no day,
-does not consume RNG, and affects only the selected character. Manual slot choices remain
-available, and acquiring loot never invokes the optimizer.
+pledged gear is excluded. Activating the button computes the current plan and immediately
+revalidates and applies it without opening another sheet or asking for confirmation. The
+same equipment modal refreshes with the resulting outfit and a completion toast. Applying
+costs no day, does not consume RNG, and affects only the selected character. Manual slot
+choices remain available, and acquiring loot never invokes the optimizer.
 
 An owned item may be placed in the `equipmentItem` protection scope from its item card.
 Both **Equip Best** and succession omit a protected armory item and preserve a protected
