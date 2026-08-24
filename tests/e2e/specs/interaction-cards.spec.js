@@ -932,12 +932,12 @@ test('war-realm links open the full ruler sheet, even for your own realm',
       '.character-current-war [data-war-realm="player"]')).toBeVisible();
     // a linked sheet offers both exits: Back walks the chain, Close leaves
     await expect(page.locator('#cm-close')).toContainText('Back');
-    await expect(page.locator('#cm-dismiss')).toContainText('Close');
+    await expect(page.locator('#cm-stack-close')).toContainText('Close');
     await page.locator('.character-interaction-modal ' +
       '.character-current-war [data-war-realm="player"]').click();
     await expect(page.locator(
       '.character-interaction-modal .realm-ruler-muster'))
       .toContainText('Realm muster');
-    await page.locator('#cm-dismiss').click();
+    await page.locator('#cm-stack-close').click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });

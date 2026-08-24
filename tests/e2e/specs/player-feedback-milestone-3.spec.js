@@ -547,9 +547,27 @@ test('war catalogue searches and filters semantic available and blocked causes',
       setup.claimTarget + '"]');
     const blocked = page.locator('[data-war-cause-target="' +
       setup.blockedTarget + '"]');
-    await expect(claim).toContainText('Osric Amberlord');
+    await expect(claim).not.toContainText('Osric Amberlord');
+    await claim.hover();
+    await expect(page.locator('#tooltip')).toContainText('Osric Amberlord');
     await expect(blocked).toBeDisabled();
     await expect(blocked).toContainText('peace pact');
+
+    const basisSelect = page.locator('#war-target-basis');
+    await expect(basisSelect.locator('..')).toHaveClass(/war-target-select-wrap/);
+    const dropdownStyle = await basisSelect.evaluate(function (select) {
+      const option = select.options[0];
+      return {
+        appearance:getComputedStyle(select).appearance,
+        backgroundImage:getComputedStyle(select).backgroundImage,
+        colorScheme:getComputedStyle(select).colorScheme,
+        optionBackground:getComputedStyle(option).backgroundColor
+      };
+    });
+    expect(dropdownStyle.appearance).toBe('none');
+    expect(dropdownStyle.backgroundImage).toContain('linear-gradient');
+    expect(dropdownStyle.colorScheme).toBe('dark');
+    expect(dropdownStyle.optionBackground).toBe('rgb(42, 34, 24)');
 
     await page.locator('#war-target-sort').selectOption('territory');
     const territoryOrder = await page.locator(

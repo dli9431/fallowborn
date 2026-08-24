@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/lang_en.js',
   'js/i18n.js',
   'js/messages.js',
   'js/ui_panels.js'
@@ -109,4 +110,40 @@ test('the chronicle grows by prepend and trims, identical to a full rebuild',
       floodNewest:true,
       floodOldest:true
     });
+  });
+
+test('reloaded Chronicle descriptors lazily recover their English source',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const key = await page.evaluate(function () {
+      delete FBDATA.lang.en;
+      const selected = 'news.army.disbands';
+      if (FB.englishMessage(selected)) {
+        throw new Error('Expected the saved news source to be unregistered.');
+      }
+      const s = FB.state;
+      s.log.push({
+        y:s.date.year, s:s.date.season, d:s.date.day,
+        msg:FB.message(selected, {})
+      });
+      FB.ui.showTab('log');
+      FB.ui.refresh();
+      return selected;
+    });
+
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return !!(FBDATA.lang.en && FBDATA.lang.en.entries);
+      });
+    }).toBe(true);
+    await expect(page.locator('#tab-log .chronicle-entries')).not.toContainText(key);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const entry = s.log[s.log.length - 1];
+      return FB.newsText(entry, s, s.player.charId);
+    });
+    expect(result).not.toBe(key);
+    expect(result).not.toMatch(/^news\./);
   });

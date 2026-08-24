@@ -2173,13 +2173,20 @@ window.FB = window.FB || {};
       return text;
     },
     show: function (s) {
-      if (!s.player.war && !(FB.playerGreatHolyWarHostActive &&
-          FB.playerGreatHolyWarHostActive(s))) return false;
-      if (FB.playerHost && FB.playerHost(s)) return false; // already in the field
-      const down = (s.armyDown || {})['player'];
-      return down === undefined || s.turn - down >= FBDATA.balance.armyRearmDays;
+      return !!s.player.war || !!(FB.playerGreatHolyWarHostActive &&
+        FB.playerGreatHolyWarHostActive(s));
     },
     can: function (s) {
+      if (FB.playerHost && FB.playerHost(s)) {
+        return FB.T('Your host is already in the field.');
+      }
+      const down = (s.armyDown || {})['player'];
+      const rearmDays = FBDATA.balance.armyRearmDays;
+      if (down !== undefined && s.turn - down < rearmDays) {
+        return FB.T('The host needs {days} more days before it can muster again.', {
+          days:rearmDays - (s.turn - down)
+        });
+      }
       const preview = FB.playerMusterPreview ? FB.playerMusterPreview(s) : null;
       if (preview && !preview.canRaise) {
         return FB.T('At least {minimum} men must answer before a field host can form; only {men} are available. Hire mercenaries before mustering again.', {
@@ -7176,18 +7183,26 @@ window.FB = window.FB || {};
     return { duchy: d, kingdom: k, empire: e };
   }
 
-  function deJureCause(state, pid, titles) {
+  function deJureCauses(state, pid, titles) {
     const dj = FB.dejureOf(pid);
+    const out = [];
     if (dj.duchy && titles.duchy[dj.duchy]) {
-      return { type: 'dejure', target: pid, titleKind: 'duchy', titleId: dj.duchy };
+      out.push({ type:'dejure', target:pid,
+        titleKind:'duchy', titleId:dj.duchy });
     }
     if (dj.kingdom && titles.kingdom[dj.kingdom]) {
-      return { type: 'dejure', target: pid, titleKind: 'kingdom', titleId: dj.kingdom };
+      out.push({ type:'dejure', target:pid,
+        titleKind:'kingdom', titleId:dj.kingdom });
     }
     if (dj.empire && titles.empire[dj.empire]) {
-      return { type: 'dejure', target: pid, titleKind: 'empire', titleId: dj.empire };
+      out.push({ type:'dejure', target:pid,
+        titleKind:'empire', titleId:dj.empire });
     }
-    return null;
+    return out;
+  }
+
+  function deJureCause(state, pid, titles) {
+    return deJureCauses(state, pid, titles)[0] || null;
   }
 
   function fabricatedClaimRecord(state, repair) {
@@ -7559,6 +7574,54 @@ window.FB = window.FB || {};
       return cause.enemy === rid ||
         (!cause.enemy && state.owner[cause.target] === rid);
     });
+  };
+
+  /* The catalogue groups by territorial objective, while its final review
+     can offer every independently valid legal basis for that same county.
+     Keep warCauses's most-specific default for older callers and derive the
+     expanded read-only set only when a player is choosing a justification. */
+  FB.warJustifications = function (state, target, enemy, includeBlocked) {
+    const base = FB.warCauses(state, true, true).filter(function (cause) {
+      const causeEnemy = cause.enemy || state.owner[cause.target];
+      return cause.target === target && (!enemy || causeEnemy === enemy);
+    });
+    if (!base.length) return [];
+    const rid = enemy || base[0].enemy || state.owner[target];
+    const blocked = diplomacyBlocksWar(state, rid, true);
+    if (blocked && !includeBlocked) return [];
+    const out = [], seen = {};
+    function add(cause) {
+      const key = [cause.type, cause.target, cause.titleKind || '',
+        cause.titleId || '', cause.titleName || ''].join('|');
+      if (seen[key]) return;
+      seen[key] = 1;
+      const copy = {};
+      for (const field in cause) copy[field] = cause[field];
+      copy.enemy = rid;
+      copy.blocked = blocked;
+      annotateReligiousWarCause(state, copy, true);
+      out.push(copy);
+    }
+    const titles = heldTitleSets(state);
+    for (const cause of base) {
+      if (cause.type === 'dejure') {
+        for (const right of deJureCauses(state, target, titles)) add(right);
+      } else {
+        add(cause);
+      }
+    }
+    const claim = fabricatedClaimRecord(state, false);
+    if (claim && claim.pid === target && out.some(function (cause) {
+      return cause.type === 'dejure';
+    })) {
+      add({ type:'fabricated', target:target });
+    }
+    if (out.some(function (cause) { return cause.type !== 'aggression'; })) {
+      return out.filter(function (cause) {
+        return cause.type !== 'aggression';
+      });
+    }
+    return out;
   };
 
   function activeWarReason(state, realmId) {
@@ -8325,6 +8388,7 @@ window.FB = window.FB || {};
       }
 
       captiveChoice = captiveChoice || 'settle';
+      spoils.captiveChoice = captiveChoice;
       if (captiveChoice === 'settle') {
         if (FB.changeCountyPopulation && homePid) {
           FB.changeCountyPopulation(state, homePid, spoils.captives, 'raid_captives');
@@ -8381,22 +8445,39 @@ window.FB = window.FB || {};
 
     const cdDays = (FBDATA.balance && FBDATA.balance.raidCooldownDays) || 180;
     p.raidCooldownUntil = state.turn + cdDays;
+    let hostileReport = null;
+    if (FB.recordHostileEvent) {
+      hostileReport = FB.recordHostileEvent(state, {
+        kind:'raid', targetPid:targetPid, targetRealmId:targetRid || null,
+        strategy:strategy, success:!!spoils.success,
+        victoryGrade:spoils.victoryGrade || null,
+        combatAdvantage:spoils.combatAdvantage,
+        stoppedProvince:spoils.stoppedProvince || null,
+        marchSkirmishes:(spoils.marchSkirmishes || []).map(function (step) {
+          return {
+            pid:step.pid, casualties:step.casualties || 0,
+            repelled:!!step.repelled, defenders:step.defenders || 0
+          };
+        }),
+        raiderMen:spoils.raiderMen, survivingMen:spoils.survivingMen,
+        garrisonMen:spoils.garrisonMen, casualties:spoils.casualties,
+        wounded:!!spoils.wounded, gold:spoils.gold,
+        ransomGold:spoils.ransomGold || 0, prestige:spoils.prestige,
+        goods:spoils.goods || {}, captives:spoils.captives,
+        captiveChoice:spoils.captiveChoice || null,
+        popLoss:spoils.popLoss, ruinedBuildings:spoils.ruinedBuildings || [],
+        devLoss:!!spoils.devLoss
+      });
+      if (hostileReport) spoils.hostileReportId = hostileReport.id;
+    }
     p.lastRaid = {
       targetPid: targetPid,
       strategy: strategy,
       turn: state.turn,
-      success: spoils.success
+      success: spoils.success,
+      reportId: hostileReport && hostileReport.id || null
     };
 
-    if (FB.chronicle) {
-      FB.chronicle(state, spoils.success ? 'raid_completed' : 'raid_repelled', {
-        provinceId: targetPid,
-        gold: spoils.gold,
-        captives: spoils.captives,
-        casualties: spoils.casualties,
-        success: spoils.success
-      });
-    }
     if (FB.news) {
       if (spoils.success) {
         FB.news(state, FB.msg('news.raid.success',
@@ -8404,13 +8485,13 @@ window.FB = window.FB || {};
             province: pr ? pr.name : targetPid,
             gold: spoils.gold,
             captives: spoils.captives
-          }));
+          }), { hostileReportId:hostileReport && hostileReport.id || '' });
       } else {
         FB.news(state, FB.msg('news.raid.repelled',
           '🛡 Your raid on {province} was repelled by the defending garrison with {casualties} casualties.', {
             province: pr ? pr.name : targetPid,
             casualties: spoils.casualties
-          }));
+          }), { hostileReportId:hostileReport && hostileReport.id || '' });
       }
     }
 

@@ -1,11 +1,13 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'data/actions.js',
   'js/actions.js',
   'js/main.js',
   'js/save.js',
   'js/model.js',
+  'js/ui_misc.js',
   'js/ui_modals.js',
   'data/starts.js'
 ]);
@@ -476,6 +478,55 @@ test.describe('sibling and collateral-household agency', function () {
         finalRowClear:true
       });
       await page.locator('#household-plan-close').click();
+    });
+
+  test('Education Policy uses canonical equal-sized footer controls',
+    async function ({ page }) {
+      await startDeterministicGame(page);
+      await page.evaluate(function () {
+        FB.ui.showEducationPolicy();
+      });
+
+      const back = page.locator('#education-policy-back');
+      const preview = page.locator('#education-policy-preview');
+      await expect(back).toHaveText('Back');
+      await expect(preview).toHaveText('Preview policy');
+      const desktop = await page.evaluate(function () {
+        const backRect = document.querySelector(
+          '#education-policy-back').getBoundingClientRect();
+        const previewRect = document.querySelector(
+          '#education-policy-preview').getBoundingClientRect();
+        return {
+          sameRow:Math.abs(backRect.top - previewRect.top) < 2,
+          backLeft:backRect.left < previewRect.left,
+          equalWidth:Math.abs(backRect.width - previewRect.width) < 2,
+          equalHeight:Math.abs(backRect.height - previewRect.height) < 2
+        };
+      });
+      expect(desktop).toEqual({
+        sameRow:true,
+        backLeft:true,
+        equalWidth:true,
+        equalHeight:true
+      });
+
+      await page.setViewportSize({ width:390, height:740 });
+      const mobile = await page.evaluate(function () {
+        const backRect = document.querySelector(
+          '#education-policy-back').getBoundingClientRect();
+        const previewRect = document.querySelector(
+          '#education-policy-preview').getBoundingClientRect();
+        return {
+          backAbove:backRect.top < previewRect.top,
+          equalWidth:Math.abs(backRect.width - previewRect.width) < 2,
+          equalHeight:Math.abs(backRect.height - previewRect.height) < 2
+        };
+      });
+      expect(mobile).toEqual({
+        backAbove:true,
+        equalWidth:true,
+        equalHeight:true
+      });
     });
 
   test('a manageable sibling remains an eligible heir',

@@ -4781,6 +4781,7 @@ window.FB = window.FB || {};
           FB.applyPlayerWarEnemyStanding(state, pw, 'war:repair');
         }
         if (FB.ensurePlayerWarFeedback) FB.ensurePlayerWarFeedback(state);
+        if (FB.ensurePlayerWarHistory) FB.ensurePlayerWarHistory(state);
       }
     }
 
@@ -5864,6 +5865,26 @@ window.FB = window.FB || {};
   FB.warFooting = function (state) {
     const p = state.player;
     if (p.war) playerWarEventId(state);
+    if (p.war && FB.ensurePlayerWarHistory) {
+      const report = FB.ensurePlayerWarHistory(state);
+      if (report && !p.war.hostileRecordAnnounced) {
+        p.war.hostileRecordAnnounced = 1;
+        const enemy = state.realms[p.war.enemy];
+        const target = p.war.target && FB.world.byId[p.war.target];
+        FB.news(state, FB.msg('news.war.record_opened', {
+          forms: {
+            select:'value', param:'targeted', cases: {
+              yes:'⚔ War begins with {enemy} over {province}.',
+              other:'⚔ War begins with {enemy}.'
+            }
+          }
+        }, {
+          targeted:target ? 'yes' : 'other',
+          enemy:enemy ? enemy.name : p.war.enemy,
+          province:target ? target.name : ''
+        }), { hostileReportId:report.id, toast:false });
+      }
+    }
     if (p.war && FB.applyPlayerWarEnemyStanding) {
       FB.applyPlayerWarEnemyStanding(state, p.war, 'war:declaration');
     }
@@ -5925,8 +5946,28 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.war.prison_released',
         '🕊 The peace opens your cell — you come home thinner, but free.', {}));
     }
+    const report = FB.finishPlayerWarHistory
+      ? FB.finishPlayerWarHistory(state) : null;
+    if (report) {
+      const enemy = state.realms[report.enemyId];
+      FB.news(state, FB.msg('news.war.record_concluded', {
+        forms: {
+          select:'value', param:'result', cases: {
+            victory:'⚔ The war with {enemy} ends in victory.',
+            defeat:'⚔ The war with {enemy} ends in defeat.',
+            favorable_peace:'⚔ The war with {enemy} ends on favorable terms.',
+            unfavorable_peace:'⚔ The war with {enemy} ends on unfavorable terms.',
+            other:'⚔ The war with {enemy} ends in peace.'
+          }
+        }
+      }, {
+        result:report.result || 'peace',
+        enemy:enemy ? enemy.name : report.enemyId
+      }), { hostileReportId:report.id, toast:false });
+    }
     state.player.war = null;
     FB.validateFocus(state);
+    return report;
   };
 
   /* Each war season asks for orders instead of rolling a hidden battle. Host
@@ -6686,7 +6727,8 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.wins = (w.wins || 0) + 1; afterBattle(w);
     const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'win');
-    if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
+    const savedBattle = FB.recordPlayerBattle
+      ? FB.recordPlayerBattle(state, battle) : null;
     if (FB.adjustWarStrength) {
       FB.adjustWarStrength(state, 0.05, {
         source:warEffectSource(ev, battle.mode === 'field' ? 'field_battle' : 'war_council'),
@@ -6698,7 +6740,9 @@ window.FB = window.FB || {};
     if (w.defending && w.enemySiege) w.enemySiege = Math.max(0, w.enemySiege - 1);
     FB.news(state, FB.msg('news.war.field_victory',
       '⚔ Victory in the field! ({wins}/{needed})',
-      { wins: w.wins, needed: FBDATA.balance.warWinsToTakeProvince }));
+      { wins: w.wins, needed: FBDATA.balance.warWinsToTakeProvince }), {
+        hostileReportId:savedBattle && savedBattle.hostileReportId || ''
+      });
     if (battle.primaryHostInvolved !== false && FB.chance(0.3)) {
       FB.lootItem(state, null, 'spoils');
     }
@@ -6708,7 +6752,8 @@ window.FB = window.FB || {};
     const w = state.player.war; if (!w) return;
     w.losses = (w.losses || 0) + 1; afterBattle(w);
     const battle = ctx && ctx.battleRecord || abstractBattleRecord(state, 'loss');
-    if (FB.recordPlayerBattle) FB.recordPlayerBattle(state, battle);
+    const savedBattle = FB.recordPlayerBattle
+      ? FB.recordPlayerBattle(state, battle) : null;
     w.lastDefeatTurn = state.turn;
     if (FB.adjustWarStrength) {
       FB.adjustWarStrength(state, -0.2, {
@@ -6725,7 +6770,9 @@ window.FB = window.FB || {};
           other: '⚔ The host is bested… ({losses} defeats)'
         }
       }
-    }, { losses: w.losses }));
+    }, { losses: w.losses }), {
+      hostileReportId:savedBattle && savedBattle.hostileReportId || ''
+    });
     FB.warOutcome(state);
     /* A detached banner can lose war score, men, and position without
        teleporting the protagonist into its rout. Abstract council battles
@@ -6851,9 +6898,12 @@ window.FB = window.FB || {};
         '🏰 The walls of {target} are breached!', { target: tname }));
       FB.warCapture(state);
     } else {
+      const requiredDisplay = Math.max(1, Math.round(Number(status.required) || 0));
+      const progressDisplay = Math.min(requiredDisplay - 1,
+        Math.max(0, Math.round(Number(w.siege) || 0)));
       FB.news(state, FB.msg('news.war.siege_tightens',
         '⚔ The siege of {target} tightens. ({progress}/{required})',
-        { target: tname, progress: w.siege, required:status.required }));
+        { target: tname, progress:progressDisplay, required:requiredDisplay }));
     }
   };
   FB.fns.war_mercs = function (state) {

@@ -430,7 +430,7 @@ test('the protagonist Equipment sheet previews, cancels, and pays for barbering'
       return {appearance:FB.state.chars[id].appearance||null,
         gold:FB.state.player.gold};
     },setup.id)).toEqual({appearance:null,gold:setup.gold});
-    await page.getByRole('button',{name:'Back to equipment',exact:true}).click();
+    await page.getByRole('button',{name:'Back',exact:true}).click();
     await expect(page.getByRole('heading',{name:/Equipment for/})).toBeVisible();
     expect(await page.evaluate(function (id) {
       return FB.state.chars[id].appearance||null;

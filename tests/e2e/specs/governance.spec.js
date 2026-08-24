@@ -1161,12 +1161,21 @@ test('Governance county and grant flows return to Domain while Council reservati
     await page.evaluate(function () {
       FB.ui.showCouncil('governance');
     });
+    const reservations = page.locator('#council-reservations');
+    const reservationSummary = reservations.locator('summary');
     const councilProtection = page.locator('[data-council-protection="' +
       result.reservedRealm + '"]');
+    await expect(reservations).not.toHaveAttribute('open', '');
+    await expect(reservationSummary).toContainText('reserved');
+    await expect(councilProtection).toBeHidden();
+    await reservationSummary.click();
+    await expect(reservations).toHaveAttribute('open', '');
+    await expect(councilProtection).toBeVisible();
     await expect(councilProtection).toContainText('Reserved');
     await councilProtection.click();
+    await expect(reservations).toHaveAttribute('open', '');
     await expect(page.locator('[data-council-protection="' +
-      result.reservedRealm + '"]')).toContainText('Automatic allowed');
+      result.reservedRealm + '"]')).toContainText('Eligible');
     await page.locator('#gm-cancel').click();
     await expect(page.locator('#governance-institution')).toBeVisible();
   });
@@ -1360,6 +1369,29 @@ test('Council, realm, and character views agree with Governance Standing',
     });
     await expect(page.locator('#gm-body')).toContainText(
       'Standing +48 (Favorable)');
+    await expect(page.locator('#council-reservations'))
+      .not.toHaveAttribute('open', '');
+    const officerCard = page.locator('.council-officer-card').first();
+    const officerLayout = await officerCard.evaluate(function (card) {
+      var actions = card.querySelector('.council-officer-actions');
+      var buttons = Array.prototype.slice.call(actions.querySelectorAll('.btn'));
+      var widths = buttons.map(function (button) {
+        return button.getBoundingClientRect().width;
+      });
+      return {
+        columns:getComputedStyle(actions).gridTemplateColumns.split(' ').length,
+        nameSize:parseFloat(getComputedStyle(card.querySelector('.ccname')).fontSize),
+        infoSize:parseFloat(getComputedStyle(
+          card.querySelector('.council-ruler-info')).fontSize),
+        buttonCount:buttons.length,
+        widthSpread:Math.max.apply(Math, widths) - Math.min.apply(Math, widths)
+      };
+    });
+    expect(officerLayout.columns).toBe(2);
+    expect(officerLayout.nameSize).toBeGreaterThanOrEqual(16);
+    expect(officerLayout.infoSize).toBeGreaterThanOrEqual(14);
+    expect(officerLayout.buttonCount).toBe(4);
+    expect(officerLayout.widthSpread).toBeLessThanOrEqual(1);
     const heraldry = page.locator('.council-ruler-heraldry').first();
     await expect(heraldry.locator('.council-ruler-heraldry-button'))
       .toHaveAttribute('aria-label', /Open ruler card for/);
@@ -1442,6 +1474,22 @@ test('Governance tabs show one compact desktop surface at a time',
     await expect(page.locator(
       '[data-governance-section="domain"]')).toHaveAttribute(
         'aria-selected', 'true');
+    await expect(page.locator('.governance-domain-summary .kv')).toHaveCount(3);
+    const countyRow = page.locator('.governance-county-row').first();
+    await expect(countyRow.locator('.governance-county-main'))
+      .toContainText('Development');
+    await expect(countyRow.locator('[data-grant-protection]')).toBeVisible();
+    await expect(countyRow.locator('[data-autobuild-protection]')).toBeVisible();
+    await expect(countyRow.locator('.governance-county-details')).toBeHidden();
+    await expect(countyRow.locator('.settcard-info')).toBeHidden();
+    expect(await countyRow.evaluate(function (row) {
+      return getComputedStyle(row).gridTemplateColumns.split(' ').length;
+    })).toBe(2);
+    await countyRow.hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Keeps this county out of automatic and reviewed land-grant proposals');
+    await expect(page.locator('#tooltip')).toContainText(
+      'Controls whether household automation may begin construction');
 
     await page.locator(
       '[data-governance-section="domain"]').focus();
@@ -1504,6 +1552,18 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     expect(geometry.bottom).toBeLessThanOrEqual(geometry.viewportHeight + 1);
     expect(geometry.scrollWidth).toBeLessThanOrEqual(geometry.clientWidth + 1);
 
+    await page.locator('[data-governance-section="domain"]').click();
+    const compactCounty = page.locator('.governance-county-row').first();
+    const compactDetails = compactCounty.locator('.governance-county-details');
+    await expect(page.locator('.governance-domain-summary .kv')).toHaveCount(3);
+    await expect(compactCounty.locator('.settcard-info')).toBeVisible();
+    await expect(compactDetails).toBeHidden();
+    await compactCounty.locator('.settcard-info').click();
+    await expect(compactDetails).toBeVisible();
+    await expect(compactDetails).toContainText('Reserve');
+    await expect(compactCounty.locator('[data-grant-protection]')).toBeVisible();
+    await expect(compactCounty.locator('[data-autobuild-protection]')).toBeVisible();
+
     await page.locator('[data-governance-section="vassals"]').click();
     const vassalLayout = await page.locator(
       '.governance-vassal').first().evaluate(function (row) {
@@ -1534,6 +1594,13 @@ test('narrow Governance keeps focus, numbered actions, geometry, and browser Bac
     await expect(page.getByRole('heading', {
       name:'The Royal Council', exact:true
     })).toBeVisible();
+    await expect(page.locator('#council-reservations summary')).toBeVisible();
+    await expect(page.locator('#council-reservations'))
+      .not.toHaveAttribute('open', '');
+    expect(await page.locator('.council-officer-actions').first().evaluate(
+      function (actions) {
+        return getComputedStyle(actions).gridTemplateColumns.split(' ').length;
+      })).toBe(1);
     const councilHeraldry = page.locator(
       '.council-ruler-heraldry-button').last();
     const councilScroll = await councilHeraldry.evaluate(function (button) {

@@ -48,11 +48,17 @@ operation remains synchronous so deterministic callers retain one atomic state t
 the player-facing button adds the painted handoff. The form unlocks after success or failure, so
 returning to character creation never inherits stale disabled controls.
 
-The Papacy deed opens `fullsheet-modal papacy-modal`: a responsive two-column summary
-collapses to one column on narrow/short screens, and the College grid does the same.
-Every elector, obedience, election tactic, regnal name, policy, sanction, and governance
-action is a native button or labeled checkbox, so normal modal focus, number-key hints,
-screen-reader labels, sticky footer behavior, and browser-history navigation apply.
+The Papacy deed opens `fullsheet-modal papacy-modal`. Claimant, recognition, authority,
+College size, election phase, ballot number, and investiture effects remain visible;
+patronage, election law, outside assent, enclosure, tactic explanations, elector metadata,
+and longer rules use the shared modal-header or card tooltip/disclosure system. The latest
+saved ballot is a responsive candidate-grouped flow: candidate totals head columns of the
+electors who backed them, while pre-ballot state uses the same layout for projected leans.
+Columns collapse into one vertical sequence on narrow/short screens, avoiding crossing
+edges and preserving full-size names and touch targets. Every elector, candidate,
+obedience, election tactic, regnal name, policy, sanction, and governance action remains
+a native button or labeled control, so normal modal focus, number-key hints, screen-reader
+labels, sticky footer behavior, and browser-history navigation apply.
 Mandatory Papal name, investiture, sponsorship, and deposition choices pause time and
 reopen this sheet until resolved. The Work picker exposes “Petition for the red hat”
 with exact unmet requirements. See [papacy.md](papacy.md).
@@ -131,14 +137,23 @@ and end-game dialogs use `fullsheet-modal` for their own mobile layouts (see bel
 `modalClass` may contain multiple whitespace-separated classes; open and history-restore
 paths apply and clear each token individually. A dialog
 that dismisses, cancels, goes back, finishes, or begins from a terminal control puts that
-control in a `.gm-footer`. `UI.openModal` normalizes legacy loose terminal
-buttons into that footer while leaving substantive choices in the scrolling body. Labels
-state navigation precisely: **Close** is the only label for dismissing a root or
-informational modal, **Back** appears only when it restores a real preceding modal view,
-and **Cancel** abandons an uncommitted picker, draft, or confirmation. Flat modals do not
-gain a redundant Back button, and completed summaries do not use Done as an alias for
-Close. Footer controls are centered, 200 px wide, and at least 52 px high on every layout;
-multiple controls wrap as equal-sized rows rather than changing width.
+control in a `.gm-footer`. `UI.openModal` consolidates legacy loose or duplicate footers,
+moves that single footer to the final body row, and leaves substantive choices in the
+scrolling body. Labels state navigation precisely: **Close** is the only label for dismissing
+a root or informational modal, **Back** appears only when it restores a real preceding modal
+view, and **Cancel** abandons an uncommitted picker, draft, or confirmation. These labels
+remain exactly **Back**, **Close**, and **Cancel**; the modal title and saved history provide
+the destination context, so variants such as “Back to Household Plan” are not used. Flat
+modals do not gain a redundant Back button, and completed summaries do not use Done as an
+alias for Close.
+
+Footer controls use the shared `.btn` and `.btn.primary` vocabulary. Primary emphasis may
+change border and background but never geometry: every footer button is 200 px wide, at least
+52 px high, vertically centered, and stretched to the tallest control on its flex row. Labels
+may wrap for localization without leaving adjacent buttons at mismatched heights. Their
+semantic, visual, and focus order is always Back, Cancel, Close, then commit controls: this
+reads left-to-right when controls share a row and top-to-bottom when they wrap on narrow
+screens. A lone Back or Close remains centered at the bottom.
 
 The Family Tree uses its own near-viewport sheet instead of the generic narrow dialog, so
 wide generations have the available desktop map area. Names and relationships remain
@@ -225,7 +240,11 @@ Royal Council seat and candidate heraldry use the shared ruler-card tooltip on d
 hover. Occupied heraldry also supports keyboard focus and opens that ruler's full sheet
 when activated; candidate heraldry remains part of its assignment action. The preview is
 placed outside the modal's left edge to keep the seat actions clear. Mobile Back restores
-the originating occupied heraldry and its exact Council scroll position.
+the originating occupied heraldry and its exact Council scroll position. The manager keeps
+its reservation roster collapsed behind a reserved/eligible count until explicitly opened;
+the expanded roster is bounded and multi-column rather than pushing every office below the
+fold. Occupied ruler identity uses the ordinary readable text role, and its four actions use
+an equal two-column grid (one column below 420 px) instead of inline content-sized buttons.
 Network uses the same disclosure for routine **Established**, **Known tie**, and **Vacancy**
 labels instead of rendering those words as face chips. Household and Connections
 disclosures add the character's age, home, section-relevant roles or ties, standing, and
@@ -339,12 +358,17 @@ focus border never visually merges with the card edge. Sticky modal toolbars (su
 `.war-target-toolbar`, `.raid-target-toolbar`, `.market-lens-controls`, `.guide-controls`, and
 `.tech-controls`) standardize on dark parchment inputs (`#201a13`/`#211a12`), bronze borders
 (`#66522f`/`#775f32`), gold focus rings (`#ffd24a`/`#e0c060`), custom chevron wrappers
-(`.raid-strategy-select-wrap`/`.market-lens-select-wrap`), search input wrappers with leading
+(`.raid-strategy-select-wrap`/`.market-lens-select-wrap`/`.war-target-select-wrap`), search input wrappers with leading
 magnifying icons and dismissible clear buttons, and minimum 44 px touch heights on mobile.
 Dropdown options inside these toolbars must remain short and concise (e.g. `⚔ Deep Sack`, `🐎 Swift Skirmish`);
 never embed long multi-clause explanations or parenthetical descriptions inside `<option>` labels, which
 cause text to extend past dropdown bounds or clip horizontally on narrow screens. Any dynamic explanatory
 helper or hint text belongs immediately below the dropdown when a selection is picked.
+The conquest picker follows the compact-card rule: objective, cause, force comparison,
+fort requirement, and blockers stay visible, while ruler, realm, support, reach, and
+full consequence prose use the shared card tooltip. Its War Justification confirmation
+uses compact key/value rows for the selected reason’s exact costs or rewards and a
+modal-header tooltip for the supporting political and mechanical explanation.
 Two families break only the bottom-sheet framing: the Changelog
 (`.changelog-modal`) stays an evenly margined centered panel, while the Menu, Automation,
 and end-game dialogs (`.fullsheet-modal`) fill the whole screen edge to edge.
@@ -619,13 +643,21 @@ current live logistics total beside its composition; ordinary war-status text re
 the component breakdown and total. These surfaces read `FB.playerMusterUpkeepParts` and
 `FB.playerHostUpkeepParts`, so great levies, reinforcements, casualties, mercenary
 companies, disbanding, and re-raising stay in agreement with the seasonal gold ledger.
-The conquest picker is a session-state catalogue over `FB.warCauses(state, true, true)`:
-blocked causes stay present with the pact, alliance, or diplomatic reason preventing
-declaration. Search covers objective, enemy realm, ruler, and enemy territory. Cause,
-adjacency, relative-rank, and diplomatic filters compose; deterministic sorts offer the
-recommended available-rights-first order plus realm, territory, rank, and defensive
-strength. Filtering and sorting only hide or reorder semantic cause rows, then rebuild
-visible modal number badges from that DOM order.
+The conquest picker is a session-state catalogue over unique enemy objectives derived
+from `FB.warCauses(state, true, true)`. The global catalogue keeps blocked targets with
+their pact, alliance, or diplomatic reason; entry from a ruler sheet resets the catalogue
+filters, scopes rows to that ruler's realm, and omits blocked targets. Search covers
+objective, enemy realm, ruler, and enemy territory. Cause, adjacency, relative-rank, and
+diplomatic filters compose; a cause filter matches any valid justification attached to
+the target. Deterministic sorts offer the recommended available-rights-first order plus
+realm, territory, rank, and defensive strength.
+
+Every target opens the compact **War Justification** confirmation before declaration.
+One reason is summarized directly; overlapping valid reasons use the same styled select
+control as the conquest filters and update the visible consequence summary. The final
+button records the chosen cause only after rebuilding and revalidating its live target,
+right, and diplomatic gates. Ruler interaction cards expose this flow through one
+**Declare war…** action, never one action per county or claim.
 The selected-host Land panel and Deeds war summary also show the bounded battle record,
 recent streak, live composition, campaign losses by class, and recent non-battle
 effects. Every effect is labeled as changing abstract strength, live troops, or both;
@@ -662,6 +694,9 @@ preventing large territorial rosters from squishing dignity labels. Title styles
 names are interactive links that navigate directly to the target county (or duchy/kingdom/empire
 capital) on the map and Land panel. Active maintained standards appear in the livelihood summary
 as compact icons with numeric levels; dormant purchased levels stay off that active row.
+The Self panel keeps this livelihood summary informational; Work & Enterprises management
+opens from its persistent Network action or the contextual Deeds action instead of a duplicate
+Self-panel button.
 The full-name heading leads the mobile/short-screen drawer,
 where that drawer covers the topbar, and is hidden in the desktop panel because the
 persistent topbar already names the character. On desktop, a subtle divider separates
@@ -1091,7 +1126,13 @@ hints and shortcuts apply only to actions in the active section, and no layout h
 blocked reasons. The legacy Estates and Royal Council
 deed ids remain callable compatibility aliases but are omitted from the ordinary Deeds
 list.
-The Domain section exposes per-county **Reserve from grants** and **No autobuild** controls.
+The Domain section groups held count, realm territory, and the direct tax/levy multiplier
+as three summary facts, then gives every directly held county one bounded row. County name,
+development, capital/home markers, and the **Reserve from grants** and **No autobuild**
+controls remain visible because they drive immediate decisions. Their automation semantics
+use the shared desktop hover/focus tooltip or compact-layout `?` disclosure; interactive
+controls never move into hover-only content. The rows and summary collapse to one column
+without horizontal overflow on narrow or short layouts.
 Choosing a county or duchy to grant opens a recipient sheet and then a non-mutating terms
 sheet. It keeps service charter and tenure as separate controls and shows the selected
 grant's exact projected gold per season, soldiers, initial Standing, extraordinary-tax
@@ -1169,12 +1210,18 @@ they are disabled below tier 3 and act only as technology-detail links for tier-
 Autoresolve excludes them until the technology is complete.
 
 The Institution section and Network's Trade & Guild summary also open the shared
-**Privileges & collective demands** sheet. Each contract names its holder, grantor,
-territorial scope, exact authoritative-ledger effect, remaining or indefinite duration,
-rights, exemptions, obligations, and revocation rule. A deliberate confirmation sheet
+**Privileges & collective demands** sheet. Its title tooltip explains the durable-contract
+and authoritative-ledger split instead of opening with a prose wall. Each contract card
+keeps identity, holder, territorial scope, exact effect, remaining or indefinite duration,
+current revocation availability, and any revocation action on its face. Grantor provenance,
+the full legal rule and reason, rights, exemptions, and obligations use the shared desktop
+hover/focus tooltip or compact-layout `?` disclosure. A deliberate confirmation sheet
 precedes unlawful early revocation and states the Common Voice, mistreatment, and organized
-opposition consequences. Pending demands and bounded opposition remain visible below the
-contract roll.
+opposition consequences. Pending demands remain prominent. The **Organized grievances**
+roll uses human group names and the privilege around which each group is organizing; it does
+not expose internal constituency ids or an unexplained `1/5` scale. The card tooltip or
+compact disclosure states the exact +10 to +50 demand-ranking priority, how it grows and
+clears, and that it does not independently start a revolt or battle.
 
 Guild officer/guildmaster and chartered Council confirmation campaigns use one election
 sheet. It always shows the office, weighted electorate, fixed term, candidates, expected
@@ -1257,8 +1304,10 @@ the same weighted route assigned to the army to report destination ETA, water-cr
 count, and the limiting crossing's capacity and cycles. Pointer and keyboard orders share
 that path. When a moving host is selected, Land reports the immediate leg and remaining
 days as either marching or preparing a crossing; the marker remains on the departure
-county. These long feedback lines wrap naturally in narrow layouts and add no fixed-width
-controls.
+county. During an ordinary player war, marching hosts belonging to the recorded enemy
+realm expose red route lines and destination arrows on the map; every unrelated AI route
+remains hidden. These long feedback lines wrap naturally in narrow layouts and add no
+fixed-width controls.
 Independent counts and higher also get a compact political-attention summary above those
 groups. The Foreign Policy deed opens a numbered neighboring-court list and then numbered
 Improve/Neutral/Provoke controls; both use the standard keyboard-focusable, mobile
@@ -1376,7 +1425,7 @@ table rather than the intermediate Work & Enterprises sheet.
 
 An **Education Policy** summary and native management button sit above the Household Plan
 ledger. Its keyboard/mobile-safe flow uses a native focus select, instruction checkbox,
-and non-negative number input, then requires a preview before saving. The preview names
+and non-negative number input, then requires a preview before saving. Configuration and preview use the shared footer geometry: canonical Back first, then the equal-sized primary Preview or Save action. The preview names
 every currently affected eligible child and shows the proposed focus, instruction,
 projected yearly chance, per-child seasonal fee, and any institutional mortality warning.
 It explicitly states that existing choices stay unchanged, the cap is per child, and no
@@ -1482,6 +1531,18 @@ notices. Each filter renders its newest 80 matches while saved history retains t
 300-entry cap. Recorded-choice cards use a generous inner inset to separate their date, title,
 selected option, outcome, and impact chips from the card border. The incremental prepend cache
 includes the active filter, so switching views cannot reuse markup from another category.
+Recent player raids, player-involved battles, and ordinary player wars carry a lightweight
+saved hostile-report id and presentation-kind tag. Their Chronicle face remains readable prose plus a clear **View raid
+report**, **View battle report**, or **View war report** control. Activating it performs the
+only history lookup and opens the result sheet: raids reuse the expedition summary, battles
+show the action, outcome, location, forces, and class losses, and wars show cause, objective,
+result, duration, record, and their currently retained battle list. The 200-report archive is
+not rendered or traversed during ticks; opening a report scans only that bounded list. Expired
+report ids degrade to the original non-interactive Chronicle entry.
+An English session normally stays on authored source records. If a reloaded Chronicle contains
+an opaque durable message whose originating code path has not run in that page session, opening
+the panel lazily loads the generated English source manifest, shows a bounded loading row, and
+rebuilds the same filtered window; raw `news.*` keys never stand in for prose.
 
 Related: [items.md](items.md) for the item card's hover/tap duality.
 

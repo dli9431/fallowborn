@@ -42,6 +42,8 @@ window.FBDATA = window.FBDATA || {};
   let requested = 'en';
   let activeCatalog = null;
   let pendingCatalog = null;
+  let englishCatalogLoadState = 0;
+  let englishCatalogCallbacks = [];
   let lastKey = '';
   let activeCurrency = null;
 
@@ -830,6 +832,37 @@ window.FBDATA = window.FBDATA || {};
     script.onerror = function () { done(false); };
     document.head.appendChild(script);
   }
+  /* English normally renders from authored calls and avoids the generated
+     source manifest. A reloaded durable message may predate every call that
+     registers its source in this page session, so Chronicle can request the
+     manifest once, without adding it to ordinary English boot. */
+  FB.ensureEnglishCatalog = function (done) {
+    const ready = FBDATA.lang.en && validateCatalog(FBDATA.lang.en, 'en');
+    if (ready) {
+      englishCatalogLoadState = 2;
+      if (done) done(true);
+      return true;
+    }
+    if (done) englishCatalogCallbacks.push(done);
+    if (englishCatalogLoadState === 1) return false;
+    if (englishCatalogLoadState === -1) {
+      const failed = englishCatalogCallbacks.slice();
+      englishCatalogCallbacks = [];
+      for (let i = 0; i < failed.length; i++) failed[i](false);
+      return false;
+    }
+    englishCatalogLoadState = 1;
+    loadCatalog('data/lang_en.js', function (loaded) {
+      const valid = !!(loaded && FBDATA.lang.en &&
+        validateCatalog(FBDATA.lang.en, 'en'));
+      englishCatalogLoadState = valid ? 2 : -1;
+      if (valid && FB.locale === 'en') activeCatalog = FBDATA.lang.en;
+      const callbacks = englishCatalogCallbacks.slice();
+      englishCatalogCallbacks = [];
+      for (let i = 0; i < callbacks.length; i++) callbacks[i](valid);
+    });
+    return false;
+  };
   FB.loadSelectedLocale = function (done) {
     try { requested = localStorage.getItem(LANG_KEY) || 'en'; } catch (e) { requested = 'en'; }
     const def = localeDef(requested);

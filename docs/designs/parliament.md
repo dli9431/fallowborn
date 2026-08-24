@@ -169,9 +169,21 @@ parallel `state.privileges` entry records holder, grantor, territorial scope, ri
 exemptions, obligations, protected duration, revocation rule, and semantic source.
 `obl.revocationConsent` likewise remains the authoritative law while its privilege record
 describes the institutional holder and estates-vote revocation rule. This is provenance,
-not a second modifier or law calculation. Load-time institution repair discovers legacy
-modifier provenance; the normalized modifier APIs maintain it afterward, so the daily
-institution pass does not rescan every county merely to rediscover the same records. Its
+not a second modifier or law calculation. The shared privilege sheet reflects that boundary:
+identity, scope, authoritative effect, duration, and revocation availability stay on the
+contract face, while grantor provenance, legal terms, rights, exemptions, and obligations
+use the standard desktop tooltip or compact disclosure. This is a presentation-only split;
+the saved privilege schema and every mechanical source remain unchanged. Load-time
+institution repair discovers legacy modifier provenance; the normalized modifier APIs
+maintain it afterward, so the daily
+institution pass does not rescan every county merely to rediscover the same records. A
+refused demand or unlawful revocation stores organized pressure for that constituency from
+one to five steps. Each step adds 10 points when currently eligible collective demands are
+ranked, so the highest-pressure eligible petition leads the next event; the pressure alone
+never creates a revolt or battle. Further refusals increase it to a +50 cap, while granting
+that constituency’s eventual demand clears it. The UI calls this an organized grievance and
+keeps the exact points and clearing rule in its standard details disclosure rather than
+showing the internal step counter. Its
 normalized policy, election, privilege, demand, guild, and council inputs are retained
 while unchanged, with the next saved expiry or cooldown waking repair on its exact turn.
 Political-court alignment follows the same rule: realm, Standing, commerce, council,

@@ -1305,7 +1305,7 @@ window.FB = window.FB || {};
       '<button class="actionbtn" id="venture-market-details">⚖ ' +
       esc(FB.T('Inspect destination market')) + '</button>' +
       '<button class="actionbtn" id="venture-review-back">' +
-      esc(FB.T('Back to markets')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Review your venture'), h,
       {dismissable:false, historyBack:true});
     $('venture-dispatch-cautious').addEventListener('click', function () {
@@ -1534,7 +1534,7 @@ window.FB = window.FB || {};
           chance:boldChance
         })) + '</span></button>' +
       '<button class="actionbtn" id="return-review-back">' +
-      esc(FB.T('Back to goods')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
 
     openModal(FB.T('Review return cargo'), h, { dismissable:false, historyBack:true });
 
@@ -1605,7 +1605,7 @@ window.FB = window.FB || {};
       '<div class="gm-list"><button class="actionbtn" id="travel-depart">🧭 ' +
       esc(FB.T('Depart for {destination}', {destination:pr.name})) +
       '</button><button class="actionbtn" id="travel-review-back">' +
-      esc(FB.T('Back to destinations')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal('Review journey', h, {dismissable:false, historyBack:true});
     $('travel-depart').addEventListener('click', function () {
       if (FB.travelStart(s, SH.travelPicker.purpose, item.destinationId, item.destinationRealm)) {
@@ -3532,7 +3532,7 @@ window.FB = window.FB || {};
 
   const warTargetView = {
     stateRef:null, search:'', basis:'all', adjacency:'all', rank:'all',
-    diplomacy:'all', sort:'recommended'
+    diplomacy:'all', sort:'recommended', focusRealmId:null
   };
 
   function warCauseIsAdjacent(s, cause) {
@@ -3556,46 +3556,48 @@ window.FB = window.FB || {};
       return '<option value="' + value + '"' +
         (current === value ? ' selected' : '') + '>' + esc(label) + '</option>';
     }
+    function select(id, label, options) {
+      return '<label><span>' + esc(label) + '</span>' +
+        '<span class="war-target-select-wrap"><select id="' + id + '">' +
+        options + '</select></span></label>';
+    }
     return '<div class="war-target-toolbar" id="war-target-toolbar">' +
       '<label class="war-target-search"><span>' + esc(FB.T(
         'Search realm, ruler, or territory')) + '</span><input type="search" ' +
       'id="war-target-search" value="' + esc(warTargetView.search) +
-      '" autocomplete="off" spellcheck="false"></label>' +
-      '<label><span>' + esc(FB.T('Cause')) + '</span><select id="war-target-basis">' +
+      '" autocomplete="off" spellcheck="false"></label>' + select(
+      'war-target-basis', FB.T('Cause'),
       option('all', FB.T('All causes'), warTargetView.basis) +
       option('dejure', FB.T('De jure rights'), warTargetView.basis) +
       option('claim', FB.T('Claims and restorations'), warTargetView.basis) +
-      option('aggression', FB.T('War of Aggression'), warTargetView.basis) +
-      '</select></label><label><span>' + esc(FB.T('Adjacency')) +
-      '</span><select id="war-target-adjacency">' +
+      option('aggression', FB.T('War of Aggression'), warTargetView.basis)) + select(
+      'war-target-adjacency', FB.T('Adjacency'),
       option('all', FB.T('Any distance'), warTargetView.adjacency) +
       option('adjacent', FB.T('Border targets'), warTargetView.adjacency) +
-      option('distant', FB.T('Distant rights'), warTargetView.adjacency) +
-      '</select></label><label><span>' + esc(FB.T('Enemy rank')) +
-      '</span><select id="war-target-rank">' +
+      option('distant', FB.T('Distant rights'), warTargetView.adjacency)) + select(
+      'war-target-rank', FB.T('Enemy rank'),
       option('all', FB.T('Any rank'), warTargetView.rank) +
       option('lower', FB.T('Lower rank'), warTargetView.rank) +
       option('peer', FB.T('Same rank'), warTargetView.rank) +
-      option('higher', FB.T('Higher rank'), warTargetView.rank) +
-      '</select></label><label><span>' + esc(FB.T('Diplomacy')) +
-      '</span><select id="war-target-diplomacy">' +
+      option('higher', FB.T('Higher rank'), warTargetView.rank)) + select(
+      'war-target-diplomacy', FB.T('Diplomacy'),
       option('all', FB.T('Available and blocked'), warTargetView.diplomacy) +
       option('available', FB.T('Available now'), warTargetView.diplomacy) +
-      option('blocked', FB.T('Blocked now'), warTargetView.diplomacy) +
-      '</select></label><label><span>' + esc(FB.T('Sort')) +
-      '</span><select id="war-target-sort">' +
-      option('recommended', FB.T('Recommended: available rights first'), warTargetView.sort) +
+      option('blocked', FB.T('Blocked now'), warTargetView.diplomacy)) + select(
+      'war-target-sort', FB.T('Sort'),
+      option('recommended', FB.T('Recommended'), warTargetView.sort) +
       option('realm', FB.T('Realm name'), warTargetView.sort) +
       option('territory', FB.T('Territory name'), warTargetView.sort) +
       option('rank', FB.T('Enemy rank'), warTargetView.sort) +
-      option('defense', FB.T('Defense strength'), warTargetView.sort) +
-      '</select></label></div>';
+      option('defense', FB.T('Defense strength'), warTargetView.sort)) + '</div>';
   }
 
   UI.showWarTargets = function (focusRealmId, returnContext) {
     const s = FB.state;
-    if (warTargetView.stateRef !== s) {
+    if (warTargetView.stateRef !== s ||
+        warTargetView.focusRealmId !== (focusRealmId || null)) {
       warTargetView.stateRef = s;
+      warTargetView.focusRealmId = focusRealmId || null;
       warTargetView.search = '';
       warTargetView.basis = 'all';
       warTargetView.adjacency = 'all';
@@ -3603,29 +3605,48 @@ window.FB = window.FB || {};
       warTargetView.diplomacy = 'all';
       warTargetView.sort = 'recommended';
     }
-    const causes = focusRealmId && FB.realmWarCauses
-      ? FB.realmWarCauses(s, focusRealmId, true)
+    const includeBlocked = !focusRealmId;
+    const sourceCauses = focusRealmId && FB.realmWarCauses
+      ? FB.realmWarCauses(s, focusRealmId, false)
       : FB.warCauses(s, true, true);
+    const targets = [], seenTargets = {};
+    for (const sourceCause of sourceCauses) {
+      const sourceEnemy = sourceCause.enemy || s.owner[sourceCause.target];
+      const key = sourceEnemy + '|' + sourceCause.target;
+      if (seenTargets[key]) continue;
+      seenTargets[key] = 1;
+      const justifications = FB.warJustifications
+        ? FB.warJustifications(s, sourceCause.target, sourceEnemy,
+          includeBlocked)
+        : [sourceCause];
+      if (justifications.length) targets.push(justifications);
+    }
     const musterUpkeep = FB.playerMusterUpkeepParts
       ? FB.playerMusterUpkeepParts(s) : { total:0 };
     const playerRank = s.realms.player && s.realms.player.alive
       ? s.realms.player.rank : s.player.tier;
     const models = [];
-    let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Compare every available cause before choosing. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
-      '</p><p class="hint">' + esc(FB.T(
+    const titleDetails = '<p>' + esc(FB.T(
+      'Compare available territorial targets before choosing. The final review selects the exact justification. A recognized right avoids the political penalties of a War of Aggression. Land is taken only by siege: march your host onto the named prize and hold it — the works advance each season the host stands there. An unfortified county takes three steps; a fort adds work, minimum force, and attrition. Field victories bring the enemy to the table, nothing more.')) +
+      '</p><p>' + esc(FB.T(
         'Your normal muster would cost about {money:amount} in logistics each season. Great levies, mercenaries, allied reinforcements, and casualties change the live bill.', {
           amount:financeAmount(musterUpkeep.total)
-        })) + '</p></div>' + warTargetToolbarHtml() + '<div class="gm-list war-target-list" ' +
+        })) + '</p>';
+    let h = warTargetToolbarHtml() + '<div class="gm-list war-target-list" ' +
       'id="war-target-list">';
-    for (let ci = 0; ci < causes.length; ci++) {
-      const cause = causes[ci];
+    for (let ci = 0; ci < targets.length; ci++) {
+      const justifications = targets[ci];
+      const cause = justifications[0];
       const pid = cause.target;
       const pr = FB.world.byId[pid];
       const rid = cause.enemy || s.owner[pid];
       const realm = s.realms[rid];
       const enMen = FB.realmDefensiveStrength(s, rid);
-      const causeText = warCauseName(s, cause);
+      const causeText = justifications.length === 1
+        ? warCauseName(s, cause)
+        : FB.T('{count} available justifications', {
+          count:justifications.length
+        });
       const preview = FB.warCausePreview
         ? FB.warCausePreview(s, cause) : null;
       const targetSiege = FB.fortSiegeStatus
@@ -3644,53 +3665,96 @@ window.FB = window.FB || {};
       const blockedReason = FB.warCauseBlockedReason(s, cause);
       const search = [pr.name, realm ? realm.name : '', rulerName]
         .concat(territory).join(' ').toLocaleLowerCase();
+      const bases = [];
+      for (const justification of justifications) {
+        const basis = warCauseBasis(justification);
+        if (bases.indexOf(basis) < 0) bases.push(basis);
+      }
       models.push({
         index:ci, cause:cause, realmName:realm ? realm.name : '',
-        territoryName:pr.name, rank:rank, defense:enMen,
-        basis:warCauseBasis(cause), adjacent:adjacent,
-        blocked:!!cause.blocked, search:search
+        territoryName:pr.name, rank:rank, defense:enMen, bases:bases,
+        aggressionOnly:bases.length === 1 && bases[0] === 'aggression',
+        adjacent:adjacent, blocked:!!cause.blocked, search:search
       });
-      h += '<button class="actionbtn war-target-row" data-war-cause="' + ci +
-        '" data-war-cause-type="' + esc(cause.type) +
-        '" data-war-cause-target="' + esc(cause.target) + '"' +
-        (cause.blocked ? ' disabled' : '') + '>⚔ ' + esc(pr.name) +
-        '<span class="adesc">' + esc(FB.T(
-          '{cause} · {rank} {realm}, ruled by {ruler} ({counties}) · defense ~{theirs} against your ~{yours}{support}', {
-            cause: causeText,
-            realm: realm ? realm.name : '?',
-            rank:realm ? FB.realmRankTitle(s, realm) : FB.T('Realm'),
-            ruler:rulerName,
-            counties: countyCountText(s, FB.realmProvinces(s, rid).length),
-            theirs: menText(s, enMen),
-            yours: menText(s, FB.playerLevy(s)),
-            support: support.men && s.realms[support.ally]
-              ? FB.T(' (including ~{men} from {ally})', {
-                men: menText(s, support.men), ally: s.realms[support.ally].name
-              }) : ''
-          })) + '</span><span class="adesc' +
-          (cause.type === 'aggression' ? ' warnote' : '') + '">' +
-          esc(warCausePickerConsequenceText(s, preview)) +
-          '</span>' + (targetSiege && targetSiege.level
-            ? '<span class="adesc warnote">' + esc(FB.T(
-              '{fort}: {steps} siege steps, {minimum} uncontested besiegers, {attrition} seasonal casualties; hostile passage stops there until breach.', {
-                fort:targetSiege.name, steps:targetSiege.required,
-                minimum:targetSiege.minimum, attrition:targetSiege.attrition
-              })) + '</span>' : '') + '<span class="adesc ' +
-          (cause.blocked ? 'warnote' : 'op-good') + '">' +
-          esc(cause.blocked ? blockedReason : FB.T(
-            'Available now · {distance}', {
-              distance:adjacent ? FB.T('border target') : FB.T('distant right')
-            })) + '</span>' + (cause.sacrilegious
-            ? '<span class="adesc warnote">' + esc(FB.T(
-              '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</span>'
-            : '') + '</button>';
+      const detailsId = 'war-target-details-' + ci;
+      const supportText = support.men && s.realms[support.ally]
+        ? FB.T(' Defensive support includes ~{men} from {ally}.', {
+          men:menText(s, support.men), ally:s.realms[support.ally].name
+        }) : '';
+      let detailsHtml = '<p><b>' + esc(FB.T('Enemy realm')) + '</b><br>' +
+        esc(FB.T('{rank} {realm}, ruled by {ruler} ({counties}).', {
+          realm:realm ? realm.name : '?',
+          rank:realm ? FB.realmRankTitle(s, realm) : FB.T('Realm'),
+          ruler:rulerName,
+          counties:countyCountText(s, FB.realmProvinces(s, rid).length)
+        })) + '</p><p><b>' + esc(FB.T('Campaign strength')) + '</b><br>' +
+        esc(FB.T('Expected defense: ~{theirs} against your ~{yours}.{support}', {
+          theirs:menText(s, enMen), yours:menText(s, FB.playerLevy(s)),
+          support:supportText
+        })) + '</p><p><b>' + esc(FB.T('Cause and consequences')) + '</b><br>' +
+        esc(justifications.length === 1
+          ? warCausePickerConsequenceText(s, preview)
+          : FB.T('Choose the exact basis in the final review: {causes}.', {
+            causes:justifications.map(function (item) {
+              return warCauseName(s, item);
+            }).join(' · ')
+          })) + '</p>';
+      if (targetSiege && targetSiege.level) {
+        detailsHtml += '<p><b>' + esc(FB.T('Fortified objective')) + '</b><br>' +
+          esc(FB.T(
+            '{fort}: {steps} siege steps, {minimum} uncontested besiegers, {attrition} seasonal casualties; hostile passage stops there until breach.', {
+              fort:targetSiege.name, steps:targetSiege.required,
+              minimum:targetSiege.minimum, attrition:targetSiege.attrition
+            })) + '</p>';
+      }
+      detailsHtml += '<p><b>' + esc(FB.T('Reach')) + '</b><br>' +
+        esc(adjacent ? FB.T('Border target') : FB.T('Distant right')) + '</p>';
+      if (cause.sacrilegious) {
+        detailsHtml += '<p class="warnote">' + esc(FB.T(
+          '⛓ Sacrilege — attacking the active Papacy brings excommunication, forfeits all piety, and turns every Catholic ruler against you.')) + '</p>';
+      }
+      const criticalFort = targetSiege && targetSiege.level
+        ? '<span class="adesc war-target-fort">' + esc(FB.T(
+          '🏰 {fort} · {steps} siege steps', {
+            fort:targetSiege.name, steps:targetSiege.required
+          })) + '</span>' : '';
+      const criticalSacrilege = cause.sacrilegious
+        ? '<span class="adesc warnote">' + esc(FB.T(
+          '⛓ Sacrilege · all piety lost · excommunication')) + '</span>' : '';
+      h += '<div class="war-target-card settcard' +
+        (cause.type === 'aggression' ? ' aggression' : '') +
+        (cause.blocked ? ' blocked' : '') + '"><button class="actionbtn war-target-row" ' +
+        'data-war-cause="' + ci + '" data-war-cause-type="' + esc(cause.type) +
+        '" data-war-cause-target="' + esc(cause.target) +
+        '" data-war-target-realm="' + esc(rid) +
+        '" data-war-justification-count="' + justifications.length +
+        '" aria-describedby="' +
+        detailsId + '"' + (cause.blocked ? ' disabled' : '') + '>' +
+        '<span class="war-target-row-head"><b>⚔ ' + esc(pr.name) + '</b><span class="' +
+        (cause.blocked ? 'op-bad' : 'op-good') + '">' +
+        esc(cause.blocked ? FB.T('Blocked') : FB.T('Available')) + '</span></span>' +
+        '<span class="adesc">' + esc(FB.T('{cause} · {realm}', {
+          cause:causeText, realm:realm ? realm.name : '?'
+        })) + '</span><span class="adesc">' + esc(FB.T(
+          'Your force ~{yours} · enemy defense ~{theirs}', {
+            yours:menText(s, FB.playerLevy(s)), theirs:menText(s, enMen)
+          })) + '</span>' + criticalFort +
+        (cause.blocked ? '<span class="adesc warnote">' + esc(blockedReason) +
+          '</span>' : '') + criticalSacrilege + '</button>' +
+        '<span class="settcard-actions war-target-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+        detailsId + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details')) + '">?</button></span>' +
+        '<div class="settcard-details war-target-details hidden" id="' + detailsId +
+        '">' + detailsHtml + '</div></div>';
     }
     h += '</div><div class="hint large-list-no-results" id="war-target-empty" hidden>' +
       esc(FB.T('No war target matches the current search and filters.')) +
       '</div><div class="gm-footer"><button class="btn" id="gm-cancel">' +
-      esc(returnContext ? FB.T('Back') : FB.T('Think better of it')) +
+      esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
     openModal(FB.T('Choose Your Conquest'), h, {
+      titleDetailsHtml:titleDetails,
       historyView:!!returnContext,
       guide:guideModalOption('war-guide', 'war', 'Guide: war'),
       historyBackRender:function () {
@@ -3702,8 +3766,8 @@ window.FB = window.FB || {};
       let result = 0;
       if (warTargetView.sort === 'recommended') {
         result = Number(a.blocked) - Number(b.blocked) ||
-          (a.basis === 'aggression' ? 1 : 0) -
-            (b.basis === 'aggression' ? 1 : 0) ||
+          (a.aggressionOnly ? 1 : 0) -
+            (b.aggressionOnly ? 1 : 0) ||
           Number(!a.adjacent) - Number(!b.adjacent) ||
           a.defense - b.defense;
       } else if (warTargetView.sort === 'realm') {
@@ -3731,19 +3795,21 @@ window.FB = window.FB || {};
       let visible = 0;
       for (const model of ordered) {
         const row = list.querySelector('[data-war-cause="' + model.index + '"]');
-        list.appendChild(row);
+        const card = row.closest('.war-target-card') || row;
+        list.appendChild(card);
         const rankMatch = warTargetView.rank === 'all' ||
           (warTargetView.rank === 'lower' && model.rank < playerRank) ||
           (warTargetView.rank === 'peer' && model.rank === playerRank) ||
           (warTargetView.rank === 'higher' && model.rank > playerRank);
         const show = (!query || model.search.indexOf(query) >= 0) &&
-          (warTargetView.basis === 'all' || model.basis === warTargetView.basis) &&
+          (warTargetView.basis === 'all' ||
+            model.bases.indexOf(warTargetView.basis) >= 0) &&
           (warTargetView.adjacency === 'all' ||
             (warTargetView.adjacency === 'adjacent') === model.adjacent) &&
           rankMatch &&
           (warTargetView.diplomacy === 'all' ||
             (warTargetView.diplomacy === 'blocked') === model.blocked);
-        row.hidden = !show;
+        card.hidden = !show;
         if (show) visible++;
       }
       $('war-target-empty').hidden = visible > 0;
@@ -3757,24 +3823,11 @@ window.FB = window.FB || {};
     applyWarTargetView();
     document.querySelectorAll('[data-war-cause]').forEach(function (b) {
       b.addEventListener('click', function () {
-        const cause = causes[Number(b.dataset.warCause)];
-        if (cause.type === 'aggression') {
-          UI.showAggressiveWarConfirmation(cause, {
-            focusRealmId:focusRealmId,
-            returnContext:returnContext
-          });
-        } else if (cause.sacrilegious) {
-          UI.showSacrilegiousWarConfirmation(cause, {
-            focusRealmId:focusRealmId,
-            returnContext:returnContext
-          });
-        } else {
-          if (!FB.startPlayerWar(FB.state, cause)) return;
-          UI.refresh();
-          if (returnContext) interactionReturn(returnContext);
-          else UI.closeModal();
-          mobileNavClosedAll('modal-view', true);
-        }
+        const justifications = targets[Number(b.dataset.warCause)];
+        UI.showWarJustification(justifications, {
+          focusRealmId:focusRealmId,
+          returnContext:returnContext
+        });
       });
     });
     $('gm-cancel').addEventListener('click', function () {
@@ -3788,193 +3841,234 @@ window.FB = window.FB || {};
     });
   };
 
-  /* Aggression is never inferred from a generic county click. This second
-     sheet repeats every immediate and continuing consequence from the same
-     preview object the declaration writer applies, then revalidates all
-     cause and diplomacy gates on the final button. */
-  UI.showAggressiveWarConfirmation = function (cause, returnContext) {
-    const s = FB.state;
-    const preview = cause && FB.warCausePreview
-      ? FB.warCausePreview(s, cause) : null;
-    const consequence = preview && preview.aggression;
-    const realm = cause && s.realms[cause.enemy];
-    const province = cause && FB.world.byId[cause.target];
-    if (!consequence || !realm || !province) return;
-    const siege = FB.fortSiegeStatus
-      ? FB.fortSiegeStatus(s, cause.target, {}, 0) : { required:3, level:0 };
-    const modifier = consequence.modifier;
-    const modifierDef = modifier && FBDATA.modifiers[modifier.id];
-    const modifierName = modifierDef
-      ? dt(s, 'modifier', modifier.id, modifierDef, 'name')
-      : FB.T('Conquered Without Right');
-    const modifierEffects = modifier
-      ? modifierEffectText(s, modifier.id) : '';
-    const sacrilegeStanding = Math.abs(
-      FBDATA.balance.religiousHeadWarOpinion !== undefined
-        ? FBDATA.balance.religiousHeadWarOpinion : -40);
-    const vassalText = consequence.vassals.length
-      ? FB.T(
-        'Direct-vassal Standing changes {standing} across {count} affected courts; this includes normal Standing bounds.', {
-          standing:standingChangeRange(consequence.vassals),
-          count:consequence.vassals.length
-        })
-      : FB.T('You have no direct vassals, so no direct-vassal Standing changes now.');
-    const foreignText = consequence.foreign.length
-      ? FB.T(
-        'Foreign-sovereign Standing changes {standing} across {count} affected courts; this includes normal Standing bounds.', {
-          standing:standingChangeRange(consequence.foreign),
-          count:consequence.foreign.length
-        })
-      : FB.T('No living foreign sovereign is currently affected.');
-    const recentText = consequence.recentCount
-      ? FB.T(
-        '{count} aggressive wars by this ruler remain recent, so this declaration’s political costs are multiplied by ×{multiplier}.', {
-          count:consequence.recentCount,
-          multiplier:Math.round(
-            consequence.escalationMultiplier * 100) / 100
-        })
-      : FB.T(
-        'This is the ruler’s first recent aggressive war; later declarations escalate every political cost.');
-    let h = '<div class="gm-body-text"><p class="warnote"><b>' +
-      esc(FB.T('This war has no recognized right.')) + '</b></p><p>' +
-      esc(FB.T(
-        'Target {realm}; conquer {province} by standing your host on it until {steps} siege steps are done.', {
-          realm:realm.name,
-          province:province.name,
-          steps:siege.required
-        })) + '</p>' + (siege.level
-        ? '<p class="hint">' + esc(FB.T(
-          '{fort} pins passage through the county until breached; it needs {minimum} uncontested besiegers and inflicts {attrition} casualties each active season.', {
-            fort:siege.name, minimum:siege.minimum, attrition:siege.attrition
-          })) + '</p>' : '') + '<h4>' + esc(FB.T('Immediate consequences')) +
-      '</h4><ul><li>' + esc(FB.T('{prestige} prestige.', {
-        prestige:signedNumber(consequence.prestigeChange)
-      })) + '</li><li>' + esc(FB.T('{voice} Common Voice.', {
-        voice:signedNumber(consequence.commonVoiceChange)
-      })) + '</li><li>' + esc(FB.T(
-        'The enemy ruler’s Standing is capped at {standing}.', {
-          standing:standingText(preview.enemyStanding.after)
-        })) + '</li><li>' + esc(vassalText) + '</li><li>' +
-      esc(foreignText) + '</li></ul><p>' + esc(recentText) +
-      '</p><h4>' + esc(FB.T('Continuing consequences')) +
-      '</h4><p>' + esc(FB.T(
-        'While this declaration remains recent, player-realm vassal breakaway pressure is ×{multiplier}; poor Standing raises it further.', {
-          multiplier:Math.round(
-            consequence.breakawayMultiplier * 100) / 100
-        })) + '</p><p>' + esc(modifier
-          ? FB.T(
-            'The war itself grants no declaration or victory prestige; separate title promotions still apply. {province} receives {modifier} for {days} days: {effects}. The modifier remains with the county if ownership changes.', {
-              province:province.name,
+  function sameWarJustification(a, b) {
+    return !!a && !!b && a.type === b.type && a.target === b.target &&
+      (a.enemy || '') === (b.enemy || '') &&
+      (a.titleKind || '') === (b.titleKind || '') &&
+      (a.titleId || '') === (b.titleId || '') &&
+      (a.titleName || '') === (b.titleName || '');
+  }
+
+  function warJustificationTitleDetails(s, causes) {
+    let h = '<p>' + esc(FB.T(
+      'Choose the exact right this war will record. Reviewing or changing the justification does not alter state or consume randomness; the final declaration revalidates the target, right, and diplomatic gates.')) + '</p>';
+    for (const cause of causes) {
+      const preview = FB.warCausePreview ? FB.warCausePreview(s, cause) : null;
+      h += '<p><b>' + esc(warCauseName(s, cause)) + '</b><br>' +
+        esc(warCausePickerConsequenceText(s, preview)) + '</p>';
+      if (cause.sacrilegious) {
+        const standing = Math.abs(
+          FBDATA.balance.religiousHeadWarOpinion !== undefined
+            ? FBDATA.balance.religiousHeadWarOpinion : -40);
+        h += '<p class="warnote"><b>' + esc(FB.T('Sacrilege')) +
+          '</b><br>' + esc(FB.T(
+            'Declaring forfeits all piety, gives −{standing} Standing with every living Catholic ruler, and excommunicates the current ruler. After peace, an active Pope may grant costly absolution.', {
+              standing:standing
+            })) + '</p>';
+      }
+      if (preview && preview.aggression) {
+        const consequence = preview.aggression;
+        const province = FB.world.byId[cause.target];
+        const modifier = consequence.modifier;
+        const modifierDef = modifier && FBDATA.modifiers[modifier.id];
+        const modifierName = modifierDef
+          ? dt(s, 'modifier', modifier.id, modifierDef, 'name')
+          : FB.T('Conquered Without Right');
+        h += '<p><b>' + esc(FB.T('Immediate consequences')) +
+          '</b><br>' + esc(FB.T(
+            'Political costs are multiplied by ×{multiplier}; {vassals} direct-vassal courts and {foreign} foreign sovereign courts are affected.', {
+              multiplier:Math.round(
+                consequence.escalationMultiplier * 100) / 100,
+              vassals:consequence.vassals.length,
+              foreign:consequence.foreign.length
+            })) + '</p><p><b>' + esc(FB.T('Continuing consequences')) +
+          '</b><br>' + esc(FB.T(
+            'Breakaway pressure is ×{multiplier} while the declaration remains recent. {province} receives {modifier} for {days} days: {effects}.', {
+              multiplier:Math.round(
+                consequence.breakawayMultiplier * 100) / 100,
+              province:province ? province.name : cause.target,
               modifier:modifierName,
-              days:modifier.days,
-              effects:modifierEffects
-            })
-          : FB.T(
-            'The war itself grants no declaration or victory prestige and applies the unjust-conquest county burden.')) +
-      '</p><h4>' + esc(FB.T('Most likely opposition')) +
-      '</h4><p>' + esc(aggressionOppositionText(s, consequence)) +
-      '</p>' + (cause.sacrilegious
-        ? '<p class="warnote">' + esc(FB.T(
-          'This target is also the active Papacy. Declaring forfeits all piety, gives −{standing} Standing with every Catholic ruler, and excommunicates the current ruler.', {
-            standing:sacrilegeStanding
-          })) + '</p>'
-        : '') + '</div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="aggression-confirm">⚔ ' +
-      esc(FB.T('Accept the consequences and declare war')) + '</button>' +
-      '<button type="button" class="actionbtn" id="aggression-cancel">' +
-      esc(FB.T('Think better of it')) + '</button></div>';
-    openModal(FB.T('Declare a War of Aggression?'), h, {
-      historyView:!!returnContext,
-      historyBackRender:function () {
-        UI.showWarTargets(returnContext.focusRealmId,
-          returnContext.returnContext);
+              days:modifier ? modifier.days : 0,
+              effects:modifier
+                ? modifierEffectText(s, modifier.id)
+                : FB.T('the unjust-conquest county burden')
+            })) + '</p><p><b>' + esc(FB.T('Most likely opposition')) +
+          '</b><br>' + esc(aggressionOppositionText(s, consequence)) + '</p>';
       }
-    });
-    $('aggression-confirm').addEventListener('click', function () {
-      if (!FB.startPlayerWar(s, cause, {
-          confirmAggression:true,
-          confirmSacrilege:!!cause.sacrilegious
-      })) {
-        UI.toast(FB.T(
-          'The War of Aggression can no longer be declared.'));
-        UI.showWarTargets(returnContext.focusRealmId,
-          returnContext.returnContext);
-        return;
-      }
-      UI.refresh();
-      if (returnContext.returnContext) {
-        interactionReturn(returnContext.returnContext);
-      } else {
-        UI.closeModal();
-      }
-      mobileNavClosedAll('modal-view', true);
-    });
-    $('aggression-cancel').addEventListener('click', function () {
-      if (returnContext) {
-        modalHistoryBack(function () {
-          UI.showWarTargets(returnContext.focusRealmId,
-            returnContext.returnContext);
-        });
-      } else {
-        UI.closeModal();
-      }
-    });
-  };
+    }
+    return h;
+  }
 
-  /* Same cause, second confirmation: no state changes until the player
-     explicitly accepts the religious penalties here. */
-  UI.showSacrilegiousWarConfirmation = function (cause, returnContext) {
+  function warJustificationPanelHtml(s, cause, index) {
+    const preview = FB.warCausePreview ? FB.warCausePreview(s, cause) : null;
+    const consequence = preview && preview.aggression;
+    const realm = s.realms[cause.enemy];
+    const province = FB.world.byId[cause.target];
+    const siege = FB.fortSiegeStatus
+      ? FB.fortSiegeStatus(s, cause.target, {}, 0)
+      : { required:3, level:0 };
+    const siegeSummary = siege.level
+      ? FB.T('{fort} · {steps} siege steps', {
+        fort:siege.name, steps:siege.required
+      })
+      : FB.T('{steps} siege steps', { steps:siege.required });
+    let h = '<div class="war-justification-critical aggression-confirm-critical" ' +
+      'data-war-justification-panel="' + index + '"' +
+      (index ? ' hidden' : '') + '>';
+    if (consequence) {
+      const modifier = consequence.modifier;
+      const modifierDef = modifier && FBDATA.modifiers[modifier.id];
+      const modifierName = modifierDef
+        ? dt(s, 'modifier', modifier.id, modifierDef, 'name')
+        : FB.T('Conquered Without Right');
+      h += '<div class="progressnote warnote"><b>' +
+        esc(FB.T('This war has no recognized right.')) + '</b></div>' +
+        kv('Target', esc(FB.T('{realm} → {province}', {
+          realm:realm ? realm.name : cause.enemy,
+          province:province ? province.name : cause.target
+        }))) +
+        kv('War reason', esc(warCauseName(s, cause))) +
+        kv('Siege', esc(siegeSummary)) +
+        kv('Immediate cost', esc(FB.T(
+          '{prestige} prestige · {voice} Common Voice', {
+            prestige:signedNumber(consequence.prestigeChange),
+            voice:signedNumber(consequence.commonVoiceChange)
+          }))) +
+        kv('Standing penalties', esc(FB.T(
+          'Vassals {vassal} · foreign rulers {foreign}', {
+            vassal:standingChangeRange(consequence.vassals),
+            foreign:standingChangeRange(consequence.foreign)
+          }))) +
+        kv('Breakaway pressure', esc(FB.T('×{multiplier} while recent', {
+          multiplier:Math.round(consequence.breakawayMultiplier * 100) / 100
+        }))) +
+        kv('Victory burden', esc(modifier
+          ? FB.T('{modifier} · {days} days', {
+            modifier:modifierName, days:modifier.days
+          })
+          : FB.T('Unjust-conquest county burden')));
+    } else {
+      h += '<div class="progressnote"><b>' +
+        esc(FB.T('A recognized right supports this war.')) + '</b></div>' +
+        kv('Target', esc(FB.T('{realm} → {province}', {
+          realm:realm ? realm.name : cause.enemy,
+          province:province ? province.name : cause.target
+        }))) +
+        kv('War reason', esc(warCauseName(s, cause))) +
+        kv('Siege', esc(siegeSummary)) +
+        kv('Declaration reward', esc(FB.T('{prestige} prestige', {
+          prestige:signedNumber(preview ? preview.declarationPrestige : 0)
+        }))) +
+        kv('Victory reward', esc(FB.T('{prestige} prestige', {
+          prestige:signedNumber(preview ? preview.victoryPrestige : 0)
+        }))) +
+        kv('Enemy Standing', esc(preview && preview.enemyStanding
+          ? FB.T('Capped at {standing}', {
+            standing:standingText(preview.enemyStanding.after)
+          })
+          : FB.T('Becomes Hostile')));
+    }
+    if (cause.sacrilegious) {
+      h += '<div class="progressnote warnote">' + esc(FB.T(
+        'Sacrilege: all piety is lost and the current ruler is excommunicated.')) +
+        '</div>';
+    }
+    return h + '</div>';
+  }
+
+  /* Every conquest now ends at one read-only justification sheet. Multiple
+     de jure bases share a selector; aggression and sacrilege use the same
+     final declaration boundary and retain their exact consequence summary. */
+  UI.showWarJustification = function (causes, returnContext) {
     const s = FB.state;
-    const B = FBDATA.balance;
-    const realm = cause && s.realms[cause.enemy];
-    if (!cause || !cause.sacrilegious || !realm) return;
-    const opinion = Math.abs(B.religiousHeadWarOpinion !== undefined
-      ? B.religiousHeadWarOpinion : -40);
-    const h = '<div class="gm-body-text"><p class="warnote"><b>' + esc(FB.T(
-      'This conquest is sacrilege.')) + '</b></p><p>' + esc(FB.T(
-      'Declaring war on {realm} reduces your piety to zero, gives you −{standing} Standing with every living Catholic ruler, and excommunicates the current ruler.', {
-        realm:realm.name, standing:opinion
-      })) + '</p><p>' + esc(FB.T(
-      'Canceling here changes nothing. After peace, an active Pope may grant costly absolution.')) +
-      '</p></div><div class="gm-list">' +
-      '<button type="button" class="actionbtn" id="sacrilege-confirm">⚔ ' +
-      esc(FB.T('Accept condemnation and declare war')) + '</button>' +
-      '<button type="button" class="actionbtn" id="sacrilege-cancel">' +
-      esc(FB.T('Think better of it')) + '</button></div>';
-    openModal(FB.T('Attack the Papacy?'), h, {
-      historyView:!!returnContext,
-      historyBackRender:function () {
-        UI.showWarTargets(returnContext.focusRealmId,
-          returnContext.returnContext);
+    causes = (causes || []).filter(function (cause) { return !!cause; });
+    if (!causes.length) return;
+    let h = '';
+    if (causes.length > 1) {
+      h += '<div class="war-target-toolbar war-justification-toolbar"><label>' +
+        '<span>' + esc(FB.T('War reason')) + '</span>' +
+        '<span class="war-target-select-wrap"><select ' +
+        'id="war-justification-reason">';
+      for (let i = 0; i < causes.length; i++) {
+        h += '<option value="' + i + '">' +
+          esc(warCauseName(s, causes[i])) + '</option>';
       }
-    });
-    $('sacrilege-confirm').addEventListener('click', function () {
-      if (!FB.startPlayerWar(s, cause, { confirmSacrilege:true })) {
-        UI.toast(FB.T('This sacrilegious war can no longer be declared.'));
+      h += '</select></span></label></div>';
+    }
+    for (let pi = 0; pi < causes.length; pi++) {
+      h += warJustificationPanelHtml(s, causes[pi], pi);
+    }
+    h += '<div class="gm-list"><button type="button" class="actionbtn" ' +
+      'id="war-justification-confirm">⚔ ' + esc(FB.T('Declare war')) +
+      '</button><button type="button" class="actionbtn" ' +
+      'id="war-justification-back">' + esc(FB.T('Back')) +
+      '</button></div>';
+    function restoreTargets() {
+      if (returnContext) {
         UI.showWarTargets(returnContext.focusRealmId,
           returnContext.returnContext);
+      } else {
+        UI.closeModal();
+      }
+    }
+    openModal(FB.T('War Justification'), h, {
+      titleDetailsHtml:warJustificationTitleDetails(s, causes),
+      historyView:!!returnContext,
+      historyBackRender:restoreTargets
+    });
+    const reason = $('war-justification-reason');
+    if (reason) {
+      reason.addEventListener('change', function () {
+        const panels = document.querySelectorAll(
+          '[data-war-justification-panel]');
+        for (let i = 0; i < panels.length; i++) {
+          panels[i].hidden = i !== Number(reason.value);
+        }
+      });
+    }
+    $('war-justification-confirm').addEventListener('click', function () {
+      const chosen = causes[reason ? Number(reason.value) : 0];
+      const live = FB.warJustifications
+        ? FB.warJustifications(FB.state, chosen.target, chosen.enemy, true)
+        : [chosen];
+      let confirmed = null;
+      for (const candidate of live) {
+        if (sameWarJustification(candidate, chosen)) {
+          confirmed = candidate;
+          break;
+        }
+      }
+      if (!confirmed || confirmed.blocked || !FB.startPlayerWar(FB.state,
+          confirmed, {
+            confirmAggression:confirmed.type === 'aggression',
+            confirmSacrilege:!!confirmed.sacrilegious
+          })) {
+        UI.toast(FB.T(
+          'That target or justification can no longer be declared.'));
+        restoreTargets();
         return;
       }
       UI.refresh();
-      if (returnContext.returnContext) {
+      if (returnContext && returnContext.returnContext) {
         interactionReturn(returnContext.returnContext);
       } else {
         UI.closeModal();
       }
       mobileNavClosedAll('modal-view', true);
     });
-    $('sacrilege-cancel').addEventListener('click', function () {
-      if (returnContext) {
-        modalHistoryBack(function () {
-          UI.showWarTargets(returnContext.focusRealmId,
-            returnContext.returnContext);
-        });
-      } else {
-        UI.closeModal();
-      }
+    $('war-justification-back').addEventListener('click', function () {
+      if (returnContext) modalHistoryBack(restoreTargets);
+      else UI.closeModal();
     });
   };
 
+  UI.showAggressiveWarConfirmation = function (cause, returnContext) {
+    UI.showWarJustification([cause], returnContext);
+  };
+
+  UI.showSacrilegiousWarConfirmation = function (cause, returnContext) {
+    UI.showWarJustification([cause], returnContext);
+  };
   /* =========================================================================
      RAIDING UI (UI.showRaidTargets, UI.showRaidResolution)
      ========================================================================= */
@@ -4454,7 +4548,7 @@ window.FB = window.FB || {};
     const s = FB.state;
     if (!s || !report) return;
     const pr = FB.world.byId[report.targetPid];
-    const targetRid = s.owner && s.owner[report.targetPid];
+    const targetRid = report.targetRealmId || (s.owner && s.owner[report.targetPid]);
     const targetRealm = targetRid && s.realms && s.realms[targetRid];
 
     let h = '<div class="gm-body-text">';
@@ -4527,7 +4621,9 @@ window.FB = window.FB || {};
       for (let sIdx = 0; sIdx < report.marchSkirmishes.length; sIdx++) {
         const ms = report.marchSkirmishes[sIdx];
         if (ms.casualties > 0 || ms.repelled) {
-          marchParts.push(esc(ms.name) + ': ' + (ms.repelled ? FB.T('Repelled (-{n} men)', { n: ms.casualties }) : FB.T('-{n} men', { n: ms.casualties })));
+          const marchProvince = ms.pid && FB.world.byId[ms.pid];
+          marchParts.push(esc(ms.name || (marchProvince ? marchProvince.name : ms.pid)) + ': ' +
+            (ms.repelled ? FB.T('Repelled (-{n} men)', { n: ms.casualties }) : FB.T('-{n} men', { n: ms.casualties })));
         }
       }
       if (marchParts.length) {
@@ -4565,6 +4661,192 @@ window.FB = window.FB || {};
         UI.closeModal();
         if (FB.ui && FB.ui.refresh) FB.ui.refresh();
       });
+    }
+  };
+
+  function hostileReportDate(report) {
+    return report.d
+      ? FB.T('{season} {day}, {year}', {
+        season:FB.seasonName(report.s), day:report.d, year:report.y
+      })
+      : FB.T('{season}, {year}', {
+        season:FB.seasonName(report.s), year:report.y
+      });
+  }
+
+  function hostileFact(label, value) {
+    return '<div class="hostile-report-fact"><span>' + esc(label) +
+      '</span><b>' + esc(value) + '</b></div>';
+  }
+
+  function hostileLossTotal(losses) {
+    if (!losses) return 0;
+    if (losses.total !== undefined) {
+      return Math.max(0, Math.round(Number(losses.total) || 0));
+    }
+    let total = 0;
+    for (const key in losses) {
+      total += Math.max(0, Math.round(Number(losses[key]) || 0));
+    }
+    return total;
+  }
+
+  function hostileLossBreakdown(s, losses) {
+    const parts = [];
+    for (const key in (losses || {})) {
+      if (key === 'total') continue;
+      const amount = Math.max(0, Math.round(Number(losses[key]) || 0));
+      if (!amount) continue;
+      const def = FBDATA.unitClasses && FBDATA.unitClasses[key];
+      parts.push(FB.T('{unit} {men}', {
+        unit:def ? dt(s, 'unitClass', key, def, 'name') : key,
+        men:amount
+      }));
+    }
+    return parts.join(' · ');
+  }
+
+  function hostileWarResultName(result, active) {
+    if (active) return FB.T('War ongoing');
+    if (result === 'victory') return FB.T('Victory');
+    if (result === 'defeat') return FB.T('Defeat');
+    if (result === 'favorable_peace') return FB.T('Favorable peace');
+    if (result === 'unfavorable_peace') return FB.T('Unfavorable peace');
+    return FB.T('Peace');
+  }
+
+  function hostileWarCauseName(s, report) {
+    if (report.causeType === 'border') return FB.T('Border war');
+    if (report.causeType === 'independence') return FB.T('War of independence');
+    if (report.causeType === 'defection') return FB.T('War over defection');
+    if (!report.causeType) return report.defending
+      ? FB.T('Defense of the realm') : FB.T('Territorial war');
+    return warCauseName(s, {
+      type:report.causeType, target:report.causeTarget,
+      titleKind:report.titleKind, titleId:report.titleId
+    });
+  }
+
+  function showBattleHostileReport(report) {
+    const s = FB.state;
+    const province = report.pid && FB.world.byId[report.pid];
+    const enemy = report.enemyId && s.realms[report.enemyId];
+    const outcome = report.outcome === 'win' ? FB.T('Victory') : FB.T('Defeat');
+    const action = report.defending
+      ? FB.T('Your host met the invading forces of {enemy}.', {
+        enemy:enemy ? enemy.name : report.enemyId
+      })
+      : FB.T('Your host engaged the forces of {enemy}.', {
+        enemy:enemy ? enemy.name : report.enemyId
+      });
+    let h = '<div class="hostile-report-lead"><strong class="' +
+      (report.outcome === 'win' ? 'op-good' : 'op-bad') + '">' +
+      esc(FB.T('{outcome} at {province}', {
+        outcome:outcome,
+        province:province ? province.name : FB.T('an unknown field')
+      })) + '</strong><span>' + esc(action) + '</span></div>' +
+      '<div class="hostile-report-facts">' +
+      hostileFact(FB.T('Date'), hostileReportDate(report)) +
+      hostileFact(FB.T('Battle'), report.mode === 'field'
+        ? FB.T('Field battle') : FB.T('Campaign encounter')) +
+      hostileFact(FB.T('Your host'), FB.T('{before} → {after} men', {
+        before:report.playerBefore, after:report.playerAfter
+      })) +
+      hostileFact(FB.T('Enemy host'), FB.T('{before} → {after} men', {
+        before:report.enemyBefore, after:report.enemyAfter
+      })) +
+      hostileFact(FB.T('Your losses'), FB.T('{men} men', {
+        men:hostileLossTotal(report.playerLosses)
+      })) +
+      hostileFact(FB.T('Enemy losses'), FB.T('{men} men', {
+        men:hostileLossTotal(report.enemyLosses)
+      })) + '</div>';
+    const ownBreakdown = hostileLossBreakdown(s, report.playerLosses);
+    const enemyBreakdown = hostileLossBreakdown(s, report.enemyLosses);
+    if (ownBreakdown || enemyBreakdown) {
+      h += '<div class="hostile-report-detail">' +
+        (ownBreakdown ? '<span><b>' + esc(FB.T('Your casualties')) + '</b>' +
+          esc(ownBreakdown) + '</span>' : '') +
+        (enemyBreakdown ? '<span><b>' + esc(FB.T('Enemy casualties')) + '</b>' +
+          esc(enemyBreakdown) + '</span>' : '') + '</div>';
+    }
+    h += '<div class="gm-footer"><button class="btn" id="hostile-report-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('Battle Result: {province}', {
+      province:province ? province.name : FB.T('Unknown field')
+    }), h, { modalClass:'hostile-report-modal' });
+    $('hostile-report-close').addEventListener('click', UI.closeModal);
+  }
+
+  function showWarHostileReport(report) {
+    const s = FB.state;
+    const enemy = report.enemyId && s.realms[report.enemyId];
+    const target = report.targetPid && FB.world.byId[report.targetPid];
+    const active = report.status === 'active';
+    const result = hostileWarResultName(report.result, active);
+    const cause = hostileWarCauseName(s, report);
+    const action = report.defending
+      ? FB.T('{enemy} brought war against your realm.', {
+        enemy:enemy ? enemy.name : report.enemyId
+      })
+      : FB.T('You brought war against {enemy}.', {
+        enemy:enemy ? enemy.name : report.enemyId
+      });
+    let h = '<div class="hostile-report-lead"><strong class="' +
+      (report.result === 'victory' ? 'op-good' :
+        (report.result === 'defeat' ? 'op-bad' : '')) + '">' +
+      esc(result) + '</strong><span>' + esc(action) + '</span></div>' +
+      '<div class="hostile-report-facts">' +
+      hostileFact(FB.T('War began'), hostileReportDate(report)) +
+      hostileFact(FB.T('Cause'), cause) +
+      hostileFact(FB.T('Objective'), target ? target.name : FB.T('Defend the realm')) +
+      hostileFact(FB.T('Field record'), FB.T('{wins} victories · {losses} defeats', {
+        wins:report.wins || 0, losses:report.losses || 0
+      })) +
+      hostileFact(FB.T('Duration'), FB.T('{seasons} seasons', {
+        seasons:report.seasons || 0
+      })) +
+      hostileFact(FB.T('Result'), result) + '</div>';
+    const battles = (FB.hostileHistory ? FB.hostileHistory(s) : []).filter(
+      function (item) {
+        return item && item.kind === 'battle' && item.warReportId === report.id;
+      });
+    if (battles.length) {
+      h += '<section class="hostile-report-events"><h4>' +
+        esc(FB.T('Campaign battles ({count})', { count:battles.length })) + '</h4>';
+      for (let i = battles.length - 1; i >= 0; i--) {
+        const battle = battles[i];
+        const province = battle.pid && FB.world.byId[battle.pid];
+        h += '<div class="hostile-report-event"><b class="' +
+          (battle.outcome === 'win' ? 'op-good' : 'op-bad') + '">' +
+          esc(battle.outcome === 'win' ? FB.T('Victory') : FB.T('Defeat')) +
+          '</b><span>' + esc(province ? province.name : FB.T('Unknown field')) +
+          ' · ' + esc(FB.T('{ours} vs {theirs} before battle', {
+            ours:battle.playerBefore, theirs:battle.enemyBefore
+          })) + '</span></div>';
+      }
+      h += '</section>';
+    }
+    h += '<div class="gm-footer"><button class="btn" id="hostile-report-close">' +
+      esc(FB.T('Close')) + '</button></div>';
+    openModal(FB.T('War Result: {enemy}', {
+      enemy:enemy ? enemy.name : report.enemyId
+    }), h, { modalClass:'hostile-report-modal' });
+    $('hostile-report-close').addEventListener('click', UI.closeModal);
+  }
+
+  UI.showHostileReport = function (id) {
+    const report = FB.hostileReport ? FB.hostileReport(FB.state, id) : null;
+    if (!report) {
+      UI.toast(FB.T('That older military report is no longer available.'));
+      return;
+    }
+    if (report.kind === 'raid') {
+      UI.showRaidResolution(report);
+    } else if (report.kind === 'battle') {
+      showBattleHostileReport(report);
+    } else {
+      showWarHostileReport(report);
     }
   };
 
@@ -7407,25 +7689,31 @@ window.FB = window.FB || {};
 
     const causes = FB.realmWarCauses
       ? FB.realmWarCauses(s, rid, true) : [];
-    for (const cause of causes) {
-      const province = FB.world.byId[cause.target];
+    if (causes.length) {
+      const availableCauses = causes.filter(function (cause) {
+        return !cause.blocked;
+      });
+      const targetIds = [];
+      for (const cause of availableCauses) {
+        if (targetIds.indexOf(cause.target) < 0) targetIds.push(cause.target);
+      }
+      const blockedReason = !availableCauses.length && FB.warCauseBlockedReason
+        ? FB.warCauseBlockedReason(s, causes[0]) : null;
       addInteractionAction(model, {
-        id:'war.' + cause.type + '.' + cause.target,
+        id:'war.declare',
         group:'war',
-        label:FB.T('Press {cause}…', { cause:warCauseName(s, cause) }),
-        detail:FB.T(
-          'Target: {province}. Opens the existing cause review and muster preview.', {
-            province:province ? province.name : cause.target
-          }),
-        enabled:!cause.blocked,
-        blockedReason:FB.warCauseBlockedReason
-          ? FB.warCauseBlockedReason(s, cause) : null,
-        consequence:cause.sacrilegious
+        label:FB.T('Declare war…'),
+        detail:availableCauses.length
           ? FB.T(
-            'A separate condemnation confirmation appears before war can begin.')
-          : FB.T('War begins only after the existing cause selection is confirmed.'),
-        route:'war',
-        causeTarget:cause.target
+            'Choose among {count} available targets in {realm}.', {
+              count:targetIds.length, realm:realm.name
+            })
+          : blockedReason,
+        enabled:!!availableCauses.length,
+        blockedReason:blockedReason,
+        consequence:FB.T(
+          'The conquest picker is limited to this ruler’s realm; a final review chooses the war justification before declaration.'),
+        route:'war'
       });
     }
 
@@ -7680,7 +7968,7 @@ window.FB = window.FB || {};
       esc(returnContext ? FB.T('Back') : FB.T('Close')) +
       '</button>' +
       (returnContext
-        ? '<button type="button" class="btn" id="gm-dismiss">' +
+        ? '<button type="button" class="btn" id="gm-stack-close">' +
           esc(FB.T('Close')) + '</button>'
         : '') + '</div>';
     openModal(rid === s.player.liege
@@ -7825,7 +8113,7 @@ window.FB = window.FB || {};
         UI.closeModal();
       }
     });
-    const gmDismiss = $('gm-dismiss');
+    const gmDismiss = $('gm-stack-close');
     if (gmDismiss) {
       gmDismiss.addEventListener('click', function () {
         UI.closeModal();
@@ -9085,17 +9373,18 @@ window.FB = window.FB || {};
   function governanceDomainHtml(s, summary) {
     const percent = Math.round(summary.domainMultiplier * 1000) / 10;
     const multiplier = Math.round(summary.domainMultiplier * 10000) / 10000;
-    let h = kv('Held directly', esc(FB.T('{held} of {cap} counties', {
-      held:summary.directCounties.length,
-      cap:summary.domainCap
-    }))) +
+    let h = '<div class="governance-domain-summary">' +
+      kv('Held directly', esc(FB.T('{held} of {cap} counties', {
+        held:summary.directCounties.length,
+        cap:summary.domainCap
+      }))) +
       kv('Realm-wide territory', esc(countyCountText(
         s, summary.realmCounties.length))) +
       kv('Direct tax & levy multiplier', esc(FB.T(
         '×{multiplier} ({percent}% of normal)', {
           multiplier:multiplier,
           percent:percent
-        })));
+        }))) + '</div>';
     if (summary.domainExcess) {
       h += '<div class="progressnote warnote">' + esc(FB.T(
         'Counties over the limit: {count}. The multiplier applies to your own demesne tax and levy, not vassal contributions.', {
@@ -9117,18 +9406,34 @@ window.FB = window.FB || {};
       const markers = [];
       if (pid === summary.capitalCountyId) markers.push(FB.T('capital'));
       if (pid === summary.homeCountyId) markers.push(FB.T('home'));
-      h += '<div class="governance-county-row">' +
+      const detailsId = 'governance-county-details-' + pid;
+      h += '<div class="governance-county-row settcard">' +
+        '<div class="governance-county-main">' +
         governanceCountyLink(pid, province.name, markers.join(' · ')) +
-        '<span>' + esc(FB.T('development {development}', {
+        '<span>' + esc(FB.T('Development {development}', {
           development:s.dev[pid] || 1
-        })) + '</span><span class="governance-county-protections">' +
+        })) + '</span></div><span class="governance-county-protections">' +
         grantProtectionButton(pid) +
         '<button type="button" class="btn small protection-toggle" ' +
         'data-autobuild-protection="' + esc(pid) + '" aria-pressed="' +
         (FB.isProtected(s, 'autoBuildCounty', pid) ? 'true' : 'false') + '">' +
         (FB.isProtected(s, 'autoBuildCounty', pid)
           ? '🔒 ' + esc(FB.T('No autobuild'))
-          : '⚙ ' + esc(FB.T('Allow autobuild'))) + '</button></span></div>';
+          : '⚙ ' + esc(FB.T('Allow autobuild'))) + '</button>' +
+        '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" ' +
+        'aria-controls="' + esc(detailsId) + '" title="' +
+        esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+        '">?</button></span></span>' +
+        '<div class="settcard-details governance-county-details hidden" id="' +
+        esc(detailsId) + '"><p><b>' + esc(FB.T('Reserve')) +
+        '</b><br>' + esc(FB.T(
+          'Keeps this county out of automatic and reviewed land-grant proposals.')) +
+        '</p><p><b>' + esc(FB.T('Autobuild')) + '</b><br>' + esc(FB.T(
+          'Controls whether household automation may begin construction in this county.')) +
+        '</p>' + (markers.length
+          ? '<p><b>' + esc(FB.T('Domain role')) + '</b><br>' +
+            esc(markers.join(' · ')) + '</p>' : '') + '</div></div>';
     }
     const grantStatus = FB.instantStatus(s, 'grant_land');
     if (grantStatus.shown) {
@@ -9975,13 +10280,40 @@ window.FB = window.FB || {};
     return def ? dt(s, 'privilege', defId, def, 'name') : defId;
   }
 
+  function privilegeRevocationRuleName(rule) {
+    if (rule === 'protected_term') {
+      return FB.T('Protected until the recorded term ends');
+    }
+    if (rule === 'term_only') return FB.T('Ends only with its contract');
+    if (rule === 'estates_vote') return FB.T('Requires an Estates vote');
+    if (rule === 'council_consent') return FB.T('Requires Council consent');
+    if (rule === 'policy_change') {
+      return FB.T('Ends when the governing policy changes');
+    }
+    return FB.T('No unilateral revocation');
+  }
+
+  function privilegeConstituencyName(id) {
+    if (id === 'commons') return FB.T('The commons');
+    if (id === 'guild') return FB.T('Guilds and merchants');
+    if (id === 'faith') return FB.T('Faith communities');
+    if (id === 'magnates') return FB.T('The magnates');
+    return FB.T('Organized petitioners');
+  }
+
+  function privilegeInfoButton(detailsId) {
+    return '<span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      esc(detailsId) + '" title="' + esc(FB.T('Details')) +
+      '" aria-label="' + esc(FB.T('Details')) + '">?</button></span>';
+  }
+
   UI.showPrivileges = function (returnView, replaceView) {
     const s = FB.state;
     const records = FB.privilegeSummary ? FB.privilegeSummary(s) : [];
     const demands = FB.collectiveDemandSummary
       ? FB.collectiveDemandSummary(s) : { pending:null, opposition:[] };
-    let h = '<p class="hint">' + esc(FB.T(
-      'Privileges are durable legal contracts. Mechanical effects remain in their ordinary modifier, monopoly, obligation, or Council ledger; this roll records who holds them and on what terms.')) + '</p>';
+    let h = '<div class="privilege-list">';
     if (!records.length) {
       h += '<div class="progressnote">' + esc(FB.T(
         'No active privilege is recorded.')) + '</div>';
@@ -9989,69 +10321,105 @@ window.FB = window.FB || {};
     for (const record of records) {
       const def = FBDATA.privileges[record.defId] || {};
       const revoke = FB.privilegeRevocationStatus(s, record.id);
-      h += '<div class="charcard"><div><div class="ccname">' +
-        (def.icon || '📜') + ' ' + esc(dt(s, 'privilege', record.defId,
-          def, 'name')) + '</div>' +
-        kv('Holder', esc(FB.T('{type}: {name}', {
-          type:record.holderType,
-          name:privilegePartyName(s, record.holderType, record.holderId)
-        }))) +
-        kv('Scope', esc(FB.T('{type}: {name}', {
-          type:record.scopeType,
-          name:privilegePartyName(s, record.scopeType, record.scopeId)
-        }))) +
-        kv('Grantor', esc(FB.T('{type}: {name}', {
-          type:record.grantorType,
-          name:privilegePartyName(s, record.grantorType, record.grantorId)
-        }))) +
+      const detailsId = 'privilege-details-' + record.id;
+      h += '<section class="privilege-card settcard" tabindex="0" ' +
+        'aria-describedby="' + esc(detailsId) + '">' +
+        '<div class="settcard-head"><b>' + (def.icon || '📜') + ' ' +
+        esc(dt(s, 'privilege', record.defId, def, 'name')) + '</b>' +
+        privilegeInfoButton(detailsId) + '</div>' +
+        '<div class="privilege-card-critical">' +
+        kv('Holder', esc(privilegePartyName(
+          s, record.holderType, record.holderId))) +
+        kv('Scope', esc(privilegePartyName(
+          s, record.scopeType, record.scopeId))) +
         kv('Exact effect', esc(privilegeEffectDescription(s, record, def))) +
         kv('Duration', esc(record.remainingDays === null
           ? FB.T('Indefinite while its legal source survives')
           : FB.T('{days} protected days remain', {
             days:record.remainingDays
           }))) +
-        kv('Revocation', esc(FB.T('{rule}: {reason}', {
-          rule:record.revocationRule,
-          reason:revoke.reason || FB.T('No unilateral revocation path')
-        }))) +
+        kv('Revocation', esc(revoke.ready
+          ? FB.T('Early revocation possible — unlawful')
+          : FB.T('No unilateral action'))) + '</div>' +
+        '<div class="settcard-details privilege-card-details hidden" id="' +
+        esc(detailsId) + '"><div class="privilege-legal-details">' +
+        kv('Grantor', esc(privilegePartyName(
+          s, record.grantorType, record.grantorId))) +
+        kv('Revocation rule', esc(privilegeRevocationRuleName(
+          record.revocationRule))) +
+        kv('Current status', esc(revoke.reason ||
+          FB.T('No unilateral revocation path'))) +
         privilegeTermsList(s, record.defId, def, FB.T('Rights'),
           'rights', def.rights) +
         privilegeTermsList(s, record.defId, def, FB.T('Exemptions'),
           'exemptions', def.exemptions) +
         privilegeTermsList(s, record.defId, def, FB.T('Obligations'),
-          'obligations', def.obligations) +
+          'obligations', def.obligations) + '</div></div>' +
         (revoke.ready
-          ? '<button type="button" class="btn" data-revoke-privilege="' +
-            esc(record.id) + '">' + esc(FB.T('Begin unlawful revocation…')) +
-            '</button>' : '') + '</div></div>';
+          ? '<div class="privilege-card-actions"><button type="button" ' +
+            'class="btn" data-revoke-privilege="' + esc(record.id) + '">' +
+            esc(FB.T('Begin unlawful revocation…')) + '</button></div>'
+          : '') + '</section>';
     }
-    h += '<div class="panelh">' + esc(FB.T('Collective opposition')) + '</div>';
+    h += '</div><div class="panelh">' +
+      esc(FB.T('Organized grievances')) + '</div>';
     if (demands.pending) {
       h += '<div class="progressnote warnote">' + esc(FB.T(
         '{constituency} currently demands {privilege}.', {
-          constituency:demands.pending.constituency,
+          constituency:privilegeConstituencyName(
+            demands.pending.constituency),
           privilege:privilegeDisplayName(s, demands.pending.privilegeId)
         })) + '</div>';
     }
     if (!demands.opposition.length) {
       h += '<div class="hint">' + esc(FB.T(
-        'No constituency is presently organized around a refused demand.')) + '</div>';
-    }
-    for (const opposition of demands.opposition) {
-      h += kv(opposition.constituency, esc(FB.T(
-        'Organization level {level}/5 · cause: {privilege}', {
-          level:opposition.level,
-          privilege:opposition.privilegeId
-            ? privilegeDisplayName(s, opposition.privilegeId)
-            : FB.T('unrecorded grievance')
-        })));
+        'No group is currently organizing around a refused or revoked privilege.')) +
+        '</div>';
+    } else {
+      h += '<div class="privilege-opposition-list">';
+      for (const opposition of demands.opposition) {
+        const oppositionDetailsId = 'privilege-opposition-details-' +
+          opposition.constituency;
+        const pressure = FB.clamp(
+          Math.round(Number(opposition.level) || 1), 1, 5) * 10;
+        const grievance = opposition.privilegeId
+          ? privilegeDisplayName(s, opposition.privilegeId)
+          : FB.T('an unresolved privilege');
+        h += '<div class="privilege-opposition-row settcard" tabindex="0" ' +
+          'aria-describedby="' + esc(oppositionDetailsId) + '">' +
+          '<div class="settcard-head"><b>' +
+          esc(privilegeConstituencyName(opposition.constituency)) + '</b>' +
+          privilegeInfoButton(oppositionDetailsId) + '</div>' +
+          '<div class="privilege-opposition-copy"><span>' + esc(FB.T(
+            'Organizing around {privilege}', { privilege:grievance })) +
+          '</span><small>' + esc(FB.T(
+            'Adds weight when the next eligible collective demand is chosen.')) +
+          '</small></div>' +
+          '<div class="settcard-details privilege-opposition-details hidden" ' +
+          'id="' + esc(oppositionDetailsId) + '">' +
+          kv('Demand priority', esc(FB.T(
+            '+{pressure} when eligible demands are ranked', {
+              pressure:pressure
+            }))) + '<p>' + esc(FB.T(
+            'This does not start a revolt or battle by itself. Refusing another demand from this group or unlawfully revoking its privilege increases the priority, up to +50. Granting its eventual demand clears the grievance.')) +
+          '</p></div></div>';
+      }
+      h += '</div>';
     }
     h += '<div class="gm-footer"><button type="button" class="btn" ' +
       'id="privileges-back">' +
       esc(returnView === 'governance' ? FB.T('Back') : FB.T('Close')) +
       '</button></div>';
+    const titleDetails = '<p>' + esc(FB.T(
+      'Privileges are durable legal contracts. Mechanical effects remain in their ordinary modifier, monopoly, obligation, or Council ledger; this roll records who holds them and on what terms.')) +
+      '</p><p>' + esc(FB.T(
+        'Contract cards keep the authoritative effect and current revocation state visible. Hover or focus a card, or use Details on compact layouts, to inspect its grantor, legal rule, rights, exemptions, and obligations.')) +
+      '</p><p>' + esc(FB.T(
+        'Refused demands and unlawful revocations create organized grievances. They add 10 to 50 priority points when the next eligible collective demand is chosen; granting that group’s eventual demand clears its grievance. They do not start a revolt or battle by themselves.')) + '</p>';
     openModal(FB.T('📜 Privileges & collective demands'), h, {
-      modalClass:'fullsheet-modal', historyView:returnView === 'governance',
+      modalClass:'fullsheet-modal privileges-modal',
+      historyView:returnView === 'governance',
+      titleDetailsHtml:titleDetails,
       replaceView:!!replaceView,
       historyBackRender:function () { UI.showGovernance('institution'); }
     });
@@ -10401,23 +10769,43 @@ window.FB = window.FB || {};
     for (const seat of FB.councilSeats(s)) {
       if (seats[seat.id]) seated[seats[seat.id]] = 1;
     }
-    const unseated = FB.playerVassals(s).filter(function (vid) { return !seated[vid]; });
-    h += '<div class="panelh">' + esc(FB.T('Automatic appointment reservations')) +
-      '</div><div class="cmeta">' + esc(FB.T(
+    const councilVassals = FB.playerVassals(s);
+    const unseated = councilVassals.filter(function (vid) { return !seated[vid]; });
+    let reservedCount = 0;
+    for (const vid of councilVassals) {
+      if (FB.isProtected(s, 'councilRealm', vid)) reservedCount++;
+    }
+    const reservationsOpen = !!(restoreContext &&
+      restoreContext.reservationsOpen);
+    h += '<details class="council-reservations" id="council-reservations"' +
+      (reservationsOpen ? ' open' : '') + '><summary><span>' +
+      esc(FB.T('Automatic appointment reservations')) + '</span><small>' +
+      esc(FB.T('{reserved} reserved · {automatic} eligible', {
+        reserved:reservedCount,
+        automatic:Math.max(0, councilVassals.length - reservedCount)
+      })) + '</small></summary><div class="council-reservation-body">' +
+      '<p class="cmeta">' + esc(FB.T(
         'Reserved vassals are skipped when vacancies fill automatically and are not recommended first. You may still appoint them manually.')) +
-      '</div><div class="council-protection-list">';
-    for (const vid of FB.playerVassals(s)) {
+      '</p><div class="council-protection-list">';
+    for (const vid of councilVassals) {
       const realm = s.realms[vid];
       if (!realm) continue;
-      h += '<button type="button" class="btn small" data-council-protection="' +
-        esc(vid) + '" aria-pressed="' +
-        (FB.isProtected(s, 'councilRealm', vid) ? 'true' : 'false') + '">' +
-        (FB.isProtected(s, 'councilRealm', vid) ? '🔒 ' : '🔓 ') +
-        esc(realm.ruler ? realm.ruler.name : realm.name) + ' · ' +
-        esc(FB.isProtected(s, 'councilRealm', vid)
-          ? FB.T('Reserved') : FB.T('Automatic allowed')) + '</button>';
+      const reserved = FB.isProtected(s, 'councilRealm', vid);
+      const rulerName = realm.ruler ? realm.ruler.name : realm.name;
+      h += '<button type="button" class="btn small council-protection" ' +
+        'data-council-protection="' + esc(vid) + '" aria-pressed="' +
+        (reserved ? 'true' : 'false') + '" aria-label="' + esc(reserved
+          ? FB.T('Allow automatic appointment for {ruler}', {
+            ruler:rulerName
+          })
+          : FB.T('Reserve {ruler} from automatic appointment', {
+            ruler:rulerName
+          })) + '">' + (reserved ? '🔒 ' : '🔓 ') +
+        '<span class="council-protection-name">' + esc(rulerName) +
+        '</span><span class="council-protection-state">' +
+        esc(reserved ? FB.T('Reserved') : FB.T('Eligible')) + '</span></button>';
     }
-    h += '</div>';
+    h += '</div></div></details>';
     for (const seat of FB.councilSeats(s)) {
       const rid = seats[seat.id];
       const r = rid ? s.realms[rid] : null;
@@ -10431,7 +10819,8 @@ window.FB = window.FB || {};
         const term = electionStore && electionStore[seat.id];
         const dismissal = FB.councilDismissalStatus
           ? FB.councilDismissalStatus(s, seat.id) : { ready:true };
-        h += '<div class="charcard"><div class="council-ruler-heraldry">' +
+        h += '<div class="charcard council-officer-card">' +
+          '<div class="council-ruler-heraldry">' +
           '<button type="button" class="council-ruler-heraldry-button" ' +
           'data-council-realm="' + esc(rid) + '" data-ruler-card-tooltip="' +
           esc(rid) + '" data-council-seat="' + esc(seat.id) + '" aria-label="' +
@@ -10439,32 +10828,34 @@ window.FB = window.FB || {};
             ruler:r.ruler.name
           })) + '"><canvas class="pface" width="56" height="64" id="crest_' +
           esc(seat.id) + '"></canvas></button></div>' +
-          '<div><div class="ccname">' + esc(r.ruler.name) + '</div>' +
-          '<div class="ccmeta">' + esc(r.name) + (trait ? ' · ' + esc(trait) : '') + '</div>' +
-          '<div class="ccmeta ' + standingClass(op) + '">' +
+          '<div class="council-officer-main"><div class="ccname">' +
+          esc(r.ruler.name) + '</div>' +
+          '<div class="ccmeta council-ruler-info">' + esc(r.name) +
+          (trait ? ' · ' + esc(trait) : '') + '</div>' +
+          '<div class="ccmeta council-ruler-info ' + standingClass(op) + '">' +
           esc(FB.T('Standing {standing}', {
             standing:standingText(op)
           })) + '</div>' +
           (term && term.holderId === rid
-            ? '<div class="ccmeta">' + esc(FB.T(
+            ? '<div class="ccmeta council-ruler-info">' + esc(FB.T(
               'Confirmed fixed term · {days} days remain', {
                 days:Math.max(0, Math.ceil(term.endTurn - s.turn))
               })) + '</div>' : '') +
-          '<div style="margin-top:6px">' +
+          '<div class="council-officer-actions">' +
           '<button class="btn" data-council-realm="' + esc(rid) + '">' +
-          esc(FB.T('Ruler card…')) + '</button> ' +
+          esc(FB.T('Ruler card…')) + '</button>' +
           '<button class="btn" data-council-gift="' + esc(rid) + '">🎁 ' +
-          esc(FB.T('Offer a gift…')) + '</button> ' +
+          esc(FB.T('Offer a gift…')) + '</button>' +
           (unseated.length
             ? '<button class="btn" data-council-assign="' + esc(seat.id) + '">🏛 ' +
-              esc(FB.T('Choose another officer…')) + '</button> '
+              esc(FB.T('Choose another officer…')) + '</button>'
             : '') +
           '<button class="btn" data-dismiss="' + esc(seat.id) + '"' +
           (dismissal.ready ? '' : ' disabled') + '>' +
-          esc(FB.T('Dismiss')) + '</button>' +
-          (dismissal.ready ? '' : '<div class="ccmeta">' +
+          esc(FB.T('Dismiss')) + '</button></div>' +
+          (dismissal.ready ? '' : '<div class="ccmeta council-dismissal-reason">' +
             esc(dismissal.reason) + '</div>') +
-          '</div></div></div>';
+          '</div></div>';
       } else {
         h += '<div class="cmeta">' + esc(FB.T('Vacant.')) + '</div>';
         if (unseated.length) {
@@ -10496,6 +10887,7 @@ window.FB = window.FB || {};
         }
       } : {};
     councilOptions.replaceView = !!replaceView;
+    councilOptions.modalClass = 'council-modal';
     councilOptions.guide = guideModalOption('council-guide', 'government',
       'Guide: government');
     openModal(FB.T('The Royal Council'), h, councilOptions);
@@ -10567,9 +10959,12 @@ window.FB = window.FB || {};
     document.querySelectorAll('[data-council-protection]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         const rid = btn.dataset.councilProtection;
+        const reservations = $('council-reservations');
         FB.setProtected(s, 'councilRealm', rid,
           !FB.isProtected(s, 'councilRealm', rid));
-        UI.showCouncil(returnView, returnContext, true);
+        UI.showCouncil(returnView, returnContext, true, {
+          reservationsOpen:!!(reservations && reservations.open)
+        });
       });
     });
     document.querySelectorAll('[data-dismiss]').forEach(function (btn) {
@@ -11764,7 +12159,7 @@ window.FB = window.FB || {};
     }
     h += '</div><div class="gm-footer"><button class="btn" ' +
       'id="household-standard-back">' +
-      esc(FB.T('Back to household')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal((def.icon || '🏠') + ' ' + householdStandardName(s, id), h, {
       historyView:true,
       modalClass:'fullsheet-modal household-standard-modal',
@@ -12710,7 +13105,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn primary" id="education-policy-preview">' +
       esc(FB.T('Preview policy')) + '</button>' +
       '<button type="button" class="btn" id="education-policy-back">' +
-      esc(FB.T('Back to Household Plan')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('🎓 Household Education Policy'), h, {
       historyView:true,
       modalClass:'fullsheet-modal education-policy-modal',
@@ -12899,7 +13294,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn primary" id="match-policy-preview">' +
       esc(FB.T('Preview recommendations')) + '</button>' +
       '<button type="button" class="btn" id="match-policy-back">' +
-      esc(FB.T('Back to Household Plan')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('💍 Descendant Match Assistant'), h, {
       historyView:true,
       modalClass:'fullsheet-modal match-policy-modal',
@@ -14589,6 +14984,152 @@ window.FB = window.FB || {};
     return s.realms[rid] ? s.realms[rid].name : rid || FB.T('None');
   }
 
+  function papalInfoButton(detailsId) {
+    return '<span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      esc(detailsId) + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span>';
+  }
+
+  function papalActionCardHtml(id, icon, label, details, disabled) {
+    const detailsId = id + '-details';
+    return '<div class="papacy-action-card settcard"' + (disabled
+      ? ' tabindex="0" role="group" aria-label="' + esc(label) +
+        '" aria-describedby="' + esc(detailsId) + '"' : '') +
+      '><button type="button" class="actionbtn" id="' + esc(id) + '"' +
+      (disabled ? ' disabled' : '') + '>' + icon + ' ' + esc(label) +
+      '</button>' + papalInfoButton(detailsId) +
+      '<div class="settcard-details papacy-action-details hidden" id="' +
+      esc(detailsId) + '"><p>' + esc(details) + '</p></div></div>';
+  }
+
+  function papalBallotFlowHtml(s, papacy, obedience, election, leans) {
+    const ballots = election && election.ballots || [];
+    const ballot = ballots.length ? ballots[ballots.length - 1] : null;
+    const ballotVotes = ballot && ballot.votes || [];
+    const usesBallot = !!ballotVotes.length;
+    const rows = usesBallot ? ballotVotes : (leans || []);
+    const groups = {}, orderedGroups = [], seenElectors = {};
+
+    function groupFor(candidateId) {
+      const key = candidateId || 'undeclared';
+      if (!groups[key]) {
+        const candidate = candidateId && s.chars[candidateId];
+        groups[key] = {
+          key:key,
+          candidateId:candidateId || null,
+          candidate:candidate || null,
+          name:candidate ? FB.papalDisplayName(s, candidate) :
+            FB.T('No declared lean'),
+          voters:[]
+        };
+        orderedGroups.push(groups[key]);
+      }
+      return groups[key];
+    }
+
+    function addElector(c, row) {
+      const record = papacy.cardinals[c.id] || null;
+      if ((!record && !row) || seenElectors[c.id]) return;
+      seenElectors[c.id] = 1;
+      groupFor(row && row.candidateId).voters.push({
+        character:c, record:record, row:row || null
+      });
+    }
+
+    for (let i = 0; i < rows.length; i++) {
+      const c = s.chars[rows[i].electorId];
+      if (c) addElector(c, rows[i]);
+    }
+    for (const cardinalId of obedience.college) {
+      const c = s.chars[cardinalId];
+      if (c && !c.dead) addElector(c, null);
+    }
+
+    orderedGroups.sort(function (a, b) {
+      if (!a.candidateId && b.candidateId) return 1;
+      if (a.candidateId && !b.candidateId) return -1;
+      return b.voters.length - a.voters.length || a.name.localeCompare(b.name);
+    });
+
+    let h = '<div class="papacy-ballot-mode">' + esc(usesBallot
+      ? FB.T('Last ballot · {threshold} votes required', {
+        threshold:ballot.threshold
+      })
+      : election
+        ? FB.T('Projected lean · the saved ballot may still vary')
+        : FB.T('College roster · no election is active')) + '</div>' +
+      '<div class="papacy-ballot-flow" role="list" aria-label="' +
+      esc(usesBallot ? FB.T('Last Papal ballot') : election
+        ? FB.T('Current Papal leans') : FB.T('College roster')) + '">';
+
+    for (let gi = 0; gi < orderedGroups.length; gi++) {
+      const group = orderedGroups[gi];
+      let countText;
+      if (usesBallot) {
+        countText = group.voters.length === 1
+          ? FB.T('{count} vote', { count:group.voters.length })
+          : FB.T('{count} votes', { count:group.voters.length });
+      } else {
+        countText = group.voters.length === 1
+          ? FB.T('{count} elector', { count:group.voters.length })
+          : FB.T('{count} electors', { count:group.voters.length });
+      }
+      h += '<section class="papacy-ballot-candidate-group" role="listitem" ' +
+        'data-papal-ballot-candidate="' + esc(group.candidateId || '') + '">' +
+        '<header>' + (group.candidate
+          ? '<button type="button" class="papacy-ballot-candidate" ' +
+            'data-papal-character="' + esc(group.candidate.id) + '">' +
+            esc(group.name) + '</button>'
+          : '<b>' + esc(group.name) + '</b>') +
+        '<span>' + esc(countText) + '</span></header>' +
+        '<div class="papacy-ballot-voters">';
+      for (let vi = 0; vi < group.voters.length; vi++) {
+        const voter = group.voters[vi];
+        const c = voter.character;
+        const record = voter.record;
+        const row = voter.row;
+        const detailsId = 'papal-ballot-voter-details-' + c.id;
+        const offices = [];
+        if (obedience.deanId === c.id) offices.push(FB.T('Dean'));
+        if (obedience.camerlengoId === c.id) offices.push(FB.T('Camerlengo'));
+        let details;
+        if (record) {
+          const orderName = papalDefinitionText(s, 'papalCardinalOrder',
+            FBDATA.papacy.cardinalOrders, record.order, 'name', 'Cardinal');
+          const blocName = papalDefinitionText(s, 'papalCardinalBloc',
+            FBDATA.papacy.blocs, record.bloc, 'name', record.bloc);
+          details = kv('Order', esc(orderName)) +
+            kv('Title church', esc(record.titleChurch || FB.T('None'))) +
+            kv('Curial bloc', esc(blocName)) +
+            (offices.length ? kv('College office', esc(offices.join(', '))) : '');
+        } else {
+          details = kv('College status', esc(FB.T(
+            'Former elector; current office details are no longer available.')));
+        }
+        if (row) {
+          const voteLabel = usesBallot ? FB.T('Last vote') : FB.T('Current lean');
+          const scoreLabel = usesBallot ? FB.T('Ballot score') : FB.T('Lean score');
+          details += kv(voteLabel, esc(group.name)) +
+            kv(scoreLabel, String(row.score)) +
+            kv('Relevant opinion', esc((row.opinion > 0 ? '+' : '') +
+              row.opinion));
+        } else {
+          details += kv('Ballot status', esc(FB.T('No vote or lean recorded')));
+        }
+        h += '<div class="papacy-ballot-voter settcard" data-papal-voter="' +
+          esc(c.id) + '"><button type="button" class="papacy-ballot-voter-main" ' +
+          'data-papal-character="' + esc(c.id) + '" aria-describedby="' +
+          esc(detailsId) + '"><span>' + esc(FB.fullName(c)) + '</span></button>' +
+          papalInfoButton(detailsId) +
+          '<div class="settcard-details papacy-ballot-voter-details hidden" id="' +
+          esc(detailsId) + '">' + details + '</div></div>';
+      }
+      h += '</div></section>';
+    }
+    return h + '</div>';
+  }
+
   function papalActionResult(result, success, failure, obedienceId) {
     UI.showPapacy(obedienceId);
     UI.toast(result ? FB.T(success) : FB.T(failure));
@@ -14616,34 +15157,53 @@ window.FB = window.FB || {};
     const isPlayerPope = obedience.claimantId === s.player.charId;
     const isPlayerElector = obedience.college.indexOf(s.player.charId) >= 0 &&
       FB.isCardinal(s, me);
-    let h = '<div class="papacy-summary">' +
-      '<section class="papacy-card">' + panelh('Obedience') +
-      kv('Recognition', esc(chosen === recognizedId
-        ? FB.T('Recognized by you') : FB.T('Not recognized by you'))) +
-      kv('Claimant', esc(pope ? FB.papalDisplayName(s, pope) :
-        FB.T('The Apostolic See is vacant'))) +
-      kv('Authority', esc(FB.T('{authority}/100 · {band}', {
-        authority:Math.round(obedience.authority),
-        band:dt(s, 'papalAuthorityBand', authorityBand.id,
-          authorityBand, 'name')
-      }))) +
+    const overviewDetailsId = 'papacy-overview-details';
+    const ballotRule = law.threshold === 'twoThirds'
+      ? FB.T('Two-thirds of all electors') : FB.T('Simple majority');
+    const titleDetails = '<p>' + esc(FB.T(
+      'This sheet follows the Papal obedience recognized by your character. Rival obediences retain separate claimants, Colleges, authority, supporters, sanctions, and elections.')) +
+      '</p><p><b>' + esc(FB.T('Authority gates')) + '</b><br>' +
+      esc(FB.T(
+        '{sanctions} enables justified sanctions and investiture demands; {arbitrary} enables arbitrary sanctions and Catholic great holy wars; {council} enables a general council.', {
+          sanctions:FBDATA.papacy.authority.gates.sanctions,
+          arbitrary:FBDATA.papacy.authority.gates.arbitrarySanction,
+          council:FBDATA.papacy.authority.gates.council
+        })) + '</p><p><b>' + esc(FB.T('Ballot diagram')) + '</b><br>' +
+      esc(FB.T(
+        'Candidate columns group every elector beneath the person they backed. Before a ballot, the same diagram shows projected leans; the saved ballot may still vary. Hover or focus an elector on desktop, or use Details on touch, for order, title church, bloc, score, and relevant opinion.')) +
+      '</p>';
+    const overviewDetails =
       kv('Supporters', esc(FB.T('{count} sovereign realms', {
         count:obedience.supporters.length
       }))) +
       kv('Strongest patron', esc(papalRealmLabel(s, obedience.strongestPatron))) +
-      '</section><section class="papacy-card">' + panelh('Law and governance') +
-      kv('Election law', esc(dt(s, 'papalElectionLaw', law.id,
-        law, 'name'))) +
-      kv('Ballot rule', esc(law.threshold === 'twoThirds'
-        ? FB.T('Two-thirds of all electors')
-        : FB.T('Simple majority'))) +
+      kv('Election law', esc(dt(s, 'papalElectionLaw', law.id, law, 'name'))) +
+      kv('Ballot rule', esc(ballotRule)) +
       kv('Outside assent', esc(law.outsideAssent
         ? FB.T('Required for legitimacy') : FB.T('Cannot override the Cardinals'))) +
       kv('Enclosure', esc(law.enclosed
         ? FB.T('Ten-day vacancy, then conclave') : FB.T('Open election'))) +
       kv('Investiture', esc(policy ? dt(s, 'papalInvestiturePolicy',
-        investiture.policy, policy, 'name') : FB.T('Not applicable'))) +
-      '</section></div>';
+        investiture.policy, policy, 'name') : FB.T('Not applicable')));
+    let h = '<div class="papacy-summary">' +
+      '<section class="papacy-card papacy-overview settcard">' +
+      '<div class="settcard-head"><b>' + esc(FB.T('Obedience')) + '</b>' +
+      papalInfoButton(overviewDetailsId) + '</div>' +
+      kv('Claimant', esc(pope ? FB.papalDisplayName(s, pope) :
+        FB.T('The Apostolic See is vacant'))) +
+      kv('Recognition', esc(chosen === recognizedId
+        ? FB.T('Recognized by you') : FB.T('Not recognized by you'))) +
+      kv('Authority', esc(FB.T('{authority}/100 · {band}', {
+        authority:Math.round(obedience.authority),
+        band:dt(s, 'papalAuthorityBand', authorityBand.id,
+          authorityBand, 'name')
+      }))) +
+      kv('College', esc(FB.T('{current}/{target} electors', {
+        current:obedience.college.length,
+        target:FBDATA.papacy.targetCollege
+      }))) +
+      '<div class="settcard-details papacy-overview-details hidden" id="' +
+      overviewDetailsId + '">' + overviewDetails + '</div></section></div>';
 
     const activeObediences = [];
     for (const oid in papacy.obediences) {
@@ -14708,17 +15268,25 @@ window.FB = window.FB || {};
     }
 
     if (election && election.phase !== 'resolved') {
-      h += panelh(law.enclosed ? 'Conclave' : 'Papal election');
-      h += '<section class="papacy-card">' +
-        kv('Phase', esc(election.phase === 'name'
-          ? FB.T('Regnal name') : election.phase === 'vacancy'
-            ? FB.T('Vacancy') : FB.T('Balloting'))) +
-        kv('Ballot', String(election.round || 0)) +
+      const electionDetailsId = 'papacy-election-details';
+      const electionDetails =
         kv('Compromise candidate', esc(election.compromiseId &&
           s.chars[election.compromiseId]
           ? FB.fullName(s.chars[election.compromiseId]) : FB.T('None'))) +
         kv('Promises saved', String((election.promises || []).length)) +
-        '</section>';
+        '<p>' + esc(FB.T(
+          'Every elector’s displayed lean is a read-only projection. A ballot saves the exact vote, score, and relevant opinion and may vary through election uncertainty.')) +
+        '</p>';
+      h += panelh(law.enclosed ? 'Conclave' : 'Papal election');
+      h += '<section class="papacy-card papacy-election-card settcard">' +
+        '<div class="settcard-head"><b>' + esc(FB.T('Election state')) +
+        '</b>' + papalInfoButton(electionDetailsId) + '</div>' +
+        kv('Phase', esc(election.phase === 'name'
+          ? FB.T('Regnal name') : election.phase === 'vacancy'
+            ? FB.T('Vacancy') : FB.T('Balloting'))) +
+        kv('Ballot', String(election.round || 0)) +
+        '<div class="settcard-details papacy-election-details hidden" id="' +
+        electionDetailsId + '">' + electionDetails + '</div></section>';
       if (election.phase === 'name' &&
           election.winnerId === s.player.charId) {
         h += '<div class="gm-list">';
@@ -14738,9 +15306,9 @@ window.FB = window.FB || {};
             'The enclosed conclave opens in {days} days.', { days:wait })) +
             '</div>';
         } else if (isPlayerElector) {
-          h += '<div class="gm-body-text"><p>' + esc(FB.T(
-            'Choose one tactic for this ballot. Every elector’s current lean is shown below; the saved ballot may still vary.')) +
-            '</p></div><div class="papacy-tactics">';
+          h += '<div class="progressnote">' +
+            esc(FB.T('Choose one tactic for this ballot.')) +
+            '</div><div class="papacy-tactics">';
           for (const tactic of FBDATA.papacy.tactics) {
             if (tactic.closedFrom && s.date.year >= tactic.closedFrom) continue;
             const disabled = tactic.id === 'backing' && s.player.prestige < 100;
@@ -14748,10 +15316,16 @@ window.FB = window.FB || {};
               tactic, 'name');
             const tacticDesc = dt(s, 'papalElectionTactic', tactic.id,
               tactic, 'desc');
-            h += '<button class="btn small" data-papal-tactic="' +
-              esc(tactic.id) + '" title="' + esc(tacticDesc) + '"' +
-              (disabled ? ' disabled' : '') + '>' +
-              esc(tacticName) + '</button>';
+            const tacticDetailsId = 'papal-tactic-details-' + tactic.id;
+            const tacticDetails = '<p>' + esc(tacticDesc) + '</p>' +
+              (disabled ? '<p class="warnote">' + esc(FB.T(
+                'Requires at least 100 prestige.')) + '</p>' : '');
+            h += '<div class="papacy-tactic-card settcard"><button ' +
+              'class="btn small" data-papal-tactic="' + esc(tactic.id) + '"' +
+              (disabled ? ' disabled' : '') + '>' + esc(tacticName) +
+              '</button>' + papalInfoButton(tacticDetailsId) +
+              '<div class="settcard-details papacy-tactic-details hidden" id="' +
+              esc(tacticDetailsId) + '">' + tacticDetails + '</div></div>';
           }
           h += '</div>';
         } else {
@@ -14763,71 +15337,27 @@ window.FB = window.FB || {};
     }
 
     const leans = election ? FB.papalElectionLeans(s, obedience.id) : [];
-    const leanByElector = {};
-    for (const lean of leans) leanByElector[lean.electorId] = lean;
     h += panelh(s.date.year >= 1150 ? 'College of Cardinals' : 'Cardinal electors') +
-      '<div class="papacy-college">';
-    for (const cardinalId of obedience.college) {
-      const c = s.chars[cardinalId];
-      const record = papacy.cardinals[cardinalId];
-      if (!c || c.dead || !record) continue;
-      const lean = leanByElector[c.id];
-      const votedId = election && election.lastVotes &&
-        election.lastVotes[c.id];
-      const leaning = lean && lean.candidateId && s.chars[lean.candidateId];
-      const voted = votedId && s.chars[votedId];
-      const offices = [];
-      if (obedience.deanId === c.id) offices.push(FB.T('Dean'));
-      if (obedience.camerlengoId === c.id) offices.push(FB.T('Camerlengo'));
-      h += '<button class="papacy-elector" ' +
-        'data-papal-character="' + esc(c.id) + '">' +
-        '<span><b>' + esc(FB.fullName(c)) + '</b><small>' +
-        esc(papalDefinitionText(s, 'papalCardinalOrder',
-          FBDATA.papacy.cardinalOrders, record.order, 'name',
-          'Cardinal')) + ' · ' + esc(record.titleChurch) +
-        ' · ' + esc(papalDefinitionText(s, 'papalCardinalBloc',
-          FBDATA.papacy.blocs, record.bloc, 'name', record.bloc)) +
-        (offices.length ? ' · ' + esc(offices.join(', ')) : '') +
-        '</small></span><span class="papacy-vote">' +
-        esc(voted ? FB.T('Voted: {name}', { name:FB.papalDisplayName(s, voted) })
-          : leaning ? FB.T('Leans: {name}', {
-            name:FB.papalDisplayName(s, leaning)
-          }) : FB.T('No declared lean')) +
-        (lean ? '<small>' + esc(FB.T('relevant opinion {opinion}', {
-          opinion:(lean.opinion > 0 ? '+' : '') + lean.opinion
-        })) + '</small>' : '') +
-        '</span></button>';
-    }
-    h += '</div>';
+      papalBallotFlowHtml(s, papacy, obedience, election, leans);
 
-    if (election && election.lastCounts &&
-        Object.keys(election.lastCounts).length) {
-      const countText = [];
-      for (const candidateId in election.lastCounts) {
-        const candidate = s.chars[candidateId];
-        if (candidate) countText.push(FB.T('{name}: {votes}', {
-          name:FB.papalDisplayName(s, candidate),
-          votes:election.lastCounts[candidateId]
-        }));
-      }
-      h += '<div class="progressnote">' +
-        esc(FB.T('Last ballot · {count}', {
-          count:countText.join(' · ')
-        })) + '</div>';
-    }
-
-    h += panelh('Investiture') + '<section class="papacy-card">' +
-      '<p>' + esc(policy ? dt(s, 'papalInvestiturePolicy',
-        investiture.policy, policy, 'desc') :
-        FB.T('Your non-Catholic realm has no Catholic investiture policy.')) +
+    const investitureDetailsId = 'papacy-investiture-details';
+    const investitureName = policy ? dt(s, 'papalInvestiturePolicy',
+      investiture.policy, policy, 'name') : FB.T('Not applicable');
+    const investitureDetails = '<p>' + esc(policy
+      ? dt(s, 'papalInvestiturePolicy', investiture.policy, policy, 'desc')
+      : FB.T('Your non-Catholic realm has no Catholic investiture policy.')) +
       '</p>';
+    h += panelh('Investiture') +
+      '<section class="papacy-card papacy-investiture-card settcard">' +
+      '<div class="settcard-head"><b>' + esc(investitureName) + '</b>' +
+      papalInfoButton(investitureDetailsId) + '</div>';
     if (policy) {
-      h += '<p class="hint">' + esc(FB.T(
+      h += '<div class="papacy-policy-effects">' + esc(FB.T(
         'Tax {tax}% · realm strength {strength}% · seasonal piety {piety}', {
           tax:Math.round(policy.tax * 100),
           strength:Math.round(policy.strength * 100),
           piety:(policy.piety > 0 ? '+' : '') + policy.piety
-        })) + '</p>';
+        })) + '</div>';
       const policyAction = FB.isPlayerSovereign(s)
         ? 'data-set-investiture' : s.player.liege
           ? 'data-petition-investiture' : null;
@@ -14846,7 +15376,8 @@ window.FB = window.FB || {};
         h += '</div>';
       }
     }
-    h += '</section>';
+    h += '<div class="settcard-details papacy-investiture-details hidden" id="' +
+      investitureDetailsId + '">' + investitureDetails + '</div></section>';
 
     const activeSentences = [];
     for (const key in papacy.excommunications) {
@@ -14871,55 +15402,51 @@ window.FB = window.FB || {};
 
     if (isPlayerPope) {
       h += panelh('Papal governance') + '<div class="gm-list">';
-      h += '<button class="actionbtn" id="papal-consistory"' +
-        (obedience.college.length >= FBDATA.papacy.targetCollege ||
-          obedience.lastConsistoryYear === s.date.year ? ' disabled' : '') +
-        '>⛪ ' + esc(FB.T('Hold a consistory')) +
-        '<span class="adesc">' + esc(FB.T(
-          'Appoint up to two Cardinals while the College is below twelve.')) +
-        '</span></button>';
-      h += '<button class="actionbtn" id="papal-legation"' +
-        (obedience.lastLegationYear === s.date.year ||
-          s.player.gold < FBDATA.papacy.balance.popeLegationGold
-          ? ' disabled' : '') + '>📜 ' + esc(FB.T('Send a legation')) +
-        '<span class="adesc">' + esc(FB.T(
+      h += papalActionCardHtml('papal-consistory', '⛪',
+        FB.T('Hold a consistory'), FB.T(
+          'Appoint up to two Cardinals while the College is below twelve. This can be done once per year.'),
+        obedience.college.length >= FBDATA.papacy.targetCollege ||
+          obedience.lastConsistoryYear === s.date.year);
+      h += papalActionCardHtml('papal-legation', '📜',
+        FB.T('Send a legation · {money:gold}', {
+          gold:FBDATA.papacy.balance.popeLegationGold
+        }), FB.T(
           'Spend {money:gold} once this year to build one authority.', {
             gold:FBDATA.papacy.balance.popeLegationGold
-          })) + '</span></button>';
-      h += '<button class="actionbtn" id="papal-audience">🤝 ' +
-        esc(FB.T('Receive a ruler in audience')) + '</button>';
+          }), obedience.lastLegationYear === s.date.year ||
+          s.player.gold < FBDATA.papacy.balance.popeLegationGold);
+      h += papalActionCardHtml('papal-audience', '🤝',
+        FB.T('Receive a ruler in audience'), FB.T(
+          'Choose a Catholic ruler. Each ruler may be received once per year; the audience grants 10 piety and improves that realm’s Standing by 10.'), false);
       if (FB.papacyInSchism(s)) {
-        h += '<button class="actionbtn" id="papal-recognition">⚖ ' +
-          esc(FB.T('Bargain for recognition')) +
-          '<span class="adesc">' + esc(FB.T(
-            'Offer patronage to a sovereign that recognizes a rival claimant.')) +
-          '</span></button>';
+        h += papalActionCardHtml('papal-recognition', '⚖',
+          FB.T('Bargain for recognition'), FB.T(
+            'Offer patronage to a sovereign that recognizes a rival claimant. The target review shows the cost, Standing, and yearly limit.'), false);
       }
-      h += '<button class="actionbtn" id="papal-investiture-demands"' +
-        (s.date.year < FBDATA.papacy.investiture.reformFrom ||
-          obedience.authority <
-            FBDATA.papacy.authority.gates.investiture ? ' disabled' : '') +
-        '>📜 ' + esc(FB.T('Demand canonical investiture')) + '</button>';
-      h += '<button class="actionbtn" id="papal-sanctions"' +
-        (obedience.authority <
-          FBDATA.papacy.authority.gates.sanctions ? ' disabled' : '') +
-        '>⛓ ' + esc(FB.T('Issue an excommunication')) + '</button>';
-      h += '<button class="actionbtn" id="papal-great-holy-war"' +
-        (FB.canCallGreatHolyWar(s, 'catholic', null, 'player')
-          ? '' : ' disabled') + '>📯 ' +
-        esc(FB.T('Call a Catholic great holy war')) + '</button>';
+      h += papalActionCardHtml('papal-investiture-demands', '📜',
+        FB.T('Demand canonical investiture'), FB.T(
+          'Choose a Catholic sovereign who still uses lay investiture. Reform date, Papal authority, faith, and current policy are checked before the demand is sent.'),
+        s.date.year < FBDATA.papacy.investiture.reformFrom ||
+          obedience.authority < FBDATA.papacy.authority.gates.investiture);
+      h += papalActionCardHtml('papal-sanctions', '⛓',
+        FB.T('Issue an excommunication'), FB.T(
+          'Choose a ruler and review justified or arbitrary sentences, their recorded grounds, piety cost, authority requirement, and cooldown.'),
+        obedience.authority < FBDATA.papacy.authority.gates.sanctions);
+      h += papalActionCardHtml('papal-great-holy-war', '📯',
+        FB.T('Call a Catholic great holy war'), FB.T(
+          'Open the Catholic great holy war target review. Authority, schism, faith, campaign, and target eligibility are checked before the call.'),
+        !FB.canCallGreatHolyWar(s, 'catholic', null, 'player'));
       if (FB.papacyInSchism(s)) {
-        h += '<button class="actionbtn" id="papal-council"' +
-          (obedience.authority < FBDATA.papacy.authority.gates.council ||
+        h += papalActionCardHtml('papal-council', '🕊',
+          FB.T('Call a general council'), FB.T(
+            'Review reunification outcomes after the schism has lasted ten years. The council may recognize a claimant or depose all claimants for a compromise outsider.'),
+          obedience.authority < FBDATA.papacy.authority.gates.council ||
             !isFinite(papacy.schismStartedTurn) ||
             s.turn - papacy.schismStartedTurn <
-              FBDATA.papacy.schism.councilAfterDays ? ' disabled' : '') +
-          '>🕊 ' + esc(FB.T('Call a general council')) + '</button>';
-        h += '<button class="actionbtn" id="papal-submit-claim">🕊 ' +
-          esc(FB.T('Submit your claim voluntarily')) +
-          '<span class="adesc">' + esc(FB.T(
-            'End your obedience and continue as a retired former Cardinal.')) +
-          '</span></button>';
+              FBDATA.papacy.schism.councilAfterDays);
+        h += papalActionCardHtml('papal-submit-claim', '🕊',
+          FB.T('Submit your claim voluntarily'), FB.T(
+            'End your obedience and continue as a retired former Cardinal.'), false);
       }
       h += '</div>';
     }
@@ -14931,23 +15458,30 @@ window.FB = window.FB || {};
       const cannotSwitch = s.player.piety < FBDATA.papacy.schism.switchPiety ||
         s.player.prestige < FBDATA.papacy.schism.switchPrestige || days ||
         !FB.isPlayerSovereign(s);
-      h += '<button class="actionbtn" id="papal-switch-obedience"' +
-        (cannotSwitch ? ' disabled' : '') + '>⚖ ' +
-        esc(FB.T('Recognize this claimant')) +
-        '<span class="adesc">' + esc(FB.T(
-          FB.isPlayerSovereign(s)
-            ? 'Costs {piety} piety and {prestige} prestige; the next change is barred for five years.{cooldown}'
-            : 'Your sovereign determines the obedience recognized by every vassal in the realm.', {
+      const switchDetails = FB.isPlayerSovereign(s)
+        ? FB.T(
+          'Costs {piety} piety and {prestige} prestige; the next change is barred for five years.{cooldown}', {
             piety:FBDATA.papacy.schism.switchPiety,
             prestige:FBDATA.papacy.schism.switchPrestige,
             cooldown:days ? FB.T(' {days} days remain.', { days:days }) : ''
-          })) + '</span></button>';
+          })
+        : FB.T(
+          'Your sovereign determines the obedience recognized by every vassal in the realm.');
+      const switchLabel = FB.isPlayerSovereign(s)
+        ? FB.T('Recognize this claimant · {piety} piety · {prestige} prestige', {
+          piety:FBDATA.papacy.schism.switchPiety,
+          prestige:FBDATA.papacy.schism.switchPrestige
+        })
+        : FB.T('Recognize this claimant');
+      h += papalActionCardHtml('papal-switch-obedience', '⚖',
+        switchLabel, switchDetails, cannotSwitch);
     }
 
     h += '<div class="modal-actions"><button class="btn" id="gm-cancel">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T('Papacy and College'), h, {
       modalClass:'fullsheet-modal papacy-modal',
+      titleDetailsHtml:titleDetails,
       guide:guideModalOption('papacy-guide', 'roles', 'Guide: social and religious roles')
     });
 
@@ -17695,7 +18229,7 @@ window.FB = window.FB || {};
     h += '<div class="gm-footer"><button type="button" class="btn" id="cm-close">' +
       esc(backable ? FB.T('Back') : FB.T('Close')) + '</button>' +
       (backable
-        ? '<button type="button" class="btn" id="cm-dismiss">' +
+        ? '<button type="button" class="btn" id="cm-stack-close">' +
           esc(FB.T('Close')) + '</button>'
         : '') + '</div>';
     const modalTitle = cardOptions.namePrefix
@@ -18036,7 +18570,7 @@ window.FB = window.FB || {};
         UI.closeModal();
       }
     });
-    const cmDismiss = $('cm-dismiss');
+    const cmDismiss = $('cm-stack-close');
     if (cmDismiss) {
       cmDismiss.addEventListener('click', function () {
         UI.closeModal();
@@ -18063,8 +18597,8 @@ window.FB = window.FB || {};
       exitMode:householdPlan ? HOUSEHOLD_PLAN_RETURN : exitMode,
       returnContext:returnContext
     };
-    const closeLabel = householdPlan ? FB.T('Back to Household Plan')
-      : (exitMode === 'character' ? FB.T('Back to character') : FB.T('Close'));
+    const closeLabel = householdPlan || exitMode === 'character'
+      ? FB.T('Back') : FB.T('Close');
     const fullName = FB.fullName(c);
     const modalClass = ['fullsheet-modal', 'equipment-modal'].join(' ');
     const h = equipmentSheetHtml(s, c) +
@@ -18205,7 +18739,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn primary" id="barber-apply">' +
       esc(FB.T('Pay and apply')) + '</button>' +
       '<button type="button" class="btn" id="barber-back">' +
-      esc(FB.T('Back to equipment')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Visit Barber for {name}', { name:FB.fullName(c) }), h, {
       historyView:true,
       modalClass:'fullsheet-modal barber-modal',
@@ -18459,7 +18993,7 @@ window.FB = window.FB || {};
       (!plan.changed ? ' disabled' : '') + '>' +
       esc(FB.T('Apply Equip Best')) + '</button>' +
       '<button type="button" class="btn" id="equip-best-back">' +
-      esc(FB.T('Back to equipment')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Equip Best for {name}', { name:FB.fullName(c) }), h, {
       historyView:true,
       modalClass:'fullsheet-modal equip-best-modal',
@@ -19173,9 +19707,8 @@ window.FB = window.FB || {};
         'There is no compatible object in the armory.')) + '</div>';
     }
     const equipmentExit = equipmentExitMode(returnMode);
-    const cancelLabel = equipmentExit === HOUSEHOLD_PLAN_RETURN
-      ? FB.T('Back to Household Plan')
-      : (equipmentExit !== null ? FB.T('Back to equipment') : FB.T('Close'));
+    const cancelLabel = equipmentExit !== null
+      ? FB.T('Back') : FB.T('Close');
     h += '</div><button class="btn" id="gm-cancel">' +
       esc(cancelLabel) + '</button>';
     const pickerTitle = FB.T('{slot} Equipment', { slot:itemSlotLabel(slot) });
@@ -19295,7 +19828,7 @@ window.FB = window.FB || {};
             (check.ok ? FB.T('Available') : equipCheckText(check))) + '</span></button>';
       }
     }
-    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back to item')) + '</button>';
+    h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
     openModal(FB.T('Equip {item}', { item:FB.itemName(s, ref) }), h,
       {
         historyView:true,
@@ -20346,7 +20879,7 @@ window.FB = window.FB || {};
       '<button type="button" class="btn" id="shortcut-reset">' +
       esc(FB.T('Reset to Defaults')) + '</button>' +
       '<button type="button" class="btn" id="shortcut-back">' +
-      esc(FB.T('Back to Settings')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Keyboard shortcuts'), body, {
       historyView:!replaceView,
       replaceView:!!replaceView,
@@ -20653,7 +21186,7 @@ window.FB = window.FB || {};
       '<button class="btn small danger" id="music-remove-all">' + esc(FB.T('Remove all music')) + '</button>' +
       '<button class="btn small hidden" id="music-cancel-download">' + esc(FB.T('Cancel download')) + '</button>' +
       '</div></div><div class="gm-footer"><button class="btn" id="music-download-back">' +
-      esc(FB.T('Back to Settings')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal('Music for offline play', h, {
       historyView:!replaceView,
       replaceView:!!replaceView,
@@ -21177,7 +21710,7 @@ window.FB = window.FB || {};
       '</p></div><div class="gm-footer"><button type="button" class="btn danger" ' +
       'id="reset-starts-confirm">' + esc(FB.T('Reset unlocked beginnings')) +
       '</button><button type="button" class="btn" id="reset-starts-back">' +
-      esc(FB.T('Back to Settings')) + '</button></div>';
+      esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('Reset unlocked beginnings'), h, {
       historyView:true,
       historyBackRender:function () { UI.showSettings(); }

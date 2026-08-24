@@ -1,6 +1,7 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'data/actions.js',
   'js/actions.js',
   'js/armies.js',
@@ -11,7 +12,8 @@ dependsOnRuntime(__filename, [
   'js/ui_modals.js',
   'js/world.js',
   'data/events_war.js',
-  'data/map_data.js'
+  'data/map_data.js',
+  'data/technology.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -637,7 +639,102 @@ test('the Guide exposes aggression through search and the conquest picker',
       .toBeVisible();
   });
 
-test('war picker names aggression and requires its consequence sheet',
+test('ruler war action scopes targets and records a selected de jure basis',
+  async function ({ page }, testInfo) {
+    await startWarGame(page, testInfo);
+    var ids = await configureAggressionWar(page);
+    var setup = await page.evaluate(function (fixture) {
+      var s = FB.state;
+      var deJure = FB.dejureOf(fixture.targetId);
+      s.player.tier = 7;
+      FB.playerDuchies = function () { return [deJure.duchy]; };
+      FB.playerKingdoms = function () { return [deJure.kingdom]; };
+      FB.playerEmpires = function () { return [deJure.empire]; };
+      var beforeJustifications = JSON.stringify(s);
+      var rngBeforeJustifications = FB.getRngState();
+      var justifications = FB.warJustifications(
+        s, fixture.targetId, fixture.enemyId, false);
+      var justificationStable = beforeJustifications === JSON.stringify(s) &&
+        rngBeforeJustifications === FB.getRngState();
+      var model = FB.ui.realmInteractionCard(s, fixture.enemyId);
+      FB.ui.showLiegeModal(fixture.enemyId);
+      return {
+        duchy:deJure.duchy,
+        kingdom:deJure.kingdom,
+        empire:deJure.empire,
+        kingdomName:FBDATA.kingdoms[deJure.kingdom].name,
+        justificationStable:justificationStable,
+        techReview:FBDATA.techImpactReviews.features
+          .war_justification_selection,
+        techErrors:FB.validateTechnologyData(),
+        kinds:justifications.map(function (cause) {
+          return cause.titleKind;
+        }),
+        warActions:model.actions.filter(function (action) {
+          return action.route === 'war';
+        }).map(function (action) {
+          return { id:action.id, label:action.label };
+        })
+      };
+    }, ids);
+
+    expect(setup.justificationStable).toBe(true);
+    expect(setup.techReview.mode).toBe('none');
+    expect(setup.techErrors).toEqual([]);
+    expect(setup.kinds).toEqual(['duchy', 'kingdom', 'empire']);
+    expect(setup.warActions).toEqual([{
+      id:'war.declare', label:'Declare war…'
+    }]);
+    const rulerWarActions = page.locator(
+      '[data-interaction-group="war"] [data-interaction-action="war.declare"]');
+    await expect(rulerWarActions).toHaveCount(1);
+    await expect(rulerWarActions).toBeVisible();
+    await rulerWarActions.click();
+
+    await expect(page.getByRole('heading', {
+      name:'Choose Your Conquest', exact:true
+    })).toBeVisible();
+    const scopedTargets = page.locator(
+      '#war-target-list [data-war-target-realm]');
+    expect(await scopedTargets.count()).toBeGreaterThan(0);
+    expect(await scopedTargets.evaluateAll(function (rows, enemyId) {
+      return rows.every(function (row) {
+        return row.dataset.warTargetRealm === enemyId && !row.disabled;
+      });
+    }, ids.enemyId)).toBe(true);
+    const target = page.locator('[data-war-cause-target="' +
+      ids.targetId + '"]');
+    await expect(target).toHaveCount(1);
+    await expect(target).toHaveAttribute('data-war-justification-count', '3');
+    await expect(target).toContainText('3 available justifications');
+    await target.click();
+
+    await expect(page.getByRole('heading', {
+      name:'War Justification', exact:true
+    })).toBeVisible();
+    const reason = page.locator('#war-justification-reason');
+    await expect(reason.locator('option')).toHaveCount(3);
+    await reason.selectOption({ label:'De jure right through ' +
+      setup.kingdomName });
+    await expect(page.locator(
+      '.war-justification-critical:not([hidden])')).toContainText(
+      setup.kingdomName);
+    await page.getByRole('button', {
+      name:'Declare war', exact:true
+    }).click();
+
+    expect(await page.evaluate(function () {
+      return {
+        type:FB.state.player.war && FB.state.player.war.casus.type,
+        titleKind:FB.state.player.war && FB.state.player.war.casus.titleKind,
+        titleId:FB.state.player.war && FB.state.player.war.casus.titleId
+      };
+    })).toEqual({
+      type:'dejure', titleKind:'kingdom', titleId:setup.kingdom
+    });
+  });
+
+test('war picker routes aggression through the universal justification sheet',
   async function ({ page }, testInfo) {
     await startWarGame(page, testInfo);
     var ids = await configureAggressionWar(page);
@@ -645,30 +742,47 @@ test('war picker names aggression and requires its consequence sheet',
       FB.ui.showWarTargets(enemyId);
     }, ids.enemyId);
 
+    const pickerHeading = page.getByRole('heading', {
+      name:'Choose Your Conquest', exact:true
+    });
+    await expect(pickerHeading.locator('..')).toHaveClass(/has-modal-title-details/);
+    await expect(page.locator('#gm-title-details')).toBeHidden();
+    await pickerHeading.hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Compare available territorial targets before choosing.');
+    await expect(page.locator('#tooltip')).toContainText(
+      'normal muster would cost about');
+
     var row = page.locator(
       '[data-war-cause-type="aggression"][data-war-cause-target="' +
       ids.targetId + '"]');
     await expect(row).toBeVisible();
     await expect(row).toContainText('War of Aggression');
-    await expect(row).toContainText('Conquered Without Right');
+    await expect(row).toContainText('enemy defense');
+    await expect(row).not.toContainText('Conquered Without Right');
+    await expect(row.locator('..').locator('.settcard-info'))
+      .toHaveAttribute('aria-controls', /war-target-details-/);
+    await row.hover();
+    await expect(page.locator('#tooltip')).toContainText('Conquered Without Right');
     await row.click();
 
-    await expect(page.getByRole('heading', {
-      name:'Declare a War of Aggression?',
-      exact:true
-    })).toBeVisible();
-    await expect(page.locator('#genmodal')).toContainText(
-      'This war has no recognized right.');
-    await expect(page.locator('#genmodal')).toContainText(ids.enemyName);
-    await expect(page.locator('#genmodal')).toContainText(ids.targetName);
-    await expect(page.locator('#genmodal')).toContainText(
-      'Immediate consequences');
-    await expect(page.locator('#genmodal')).toContainText(
-      'Continuing consequences');
-    await expect(page.locator('#genmodal')).toContainText(
-      'Conquered Without Right');
-    await expect(page.locator('#genmodal')).toContainText(
-      'Most likely opposition');
+    const confirmationHeading = page.getByRole('heading', {
+      name:'War Justification', exact:true
+    });
+    await expect(confirmationHeading).toBeVisible();
+    const critical = page.locator('.war-justification-critical:not([hidden])');
+    await expect(critical).toContainText('This war has no recognized right.');
+    await expect(critical).toContainText(ids.enemyName);
+    await expect(critical).toContainText(ids.targetName);
+    await expect(critical).toContainText('Immediate cost');
+    await expect(critical).toContainText('Standing penalties');
+    await expect(critical).toContainText('Breakaway pressure');
+    await expect(critical).toContainText('Conquered Without Right');
+    await expect(critical).not.toContainText('Most likely opposition');
+    await confirmationHeading.hover();
+    await expect(page.locator('#tooltip')).toContainText('Immediate consequences');
+    await expect(page.locator('#tooltip')).toContainText('Continuing consequences');
+    await expect(page.locator('#tooltip')).toContainText('Most likely opposition');
 
     var beforeConfirm = await page.evaluate(function () {
       return {
@@ -679,7 +793,7 @@ test('war picker names aggression and requires its consequence sheet',
     expect(beforeConfirm).toEqual({ war:null, history:0 });
 
     await page.getByRole('button', {
-      name:'Think better of it',
+      name:'Back',
       exact:true
     }).click();
     await expect(page.getByRole('heading', {
@@ -696,7 +810,8 @@ test('war picker names aggression and requires its consequence sheet',
     await row.click();
 
     await page.getByRole('button', {
-      name:/Accept the consequences and declare war/
+      name:'Declare war',
+      exact:true
     }).click();
     var afterConfirm = await page.evaluate(function () {
       return {

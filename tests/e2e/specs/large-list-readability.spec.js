@@ -285,7 +285,12 @@ test('large Work roster counts choices, orders attention, and preserves exact en
     })).toBe(true);
 
     var head = page.locator('[data-list-identity="' + fixture.headId + '"]');
+    await page.locator(
+      '[data-list-section="household-work"] [data-list-show-all]').click();
+    await expect(page.locator(
+      '[data-list-toggle="household-work"]')).toBeFocused();
     await expect(head).toHaveAttribute('data-list-attention', 'false');
+    await expect(head).toBeVisible();
     await expect(head).toContainText('Former calling');
     await head.hover();
     await expect(page.locator('#tooltip'))

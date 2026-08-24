@@ -572,7 +572,11 @@ test('serfs see neither the commitments ledger nor deeds they cannot use',
     await expect(page.locator('[data-action-id="buy_freedom"]')).toBeVisible();
     await expect(page.locator('[data-action-id="adopt_tech"]')).toHaveCount(0);
 
-    // the Network tab drops the Finance shortcut on the same rule
+    // Self keeps the livelihood summary without duplicating its management route.
+    await page.locator('#lefttabs [data-tab="char"]').click();
+    await expect(page.locator('#self-work')).toHaveCount(0);
+
+    // Network remains the persistent management route and drops Finance on the same rule.
     await page.locator('#sidetabs [data-tab="network"]').click();
     await expect(page.locator('#network-work')).toBeVisible();
     await expect(page.locator('#network-finance')).toHaveCount(0);

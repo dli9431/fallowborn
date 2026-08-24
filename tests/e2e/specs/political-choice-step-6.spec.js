@@ -2,10 +2,14 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/council.js',
+  'js/institutions.js',
   'js/parliament.js',
   'js/politics.js',
+  'js/ui_misc.js',
+  'js/ui_modals.js',
   'data/political_institutions.js',
-  'data/events_politics.js'
+  'data/events_politics.js',
+  'css/style.css'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -397,13 +401,74 @@ test('election and privilege sheets expose constituencies, terms, and revocation
       FB.addModifier(s, 'market_charter', pid, {
         privilegeDefId:'market_charter', sourceEventId:'ui_test'
       });
+      s.collectiveDemands = s.collectiveDemands || {};
+      s.collectiveDemands.opposition = {
+        faith:{ privilegeId:'sanctuary', level:5, lastTurn:s.turn }
+      };
       FB.ui.showPrivileges();
     });
-    await expect(page.locator('#gm-body')).toContainText('Market Charter');
-    await expect(page.locator('#gm-body')).toContainText('Holder');
-    await expect(page.locator('#gm-body')).toContainText('Scope');
-    await expect(page.locator('#gm-body')).toContainText('Exact effect');
-    await expect(page.locator('#gm-body')).toContainText('Revocation');
+    const privilegeCard = page.locator('.privilege-card').first();
+    const privilegeFace = privilegeCard.locator('.privilege-card-critical');
+    const privilegeDetails = privilegeCard.locator('.privilege-card-details');
+    await expect(privilegeCard).toContainText('Market Charter');
+    await expect(privilegeFace).toContainText('Holder');
+    await expect(privilegeFace).toContainText('Scope');
+    await expect(privilegeFace).toContainText('Exact effect');
+    await expect(privilegeFace).toContainText('Duration');
+    await expect(privilegeFace).toContainText(
+      'Early revocation possible — unlawful');
+    await expect(privilegeFace).not.toContainText('county:');
+    await expect(privilegeFace).not.toContainText('Grantor');
+    await expect(privilegeFace).not.toContainText('Rights');
+    await expect(privilegeDetails).toBeHidden();
+    await expect(privilegeCard.locator('.settcard-info')).toBeHidden();
+    const oppositionRow = page.locator('.privilege-opposition-row').first();
+    const oppositionDetails = oppositionRow.locator(
+      '.privilege-opposition-details');
+    await expect(oppositionRow).toContainText('Faith communities');
+    await expect(oppositionRow).toContainText('Organizing around Sanctuary');
+    await expect(oppositionRow).toContainText(
+      'Adds weight when the next eligible collective demand is chosen');
+    await expect(oppositionRow).not.toContainText('Level 5/5');
+    await expect(oppositionDetails).toBeHidden();
+    await oppositionRow.hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      '+50 when eligible demands are ranked');
+    await expect(page.locator('#tooltip')).toContainText(
+      'This does not start a revolt or battle by itself');
+
+    await page.locator('.gm-heading.has-modal-title-details').hover();
+    await expect(page.locator('#tooltip')).toContainText(
+      'Privileges are durable legal contracts');
+    await privilegeCard.hover();
+    await expect(page.locator('#tooltip')).toContainText('Grantor');
+    const legalRowLayout = await page.locator(
+      '#tooltip .privilege-legal-details .kv').first().evaluate(function (row) {
+      var label = row.querySelector('span').getBoundingClientRect();
+      var value = row.querySelector('b').getBoundingClientRect();
+      return {
+        direction:getComputedStyle(row).flexDirection,
+        valueBelowLabel:value.top >= label.bottom - 1
+      };
+    });
+    expect(legalRowLayout.direction).toBe('column');
+    expect(legalRowLayout.valueBelowLabel).toBe(true);
+    await expect(page.locator('#tooltip')).toContainText(
+      'Protected until the recorded term ends');
+    await expect(page.locator('#tooltip')).not.toContainText('protected_term');
+    await expect(page.locator('#tooltip')).toContainText('Rights');
+    await expect(page.locator('#tooltip')).toContainText('Obligations');
+
+    await page.setViewportSize({ width:390, height:740 });
+    await expect(privilegeCard.locator('.settcard-info')).toBeVisible();
+    await privilegeCard.locator('.settcard-info').click();
+    await expect(privilegeDetails).toBeVisible();
+    await expect(privilegeDetails).toContainText('Grantor');
+    await expect(oppositionRow.locator('.settcard-info')).toBeVisible();
+    await oppositionRow.locator('.settcard-info').click();
+    await expect(oppositionDetails).toBeVisible();
+    await expect(oppositionDetails).toContainText(
+      '+50 when eligible demands are ranked');
     await expect(page.locator(
       '#gm-body > .gm-footer > #privileges-back')).toBeVisible();
 

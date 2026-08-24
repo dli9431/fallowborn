@@ -109,6 +109,18 @@ benefice promise, secular backing before enclosure, or withdrawal and endorsemen
 Scores combine relationship, Learning, Diplomacy, piety, bloc affinity, culture,
 promises, and backing; uncertainty always uses the saved RNG.
 
+The **Papacy and College** sheet renders the latest saved ballot as candidate-grouped
+columns: each candidate header shows the total and the electors who backed that candidate
+sit directly beneath it. Before the first ballot, the same layout groups current projected
+leans. Responsive columns collapse into a single vertical sequence on mobile, avoiding
+crossing graph edges and unreadably small labels. The card face keeps candidate, total,
+and elector names; order, title church, Curial bloc, College office, score, and relevant
+opinion use the shared desktop tooltip or touch disclosure. The compact overview likewise
+keeps claimant, recognition, authority, and College size visible while moving election
+law, outside assent, enclosure, patronage, and rule explanations into header/card tooltips.
+This is a presentation-only read of already-saved election data and has no technology
+impact or save-schema change.
+
 After six failed ballots, elections from 1059 onward may introduce a qualified outside
 Bishop or Abbot as a compromise. A player must remain a Cardinal to be elected. After
 twelve ballots, a non-schismatic election forces support toward the leading compromise.

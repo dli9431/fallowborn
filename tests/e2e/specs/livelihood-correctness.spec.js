@@ -269,7 +269,10 @@ test('owned enterprise sheets explain profession, guild, remote, and reassignmen
 
     const row = page.locator('[data-enterprise="' + fixture.uid + '"]');
     await expect(row).toContainText('Blocked');
-    await expect(row).toContainText(
+    await expect(row).not.toContainText(
+      'No adult resident household member is eligible for Craft work');
+    await row.hover();
+    await expect(page.locator('#tooltip')).toContainText(
       'No adult resident household member is eligible for Craft work');
     await row.click();
     await expect(page.locator('.enterprise-management-status.blocked'))

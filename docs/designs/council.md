@@ -162,7 +162,11 @@ full ruler sheet when activated; candidate heraldry remains part of its assignme
 The desktop preview sits outside the modal's left edge so it does not cover Council
 actions. On mobile, returning from an occupied heraldry's ruler sheet restores that exact
 seat and scroll position.
-The named **Ruler card…** action remains as the explicit textual route.
+The named **Ruler card…** action remains as the explicit textual route. Occupied-seat cards
+use a larger 16 px ruler name and 14 px realm, trait, Standing, and term lines. Their Ruler
+card, gift, replacement, and dismissal controls form equal two-column rows on ordinary
+layouts and one-column rows below 420 px, so label length never determines button width or
+placement.
 `FB.councilSummary` is the deterministic, locale-neutral read model shared by both
 surfaces. It reads the saved seats as they stand and never calls `FB.councilEnsure`,
 repairs rulers, fills vacancies, consumes RNG, or writes Chronicle news. Formation and
@@ -192,7 +196,12 @@ Any direct vassal may be placed in the `councilRealm` protection scope from Gove
 the Council manager. `FB.councilEnsure` leaves that vassal out when it fills a vacancy, and
 `FB.councilRecommendation` uses the same rank/Standing order while omitting protected and
 already seated realms. Protected candidates remain visible and manually appointable; a
-reservation never dismisses a holder already in office.
+reservation never dismisses a holder already in office. The focused manager summarizes
+reserved and eligible counts in a closed native disclosure by default. Expanding it reveals
+a bounded three-column roster (two on compact layouts) with concise Eligible/Reserved
+states and full accessible action names. A toggle rerender keeps that disclosure open; a
+fresh Council opening returns to the compact closed summary. This changes presentation only,
+not the protection scope or automatic-appointment mechanic.
 
 The Network Realm section routes a qualified territorial ruler into Governance rather
 than maintaining another Council summary. Network keeps the exact host ledger; Governance

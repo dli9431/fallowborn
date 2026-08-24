@@ -3239,8 +3239,9 @@ window.FB = window.FB || {};
 
   /* Dialog builders historically put exit controls in several places:
      loose after the body, inside an action list, or in a real footer. Gather
-     Close/Cancel/Back and legacy terminal controls into one footer without making
-     substantive choices (confirm, buy, appoint, etc.) look like exits. */
+     Back/Cancel/Close and legacy terminal controls into one final footer without
+     making substantive choices (confirm, buy, appoint, etc.) look like exits.
+     Reading order is also visual order: navigation first, Close next, commits last. */
   function normalizeModalFooter(root) {
     if (!root) return;
     const legacy = root.querySelectorAll('button.gm-footer');
@@ -3256,19 +3257,25 @@ window.FB = window.FB || {};
     const buttons = root.querySelectorAll(
       'button[id$="-cancel"], button[id$="-close"], button[id$="-back"], ' +
       'button[id$="-done"], button[id^="gm-ok"]');
-    if (!buttons.length) return;
+    const exitButtons = [];
+    for (let i = 0; i < buttons.length; i++) exitButtons.push(buttons[i]);
 
     let footer = null;
+    const extraFooters = [];
     for (let i = 0; i < root.children.length; i++) {
-      if (root.children[i].classList.contains('gm-footer')) {
-        footer = root.children[i];
-        break;
-      }
+      if (!root.children[i].classList.contains('gm-footer')) continue;
+      if (!footer) footer = root.children[i];
+      else extraFooters.push(root.children[i]);
     }
+    if (!footer && !buttons.length) return;
     if (!footer) {
       footer = document.createElement('div');
       footer.className = 'gm-footer';
-      root.appendChild(footer);
+    }
+    for (let i = 0; i < extraFooters.length; i++) {
+      const extra = extraFooters[i];
+      while (extra.firstChild) footer.appendChild(extra.firstChild);
+      extra.parentNode.removeChild(extra);
     }
 
     for (let i = 0; i < buttons.length; i++) {
@@ -3283,6 +3290,29 @@ window.FB = window.FB || {};
         oldParent.parentNode.removeChild(oldParent);
       }
     }
+
+    const ordered = [];
+    for (let i = 0; i < footer.children.length; i++) {
+      const child = footer.children[i];
+      if (child.tagName === 'BUTTON') ordered.push({ button:child, index:i });
+    }
+    function rank(item) {
+      const button = item.button;
+      if (exitButtons.indexOf(button) < 0) return 3;
+      const id = button.id || '';
+      const label = button.textContent.trim();
+      if (/-back$/.test(id) || label === FB.T('Back')) return 0;
+      if (/-close$/.test(id) || /-done$/.test(id) || /^gm-ok/.test(id) ||
+          label === FB.T('Close')) return 2;
+      return 1;
+    }
+    ordered.sort(function (a, b) {
+      return rank(a) - rank(b) || a.index - b.index;
+    });
+    for (let i = 0; i < ordered.length; i++) {
+      footer.appendChild(ordered[i].button);
+    }
+    root.appendChild(footer);
   }
 
   function focusFirstModalControl() {

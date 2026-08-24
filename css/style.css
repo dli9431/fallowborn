@@ -1749,6 +1749,50 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   letter-spacing: .04em; text-transform: uppercase;
 }
 .choice-receipt-outcome { margin-top: 4px; color: var(--helper-text-color); font-style: italic; }
+.logentry.hostile-entry {
+  margin: 6px 0; padding: 10px 11px; border: 1px solid #5c4623;
+  border-radius: 8px; background: #211a13;
+}
+.chronicle-hostile-link {
+  display: block; width: 100%; margin: 0; padding: 0; border: 0;
+  background: transparent; color: inherit; font: inherit; line-height: inherit;
+  text-align: left; cursor: pointer;
+}
+.chronicle-hostile-link:hover .chronicle-hostile-link-label,
+.chronicle-hostile-link:focus-visible .chronicle-hostile-link-label { color: #ffd24a; text-decoration: underline; }
+.chronicle-hostile-link:focus-visible { outline: 2px solid #e0c060; outline-offset: 4px; }
+.chronicle-hostile-link-label {
+  display: block; margin-top: 6px; color: #d8b24a; font-size: 12px; font-weight: bold;
+}
+.hostile-report-lead {
+  display: grid; gap: 4px; margin-bottom: 10px; padding: 11px 12px;
+  border: 1px solid #66522f; border-radius: 8px; background: #211a13;
+}
+.hostile-report-lead strong { color: #e0c060; font-size: 18px; }
+.hostile-report-lead span { color: var(--helper-text-color); line-height: 1.4; }
+.hostile-report-facts {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px; margin-bottom: 10px; overflow: hidden;
+  border: 1px solid #493c27; border-radius: 8px; background: #493c27;
+}
+.hostile-report-fact { min-width: 0; padding: 9px 10px; background: #211a13; }
+.hostile-report-fact span {
+  display: block; margin-bottom: 3px; color: var(--helper-text-color);
+  font-size: 10px; font-weight: bold; letter-spacing: .04em; text-transform: uppercase;
+}
+.hostile-report-fact b { display: block; overflow-wrap: anywhere; color: var(--main-text-color); }
+.hostile-report-detail, .hostile-report-events { margin: 10px 0; }
+.hostile-report-detail { display: grid; gap: 6px; }
+.hostile-report-detail span, .hostile-report-event {
+  display: grid; gap: 2px; padding: 8px 10px; border: 1px solid #55452a;
+  border-radius: 7px; background: #241d15;
+}
+.hostile-report-detail b { display: block; color: #d8b24a; }
+.hostile-report-events h4 { margin: 0 0 7px; color: #d8b24a; }
+.hostile-report-event span { color: var(--helper-text-color); font-size: 12px; }
+@media (max-width: 520px) {
+  .hostile-report-facts { grid-template-columns: minmax(0, 1fr); }
+}
 .progressnote { background: #241d15; border: 1px solid #55452a; border-radius: 8px; padding: 8px 10px; font-size: 13px; margin-bottom: 8px; }
 /* Deeds demesne-buildings ledger: county rows against shared building columns */
 .bldsummary .bldhead { display: block; margin-bottom: 4px; }
@@ -1925,12 +1969,13 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
    their content scrolls; the travel picker and Self/Kin drawer reuse the
    same button dimensions. */
 .gm-footer, .travel-picker-actions, .drawer-footer {
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center;
   gap: 10px; margin-top: auto;
 }
 .gm-footer .btn, .travel-picker-actions .btn, .drawer-footer .btn {
-  flex: 0 1 200px; width: 200px; max-width: 100%; min-height: 52px;
-  padding: 10px 16px; font-size: 16px; text-align: center;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; flex: 0 1 200px; width: 200px; min-width: 0; max-width: 100%; min-height: 52px;
+  padding: 10px 16px; font-family: inherit; font-size: 16px; line-height: 1.25; text-align: center;
 }
 #genmodal .gm-footer, .equip-picker-body .gm-footer {
   position: sticky; bottom: 0; z-index: 1;
@@ -2190,10 +2235,86 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .war-target-search { grid-column: span 2; }
 .war-target-toolbar label { display: grid; gap: 4px; min-width: 0; }
 .war-target-toolbar label > span { color: var(--helper-text-color); font-size: 11px; }
-.war-target-toolbar input, .war-target-toolbar select { width: 100%; min-width: 0; }
-.war-target-row[disabled] { opacity: 0.72; cursor: not-allowed; }
+.war-target-toolbar input {
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: 44px;
+  padding: 7px 10px; border: 1px solid #66522f; border-radius: 6px;
+  background: #201a13; color: var(--main-text-color); font: inherit;
+}
+.war-target-select-wrap {
+  position: relative; display: block; width: 100%; min-width: 0;
+}
+.war-target-select-wrap::after {
+  content: '▾'; position: absolute; right: 11px; top: 50%;
+  transform: translateY(-53%); color: #d8b24a; font-size: 14px;
+  line-height: 1; pointer-events: none;
+}
+.war-target-toolbar select {
+  box-sizing: border-box; width: 100%; min-width: 0; height: 44px;
+  min-height: 44px; padding: 6px 32px 6px 9px;
+  -webkit-appearance: none; appearance: none;
+  border: 1px solid #66522f; border-radius: 6px;
+  background: linear-gradient(180deg, #3b3020, #2a2218);
+  color: var(--main-text-color); color-scheme: dark;
+  font: inherit; font-size: 13px; line-height: 1.25; cursor: pointer;
+  box-shadow: inset 0 1px rgba(255,255,255,.05);
+}
+.war-target-toolbar select:hover { border-color: #c9a24a; }
+.war-target-toolbar select:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 1px;
+}
+.war-target-toolbar select option {
+  background: #2a2218; color: var(--main-text-color);
+}
+.war-justification-toolbar {
+  position: static; grid-template-columns: minmax(0, 1fr);
+}
+.war-justification-critical[hidden] { display: none; }
+.war-target-card {
+  position: relative; margin-bottom: 7px; overflow: hidden;
+  border: 1px solid #55452a; border-radius: 8px; background: #2a2216;
+}
+.war-target-card:hover, .war-target-card:focus-within { border-color: #c9a24a; }
+.war-target-card.aggression { border-color: #704737; }
+.war-target-card .war-target-row {
+  width: 100%; min-width: 0; margin: 0;
+  border: 0; border-radius: 0; background: transparent;
+}
+@media (pointer: coarse), (max-width: 1100px), (max-height: 520px) {
+  .war-target-card .war-target-row { padding-right: 60px; }
+}
+.war-target-card.blocked .war-target-row { opacity: 0.72; cursor: not-allowed; }
+.war-target-row-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+}
+.war-target-row-head > b { color: var(--main-text-color); }
+.war-target-fort { color: #d8bd7b !important; }
+.war-target-actions { position: absolute; z-index: 2; top: 8px; right: 8px; }
+.war-target-actions .settcard-info { margin: 0; }
+.war-target-details {
+  margin: 0; padding: 9px 11px; border-top: 1px solid #40331f;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.war-target-details p { margin: 0; }
+.war-target-details p + p { margin-top: 7px; }
 /* .actionbtn's display:block would defeat the hidden attribute the filter sets */
-.war-target-row[hidden] { display: none !important; }
+.war-target-card[hidden], .war-target-row[hidden] { display: none !important; }
+.aggression-confirm-critical {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px; margin-bottom: 10px; overflow: hidden;
+  border: 1px solid #493c27; border-radius: 8px; background: #493c27;
+}
+.aggression-confirm-critical .progressnote {
+  grid-column: 1 / -1; margin: 0; border: 0; border-radius: 0;
+}
+.aggression-confirm-critical .kv {
+  min-width: 0; padding: 8px 9px; flex-direction: column;
+  justify-content: flex-start; gap: 3px; background: #211a13;
+}
+.aggression-confirm-critical .kv > span:first-child {
+  color: var(--helper-text-color); font-size: 10px; font-weight: bold;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.aggression-confirm-critical .kv b { font-size: 13px; }
 
 /* ---------- raiding expedition target toolbar ---------- */
 .raid-target-toolbar {
@@ -2449,22 +2570,79 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
 .papacy-tabs, .papacy-tactics {
   display: flex; flex-wrap: wrap; gap: 7px; margin: 6px 0 12px;
 }
-.papacy-college {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 7px; margin-bottom: 10px;
+.papacy-overview { grid-column: 1 / -1; }
+.papacy-ballot-mode {
+  margin: -2px 0 8px; color: var(--helper-text-color); font-size: 12px;
 }
-.papacy-elector {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px; width: 100%; min-height: 58px; padding: 8px 10px;
-  color: var(--main-text-color); background: #2a2216; border: 1px solid #55452a;
-  border-radius: 8px; font: inherit; text-align: left; cursor: pointer;
+.papacy-ballot-flow {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  align-items: start; gap: 9px; margin-bottom: 12px;
 }
-.papacy-elector:hover { border-color: #c9a24a; }
-.papacy-elector span { min-width: 0; }
-.papacy-elector small, .papacy-choice small, .papacy-sanction-row small {
+.papacy-ballot-candidate-group {
+  min-width: 0; overflow: hidden; border: 1px solid #55452a;
+  border-radius: 8px; background: #241d15;
+}
+.papacy-ballot-candidate-group > header {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 42px; padding: 7px 9px; border-bottom: 1px solid #55452a;
+  background: #302416;
+}
+.papacy-ballot-candidate-group > header > span {
+  flex: 0 0 auto; color: #d8b24a; font-size: 12px;
+}
+.papacy-ballot-candidate {
+  min-width: 0; margin: 0; padding: 3px 0; border: 0; background: transparent;
+  color: #e0c060; font: inherit; font-weight: bold; text-align: left;
+  cursor: pointer;
+}
+.papacy-ballot-candidate:hover, .papacy-ballot-candidate:focus-visible {
+  color: #ffe28a; text-decoration: underline;
+}
+.papacy-ballot-voters { display: grid; gap: 5px; padding: 6px; }
+.papacy-ballot-voter {
+  display: flex; align-items: stretch; min-width: 0; overflow: hidden;
+  border: 1px solid #493c27; border-radius: 6px; background: #2a2216;
+}
+.papacy-ballot-voter:hover, .papacy-ballot-voter:focus-within {
+  border-color: #c9a24a;
+}
+.papacy-ballot-voter-main {
+  flex: 1 1 auto; min-width: 0; min-height: 38px; padding: 7px 8px;
+  border: 0; background: transparent; color: var(--main-text-color);
+  font: inherit; font-size: 13px; text-align: left; cursor: pointer;
+}
+.papacy-ballot-voter-main:hover { color: #ffe9a8; }
+.papacy-ballot-voter .settcard-actions { padding: 3px; }
+.papacy-ballot-voter-details .kv { font-size: 12px; }
+.papacy-tactic-card {
+  display: flex; align-items: stretch; min-width: 150px; padding: 3px;
+  border: 1px solid #55452a; border-radius: 7px; background: #2a2216;
+}
+.papacy-tactic-card > .btn { flex: 1 1 auto; margin: 0; }
+.papacy-tactic-card > .settcard-actions { padding-left: 3px; }
+.papacy-action-card {
+  position: relative; display: flex; align-items: stretch; min-width: 0;
+  overflow: hidden; border: 1px solid #55452a; border-radius: 8px;
+  background: #2a2216;
+}
+.papacy-action-card:hover, .papacy-action-card:focus-within {
+  border-color: #c9a24a;
+}
+.papacy-action-card:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 1px;
+}
+.papacy-action-card > .actionbtn {
+  flex: 1 1 auto; min-width: 0; margin: 0; border: 0; border-radius: 0;
+}
+.papacy-action-card > .settcard-actions {
+  flex: 0 0 auto; align-self: center; padding: 4px;
+}
+.papacy-policy-effects {
+  margin-top: 7px; color: var(--helper-text-color); font-size: 12px;
+}
+.papacy-choice small, .papacy-sanction-row small {
   display: block; color: var(--helper-text-color); font-size: 12px; margin-top: 2px;
 }
-.papacy-vote { flex: 0 1 42%; color: #d8b24a; text-align: right; }
 .papacy-choice, .papacy-sanction-row {
   display: flex; align-items: flex-start; gap: 10px; padding: 9px 10px;
   margin-bottom: 7px; background: #2a2216; border: 1px solid #55452a;
@@ -2514,6 +2692,31 @@ textarea.modjson, textarea.savetext {
 .council-ruler-heraldry-button:hover .pface { border-color: #c9a24a; }
 .council-ruler-heraldry-button:focus-visible {
   outline: 2px solid #e0c060; outline-offset: 2px;
+}
+.council-officer-card { align-items: flex-start; }
+.council-officer-main { flex: 1 1 auto; min-width: 0; }
+.council-officer-card .ccname { font-size: 16px; font-weight: bold; }
+.council-officer-card .ccmeta.council-ruler-info {
+  color: var(--main-text-color); font-size: 14px; line-height: 1.35;
+}
+.council-officer-card .ccmeta.council-ruler-info.op-good { color: #9fc06a; }
+.council-officer-card .ccmeta.council-ruler-info.op-bad { color: #d07050; }
+.council-officer-card .ccmeta.council-ruler-info.op-mid {
+  color: var(--helper-text-color);
+}
+.council-officer-actions {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px; margin-top: 8px;
+}
+.council-officer-actions .btn {
+  width: 100%; min-width: 0; min-height: 44px; margin: 0;
+  padding: 7px 9px; font-size: 14px; line-height: 1.2; white-space: normal;
+}
+.council-officer-actions > .btn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+.council-dismissal-reason {
+  margin-top: 7px !important; font-size: 13px !important; line-height: 1.35;
 }
 .council-assignment-heraldry { display: inline-flex; cursor: help; }
 #tooltip .realm-ruler-card { margin-top: 0; }
@@ -2631,12 +2834,116 @@ textarea.modjson, textarea.savetext {
   padding: 5px 0; border-bottom: 1px solid #3e3321;
   color: var(--helper-text-color); font-size: 12px;
 }
-.governance-county-row:last-of-type { border-bottom: 0; }
+.governance-domain-summary {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px; margin-bottom: 10px;
+}
+.governance-domain-summary .kv {
+  min-width: 0; padding: 8px 9px; flex-direction: column;
+  align-items: flex-start; gap: 2px; border: 1px solid #463a25;
+  border-radius: 6px; background: #211b13;
+}
+.governance-domain-summary .kv > span:first-child {
+  color: var(--helper-text-color); font-size: 10px; font-weight: bold;
+  letter-spacing: .035em; text-transform: uppercase;
+}
+.governance-domain-summary .kv b {
+  overflow-wrap: anywhere; color: var(--main-text-color); font-size: 13px;
+}
+.governance-county-row:last-of-type { border-bottom: 1px solid #463a25; }
+.governance-county-row {
+  grid-template-columns: minmax(0, 1fr) auto; gap: 9px;
+  margin: 6px 0; padding: 8px 9px; border: 1px solid #463a25;
+  border-radius: 7px; background: #211b13;
+}
+.governance-county-main {
+  display: flex; min-width: 0; align-items: baseline; gap: 6px;
+}
+.governance-county-main .linklike { min-width: 0; text-align: left; }
+.governance-county-main > span:last-child {
+  margin-left: auto; color: var(--helper-text-color); white-space: nowrap;
+}
 .governance-county-protections {
   display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px;
 }
-.governance-county-protections .btn { min-height: 32px; white-space: normal; }
+.governance-county-protections .btn { min-height: 36px; white-space: normal; }
+.governance-county-protections .settcard-actions { align-self: center; }
+.governance-county-details {
+  grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid #40331f;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.governance-county-details p { margin: 0; }
+.governance-county-details p + p { margin-top: 7px; }
+.governance-county-details b { color: var(--main-text-color); }
 .governance-markers { color: var(--helper-text-color); font-size: 11px; }
+
+/* Privilege cards keep the legal decision on the face and move provenance
+   and contract prose into the shared desktop tooltip / compact disclosure. */
+.privileges-modal .modalcard { width: min(94vw, 760px); }
+.privilege-list { display: grid; gap: 10px; }
+.privilege-card {
+  min-width: 0; padding: 11px 12px; border: 1px solid #55452a;
+  border-radius: 8px; background: linear-gradient(180deg, #251e15, #211a13);
+}
+.privilege-card:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 2px;
+}
+.privilege-card .settcard-head {
+  margin-bottom: 9px; padding-bottom: 7px; border-bottom: 1px solid #40331f;
+}
+.privilege-card-critical {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+}
+.privilege-card-critical .kv {
+  min-width: 0; padding: 0; flex-direction: column;
+  align-items: flex-start; justify-content: flex-start; gap: 2px;
+}
+.privilege-card-critical .kv:nth-child(3) { grid-column: 1 / -1; }
+.privilege-card-critical .kv > span:first-child {
+  color: var(--helper-text-color); font-size: 10px; font-weight: bold;
+  letter-spacing: .035em; text-transform: uppercase;
+}
+.privilege-card-critical .kv b {
+  overflow-wrap: anywhere; color: var(--main-text-color); font-size: 13px;
+  line-height: 1.35;
+}
+.privilege-card-details {
+  padding-top: 8px; border-top: 1px solid #40331f;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.privilege-legal-details .kv {
+  flex-direction: column; align-items: flex-start; gap: 2px;
+}
+.privilege-legal-details .kv > span,
+.privilege-legal-details .kv > b {
+  width: 100%; min-width: 0; max-width: none;
+  text-align: left; overflow-wrap: break-word;
+}
+.privilege-card-details .ccmeta { margin-top: 7px; }
+.privilege-card-details ul { margin: 3px 0 0; padding-left: 18px; }
+.privilege-card-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.privilege-card-actions .btn { width: auto; min-height: 40px; }
+.privilege-opposition-list { display: grid; gap: 6px; }
+.privilege-opposition-row {
+  min-width: 0; padding: 8px 9px; border: 1px solid #463a25;
+  border-radius: 6px; background: #211b13;
+}
+.privilege-opposition-row:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 2px;
+}
+.privilege-opposition-row .settcard-head { margin-bottom: 3px; }
+.privilege-opposition-copy span {
+  display: block; color: #d8b24a; font-size: 13px;
+}
+.privilege-opposition-copy small {
+  display: block; margin-top: 2px; color: var(--helper-text-color); font-size: 12px;
+}
+.privilege-opposition-details {
+  padding-top: 7px; border-top: 1px solid #40331f;
+  color: var(--helper-text-color); font-size: 13px; line-height: 1.4;
+}
+.privilege-opposition-details .kv { gap: 10px; }
+.privilege-opposition-details p { margin: 7px 0 0; }
 .governance-subhead {
   margin: 10px 0 5px; color: #bfa45d; font-size: 12px;
   letter-spacing: .04em; text-transform: uppercase;
@@ -2696,10 +3003,52 @@ textarea.modjson, textarea.savetext {
   min-width: 0; min-height: 36px; padding: 5px 7px;
   line-height: 1.15; white-space: normal;
 }
-.council-protection-list {
-  display: flex; flex-wrap: wrap; gap: 6px; margin: 7px 0 12px;
+.council-reservations {
+  margin: 12px 0 14px; border: 1px solid #55452a;
+  border-radius: 8px; background: #211a13;
 }
-.council-protection-list .btn { min-height: 36px; white-space: normal; }
+.council-reservations > summary {
+  display: flex; min-height: 44px; align-items: center;
+  justify-content: space-between; gap: 10px; padding: 8px 11px;
+  color: #d8b24a; cursor: pointer; list-style: none;
+}
+.council-reservations > summary::-webkit-details-marker { display: none; }
+.council-reservations > summary::after {
+  content: '▸'; flex: 0 0 auto; color: #d8b24a;
+  transition: transform .15s ease;
+}
+.council-reservations[open] > summary::after { transform: rotate(90deg); }
+.council-reservations > summary:focus-visible {
+  outline: 2px solid #e0c060; outline-offset: 2px; border-radius: 7px;
+}
+.council-reservations > summary span { font-weight: bold; }
+.council-reservations > summary small {
+  margin-left: auto; color: var(--helper-text-color); font-size: 12px;
+  text-align: right;
+}
+.council-reservation-body {
+  padding: 0 10px 10px; border-top: 1px solid #40331f;
+}
+.council-reservation-body > .cmeta {
+  margin: 8px 0; color: var(--helper-text-color); font-size: 13px;
+  line-height: 1.4;
+}
+.council-protection-list {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px; max-height: min(34vh, 250px); overflow-y: auto;
+  padding-right: 4px; overscroll-behavior: contain;
+}
+.council-protection-list .btn {
+  display: flex; width: 100%; min-width: 0; min-height: 38px;
+  align-items: center; gap: 4px; padding: 5px 7px;
+  font-size: 13px; line-height: 1.2; white-space: normal;
+}
+.council-protection-name {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.council-protection-state {
+  margin-left: auto; color: var(--helper-text-color); font-size: 11px;
+}
 .governance-seat {
   display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1fr);
   gap: 2px 9px; margin: 6px 0; padding: 7px 8px;
@@ -3379,8 +3728,19 @@ textarea.modjson, textarea.savetext {
   }
   .governance-sections { padding: 0 0 4px; }
   .governance-card { padding: 11px 10px 13px; }
+  .governance-domain-summary { grid-template-columns: minmax(0, 1fr); }
   .governance-county-row { grid-template-columns: minmax(0, 1fr); }
+  .governance-county-main { flex-wrap: wrap; }
+  .governance-county-main > span:last-child { margin-left: 0; }
   .governance-county-protections { justify-content: flex-start; }
+  .council-protection-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .council-reservations > summary { align-items: flex-start; flex-wrap: wrap; }
+  .council-reservations > summary small {
+    flex: 1 1 100%; margin-left: 0; text-align: left;
+  }
+  .privilege-card-critical { grid-template-columns: minmax(0, 1fr); }
+  .privilege-card-critical .kv:nth-child(3) { grid-column: auto; }
+  .privilege-card-actions .btn { width: 100%; min-height: 48px; }
   .governance-vassal {
     display: block; margin-bottom: 8px; padding: 10px;
     border: 1px solid #493c27; border-radius: 7px; background: #211a13;
@@ -3419,8 +3779,13 @@ textarea.modjson, textarea.savetext {
   .equip-best-list { grid-template-columns: 1fr; }
   .education-policy-field select,
   .education-policy-field input[type="number"] { width: 100%; min-height: 48px; }
-  .papacy-summary, .papacy-college { grid-template-columns: 1fr; }
-  .papacy-elector { min-height: 68px; }
+  .papacy-summary, .papacy-ballot-flow {
+    grid-template-columns: 1fr;
+  }
+  .papacy-ballot-candidate-group > header,
+  .papacy-ballot-voter-main { min-height: 48px; }
+  .papacy-tactic-card { flex: 1 1 100%; }
+  .papacy-action-card > .actionbtn { min-height: 48px; }
   #tb-date { display: none; }
   .stat { font-size: 14px; min-width: 52px; }
   /* a taller tap target for the resource breakdown, layout left as it was */
@@ -3751,6 +4116,11 @@ textarea.modjson, textarea.savetext {
   }
 }
 
+@media (max-width: 420px) {
+  .council-officer-actions { grid-template-columns: minmax(0, 1fr); }
+  .council-officer-actions > .btn:last-child:nth-child(odd) { grid-column: auto; }
+}
+
 @media (max-width: 600px) {
   .update-banner { flex-wrap: wrap; gap: 9px; }
   .update-banner-copy { flex-basis: 100%; }
@@ -3764,7 +4134,9 @@ textarea.modjson, textarea.savetext {
   .enterprise-view-controls { align-items: stretch; flex-direction: column; }
   .enterprise-view-controls label { width: 100%; flex-basis: auto; }
   .war-target-toolbar { position: static; grid-template-columns: 1fr 1fr; }
+  .war-justification-toolbar { grid-template-columns: 1fr; }
   .war-target-search { grid-column: 1 / -1; }
+  .aggression-confirm-critical { grid-template-columns: 1fr; }
   .raid-target-toolbar { position: static; grid-template-columns: 1fr; }
   .raid-target-actions, .raid-target-options { width: 100%; }
   .shortcut-binding-row { grid-template-columns: 72px minmax(0, 1fr); }

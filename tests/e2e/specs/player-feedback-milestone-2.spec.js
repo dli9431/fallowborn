@@ -77,7 +77,7 @@ test('technology search discovers unlocks and locked links follow role access',
     await expect(commonWorkshop).toHaveAttribute(
       'data-enterprise-available', 'false');
     await expect(commonWorkshop).toContainText('Unavailable');
-    await commonWorkshop.locator('..').hover();
+    await commonWorkshop.focus();
     await expect(page.locator('#tooltip')).toContainText('Requires Horizontal Loom');
     await commonWorkshop.click();
     await expect(page.locator('[data-enterprise-blocker="technology"]'))

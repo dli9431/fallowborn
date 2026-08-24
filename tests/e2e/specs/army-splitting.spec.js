@@ -689,22 +689,40 @@ test('Deeds panel renders compact war card with summary and interactive tooltips
     expect(highlightState.hasGroupOutline).toBe(true);
   });
 
-test('Army move orders render movement path and destination marker on map',
+test('Map routes show controlled hosts and only the active-war enemy',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const state = FB.state;
       const home = state.player.provinceId;
       const adj = Object.keys(FB.world.adj[home] || {});
       const targetPid = adj[0];
-      const host = {
-        id:'marching_route_host', realm:'player', men:500, size:500,
-        units:{ levy:300, arch:200, cav:0, ret:0, mercs:0 },
-        at:home, from:home, moveLeft:10, path:[targetPid], goal:targetPid, supply:90
+      const makeHost = function (id, realm) {
+        return {
+          id:id, realm:realm, men:500, size:500,
+          units:{ levy:300, arch:200, cav:0, ret:0, mercs:0 },
+          at:home, from:home, moveLeft:10, path:[targetPid],
+          goal:targetPid, supply:90
+        };
       };
-      state.armies = [host];
+      const playerHost = makeHost('marching_route_host', 'player');
+      const enemyHost = makeHost('marching_enemy_host', 'route_enemy');
+      const bystanderHost = makeHost('marching_bystander_host', 'route_bystander');
+      state.realms.route_enemy = {
+        id:'route_enemy', name:'Route Enemy', alive:true,
+        capital:targetPid, color:'#8f3028', rank:4
+      };
+      state.realms.route_bystander = {
+        id:'route_bystander', name:'Route Bystander', alive:true,
+        capital:targetPid, color:'#405080', rank:4
+      };
+      state.armies = [playerHost, enemyHost, bystanderHost];
+      state.player.war = {
+        enemy:'route_enemy', target:targetPid, wins:0, losses:0,
+        seasons:0, defending:false, strength:1
+      };
 
-      // Render armies and intercept canvas draw calls
-      let lineDrawn = false;
+      let routeDash = false;
+      let routeStrokes = [];
       const mockCtx = {
         canvas: { width: 800, height: 600 },
         strokeStyle: '',
@@ -713,12 +731,16 @@ test('Army move orders render movement path and destination marker on map',
         font: '',
         textAlign: '',
         textBaseline: '',
-        setLineDash: function () {},
+        setLineDash: function (dash) { routeDash = !!dash.length; },
         beginPath: function () {},
-        moveTo: function () { lineDrawn = true; },
-        lineTo: function () { lineDrawn = true; },
-        stroke: function () { lineDrawn = true; },
+        moveTo: function () {},
+        lineTo: function () {},
+        stroke: function () {
+          if (routeDash) routeStrokes.push(this.strokeStyle);
+        },
         arc: function () {},
+        ellipse: function () {},
+        closePath: function () {},
         fill: function () {},
         fillText: function () {},
         strokeText: function () {},
@@ -728,16 +750,32 @@ test('Army move orders render movement path and destination marker on map',
         translate: function () {}
       };
       const toScreen = function (x, y) { return [x * 10, y * 10]; };
-      FB.renderArmies(mockCtx, toScreen, 1, 1);
+      FB.renderArmies(mockCtx, toScreen, 2, 1);
+      const wartimeRoutes = routeStrokes.slice();
+
+      routeStrokes = [];
+      state.player.war = null;
+      FB.renderArmies(mockCtx, toScreen, 2, 1);
 
       return {
-        lineDrawn: lineDrawn,
-        hostHasPath: host.path.length > 0
+        wartimeRoutes:wartimeRoutes,
+        peacetimeRoutes:routeStrokes,
+        playerHasPath:playerHost.path.length > 0,
+        enemyHasPath:enemyHost.path.length > 0,
+        bystanderHasPath:bystanderHost.path.length > 0
       };
     });
 
-    expect(result.hostHasPath).toBe(true);
-    expect(result.lineDrawn).toBe(true);
+    expect(result.playerHasPath).toBe(true);
+    expect(result.enemyHasPath).toBe(true);
+    expect(result.bystanderHasPath).toBe(true);
+    expect(result.wartimeRoutes).toEqual([
+      'rgba(255, 215, 80, 0.92)',
+      'rgba(220, 68, 54, 0.96)'
+    ]);
+    expect(result.peacetimeRoutes).toEqual([
+      'rgba(255, 215, 80, 0.92)'
+    ]);
   });
 
 test('Ordering army to a second location overrides the path directly instead of chaining',

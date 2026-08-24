@@ -10,6 +10,22 @@ window.FB = window.FB || {};
   const english = {};
   const listeners = [];
   let toastSuppression = 0;
+  const HOSTILE_HISTORY_LIMIT = 200;
+
+  function expireHostileChronicleLinks(state, reports) {
+    if (!state || !Array.isArray(state.log) || !reports || !reports.length) return;
+    const expired = {};
+    for (let i = 0; i < reports.length; i++) {
+      if (reports[i] && reports[i].id) expired[reports[i].id] = 1;
+    }
+    for (let i = 0; i < state.log.length; i++) {
+      const entry = state.log[i];
+      if (entry && expired[entry.hostileReportId]) {
+        delete entry.hostileReportId;
+        delete entry.hostileReportKind;
+      }
+    }
+  }
 
   function plainObject(value) {
     if (!value || Object.prototype.toString.call(value) !== '[object Object]') return false;
@@ -141,6 +157,67 @@ window.FB = window.FB || {};
   };
   FB.newsToastsSuppressed = function () { return toastSuppression > 0; };
 
+  /* Hostile reports are compact saved facts, never rendered prose. They are
+     appended only when a raid, battle, or war boundary actually occurs; no
+     daily tick reads this ledger. The cap keeps save serialization bounded. */
+  FB.HOSTILE_HISTORY_LIMIT = HOSTILE_HISTORY_LIMIT;
+  FB.hostileHistory = function (state) {
+    if (!state) return [];
+    if (!Array.isArray(state.hostileHistory)) state.hostileHistory = [];
+    if (state.hostileHistory.length > HOSTILE_HISTORY_LIMIT) {
+      const expired = state.hostileHistory.splice(0,
+        state.hostileHistory.length - HOSTILE_HISTORY_LIMIT);
+      expireHostileChronicleLinks(state, expired);
+    }
+    return state.hostileHistory;
+  };
+
+  FB.hostileReport = function (state, id) {
+    if (!state || !id) return null;
+    const history = FB.hostileHistory(state);
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i] && history[i].id === id) return history[i];
+    }
+    return null;
+  };
+
+  FB.recordHostileEvent = function (state, record) {
+    if (!state || !record || typeof record.kind !== 'string') return null;
+    const history = FB.hostileHistory(state);
+    let serial = Math.max(0, Math.round(Number(state.hostileHistorySerial) || 0));
+    if (!serial) {
+      for (let i = 0; i < history.length; i++) {
+        const match = history[i] && /^hostile_(\d+)$/.exec(history[i].id || '');
+        if (match) serial = Math.max(serial, Number(match[1]) || 0);
+      }
+    }
+    state.hostileHistorySerial = serial + 1;
+    const saved = FB.messageParams(record);
+    saved.id = 'hostile_' + state.hostileHistorySerial;
+    saved.turn = saved.turn === undefined ? state.turn : saved.turn;
+    saved.y = saved.y === undefined ? state.date.year : saved.y;
+    saved.s = saved.s === undefined ? state.date.season : saved.s;
+    saved.d = saved.d === undefined ? state.date.day : saved.d;
+    history.push(saved);
+    if (history.length > HOSTILE_HISTORY_LIMIT) {
+      const expired = history.splice(0, history.length - HOSTILE_HISTORY_LIMIT);
+      expireHostileChronicleLinks(state, expired);
+    }
+    return saved;
+  };
+
+  FB.updateHostileEvent = function (state, id, patch) {
+    const saved = FB.hostileReport(state, id);
+    if (!saved || !patch) return null;
+    const safe = FB.messageParams(patch);
+    for (const key in safe) {
+      if (key !== 'id' && Object.prototype.hasOwnProperty.call(safe, key)) {
+        saved[key] = safe[key];
+      }
+    }
+    return saved;
+  };
+
   /* New entries carry a descriptor and can be rendered in any locale. Legacy
      strings remain supported so old saves need no migration. Optional entry
      metadata is additive: old builds ignore it and still render msg/t. */
@@ -155,6 +232,19 @@ window.FB = window.FB || {};
     const kind = options.kind || options.category;
     if (typeof kind === 'string' && kind) entry.kind = kind;
     if (options.receipt) entry.receipt = FB.messageParams(options.receipt);
+    if (typeof options.hostileReportId === 'string' && options.hostileReportId) {
+      entry.hostileReportId = options.hostileReportId;
+    } else if (entry.msg && /^news\.war\./.test(entry.msg.key || '') &&
+        state.player && state.player.war && state.player.war.hostileReportId) {
+      /* Every Chronicle line emitted during an ordinary player war can reopen
+         that campaign's report. This is append-time metadata only; Chronicle
+         rendering and daily ticks do not search or rebuild the campaign. */
+      entry.hostileReportId = state.player.war.hostileReportId;
+    }
+    if (entry.hostileReportId) {
+      const report = FB.hostileReport(state, entry.hostileReportId);
+      if (report) entry.hostileReportKind = report.kind;
+    }
     state.log.push(entry);
     if (state.log.length > 300) state.log.splice(0, state.log.length - 300);
     if (options.toast !== false && !toastSuppression) {

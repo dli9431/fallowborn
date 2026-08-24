@@ -6,12 +6,14 @@ dependsOnRuntime(__filename, [
   'js/armies.js',
   'js/events.js',
   'js/ui_modals.js',
+  'js/ui_panels.js',
   'data/events_war.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+const { waitForUiRefresh } = require('../support/game/ui');
 
 async function startCampaignGame(page, testInfo) {
   await openGame(page, testInfo);
@@ -63,6 +65,66 @@ async function startCampaignGame(page, testInfo) {
     return { enemyId:enemyId, homeId:homeId };
   });
 }
+
+test('Muster Host stays visible through fielded and rearming wartime states',
+  async function ({ page }, testInfo) {
+    await startCampaignGame(page, testInfo);
+    var fielded = await page.evaluate(function () {
+      var status = FB.instantStatus(FB.state, 'muster_host');
+      FB.ui.revealDeedAction('muster_host');
+      return {
+        shown:status.shown,
+        can:status.can,
+        reason:status.reason
+      };
+    });
+    expect(fielded).toEqual({
+      shown:true,
+      can:false,
+      reason:'Your host is already in the field.'
+    });
+    var muster = page.locator('[data-action-id="muster_host"]');
+    await expect(muster).toBeVisible();
+    await expect(muster).toBeDisabled();
+    await expect(page.locator('#deed-details-muster_host .deed-status-text'))
+      .toContainText('already in the field');
+
+    var rearming = await page.evaluate(function () {
+      var s = FB.state;
+      s.armies = (s.armies || []).filter(function (host) {
+        return host.realm !== 'player';
+      });
+      s.armyDown = s.armyDown || {};
+      s.armyDown.player = s.turn;
+      FB.ui.refresh();
+      var status = FB.instantStatus(s, 'muster_host');
+      return {
+        shown:status.shown,
+        can:status.can,
+        reason:status.reason,
+        days:FBDATA.balance.armyRearmDays
+      };
+    });
+    await waitForUiRefresh(page);
+    expect(rearming.shown).toBe(true);
+    expect(rearming.can).toBe(false);
+    expect(rearming.reason).toBe('The host needs ' + rearming.days +
+      ' more days before it can muster again.');
+    await expect(muster).toBeVisible();
+    await expect(muster).toBeDisabled();
+
+    var ready = await page.evaluate(function () {
+      var s = FB.state;
+      s.turn += FBDATA.balance.armyRearmDays;
+      FB.ui.refresh();
+      var status = FB.instantStatus(s, 'muster_host');
+      return { shown:status.shown, can:status.can, reason:status.reason };
+    });
+    await waitForUiRefresh(page);
+    expect(ready).toEqual({ shown:true, can:true, reason:'' });
+    await expect(muster).toBeVisible();
+    await expect(muster).toBeEnabled();
+  });
 
 test('filtered declarations initialize campaign feedback and preserve the catalogue after withdrawal',
   async function ({ page }, testInfo) {
@@ -126,6 +188,12 @@ test('filtered declarations initialize campaign feedback and preserve the catalo
       setup.target + '"]');
     await expect(targetRow).toBeVisible();
     await targetRow.click();
+    await expect(page.getByRole('heading', {
+      name:'War Justification', exact:true
+    })).toBeVisible();
+    await page.getByRole('button', {
+      name:'Declare war', exact:true
+    }).click();
 
     var active = await page.evaluate(function () {
       var s = FB.state;

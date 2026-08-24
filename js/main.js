@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.153.4';
+  FB.VERSION = '1.154.0';
   FB.CHANGELOG = [
+    { v: '1.154.0', date: '2026-08-24', changes: [
+      'Chronicle war, battle, and raid notices now open compact saved result reports; wartime map orders show enemy movement and resolve battles only when hostile hosts share a county.',
+      'Dense Governance, Council, Papacy, conquest, and privilege sheets now use consistent controls, navigation, and tooltips.'
+    ] },
     { v: '1.153.4', date: '2026-08-23', changes: [
       'Raiding expeditions now offer target sorting, last-target reuse, repeat-raiding and summary preferences, with compact header guidance.',
       'Deed cooldowns stay current during flowing time and fast-forward, and modal exits now use consistent Close, Back, and Cancel labels.'

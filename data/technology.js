@@ -335,6 +335,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Horse-archer, huscarl, and camel-rider companies gate on the mustering realm’s culture alone; no period technology credibly blocks a people’s traditional arm, so no dependency is invented.'
       },
+      war_justification_selection:{
+        mode:'none',
+        rationale:'Choosing among legal bases the ruler already holds is core declaration judgment; the rights retain their existing eligibility, and no technology credibly governs selecting which valid claim to press.'
+      },
       host_splitting_encirclement:{
         mode:'none',
         rationale:'Splitting and merging field hosts, and the destruction of a host shattered while cut off, are core play available from the baseline; no credible period technology gates dividing an army or reading whether a road home remains, so no dependency is invented.'

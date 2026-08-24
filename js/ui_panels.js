@@ -2395,17 +2395,6 @@ window.FB = window.FB || {};
     if (standardSummary) {
       h += kv('Active household standards', esc(standardSummary));
     }
-    if (FB.ageOf(me, s.date.year) >= 10) {
-      const landed = s.player.tier >= 3;
-      h += '<button class="actionbtn" id="self-work">' +
-        esc(FB.T(landed ? '🧰 Household work & enterprises…' : '🧰 Work, training & enterprises…')) +
-        '<span class="adesc">' + esc(FB.T(landed
-          ? 'Your calling is now biography; manage the occupations and productive property of your household.'
-          : 'Manage the occupations and productive property of your household.')) +
-        '</span></button>';
-    } else {
-      h += '<div class="hint">' + esc(FB.T('Too young for an apprenticeship yet.')) + '</div>';
-    }
     if (FB.ageOf(me, s.date.year) < 16) {
       h += panelh('Upbringing') + upbringingNote(s, me) +
         '<button class="actionbtn" id="self-edufocus">🎓 Choose your education focus…' +
@@ -2452,8 +2441,6 @@ window.FB = window.FB || {};
     if (sef) sef.addEventListener('click', function () { UI.showEduFocus(me.id); });
     const stu = $('self-tutor');
     if (stu) stu.addEventListener('click', function () { UI.showTutorPick(me.id); });
-    const sw = $('self-work');
-    if (sw) sw.addEventListener('click', UI.showLivelihoods);
     const bishopric = $('self-bishopric');
     if (bishopric) bishopric.addEventListener('click', UI.showBishopric);
     const srh = $('self-rename-house');
@@ -5946,6 +5933,8 @@ window.FB = window.FB || {};
   SH.logRenderedHeader = ''; SH.logRenderedLocale = ''; // append-path validity keys
   SH.logFilter = SH.logFilter || 'all';
   SH.logRenderedFilter = '';
+  let chronicleEnglishPending = false;
+  let chronicleEnglishFailed = false;
   function receiptImpactClass(record) {
     if (record.lethal) return 'danger';
     if (record.amount < 0 || record.action === 'remove' || record.action === 'lose') {
@@ -5985,9 +5974,22 @@ window.FB = window.FB || {};
       : FB.T('{season}, {year}', { season: FB.seasonName(e.s), year: e.y });
     const receipt = e.kind === 'choice' && e.receipt
       ? choiceReceiptHtml(s, e.receipt) : '';
-    return '<div class="logentry' + (receipt ? ' choice-entry' : '') + '">' +
+    const reportId = e.hostileReportId;
+    const reportKind = e.hostileReportKind;
+    const content = receipt || esc(FB.newsText(e, s, s.player.charId));
+    let body = content;
+    if (reportId && reportKind) {
+      const label = reportKind === 'raid' ? FB.T('View raid report')
+        : (reportKind === 'battle' ? FB.T('View battle report')
+          : FB.T('View war report'));
+      body = '<button type="button" class="chronicle-hostile-link" data-hostile-report="' +
+        esc(reportId) + '">' + content +
+        '<span class="chronicle-hostile-link-label">' + esc(label) + ' →</span></button>';
+    }
+    return '<div class="logentry' + (receipt ? ' choice-entry' : '') +
+      (reportId && reportKind ? ' hostile-entry' : '') + '">' +
       '<span class="ldate">' + esc(logDate) + '</span><br>' +
-      (receipt || esc(FB.newsText(e, s, s.player.charId))) + '</div>';
+      body + '</div>';
   }
   function logMatches(e, filter) {
     if (filter === 'choices') return !!(e && e.kind === 'choice');
@@ -6012,21 +6014,68 @@ window.FB = window.FB || {};
   }
   function wireLogControls(box) {
     box.querySelectorAll('[data-chronicle-filter]').forEach(function (button) {
+      if (button.getAttribute('data-chronicle-filter-wired')) return;
+      button.setAttribute('data-chronicle-filter-wired', 'true');
       button.addEventListener('click', function () {
         UI.setChronicleFilter(button.getAttribute('data-chronicle-filter'));
+      });
+    });
+    box.querySelectorAll('[data-hostile-report]').forEach(function (button) {
+      if (button.getAttribute('data-hostile-report-wired')) return;
+      button.setAttribute('data-hostile-report-wired', 'true');
+      button.addEventListener('click', function () {
+        if (UI.showHostileReport) {
+          UI.showHostileReport(button.getAttribute('data-hostile-report'));
+        }
       });
     });
   }
   function renderLog() {
     const s = FB.state;
     const tail = s.log.length ? s.log[s.log.length - 1] : null;
-    if (tail === SH.logRenderedTail && s.log.length === SH.logRenderedLen &&
-        SH.logFilter === SH.logRenderedFilter) return;
     const header = '<div class="panelh">' + esc(FB.game && FB.game.observe
       ? FB.T('Chronicle of the realms')
       : FB.T('Chronicle of {dynasty}', { dynasty: s.chars[s.player.charId].dyn || FB.T('your line') })) +
       '</div>';
     const box = $('tab-log');
+    let missingEnglish = false;
+    if (!FBDATA.lang.en && !chronicleEnglishFailed) {
+      for (let i = s.log.length - 1, seen = 0; i >= 0 && seen < 80; i--) {
+        if (!logMatches(s.log[i], SH.logFilter)) continue;
+        seen++;
+        const entry = s.log[i];
+        const receipt = entry && entry.receipt;
+        const messages = [entry && entry.msg, receipt && receipt.title,
+          receipt && receipt.option, receipt && receipt.outcome];
+        for (let j = 0; j < messages.length; j++) {
+          if (messages[j] && typeof messages[j].key === 'string' &&
+              !FB.englishMessage(messages[j].key)) {
+            missingEnglish = true;
+            break;
+          }
+        }
+        if (missingEnglish) break;
+      }
+    }
+    if (missingEnglish && FB.ensureEnglishCatalog) {
+      if (!chronicleEnglishPending) {
+        chronicleEnglishPending = true;
+        FB.ensureEnglishCatalog(function (loaded) {
+          chronicleEnglishPending = false;
+          chronicleEnglishFailed = !loaded;
+          SH.logRenderedTail = null;
+          SH.logRenderedLen = -1;
+          if (FB.state && SH.activeTab === 'log') renderLog();
+        });
+      }
+      box.innerHTML = header + logControlsHtml() +
+        '<div class="chronicle-entries"><div class="logentry">' +
+        esc(FB.T('Loading Chronicle…')) + '</div></div>';
+      wireLogControls(box);
+      return;
+    }
+    if (tail === SH.logRenderedTail && s.log.length === SH.logRenderedLen &&
+        SH.logFilter === SH.logRenderedFilter) return;
     /* The log grows by appends (truncation only bites far above the visible
        window), so fresh entries are prepended and the overflow trimmed — the
        DOM ends identical to a full rebuild without reparsing 80 nodes. Any
@@ -6051,6 +6100,7 @@ window.FB = window.FB || {};
       }
       SH.logRenderedTail = tail; SH.logRenderedLen = to;
       FB.localizeTree(box);
+      wireLogControls(box);
       return;
     }
     SH.logRenderedTail = tail; SH.logRenderedLen = s.log.length;

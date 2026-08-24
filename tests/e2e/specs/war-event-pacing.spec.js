@@ -198,6 +198,182 @@ test('a peaceful day with no hosts bypasses the field-army pipeline',
     expect(result).toEqual({ playerHostCalls:0, armies:0 });
   });
 
+test('adjacent hosts plan from start-of-day counties and fight only after co-location',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const adj = FB.world.adj;
+      let triangle = null;
+      for (const source in adj) {
+        const neighbors = Object.keys(adj[source] || {}).filter(function (pid) {
+          const pr = FB.world.byId[pid];
+          return pr && !pr.wasteland && !FB.waterCrossing(source, pid);
+        });
+        for (let i = 0; i < neighbors.length && !triangle; i++) {
+          for (let j = i + 1; j < neighbors.length; j++) {
+            if (adj[neighbors[i]] && adj[neighbors[i]][neighbors[j]] &&
+                !FB.waterCrossing(neighbors[i], neighbors[j])) {
+              triangle = [source, neighbors[i], neighbors[j]];
+              break;
+            }
+          }
+        }
+        if (triangle) break;
+      }
+      if (!triangle) throw new Error('Expected a three-county land triangle.');
+
+      const playerSource = triangle[0];
+      const emptyTarget = triangle[1];
+      const enemySource = triangle[2];
+      const enemyId = Object.keys(s.realms).filter(function (rid) {
+        const realm = s.realms[rid];
+        return rid !== 'player' && realm && realm.alive && !realm.liege;
+      })[0];
+      const oldAuto = FB.game.auto.hosts;
+      const oldTechMarch = FB.techArmyMarchDays;
+      const oldTerrain = {};
+      const terrainIds = [playerSource, emptyTarget, enemySource].map(function (pid) {
+        return FB.world.byId[pid].terrain || 'plains';
+      });
+      terrainIds.forEach(function (terrain) {
+        oldTerrain[terrain] = FBDATA.balance.terrainMarchMult[terrain];
+        FBDATA.balance.terrainMarchMult[terrain] = 1;
+      });
+
+      FB.game.auto.hosts = 'manual';
+      FB.techArmyMarchDays = function () { return 1; };
+      p.provinceId = playerSource;
+      p.provs = [playerSource, emptyTarget];
+      s.owner[playerSource] = 'player';
+      s.owner[emptyTarget] = 'player';
+      s.owner[enemySource] = enemyId;
+      s.holder[playerSource] = 'player';
+      s.holder[emptyTarget] = 'player';
+      s.holder[enemySource] = enemyId;
+      s.buildings[playerSource] = [];
+      s.buildings[emptyTarget] = [];
+      s.buildings[enemySource] = [];
+      FB.invalidateFortIndex();
+      p.war = {
+        enemy:enemyId, target:enemySource, wins:0, losses:0, seasons:0,
+        defending:false, strength:1
+      };
+      s.armyDown = {};
+      s.armyDetachmentDown = {};
+      s.armyCohorts = {};
+      s.eventQueue = [];
+      s.armies = [
+        {
+          id:'simultaneous-player', realm:'player', men:500, size:500,
+          units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
+          at:playerSource, from:playerSource, moveLeft:1,
+          path:[emptyTarget], goal:emptyTarget, supply:100, manual:1
+        },
+        {
+          id:'simultaneous-enemy', realm:enemyId, men:500, size:500,
+          units:{ levy:500, arch:0, cav:0, ret:0, mercs:0 },
+          at:enemySource, from:enemySource, moveLeft:0,
+          path:[], goal:null, supply:100
+        }
+      ];
+
+      try {
+        FB.armyTick(s);
+        return {
+          playerAt:s.armies[0] && s.armies[0].at,
+          enemyAt:s.armies[1] && s.armies[1].at,
+          target:emptyTarget,
+          playerSource:playerSource,
+          battleEvents:s.eventQueue.filter(function (item) {
+            return item.id.indexOf('field_battle_') === 0;
+          }).length,
+          wins:p.war && p.war.wins,
+          losses:p.war && p.war.losses
+        };
+      } finally {
+        FB.game.auto.hosts = oldAuto;
+        FB.techArmyMarchDays = oldTechMarch;
+        for (const terrain in oldTerrain) {
+          FBDATA.balance.terrainMarchMult[terrain] = oldTerrain[terrain];
+        }
+      }
+    });
+
+    expect(result.playerAt).toBe(result.target);
+    expect(result.enemyAt).toBe(result.playerSource);
+    expect(result.battleEvents).toBe(0);
+    expect(result.wins).toBe(0);
+    expect(result.losses).toBe(0);
+  });
+
+test('siege Chronicle progress keeps ledger precision but displays whole steps',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const enemyId = Object.keys(s.realms).filter(function (rid) {
+        const realm = s.realms[rid];
+        return rid !== 'player' && realm && realm.alive && !realm.liege;
+      })[0];
+      const target = Object.keys(s.owner).filter(function (pid) {
+        return s.owner[pid] === enemyId;
+      })[0];
+      const oldTechBonus = FB.techBonus;
+      const oldChance = FB.chance;
+      const oldBuildings = s.buildings[target];
+      p.tier = 4;
+      s.buildings[target] = [{ s:0, id:'walls', level:1 }];
+      FB.invalidateFortIndex();
+      p.war = {
+        enemy:enemyId, target:target, wins:0, losses:0, seasons:0,
+        defending:false, strength:1, siege:3
+      };
+      const host = {
+        id:'decimal-siege-host', realm:'player', men:5000, size:5000,
+        units:{ levy:5000, arch:0, cav:0, ret:0, mercs:0 },
+        at:target, from:target, moveLeft:0, path:[], goal:null, supply:100
+      };
+      s.armies = [host];
+      const required = FB.fortSiegeStatus(s, target,
+        { fortLevel:1, progress:0 }, [host]).required;
+      FB.techBonus = function (state, effect, realmId) {
+        if (effect === 'siege' &&
+            (realmId === undefined || realmId === 'player')) {
+          return 0.19166666666666665;
+        }
+        return oldTechBonus.apply(this, arguments);
+      };
+      FB.chance = function () { return false; };
+
+      let entry;
+      try {
+        FB.fns.war_siege(s);
+        entry = s.log.slice().reverse().filter(function (item) {
+          return item.msg && item.msg.key === 'news.war.siege_tightens';
+        })[0];
+        return {
+          stored:p.war.siege,
+          required:required,
+          params:entry && entry.msg.params,
+          text:entry ? FB.newsText(entry, s, p.charId) : ''
+        };
+      } finally {
+        FB.techBonus = oldTechBonus;
+        FB.chance = oldChance;
+        s.buildings[target] = oldBuildings;
+        FB.invalidateFortIndex();
+      }
+    });
+
+    expect(result.stored).toBeCloseTo(4.575, 6);
+    expect(result.params.progress).toBe(Math.round(result.stored));
+    expect(result.params.required).toBe(Math.round(result.required));
+    expect(result.text).toContain('(' + result.params.progress + '/' +
+      result.params.required + ')');
+    expect(result.text).not.toMatch(/\d+\.\d+/);
+  });
+
 test('pausing an open event defers an unread batch instead of opening it',
   async function ({ page }) {
     await page.evaluate(function () {

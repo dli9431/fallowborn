@@ -344,10 +344,15 @@ test('a battle-proven founder can manually march and win by real field command',
       const orderAccepted = FB.armyTap(s, marchProvince,
         marchProvince.cx, marchProvince.cy);
       const orderedDays = commandHost.moveLeft;
+      const manualOrderStarted = orderedDays > 0 &&
+        commandHost.goal === marchTarget && commandHost.path[0] === marchTarget;
       FB.armyTick(s);
-      const manualGoalKept = commandHost.goal === marchTarget &&
-        (commandHost.at === marchTarget ||
-          commandHost.path[0] === marchTarget);
+      const manualRouteStateValid = commandHost.at === marchTarget
+        ? commandHost.goal === marchTarget ||
+          (commandHost.goal === null && commandHost.path.length === 0 &&
+            FB.fortBlocksArmy(s, marchTarget, commandHost))
+        : commandHost.goal === marchTarget &&
+          commandHost.path[0] === marchTarget;
       const manualMarchAdvanced = commandHost.at === marchTarget ||
         commandHost.moveLeft === Math.max(0, orderedDays - 1);
 
@@ -381,7 +386,8 @@ test('a battle-proven founder can manually march and win by real field command',
         selectedCommandHost:selectedCommandHost,
         haltControlVisible:haltControlVisible,
         orderAccepted:orderAccepted,
-        manualGoalKept:manualGoalKept,
+        manualOrderStarted:manualOrderStarted,
+        manualRouteStateValid:manualRouteStateValid,
         manualMarchAdvanced:manualMarchAdvanced,
         won:!!queued,
         queued:!!queued,
@@ -406,7 +412,8 @@ test('a battle-proven founder can manually march and win by real field command',
       selectedCommandHost:true,
       haltControlVisible:true,
       orderAccepted:true,
-      manualGoalKept:true,
+      manualOrderStarted:true,
+      manualRouteStateValid:true,
       manualMarchAdvanced:true,
       won:true,
       queued:true,

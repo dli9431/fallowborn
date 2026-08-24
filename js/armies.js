@@ -807,6 +807,60 @@ window.FB = window.FB || {};
     return war;
   };
 
+  FB.ensurePlayerWarHistory = function (state) {
+    const war = state && state.player && state.player.war;
+    if (!war || !FB.recordHostileEvent) return null;
+    let report = war.hostileReportId && FB.hostileReport
+      ? FB.hostileReport(state, war.hostileReportId) : null;
+    if (report) return report;
+    report = FB.recordHostileEvent(state, {
+      kind:'war', status:'active', startedTurn:state.turn,
+      enemyId:war.enemy || null, targetPid:war.target || null,
+      defending:!!war.defending,
+      causeType:war.casus && war.casus.type || null,
+      causeTarget:war.casus && war.casus.target || null,
+      titleKind:war.casus && war.casus.titleKind || null,
+      titleId:war.casus && war.casus.titleId || null,
+      wins:war.wins || 0, losses:war.losses || 0, seasons:war.seasons || 0
+    });
+    if (report) war.hostileReportId = report.id;
+    return report;
+  };
+
+  FB.finishPlayerWarHistory = function (state, result) {
+    const war = state && state.player && state.player.war;
+    if (!war) return null;
+    const report = FB.ensurePlayerWarHistory(state);
+    if (!report || !FB.updateHostileEvent) return report;
+    const need = FBDATA.balance.warWinsToTakeProvince || 3;
+    let resolved = result;
+    if (!resolved) {
+      const playerRealm = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+      const targetOwner = state.owner && state.owner[war.target];
+      const targetHolder = state.holder && state.holder[war.target];
+      if (!war.defending && war.target &&
+          (targetOwner === 'player' || targetHolder === 'player' ||
+            targetOwner === playerRealm)) {
+        resolved = 'victory';
+      } else if ((war.losses || 0) >= need) {
+        resolved = 'defeat';
+      } else if ((war.wins || 0) >= need ||
+          (war.wins || 0) > (war.losses || 0)) {
+        resolved = war.defending ? 'victory' : 'favorable_peace';
+      } else if ((war.losses || 0) > (war.wins || 0)) {
+        resolved = 'unfavorable_peace';
+      } else {
+        resolved = 'peace';
+      }
+    }
+    return FB.updateHostileEvent(state, report.id, {
+      status:'concluded', result:resolved, endedTurn:state.turn,
+      endedY:state.date.year, endedS:state.date.season, endedD:state.date.day,
+      wins:war.wins || 0, losses:war.losses || 0, seasons:war.seasons || 0,
+      finalTargetPid:war.target || null
+    });
+  };
+
   FB.notePlayerWarTroopLosses = function (state, losses) {
     const war = FB.ensurePlayerWarFeedback(state);
     if (!war || !losses) return;
@@ -832,6 +886,20 @@ window.FB = window.FB || {};
       playerLosses:copyUnitCounts(record.playerLosses),
       enemyLosses:copyUnitCounts(record.enemyLosses)
     };
+    const warReport = FB.ensurePlayerWarHistory(state);
+    if (FB.recordHostileEvent) {
+      const hostile = FB.recordHostileEvent(state, {
+        kind:'battle', warReportId:warReport && warReport.id || null,
+        enemyId:war.enemy || null, targetPid:war.target || null,
+        defending:!!war.defending, turn:saved.turn,
+        outcome:saved.outcome, mode:saved.mode, pid:saved.pid,
+        primaryHostInvolved:saved.primaryHostInvolved,
+        playerBefore:saved.playerBefore, playerAfter:saved.playerAfter,
+        enemyBefore:saved.enemyBefore, enemyAfter:saved.enemyAfter,
+        playerLosses:saved.playerLosses, enemyLosses:saved.enemyLosses
+      });
+      if (hostile) saved.hostileReportId = hostile.id;
+    }
     war.battles.push(saved);
     if (war.battles.length > 8) war.battles.splice(0, war.battles.length - 8);
     FB.notePlayerWarTroopLosses(state, saved.playerLosses);
@@ -2966,6 +3034,11 @@ window.FB = window.FB || {};
         primaryByRealm[army.realm] = army;
       }
     }
+    /* Choose every host's order against the same start-of-day positions.
+       Marching inside this loop made the result depend on array order: an AI
+       banner processed after the player could see the county the player had
+       just entered, retarget across one adjacent leg, and join a battle in
+       that same tick. */
     for (const a of state.armies) {
       if (a.path && a.path.length && FB.fortBlocksArmy &&
           FB.fortBlocksArmy(state, a.at, a) &&
@@ -3006,8 +3079,11 @@ window.FB = window.FB || {};
         if (!prey || !FB.armiesHostile(state, a, prey)) a.huntPrey = null;
         else if (prey.at !== a.goal) FB.orderArmy(state, a, prey.at);
       }
-      march(state, a);
     }
+    /* Only after all orders are fixed do hosts advance. The battle scan below
+       therefore sees genuine end-of-day co-location; adjacency alone never
+       creates contact. */
+    for (const a of state.armies) march(state, a);
 
     /* Campaign desertion is expressed as a seasonal fraction but resolved
        daily. Fractional expected losses use the saved RNG stream. */
@@ -3386,6 +3462,10 @@ window.FB = window.FB || {};
     let hit = null;
     if (wx !== undefined && FB.map && FB.map.zoom) {
       hit = FB.armyAtWorld(state, wx, wy, 24 * (FB.map.dpr || 1) / FB.map.zoom);
+      /* A selected banner can overlap the center of a neighboring county at
+         low zoom. A tap whose resolved province differs from the banner's
+         province is a destination order, not a second tap that halts it. */
+      if (sel && pr && pr.id !== sel.at && hit === sel) hit = null;
     } else if (pr) {
       // keyboard taps carry no pointer position: cycle or select in the tapped province
       const here = FB.armiesAt(state, pr.id);
@@ -3556,14 +3636,22 @@ window.FB = window.FB || {};
     const layout = armyRenderLayout(s, z, dpr);
 
     // Helper to draw a host's planned movement route on the map
-    function drawArmyRoute(host, path, isPreview) {
+    function drawArmyRoute(host, path, routeKind) {
       if (!path || !path.length) return;
+      const isPreview = routeKind === 'preview';
+      const isEnemy = routeKind === 'enemy';
+      const routeStroke = isPreview ? 'rgba(255, 235, 120, 0.98)'
+        : (isEnemy ? 'rgba(220, 68, 54, 0.96)'
+          : 'rgba(255, 215, 80, 0.92)');
+      const routeFill = isPreview ? 'rgba(255, 235, 120, 0.28)'
+        : (isEnemy ? 'rgba(200, 53, 43, 0.24)'
+          : 'rgba(255, 215, 80, 0.22)');
       const startPos = layout.positions[host.id] ||
         hostWorldPosition(s, host, z, dpr);
       const p0 = toScreen(startPos[0], startPos[1]);
 
       // 1. Draw dashed route line
-      ctx.strokeStyle = isPreview ? 'rgba(255, 235, 120, 0.98)' : 'rgba(255, 215, 80, 0.92)';
+      ctx.strokeStyle = routeStroke;
       ctx.lineWidth = (isPreview ? 2.4 : 2.2) * dpr;
       ctx.setLineDash([5 * dpr, 4 * dpr]);
       ctx.beginPath();
@@ -3582,7 +3670,9 @@ window.FB = window.FB || {};
         const pr = FB.world.byId[path[i]];
         if (!pr) continue;
         const sp = toScreen(pr.cx, pr.cy);
-        ctx.fillStyle = isPreview ? 'rgba(255, 235, 120, 0.9)' : 'rgba(255, 215, 80, 0.85)';
+        ctx.fillStyle = isPreview ? 'rgba(255, 235, 120, 0.9)'
+          : (isEnemy ? 'rgba(220, 68, 54, 0.9)'
+            : 'rgba(255, 215, 80, 0.85)');
         ctx.beginPath();
         ctx.arc(sp[0], sp[1], 3.2 * dpr, 0, Math.PI * 2);
         ctx.fill();
@@ -3596,26 +3686,30 @@ window.FB = window.FB || {};
         const destR = (10 + Math.min(5, z)) * dpr;
         ctx.beginPath();
         ctx.arc(destPt[0], destPt[1], destR, 0, Math.PI * 2);
-        ctx.strokeStyle = isPreview ? 'rgba(255, 235, 120, 0.98)' : 'rgba(255, 215, 80, 0.95)';
+        ctx.strokeStyle = routeStroke;
         ctx.lineWidth = 2.4 * dpr;
         ctx.stroke();
-        ctx.fillStyle = isPreview ? 'rgba(255, 235, 120, 0.28)' : 'rgba(255, 215, 80, 0.22)';
+        ctx.fillStyle = routeFill;
         ctx.fill();
 
         ctx.font = Math.round(12 * dpr) + 'px system-ui, sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🚩', destPt[0], destPt[1]);
+        ctx.fillStyle = isEnemy ? 'rgba(255, 190, 155, 0.98)' : routeStroke;
+        ctx.fillText(isEnemy ? '➜' : '🚩', destPt[0], destPt[1]);
       }
     }
 
-    // Render active movement routes for all marching player hosts or selected host
+    // Show orders for controlled hosts and only the enemy in the player's active
+    // ordinary war. Other AI movement remains private map noise.
     const drawnHosts = {};
+    const activeWarEnemyRealm = s.player.war && s.player.war.enemy;
     for (let ai = 0; ai < s.armies.length; ai++) {
       const a = s.armies[ai];
-      if ((a.realm === 'player' || a.id === commandedHostId || a === sel) &&
-          a.path && a.path.length) {
-        drawArmyRoute(a, a.path, false);
+      const activeWarEnemy = activeWarEnemyRealm === a.realm;
+      if ((a.realm === 'player' || a.id === commandedHostId || a === sel ||
+          activeWarEnemy) && a.path && a.path.length) {
+        drawArmyRoute(a, a.path, activeWarEnemy ? 'enemy' : 'active');
         drawnHosts[a.id] = true;
       }
     }
@@ -3626,7 +3720,7 @@ window.FB = window.FB || {};
       if (targetPr && !targetPr.wasteland) {
         const plan = cachedArmyPreviewPlan(s, sel, FB.map.selected);
         if (plan && plan.ok && plan.path && plan.path.length) {
-          drawArmyRoute(sel, plan.path, true);
+          drawArmyRoute(sel, plan.path, 'preview');
         }
       }
     }

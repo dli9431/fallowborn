@@ -14,24 +14,26 @@ Active wars, peace pacts, and alliances remain hard declaration blocks.
 record in `player.war.casus`. Old in-progress wars without that field keep their legacy
 capture behavior.
 
-`FB.warCausePreview` is the shared read-only declaration projection. The target picker
-compares recognized rights with War of Aggression and shows the objective and automatic
-prestige rewards. Aggression opens a second confirmation which repeats its exact clamped
-prestige and Common Voice changes, the per-court direct-vassal and foreign-sovereign
-Standing changes, the recent-war escalation, current breakaway multiplier, likely
-political opposition, and the county burden victory will apply. Opening, canceling, or
-navigating that review neither writes state nor consumes RNG; the final action
-revalidates the live cause and diplomacy gates.
+`FB.warCausePreview` is the shared read-only declaration projection. The conquest picker
+groups causes into one row per territorial objective. A recognized right avoids the
+political penalties of a War of Aggression; when the player can press several valid
+duchy, kingdom, empire, fabricated, restoration, or office bases for one objective,
+`FB.warJustifications` exposes each without changing `FB.warCauses`'s most-specific
+default for legacy callers. Selecting any target always opens **War Justification**.
+That final sheet chooses the exact basis, keeps only the critical target, siege, reward
+or political-cost facts on screen, and places the longer consequences in its header
+tooltip. Aggression and sacrilege use this same final declaration boundary.
 
-The picker asks `FB.warCauses(state, true, true)` for available and diplomatically
-blocked semantic causes. Its search index derives realm, ruler, objective, and full
-enemy territory from live world state. Cause basis, border adjacency, enemy rank
-relative to the player, and diplomatic availability are filters over those records;
-the deterministic default sorts available recognized rights before aggression and
-blocked rows, then uses stable realm/objective/type ties. Alternative sorts cover realm,
-objective, rank, and defensive strength. A blocked row is disabled and names the shared
-`FB.warCauseBlockedReason`; an available row passes the untouched cause record into the
-existing confirmation and declaration path.
+A ruler sheet contributes one **Declare war…** action rather than one button per cause.
+It opens the conquest picker scoped to that ruler's realm and includes only targets that
+can be declared immediately. The global Deeds catalogue continues to include blocked
+targets with their pact, alliance, or active-war explanation. Search and filters operate
+on unique target rows; a cause filter matches when any justification for that target
+belongs to the selected basis. Opening, backing out of, changing a justification, or
+navigating either sheet neither writes state nor consumes RNG. The final action rebuilds
+the live justification set and revalidates diplomacy before declaring. The technology
+impact is **none** (`war_justification_selection`): choosing among rights already held is
+core declaration judgment, while each right keeps its existing eligibility.
 
 The core first-declaration costs are 20 prestige, 8 Common Voice, 10 Standing with every
 direct vassal, and 5 Standing with every foreign sovereign. Each earlier aggressive
@@ -176,8 +178,12 @@ the war as `state.player.war.musterPool` and cap each own class of the war's nex
 muster after levy modifiers are calculated; hired companies and allied reinforcements
 are raised fresh. The ordinary `armyMinMen` floor does not create replacements after
 a de-muster: if the preserved men plus fresh mercenaries/allies remain below it, the
-muster deed explains the shortage and stays disabled. The de-muster itself starts the
-same rearm wait as a shattering — so a beaten player cannot de-muster and immediately
+muster deed explains the shortage and stays disabled. The Muster Host deed remains
+visible throughout an ordinary war or eligible sovereign great-holy-war service. It is
+disabled with the live blocker while a host is already fielded, the rearm wait remains,
+or too few men can answer, rather than disappearing from the wartime controls. The
+de-muster itself starts the same rearm wait as a shattering — so a beaten player cannot
+de-muster and immediately
 re-raise a full levy. Great-holy-war hosts are vow-bound and cannot de-muster. Hosts exist only while their sovereign
 is at war — the daily `FB.armyTick` (called from `G.passDay`) disbands any whose war has
 ended, which covers every peace path with one rule. War relationships are folded into a
@@ -203,7 +209,7 @@ AI realms whose muster clears `balance.aiMultiHostStrength` split off a
 `balance.aiDetachmentFrac` detachment while prosecuting an offensive war (capped at
 `balance.aiMaxHosts`); the main host hunts enemy hosts while the detachment makes for
 the enemy seat or the holy-war goal — screening and besieging while the main body
-fights. On the map each host bears its own marker distributed with non-overlapping spacing and settlement clearance around the province centroid, strictly clamped to remain within the county's boundaries. If that clamp crowds a banner against a settlement or another host in a narrow county, a deterministic bounded search chooses the valid point with the greatest clearance. At far zoom-out (`z < 1.35`), troop-occupied counties highlight their borders in green (friendly/player), red (hostile), or realm color to ensure battlefields read clearly without markers straying into neighboring counties; same-realm hosts sharing a province wear a ×N stack badge, and tapping an individual host selects it directly (while keyboard/centroid taps cycle the selection banner by banner). In the Land tab, selected host information is presented in a dedicated, compact `.war-card` featuring only critical summary lines (status, troop numbers/composition chips, supply/upkeep, campaign losses, and split/merge/halt actions), while exhaustive unit combat stats, cohort replacements, detailed logistics, and casualty records are contained in interactive tooltips (desktop hover/focus side-tip and mobile `?` disclosure toggle). In the Deeds tab, the active war card header links the enemy realm name so clicking or tapping it centers the map on that enemy and highlights their borders in red.
+fights. During the player's active ordinary war, each marching host belonging to the recorded enemy realm exposes its remaining route as a red dashed line, destination ring, and direction arrow; unrelated AI routes stay hidden. This is a presentation-only read of saved `path`/`goal`/`moveLeft`, with no technology impact or simulation mutation. On the map each host bears its own marker distributed with non-overlapping spacing and settlement clearance around the province centroid, strictly clamped to remain within the county's boundaries. If that clamp crowds a banner against a settlement or another host in a narrow county, a deterministic bounded search chooses the valid point with the greatest clearance. At far zoom-out (`z < 1.35`), troop-occupied counties highlight their borders in green (friendly/player), red (hostile), or realm color to ensure battlefields read clearly without markers straying into neighboring counties; same-realm hosts sharing a province wear a ×N stack badge, and tapping an individual host selects it directly (while keyboard/centroid taps cycle the selection banner by banner). In the Land tab, selected host information is presented in a dedicated, compact `.war-card` featuring only critical summary lines (status, troop numbers/composition chips, supply/upkeep, campaign losses, and split/merge/halt actions), while exhaustive unit combat stats, cohort replacements, detailed logistics, and casualty records are contained in interactive tooltips (desktop hover/focus side-tip and mobile `?` disclosure toggle). In the Deeds tab, the active war card header links the enemy realm name so clicking or tapping it centers the map on that enemy and highlights their borders in red.
 
 **A host is a composition, not just a headcount.** Every host carries
 `units: { <classId>: men }` keyed by `FBDATA.unitClasses` (with `men` always the total,
@@ -329,6 +335,24 @@ effects, and the same authoritative `FB.playerHostUpkeepParts` result used by se
 charging. These additive, JSON-safe fields self-initialize on old active wars and do not
 constitute a second battle or casualty simulation.
 
+Player-involved hostile history also has one bounded, save-safe archive for Chronicle
+drill-down. `state.hostileHistory` stores at most 200 compact raid, battle, and ordinary-war
+reports; `state.hostileHistorySerial` supplies stable report ids without consuming RNG or the
+shared character/realm uid sequence. A war owns one parent report from `FB.warFooting` through
+`FB.endPlayerWar`; each battle stores its parent id, place, outcome, before/after headcounts,
+and class losses. Ending the war freezes its result before the live `player.war` ledger is
+discarded. The archive is append/update-only at actual hostile-action boundaries and is never
+read by a daily or seasonal tick. Chronicle entries store only the matching report id and
+presentation-kind tag, and the
+UI resolves and renders details only when the player activates that link. Reports contain ids
+and numeric facts rather than rendered prose or state snapshots, keeping autosave/load cost
+linear but tightly bounded. When the cap expires an older report, its Chronicle line remains
+ordinary readable text without a dead control.
+Every `news.war.*` Chronicle line emitted while that ordinary player war is active inherits
+the parent report id at append time, so campaign developments reopen the same result without
+reconstructing history. Save repair creates the compact parent once for a legacy active war;
+it does not add a daily check.
+
 Campaign condition and live troops remain deliberately separate. Thin ranks,
 discipline, and disorder normally move the bounded abstract `war.strength` that
 multiplies the host's field-battle power (`battlePower`); field supply is the
@@ -373,7 +397,11 @@ contingents, and completing the passage; `army.at` changes only on arrival. Batt
 reinforcement, siege, and map-marker rules therefore remain province-based. An active
 `moveLeft` is reset when giving a new movement destination. A new movement order
 immediately overrides any prior path, routing directly from the host's current county
-to the new goal. Ordering the departure county remains an explicit halt. Broken hosts,
+to the new goal. Every host chooses or retains its order against the same start-of-day
+positions before any host advances, so an AI banner cannot react to a county entered by
+an earlier array member and cross an adjacent leg into an immediate same-tick battle.
+After all marches resolve, combat requires exact end-of-day province co-location;
+adjacency alone never creates contact. Ordering the departure county remains an explicit halt. Broken hosts,
 AI hunting, and player automation all use the same weighted route and leg quotes. The player taps their host to
 select it, taps a province to march — which lets go of the host again so further taps
 browse the map — and taps the selected host again to halt; Enter/Shift+arrows do the
@@ -465,9 +493,14 @@ it — and once standing on the target it stays put, so the season tick's siege 
 proceeds on its own, no council order (manual or automated) required. A hand-tapped route (`manual`) always plays out first and a hand-given halt
 (`holdManual`) parks the host until the next manual march — automation never
 overrides either, and while active it supersedes the council's `huntPrey`.
+While a host is selected, a tap resolved to a different province always issues a
+destination order even when the host marker's hit radius overlaps that province at
+low zoom; only a second tap in the host's current province halts it.
 
 **A battle fires when hostile hosts share a province** (`FB.armiesHostile`: the two
 sovereigns hold a war object on each other, or one side is the player's war enemy).
+The battle scan runs only after the day's separately planned marches and groups hosts by
+the exact `army.at` province id; neighboring province ids never fight one another.
 One clash per province per day: hosts that are not mutually hostile fold into one side
 (the same folding the allied reinforcement rule applies), the two strongest sides meet,
 and everyone else stands clear. A side's power is the sum of its hosts' terrain-aware
@@ -589,7 +622,9 @@ large enough to work the enemy-held target and queues `war_occupation_policy`
 immediately. `war.occupationEventQueued` makes that story once per war, while its exact
 war context lets peace discard a stale queued audience. The read-only
 `war_active_occupation` trigger remains available to mods that need the broader live
-presence fact.
+presence fact. Chronicle siege-progress fractions round their display parameters to
+whole steps and never show a completed numerator before the saved numeric progress
+actually breaches the requirement; the underlying siege ledger keeps its full precision.
 
 Operational musters, councils, submission/ransom audiences, and tribute offers are
 queued through `FB.queueWarEvent`. Their context saves the ordinary war's deterministic
@@ -892,6 +927,9 @@ Raiding does not declare a formal conquest war, nor does it occupy land permanen
   random wounds and devastation roll only when the expedition launches. **Keep raiding** pins that
   last target for the next eligible expedition without bypassing the normal cooldown. **Skip raid
   summary** suppresses the result sheet while retaining the Chronicle entry and its ordinary
-  outcome toast:
+  outcome toast. Every executed expedition also writes one compact hostile-history report with
+  target/victim ids, strategy, outcome, forces, casualties, spoils, captives, route skirmishes,
+  and physical damage. The Chronicle outcome links back to the same lazy result renderer, so
+  skipping the immediate summary never loses the report:
   - *Target List*: Each candidate row summarizes the march route (e.g. `Passes 2 counties (1 fort)` or `Direct landing`), destination fort tier (e.g. `🏰 Stone Keep (Tier 2)`), garrison size, and combat risk assessment.
   - *Interactive Map Overlay*: When selecting on the map, reachable unfortified counties are illuminated with clean pips, while fortified counties display distinct square fortress badges with `🏰` emblems. Selecting a target renders the full dotted march path through intermediate counties, highlighting intermediate forts along the march route and displaying live spoils and defender counts in the floating `#raid-picker` card.
