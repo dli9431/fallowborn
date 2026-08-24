@@ -115,7 +115,10 @@ test('adjusts living standards and work outfits inline with tooltip terms',
     await expect(page.locator(
       '#household-standard-confirm, #household-standard-reduce-confirm'))
       .toHaveCount(0);
-    await expect(tooltip).toBeHidden();
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toContainText(
+      'Adds 2.5 percentage points to yearly education chances.');
+    await expect(tooltip).toContainText('Requires Freeholder rank.');
 
     const purchased = await page.evaluate(function () {
       return {

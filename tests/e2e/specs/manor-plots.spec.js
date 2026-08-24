@@ -75,20 +75,20 @@ test('previews and atomically buys every remaining manor plot in one settlement'
     await batch.click();
     await expect(page.locator('#gm-title')).toContainText(
       'Complete the holding at ' + setup.settlement);
-    await expect(page.locator('.kv').filter({
+    await expect(page.locator('#gm-body .kv').filter({
       hasText:'Plots in this purchase'
     })).toContainText(setup.remaining + ' plots');
-    await expect(page.locator('.kv').filter({
+    await expect(page.locator('#gm-body .kv').filter({
       hasText:'Total price'
     })).toContainText(setup.totalPrice);
-    await expect(page.locator('.kv').filter({
+    await expect(page.locator('#gm-body .kv').filter({
       hasText:'Resulting seasonal yield'
     })).toContainText(setup.resultingYield + ' each season');
-    await expect(page.locator('.kv').filter({
+    await expect(page.locator('#gm-body .kv').filter({
       hasText:'Resulting cluster and manor progress'
     })).toContainText(setup.requirement + '/' + setup.requirement +
       ' plots — ready to declare a manor');
-    await expect(page.locator('.kv').filter({
+    await expect(page.locator('#gm-body .kv').filter({
       hasText:'Money remaining after purchase'
     })).toContainText(setup.moneyAfter);
 
@@ -151,7 +151,7 @@ test('keeps one-plot rows compact and exposes full terms when unaffordable',
       'Passes to heirs as family land in this settlement');
     await expect(tooltip).toContainText('No fixed end');
 
-    await choice.click();
+    await choice.dispatchEvent('click');
     const unchanged = await page.evaluate(function () {
       const s = FB.state;
       return {
@@ -177,7 +177,7 @@ test('shows an unaffordable batch without making a partial purchase',
       'unless the full price is available.',
       { exact:true }
     )).toBeVisible();
-    await expect(page.locator('.kv').filter({
+    await expect(page.locator('#gm-body .kv').filter({
       hasText:'Money remaining after purchase'
     })).toContainText(setup.moneyAfter);
 

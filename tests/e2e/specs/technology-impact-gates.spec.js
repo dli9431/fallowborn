@@ -217,7 +217,8 @@ test('the prospective review ledger and every gate schema validate together',
       'tournament_jousting',
       'towered_stronghold_upgrade',
       'trade_venture_return_cargo',
-      'unit_attack_defense_roles'
+      'unit_attack_defense_roles',
+      'war_justification_selection'
     ]);
     expect(Object.values(result.modes)).toEqual([
       'none', 'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',
@@ -227,7 +228,7 @@ test('the prospective review ledger and every gate schema validate together',
       'none', 'soft', 'hard', 'hard', 'hard', 'none', 'none', 'hard', 'hard', 'hard', 'none',
       'hard', 'none', 'soft', 'soft', 'soft', 'none', 'none', 'none', 'none', 'soft',
       'hard', 'hard', 'none', 'none', 'soft', 'soft', 'none', 'none', 'none',
-      'soft', 'none', 'hard', 'none', 'hard', 'hard', 'none', 'none'
+      'soft', 'none', 'hard', 'none', 'hard', 'hard', 'none', 'none', 'none'
     ]);
     expect(result.settlementDynamicRentTech).toEqual([
       'undershot_watermill', 'urban_markets', 'harbor_works',
