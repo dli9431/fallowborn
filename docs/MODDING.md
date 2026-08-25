@@ -316,7 +316,7 @@ draw six-part start code.
 
 ## Focus and deed overrides
 
-Runtime mods may customize the 28 built-in daily focuses and 78 built-in deeds through
+Runtime mods may customize the 28 built-in daily focuses and 79 built-in deeds through
 partial records under `focuses` and `deeds`. Baseline records cannot be removed or
 renamed, and their executable behavior cannot be replaced. New focuses and deeds use the
 separate declarative contracts below.
@@ -365,7 +365,7 @@ A focus override accepts `id` plus any of `label`, `desc`, `order`, and
   `action.<id>.desc`; a translation catalogue whose source hash no longer matches
   falls back to the mod's English.
 - `order` is a unique integer from 0 through 27 for focuses. Deed order runs from 0
-  through the effective deed count minus one (0 through 77 without added deeds). The
+  through the effective deed count minus one (0 through 78 without added deeds). The
   complete effective catalogue must remain a permutation, so moving one action generally
   requires giving the displaced action the old order in the same mod, as in the focus
   example above.
@@ -433,7 +433,7 @@ built-in deed.
       "handler": "declarative_deed",
       "label": "Endow the wayfarers",
       "desc": "Set coin aside for travelers and pilgrims.",
-      "order": 78,
+      "order": 79,
       "group": "faith",
       "cooldownDays": 90,
       "spendsDay": false,
@@ -451,7 +451,7 @@ built-in deed.
       "handler": "declarative_deed",
       "label": "Seek a charter audience",
       "desc": "Pay the clerks to arrange a hearing.",
-      "order": 79,
+      "order": 80,
       "group": "realm",
       "cooldownDays": 30,
       "spendsDay": true,
@@ -484,7 +484,7 @@ checks are composed into that same status. These checks and the preview are pure
 no RNG draws.
 
 `order` participates in the complete effective deed permutation. The first added deed is
-normally 78, the next 79, and so on; later mods adding deeds append after every effective
+normally 79, the next 80, and so on; later mods adding deeds append after every effective
 definition. A later mod replacing a declarative deed must restate the complete record.
 This avoids silently inheriting costs or effects from a different mod load order.
 
@@ -588,7 +588,7 @@ whole mod before either action catalogue changes.
     "capability": "resource_choice",
     "label": "Choose a charter grant",
     "desc": "Select one grant to confirm.",
-    "order": 78,
+    "order": 79,
     "group": "realm",
     "cooldownDays": 90,
     "spendsDay": true,
@@ -1351,6 +1351,14 @@ a count-or-higher vassal receives an adjacent county the liege holds directly, n
 liege's seat or his last county, and stays inside the realm; a resulting duchy majority
 raises him to duke only when his living liege is a king or greater) · `profession`,
 `restoreProfession` · `queue: "event_id"` (chain events) ·
+`serfFreedom:{route:"old_custom"|"flight"}` (a bounded tier-0-to-tier-1
+transition for an exact story context; it requires a living protagonist and active
+home tenure, closes that tenure, writes semantic family history and one Chronicle
+landmark, and runs before movement. It cannot be combined in the same effect object with
+`tierSet` or `tierUp`; failed preflight applies none of that object's sibling effects.
+Purchase and negotiated manumission are engine-owned routes and are not valid authored
+event values. Invalid route shapes and generic-rank conflicts reject a runtime mod before
+any of its data is applied.) ·
 `marry` (`true` settles the current suitor's saved formal courtship transfer;
 `"informal"` uses the same wedding and family-link mechanics without a dowry),
 `clearSuitor`, `focusSet: "<focus id>"` · `adoptChild`, `killChild`,

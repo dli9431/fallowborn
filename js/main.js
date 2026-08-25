@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.155.2';
+  FB.VERSION = '1.156.0';
   FB.CHANGELOG = [
+    { v: '1.156.0', date: '2026-08-25', changes: [
+      'Serf households can now pursue freedom through purchase, negotiated manumission, the Old Custom, or flight, with completed routes preserved in family history.'
+    ] },
     { v: '1.155.2', date: '2026-08-25', changes: [
       'Losses and incurred commitments can now push household gold below zero; future income clears the shortfall while cash-priced deeds and purchases remain affordability-gated.'
     ] },
@@ -2788,6 +2791,7 @@ window.FB = window.FB || {};
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
 
+    if (FB.freedomDay) FB.freedomDay(s);
     if (FB.tenureDay) FB.tenureDay(s);
     const events = FB.pickDailyEvents(s);
     if (!(opts && opts.deferUi)) {
@@ -3152,8 +3156,8 @@ window.FB = window.FB || {};
           const minor = successor && me && FB.ageOf(me, s.date.year) < 16;
           if (s.player.tier === 0) {
             return minor
-              ? FB.T('Come of age, buy your freedom, then acquire land')
-              : FB.T('Buy your freedom, then your first land plot');
+              ? FB.T('Come of age, petition or buy freedom, then acquire land')
+              : FB.T('Petition or buy freedom, then acquire your first land plot');
           }
           return minor
             ? FB.T('Come of age, then buy your first land plot')
@@ -4364,6 +4368,7 @@ window.FB = window.FB || {};
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    if (FB.freedomSuccession) FB.freedomSuccession(s);
     if (FB.resetStandingsForSuccession) {
       FB.resetStandingsForSuccession(s);
     } else {

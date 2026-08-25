@@ -3970,6 +3970,12 @@ window.FB = window.FB || {};
     }
     if (oldTier === 0 && tier > 0) {
       if (FB.closeSerfTenure) FB.closeSerfTenure(state, opts.tenureEndReason || 'rank_change');
+      const freedomOffer = p.freedomOffer;
+      if (freedomOffer && !opts.freedomResolution &&
+          (freedomOffer.status === 'offered' ||
+            freedomOffer.status === 'service')) {
+        freedomOffer.status = 'invalid';
+      }
     } else if (oldTier > 0 && tier === 0) {
       if (opts.formTenure !== false && FB.ensureSerfTenure) {
         FB.ensureSerfTenure(state, opts.tenureFormationReason || 'rank_change');
@@ -4000,6 +4006,7 @@ window.FB = window.FB || {};
     if (!randomEventPools) {
       randomEventPools = { ordinary:[], wartime:[], childhood:[], wartimeChildhood:[] };
       for (const ev of FBDATA.events) {
+        validateEventSerfFreedomEffects(ev);
         if (!ev.trigger || ev.trigger.never) continue;
         randomEventPools.ordinary.push(ev);
         if (ev.wartime) randomEventPools.wartime.push(ev);
@@ -4127,7 +4134,10 @@ window.FB = window.FB || {};
   FB.eventById = function (id) {
     if (!eventIndex) {
       eventIndex = {};
-      for (const ev of FBDATA.events) eventIndex[ev.id] = ev;
+      for (const ev of FBDATA.events) {
+        validateEventSerfFreedomEffects(ev);
+        eventIndex[ev.id] = ev;
+      }
     }
     return eventIndex[id] || null;
   };
@@ -4885,6 +4895,445 @@ window.FB = window.FB || {};
     tenure.lastPresentedSeasonKey = currentSeasonKey;
   };
 
+  /* =========================================================================
+     Deliberate serf freedom. All real tier-0-to-tier-1 freedom routes pass
+     through this boundary; generic rank changes deliberately do not infer a
+     route or create family history.
+     ========================================================================= */
+
+  const SERF_FREEDOM_ROUTES = {
+    purchase:{ lawful:true, tenureEndReason:'purchase' },
+    manumission:{ lawful:true, tenureEndReason:'manumission' },
+    old_custom:{ lawful:true, tenureEndReason:'old_custom' },
+    flight:{ lawful:false, tenureEndReason:'flight' }
+  };
+  const EVENT_SERF_FREEDOM_ROUTES = { old_custom:true, flight:true };
+  FB.serfFreedomRoutes = SERF_FREEDOM_ROUTES;
+
+  function serfFreedomEffectError(fx) {
+    if (!fx || !Object.prototype.hasOwnProperty.call(fx, 'serfFreedom')) return '';
+    if (typeof fx.serfFreedom !== 'object' ||
+        Array.isArray(fx.serfFreedom) ||
+        Object.keys(fx.serfFreedom).length !== 1 ||
+        !EVENT_SERF_FREEDOM_ROUTES[fx.serfFreedom.route]) {
+      return 'serfFreedom must contain the authored route old_custom or flight.';
+    }
+    if (fx.tierSet !== undefined || fx.tierUp !== undefined) {
+      return 'serfFreedom cannot be combined with tierSet or tierUp.';
+    }
+    return '';
+  }
+
+  FB.validateSerfFreedomEffect = function (fx) {
+    const error = serfFreedomEffectError(fx);
+    if (error) throw new Error(error);
+    return true;
+  };
+
+  function validateEventSerfFreedomEffects(ev) {
+    if (!ev || !Array.isArray(ev.options)) return true;
+    for (let i = 0; i < ev.options.length; i++) {
+      const option = ev.options[i] || {};
+      FB.validateSerfFreedomEffect(option.effects);
+      FB.validateSerfFreedomEffect(option.success && option.success.effects);
+      FB.validateSerfFreedomEffect(option.failure && option.failure.effects);
+    }
+    return true;
+  }
+
+  function freedomRecordEntry(value) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) ||
+        !SERF_FREEDOM_ROUTES[value.route] ||
+        typeof value.protagonistId !== 'string' || !value.protagonistId ||
+        typeof value.provinceId !== 'string' || !value.provinceId ||
+        !Number.isInteger(value.settlementIndex) || value.settlementIndex < 0 ||
+        !Number.isInteger(value.turn) || value.turn < 0 ||
+        !Number.isInteger(value.year) || value.year < 0 ||
+        !Number.isInteger(value.price) || value.price < 0 ||
+        !Number.isInteger(value.serviceDays) || value.serviceDays < 0 ||
+        value.serviceDays > 360) return null;
+    const lawful = SERF_FREEDOM_ROUTES[value.route].lawful;
+    if (!!value.lawful !== lawful) return null;
+    if (lawful && value.lordId !== null &&
+        typeof value.lordId !== 'string') return null;
+    const out = {
+      route:value.route, lawful:lawful,
+      protagonistId:value.protagonistId,
+      lordId:lawful ? (value.lordId || null) : null,
+      provinceId:value.provinceId,
+      settlementIndex:value.settlementIndex,
+      turn:value.turn, year:value.year,
+      price:lawful ? value.price : 0,
+      serviceDays:lawful ? value.serviceDays : 0
+    };
+    if (lawful && typeof value.termId === 'string' && value.termId) {
+      out.termId = value.termId;
+    }
+    return out;
+  }
+
+  FB.ensureFamilyFreedom = function (state) {
+    if (!state || !state.player) return null;
+    const raw = state.player.familyFreedom;
+    if (raw === undefined || raw === null) return null;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      delete state.player.familyFreedom;
+      return null;
+    }
+    const first = raw.version === 1 ? freedomRecordEntry(raw.first) : null;
+    if (!first) {
+      delete state.player.familyFreedom;
+      return null;
+    }
+    const normalized = { version:1, first:first };
+    if (!first.lawful) {
+      const lawful = freedomRecordEntry(raw.firstLawful);
+      if (lawful && lawful.lawful) normalized.firstLawful = lawful;
+    }
+    state.player.familyFreedom = normalized;
+    return normalized;
+  };
+
+  function familyFreedomName(state, id, fallback) {
+    const c = id && state.chars && state.chars[id];
+    return c ? FB.fullName(c) : fallback;
+  }
+
+  function familyFreedomPlace(state, entry) {
+    const province = FB.world && FB.world.byId &&
+      FB.world.byId[entry.provinceId];
+    const settlements = FB.settlementsOf
+      ? FB.settlementsOf(state, entry.provinceId) : [];
+    const settlement = settlements[entry.settlementIndex];
+    if (settlement && province) {
+      return FB.T('{settlement}, {county}', {
+        settlement:settlement.name, county:FB.L(province.name)
+      });
+    }
+    if (province) return FB.L(province.name);
+    return FB.T('an unrecorded home');
+  }
+
+  function familyFreedomLine(state, entry) {
+    const protagonist = familyFreedomName(state, entry.protagonistId,
+      FB.T('An earlier head of the household'));
+    const home = familyFreedomPlace(state, entry);
+    const lord = familyFreedomName(state, entry.lordId,
+      FB.T('the local lord'));
+    if (entry.route === 'flight') {
+      return FB.T(
+        '{protagonist} fled serfdom from {home} in {year}; no lawful charter was granted.', {
+          protagonist:protagonist, home:home, year:entry.year
+        });
+    }
+    if (entry.route === 'old_custom') {
+      return FB.T(
+        '{protagonist} won lawful freedom from {lord} at {home} under the Old Custom in {year}.', {
+          protagonist:protagonist, lord:lord, home:home, year:entry.year
+        });
+    }
+    if (entry.route === 'purchase') {
+      return FB.T(
+        '{protagonist} bought lawful freedom from {lord} at {home} for {money:price} in {year}.', {
+          protagonist:protagonist, lord:lord, home:home,
+          price:entry.price, year:entry.year
+        });
+    }
+    if (entry.serviceDays) {
+      return FB.T(
+        '{protagonist} secured lawful freedom from {lord} at {home} for {money:price} and {days} days of final service in {year}.', {
+          protagonist:protagonist, lord:lord, home:home,
+          price:entry.price, days:entry.serviceDays, year:entry.year
+        });
+    }
+    return FB.T(
+      '{protagonist} secured lawful freedom from {lord} at {home} for {money:price} in {year}.', {
+        protagonist:protagonist, lord:lord, home:home,
+        price:entry.price, year:entry.year
+      });
+  }
+
+  FB.familyFreedomView = function (state) {
+    const record = state && state.player && state.player.familyFreedom;
+    if (!record || !freedomRecordEntry(record.first)) return null;
+    return {
+      first:{ entry:record.first, text:familyFreedomLine(state, record.first) },
+      firstLawful:record.firstLawful && freedomRecordEntry(record.firstLawful)
+        ? { entry:record.firstLawful,
+          text:familyFreedomLine(state, record.firstLawful) } : null
+    };
+  };
+
+  function serfFreedomLord(state) {
+    const id = state && state.roles && state.roles.lord;
+    const lord = id && state.chars && state.chars[id];
+    return lord && !lord.dead ? lord : null;
+  }
+
+  function serfFreedomHome(state) {
+    const p = state.player;
+    return {
+      provinceId:p.provinceId || p.home || null,
+      settlementIndex:(p.homeSettlement !== undefined
+        ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0)) | 0
+    };
+  }
+
+  FB.serfFreedomStatus = function (state, spec, ctx) {
+    spec = spec || {};
+    ctx = ctx || {};
+    const route = spec.route;
+    const routeDef = SERF_FREEDOM_ROUTES[route];
+    const out = { ready:false, reason:'invalid_route', route:route || null };
+    if (!routeDef || !state || !state.player || !state.chars) return out;
+    const p = state.player;
+    const protagonist = state.chars[p.charId];
+    if (!protagonist || protagonist.dead) {
+      out.reason = 'invalid_protagonist'; return out;
+    }
+    if (p.tier !== 0) { out.reason = 'not_serf'; return out; }
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const home = serfFreedomHome(state);
+    if (!tenure || tenure.provinceId !== home.provinceId ||
+        tenure.settlement !== home.settlementIndex) {
+      out.reason = 'invalid_tenure'; return out;
+    }
+    let lord = serfFreedomLord(state);
+    let price = 0;
+    let serviceDays = 0;
+    let termId = null;
+    let offer = null;
+    let recordProtagonistId = protagonist.id;
+
+    if (route === 'purchase') {
+      if (p.travel || FB.ageOf(protagonist, state.date.year) < 16) {
+        out.reason = 'adult_at_home_required'; return out;
+      }
+      if (p.freedomOffer && p.freedomOffer.status === 'service') {
+        out.reason = 'service_active'; return out;
+      }
+      if (!lord) { out.reason = 'missing_lord'; return out; }
+      if (FB.standingOf(state, { kind:'character', id:lord.id }) < -20) {
+        out.reason = 'hostile_lord'; return out;
+      }
+      price = FB.freedomPurchasePrice ? FB.freedomPurchasePrice() : 0;
+      if (!price || p.gold < price) {
+        out.reason = 'unaffordable'; return out;
+      }
+    } else if (route === 'manumission') {
+      offer = p.freedomOffer;
+      if (!offer || spec.offerCreatedTurn !== offer.createdTurn) {
+        out.reason = 'offer_identity'; return out;
+      }
+      if (offer.status === 'offered') {
+        const acceptance = FB.freedomOfferAcceptanceStatus &&
+          FB.freedomOfferAcceptanceStatus(state, offer);
+        if (!acceptance || !acceptance.ready || offer.serviceDays !== 0) {
+          out.reason = acceptance && acceptance.reason || 'offer_not_ready';
+          return out;
+        }
+        price = offer.price;
+      } else if (offer.status === 'service') {
+        const term = FB.freedomTermDefinition &&
+          FB.freedomTermDefinition(offer.termId);
+        if (offer.serviceDays <= 0 || offer.paidPrice !== offer.price ||
+            !FB.freedomOfferSemanticsValid ||
+            !FB.freedomOfferSemanticsValid(offer) ||
+            !term || term.serviceDays !== offer.serviceDays ||
+            !Number.isInteger(offer.acceptedTurn) ||
+            !Number.isInteger(offer.serviceEndTurn) ||
+            offer.serviceEndTurn !== offer.acceptedTurn + offer.serviceDays ||
+            (state.turn || 0) < offer.serviceEndTurn ||
+            offer.tenureFormedTurn !== tenure.formedTurn ||
+            offer.provinceId !== home.provinceId ||
+            offer.settlementIndex !== home.settlementIndex) {
+          out.reason = 'service_not_due'; return out;
+        }
+        price = 0;
+      } else {
+        out.reason = 'offer_not_active'; return out;
+      }
+      serviceDays = offer.serviceDays;
+      termId = offer.termId;
+      lord = state.chars[offer.lordId] || null;
+      if (offer.status === 'service') {
+        recordProtagonistId = offer.protagonistId;
+      }
+    } else if (route === 'old_custom') {
+      if (!ctx.event || ctx.event.id !== 'old_custom_end' ||
+          !p.flags.old_custom_resolve || !p.flags.old_custom_won) {
+        out.reason = 'old_custom_context'; return out;
+      }
+      if (!lord) { out.reason = 'missing_lord'; return out; }
+    } else if (route === 'flight') {
+      if (!ctx.event || ctx.event.id !== 'flee_serfdom') {
+        out.reason = 'flight_context'; return out;
+      }
+      lord = null;
+    }
+
+    out.ready = true;
+    out.reason = '';
+    out.lawful = routeDef.lawful;
+    out.tenureEndReason = routeDef.tenureEndReason;
+    out.protagonistId = recordProtagonistId;
+    out.lordId = route === 'flight' ? null
+      : (offer ? offer.lordId : (lord ? lord.id : null));
+    out.provinceId = home.provinceId;
+    out.settlementIndex = home.settlementIndex;
+    out.tenureFormedTurn = tenure.formedTurn;
+    out.turn = state.turn || 0;
+    out.year = state.date.year;
+    out.price = price;
+    out.serviceDays = serviceDays;
+    out.termId = termId;
+    out.offer = offer;
+    return out;
+  };
+
+  function writeFamilyFreedom(state, frozen) {
+    let history = FB.ensureFamilyFreedom(state);
+    if (!history || typeof history !== 'object' ||
+        !freedomRecordEntry(history.first)) {
+      history = { version:1 };
+      state.player.familyFreedom = history;
+    }
+    const entry = {
+      route:frozen.route, lawful:frozen.lawful,
+      protagonistId:frozen.protagonistId,
+      lordId:frozen.lawful ? frozen.lordId : null,
+      provinceId:frozen.provinceId,
+      settlementIndex:frozen.settlementIndex,
+      turn:frozen.turn, year:frozen.year,
+      price:frozen.lawful ? frozen.totalPrice : 0,
+      serviceDays:frozen.lawful ? frozen.serviceDays : 0
+    };
+    if (frozen.termId) entry.termId = frozen.termId;
+    if (!history.first) history.first = entry;
+    else if (!history.first.lawful && frozen.lawful &&
+        !history.firstLawful) history.firstLawful = entry;
+  }
+
+  function freedomChronicle(state, frozen) {
+    const protagonist = familyFreedomName(state, frozen.protagonistId,
+      FB.T('The household head'));
+    const lord = familyFreedomName(state, frozen.lordId,
+      FB.T('the local lord'));
+    const home = familyFreedomPlace(state, {
+      provinceId:frozen.provinceId,
+      settlementIndex:frozen.settlementIndex
+    });
+    let message;
+    if (frozen.route === 'purchase') {
+      message = FB.msg('news.freedom.purchase',
+        '📜 {protagonist} bought lawful freedom from {lord} at {home} for {money:price}.', {
+          protagonist:protagonist, lord:lord, home:home, price:frozen.totalPrice
+        });
+    } else if (frozen.route === 'manumission' && frozen.serviceDays) {
+      message = FB.msg('news.freedom.manumission_service',
+        '📜 {protagonist} completed {days} days of final service and received lawful freedom from {lord} at {home} for {money:price}.', {
+          protagonist:protagonist, lord:lord, home:home,
+          days:frozen.serviceDays, price:frozen.totalPrice
+        });
+    } else if (frozen.route === 'manumission') {
+      message = FB.msg('news.freedom.manumission',
+        '📜 {protagonist} accepted lawful freedom from {lord} at {home} for {money:price}.', {
+          protagonist:protagonist, lord:lord, home:home, price:frozen.totalPrice
+        });
+    } else if (frozen.route === 'old_custom') {
+      message = FB.msg('news.freedom.old_custom',
+        '📜 {protagonist} won lawful freedom from {lord} at {home} under the Old Custom.', {
+          protagonist:protagonist, lord:lord, home:home
+        });
+    } else {
+      message = FB.msg('news.freedom.flight',
+        '🏃 {protagonist} fled serfdom from {home}; no lawful charter was granted.', {
+          protagonist:protagonist, home:home
+        });
+    }
+    FB.news(state, message);
+  }
+
+  FB.resolveSerfFreedom = function (state, spec, ctx) {
+    const status = FB.serfFreedomStatus(state, spec, ctx);
+    if (!status.ready) return false;
+    const offer = status.offer;
+    const totalPrice = offer ? offer.price : status.price;
+    const frozen = {
+      route:status.route, lawful:status.lawful,
+      protagonistId:status.protagonistId, lordId:status.lordId,
+      provinceId:status.provinceId,
+      settlementIndex:status.settlementIndex,
+      tenureFormedTurn:status.tenureFormedTurn,
+      turn:status.turn, year:status.year,
+      chargedPrice:status.price, totalPrice:totalPrice,
+      serviceDays:status.serviceDays, termId:status.termId
+    };
+    if (Object.freeze) Object.freeze(frozen);
+
+    if (status.price) state.player.gold -= status.price;
+    const activeOffer = state.player.freedomOffer;
+    if (status.route === 'manumission' && activeOffer === offer) {
+      activeOffer.status = 'resolved';
+      activeOffer.resolvedTurn = status.turn;
+    } else if (activeOffer && (activeOffer.status === 'offered' ||
+        activeOffer.status === 'service')) {
+      activeOffer.status = 'superseded';
+      activeOffer.supersededTurn = status.turn;
+    }
+    FB.setPlayerTier(state, 1, {
+      tenureEndReason:status.tenureEndReason,
+      freedomResolution:true
+    });
+    if (status.route === 'purchase' || status.route === 'manumission') {
+      state.player.prestige += 15;
+      state.player.piety += 5;
+    }
+    writeFamilyFreedom(state, frozen);
+    freedomChronicle(state, frozen);
+    return frozen;
+  };
+
+  FB.freedomDay = function (state) {
+    if (!state || !state.player) return;
+    if (FB.ensureFreedomOffer) FB.ensureFreedomOffer(state);
+    const offer = state.player.freedomOffer;
+    if (!offer || (offer.status !== 'offered' && offer.status !== 'service')) return;
+    const p = state.player;
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const home = serfFreedomHome(state);
+    const term = FB.freedomTermDefinition &&
+      FB.freedomTermDefinition(offer.termId);
+    if (offer.status === 'offered') {
+      if ((state.turn || 0) > offer.expiryTurn) {
+        offer.status = 'expired';
+        return;
+      }
+      const lord = serfFreedomLord(state);
+      if (p.tier !== 0 || offer.protagonistId !== p.charId ||
+          !tenure || tenure.formedTurn !== offer.tenureFormedTurn ||
+          home.provinceId !== offer.provinceId ||
+          home.settlementIndex !== offer.settlementIndex ||
+          !lord || lord.id !== offer.lordId || !term ||
+          term.serviceDays !== offer.serviceDays) offer.status = 'invalid';
+      return;
+    }
+    if (p.tier !== 0 || !tenure ||
+        tenure.formedTurn !== offer.tenureFormedTurn ||
+        home.provinceId !== offer.provinceId ||
+        home.settlementIndex !== offer.settlementIndex ||
+        !term || term.serviceDays !== offer.serviceDays ||
+        !Number.isInteger(offer.serviceEndTurn)) {
+      offer.status = 'invalid';
+      return;
+    }
+    if ((state.turn || 0) >= offer.serviceEndTurn) {
+      FB.resolveSerfFreedom(state, {
+        route:'manumission', offerCreatedTurn:offer.createdTurn
+      }, { daily:true });
+    }
+  };
+
   FB.fns = FB.fns || {};
   FB.fns.serf_tenure_context_valid = function (state, ctx, ev) {
     if (!state || !state.player || state.player.tier !== 0) return false;
@@ -5043,7 +5492,8 @@ window.FB = window.FB || {};
     'marry','clearSuitor','adoptChild','killChild','killRole','kinslayer',
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
-    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate','tenureEnd'
+    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate','tenureEnd',
+    'serfFreedom'
   ];
   FB.eventPreviewEffectKeys = {};
   for (let effectKeyIndex = 0; effectKeyIndex < EVENT_EFFECT_KEYS.length;
@@ -5090,7 +5540,7 @@ window.FB = window.FB || {};
     'agency_family_counsel agency_family_refuse agency_family_support agency_marriage_accept agency_marriage_decline agency_overture_gift agency_overture_rebuff agency_overture_welcome agency_rebel_buyoff agency_rebel_expose ' +
     'annul_granted appeal_lose appeal_win artifact_grant artifact_offering artifact_rumor_pursue artifact_seize attainder_pay attainder_resist attainder_yield begin_courtship bishop_simony_clear bondage_flee bondage_submit buy_item claim_lost claim_sold claim_won clear_item_offer ' +
     'collective_demand_accept collective_demand_compromise collective_demand_negotiation_failed collective_demand_refuse council_charter_seal council_defy_fail council_defy_hold council_domain_custom council_domain_prepare council_domain_refuse council_feud_fail council_feud_peace council_feud_side council_flatter_cold council_flatter_kind council_gift_take council_gift_wave council_muster_concede council_muster_impose council_muster_supply council_pet_deny council_pet_grant council_scheme_fest council_scheme_mercy council_scheme_punish council_scheme_rooted council_seat_demand_no council_seat_demand_yes council_toll_refusal council_war_chest ' +
-    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend frontier_go_home frontier_milestone ' +
+    'county_petition_grant devastation_commend devastation_lose_holding df_fall df_fall_flee diplomacy_break_alliance diplomacy_end_pact diplomacy_extend_pact diplomacy_form_alliance diplomacy_make_pact diplomacy_succession_pact distraint_seize distraint_settle distraint_yield_one dower_take dower_take_full fabricate_claim_failure fabricate_claim_success feudal_renewal_accept feudal_renewal_decline feudal_renewal_valid finance_trade_20 finance_trade_50 find_artifact formalize_attention_friend freedom_accept_offer freedom_lords_notice freedom_offer_accept_ready frontier_go_home frontier_milestone ' +
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
     'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item open_item_shop papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
@@ -5103,6 +5553,24 @@ window.FB = window.FB || {};
 
   function coreCustomPreview(id, state, ctx) {
     const p = state.player;
+    if (id === 'freedom_lords_notice') {
+      return [impact('queue', { eventId:'manumission', possible:true }),
+        impact('system', { system:'property', action:'freedom_offer',
+          reward:true })];
+    }
+    if (id === 'freedom_accept_offer') {
+      const offer = p.freedomOffer;
+      if (!offer) return [impact('system', { system:'property' })];
+      const out = [impact('gold', { amount:-offer.price })];
+      if (offer.serviceDays) {
+        out.push(impact('system', { system:'property',
+          action:'final_service', permanent:true }));
+      } else {
+        out.push(impact('rank', { action:'serf_freedom', route:'manumission',
+          tier:1, reward:true, permanent:true }));
+      }
+      return out;
+    }
     if (id === 'finance_trade_20' || id === 'finance_trade_50') {
       return [impact('gold', {
         amount:id === 'finance_trade_20' ? -20 : -50
@@ -5475,6 +5943,10 @@ window.FB = window.FB || {};
     if (fx.tierSet !== undefined || fx.tierUp) out.push(impact('rank', {
       action:fx.tierSet !== undefined ? 'set' : 'up',
       tier:fx.tierSet, reward:true, permanent:true
+    }));
+    if (fx.serfFreedom) out.push(impact('rank', {
+      action:'serf_freedom', route:fx.serfFreedom.route,
+      tier:1, reward:true, permanent:true
     }));
     if (fx.devUp) out.push(impact('development', {
       amount:fx.devUp, reward:fx.devUp > 0
@@ -6463,9 +6935,17 @@ window.FB = window.FB || {};
   FB.applyEffects = function (state, fx, ctx, ev) {
     if (!fx) return [];
     ctx = ctx || {};
-    const beforeImpact = impactSnapshot(state, ctx);
     const sourceFx = fx;
     if (FB.scaleEventEffects) fx = FB.scaleEventEffects(state, fx, ctx, ev);
+    let freedomStatus = null;
+    if (fx && Object.prototype.hasOwnProperty.call(fx, 'serfFreedom')) {
+      if (serfFreedomEffectError(fx)) return [];
+      freedomStatus = FB.serfFreedomStatus(state, fx.serfFreedom, {
+        event:ev, effectContext:ctx
+      });
+      if (!freedomStatus.ready) return [];
+    }
+    const beforeImpact = impactSnapshot(state, ctx);
     const customAdapter = fx.custom && FB.eventImpactAdapters[fx.custom];
     const customBefore = customAdapter && typeof customAdapter.capture === 'function'
       ? customAdapter.capture(state, ctx, ev, fx) : null;
@@ -6480,6 +6960,9 @@ window.FB = window.FB || {};
        It is committed below only when this resolution actually kills. */
     const lethalProvenance = fx.deathProvenance
       ? deathProvenance(state, fx.deathProvenance, ctx, ev) : null;
+    if (freedomStatus && !FB.resolveSerfFreedom(state, fx.serfFreedom, {
+      event:ev, effectContext:ctx
+    })) return [];
     if (fx.tenureEnd && FB.closeSerfTenure) {
       FB.closeSerfTenure(state, fx.tenureEnd);
     }
@@ -6915,6 +7398,23 @@ window.FB = window.FB || {};
     if (!option) {
       return { visible:false, ready:false, techLocked:false, missingTech:[] };
     }
+    if (option.effects && option.effects.custom === 'freedom_accept_offer') {
+      const contextReady = FB.fns && FB.fns.freedom_offer_context_valid &&
+        FB.fns.freedom_offer_context_valid(state, ctx);
+      const acceptance = FB.freedomOfferAcceptanceStatus
+        ? FB.freedomOfferAcceptanceStatus(state) : {
+          ready:false, reason:FB.T('The saved offer cannot be verified.')
+        };
+      return {
+        visible:true,
+        ready:!!contextReady && acceptance.ready,
+        techLocked:false,
+        requiredTech:[], missingTech:[],
+        reason:!contextReady
+          ? FB.T('These terms no longer match the offer that was presented.')
+          : (acceptance.reason || '')
+      };
+    }
     const triggerReady = !option.require ||
       FB.checkTrigger(state, option.require, ctx);
     const technology = FB.techRequirementStatus
@@ -6973,8 +7473,12 @@ window.FB = window.FB || {};
     ctx = ctx || {};
     meta = meta || {};
     if (meta.automated && option.manualOnly) return false;
-    if (FB.eventOptionStatus &&
-        FB.eventOptionStatus(state, ev, option, ctx).techLocked) return false;
+    if (FB.eventOptionStatus) {
+      const optionStatus = FB.eventOptionStatus(state, ev, option, ctx);
+      if (optionStatus.techLocked ||
+          (option.effects && option.effects.custom === 'freedom_accept_offer' &&
+            !optionStatus.ready)) return false;
+    }
 
     if (ev && ev.contextValidator) {
       if (!FB.eventContextStillValid(state, ev, ctx)) return false;

@@ -181,6 +181,7 @@ test('the prospective review ledger and every gate schema validate together',
       'earned_starting_stations',
       'estates_scutage',
       'faith_conversion',
+      'family_freedom_record',
       'field_supply_attrition',
       'formal_confirmation_of_custom',
       'formal_market_charters',
@@ -200,9 +201,12 @@ test('the prospective review ledger and every gate schema validate together',
       'legendary_artifacts',
       'local_marriage_prospect_identity',
       'mercenary_contracts',
+      'minor_household_standard_reduction',
       'mounted_raiding',
+      'negative_household_gold',
       'new_unit_classes',
       'overseas_raiding',
+      'persistent_serf_tenure',
       'physician_practice_stories',
       'professional_replacement_cohorts',
       'raiding_navigation',
@@ -210,6 +214,7 @@ test('the prospective review ledger and every gate schema validate together',
       'rare_auction_invitations',
       'royal_religious_tolerance_policy',
       'royal_settlement_policy',
+      'serf_freedom_petition',
       'settlement_dynamic_rents',
       'soldier_command_assignments',
       'stone_castle_upgrade',
@@ -220,7 +225,19 @@ test('the prospective review ledger and every gate schema validate together',
       'unit_attack_defense_roles',
       'war_justification_selection'
     ]);
-    expect(Object.values(result.modes)).toEqual([
+    const additiveNoneIds = [
+      'family_freedom_record',
+      'minor_household_standard_reduction',
+      'negative_household_gold',
+      'persistent_serf_tenure',
+      'serf_freedom_petition'
+    ];
+    expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
+      .toEqual(['none', 'none', 'none', 'none', 'none']);
+    const establishedModes = result.featureIds.filter(function (id) {
+      return additiveNoneIds.indexOf(id) < 0;
+    }).map(function (id) { return result.modes[id]; });
+    expect(establishedModes).toEqual([
       'none', 'none', 'none', 'hard', 'none', 'hard', 'hard', 'hard', 'hard',
       'hard', 'soft', 'hard', 'soft', 'hard', 'none', 'none', 'hard', 'hard',
       'hard', 'none', 'soft', 'soft', 'none', 'none', 'none', 'none', 'hard',

@@ -1019,6 +1019,34 @@ window.FBMODS = window.FBMODS || [];
       traits, true);
   }
 
+  function validateSerfFreedomEventEffects(mod) {
+    if (!own(mod, 'events')) return;
+    if (!Array.isArray(mod.events)) fail('events', 'must be an array.');
+    for (let eventIndex = 0; eventIndex < mod.events.length; eventIndex++) {
+      const event = mod.events[eventIndex];
+      if (!event || !Array.isArray(event.options)) continue;
+      for (let optionIndex = 0; optionIndex < event.options.length; optionIndex++) {
+        const option = event.options[optionIndex] || {};
+        const branches = [
+          { name:'effects', value:option.effects },
+          { name:'success.effects', value:option.success && option.success.effects },
+          { name:'failure.effects', value:option.failure && option.failure.effects }
+        ];
+        for (let branchIndex = 0; branchIndex < branches.length; branchIndex++) {
+          const branch = branches[branchIndex];
+          try {
+            if (FB.validateSerfFreedomEffect) {
+              FB.validateSerfFreedomEffect(branch.value);
+            }
+          } catch (error) {
+            fail('events[' + eventIndex + '].options[' + optionIndex + '].' +
+              branch.name, error.message || 'has invalid serfFreedom data.');
+          }
+        }
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1041,6 +1069,7 @@ window.FBMODS = window.FBMODS || [];
     if (own(mod, 'councilSeats') || own(mod, 'councilRules')) {
       validateCouncilDefinitions(mod);
     }
+    validateSerfFreedomEventEffects(mod);
     return { actions:prepareActionCatalogs(mod) };
   }
 

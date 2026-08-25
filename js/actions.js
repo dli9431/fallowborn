@@ -1047,6 +1047,579 @@ window.FB = window.FB || {};
   }
 
   /* ================= INSTANTS (one-shot deeds) ================= */
+
+  let validatedFreedomTerms = null;
+
+  FB.validateFreedomTerms = function (catalogue, timing) {
+    catalogue = catalogue || FBDATA.freedomTerms;
+    timing = timing || FBDATA.freedomBargaining;
+    if (!Array.isArray(catalogue) || !catalogue.length) {
+      throw new Error('Freedom terms must be a non-empty array.');
+    }
+    if (!timing || typeof timing !== 'object') {
+      throw new Error('Freedom bargaining timings are required.');
+    }
+    const timingKeys = ['petitionMinStanding','offerDays',
+      'petitionCooldownDays','finalServiceDays'];
+    for (let i = 0; i < timingKeys.length; i++) {
+      const key = timingKeys[i];
+      if (!Number.isInteger(timing[key])) {
+        throw new Error('Freedom bargaining ' + key + ' must be an integer.');
+      }
+    }
+    if (timing.petitionMinStanding < -100 ||
+        timing.petitionMinStanding > 100 || timing.offerDays <= 0 ||
+        timing.petitionCooldownDays < timing.offerDays ||
+        timing.finalServiceDays < 0 || timing.finalServiceDays > 360) {
+      throw new Error('Freedom bargaining timings are outside their bounds.');
+    }
+
+    const seen = {};
+    const bands = [];
+    let hasImmediate = false;
+    let hasService = false;
+    for (let i = 0; i < catalogue.length; i++) {
+      const term = catalogue[i];
+      if (!term || typeof term !== 'object' || Array.isArray(term) ||
+          typeof term.id !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(term.id) || seen[term.id]) {
+        throw new Error('Freedom terms require unique lowercase ids.');
+      }
+      seen[term.id] = 1;
+      const min = term.minStanding;
+      const max = term.maxStanding === undefined ? 100 : term.maxStanding;
+      if (!Number.isInteger(min) || !Number.isInteger(max) ||
+          min < -100 || max > 100 || min > max) {
+        throw new Error('Freedom term ' + term.id +
+          ' has invalid Standing bounds.');
+      }
+      if (typeof term.priceFactor !== 'number' ||
+          !isFinite(term.priceFactor) || term.priceFactor <= 0) {
+        throw new Error('Freedom term ' + term.id +
+          ' has an invalid price factor.');
+      }
+      if (!Number.isInteger(term.serviceDays) || term.serviceDays < 0 ||
+          term.serviceDays > 360) {
+        throw new Error('Freedom term ' + term.id +
+          ' has invalid service days.');
+      }
+      if (term.serviceDays) hasService = true;
+      else hasImmediate = true;
+      if (term.serviceDays &&
+          term.serviceDays !== timing.finalServiceDays) {
+        throw new Error('Freedom service terms must use finalServiceDays.');
+      }
+      bands.push({
+        id:term.id, minStanding:min, maxStanding:max,
+        priceFactor:term.priceFactor, serviceDays:term.serviceDays
+      });
+    }
+    bands.sort(function (a, b) {
+      return a.minStanding - b.minStanding || a.maxStanding - b.maxStanding ||
+        (a.id < b.id ? -1 : 1);
+    });
+    let expected = timing.petitionMinStanding;
+    for (let i = 0; i < bands.length; i++) {
+      const band = bands[i];
+      if (band.maxStanding < timing.petitionMinStanding) continue;
+      if (band.minStanding > expected) {
+        throw new Error('Freedom terms leave an uncovered Standing band.');
+      }
+      if (band.minStanding < expected) {
+        throw new Error('Freedom terms contain overlapping Standing bands.');
+      }
+      expected = band.maxStanding + 1;
+    }
+    if (expected <= 100) {
+      throw new Error('Freedom terms must cover Standing through 100.');
+    }
+    if (!hasImmediate || !hasService) {
+      throw new Error('Freedom terms require immediate and service-bearing terms.');
+    }
+    return bands;
+  };
+
+  function freedomTerms() {
+    if (!validatedFreedomTerms) {
+      const list = FB.validateFreedomTerms();
+      const byId = {};
+      for (let i = 0; i < list.length; i++) byId[list[i].id] = list[i];
+      validatedFreedomTerms = { list:list, byId:byId };
+    }
+    return validatedFreedomTerms;
+  }
+  FB.freedomTermDefinition = function (id) {
+    return freedomTerms().byId[id] || null;
+  };
+
+  function freedomOfferTermValid(record, term) {
+    return !!(record && term && Number.isInteger(record.baseCost) &&
+      record.baseCost > 0 && Number.isInteger(record.price) && record.price >= 0 &&
+      Number.isInteger(record.requiredStanding) &&
+      Number.isInteger(record.serviceDays) &&
+      record.serviceDays === term.serviceDays);
+  }
+  FB.freedomOfferSemanticsValid = function (record) {
+    return freedomOfferTermValid(record,
+      record && freedomTerms().byId[record.termId]);
+  };
+  FB.freedomPurchasePrice = function () {
+    const price = Math.ceil(Number(FBDATA.balance.freedomCost));
+    return isFinite(price) && price > 0 ? price : 0;
+  };
+
+  function freedomHome(state) {
+    const p = state.player;
+    return {
+      provinceId:p.provinceId || p.home || null,
+      settlementIndex:(p.homeSettlement !== undefined
+        ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0)) | 0
+    };
+  }
+
+  function freedomInvitation(state) {
+    const invitation = state.player.freedomInvitation;
+    if (!invitation || typeof invitation !== 'object' ||
+        ['lords_notice','legacy_invitation'].indexOf(invitation.source) < 0 ||
+        invitation.protagonistId !== state.player.charId) return null;
+    return invitation;
+  }
+
+  FB.inviteFreedomOffer = function (state, source) {
+    if (!state || !state.player || state.player.tier !== 0) return false;
+    source = source === 'legacy_invitation' ? source : 'lords_notice';
+    state.player.freedomInvitation = {
+      version:1, source:source,
+      protagonistId:state.player.charId,
+      createdTurn:state.turn || 0
+    };
+    return state.player.freedomInvitation;
+  };
+
+  FB.ensureFreedomOffer = function (state) {
+    if (!state || !state.player) return null;
+    const p = state.player;
+    p.flags = p.flags || {};
+    if (p.freedomInvitation &&
+        (typeof p.freedomInvitation !== 'object' ||
+          p.freedomInvitation.version !== 1 ||
+          ['lords_notice','legacy_invitation'].indexOf(
+            p.freedomInvitation.source) < 0 ||
+          typeof p.freedomInvitation.protagonistId !== 'string' ||
+          !p.freedomInvitation.protagonistId ||
+          p.freedomInvitation.protagonistId !== p.charId ||
+          !Number.isInteger(p.freedomInvitation.createdTurn) ||
+          p.freedomInvitation.createdTurn < 0)) {
+      delete p.freedomInvitation;
+    }
+    if (p.flags.freedom_promised) {
+      if (!p.freedomInvitation) {
+        FB.inviteFreedomOffer(state, 'legacy_invitation');
+      }
+      delete p.flags.freedom_promised;
+    }
+    const record = p.freedomOffer;
+    if (record === undefined || record === null) return null;
+    if (!record || typeof record !== 'object' || Array.isArray(record)) {
+      p.freedomOffer = { version:1, status:'invalid' };
+      return p.freedomOffer;
+    }
+    const statuses = ['offered','service','expired','invalid','resolved','superseded'];
+    const sources = ['petition','lords_notice','legacy_invitation'];
+    let invalid = record.version !== 1 || statuses.indexOf(record.status) < 0 ||
+      sources.indexOf(record.source) < 0;
+    const integerFields = ['tenureFormedTurn','settlementIndex',
+      'standingAtCreation','requiredStanding','baseCost','price','serviceDays',
+      'createdTurn','expiryTurn','cooldownUntil'];
+    for (let i = 0; i < integerFields.length; i++) {
+      if (!Number.isInteger(record[integerFields[i]])) invalid = true;
+    }
+    if (typeof record.termId !== 'string' ||
+        typeof record.protagonistId !== 'string' || !record.protagonistId ||
+        typeof record.lordId !== 'string' || !record.lordId ||
+        typeof record.provinceId !== 'string' || !record.provinceId ||
+        record.baseCost <= 0 || record.price < 0 || record.serviceDays < 0 ||
+        record.tenureFormedTurn < 0 || record.settlementIndex < 0 ||
+        record.standingAtCreation < -100 || record.standingAtCreation > 100 ||
+        record.requiredStanding < -100 || record.requiredStanding > 100 ||
+        record.createdTurn < 0 || record.expiryTurn < 0 ||
+        record.cooldownUntil < 0 ||
+        record.expiryTurn < record.createdTurn ||
+        record.cooldownUntil < record.expiryTurn) invalid = true;
+    const term = freedomTerms().byId[record.termId];
+    if (!freedomOfferTermValid(record, term)) {
+      invalid = true;
+    }
+    if (record.status === 'service') {
+      if (!Number.isInteger(record.acceptedTurn) ||
+          record.acceptedTurn < record.createdTurn ||
+          !Number.isInteger(record.paidPrice) || record.paidPrice !== record.price ||
+          !Number.isInteger(record.serviceEndTurn) ||
+          record.serviceEndTurn !== record.acceptedTurn + record.serviceDays ||
+          record.serviceDays <= 0) invalid = true;
+    }
+    if (invalid) record.status = 'invalid';
+    return record;
+  };
+
+  function freedomCurrentLord(state) {
+    const id = state && state.roles && state.roles.lord;
+    const lord = id && state.chars && state.chars[id];
+    return lord && !lord.dead ? lord : null;
+  }
+
+  FB.freedomOfferAcceptanceStatus = function (state, record) {
+    record = record || (state && state.player && state.player.freedomOffer);
+    const out = { ready:false, reason:'', offer:record || null, term:null };
+    if (!state || !state.player || !record || typeof record !== 'object') {
+      out.reason = FB.T('No offer of freedom is recorded.'); return out;
+    }
+    if (record.status !== 'offered') {
+      out.reason = record.status === 'service'
+        ? FB.T('Final service is already underway.')
+        : (record.status === 'expired'
+          ? FB.T('These terms have expired.')
+          : FB.T('These terms are no longer valid.'));
+      return out;
+    }
+    if ((state.turn || 0) > record.expiryTurn) {
+      out.reason = FB.T('These terms have expired.'); return out;
+    }
+    const p = state.player;
+    if (p.travel) {
+      out.reason = FB.T('Return home before accepting these terms.'); return out;
+    }
+    if ((p.flags && p.flags.in_prison) ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, p.charId))) {
+      out.reason = FB.T('You are imprisoned.'); return out;
+    }
+    const protagonist = state.chars && state.chars[p.charId];
+    if (!protagonist || protagonist.dead || record.protagonistId !== p.charId) {
+      out.reason = FB.T('The offer was made to the previous head of the household.'); return out;
+    }
+    if (p.tier !== 0) {
+      out.reason = FB.T('The household is no longer held in serfdom.'); return out;
+    }
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const home = freedomHome(state);
+    if (!tenure || tenure.formedTurn !== record.tenureFormedTurn) {
+      out.reason = FB.T('The tenure named in the offer is no longer active.'); return out;
+    }
+    if (home.provinceId !== record.provinceId ||
+        home.settlementIndex !== record.settlementIndex ||
+        tenure.provinceId !== record.provinceId ||
+        tenure.settlement !== record.settlementIndex) {
+      out.reason = FB.T('The household no longer occupies the home named in the offer.'); return out;
+    }
+    const lord = freedomCurrentLord(state);
+    if (!lord || lord.id !== record.lordId) {
+      out.reason = FB.T('The lord who made these terms no longer holds authority here.'); return out;
+    }
+    const standing = FB.standingOf(state, { kind:'character', id:lord.id });
+    if (standing < record.requiredStanding) {
+      out.reason = FB.T('Standing with {lord} has fallen below +{standing}.', {
+        lord:FB.fullName(lord), standing:record.requiredStanding
+      });
+      return out;
+    }
+    const term = freedomTerms().byId[record.termId];
+    if (!freedomOfferTermValid(record, term)) {
+      out.reason = FB.T('The recorded terms are damaged and cannot be accepted.'); return out;
+    }
+    if (p.gold < record.price) {
+      out.reason = FB.T('The offer requires {money:price}; you have {money:gold}.', {
+        price:record.price, gold:Math.floor(p.gold)
+      });
+      return out;
+    }
+    out.ready = true;
+    out.term = term;
+    return out;
+  };
+
+  FB.freedomPetitionStatus = function (state) {
+    const out = { ready:false, reason:'', offer:null, invitation:null,
+      standing:0, threshold:FBDATA.freedomBargaining.petitionMinStanding,
+      lord:null };
+    if (!state || !state.player) {
+      out.reason = FB.T('No household can make this petition.'); return out;
+    }
+    const p = state.player;
+    out.offer = p.freedomOffer || null;
+    out.invitation = freedomInvitation(state);
+    if (p.tier !== 0) {
+      out.reason = FB.T('Only a serf household needs terms of freedom.'); return out;
+    }
+    const protagonist = state.chars[p.charId];
+    if (!protagonist || protagonist.dead ||
+        FB.ageOf(protagonist, state.date.year) < 16) {
+      out.reason = adultDeedReason(); return out;
+    }
+    const lord = freedomCurrentLord(state);
+    out.lord = lord;
+    if (lord) {
+      out.standing = FB.standingOf(state, { kind:'character', id:lord.id });
+    }
+    /* Existing records remain inspectable even when present circumstances
+       would block creating or accepting a new offer. */
+    if (out.offer && ['offered','service','expired','invalid'].indexOf(
+        out.offer.status) >= 0) {
+      out.ready = true;
+      return out;
+    }
+    if (p.travel) {
+      out.reason = FB.T('Return home before petitioning the lord.'); return out;
+    }
+    if ((p.flags && p.flags.in_prison) ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, p.charId))) {
+      out.reason = FB.T('You are imprisoned.'); return out;
+    }
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const home = freedomHome(state);
+    if (!tenure || tenure.provinceId !== home.provinceId ||
+        tenure.settlement !== home.settlementIndex) {
+      out.reason = FB.T('No active customary tenure binds this household.'); return out;
+    }
+    if (!lord) {
+      out.reason = FB.T('No current lord can receive the petition.'); return out;
+    }
+    if (out.offer && (state.turn || 0) < out.offer.cooldownUntil) {
+      out.reason = FB.T('You may petition again in {days} days.', {
+        days:out.offer.cooldownUntil - (state.turn || 0)
+      });
+      return out;
+    }
+    if (out.standing < out.threshold && !out.invitation) {
+      out.reason = FB.T('Requires +{standing} Standing with the current lord.', {
+        standing:out.threshold
+      });
+      return out;
+    }
+    out.ready = true;
+    return out;
+  };
+
+  FB.createFreedomOffer = function (state, requestedSource) {
+    if (!state || !state.player) return false;
+    const p = state.player;
+    const existing = p.freedomOffer;
+    if (existing && existing.status === 'offered' &&
+        (state.turn || 0) <= existing.expiryTurn) return existing;
+    if (existing && existing.status === 'service') return existing;
+
+    /* A petition never materializes a missing role: creation must not consume
+       RNG merely because the player opened a negotiation surface. */
+    const resolvedLord = freedomCurrentLord(state);
+    if (!resolvedLord) return false;
+    const status = FB.freedomPetitionStatus(state);
+    if (!resolvedLord || !status.ready ||
+        (existing && (state.turn || 0) < existing.cooldownUntil)) return false;
+    const invitation = freedomInvitation(state);
+    const source = invitation ? invitation.source : 'petition';
+    const actualStanding = FB.standingOf(state, {
+      kind:'character', id:resolvedLord.id
+    });
+    const effectiveStanding = invitation || source === 'lords_notice'
+      ? Math.max(40, actualStanding) : actualStanding;
+    const terms = freedomTerms().list;
+    let selected = null;
+    for (let i = 0; i < terms.length; i++) {
+      if (effectiveStanding >= terms[i].minStanding &&
+          effectiveStanding <= terms[i].maxStanding) selected = terms[i];
+    }
+    if (!selected) return false;
+    const baseCost = FB.freedomPurchasePrice();
+    if (!baseCost) return false;
+    const home = freedomHome(state);
+    const tenure = FB.activeSerfTenure(state);
+    const createdTurn = state.turn || 0;
+    const timing = FBDATA.freedomBargaining;
+    const record = {
+      version:1, status:'offered', source:source,
+      termId:selected.id, protagonistId:p.charId, lordId:resolvedLord.id,
+      tenureFormedTurn:tenure.formedTurn,
+      provinceId:home.provinceId, settlementIndex:home.settlementIndex,
+      standingAtCreation:actualStanding,
+      requiredStanding:selected.minStanding,
+      baseCost:baseCost,
+      price:Math.ceil(baseCost * selected.priceFactor),
+      serviceDays:selected.serviceDays,
+      createdTurn:createdTurn,
+      expiryTurn:createdTurn + timing.offerDays,
+      cooldownUntil:createdTurn + timing.petitionCooldownDays
+    };
+    p.freedomOffer = record;
+    if (invitation) delete p.freedomInvitation;
+    if (FB.save && FB.save.autosave) FB.save.autosave();
+    return record;
+  };
+
+  function freedomDateLabel(state, turn) {
+    const date = FB.dateAtTurn(state, turn);
+    return FB.T('{season} {year}, day {day}', {
+      season:FB.seasonName(date.season), year:date.year, day:date.day
+    });
+  }
+
+  FB.freedomOfferView = function (state) {
+    const record = state && state.player && state.player.freedomOffer;
+    if (!record || typeof record !== 'object') return null;
+    const status = FB.freedomOfferAcceptanceStatus(state, record);
+    const lord = state.chars && state.chars[record.lordId];
+    const province = FB.world && FB.world.byId && FB.world.byId[record.provinceId];
+    const settlements = record.provinceId && FB.settlementsOf
+      ? FB.settlementsOf(state, record.provinceId) : [];
+    const settlement = settlements[record.settlementIndex];
+    const effectiveStatus = record.status === 'offered' &&
+      (state.turn || 0) > record.expiryTurn ? 'expired' : record.status;
+    const expiryKnown = Number.isInteger(record.expiryTurn);
+    const cooldownKnown = Number.isInteger(record.cooldownUntil);
+    const serviceEndKnown = Number.isInteger(record.serviceEndTurn);
+    return {
+      status:effectiveStatus,
+      source:record.source,
+      termId:record.termId,
+      lordName:lord ? FB.fullName(lord) : FB.T('the former local lord'),
+      homeName:settlement ? settlement.name
+        : (province ? FB.L(province.name) : FB.T('the former home')),
+      price:Number.isInteger(record.price) ? record.price : 0,
+      baseCost:Number.isInteger(record.baseCost) ? record.baseCost : 0,
+      serviceDays:Number.isInteger(record.serviceDays) ? record.serviceDays : 0,
+      requiredStanding:Number.isInteger(record.requiredStanding)
+        ? record.requiredStanding : 0,
+      standingAtCreation:Number.isInteger(record.standingAtCreation)
+        ? record.standingAtCreation : 0,
+      createdTurn:record.createdTurn,
+      expiryTurn:record.expiryTurn,
+      expiryLabel:expiryKnown ? freedomDateLabel(state, record.expiryTurn)
+        : FB.T('Unknown'),
+      cooldownUntil:record.cooldownUntil,
+      cooldownDays:cooldownKnown
+        ? Math.max(0, record.cooldownUntil - (state.turn || 0)) : 0,
+      acceptanceReady:status.ready,
+      acceptanceReason:status.reason,
+      serviceEndTurn:record.serviceEndTurn,
+      serviceEndLabel:serviceEndKnown
+        ? freedomDateLabel(state, record.serviceEndTurn) : '',
+      serviceDaysRemaining:!serviceEndKnown ? 0
+        : Math.max(0, record.serviceEndTurn - (state.turn || 0))
+    };
+  };
+
+  FB.beginFreedomFinalService = function (state) {
+    const status = FB.freedomOfferAcceptanceStatus(state);
+    if (!status.ready || !status.term || status.term.serviceDays <= 0) return false;
+    const record = status.offer;
+    const acceptedTurn = state.turn || 0;
+    state.player.gold -= record.price;
+    record.status = 'service';
+    record.acceptedTurn = acceptedTurn;
+    record.paidPrice = record.price;
+    record.serviceEndTurn = acceptedTurn + record.serviceDays;
+    return record;
+  };
+
+  FB.acceptFreedomOffer = function (state, options) {
+    options = options || {};
+    const status = FB.freedomOfferAcceptanceStatus(state);
+    if (!status.ready) return false;
+    let result;
+    if (status.term.serviceDays > 0) {
+      result = FB.beginFreedomFinalService(state);
+    } else {
+      result = FB.resolveSerfFreedom(state, {
+        route:'manumission', offerCreatedTurn:status.offer.createdTurn
+      }, options.context || {});
+    }
+    if (!result) return false;
+    if (options.spendDay !== false && FB.game && FB.game.passDay) {
+      FB.game.passDay({ skipFocus:true });
+    }
+    return result;
+  };
+
+  FB.freedomSuccession = function (state) {
+    const record = state && state.player && state.player.freedomOffer;
+    if (record && record.status === 'offered' &&
+        record.protagonistId !== state.player.charId) record.status = 'invalid';
+    if (state && state.player && state.player.freedomInvitation &&
+        state.player.freedomInvitation.protagonistId !== state.player.charId) {
+      delete state.player.freedomInvitation;
+    }
+  };
+
+  function queueFreedomOfferEvent(state, record) {
+    if (!record || record.status !== 'offered') return false;
+    const alreadyQueued = (state.eventQueue || []).some(function (item) {
+      return item.id === 'manumission' && item.ctx &&
+        item.ctx.offerCreatedTurn === record.createdTurn;
+    });
+    if (alreadyQueued) return true;
+    FB.queueEvent(state, 'manumission', {
+      offerCreatedTurn:record.createdTurn,
+      lordId:record.lordId,
+      protagonistId:record.protagonistId,
+      locationId:record.provinceId,
+      provinceId:record.provinceId,
+      settlementIndex:record.settlementIndex,
+      tenureFormedTurn:record.tenureFormedTurn,
+      price:record.price,
+      serviceDays:record.serviceDays,
+      expiryTurn:record.expiryTurn
+    });
+    return true;
+  }
+
+  FB.fns.freedom_lords_notice = function (state) {
+    const active = state.player.freedomOffer;
+    if (active && active.status === 'service') return false;
+    FB.inviteFreedomOffer(state, 'lords_notice');
+    const offer = FB.createFreedomOffer(state, 'lords_notice');
+    if (offer && state.player.freedomInvitation) {
+      delete state.player.freedomInvitation;
+    }
+    const queued = !!offer && queueFreedomOfferEvent(state, offer);
+    if (queued && FB.save && FB.save.autosave) FB.save.autosave();
+    return queued;
+  };
+  FB.fns.freedom_offer_context_valid = function (state, ctx) {
+    const offer = state && state.player && state.player.freedomOffer;
+    if (!(offer && offer.status === 'offered' && ctx &&
+      ctx.offerCreatedTurn === offer.createdTurn &&
+      ctx.lordId === offer.lordId &&
+      ctx.protagonistId === offer.protagonistId &&
+      ctx.locationId === offer.provinceId &&
+      ctx.provinceId === offer.provinceId &&
+      ctx.settlementIndex === offer.settlementIndex &&
+      ctx.tenureFormedTurn === offer.tenureFormedTurn &&
+      ctx.price === offer.price &&
+      ctx.serviceDays === offer.serviceDays &&
+      ctx.expiryTurn === offer.expiryTurn)) return false;
+    const p = state.player;
+    const protagonist = state.chars && state.chars[p.charId];
+    const lord = freedomCurrentLord(state);
+    const home = freedomHome(state);
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const term = FB.freedomTermDefinition(offer.termId);
+    return !!(p.tier === 0 && protagonist && !protagonist.dead &&
+      p.charId === offer.protagonistId && (state.turn || 0) <= offer.expiryTurn &&
+      lord && lord.id === offer.lordId && tenure &&
+      tenure.formedTurn === offer.tenureFormedTurn &&
+      tenure.provinceId === offer.provinceId &&
+      tenure.settlement === offer.settlementIndex &&
+      home.provinceId === offer.provinceId &&
+      home.settlementIndex === offer.settlementIndex && term &&
+      term.serviceDays === offer.serviceDays);
+  };
+  FB.fns.freedom_offer_accept_ready = function (state, ctx) {
+    return FB.fns.freedom_offer_context_valid(state, ctx) &&
+      FB.freedomOfferAcceptanceStatus(state).ready;
+  };
+  FB.fns.freedom_accept_offer = function (state, ctx) {
+    return FB.fns.freedom_offer_context_valid(state, ctx) &&
+      !!FB.acceptFreedomOffer(state, { spendDay:false, context:ctx });
+  };
+
   const DEED_HANDLERS = [
 
   { id: 'poach', requiresAdult:true,
@@ -1792,28 +2365,56 @@ window.FB = window.FB || {};
       }
     } },
 
+  { id:'petition_freedom', opensChoices:true, noConsume:true,
+    requiresAdult:true,
+    desc:function (s) {
+      const view = FB.freedomOfferView(s);
+      if (view && view.status === 'offered') {
+        return FB.T('Review the exact terms already offered by {lord}.', {
+          lord:view.lordName
+        });
+      }
+      if (view && view.status === 'service') {
+        return FB.T('Review the final service already underway.');
+      }
+      return FB.T('Ask the current lord for exact terms of lawful freedom.');
+    },
+    show:function (s) {
+      return s.player.tier === 0;
+    },
+    can:function (s) {
+      const status = FB.freedomPetitionStatus(s);
+      return status.ready ? true : status.reason;
+    },
+    run:function () {
+      if (FB.ui && FB.ui.showFreedomPetition) FB.ui.showFreedomPetition();
+    } },
+
   { id: 'buy_freedom', requiresAdult:true,
     desc: function () {
       return FB.T('Pay {money:gold} to be struck from the serf-roll.',
-        { gold: FBDATA.balance.freedomCost });
+        { gold: FB.freedomPurchasePrice() });
     },
     show: function (s) { return s.player.tier === 0; },
     can: function (s) {
-      if (s.player.gold < FBDATA.balance.freedomCost) return FB.T('Not enough money.');
-      const lord = FB.getRole(s, 'lord', true);
+      if (s.player.freedomOffer && s.player.freedomOffer.status === 'service') {
+        return FB.T('Final service is already underway.');
+      }
+      if (!FB.activeSerfTenure || !FB.activeSerfTenure(s)) {
+        return FB.T('No active customary tenure binds this household.');
+      }
+      const price = FB.freedomPurchasePrice();
+      if (!price) return FB.T('The purchase price is unavailable.');
+      if (s.player.gold < price) return FB.T('Not enough money.');
+      const lord = freedomCurrentLord(s);
+      if (!lord) return FB.T('No current lord can authorize the purchase.');
       if (lord && FB.standingOf(s, { kind:'character', id:lord.id }) < -20) {
-        return 'The lord despises you and refuses.';
+        return FB.T('The lord despises you and refuses.');
       }
       return true;
     },
     run: function (s) {
-      FB.applyEffects(s, {
-        tenureEnd: 'purchase',
-        gold: -FBDATA.balance.freedomCost, tierSet: 1,
-        prestige: 15, piety: 5
-      });
-      FB.news(s, FB.msg('news.action.freedom_bought',
-        'Bought freedom from serfdom!', {}));
+      return FB.resolveSerfFreedom(s, { route:'purchase' }, {});
     } },
   { id: 'buy_land', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
@@ -3402,6 +4003,8 @@ window.FB = window.FB || {};
   }
 
   function buildActionCatalogs(focusDefinitions, deedDefinitions, references) {
+    validatedFreedomTerms = null;
+    freedomTerms();
     const errors = FB.validateActionData(focusDefinitions, deedDefinitions, references);
     if (errors.length) throw new Error('Invalid action catalogue: ' + errors.join(' '));
     const orderedFocusDefinitions = focusDefinitions.slice().sort(function (a, b) {
@@ -9007,7 +9610,8 @@ window.FB = window.FB || {};
     for (const a of FB.instants) {
       if (state.player.travel &&
         ['travel_turn_back', 'travel_return_cargo', 'travel_marriage_residence',
-          'travel_settle_here', 'frontier_settle_here'].indexOf(a.id) < 0) continue;
+          'travel_settle_here', 'frontier_settle_here',
+          'petition_freedom'].indexOf(a.id) < 0) continue;
       if (a.compatibilityAlias) continue;
       const shown = !!a.show(state);
       if (!shown) continue;

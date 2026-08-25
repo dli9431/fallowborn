@@ -15,6 +15,29 @@ protection and context validation guarantee that invalidated, stale, or relocate
 discarded without gameplay side effects or double-charging. Extraordinary burdens
 (`serf_extraordinary_tallage`, `serf_seed_grain_requisition`) remain in the random pool.
 
+## Serf freedom routes
+
+Every actual tier-0-to-tier-1 freedom route uses `FB.resolveSerfFreedom`; a generic
+`tierSet:1` or `FB.setPlayerTier(state, 1)` deliberately creates no freedom history.
+The bounded `serfFreedom:{route:'old_custom'|'flight'}` event effect preflights its
+route before any sibling effect, rejects combinations with `tierSet` or `tierUp`, and
+resolves before movement. Direct purchase and saved negotiated offers call the same
+boundary. It freezes the old home and tenure, charges at most once, closes tenure,
+writes one route-specific message descriptor, and records bounded semantic family
+history. Autoresolve scores `serfFreedom` and the exact-offer acceptance handler as
+positive rank transitions, but can select acceptance only while the saved context and
+price remain valid.
+
+Both capabilities deliberately have technology impact **none**:
+`serf_freedom_petition` is a baseline appeal to an existing lord, and
+`family_freedom_record` is household memory rather than a researched capability.
+
+`lords_notice` now creates or reuses one favorable saved offer instead of promising an
+independent random promotion. `manumission` has `trigger.never:true` and is only queued
+with the exact offer identity; declining leaves that offer unchanged. Stale protagonist,
+lord, home, tenure, or expiry context removes the queued presentation before either
+manual or automated resolution can mutate the household.
+
 Exceptional sibling courtship uses three queued, context-validated events:
 the one-time approach, illicit exposure, and the final proposal. Pair status,
 target id, route, and resource checks are revalidated when the event reaches

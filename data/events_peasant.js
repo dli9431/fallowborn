@@ -355,16 +355,17 @@ FBDATA.events.push(
   trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.4 }, weight:10, once:true,
   text:'{lord} reins in beside your strip of field. “You. You’re the one who works like two men. What is it you want in this life?”',
   options:[
-    { label:'“My freedom, lord, if I earn it.”', desc:'Speak the dream aloud and see what it costs.', effects:{ setFlag:'freedom_promised', opinion:{role:'lord', amt:5}, log:'The lord spoke of freedom.' } },
+    { label:'“My freedom, lord, if I earn it.”', desc:'Receive one exact favorable offer; it still must be afforded and accepted.', effects:{ opinion:{role:'lord', amt:5}, custom:'freedom_lords_notice' } },
     { label:'“Only to serve, lord.”', desc:'Humility pleases the powerful, and asks for nothing.', effects:{ opinion:{role:'lord', amt:10} } },
     { label:'“Land of my own, someday.”', desc:'An honest ambition, honestly confessed.', effects:{ opinion:{role:'lord', amt:3} } }
   ]},
 { id:'manumission', title:'A Man of Your Own',
-  trigger:{ tierMax:0, flags:['freedom_promised'], goldMin:30, chance:0.5 }, weight:20,
-  text:'The {holy} drafts the charter by candlelight. For thirty pieces of silver, {lord} will strike your name from the roll of serfs — forever.',
+  trigger:{ never:true }, weight:20,
+  contextValidator:'freedom_offer_context_valid',
+  text:'The {holy} drafts the exact terms by candlelight. {lord} asks {money:price}; the record names {serviceDays} days of final service.',
   options:[
-    { label:'Pay. Be free.', desc:'A fortune in silver for a single word: yours.', effects:{ tenureEnd:'manumission', gold:-30, tierSet:1, prestige:15, piety:5, log:'Bought freedom from serfdom!' } },
-    { label:'Not yet. Save more first.', desc:'Freedom keeps; the charter can wait another season.', effects:{ } }
+    { label:'Accept these exact terms.', require:{ custom:'freedom_offer_accept_ready' }, desc:'Pay the saved price once; any written final service must then be completed.', effects:{ custom:'freedom_accept_offer' } },
+    { label:'Not yet.', desc:'The saved offer remains unchanged until its exact expiry.', effects:{ } }
   ]},
 
 /* ---------- village life ---------- */
@@ -449,7 +450,7 @@ FBDATA.events.push(
   text:'They say a serf who reaches a town and lives there a year and a day is free. The road is long, the law is against you — but the door stands open tonight.',
   options:[
     { label:'Run.', desc:'Freedom at the end of the road — or a halter.', chance:0.5,
-      success:{ text:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.', effects:{ tenureEnd:'flight', tierSet:1, moveRandom:true, gold:-3, prestige:5, log:'Fled serfdom to a new land!' } },
+      success:{ text:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.', effects:{ serfFreedom:{route:'flight'}, moveRandom:true, gold:-3, prestige:5 } },
       failure:{ text:'The lord’s riders catch you at the ford. You are dragged back in a halter.', effects:{ health:-2, prestige:-10, opinion:{role:'lord', amt:-20}, rivalContact:{role:'lord', score:2, cause:'attempted_escape'} } } },
     { label:'Stay. This is home, chains and all.', desc:'Better the known yoke than the unknown road.', effects:{ } }
   ]},
@@ -544,7 +545,7 @@ FBDATA.events.push(
     { label:'Renew the right already held by your house.', require:{ flags:['old_custom_won'], holdings:['common_rights'] }, desc:'Confirm in ink what your house already holds.',
       effects:{ prestige:15, popularOpinion:10, opinion:{role:'lord', amt:5}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
     { label:'Ask for your freedom as the price.', require:{ flags:['old_custom_won'], tierMax:0 }, desc:'Trade the village’s gain for your own chains broken.',
-      effects:{ tenureEnd:'old_custom', tierSet:1, prestige:15, popularOpinion:-5, opinion:{role:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', log:'Won freedom in the struggle over the common.' } },
+      effects:{ serfFreedom:{route:'old_custom'}, prestige:15, popularOpinion:-5, opinion:{role:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
     { label:'Ask instead for a place in the lord’s service.', require:{ flags:['old_custom_won'], tierMin:1, tierMax:2 }, desc:'Turn victory into a step up the ladder.',
       effects:{ prestige:20, popularOpinion:-3, opinion:{role:'lord', amt:25}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
 

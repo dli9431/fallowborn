@@ -714,6 +714,14 @@ standalone founder card keeps the jump reachable.
 
 ## Succession and inheritance
 
+A freedom offer belongs to the protagonist who received it, so ordinary death or
+retirement invalidates an unaccepted offer and any queued presentation. Once a final-
+service term is accepted, its paid price and exact end turn belong to the household's
+active tenure and survive succession; a new head completes the same remaining service
+without another charge. The bounded `player.familyFreedom` landmark also survives every
+handover, preserving the original negotiating protagonist rather than rewriting history
+around the heir.
+
 `FB.heirReview` is the shared read-only succession explanation. `FB.heirsOf` filters
 that review instead of rebuilding the order. The review preserves the existing named
 heir, children-first, then same-house grandchildren/siblings/nieces-nephews/

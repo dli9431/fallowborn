@@ -4,6 +4,24 @@
    ========================================================================= */
 window.FBDATA = window.FBDATA || {};
 
+/* Exact, deterministic terms offered when a serf asks the current lord for
+   freedom. Display prose belongs to the UI; these records are simulation
+   semantics and saved offers freeze their calculated values. */
+FBDATA.freedomTerms = [
+  { id:'cash_standard', minStanding:20, maxStanding:39,
+    priceFactor:1, serviceDays:0 },
+  { id:'cash_favored', minStanding:40, maxStanding:59,
+    priceFactor:0.75, serviceDays:0 },
+  { id:'cash_service', minStanding:60, maxStanding:100,
+    priceFactor:0.50, serviceDays:90 }
+];
+FBDATA.freedomBargaining = {
+  petitionMinStanding:20,
+  offerDays:180,
+  petitionCooldownDays:360,
+  finalServiceDays:90
+};
+
 /* Religious progression is character state keyed by path id and a legacy
    numeric rank index. Baseline rank order is therefore a compatibility
    boundary even though every rank also has its own stable id. */

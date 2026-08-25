@@ -18,7 +18,14 @@ an immediate deed such as Poach is visibly different from a picker-backed deed s
 into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
-The 28 baseline focus records and 78 baseline deed records keep their non-executable
+Freedom offers last 180 days and measure their 360-day petition cooldown from creation.
+Creating, reopening, or declining an offer spends no day. Acceptance spends one day.
+The highest-Standing offer includes 90 days of final service: its price is charged once,
+ordinary tenure duties remain possible, and `FB.freedomDay` completes freedom on the exact
+saved turn. The daily post-calendar order runs `freedomDay` immediately before
+`tenureDay`, so a completed service term cannot queue another duty that day.
+
+The 28 baseline focus records and 79 baseline deed records keep their non-executable
 metadata in `data/actions.js`. `js/actions.js` owns private handler registries and validates
 and projects those records into the compatible `FB.focuses` / `FB.instants` shapes. Every
 baseline id, order, and handler binding is protected. Fixed cooldowns, technology

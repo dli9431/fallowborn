@@ -870,6 +870,11 @@ window.FB = window.FB || {};
        old inventories and grows exact instances/loadouts additively here. */
     if (FB.ensureItems) FB.ensureItems(FB.state);
     if (FB.ensureHouseholdStandards) FB.ensureHouseholdStandards(FB.state);
+    /* Freedom bargaining and its bounded family landmark are additive format-3
+       records. Repair them without forming tenure, advancing time, or using
+       RNG; old freeholder saves deliberately receive no invented history. */
+    if (FB.ensureFreedomOffer) FB.ensureFreedomOffer(FB.state);
+    if (FB.ensureFamilyFreedom) FB.ensureFamilyFreedom(FB.state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(FB.state);
     if (FB.ensureMarket) FB.ensureMarket(FB.state);
     if (FB.ensureEducationPolicy) FB.ensureEducationPolicy(FB.state, true);

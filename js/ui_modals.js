@@ -189,7 +189,8 @@ window.FB = window.FB || {};
      explicit "everything" setting may make this irreversible choice. */
   function hasTitleChoice(ev) {
     function has(fx) {
-      return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.declareIndependence ||
+      return !!(fx && (fx.tierSet >= 3 || fx.tierUp || fx.serfFreedom ||
+        fx.custom === 'freedom_accept_offer' || fx.declareIndependence ||
         fx.travelSettle));
     }
     for (const o of (ev.options || [])) {
@@ -288,7 +289,8 @@ window.FB = window.FB || {};
     if (fx.standingRealm) v += fx.standingRealm * 0.1;
     if (fx.opinion && fx.opinion.amt) v += fx.opinion.amt * 0.1;
     if (fx.skills) for (const k in fx.skills) v += fx.skills[k] * 1.5;
-    if (fx.tierSet !== undefined || fx.tierUp) v += 25;
+    if (fx.tierSet !== undefined || fx.tierUp || fx.serfFreedom ||
+        fx.custom === 'freedom_accept_offer') v += 25;
     if (fx.marry) v += 10;
     if (fx.killChild || fx.killRole) v -= 10;
     if (fx.setFlag === 'ill') v -= 4;
@@ -704,7 +706,7 @@ window.FB = window.FB || {};
       btn.setAttribute('aria-describedby', detailsId);
       btn.innerHTML = hintFor(i) +
         esc(oi >= 0 ? FB.eventText(s, s.player.charId, ev, 'options.' + oi + '.label', ctx) : FB.fmt(s, o.label, ctx)) +
-        (optionStatus.techLocked ? '<span class="odesc">' +
+        (!optionStatus.ready && optionStatus.reason ? '<span class="odesc">' +
           esc(optionStatus.reason) + (technologyLink
             ? ' ' + esc(FB.T('Open the technology entry.')) : '') +
           '</span>' : '');
@@ -1720,6 +1722,139 @@ window.FB = window.FB || {};
         }
       });
     });
+  };
+
+  UI.showFreedomPetition = function (options) {
+    options = options || {};
+    const s = FB.state;
+    if (!s || !s.player || s.player.tier !== 0) return;
+    const petition = FB.freedomPetitionStatus(s);
+    const view = FB.freedomOfferView(s);
+    const lord = petition.lord || (view && s.chars[
+      s.player.freedomOffer && s.player.freedomOffer.lordId]);
+    const lordName = lord ? FB.fullName(lord)
+      : (view ? view.lordName : FB.T('No current lord'));
+    const showReview = !!view && !options.intro;
+    let h = '<div class="gm-body-text" data-freedom-routes>' +
+      '<p>' + esc(FB.T(
+        'A petition asks the current lord for one exact, saved offer. It spends no day and uses no chance roll.')) + '</p>' +
+      kv('Current lord', esc(lordName)) +
+      kv('Standing', esc(String(petition.standing))) +
+      kv('Petition threshold', esc(FB.T('+{standing}', {
+        standing:petition.threshold
+      }))) +
+      kv('Buy freedom outright', esc(FB.T('{money:price}', {
+        price:FB.freedomPurchasePrice()
+      })));
+
+    if (!showReview) {
+      h += '<p class="adesc">' + esc(FB.T(
+        'Standing +20 offers the standard price; +40 offers a lower cash price; +60 offers the lowest cash price followed by final service.')) + '</p>';
+      if (petition.invitation) {
+        h += '<p class="progressnote">' + esc(FB.T(
+          'The lord’s invitation guarantees favorable terms for this petition.')) + '</p>';
+      }
+      if (!petition.ready) {
+        h += '<p class="warnote">' + esc(petition.reason) + '</p>';
+      }
+      h += '</div><div class="gm-list"><button type="button" class="actionbtn" ' +
+        'id="freedom-petition-create"' + (petition.ready ? '' : ' disabled') + '>' +
+        esc(FB.T('Ask for exact terms')) + '</button>' +
+        (view ? '<button type="button" class="actionbtn" id="freedom-petition-review">' +
+          esc(FB.T('Review the saved offer')) + '</button>' : '') +
+        '<button type="button" class="actionbtn" id="freedom-petition-close">' +
+        esc(FB.T('Not now')) + '</button></div>';
+      openModal(FB.T('Petition for terms of freedom'), h, {
+        historyView:true, historyBack:true
+      });
+      const create = $('freedom-petition-create');
+      if (create) create.addEventListener('click', function () {
+        const created = FB.createFreedomOffer(s, 'petition');
+        if (!created) {
+          UI.toast(FB.T('Circumstances changed before terms could be offered.'));
+          return;
+        }
+        UI.showFreedomPetition();
+      });
+      const review = $('freedom-petition-review');
+      if (review) review.addEventListener('click', function () {
+        UI.showFreedomPetition();
+      });
+      $('freedom-petition-close').addEventListener('click', UI.closeModal);
+      return;
+    }
+
+    const serviceText = view.serviceDays
+      ? FB.T('{days} days of final service', { days:view.serviceDays })
+      : FB.T('No final service; freedom is immediate');
+    h += '<div data-freedom-offer>' +
+      '<div class="panelh">' + esc(FB.T('Saved offer')) + '</div>' +
+      kv('Lord', esc(view.lordName)) +
+      '<div data-freedom-offer-price>' +
+        kv('Exact cash price', esc(FB.T('{money:price}', { price:view.price }))) +
+      '</div><div data-freedom-offer-service>' +
+        kv('Continued service', esc(serviceText)) +
+      '</div><div data-freedom-offer-expiry>' +
+        kv('Offer expires', esc(view.expiryLabel)) +
+      '</div>' +
+      '<p class="adesc">' + esc(view.serviceDays
+        ? FB.T('Acceptance pays the exact price now. Freedom follows only when final service ends; ordinary customary duties may still fall due.')
+        : FB.T('Acceptance pays the exact price and grants lawful freedom immediately.')) +
+      '</p>';
+    if (view.status === 'service') {
+      h += '<div class="progressnote" data-freedom-service-progress>' +
+        esc(FB.T('Final service ends {date}; {days} days remain.', {
+          date:view.serviceEndLabel, days:view.serviceDaysRemaining
+        })) + '</div>';
+    } else if (!view.acceptanceReady) {
+      h += '<p class="warnote">' + esc(view.acceptanceReason) + '</p>';
+    }
+    if (view.status === 'expired' && view.cooldownDays) {
+      h += '<p class="progressnote">' + esc(FB.T(
+        'You may petition again in {days} days.', { days:view.cooldownDays
+        })) + '</p>';
+    }
+    h += '</div></div><div class="gm-list">';
+    if (view.status === 'offered') {
+      h += '<button type="button" class="actionbtn" id="freedom-offer-accept"' +
+        (view.acceptanceReady ? '' : ' disabled') + '>' +
+        esc(view.serviceDays ? FB.T('Accept and begin final service')
+          : FB.T('Pay and accept lawful freedom')) + '</button>';
+    } else if ((view.status === 'expired' || view.status === 'invalid') &&
+        view.cooldownDays === 0) {
+      h += '<button type="button" class="actionbtn" id="freedom-offer-new">' +
+        esc(FB.T('Ask for new terms')) + '</button>';
+    }
+    h += '<button type="button" class="actionbtn" id="freedom-offer-back">' +
+      esc(FB.T('Back')) + '</button>' +
+      '<button type="button" class="actionbtn" id="freedom-offer-close">' +
+      esc(FB.T('Not now')) + '</button></div>';
+    openModal(FB.T('Terms of freedom'), h, {
+      historyView:true, historyBack:true
+    });
+    const accept = $('freedom-offer-accept');
+    if (accept) accept.addEventListener('click', function () {
+      UI.closeModal();
+      const accepted = FB.acceptFreedomOffer(s);
+      if (!accepted) {
+        UI.toast(FB.T('The terms could not be accepted because circumstances changed.'));
+      } else if (s.player.freedomOffer &&
+          s.player.freedomOffer.status === 'service') {
+        UI.toast(FB.T('The price is paid. Final service is underway.'));
+      }
+      UI.refresh();
+    });
+    const newer = $('freedom-offer-new');
+    if (newer) newer.addEventListener('click', function () {
+      delete s.player.freedomOffer;
+      UI.showFreedomPetition({ intro:true });
+    });
+    $('freedom-offer-back').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showFreedomPetition({ intro:true });
+      });
+    });
+    $('freedom-offer-close').addEventListener('click', UI.closeModal);
   };
 
   function closeTravelPicker(restorePause) {

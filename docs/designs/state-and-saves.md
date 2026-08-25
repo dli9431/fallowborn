@@ -8,6 +8,22 @@ consuming RNG or bumping save format 3:
 - Unknown optional duty, conditional-duty, and right IDs remain harmless save data and are ignored by scheduling and display.
 - No rendered text, active calculations, or volatile references enter serialized state.
 
+Freedom bargaining is also optional additive save-format-3 state. At most one
+`player.freedomOffer` freezes version, status, source, term id, protagonist and lord ids,
+tenure/home identity, Standing threshold, base cost, exact price, service days, creation,
+expiry, and cooldown turns. Accepted service additionally freezes acceptance, paid-price,
+and completion turns. `FB.ensureFreedomOffer` fails malformed records closed without
+recalculating terms or consuming RNG; the removed `flags.freedom_promised` becomes a
+one-use invitation and never an offer merely because a save was loaded.
+
+`player.familyFreedom` is a bounded locale-neutral landmark: `first` records the first
+serf-to-free transition, and `firstLawful` is permitted only when `first` was flight.
+Records contain route, lawful flag, character/lord/home ids, turn/year, price, service,
+and optional term id—never rendered names, dates, or summaries. Restore validates the
+optional object but invents no history for an older freeholder save. The household object
+preserves this landmark and paid final service through succession while an unaccepted
+personal offer becomes invalid.
+
 Phase 4E action capabilities add no serialized state. A `resource_choice` deed picker is
 only a generic-modal view: opening, cancelling, mobile Back, saving, or reloading before
 confirmation leaves no pending-action record. Confirmation completes synchronously through

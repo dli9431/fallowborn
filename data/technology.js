@@ -75,6 +75,14 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      serf_freedom_petition:{
+        mode:'none',
+        rationale:'A serf asking an existing lord for terms is a baseline social and legal action, not a capability unlocked by sovereign research.'
+      },
+      family_freedom_record:{
+        mode:'none',
+        rationale:'Remembering how a household first became free is family history and presentation, not a technology-gated capability.'
+      },
       negative_household_gold:{
         mode:'none',
         rationale:'Household cash shortfalls are a baseline consequence of losses, commitments, and incurred obligations, not an optional capability or a financial technique unlocked by sovereign research.'

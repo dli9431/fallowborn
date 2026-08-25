@@ -420,7 +420,8 @@ test('descent and ascent routes: freedom deed, flight event, debt bondage, comme
 
       // 1. Manumission / Freedom via buy_freedom action
       FB.ensureSerfTenure(state, 'new_game');
-      state.player.gold = 50;
+      state.player.gold = FBDATA.balance.freedomCost;
+      FB.getRole(state, 'lord', true);
       var buyFreedom = FB.instants.filter(function (d) { return d.id === 'buy_freedom'; })[0];
       if (buyFreedom) buyFreedom.run(state);
       results.freedomTier = state.player.tier;
@@ -509,6 +510,7 @@ test('lifecycle: legacy repair, due turn arrival, stale context matrix, closing 
       // Verify lazy repair
       delete state.player.tenure;
       const repaired = FB.ensureSerfTenure(state, 'legacy_repair');
+      const repairedActive = !!repaired && repaired.status === 'active';
 
       const firstDuty = repaired.duties[0];
       const validCtx = {
@@ -571,7 +573,7 @@ test('lifecycle: legacy repair, due turn arrival, stale context matrix, closing 
 
       return {
         initialActive: !!initialTenure,
-        repairedActive: !!repaired && repaired.status === 'active',
+        repairedActive: repairedActive,
         invalidBeforeDue: invalidBeforeDue,
         validAtDue: validAtDue,
         invalidOnTier1: invalidOnTier1,

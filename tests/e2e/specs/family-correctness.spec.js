@@ -672,7 +672,8 @@ test('customary tenure persists across real character succession with duty reque
       const heirProtagonistMatched = requeuedEvent && requeuedEvent.ctx.protagonistId === child.id;
 
       // 3. Tier promotion closes tenure and prevents future duty scheduling
-      s.player.gold = 50;
+      s.player.gold = FBDATA.balance.freedomCost;
+      FB.getRole(s, 'lord', true);
       var buyFreedom = FB.instants.filter(function (d) { return d.id === 'buy_freedom'; })[0]; if (buyFreedom) buyFreedom.run(s);
       const promotionClosed = s.player.tenure && s.player.tenure.status === 'closed';
       s.eventQueue = [];

@@ -200,6 +200,59 @@ test('milestone-zero registries merge through mods and drive their engine consum
     expect(result.coreProfile.dailyProgress).toBeGreaterThan(0);
   });
 
+test('serfFreedom exposes only bounded story routes and rejects rank conflicts',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      function accepted(fx) {
+        try {
+          FB.validateSerfFreedomEffect(fx);
+          return true;
+        } catch (error) { return false; }
+      }
+      const eventCount = FBDATA.events.length;
+      let modRejected = false;
+      try {
+        FB.mods.apply({ events:[{
+          id:'e2e_invalid_serf_freedom', title:'Invalid freedom',
+          text:'This event must never be installed.', trigger:{ never:true },
+          options:[{ label:'Reject it',
+            effects:{ serfFreedom:{ route:'purchase' } } }]
+        }] });
+      } catch (error) {
+        modRejected = error.message.indexOf('old_custom or flight') >= 0;
+      }
+      return {
+        oldCustom:accepted({ serfFreedom:{ route:'old_custom' } }),
+        flight:accepted({ serfFreedom:{ route:'flight' } }),
+        purchase:accepted({ serfFreedom:{ route:'purchase' } }),
+        manumission:accepted({ serfFreedom:{ route:'manumission' } }),
+        malformed:accepted({ serfFreedom:{ route:'flight', price:0 } }),
+        missingObject:accepted({ serfFreedom:null }),
+        tierSet:accepted({ serfFreedom:{ route:'flight' }, tierSet:1 }),
+        tierUp:accepted({ serfFreedom:{ route:'flight' }, tierUp:true }),
+        modRejected:modRejected,
+        modUnchanged:FBDATA.events.length === eventCount &&
+          !FBDATA.events.some(function (event) {
+            return event.id === 'e2e_invalid_serf_freedom';
+          })
+      };
+    });
+
+    expect(result).toEqual({
+      oldCustom:true,
+      flight:true,
+      purchase:false,
+      manumission:false,
+      malformed:false,
+      missingObject:false,
+      tierSet:false,
+      tierUp:false,
+      modRejected:true,
+      modUnchanged:true
+    });
+  });
+
 test('milestone-zero mod validation rejects unknown data before mutation',
   async function ({ page }, testInfo) {
     await openGame(page, testInfo);
@@ -898,7 +951,7 @@ test('milestone-four phase A projects protected baseline action catalogues and r
       };
     });
 
-    expect(result.counts).toEqual([28, 78]);
+    expect(result.counts).toEqual([28, 79]);
     expect(result.validation).toEqual([]);
     expect(result.focusMetadata).toBe(true);
     expect(result.deedMetadata).toBe(true);
@@ -1250,7 +1303,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             id:'e2e_declarative_exchange', handler:'declarative_deed',
             label:'Make the chartered exchange',
             desc:'Trade coin and standing for a pious endowment.',
-            order:78, group:'life', cooldownDays:12, spendsDay:false,
+            order:79, group:'life', cooldownDays:12, spendsDay:false,
             requiresTech:'crop_rotation',
             visibility:{ flagsAll:['e2e_deed_visible'] },
             eligibility:{
@@ -1264,14 +1317,14 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
             id:'e2e_declarative_day', handler:'declarative_deed',
             label:'Spend a day on the charter',
             desc:'Complete one bounded day-spending deed.',
-            order:79, group:'life', cooldownDays:0, spendsDay:true,
+            order:80, group:'life', cooldownDays:0, spendsDay:true,
             effects:{ prestige:1 }
           },
           {
             id:'e2e_declarative_story', handler:'declarative_deed',
             label:'Request the promised audience',
             desc:'Pay for one authored follow-up event.',
-            order:80, group:'life', cooldownDays:5, spendsDay:false,
+            order:81, group:'life', cooldownDays:5, spendsDay:false,
             costs:{ piety:1 }, queueEvent:'e2e_declarative_followup'
           }
         ]
@@ -1334,7 +1387,7 @@ test('milestone-four phase C adds previewable declarative deeds with atomic exec
 
     expect(setup.eventWasAbsent).toBe(true);
     expect(setup.sameModEvent).toBe('A promised audience');
-    expect(setup.count).toBe(81);
+    expect(setup.count).toBe(82);
     expect(setup.hidden).toEqual({ shown:false, preview:null });
     expect(setup.techBlocked).toEqual({
       can:false,
@@ -1510,7 +1563,7 @@ test('milestone-four phase C rejects unsafe declarative deeds without mutation',
         return Object.assign({
           id:'e2e_unsafe_deed', handler:'declarative_deed',
           label:'Unsafe deed', desc:'A rejected declarative deed.',
-          order:78, group:'life', cooldownDays:1, spendsDay:false,
+          order:79, group:'life', cooldownDays:1, spendsDay:false,
           effects:{ piety:1 }
         }, patch || {});
       }
@@ -2002,7 +2055,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'resource_choice',
             label:'Choose a charter grant',
             desc:'Select one bounded grant to confirm.',
-            order:78, group:'life', cooldownDays:15, spendsDay:false,
+            order:79, group:'life', cooldownDays:15, spendsDay:false,
             choices:[
               {
                 id:'hidden', label:'Hidden grant',
@@ -2042,7 +2095,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
             capability:'resource_choice',
             label:'Choose a day-long grant',
             desc:'Confirm one grant that occupies the day.',
-            order:79, group:'life', cooldownDays:4, spendsDay:true,
+            order:80, group:'life', cooldownDays:4, spendsDay:true,
             choices:[{
               id:'accept', label:'Accept the grant', effects:{ prestige:2 }
             }]
@@ -2091,7 +2144,7 @@ test('milestone-four phase E adds bounded choice deeds and scored focus fallback
       };
     });
 
-    expect(setup.counts).toEqual([31, 80]);
+    expect(setup.counts).toEqual([31, 81]);
     expect(setup.defaults).toEqual([
       'trade_run', 'e2e_fallback_first', 'e2e_fallback_high'
     ]);
@@ -2290,7 +2343,7 @@ test('milestone-four phase E rejects unregistered action capabilities atomically
         return Object.assign({
           id:'e2e_capability_deed', handler:'declarative_deed',
           capability:'resource_choice', label:'Capability deed',
-          desc:'A bounded picker-backed deed.', order:78, group:'life',
+          desc:'A bounded picker-backed deed.', order:79, group:'life',
           cooldownDays:1, spendsDay:false, choices:[choice()]
         }, patch || {});
       }

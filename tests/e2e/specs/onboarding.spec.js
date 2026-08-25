@@ -759,7 +759,7 @@ test('unfinished work guidance follows a minor child and points succession at Ch
     expect(result.steps.map(function (step) { return step.label; })).toEqual([
       'Come of age and take up a livelihood',
       'Start or continue a household enterprise',
-      'Come of age, buy your freedom, then acquire land'
+      'Come of age, petition or buy freedom, then acquire land'
     ]);
     expect(result.steps[1].done).toBe(true);
     await expect(page.locator('.coachmark')).toContainText(

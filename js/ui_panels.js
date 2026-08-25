@@ -1601,8 +1601,8 @@ window.FB = window.FB || {};
   function nextStepHint(s) {
     if (s.player.tier === 0) {
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
-        'Path: save {money:gold} (or build Standing with your lord) to buy freedom.',
-        { gold: FBDATA.balance.freedomCost })) + '</div>';
+        'Path: save {money:gold} to buy freedom outright, or reach +20 Standing with your lord and petition for exact terms.',
+        { gold: FB.freedomPurchasePrice() })) + '</div>';
     }
     if (s.player.tier === 1) {
       const cluster = FB.largestLandCluster(s);
@@ -2448,11 +2448,79 @@ window.FB = window.FB || {};
             '<p class="adesc">' + esc(view.lawfulFreedomStatement) + '</p>' +
             '</div>';
         }
+        const petition = FB.freedomPetitionStatus
+          ? FB.freedomPetitionStatus(s) : null;
+        const offer = FB.freedomOfferView ? FB.freedomOfferView(s) : null;
+        const freedomHead = s.chars[s.player.charId];
+        const freedomLordId = s.roles && s.roles.lord;
+        const freedomLord = freedomLordId && s.chars[freedomLordId] &&
+          !s.chars[freedomLordId].dead ? s.chars[freedomLordId] : null;
+        const freedomLordStanding = freedomLord
+          ? FB.standingOf(s, { kind:'character', id:freedomLord.id }) : 0;
+        const purchaseBlocked = s.player.freedomOffer &&
+          s.player.freedomOffer.status === 'service'
+          ? FB.T('Final service is already underway.')
+          : (!freedomHead || freedomHead.dead ||
+              FB.ageOf(freedomHead, s.date.year) < 16
+            ? FB.T('You can do this when you come of age at 16.')
+            : (s.player.gold < FB.freedomPurchasePrice()
+            ? FB.T('Requires {money:price}; you have {money:gold}.', {
+              price:FB.freedomPurchasePrice(),
+              gold:Math.floor(s.player.gold)
+            })
+            : (!freedomLord
+              ? FB.T('No current lord can authorize the purchase.')
+              : (freedomLordStanding < -20
+                ? FB.T('The lord despises you and refuses.')
+                : FB.T('Available now.')))));
+        h += '<div class="freedom-routes" data-freedom-routes>' +
+          '<div class="panelh">' + esc(FB.T('Routes to Freedom')) + '</div>' +
+          kv('Buy freedom outright', esc(FB.T('{money:price}', {
+            price:FB.freedomPurchasePrice()
+          }))) +
+          '<p class="adesc">' + esc(purchaseBlocked) + '</p>' +
+          (petition && petition.lord
+            ? kv('Standing with current lord', esc(FB.T('{standing} (petition at +{threshold})', {
+              standing:petition.standing, threshold:petition.threshold
+            })))
+            : kv('Petition', esc(petition ? petition.reason
+              : FB.T('No current lord can receive the petition.'))));
+        if (offer) {
+          const offerService = offer.serviceDays
+            ? FB.T('{days} days', { days:offer.serviceDays })
+            : FB.T('none');
+          h += '<div data-freedom-offer>' +
+            '<div data-freedom-offer-price>' +
+              kv('Saved price', esc(FB.T('{money:price}', {
+                price:offer.price
+              }))) + '</div>' +
+            '<div data-freedom-offer-service>' +
+              kv('Final service', esc(offerService)) + '</div>' +
+            '<div data-freedom-offer-expiry>' +
+              kv('Offer expiry', esc(offer.expiryLabel)) + '</div>' +
+            (!offer.acceptanceReady && offer.status === 'offered'
+              ? '<p class="warnote">' + esc(offer.acceptanceReason) + '</p>'
+              : '') + '</div>';
+          if (offer.status === 'service') {
+            h += '<div class="progressnote" data-freedom-service-progress>' +
+              esc(FB.T('Final service ends {date}; {days} days remain.', {
+                date:offer.serviceEndLabel,
+                days:offer.serviceDaysRemaining
+              })) + '</div>';
+          }
+        }
+        h += '<button type="button" class="btn" id="rank-petition-freedom"' +
+          (petition && petition.ready ? '' : ' disabled') + '>' +
+          esc(FB.T('Petition for terms of freedom…')) + '</button></div>';
       }
     }
     h += '<div class="gm-footer"><button class="btn" id="rank-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
     openModal(FB.T(landed ? 'Realm & demesne' : 'Station & home'), h);
+    const freedomPetition = $('rank-petition-freedom');
+    if (freedomPetition) freedomPetition.addEventListener('click', function () {
+      if (UI.showFreedomPetition) UI.showFreedomPetition();
+    });
     $('rank-details-close').addEventListener('click', UI.closeModal);
   };
 
@@ -2914,6 +2982,18 @@ window.FB = window.FB || {};
     let h = '<button class="btn small" id="btn-ftree" style="width:100%" ' +
       'title="' + esc(FB.T('See the whole family drawn as a tree')) + '">' +
       esc(FB.T('🌳 See the family tree')) + '</button>';
+    const freedomHistory = FB.familyFreedomView
+      ? FB.familyFreedomView(s) : null;
+    if (freedomHistory) {
+      h += '<section class="family-landmarks" data-family-freedom>' +
+        panelh('Family landmarks') +
+        '<p class="adesc" data-family-freedom-first>' +
+          esc(freedomHistory.first.text) + '</p>' +
+        (freedomHistory.firstLawful
+          ? '<p class="adesc" data-family-freedom-lawful>' +
+            esc(freedomHistory.firstLawful.text) + '</p>' : '') +
+        '</section>';
+    }
     const sps = FB.spousesOf(s, me);
     h += panelh(sps.length > 1 ? 'Wives' : 'Spouse');
     if (sps.length) {

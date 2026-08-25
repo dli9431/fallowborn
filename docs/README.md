@@ -251,7 +251,12 @@ Serf → Freeholder → Gentry → Baron → Count → Duke → King → Emperor
 A brand-new life finds a dismissible **First steps** checklist atop the *Deeds* tab —
 five tiny goals that teach the core loop once — and the tab shows a hint for the
 next rung by default; experienced players can disable guide hints in Settings. Wealth
-buys freedom; Freeholders then buy inherited plots settlement by settlement. Land held together grows more
+buys freedom outright, or an adult serf with +20 Standing can ask the current lord for
+exact saved terms in **Rank & Realm** or **Deeds**. Better Standing lowers the frozen
+cash price; at +60 the best terms add 90 days of final service before promotion. Offers
+last two seasons, can be reviewed without spending a day, and are rechecked when accepted.
+The Kin panel remembers how the family first became free, including flight without a
+lawful charter. Freeholders then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement can be declared a manor once the family has
 the standing to join the gentry. Standing with a lord then earns an established gentle house a
 banner, normally after the manor has passed to an heir; battlefield glory during an active

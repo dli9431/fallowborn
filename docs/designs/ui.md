@@ -15,6 +15,22 @@ localized archetype name, summary, holding controller, current lord/authority, r
 ordinary duties with full calendar dates and days remaining, and any pending conditional obligations,
 using stable `data-tenure-*` selectors and responsive mobile layout.
 
+The same modal contains a **Routes to Freedom** section. It shows the direct price,
+current-lord Standing and petition threshold, exact saved offer price/service/expiry and
+acceptance lock, or paid final-service completion. Its stable selectors are
+`data-freedom-routes`, `data-freedom-offer`, `data-freedom-offer-price`,
+`data-freedom-offer-service`, `data-freedom-offer-expiry`, and
+`data-freedom-service-progress`. The petition button opens a standard scrollable modal:
+creating terms changes only the saved offer, Back returns to the explanation, and Close,
+Escape, or Not now leaves terms unchanged. Native controls retain keyboard activation and
+44-pixel touch height at a 390-CSS-pixel viewport.
+
+When bounded family freedom history exists, Kin renders **Family landmarks** immediately
+after the family-tree button. `data-family-freedom`, `data-family-freedom-first`, and
+`data-family-freedom-lawful` distinguish the first route and optional later lawful route.
+The presentation adapter resolves historical ids with neutral fallbacks and never exposes
+raw ids or saved prose.
+
 **Where the UI code lives.** The former `js/ui.js` is split into four files that augment one
 `FB.ui` namespace. The first three load consecutively; the modal sheet is deferred until
 after the initial title paint:
@@ -1078,7 +1094,8 @@ layouts the Self lesson targets the always-visible portrait because the Self/Kin
 are hidden. Afterward, ranks 0–2 finish **Family & legacy** before unfinished
 **Making a living** steps hand off to
 **Work, training & enterprises…** for the first business, then to the rank-aware land
-route in **Rank & Realm**: serfs are shown **Buy your freedom**, while freeholders are
+route in **Rank & Realm**: serfs are shown **Petition for terms of freedom…** and
+**Buy freedom outright**, while freeholders are
 shown **Buy a plot of land** directly. The lesson opens the owning Deeds section before
 anchoring its coachmark, waits for the enterprise objective to be completed before teaching
 land, skips an objective already completed, and Continue resumes at

@@ -2820,6 +2820,16 @@ textarea.modjson, textarea.savetext {
 .tenure-notes {
   margin-top: 10px; border-top: 1px solid rgba(85, 69, 42, .4); padding-top: 6px;
 }
+.freedom-routes {
+  margin-top: 12px; border-top: 1px solid rgba(85, 69, 42, .4); padding-top: 4px;
+  overflow-wrap: anywhere;
+}
+.freedom-routes .btn { width: 100%; min-height: 44px; margin-top: 6px; }
+.family-landmarks {
+  margin-top: 8px; padding: 2px 8px 1px; border: 1px solid rgba(85, 69, 42, .45);
+  border-radius: 8px; overflow-wrap: anywhere;
+}
+[data-freedom-offer] { overflow-wrap: anywhere; }
 
 /* Governance is the territorial ruler's political home. Its section strip
    switches one consistent content surface instead of stacking mismatched

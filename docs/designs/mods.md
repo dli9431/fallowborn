@@ -59,6 +59,12 @@ before locale validation so newly added mod text always has an English fallback.
 authored name, description, and prose remain English unless they exactly match a known
 catalog source; translation packs for third-party mods are outside the core v1 contract.
 
+Event mods may author the bounded `serfFreedom` effect only for `old_custom` and
+`flight`. The pre-apply validator checks the effect object and rejects engine-owned
+purchase/manumission routes or combinations with generic rank effects before any table
+from that mod is merged. Runtime event indexing repeats the same validation as a defensive
+boundary for core and effective event data.
+
 Culture definitions replace or add atomically by id under `cultures`, while cultural
 affinity definitions replace or add by id under `cultureTraditions`. A culture's
 optional `tradition` points at the resulting table; new definitions without one fall
