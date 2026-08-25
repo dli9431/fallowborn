@@ -60,13 +60,17 @@ FBDATA.events.push(
 /* ---------- the lord's shadow (serfs) ---------- */
 { id:'corvee', title:'The Lord’s Due',
   trigger:{ tierMax:0, chance:0.35 }, weight:10, cooldown:4,
-  text:'The reeve bangs on doors at dawn: {lord} requires labor — hauling stone, mending the mill-race, digging ditches.',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true}
+  ],
+  text:'{officer}, the manor officer, bangs on doors at dawn: {lord} requires labor — hauling stone, mending the mill-race, digging ditches.',
   options:[
-    { label:'Work hard and be noticed.', desc:'Sweat spent where the powerful can see it.', effects:{ health:-1, opinion:{role:'lord', amt:8}, log:'Labored on the lord’s works.' } },
-    { label:'Do the least you can.', desc:'Save your strength — if the reeve’s stick stays elsewhere.', chance:0.7,
+    { label:'Work hard and be noticed.', desc:'Sweat spent where the powerful can see it.', effects:{ health:-1, standingCharacter:{participant:'lord', amt:8}, log:'Labored on the lord’s works.' } },
+    { label:'Do the least you can.', desc:'Save your strength — if {officer}’s stick stays elsewhere.', chance:0.7,
       success:{ text:'You shirk artfully and save your strength.', effects:{ } },
-      failure:{ text:'The reeve notices, and his stick argues the point.', effects:{ health:-1, opinion:{role:'lord', amt:-8} } } },
-    { label:'Bribe the reeve to overlook you.', require:{ goldMin:3 }, desc:'A few coins, and the dawn knock is not for you.', effects:{ gold:-3 } }
+      failure:{ text:'{officer} notices, and his stick argues the point.', effects:{ health:-1, standingCharacter:{participant:'officer', amt:-8} } } },
+    { label:'Bribe {officer} to overlook you.', require:{ goldMin:3 }, desc:'A few coins, and the dawn knock is not for you.', effects:{ gold:-3, standingCharacter:{participant:'officer', amt:5} } }
   ]},
 /* ---------- customary burdens (serfs) ---------- */
 { id:'serf_boon_harvest',
@@ -78,21 +82,28 @@ FBDATA.events.push(
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
+    {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
+  ],
   text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Your own grain stands ripe when the reeve’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip.',
-    irrigated_fellah:'Your household fields are ready for harvest, but the overseer calls every laborer to the estate crop first. The shared ditches and storehouses must receive their {duty} before private sickles work.',
-    pagan_household_service:'The grain in your household plot is ripe, but the master’s horn calls every hand to his great fields first. Custom commands that the master’s sheaves stand bound before your own are cut.',
-    other:'Your own grain stands ripe when the horn sounds. Custom summons every able hand to harvest the estate fields before sickles may touch household ground.'
+    latin_manorial:'Your own grain stands ripe when {officer}’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip.',
+    irrigated_fellah:'Your household fields are ready for harvest, but {officer} calls every laborer to the estate crop first. The shared ditches and storehouses must receive their {duty} before private sickles work.',
+    pagan_household_service:'The grain in your household plot is ripe when {officer} sounds the master’s horn for every hand to enter the great fields first. Custom commands that the master’s sheaves stand bound before your own are cut.',
+    other:'Your own grain stands ripe when {officer} sounds the horn. Custom summons every able hand to harvest the estate fields before sickles may touch household ground.'
   }}},
   options:[
     { label:'Send every hand to the demesne.', desc:'The lord’s grain comes in while yours waits under the weather.',
-      effects:{ health:-1, gold:-2, opinion:{role:'lord', amt:4} } },
+      effects:{ health:-1, gold:-2, standingCharacter:{participant:'lord', amt:4} } },
     { label:'Hire someone to answer for you. ({money:4})', require:{ goldMin:4 }, desc:'Buy back the day your own harvest needs.',
       effects:{ gold:-4 } },
     { label:'Keep one reaper hidden at home.', desc:'One pair of hands for your field, if the tally misses them.', chance:'skill_int',
       success:{ text:'The count tallies heads, not shadows. Your hidden reaper saves the ripest rows.', effects:{ skills:{int:1} } },
       failure:{ text:'The missing hand is named before noon. The amercement costs more than the grain it saved.',
-        effects:{ gold:-4, opinion:{role:'lord', amt:-8} } } }
+        effects:{ gold:-4, standingCharacter:{participant:'officer', amt:-8} } } },
+    { label:'Take {neighbor}’s row after your own.', desc:'Spend what strength remains so a neighbor’s grain does not spoil.',
+      effects:{ health:-2, prestige:2, standingCharacter:{participant:'neighbor', amt:12} } }
   ]},
 { id:'serf_weekwork_tally',
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
@@ -103,20 +114,25 @@ FBDATA.events.push(
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'local_witness', required:true, createFallback:true, sameHome:true}
+  ],
   text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'The steward measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed.',
-    irrigated_fellah:'The estate supervisor inspects the household plots and records an added measure of canal and field labor for {duty} beyond the customary tally.',
-    pagan_household_service:'The master’s bailiff inspects the household dwellings and marks another day of heavy service onto the wooden tally stick.',
-    other:'The steward measures every holding anew, then announces that your household owes an added day of customary labor beyond the old tally.'
+    latin_manorial:'{officer} measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed.',
+    irrigated_fellah:'{officer}, the estate supervisor, inspects the household plots and records an added measure of canal and field labor for {duty} beyond the customary tally.',
+    pagan_household_service:'{officer}, the master’s bailiff, inspects the household dwellings and marks another day of heavy service onto the wooden tally stick.',
+    other:'{officer}, the steward, measures every holding anew, then announces that your household owes an added day of customary labor beyond the old tally.'
   }}},
   options:[
     { label:'Give the added day.', desc:'A day for the lord is a day stolen from your own ground.',
-      effects:{ health:-1, opinion:{role:'lord', amt:3} } },
+      effects:{ health:-1, standingCharacter:{participant:'officer', amt:3} } },
     { label:'Commute it into coin. ({money:3})', require:{ goldMin:3 }, desc:'Silver works even when your back does not.',
       effects:{ gold:-3 } },
-    { label:'Call neighbors who remember the old tally.', desc:'Custom lives in witnesses, but stewards keep the ink.', chance:'skill_lea',
-      success:{ text:'Three elders repeat the same number. The steward restores the missing stroke.', effects:{ prestige:3, skills:{lea:1} } },
-      failure:{ text:'Memory bends under questions. The new tally stands, with a penalty for delay.', effects:{ health:-1, prestige:-3 } } }
+    { label:'Call {witness}, who remembers the old tally.', desc:'Custom lives in witnesses, but stewards keep the ink.', chance:'skill_lea',
+      success:{ text:'{witness} repeats the old number. {officer} restores the missing stroke.', effects:{ prestige:3, skills:{lea:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}] } },
+      failure:{ text:'{witness}’s memory bends under {officer}’s questions. The new tally stands.', effects:{ health:-1, prestige:-3, standingCharacter:[{participant:'officer', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
 { id:'serf_mill_multure',
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
@@ -127,11 +143,15 @@ FBDATA.events.push(
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true}
+  ],
   text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'The miller finds meal from a hand-quern in your bin. Grain from this holding must pass beneath {lord}’s millstones, with every lawful sack leaving a share behind.',
-    irrigated_fellah:'The estate miller discovers flour ground by hand in your dwelling. By local custom, grain harvested from dependent soil must be ground at the communal watermill and render its customary {duty}.',
-    pagan_household_service:'The master’s miller notices stone-ground meal in your grain chest. Custom forbids household querns while the master’s mill wheel turns, demanding a share of every sack.',
-    other:'The miller finds meal from a private quern in your bin. Grain from this holding must pass beneath the estate millstones, leaving its customary toll behind.'
+    latin_manorial:'{officer} checks the miller’s tally and finds meal from a hand-quern in your bin. Grain from this holding must pass beneath {lord}’s millstones, with every lawful sack leaving a share behind.',
+    irrigated_fellah:'{officer} checks the mill tally and finds flour ground by hand in your dwelling. By local custom, grain harvested from dependent soil must render its customary {duty}.',
+    pagan_household_service:'{officer} checks the grinding tally and notices stone-ground meal in your grain chest. Custom forbids household querns while the master’s mill wheel turns.',
+    other:'{officer} checks the mill tally and finds meal from a private quern in your bin. Grain from this holding must leave its customary toll behind.'
   }}},
   options:[
     { label:'Surrender the miller’s share.', desc:'Lose the grain and close the matter.', effects:{ gold:-3 } },
@@ -139,7 +159,7 @@ FBDATA.events.push(
     { label:'Swear the meal came from another manor.', desc:'A boundary may hide what a quern cannot.', chance:'skill_int',
       success:{ text:'The miller cannot prove whose stones ground it and lets the sack go.', effects:{ skills:{int:1} } },
       failure:{ text:'The flour is still warm from your quern. He seizes the sack and adds a fine.',
-        effects:{ gold:-5, opinion:{role:'lord', amt:-6} } } }
+        effects:{ gold:-5, standingCharacter:{participant:'officer', amt:-6} } } }
   ]},
 { id:'serf_pannage_due',
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
@@ -218,11 +238,15 @@ FBDATA.events.push(
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
+  participants:[
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
+    {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
+  ],
   text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Floodwater has bitten through the bridge piles. The steward apportions timber, carts, and labor by holding; your mark appears beside the longest haul.',
-    irrigated_fellah:'Seasonal floods have damaged the irrigation dikes and stone bridges. The water bailiff assigns cartage and heavy labor for {duty} to every holding; your household receives the longest run.',
-    pagan_household_service:'Heavy spring rains have washed out the ford and palisade ditch. The master demands logs, stone, and carts from every serf dwelling to restore the works.',
-    other:'Seasonal floods have damaged the local roadways and bridges. The steward apportions timber and carts by holding; your mark appears beside the longest haul.'
+    latin_manorial:'Floodwater has bitten through the bridge piles. {officer} apportions timber, carts, and labor by holding; your mark appears beside the longest haul.',
+    irrigated_fellah:'Seasonal floods have damaged the irrigation dikes and stone bridges. {officer} assigns cartage and heavy labor for {duty} to every holding; your household receives the longest run.',
+    pagan_household_service:'Heavy spring rains have washed out the ford and palisade ditch. {officer} assigns logs, stone, and carts from every serf dwelling to restore the master’s works.',
+    other:'Seasonal floods have damaged the local roadways and bridges. {officer} apportions timber and carts by holding; your mark appears beside the longest haul.'
   }}},
   options:[
     { label:'Take the cart road and haul it.', desc:'A sound bridge for everyone, paid for by your bones.', effects:{ health:-1 } },
@@ -230,7 +254,7 @@ FBDATA.events.push(
     { label:'Find a shorter way through the shallows.', desc:'Save half the road if your eye for ground is true.', chance:'skill_ste',
       success:{ text:'The ford holds, the timber arrives early, and others follow your track.', effects:{ skills:{ste:1}, prestige:2 } },
       failure:{ text:'A wheel sinks to the hub. Dragging it free costs the strength you meant to save.', effects:{ health:-2 } } },
-    { label:'Pay a carter to take your mark. ({money:3})', require:{ goldMin:3 }, desc:'Another household takes the mud; yours pays the coin.', effects:{ gold:-3 } }
+    { label:'Pay {neighbor} to take your mark. ({money:3})', require:{ goldMin:3 }, desc:'Their household takes the mud; yours pays the coin.', effects:{ gold:-3, standingCharacter:{participant:'neighbor', amt:5} } }
   ]},
 { id:'serf_common_oven',
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
@@ -286,35 +310,60 @@ FBDATA.events.push(
   wartime:true,
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
+    {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
+  ],
   text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Mounted officers in {lord}’s colors claim your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently.',
-    irrigated_fellah:'Armed riders from the garrison arrive at dusk demanding shelter, barley for their horses, and food from the household store while the realm is at war under {duty}.',
-    pagan_household_service:'The master’s warband returns from the borders and billets in the serf dwellings. They take the hearth, grain, and straw by right of martial service.',
-    other:'Armed retainers in the lord’s colors demand hearth, fodder, and food for the night under the customary wartime billeting obligation.'
+    latin_manorial:'{officer} assigns mounted officers in {lord}’s colors to your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently.',
+    irrigated_fellah:'At dusk {officer} assigns armed riders from the garrison to your shelter, barley, and household store while the realm is at war under {duty}.',
+    pagan_household_service:'{officer} billets the master’s returning warband in the serf dwellings. They take the hearth, grain, and straw by right of martial service.',
+    other:'{officer} assigns armed retainers in the lord’s colors to your hearth, fodder, and food for the night under the customary wartime billeting obligation.'
   }}},
   options:[
     { label:'Set out everything they ask.', desc:'An empty larder may purchase a favorable word.',
-      effects:{ gold:-4, opinion:{role:'lord', amt:4} } },
+      effects:{ gold:-4, standingCharacter:{participant:'lord', amt:4} } },
     { label:'Give them the hearth and sleep in the byre.', desc:'Spare some food by yielding every comfort.', effects:{ gold:-2, health:-1 } },
     { label:'Hide the best stores before they dismount.', desc:'A bare shelf can lie more smoothly than its owner.', chance:'skill_int',
       success:{ text:'They eat coarse bread, complain, and never find the smoked meat overhead.', effects:{ skills:{int:1} } },
       failure:{ text:'A trooper finds the false panel. They take the hidden food as well as the supper.',
         effects:{ gold:-6, health:-1 } } },
-    { label:'Send them toward a richer roof.', desc:'Move the burden to a neighbor and live with the village’s memory.',
-      effects:{ prestige:-3, popularOpinion:-2 } }
+    { label:'Send them toward {neighbor}’s roof.', desc:'Move the burden to that household and live with the village’s memory.',
+      effects:{ prestige:-3, popularOpinion:-2, standingCharacter:{participant:'neighbor', amt:-15}, rivalContact:{participant:'neighbor', score:2, cause:'shifted_quartering'}, custom:'serf_neighbor_shifted' } }
+  ]},
+
+{ id:'serf_neighbor_reckoning', title:'The Burden Comes Home',
+  trigger:{ never:true }, contextValidator:'serf_neighbor_context_valid',
+  participants:[
+    {slot:'neighbor', source:'context', required:true, sameHome:true},
+    {slot:'officer', source:'context', allowDead:true}
+  ],
+  text:'{neighbor} comes to your door with the old quartering marked against your household. The riders left, but the insult did not.',
+  options:[
+    { label:'Make amends. ({money:3})', require:{goldMin:3}, desc:'Coin cannot undo the night, but it can acknowledge the burden.',
+      effects:{gold:-3, standingCharacter:{participant:'neighbor', amt:10}, custom:'serf_neighbor_clear'} },
+    { label:'Insist every household bears its turn.', desc:'Defend the choice and deepen the quarrel.',
+      effects:{standingCharacter:{participant:'neighbor', amt:-10}, rivalContact:{participant:'neighbor', score:2, cause:'quartering_quarrel'}, custom:'serf_neighbor_clear'} },
+    { label:'Ask {officer} to settle the quarrel.', require:{custom:'serf_neighbor_officer_current', participantStandingAbove:{participant:'officer', value:20}}, desc:'Let the manor officer press both households toward peace.',
+      effects:{prestige:-2, standingCharacter:{participant:'neighbor', amt:5}, custom:'serf_neighbor_clear'} }
   ]},
 
 /* ---------- extraordinary burdens: every road costs something ---------- */
 { id:'serf_extraordinary_tallage', title:'Tallage Without Measure', once:true,
   trigger:{ tierMax:0, minAge:16, goldMin:4, chance:0.035 }, weight:2, cooldown:32,
-  text:'A sealed tally arrives without harvest, feast, or judgment to explain it. {lord} needs silver, the steward says, and an unfree household owes what its lord chooses to ask.',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true}
+  ],
+  text:'{officer} delivers a sealed tally without harvest, feast, or judgment to explain it. {lord} needs silver, and an unfree household owes what its lord chooses to ask.',
   options:[
     { label:'Empty the purse into the tally chest.', desc:'Keep your body and your silence; lose the household reserve.',
       effects:{ gold:-10 } },
     { label:'Offer a month of added labor.', desc:'Pay the arbitrary demand in winter strength.',
       effects:{ health:-2, prestige:-2 } },
     { label:'Refuse before the manor court.', desc:'Keep coin and strength; let defiance become the next debt.',
-      effects:{ prestige:-8, opinion:{role:'lord', amt:-15} } }
+      effects:{ prestige:-8, standingCharacter:[{participant:'lord', amt:-15},{participant:'officer', amt:-10}] } }
   ]},
 { id:'serf_seed_grain_requisition', title:'The Granary Is Opened', once:true, wartime:true,
   trigger:{ tierMax:0, minAge:16, realmAtWar:true, seasons:[2,3], chance:0.05 },
@@ -343,13 +392,18 @@ FBDATA.events.push(
   ]},
 { id:'lord_squeezes', title:'A Tally With Your Name On It',
   trigger:{ tierMax:2, roleOpinionBelow:{role:'lord', value:-40}, chance:0.25 }, weight:7, cooldown:8,
-  text:'The reeve arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger.',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'local_witness', required:true, createFallback:true, sameHome:true}
+  ],
+  text:'{officer} arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger.',
   options:[
     { label:'Pay without a word. ({money:4})', require:{ goldMin:4 }, desc:'Coin today, and the tally-man moves on.', effects:{ gold:-4 } },
     { label:'Work the extra days instead.', desc:'The back pays what the purse is spared.', effects:{ health:-1 } },
     { label:'Appeal to the old custom.', desc:'Right may be on your side — the ledger is on his.', chance:0.4,
-      success:{ text:'You name the custom and the witnesses to it. The reeve scratches out the line, scowling.', effects:{ prestige:3, skills:{lea:1} } },
-      failure:{ text:'“Custom is what the lord says it is.” The tally stands — and there is a fine for arguing.', effects:{ gold:-4, health:-1, opinion:{role:'lord', amt:-5} } } }
+      success:{ text:'{witness} names the custom. {officer} scratches out the line, scowling.', effects:{ prestige:3, skills:{lea:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}] } },
+      failure:{ text:'“Custom is what the lord says it is.” The tally stands — and there is a fine for arguing.', effects:{ gold:-4, health:-1, standingCharacter:[{participant:'lord', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
 { id:'lords_notice', title:'The Lord’s Eye',
   trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.4 }, weight:10, once:true,
@@ -392,15 +446,18 @@ FBDATA.events.push(
   ]},
 { id:'boundary_dispute', title:'The Moved Stone',
   trigger:{ tierMin:1, tierMax:1, professions:['farmer'], chance:0.15 }, weight:6, cooldown:12,
-  text:'Your neighbor’s plough has crept over the boundary stone — or did the stone itself walk? A strip of your land is suddenly his.',
+  participants:[
+    {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
+  ],
+  text:'{neighbor}’s plough has crept over the boundary stone — or did the stone itself walk? A strip of your land is suddenly theirs.',
   options:[
     { label:'Bring it before the village moot.', desc:'Trust the elders to see straight — if kinship allows.', chance:0.6,
-      success:{ text:'The elders find for you. The stone walks home.', effects:{ prestige:4 } },
-      failure:{ text:'His cousin sits on the moot. The stone stays.', effects:{ prestige:-3 } } },
+      success:{ text:'The elders find for you. The stone walks home.', effects:{ prestige:4, standingCharacter:{participant:'neighbor', amt:-8} } },
+      failure:{ text:'The moot leaves the stone where it stands.', effects:{ prestige:-3, standingCharacter:{participant:'neighbor', amt:3} } } },
     { label:'Move it back by night.', desc:'Stones are quietest movers after dark.', chance:0.7,
-      success:{ text:'The stone returns as mysteriously as it left.', effects:{ skills:{int:1} } },
-      failure:{ text:'Caught in the moonlight, shovel in hand. The moot fines you.', effects:{ gold:-4, prestige:-4 } } },
-    { label:'Let it go.', desc:'A strip of land is cheaper than a feud.', effects:{ piety:2, prestige:-1 } }
+      success:{ text:'The stone returns as mysteriously as it left.', effects:{ skills:{int:1}, standingCharacter:{participant:'neighbor', amt:-12}, rivalContact:{participant:'neighbor', score:1, cause:'moved_boundary'} } },
+      failure:{ text:'Caught in the moonlight, shovel in hand. The moot fines you.', effects:{ gold:-4, prestige:-4, standingCharacter:{participant:'neighbor', amt:-20}, rivalContact:{participant:'neighbor', score:2, cause:'caught_moving_boundary'} } } },
+    { label:'Let it go.', desc:'A strip of land is cheaper than a feud.', effects:{ piety:2, prestige:-1, standingCharacter:{participant:'neighbor', amt:10} } }
   ]},
 { id:'foundling', title:'The Basket at the Door',
   trigger:{ tierMax:1, chance:0.06, married:true }, weight:3, once:true,
@@ -447,128 +504,178 @@ FBDATA.events.push(
 /* ---------- serf flight ---------- */
 { id:'flee_serfdom', title:'The Open Road',
   trigger:{ tierMax:0, chance:0.08, roleOpinionBelow:{role:'lord', value:-20} }, weight:6, cooldown:12,
-  text:'They say a serf who reaches a town and lives there a year and a day is free. The road is long, the law is against you — but the door stands open tonight.',
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'confidant', source:'flight_contact', kindParam:'confidantKind', sameHome:true}
+  ],
+  text:{forms:{select:'value', param:'confidantKind', cases:{
+    friend:'They say a serf who reaches a town and lives there a year and a day is free. {confidant} has left food and named a hiding place along the road.',
+    rival:'They say a serf who reaches a town and lives there a year and a day is free. {confidant} has been asking which road your household might take.',
+    other:'They say a serf who reaches a town and lives there a year and a day is free. The road is long, the law is against you — but the door stands open tonight.'
+  }}},
   options:[
-    { label:'Run.', desc:'Freedom at the end of the road — or a halter.', chance:0.5,
-      success:{ text:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.', effects:{ serfFreedom:{route:'flight'}, moveRandom:true, gold:-3, prestige:5 } },
-      failure:{ text:'The lord’s riders catch you at the ford. You are dragged back in a halter.', effects:{ health:-2, prestige:-10, opinion:{role:'lord', amt:-20}, rivalContact:{role:'lord', score:2, cause:'attempted_escape'} } } },
+    { label:'Run.', desc:{forms:{select:'value', param:'confidantKind', cases:{friend:'{confidant} makes the road look likely.', rival:'{confidant} makes the road risky.', other:'Freedom at the end of the road — or a halter.'}}}, chance:'serf_flight',
+      success:{ text:{forms:{select:'value', param:'confidantKind', cases:{
+        friend:'Weeks of hedgerows and hunger lead to the hiding place {confidant} named. You make it: a new province, a new name, a free life.',
+        rival:'You abandon the road {confidant} watched and make it by another path: a new province, a new name, a free life.',
+        other:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.'
+      }}}, effects:{ serfFreedom:{route:'flight'}, moveRandom:true, gold:-3, prestige:5 } },
+      failure:{ text:'{lord}’s riders catch you at the ford. You are dragged back in a halter.', effects:{ health:-2, prestige:-10, standingCharacter:{participant:'lord', amt:-20}, custom:'serf_flight_failure' } } },
     { label:'Stay. This is home, chains and all.', desc:'Better the known yoke than the unknown road.', effects:{ } }
   ]},
 
 /* ================= THE OLD CUSTOM — five-part landmark chain ================= */
 { id:'old_custom_stakes', title:'Stakes in the Common',
-  trigger:{ tierMax:2, minAge:16, chance:0.2 }, weight:15, once:true,
-  text:'Fresh stakes stand across the waste where the households of {province} have grazed beasts, cut fuel, and drawn water since anyone remembers. The reeve says it is the lord’s land, and tomorrow it will be closed.',
+  trigger:{ tierMax:0, minAge:16, chance:0.2 }, weight:15, once:true,
+  participants:[
+    {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'local_witness', required:true, createFallback:true, sameHome:true}
+  ],
+  text:'Fresh stakes stand across the waste where the households of {province} have grazed beasts, cut fuel, and drawn water since anyone remembers. {officer} says it is {lord}’s land; {witness} remembers otherwise.',
   options:[
     { label:'Call every household together.', desc:'One voice carries further than forty quarrels.', chance:'skill_dip', effects:{ setFlag:'old_custom_1' },
-      success:{ text:'Quarrels are put aside. One by one, the households agree to speak with a single voice.', effects:{ setFlag:'rights_evidence', prestige:2, popularOpinion:3, skills:{dip:1} } },
-      failure:{ text:'Old grudges prove stronger than old custom. Half the village will not stand beside the other half.', effects:{ popularOpinion:-2 } } },
+      success:{ text:'Quarrels are put aside. {witness} helps the households speak with a single voice.', effects:{ setFlag:'rights_evidence', prestige:2, popularOpinion:3, skills:{dip:1}, standingCharacter:{participant:'witness', amt:5}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'Old grudges prove stronger than old custom. Half the village will not stand beside the other half.', effects:{ popularOpinion:-2, custom:'serf_old_custom_sync' } } },
     { label:'Measure exactly what is being taken.', desc:'Grief argued in numbers is harder to dismiss.', chance:'skill_ste', effects:{ setFlag:'old_custom_1' },
-      success:{ text:'Paces, rents, beasts, winter fuel — you put a number to every loss.', effects:{ setFlag:'rights_evidence', prestige:2, skills:{ste:1} } },
-      failure:{ text:'The strips, ditches, and remembered bounds refuse to add up cleanly.', effects:{ } } },
-    { label:'Find words older than the reeve.', desc:'Somewhere, ink remembers what men deny.', chance:'skill_lea', effects:{ setFlag:'old_custom_1' },
-      success:{ text:'A neglected record speaks of pasture and fuel owed to every hearth.', effects:{ setFlag:'rights_evidence', prestige:2, skills:{lea:1} } },
-      failure:{ text:'Dust, worm-holes, and pious accounts — but no grant anyone can use.', effects:{ } } },
-    { label:'Tell the reeve who is stirring trouble.', desc:'Sell your neighbors’ names and see what coin buys.', chance:'skill_int', effects:{ setFlag:'old_custom_1', setFlag2:'rights_collaborator', popularOpinion:-4 },
-      success:{ text:'The reeve pays for names and promises to remember yours kindly.', effects:{ gold:3, opinion:{role:'lord', amt:5}, skills:{int:1} } },
-      failure:{ text:'He takes the names, keeps his coin, and looks at you with contempt.', effects:{ opinion:{role:'lord', amt:-5}, prestige:-2 } } }
+      success:{ text:'Paces, rents, beasts, winter fuel — you put a number to every loss.', effects:{ setFlag:'rights_evidence', prestige:2, skills:{ste:1}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'The strips, ditches, and remembered bounds refuse to add up cleanly.', effects:{ custom:'serf_old_custom_sync' } } },
+    { label:'Find words older than {officer}.', desc:'Somewhere, ink remembers what power denies.', chance:'skill_lea', effects:{ setFlag:'old_custom_1' },
+      success:{ text:'A neglected record speaks of pasture and fuel owed to every hearth.', effects:{ setFlag:'rights_evidence', prestige:2, skills:{lea:1}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'Dust, worm-holes, and pious accounts — but no grant anyone can use.', effects:{ custom:'serf_old_custom_sync' } } },
+    { label:'Tell {officer} who is stirring trouble.', desc:'Sell your neighbors’ names and see what coin buys.', chance:'skill_int', effects:{ setFlag:'old_custom_1', setFlag2:'rights_collaborator', popularOpinion:-4 },
+      success:{ text:'{officer} pays for names and promises to remember yours kindly.', effects:{ gold:3, standingCharacter:[{participant:'officer', amt:5},{participant:'witness', amt:-8}], skills:{int:1}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'{officer} takes the names, keeps the coin, and looks at you with contempt.', effects:{ standingCharacter:[{participant:'officer', amt:-5},{participant:'witness', amt:-8}], prestige:-2, custom:'serf_old_custom_sync' } } }
   ]},
 
 { id:'old_custom_memory', title:'What the Old Folk Remember',
-  trigger:{ flags:['old_custom_1'] }, weight:50, once:true,
-  text:'Every elder remembers the boundary, but none remembers it quite alike. If custom is to stand before judgment, memory must become proof.',
+  trigger:{ flags:['old_custom_1'], custom:'serf_old_custom_ready' }, weight:50, once:true,
+  participants:[
+    {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'story', storyId:'old_custom', required:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'story', storyId:'old_custom', required:true, sameHome:true}
+  ],
+  text:'{witness} remembers the boundary, though other elders remember it differently. If custom is to stand before {lord}’s judgment, memory must become proof.',
   options:[
     { label:'Take sworn testimony from every hearth.', desc:'Oaths in chorus are heavy to lift against.', chance:'skill_dip', effects:{ clearFlag:'old_custom_1', setFlag:'old_custom_2' },
-      success:{ text:'The stories agree where it matters. A village speaking together is difficult to dismiss.', effects:{ setFlag:'rights_evidence', prestige:3, skills:{dip:1} } },
-      failure:{ text:'Two witnesses fall to shouting over whose grandfather owned which sow.', effects:{ popularOpinion:-2 } } },
+      success:{ text:'With {witness} leading them, the stories agree where it matters.', effects:{ setFlag:'rights_evidence', prestige:3, skills:{dip:1}, standingCharacter:{participant:'witness', amt:5}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'Two witnesses fall to shouting over whose grandfather owned which sow.', effects:{ popularOpinion:-2, custom:'serf_old_custom_sync' } } },
     { label:'Search the old records again.', desc:'Dust may yet yield what memory cannot.', chance:'skill_lea', effects:{ clearFlag:'old_custom_1', setFlag:'old_custom_2' },
-      success:{ text:'In a faded hand: pasture, fallen wood, and water, reserved to the households in perpetuity.', effects:{ setFlag:'rights_evidence', prestige:3, skills:{lea:1} } },
-      failure:{ text:'The page that might have settled it was scraped clean generations ago.', effects:{ } } },
+      success:{ text:'In a faded hand: pasture, fallen wood, and water, reserved to the households in perpetuity.', effects:{ setFlag:'rights_evidence', prestige:3, skills:{lea:1}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'The page that might have settled it was scraped clean generations ago.', effects:{ custom:'serf_old_custom_sync' } } },
     { label:'Walk the old boundary by night.', desc:'The land keeps its own record, if you can read it.', chance:'skill_ste', effects:{ clearFlag:'old_custom_1', setFlag:'old_custom_2' },
-      success:{ text:'Notches on trees and stones beneath the moss agree with the oldest memories.', effects:{ setFlag:'rights_evidence', skills:{ste:1} } },
-      failure:{ text:'The forester finds you beyond the new stakes and reports the trespass.', effects:{ opinion:{role:'lord', amt:-6}, prestige:-2 } } },
+      success:{ text:'Notches on trees and stones beneath the moss agree with {witness}’s memory.', effects:{ setFlag:'rights_evidence', skills:{ste:1}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'The forester finds you beyond the new stakes and reports the trespass.', effects:{ standingCharacter:{participant:'lord', amt:-6}, prestige:-2, custom:'serf_old_custom_sync' } } },
     { label:'Pay a clerk for a clean copy. ({money:8})', require:{ goldMin:8 }, desc:'Coin turns hearsay into parchment.',
-      effects:{ gold:-8, clearFlag:'old_custom_1', setFlag:'old_custom_2', setFlag2:'rights_evidence' } },
+      effects:{ gold:-8, clearFlag:'old_custom_1', setFlag:'old_custom_2', setFlag2:'rights_evidence', custom:'serf_old_custom_sync' } },
     { label:'Write the missing custom yourself.', desc:'A forged past is a dangerous foundation.', chance:'skill_int', effects:{ clearFlag:'old_custom_1', setFlag:'old_custom_2' },
-      success:{ text:'Old ink, old phrasing, an old seal impressed again. It may be enough.', effects:{ setFlag:'rights_evidence', skills:{int:1}, piety:-2 } },
-      failure:{ text:'The clerk recognizes his predecessor’s hand — and knows this is not it.', effects:{ prestige:-5, opinion:{role:'lord', amt:-10}, piety:-3 } } }
+      success:{ text:'Old ink, old phrasing, an old seal impressed again. It may be enough.', effects:{ setFlag:'rights_evidence', skills:{int:1}, piety:-2, custom:'serf_old_custom_sync' } },
+      failure:{ text:'The clerk recognizes his predecessor’s hand — and knows this is not it.', effects:{ prestige:-5, standingCharacter:{participant:'lord', amt:-10}, piety:-3, custom:'serf_old_custom_sync' } } }
   ]},
 
 { id:'old_custom_reeve', title:'The Reeve Comes at Dusk',
-  trigger:{ flags:['old_custom_2'] }, weight:50, once:true,
-  text:'The reeve comes without his men. First he offers a purse. Then he explains, very softly, what refusal may cost.',
+  trigger:{ flags:['old_custom_2'], custom:'serf_old_custom_ready' }, weight:50, once:true,
+  participants:[
+    {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'story', storyId:'old_custom', required:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'story', storyId:'old_custom', required:true, sameHome:true},
+    {slot:'priest', source:'role', role:'priest', create:true, authorityRole:'priest', sameHome:true}
+  ],
+  text:'{officer} comes without retainers. First comes a purse. Then, very softly, an explanation of what refusal may cost.',
   options:[
     { label:'Reject his purse before witnesses.', desc:'Refusal heard by many is hard to punish quietly.',
-      effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3', prestige:5, popularOpinion:5, opinion:{role:'lord', amt:-5} } },
+      effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3', prestige:5, popularOpinion:5, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}], custom:'serf_old_custom_sync' } },
     { label:'Take the purse and give him names.', desc:'Silver now; the village’s memory later.',
-      effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_collaborator', gold:12, popularOpinion:-12, opinion:{role:'lord', amt:10} } },
+      effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_collaborator', gold:12, popularOpinion:-12, standingCharacter:[{participant:'officer', amt:10},{participant:'witness', amt:-10}], custom:'serf_old_custom_sync' } },
     { label:'Make him reveal whose purse it truly is.', desc:'Trap him into speaking his master’s secrets.', chance:'skill_int', effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3' },
-      success:{ text:'A feigned misunderstanding draws out the second tally — the one the lord has never seen.', effects:{ setFlag:'rights_evidence', prestige:5, skills:{int:1} } },
-      failure:{ text:'He recognizes the trap and leaves smiling. The next threat will not be private.', effects:{ opinion:{role:'lord', amt:-6} } } },
+      success:{ text:'A feigned misunderstanding draws out the second tally — the one {lord} has never seen.', effects:{ setFlag:'rights_evidence', prestige:5, skills:{int:1}, standingCharacter:{participant:'officer', amt:-8}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'{officer} recognizes the trap and leaves smiling. The next threat will not be private.', effects:{ standingCharacter:{participant:'officer', amt:-6}, custom:'serf_old_custom_sync' } } },
     { label:'Make him use the stick in public.', desc:'Bruises seen by all accuse louder than words.', chance:'battle', effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3' },
-      success:{ text:'You do not give ground. By morning every bruise in the village belongs to your cause.', effects:{ setFlag:'rights_evidence', prestige:8, popularOpinion:5, skills:{mar:1} } },
-      failure:{ text:'His men put you down hard, but they must do it where everyone can see.', effects:{ health:-2, prestige:3, popularOpinion:3 } } },
-    { label:'Ask {lord} to examine his own reeve.', require:{ roleOpinionAbove:{role:'lord', value:20} }, desc:'Appeal over the dog to the hand that feeds it.',
-      effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_evidence', opinion:{role:'lord', amt:-3} } },
-    { label:'Ask {priest} to stand as protector. (5 piety)', require:{ pietyMin:40 }, desc:'Call in the favor heaven owes you.',
-      effects:{ piety:-5, clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_evidence', opinion:{role:'priest', amt:10} } }
+      success:{ text:'You do not give ground. By morning every bruise in the village belongs to your cause.', effects:{ setFlag:'rights_evidence', prestige:8, popularOpinion:5, skills:{mar:1}, standingCharacter:{participant:'officer', amt:-8}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'{officer}’s men put you down hard, but they must do it where everyone can see.', effects:{ health:-2, prestige:3, popularOpinion:3, custom:'serf_old_custom_sync' } } },
+    { label:'Ask {lord} to examine {officer}.', require:{ participantStandingAbove:{participant:'lord', value:20} }, desc:'Appeal over the officer to the hand that appointed them.',
+      effects:{ clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_evidence', standingCharacter:[{participant:'lord', amt:-3},{participant:'officer', amt:-8}], custom:'serf_old_custom_sync' } },
+    { label:'Ask {priest} to stand as protector. (5 piety)', require:{ pietyMin:40, participantStandingAbove:{participant:'priest', value:40} }, desc:'Call on a trusted protector of the custom.',
+      effects:{ piety:-5, clearFlag:'old_custom_2', setFlag:'old_custom_3', setFlag2:'rights_evidence', custom:'serf_old_custom_sync' } }
   ]},
 
 { id:'old_custom_hearing', title:'Before the Lord’s Bench',
-  trigger:{ flags:['old_custom_3'] }, weight:60, once:true,
-  text:'The households crowd the hall. The reeve has his tally and his men; you have whatever truth, skill, and favor you managed to gather.',
+  trigger:{ flags:['old_custom_3'], custom:'serf_old_custom_ready' }, weight:60, once:true,
+  participants:[
+    {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'story', storyId:'old_custom', required:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'story', storyId:'old_custom', required:true, sameHome:true}
+  ],
+  text:'The households crowd {lord}’s hall. {officer} has the tally; {witness} carries the village’s memory. You have whatever truth, skill, and favor you gathered.',
   options:[
     { label:'“Custom lives in those who keep it.”', desc:'Win the hall with voices, or lose it to silence.', chance:'rights_dip', effects:{ clearFlag:'old_custom_3' },
-      success:{ text:'One witness follows another until even the steward must call the custom proven.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{dip:1} } },
-      failure:{ text:'The steward calls it noise, not law. The reeve’s smile returns.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', prestige:-4 } } },
+      success:{ text:'{witness} speaks until even {officer} must call the custom proven.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{dip:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}], custom:'serf_old_custom_sync' } },
+      failure:{ text:'{officer} calls it noise, not law.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', prestige:-4, standingCharacter:[{participant:'officer', amt:3},{participant:'witness', amt:-3}], custom:'serf_old_custom_sync' } } },
     { label:'Lay out the rents, measures, and losses.', desc:'Let his own arithmetic betray him.', chance:'rights_ste', effects:{ clearFlag:'old_custom_3' },
-      success:{ text:'The reeve’s demand contradicts his own accounts. The bench notices.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{ste:1} } },
-      failure:{ text:'The steward finds three errors before you finish the first column.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', prestige:-4 } } },
+      success:{ text:'{officer}’s demand contradicts the manor accounts. The bench notices.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{ste:1}, standingCharacter:{participant:'officer', amt:-8}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'{officer} finds three errors before you finish the first column.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', prestige:-4, standingCharacter:{participant:'officer', amt:3}, custom:'serf_old_custom_sync' } } },
     { label:'Read the oldest words you found.', desc:'Old ink against new ambition.', chance:'rights_lea', effects:{ clearFlag:'old_custom_3' },
-      success:{ text:'The old formula leaves little room to wriggle. The right is older than the reeve’s office.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{lea:1} } },
-      failure:{ text:'The record speaks of another field, or perhaps another village. The case collapses in the reading.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', prestige:-4 } } },
-    { label:'Prove that the reeve means to rob lord and village alike.', desc:'Expose the thief — but slander cuts both ways.', chance:'rights_int', effects:{ clearFlag:'old_custom_3' },
-      success:{ text:'A concealed tally and a frightened clerk do what righteous speeches could not.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{int:1} } },
-      failure:{ text:'The accusation lands as slander. The steward fines insolence as well as defeat.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', gold:-5, prestige:-5 } } },
+      success:{ text:'The old formula leaves little room to wriggle. The right is older than {officer}’s office.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{lea:1}, standingCharacter:{participant:'officer', amt:-8}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'The record speaks of another field, or perhaps another village. The case collapses in the reading.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', prestige:-4, custom:'serf_old_custom_sync' } } },
+    { label:'Prove that {officer} means to rob lord and village alike.', desc:'Expose the thief — but slander cuts both ways.', chance:'rights_int', effects:{ clearFlag:'old_custom_3' },
+      success:{ text:'A concealed tally and a frightened clerk do what righteous speeches could not.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_won', prestige:6, skills:{int:1}, standingCharacter:{participant:'officer', amt:-10}, custom:'serf_old_custom_sync' } },
+      failure:{ text:'The accusation lands as slander. {officer} fines insolence as well as defeat.', effects:{ setFlag:'old_custom_resolve', setFlag2:'old_custom_lost', gold:-5, prestige:-5, standingCharacter:{participant:'officer', amt:-5}, custom:'serf_old_custom_sync' } } },
     { label:'Buy a narrow settlement. ({money:10})', require:{ goldMin:10 }, desc:'Purchase peace, and accept a smaller right.',
-      effects:{ gold:-10, clearFlag:'old_custom_3', setFlag:'old_custom_resolve', setFlag2:'old_custom_compromise' } },
-    { label:'Testify for the reeve.', require:{ flags:['rights_collaborator'] }, desc:'Finish the betrayal you were paid to begin.',
-      effects:{ gold:8, clearFlag:'old_custom_3', setFlag:'old_custom_resolve', setFlag2:'old_custom_betrayed', opinion:{role:'lord', amt:10}, popularOpinion:-10 } }
+      effects:{ gold:-10, clearFlag:'old_custom_3', setFlag:'old_custom_resolve', setFlag2:'old_custom_compromise', custom:'serf_old_custom_sync' } },
+    { label:'Testify for {officer}.', require:{ flags:['rights_collaborator'] }, desc:'Finish the betrayal you were paid to begin.',
+      effects:{ gold:8, clearFlag:'old_custom_3', setFlag:'old_custom_resolve', setFlag2:'old_custom_betrayed', standingCharacter:[{participant:'lord', amt:10},{participant:'officer', amt:10},{participant:'witness', amt:-12}], popularOpinion:-10, custom:'serf_old_custom_sync' } }
   ]},
 
 { id:'old_custom_end', title:'What Is Remembered',
-  trigger:{ flags:['old_custom_resolve'] }, weight:80, once:true,
-  text:'The stakes, the hearing, and the names spoken there will be remembered. What matters now is what your household carries away.',
+  trigger:{ flags:['old_custom_resolve'], custom:'serf_old_custom_ready' }, weight:80, once:true,
+  participants:[
+    {slot:'lord', source:'story', storyId:'old_custom', required:true, authorityRole:'lord', sameHome:true},
+    {slot:'officer', source:'story', storyId:'old_custom', required:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'story', storyId:'old_custom', required:true, sameHome:true}
+  ],
+  text:'The stakes, {officer}’s tally, and {witness}’s testimony will be remembered. What matters now is what your household carries away from {lord}’s judgment.',
   options:[
     { label:'Bind the right to every hearth.', require:{ flags:['old_custom_won'], notHoldings:['common_rights'] }, desc:'Make the victory outlive those who won it.',
-      effects:{ holding:'common_rights', prestige:15, popularOpinion:10, opinion:{role:'lord', amt:-5}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', log:'Secured the ancient rights of common.' } },
+      effects:{ holding:'common_rights', prestige:15, popularOpinion:10, standingCharacter:{participant:'lord', amt:-5}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', log:'Secured the ancient rights of common.', custom:'serf_old_custom_sync' } },
     { label:'Renew the right already held by your house.', require:{ flags:['old_custom_won'], holdings:['common_rights'] }, desc:'Confirm in ink what your house already holds.',
-      effects:{ prestige:15, popularOpinion:10, opinion:{role:'lord', amt:5}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
+      effects:{ prestige:15, popularOpinion:10, standingCharacter:{participant:'lord', amt:5}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', custom:'serf_old_custom_sync' } },
     { label:'Ask for your freedom as the price.', require:{ flags:['old_custom_won'], tierMax:0 }, desc:'Trade the village’s gain for your own chains broken.',
-      effects:{ serfFreedom:{route:'old_custom'}, prestige:15, popularOpinion:-5, opinion:{role:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
+      effects:{ serfFreedom:{route:'old_custom'}, prestige:15, popularOpinion:-5, standingCharacter:{participant:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', custom:'serf_old_custom_sync' } },
     { label:'Ask instead for a place in the lord’s service.', require:{ flags:['old_custom_won'], tierMin:1, tierMax:2 }, desc:'Turn victory into a step up the ladder.',
-      effects:{ prestige:20, popularOpinion:-3, opinion:{role:'lord', amt:25}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
+      effects:{ prestige:20, popularOpinion:-3, standingCharacter:{participant:'lord', amt:25}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', custom:'serf_old_custom_sync' } },
 
     { label:'Accept the narrow peace.', require:{ flags:['old_custom_compromise'] }, desc:'Take what was offered and call it enough.',
-      effects:{ prestige:8, opinion:{role:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_compromise' } },
+      effects:{ prestige:8, standingCharacter:{participant:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_compromise', custom:'serf_old_custom_sync' } },
     { label:'Pay for full confirmation. ({money:12})', require:{ flags:['old_custom_compromise'], goldMin:12, notHoldings:['common_rights'] }, desc:'Coin seals what the bench left half-open.',
-      effects:{ gold:-12, holding:'common_rights', prestige:10, popularOpinion:6, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_compromise', log:'Bought confirmation of the household’s common rights.' } },
+      effects:{ gold:-12, holding:'common_rights', prestige:10, popularOpinion:6, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_compromise', log:'Bought confirmation of the household’s common rights.', custom:'serf_old_custom_sync' } },
     { label:'Pull the stakes down after dark.', require:{ flags:['old_custom_compromise'], notHoldings:['common_rights'] }, desc:'Undo by night what was done by day — if unseen.', chance:'skill_int',
-      effects:{ clearFlag:'old_custom_resolve', clearFlag2:'old_custom_compromise' },
-      success:{ text:'By dawn no stake stands and no witness remembers a face. Use becomes custom once more.', effects:{ holding:'common_rights', prestige:8, opinion:{role:'lord', amt:-15}, skills:{int:1} } },
-      failure:{ text:'The reeve’s men are waiting among the trees.', effects:{ health:-2, gold:-8, opinion:{role:'lord', amt:-20} } } },
+      effects:{ clearFlag:'old_custom_resolve', clearFlag2:'old_custom_compromise', custom:'serf_old_custom_sync' },
+      success:{ text:'By dawn no stake stands and no witness remembers a face. Use becomes custom once more.', effects:{ holding:'common_rights', prestige:8, standingCharacter:{participant:'lord', amt:-15}, skills:{int:1} } },
+      failure:{ text:'{officer}’s men are waiting among the trees.', effects:{ health:-2, gold:-8, standingCharacter:{participant:'lord', amt:-20} } } },
 
     { label:'Pay the amercement. ({money:8})', require:{ flags:['old_custom_lost'], goldMin:8 }, desc:'Buy your way out of the judgment’s teeth.',
-      effects:{ gold:-8, prestige:4, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_lost' } },
+      effects:{ gold:-8, prestige:4, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_lost', custom:'serf_old_custom_sync' } },
     { label:'Take the punishment for everyone.', require:{ flags:['old_custom_lost'] }, desc:'One back bent so the village stands straight.',
-      effects:{ health:-2, prestige:6, popularOpinion:12, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_lost' } },
+      effects:{ health:-2, prestige:6, popularOpinion:12, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_lost', custom:'serf_old_custom_sync' } },
     { label:'Endure the judgment and remember.', require:{ flags:['old_custom_lost'] }, desc:'Swallow defeat; grudges keep longer than grain.',
-      effects:{ prestige:2, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_lost' } },
+      effects:{ prestige:2, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_lost', custom:'serf_old_custom_sync' } },
 
-    { label:'Take the reeve’s purse and office.', require:{ flags:['old_custom_betrayed'] }, desc:'Wear the chain you helped fasten on others.',
-      effects:{ gold:20, prestige:4, popularOpinion:-20, opinion:{role:'lord', amt:25}, addTrait:'deceitful', clearFlag:'old_custom_resolve', clearFlag2:'old_custom_betrayed', log:'Profited from the closing of the common.' } },
-    { label:'Confess, and expose what the reeve paid for.', require:{ flags:['old_custom_betrayed'] }, desc:'Buy back your name with the truth.',
-      effects:{ piety:8, popularOpinion:10, prestige:-4, opinion:{role:'lord', amt:-15}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_betrayed' } }
+    { label:'Take {officer}’s purse and office.', require:{ flags:['old_custom_betrayed'] }, desc:'Wear the chain you helped fasten on others.',
+      effects:{ gold:20, prestige:4, popularOpinion:-20, standingCharacter:[{participant:'lord', amt:25},{participant:'officer', amt:10},{participant:'witness', amt:-15}], addTrait:'deceitful', clearFlag:'old_custom_resolve', clearFlag2:'old_custom_betrayed', log:'Profited from the closing of the common.', custom:'serf_old_custom_sync' } },
+    { label:'Confess, and expose what {officer} paid for.', require:{ flags:['old_custom_betrayed'] }, desc:'Buy back your name with the truth.',
+      effects:{ piety:8, popularOpinion:10, prestige:-4, standingCharacter:[{participant:'lord', amt:-15},{participant:'officer', amt:-12},{participant:'witness', amt:8}], clearFlag:'old_custom_resolve', clearFlag2:'old_custom_betrayed', custom:'serf_old_custom_sync' } }
+  ]},
+
+{ id:'old_custom_officer_changed', title:'A New Hand on the Tally',
+  trigger:{never:true}, contextValidator:'serf_old_custom_replacement_valid',
+  participants:[
+    {slot:'formerOfficer', source:'context', allowDead:true},
+    {slot:'newOfficer', source:'context', required:true, authorityRole:'steward', sameHome:true},
+    {slot:'witness', source:'context', required:true, sameHome:true}
+  ],
+  text:'The Old Custom case outlasts its first manor officer. Before {witness}, the tally passes from {formerOfficer} to {newOfficer}; nothing already sworn is erased.',
+  options:[
+    {label:'The case continues.', desc:'Acknowledge the new officer without changing the evidence.', effects:{custom:'serf_old_custom_replace_officer'}}
   ]},
 
 /* ================= MEDIUM STORIES — two events each ================= */

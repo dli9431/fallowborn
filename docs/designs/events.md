@@ -15,6 +15,39 @@ protection and context validation guarantee that invalidated, stale, or relocate
 discarded without gameplay side effects or double-charging. Extraordinary burdens
 (`serf_extraordinary_tallage`, `serf_seed_grain_requisition`) remain in the random pool.
 
+## Exact local event participants
+
+An event may declare up to four ordered `participants`. `FB.eventContextFor` binds each
+slot once after an event is selected and saves the exact character id in
+`ctx.participants`; `ctx.participantKinds` carries only small enums needed by select text
+or requirements. Role, local-neighbor, local-witness, flight-contact, active-story, and
+caller-context sources are allowlisted. Candidate order is deterministic and consumes no
+RNG unless a required neighbor or witness must materialize the single local `notable`
+fallback. Validation never substitutes a different person for an already-bound id.
+
+Participant tokens resolve before legacy role tokens. `standingCharacter` and the
+participant form of `rivalContact` target only the bound id, while participant Standing
+and kind requirements inspect the same context. Required deaths, moves, authority changes,
+or protagonist succession expire the event before a choice can spend anything. Manual and
+automated choices share `FB.resolveEventOption`, and durable receipts capture participant
+names before effects can move the household or end a relationship.
+
+The five Old Custom chapters keep one bounded `player.serfStory` record with the same lord,
+manor officer, and witness. A changed steward is the sole substitution exception: a queued
+bridge names the former and new officer before continuity is updated. Other authority,
+tenure, home, rank, witness, or succession changes close the chain explicitly. Shifting
+wartime quartering to a neighbor creates one bounded 90-day consequence involving that
+same neighbor; it clears on resolution or when its serf-life context ends. Flight similarly
+freezes an optional canonical friend or rival and uses the disclosed 65%, 35%, or 50%
+named chance without generating a helper.
+
+Exact recurring local participants have technology impact **none**. Remembering who
+testified, enforced a duty, or shared a village quarrel is baseline social continuity, not
+a researched capability. Freedom advocacy also has impact **none**: support from a known
+local steward or priest is an ordinary personal and legal relationship. A qualifying
+advocate adds a disclosed +10 to term selection, is saved by id and role, and is rechecked
+at acceptance unless the lord independently supports the saved term.
+
 ## Serf freedom routes
 
 Every actual tier-0-to-tier-1 freedom route uses `FB.resolveSerfFreedom`; a generic
@@ -28,7 +61,7 @@ history. Autoresolve scores `serfFreedom` and the exact-offer acceptance handler
 positive rank transitions, but can select acceptance only while the saved context and
 price remain valid.
 
-Both capabilities deliberately have technology impact **none**:
+The Phase 2 freedom capabilities deliberately have technology impact **none**:
 `serf_freedom_petition` is a baseline appeal to an existing lord, and
 `family_freedom_record` is household memory rather than a researched capability.
 

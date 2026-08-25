@@ -15,6 +15,28 @@ expiry, and cooldown turns. Accepted service additionally freezes acceptance, pa
 and completion turns. `FB.ensureFreedomOffer` fails malformed records closed without
 recalculating terms or consuming RNG; the removed `flags.freedom_promised` becomes a
 one-use invitation and never an offer merely because a save was loaded.
+An offer created with local support additively stores
+`advocacy:{characterId,role,standingRequired,standingAtCreation,bonus}` plus the actual
+lord and effective Standing snapshots. It stores no supporter name or rendered term prose;
+older unsupported offers remain valid. Acceptance either revalidates that exact living,
+local, non-hostile role holder at the saved threshold or accepts because current lord
+Standing independently reaches the saved term.
+
+Exact event participants remain ordinary JSON-safe event context:
+`ctx.participants` maps at most four declared slots to character ids, while optional
+`ctx.participantKinds` stores normalized source enums. Restore and legacy queue repair bind
+only missing slots once; an existing invalid id is never rerolled or replaced. Participant
+events also carry the existing protagonist and location snapshots, so succession and
+relocation expire an old pending decision.
+
+Two bounded current-life serf records are also additive save-format-3 state.
+`player.serfStory` stores the active Old Custom stage, protagonist, home, tenure stamp,
+lord, exact lord/officer/witness ids, participant kinds, and at most one pending officer
+replacement. `player.serfNeighborConsequence` stores one shifted-quartering neighbor and
+officer with creation/due turns and a queued bit. Malformed records fail closed. Promotion,
+relocation, tenure replacement, authority loss, or succession clears the applicable
+records; succession does not copy their Standing or identities to the heir. No save-wrapper
+version or migration is required.
 
 `player.familyFreedom` is a bounded locale-neutral landmark: `first` records the first
 serf-to-free transition, and `firstLawful` is permitted only when `first` was flight.

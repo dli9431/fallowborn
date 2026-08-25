@@ -813,12 +813,21 @@ window.FB = window.FB || {};
          receiving attention at the shared threshold, never a stranger. */
       return FB.attentionFriendCandidate(state);
     }
+    if (['lord','steward','priest','rival','notable'].indexOf(role) < 0) {
+      return null;
+    }
     const pr = FB.world.byId[state.player.provinceId];
     const me = state.chars[state.player.charId];
     let opts = { culture: pr.culture, religion: pr.religion, born: state.date.year - FB.ri(25, 55), role: role };
     if (role === 'lord') { opts.quality = 4; opts.sex = 'm'; opts.dyn = 'of ' + pr.name; opts.station = 3; }
     else if (role === 'steward') { opts.quality = 3; opts.born = state.date.year - FB.ri(30, 60); opts.station = 2; }
     else if (role === 'priest') { opts.quality = 2; opts.sex = 'm'; opts.born = state.date.year - FB.ri(30, 60); opts.station = 1; }
+    else if (role === 'notable') {
+      opts.quality = 1;
+      opts.born = state.date.year - FB.ri(25, 55);
+      opts.station = state.player.tier === 0 ? 0 :
+        Math.min(1, FB.playerStation(state));
+    }
     else if (role === 'rival') {
       opts.born = state.date.year - FB.clamp(FB.ageOf(me, state.date.year) + FB.ri(-8, 8), 16, 70);
       opts.opinion = -25;
@@ -828,6 +837,489 @@ window.FB = window.FB || {};
     state.roles[role] = c.id;
     if (role === 'lord' && create) FB.getRole(state, 'steward', true);
     return c;
+  };
+
+  /* Event participants are exact, saved character ids. Candidate scans are
+     pure; only this resolver may materialize the one bounded local fallback. */
+  const EVENT_PARTICIPANT_SOURCES = {
+    role:1, local_neighbor:1, local_witness:1,
+    flight_contact:1, story:1, context:1
+  };
+  const EVENT_PARTICIPANT_ROLES = {
+    lord:1, steward:1, priest:1, friend:1, rival:1, notable:1
+  };
+  const EVENT_PARTICIPANT_CREATE_ROLES = {
+    lord:1, steward:1, priest:1, notable:1
+  };
+  const EVENT_PARTICIPANT_FIELDS = {
+    slot:1, source:1, role:1, storyId:1, storySlot:1,
+    required:1, create:1, createFallback:1, authorityRole:1,
+    sameHome:1, allowDead:1, kindParam:1
+  };
+
+  function participantDefinitionError(ev) {
+    if (!ev) return '';
+    if (ev.participants === undefined) {
+      let usesParticipants = ev.participantCards !== undefined ||
+        !!(ev.trigger && (ev.trigger.participantStandingAbove ||
+          ev.trigger.participantStandingBelow || ev.trigger.participantKind));
+      for (let optionIndex = 0; !usesParticipants &&
+           optionIndex < (ev.options || []).length; optionIndex++) {
+        const option = ev.options[optionIndex] || {};
+        const records = [option.require, option.effects,
+          option.success && option.success.effects,
+          option.failure && option.failure.effects];
+        for (let recordIndex = 0; recordIndex < records.length; recordIndex++) {
+          const record = records[recordIndex];
+          if (record && (record.participantStandingAbove ||
+              record.participantStandingBelow || record.participantKind ||
+              record.standingCharacter ||
+              (record.rivalContact && record.rivalContact.participant))) {
+            usesParticipants = true;
+          }
+        }
+      }
+      return usesParticipants
+        ? 'participant features require a participants declaration.' : '';
+    }
+    if (!Array.isArray(ev.participants) || ev.participants.length > 4) {
+      return 'participants must be an array of at most four slots.';
+    }
+    const seen = {};
+    const requiredSlots = {};
+    for (let i = 0; i < ev.participants.length; i++) {
+      const spec = ev.participants[i];
+      if (!spec || typeof spec !== 'object' || Array.isArray(spec)) {
+        return 'participants[' + i + '] must be an object.';
+      }
+      for (const key in spec) {
+        if (!EVENT_PARTICIPANT_FIELDS[key]) {
+          return 'participants[' + i + '] contains unknown field ' + key + '.';
+        }
+      }
+      if (typeof spec.slot !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(spec.slot) || seen[spec.slot]) {
+        return 'participant slots must be unique lowercase identifiers.';
+      }
+      seen[spec.slot] = 1;
+      if (spec.required) requiredSlots[spec.slot] = 1;
+      if (!EVENT_PARTICIPANT_SOURCES[spec.source]) {
+        return 'participant ' + spec.slot + ' has an unknown source.';
+      }
+      for (const booleanField of ['required','create','createFallback',
+          'sameHome','allowDead']) {
+        if (spec[booleanField] !== undefined &&
+            typeof spec[booleanField] !== 'boolean') {
+          return 'participant ' + spec.slot + ' has a non-boolean ' +
+            booleanField + '.';
+        }
+      }
+      if (spec.source === 'role') {
+        if (!EVENT_PARTICIPANT_ROLES[spec.role]) {
+          return 'participant ' + spec.slot + ' has an unsupported role.';
+        }
+      } else if (spec.role !== undefined) {
+        return 'participant ' + spec.slot + ' may not declare role.';
+      }
+      if (spec.create && (spec.source !== 'role' ||
+          !EVENT_PARTICIPANT_CREATE_ROLES[spec.role])) {
+        return 'participant ' + spec.slot + ' may not create that role.';
+      }
+      if (spec.createFallback && spec.source !== 'local_neighbor' &&
+          spec.source !== 'local_witness') {
+        return 'participant ' + spec.slot + ' may not create a fallback.';
+      }
+      if (spec.createFallback && !spec.required) {
+        return 'participant ' + spec.slot +
+          ' may create a fallback only when required.';
+      }
+      if (spec.source === 'story' && (typeof spec.storyId !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(spec.storyId))) {
+        return 'participant ' + spec.slot + ' requires a storyId.';
+      }
+      if (spec.source !== 'story' &&
+          (spec.storyId !== undefined || spec.storySlot !== undefined)) {
+        return 'participant ' + spec.slot +
+          ' may declare story fields only for a story source.';
+      }
+      if (spec.storySlot !== undefined && (spec.source !== 'story' ||
+          typeof spec.storySlot !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(spec.storySlot))) {
+        return 'participant ' + spec.slot + ' has an invalid storySlot.';
+      }
+      if (spec.authorityRole !== undefined &&
+          !EVENT_PARTICIPANT_ROLES[spec.authorityRole]) {
+        return 'participant ' + spec.slot + ' has an invalid authorityRole.';
+      }
+      if (spec.allowDead && spec.source !== 'context') {
+        return 'allowDead is valid only for context participants.';
+      }
+      if (spec.kindParam !== undefined && (typeof spec.kindParam !== 'string' ||
+          !/^[a-z][a-z0-9_]*$/.test(spec.kindParam))) {
+        return 'participant ' + spec.slot + ' has an invalid kindParam.';
+      }
+    }
+    if (ev.participantCards !== undefined) {
+      if (!Array.isArray(ev.participantCards) || ev.participantCards.length > 4) {
+        return 'participantCards must contain at most four slots.';
+      }
+      for (let c = 0; c < ev.participantCards.length; c++) {
+        if (typeof ev.participantCards[c] !== 'string' ||
+            !seen[ev.participantCards[c]]) {
+          return 'participantCards must reference declared participant slots.';
+        }
+        if (ev.participantCards.indexOf(ev.participantCards[c]) !== c) {
+          return 'participantCards may not repeat a participant slot.';
+        }
+      }
+    }
+    if (ev.trigger && (ev.trigger.participantStandingAbove ||
+        ev.trigger.participantStandingBelow || ev.trigger.participantKind)) {
+      return 'random event triggers may not depend on bound participants.';
+    }
+    function requirementError(requirement) {
+      if (!requirement) return '';
+      for (const field of ['participantStandingAbove','participantStandingBelow']) {
+        const value = requirement[field];
+        if (value && (!seen[value.participant] ||
+            typeof value.value !== 'number' || !isFinite(value.value))) {
+          return field + ' must name a participant and finite value.';
+        }
+      }
+      const kind = requirement.participantKind;
+      if (kind && (!seen[kind.participant] || !Array.isArray(kind.values) ||
+          !kind.values.length)) {
+        return 'participantKind must name a participant and non-empty values.';
+      }
+      if (kind) {
+        const allowedKinds = {
+          lord:1, steward:1, priest:1, friend:1, rival:1,
+          notable:1, kin:1, contact:1
+        };
+        for (let valueIndex = 0; valueIndex < kind.values.length; valueIndex++) {
+          if (!allowedKinds[kind.values[valueIndex]]) {
+            return 'participantKind contains an unknown participant kind.';
+          }
+        }
+      }
+      return '';
+    }
+    function effectsError(effects) {
+      if (!effects) return '';
+      const standing = effects.standingCharacter;
+      const standingList = Array.isArray(standing) ? standing : [standing];
+      if (standingList.length > 4) {
+        return 'standingCharacter supports at most four exact changes.';
+      }
+      const exactStandingSlots = {};
+      for (let s = 0; s < standingList.length; s++) {
+        const exact = standingList[s];
+        if (exact && (!seen[exact.participant] ||
+            !requiredSlots[exact.participant] ||
+            typeof exact.amt !== 'number' || !isFinite(exact.amt) ||
+            !exact.amt || exactStandingSlots[exact.participant])) {
+          return 'standingCharacter must name a participant and non-zero finite amt.';
+        }
+        if (exact) exactStandingSlots[exact.participant] = 1;
+      }
+      const rival = effects.rivalContact;
+      if (rival && rival.participant !== undefined &&
+          (!seen[rival.participant] || !requiredSlots[rival.participant] ||
+            rival.role !== undefined)) {
+        return 'rivalContact participant must name one exact participant.';
+      }
+      return '';
+    }
+    for (let o = 0; o < (ev.options || []).length; o++) {
+      const option = ev.options[o] || {};
+      const reqError = requirementError(option.require);
+      if (reqError) return 'options[' + o + '].require ' + reqError;
+      for (const branch of [option.effects,
+          option.success && option.success.effects,
+          option.failure && option.failure.effects]) {
+        const effectError = effectsError(branch);
+        if (effectError) return 'options[' + o + '] ' + effectError;
+      }
+    }
+    return '';
+  }
+
+  FB.validateEventParticipants = function (ev) {
+    const error = participantDefinitionError(ev);
+    if (error) throw new Error(error);
+    return true;
+  };
+
+  function participantHome(state, ctx) {
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    return tenure ? tenure.provinceId :
+      (ctx && ctx.locationId || state.player.provinceId);
+  }
+
+  function participantResident(state, c, homeId) {
+    return !!(c && FB.characterResidence &&
+      FB.characterResidence(state, c) === homeId);
+  }
+
+  function participantSelectorEligible(state, c, source, homeId) {
+    if (!c || c.dead || c.id === state.player.charId ||
+        FB.ageOf(c, state.date.year) < 16 ||
+        !participantResident(state, c, homeId)) return false;
+    const roles = state.roles || {};
+    if (roles.lord === c.id || roles.steward === c.id ||
+        roles.priest === c.id) return false;
+    if (source === 'local_neighbor' && FB.kinOf &&
+        FB.kinOf(state).byId[c.id]) return false;
+    if (source === 'local_witness' && FB.kinOf && FB.kinOf(state).byId[c.id] &&
+        (!FB.manageableKinKind || !FB.manageableKinKind(state, c.id))) {
+      return false;
+    }
+    return true;
+  }
+
+  function pushParticipantCandidate(out, seen, state, c, source, homeId) {
+    if (!participantSelectorEligible(state, c, source, homeId) || seen[c.id]) return;
+    seen[c.id] = 1;
+    out.push(c);
+  }
+
+  function existingParticipantRole(state, role) {
+    const id = state && state.roles && state.roles[role];
+    const c = id && state.chars && state.chars[id];
+    return c && !c.dead ? c : null;
+  }
+
+  FB.eventParticipantCandidates = function (state, spec, ctx) {
+    const out = [], seen = {};
+    if (!state || !state.player || !spec) return out;
+    ctx = ctx || {};
+    const source = spec.source;
+    if (source === 'role') {
+      const c = existingParticipantRole(state, spec.role);
+      return c ? [c] : [];
+    }
+    if (source === 'story') {
+      const story = state.player.serfStory;
+      const storySlot = spec.storySlot || spec.slot;
+      const id = story && story.id === spec.storyId && story.participants &&
+        story.participants[storySlot];
+      const c = id && state.chars[id];
+      return c ? [c] : [];
+    }
+    if (source === 'context') {
+      const exactId = ctx.participants && ctx.participants[spec.slot];
+      const exact = exactId && state.chars[exactId];
+      return exact ? [exact] : [];
+    }
+    if (source === 'flight_contact') {
+      const friend = existingParticipantRole(state, 'friend');
+      if (friend && participantResident(state, friend, participantHome(state, ctx))) {
+        return [friend];
+      }
+      const rival = existingParticipantRole(state, 'rival');
+      if (rival && participantResident(state, rival, participantHome(state, ctx))) {
+        return [rival];
+      }
+      return [];
+    }
+    const homeId = participantHome(state, ctx);
+    const exactId = ctx.participants && ctx.participants[spec.slot];
+    if (exactId) {
+      pushParticipantCandidate(out, seen, state, state.chars[exactId], source, homeId);
+    }
+    pushParticipantCandidate(out, seen, state,
+      existingParticipantRole(state, 'friend'), source, homeId);
+    pushParticipantCandidate(out, seen, state,
+      existingParticipantRole(state, 'rival'), source, homeId);
+    /* Do not call socialAttentionEnsure here: candidate enumeration is a pure
+       query and must not normalize unrelated relationship state. Capacity is
+       currently one, but scan the saved insertion order defensively. */
+    const attention = state.player.socialAttention;
+    if (attention && typeof attention === 'object' && !Array.isArray(attention)) {
+      const attentionIds = Object.keys(attention);
+      for (let attentionIndex = 0; attentionIndex < attentionIds.length;
+           attentionIndex++) {
+        pushParticipantCandidate(out, seen, state,
+          state.chars[attentionIds[attentionIndex]], source, homeId);
+      }
+    }
+    const contacts = state.player.friendContacts || {};
+    const contactIds = Object.keys(contacts).sort(function (a, b) {
+      const aTurn = contacts[a] && isFinite(contacts[a].startedTurn)
+        ? contacts[a].startedTurn : 0;
+      const bTurn = contacts[b] && isFinite(contacts[b].startedTurn)
+        ? contacts[b].startedTurn : 0;
+      return aTurn - bTurn || (String(a) < String(b) ? -1 :
+        (String(a) > String(b) ? 1 : 0));
+    });
+    for (let i = 0; i < contactIds.length; i++) {
+      pushParticipantCandidate(out, seen, state,
+        state.chars[contactIds[i]], source, homeId);
+    }
+    if (source === 'local_witness' && FB.kinOf) {
+      const kinGroups = FB.kinOf(state);
+      const kin = [];
+      for (const group of ['parents','grandparents','siblings','children',
+          'stepchildren','grandchildren','niecesNephews','unclesAunts','cousins']) {
+        for (let g = 0; g < (kinGroups[group] || []).length; g++) {
+          kin.push(kinGroups[group][g].c);
+        }
+      }
+      kin.sort(function (a, b) {
+        return String(a.id) < String(b.id) ? -1 :
+          (String(a.id) > String(b.id) ? 1 : 0);
+      });
+      for (let k = 0; k < kin.length; k++) {
+        pushParticipantCandidate(out, seen, state, kin[k], source, homeId);
+      }
+    }
+    pushParticipantCandidate(out, seen, state,
+      existingParticipantRole(state, 'notable'), source, homeId);
+    return out;
+  };
+
+  function participantKindFor(state, spec, c) {
+    if (!c) return null;
+    if (spec.source === 'role') return spec.role;
+    if (spec.source === 'flight_contact') {
+      if (state.roles.friend === c.id) return 'friend';
+      if (state.roles.rival === c.id) return 'rival';
+    }
+    if (spec.source === 'story') {
+      const story = state.player.serfStory;
+      const slot = spec.storySlot || spec.slot;
+      return story && story.participantKinds && story.participantKinds[slot] ||
+        (story && story.participants && story.participants[slot] === c.id
+          ? slot : null);
+    }
+    if (state.roles.friend === c.id) return 'friend';
+    if (state.roles.rival === c.id) return 'rival';
+    if (state.roles.notable === c.id) return 'notable';
+    if (FB.kinOf && FB.kinOf(state).byId[c.id]) return 'kin';
+    return 'contact';
+  }
+
+  FB.resolveEventParticipant = function (state, spec, ctx) {
+    const candidates = FB.eventParticipantCandidates(state, spec, ctx);
+    if (candidates.length) return candidates[0];
+    if (spec.source === 'role' && spec.create) {
+      return FB.getRole(state, spec.role, true);
+    }
+    if ((spec.source === 'local_neighbor' || spec.source === 'local_witness') &&
+        spec.required && spec.createFallback) {
+      const notable = FB.getRole(state, 'notable', true);
+      return participantSelectorEligible(state, notable, spec.source,
+        participantHome(state, ctx)) ? notable : null;
+    }
+    return null;
+  };
+
+  FB.bindEventParticipants = function (state, ev, ctx) {
+    ctx = ctx || {};
+    if (!ev || !ev.participants || !ev.participants.length) return ctx;
+    ctx.participants = ctx.participants && typeof ctx.participants === 'object'
+      ? ctx.participants : {};
+    ctx.participantKinds = ctx.participantKinds &&
+      typeof ctx.participantKinds === 'object' ? ctx.participantKinds : {};
+    for (let i = 0; i < ev.participants.length; i++) {
+      const spec = ev.participants[i];
+      if (Object.prototype.hasOwnProperty.call(ctx.participants, spec.slot)) {
+        const exact = state.chars && state.chars[ctx.participants[spec.slot]];
+        const exactKind = participantKindFor(state, spec, exact);
+        if (!ctx.participantKinds[spec.slot] && exactKind) {
+          ctx.participantKinds[spec.slot] = exactKind;
+        }
+        if (spec.kindParam && ctx[spec.kindParam] === undefined) {
+          ctx[spec.kindParam] = ctx.participantKinds[spec.slot] || '';
+        }
+        continue;
+      }
+      const c = FB.resolveEventParticipant(state, spec, ctx);
+      if (!c) {
+        if (spec.required) return false;
+        if (spec.kindParam) ctx[spec.kindParam] = '';
+        continue;
+      }
+      const kind = participantKindFor(state, spec, c);
+      ctx.participants[spec.slot] = c.id;
+      if (kind) ctx.participantKinds[spec.slot] = kind;
+      if (spec.kindParam) ctx[spec.kindParam] = kind || '';
+    }
+    return ctx;
+  };
+
+  FB.eventParticipant = function (state, ctx, slot) {
+    const id = ctx && ctx.participants && ctx.participants[slot];
+    const c = id && state && state.chars && state.chars[id];
+    return c && !c.dead ? c : null;
+  };
+
+  FB.eventParticipantKind = function (ctx, slot) {
+    return ctx && ctx.participantKinds && ctx.participantKinds[slot] || null;
+  };
+
+  function participantSpecValid(state, spec, ctx) {
+    const id = ctx && ctx.participants && ctx.participants[spec.slot];
+    if (!id) return !spec.required;
+    const c = state.chars && state.chars[id];
+    if (!c) return !spec.required && spec.source === 'context';
+    if (c.dead && !spec.allowDead) return false;
+    if (spec.authorityRole && state.roles[spec.authorityRole] !== id) return false;
+    if (spec.sameHome && !participantResident(state, c,
+        participantHome(state, ctx))) return false;
+    if (spec.source === 'role' && state.roles[spec.role] !== id) return false;
+    if (spec.source === 'story') {
+      const story = state.player.serfStory;
+      const storySlot = spec.storySlot || spec.slot;
+      if (!story || story.id !== spec.storyId || !story.participants ||
+          story.participants[storySlot] !== id) return false;
+    }
+    if (spec.source === 'flight_contact') {
+      const kind = FB.eventParticipantKind(ctx, spec.slot);
+      if ((kind !== 'friend' || state.roles.friend !== id) &&
+          (kind !== 'rival' || state.roles.rival !== id)) return false;
+    }
+    if ((spec.source === 'local_neighbor' || spec.source === 'local_witness') &&
+        !participantSelectorEligible(state, c, spec.source,
+          participantHome(state, ctx))) return false;
+    const savedKind = FB.eventParticipantKind(ctx, spec.slot);
+    if (savedKind && (spec.source === 'role' || spec.source === 'story' ||
+        spec.source === 'flight_contact') &&
+        savedKind !== participantKindFor(state, spec, c)) return false;
+    if (spec.kindParam && ctx[spec.kindParam] !== (savedKind || '')) return false;
+    return true;
+  }
+
+  FB.eventParticipantsStillValid = function (state, ev, ctx) {
+    if (!ev || !ev.participants) return true;
+    if (!ctx || ctx.protagonistId !== state.player.charId) return false;
+    const declared = {};
+    for (let declaredIndex = 0; declaredIndex < ev.participants.length;
+         declaredIndex++) declared[ev.participants[declaredIndex].slot] = 1;
+    const participants = ctx && ctx.participants;
+    const kinds = ctx && ctx.participantKinds;
+    if (participants !== undefined && (!participants ||
+        typeof participants !== 'object' || Array.isArray(participants) ||
+        Object.keys(participants).length > 4)) return false;
+    if (kinds !== undefined && (!kinds || typeof kinds !== 'object' ||
+        Array.isArray(kinds))) return false;
+    const allowedKinds = {
+      lord:1, steward:1, priest:1, friend:1, rival:1,
+      notable:1, kin:1, contact:1
+    };
+    for (const participantSlot in (participants || {})) {
+      if (!declared[participantSlot] ||
+          typeof participants[participantSlot] !== 'string' ||
+          !participants[participantSlot]) return false;
+    }
+    for (const kindSlot in (kinds || {})) {
+      if (!declared[kindSlot] || !participants ||
+          !participants[kindSlot] || !allowedKinds[kinds[kindSlot]]) return false;
+    }
+    for (let i = 0; i < ev.participants.length; i++) {
+      if (!participantSpecValid(state, ev.participants[i], ctx || {})) return false;
+    }
+    return true;
   };
 
   /* ---------- rivalry ----------
@@ -2757,6 +3249,14 @@ window.FB = window.FB || {};
     while ((match = rx.exec(text))) {
       const k = match[2];
       if (match[1] && /^[-+]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(k)) continue;
+      if (ctx && ctx.participants &&
+          Object.prototype.hasOwnProperty.call(ctx.participants, k)) {
+        const participant = state.chars[ctx.participants[k]];
+        out[k] = participant
+          ? FB.fullName(participant)
+          : (semantic ? neutralParam('fx.param.someone') : FB.T('someone'));
+        continue;
+      }
       switch (k) {
         case 'name': out[k] = me.name; break;
         case 'dyn': out[k] = me.dyn || ''; break;
@@ -3312,11 +3812,19 @@ window.FB = window.FB || {};
   };
 
   /* ---------- named chance formulas ---------- */
-  FB.namedChance = function (state, key) {
+  FB.namedChance = function (state, key, ctx) {
     const p = state.player;
     const me = state.chars[p.charId];
     const f = p.flags;
     switch (key) {
+      case 'serf_flight': {
+        const kind = FB.eventParticipantKind &&
+          FB.eventParticipantKind(ctx, 'confidant');
+        const balance = FBDATA.balance;
+        return kind === 'friend' ? balance.serfFlightFriendChance
+          : (kind === 'rival' ? balance.serfFlightRivalChance
+            : balance.serfFlightUnaccompaniedChance);
+      }
       case 'harvest': {
         let c = 0.55 + FB.skillOf(me, 'ste') * 0.018;
         if (f.crop_safe) c += 0.15;
@@ -3766,6 +4274,22 @@ window.FB = window.FB || {};
         return false;
       }
     }
+    if (tg.participantStandingAbove) {
+      const spec = tg.participantStandingAbove;
+      const c = FB.eventParticipant(state, ctx, spec.participant);
+      if (!c || characterStanding(state, c) < spec.value) return false;
+    }
+    if (tg.participantStandingBelow) {
+      const spec = tg.participantStandingBelow;
+      const c = FB.eventParticipant(state, ctx, spec.participant);
+      if (!c || characterStanding(state, c) > spec.value) return false;
+    }
+    if (tg.participantKind) {
+      const spec = tg.participantKind;
+      const kind = FB.eventParticipantKind(ctx, spec.participant);
+      if (!kind || !Array.isArray(spec.values) ||
+          spec.values.indexOf(kind) < 0) return false;
+    }
     if (tg.rivalHeatMin !== undefined && FB.rivalHeat(state) < tg.rivalHeatMin) return false;
     if (tg.rivalHeatMax !== undefined && FB.rivalHeat(state) > tg.rivalHeatMax) return false;
     /* computed only when a def actually asks for it: popEffective walks the
@@ -3849,8 +4373,33 @@ window.FB = window.FB || {};
     return out;
   };
 
+  FB.eventContextFor = function (state, ev, ctx) {
+    const out = FB.eventContext(state, ctx);
+    const bound = FB.bindEventParticipants(state, ev, out);
+    if (!bound || !FB.eventParticipantsStillValid(state, ev, bound)) return false;
+    return bound;
+  };
+
+  FB.ensureEventParticipants = function (state, ev, ctx) {
+    ctx = ctx || {};
+    /* Direct UI callers and old queue records can predate the event-context
+       defaults as well as participant binding. Repair only missing defaults
+       in place so the caller keeps the same saved object and any exact slot
+       already present can never be recast. */
+    const normalized = FB.eventContext(state, ctx);
+    for (const key of ['societalRole','profession','formerProfession',
+        'protagonistId','locationId']) {
+      if (ctx[key] === undefined) ctx[key] = normalized[key];
+    }
+    if (!ev || !ev.participants || !ev.participants.length) return ctx;
+    return FB.bindEventParticipants(state, ev, ctx);
+  };
+
   FB.queueEvent = function (state, id, ctx, extra) {
-    const item = { id:id, ctx:FB.eventContext(state, ctx) };
+    const ev = FB.eventById(id);
+    const eventCtx = FB.eventContextFor(state, ev, ctx);
+    if (!eventCtx) return null;
+    const item = { id:id, ctx:eventCtx };
     extra = extra || {};
     for (const key in extra) {
       if (Object.prototype.hasOwnProperty.call(extra, key)) item[key] = extra[key];
@@ -3870,6 +4419,7 @@ window.FB = window.FB || {};
 
   FB.eventContextStillValid = function (state, ev, ctx) {
     if (!ev) return false;
+    if (!FB.eventParticipantsStillValid(state, ev, ctx || {})) return false;
     if (ev.contextValidator) {
       const validator = FB.fns && FB.fns[ev.contextValidator];
       if (!validator || !validator(state, ctx || {})) return false;
@@ -3970,6 +4520,9 @@ window.FB = window.FB || {};
     }
     if (oldTier === 0 && tier > 0) {
       if (FB.closeSerfTenure) FB.closeSerfTenure(state, opts.tenureEndReason || 'rank_change');
+      if (FB.serfParticipantRankChanged) {
+        FB.serfParticipantRankChanged(state, !!opts.freedomResolution);
+      }
       const freedomOffer = p.freedomOffer;
       if (freedomOffer && !opts.freedomResolution &&
           (freedomOffer.status === 'offered' ||
@@ -4007,6 +4560,7 @@ window.FB = window.FB || {};
       randomEventPools = { ordinary:[], wartime:[], childhood:[], wartimeChildhood:[] };
       for (const ev of FBDATA.events) {
         validateEventSerfFreedomEffects(ev);
+        FB.validateEventParticipants(ev);
         if (!ev.trigger || ev.trigger.never) continue;
         randomEventPools.ordinary.push(ev);
         if (ev.wartime) randomEventPools.wartime.push(ev);
@@ -4037,6 +4591,9 @@ window.FB = window.FB || {};
         qev.ctx = FB.eventContext(state, qev.ctx);
       }
       const queuedDef = FB.eventById(qev.id);
+      if (queuedDef && !FB.ensureEventParticipants(state, queuedDef, qev.ctx)) {
+        continue;
+      }
       if (queuedDef &&
           queuedDef.contextValidator === 'plot_event_context_valid' &&
           !qev.ctx.plotId && state.player.plot) {
@@ -4111,7 +4668,8 @@ window.FB = window.FB || {};
         if (!contexts.length) return out;
         selectedContext = FB.pick(contexts);
       }
-      const ctx = FB.eventContext(state, selectedContext);
+      const ctx = FB.eventContextFor(state, chosen, selectedContext);
+      if (!ctx) return out;
       // events about "a young child" name (and afflict) one actual child, so
       // the text and any killChild effect speak of the same person
       if (chosen.trigger.hasYoungChild) {
@@ -4136,6 +4694,7 @@ window.FB = window.FB || {};
       eventIndex = {};
       for (const ev of FBDATA.events) {
         validateEventSerfFreedomEffects(ev);
+        FB.validateEventParticipants(ev);
         eventIndex[ev.id] = ev;
       }
     }
@@ -4649,6 +5208,9 @@ window.FB = window.FB || {};
         endReason: old.endReason
       };
     }
+    if (FB.serfParticipantTenureChanged) {
+      FB.serfParticipantTenureChanged(state);
+    }
     delete state.player.tenure;
     const newTenure = FB.ensureSerfTenure(state, formedBy || 'forced_settlement');
     if (newTenure && priorClosure) {
@@ -4705,11 +5267,19 @@ window.FB = window.FB || {};
     const rulerChar = holderRealm && holderRealm.ruler && state.chars ? state.chars[holderRealm.ruler] : null;
     const existingLordId = state.roles && state.roles.lord;
     const lord = existingLordId && state.chars ? state.chars[existingLordId] : null;
-    const lordName = rulerChar
-      ? FB.fullName(rulerChar)
-      : (lord
-          ? FB.fullName(lord)
+    const lordName = lord && !lord.dead
+      ? FB.fullName(lord)
+      : (rulerChar
+          ? FB.fullName(rulerChar)
           : (holderRealm ? holderRealm.name : FB.T('Local authority')));
+    const stewardId = state.roles && state.roles.steward;
+    const steward = stewardId && state.chars ? state.chars[stewardId] : null;
+    const story = p.serfStory && p.serfStory.id === 'old_custom'
+      ? p.serfStory : null;
+    const storyWitness = story && story.participants && state.chars
+      ? state.chars[story.participants.witness] : null;
+    const storyOfficer = story && story.participants && state.chars
+      ? state.chars[story.participants.officer] : null;
 
     const duties = [];
     let nearestDue = null;
@@ -4790,7 +5360,17 @@ window.FB = window.FB || {};
       settlementName: settlementName,
       countyName: countyName,
       controllerName: controllerName,
+      lordId:lord && !lord.dead ? lord.id : null,
       lordName: lordName,
+      stewardId:steward && !steward.dead ? steward.id : null,
+      stewardName:steward && !steward.dead
+        ? FB.fullName(steward) : FB.T('No steward is known'),
+      oldCustom:story && storyWitness && storyOfficer ? {
+        witnessId:storyWitness.id,
+        witnessName:FB.fullName(storyWitness),
+        officerId:storyOfficer.id,
+        officerName:FB.fullName(storyOfficer)
+      } : null,
       duties: duties,
       rights: rights,
       hasRights: rights.length > 0,
@@ -5334,6 +5914,406 @@ window.FB = window.FB || {};
     }
   };
 
+  const OLD_CUSTOM_STAGE_FLAGS = [
+    'old_custom_1', 'old_custom_2', 'old_custom_3', 'old_custom_resolve'
+  ];
+  const OLD_CUSTOM_OUTCOME_FLAGS = [
+    'old_custom_won', 'old_custom_lost', 'old_custom_compromise',
+    'old_custom_betrayed', 'rights_evidence', 'rights_collaborator'
+  ];
+
+  function oldCustomStage(state) {
+    const flags = state.player.flags || {};
+    const active = [];
+    for (let i = 0; i < OLD_CUSTOM_STAGE_FLAGS.length; i++) {
+      if (flags[OLD_CUSTOM_STAGE_FLAGS[i]]) active.push(i);
+    }
+    if (active.length !== 1) return null;
+    return ['memory','officer','hearing','resolution'][active[0]];
+  }
+
+  function clearOldCustom(state, reason, quiet) {
+    const p = state.player;
+    delete p.serfStory;
+    for (const flag of OLD_CUSTOM_STAGE_FLAGS.concat(OLD_CUSTOM_OUTCOME_FLAGS)) {
+      delete p.flags[flag];
+    }
+    state.eventQueue = (state.eventQueue || []).filter(function (item) {
+      return item.id !== 'old_custom_officer_changed' &&
+        item.id.indexOf('old_custom_') !== 0;
+    });
+    if (!quiet && reason) {
+      const fallbacks = {
+        succession:'📜 The Old Custom case closes with the succession.',
+        tenure:'📜 The Old Custom case closes because the customary tenure ended.',
+        home:'📜 The Old Custom case closes because the household left its old home.',
+        authority:'📜 The Old Custom case closes because the lordship changed hands.',
+        witness:'📜 The Old Custom case closes because the witness could no longer testify.',
+        rank:'📜 The Old Custom case closes because the household’s station changed.'
+      };
+      const reasonId = fallbacks[reason] ? reason : 'tenure';
+      FB.news(state, FB.msg('news.serf.old_custom_ended.' + reasonId,
+        fallbacks[reasonId], { reason:reasonId }));
+    }
+  }
+
+  function oldCustomRecordValid(state, story) {
+    const expectedKeys = [
+      'homeProvinceId','id','lordId','participantKinds','participants',
+      'pendingReplacement','protagonistId','schema','stage','startedTurn',
+      'tenureFormedTurn'
+    ].join(',');
+    const participantKeys = story && story.participants &&
+      typeof story.participants === 'object' && !Array.isArray(story.participants)
+      ? Object.keys(story.participants).sort().join(',') : '';
+    const kinds = story && story.participantKinds;
+    const kindKeys = kinds && typeof kinds === 'object' && !Array.isArray(kinds)
+      ? Object.keys(kinds).sort().join(',') : '';
+    const pending = story && story.pendingReplacement;
+    const pendingKeys = pending && typeof pending === 'object' &&
+      !Array.isArray(pending) ? Object.keys(pending).sort().join(',') : '';
+    if (!story || typeof story !== 'object' || story.schema !== 1 ||
+        Array.isArray(story) || Object.keys(story).sort().join(',') !== expectedKeys ||
+        story.id !== 'old_custom' || story.protagonistId !== state.player.charId ||
+        typeof story.homeProvinceId !== 'string' ||
+        !Number.isInteger(story.tenureFormedTurn) || story.tenureFormedTurn < 0 ||
+        typeof story.lordId !== 'string' ||
+        !Number.isInteger(story.startedTurn) || story.startedTurn < 0 ||
+        ['memory','officer','hearing','resolution'].indexOf(story.stage) < 0 ||
+        participantKeys !== 'lord,officer,witness' ||
+        story.participants.lord !== story.lordId ||
+        typeof story.participants.officer !== 'string' ||
+        typeof story.participants.witness !== 'string' ||
+        kindKeys !== 'lord,officer,witness' ||
+        kinds.lord !== 'lord' || kinds.officer !== 'steward' ||
+        ['friend','rival','notable','kin','contact'].indexOf(kinds.witness) < 0 ||
+        (pending !== null && (pendingKeys !== 'newOfficerId,oldOfficerId' ||
+          typeof pending.oldOfficerId !== 'string' ||
+          typeof pending.newOfficerId !== 'string' ||
+          pending.oldOfficerId !== story.participants.officer ||
+          pending.oldOfficerId === pending.newOfficerId))) return false;
+    return true;
+  }
+
+  function makeOldCustomStory(state, ctx, stage) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure || !ctx || !ctx.participants) return null;
+    const participants = ctx.participants;
+    if (!participants.lord || !participants.officer || !participants.witness) {
+      return null;
+    }
+    return {
+      schema:1, id:'old_custom', protagonistId:state.player.charId,
+      homeProvinceId:tenure.provinceId,
+      tenureFormedTurn:tenure.formedTurn,
+      lordId:participants.lord,
+      startedTurn:state.turn || 0,
+      stage:stage,
+      participants:{
+        lord:participants.lord,
+        officer:participants.officer,
+        witness:participants.witness
+      },
+      participantKinds:{
+        lord:FB.eventParticipantKind(ctx, 'lord') || 'lord',
+        officer:FB.eventParticipantKind(ctx, 'officer') || 'steward',
+        witness:FB.eventParticipantKind(ctx, 'witness') || 'notable'
+      },
+      pendingReplacement:null
+    };
+  }
+
+  FB.syncSerfStoryAfterEvent = function (state, ev, ctx) {
+    if (!ev || ev.id.indexOf('old_custom_') !== 0 ||
+        ev.id === 'old_custom_officer_changed') return false;
+    const stage = oldCustomStage(state);
+    if (!stage) {
+      if (state.player.serfStory) clearOldCustom(state, null, true);
+      return true;
+    }
+    let story = state.player.serfStory;
+    if (!story && ev.id === 'old_custom_stakes') {
+      story = makeOldCustomStory(state, ctx, stage);
+      if (!story) return false;
+      state.player.serfStory = story;
+    }
+    if (!oldCustomRecordValid(state, story)) return false;
+    story.stage = stage;
+    return true;
+  };
+
+  FB.fns.serf_old_custom_sync = function (state, ctx, ev) {
+    return FB.syncSerfStoryAfterEvent(state, ev, ctx);
+  };
+
+  FB.fns.serf_old_custom_ready = function (state) {
+    const story = state.player.serfStory;
+    return !!(oldCustomRecordValid(state, story) && !story.pendingReplacement);
+  };
+
+  FB.fns.serf_old_custom_replace_officer = function (state, ctx) {
+    const story = state.player.serfStory;
+    const pending = story && story.pendingReplacement;
+    if (!FB.fns.serf_old_custom_replacement_valid(state, ctx) ||
+        !oldCustomRecordValid(state, story) || !pending || !ctx.participants ||
+        ctx.participants.formerOfficer !== pending.oldOfficerId ||
+        ctx.participants.newOfficer !== pending.newOfficerId ||
+        state.roles.steward !== pending.newOfficerId) return false;
+    story.participants.officer = pending.newOfficerId;
+    story.participantKinds.officer = 'steward';
+    story.pendingReplacement = null;
+    return true;
+  };
+
+  FB.fns.serf_old_custom_replacement_valid = function (state, ctx) {
+    const story = state.player.serfStory;
+    const pending = story && story.pendingReplacement;
+    const tenure = FB.activeSerfTenure(state);
+    const witness = story && story.participants &&
+      state.chars[story.participants.witness];
+    return !!(oldCustomRecordValid(state, story) && pending && tenure &&
+      state.player.tier === 0 &&
+      tenure.formedTurn === story.tenureFormedTurn &&
+      tenure.provinceId === story.homeProvinceId &&
+      state.player.provinceId === story.homeProvinceId &&
+      state.roles.lord === story.lordId && state.roles.steward === pending.newOfficerId &&
+      witness && !witness.dead &&
+      participantResident(state, witness, story.homeProvinceId) &&
+      ctx && ctx.participants &&
+      ctx.participants.formerOfficer === pending.oldOfficerId &&
+      ctx.participants.newOfficer === pending.newOfficerId &&
+      ctx.participants.witness === story.participants.witness);
+  };
+
+  function queueOldCustomReplacement(state, story, oldOfficerId, newOfficerId) {
+    state.eventQueue = (state.eventQueue || []).filter(function (item) {
+      return item.id !== 'old_custom_officer_changed';
+    });
+    story.pendingReplacement = {
+      oldOfficerId:oldOfficerId, newOfficerId:newOfficerId
+    };
+    const bridge = FB.queueEvent(state, 'old_custom_officer_changed', {
+      participants:{
+        formerOfficer:oldOfficerId, newOfficer:newOfficerId,
+        witness:story.participants.witness
+      },
+      participantKinds:{
+        formerOfficer:'steward', newOfficer:'steward',
+        witness:story.participantKinds.witness || 'notable'
+      }
+    });
+    if (bridge) {
+      const bridgeIndex = state.eventQueue.indexOf(bridge);
+      if (bridgeIndex > 0) {
+        state.eventQueue.splice(bridgeIndex, 1);
+        state.eventQueue.unshift(bridge);
+      }
+    }
+  }
+
+  FB.reconcileSerfStory = function (state) {
+    const p = state.player;
+    const stage = oldCustomStage(state);
+    let story = p.serfStory;
+    if (!stage) {
+      let staleFlags = false;
+      for (const flag of OLD_CUSTOM_STAGE_FLAGS.concat(OLD_CUSTOM_OUTCOME_FLAGS)) {
+        if (p.flags && p.flags[flag]) { staleFlags = true; break; }
+      }
+      if (story || staleFlags) clearOldCustom(state, 'tenure');
+      return;
+    }
+    if (!story) {
+      const opener = FB.eventById('old_custom_stakes');
+      const ctx = FB.eventContextFor(state, opener, {});
+      story = ctx && makeOldCustomStory(state, ctx, stage);
+      if (!story) {
+        clearOldCustom(state, 'tenure');
+        return;
+      }
+      p.serfStory = story;
+    }
+    if (story.protagonistId !== p.charId) {
+      clearOldCustom(state, 'succession');
+      return;
+    }
+    if (!oldCustomRecordValid(state, story)) {
+      clearOldCustom(state, 'tenure');
+      return;
+    }
+    story.stage = stage;
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure || tenure.formedTurn !== story.tenureFormedTurn) {
+      clearOldCustom(state, 'tenure'); return;
+    }
+    if (p.provinceId !== story.homeProvinceId) {
+      clearOldCustom(state, 'home'); return;
+    }
+    if (!state.roles || state.roles.lord !== story.lordId ||
+        !state.chars[story.lordId] || state.chars[story.lordId].dead) {
+      clearOldCustom(state, 'authority'); return;
+    }
+    if (p.tier !== 0) {
+      clearOldCustom(state, 'rank'); return;
+    }
+    const witness = state.chars[story.participants.witness];
+    if (!witness || witness.dead ||
+        !participantResident(state, witness, story.homeProvinceId)) {
+      clearOldCustom(state, 'witness'); return;
+    }
+    const currentOfficer = FB.getRole(state, 'steward', true);
+    if (!currentOfficer) {
+      clearOldCustom(state, 'authority'); return;
+    }
+    if (story.participants.officer !== currentOfficer.id) {
+      const pending = story.pendingReplacement;
+      if (!pending || pending.newOfficerId !== currentOfficer.id ||
+          pending.oldOfficerId !== story.participants.officer) {
+        queueOldCustomReplacement(state, story,
+          story.participants.officer, currentOfficer.id);
+      }
+    }
+  };
+
+  function neighborConsequenceValid(state, record) {
+    const expectedKeys = [
+      'characterId','createdTurn','dueTurn','homeProvinceId','kind',
+      'officerId','protagonistId','queued','schema','tenureFormedTurn'
+    ].join(',');
+    return !!(record && typeof record === 'object' && !Array.isArray(record) &&
+      Object.keys(record).sort().join(',') === expectedKeys && record.schema === 1 &&
+      record.kind === 'shifted_quartering' &&
+      record.protagonistId === state.player.charId &&
+      typeof record.homeProvinceId === 'string' &&
+      Number.isInteger(record.tenureFormedTurn) && record.tenureFormedTurn >= 0 &&
+      typeof record.characterId === 'string' && record.characterId &&
+      typeof record.officerId === 'string' && record.officerId &&
+      record.characterId !== record.officerId &&
+      Number.isInteger(record.createdTurn) && record.createdTurn >= 0 &&
+      Number.isInteger(record.dueTurn) &&
+      record.dueTurn === record.createdTurn +
+        FBDATA.balance.serfNeighborConsequenceDays &&
+      typeof record.queued === 'boolean');
+  }
+
+  function clearNeighborConsequence(state, reason) {
+    const record = state.player.serfNeighborConsequence;
+    delete state.player.serfNeighborConsequence;
+    state.eventQueue = (state.eventQueue || []).filter(function (item) {
+      return item.id !== 'serf_neighbor_reckoning';
+    });
+    if (record && reason) {
+      const reasonId = reason === 'neighbor' ? 'neighbor' : 'tenure';
+      const fallback = reasonId === 'neighbor'
+        ? '🏘 The old quartering quarrel ends because the neighboring household can no longer answer it.'
+        : '🏘 The old quartering quarrel ends with the household’s old customary bond.';
+      FB.news(state, FB.msg(
+        'news.serf.neighbor_consequence_ended.' + reasonId,
+        fallback, { reason:reasonId }));
+    }
+  }
+
+  FB.fns.serf_neighbor_shifted = function (state, ctx) {
+    const existing = state.player.serfNeighborConsequence;
+    if (existing && neighborConsequenceValid(state, existing)) return false;
+    const tenure = FB.activeSerfTenure(state);
+    const neighbor = FB.eventParticipant(state, ctx, 'neighbor');
+    const officer = FB.eventParticipant(state, ctx, 'officer');
+    if (!tenure || !neighbor || !officer) return false;
+    const createdTurn = state.turn || 0;
+    state.player.serfNeighborConsequence = {
+      schema:1, kind:'shifted_quartering',
+      protagonistId:state.player.charId,
+      homeProvinceId:tenure.provinceId,
+      tenureFormedTurn:tenure.formedTurn,
+      characterId:neighbor.id, officerId:officer.id,
+      createdTurn:createdTurn,
+      dueTurn:createdTurn + FBDATA.balance.serfNeighborConsequenceDays,
+      queued:false
+    };
+    return true;
+  };
+
+  FB.fns.serf_neighbor_clear = function (state) {
+    clearNeighborConsequence(state, null);
+    return true;
+  };
+
+  FB.fns.serf_neighbor_context_valid = function (state, ctx) {
+    const record = state.player.serfNeighborConsequence;
+    return !!(neighborConsequenceValid(state, record) && record.queued &&
+      ctx && ctx.participants &&
+      ctx.participants.neighbor === record.characterId &&
+      ctx.participants.officer === record.officerId);
+  };
+
+  FB.fns.serf_neighbor_officer_current = function (state, ctx) {
+    return !!(ctx && ctx.participants &&
+      state.roles.steward === ctx.participants.officer &&
+      FB.eventParticipant(state, ctx, 'officer'));
+  };
+
+  FB.fns.serf_flight_failure = function (state, ctx) {
+    if (FB.eventParticipantKind(ctx, 'confidant') === 'rival' &&
+        FB.eventParticipant(state, ctx, 'confidant')) {
+      FB.changeRivalHeat(state, 5);
+    }
+    return true;
+  };
+
+  FB.reconcileSerfNeighborConsequence = function (state) {
+    const record = state.player.serfNeighborConsequence;
+    if (!record) return;
+    if (!neighborConsequenceValid(state, record)) {
+      clearNeighborConsequence(state, null); return;
+    }
+    const tenure = FB.activeSerfTenure(state);
+    if (state.player.tier !== 0 || !tenure ||
+        tenure.formedTurn !== record.tenureFormedTurn ||
+        state.player.provinceId !== record.homeProvinceId) {
+      clearNeighborConsequence(state, 'tenure'); return;
+    }
+    const neighbor = state.chars[record.characterId];
+    if (!neighbor || neighbor.dead ||
+        !participantResident(state, neighbor, record.homeProvinceId)) {
+      clearNeighborConsequence(state, 'neighbor'); return;
+    }
+    if (!record.queued && (state.turn || 0) >= record.dueTurn) {
+      const queued = FB.queueEvent(state, 'serf_neighbor_reckoning', {
+        participants:{
+          neighbor:record.characterId, officer:record.officerId
+        },
+        participantKinds:{
+          neighbor:participantKindFor(state,
+            { source:'local_neighbor', slot:'neighbor' }, neighbor) || 'contact',
+          officer:'steward'
+        }
+      });
+      if (queued) record.queued = true;
+    }
+  };
+
+  FB.serfParticipantSuccession = function (state) {
+    if (state.player.serfStory) clearOldCustom(state, null, true);
+    clearNeighborConsequence(state, null);
+  };
+
+  FB.serfParticipantRankChanged = function (state, quietStory) {
+    if (state.player.serfStory) {
+      clearOldCustom(state, 'rank', !!quietStory);
+    }
+    if (state.player.serfNeighborConsequence) {
+      clearNeighborConsequence(state, 'tenure');
+    }
+  };
+
+  FB.serfParticipantTenureChanged = function (state) {
+    if (state.player.serfStory) clearOldCustom(state, 'tenure');
+    if (state.player.serfNeighborConsequence) {
+      clearNeighborConsequence(state, 'tenure');
+    }
+  };
+
   FB.fns = FB.fns || {};
   FB.fns.serf_tenure_context_valid = function (state, ctx, ev) {
     if (!state || !state.player || state.player.tier !== 0) return false;
@@ -5485,7 +6465,7 @@ window.FB = window.FB || {};
     'marriageEnd','gold','pricePressure','pricePressureYears','pricePressureSource','marketShock',
     'prestige','piety','guildStanding','warService','health','ailment','skills','addTrait',
     'addTraitOnce','removeTrait','traitProgress','setFlag','setFlag2','clearFlag',
-    'clearFlag2','clearHarvestFlags','opinion','rivalContact','rivalHeat',
+    'clearFlag2','clearHarvestFlags','opinion','standingCharacter','rivalContact','rivalHeat',
     'endRivalry','opinionLiege','standingRealm','papalOpinion','popularOpinion',
     'profession','focusSet','restoreProfession','tierSet','tierUp','devUp',
     'research','addModifier','removeModifier','holding','loseHolding','giveItem',
@@ -5544,7 +6524,7 @@ window.FB = window.FB || {};
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
     'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item open_item_shop papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
-    'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
     'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
@@ -5847,6 +6827,10 @@ window.FB = window.FB || {};
     out.push(impact(type, extra));
   }
 
+  function exactStandingEffects(raw) {
+    return Array.isArray(raw) ? raw : (raw ? [raw] : []);
+  }
+
   function previewEffects(state, source, ctx, ev) {
     const out = [];
     if (!source) return out;
@@ -5891,6 +6875,18 @@ window.FB = window.FB || {};
     if (fx.opinion) previewNumeric(out, 'standing', fx.opinion.amt, {
       targetKind:'role', role:fx.opinion.role
     });
+    if (fx.standingCharacter) {
+      const exactStanding = exactStandingEffects(fx.standingCharacter);
+      for (let standingIndex = 0; standingIndex < exactStanding.length;
+           standingIndex++) {
+        const standingSpec = exactStanding[standingIndex];
+        const participantId = ctx.participants &&
+          ctx.participants[standingSpec.participant];
+        previewNumeric(out, 'standing', standingSpec.amt, {
+          targetKind:'character', targetId:participantId || null
+        });
+      }
+    }
     if (fx.skills) for (const skill in fx.skills) {
       previewNumeric(out, 'skill', fx.skills[skill], { id:skill });
     }
@@ -6058,7 +7054,7 @@ window.FB = window.FB || {};
     let chance = null;
     if (option.chance !== undefined) {
       const probability = typeof option.chance === 'string'
-        ? FB.namedChance(state, option.chance) : Number(option.chance);
+        ? FB.namedChance(state, option.chance, ctx) : Number(option.chance);
       chance = { band:chanceBand(probability) };
     }
     const sections = [];
@@ -6103,7 +7099,8 @@ window.FB = window.FB || {};
       const record = candidates[candidateIndex];
       if (record.internal) continue;
       const key = record.type + '|' + (record.id || record.system || record.band || '') +
-        '|' + (record.action || '') + '|' + (record.amount || '');
+        '|' + (record.action || '') + '|' + (record.amount || '') +
+        '|' + (record.targetKind || '') + '|' + (record.targetId || record.role || '');
       if (seen[key]) continue;
       seen[key] = true;
       compact.push(record);
@@ -6148,6 +7145,12 @@ window.FB = window.FB || {};
       const contextValue = ctx[contextKey];
       if (typeof contextValue === 'string' && state.chars[contextValue]) {
         relevant[contextValue] = true;
+      }
+    }
+    const participants = ctx.participants || {};
+    for (const participantSlot in participants) {
+      if (state.chars[participants[participantSlot]]) {
+        relevant[participants[participantSlot]] = true;
       }
     }
     if (p.courtingId) relevant[p.courtingId] = true;
@@ -7103,9 +8106,33 @@ window.FB = window.FB || {};
       if (c) adjustCharacterStanding(state, c, amt,
         'event:opinion_compatibility_effect');
     }
+    if (fx.standingCharacter) {
+      const exactStanding = exactStandingEffects(fx.standingCharacter);
+      for (let standingIndex = 0; standingIndex < exactStanding.length;
+           standingIndex++) {
+        const standingSpec = exactStanding[standingIndex];
+        const c = FB.eventParticipant(state, ctx, standingSpec.participant);
+        let amt = Number(standingSpec.amt) || 0;
+        if (c && amt > 0) {
+          let multiplier = 1 + FB.traitAgg(me).opinion / 200;
+          const spouse = FB.spousesOf(state, me).some(function (other) {
+            return other.id === c.id;
+          });
+          const blood = !!FB.kinOf(state).byId[c.id];
+          if ((spouse || blood) && FB.traitBonus) {
+            multiplier += FB.traitBonus(me, 'household', 'regard');
+          }
+          amt = Math.max(1, Math.round(amt * multiplier));
+        }
+        if (c && amt) adjustCharacterStanding(state, c, amt,
+          'event:standingCharacter_effect');
+      }
+    }
     if (fx.rivalContact) {
       const rc = fx.rivalContact;
-      const c = FB.getRole(state, rc.role, false);
+      const c = rc.participant
+        ? FB.eventParticipant(state, ctx, rc.participant)
+        : FB.getRole(state, rc.role, false);
       if (c) FB.noteRivalContact(state, c, rc.score || 1, rc.cause || 'conflict');
     }
     if (fx.rivalHeat) FB.changeRivalHeat(state, fx.rivalHeat);
@@ -7450,12 +8477,15 @@ window.FB = window.FB || {};
   /* Relationship effects can clear or replace a role before the durable
      outcome descriptor is built. Keep only concrete pre-effect names; nested
      fallback descriptors still come from the post-effect message. */
-  function preserveReceiptRoleParams(message, beforeEffects) {
+  function preserveReceiptRoleParams(message, beforeEffects, ctx) {
     if (!message || !beforeEffects || !beforeEffects.params) return message;
     const params = FB.messageParams(message.params);
     let changed = false;
-    for (let i = 0; i < RECEIPT_ROLE_PARAMS.length; i++) {
-      const key = RECEIPT_ROLE_PARAMS[i];
+    const keys = RECEIPT_ROLE_PARAMS.slice();
+    const participants = ctx && ctx.participants || {};
+    for (const slot in participants) if (keys.indexOf(slot) < 0) keys.push(slot);
+    for (let i = 0; i < keys.length; i++) {
+      const key = keys[i];
       const value = beforeEffects.params[key];
       if (typeof value === 'string' && value) {
         params[key] = value;
@@ -7480,9 +8510,7 @@ window.FB = window.FB || {};
             !optionStatus.ready)) return false;
     }
 
-    if (ev && ev.contextValidator) {
-      if (!FB.eventContextStillValid(state, ev, ctx)) return false;
-    }
+    if (ev && !FB.eventContextStillValid(state, ev, ctx)) return false;
 
     if (ctx && ctx._tenureResolved) return false;
 
@@ -7492,13 +8520,19 @@ window.FB = window.FB || {};
     let branch = null;
     let branchName = null;
     let outcomeBeforeEffects = null;
+    const titleBeforeEffects = FB.eventMessage(state, state.player.charId,
+      ev, 'title', ctx);
+    const optionBeforeEffects = optionIndex >= 0
+      ? FB.eventMessage(state, state.player.charId, ev,
+        'options.' + optionIndex + '.label', ctx)
+      : FB.msg('fx.event.autoresolve.default_choice', 'So it goes.', {});
     if (FB.suppressNewsToasts) FB.suppressNewsToasts(true);
     const oldUiSuppression = FB.ui && FB.ui.suppressEventEffectToasts;
     if (FB.ui) FB.ui.suppressEventEffectToasts = true;
     try {
       if (option.chance !== undefined) {
         const probability = typeof option.chance === 'string'
-          ? FB.namedChance(state, option.chance) : Number(option.chance);
+          ? FB.namedChance(state, option.chance, ctx) : Number(option.chance);
         succeeded = FB.chance(probability);
         branchName = succeeded ? 'success' : 'failure';
         branch = succeeded ? option.success : option.failure;
@@ -7572,7 +8606,7 @@ window.FB = window.FB || {};
         outcomeMessage = FB.eventMessage(state, state.player.charId,
           ev, outcomePath, ctx);
         outcomeMessage = preserveReceiptRoleParams(
-          outcomeMessage, outcomeBeforeEffects);
+          outcomeMessage, outcomeBeforeEffects, ctx);
       } else if (branch.text) {
         outcomeMessage = FB.msg(
           succeeded ? 'fx.event.autoresolve.success' : 'fx.event.autoresolve.failure',
@@ -7583,16 +8617,8 @@ window.FB = window.FB || {};
           succeeded ? 'It goes well.' : 'It goes poorly.', {});
       }
     }
-    FB.prepareEventPath(state, ev, 'title', ctx);
-    const titleMessage = FB.eventMessage(state, state.player.charId, ev, 'title', ctx);
-    let optionMessage;
-    if (optionIndex >= 0) {
-      const optionPath = 'options.' + optionIndex + '.label';
-      FB.prepareEventPath(state, ev, optionPath, ctx);
-      optionMessage = FB.eventMessage(state, state.player.charId, ev, optionPath, ctx);
-    } else {
-      optionMessage = FB.msg('fx.event.autoresolve.default_choice', 'So it goes.', {});
-    }
+    const titleMessage = titleBeforeEffects;
+    const optionMessage = optionBeforeEffects;
     const receipt = {
       schema:1,
       eventId:ev.id,

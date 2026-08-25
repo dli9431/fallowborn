@@ -23,7 +23,11 @@ Creating, reopening, or declining an offer spends no day. Acceptance spends one 
 The highest-Standing offer includes 90 days of final service: its price is charged once,
 ordinary tenure duties remain possible, and `FB.freedomDay` completes freedom on the exact
 saved turn. The daily post-calendar order runs `freedomDay` immediately before
-`tenureDay`, so a completed service term cannot queue another duty that day.
+`tenureDay`, so a completed service term cannot queue another duty that day. The same
+pre-selection phase then runs `FB.reconcileSerfStory` and
+`FB.reconcileSerfNeighborConsequence` before `FB.pickDailyEvents`; therefore an Old Custom
+officer bridge or due neighbor reckoning is queued, and stale participant state is cleared,
+before ordinary queue validation or random selection.
 
 The 28 baseline focus records and 79 baseline deed records keep their non-executable
 metadata in `data/actions.js`. `js/actions.js` owns private handler registries and validates

@@ -449,8 +449,11 @@ window.FB = window.FB || {};
       const item = pendingEvents.shift();
       const ev = FB.eventById(item.id);
       if (!ev) continue;
+      item.ctx = item.ctx || {};
+      if (FB.ensureEventParticipants &&
+          !FB.ensureEventParticipants(s, ev, item.ctx)) continue;
       if (FB.eventContextStillValid &&
-          !FB.eventContextStillValid(s, ev, item.ctx || {})) continue;
+          !FB.eventContextStillValid(s, ev, item.ctx)) continue;
       if (autoWants(ev, item)) { autoResolve(ev, item); continue; }
       showEvent(ev, item.ctx || {});
       return true;
@@ -480,11 +483,9 @@ window.FB = window.FB || {};
     return false;
   }
 
-  /* every soul an event names gets a card — face, house arms, home, and
-     allegiance — so "Reginbald insulted me" never arrives as a bare name.
-     Scans the raw strings (title, text variants, option labels, branch
-     texts) for {role} tokens and the queued {student}; prepareEvent creates
-     roles before any localized rendering begins. */
+  /* Every living person an event names gets one card. Exact participant
+     slots are considered before legacy role tokens so their card always owns
+     the native character-sheet route and can return to this event. */
   function eventCharCards(s, ev, ctx, carded) {
     let raw = ' ';
     function add(x) {
@@ -499,24 +500,53 @@ window.FB = window.FB || {};
       if (o.failure) add(o.failure.text);
     }
     let h = '';
+    let cardCount = Object.keys(carded).length;
+    function addCharacter(c, participant) {
+      if (!c || c.dead || carded[c.id] || cardCount >= 4) return;
+      carded[c.id] = 1;
+      cardCount++;
+      if (participant) {
+        h += '<div class="event-participant-card" data-event-participant="' +
+          esc(participant) + '">' + UI.charCardHtml(s, c) +
+          '<button type="button" class="btn small event-character-sheet" ' +
+          'data-event-character="' + esc(c.id) + '">' +
+          esc(FB.T('Open character sheet')) + '</button></div>';
+      } else {
+        h += UI.charCardHtml(s, c);
+      }
+    }
     const cardedRealms = {};
+    const explicitCards = ev.participantCards || [];
+    const participantSlots = [];
+    for (let declaredIndex = 0; declaredIndex < (ev.participants || []).length;
+         declaredIndex++) {
+      const declaredSlot = ev.participants[declaredIndex].slot;
+      if (ctx && ctx.participants && ctx.participants[declaredSlot]) {
+        participantSlots.push(declaredSlot);
+      }
+    }
+    for (let participantIndex = 0; participantIndex < participantSlots.length;
+         participantIndex++) {
+      const slot = participantSlots[participantIndex];
+      if (raw.indexOf('{' + slot + '}') < 0 &&
+          explicitCards.indexOf(slot) < 0) continue;
+      addCharacter(s.chars[ctx.participants[slot]], slot);
+    }
     for (const role of ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor']) {
       if (raw.indexOf('{' + role + '}') < 0) continue;
       const c = FB.getRole(s, role, false);
-      if (c && !carded[c.id]) { carded[c.id] = 1; h += UI.charCardHtml(s, c); }
+      addCharacter(c, null);
     }
     if (raw.indexOf('{student}') >= 0 && ctx && ctx.studentId) {
       const student = s.chars[ctx.studentId];
       if (student && !student.dead && !carded[student.id]) {
-        carded[student.id] = 1;
-        h += UI.charCardHtml(s, student);
+        addCharacter(student, null);
       }
     }
     if (raw.indexOf('{partner}') >= 0 && ctx && ctx.partnerId) {
       const partner = s.chars[ctx.partnerId];
       if (partner && !partner.dead && !carded[partner.id]) {
-        carded[partner.id] = 1;
-        h += UI.charCardHtml(s, partner);
+        addCharacter(partner, null);
       }
     }
     if ((raw.indexOf('{rname}') >= 0 || raw.indexOf('{rulername}') >= 0) &&
@@ -645,17 +675,29 @@ window.FB = window.FB || {};
     }
     bodyHtml += financeDistraintPreview(s, ev);
     const carded = {};
+    bodyHtml += eventCharCards(s, ev, ctx, carded);
     if (ev.charCard) {
       const cc = FB.getRole(s, ev.charCard, false);
-      if (cc) { bodyHtml += UI.charCardHtml(s, cc); carded[cc.id] = 1; }
+      if (cc && !carded[cc.id]) {
+        bodyHtml += UI.charCardHtml(s, cc);
+        carded[cc.id] = 1;
+      }
     }
-    bodyHtml += eventCharCards(s, ev, ctx, carded);
     if (UI.hintDue && UI.hintDue('event-pauses')) {
       bodyHtml = '<p class="hint">' + esc(FB.T(
         'Events pause the days until you choose an answer.')) + '</p>' + bodyHtml;
     }
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
+    document.querySelectorAll('.event-character-sheet').forEach(function (button) {
+      button.addEventListener('click', function () {
+        const card = $('eventmodal').querySelector('.modalcard');
+        UI.showCharModal(button.dataset.eventCharacter, {
+          view:'event', scrollTop:card ? card.scrollTop : 0,
+          focusCharacterId:button.dataset.eventCharacter
+        });
+      });
+    });
     const box = $('ev-options');
     box.innerHTML = '';
     /* a nameChild event (births) opens with a name field: the generated name,
@@ -1735,6 +1777,8 @@ window.FB = window.FB || {};
     const lordName = lord ? FB.fullName(lord)
       : (view ? view.lordName : FB.T('No current lord'));
     const showReview = !!view && !options.intro;
+    const advocates = !showReview && petition.ready && FB.freedomAdvocates
+      ? FB.freedomAdvocates(s) : [];
     let h = '<div class="gm-body-text" data-freedom-routes>' +
       '<p>' + esc(FB.T(
         'A petition asks the current lord for one exact, saved offer. It spends no day and uses no chance roll.')) + '</p>' +
@@ -1757,9 +1801,48 @@ window.FB = window.FB || {};
       if (!petition.ready) {
         h += '<p class="warnote">' + esc(petition.reason) + '</p>';
       }
+      if (advocates.length) {
+        h += '<div class="panelh">' + esc(FB.T('Optional advocate')) + '</div>' +
+          '<p class="adesc">' + esc(FB.T(
+            'A local officer or priest with at least +40 Standing may add +10 to this petition. Their support is rechecked when you accept.')) + '</p>';
+        for (let advocateIndex = 0; advocateIndex < advocates.length;
+             advocateIndex++) {
+          const advocate = advocates[advocateIndex];
+          const preview = FB.freedomAdvocacyPreview(s, advocate.id);
+          const bandText = preview && preview.changesTerm
+            ? FB.T('Changes the offered term band from +{fromMin}–{fromMax} to +{toMin}–{toMax}.', {
+              fromMin:preview.unassistedMinStanding,
+              fromMax:preview.unassistedMaxStanding,
+              toMin:preview.termMinStanding,
+              toMax:preview.termMaxStanding
+            })
+            : FB.T('The +10 support does not improve the offered term band.');
+          h += '<div class="progressnote freedom-advocate-preview" ' +
+            'data-freedom-advocate-preview="' + esc(advocate.id) + '"><b>' +
+            esc(FB.T('{name}, {role}', {
+              name:advocate.name,
+              role:advocate.role === 'steward' ? FB.T('Steward') : FB.T('Priest')
+            })) + '</b><p class="hint">' + esc(FB.T(
+              'Standing {standing}; effective lord Standing {effective}. {result}', {
+                standing:advocate.standing,
+                effective:preview ? preview.effectiveStanding : petition.standing,
+                result:bandText
+              })) + '</p></div>';
+        }
+      }
       h += '</div><div class="gm-list"><button type="button" class="actionbtn" ' +
         'id="freedom-petition-create"' + (petition.ready ? '' : ' disabled') + '>' +
-        esc(FB.T('Ask for exact terms')) + '</button>' +
+        esc(advocates.length ? FB.T('Ask without a supporter')
+          : FB.T('Ask for exact terms')) + '</button>';
+      for (let advocateButtonIndex = 0;
+           advocateButtonIndex < advocates.length; advocateButtonIndex++) {
+        h += '<button type="button" class="actionbtn freedom-advocate-select" ' +
+          'data-freedom-advocate="' + esc(advocates[advocateButtonIndex].id) + '">' +
+          esc(FB.T('Ask with {name}’s support', {
+            name:advocates[advocateButtonIndex].name
+          })) + '</button>';
+      }
+      h +=
         (view ? '<button type="button" class="actionbtn" id="freedom-petition-review">' +
           esc(FB.T('Review the saved offer')) + '</button>' : '') +
         '<button type="button" class="actionbtn" id="freedom-petition-close">' +
@@ -1775,6 +1858,19 @@ window.FB = window.FB || {};
           return;
         }
         UI.showFreedomPetition();
+      });
+      document.querySelectorAll('.freedom-advocate-select').forEach(function (button) {
+        button.addEventListener('click', function () {
+          const created = FB.createFreedomOffer(
+            s, 'petition', button.dataset.freedomAdvocate);
+          if (!created) {
+            UI.toast(FB.T(
+              'Circumstances changed before the supporter could confirm the terms.'));
+            UI.showFreedomPetition({ intro:true });
+            return;
+          }
+          UI.showFreedomPetition();
+        });
       });
       const review = $('freedom-petition-review');
       if (review) review.addEventListener('click', function () {
@@ -1801,6 +1897,24 @@ window.FB = window.FB || {};
         ? FB.T('Acceptance pays the exact price now. Freedom follows only when final service ends; ordinary customary duties may still fall due.')
         : FB.T('Acceptance pays the exact price and grants lawful freedom immediately.')) +
       '</p>';
+    if (view.advocacy) {
+      h += '<div data-freedom-offer-advocacy>' +
+        kv('Advocate', esc(FB.T('{name}, {role}', {
+          name:view.advocacy.name,
+          role:view.advocacy.role === 'steward'
+            ? FB.T('Steward') : FB.T('Priest')
+        }))) +
+        kv('Saved Standing support', esc(FB.T(
+          'Lord {actual} + advocate {bonus} = effective {effective}', {
+            actual:view.advocacy.actualLordStanding,
+            bonus:view.advocacy.bonus,
+            effective:view.advocacy.effectiveStanding
+          }))) +
+        '<p class="adesc">' + esc(view.advocacy.changedTerm
+          ? FB.T('The advocate’s +10 support improved the saved term band.')
+          : FB.T('The advocate’s +10 support did not improve the saved term band.')) +
+        '</p></div>';
+    }
     if (view.status === 'service') {
       h += '<div class="progressnote" data-freedom-service-progress>' +
         esc(FB.T('Final service ends {date}; {days} days remain.', {
@@ -7928,6 +8042,21 @@ window.FB = window.FB || {};
     } else if (returnContext.view === 'retainer') {
       UI.showRetainerManage(returnContext.characterId,
         returnContext.returnContext);
+    } else if (returnContext.view === 'event') {
+      UI.closeModal();
+      const eventCard = $('eventmodal').querySelector('.modalcard');
+      if (eventCard) eventCard.scrollTop = returnContext.scrollTop || 0;
+      const selector = returnContext.focusCharacterId
+        ? '[data-event-character="' + returnContext.focusCharacterId + '"]'
+        : '.event-character-sheet';
+      const control = $('eventmodal').querySelector(selector);
+      if (control) control.focus();
+    } else if (returnContext.view === 'rank-details') {
+      UI.showRankDetails();
+      const focusId = returnContext.focusCharacterId;
+      const control = focusId && document.querySelector(
+        '[data-tenure-character="' + focusId + '"]');
+      if (control) control.focus();
     } else {
       UI.closeModal();
     }

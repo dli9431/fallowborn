@@ -1226,6 +1226,10 @@ FBDATA.currency = {
 FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,
   freedomCost: 100, landPlotCost: 120, landPlotYield: 0.6,
+  serfAdvocacyStanding:40, serfAdvocacyBonus:10,
+  serfNeighborConsequenceDays:90,
+  serfFlightFriendChance:0.65, serfFlightRivalChance:0.35,
+  serfFlightUnaccompaniedChance:0.50,
   landConsolidationBonus: 0.10, landPlotMaxSettlement: 5,
   manorPlotRequirement: 5, manorPrestige: 150,
   baronyGold: 2500, baronyPrestige: 400, baronyOpinion: 60,

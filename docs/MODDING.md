@@ -1122,6 +1122,8 @@ translation packs. Keep every documented `{token}` intact inside translatable st
 | `provinceReligionGroup`, `provinceCultures`, `terrains`, `coastal` | home province checks |
 | `atWar`, `realmAtWar`, `liegeAtWar`, `isVassal`, `isLiege` | war/politics (`isLiege`: the player has vassals of their own) |
 | `hasRole` / `noRole`, `roleOpinionAbove/Below` | `{role, value}`; roles: `lord priest friend rival spouse suitor` |
+| `participantStandingAbove` / `participantStandingBelow` | option-only `{participant, value}` check against the exact bound participant; random top-level triggers may not depend on participants |
+| `participantKind` | option-only `{participant, values:[...]}` check; normalized values are `lord steward priest friend rival notable kin contact` |
 | `rivalHeatMin` / `rivalHeatMax` | active rivalry heat at or above/below the number (0–100) |
 | `popularOpinionBelow` | effective Common Voice (stored popular opinion plus directly held county modifiers) |
 | `hasModifier` | modifier id string, or `{id,pid?}`; county lookup uses explicit `pid`, then the queued event location, then the player's home province |
@@ -1153,6 +1155,44 @@ Core code queues through `FB.queueEvent`, which snapshots `societalRole`, `profe
 `formerProfession`, and `locationId` into the JSON-safe event context for exact-value
 localization selectors and county targeting. Mods should use the effect-level `queue`
 field whenever possible.
+
+An event may additionally declare at most four exact character participants:
+
+```json
+{
+  "participants": [
+    { "slot": "officer", "source": "role", "role": "steward",
+      "required": true, "create": true, "authorityRole": "steward",
+      "sameHome": true },
+    { "slot": "witness", "source": "local_witness",
+      "required": true, "createFallback": true, "sameHome": true }
+  ],
+  "participantCards": ["officer", "witness"]
+}
+```
+
+Each participant record accepts only `slot`, `source`, `role`, `storyId`, `storySlot`,
+`required`, `create`, `createFallback`, `authorityRole`, `sameHome`, `allowDead`, and
+`kindParam`. Slots are unique lowercase ASCII identifiers. Sources are `role`,
+`local_neighbor`, `local_witness`, `flight_contact`, `story`, and `context`. Role sources
+allow `lord`, `steward`, `priest`, `friend`, `rival`, and `notable`; creation is limited to
+the local `lord`, `steward`, `priest`, or `notable`. `story` requires `storyId` and may map
+to another `storySlot`. Only a required neighbor/witness may use `createFallback:true`,
+which materializes the one bounded `notable`. Only a caller-supplied `context` participant
+may use `allowDead:true`. `participantCards` is an optional unique subset of declared slots.
+
+Binding occurs only after selection. Exact caller/story ids are preserved; otherwise the
+engine considers local friend, rival, current personal attention, cultivated contacts in
+relationship order, manageable resident kin for witnesses, and the existing notable.
+The saved `ctx.participants` ids and optional normalized `ctx.participantKinds` never reroll
+on reopen, restore, preview, or autoresolve. A required participant who dies, moves, loses
+their required authority, or belongs to a previous protagonist expires the event before a
+choice mutates state. `kindParam` copies the bound kind into a direct context selector key.
+`FB.validateEventParticipants` rejects unsupported schemas when a mod is applied.
+Core tuning lives in the existing balance catalogue:
+`serfAdvocacyStanding`, `serfAdvocacyBonus`, `serfNeighborConsequenceDays`,
+`serfFlightFriendChance`, `serfFlightRivalChance`, and
+`serfFlightUnaccompaniedChance`.
 
 Random events may declare `contextSelector` beside `trigger`. The selector must be
 registered by engine code as `FB.eventContextOptions(state, id)` and return an array of
@@ -1226,7 +1266,7 @@ as triggers — hides the option),
 optional `chance` (0–1, or a named formula: `harvest battle proposal rival_peace house_claim annulment
 skill_dip skill_ste skill_int skill_lea rights_dip rights_ste rights_int rights_lea swarm
 liege_grant war_battle plot plot_discovery fabricate_claim appeal_outcome
-vassal_comply county_petition parliament_vote parliament_redress_vote travel_trade`) with
+vassal_comply county_petition parliament_vote parliament_redress_vote travel_trade serf_flight`) with
 `success` / `failure`
 branches (`{text, effects}`), and `effects`.
 An option may also declare all-of `requiresTech:"technology_id"` (or an array).
@@ -1342,7 +1382,12 @@ protagonist when the context has no candidate; clamped to −100…100 and a no-
 vacancy) ·
 `rivalContact: {role, score, cause}` (record an explicitly hostile encounter with that
 existing named role; `score` defaults to 1, `cause` is an opaque non-localized id, and
-contact with the active rival also adds `score × balance.rivalContactHeat` heat) ·
+contact with the active rival also adds `score × balance.rivalContactHeat` heat). For an
+event with declared participants, use `rivalContact:{participant,score,cause}` to target
+only that exact required slot; it never falls back to a role ·
+`standingCharacter:{participant,amt}` (or an array of up to four unique required slots;
+adjust exact personal Standing, with the ordinary positive-trait multiplier, and never
+substitute another character) ·
 `rivalHeat: n` (adjust the active feud, clamped 0–100) · `endRivalry: true` (clear the
 rival seat, its plot/escalation state, and begin the peace cooldown) ·
 `tierSet` (raise rank), `tierUp`
@@ -1504,6 +1549,11 @@ describe the currently offered item (`player.itemOffer`); `{liege}` is the playe
 liege realm; `{rname}` / `{rulername}` are the realm and ruler named by
 `ctx.realmId` (legacy `ctx.rid` remains accepted); `{cname}` is the county named by
 `ctx.provinceId` (legacy `ctx.pid` remains accepted).
+Any declared participant slot is also a token: `{officer}`, `{witness}`, `{neighbor}`,
+or another valid slot resolves the exact id in `ctx.participants` before a same-named
+legacy role could be considered. Mentioning a living participant adds one event character
+card; `participantCards` adds a card when the prose itself does not contain the token.
+Outcome receipts preserve the pre-effect participant name.
 `{location}` is the traveler’s current county (or `ctx.locationId`) and
 `{destination}` is the journey destination (or `ctx.destinationId`).
 `{student}` is the exact character named by queued-event `ctx.studentId`; mentioning it

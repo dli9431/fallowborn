@@ -1229,7 +1229,7 @@ window.FB = window.FB || {};
     let invalid = record.version !== 1 || statuses.indexOf(record.status) < 0 ||
       sources.indexOf(record.source) < 0;
     const integerFields = ['tenureFormedTurn','settlementIndex',
-      'standingAtCreation','requiredStanding','baseCost','price','serviceDays',
+      'requiredStanding','baseCost','price','serviceDays',
       'createdTurn','expiryTurn','cooldownUntil'];
     for (let i = 0; i < integerFields.length; i++) {
       if (!Number.isInteger(record[integerFields[i]])) invalid = true;
@@ -1240,6 +1240,7 @@ window.FB = window.FB || {};
         typeof record.provinceId !== 'string' || !record.provinceId ||
         record.baseCost <= 0 || record.price < 0 || record.serviceDays < 0 ||
         record.tenureFormedTurn < 0 || record.settlementIndex < 0 ||
+        !isFinite(record.standingAtCreation) ||
         record.standingAtCreation < -100 || record.standingAtCreation > 100 ||
         record.requiredStanding < -100 || record.requiredStanding > 100 ||
         record.createdTurn < 0 || record.expiryTurn < 0 ||
@@ -1248,6 +1249,40 @@ window.FB = window.FB || {};
         record.cooldownUntil < record.expiryTurn) invalid = true;
     const term = freedomTerms().byId[record.termId];
     if (!freedomOfferTermValid(record, term)) {
+      invalid = true;
+    }
+    if (record.advocacy !== undefined) {
+      const advocacy = record.advocacy;
+      const advocacyKeys = advocacy && typeof advocacy === 'object'
+        ? Object.keys(advocacy).sort().join(',') : '';
+      const unassistedStanding = record.source === 'petition'
+        ? record.actualLordStandingAtCreation
+        : Math.max(40, record.actualLordStandingAtCreation);
+      const expectedEffectiveStanding = FB.clamp(
+        unassistedStanding + FBDATA.balance.serfAdvocacyBonus, -100, 100);
+      const expectedTerm = freedomTermAtStanding(expectedEffectiveStanding);
+      if (!advocacy || typeof advocacy !== 'object' ||
+          Array.isArray(advocacy) ||
+          advocacyKeys !== 'bonus,characterId,role,standingAtCreation,standingRequired' ||
+          typeof advocacy.characterId !== 'string' || !advocacy.characterId ||
+          ['steward','priest'].indexOf(advocacy.role) < 0 ||
+          advocacy.standingRequired !== FBDATA.balance.serfAdvocacyStanding ||
+          !isFinite(advocacy.standingAtCreation) ||
+          advocacy.standingAtCreation < advocacy.standingRequired ||
+          advocacy.standingAtCreation > 100 ||
+          advocacy.bonus !== FBDATA.balance.serfAdvocacyBonus ||
+          !isFinite(record.actualLordStandingAtCreation) ||
+          record.actualLordStandingAtCreation < -100 ||
+          record.actualLordStandingAtCreation > 100 ||
+          !isFinite(record.effectiveStandingAtCreation) ||
+          record.effectiveStandingAtCreation < -100 ||
+          record.effectiveStandingAtCreation > 100 ||
+          record.actualLordStandingAtCreation !== record.standingAtCreation ||
+          record.effectiveStandingAtCreation !== expectedEffectiveStanding ||
+          !expectedTerm || expectedTerm.id !== record.termId ||
+          record.requiredStanding !== expectedTerm.minStanding) invalid = true;
+    } else if (record.actualLordStandingAtCreation !== undefined ||
+        record.effectiveStandingAtCreation !== undefined) {
       invalid = true;
     }
     if (record.status === 'service') {
@@ -1267,6 +1302,97 @@ window.FB = window.FB || {};
     const lord = id && state.chars && state.chars[id];
     return lord && !lord.dead ? lord : null;
   }
+
+  function freedomTermAtStanding(standing) {
+    const terms = freedomTerms().list;
+    let selected = null;
+    for (let i = 0; i < terms.length; i++) {
+      if (standing >= terms[i].minStanding &&
+          standing <= terms[i].maxStanding) selected = terms[i];
+    }
+    return selected;
+  }
+
+  function freedomAdvocateValid(state, advocacy) {
+    if (!advocacy || typeof advocacy !== 'object' ||
+        ['steward','priest'].indexOf(advocacy.role) < 0 ||
+        state.roles[advocacy.role] !== advocacy.characterId) return false;
+    const c = state.chars[advocacy.characterId];
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    if (!c || c.dead || !tenure || !FB.characterResidence ||
+        FB.characterResidence(state, c) !== tenure.provinceId ||
+        state.roles.rival === c.id ||
+        (state.player.rivalContacts && state.player.rivalContacts[c.id])) {
+      return false;
+    }
+    return FB.standingOf(state, { kind:'character', id:c.id }) >=
+      advocacy.standingRequired;
+  }
+
+  FB.freedomAdvocates = function (state) {
+    const out = [];
+    if (!state || !state.player || state.player.tier !== 0 ||
+        !FB.activeSerfTenure || !FB.activeSerfTenure(state)) return out;
+    const p = state.player;
+    const tenure = FB.activeSerfTenure(state);
+    const protagonist = state.chars && state.chars[p.charId];
+    const lord = freedomCurrentLord(state);
+    const lordStanding = lord
+      ? FB.standingOf(state, { kind:'character', id:lord.id }) : -100;
+    const existing = p.freedomOffer;
+    if (!protagonist || protagonist.dead ||
+        FB.ageOf(protagonist, state.date.year) < 16 || p.travel ||
+        (p.flags && p.flags.in_prison) ||
+        (FB.intrigueCaptivityOf && FB.intrigueCaptivityOf(state, p.charId)) ||
+        !lord ||
+        (lordStanding < FBDATA.freedomBargaining.petitionMinStanding &&
+          !freedomInvitation(state)) ||
+        (existing && ['offered','service'].indexOf(existing.status) >= 0) ||
+        (existing && (state.turn || 0) < existing.cooldownUntil)) return out;
+    const required = FBDATA.balance.serfAdvocacyStanding;
+    for (const role of ['steward','priest']) {
+      const id = state.roles && state.roles[role];
+      const c = id && state.chars && state.chars[id];
+      if (!c || c.dead || state.roles.rival === c.id ||
+          (p.rivalContacts && p.rivalContacts[c.id]) ||
+          !FB.characterResidence ||
+          FB.characterResidence(state, c) !== tenure.provinceId) continue;
+      const standing = FB.standingOf(state, { kind:'character', id:c.id });
+      if (standing < required) continue;
+      out.push({ id:c.id, role:role, name:FB.fullName(c), standing:standing });
+    }
+    return out;
+  };
+
+  FB.freedomAdvocacyPreview = function (state, advocateId) {
+    const lord = freedomCurrentLord(state);
+    if (!lord) return null;
+    const actual = FB.standingOf(state, { kind:'character', id:lord.id });
+    const invitation = freedomInvitation(state);
+    const floor = invitation ? 40 : actual;
+    let advocate = null;
+    const advocates = FB.freedomAdvocates(state);
+    for (let i = 0; i < advocates.length; i++) {
+      if (advocates[i].id === advocateId) advocate = advocates[i];
+    }
+    const without = FB.clamp(Math.max(actual, floor), -100, 100);
+    const bonus = FBDATA.balance.serfAdvocacyBonus;
+    const effective = FB.clamp(without + (advocate ? bonus : 0), -100, 100);
+    const baseTerm = freedomTermAtStanding(without);
+    const term = freedomTermAtStanding(effective);
+    return {
+      actualLordStanding:actual, invitationFloor:invitation ? 40 : null,
+      advocate:advocate, bonus:advocate ? bonus : 0,
+      effectiveStanding:effective,
+      unassistedTermId:baseTerm && baseTerm.id,
+      unassistedMinStanding:baseTerm && baseTerm.minStanding,
+      unassistedMaxStanding:baseTerm && baseTerm.maxStanding,
+      termId:term && term.id,
+      termMinStanding:term && term.minStanding,
+      termMaxStanding:term && term.maxStanding,
+      changesTerm:!!(advocate && baseTerm && term && baseTerm.id !== term.id)
+    };
+  };
 
   FB.freedomOfferAcceptanceStatus = function (state, record) {
     record = record || (state && state.player && state.player.freedomOffer);
@@ -1317,10 +1443,14 @@ window.FB = window.FB || {};
     }
     const standing = FB.standingOf(state, { kind:'character', id:lord.id });
     if (standing < record.requiredStanding) {
-      out.reason = FB.T('Standing with {lord} has fallen below +{standing}.', {
-        lord:FB.fullName(lord), standing:record.requiredStanding
-      });
-      return out;
+      if (!record.advocacy || !freedomAdvocateValid(state, record.advocacy)) {
+        out.reason = record.advocacy
+          ? FB.T('Support for these terms has been lost.')
+          : FB.T('Standing with {lord} has fallen below +{standing}.', {
+            lord:FB.fullName(lord), standing:record.requiredStanding
+          });
+        return out;
+      }
     }
     const term = freedomTerms().byId[record.termId];
     if (!freedomOfferTermValid(record, term)) {
@@ -1399,7 +1529,7 @@ window.FB = window.FB || {};
     return out;
   };
 
-  FB.createFreedomOffer = function (state, requestedSource) {
+  FB.createFreedomOffer = function (state, requestedSource, advocateId) {
     if (!state || !state.player) return false;
     const p = state.player;
     const existing = p.freedomOffer;
@@ -1419,14 +1549,18 @@ window.FB = window.FB || {};
     const actualStanding = FB.standingOf(state, {
       kind:'character', id:resolvedLord.id
     });
-    const effectiveStanding = invitation || source === 'lords_notice'
-      ? Math.max(40, actualStanding) : actualStanding;
-    const terms = freedomTerms().list;
-    let selected = null;
-    for (let i = 0; i < terms.length; i++) {
-      if (effectiveStanding >= terms[i].minStanding &&
-          effectiveStanding <= terms[i].maxStanding) selected = terms[i];
+    let advocate = null;
+    const advocates = FB.freedomAdvocates(state);
+    for (let i = 0; i < advocates.length; i++) {
+      if (advocates[i].id === advocateId) advocate = advocates[i];
     }
+    if (advocateId && !advocate) return false;
+    const invitationFloor = invitation || source === 'lords_notice' ? 40 : -100;
+    const effectiveStanding = FB.clamp(
+      Math.max(actualStanding, invitationFloor) +
+        (advocate ? FBDATA.balance.serfAdvocacyBonus : 0),
+      -100, 100);
+    const selected = freedomTermAtStanding(effectiveStanding);
     if (!selected) return false;
     const baseCost = FB.freedomPurchasePrice();
     if (!baseCost) return false;
@@ -1448,6 +1582,16 @@ window.FB = window.FB || {};
       expiryTurn:createdTurn + timing.offerDays,
       cooldownUntil:createdTurn + timing.petitionCooldownDays
     };
+    if (advocate) {
+      record.advocacy = {
+        characterId:advocate.id, role:advocate.role,
+        standingRequired:FBDATA.balance.serfAdvocacyStanding,
+        standingAtCreation:advocate.standing,
+        bonus:FBDATA.balance.serfAdvocacyBonus
+      };
+      record.actualLordStandingAtCreation = actualStanding;
+      record.effectiveStandingAtCreation = effectiveStanding;
+    }
     p.freedomOffer = record;
     if (invitation) delete p.freedomInvitation;
     if (FB.save && FB.save.autosave) FB.save.autosave();
@@ -1475,6 +1619,15 @@ window.FB = window.FB || {};
     const expiryKnown = Number.isInteger(record.expiryTurn);
     const cooldownKnown = Number.isInteger(record.cooldownUntil);
     const serviceEndKnown = Number.isInteger(record.serviceEndTurn);
+    const advocate = record.advocacy && state.chars &&
+      state.chars[record.advocacy.characterId];
+    const unassistedStanding = record.advocacy
+      ? FB.clamp(record.source === 'petition'
+        ? record.actualLordStandingAtCreation
+        : Math.max(40, record.actualLordStandingAtCreation), -100, 100)
+      : null;
+    const unassistedTerm = unassistedStanding === null
+      ? null : freedomTermAtStanding(unassistedStanding);
     return {
       status:effectiveStatus,
       source:record.source,
@@ -1487,8 +1640,19 @@ window.FB = window.FB || {};
       serviceDays:Number.isInteger(record.serviceDays) ? record.serviceDays : 0,
       requiredStanding:Number.isInteger(record.requiredStanding)
         ? record.requiredStanding : 0,
-      standingAtCreation:Number.isInteger(record.standingAtCreation)
+      standingAtCreation:isFinite(record.standingAtCreation)
         ? record.standingAtCreation : 0,
+      advocacy:record.advocacy ? {
+        characterId:record.advocacy.characterId,
+        name:advocate ? FB.fullName(advocate) : FB.T('the former supporter'),
+        role:record.advocacy.role,
+        standingAtCreation:record.advocacy.standingAtCreation,
+        bonus:record.advocacy.bonus,
+        actualLordStanding:record.actualLordStandingAtCreation,
+        effectiveStanding:record.effectiveStandingAtCreation,
+        changedTerm:!!(unassistedTerm &&
+          unassistedTerm.id !== record.termId)
+      } : null,
       createdTurn:record.createdTurn,
       expiryTurn:record.expiryTurn,
       expiryLabel:expiryKnown ? freedomDateLabel(state, record.expiryTurn)

@@ -1899,6 +1899,28 @@ button.linklike { background: none; border: 0; padding: 0; font: inherit; color:
   flex: 0 0 28px; width: 28px; min-height: 28px; height: 28px;
   font: 18px/1 Georgia, serif;
 }
+.panel-inline-link {
+  min-height: 44px;
+  padding: 2px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #c9a24a;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.panel-inline-link:hover { color: var(--main-text-color); }
+.panel-inline-link:focus-visible {
+  border-color: #c9a24a;
+  outline: 2px solid #c9a24a;
+  outline-offset: 1px;
+}
+.event-participant-card > .event-character-sheet {
+  width: 100%;
+  min-height: 44px;
+  margin: 6px 0 10px;
+}
 .modal-guide-button:hover, .panel-inline-icon-button:hover {
   border-color: #b89543; background: transparent; color: #f0d170;
 }

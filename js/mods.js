@@ -1047,6 +1047,20 @@ window.FBMODS = window.FBMODS || [];
     }
   }
 
+  function validateEventParticipants(mod) {
+    if (!own(mod, 'events') || !Array.isArray(mod.events)) return;
+    for (let eventIndex = 0; eventIndex < mod.events.length; eventIndex++) {
+      try {
+        if (FB.validateEventParticipants) {
+          FB.validateEventParticipants(mod.events[eventIndex]);
+        }
+      } catch (error) {
+        fail('events[' + eventIndex + '].participants',
+          error.message || 'has invalid participant data.');
+      }
+    }
+  }
+
   function validateBeforeApply(mod) {
     if (!plainObject(mod)) throw new Error('Mod data must be an object.');
     for (const key in mod) {
@@ -1070,6 +1084,7 @@ window.FBMODS = window.FBMODS || [];
       validateCouncilDefinitions(mod);
     }
     validateSerfFreedomEventEffects(mod);
+    validateEventParticipants(mod);
     return { actions:prepareActionCatalogs(mod) };
   }
 

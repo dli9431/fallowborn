@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.156.0';
+  FB.VERSION = '1.157.0';
   FB.CHANGELOG = [
+    { v: '1.157.0', date: '2026-08-25', changes: [
+      'Serf manor and village events now reuse named local people across recurring stories, and trusted stewards or priests can support a household’s freedom petition.'
+    ] },
     { v: '1.156.0', date: '2026-08-25', changes: [
       'Serf households can now pursue freedom through purchase, negotiated manumission, the Old Custom, or flight, with completed routes preserved in family history.'
     ] },
@@ -2793,6 +2796,10 @@ window.FB = window.FB || {};
 
     if (FB.freedomDay) FB.freedomDay(s);
     if (FB.tenureDay) FB.tenureDay(s);
+    if (FB.reconcileSerfStory) FB.reconcileSerfStory(s);
+    if (FB.reconcileSerfNeighborConsequence) {
+      FB.reconcileSerfNeighborConsequence(s);
+    }
     const events = FB.pickDailyEvents(s);
     if (!(opts && opts.deferUi)) {
       FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);
@@ -4369,6 +4376,7 @@ window.FB = window.FB || {};
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
     if (FB.freedomSuccession) FB.freedomSuccession(s);
+    if (FB.serfParticipantSuccession) FB.serfParticipantSuccession(s);
     if (FB.resetStandingsForSuccession) {
       FB.resetStandingsForSuccession(s);
     } else {

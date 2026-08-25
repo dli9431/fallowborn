@@ -2,6 +2,8 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/cultures.js',
+  'data/events_peasant.js',
+  'js/events.js',
   'js/model.js',
   'js/mods.js',
   'js/save.js',
@@ -52,6 +54,54 @@ test('runtime mods add culture traditions and retain a replaced core culture aff
     expect(result.valid).toEqual([]);
     expect(result.invalid).toContain(
       'Culture data: culture riverlander has invalid tradition missing_tradition.');
+  });
+
+test('runtime mods accept bounded event participants and reject unsupported participant schemas atomically',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const valid = {
+        id:'e2e_participant_event', title:'A Known Witness',
+        text:'{witness} remembers.', trigger:{ never:true },
+        participants:[{
+          slot:'witness', source:'local_witness', required:true,
+          createFallback:true, sameHome:true
+        }],
+        options:[{
+          label:'Believe {witness}.',
+          effects:{ standingCharacter:{ participant:'witness', amt:3 } }
+        }]
+      };
+      FB.mods.apply({ events:[valid] });
+      const accepted = FB.eventById('e2e_participant_event');
+      let duplicateError = '';
+      try {
+        FB.mods.apply({ events:[{
+          id:'e2e_bad_participant_event', title:'Bad', text:'Bad.',
+          trigger:{ never:true },
+          participants:[
+            { slot:'witness', source:'context' },
+            { slot:'witness', source:'context' }
+          ], options:[]
+        }] });
+      } catch (error) {
+        duplicateError = error.message;
+      }
+      return {
+        accepted:accepted && accepted.participants[0],
+        duplicateError:duplicateError,
+        invalidApplied:FBDATA.events.some(function (event) {
+          return event.id === 'e2e_bad_participant_event';
+        })
+      };
+    });
+
+    expect(result.accepted).toMatchObject({
+      slot:'witness', source:'local_witness', required:true
+    });
+    expect(result.duplicateError).toContain(
+      'participant slots must be unique lowercase identifiers');
+    expect(result.invalidApplied).toBe(false);
   });
 
 test('runtime mods merge definitions and the complete technology configuration',

@@ -641,3 +641,142 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     await expect(page.locator('[data-family-freedom-first]'))
       .toContainText('no lawful charter was granted');
   });
+
+test('local advocacy snapshots an exact +10 term and acceptance falls back to the lord’s current Standing',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const lord = FB.getRole(s, 'lord', true);
+      const steward = FB.getRole(s, 'steward', false);
+      const lordTarget = { kind:'character', id:lord.id };
+      const stewardTarget = { kind:'character', id:steward.id };
+      FB.adjustStanding(s, lordTarget,
+        34 - FB.standingOf(s, lordTarget), 'test:advocacy_lord');
+      FB.adjustStanding(s, stewardTarget,
+        52 - FB.standingOf(s, stewardTarget), 'test:advocacy_steward');
+      delete p.freedomOffer;
+      delete p.freedomInvitation;
+      p.rivalContacts = p.rivalContacts || {};
+      delete p.rivalContacts[steward.id];
+      const rngBefore = FB.getRngState();
+      const advocates = FB.freedomAdvocates(s);
+      const preview = FB.freedomAdvocacyPreview(s, steward.id);
+      const offer = FB.createFreedomOffer(s, 'petition', steward.id);
+      const rngAfter = FB.getRngState();
+      const serialized = JSON.parse(FB.save.serialize());
+      delete p.freedomOffer;
+      FB.adjustStanding(s, lordTarget,
+        5 - FB.standingOf(s, lordTarget), 'test:advocacy_invitation');
+      FB.inviteFreedomOffer(s, 'lords_notice');
+      const invitedPreview = FB.freedomAdvocacyPreview(s, steward.id);
+      const invitedOffer = FB.createFreedomOffer(s, 'petition', steward.id);
+      FB.save.restore(serialized);
+      const restored = FB.state;
+      const restoredOffer = restored.player.freedomOffer;
+      const restoredSteward = restored.chars[steward.id];
+      const restoredLord = restored.chars[lord.id];
+      FB.adjustStanding(restored, { kind:'character', id:restoredSteward.id },
+        39 - FB.standingOf(restored, {
+          kind:'character', id:restoredSteward.id
+        }), 'test:lost_support');
+      const lost = FB.freedomOfferAcceptanceStatus(restored);
+      FB.adjustStanding(restored, { kind:'character', id:restoredLord.id },
+        40 - FB.standingOf(restored, {
+          kind:'character', id:restoredLord.id
+        }), 'test:lord_supports');
+      const independent = FB.freedomOfferAcceptanceStatus(restored);
+      const malformed = JSON.parse(JSON.stringify(restoredOffer));
+      malformed.effectiveStandingAtCreation += 1;
+      restored.player.freedomOffer = malformed;
+      const malformedStatus = FB.ensureFreedomOffer(restored).status;
+      return {
+        advocates:advocates,
+        preview:preview,
+        offer:offer,
+        rngStable:rngBefore === rngAfter,
+        invitedPreview:invitedPreview,
+        invitedOffer:invitedOffer,
+        restoredOffer:restoredOffer,
+        lost:lost,
+        independent:independent,
+        malformedStatus:malformedStatus,
+        tech:{
+          participants:FBDATA.techImpactReviews.features
+            .recurring_local_event_participants.mode,
+          advocacy:FBDATA.techImpactReviews.features.serf_freedom_advocacy.mode
+        }
+      };
+    });
+
+    expect(result.advocates.map(function (entry) { return entry.role; }))
+      .toEqual(['steward']);
+    expect(result.preview).toMatchObject({
+      actualLordStanding:34,
+      bonus:10,
+      effectiveStanding:44,
+      unassistedTermId:'cash_standard',
+      termId:'cash_favored',
+      changesTerm:true
+    });
+    expect(result.offer.advocacy).toMatchObject({
+      role:'steward', standingRequired:40, standingAtCreation:52, bonus:10
+    });
+    expect(result.offer.actualLordStandingAtCreation).toBe(34);
+    expect(result.offer.effectiveStandingAtCreation).toBe(44);
+    expect(result.rngStable).toBe(true);
+    expect(result.invitedPreview).toMatchObject({
+      actualLordStanding:5,
+      invitationFloor:40,
+      effectiveStanding:50,
+      termId:'cash_favored'
+    });
+    expect(result.invitedOffer).toMatchObject({
+      source:'lords_notice', actualLordStandingAtCreation:5,
+      effectiveStandingAtCreation:50, termId:'cash_favored'
+    });
+    expect(result.restoredOffer).toEqual(result.offer);
+    expect(result.lost.ready).toBe(false);
+    expect(result.lost.reason).toBe('Support for these terms has been lost.');
+    expect(result.independent.ready).toBe(true);
+    expect(result.malformedStatus).toBe('invalid');
+    expect(result.tech).toEqual({ participants:'none', advocacy:'none' });
+  });
+
+test('the petition sheet discloses optional advocacy before creation and preserves its saved audit',
+  async function ({ page }) {
+    const expected = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const lord = FB.getRole(s, 'lord', true);
+      const steward = FB.getRole(s, 'steward', false);
+      FB.adjustStanding(s, { kind:'character', id:lord.id },
+        34 - FB.standingOf(s, { kind:'character', id:lord.id }),
+        'test:advocacy_ui_lord');
+      FB.adjustStanding(s, { kind:'character', id:steward.id },
+        52 - FB.standingOf(s, { kind:'character', id:steward.id }),
+        'test:advocacy_ui_steward');
+      delete p.freedomOffer;
+      delete p.freedomInvitation;
+      FB.ui.showFreedomPetition({ intro:true });
+      return { stewardId:steward.id, stewardName:FB.fullName(steward) };
+    });
+
+    const preview = page.locator(
+      '[data-freedom-advocate-preview="' + expected.stewardId + '"]');
+    await expect(preview).toBeVisible();
+    await expect(preview).toContainText(expected.stewardName);
+    await expect(preview).toContainText('effective lord Standing 44');
+    await expect(preview).toContainText('Changes the offered term band');
+    await expect(page.locator('#freedom-petition-create'))
+      .toContainText('without a supporter');
+    const choose = page.locator(
+      '[data-freedom-advocate="' + expected.stewardId + '"]');
+    await expect(choose).toBeVisible();
+    await choose.click();
+    await expect(page.locator('[data-freedom-offer-advocacy]')).toBeVisible();
+    await expect(page.locator('[data-freedom-offer-advocacy]'))
+      .toContainText(expected.stewardName);
+    await expect(page.locator('[data-freedom-offer-advocacy]'))
+      .toContainText('Lord 34 + advocate 10 = effective 44');
+  });

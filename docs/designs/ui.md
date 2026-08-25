@@ -11,9 +11,12 @@ category preserves the complete rule summary and searchable trait list.
 
 For unlanded tier 0 players, `UI.showRankDetails` presents the household's active
 customary tenure (`FB.tenureView`) within the **Station & home** modal. It displays the
-localized archetype name, summary, holding controller, current lord/authority, recognized rights,
+localized archetype name, summary, holding controller, linked current lord and steward, recognized rights,
 ordinary duties with full calendar dates and days remaining, and any pending conditional obligations,
 using stable `data-tenure-*` selectors and responsive mobile layout.
+An active Old Custom case adds one compact linked witness/officer line. Each native link
+opens the standard character sheet; visible or browser Back restores the same Station &
+home sheet and keyboard focus.
 
 The same modal contains a **Routes to Freedom** section. It shows the direct price,
 current-lord Standing and petition threshold, exact saved offer price/service/expiry and
@@ -24,6 +27,16 @@ acceptance lock, or paid final-service completion. Its stable selectors are
 creating terms changes only the saved offer, Back returns to the explanation, and Close,
 Escape, or Not now leaves terms unchanged. Native controls retain keyboard activation and
 44-pixel touch height at a 390-CSS-pixel viewport.
+Before creating an offer, eligible already-known stewards and priests appear in stable
+role order as optional advocates. Each preview discloses +10 effective Standing and says
+whether it changes the offered term band; choosing no supporter remains explicit. A saved
+supported offer names the advocate and shows the actual-plus-bonus Standing snapshot.
+
+Events render every living bound participant named by their selected prose or explicit
+card list exactly once. Each participant card has a native **Open character sheet** button.
+The standard sheet's visible/browser Back returns to the still-open event, restores its
+scroll position, and focuses the originating participant control. Participant ids remain
+simulation context rather than separate browser-history state.
 
 When bounded family freedom history exists, Kin renders **Family landmarks** immediately
 after the family-tree button. `data-family-freedom`, `data-family-freedom-first`, and
@@ -1398,7 +1411,7 @@ The contextual **Network** panel (`N`) answers who is tied to the current househ
 what that relationship does. Its five sections are Household (resident family,
 capacity-limited retainers, office, pay, work assignment, and maintained-standard
 summary/upkeep), Connections (canonical
-friend, cultivated contacts, rival, suitor, priest, and lord), Trade & Guild (career,
+friend, cultivated contacts, rival, suitor, priest, steward, encountered neighbor, and lord), Trade & Guild (career,
 rank, standing, exact income modifier, enterprises, partnerships, positions, bounded
 guild commissions, and the shared privilege roll), Political Blocs, and Realm. For a qualified territorial ruler,
 Political Blocs is the compact shared-court summary and Realm contains one

@@ -349,6 +349,19 @@ scales positive opinion effects in `FB.applyEffects` (likeable traits warm folk 
 and the `scheme_rival` deed and the `plot` named chance (for plots with a personal victim)
 add the target's `opinion/500` to success — a trusting victim is easier to undo.
 
+**Recurring local event characters are ordinary people, not a village roster.**
+Serf manor stories bind exact living character ids for the current lord, steward,
+priest, witness, neighbor, friend, or rival and continue to use typed Standing,
+cultivation, friendship, and rivalry for every personal consequence. Deterministic
+selection reuses an eligible local friend, rival, cultivated contact, or witness
+before materializing the one bounded `state.roles.notable` fallback. That notable is
+an adult local peer (station 0 for a serf household and never above station 1 later),
+persists under the ordinary residence and death rules, and appears in Network as a
+Neighbor only after being created. A neighbor selector excludes kin and authority
+roles; a witness selector may additionally reuse an eligible resident manageable
+relative. Events never generate a friend or rival, and changing an office does not
+silently substitute a new holder for an already bound participant.
+
 **Ranked access is a chain of introductions, not a hard prohibition.** A household can
 normally approach its own station or one station above it. A cultivated contact at Warm
 Standing (the shared +40 relationship threshold) opens the next exact station, so a serf

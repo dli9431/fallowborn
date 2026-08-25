@@ -2403,8 +2403,36 @@ window.FB = window.FB || {};
             '<p class="adesc">' + esc(view.archetypeSummary) + '</p>' +
             kv('Holding', esc(view.settlementName + ', ' + view.countyName)) +
             kv('Controller', esc(view.controllerName)) +
-            kv('Local authority', esc(view.lordName)) +
+            kv('Current lord', view.lordId
+              ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
+                'data-tenure-character="' + esc(view.lordId) + '">' +
+                esc(view.lordName) + '</button>'
+              : esc(view.lordName)) +
+            kv('Steward', view.stewardId
+              ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
+                'data-tenure-character="' + esc(view.stewardId) + '">' +
+                esc(view.stewardName) + '</button>'
+              : esc(view.stewardName)) +
             '</div>';
+
+          if (view.oldCustom) {
+            const witnessButton =
+              '<button type="button" class="panel-inline-link tenure-character-link" ' +
+                'data-tenure-character="' + esc(view.oldCustom.witnessId) + '">' +
+                esc(view.oldCustom.witnessName) + '</button>';
+            const officerButton =
+              '<button type="button" class="panel-inline-link tenure-character-link" ' +
+                'data-tenure-character="' + esc(view.oldCustom.officerId) + '">' +
+                esc(view.oldCustom.officerName) + '</button>';
+            const storyLine = esc(FB.T(
+              'Old Custom case: witness {witness}, officer {officer}', {
+                witness:'__OLD_CUSTOM_WITNESS__',
+                officer:'__OLD_CUSTOM_OFFICER__'
+              })).replace('__OLD_CUSTOM_WITNESS__', witnessButton)
+              .replace('__OLD_CUSTOM_OFFICER__', officerButton);
+            h += '<p class="adesc tenure-old-custom" data-tenure-old-custom>' +
+              storyLine + '</p>';
+          }
 
           if (view.nearestDue) {
             h += '<div class="tenure-next-due-block" data-tenure-next-due>' +
@@ -2520,6 +2548,13 @@ window.FB = window.FB || {};
     const freedomPetition = $('rank-petition-freedom');
     if (freedomPetition) freedomPetition.addEventListener('click', function () {
       if (UI.showFreedomPetition) UI.showFreedomPetition();
+    });
+    document.querySelectorAll('.tenure-character-link').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showCharModal(button.dataset.tenureCharacter, {
+          view:'rank-details', focusCharacterId:button.dataset.tenureCharacter
+        });
+      });
     });
     $('rank-details-close').addEventListener('click', UI.closeModal);
   };
@@ -3524,7 +3559,8 @@ window.FB = window.FB || {};
         attention:true, attentionLabel:FB.T('Opportunity') },
       { id:'priest', label:roleName('priest'), priority:4 },
       { id:'steward', label:roleName('steward'), priority:5 },
-      { id:'lord', label:roleName('lord'), priority:6 }
+      { id:'notable', label:FB.T('Neighbor'), priority:6 },
+      { id:'lord', label:roleName('lord'), priority:7 }
     ];
     for (const role of connectionRoles) {
       const c = FB.getRole(s, role.id, false);

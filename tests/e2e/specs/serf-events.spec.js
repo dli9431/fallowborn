@@ -8,9 +8,13 @@ dependsOnRuntime(__filename, [
   'data/technology.js',
   'js/main.js',
   'js/i18n.js',
+  'js/messages.js',
+  'js/model.js',
   'js/events.js',
   'js/actions.js',
+  'js/save.js',
   'js/world.js',
+  'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
   'css/style.css'
@@ -135,7 +139,9 @@ test('every extraordinary serf choice inflicts an unavoidable resource loss',
             piety: player.piety,
             health: character.health
           };
-          FB.resolveEventOption(state, event, option, {}, { automated: false });
+          var context = FB.eventContextFor(state, event, {});
+          FB.resolveEventOption(state, event, option, context,
+            { automated: false });
           var after = {
             gold: player.gold,
             prestige: player.prestige,
@@ -442,7 +448,9 @@ test('descent and ascent routes: freedom deed, flight event, debt bondage, comme
       // Mulberry32 seed zero's first draw is below 0.5, pinning the authored
       // success branch while still exercising the real chance/effect path.
       FB.setRngState(0);
-      FB.resolveEventOption(state, fleeEv, fleeEv.options[0], {}, { automated: false });
+      const fleeCtx = FB.eventContextFor(state, fleeEv, {});
+      FB.resolveEventOption(state, fleeEv, fleeEv.options[0], fleeCtx,
+        { automated: false });
       results.flightTier = state.player.tier;
       results.flightStatus = state.player.tenure.status;
       results.flightReason = state.player.tenure.endReason;
@@ -559,7 +567,9 @@ test('lifecycle: legacy repair, due turn arrival, stale context matrix, closing 
 
       // 4. Resolve event and verify duty advance
       const oldDueTurn = firstDuty.nextDueTurn;
-      FB.resolveEventOption(state, ev, ev.options[0], validCtx, { automated: false });
+      const resolveCtx = FB.eventContextFor(state, ev, validCtx);
+      FB.resolveEventOption(state, ev, ev.options[0], resolveCtx,
+        { automated: false });
       const newDueTurn = firstDuty.nextDueTurn;
       const replayAttemptValid = FB.fns.serf_tenure_context_valid(state, validCtx, ev);
 
@@ -636,7 +646,9 @@ test('tenure-closing effects win over duty advancement during resolution',
       const ev = FB.eventById(firstDuty.eventId);
 
       const oldDueTurn = firstDuty.nextDueTurn;
-      FB.resolveEventOption(state, ev, closingOption, ctx, { automated: false });
+      const resolveCtx = FB.eventContextFor(state, ev, ctx);
+      FB.resolveEventOption(state, ev, closingOption, resolveCtx,
+        { automated: false });
 
       return {
         tenureStatus: tenure.status,
@@ -672,7 +684,9 @@ test('autoresolve resolves valid options, advances schedule, and emits structure
       const ev = FB.eventById(firstDuty.eventId);
 
       const oldDueTurn = firstDuty.nextDueTurn;
-      const receipt = FB.resolveEventOption(state, ev, ev.options[0], ctx, { automated: true });
+      const resolveCtx = FB.eventContextFor(state, ev, ctx);
+      const receipt = FB.resolveEventOption(state, ev, ev.options[0],
+        resolveCtx, { automated: true });
 
       return {
         receiptAutomated: receipt && receipt.automated,
@@ -719,7 +733,9 @@ test('quartering duty triggers at most once per eligible war, cancels on peace, 
         protagonistId: state.player.charId,
         locationId: state.player.provinceId
       };
-      const war1Receipt = FB.resolveEventOption(state, ev, ev.options[0], ctx, { automated: false });
+      const resolveCtx = FB.eventContextFor(state, ev, ctx);
+      const war1Receipt = FB.resolveEventOption(state, ev, ev.options[0],
+        resolveCtx, { automated: false });
       const clearedAfterResolve = qDuty.pendingTurn === null;
       const cooldownTurn = qDuty.nextEligibleTurn;
 
@@ -875,10 +891,13 @@ test('replay protection prevents double-charging effects on replayed event optio
 
       state.player.gold = 50;
 
-      const firstReceipt = FB.resolveEventOption(state, ev, ev.options[0], ctx, { automated: false });
+      const resolveCtx = FB.eventContextFor(state, ev, ctx);
+      const firstReceipt = FB.resolveEventOption(state, ev, ev.options[0],
+        resolveCtx, { automated: false });
       const goldAfterFirst = state.player.gold;
 
-      const secondReceipt = FB.resolveEventOption(state, ev, ev.options[0], ctx, { automated: false });
+      const secondReceipt = FB.resolveEventOption(state, ev, ev.options[0],
+        resolveCtx, { automated: false });
       const goldAfterSecond = state.player.gold;
 
       return {
@@ -949,6 +968,10 @@ test('travel invalidates tenure context and halts daily scheduler while away',
 test('serf tenure details render across archetypes in Station & home with stable data attributes and Escape dismissal',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
+    const steward = await page.evaluate(function () {
+      const c = FB.getRole(FB.state, 'steward', true);
+      return { id:c.id, name:FB.fullName(c) };
+    });
     const rank = page.locator('#self-rank-details');
     await expect(rank).toBeVisible();
     await rank.click();
@@ -956,8 +979,545 @@ test('serf tenure details render across archetypes in Station & home with stable
     await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
     await expect(page.locator('#gm-body [data-tenure-duty]').first()).toBeVisible();
     await expect(page.locator('#gm-body [data-tenure-next-due]')).toBeVisible();
+    const stewardLink = page.locator(
+      '[data-tenure-character="' + steward.id + '"]').first();
+    await expect(stewardLink).toBeVisible();
+    await stewardLink.click();
+    await expect(page.getByRole('heading', { name:steward.name })).toBeVisible();
+    await expect(page.locator('#cm-close')).toContainText('Back');
+    await page.locator('#cm-close').click();
+    await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
+    await expect(stewardLink).toBeFocused();
+    await stewardLink.click();
+    await page.evaluate(function () { history.back(); });
+    await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
+    await expect(stewardLink).toBeFocused();
 
     // Verify keyboard dismissal with Escape
     await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
+test('exact participant binding is deterministic, bounded, persistent, and never recasts an existing slot',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      function local(name) {
+        return FB.makeCharacter(s, {
+          name:name, sex:'m', born:s.date.year - 30,
+          culture:s.chars[p.charId].culture,
+          religion:s.chars[p.charId].religion,
+          station:0, traitsN:0
+        });
+      }
+      const friend = local('Friend Candidate');
+      const rival = local('Rival Candidate');
+      const attention = local('Attention Candidate');
+      const early = local('Early Contact');
+      const later = local('Later Contact');
+      const notable = FB.getRole(s, 'notable', true);
+      s.roles.friend = friend.id;
+      s.roles.rival = rival.id;
+      p.socialAttention = {};
+      p.socialAttention[attention.id] = { startedTurn:10, lastTurn:10 };
+      p.friendContacts = {};
+      p.friendContacts[later.id] = { startedTurn:30, lastTurn:30 };
+      p.friendContacts[early.id] = { startedTurn:20, lastTurn:20 };
+      const spec = {
+        slot:'neighbor', source:'local_neighbor', required:true,
+        createFallback:true, sameHome:true
+      };
+      const rngBefore = FB.getRngState();
+      const candidateStateBefore = JSON.stringify({
+        roles:s.roles,
+        socialAttention:p.socialAttention,
+        friendContacts:p.friendContacts,
+        characterIds:Object.keys(s.chars)
+      });
+      const candidates = FB.eventParticipantCandidates(s, spec, {});
+      const candidateStateAfter = JSON.stringify({
+        roles:s.roles,
+        socialAttention:p.socialAttention,
+        friendContacts:p.friendContacts,
+        characterIds:Object.keys(s.chars)
+      });
+      const rngAfterCandidates = FB.getRngState();
+      const event = {
+        id:'participant_contract_test', title:'A word with {neighbor}',
+        text:'{neighbor} waits.', participants:[spec],
+        options:[{ label:'Listen.', effects:{} }]
+      };
+      const ctx = FB.eventContextFor(s, event, {});
+      const rngAfterBinding = FB.getRngState();
+      const boundId = ctx.participants.neighbor;
+      const directLegacyCtx = {};
+      const directLegacy = FB.ensureEventParticipants(s, event, directLegacyCtx);
+      const directLegacyRepaired = directLegacy === directLegacyCtx &&
+        directLegacy.protagonistId === p.charId &&
+        directLegacy.locationId === p.provinceId &&
+        directLegacy.participants.neighbor === boundId;
+      s.roles.friend = early.id;
+      const repaired = FB.ensureEventParticipants(s, event, ctx);
+      const retainedAfterPriorityChange = repaired.participants.neighbor;
+      const retainedStillValid = FB.eventParticipantsStillValid(s, event, ctx);
+      const roleEvent = {
+        id:'participant_role_kind_test', title:'A word with {lord}',
+        text:'{lord} waits.', participants:[{
+          slot:'lord', source:'role', role:'lord', required:true, create:true
+        }], options:[{ label:'Listen.', effects:{} }]
+      };
+      const roleCtx = FB.eventContextFor(s, roleEvent, {});
+      const falseKindCtx = JSON.parse(JSON.stringify(roleCtx));
+      falseKindCtx.participantKinds.lord = 'rival';
+      const falseKindInvalid = FB.eventParticipantsStillValid(
+        s, roleEvent, falseKindCtx);
+      friend.dead = true;
+      const deadInvalid = FB.eventParticipantsStillValid(s, event, ctx);
+      friend.dead = false;
+
+      const flight = {
+        id:'optional_flight_contact_test', title:'The road', text:'Go alone.',
+        participants:[{
+          slot:'confidant', source:'flight_contact', kindParam:'confidantKind'
+        }], options:[{ label:'Wait.', effects:{} }]
+      };
+      delete s.roles.friend;
+      delete s.roles.rival;
+      const optional = FB.eventContextFor(s, flight, {});
+
+      const invalidSchemas = [];
+      const definitions = [
+        { id:'too_many', participants:[spec, spec, spec, spec, spec] },
+        { id:'duplicate', participants:[spec, spec] },
+        { id:'unknown', participants:[{ slot:'x', source:'village_roster' }] },
+        { id:'bad_create', participants:[{
+          slot:'x', source:'role', role:'rival', create:true
+        }] }
+      ];
+      definitions.forEach(function (definition) {
+        try { FB.validateEventParticipants(definition); }
+        catch (error) { invalidSchemas.push(definition.id); }
+      });
+
+      s.eventQueue = [];
+      const corvee = FB.queueEvent(s, 'corvee', {});
+      const queuedParticipants = Object.assign({}, corvee.ctx.participants);
+      const wrapper = JSON.parse(FB.save.serialize());
+      FB.save.restore(wrapper);
+      const restoredParticipants = Object.assign({},
+        FB.state.eventQueue[0].ctx.participants);
+      return {
+        order:candidates.map(function (c) { return c.id; }),
+        expected:[friend.id, rival.id, attention.id, early.id, later.id, notable.id],
+        rngStable:rngBefore === rngAfterCandidates &&
+          rngBefore === rngAfterBinding,
+        candidatePure:candidateStateBefore === candidateStateAfter,
+        boundId:boundId,
+        directLegacyRepaired:directLegacyRepaired,
+        retainedAfterPriorityChange:retainedAfterPriorityChange,
+        retainedStillValid:retainedStillValid,
+        falseKindInvalid:falseKindInvalid,
+        deadInvalid:deadInvalid,
+        optionalHasConfidant:Object.prototype.hasOwnProperty.call(
+          optional.participants, 'confidant'),
+        invalidSchemas:invalidSchemas,
+        queuedParticipants:queuedParticipants,
+        restoredParticipants:restoredParticipants
+      };
+    });
+
+    expect(result.order).toEqual(result.expected);
+    expect(result.rngStable).toBe(true);
+    expect(result.candidatePure).toBe(true);
+    expect(result.boundId).toBe(result.expected[0]);
+    expect(result.directLegacyRepaired).toBe(true);
+    expect(result.retainedAfterPriorityChange).toBe(result.boundId);
+    expect(result.retainedStillValid).toBe(true);
+    expect(result.falseKindInvalid).toBe(false);
+    expect(result.deadInvalid).toBe(false);
+    expect(result.optionalHasConfidant).toBe(false);
+    expect(result.invalidSchemas).toEqual([
+      'too_many','duplicate','unknown','bad_create'
+    ]);
+    expect(result.restoredParticipants).toEqual(result.queuedParticipants);
+  });
+
+test('Old Custom keeps one cast, bridges an officer change explicitly, and clears on witness loss',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const opener = FB.eventById('old_custom_stakes');
+      const openerCtx = FB.eventContextFor(s, opener, {});
+      p.flags.old_custom_1 = 1;
+      FB.syncSerfStoryAfterEvent(s, opener, openerCtx);
+      const original = JSON.parse(JSON.stringify(p.serfStory));
+      const tenureCast = FB.tenureView(s).oldCustom;
+
+      delete p.flags.old_custom_1;
+      p.flags.old_custom_2 = 1;
+      const memory = FB.eventById('old_custom_memory');
+      const memoryCtx = FB.eventContextFor(s, memory, {});
+      FB.syncSerfStoryAfterEvent(s, memory, memoryCtx);
+      const stageAfterMemory = p.serfStory.stage;
+      const sameCast = p.serfStory.participants.lord === original.participants.lord &&
+        p.serfStory.participants.officer === original.participants.officer &&
+        p.serfStory.participants.witness === original.participants.witness;
+
+      const former = s.chars[original.participants.officer];
+      former.dead = true;
+      delete s.roles.steward;
+      FB.reconcileSerfStory(s);
+      const bridge = s.eventQueue[0];
+      const pending = JSON.parse(JSON.stringify(p.serfStory.pendingReplacement));
+      const bridgeEvent = FB.eventById('old_custom_officer_changed');
+      const formerName = FB.textParams(s, p.charId,
+        bridgeEvent.text, bridge.ctx).formerOfficer;
+      const bridgeValid = FB.eventContextStillValid(s, bridgeEvent, bridge.ctx);
+      const bridgeReceipt = FB.resolveEventOption(s, bridgeEvent,
+        bridgeEvent.options[0], bridge.ctx, { automated:true });
+      const replaced = p.serfStory.participants.officer;
+      const replacementCleared = p.serfStory.pendingReplacement === null;
+
+      const witness = s.chars[p.serfStory.participants.witness];
+      witness.dead = true;
+      FB.reconcileSerfStory(s);
+      const lastNews = s.log[s.log.length - 1];
+      p.flags.old_custom_1 = 1;
+      p.flags.old_custom_2 = 1;
+      FB.reconcileSerfStory(s);
+      const malformedCleared = !p.flags.old_custom_1 &&
+        !p.flags.old_custom_2 && !p.serfStory;
+      return {
+        sameCast:sameCast,
+        tenureCast:tenureCast,
+        originalOfficerId:original.participants.officer,
+        originalWitnessId:original.participants.witness,
+        stageBeforeBridge:original.stage,
+        stageAfterMemory:stageAfterMemory,
+        liveStage:p.serfStory && p.serfStory.stage,
+        bridgeFirst:bridge && bridge.id,
+        pending:pending,
+        formerId:former.id,
+        formerName:formerName,
+        expectedFormerName:FB.fullName(former),
+        bridgeValid:bridgeValid,
+        bridgeReceipt:!!bridgeReceipt,
+        replaced:replaced,
+        replacementCleared:replacementCleared,
+        storyCleared:!p.serfStory,
+        flagsCleared:!p.flags.old_custom_1 && !p.flags.old_custom_2 &&
+          !p.flags.old_custom_3 && !p.flags.old_custom_resolve,
+        malformedCleared:malformedCleared,
+        reason:lastNews && lastNews.msg && lastNews.msg.params &&
+          lastNews.msg.params.reason
+      };
+    });
+
+    expect(result.sameCast).toBe(true);
+    expect(result.tenureCast).toMatchObject({
+      witnessId:result.originalWitnessId,
+      officerId:result.originalOfficerId
+    });
+    expect(result.stageBeforeBridge).toBe('memory');
+    expect(result.stageAfterMemory).toBe('officer');
+    expect(result.liveStage).toBeUndefined();
+    expect(result.bridgeFirst).toBe('old_custom_officer_changed');
+    expect(result.pending.oldOfficerId).toBe(result.formerId);
+    expect(result.formerName).toBe(result.expectedFormerName);
+    expect(result.bridgeValid).toBe(true);
+    expect(result.bridgeReceipt).toBe(true);
+    expect(result.replaced).toBe(result.pending.newOfficerId);
+    expect(result.replacementCleared).toBe(true);
+    expect(result.storyCleared).toBe(true);
+    expect(result.flagsCleared).toBe(true);
+    expect(result.malformedCleared).toBe(true);
+    expect(result.reason).toBe('witness');
+  });
+
+test('shifted quartering returns to the exact neighbor after 90 days and promotion reuses that local person',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const tenure = FB.activeSerfTenure(s);
+      const duty = tenure.conditional.filter(function (record) {
+        return record.id === 'officers_quartered';
+      })[0];
+      duty.pendingTurn = s.turn;
+      const quartering = FB.eventById('serf_officers_quartered');
+      const ctx = FB.eventContextFor(s, quartering, {
+        tenureFormedTurn:tenure.formedTurn,
+        archetypeId:tenure.archetypeId,
+        dutyId:duty.id,
+        dueTurn:duty.pendingTurn,
+        protagonistId:p.charId,
+        locationId:p.provinceId
+      });
+      const neighborId = ctx.participants.neighbor;
+      const neighbor = s.chars[neighborId];
+      const beforeStanding = FB.standingOf(s, {
+        kind:'character', id:neighborId
+      });
+      const shifted = FB.resolveEventOption(s, quartering,
+        quartering.options[quartering.options.length - 1], ctx,
+        { automated:false });
+      const record = JSON.parse(JSON.stringify(p.serfNeighborConsequence));
+      const afterStanding = FB.standingOf(s, {
+        kind:'character', id:neighborId
+      });
+      const snapshot = JSON.parse(FB.save.serialize());
+
+      s.turn = record.dueTurn - 1;
+      FB.reconcileSerfNeighborConsequence(s);
+      const beforeDue = s.eventQueue.filter(function (item) {
+        return item.id === 'serf_neighbor_reckoning';
+      }).length;
+      s.turn = record.dueTurn;
+      FB.reconcileSerfNeighborConsequence(s);
+      const reckoning = s.eventQueue.filter(function (item) {
+        return item.id === 'serf_neighbor_reckoning';
+      })[0];
+      const exactDueNeighbor = reckoning && reckoning.ctx.participants.neighbor;
+      p.gold = 20;
+      const reckoningEvent = FB.eventById('serf_neighbor_reckoning');
+      const reckoningReceipt = FB.resolveEventOption(s, reckoningEvent,
+        reckoningEvent.options[0], reckoning.ctx, { automated:true });
+      const clearedAfterOutcome = !p.serfNeighborConsequence;
+
+      FB.save.restore(snapshot);
+      const restored = FB.state;
+      FB.setPlayerTier(restored, 1, { tenureEndReason:'promotion_test' });
+      const clearedOnPromotion = !restored.player.serfNeighborConsequence;
+      const boundary = FB.eventById('boundary_dispute');
+      const boundaryCtx = FB.eventContextFor(restored, boundary, {});
+      const recurringId = boundaryCtx.participants.neighbor;
+      const recurringName = FB.textParams(restored, restored.player.charId,
+        boundary.text, boundaryCtx).neighbor;
+      return {
+        shifted:!!shifted,
+        standingChange:afterStanding - beforeStanding,
+        dueDelay:record.dueTurn - record.createdTurn,
+        beforeDue:beforeDue,
+        exactDueNeighbor:exactDueNeighbor,
+        neighborId:neighborId,
+        reckoningReceipt:!!reckoningReceipt,
+        clearedAfterOutcome:clearedAfterOutcome,
+        clearedOnPromotion:clearedOnPromotion,
+        recurringId:recurringId,
+        recurringName:recurringName,
+        expectedName:FB.fullName(restored.chars[neighborId])
+      };
+    });
+
+    expect(result.shifted).toBe(true);
+    expect(result.standingChange).toBe(-15);
+    expect(result.dueDelay).toBe(90);
+    expect(result.beforeDue).toBe(0);
+    expect(result.exactDueNeighbor).toBe(result.neighborId);
+    expect(result.reckoningReceipt).toBe(true);
+    expect(result.clearedAfterOutcome).toBe(true);
+    expect(result.clearedOnPromotion).toBe(true);
+    expect(result.recurringId).toBe(result.neighborId);
+    expect(result.recurringName).toBe(result.expectedName);
+  });
+
+test('named event participants render once and their character sheet returns to the open event',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const cast = await page.evaluate(function () {
+      const s = FB.state;
+      const queued = FB.queueEvent(s, 'corvee', {});
+      s.eventQueue = [];
+      FB.ui.runEvents([queued]);
+      return {
+        lord:queued.ctx.participants.lord,
+        officer:queued.ctx.participants.officer,
+        officerName:FB.fullName(s.chars[queued.ctx.participants.officer])
+      };
+    });
+
+    await expect(page.locator('[data-event-participant]')).toHaveCount(2);
+    await expect(page.locator(
+      '[data-event-participant="lord"] [data-event-character="' +
+        cast.lord + '"]')).toHaveCount(1);
+    const officerButton = page.locator(
+      '[data-event-participant="officer"] [data-event-character="' +
+        cast.officer + '"]');
+    await expect(officerButton).toHaveCount(1);
+    await officerButton.click();
+    await expect(page.getByRole('heading', { name:cast.officerName }))
+      .toBeVisible();
+    await page.locator('#cm-close').click();
+    await expect(page.locator('#eventmodal')).not.toHaveClass(/hidden/);
+    await expect(officerButton).toBeFocused();
+    await officerButton.click();
+    await expect(page.getByRole('heading', { name:cast.officerName }))
+      .toBeVisible();
+    await page.evaluate(function () { history.back(); });
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+    await expect(page.locator('#eventmodal')).not.toHaveClass(/hidden/);
+    await expect(officerButton).toBeFocused();
+  });
+
+test('flight freezes the canonical local confidant, discloses the named chance, and expires on a role change',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const me = s.chars[p.charId];
+      const friend = FB.makeCharacter(s, {
+        name:'Road Friend', sex:'m', born:s.date.year - 30,
+        culture:me.culture, religion:me.religion, station:0, traitsN:0
+      });
+      s.roles.friend = friend.id;
+      const flee = FB.eventById('flee_serfdom');
+      const friendCtx = FB.eventContextFor(s, flee, {});
+      const friendChance = FB.namedChance(s, 'serf_flight', friendCtx);
+      const preview = FB.previewEventOption(s, flee, flee.options[0], friendCtx);
+      delete s.roles.friend;
+      const staleFriend = FB.eventContextStillValid(s, flee, friendCtx);
+
+      const rival = FB.makeCharacter(s, {
+        name:'Road Rival', sex:'f', born:s.date.year - 28,
+        culture:me.culture, religion:me.religion, station:0, traitsN:0
+      });
+      s.roles.rival = rival.id;
+      p.rivalry = { heat:20, startedTurn:s.turn, lastMoveTurn:s.turn,
+        initiator:'npc', cause:'test' };
+      const rivalCtx = FB.eventContextFor(s, flee, {});
+      const rivalChance = FB.namedChance(s, 'serf_flight', rivalCtx);
+      FB.fns.serf_flight_failure(s, rivalCtx);
+      const rivalHeat = FB.rivalHeat(s);
+
+      delete s.roles.rival;
+      p.rivalry = null;
+      const aloneCtx = FB.eventContextFor(s, flee, {});
+      const aloneChance = FB.namedChance(s, 'serf_flight', aloneCtx);
+      s.roles.friend = friend.id;
+      FB.setRngState(0);
+      const friendReceipt = FB.resolveEventOption(s, flee, flee.options[0],
+        friendCtx, { automated:false });
+      const friendOutcome = FB.renderMessage(friendReceipt.outcome, {
+        state:s, viewer:p.charId
+      });
+      return {
+        friendId:friendCtx.participants.confidant,
+        friendKind:friendCtx.participantKinds.confidant,
+        friendChance:friendChance,
+        previewBand:preview.chance.band,
+        staleFriend:staleFriend,
+        rivalId:rivalCtx.participants.confidant,
+        rivalKind:rivalCtx.participantKinds.confidant,
+        rivalChance:rivalChance,
+        rivalHeat:rivalHeat,
+        aloneHasConfidant:Object.prototype.hasOwnProperty.call(
+          aloneCtx.participants, 'confidant'),
+        aloneChance:aloneChance,
+        friendReceiptName:friendReceipt.outcome.params.confidant,
+        friendOutcome:friendOutcome,
+        expectedFriendName:FB.fullName(friend)
+      };
+    });
+
+    expect(result.friendId).toBeDefined();
+    expect(result.friendKind).toBe('friend');
+    expect(result.friendChance).toBe(0.65);
+    expect(result.previewBand).toBe('likely');
+    expect(result.staleFriend).toBe(false);
+    expect(result.rivalId).toBeDefined();
+    expect(result.rivalKind).toBe('rival');
+    expect(result.rivalChance).toBe(0.35);
+    expect(result.rivalHeat).toBe(25);
+    expect(result.aloneHasConfidant).toBe(false);
+    expect(result.aloneChance).toBe(0.5);
+    expect(result.friendReceiptName).toBe(result.expectedFriendName);
+    expect(result.friendOutcome).toContain(result.expectedFriendName);
+  });
+
+test('exact participant effects and receipts match between manual and autoresolve and fail atomically when stale',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const neighbor = FB.getRole(s, 'notable', true);
+      const event = {
+        id:'participant_parity_test', title:'A quarrel with {neighbor}',
+        text:'{neighbor} waits at the boundary.',
+        participants:[{
+          slot:'neighbor', source:'context', required:true, sameHome:true
+        }],
+        options:[{
+          label:'Answer {neighbor}.', desc:'The quarrel deepens.',
+          effects:{
+            gold:-3,
+            standingCharacter:{ participant:'neighbor', amt:-10 },
+            rivalContact:{ participant:'neighbor', score:2, cause:'test_quarrel' }
+          }
+        }]
+      };
+      FB.validateEventParticipants(event);
+      const ctx = FB.eventContextFor(s, event, {
+        participants:{ neighbor:neighbor.id },
+        participantKinds:{ neighbor:'notable' }
+      });
+      s.player.gold = 20;
+      const baseline = JSON.parse(FB.save.serialize());
+      const manual = FB.resolveEventOption(s, event, event.options[0], ctx,
+        { automated:false });
+      const manualState = {
+        gold:s.player.gold,
+        standing:FB.standingOf(s, { kind:'character', id:neighbor.id }),
+        contact:s.player.rivalContacts[neighbor.id],
+        title:manual.title,
+        option:manual.option,
+        impacts:manual.impacts
+      };
+
+      FB.save.restore(baseline);
+      const autoState = FB.state;
+      const autoCtx = JSON.parse(JSON.stringify(ctx));
+      const automatic = FB.resolveEventOption(autoState, event,
+        event.options[0], autoCtx, { automated:true });
+      const automatedState = {
+        gold:autoState.player.gold,
+        standing:FB.standingOf(autoState, {
+          kind:'character', id:neighbor.id
+        }),
+        contact:autoState.player.rivalContacts[neighbor.id],
+        title:automatic.title,
+        option:automatic.option,
+        impacts:automatic.impacts
+      };
+
+      FB.save.restore(baseline);
+      const staleState = FB.state;
+      const staleCtx = JSON.parse(JSON.stringify(ctx));
+      delete staleState.chars[neighbor.id];
+      const goldBefore = staleState.player.gold;
+      const stale = FB.resolveEventOption(staleState, event,
+        event.options[0], staleCtx, { automated:false });
+      return {
+        manual:manualState,
+        automated:automatedState,
+        stale:stale,
+        staleGold:staleState.player.gold,
+        staleGoldBefore:goldBefore,
+        receiptName:manual.title.params.neighbor,
+        expectedName:FB.fullName(neighbor)
+      };
+    });
+
+    expect(result.manual).toEqual(result.automated);
+    expect(result.manual.gold).toBe(17);
+    expect(result.manual.standing).toBe(-10);
+    expect(result.manual.contact.score).toBe(2);
+    expect(result.receiptName).toBe(result.expectedName);
+    expect(result.stale).toBe(false);
+    expect(result.staleGold).toBe(result.staleGoldBefore);
   });
