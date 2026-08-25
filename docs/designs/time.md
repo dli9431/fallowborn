@@ -176,11 +176,12 @@ unaffordable, discretionary levels lapse in a stable order until the remainder c
 surviving luxuries then grant their prestige. Retainer capacity/pay and active
 school terms settle after standards, so a lost quarters level can reduce service capacity
 before contracts are paid. Unaffordable schooling pauses for that term. Any live player
-host then pays composition-based logistics, clamped at an empty purse if unaffordable,
+host then pays its full composition-based logistics as an already-incurred obligation,
+which may push the household purse below zero,
 before the ordinary war and great holy-war seasonal drivers run. Then
 `FB.financeSeason` collects assigned revenues and processes loans and passive trade partnerships
 in stable numeric-id order. The measured season ledger closes after those contracts. At a
-new year `FB.financeYear` then moves the price index and revalues the remaining purse before
+new year `FB.financeYear` then moves the price index and revalues any positive remaining coin before
 `FB.worldTick`, autosave, and yearly life. The revaluation is visible immediately in
 Finance but enters the following season's measured net. `economy.lastYear` prevents a
 loaded spring save from applying the annual step twice.

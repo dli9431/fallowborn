@@ -797,13 +797,14 @@ window.FB = window.FB || {};
     const step = path.next;
     const career = FB.careerOf(state, c);
     const age = FB.ageOf(c, state.date.year);
+    const goldCost = step.gold || 0;
     const blocked = (step.maleOnly && c.sex !== 'm') ||
       age < (step.age || 0) ||
       career.experience < (step.years || 0) ||
       FB.skillOf(c, 'lea') < (step.learning || 0) ||
       state.player.piety < (step.piety || 0) ||
       state.player.prestige < (step.prestige || 0) ||
-      state.player.gold < (step.gold || 0);
+      (goldCost > 0 && state.player.gold < goldCost);
     return { path:path, step:step, blocked:blocked };
   };
 
@@ -1513,7 +1514,7 @@ window.FB = window.FB || {};
       return FB.T('No eligible household worker currently practices this profession.');
     }
     const cost = FB.householdStandardUpgradeCost(state, id);
-    if (state.player.gold + 0.0001 < cost) {
+    if (cost > 0 && state.player.gold + 0.0001 < cost) {
       return FB.T('Not enough money: requires {money:cost}.', { cost:cost });
     }
     return true;
@@ -1608,7 +1609,7 @@ window.FB = window.FB || {};
     }
     available = Math.max(0, state.player.gold);
     const paid = Math.min(available, upkeep);
-    state.player.gold = Math.max(0, state.player.gold - paid);
+    state.player.gold -= paid;
     state.player.prestige += FB.householdStandardEffect(state, 'prestige');
     return { paid:paid, reduced:reduced };
   };
@@ -1772,7 +1773,7 @@ window.FB = window.FB || {};
     if (FB.retainerRecords(state).length >= FB.retainerCapacity(state)) return false;
     if (FB.retainerOfficeRecord(state, office) ||
         (FB.familyOfficeHolder && FB.familyOfficeHolder(state, office))) return false;
-    if (state.player.gold < (def.pay || 0)) return false;
+    if ((def.pay || 0) > 0 && state.player.gold < (def.pay || 0)) return false;
     if (!cid) return true;
     for (const c of FB.retainerCandidates(state, office)) if (c.id === cid) return true;
     return false;
@@ -3173,7 +3174,7 @@ window.FB = window.FB || {};
       });
     const price = status.cost;
     if (!status.ready) return false;
-    state.player.gold = Math.max(0, state.player.gold - price);
+    state.player.gold -= price;
     const e = {
       uid:'enterprise_' + FB.uid(), type:type, provinceId:provinceId,
       settlement:settlement, workerId:null
@@ -3533,7 +3534,7 @@ window.FB = window.FB || {};
       /* acquireEnterprise already charged the winning price. */
       return awarded;
     }
-    state.player.gold = Math.max(0, state.player.gold - price);
+    state.player.gold -= price;
     return awarded;
   }
 
@@ -4160,7 +4161,7 @@ window.FB = window.FB || {};
   FB.livelihoodSeason = function (state) {
     let gold = 0;
     for (const line of FB.livelihoodBreakdown(state)) gold += line.amount;
-    state.player.gold = Math.max(0, state.player.gold + gold);
+    state.player.gold += gold;
     if (gold > 0 && FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('first-coin',
         '💡 The season’s work has paid. Gold funds land, gifts, loans, and the household table.',
@@ -5337,14 +5338,14 @@ window.FB = window.FB || {};
     return out;
   };
 
-  /* Whether the Coin & Credit sheet holds anything actionable for the player.
+  /* Whether the Coin & Credit sheet holds anything material for the player.
      Free stations always have a reason to look (credit, ventures, prices); a
      serf can neither borrow on income nor trade — the sheet matters only once
-     obligations are on the book or collateral secures an actual pledge offer. */
+     shortfall, booked obligation, or eligible pledge offer makes it relevant. */
   FB.financeUiRelevant = function (state) {
     if (state.player.tier >= 1) return true;
     const e = FB.ensureEconomy(state);
-    return activeLoans(e).length > 0 ||
+    return state.player.gold < -0.0001 || activeLoans(e).length > 0 ||
       FB.financeLoanOffers(state, e).length > 0;
   };
 
@@ -5425,7 +5426,7 @@ window.FB = window.FB || {};
     const due = FB.financeDueNow(state, loan, e);
     if (!loan || financeSettled(loan.status) || loan.status === 'default' ||
       state.player.gold + 0.000001 < due) return false;
-    state.player.gold = Math.max(0, state.player.gold - due);
+    state.player.gold -= due;
     loan.status = 'repaid';
     loan.repaidTurn = state.turn;
     FB.news(state, FB.msg('news.finance.loan_repaid',
@@ -5576,7 +5577,7 @@ window.FB = window.FB || {};
   FB.settleFinanceDefault = function (state) {
     if (!FB.financeCanSettleDefault(state)) return false;
     const p = state.player;
-    p.gold = Math.max(0, p.gold - totalDefaultDue(state));
+    p.gold -= totalDefaultDue(state);
     for (const loan of defaultedLoans(state)) { loan.status = 'settled'; loan.face = 0; }
     delete p.flags.debt_distraint;
     FB.news(state, FB.msg('news.finance.distraint_settled',
@@ -6517,7 +6518,9 @@ window.FB = window.FB || {};
     const oldGold = state.player.gold;
     const newPrice = FB.clamp(oldPrice * (1 + rate),
       B.priceMin || 0.5, B.priceMax || 3);
-    state.player.gold *= oldPrice / newPrice;
+    /* Only coin in hand is revalued. A negative balance is a real household
+       shortfall rather than nominal cash or a signed debt contract. */
+    if (state.player.gold > 0) state.player.gold *= oldPrice / newPrice;
     e.price = newPrice;
     e.lastRate = newPrice / oldPrice - 1;
     e.lastAdjustment = state.player.gold - oldGold;

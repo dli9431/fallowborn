@@ -1184,7 +1184,7 @@
     const parts = FB.householdUpkeepParts(state);
     const due = Math.max(0, Number(parts.total) || 0);
     const paid = Math.min(Math.max(0, Number(p.gold) || 0), due);
-    p.gold = Math.max(0, p.gold - paid);
+    p.gold -= paid;
     const funded = due <= 0 || paid + 0.0001 >= due;
     const provisionsDue = Math.max(0, Number(parts.provisionsDue) || 0);
     const provisionsFunded = provisionsDue <= 0 ||

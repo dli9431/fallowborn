@@ -4,7 +4,7 @@
 nominal coin needed to buy one gold of obligations and is distinct from the
 county commodity prices in [markets.md](markets.md). Once each spring
 `FB.financeYear` evolves a slow, bounded, mean-reverting price index and revalues
-only the liquid purse by `oldPrice / newPrice`. Contracts, wages, rewards, and
+only positive liquid coin by `oldPrice / newPrice`. Contracts, wages, rewards, and
 other real-gold obligations keep their authored values; tangible local purchases
 apply their county market quote independently. The annual
 revaluation runs after the completed winter ledger, so it appears immediately
@@ -39,6 +39,31 @@ prevent reloads from applying or rolling an outcome twice.
 There is no fixed wartime-necessities surcharge. Raised and hostile armies create
 food demand, while occupation creates saved production and flow disruption. Their
 effects emerge through the local provisions price and fade when the shocks expire.
+
+**A negative purse is a cash shortfall, not an implicit loan.** Mandatory losses,
+imposed compensation, already-incurred focus or military costs, and narrative choices
+without an affordability gate apply their full authored amount and may take
+`player.gold` below zero. Later income first brings that balance back toward zero.
+The shortfall has no lender, face value, interest, deadline, default, or distraint;
+only a signed finance contract creates those rights and consequences. It therefore
+is not revalued by the annual coin-price step and is not included in outstanding
+contract debt. Death dues and forced purse confiscation take positive liquid coin
+without forgiving an existing shortfall.
+
+Standalone voluntary purchases, gifts, investments, ransoms, settlement offers,
+freedom purchases, manual loan payments, and event options with `goldMin` remain gated
+by their full cash price and cannot create or deepen a shortfall. An event option with
+an authored negative-gold effect but no affordability requirement is a commitment to
+pay the full result, not a free benefit at an empty purse. Locally quoted necessities still consume only available
+coin and record any unmet share as market hardship. Household standards still lapse,
+retainers may go unpaid, and schooling pauses instead of silently financing those
+choices. Raised-host logistics are an incurred obligation and do deepen the shortfall.
+Coin & Credit appears for a serf with a negative balance and explains this distinction;
+the topbar and resource breakdown render the signed amount in the warning tone.
+
+Technology impact: `negative_household_gold` is `none`. Cash shortage and the
+consequences of incurred obligations are baseline household conditions, not an
+advanced capability; formal credit keeps its existing per-contract technology gates.
 
 **Contracts state exact terms.** Pledged loans, merchant advances, and loans
 against revenues grant base gold now and record a fixed face value. A nominal

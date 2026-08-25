@@ -1392,7 +1392,7 @@ window.FB = window.FB || {};
       status.reason = FB.T('Requires {piety} piety; you have {current}.', {
         piety:status.piety, current:Math.floor(state.player.piety)
       });
-    } else if (state.player.gold < status.gold) {
+    } else if (status.gold > 0 && state.player.gold < status.gold) {
       status.reason = FB.T('Requires {money:cost}; you have {money:current}.', {
         cost:status.gold, current:Math.floor(state.player.gold)
       });
@@ -1690,7 +1690,7 @@ window.FB = window.FB || {};
       status.reason = FB.T('Ready in {days} days.', {
         days:cooldownDays
       });
-    } else if ((Number(state.player.gold) || 0) < cost) {
+    } else if (cost > 0 && (Number(state.player.gold) || 0) < cost) {
       status.reason = FB.T(
         'Requires {money:cost}; you have {money:current}.', {
           cost:cost,
@@ -2332,7 +2332,7 @@ window.FB = window.FB || {};
           FB.papacyCelibate(state, cand))) reason = 'doctrine';
     else if (cand.royalLine) reason = 'compact';
     else if (state.player.courtingId === cand.id) reason = 'courtship';
-    else if (state.player.gold + 0.0001 < dowry) reason = 'gold';
+    else if (dowry > 0 && state.player.gold + 0.0001 < dowry) reason = 'gold';
     else if (state.player.prestige + 0.0001 < prestigeNeed) reason = 'prestige';
     return {
       ok:!reason,
@@ -2611,7 +2611,7 @@ window.FB = window.FB || {};
     cand.role = 'kinspouse';
     FB.touchFamily();
     if (terms.marriage.subjectPays && terms.marriage.amount) {
-      p.gold = Math.max(0, p.gold - terms.marriage.amount);
+      p.gold -= terms.marriage.amount;
       FB.news(state, FB.msg('news.event.match_dowry_paid',
         '💰 You settle a dowry of {money:gold} on the match.', {
           gold:terms.marriage.amount
@@ -6494,7 +6494,7 @@ window.FB = window.FB || {};
         : (ctx.marriagePiety !== undefined ? ctx.marriagePiety : ending.piety);
       const marriagePrestige = ctx.marriagePrestige !== undefined
         ? ctx.marriagePrestige : ending.prestige;
-      p.gold = Math.max(0, p.gold - Math.max(0, Number(marriageGold) || 0));
+      p.gold -= Math.max(0, Number(marriageGold) || 0);
       p.piety = Math.max(0, p.piety - Math.max(0, Number(marriagePiety) || 0));
       p.prestige = Math.max(0,
         p.prestige - Math.max(0, Number(marriagePrestige) || 0));
@@ -6513,7 +6513,7 @@ window.FB = window.FB || {};
           g = Math.round(g * 1.6);
         }
       }
-      p.gold = Math.max(0, p.gold + g);
+      p.gold += g;
     }
     if (fx.pricePressure && FB.addPricePressure) {
       appliedPricePressure = FB.addPricePressure(state, fx.pricePressure,
@@ -7394,7 +7394,7 @@ window.FB = window.FB || {};
       suppressStationPrestige:true
     })) return false;
     state.player.piety = Math.max(0, state.player.piety - status.piety);
-    state.player.gold = Math.max(0, state.player.gold - status.gold);
+    state.player.gold -= status.gold;
     state.player.prestige = Math.max(0,
       state.player.prestige - status.prestige);
     if (status.route === 'xwedodah') {
@@ -7814,7 +7814,7 @@ window.FB = window.FB || {};
     if (!FB.fns.historic_raid_context_valid(state, ctx)) return false;
     const p = state.player;
     const destination = ctx.destinationId;
-    p.gold = 0;
+    p.gold = Math.min(0, Number(p.gold) || 0);
     p.provs = [];
     p.holdings = [];
     p.enterprises = [];

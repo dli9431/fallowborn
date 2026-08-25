@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.155.1';
+  FB.VERSION = '1.155.2';
   FB.CHANGELOG = [
+    { v: '1.155.2', date: '2026-08-25', changes: [
+      'Losses and incurred commitments can now push household gold below zero; future income clears the shortfall while cash-priced deeds and purchases remain affordability-gated.'
+    ] },
     { v: '1.155.1', date: '2026-08-25', changes: [
       'Child heirs keep their Deeds catalogue visible and can reduce inherited household standards, while adult purchases remain unavailable until age 16.'
     ] },
@@ -2723,7 +2726,7 @@ window.FB = window.FB || {};
       FB.livelihoodSeason(s);
       if (FB.marketSettleHouseholdNecessities) {
         FB.marketSettleHouseholdNecessities(s);
-      } else p.gold = Math.max(0, p.gold - FB.householdUpkeep(s));
+      } else p.gold -= Math.min(Math.max(0, p.gold), FB.householdUpkeep(s));
       if (FB.papacySeason) FB.papacySeason(s);
       if (FB.householdStandardsSeason) FB.householdStandardsSeason(s);
       if (FB.retainerSeason) FB.retainerSeason(s);
@@ -2742,7 +2745,7 @@ window.FB = window.FB || {};
          ordinary and great holy wars. Shattered/disbanded hosts return zero. */
       if (FB.playerHostUpkeepParts) {
         const hostUpkeep = FB.playerHostUpkeepParts(s);
-        p.gold = Math.max(0, p.gold - hostUpkeep.total);
+        p.gold -= hostUpkeep.total;
       }
       if (FB.techSeason) FB.techSeason(s, G.auto.research);
       FB.playerWarTick(s);
@@ -4371,7 +4374,9 @@ window.FB = window.FB || {};
     if (FB.cleanupManagedMatches) FB.cleanupManagedMatches(s);
     if (FB.greatHolyWarSuccession) FB.greatHolyWarSuccession(s);
     p.dead = false;
-    if (!livingAbdication) p.gold = Math.round(p.gold * 0.9); // death dues
+    /* Death dues take liquid coin; they do not forgive an inherited
+       household shortfall. */
+    if (!livingAbdication && p.gold > 0) p.gold = Math.round(p.gold * 0.9);
     FB.financeSuccession(s); // household contracts survive; mature ones settle at transition
     p.courtingId = null;
     p.courtshipTerms = null;

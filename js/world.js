@@ -6239,7 +6239,7 @@ window.FB = window.FB || {};
     const p = state.player;
     const holdings = FB.holdingList ? FB.holdingList(state) : [];
     if (!holdings.length) {
-      p.gold = Math.max(0, p.gold - 5); // nothing to burn but the crop and the door
+      p.gold -= 5; // nothing to burn but the crop and the door
       return;
     }
     const id = FB.pick(holdings);
@@ -6410,7 +6410,7 @@ window.FB = window.FB || {};
           '🏰 Field defeat cannot surrender an unbreached fortified county; the invasion continues.', {}));
         return false;
       }
-      p.gold = Math.max(0, p.gold - 30);
+      p.gold -= 30;
       FB.news(state, FB.msg('news.war.reparations',
         '🕊 A humiliating peace. Reparations drain your coffers.', {}));
       p.prestige = Math.max(0, p.prestige - 20);
@@ -6589,8 +6589,9 @@ window.FB = window.FB || {};
   };
   FB.fns.prison_pay = function (state) {
     const p = state.player;
-    if (!FB.fns.prison_still(state)) return;
-    p.gold = Math.max(0, p.gold - prisonRansom(state));
+    const ransom = prisonRansom(state);
+    if (!FB.fns.prison_still(state) || p.gold < ransom) return false;
+    p.gold -= ransom;
     delete p.flags.in_prison;
     FB.news(state, FB.msg('news.war.prison_ransomed',
       '⛓ The ransom is counted out — you ride home poorer, and free.', {}));
@@ -6884,7 +6885,7 @@ window.FB = window.FB || {};
         } else {
           w.strength = Math.max(0.5, (w.strength || 1) - 0.1);
         }
-        state.player.gold = Math.max(0, state.player.gold - 2);
+        state.player.gold -= 2;
         FB.news(state, FB.msg('news.war.sortie_succeeds',
           '⚔ A night sortie burns your siege-works — the ring is set back.', {}));
         return;
@@ -7166,7 +7167,7 @@ window.FB = window.FB || {};
     const enemy = state.realms[w.enemy];
     if (w.defending) {
       const cost = 15 + 5 * (w.losses || 0);
-      p.gold = Math.max(0, p.gold - cost);
+      p.gold -= cost;
       p.prestige = Math.max(0, p.prestige - 10);
       FB.news(state, FB.msg('news.war.peace_bought', {
         forms: {
@@ -7231,7 +7232,8 @@ window.FB = window.FB || {};
     const p = state.player, w = p.war; if (!w) return;
     const enemy = state.realms[w.enemy];
     const price = submissionTributePrice(state);
-    p.gold = Math.max(0, p.gold - price);
+    if (!FB.fns.war_submission_tribute_affordable(state)) return false;
+    p.gold -= price;
     FB.news(state, FB.msg('news.war.submission_tribute',
       '🕊 A conqueror’s tribute buys the peace — {money:price} to {enemy}.',
       { price: price, enemy: enemy ? enemy.name : '' }));
@@ -7259,7 +7261,8 @@ window.FB = window.FB || {};
   };
   FB.fns.attainder_pay = function (state) {
     const p = state.player;
-    p.gold = Math.max(0, p.gold - attainderFine(state));
+    if (!FB.fns.attainder_can_pay(state)) return false;
+    p.gold -= attainderFine(state);
     delete p.flags.felony_mark;
     delete p.flags.felony_doom;
     if (FB.adjustStanding) FB.adjustStanding(state, { kind:'realm', id:p.liege }, 15, 'event:attainder_pay');

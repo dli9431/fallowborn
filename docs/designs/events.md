@@ -247,6 +247,15 @@ slot gates, weight 2, and three unconditional choices. Every choice applies an
 immediate resource loss; the wartime seed seizure can also cause a lean winter.
 They never hide a safe refusal behind an unaffordable option or a chance roll.
 
+Negative declarative `gold` effects now apply their full signed amount and may
+leave `player.gold` below zero. An option with `require.goldMin` stays unavailable
+until that exact cash threshold is met; an option without the requirement is an
+authored commitment to its full result rather than a benefit whose cost disappears
+at an empty purse. Every event that offers costly relief must therefore retain a
+safe refusal or other non-cash route where the choice is meant to remain optional.
+The resulting cash shortfall is explained and governed by
+[finance.md](finance.md), separately from signed loan debt.
+
 The motifs come from recorded obligations rather than a single universal
 “serf law.” The ninth-century [*Capitulary de
 Villis*](https://sourcebooks.web.fordham.edu/source/carol-devillis.asp) accounts

@@ -647,6 +647,13 @@ Reduction requires a second explicit confirmation that names the lost level and
 no-refund/re-purchase rule. `UI.showHoldings` remains an alias to this sheet for older
 deeds and mods.
 
+The gold topbar renders an actual negative balance in the warning tone. Its resource
+breakdown explains that future income first clears this cash shortfall and that it is
+not a signed loan. Coin & Credit repeats that explanation before formal obligations,
+including for a serf whose shortfall is the only reason the sheet is relevant. Amounts
+stay signed through `FB.money`; voluntary unaffordable actions remain disabled by their
+ordinary price checks.
+
 Maintained transport and outfits are explicitly described as expenses rather than
 productive or combat property. The permanent section keeps Pack Mule, Fine Tools, Good
 Mail, Warhorse, and other existing assets under their old one-time ownership rules.

@@ -760,6 +760,12 @@ displayed. It does not change the economy: `player.gold`, event `gold` effects,
 gold. One game gold is converted only while text is rendered, and formatted strings
 are never stored in a save.
 
+`player.gold` is signed at runtime. A negative event `gold` effect applies its full
+amount and may create or deepen a household cash shortfall; later positive effects
+reduce that shortfall before producing spendable coin. Voluntary transactions still
+enforce their own affordability checks, and formal loan debt remains a separate saved
+contract rather than being inferred from a negative purse.
+
 A full pounds/shillings/pence definition is:
 
 ```json

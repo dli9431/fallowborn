@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      negative_household_gold:{
+        mode:'none',
+        rationale:'Household cash shortfalls are a baseline consequence of losses, commitments, and incurred obligations, not an optional capability or a financial technique unlocked by sovereign research.'
+      },
       persistent_serf_tenure:{
         mode:'none',
         rationale:'Household tenure, customary service, and awareness of local obligations are baseline social conditions, not capabilities unlocked by sovereign research.'

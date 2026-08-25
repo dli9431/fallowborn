@@ -120,6 +120,10 @@ window.FB = window.FB || {};
           bd.coinAdjustment < 0 ? 'op-bad' : '') + '">' +
         esc(fmtAmt(bd.coinAdjustment, true)) + '</span></div>';
     }
+    if (stat === 'gold' && FB.state.player.gold < -0.0001) {
+      h += '<div class="bd-note op-bad">' + esc(FB.T(
+        'Cash shortfall: future gold first brings the purse back to zero. This is not a signed loan and adds no interest or creditor claim.')) + '</div>';
+    }
     h += '<div class="bd-note">' + esc(FB.T(
       'The ± beside the stat is last season’s real change — events and deeds included.')) + '</div>';
     if (!FB.game.uiPrefs || !FB.game.uiPrefs.hideBeginnerHints) {
@@ -179,7 +183,8 @@ window.FB = window.FB || {};
     });
     const net = s.seasonNet || {};
     const coinIcon = FB.money(0, { style:'icon' });
-    $('tb-gold').innerHTML = esc(coinIcon) + (coinIcon === '💰' ? ' ' : '') + '<span class="mono">' +
+    $('tb-gold').innerHTML = esc(coinIcon) + (coinIcon === '💰' ? ' ' : '') + '<span class="mono' +
+      (s.player.gold < -0.0001 ? ' op-bad' : '') + '">' +
       esc(FB.money(s.player.gold, { omitPrimarySymbol:true })) + '</span>' +
       netBadge(net.gold, true);
     $('tb-gold').setAttribute('aria-label', FB.T('{label}: {amount}', {

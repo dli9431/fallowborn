@@ -1541,7 +1541,7 @@ window.FB = window.FB || {};
     var p = state.player;
     publicConductForHearing(state, hearing);
     if (projection.outcome === 'compensation') {
-      p.gold = Math.max(0, p.gold - Math.min(p.gold, projection.fine));
+      p.gold -= projection.fine;
     } else if (projection.outcome === 'penance') {
       p.piety = Math.max(0, p.piety - 40);
       p.prestige = Math.max(0, p.prestige - 20);

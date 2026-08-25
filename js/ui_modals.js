@@ -11452,6 +11452,15 @@ window.FB = window.FB || {};
 
     /* Obligations lead the sheet so a narrow phone shows the urgent date
        before background metrics or optional transactions. */
+    if (s.player.gold < -0.0001) {
+      h += panelh('Cash shortfall') +
+        '<div class="progressnote warnote"><b>' +
+        esc(FB.T('{money:amount} below zero', {
+          amount:financeAmount(Math.abs(s.player.gold))
+        })) + '</b><br><span class="hint">' + esc(FB.T(
+          'Losses, incurred obligations, and event commitments without an affordability gate can leave a cash shortfall. Future gold clears it first. It is not a signed loan, accrues no interest, and creates no creditor or default claim.')) +
+        '</span></div>';
+    }
     if (loans.length) {
       h += panelh('Urgent obligations');
       let defaultSettlementShown = false;
@@ -13769,7 +13778,8 @@ window.FB = window.FB || {};
       const def = FBDATA.positions[id];
       if (def.kind !== 'retainer') continue;
       const blockedTier = s.player.tier < (def.minTier || 0);
-      const blockedGold = s.player.gold < (def.pay || 0);
+      const blockedGold = (def.pay || 0) > 0 &&
+        s.player.gold < (def.pay || 0);
       const occupied = FB.retainerOfficeRecord(s, id) ||
         (FB.familyOfficeHolder && FB.familyOfficeHolder(s, id));
       h += '<button class="actionbtn" data-retainer-office="' + esc(id) + '"' +
@@ -13835,7 +13845,7 @@ window.FB = window.FB || {};
           (FB.familyOfficeHolder && FB.familyOfficeHolder(s, office))) {
         return FB.T('This household office is already filled.');
       }
-      if (s.player.gold < (def.pay || 0)) {
+      if ((def.pay || 0) > 0 && s.player.gold < (def.pay || 0)) {
         return FB.T('Requires the first seasonal pay of {money:pay}.', {
           pay:def.pay || 0
         });
@@ -18307,7 +18317,7 @@ window.FB = window.FB || {};
           actThen(function () {
             const cost = status.cost;
             const gap = FB.stationOf(c) - FB.playerStation(s);
-            if (cost) s.player.gold = Math.max(0, s.player.gold - cost);
+            if (cost) s.player.gold -= cost;
             if (status.piety) s.player.piety = Math.max(0,
               s.player.piety - status.piety);
             if (status.prestige) s.player.prestige = Math.max(0,

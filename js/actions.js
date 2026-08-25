@@ -475,7 +475,7 @@ window.FB = window.FB || {};
     show: function (s) { return s.player.tier >= 3 && adult(s); },
     tick: function (s) {
       FB.addResearch(s, patronageResearch(s) / D);
-      s.player.gold = Math.max(0, s.player.gold - 2 / D);
+      s.player.gold -= 2 / D;
       if (skillDch(0.3)) skillUp(s, 'lea');
     },
     gain: function () { return { gold: -2 }; } }
@@ -8383,7 +8383,7 @@ window.FB = window.FB || {};
     const targetRid = state.owner && state.owner[targetPid];
     const homePid = p.provinceId || (p.provs && p.provs[0]);
 
-    p.gold = Math.max(0, (Number(p.gold) || 0) + spoils.gold);
+    p.gold = (Number(p.gold) || 0) + spoils.gold;
     p.prestige = (Number(p.prestige) || 0) + spoils.prestige;
 
     // Apply casualties to player home county / levy pool
