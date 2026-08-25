@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.155.0';
+  FB.VERSION = '1.155.1';
   FB.CHANGELOG = [
+    { v: '1.155.1', date: '2026-08-25', changes: [
+      'Child heirs keep their Deeds catalogue visible and can reduce inherited household standards, while adult purchases remain unavailable until age 16.'
+    ] },
     { v: '1.155.0', date: '2026-08-25', changes: [
       'Serf households now live under persistent customary tenure, with culture- and faith-aware service cycles, recognized customary rights, and obligation details in Station & home.'
     ] },
@@ -4519,11 +4522,11 @@ window.FB = window.FB || {};
       let successionTip;
       if (successorIsChild) {
         successionTip = minor
-          ? '💡 The chronicle continues through your child. You now play as them; household gold, property, enterprises, and debts carry over. Childhood uses Play or Study, and adult deeds unlock at 16.'
+          ? '💡 The chronicle continues through your child. You now play as them; household gold, property, enterprises, and debts carry over. Childhood uses Play or Study; adult deeds remain visible and unlock at 16.'
           : '💡 The chronicle continues through your child. You now play as them; household gold, property, enterprises, and debts carry over.';
       } else {
         successionTip = minor
-          ? '💡 The chronicle continues through a young relative. You now play as them; household gold, property, enterprises, and debts carry over. Childhood uses Play or Study, and adult deeds unlock at 16.'
+          ? '💡 The chronicle continues through a young relative. You now play as them; household gold, property, enterprises, and debts carry over. Childhood uses Play or Study; adult deeds remain visible and unlock at 16.'
           : '💡 The chronicle continues through a relative. You now play as them; household gold, property, enterprises, and debts carry over.';
       }
       FB.ui.maybeTip('succession', successionTip,

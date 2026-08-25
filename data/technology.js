@@ -79,6 +79,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Household tenure, customary service, and awareness of local obligations are baseline social conditions, not capabilities unlocked by sovereign research.'
       },
+      minor_household_standard_reduction:{
+        mode:'none',
+        rationale:'A child household head giving up an inherited recurring expense is a baseline recovery control; no innovation credibly unlocks abandoning a living standard.'
+      },
       county_population_demographics:{
         mode:'soft',
         tech:[

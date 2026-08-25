@@ -10,6 +10,14 @@ Definitions marked `eventOnly` are excluded from the purchase picker. Rights of 
 are such a holding: the Old Custom landmark chain can secure the family's heritable
 pasture, fuel, and water rights, and those rights then pass to later generations.
 
+**Customary Serf Tenure is distinct from owned property.** Tier 0 serf households do not
+own their land; they hold customary strips and dwelling use under an active tenure archetype
+(`latin_manorial`, `irrigated_fellah`, `pagan_household_service`, `dependent_farming`).
+This tenure records recognized rights (such as post-harvest gleaning or irrigation turns)
+and recurring customary service obligations (week-work, boon harvests, multure, tithes,
+cartage). Customary tenure is held by custom rather than bought as property, and lawful
+freedom ends all personal service obligations.
+
 `FBDATA.householdStandards` (`data/economy.js`) is deliberately different from
 property. Board, wares, quarters, luxuries, transport, and profession-specific work
 outfits advance one purchased level at a time. Each level has its own setup cost,
@@ -51,6 +59,11 @@ focusable with `aria-disabled` so its exact reason is still disclosed. Hovering
 or focusing the minus button shows the level that will be lost, the no-refund
 rule, the resulting effect and upkeep, and the projected finances; activating
 it gives up one level immediately. The minus button is disabled at baseline.
+After succession to a minor, Better the Household remains available whenever at least one
+inherited standard can be reduced. A child household head may give up those inherited
+levels to control upkeep, but cannot buy a higher standard or permanent holding until age
+16; the engine revalidates both spending paths. This recovery control has technology impact
+**none** (`minor_household_standard_reduction`): abandoning an expense needs no innovation.
 On touch, tablet-width, and short layouts, button hover tooltips are suppressed
 and one visible 44 px `?` control on the current-state card toggles both adjustment
 breakdowns inline; roomy pointer layouts hide that disclosure control. There are

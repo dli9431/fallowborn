@@ -9,6 +9,12 @@ xwēdōdah recognition before spending a day. The proposal review shows the
 compact, and alliance, plus child health-risk bands. The Guide's Family
 category preserves the complete rule summary and searchable trait list.
 
+For unlanded tier 0 players, `UI.showRankDetails` presents the household's active
+customary tenure (`FB.tenureView`) within the **Station & home** modal. It displays the
+localized archetype name, summary, holding controller, current lord/authority, recognized rights,
+ordinary duties with full calendar dates and days remaining, and any pending conditional obligations,
+using stable `data-tenure-*` selectors and responsive mobile layout.
+
 **Where the UI code lives.** The former `js/ui.js` is split into four files that augment one
 `FB.ui` namespace. The first three load consecutively; the modal sheet is deferred until
 after the initial title paint:
@@ -921,6 +927,11 @@ rebuilding the commitments, focus, or other group controls. Every available dail
 appears together in one block above the category accordions; the accordions split and count
 only deeds by category. The stable `1`–`6` section keys do not renumber when a role has no
 actions in one category, preserving muscle memory across promotions and temporary states.
+During childhood the focus block contains exactly Study and Play. Adult-only deeds that
+otherwise fit the child's station and situation remain in their normal groups as disabled
+rows whose disclosure says they unlock at age 16; they are not removed and do not renumber
+the surrounding catalogue. Better the Household remains actionable when an inherited
+standard can be reduced, while its purchase controls expose their childhood restriction.
 Building Deeds first evaluates only each deed's visibility so every accordion retains an
 exact count. Cooldowns, technology gates, and potentially expensive eligibility reasons are
 evaluated only for open groups, when their controls are constructed. Returning through a

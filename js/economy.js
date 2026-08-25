@@ -1488,6 +1488,10 @@ window.FB = window.FB || {};
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     if (!def || !Array.isArray(def.levels)) return FB.T('That household standard is unavailable.');
     if (state.player.tier > 2) return FB.T('Maintained household standards are dormant at landed rank.');
+    const protagonist = state.chars && state.chars[state.player.charId];
+    if (protagonist && FB.ageOf(protagonist, state.date.year) < 16) {
+      return FB.T('You may reduce inherited standards during childhood, but new purchases unlock at age 16.');
+    }
     const level = FB.householdStandardLevel(state, id);
     if (level >= def.levels.length) return FB.T('This standard is already at its highest level.');
     const next = def.levels[level];

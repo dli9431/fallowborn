@@ -167,6 +167,10 @@ members (see the manageable-kin rule below). See
 **Children are players too.** When a minor heir succeeds (age < 16), the daily picker
 fires only events tagged `childhood:true` (the childhood section of events_common.js plus
 age-neutral events like sickness and plague) until they come of age.
+Their Daily Focus catalogue contains only Study and Play. Role-appropriate adult deeds
+remain visible in their ordinary groups but are disabled with an exact age-16 explanation,
+so succession does not make the family's established options disappear. Existing
+age-neutral management and resolution deeds retain their authored availability.
 
 **Starting families are authored presets, not an editor.** The character screen offers
 `FBDATA.familyPresets` (`data/starts.js`): `standard` (sixteen, unmarried, parents and

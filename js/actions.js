@@ -12,6 +12,9 @@ window.FB = window.FB || {};
 
   function me(state) { return state.chars[state.player.charId]; }
   function adult(state) { return FB.ageOf(me(state), state.date.year) >= 16; }
+  function adultDeedReason() {
+    return FB.T('You can do this when you come of age at 16.');
+  }
   function female(state) { return me(state).sex === 'f'; }
   function vocationalMultiplier(state, focus) {
     if (!focus || !focus.vocational || !FB.householdWorkMultiplier) return 1;
@@ -1046,20 +1049,20 @@ window.FB = window.FB || {};
   /* ================= INSTANTS (one-shot deeds) ================= */
   const DEED_HANDLERS = [
 
-  { id: 'poach',
-    show: function (s) { return s.player.tier <= 1 && adult(s); },
+  { id: 'poach', requiresAdult:true,
+    show: function (s) { return s.player.tier <= 1; },
     run: function (s) {
       if (FB.chance(0.65)) FB.applyEffects(s, { gold: FB.ri(2, 5), skills: { int: FB.chance(0.4) ? 1 : 0 } });
       else FB.queueEvent(s, 'caught_poaching', {});
     } },
-  { id: 'scheme_rival',
+  { id: 'scheme_rival', requiresAdult:true,
     desc: function (s) {
       const r = FB.getRole(s, 'rival');
       return r
         ? FB.T('Undermine {name} by fair means or foul.', { name: r.name })
         : FB.T('Undermine your rival by fair means or foul.');
     },
-    show: function (s) { return !!FB.getRole(s, 'rival') && adult(s); },
+    show: function (s) { return !!FB.getRole(s, 'rival'); },
     run: function (s) {
       const r = FB.getRole(s, 'rival');
       const inn = FB.skillOf(me(s), 'int');
@@ -1079,7 +1082,7 @@ window.FB = window.FB || {};
           'The scheme unravels, and fingers point at you.', {}));
       }
     } },
-  { id: 'seek_match', opensChoices:true,
+  { id: 'seek_match', opensChoices:true, requiresAdult:true,
     cd: FB.marriageProspectRefreshDays(), noConsume: true,
     cooldownDays: function () {
       return FB.marriageProspectRefreshDays();
@@ -1127,7 +1130,7 @@ window.FB = window.FB || {};
       const m = me(s);
       const clergyCelibate = s.player.profession === 'monk' &&
         !FB.religionOf(m.religion, s).clergyMarriage;
-      return adult(s) && FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
+      return FB.canWed(s) && !s.player.courtingId && !clergyCelibate;
     },
     run: function (s) {
       const cands = FB.refreshSuitors(s);
@@ -1153,11 +1156,11 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'go_to_town', opensChoices:true, noConsume: true,
-    show: function (s) { return adult(s); },
+  { id: 'go_to_town', opensChoices:true, noConsume: true, requiresAdult:true,
+    show: function () { return true; },
     can: function (s) { return FB.settlementsOf(s, s.player.provinceId).length ? true : 'Only wilderness here.'; },
     run: function (s) { if (FB.ui && FB.ui.showSettlements) FB.ui.showSettlements(); } },
-  { id: 'attend_auction', opensChoices:true, noConsume:true,
+  { id: 'attend_auction', opensChoices:true, noConsume:true, requiresAdult:true,
     desc: function (s) {
       let description = FB.T(
         'Attend a bounded market auction for one rare lot. Three bids decide the sale; losing spends no coin.');
@@ -1173,7 +1176,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       return !!(FB.auctionOf && FB.auctionOf(s)) ||
-        (adult(s) && !(s.player.flags && s.player.flags.in_prison));
+        !(s.player.flags && s.player.flags.in_prison);
     },
     can: function (s) {
       const status = FB.auctionStatus && FB.auctionStatus(s);
@@ -1191,10 +1194,10 @@ window.FB = window.FB || {};
         if (FB.ui && FB.ui.showAuction) FB.ui.showAuction();
       }
     } },
-  { id: 'take_road', opensChoices:true, noConsume: true,
+  { id: 'take_road', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () { return FB.T('Choose a purpose and travel county by county over game time.'); },
     show: function (s) {
-      return !s.player.travel && s.player.tier >= 1 && adult(s);
+      return !s.player.travel && s.player.tier >= 1;
     },
     can: function (s) {
       return FB.travelAnyPurposeEligible
@@ -1321,13 +1324,13 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showFrontierSettlement) FB.ui.showFrontierSettlement();
     } },
-  { id: 'retire', opensChoices:true, noConsume: true,
+  { id: 'retire', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       return FB.T('Retire in favor of an adult successor. {name} remains in the family at home as a retired elder.', {
         name: FB.fullName(me(s))
       });
     },
-    show: function (s) { return adult(s); },
+    show: function () { return true; },
     can: function (s) {
       if (!FB.game || !FB.game.retirePreview) {
         return FB.T('Retirement is not possible.');
@@ -1339,18 +1342,18 @@ window.FB = window.FB || {};
       if (FB.ui && FB.ui.showRetirement) FB.ui.showRetirement();
     } },
 
-  { id: 'seek_blessing',
+  { id: 'seek_blessing', requiresAdult:true,
     desc: function (s) {
       return FB.T('Bring your piety to the {temple} and ask for grace.',
         { temple: FB.templeWord(me(s).religion) });
     },
-    show: function (s) { return adult(s); },
+    show: function () { return true; },
     can: function (s) {
       return FB.playerExcommunicated && FB.playerExcommunicated(s)
         ? FB.T('The excommunicated may not seek a blessing.') : true;
     },
     run: function (s) { FB.queueEvent(s, 'seek_blessing', {}); } },
-  { id: 'seek_absolution', opensChoices:true, noConsume: true,
+  { id: 'seek_absolution', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       const status = FB.papalAbsolutionStatus &&
         FB.papalAbsolutionStatus(s, s.player.charId);
@@ -1367,7 +1370,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const c = me(s);
-      return adult(s) && c && FB.faithHasSystem(c.religion, 'papacy', s) &&
+      return c && FB.faithHasSystem(c.religion, 'papacy', s) &&
         FB.playerExcommunicated && FB.playerExcommunicated(s);
     },
     can: function (s) {
@@ -1390,13 +1393,13 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showAbsolution) FB.ui.showAbsolution();
     } },
-  { id: 'papacy', opensChoices:true, noConsume: true,
+  { id: 'papacy', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Review the Pope, College, authority, investiture, sanctions, elections, and any rival obedience.');
     },
     show: function (s) {
       const c = me(s);
-      return adult(s) && c && FB.faithHasSystem(c.religion, 'papacy', s) &&
+      return c && FB.faithHasSystem(c.religion, 'papacy', s) &&
         !!FB.ensurePapacy &&
         // Only roles that actually deal with the Church: landed rulers
         // (investiture, sanctions), the ordained (monks/priests), and
@@ -1409,7 +1412,7 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showPapacy) FB.ui.showPapacy();
     } },
-  { id: 'restore_papacy', opensChoices:true, noConsume: true,
+  { id: 'restore_papacy', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Grant Roma to a new independent Pope. Gain {piety} piety and {prestige} prestige, reconcile Catholic rulers, and clear excommunication.', {
         piety:FB.religiousHeadBalance('religiousHeadRestorePiety', 200),
@@ -1417,7 +1420,7 @@ window.FB = window.FB || {};
       });
     },
     show: function (s) {
-      return adult(s) && FB.faithHasSystem(me(s).religion, 'papacy', s) &&
+      return FB.faithHasSystem(me(s).religion, 'papacy', s) &&
         FB.isPlayerSovereign(s) &&
         !!FB.religiousHeadVacancy(s, 'catholic');
     },
@@ -1440,7 +1443,7 @@ window.FB = window.FB || {};
         FB.ui.showReligiousHeadRestoration('catholic');
       }
     } },
-  { id: 'claim_caliphate', opensChoices:true, noConsume: true,
+  { id: 'claim_caliphate', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       if (s && !FB.religiousHeadVacancy(s, 'sunni')) {
         const cause = FB.caliphateWarCause(s);
@@ -1458,7 +1461,7 @@ window.FB = window.FB || {};
       });
     },
     show: function (s) {
-      return adult(s) && FB.faithOfficeId(me(s).religion, s) === 'sunni' &&
+      return FB.faithOfficeId(me(s).religion, s) === 'sunni' &&
         s.player.tier >= 6 &&
         (!!FB.religiousHeadVacancy(s, 'sunni') || !!FB.caliphateWarCause(s));
     },
@@ -1519,34 +1522,34 @@ window.FB = window.FB || {};
         FB.ui.showReligiousHeadClaim('sunni');
       }
     } },
-  { id: 'convert_faith', opensChoices:true, noConsume: true,
+  { id: 'convert_faith', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Turn to another faith — privately, with your household, or across your whole realm. Piety and prestige pay the price, and the old faithful will not forgive it.');
     },
-    show: function (s) { return adult(s); },
+    show: function () { return true; },
     can: function (s) { return conversionProbe(s, 'faith'); },
     run: function () {
       if (FB.ui && FB.ui.showConversionPicker) {
         FB.ui.showConversionPicker('faith');
       }
     } },
-  { id: 'adopt_culture', opensChoices:true, noConsume: true,
+  { id: 'adopt_culture', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Take up the language and customs of another people — yourself alone, or your whole household. Prestige pays the price, and your neighbors will mark the change.');
     },
-    show: function (s) { return adult(s); },
+    show: function () { return true; },
     can: function (s) { return conversionProbe(s, 'culture'); },
     run: function () {
       if (FB.ui && FB.ui.showConversionPicker) {
         FB.ui.showConversionPicker('culture');
       }
     } },
-  { id: 'call_great_holy_war', opensChoices:true, noConsume: true,
+  { id: 'call_great_holy_war', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Summon sovereigns of the faith to a 180-day gathering for a lost sacred kingdom.');
     },
     show: function (s) {
-      if (!adult(s) || s.greatHolyWar) return false;
+      if (s.greatHolyWar) return false;
       if (FB.playerPope && FB.playerPope(s)) return true;
       const religionIds = FB.religionIds(s, false);
       for (let i = 0; i < religionIds.length; i++) {
@@ -1656,19 +1659,19 @@ window.FB = window.FB || {};
         FB.ui.showGreatHolyWarSettlement();
       }
     } },
-  { id: 'give_alms',
+  { id: 'give_alms', requiresAdult:true,
     desc: function (s) {
       return FB.T('Bread and coin for the poor at the {temple} gate. ({money:10})',
         { temple: FB.templeWord(me(s).religion) });
     },
-    show: function (s) { return adult(s); },
+    show: function () { return true; },
     can: function (s) { return s.player.gold >= 10 ? true : 'Nothing to spare.'; },
     run: function (s) {
       FB.applyEffects(s, { gold: -10, piety: 8, popularOpinion: 3 });
       FB.news(s, FB.msg('news.action.alms', '🕯 Gave alms to the poor.', {}));
     } },
-  { id: 'begin_plot', opensChoices:true, noConsume: true,
-    show: function (s) { return adult(s) && !s.player.plot &&
+  { id: 'begin_plot', opensChoices:true, noConsume: true, requiresAdult:true,
+    show: function (s) { return !s.player.plot &&
       !s.player.flags.in_prison && !(FB.intrigueCaptivityOf &&
         FB.intrigueCaptivityOf(s, s.player.charId)); },
     can: function (s) { return FB.plotAvailable(s).length ? true : 'No plot within your reach.'; },
@@ -1679,8 +1682,8 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showIntrigueAssets) FB.ui.showIntrigueAssets();
     } },
-  { id: 'mediate',
-    show: function (s) { return s.player.tier <= 2 && adult(s); },
+  { id: 'mediate', requiresAdult:true,
+    show: function (s) { return s.player.tier <= 2; },
     run: function (s) {
       const dip = FB.skillOf(me(s), 'dip');
       if (FB.chance(0.4 + dip * 0.03)) {
@@ -1693,7 +1696,7 @@ window.FB = window.FB || {};
           '🤝 Both sides leave angrier — at each other, and at you.', {}));
       }
     } },
-  { id: 'swear_friend',
+  { id: 'swear_friend', requiresAdult:true,
     desc: function (s) {
       const f = FB.getRole(s, 'friend', false);
       return f
@@ -1702,7 +1705,7 @@ window.FB = window.FB || {};
     },
     show: function (s) {
       const f = FB.getRole(s, 'friend', false);
-      return adult(s) && !!f &&
+      return !!f &&
         FB.standingOf(s, { kind:'character', id:f.id }) >= 40 &&
         !s.player.flags.sworn_friend;
     },
@@ -1733,8 +1736,15 @@ window.FB = window.FB || {};
     run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
   { id: 'better_household', opensChoices:true, noConsume: true,
-    show: function (s) { return s.player.tier <= 2 && adult(s); },
+    show: function (s) { return s.player.tier <= 2; },
     can: function (s) {
+      if (!adult(s)) {
+        FB.ensureHouseholdStandards(s);
+        for (const id of FB.householdStandardIds()) {
+          if (FB.householdStandardLevel(s, id) > 0) return true;
+        }
+        return adultDeedReason();
+      }
       return ((FBDATA.householdStandards && FB.householdStandardIds().length) ||
         FB.holdingAvailable(s).length) ? true : 'Nothing suitable for your station remains.';
     },
@@ -1782,12 +1792,12 @@ window.FB = window.FB || {};
       }
     } },
 
-  { id: 'buy_freedom',
+  { id: 'buy_freedom', requiresAdult:true,
     desc: function () {
       return FB.T('Pay {money:gold} to be struck from the serf-roll.',
         { gold: FBDATA.balance.freedomCost });
     },
-    show: function (s) { return s.player.tier === 0 && adult(s); },
+    show: function (s) { return s.player.tier === 0; },
     can: function (s) {
       if (s.player.gold < FBDATA.balance.freedomCost) return FB.T('Not enough money.');
       const lord = FB.getRole(s, 'lord', true);
@@ -1805,12 +1815,12 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.action.freedom_bought',
         'Bought freedom from serfdom!', {}));
     } },
-  { id: 'buy_land', opensChoices:true, noConsume: true,
+  { id: 'buy_land', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function (s) {
       return FB.T('{money:gold} per plot. Land held together in one settlement is more productive.',
         { gold: FB.landPlotCost(s) });
     },
-    show: function (s) { return canBuyFreeholdLand(s) && adult(s); },
+    show: function (s) { return canBuyFreeholdLand(s); },
     can: function (s) {
       if (!FB.landAvailable(s).length) return 'No more land is for sale here.';
       if (s.player.gold < FB.landPlotCost(s)) return FB.T('Not enough money.');
@@ -1819,12 +1829,12 @@ window.FB = window.FB || {};
     run: function () {
       if (FB.ui && FB.ui.showLandMarket) FB.ui.showLandMarket();
     } },
-  { id: 'declare_manor',
+  { id: 'declare_manor', requiresAdult:true,
     desc: function () {
       return FB.T('Gather {plots} plots in one settlement and command {prestige} prestige to join the gentry.',
         { plots: FBDATA.balance.manorPlotRequirement, prestige: FBDATA.balance.manorPrestige });
     },
-    show: function (s) { return s.player.tier === 1 && adult(s); },
+    show: function (s) { return s.player.tier === 1; },
     can: function (s) {
       if (!FB.manorSite(s)) {
         return FB.T('You need {plots} plots together in one settlement.',
@@ -2396,11 +2406,11 @@ window.FB = window.FB || {};
     },
     show: function (s) { return FB.parliamentActive && FB.parliamentActive(s); },
     run: function (s) { if (FB.ui && FB.ui.showParliament) FB.ui.showParliament(); } },
-  { id: 'coin_credit', opensChoices:true, noConsume: true,
+  { id: 'coin_credit', opensChoices:true, noConsume: true, requiresAdult:true,
     desc: function () {
       return FB.T('Prices, reliable income, loans, pledged property, and trade ventures.');
     },
-    show: function (s) { return adult(s) && FB.financeUiRelevant(s); },
+    show: function (s) { return FB.financeUiRelevant(s); },
     run: function () { if (FB.ui && FB.ui.showFinance) FB.ui.showFinance(); } },
   { id: 'debase_coinage', opensChoices:true, noConsume: true,
     show: function (s) { return s.player.tier >= 6 && !s.player.liege; },
@@ -6718,6 +6728,8 @@ window.FB = window.FB || {};
     const def = FBDATA.holdings[id];
     const done = FB.holdingList(state);
     if (!def || def.eventOnly || done.indexOf(id) >= 0) return;
+    const protagonist = state.chars && state.chars[state.player.charId];
+    if (protagonist && FB.ageOf(protagonist, state.date.year) < 16) return false;
     if (def.req && done.indexOf(def.req) < 0) return;
     const cost = FB.holdingCost(state, id);
     if (state.player.gold < cost) return;
@@ -8883,7 +8895,9 @@ window.FB = window.FB || {};
   }
 
   function focusStatusForAction(state, focus, options) {
-    const shown = !state.player.travel && !!focus.show(state) &&
+    const childhoodFocus = focus.id === 'study' || focus.id === 'play';
+    const shown = !state.player.travel &&
+      (adult(state) || childhoodFocus) && !!focus.show(state) &&
       focusContextPermits(state, focus);
     let can = shown;
     let reason = '';
@@ -8941,7 +8955,11 @@ window.FB = window.FB || {};
   function instantStatusForAction(state, action, shown) {
     shown = shown === undefined ? !!action.show(state) : !!shown;
     let can = shown, reason = '';
-    if (shown && action.cd !== undefined) {
+    if (can && action.requiresAdult && !adult(state)) {
+      can = false;
+      reason = adultDeedReason();
+    }
+    if (can && action.cd !== undefined) {
       const cooldownDays = action.cooldownDays
         ? action.cooldownDays(state) : action.cd;
       const cooldowns = state.player.cooldowns || {};

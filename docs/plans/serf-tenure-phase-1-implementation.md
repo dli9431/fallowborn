@@ -257,13 +257,15 @@ Validation must reject:
 
 - duplicate archetype, duty, conditional-duty, right, or context-slot IDs
 - an unknown event ID
-- a missing translation key
+- a missing name/desc translation record or explicit translation key
 - a nonpositive interval
 - a selector that names an unknown terrain, settlement kind, culture tradition, or
   faith ancestor
 - a context slot whose cases do not have a fallback
 - more than four ordinary duties or more than two recognized rights
 - a catalogue without exactly one unconditional fallback
+
+Note: In alignment with Fallowborn's data architecture, archetypes, duties, and rights define canonical English `name` and `desc` properties directly on their catalogue entries. These are extracted into `tenureArchetype.<id>.name`, `tenureDuty.<id>.name`, and `tenureRight.<id>.name` by `tools/i18n_catalog.py` and resolved at runtime via `FB.dataText`. Explicit `nameKey`/`descKey`/`summaryKey` overrides remain supported.
 
 Validation errors must name the archetype and field. Build and cache the validated
 catalogue on first use. Clear that cache from the same event-registration invalidation
@@ -682,9 +684,9 @@ Extend `tests/e2e/specs/start-progression.spec.js` with:
 Use these start codes or their builder equivalents as the primary fixtures:
 
 ```text
-TENUREC-867-serf-barcelona-f-Ada-standard-0-iberian.catholic
-TENUREM-867-serf-fustat-m-Hassan-standard-0-arabic.sunni
-TENUREP-867-serf-novgorod-m-Igor-standard-0-slavic.slavic_pagan
+TENUREC-867-serf-barcelona-f-Ada
+TENUREM-867-serf-fustat-m-Hassan
+TENUREP-867-serf-novgorod-m-Igor
 ```
 
 Also cover Fustat with `arabic.shia` and Novgorod with

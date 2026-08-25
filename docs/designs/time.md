@@ -6,7 +6,9 @@
 counts days. Each day the player's **focus** ticks (`FB.focuses` — continuous
 activities with per-day rates); **instants** (`FB.instants`) are one-shot deeds that normally
 spend the day or open the interface where a final action is chosen, and may use day-based
-cooldowns (`cd`). The Deeds panel presents this as a strong
+cooldowns (`cd`). For tier 0 serfs, `FB.tenureDay` checks customary duties and presents at most
+one due tenure decision per 90-day season (`lastPresentedSeasonKey`), ensuring regular cycles
+without flooding the daily event flow. The Deeds panel presents this as a strong
 two-kind contract: **Daily Focus** repeats automatically whenever a day passes, while
 **one-time deeds** are chosen once. Immediate and choice-backed deed buttons use different
 border accents; their supplementary **Resolves now** / **Opens choices…** timing and action

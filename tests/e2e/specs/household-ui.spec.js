@@ -3,10 +3,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'data/economy.js',
+  'data/map_data.js',
+  'data/technology.js',
+  'js/main.js',
   'js/actions.js',
   'js/economy.js',
   'js/model.js',
   'js/ui_misc.js',
+  'js/ui_panels.js',
   'js/ui_modals.js',
   'css/style.css'
 ]);
@@ -212,4 +216,99 @@ test('uses the shared question-mark disclosure for household adjustments on comp
     await info.click();
     await expect(info).toHaveAttribute('aria-expanded', 'false');
     await expect(details).toBeHidden();
+  });
+
+test('minor succession keeps adult deeds visible, limits focuses to Study and Play, and permits only inherited-standard reductions',
+  async function ({ page }) {
+    const setup = await page.evaluate(function () {
+      const s = FB.state;
+      const former = s.chars[s.player.charId];
+      s.player.tier = 1;
+      s.player.gold = 250;
+      s.player.householdStandards = { board:2 };
+      s.player.holdings = [];
+      const child = FB.makeCharacter(s, {
+        name:'Alden', sex:'m', born:s.date.year - 10,
+        fatherId:former.sex === 'm' ? former.id : null,
+        motherId:former.sex === 'f' ? former.id : null,
+        culture:former.culture, religion:former.religion,
+        dyn:former.dyn, traitsN:0
+      });
+      former.childrenIds = former.childrenIds || [];
+      former.childrenIds.push(child.id);
+      FB.game.succeedTo(child.id, { livingAbdication:true });
+      FB.ui.showTab('actions');
+      const town = FB.instantStatus(s, 'go_to_town');
+      const household = FB.instantStatus(s, 'better_household');
+      return {
+        age:FB.ageOf(child, s.date.year),
+        focuses:FB.listFocusChoices(s).map(function (item) {
+          return item.action.id;
+        }),
+        town:{ shown:town.shown, can:town.can, reason:town.reason },
+        household:{ shown:household.shown, can:household.can,
+          reason:household.reason },
+        level:FB.householdStandardLevel(s, 'board'),
+        gold:s.player.gold
+      };
+    });
+
+    expect(setup.age).toBe(10);
+    expect(setup.level).toBe(2);
+    expect(setup.focuses).toEqual(['study', 'play']);
+    expect(setup.town).toMatchObject({ shown:true, can:false });
+    expect(setup.town.reason).toBe('You can do this when you come of age at 16.');
+    expect(setup.household).toMatchObject({ shown:true, can:true });
+    await expect(page.locator('[data-focus-id]')).toHaveCount(2);
+    await expect(page.locator('[data-focus-id="study"]')).toBeVisible();
+    await expect(page.locator('[data-focus-id="play"]')).toBeVisible();
+
+    const town = page.locator('[data-action-id="go_to_town"]');
+    await expect(town).toBeVisible();
+    await expect(town).toBeDisabled();
+    await expect(page.locator('#deed-details-go_to_town')).toContainText(
+      'You can do this when you come of age at 16.');
+
+    const household = page.locator('[data-action-id="better_household"]');
+    await expect(household).toBeEnabled();
+    await household.click();
+    await expect(page.locator('#genmodal')).toHaveClass(/household-modal/);
+    await expect(page.locator('#gm-body')).toContainText(
+      'During childhood you may reduce inherited standards');
+
+    const boardRow = page.locator('[data-household-standard-row="board"]');
+    const decrease = boardRow.locator('[data-household-standard-adjust="-1"]');
+    const increase = boardRow.locator('[data-household-standard-adjust="1"]');
+    await expect(decrease).toBeEnabled();
+    await expect(increase).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.locator('#household-standard-upgrade-details-board')).toContainText(
+      'new purchases unlock at age 16');
+    await expect(page.locator('#household-property [data-holding]').first()).toBeDisabled();
+    await expect(page.locator('#household-property')).toContainText('Available at age 16');
+
+    await decrease.click();
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const beforeGold = s.player.gold;
+      const beforeLevel = FB.householdStandardLevel(s, 'board');
+      const upgrade = FB.buyHouseholdStandard(s, 'board');
+      const holding = FB.buyHolding(s, 'hearth_garden');
+      return {
+        beforeLevel:beforeLevel,
+        level:FB.householdStandardLevel(s, 'board'),
+        gold:s.player.gold,
+        beforeGold:beforeGold,
+        upgrade:upgrade,
+        holding:holding,
+        ownsGarden:FB.holdingList(s).indexOf('hearth_garden') >= 0
+      };
+    })).toEqual({
+      beforeLevel:1,
+      level:1,
+      gold:setup.gold,
+      beforeGold:setup.gold,
+      upgrade:false,
+      holding:false,
+      ownsGarden:false
+    });
   });

@@ -14,6 +14,10 @@ Broad identities such as `christian`, `muslim`, and `pagan` are ordinary nodes w
 a person or map province. This keeps “Christian” useful as an ancestor without creating
 characters whose only identity is Christianity.
 
+Serf tenure archetype selectors query this inheritance graph through `FB.faithIsA(faith, ancestor, state)`
+so that Catholic, Sunni/Shia, and Slavic/Norse/Baltic pagan serfs receive culturally and doctrinally
+distinct customary tenure packages (`latin_manorial`, `irrigated_fellah`, `pagan_household_service`).
+
 Identity and lifecycle fields stay local (an omitted icon alone may fall back to the
 parent's icon):
 

@@ -12054,6 +12054,8 @@ window.FB = window.FB || {};
   }
 
   function permanentHoldingsHtml(s) {
+    const protagonist = s.chars && s.chars[s.player.charId];
+    const minor = protagonist && FB.ageOf(protagonist, s.date.year) < 16;
     let h = '<section class="household-catalogue-section" id="household-property" ' +
       'aria-labelledby="household-property-title"><h4 id="household-property-title">' +
       esc(FB.T('Permanent household property')) +
@@ -12066,7 +12068,7 @@ window.FB = window.FB || {};
       const short = s.player.gold < cost;
       h += '<button class="actionbtn household-entry household-property-entry" ' +
         'data-holding="' + esc(t.id) + '"' +
-        (short ? ' disabled' : '') + '>' +
+        (minor || short ? ' disabled' : '') + '>' +
         householdCatalogueEntry({
           icon:t.def.icon,
           name:dt(s, 'holding', t.id, t.def, 'name'),
@@ -12074,7 +12076,8 @@ window.FB = window.FB || {};
           effect:holdingEffectText(t.def) +
             (t.def.pledge === false ? ' · ' + holdingTransferRule(t.def) : ''),
           cost:FB.money(cost),
-          costLabel:short ? FB.T('not enough money') : FB.T('Setup cost'),
+          costLabel:minor ? FB.T('Available at age 16') :
+            (short ? FB.T('not enough money') : FB.T('Setup cost')),
           recurring:FB.T('No upkeep'),
           unaffordable:short
         }) + '</button>';
@@ -12110,6 +12113,8 @@ window.FB = window.FB || {};
 
   UI.showHousehold = function () {
     const s = FB.state;
+    const protagonist = s.chars && s.chars[s.player.charId];
+    const minor = protagonist && FB.ageOf(protagonist, s.date.year) < 16;
     FB.ensureHouseholdStandards(s);
     const upkeep = FB.householdStandardsUpkeep(s);
     const net = FB.reliableGoldIncome(s);
@@ -12123,7 +12128,9 @@ window.FB = window.FB || {};
         (projected < 0 ? 'op-bad' : '') + '">' + esc(FB.money(projected)) + '</span>') +
       '</div><p class="household-intro">' + esc(FB.T(
         'Use − and + beside a standard to change it by one level. Hover or focus a control for its full effect, ownership, upkeep, and lapse terms.')) +
-      '</p>' + (projected < 0 ? '<p class="household-warning op-bad">' + esc(FB.T(
+      '</p>' + (minor ? '<p class="household-warning">' + esc(FB.T(
+        'During childhood you may reduce inherited standards, but new standards and property purchases unlock at age 16.')) +
+        '</p>' : '') + (projected < 0 ? '<p class="household-warning op-bad">' + esc(FB.T(
         'The projected purse is negative. Spending is still allowed, but unaffordable standards will lapse at the season boundary without debt or further penalty.')) +
         '</p>' : '');
 

@@ -1,5 +1,20 @@
 # Events are data
 
+## Persistent Serf Tenure & Customary Obligations
+
+Tier 0 serf households participate in a structured customary tenure model. Ten ordinary serf
+burden stories (`serf_boon_harvest`, `serf_weekwork_tally`, `serf_mill_multure`, `serf_pannage_due`,
+`serf_marriage_leave`, `serf_tithe_sheaf`, `serf_bridge_cartage`, `serf_common_oven`,
+`serf_deadwood_amerced`, `serf_officers_quartered`) are converted to scheduled tenure events with
+`trigger: { never: true }` and `contextValidator: 'serf_tenure_context_valid'`.
+
+The daily tenure scheduler (`FB.tenureDay`) queues due duties based on calendar turns and active
+archetype cycles, presenting at most one decision per season. Resolution advances regular duties by
+their package intervals (720 turns) and clears conditional duties with a 12-season cooldown. Replay
+protection and context validation guarantee that invalidated, stale, or relocated events are
+discarded without gameplay side effects or double-charging. Extraordinary burdens
+(`serf_extraordinary_tallage`, `serf_seed_grain_requisition`) remain in the random pool.
+
 Exceptional sibling courtship uses three queued, context-validated events:
 the one-time approach, illicit exposure, and the final proposal. Pair status,
 target id, route, and resource checks are revalidated when the event reaches

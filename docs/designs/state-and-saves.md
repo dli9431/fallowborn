@@ -1,5 +1,13 @@
 # Game state & saves
 
+Persistent serf tenure is additive save-format-3 data (`state.player.tenure`).
+`FB.ensureSerfTenure` lazily creates or repairs tenure records on older tier 0 saves without
+consuming RNG or bumping save format 3:
+- Schema fields: `{ version: 1, status: 'active' | 'closed', provinceId, settlement, archetypeId, formedTurn, formedBy, lastPresentedSeasonKey, duties: [{ id, eventId, nextDueTurn, lastResolvedTurn }], conditional: [{ id, eventId, nextEligibleTurn, pendingTurn, lastResolvedTurn, currentWarId, marriageTurn? }], rights: [rightId] }`.
+- When closed on promotion or manumission, `status: 'closed'`, `endedTurn`, and `endReason` are preserved.
+- Unknown optional duty, conditional-duty, and right IDs remain harmless save data and are ignored by scheduling and display.
+- No rendered text, active calculations, or volatile references enter serialized state.
+
 Phase 4E action capabilities add no serialized state. A `resource_choice` deed picker is
 only a generic-modal view: opening, cancelling, mobile Back, saving, or reloading before
 confirmation leaves no pending-action record. Confirmation completes synchronously through
