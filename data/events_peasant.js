@@ -69,22 +69,46 @@ FBDATA.events.push(
     { label:'Bribe the reeve to overlook you.', require:{ goldMin:3 }, desc:'A few coins, and the dawn knock is not for you.', effects:{ gold:-3 } }
   ]},
 /* ---------- customary burdens (serfs) ---------- */
-{ id:'serf_boon_harvest', title:'The Lord’s Harvest First',
-  trigger:{ tierMax:0, minAge:16, seasons:[2], chance:0.22 }, weight:9, cooldown:6,
-  text:'Your own grain stands ripe when the reeve’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip.',
+{ id:'serf_boon_harvest',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The Lord’s Harvest First',
+    irrigated_fellah:'The Estate Harvest First',
+    pagan_household_service:'The Master’s Harvest First',
+    other:'The Customary Harvest First'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Your own grain stands ripe when the reeve’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip.',
+    irrigated_fellah:'Your household fields are ready for harvest, but the overseer calls every laborer to the estate crop first. The shared ditches and storehouses must receive their {duty} before private sickles work.',
+    pagan_household_service:'The grain in your household plot is ripe, but the master’s horn calls every hand to his great fields first. Custom commands that the master’s sheaves stand bound before your own are cut.',
+    other:'Your own grain stands ripe when the horn sounds. Custom summons every able hand to harvest the estate fields before sickles may touch household ground.'
+  }}},
   options:[
     { label:'Send every hand to the demesne.', desc:'The lord’s grain comes in while yours waits under the weather.',
       effects:{ health:-1, gold:-2, opinion:{role:'lord', amt:4} } },
     { label:'Hire someone to answer for you. ({money:4})', require:{ goldMin:4 }, desc:'Buy back the day your own harvest needs.',
       effects:{ gold:-4 } },
     { label:'Keep one reaper hidden at home.', desc:'One pair of hands for your field, if the tally misses them.', chance:'skill_int',
-      success:{ text:'The reeve counts heads, not shadows. Your hidden reaper saves the ripest rows.', effects:{ skills:{int:1} } },
+      success:{ text:'The count tallies heads, not shadows. Your hidden reaper saves the ripest rows.', effects:{ skills:{int:1} } },
       failure:{ text:'The missing hand is named before noon. The amercement costs more than the grain it saved.',
         effects:{ gold:-4, opinion:{role:'lord', amt:-8} } } }
   ]},
-{ id:'serf_weekwork_tally', title:'A Longer Week',
-  trigger:{ tierMax:0, minAge:16, chance:0.16 }, weight:7, cooldown:10,
-  text:'The steward measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed.',
+{ id:'serf_weekwork_tally',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'A Longer Week',
+    irrigated_fellah:'The Labor Tally',
+    pagan_household_service:'The Service Roll',
+    other:'A Longer Tally'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The steward measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed.',
+    irrigated_fellah:'The estate supervisor inspects the household plots and records an added measure of canal and field labor for {duty} beyond the customary tally.',
+    pagan_household_service:'The master’s bailiff inspects the household dwellings and marks another day of heavy service onto the wooden tally stick.',
+    other:'The steward measures every holding anew, then announces that your household owes an added day of customary labor beyond the old tally.'
+  }}},
   options:[
     { label:'Give the added day.', desc:'A day for the lord is a day stolen from your own ground.',
       effects:{ health:-1, opinion:{role:'lord', amt:3} } },
@@ -94,9 +118,21 @@ FBDATA.events.push(
       success:{ text:'Three elders repeat the same number. The steward restores the missing stroke.', effects:{ prestige:3, skills:{lea:1} } },
       failure:{ text:'Memory bends under questions. The new tally stands, with a penalty for delay.', effects:{ health:-1, prestige:-3 } } }
   ]},
-{ id:'serf_mill_multure', title:'The Miller’s Share',
-  trigger:{ tierMax:0, minAge:16, chance:0.18 }, weight:8, cooldown:8,
-  text:'The miller finds meal from a hand-quern in your bin. Grain from this holding must pass beneath {lord}’s millstones, with every lawful sack leaving a share behind.',
+{ id:'serf_mill_multure',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The Miller’s Share',
+    irrigated_fellah:'The Mill Multure',
+    pagan_household_service:'The Grinding Toll',
+    other:'The Mill Toll'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The miller finds meal from a hand-quern in your bin. Grain from this holding must pass beneath {lord}’s millstones, with every lawful sack leaving a share behind.',
+    irrigated_fellah:'The estate miller discovers flour ground by hand in your dwelling. By local custom, grain harvested from dependent soil must be ground at the communal watermill and render its customary {duty}.',
+    pagan_household_service:'The master’s miller notices stone-ground meal in your grain chest. Custom forbids household querns while the master’s mill wheel turns, demanding a share of every sack.',
+    other:'The miller finds meal from a private quern in your bin. Grain from this holding must pass beneath the estate millstones, leaving its customary toll behind.'
+  }}},
   options:[
     { label:'Surrender the miller’s share.', desc:'Lose the grain and close the matter.', effects:{ gold:-3 } },
     { label:'Carry the rest back to the lord’s mill.', desc:'Pay the toll in grain, road, and aching shoulders.', effects:{ gold:-1, health:-1 } },
@@ -105,10 +141,19 @@ FBDATA.events.push(
       failure:{ text:'The flour is still warm from your quern. He seizes the sack and adds a fine.',
         effects:{ gold:-5, opinion:{role:'lord', amt:-6} } } }
   ]},
-{ id:'serf_pannage_due', title:'Under the Oak Mast',
-  trigger:{ tierMax:0, minAge:16, seasons:[2], terrains:['forest','hills'], chance:0.2 },
-  weight:7, cooldown:8,
-  text:'Acorns lie thick beneath the lord’s oaks, enough to fatten every village pig. The forester waits at the wood’s edge to collect pannage before a snout crosses the ditch.',
+{ id:'serf_pannage_due',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Under the Oak Mast',
+    pagan_household_service:'Woodland Pasture Due',
+    other:'Pannage in the Woods'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Acorns lie thick beneath the lord’s oaks, enough to fatten every village pig. The forester waits at the wood’s edge to collect pannage before a snout crosses the ditch.',
+    pagan_household_service:'Fallen acorns and beech mast cover the master’s sacred woods. The woodsman demands the customary tribute before your swine may fatten under the trees.',
+    other:'Acorns lie thick beneath the estate oaks. The forester waits at the wood’s edge to collect the customary {duty} before swine may forage.'
+  }}},
   options:[
     { label:'Pay for the woodland mast.', desc:'A lean purse now for a fatter animal in winter.', effects:{ gold:-2 } },
     { label:'Keep the swine penned and feed them grain.', desc:'Save the fee and spend the household’s own food instead.', effects:{ gold:-2 } },
@@ -117,10 +162,21 @@ FBDATA.events.push(
       failure:{ text:'A bellwether squeals beneath the forester’s window. He takes the fattest pig as amercement.',
         effects:{ gold:-5, opinion:{role:'lord', amt:-8} } } }
   ]},
-{ id:'serf_marriage_leave', title:'Leave to Wed', once:true,
-  trigger:{ tierMax:0, minAge:16, married:true, maxSeasonsSinceMarriage:2, chance:0.5 },
-  weight:12,
-  text:'The reeve comes after the wedding feast with a reminder: an unfree tenant does not marry beyond the household without {lord}’s leave, and leave has its price.',
+{ id:'serf_marriage_leave',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Leave to Wed',
+    irrigated_fellah:'The Marriage Custom',
+    pagan_household_service:'Master’s Leave to Wed',
+    other:'Customary Marriage Dues'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The reeve comes after the wedding feast with a reminder: an unfree tenant does not marry beyond the household without {lord}’s leave, and leave has its price.',
+    irrigated_fellah:'Following the marriage, the village elder arrives to record the new union in the estate rolls and collect the customary {duty}.',
+    pagan_household_service:'Following your vows, the master’s officer appears at the hearth: an unfree servant does not take a spouse without the master’s sanction and service payment.',
+    other:'The steward comes after the wedding with a reminder: a dependent tenant owes customary leave and dues to the lord upon forming a new household.'
+  }}},
   options:[
     { label:'Pay the marriage fine. ({money:5})', require:{ goldMin:5 }, desc:'Begin married life with an emptier purse and a closed tally.', effects:{ gold:-5 } },
     { label:'Work the fine in extra days.', desc:'Let your back purchase what the wedding promised.',
@@ -130,10 +186,21 @@ FBDATA.events.push(
       failure:{ text:'The petition is called ingratitude. The full fine grows by another coin.',
         effects:{ gold:-6, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_tithe_sheaf', title:'The Tenth Sheaf',
-  trigger:{ tierMax:0, minAge:16, religionGroup:'christian', seasons:[2], chance:0.2 },
-  weight:7, cooldown:8,
-  text:'The tithe collector walks the stubble counting every tenth sheaf for the {temple}. The lord’s harvest is already gone, and winter has not yet shown its teeth.',
+{ id:'serf_tithe_sheaf',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The Tenth Sheaf',
+    irrigated_fellah:'The Harvest Tithe',
+    pagan_household_service:'Sacred First Fruits',
+    other:'The Tithe Sheaf'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The tithe collector walks the stubble counting every tenth sheaf for the {temple}. The lord’s harvest is already gone, and winter has not yet shown its teeth.',
+    irrigated_fellah:'The collector of religious dues walks the threshing floor to measure the customary share of grain for {duty} and charitable endowments.',
+    pagan_household_service:'The elder priest arrives at the field’s edge to take the sacred tenth of the harvest for the altar and seasonal rites.',
+    other:'The tithe collector walks the field counting every tenth sheaf for the {temple}. The customary share must be delivered before winter arrives.'
+  }}},
   options:[
     { label:'Give the full tenth.', desc:'Render the sacred share and tighten the household store.', effects:{ gold:-2, piety:2 } },
     { label:'Cart the parish grain in place of part of it.', desc:'Pay with shoulders where the granary cannot.', effects:{ health:-1, piety:3 } },
@@ -142,9 +209,21 @@ FBDATA.events.push(
       failure:{ text:'A fork strikes the hidden bundle. The grain goes to the church with an amercement besides.',
         effects:{ gold:-5, piety:-4 } } }
   ]},
-{ id:'serf_bridge_cartage', title:'Timber for the Bridge',
-  trigger:{ tierMax:0, minAge:16, seasons:[0], chance:0.16 }, weight:7, cooldown:10,
-  text:'Floodwater has bitten through the bridge piles. The steward apportions timber, carts, and labor by holding; your mark appears beside the longest haul.',
+{ id:'serf_bridge_cartage',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Timber for the Bridge',
+    irrigated_fellah:'Waterworks Cartage',
+    pagan_household_service:'Hauling for the Fort',
+    other:'Communal Cartage Due'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Floodwater has bitten through the bridge piles. The steward apportions timber, carts, and labor by holding; your mark appears beside the longest haul.',
+    irrigated_fellah:'Seasonal floods have damaged the irrigation dikes and stone bridges. The water bailiff assigns cartage and heavy labor for {duty} to every holding; your household receives the longest run.',
+    pagan_household_service:'Heavy spring rains have washed out the ford and palisade ditch. The master demands logs, stone, and carts from every serf dwelling to restore the works.',
+    other:'Seasonal floods have damaged the local roadways and bridges. The steward apportions timber and carts by holding; your mark appears beside the longest haul.'
+  }}},
   options:[
     { label:'Take the cart road and haul it.', desc:'A sound bridge for everyone, paid for by your bones.', effects:{ health:-1 } },
     { label:'Lend the household cart and stay afield.', desc:'Let wheel and axle suffer in your place.', effects:{ gold:-2 } },
@@ -153,9 +232,21 @@ FBDATA.events.push(
       failure:{ text:'A wheel sinks to the hub. Dragging it free costs the strength you meant to save.', effects:{ health:-2 } } },
     { label:'Pay a carter to take your mark. ({money:3})', require:{ goldMin:3 }, desc:'Another household takes the mud; yours pays the coin.', effects:{ gold:-3 } }
   ]},
-{ id:'serf_common_oven', title:'The Lord’s Oven',
-  trigger:{ tierMax:0, minAge:16, seasons:[3], chance:0.18 }, weight:7, cooldown:8,
-  text:'The village oven is hot, and the baker has raised the customary toll. He points to the cold clay ovens behind the cottages: none may bake while {lord}’s fire burns.',
+{ id:'serf_common_oven',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The Lord’s Oven',
+    irrigated_fellah:'The Communal Bakery',
+    pagan_household_service:'The Master’s Hearth',
+    other:'The Common Oven'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The village oven is hot, and the baker has raised the customary toll. He points to the cold clay ovens behind the cottages: none may bake while {lord}’s fire burns.',
+    irrigated_fellah:'The village bakery is fired for the winter bread, but the baker raises the customary toll on household dough under {duty}. Private hearth ovens remain locked under village regulation.',
+    pagan_household_service:'The master’s communal oven is heated, and his servant collects a heavy toll of dough from every cottage. Domestic baking without permission is forbidden.',
+    other:'The village oven is fired, and the baker demands the customary toll. Private baking is restricted while the communal oven burns.'
+  }}},
   options:[
     { label:'Pay the oven toll.', desc:'Lawful bread, dearer than yesterday’s.', effects:{ gold:-2 } },
     { label:'Bring fuel and tend the fire instead.', desc:'Trade a day in the coppice for the baker’s share.', effects:{ health:-1 } },
@@ -164,10 +255,19 @@ FBDATA.events.push(
       failure:{ text:'Smoke curls above the roof. The baker arrives before the loaf is cool.',
         effects:{ gold:-4, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_deadwood_amerced', title:'Whose Fallen Wood?',
-  trigger:{ tierMax:0, minAge:16, seasons:[3], terrains:['forest','hills','mountains'], chance:0.16 },
-  weight:6, cooldown:10,
-  text:'The forester stops your sledge at the wood’s edge. You gathered only storm-fallen limbs, but he says even dead wood belongs first to {lord}.',
+{ id:'serf_deadwood_amerced',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Whose Fallen Wood?',
+    pagan_household_service:'Fuel from the Master’s Wood',
+    other:'Deadwood Gathering Due'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'The forester stops your sledge at the wood’s edge. You gathered only storm-fallen limbs, but he says even dead wood belongs first to {lord}.',
+    pagan_household_service:'The woodsman blocks your way as you pull dry branches from the master’s forest. He declares that even dead timber and frost-cracked wood belong to the master’s store.',
+    other:'The forester stops your cart at the wood’s edge. You gathered only storm-fallen limbs, but he insists that all deadwood belongs first to the estate under {duty}.'
+  }}},
   options:[
     { label:'Pay the wood amercement. ({money:3})', require:{ goldMin:3 }, desc:'Keep the fuel and surrender the coin.', effects:{ gold:-3 } },
     { label:'Leave the whole bundle.', desc:'Walk home cold rather than enter the forester’s book.', effects:{ health:-1 } },
@@ -176,9 +276,22 @@ FBDATA.events.push(
       failure:{ text:'The forester calls custom a tale told by thieves. The fine doubles.',
         effects:{ gold:-4, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_officers_quartered', title:'Boots by the Hearth', wartime:true,
-  trigger:{ tierMax:0, minAge:16, realmAtWar:true, chance:0.15 }, weight:8, cooldown:12,
-  text:'Mounted officers in {lord}’s colors claim your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently.',
+{ id:'serf_officers_quartered',
+  title:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Boots by the Hearth',
+    irrigated_fellah:'Quartering the Retainers',
+    pagan_household_service:'Warriors at the Door',
+    other:'Billeting and Quartering'
+  }}},
+  wartime:true,
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_context_valid',
+  text:{ forms:{ select:'value', param:'archetypeId', cases:{
+    latin_manorial:'Mounted officers in {lord}’s colors claim your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently.',
+    irrigated_fellah:'Armed riders from the garrison arrive at dusk demanding shelter, barley for their horses, and food from the household store while the realm is at war under {duty}.',
+    pagan_household_service:'The master’s warband returns from the borders and billets in the serf dwellings. They take the hearth, grain, and straw by right of martial service.',
+    other:'Armed retainers in the lord’s colors demand hearth, fodder, and food for the night under the customary wartime billeting obligation.'
+  }}},
   options:[
     { label:'Set out everything they ask.', desc:'An empty larder may purchase a favorable word.',
       effects:{ gold:-4, opinion:{role:'lord', amt:4} } },
@@ -250,7 +363,7 @@ FBDATA.events.push(
   trigger:{ tierMax:0, flags:['freedom_promised'], goldMin:30, chance:0.5 }, weight:20,
   text:'The {holy} drafts the charter by candlelight. For thirty pieces of silver, {lord} will strike your name from the roll of serfs — forever.',
   options:[
-    { label:'Pay. Be free.', desc:'A fortune in silver for a single word: yours.', effects:{ gold:-30, tierSet:1, prestige:15, piety:5, log:'Bought freedom from serfdom!' } },
+    { label:'Pay. Be free.', desc:'A fortune in silver for a single word: yours.', effects:{ tenureEnd:'manumission', gold:-30, tierSet:1, prestige:15, piety:5, log:'Bought freedom from serfdom!' } },
     { label:'Not yet. Save more first.', desc:'Freedom keeps; the charter can wait another season.', effects:{ } }
   ]},
 
@@ -336,7 +449,7 @@ FBDATA.events.push(
   text:'They say a serf who reaches a town and lives there a year and a day is free. The road is long, the law is against you — but the door stands open tonight.',
   options:[
     { label:'Run.', desc:'Freedom at the end of the road — or a halter.', chance:0.5,
-      success:{ text:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.', effects:{ tierSet:1, moveRandom:true, gold:-3, prestige:5, log:'Fled serfdom to a new land!' } },
+      success:{ text:'Weeks of hedgerows and hunger — but you make it. A new province, a new name, a free life.', effects:{ tenureEnd:'flight', tierSet:1, moveRandom:true, gold:-3, prestige:5, log:'Fled serfdom to a new land!' } },
       failure:{ text:'The lord’s riders catch you at the ford. You are dragged back in a halter.', effects:{ health:-2, prestige:-10, opinion:{role:'lord', amt:-20}, rivalContact:{role:'lord', score:2, cause:'attempted_escape'} } } },
     { label:'Stay. This is home, chains and all.', desc:'Better the known yoke than the unknown road.', effects:{ } }
   ]},
@@ -431,7 +544,7 @@ FBDATA.events.push(
     { label:'Renew the right already held by your house.', require:{ flags:['old_custom_won'], holdings:['common_rights'] }, desc:'Confirm in ink what your house already holds.',
       effects:{ prestige:15, popularOpinion:10, opinion:{role:'lord', amt:5}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
     { label:'Ask for your freedom as the price.', require:{ flags:['old_custom_won'], tierMax:0 }, desc:'Trade the village’s gain for your own chains broken.',
-      effects:{ tierSet:1, prestige:15, popularOpinion:-5, opinion:{role:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', log:'Won freedom in the struggle over the common.' } },
+      effects:{ tenureEnd:'old_custom', tierSet:1, prestige:15, popularOpinion:-5, opinion:{role:'lord', amt:10}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won', log:'Won freedom in the struggle over the common.' } },
     { label:'Ask instead for a place in the lord’s service.', require:{ flags:['old_custom_won'], tierMin:1, tierMax:2 }, desc:'Turn victory into a step up the ladder.',
       effects:{ prestige:20, popularOpinion:-3, opinion:{role:'lord', amt:25}, clearFlag:'old_custom_resolve', clearFlag2:'old_custom_won' } },
 

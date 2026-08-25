@@ -4,6 +4,8 @@ dependsOnRuntime(__filename, [
   'data/map_data.js',
   'js/main.js',
   'js/save.js',
+  'js/i18n.js',
+  'js/events.js',
   'js/ui_misc.js',
   'js/ui_panels.js',
   'js/ui_modals.js',
@@ -11,8 +13,13 @@ dependsOnRuntime(__filename, [
   'js/actions.js',
   'css/style.css',
   'data/bookmarks.js',
+  'data/economy.js',
   'data/events_common.js',
-  'data/events_tutorial.js'
+  'data/events_peasant.js',
+  'data/events_tutorial.js',
+  'data/technology.js',
+  'data/lang_en.js',
+  'data/lang_fr.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -959,22 +966,240 @@ test('a mid-checklist save from the single-track version keeps its progress',
     expect(status.done).toBe(1);
   });
 
-test('unlanded rank details modal shows settlement, county ruler, and station context instead of noble demesne counts',
+test('unlanded rank details modal shows settlement, county ruler, customary tenure, and obligations at 390px viewport with keyboard focus, scrolling, and Escape dismissal',
   async function ({ page }) {
+    await page.setViewportSize({ width: 390, height: 844 });
     await startDeterministicGame(page);
+    await page.evaluate(function () {
+      FB.setPlayerTier(FB.state, 0, { tenureFormationReason:'rank_change' });
+      FB.ui.refresh();
+      FB.ui.showTab('char');
+    });
     const rank = page.locator('#self-rank-details');
     await expect(rank).toBeVisible();
-    await rank.click();
 
+    // 1. Open the modal from the keyboard and verify its focus target.
+    await rank.focus();
+    await page.keyboard.press('Enter');
     await expect(page.getByRole('heading', { name:'Station & home', exact:true }))
       .toBeVisible();
+    const closeBtn = page.locator('#rank-details-close');
+    await expect(closeBtn).toBeVisible();
+    await expect(closeBtn).toBeFocused();
+
+    // 2. 390px mobile layout and structural selectors
     await expect(page.locator('#gm-body .kv:has(span:text-is("Settlement")) b'))
       .toBeVisible();
     await expect(page.locator('#gm-body .kv:has(span:text-is("County ruler")) b'))
       .toBeVisible();
-    await expect(page.locator('#gm-body .panelh')).toContainText('Home');
+    await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
+    await expect(page.locator('#gm-body [data-tenure-duty]').first()).toBeVisible();
+    await expect(page.locator('#gm-body [data-tenure-next-due]')).toBeVisible();
+    await expect(page.locator('#gm-body .panelh').first()).toContainText('Home');
     await expect(page.locator('#gm-body')).not.toContainText('Held directly');
     await expect(page.locator('#gm-body')).not.toContainText('Direct demesne');
     await expect(page.locator('#gm-body')).not.toContainText('Path:');
+
+    // 3. Scrolling container verification — verify panel actually has scrollable content
+    const isScrollable = await page.locator('#gm-body').evaluate(function (el) {
+      return el.scrollHeight > el.clientHeight;
+    });
+    expect(isScrollable).toBe(true);
+
+    // 4. Dismiss modal via Escape key and verify hidden state
+    await page.keyboard.press('Escape');
+    await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
+  });
+
+test('Station & home modal renders all four archetypes into DOM with exact duty counts and rights',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+
+    const archetypes = [
+      { id:'latin_manorial', title:'Manorial customary tenure', dutyCount:4,
+        culture:'english', faith:'catholic', terrain:'farmland', dev0:5, kind:'village',
+        rights:['gleaning_after_harvest'], nearest:'Boon harvest', pending:true },
+      { id:'irrigated_fellah', title:'Irrigated fellah tenure', dutyCount:4,
+        culture:'arabic', faith:'sunni', terrain:'farmland', dev0:6, kind:'village',
+        rights:['irrigation_turn'], nearest:'Crop-share delivery' },
+      { id:'pagan_household_service', title:'Household-service tenure', dutyCount:3,
+        culture:'slavic', faith:'slavic_pagan', terrain:'forest', dev0:2, kind:'village',
+        rights:[], nearest:'Master’s harvest' },
+      { id:'dependent_farming', title:'Dependent farming tenure', dutyCount:2,
+        culture:'khazar', faith:'jewish', terrain:'steppe', dev0:1, kind:'town',
+        rights:[], nearest:'Seasonal harvest' }
+    ];
+
+    for (const arch of archetypes) {
+      await page.evaluate(function (fixture) {
+        FB.state.player.tier = 0;
+        const prov = FB.state.player.provinceId || 'london';
+        const sett = FB.state.player.homeSettlement || 0;
+        const res = FB.selectSerfTenureArchetype({
+          provinceId:prov, settlementIndex:sett, culture:fixture.culture,
+          faith:fixture.faith, terrain:fixture.terrain, dev0:fixture.dev0,
+          settlementKind:fixture.kind, state:FB.state
+        });
+        if (res.archetype.id !== fixture.id) throw new Error('Unexpected tenure archetype.');
+
+        FB.state.player.tenure = {
+          version: 1,
+          status: 'active',
+          provinceId: prov,
+          settlement: sett,
+          archetypeId: fixture.id,
+          formedTurn: FB.state.turn,
+          formedBy: 'new_game',
+          duties: res.resolvedDuties.map(function (d, index) {
+            return {
+              id:d.id,
+              eventId:d.eventId,
+              nextDueTurn:FB.state.turn + (index === 1 ? 5 : 50 + index),
+              lastResolvedTurn:null
+            };
+          }),
+          conditional: (res.archetype.conditionalDuties || []).map(function (c, index) {
+            return {
+              id:c.id,
+              eventId:c.eventId,
+              nextEligibleTurn:0,
+              pendingTurn:fixture.pending && index === 0 ? FB.state.turn + 7 : null,
+              lastResolvedTurn:null
+            };
+          }),
+          rights: res.resolvedRights
+        };
+        FB.ui.showRankDetails();
+      }, arch);
+
+      await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
+      await expect(page.locator('#gm-body .tenure-archetype-name')).toContainText(arch.title);
+      await expect(page.locator('#gm-body [data-tenure-duty]')).toHaveCount(arch.dutyCount);
+      await expect(page.locator('#gm-body [data-tenure-next-due]')).toContainText(arch.nearest);
+      if (arch.rights.length) {
+        await expect(page.locator('#gm-body [data-tenure-right]')).toHaveCount(arch.rights.length);
+        for (const rightId of arch.rights) {
+          await expect(page.locator('#gm-body [data-tenure-right="' + rightId + '"]')).toBeVisible();
+        }
+      } else {
+        await expect(page.locator('#gm-body [data-tenure-right="none"]')).toBeVisible();
+      }
+      await expect(page.locator('#gm-body [data-tenure-conditional]'))
+        .toHaveCount(arch.pending ? 1 : 0);
+      await page.locator('#rank-details-close').click();
+    }
+  });
+
+test('Station & home modal renders English and an injected test locale without untranslated tokens or raw IDs',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+
+    // 1. English rendering: no raw {token} placeholders
+    var englishText = await page.evaluate(function () {
+      FB.setPlayerTier(FB.state, 0, { tenureFormationReason:'rank_change' });
+      FB.ensureSerfTenure(FB.state, 'new_game');
+      FB.ui.showRankDetails();
+      var body = document.getElementById('gm-body');
+      return {
+        text: body ? body.innerText : '',
+        hasRawTokens: body ? /\{[a-zA-Z0-9_]+\}/.test(body.innerText) : false,
+        hasRawIds: body ? /(?:latin_manorial|week_work|demesne_harvest|gleaning_after_harvest)/.test(body.innerText) : false
+      };
+    });
+    expect(englishText.text.length).toBeGreaterThan(0);
+    expect(englishText.hasRawTokens).toBe(false);
+    expect(englishText.hasRawIds).toBe(false);
+    await page.locator('#rank-details-close').click();
+
+    // 2. Load the real Preview-locale path, inject two exact records before
+    // activation, and prove both UI and tenure keys are consumed.
+    var localized = await page.evaluate(function () {
+      return new Promise(function (resolve) {
+        localStorage.setItem('fb_lang', 'fr');
+        FB.loadSelectedLocale(function (loaded) {
+          var catalog = FBDATA.lang.fr;
+          catalog.entries['ui:Station & home'] = {
+            text:'Statut et foyer',
+            hash:FB.i18nHash({ text:'Station & home' })
+          };
+          catalog.entries.tenure_archetype_latin_manorial_name = {
+            text:'Tenure coutumière seigneuriale',
+            hash:FB.i18nHash({ text:'Manorial customary tenure' })
+          };
+          FB.finalizeLocale(loaded);
+          FB.ui.showRankDetails();
+          var body = document.getElementById('gm-body');
+          var heading = document.getElementById('gm-title');
+          localStorage.setItem('fb_lang', 'en');
+          resolve({
+            locale:FB.locale,
+            heading:heading ? heading.textContent : '',
+            text:body ? body.innerText : ''
+          });
+        });
+      });
+    });
+    expect(localized.locale).toBe('fr');
+    expect(localized.heading).toContain('Statut et foyer');
+    expect(localized.text).toContain('Tenure coutumière seigneuriale');
+    await page.locator('#rank-details-close').click();
+  });
+
+test('Station & home modal renders live controller updates, zero-right variants, and preserves state neutrality',
+  async function ({ page }) {
+    await startDeterministicGame(page);
+    await page.evaluate(function () {
+      FB.setPlayerTier(FB.state, 0, { tenureFormationReason:'rank_change' });
+    });
+
+    const testResults = await page.evaluate(function () {
+      const state = FB.state;
+      const results = {};
+
+      // 1. Render state neutrality (RNG and state untouched)
+      const rngBefore = FB.getRngState();
+      const stateBefore = JSON.stringify(state);
+      FB.ui.showRankDetails();
+      FB.ui.showRankDetails();
+      const rngAfter = FB.getRngState();
+      const stateAfter = JSON.stringify(state);
+      results.rngNeutral = rngBefore === rngAfter;
+      results.stateNeutral = stateBefore === stateAfter;
+
+      // 2. Live direct county controller update (state.holder)
+      state.holder = state.holder || {};
+      state.holder[state.player.provinceId] = 'vassal_county_realm';
+      state.realms.vassal_county_realm = {
+        id: 'vassal_county_realm',
+        name: 'County of Surrey',
+        ruler: 'char_local_count',
+        alive: true
+      };
+      state.chars.char_local_count = {
+        id: 'char_local_count',
+        name: 'Wulfric',
+        sex: 'm',
+        born: state.date.year - 35,
+        traits: []
+      };
+      const viewWithLocalHolder = FB.tenureView(state);
+      results.derivedLocalLord = viewWithLocalHolder && viewWithLocalHolder.lordName;
+
+      // 3. Zero-right / empty right variant
+      state.player.tenure.rights = [];
+      const viewZeroRights = FB.tenureView(state);
+      results.zeroRightsRendered = !!viewZeroRights;
+
+      FB.ui.showRankDetails();
+
+      return results;
+    });
+
+    expect(testResults.rngNeutral).toBe(true);
+    expect(testResults.stateNeutral).toBe(true);
+    expect(testResults.derivedLocalLord).toContain('Wulfric');
+    expect(testResults.zeroRightsRendered).toBe(true);
+    await expect(page.locator('#gm-body')).toContainText('Wulfric');
+    await expect(page.locator('#gm-body [data-tenure-right="none"]')).toBeVisible();
     await page.locator('#rank-details-close').click();
   });

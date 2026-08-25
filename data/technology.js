@@ -75,6 +75,10 @@ window.FBDATA = window.FBDATA || {};
   FBDATA.techImpactReviews = {
     baselineVersion:'1.127.1',
     features:{
+      persistent_serf_tenure:{
+        mode:'none',
+        rationale:'Household tenure, customary service, and awareness of local obligations are baseline social conditions, not capabilities unlocked by sovereign research.'
+      },
       county_population_demographics:{
         mode:'soft',
         tech:[

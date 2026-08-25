@@ -5679,7 +5679,7 @@ window.FB = window.FB || {};
       FB.news(state, FB.msg('news.economy.bondage_gentry',
         '⛓ The manor passes to the creditor. The debt is extinguished, and the family falls to freeholder.', {}));
     } else if (p.tier === 1) {
-      FB.setPlayerTier(state, 0);
+      FB.setPlayerTier(state, 0, { tenureFormationReason: 'debt_bondage' });
       FB.news(state, FB.msg('news.economy.bondage',
         '⛓ The court binds your family to the land for the debt. You are the lord’s now, body and plow.', {}));
     } else {

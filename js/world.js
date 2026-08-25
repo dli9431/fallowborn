@@ -6254,7 +6254,7 @@ window.FB = window.FB || {};
     delete p.flags.home_burned2;
     p.flags.lord_protection = 1;
     if (p.tier === 1) {
-      FB.setPlayerTier(state, 0);
+      FB.setPlayerTier(state, 0, { tenureFormationReason: 'commendation' });
       FB.news(state, FB.msg('news.world.commended',
         '🛡 The household goes inside the lord’s wall — his people now, protected and bound.', {}));
     }

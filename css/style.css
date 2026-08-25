@@ -2801,6 +2801,26 @@ textarea.modjson, textarea.savetext {
 }
 @media (pointer: coarse) { .portrait-equip { min-height: 44px; } }
 
+/* Serf customary tenure details in rank modal */
+.tenure-summary-block, .tenure-next-due-block, .tenure-conditional-block {
+  margin: 6px 0 10px;
+}
+.tenure-archetype-name {
+  color: #d8b24a; font-size: 15px; margin-bottom: 3px;
+}
+.tenure-duty-item, .tenure-right-item {
+  margin: 5px 0 8px; padding: 4px 0; border-bottom: 1px solid rgba(85, 69, 42, .3);
+}
+.tenure-duty-header, .tenure-right-name {
+  font-size: 14px; color: var(--main-text-color);
+}
+.tenure-duty-header > strong, .tenure-right-name > strong {
+  color: #d8b24a;
+}
+.tenure-notes {
+  margin-top: 10px; border-top: 1px solid rgba(85, 69, 42, .4); padding-top: 6px;
+}
+
 /* Governance is the territorial ruler's political home. Its section strip
    switches one consistent content surface instead of stacking mismatched
    dashboard cards into a long, sparse sheet. */

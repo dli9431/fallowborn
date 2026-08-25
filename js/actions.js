@@ -1798,6 +1798,7 @@ window.FB = window.FB || {};
     },
     run: function (s) {
       FB.applyEffects(s, {
+        tenureEnd: 'purchase',
         gold: -FBDATA.balance.freedomCost, tierSet: 1,
         prestige: 15, piety: 5
       });

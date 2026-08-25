@@ -2393,6 +2393,62 @@ window.FB = window.FB || {};
         });
       }
       h += '<p class="adesc">' + esc(homeInfo) + '</p>';
+      if (s.player.tier === 0) {
+        if (FB.ensureSerfTenure) FB.ensureSerfTenure(s, 'legacy_repair');
+        const view = FB.tenureView && FB.tenureView(s);
+        if (view) {
+          h += '<div class="panelh" data-tenure-header>' + esc(FB.T('Tenure & Custom')) + '</div>';
+          h += '<div class="tenure-summary-block" data-tenure-summary>' +
+            '<div class="tenure-archetype-name"><strong>' + esc(view.archetypeName) + '</strong></div>' +
+            '<p class="adesc">' + esc(view.archetypeSummary) + '</p>' +
+            kv('Holding', esc(view.settlementName + ', ' + view.countyName)) +
+            kv('Controller', esc(view.controllerName)) +
+            kv('Local authority', esc(view.lordName)) +
+            '</div>';
+
+          if (view.nearestDue) {
+            h += '<div class="tenure-next-due-block" data-tenure-next-due>' +
+              kv('Next due obligation', esc(view.nearestDue.name + ' — ' + view.nearestDue.dateFull)) +
+              '</div>';
+          }
+
+          if (view.pendingConditional) {
+            h += '<div class="tenure-conditional-block" data-tenure-conditional>' +
+              kv('Pending obligation', esc(view.pendingConditional.name + ' (' + view.pendingConditional.dateLabel + ')')) +
+              '<p class="adesc">' + esc(view.pendingConditional.desc) + '</p>' +
+              '</div>';
+          }
+
+          h += '<div class="tenure-duties-section"><div class="panelh">' + esc(FB.T('Customary Duties')) + '</div>';
+          for (let i = 0; i < view.duties.length; i++) {
+            const d = view.duties[i];
+            h += '<div class="tenure-duty-item" data-tenure-duty="' + esc(d.id) + '">' +
+              '<div class="tenure-duty-header"><strong>' + esc(d.name) + '</strong> (' + esc(d.dateFull) + ')</div>' +
+              '<p class="adesc">' + esc(d.desc) + '</p>' +
+              '</div>';
+          }
+          h += '</div>';
+
+          h += '<div class="tenure-rights-section"><div class="panelh">' + esc(FB.T('Customary Rights')) + '</div>';
+          if (view.hasRights) {
+            for (let r = 0; r < view.rights.length; r++) {
+              const rt = view.rights[r];
+              h += '<div class="tenure-right-item" data-tenure-right="' + esc(rt.id) + '">' +
+                '<div class="tenure-right-name"><strong>' + esc(rt.name) + '</strong></div>' +
+                '<p class="adesc">' + esc(rt.desc) + '</p>' +
+                '</div>';
+            }
+          } else {
+            h += '<p class="adesc" data-tenure-right="none">' + esc(view.emptyRightsText) + '</p>';
+          }
+          h += '</div>';
+
+          h += '<div class="tenure-notes">' +
+            '<p class="adesc">' + esc(view.customaryUseStatement) + '</p>' +
+            '<p class="adesc">' + esc(view.lawfulFreedomStatement) + '</p>' +
+            '</div>';
+        }
+      }
     }
     h += '<div class="gm-footer"><button class="btn" id="rank-details-close">' +
       esc(FB.T('Close')) + '</button></div>';

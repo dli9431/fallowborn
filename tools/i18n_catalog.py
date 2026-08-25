@@ -69,6 +69,9 @@ STRUCTURED_DATA = {
     "techTraditions": "techTradition",
     "tech": "tech",
     "unitClasses": "unitClass",
+    "tenureArchetypes": "tenureArchetype",
+    "tenureDuties": "tenureDuty",
+    "tenureRights": "tenureRight",
 }
 DATA_FIELDS = ("name", "desc")
 EVENT_FIELDS = ("title", "text")
@@ -679,7 +682,8 @@ def extract_structured(inv: Inventory) -> None:
                            "economy.js" if data_name in (
                                "careers", "positions", "schooling", "enterprises",
                                "householdStandards", "localCouncilMotions",
-                               "feudalServiceCharters"
+                               "feudalServiceCharters", "tenureArchetypes",
+                               "tenureDuties", "tenureRights"
                            ) else
                            "travel.js" if data_name == "travelPurposes" else
                            "political_blocs.js" if data_name == "politicalBlocs" else

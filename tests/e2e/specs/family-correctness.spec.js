@@ -4,7 +4,13 @@ dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
   'js/model.js',
-  'js/world.js'
+  'js/world.js',
+  'js/events.js',
+  'js/actions.js',
+  'data/actions.js',
+  'data/economy.js',
+  'data/events_peasant.js',
+  'data/technology.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -606,4 +612,111 @@ test('a materialized consort links to the ruler in both directions',
       }
       return { checked:checked, faults:faults.slice(0, 6) };
     })).toEqual({ checked:20, faults:[] });
+  });
+
+test('customary tenure persists across real character succession with duty requeue for successor, and closes upon tier promotion',
+  async function ({ page }) {
+    await startWithCode(page, 'ASCENT-867-serf-london-f-Ada', 'Ada');
+    await page.getByRole('button', { name:'Begin', exact:true }).click();
+
+    expect(await page.evaluate(function () {
+      const s = FB.state;
+      const initialTenure = FB.ensureSerfTenure(s, 'family_test');
+      const firstDuty = initialTenure.duties[0];
+      const initialNextDueTurn = firstDuty.nextDueTurn;
+      const ev = FB.eventById(firstDuty.eventId);
+      s.turn = firstDuty.nextDueTurn;
+
+      const oldProtagonistId = s.player.charId;
+      const oldCtx = {
+        tenureFormedTurn: initialTenure.formedTurn,
+        archetypeId: initialTenure.archetypeId,
+        dutyId: firstDuty.id,
+        dueTurn: firstDuty.nextDueTurn,
+        protagonistId: oldProtagonistId,
+        locationId: s.player.provinceId
+      };
+
+      // Queue event for the initial protagonist
+      s.eventQueue = [{ id: firstDuty.eventId, ctx: oldCtx }];
+      const validBeforeDeath = FB.fns.serf_tenure_context_valid(s, oldCtx, ev);
+
+      const me = s.chars[oldProtagonistId];
+      const child = FB.makeCharacter(s, {
+        name:'Alden', sex:'m', born:s.date.year - 18,
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null,
+        culture:me.culture, religion:me.religion, dyn:me.dyn, traitsN:0
+      });
+      me.childrenIds = [child.id];
+
+      // Execute engine succession via FB.game.succeedTo
+      FB.game.succeedTo(child.id);
+      const postSuccessionTenure = FB.activeSerfTenure(s);
+      const postSuccessionStatus = postSuccessionTenure ? postSuccessionTenure.status : null;
+      const postSuccessionArchetypeId = postSuccessionTenure ? postSuccessionTenure.archetypeId : null;
+
+      // 1. Succession drops the deceased protagonist's queued item, and the
+      // original snapshotted context independently fails validation.
+      const queuedDeceasedRemoved = !s.eventQueue.some(function (item) {
+        return item.id === firstDuty.eventId && item.ctx &&
+          item.ctx.protagonistId === oldProtagonistId;
+      });
+      const invalidForDeceased = FB.fns.serf_tenure_context_valid(s, oldCtx, ev);
+
+      // 2. Daily tick clears invalid queue and requeues for the living heir
+      s.eventQueue = [];
+      FB.tenureDay(s);
+      const requeuedEvent = s.eventQueue.filter(function (e) { return e.id === firstDuty.eventId; })[0];
+      const validForHeir = requeuedEvent && FB.fns.serf_tenure_context_valid(s, requeuedEvent.ctx, ev);
+      const heirProtagonistMatched = requeuedEvent && requeuedEvent.ctx.protagonistId === child.id;
+
+      // 3. Tier promotion closes tenure and prevents future duty scheduling
+      s.player.gold = 50;
+      var buyFreedom = FB.instants.filter(function (d) { return d.id === 'buy_freedom'; })[0]; if (buyFreedom) buyFreedom.run(s);
+      const promotionClosed = s.player.tenure && s.player.tenure.status === 'closed';
+      s.eventQueue = [];
+      FB.tenureDay(s);
+      const noEventsAfterPromotion = s.eventQueue.length === 0;
+
+      // 4. Forced relocation replaces active tenure and preserves priorClosure
+      s.player.tier = 0;
+      delete s.player.tenure;
+      FB.ensureSerfTenure(s, 'forced_origin');
+      s.player.home = 'paris';
+      s.player.provinceId = 'paris';
+      const replacedTenure = FB.replaceSerfTenure(s, 'forced_settlement', 'forced_relocation');
+
+      return {
+        hasTenure: !!postSuccessionTenure,
+        status: postSuccessionStatus,
+        matchesArchetype: postSuccessionArchetypeId === initialTenure.archetypeId,
+        provinceId: postSuccessionTenure && postSuccessionTenure.provinceId,
+        schedulePreserved: postSuccessionTenure && postSuccessionTenure.duties[0].nextDueTurn === initialNextDueTurn,
+        validBeforeDeath: validBeforeDeath,
+        queuedDeceasedRemoved: queuedDeceasedRemoved,
+        invalidForDeceased: invalidForDeceased,
+        validForHeir: validForHeir,
+        heirProtagonistMatched: heirProtagonistMatched,
+        promotionClosed: promotionClosed,
+        noEventsAfterPromotion: noEventsAfterPromotion,
+        replacedProvince: replacedTenure && replacedTenure.provinceId,
+        hasPriorClosure: !!(replacedTenure && replacedTenure.priorClosure)
+      };
+    })).toEqual({
+      hasTenure: true,
+      status: 'active',
+      matchesArchetype: true,
+      provinceId: 'london',
+      schedulePreserved: true,
+      validBeforeDeath: true,
+      queuedDeceasedRemoved: true,
+      invalidForDeceased: false,
+      validForHeir: true,
+      heirProtagonistMatched: true,
+      promotionClosed: true,
+      noEventsAfterPromotion: true,
+      replacedProvince: 'paris',
+      hasPriorClosure: true
+    });
   });

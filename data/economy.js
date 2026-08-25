@@ -615,6 +615,154 @@ FBDATA.householdStandards = {
   }
 };
 
+/* Persistent serf tenure archetypes (tier 0 households).
+   Core game data: deterministic selectors match faith ancestry, culture
+   traditions, terrain, and starting development. */
+FBDATA.tenureArchetypes = {
+  latin_manorial: {
+    id: 'latin_manorial',
+    priority: 300,
+    name: 'Manorial customary tenure',
+    desc: 'A cottage and household strips held by custom in return for work and local dues.',
+    nameKey: 'tenure_archetype_latin_manorial_name',
+    summaryKey: 'tenure_archetype_latin_manorial_summary',
+    selector: {
+      faithAncestor: 'catholic',
+      traditionsAny: ['west_european', 'celtic', 'romance'],
+      terrainAny: ['farmland', 'forest', 'hills', 'mountains'],
+      settlementKindsAny: ['village', 'town']
+    },
+    duties: [
+      { id: 'week_work', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'demesne_harvest', eventId: 'serf_boon_harvest', firstDue: { season: 'autumn', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'tithe_sheaf', eventId: 'serf_tithe_sheaf', firstDue: { season: 'winter', day: 30, cycle: 1 }, intervalTurns: 720 },
+      { id: 'local_facility_due', firstDue: { season: 'summer', day: 30, cycle: 1 }, intervalTurns: 720 }
+    ],
+    contextSlots: [
+      {
+        id: 'local_facility_due',
+        cases: [
+          { terrainAny: ['forest', 'hills'], eventId: 'serf_pannage_due' },
+          { settlementKindsAny: ['village'], eventId: 'serf_common_oven' }
+        ],
+        fallback: 'serf_mill_multure'
+      }
+    ],
+    conditionalDuties: [
+      { id: 'marriage_leave', eventId: 'serf_marriage_leave' },
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: [
+      { terrainAny: ['forest', 'hills', 'mountains'], rightId: 'deadwood_after_frost' },
+      { terrainAny: ['farmland'], rightId: 'gleaning_after_harvest' }
+    ]
+  },
+  irrigated_fellah: {
+    id: 'irrigated_fellah',
+    priority: 300,
+    name: 'Irrigated fellah tenure',
+    desc: 'Household fields held through village custom, with shared waterwork and crop obligations.',
+    nameKey: 'tenure_archetype_irrigated_fellah_name',
+    summaryKey: 'tenure_archetype_irrigated_fellah_summary',
+    selector: {
+      faithAncestor: 'muslim',
+      traditionsAny: ['middle_eastern', 'african', 'romance'],
+      terrainAny: ['farmland', 'marsh'],
+      minDev0: 4
+    },
+    duties: [
+      { id: 'irrigation_labor', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'crop_share', eventId: 'serf_boon_harvest', firstDue: { season: 'autumn', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'waterworks_cartage', eventId: 'serf_bridge_cartage', firstDue: { season: 'summer', day: 30, cycle: 1 }, intervalTurns: 720 },
+      { id: 'mill_share', eventId: 'serf_mill_multure', firstDue: { season: 'winter', day: 30, cycle: 1 }, intervalTurns: 720 }
+    ],
+    contextSlots: [],
+    conditionalDuties: [
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: ['irrigation_turn']
+  },
+  pagan_household_service: {
+    id: 'pagan_household_service',
+    priority: 300,
+    name: 'Household-service tenure',
+    desc: 'A dwelling and subsistence use held under the authority of a master’s household.',
+    nameKey: 'tenure_archetype_pagan_household_service_name',
+    summaryKey: 'tenure_archetype_pagan_household_service_summary',
+    selector: {
+      faithAncestor: 'pagan',
+      traditionsAny: ['west_european', 'slavic_baltic', 'uralic'],
+      terrainAny: ['farmland', 'forest', 'hills', 'mountains']
+    },
+    duties: [
+      { id: 'household_service', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'masters_harvest', eventId: 'serf_boon_harvest', firstDue: { season: 'autumn', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'local_heavy_service', intervalTurns: 720 }
+    ],
+    contextSlots: [
+      {
+        id: 'local_heavy_service',
+        cases: [
+          { terrainAny: ['forest', 'hills', 'mountains'], eventId: 'serf_deadwood_amerced', firstDue: { season: 'winter', day: 30, cycle: 1 } },
+          { terrainAny: ['farmland'], eventId: 'serf_bridge_cartage', firstDue: { season: 'summer', day: 30, cycle: 1 } }
+        ],
+        fallback: 'serf_deadwood_amerced',
+        fallbackFirstDue: { season: 'winter', day: 30, cycle: 1 }
+      }
+    ],
+    conditionalDuties: [
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: []
+  },
+  dependent_farming: {
+    id: 'dependent_farming',
+    priority: 0,
+    name: 'Dependent farming tenure',
+    desc: 'A household holding used by local custom in return for labor and seasonal service.',
+    nameKey: 'tenure_archetype_dependent_farming_name',
+    summaryKey: 'tenure_archetype_dependent_farming_summary',
+    selector: {},
+    duties: [
+      { id: 'customary_labor', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'seasonal_harvest', eventId: 'serf_boon_harvest', firstDue: { season: 'autumn', day: 30, cycle: 1 }, intervalTurns: 720 }
+    ],
+    contextSlots: [],
+    conditionalDuties: [
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: []
+  }
+};
+
+FBDATA.tenureDuties = {
+  week_work: { name: 'Week-work tally', desc: 'Customary unfree labor owed on demesne land each week.' },
+  demesne_harvest: { name: 'Boon harvest', desc: 'Additional seasonal harvest service on the lord’s demesne.' },
+  tithe_sheaf: { name: 'Tithe sheaf', desc: 'A tenth part of grain and livestock owed to the parish church.' },
+  local_facility_due: { name: 'Local facility due', desc: 'Customary toll or service owed for using estate facilities such as the mill, oven, or woods.' },
+  irrigation_labor: { name: 'Irrigation maintenance', desc: 'Labor owed to clean canals and maintain shared water channels.' },
+  crop_share: { name: 'Crop-share delivery', desc: 'Customary seasonal share of field harvest delivered to the estate.' },
+  waterworks_cartage: { name: 'Waterworks cartage', desc: 'Carting timber, stone, and silt for communal irrigation channels and bridges.' },
+  mill_share: { name: 'Mill multure', desc: 'Customary share of ground grain owed for using the estate mill.' },
+  household_service: { name: 'Household service', desc: 'Subsistence labor and household tasks owed under the authority of the master.' },
+  masters_harvest: { name: 'Master’s harvest', desc: 'Mandatory harvest labor on the master’s fields before household harvesting.' },
+  local_heavy_service: { name: 'Heavy service due', desc: 'Mandatory heavy labor and cartage obligations owed to the master.' },
+  customary_labor: { name: 'Customary labor', desc: 'Seasonal manual service owed to the local authority under customary tenure.' },
+  seasonal_harvest: { name: 'Seasonal harvest', desc: 'Mandatory field harvest assistance rendered under local custom.' },
+  marriage_leave: { name: 'Marriage leave', desc: 'Customary dues and leave owed to the lord upon household marriage.' },
+  officers_quartered: { name: 'Billeting and quartering', desc: 'Customary obligation to shelter and supply armed retainers during wartime.' },
+  pannage_due: { name: 'Pannage due', desc: 'Customary toll paid for foraging swine in estate woodlands.' },
+  common_oven: { name: 'Common oven due', desc: 'Customary toll owed for baking household loaves at the communal oven.' },
+  deadwood_amerced: { name: 'Wood gathering due', desc: 'Amercement or service owed for taking gathered timber from woodland.' },
+  bridge_cartage: { name: 'Bridge cartage', desc: 'Customary transport service for hauling bridge and roadway materials.' }
+};
+
+FBDATA.tenureRights = {
+  deadwood_after_frost: { name: 'Deadwood gathering', desc: 'Customary right to collect fallen branches and deadwood for household fuel after frost.' },
+  gleaning_after_harvest: { name: 'Post-harvest gleaning', desc: 'Customary right to glean remaining grain heads from harvested fields.' },
+  irrigation_turn: { name: 'Irrigation turn', desc: 'Recognized customary rotational turn to draw water from shared irrigation channels.' }
+};
+
 /* Bounded auctions remain generally available at a suitable market. Each lot
    family owns its selection weight and any extra national prerequisite, so a
    mod can change one family without gating the auction deed itself. */

@@ -3,7 +3,14 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'js/main.js',
   'js/save.js',
-  'js/ui_modals.js'
+  'js/i18n.js',
+  'js/events.js',
+  'js/ui_modals.js',
+  'data/map_data.js',
+  'data/cultures.js',
+  'data/economy.js',
+  'data/events_peasant.js',
+  'data/technology.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -603,5 +610,181 @@ test('autosave compresses only when a plain write reaches storage quota',
       attempts:['plain', 'compressed'],
       compressed:true,
       readable:true
+    });
+  });
+
+test('serf customary tenure round-trips through format-3 serialization and restore',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The storage contract belongs to the served origin.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      const state = FB.state;
+      FB.setPlayerTier(state, 0, { tenureFormationReason:'rank_change' });
+      const originalTenure = FB.ensureSerfTenure(state, 'storage_test');
+      const serialized = FB.save.serialize();
+      const parsedSave = JSON.parse(serialized);
+      const restored = FB.save.restore(parsedSave);
+      const restoredTenure = FB.state.player.tenure;
+
+      return {
+        saveFormatVersion: parsedSave.v,
+        restoredValid: !!restored,
+        status: restoredTenure && restoredTenure.status,
+        archetypeId: restoredTenure && restoredTenure.archetypeId,
+        provinceId: restoredTenure && restoredTenure.provinceId,
+        settlement: restoredTenure && restoredTenure.settlement,
+        hasDuties: restoredTenure && restoredTenure.duties && restoredTenure.duties.length > 0,
+        hasRights: restoredTenure && restoredTenure.rights && restoredTenure.rights.length > 0,
+        hasConditional: restoredTenure && restoredTenure.conditional && restoredTenure.conditional.length > 0,
+        matchesOriginalDuties: JSON.stringify(restoredTenure.duties) === JSON.stringify(originalTenure.duties),
+        omitsResolvedCalendarLabel: !Object.prototype.hasOwnProperty.call(restoredTenure, 'formedYear')
+      };
+    })).toEqual({
+      saveFormatVersion: 3,
+      restoredValid: true,
+      status: 'active',
+      archetypeId: expect.any(String),
+      provinceId: expect.any(String),
+      settlement: expect.any(Number),
+      hasDuties: true,
+      hasRights: true,
+      hasConditional: true,
+      matchesOriginalDuties: true,
+      omitsResolvedCalendarLabel: true
+    });
+  });
+
+test('legacy save without tenure repairs lazily and ignores unknown optional tenure IDs',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The storage contract belongs to the served origin.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      FB.setPlayerTier(FB.state, 0, { tenureFormationReason:'rank_change' });
+
+      // 1. Create a real serialized legacy v3 save without a tenure field
+      var raw = FB.save.serialize();
+      var legacySave = JSON.parse(raw);
+      delete legacySave.state.player.tenure;
+
+      // 2. Restore the legacy save through the real restore pipeline
+      FB.save.restore(legacySave);
+      var tenureImmediatelyAfterRestore = FB.state.player.tenure || null;
+
+      // 3. Lazy repair through real load / daily tick path (FB.tenureDay)
+      FB.tenureDay(FB.state);
+      var repaired = FB.state.player.tenure;
+
+      // 4. Inject unknown duty and right IDs to verify robustness
+      repaired.duties.push({ id: 'nonexistent_future_duty', nextDueTurn: FB.state.turn, lastResolvedTurn: null });
+      repaired.rights.push('unknown_future_right');
+      repaired.conditional.push({
+        id:'nonexistent_future_conditional', eventId:'nonexistent_future_event',
+        pendingTurn:FB.state.turn, nextEligibleTurn:0, lastResolvedTurn:null
+      });
+
+      // 5. Run tenureDay with unknown IDs present
+      FB.state.eventQueue = [];
+      FB.tenureDay(FB.state);
+      var view = FB.tenureView(FB.state);
+
+      // 6. Verify tier 1 legacy non-repair: restore legacy save with tier 1
+      var tier1Save = JSON.parse(raw);
+      tier1Save.state.player.tier = 1;
+      delete tier1Save.state.player.tenure;
+      FB.save.restore(tier1Save);
+      FB.tenureDay(FB.state);
+      var tier1Repaired = FB.state.player.tenure || null;
+
+      return {
+        tenureImmediatelyAfterRestore: tenureImmediatelyAfterRestore,
+        repairedStatus: repaired && repaired.status,
+        repairedFormedBy: repaired && repaired.formedBy,
+        hasArchetype: !!(repaired && repaired.archetypeId),
+        queueProcessed: Array.isArray(FB.state.eventQueue),
+        tier1TenureNull: tier1Repaired === null,
+        viewHandledUnknown: !!(view && view.archetypeName && view.archetypeSummary),
+        unknownDutiesIgnored: view && view.duties.every(function (d) { return d.id !== 'nonexistent_future_duty'; }),
+        unknownRightsIgnored: view && view.rights.every(function (r) { return r.id !== 'unknown_future_right'; }),
+        unknownConditionalIgnored: view && (!view.pendingConditional ||
+          view.pendingConditional.id !== 'nonexistent_future_conditional')
+      };
+    })).toEqual({
+      tenureImmediatelyAfterRestore: null,
+      repairedStatus: 'active',
+      repairedFormedBy: 'legacy_repair',
+      hasArchetype: true,
+      queueProcessed: true,
+      tier1TenureNull: true,
+      viewHandledUnknown: true,
+      unknownDutiesIgnored: true,
+      unknownRightsIgnored: true,
+      unknownConditionalIgnored: true
+    });
+  });
+
+test('save slot export and import preserves full customary tenure structure and exact due turns',
+  async function ({ page }, testInfo) {
+    test.skip(testInfo.project.name !== 'chromium-served',
+      'The storage contract belongs to the served origin.');
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    expect(await page.evaluate(function () {
+      var state = FB.state;
+      FB.setPlayerTier(state, 0, { tenureFormationReason:'rank_change' });
+      var tenure = FB.ensureSerfTenure(state, 'new_game');
+
+      // Capture exact due turns and full structure before save
+      var originalDueTurns = tenure.duties.map(function (d) { return d.nextDueTurn; });
+      var originalRights = tenure.rights.slice();
+      var originalConditionalIds = (tenure.conditional || []).map(function (c) { return c.id; });
+      var originalJSON = JSON.stringify(tenure);
+
+      // Save to slot and export
+      FB.save.toSlot('auto');
+      var exportedText = FB.save.exportState();
+      var parsedExport = FB.save.parseExport(exportedText);
+
+      // Clear state and restore
+      delete FB.state.player.tenure;
+      FB.save.restore(parsedExport);
+      var imported = FB.state.player.tenure;
+
+      // Compare exact structure
+      var importedDueTurns = imported && imported.duties
+        ? imported.duties.map(function (d) { return d.nextDueTurn; }) : [];
+      var importedRights = imported && imported.rights ? imported.rights.slice() : [];
+      var importedConditionalIds = imported && imported.conditional
+        ? imported.conditional.map(function (c) { return c.id; }) : [];
+
+      return {
+        importedActive: !!(imported && imported.status === 'active'),
+        sameArchetype: imported && imported.archetypeId === tenure.archetypeId,
+        sameProvince: imported && imported.provinceId === tenure.provinceId,
+        sameSettlement: imported && imported.settlement === tenure.settlement,
+        sameFormedBy: imported && imported.formedBy === tenure.formedBy,
+        sameFormedTurn: imported && imported.formedTurn === tenure.formedTurn,
+        exactDueTurns: JSON.stringify(importedDueTurns) === JSON.stringify(originalDueTurns),
+        exactRights: JSON.stringify(importedRights) === JSON.stringify(originalRights),
+        exactConditionalIds: JSON.stringify(importedConditionalIds) === JSON.stringify(originalConditionalIds),
+        fullStructureMatch: JSON.stringify(imported) === originalJSON
+      };
+    })).toEqual({
+      importedActive: true,
+      sameArchetype: true,
+      sameProvince: true,
+      sameSettlement: true,
+      sameFormedBy: true,
+      sameFormedTurn: true,
+      exactDueTurns: true,
+      exactRights: true,
+      exactConditionalIds: true,
+      fullStructureMatch: true
     });
   });

@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.154.1';
+  FB.VERSION = '1.155.0';
   FB.CHANGELOG = [
+    { v: '1.155.0', date: '2026-08-25', changes: [
+      'Serf households now live under persistent customary tenure, with culture- and faith-aware service cycles, recognized customary rights, and obligation details in Station & home.'
+    ] },
     { v: '1.154.1', date: '2026-08-24', changes: [
       'The Self panel now keeps Age, Health, and Common Voice current while time is flowing or fast-forwarding.',
       'Fast-forward yields more often and reuses unchanged army supply routes to keep the interface responsive.',
@@ -2433,6 +2436,7 @@ window.FB = window.FB || {};
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
+    if (FB.ensureSerfTenure && sc.tier === 0) FB.ensureSerfTenure(state, 'new_game');
 
     if (sc.tier >= 3) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
@@ -2778,6 +2782,7 @@ window.FB = window.FB || {};
       s.peakTier = p.tier; s.peakTitleData = FB.titleSnapshot(s);
     }
 
+    if (FB.tenureDay) FB.tenureDay(s);
     const events = FB.pickDailyEvents(s);
     if (!(opts && opts.deferUi)) {
       FB.ui.refresh(opts && opts.liveTick ? { liveTick:true } : undefined);

@@ -3968,6 +3968,13 @@ window.FB = window.FB || {};
         FB.changePlayerLiege(state, rid, 'tier:attach_liege');
       }
     }
+    if (oldTier === 0 && tier > 0) {
+      if (FB.closeSerfTenure) FB.closeSerfTenure(state, opts.tenureEndReason || 'rank_change');
+    } else if (oldTier > 0 && tier === 0) {
+      if (opts.formTenure !== false && FB.ensureSerfTenure) {
+        FB.ensureSerfTenure(state, opts.tenureFormationReason || 'rank_change');
+      }
+    }
     if (FB.syncPlayerCareer) FB.syncPlayerCareer(state);
     if (FB.travelValidate) FB.travelValidate(state);
     if (FB.validateFocus) FB.validateFocus(state);
@@ -4127,6 +4134,802 @@ window.FB = window.FB || {};
   FB.invalidateEventIndex = function () {
     eventIndex = null;
     randomEventPools = null;
+    _validatedTenureCatalogue = null;
+  };
+
+  /* =========================================================================
+     Persistent serf tenure (tier 0 households).
+     Customary obligations, rights, pure selection, and daily scheduler.
+     ========================================================================= */
+
+  let _validatedTenureCatalogue = null;
+
+  function currentRealmWarId(state, provId) {
+    if (!state || !provId) return null;
+    const rid = state.owner && state.owner[provId];
+    if (!rid) return null;
+    const sovereign = FB.topRealm ? FB.topRealm(state, rid) : rid;
+    if (!sovereign) return null;
+
+    if (state.player && state.player.war) {
+      const pw = state.player.war;
+      const pTop = FB.playerRealmId ? FB.playerRealmId(state) : 'player';
+      const eTop = FB.topRealm ? FB.topRealm(state, pw.enemy) : pw.enemy;
+      if (sovereign === 'player' || sovereign === pTop || sovereign === eTop) {
+        return ['player', eTop || 'enemy'].sort().join(':');
+      }
+    }
+
+    const r = state.realms && state.realms[sovereign];
+    if (r && r.war && r.alive) {
+      const eTop = FB.topRealm ? FB.topRealm(state, r.war.enemy) : r.war.enemy;
+      return [sovereign, eTop].sort().join(':');
+    }
+
+    if (state.realms) {
+      for (const id in state.realms) {
+        const rr = state.realms[id];
+        if (rr.alive && rr.war) {
+          const target = FB.topRealm ? FB.topRealm(state, rr.war.enemy) : rr.war.enemy;
+          if (target === sovereign) {
+            return [id, sovereign].sort().join(':');
+          }
+        }
+      }
+    }
+
+    if (FB.greatHolyWarCamp && FB.greatHolyWarCamp(state, sovereign)) {
+      return 'ghw:' + sovereign;
+    }
+    return null;
+  }
+
+  FB.validateTenureData = function (catalogue, dutiesCatalogue, rightsCatalogue) {
+    catalogue = catalogue || (FBDATA && FBDATA.tenureArchetypes);
+    dutiesCatalogue = dutiesCatalogue || (FBDATA && FBDATA.tenureDuties);
+    rightsCatalogue = rightsCatalogue || (FBDATA && FBDATA.tenureRights);
+
+    if (!catalogue || typeof catalogue !== 'object') {
+      throw new Error('Tenure catalogue must be an object.');
+    }
+    if (!dutiesCatalogue || typeof dutiesCatalogue !== 'object') {
+      throw new Error('Tenure duties catalogue must be an object.');
+    }
+    if (!rightsCatalogue || typeof rightsCatalogue !== 'object') {
+      throw new Error('Tenure rights catalogue must be an object.');
+    }
+
+    const knownTerrains = ['farmland', 'forest', 'hills', 'mountains', 'desert', 'steppe', 'marsh', 'tundra', 'plains', 'oasis', 'coast', 'floodplain'];
+    const knownSettlementKinds = ['village', 'town', 'castle', 'monastery', 'city', 'camp'];
+    const knownTraditions = FBDATA.cultureTraditions ? Object.keys(FBDATA.cultureTraditions) : [];
+    const knownFaithAncestors = ['catholic', 'orthodox', 'muslim', 'pagan', 'sunni', 'shia', 'jewish', 'tengri', 'christian'];
+
+    for (const dutyKey in dutiesCatalogue) {
+      if (!Object.prototype.hasOwnProperty.call(dutiesCatalogue, dutyKey)) continue;
+      const dDef = dutiesCatalogue[dutyKey];
+      if (!dDef || typeof dDef !== 'object') throw new Error('Tenure duty ' + dutyKey + ' must be an object.');
+      if (!dDef.name && !dDef.nameKey) throw new Error('Tenure duty ' + dutyKey + ' missing name/nameKey.');
+      if (!dDef.desc && !dDef.descKey) throw new Error('Tenure duty ' + dutyKey + ' missing desc/descKey.');
+    }
+
+    for (const rightKey in rightsCatalogue) {
+      if (!Object.prototype.hasOwnProperty.call(rightsCatalogue, rightKey)) continue;
+      const rDef = rightsCatalogue[rightKey];
+      if (!rDef || typeof rDef !== 'object') throw new Error('Tenure right ' + rightKey + ' must be an object.');
+      if (!rDef.name && !rDef.nameKey) throw new Error('Tenure right ' + rightKey + ' missing name/nameKey.');
+      if (!rDef.desc && !rDef.descKey) throw new Error('Tenure right ' + rightKey + ' missing desc/descKey.');
+    }
+
+    let unconditionalFallbackCount = 0;
+    const seenArchetypeKeys = {};
+    const seenArchetypeIds = {};
+
+    for (const archKey in catalogue) {
+      if (!Object.prototype.hasOwnProperty.call(catalogue, archKey)) continue;
+      if (seenArchetypeKeys[archKey]) throw new Error('Duplicate archetype key: ' + archKey);
+      seenArchetypeKeys[archKey] = true;
+
+      const arch = catalogue[archKey];
+      if (!arch || typeof arch !== 'object') throw new Error('Archetype ' + archKey + ' must be an object.');
+      const archId = arch.id || archKey;
+      if (seenArchetypeIds[archId]) throw new Error('Duplicate archetype ID: ' + archId);
+      seenArchetypeIds[archId] = true;
+
+      if (typeof arch.priority !== 'number' || arch.priority < 0) {
+        throw new Error('Archetype ' + archKey + ' priority must be a non-negative number.');
+      }
+      if ((!arch.name && !arch.nameKey) || (!arch.desc && !arch.summaryKey && !arch.descKey)) {
+        throw new Error('Archetype ' + archKey + ' must have name/desc localization fields.');
+      }
+
+      const sel = arch.selector;
+      if (!sel || typeof sel !== 'object') throw new Error('Archetype ' + archKey + ' selector must be an object.');
+
+      const hasConstraints = !!(
+        (sel.faithAncestor && sel.faithAncestor.length) ||
+        (sel.traditionsAny && sel.traditionsAny.length) ||
+        (sel.terrainAny && sel.terrainAny.length) ||
+        (sel.settlementKindsAny && sel.settlementKindsAny.length) ||
+        sel.minDev0 !== undefined
+      );
+      if (arch.priority === 0 && !hasConstraints) unconditionalFallbackCount++;
+
+      if (sel.faithAncestor && knownFaithAncestors.indexOf(sel.faithAncestor) < 0 &&
+          !(FBDATA.religions && FBDATA.religions[sel.faithAncestor])) {
+        throw new Error('Archetype ' + archKey + ' names unknown faith ancestor: ' + sel.faithAncestor);
+      }
+      if (sel.traditionsAny) {
+        for (let i = 0; i < sel.traditionsAny.length; i++) {
+          if (knownTraditions.length && knownTraditions.indexOf(sel.traditionsAny[i]) < 0) {
+            throw new Error('Archetype ' + archKey + ' names unknown culture tradition: ' + sel.traditionsAny[i]);
+          }
+        }
+      }
+      if (sel.terrainAny) {
+        for (let i = 0; i < sel.terrainAny.length; i++) {
+          if (knownTerrains.indexOf(sel.terrainAny[i]) < 0) {
+            throw new Error('Archetype ' + archKey + ' names unknown terrain: ' + sel.terrainAny[i]);
+          }
+        }
+      }
+      if (sel.settlementKindsAny) {
+        for (let i = 0; i < sel.settlementKindsAny.length; i++) {
+          if (knownSettlementKinds.indexOf(sel.settlementKindsAny[i]) < 0) {
+            throw new Error('Archetype ' + archKey + ' names unknown settlement kind: ' + sel.settlementKindsAny[i]);
+          }
+        }
+      }
+
+      const slots = arch.contextSlots || [];
+      const seenSlotIds = {};
+      for (let s = 0; s < slots.length; s++) {
+        const slot = slots[s];
+        if (!slot || !slot.id) throw new Error('Archetype ' + archKey + ' context slot missing id.');
+        if (seenSlotIds[slot.id]) throw new Error('Archetype ' + archKey + ' duplicate context slot ID: ' + slot.id);
+        seenSlotIds[slot.id] = true;
+        if (!slot.fallback || !FB.eventById(slot.fallback)) {
+          throw new Error('Archetype ' + archKey + ' context slot ' + slot.id + ' missing valid fallback event.');
+        }
+        const cases = slot.cases || [];
+        for (let c = 0; c < cases.length; c++) {
+          const cs = cases[c];
+          if (!cs.eventId || !FB.eventById(cs.eventId)) {
+            throw new Error('Archetype ' + archKey + ' slot ' + slot.id + ' case missing valid eventId.');
+          }
+          if (cs.terrainAny) {
+            for (let t = 0; t < cs.terrainAny.length; t++) {
+              if (knownTerrains.indexOf(cs.terrainAny[t]) < 0) {
+                throw new Error('Archetype ' + archKey + ' slot ' + slot.id + ' case names unknown terrain: ' + cs.terrainAny[t]);
+              }
+            }
+          }
+          if (cs.settlementKindsAny) {
+            for (let k = 0; k < cs.settlementKindsAny.length; k++) {
+              if (knownSettlementKinds.indexOf(cs.settlementKindsAny[k]) < 0) {
+                throw new Error('Archetype ' + archKey + ' slot ' + slot.id + ' case names unknown settlement kind: ' + cs.settlementKindsAny[k]);
+              }
+            }
+          }
+        }
+      }
+
+      const duties = arch.duties || [];
+      if (!Array.isArray(duties) || duties.length > 4) {
+        throw new Error('Archetype ' + archKey + ' duties must be an array of at most 4 items.');
+      }
+      const archDutyIds = {};
+      for (let i = 0; i < duties.length; i++) {
+        const d = duties[i];
+        if (!d || !d.id) throw new Error('Archetype ' + archKey + ' duty missing id.');
+        if (archDutyIds[d.id]) throw new Error('Archetype ' + archKey + ' duplicate duty ID: ' + d.id);
+        archDutyIds[d.id] = true;
+
+        if (!dutiesCatalogue[d.id]) {
+          throw new Error('Archetype ' + archKey + ' duty ' + d.id + ' missing from duties catalogue.');
+        }
+        if (typeof d.intervalTurns !== 'number' || d.intervalTurns <= 0) {
+          throw new Error('Archetype ' + archKey + ' duty ' + d.id + ' intervalTurns must be positive.');
+        }
+        const hasEvent = d.eventId && FB.eventById(d.eventId);
+        const hasSlot = seenSlotIds[d.id];
+        if (!hasEvent && !hasSlot) {
+          throw new Error('Archetype ' + archKey + ' duty ' + d.id + ' must have either a valid eventId or contextSlot mapping.');
+        }
+      }
+
+      const conditional = arch.conditionalDuties || [];
+      for (let cd = 0; cd < conditional.length; cd++) {
+        const cDuty = conditional[cd];
+        if (!cDuty || !cDuty.id) throw new Error('Archetype ' + archKey + ' conditional duty missing id.');
+        if (archDutyIds[cDuty.id]) throw new Error('Archetype ' + archKey + ' duplicate duty ID: ' + cDuty.id);
+        archDutyIds[cDuty.id] = true;
+        if (!dutiesCatalogue[cDuty.id]) {
+          throw new Error('Archetype ' + archKey + ' conditional duty ' + cDuty.id + ' missing from duties catalogue.');
+        }
+        if (!cDuty.eventId || !FB.eventById(cDuty.eventId)) {
+          throw new Error('Archetype ' + archKey + ' conditional duty ' + cDuty.id + ' names unknown eventId.');
+        }
+      }
+
+      const rights = arch.rights || [];
+      if (!Array.isArray(rights) || rights.length > 2) {
+        throw new Error('Archetype ' + archKey + ' rights must be an array of at most 2 items.');
+      }
+      const archRightIds = {};
+      for (let r = 0; r < rights.length; r++) {
+        const rItem = rights[r];
+        const rId = typeof rItem === 'string' ? rItem : (rItem && rItem.rightId);
+        if (!rId) throw new Error('Archetype ' + archKey + ' right missing ID.');
+        if (archRightIds[rId]) throw new Error('Archetype ' + archKey + ' duplicate right ID: ' + rId);
+        archRightIds[rId] = true;
+        if (!rightsCatalogue[rId]) {
+          throw new Error('Archetype ' + archKey + ' right ' + rId + ' missing from rights catalogue.');
+        }
+        if (typeof rItem === 'object' && rItem.terrainAny) {
+          for (let t = 0; t < rItem.terrainAny.length; t++) {
+            if (knownTerrains.indexOf(rItem.terrainAny[t]) < 0) {
+              throw new Error('Archetype ' + archKey + ' right ' + rId + ' names unknown terrain: ' + rItem.terrainAny[t]);
+            }
+          }
+        }
+      }
+    }
+
+    if (!catalogue.dependent_farming || unconditionalFallbackCount !== 1) {
+      throw new Error('Tenure catalogue must contain exactly one unconditional fallback archetype (found ' + unconditionalFallbackCount + ').');
+    }
+
+    _validatedTenureCatalogue = catalogue;
+    return catalogue;
+  };
+
+  FB.selectSerfTenureArchetype = function (context, catalogue) {
+    catalogue = catalogue || _validatedTenureCatalogue || FB.validateTenureData();
+    context = context || {};
+    const archetypes = [];
+    let declIndex = 0;
+    for (const key in catalogue) {
+      if (Object.prototype.hasOwnProperty.call(catalogue, key)) {
+        archetypes.push({ arch: catalogue[key], declIndex: declIndex++ });
+      }
+    }
+    archetypes.sort(function (a, b) {
+      const pDiff = (b.arch.priority || 0) - (a.arch.priority || 0);
+      if (pDiff !== 0) return pDiff;
+      return a.declIndex - b.declIndex;
+    });
+
+    let selected = null;
+    for (let i = 0; i < archetypes.length; i++) {
+      const arch = archetypes[i].arch;
+      const sel = arch.selector || {};
+      if (sel.faithAncestor) {
+        if (!context.faith) continue;
+        const matchesFaith = context.state && FB.faithIsA
+          ? FB.faithIsA(context.faith, sel.faithAncestor, context.state)
+          : (context.faith === sel.faithAncestor ||
+             (FBDATA.religions && FBDATA.religions[context.faith] &&
+              FBDATA.religions[context.faith].parent === sel.faithAncestor));
+        if (!matchesFaith) continue;
+      }
+      if (sel.traditionsAny && sel.traditionsAny.length) {
+        const cul = FBDATA.cultures && FBDATA.cultures[context.culture];
+        const tradition = cul ? cul.tradition : null;
+        if (!tradition || sel.traditionsAny.indexOf(tradition) < 0) continue;
+      }
+      if (sel.terrainAny && sel.terrainAny.length) {
+        if (sel.terrainAny.indexOf(context.terrain) < 0) continue;
+      }
+      if (sel.settlementKindsAny && sel.settlementKindsAny.length) {
+        if (sel.settlementKindsAny.indexOf(context.settlementKind) < 0) continue;
+      }
+      if (sel.minDev0 !== undefined) {
+        if ((context.dev0 || 0) < sel.minDev0) continue;
+      }
+      selected = arch;
+      break;
+    }
+
+    if (!selected) {
+      selected = catalogue.dependent_farming || archetypes[archetypes.length - 1].arch;
+    }
+
+    const resolvedDuties = [];
+    const slotsMap = {};
+    for (let s = 0; s < (selected.contextSlots || []).length; s++) {
+      const slot = selected.contextSlots[s];
+      let matchedEventId = slot.fallback;
+      let matchedFirstDue = slot.fallbackFirstDue || null;
+      for (let c = 0; c < (slot.cases || []).length; c++) {
+        const slotCase = slot.cases[c];
+        let matches = true;
+        if (slotCase.terrainAny && slotCase.terrainAny.indexOf(context.terrain) < 0) {
+          matches = false;
+        }
+        if (matches && slotCase.settlementKindsAny && slotCase.settlementKindsAny.indexOf(context.settlementKind) < 0) {
+          matches = false;
+        }
+        if (matches) {
+          matchedEventId = slotCase.eventId;
+          if (slotCase.firstDue) matchedFirstDue = slotCase.firstDue;
+          break;
+        }
+      }
+      slotsMap[slot.id] = { eventId: matchedEventId, firstDue: matchedFirstDue };
+    }
+
+    for (let d = 0; d < (selected.duties || []).length; d++) {
+      const duty = selected.duties[d];
+      const slotKey = duty.contextSlotId || duty.id;
+      const slotResolution = slotsMap[slotKey];
+      let eventId = duty.eventId;
+      let firstDue = duty.firstDue;
+      if (slotResolution) {
+        if (slotResolution.eventId) eventId = slotResolution.eventId;
+        if (slotResolution.firstDue) firstDue = slotResolution.firstDue;
+      }
+      resolvedDuties.push({
+        id: duty.id,
+        eventId: eventId,
+        firstDue: firstDue,
+        intervalTurns: duty.intervalTurns
+      });
+    }
+
+    const resolvedRights = [];
+    for (let r = 0; r < (selected.rights || []).length; r++) {
+      const right = selected.rights[r];
+      if (typeof right === 'string') {
+        resolvedRights.push(right);
+      } else if (right && typeof right === 'object') {
+        let eligible = true;
+        if (right.terrainAny && right.terrainAny.indexOf(context.terrain) < 0) {
+          eligible = false;
+        }
+        if (eligible) {
+          const rId = right.rightId || right.id;
+          if (rId) resolvedRights.push(rId);
+        }
+      }
+    }
+
+    return {
+      archetype: selected,
+      resolvedDuties: resolvedDuties,
+      resolvedRights: resolvedRights
+    };
+  };
+
+  FB.ensureSerfTenure = function (state, formedBy) {
+    if (!state || !state.player || state.player.tier !== 0) return null;
+    const p = state.player;
+    if (p.tenure && p.tenure.status === 'active') return p.tenure;
+
+    FB.validateTenureData();
+    const homeProvId = p.provinceId || p.home;
+    if (!homeProvId) return null;
+
+    const char = state.chars && p.charId && state.chars[p.charId];
+    if (!char) return null;
+
+    const settIdx = (p.homeSettlement !== undefined ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0)) | 0;
+    const prov = (FB.world && FB.world.byId && FB.world.byId[homeProvId]) ||
+      (state.provinces && state.provinces[homeProvId]) || {};
+    const terrain = prov.terrain || 'farmland';
+    const dev0 = prov.dev0 !== undefined ? prov.dev0 : 0;
+
+    let settlementKind = 'village';
+    const sitesInfo = FB.world && FB.world.sitesByProv && FB.world.sitesByProv[homeProvId];
+    if (sitesInfo && sitesInfo.list && sitesInfo.list[settIdx] && sitesInfo.list[settIdx].kind) {
+      settlementKind = sitesInfo.list[settIdx].kind;
+    }
+
+    const culture = char.culture || p.culture;
+    const faith = char.religion || p.religion;
+    const bookmarkId = (state.start && state.start.id) || '867';
+    const houseId = p.houseFounderId || p.charId || 'household';
+
+    const selected = FB.selectSerfTenureArchetype({
+      provinceId: homeProvId,
+      settlementIndex: settIdx,
+      culture: culture,
+      faith: faith,
+      terrain: terrain,
+      dev0: dev0,
+      settlementKind: settlementKind,
+      bookmarkId: bookmarkId,
+      houseId: houseId,
+      state: state
+    });
+
+    const seasonMap = { spring: 0, summer: 1, autumn: 2, winter: 3 };
+    function calculateFirstDue(firstDue, intervalTurns) {
+      firstDue = firstDue || { season: 0, day: 30, cycle: 0 };
+      const sIdx = typeof firstDue.season === 'string'
+        ? (seasonMap[firstDue.season.toLowerCase()] !== undefined ? seasonMap[firstDue.season.toLowerCase()] : 0)
+        : (firstDue.season || 0);
+      const targetYear = state.date.year + (firstDue.cycle || 0);
+      const targetDay = firstDue.day || 30;
+      const targetOrdinal = targetYear * 360 + sIdx * 90 + (targetDay - 1);
+      const currentOrdinal = FB.dateOrdinal(state.date);
+      let diff = targetOrdinal - currentOrdinal;
+      while (diff < 0) {
+        diff += (intervalTurns || 720);
+      }
+      return (state.turn || 0) + diff;
+    }
+
+    const duties = [];
+    for (let d = 0; d < selected.resolvedDuties.length; d++) {
+      const duty = selected.resolvedDuties[d];
+      const nextDueTurn = calculateFirstDue(duty.firstDue, duty.intervalTurns);
+      duties.push({
+        id: duty.id,
+        eventId: duty.eventId,
+        nextDueTurn: nextDueTurn,
+        lastResolvedTurn: null
+      });
+    }
+
+    const conditional = [];
+    const archDef = selected.archetype;
+    for (let c = 0; c < (archDef.conditionalDuties || []).length; c++) {
+      const cd = archDef.conditionalDuties[c];
+      conditional.push({
+        id: cd.id,
+        eventId: cd.eventId,
+        pendingTurn: null,
+        lastResolvedTurn: null,
+        nextEligibleTurn: state.turn || 0,
+        currentWarId: null
+      });
+    }
+
+    const allowedFormedBy = {
+      new_game: 1, legacy_repair: 1, debt_bondage: 1,
+      commendation: 1, forced_settlement: 1, rank_change: 1
+    };
+    const validFormedBy = (formedBy && allowedFormedBy[formedBy]) ? formedBy : 'new_game';
+
+    const tenure = {
+      version: 1,
+      archetypeId: archDef.id,
+      formedTurn: state.turn || 0,
+      formedBy: validFormedBy,
+      status: 'active',
+      provinceId: homeProvId,
+      settlement: settIdx,
+      rights: selected.resolvedRights.slice(),
+      duties: duties,
+      conditional: conditional,
+      lastPresentedSeasonKey: null
+    };
+
+    p.tenure = tenure;
+    return tenure;
+  };
+
+  FB.activeSerfTenure = function (state) {
+    return (state && state.player && state.player.tier === 0 &&
+      state.player.tenure && state.player.tenure.status === 'active')
+      ? state.player.tenure : null;
+  };
+
+  FB.closeSerfTenure = function (state, reason) {
+    if (!state || !state.player || !state.player.tenure) return null;
+    const tenure = state.player.tenure;
+    if (tenure.status === 'closed') return tenure;
+    tenure.status = 'closed';
+    tenure.endedTurn = state.turn || 0;
+    tenure.endReason = reason || 'rank_change';
+    return tenure;
+  };
+
+  FB.replaceSerfTenure = function (state, formedBy, priorReason) {
+    if (!state || !state.player || state.player.tier !== 0) return null;
+    const old = state.player.tenure;
+    let priorClosure = null;
+    if (old && old.status === 'active') {
+      FB.closeSerfTenure(state, priorReason || 'forced_relocation');
+      priorClosure = {
+        archetypeId: old.archetypeId,
+        provinceId: old.provinceId,
+        settlement: old.settlement,
+        endedTurn: old.endedTurn,
+        endReason: old.endReason
+      };
+    }
+    delete state.player.tenure;
+    const newTenure = FB.ensureSerfTenure(state, formedBy || 'forced_settlement');
+    if (newTenure && priorClosure) {
+      newTenure.priorClosure = priorClosure;
+    }
+    return newTenure;
+  };
+
+  FB.tenureText = function (state, charId, kind, id, def, field, keyFields) {
+    if (!def) return '';
+    if (keyFields) {
+      const keys = Array.isArray(keyFields) ? keyFields : [keyFields];
+      for (let k = 0; k < keys.length; k++) {
+        const explicitKey = def[keys[k]];
+        if (explicitKey && typeof explicitKey === 'string') {
+          if (FB.renderKey) {
+            const fallbackStr = def[field] !== undefined ? def[field] : explicitKey;
+            const rendered = FB.renderKey(explicitKey, fallbackStr);
+            if (rendered) return rendered;
+          }
+        }
+      }
+    }
+    if (def[field] !== undefined) {
+      return FB.dataText(state, charId, kind, id, def, field);
+    }
+    return '';
+  };
+
+  FB.tenureView = function (state) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure) return null;
+    const p = state.player;
+    const charId = p.charId;
+    const archDef = (FBDATA.tenureArchetypes && FBDATA.tenureArchetypes[tenure.archetypeId]) || null;
+    const archetypeName = (archDef
+      ? FB.tenureText(state, charId, 'tenureArchetype', tenure.archetypeId, archDef, 'name', 'nameKey')
+      : '') || FB.T('Customary tenure');
+    const archetypeSummary = (archDef
+      ? FB.tenureText(state, charId, 'tenureArchetype', tenure.archetypeId, archDef, 'desc', ['summaryKey', 'descKey'])
+      : '') || FB.T('A household holding used by local custom in return for labor and seasonal service.');
+
+    const settlements = FB.settlementsOf(state, tenure.provinceId);
+    const homeSett = settlements[tenure.settlement] || settlements[0] || {};
+    const settlementName = homeSett.name || FB.T('Unknown');
+    const prov = FB.world && FB.world.byId ? FB.world.byId[tenure.provinceId] : null;
+    const countyName = prov ? FB.L(prov.name) : tenure.provinceId;
+
+    const holderRealmId = (state.holder && state.holder[tenure.provinceId]) ||
+      (state.owner && state.owner[tenure.provinceId]);
+    const holderRealm = holderRealmId && state.realms && state.realms[holderRealmId];
+    const controllerName = holderRealm ? holderRealm.name : FB.T('Local custom');
+
+    const rulerChar = holderRealm && holderRealm.ruler && state.chars ? state.chars[holderRealm.ruler] : null;
+    const existingLordId = state.roles && state.roles.lord;
+    const lord = existingLordId && state.chars ? state.chars[existingLordId] : null;
+    const lordName = rulerChar
+      ? FB.fullName(rulerChar)
+      : (lord
+          ? FB.fullName(lord)
+          : (holderRealm ? holderRealm.name : FB.T('Local authority')));
+
+    const duties = [];
+    let nearestDue = null;
+    let nearestDueTurn = Infinity;
+
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      const d = tenure.duties[i];
+      const dDef = (FBDATA.tenureDuties && FBDATA.tenureDuties[d.id]) || null;
+      if (!dDef) continue;
+      const dName = FB.tenureText(state, charId, 'tenureDuty', d.id, dDef, 'name', 'nameKey')
+        || FB.T('Customary obligation');
+      const dDesc = FB.tenureText(state, charId, 'tenureDuty', d.id, dDef, 'desc', 'descKey');
+      const dueDate = FB.dateAtTurn(state, d.nextDueTurn);
+      const daysRemain = Math.max(0, d.nextDueTurn - (state.turn || 0));
+      const dateLabel = FB.seasonName(dueDate.season) + ' ' + dueDate.year;
+      const dutyView = {
+        id: d.id,
+        name: dName,
+        desc: dDesc,
+        nextDueTurn: d.nextDueTurn,
+        dateLabel: dateLabel,
+        daysRemaining: daysRemain,
+        dateFull: FB.T('{season} {year} ({days} days)', {
+          season: FB.seasonName(dueDate.season),
+          year: dueDate.year,
+          days: daysRemain
+        })
+      };
+      duties.push(dutyView);
+      if (d.nextDueTurn < nearestDueTurn) {
+        nearestDueTurn = d.nextDueTurn;
+        nearestDue = dutyView;
+      }
+    }
+
+    const rights = [];
+    for (let r = 0; r < (tenure.rights || []).length; r++) {
+      const rId = tenure.rights[r];
+      const rDef = (FBDATA.tenureRights && FBDATA.tenureRights[rId]) || null;
+      if (!rDef) continue;
+      const rName = FB.tenureText(state, charId, 'tenureRight', rId, rDef, 'name', 'nameKey')
+        || FB.T('Customary right');
+      const rDesc = FB.tenureText(state, charId, 'tenureRight', rId, rDef, 'desc', 'descKey');
+      rights.push({ id: rId, name: rName, desc: rDesc });
+    }
+
+    let pendingConditional = null;
+    for (let c = 0; c < (tenure.conditional || []).length; c++) {
+      const cd = tenure.conditional[c];
+      if (cd.pendingTurn !== null && cd.pendingTurn !== undefined) {
+        const cdDef = (FBDATA.tenureDuties && FBDATA.tenureDuties[cd.id]) || null;
+        if (!cdDef) continue;
+        const cdName = FB.tenureText(state, charId,
+          'tenureDuty', cd.id, cdDef, 'name', 'nameKey') || FB.T('Customary obligation');
+        const cdDesc = FB.tenureText(state, charId,
+          'tenureDuty', cd.id, cdDef, 'desc', 'descKey');
+        const dueDate = FB.dateAtTurn(state, cd.pendingTurn);
+        const daysRemain = Math.max(0, cd.pendingTurn - (state.turn || 0));
+        pendingConditional = {
+          id: cd.id,
+          name: cdName,
+          desc: cdDesc,
+          pendingTurn: cd.pendingTurn,
+          dateLabel: FB.seasonName(dueDate.season) + ' ' + dueDate.year,
+          daysRemaining: daysRemain
+        };
+        break;
+      }
+    }
+
+    return {
+      status: 'active',
+      archetypeId: tenure.archetypeId,
+      archetypeName: archetypeName,
+      archetypeSummary: archetypeSummary,
+      provinceId: tenure.provinceId,
+      settlement: tenure.settlement,
+      settlementName: settlementName,
+      countyName: countyName,
+      controllerName: controllerName,
+      lordName: lordName,
+      duties: duties,
+      rights: rights,
+      hasRights: rights.length > 0,
+      emptyRightsText: FB.T('No recognized customary rights recorded.'),
+      nearestDue: nearestDue,
+      pendingConditional: pendingConditional,
+      customaryUseStatement: FB.T('Customary tenure grants household use by local custom, not owned property.'),
+      lawfulFreedomStatement: FB.T('Lawful freedom ends personal service obligations.')
+    };
+  };
+
+  FB.tenureDay = function (state) {
+    if (!state || !state.player || state.player.tier !== 0) return;
+    if (state.player.travel) return;
+
+    if (!state.player.tenure || state.player.tenure.status !== 'active') {
+      FB.ensureSerfTenure(state, 'legacy_repair');
+    }
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure || typeof tenure !== 'object' || !tenure.archetypeId || !Array.isArray(tenure.duties) || !tenure.provinceId) return;
+
+    const curLocation = state.player.travel ? state.player.travel.currentId : (state.player.provinceId || state.player.home);
+    if (curLocation !== tenure.provinceId) return;
+
+    const activeWarId = currentRealmWarId(state, tenure.provinceId);
+
+    for (let c = 0; c < (tenure.conditional || []).length; c++) {
+      const cd = tenure.conditional[c];
+      if (cd.id === 'officers_quartered') {
+        if (activeWarId !== cd.currentWarId) {
+          cd.currentWarId = activeWarId;
+          if (activeWarId !== null) {
+            const eligible = (cd.lastResolvedTurn === null || cd.lastResolvedTurn === undefined) ||
+              ((state.turn || 0) >= (cd.nextEligibleTurn || 0));
+            if (eligible && cd.pendingTurn === null) {
+              cd.pendingTurn = (state.turn || 0) + 7;
+            }
+          } else {
+            if (cd.pendingTurn !== null) {
+              cd.pendingTurn = null;
+              if (state.eventQueue) {
+                state.eventQueue = state.eventQueue.filter(function (item) {
+                  return item.id !== 'serf_officers_quartered';
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    const hasValidQueued = (state.eventQueue || []).some(function (item) {
+      const ev = FB.eventById(item.id);
+      return ev && ev.contextValidator === 'serf_tenure_context_valid' &&
+        FB.eventContextStillValid(state, ev, item.ctx);
+    });
+    if (hasValidQueued) return;
+
+    const currentSeasonKey = state.date.year + '_' + state.date.season;
+    if (tenure.lastPresentedSeasonKey === currentSeasonKey) return;
+
+    let candidate = null;
+    let lowestDueTurn = Infinity;
+
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      const d = tenure.duties[i];
+      if (!d || !FBDATA.tenureDuties || !FBDATA.tenureDuties[d.id] || !FB.eventById(d.eventId)) continue;
+      if (d.nextDueTurn !== null && d.nextDueTurn !== undefined && d.nextDueTurn <= (state.turn || 0)) {
+        if (d.nextDueTurn < lowestDueTurn) {
+          lowestDueTurn = d.nextDueTurn;
+          candidate = { duty: d, isConditional: false };
+        }
+      }
+    }
+
+    for (let c = 0; c < (tenure.conditional || []).length; c++) {
+      const cd = tenure.conditional[c];
+      if (!cd || !FBDATA.tenureDuties || !FBDATA.tenureDuties[cd.id] || !FB.eventById(cd.eventId)) continue;
+      if (cd.pendingTurn !== null && cd.pendingTurn !== undefined && cd.pendingTurn <= (state.turn || 0)) {
+        if (cd.pendingTurn < lowestDueTurn) {
+          lowestDueTurn = cd.pendingTurn;
+          candidate = { duty: cd, isConditional: true };
+        }
+      }
+    }
+
+    if (!candidate) return;
+
+    const dueTurn = candidate.isConditional ? candidate.duty.pendingTurn : candidate.duty.nextDueTurn;
+
+    FB.queueEvent(state, candidate.duty.eventId, {
+      tenureFormedTurn: tenure.formedTurn,
+      archetypeId: tenure.archetypeId,
+      dutyId: candidate.duty.id,
+      duty: { $data: 'tenureDuty', id: candidate.duty.id },
+      dutyName: { $data: 'tenureDuty', id: candidate.duty.id },
+      dueTurn: dueTurn,
+      protagonistId: state.player.charId,
+      locationId: curLocation
+    });
+
+    tenure.lastPresentedSeasonKey = currentSeasonKey;
+  };
+
+  FB.fns = FB.fns || {};
+  FB.fns.serf_tenure_context_valid = function (state, ctx, ev) {
+    if (!state || !state.player || state.player.tier !== 0) return false;
+    if (state.player.travel) return false;
+    const tenure = state.player.tenure;
+    if (!tenure || typeof tenure !== 'object' || tenure.status !== 'active') return false;
+    if (!ctx || typeof ctx !== 'object') return false;
+    if (ctx.tenureFormedTurn !== tenure.formedTurn) return false;
+    if (ctx.archetypeId && ctx.archetypeId !== tenure.archetypeId) return false;
+
+    const homeProvId = state.player.provinceId || state.player.home;
+    const settIdx = (state.player.homeSettlement !== undefined ? state.player.homeSettlement : (state.player.settlement !== undefined ? state.player.settlement : 0)) | 0;
+    if (tenure.provinceId !== homeProvId || tenure.settlement !== settIdx) return false;
+    if (ctx.protagonistId !== state.player.charId) return false;
+
+    const curLocation = state.player.travel ? state.player.travel.currentId : (state.player.provinceId || state.player.home);
+    if (ctx.locationId !== curLocation || curLocation !== tenure.provinceId) return false;
+
+    const dutyId = ctx.dutyId;
+    if (!dutyId) return false;
+    let matchingDuty = null;
+    let isConditional = false;
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      if (tenure.duties[i].id === dutyId) {
+        matchingDuty = tenure.duties[i];
+        break;
+      }
+    }
+    if (!matchingDuty) {
+      for (let c = 0; c < (tenure.conditional || []).length; c++) {
+        if (tenure.conditional[c].id === dutyId) {
+          matchingDuty = tenure.conditional[c];
+          isConditional = true;
+          break;
+        }
+      }
+    }
+    if (!matchingDuty) return false;
+    if (ev && matchingDuty.eventId !== ev.id) return false;
+
+    const expectedDueTurn = isConditional ? matchingDuty.pendingTurn : matchingDuty.nextDueTurn;
+    if (ctx.dueTurn !== expectedDueTurn) return false;
+    if (expectedDueTurn === null || expectedDueTurn === undefined || expectedDueTurn > (state.turn || 0)) return false;
+
+    return true;
   };
 
   /* Shadow index from an effects object to its durable event-log key. It is
@@ -4240,7 +5043,7 @@ window.FB = window.FB || {};
     'marry','clearSuitor','adoptChild','killChild','killRole','kinslayer',
     'educateChild','moveRandom','travelReturn','travelSettle','foundFaith',
     'faithRelation','convertToProvince','declareIndependence','pickHeir','queue',
-    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate'
+    'worldNews','log','custom','deathProvenance','populationLoss','populationLossRate','tenureEnd'
   ];
   FB.eventPreviewEffectKeys = {};
   for (let effectKeyIndex = 0; effectKeyIndex < EVENT_EFFECT_KEYS.length;
@@ -4754,6 +5557,7 @@ window.FB = window.FB || {};
     if (fx.queue) out.push(impact('queue', { eventId:fx.queue }));
     if (fx.worldNews) out.push(impact('worldNews', {}));
     if (fx.clearHarvestFlags) out.push(impact('system', { system:'harvest' }));
+    if (fx.tenureEnd) out.push(impact('tenureEnd', { reason: fx.tenureEnd, permanent: true }));
     if (fx.custom) {
       const adapter = FB.eventImpactAdapters[fx.custom];
       const customImpacts = adapter && typeof adapter.preview === 'function'
@@ -5676,6 +6480,9 @@ window.FB = window.FB || {};
        It is committed below only when this resolution actually kills. */
     const lethalProvenance = fx.deathProvenance
       ? deathProvenance(state, fx.deathProvenance, ctx, ev) : null;
+    if (fx.tenureEnd && FB.closeSerfTenure) {
+      FB.closeSerfTenure(state, fx.tenureEnd);
+    }
     if (fx.marriageEnd) {
       const doctrine = FB.marriageDoctrine(me.religion, state);
       const ending = doctrine.end || {};
@@ -6168,6 +6975,13 @@ window.FB = window.FB || {};
     if (meta.automated && option.manualOnly) return false;
     if (FB.eventOptionStatus &&
         FB.eventOptionStatus(state, ev, option, ctx).techLocked) return false;
+
+    if (ev && ev.contextValidator) {
+      if (!FB.eventContextStillValid(state, ev, ctx)) return false;
+    }
+
+    if (ctx && ctx._tenureResolved) return false;
+
     const optionIndex = ev.options ? ev.options.indexOf(option) : -1;
     const ledgers = [];
     let succeeded = null;
@@ -6200,6 +7014,50 @@ window.FB = window.FB || {};
     } finally {
       if (FB.ui) FB.ui.suppressEventEffectToasts = oldUiSuppression;
       if (FB.suppressNewsToasts) FB.suppressNewsToasts(false);
+    }
+
+    /* Advance tenure duties after accepted effects, with tenure-closing effects winning over advancement. */
+    if (ctx && ctx.dutyId) {
+      ctx._tenureResolved = true;
+      const tenure = state.player && state.player.tenure;
+      if (tenure && tenure.status === 'active' && state.player.tier === 0) {
+        let regularDuty = null;
+        for (let i = 0; i < (tenure.duties || []).length; i++) {
+          if (tenure.duties[i].id === ctx.dutyId) {
+            regularDuty = tenure.duties[i];
+            break;
+          }
+        }
+        if (regularDuty && regularDuty.nextDueTurn === ctx.dueTurn) {
+          const arch = FBDATA.tenureArchetypes && FBDATA.tenureArchetypes[tenure.archetypeId];
+          let interval = 720;
+          if (arch && arch.duties) {
+            for (let d = 0; d < arch.duties.length; d++) {
+              if (arch.duties[d].id === ctx.dutyId && arch.duties[d].intervalTurns) {
+                interval = arch.duties[d].intervalTurns;
+                break;
+              }
+            }
+          }
+          while (regularDuty.nextDueTurn <= (state.turn || 0)) {
+            regularDuty.nextDueTurn += interval;
+          }
+          regularDuty.lastResolvedTurn = state.turn || 0;
+        } else {
+          let condDuty = null;
+          for (let c = 0; c < (tenure.conditional || []).length; c++) {
+            if (tenure.conditional[c].id === ctx.dutyId) {
+              condDuty = tenure.conditional[c];
+              break;
+            }
+          }
+          if (condDuty && condDuty.pendingTurn === ctx.dueTurn) {
+            condDuty.pendingTurn = null;
+            condDuty.lastResolvedTurn = state.turn || 0;
+            condDuty.nextEligibleTurn = (state.turn || 0) + 1080;
+          }
+        }
+      }
     }
 
     let outcomeMessage = null;
@@ -6433,6 +7291,18 @@ window.FB = window.FB || {};
         destinationId:weddingTravel.destinationId,
         promptPending:true
       };
+    }
+    if (p.tier === 0 && p.tenure && p.tenure.status === 'active' && p.tenure.conditional) {
+      for (let c = 0; c < p.tenure.conditional.length; c++) {
+        const cd = p.tenure.conditional[c];
+        if (cd.id === 'marriage_leave') {
+          if ((state.turn || 0) >= (cd.nextEligibleTurn || 0)) {
+            cd.pendingTurn = (state.turn || 0) + 1;
+            cd.marriageTurn = state.turn || 0;
+          }
+          break;
+        }
+      }
     }
     return true;
   };
@@ -6961,8 +7831,14 @@ window.FB = window.FB || {};
     delete p.flags.home_burned;
     delete p.flags.home_burned2;
     delete p.flags.lord_protection;
-    FB.setPlayerTier(state, 0, { attachLiege:false });
+    FB.setPlayerTier(state, 0, { attachLiege:false, formTenure:false });
     p.provinceId = destination;
+    p.home = destination;
+    p.homeSettlement = 0;
+    p.settlement = 0;
+    if (FB.replaceSerfTenure) {
+      FB.replaceSerfTenure(state, 'forced_settlement', 'forced_relocation');
+    }
     FB.changePlayerLiege(state, null, 'raid:enslavement');
     if (FB.clearCourtship) FB.clearCourtship(state);
     if (FB.socialAttentionClear) FB.socialAttentionClear(state);
