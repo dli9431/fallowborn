@@ -348,12 +348,12 @@ FBDATA.events.push(
     { label:{ forms:{ select:'value', param:'dutyId', cases:{
         seasonal_drove:'Lend household animals and stay at work.', timber_cartage:'Lend the household cart and stay at the clearing.', shore_transport:'Lend household transport and stay at work.', other:'Lend the household cart and stay afield.'
       }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
-        seasonal_drove:'Let animal and gear suffer in your place.', timber_cartage:'Let wheel and axle suffer in your place.', shore_transport:'Let boat, sledge, or cart suffer in your place.', other:'Let wheel and axle suffer in your place.'
+        seasonal_drove:'Let animal and gear suffer in your place.', timber_cartage:'Let the woodland cart’s wheel and axle suffer in your place.', shore_transport:'Let boat, sledge, or cart suffer in your place.', other:'Let wheel and axle suffer in your place.'
       }}}, effects:{ gold:-2 } },
     { label:{ forms:{ select:'value', param:'dutyId', cases:{
         seasonal_drove:'Find a shorter drove route.', timber_cartage:'Find a shorter way through the woodland.', shore_transport:'Find a shorter way along the shore.', other:'Find a shorter way through the shallows.'
       }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
-        seasonal_drove:'Save half the road if your eye for ground is true.', timber_cartage:'Save half the woodland road if your eye for ground is true.', shore_transport:'Save half the shore route if your eye for weather and ground is true.', other:'Save half the road if your eye for ground is true.'
+        seasonal_drove:'Read the herd route well and you may save half the road.', timber_cartage:'Save half the woodland road if your eye for ground is true.', shore_transport:'Save half the shore route if your eye for weather and ground is true.', other:'Save half the road if your eye for ground is true.'
       }}}, chance:'skill_ste',
       success:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
           seasonal_drove:'The ground holds, the drove arrives early, and others follow your track.', timber_cartage:'The woodland track holds, the timber arrives early, and others follow your marks.', shore_transport:'The weather holds, the load arrives early, and others follow your shore route.', other:'The ford holds, the timber arrives early, and others follow your track.'

@@ -336,7 +336,7 @@ test('Phase 4 tenure catalogue ships seven complete definitions and validates ev
             arch.selector.provinceIdsAny = ['unknown_province'];
           }),
           provinceNeedsBookmark:validationError(function (arch) {
-            arch.selector.provinceIdsAny = [Object.keys(FBDATA.bookmarks['867'].provinces)[0]];
+            arch.selector.provinceIdsAny = [FBDATA.bookmarks['867'].provinces[0].id];
             delete arch.selector.bookmarksAny;
           }),
           coastal:validationError(function (arch) {
@@ -1313,7 +1313,7 @@ test('autoresolve resolves valid options, advances schedule, and emits structure
       return {
         receiptAutomated: receipt && receipt.automated,
         dutyAdvanced: firstDuty.nextDueTurn > oldDueTurn,
-        resolvedFlag: ctx._tenureResolved
+        resolvedFlag: resolveCtx._tenureResolved
       };
     });
 
@@ -1589,6 +1589,7 @@ test('travel invalidates tenure context and halts daily scheduler while away',
 
 test('serf tenure details render across archetypes in Station & home with stable data attributes and Escape dismissal',
   async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
     await startGame(page, testInfo);
     const steward = await page.evaluate(function () {
       const c = FB.getRole(FB.state, 'steward', true);
@@ -1980,6 +1981,7 @@ test('shifted quartering returns to the exact neighbor after 90 days and promoti
 
 test('named event participants render once and their character sheet returns to the open event',
   async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
     await startGame(page, testInfo);
     const cast = await page.evaluate(function () {
       const s = FB.state;
@@ -2118,6 +2120,9 @@ test('exact participant effects and receipts match between manual and autoresolv
         participants:{ neighbor:neighbor.id },
         participantKinds:{ neighbor:'notable' }
       });
+      const standingBefore = FB.standingOf(s, {
+        kind:'character', id:neighbor.id
+      });
       s.player.gold = 20;
       const baseline = JSON.parse(FB.save.serialize());
       const manual = FB.resolveEventOption(s, event, event.options[0], ctx,
@@ -2160,6 +2165,7 @@ test('exact participant effects and receipts match between manual and autoresolv
         stale:stale,
         staleGold:staleState.player.gold,
         staleGoldBefore:goldBefore,
+        standingBefore:standingBefore,
         receiptName:manual.title.params.neighbor,
         expectedName:FB.fullName(neighbor)
       };
@@ -2167,7 +2173,7 @@ test('exact participant effects and receipts match between manual and autoresolv
 
     expect(result.manual).toEqual(result.automated);
     expect(result.manual.gold).toBe(17);
-    expect(result.manual.standing).toBe(-10);
+    expect(result.manual.standing - result.standingBefore).toBe(-10);
     expect(result.manual.contact.score).toBe(2);
     expect(result.receiptName).toBe(result.expectedName);
     expect(result.stale).toBe(false);
