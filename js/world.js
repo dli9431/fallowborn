@@ -3474,6 +3474,17 @@ window.FB = window.FB || {};
     const r = state.realms[rid];
     if (!r || isPapalTerritorialRealm(state, rid) ||
         (r.succession && r.succession.papalElective)) return null;
+    const serfTenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const serfHomeHolder = serfTenure &&
+      (state.holder && state.holder[serfTenure.provinceId] ||
+        state.owner && state.owner[serfTenure.provinceId]);
+    const serfHomeSovereign = serfHomeHolder && FB.topRealm
+      ? FB.topRealm(state, serfHomeHolder) : serfHomeHolder;
+    const serfAuthorityCause = serfHomeHolder === rid
+      ? 'holder_succession'
+      : (serfHomeSovereign === rid ? 'sovereign_change' : null);
+    const serfAuthorityBefore = serfAuthorityCause &&
+      FB.serfHomeAuthority ? FB.serfHomeAuthority(state) : null;
     const s = FB.ensureRealmSuccession(state, rid);
     if (!s) return null;
     const formerPlayerAlliance = rid !== 'player' &&
@@ -3481,6 +3492,11 @@ window.FB = window.FB || {};
     FB.refreshRealmSuccession(state, rid);
     makeHeirIfEmpty(state, r, s);
     const outgoing = s.rulerMemberId && s.members[s.rulerMemberId];
+    if (outgoing && outgoing.reignGeneration === undefined) {
+      outgoing.reignGeneration = FB.realmRulerGeneration
+        ? FB.realmRulerGeneration(state, rid)
+        : (r.ruler && r.ruler.generation || 1);
+    }
     let heirId = null;
     let heir = null;
     let c = null;
@@ -3574,6 +3590,11 @@ window.FB = window.FB || {};
     }
     if (c && c.id === state.player.charId && FB.absorbRealm) FB.absorbRealm(state, rid, c);
     if (FB.intrigueRealmSuccession) FB.intrigueRealmSuccession(state, rid);
+    if (serfAuthorityBefore && FB.serfHomeAuthority &&
+        FB.noteSerfHomeTransition) {
+      FB.noteSerfHomeTransition(state, serfAuthorityCause,
+        serfAuthorityBefore, FB.serfHomeAuthority(state));
+    }
     return heir;
   };
 
@@ -4471,6 +4492,10 @@ window.FB = window.FB || {};
   };
 
   FB.transferProvince = function (state, pid, toRealm) {
+    const serfTenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    const serfAuthorityBefore = serfTenure &&
+      serfTenure.provinceId === pid && FB.serfHomeAuthority
+      ? FB.serfHomeAuthority(state) : null;
     const from = state.owner[pid];
     const oldHolder = (state.holder && state.holder[pid]) || from;
     let forcedPlayerCapital = null;
@@ -4536,6 +4561,11 @@ window.FB = window.FB || {};
     }
     if (FB.papacyProvinceTransferred) {
       FB.papacyProvinceTransferred(state, pid, from, toRealm);
+    }
+    if (serfAuthorityBefore && FB.serfHomeAuthority &&
+        FB.noteSerfHomeTransition) {
+      FB.noteSerfHomeTransition(state, 'county_transfer',
+        serfAuthorityBefore, FB.serfHomeAuthority(state));
     }
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
@@ -6220,9 +6250,18 @@ window.FB = window.FB || {};
       return;
     }
     if (!FB.chance(FBDATA.balance.devastationChance || 0.4)) return;
+    const firstSerfBurn = p.tier === 0 && !p.flags.home_burned &&
+      !p.flags.home_burned2;
     if (p.flags.home_burned) { delete p.flags.home_burned; p.flags.home_burned2 = 1; }
     else p.flags.home_burned = 1;
     FB.queueEvent(state, 'devastation_raiders', {});
+    if (firstSerfBurn && p.tenureTransition &&
+        FB.noteSerfHomeTransition) {
+      FB.noteSerfHomeTransition(state, 'war_pressure', null, null, {
+        tenureFormedTurn:p.tenure && p.tenure.formedTurn,
+        provinceId:p.provinceId || p.home
+      });
+    }
     if (FB.ui && FB.ui.maybeTip) {
       FB.ui.maybeTip('home-burned',
         '💡 Raiders burn the land: devastation steals yields and holdings; a lord’s peace or a strong realm keeps them away.',

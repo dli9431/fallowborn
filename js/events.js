@@ -816,6 +816,8 @@ window.FB = window.FB || {};
     if (['lord','steward','priest','rival','notable'].indexOf(role) < 0) {
       return null;
     }
+    const authorityBefore = role === 'lord' && FB.serfHomeAuthority
+      ? FB.serfHomeAuthority(state) : null;
     const pr = FB.world.byId[state.player.provinceId];
     const me = state.chars[state.player.charId];
     let opts = { culture: pr.culture, religion: pr.religion, born: state.date.year - FB.ri(25, 55), role: role };
@@ -836,6 +838,31 @@ window.FB = window.FB || {};
     const c = FB.makeCharacter(state, opts);
     state.roles[role] = c.id;
     if (role === 'lord' && create) FB.getRole(state, 'steward', true);
+    if (role === 'lord' && FB.activeSerfTenure &&
+        FB.activeSerfTenure(state) && FB.serfHomeAuthority) {
+      const tenure = FB.activeSerfTenure(state);
+      const authorityAfter = FB.serfHomeAuthority(state);
+      if (tenure.authorityCheckpoint &&
+          tenure.authorityCheckpoint.localLordId === null) {
+        normalizeSerfTenure(state, tenure);
+        const transition = state.player.tenureTransition;
+        if (transition && transition.oldAuthority &&
+            transition.newAuthority) {
+          transition.oldAuthority.localLordId = c.id;
+          transition.newAuthority.localLordId = c.id;
+          if (transition.queued) {
+            transition.revision++;
+            transition.status = 'pending';
+            transition.queued = false;
+            removeQueuedTenureReviews(state);
+          }
+        }
+      } else if (authorityBefore && authorityAfter &&
+          FB.noteSerfHomeTransition) {
+        FB.noteSerfHomeTransition(state, 'local_lord_succession',
+          authorityBefore, authorityAfter);
+      }
+    }
     return c;
   };
 
@@ -2214,6 +2241,11 @@ window.FB = window.FB || {};
   FB.killChar = function (state, c, opts) {
     if (!c || c.dead) return;
     opts = opts || {};
+    const serfLordDied = !!(state && state.roles &&
+      state.roles.lord === c.id && FB.activeSerfTenure &&
+      FB.activeSerfTenure(state));
+    const serfAuthorityBefore = serfLordDied && FB.serfHomeAuthority
+      ? FB.serfHomeAuthority(state) : null;
     const familyLinks = opts.familyLinks ||
       (FB.familyLinksSnapshot ? FB.familyLinksSnapshot(state) : null);
     const reverseSpouses = familyLinks && familyLinks.spouses[c.id] || [];
@@ -2268,6 +2300,11 @@ window.FB = window.FB || {};
     /* Again at the end: the spouse and betrothal links above were severed
        after the first bump, and the family index reads exactly those. */
     if (FB.touchFamily) FB.touchFamily();
+    if (serfLordDied && serfAuthorityBefore && FB.serfHomeAuthority &&
+        FB.noteSerfHomeTransition) {
+      FB.noteSerfHomeTransition(state, 'local_lord_succession',
+        serfAuthorityBefore, FB.serfHomeAuthority(state));
+    }
   };
 
   /* Can the player begin courting this character? */
@@ -3218,6 +3255,100 @@ window.FB = window.FB || {};
       (kind === 'god' ? 'words.deity' : 'words.temple');
     return FB.dataParam('religion', religionId, path);
   }
+  function authorityPersonName(state, person) {
+    if (!person) return '';
+    const exact = (person.id && state.chars && state.chars[person.id]) ||
+      (person.charId && state.chars && state.chars[person.charId]);
+    if (exact) return FB.fullName(exact);
+    if (person.name) return person.name + (person.dyn ? ' ' + person.dyn : '');
+    return '';
+  }
+  function transitionAuthorityName(state, ctx, former) {
+    if (!ctx) return FB.T('the local authority');
+    const prefix = former ? 'old' : 'new';
+    const localId = ctx[prefix + 'LocalLordId'];
+    const local = localId && state.chars && state.chars[localId];
+    const causes = ctx.transitionCauses || [];
+    const holderChanged = causes.indexOf('county_transfer') >= 0 ||
+      causes.indexOf('holder_succession') >= 0;
+    const sovereignChanged = causes.indexOf('sovereign_change') >= 0;
+    let realmId = null;
+    let generation = null;
+    if (holderChanged) {
+      realmId = ctx[prefix + 'HolderRealmId'];
+      generation = ctx[prefix + 'HolderGeneration'];
+    } else if (sovereignChanged) {
+      realmId = ctx[prefix + 'SovereignRealmId'];
+      generation = ctx[prefix + 'SovereignGeneration'];
+    }
+    if (realmId) {
+      const ruler = FB.realmRulerAtGeneration
+        ? FB.realmRulerAtGeneration(state, realmId, generation) : null;
+      const rulerName = authorityPersonName(state, ruler);
+      if (rulerName) return rulerName;
+      const realm = state.realms && state.realms[realmId];
+      if (realm && realm.name) return realm.name;
+    }
+    if (local) return FB.fullName(local);
+    const fallbackRealmId = ctx[prefix + 'HolderRealmId'];
+    const fallbackRealm = fallbackRealmId && state.realms &&
+      state.realms[fallbackRealmId];
+    return fallbackRealm && fallbackRealm.name || FB.T('the local authority');
+  }
+  function transitionCauseText(cause) {
+    if (cause === 'local_lord_succession') {
+      return FB.T('local-lord succession');
+    }
+    if (cause === 'county_transfer') return FB.T('county transfer');
+    if (cause === 'holder_succession') {
+      return FB.T('direct-holder succession');
+    }
+    if (cause === 'sovereign_change') return FB.T('sovereign change');
+    if (cause === 'custom_confirmed') {
+      return FB.T('written custom confirmed');
+    }
+    if (cause === 'custom_unconfirmed') {
+      return FB.T('written custom lost');
+    }
+    if (cause === 'war_pressure') return FB.T('wartime pressure');
+    return FB.T('authority change');
+  }
+  function transitionAuthorityChangeText(state, ctx) {
+    const former = transitionAuthorityName(state, ctx, true);
+    const current = transitionAuthorityName(state, ctx, false);
+    const causes = ctx && ctx.transitionCauses || [];
+    const holderChanged = causes.indexOf('county_transfer') >= 0 ||
+      causes.indexOf('holder_succession') >= 0;
+    const sovereignChanged = causes.indexOf('sovereign_change') >= 0;
+    if (holderChanged) {
+      return FB.T(
+        'The county’s direct authority has passed from {former} to {current}.',
+        { former:former, current:current });
+    }
+    if (sovereignChanged) {
+      return FB.T(
+        'Sovereign authority above the county has changed from {former} to {current}.',
+        { former:former, current:current });
+    }
+    if (ctx && ctx.oldLocalLordId !== ctx.newLocalLordId) {
+      return FB.T(
+        'The household’s local lordship has passed from {former} to {current}.',
+        { former:former, current:current });
+    }
+    if (causes.indexOf('custom_confirmed') >= 0) {
+      return FB.T('Written custom has been confirmed under {current}.', {
+        current:current
+      });
+    }
+    if (causes.indexOf('custom_unconfirmed') >= 0) {
+      return FB.T('Written custom is no longer confirmed under {current}.', {
+        current:current
+      });
+    }
+    return FB.T('The household custom is reviewed under {current}.', {
+      current:current
+    });
+  }
   FB.textParams = function (state, viewer, source, ctx, semantic) {
     /* No running game (title-screen label lookups): only caller context is
        available, and there is no state to materialize roles from. */
@@ -3381,6 +3512,24 @@ window.FB = window.FB || {};
           const county = countyId ? FB.world.byId[countyId] : null;
           out[k] = county ? county.name :
             (semantic ? neutralParam('fx.param.the_county') : FB.T('the county'));
+          break;
+        }
+        case 'formerAuthority':
+          out[k] = transitionAuthorityName(state, ctx, true);
+          break;
+        case 'currentAuthority':
+          out[k] = transitionAuthorityName(state, ctx, false);
+          break;
+        case 'authorityChange':
+          out[k] = transitionAuthorityChangeText(state, ctx);
+          break;
+        case 'transitionCauses': {
+          const causes = ctx && ctx.transitionCauses || [];
+          const causeLabels = causes.map(function (cause) {
+            return transitionCauseText(cause);
+          });
+          out[k] = causeLabels.length
+            ? causeLabels.join(FB.T('; ')) : FB.T('authority change');
           break;
         }
         case 'god': out[k] = semantic ? faithParam('god', me.religion) : FB.godWord(me.religion); break;
@@ -4382,6 +4531,10 @@ window.FB = window.FB || {};
     if (ctx.tenureFormedTurn === undefined) {
       ctx.tenureFormedTurn = tenure.formedTurn;
     }
+    if (ctx.tenureRevision === undefined) {
+      ctx.tenureRevision = Number.isInteger(tenure.revision)
+        ? tenure.revision : 0;
+    }
     if (ctx.tenureArchetypeId === undefined) {
       ctx.tenureArchetypeId = tenure.archetypeId;
     }
@@ -4404,6 +4557,8 @@ window.FB = window.FB || {};
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
     if (!tenure || ctx.protagonistId !== state.player.charId) return false;
     if (ctx.tenureFormedTurn !== tenure.formedTurn ||
+        (ctx.tenureRevision === undefined ? 0 : ctx.tenureRevision) !==
+          (Number.isInteger(tenure.revision) ? tenure.revision : 0) ||
         ctx.tenureArchetypeId !== tenure.archetypeId ||
         ctx.tenureProvinceId !== tenure.provinceId ||
         ctx.tenureSettlement !== tenure.settlement) return false;
@@ -5047,6 +5202,43 @@ window.FB = window.FB || {};
           }
         }
       }
+
+      const transitionTerms = arch.transitionTerms || {};
+      const transitionTermKeys = Object.keys(transitionTerms);
+      for (let tt = 0; tt < transitionTermKeys.length; tt++) {
+        if (['commutableDuties','additionalDuty'].indexOf(
+            transitionTermKeys[tt]) < 0) {
+          throw new Error('Archetype ' + archKey +
+            ' transitionTerms has unknown field ' + transitionTermKeys[tt] + '.');
+        }
+      }
+      const commutable = transitionTerms.commutableDuties || [];
+      if (!Array.isArray(commutable)) {
+        throw new Error('Archetype ' + archKey +
+          ' transitionTerms.commutableDuties must be an array.');
+      }
+      for (let ct = 0; ct < commutable.length; ct++) {
+        if (!archDutyIds[commutable[ct]] ||
+            commutable.indexOf(commutable[ct]) !== ct) {
+          throw new Error('Archetype ' + archKey +
+            ' names a duplicate or non-customary commutable duty ' +
+            commutable[ct] + '.');
+        }
+      }
+      const additional = transitionTerms.additionalDuty;
+      if (additional) {
+        if (!additional.id || archDutyIds[additional.id] ||
+            Object.keys(additional).sort().join(',') !==
+              'eventId,firstDueSeason,id,intervalTurns' ||
+            !dutiesCatalogue[additional.id] ||
+            !additional.eventId || !FB.eventById(additional.eventId) ||
+            ['spring','summer','autumn','winter'].indexOf(
+              additional.firstDueSeason) < 0 ||
+            additional.intervalTurns !== 1440) {
+          throw new Error('Archetype ' + archKey +
+            ' has invalid additional transition duty terms.');
+        }
+      }
     }
 
     if (!catalogue.dependent_farming || unconditionalFallbackCount !== 1) {
@@ -5245,7 +5437,10 @@ window.FB = window.FB || {};
   FB.ensureSerfTenure = function (state, formedBy) {
     if (!state || !state.player || state.player.tier !== 0) return null;
     const p = state.player;
-    if (p.tenure && p.tenure.status === 'active') return p.tenure;
+    if (p.tenure && p.tenure.status === 'active') {
+      normalizeSerfTenure(state, p.tenure);
+      return p.tenure;
+    }
 
     FB.validateTenureData();
     const homeProvId = p.provinceId || p.home;
@@ -5345,10 +5540,14 @@ window.FB = window.FB || {};
       rights: selected.resolvedRights.slice(),
       duties: duties,
       conditional: conditional,
-      lastPresentedSeasonKey: null
+      lastPresentedSeasonKey: null,
+      revision:0,
+      transitionHistory:[],
+      transitionEligibleTurn:state.turn || 0
     };
 
     p.tenure = tenure;
+    normalizeSerfTenure(state, tenure);
     return tenure;
   };
 
@@ -5358,9 +5557,802 @@ window.FB = window.FB || {};
       ? state.player.tenure : null;
   };
 
+  const SERF_TRANSITION_CAUSES = [
+    'local_lord_succession','county_transfer','holder_succession',
+    'sovereign_change','custom_confirmed','custom_unconfirmed','war_pressure'
+  ];
+  const SERF_TRANSITION_PROPOSALS = [
+    'confirm','add_duty','commute_duty','challenge_right','restore_right'
+  ];
+  const SERF_FAITH_SEVERITY = {
+    same:0, in_fold:1, schismatic:2, foreign:3, hostile:4
+  };
+  const SERF_AUTHORITY_FIELDS = [
+    'provinceId','settlement','localLordId','holderRealmId','holderGeneration',
+    'sovereignRealmId','sovereignGeneration','rulerCultureId',
+    'rulerCultureTraditionId','rulerFaithId','householdFaithRelation'
+  ];
+
+  function authorityValue(value) {
+    return value === undefined ? null : value;
+  }
+
+  function copySerfAuthority(source) {
+    if (!source || typeof source !== 'object') return null;
+    const out = {};
+    for (let i = 0; i < SERF_AUTHORITY_FIELDS.length; i++) {
+      const field = SERF_AUTHORITY_FIELDS[i];
+      out[field] = authorityValue(source[field]);
+    }
+    return out;
+  }
+
+  function serfAuthorityEqual(a, b) {
+    if (!a || !b) return a === b;
+    for (let i = 0; i < SERF_AUTHORITY_FIELDS.length; i++) {
+      const field = SERF_AUTHORITY_FIELDS[i];
+      if (authorityValue(a[field]) !== authorityValue(b[field])) return false;
+    }
+    return true;
+  }
+
+  function serfAuthorityValid(state, authority, tenure) {
+    if (!authority || typeof authority !== 'object' || Array.isArray(authority)) {
+      return false;
+    }
+    if (authority.provinceId !== tenure.provinceId ||
+        authority.settlement !== tenure.settlement) return false;
+    for (let i = 0; i < SERF_AUTHORITY_FIELDS.length; i++) {
+      const field = SERF_AUTHORITY_FIELDS[i];
+      if (!Object.prototype.hasOwnProperty.call(authority, field)) return false;
+    }
+    if (Object.keys(authority).length !== SERF_AUTHORITY_FIELDS.length) {
+      return false;
+    }
+    if (authority.localLordId !== null &&
+        !(state.chars && state.chars[authority.localLordId])) return false;
+    for (const realmField of ['holderRealmId','sovereignRealmId']) {
+      const rid = authority[realmField];
+      if (rid !== null && rid !== 'player' &&
+          !(state.realms && state.realms[rid])) return false;
+    }
+    for (const generationField of ['holderGeneration','sovereignGeneration']) {
+      const generation = authority[generationField];
+      if (generation !== null &&
+          (!Number.isInteger(generation) || generation < 0)) return false;
+    }
+    if (authority.rulerCultureId !== null &&
+        !(FBDATA.cultures && FBDATA.cultures[authority.rulerCultureId])) {
+      return false;
+    }
+    if (authority.rulerCultureTraditionId !== null &&
+        !(FBDATA.cultureTraditions &&
+          FBDATA.cultureTraditions[authority.rulerCultureTraditionId])) {
+      return false;
+    }
+    if (authority.rulerCultureId !== null &&
+        (FBDATA.cultures[authority.rulerCultureId].tradition || null) !==
+          authority.rulerCultureTraditionId) return false;
+    if (authority.rulerFaithId !== null && FB.faithExists &&
+        !FB.faithExists(authority.rulerFaithId, state)) return false;
+    if (authority.householdFaithRelation !== null &&
+        SERF_FAITH_SEVERITY[authority.householdFaithRelation] === undefined) {
+      return false;
+    }
+    return true;
+  }
+
+  function serfHomeSettlementKind(state, tenure) {
+    const sites = FB.world && FB.world.sitesByProv &&
+      FB.world.sitesByProv[tenure.provinceId];
+    const site = sites && sites.list &&
+      (sites.list[tenure.settlement] || sites.list[0]);
+    return site && site.kind || 'village';
+  }
+
+  function serfRealmPoliticalIdentity(state, rid) {
+    const realm = rid && state.realms && state.realms[rid];
+    if (!realm || !realm.alive || rid === 'player') {
+      return { generation:null, culture:null, faith:null };
+    }
+    const ruler = realm.ruler || {};
+    const snapshot = FB.realmRulerCharacterSnapshot &&
+      FB.realmRulerCharacterSnapshot(state, rid);
+    return {
+      generation:FB.realmRulerGeneration
+        ? FB.realmRulerGeneration(state, rid)
+        : (ruler.generation !== undefined ? ruler.generation : 1),
+      culture:snapshot && snapshot.culture || ruler.culture || realm.culture || null,
+      faith:snapshot && snapshot.religion || ruler.religion || realm.religion || null
+    };
+  }
+
+  FB.serfHomeAuthority = function (state) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure) return null;
+    const p = state.player;
+    const localLordId = state.roles && state.roles.lord;
+    const localLord = localLordId && state.chars && state.chars[localLordId];
+    const localLordHome = localLord && FB.characterResidence
+      ? FB.characterResidence(state, localLord) : null;
+    const holderRealmId = state.holder && state.holder[tenure.provinceId] ||
+      state.owner && state.owner[tenure.provinceId] || null;
+    const sovereignRealmId = holderRealmId && FB.topRealm
+      ? FB.topRealm(state, holderRealmId) : holderRealmId;
+    const holder = serfRealmPoliticalIdentity(state, holderRealmId);
+    const sovereign = serfRealmPoliticalIdentity(state, sovereignRealmId);
+    const political = holder.culture || holder.faith ? holder : sovereign;
+    const protagonist = state.chars && state.chars[p.charId];
+    const tradition = political.culture && FBDATA.cultures &&
+      FBDATA.cultures[political.culture]
+      ? FBDATA.cultures[political.culture].tradition || null : null;
+    return {
+      provinceId:tenure.provinceId,
+      settlement:tenure.settlement,
+      localLordId:localLord && !localLord.dead &&
+        localLordHome === tenure.provinceId ? localLord.id : null,
+      holderRealmId:holderRealmId,
+      holderGeneration:holder.generation,
+      sovereignRealmId:sovereignRealmId,
+      sovereignGeneration:sovereign.generation,
+      rulerCultureId:political.culture,
+      rulerCultureTraditionId:tradition,
+      rulerFaithId:political.faith,
+      householdFaithRelation:protagonist && protagonist.religion && political.faith &&
+        FB.faithRelation
+        ? FB.faithRelation(state, protagonist.religion, political.faith) : null
+    };
+  };
+
+  FB.localLordAt = function (state, characterId, allowDead) {
+    const c = characterId && state && state.chars && state.chars[characterId];
+    return c && (allowDead || !c.dead) ? c : null;
+  };
+
+  FB.realmRulerAtGeneration = function (state, realmId, generation) {
+    const realm = state && state.realms && state.realms[realmId];
+    if (!realm || !Number.isInteger(generation)) return null;
+    const currentGeneration = FB.realmRulerGeneration
+      ? FB.realmRulerGeneration(state, realmId)
+      : (realm.ruler && realm.ruler.generation || 1);
+    if (currentGeneration === generation) {
+      return FB.realmRulerCharacterSnapshot &&
+        FB.realmRulerCharacterSnapshot(state, realmId) || realm.ruler || null;
+    }
+    const succession = realm.succession;
+    const members = succession && succession.members || {};
+    for (const memberId in members) {
+      const member = members[memberId];
+      if (!member || member.reignGeneration !== generation) continue;
+      const c = member.charId && state.chars && state.chars[member.charId];
+      return c || member;
+    }
+    return null;
+  };
+
+  function normalizeSerfTenure(state, tenure) {
+    if (!tenure || tenure.status !== 'active') return tenure;
+    if (!Number.isInteger(tenure.revision) || tenure.revision < 0) {
+      tenure.revision = 0;
+    }
+    if (!Array.isArray(tenure.transitionHistory)) tenure.transitionHistory = [];
+    if (tenure.transitionHistory.length > 8) {
+      tenure.transitionHistory = tenure.transitionHistory.slice(-8);
+    }
+    if (!Number.isInteger(tenure.transitionEligibleTurn) ||
+        tenure.transitionEligibleTurn < 0) {
+      tenure.transitionEligibleTurn = state.turn || 0;
+    }
+    if (!tenure.authorityCheckpoint) {
+      const current = FB.serfHomeAuthority(state);
+      if (current) {
+        tenure.authorityCheckpoint = copySerfAuthority(current);
+        tenure.authorityCheckpoint.acknowledgedTurn = state.turn || 0;
+      }
+    } else if (tenure.authorityCheckpoint.localLordId === null) {
+      const current = FB.serfHomeAuthority(state);
+      if (current && current.localLordId) {
+        tenure.authorityCheckpoint.localLordId = current.localLordId;
+      }
+    }
+    return tenure;
+  }
+
+  function tenureTransitionTerms(tenure) {
+    const arch = tenure && FBDATA.tenureArchetypes &&
+      FBDATA.tenureArchetypes[tenure.archetypeId];
+    return arch && arch.transitionTerms || {};
+  }
+
+  function archetypeRightIds(tenure) {
+    const arch = tenure && FBDATA.tenureArchetypes &&
+      FBDATA.tenureArchetypes[tenure.archetypeId];
+    const out = [];
+    for (let i = 0; i < (arch && arch.rights || []).length; i++) {
+      const right = arch.rights[i];
+      const id = typeof right === 'string' ? right :
+        (right && (right.rightId || right.id));
+      if (id && out.indexOf(id) < 0) out.push(id);
+    }
+    return out;
+  }
+
+  function transitionHistoryRight(tenure, outcome, provenance) {
+    const permitted = archetypeRightIds(tenure);
+    for (let i = tenure.transitionHistory.length - 1; i >= 0; i--) {
+      const entry = tenure.transitionHistory[i];
+      if (!entry || entry.outcome !== outcome || !entry.rightId ||
+          permitted.indexOf(entry.rightId) < 0) continue;
+      if (provenance && entry.provenanceDetail !== provenance) continue;
+      return entry.rightId;
+    }
+    return null;
+  }
+
+  function tenureDutyById(tenure, dutyId) {
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      if (tenure.duties[i].id === dutyId) return tenure.duties[i];
+    }
+    return null;
+  }
+
+  function tenureDutyIsTargeted(state, dutyId) {
+    return (state.eventQueue || []).some(function (item) {
+      return item && item.ctx && item.ctx.dutyId === dutyId;
+    });
+  }
+
+  function safeCommutableDuty(state, tenure) {
+    const terms = tenureTransitionTerms(tenure);
+    const commutable = terms.commutableDuties || [];
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      const duty = tenure.duties[i];
+      if (commutable.indexOf(duty.id) < 0 || duty.mode === 'coin' ||
+          duty.nextDueTurn <= (state.turn || 0) + 90 ||
+          tenureDutyIsTargeted(state, duty.id)) continue;
+      return duty;
+    }
+    return null;
+  }
+
+  function faithSeverity(value) {
+    return SERF_FAITH_SEVERITY[value] === undefined
+      ? SERF_FAITH_SEVERITY.foreign : SERF_FAITH_SEVERITY[value];
+  }
+
+  FB.serfTenureTransitionProposal = function (state, transition) {
+    const tenure = FB.activeSerfTenure(state);
+    const confirm = {
+      kind:'confirm', dutyId:null, rightId:null,
+      additionalDutyId:null, commutationGold:null
+    };
+    if (!tenure || !transition) return confirm;
+    const causes = transition.causes || [];
+    let rightId = null;
+    if (causes.indexOf('custom_confirmed') >= 0) {
+      rightId = transitionHistoryRight(tenure, 'challenged_right');
+      if (rightId && tenure.rights.indexOf(rightId) < 0 &&
+          tenure.rights.length < 2) {
+        return { kind:'restore_right', dutyId:null, rightId:rightId,
+          additionalDutyId:null, commutationGold:null };
+      }
+    }
+    if (causes.indexOf('custom_unconfirmed') >= 0) {
+      rightId = transitionHistoryRight(tenure, 'restored_right',
+        'custom_confirmed');
+      if (rightId && tenure.rights.indexOf(rightId) >= 0) {
+        return { kind:'challenge_right', dutyId:null, rightId:rightId,
+          additionalDutyId:null, commutationGold:null };
+      }
+    }
+    const politicalChange = causes.indexOf('county_transfer') >= 0 ||
+      causes.indexOf('sovereign_change') >= 0;
+    if (politicalChange && transition.oldAuthority && transition.newAuthority &&
+        faithSeverity(transition.newAuthority.householdFaithRelation) >
+          faithSeverity(transition.oldAuthority.householdFaithRelation) &&
+        faithSeverity(transition.newAuthority.householdFaithRelation) >=
+          SERF_FAITH_SEVERITY.foreign && tenure.rights.length) {
+      return { kind:'challenge_right', dutyId:null, rightId:tenure.rights[0],
+        additionalDutyId:null, commutationGold:null };
+    }
+    if (causes.indexOf('county_transfer') >= 0 &&
+        ['town','city'].indexOf(serfHomeSettlementKind(state, tenure)) >= 0) {
+      const duty = safeCommutableDuty(state, tenure);
+      const commutationGold = FBDATA.balance.serfCommutedDutyGold;
+      if (duty && Number.isInteger(commutationGold) &&
+          commutationGold >= 0) {
+        return { kind:'commute_duty', dutyId:duty.id, rightId:null,
+          additionalDutyId:null,
+          commutationGold:commutationGold };
+      }
+    }
+    const additional = tenureTransitionTerms(tenure).additionalDuty;
+    if (causes.indexOf('county_transfer') >= 0 && additional &&
+        FBDATA.tenureDuties && FBDATA.tenureDuties[additional.id] &&
+        FB.eventById(additional.eventId) &&
+        tenure.duties.length < 4 && !tenureDutyById(tenure, additional.id) &&
+        !tenureDutyIsTargeted(state, additional.id)) {
+      return { kind:'add_duty', dutyId:null, rightId:null,
+        additionalDutyId:additional.id, commutationGold:null };
+    }
+    return confirm;
+  };
+
+  function transitionCauseRelevant(cause, before, after) {
+    if (cause === 'local_lord_succession') {
+      return authorityValue(before.localLordId) !==
+        authorityValue(after.localLordId);
+    }
+    if (cause === 'county_transfer') {
+      return authorityValue(before.holderRealmId) !==
+        authorityValue(after.holderRealmId);
+    }
+    if (cause === 'holder_succession') {
+      return before.holderRealmId === after.holderRealmId &&
+        authorityValue(before.holderGeneration) !==
+          authorityValue(after.holderGeneration);
+    }
+    if (cause === 'sovereign_change') {
+      return before.sovereignRealmId !== after.sovereignRealmId ||
+        before.rulerCultureTraditionId !== after.rulerCultureTraditionId ||
+        faithSeverity(before.householdFaithRelation) !==
+          faithSeverity(after.householdFaithRelation);
+    }
+    return cause === 'custom_confirmed' || cause === 'custom_unconfirmed';
+  }
+
+  function removeQueuedTenureReviews(state) {
+    if (!state.eventQueue) return;
+    state.eventQueue = state.eventQueue.filter(function (item) {
+      return item.id !== 'serf_tenure_review';
+    });
+  }
+
+  function transitionWitness(state, tenure) {
+    const story = state.player.serfStory;
+    const storyId = story && story.participants && story.participants.witness;
+    const storyWitness = storyId && state.chars && state.chars[storyId];
+    if (storyWitness && !storyWitness.dead && FB.characterResidence &&
+        FB.characterResidence(state, storyWitness) === tenure.provinceId) {
+      return storyWitness.id;
+    }
+    const candidates = FB.eventParticipantCandidates
+      ? FB.eventParticipantCandidates(state, {
+        slot:'witness', source:'local_witness', sameHome:true
+      }, { locationId:tenure.provinceId }) : [];
+    return candidates.length ? candidates[0].id : null;
+  }
+
+  FB.noteSerfHomeTransition = function (state, cause, before, after, details) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure || SERF_TRANSITION_CAUSES.indexOf(cause) < 0) return false;
+    normalizeSerfTenure(state, tenure);
+    const p = state.player;
+    const homeId = p.provinceId || p.home;
+    const settlement = (p.homeSettlement !== undefined
+      ? p.homeSettlement : (p.settlement !== undefined ? p.settlement : 0)) | 0;
+    if (homeId !== tenure.provinceId || settlement !== tenure.settlement) {
+      return false;
+    }
+    let record = p.tenureTransition;
+    if (record && !transitionRecordShapeValid(state, record)) {
+      removeQueuedTenureReviews(state);
+      delete p.tenureTransition;
+      record = null;
+    }
+    if (cause === 'war_pressure') {
+      if (!record || ['pending','queued'].indexOf(record.status) < 0 ||
+          record.causes.indexOf(cause) >= 0) return false;
+      record.causes.push(cause);
+      record.causes.sort(function (a, b) {
+        return SERF_TRANSITION_CAUSES.indexOf(a) -
+          SERF_TRANSITION_CAUSES.indexOf(b);
+      });
+      record.lastTriggerTurn = state.turn || 0;
+      record.revision++;
+      record.queued = false;
+      record.status = 'pending';
+      removeQueuedTenureReviews(state);
+      for (let i = (state.eventQueue || []).length - 1; i >= 0; i--) {
+        const item = state.eventQueue[i];
+        if (item.id !== 'devastation_raiders' || !item.ctx) continue;
+        item.ctx.tenureFormedTurn = tenure.formedTurn;
+        item.ctx.tenureRevision = tenure.revision;
+        item.ctx.homeProvinceId = tenure.provinceId;
+        item.ctx.settlement = tenure.settlement;
+        item.ctx.transitionRevision = record.revision;
+        break;
+      }
+      return true;
+    }
+    before = copySerfAuthority(before || tenure.authorityCheckpoint);
+    after = copySerfAuthority(after || FB.serfHomeAuthority(state));
+    if (!before || !after || !serfAuthorityValid(state, before, tenure) ||
+        !serfAuthorityValid(state, after, tenure) ||
+        !transitionCauseRelevant(cause, before, after)) return false;
+    if (record && (record.protagonistId !== p.charId ||
+        record.tenureFormedTurn !== tenure.formedTurn ||
+        record.tenureRevision !== tenure.revision ||
+        record.provinceId !== tenure.provinceId ||
+        record.settlement !== tenure.settlement)) {
+      removeQueuedTenureReviews(state);
+      delete p.tenureTransition;
+      record = null;
+    }
+    const checkpoint = copySerfAuthority(tenure.authorityCheckpoint || before);
+    if (checkpoint && serfAuthorityEqual(after, checkpoint) &&
+        cause !== 'custom_confirmed' && cause !== 'custom_unconfirmed') {
+      removeQueuedTenureReviews(state);
+      delete p.tenureTransition;
+      tenure.authorityCheckpoint = checkpoint;
+      tenure.authorityCheckpoint.acknowledgedTurn = state.turn || 0;
+      return true;
+    }
+    if (!record) {
+      record = {
+        version:1, status:'pending', revision:1,
+        protagonistId:p.charId,
+        tenureFormedTurn:tenure.formedTurn,
+        tenureRevision:tenure.revision,
+        provinceId:tenure.provinceId, settlement:tenure.settlement,
+        firstTriggerTurn:state.turn || 0,
+        lastTriggerTurn:state.turn || 0,
+        eligibleTurn:Math.max(state.turn || 0,
+          tenure.transitionEligibleTurn || 0),
+        causes:[cause], oldAuthority:checkpoint || before,
+        newAuthority:after,
+        transferCount:cause === 'county_transfer' ? 1 : 0,
+        proposal:null, witnessId:transitionWitness(state, tenure), queued:false
+      };
+      p.tenureTransition = record;
+    } else {
+      record.newAuthority = after;
+      if (record.causes.indexOf(cause) < 0) record.causes.push(cause);
+      record.causes.sort(function (a, b) {
+        return SERF_TRANSITION_CAUSES.indexOf(a) -
+          SERF_TRANSITION_CAUSES.indexOf(b);
+      });
+      record.lastTriggerTurn = state.turn || 0;
+      if (cause === 'county_transfer') record.transferCount++;
+      record.revision++;
+      record.status = 'pending';
+      record.queued = false;
+      if (!record.witnessId) record.witnessId = transitionWitness(state, tenure);
+      removeQueuedTenureReviews(state);
+    }
+    record.proposal = FB.serfTenureTransitionProposal(state, record);
+    return true;
+  };
+
+  function transitionRecordShapeValid(state, record) {
+    const tenure = FB.activeSerfTenure(state);
+    const transitionKeys = [
+      'causes','eligibleTurn','firstTriggerTurn','lastTriggerTurn',
+      'newAuthority','oldAuthority','proposal','protagonistId','provinceId',
+      'queued','revision','settlement','status','tenureFormedTurn',
+      'tenureRevision','transferCount','version','witnessId'
+    ];
+    if (!tenure || !record || record.version !== 1 ||
+        Object.keys(record).sort().join(',') !== transitionKeys.join(',') ||
+        ['pending','queued'].indexOf(record.status) < 0 ||
+        !Number.isInteger(record.revision) || record.revision < 1 ||
+        record.protagonistId !== state.player.charId ||
+        record.tenureFormedTurn !== tenure.formedTurn ||
+        record.tenureRevision !== tenure.revision ||
+        record.provinceId !== tenure.provinceId ||
+        record.settlement !== tenure.settlement ||
+        !Number.isInteger(record.firstTriggerTurn) ||
+        !Number.isInteger(record.lastTriggerTurn) ||
+        !Number.isInteger(record.eligibleTurn) ||
+        record.firstTriggerTurn < 0 ||
+        record.lastTriggerTurn < record.firstTriggerTurn ||
+        record.eligibleTurn < 0 ||
+        !Number.isInteger(record.transferCount) || record.transferCount < 0 ||
+        typeof record.queued !== 'boolean' ||
+        (record.status === 'queued') !== record.queued ||
+        (record.witnessId !== null &&
+          !(state.chars && state.chars[record.witnessId])) ||
+        !Array.isArray(record.causes) || !record.causes.length ||
+        !serfAuthorityValid(state, record.oldAuthority, tenure) ||
+        !serfAuthorityValid(state, record.newAuthority, tenure) ||
+        !record.proposal ||
+        SERF_TRANSITION_PROPOSALS.indexOf(record.proposal.kind) < 0) {
+      return false;
+    }
+    if (Object.keys(record.proposal).sort().join(',') !==
+        'additionalDutyId,commutationGold,dutyId,kind,rightId') return false;
+    for (let i = 0; i < record.causes.length; i++) {
+      if (SERF_TRANSITION_CAUSES.indexOf(record.causes[i]) < 0 ||
+          record.causes.indexOf(record.causes[i]) !== i ||
+          (i && SERF_TRANSITION_CAUSES.indexOf(record.causes[i - 1]) >
+            SERF_TRANSITION_CAUSES.indexOf(record.causes[i]))) return false;
+    }
+    return true;
+  }
+
+  function transitionRecordValid(state, record) {
+    if (!transitionRecordShapeValid(state, record) ||
+        !serfAuthorityEqual(record.newAuthority,
+          FB.serfHomeAuthority(state))) return false;
+    const expected = FB.serfTenureTransitionProposal(state, record);
+    const fields = ['kind','dutyId','rightId','additionalDutyId','commutationGold'];
+    for (let i = 0; i < fields.length; i++) {
+      if (authorityValue(expected[fields[i]]) !==
+          authorityValue(record.proposal[fields[i]])) return false;
+    }
+    return true;
+  }
+
+  function transitionContext(state, record) {
+    const participants = {};
+    const participantKinds = {};
+    if (record.oldAuthority.localLordId) {
+      participants.formerLord = record.oldAuthority.localLordId;
+      participantKinds.formerLord = 'lord';
+    }
+    if (record.newAuthority.localLordId) {
+      participants.currentLord = record.newAuthority.localLordId;
+      participantKinds.currentLord = 'lord';
+    }
+    if (record.witnessId) {
+      participants.witness = record.witnessId;
+      participantKinds.witness = 'contact';
+    }
+    const targetId = record.proposal.dutyId ||
+      record.proposal.additionalDutyId || record.proposal.rightId;
+    const targetKind = record.proposal.rightId ? 'tenureRight' : 'tenureDuty';
+    return {
+      transitionRevision:record.revision,
+      tenureFormedTurn:record.tenureFormedTurn,
+      tenureRevision:record.tenureRevision,
+      protagonistId:record.protagonistId,
+      locationId:record.provinceId,
+      homeProvinceId:record.provinceId,
+      settlement:record.settlement,
+      oldLocalLordId:record.oldAuthority.localLordId,
+      newLocalLordId:record.newAuthority.localLordId,
+      oldHolderRealmId:record.oldAuthority.holderRealmId,
+      oldHolderGeneration:record.oldAuthority.holderGeneration,
+      newHolderRealmId:record.newAuthority.holderRealmId,
+      newHolderGeneration:record.newAuthority.holderGeneration,
+      oldSovereignRealmId:record.oldAuthority.sovereignRealmId,
+      oldSovereignGeneration:record.oldAuthority.sovereignGeneration,
+      newSovereignRealmId:record.newAuthority.sovereignRealmId,
+      newSovereignGeneration:record.newAuthority.sovereignGeneration,
+      oldRulerCultureTraditionId:
+        record.oldAuthority.rulerCultureTraditionId,
+      newRulerCultureTraditionId:
+        record.newAuthority.rulerCultureTraditionId,
+      oldHouseholdFaithRelation:
+        record.oldAuthority.householdFaithRelation,
+      newHouseholdFaithRelation:
+        record.newAuthority.householdFaithRelation,
+      realmId:record.newAuthority.holderRealmId,
+      transitionCauses:record.causes.slice(),
+      proposalKind:record.proposal.kind,
+      targetDutyId:record.proposal.dutyId,
+      targetRightId:record.proposal.rightId,
+      additionalDutyId:record.proposal.additionalDutyId,
+      commutationGold:record.proposal.commutationGold,
+      term:targetId ? { $data:targetKind, id:targetId } : null,
+      witnessId:record.witnessId,
+      participants:participants,
+      participantKinds:participantKinds
+    };
+  }
+
+  function transitionContextMatches(record, ctx) {
+    if (!ctx) return false;
+    const expected = transitionContext(null, record);
+    const fields = [
+      'transitionRevision','tenureFormedTurn','tenureRevision','protagonistId',
+      'locationId','homeProvinceId','settlement','oldLocalLordId',
+      'newLocalLordId','oldHolderRealmId','oldHolderGeneration',
+      'newHolderRealmId','newHolderGeneration','oldSovereignRealmId',
+      'oldSovereignGeneration','newSovereignRealmId',
+      'newSovereignGeneration','oldRulerCultureTraditionId',
+      'newRulerCultureTraditionId','oldHouseholdFaithRelation',
+      'newHouseholdFaithRelation','realmId','proposalKind','targetDutyId',
+      'targetRightId','additionalDutyId','commutationGold','witnessId'
+    ];
+    for (let i = 0; i < fields.length; i++) {
+      if (authorityValue(ctx[fields[i]]) !==
+          authorityValue(expected[fields[i]])) return false;
+    }
+    if (!Array.isArray(ctx.transitionCauses) ||
+        ctx.transitionCauses.length !== expected.transitionCauses.length) {
+      return false;
+    }
+    for (let i = 0; i < expected.transitionCauses.length; i++) {
+      if (ctx.transitionCauses[i] !== expected.transitionCauses[i]) return false;
+    }
+    const expectedParticipants = expected.participants || {};
+    const actualParticipants = ctx.participants || {};
+    const expectedKinds = expected.participantKinds || {};
+    const actualKinds = ctx.participantKinds || {};
+    const participantSlots = ['formerLord','currentLord','witness'];
+    for (let i = 0; i < participantSlots.length; i++) {
+      const slot = participantSlots[i];
+      if (authorityValue(actualParticipants[slot]) !==
+          authorityValue(expectedParticipants[slot]) ||
+          authorityValue(actualKinds[slot]) !==
+          authorityValue(expectedKinds[slot])) return false;
+    }
+    if (Object.keys(actualParticipants).length !==
+        Object.keys(expectedParticipants).length ||
+        Object.keys(actualKinds).length !== Object.keys(expectedKinds).length) {
+      return false;
+    }
+    if (expected.term === null) {
+      if (ctx.term !== null) return false;
+    } else if (!ctx.term || ctx.term.$data !== expected.term.$data ||
+        ctx.term.id !== expected.term.id) return false;
+    return true;
+  }
+
+  function nextTransitionDutyTurn(state, firstDueSeason) {
+    const seasons = { spring:0, summer:1, autumn:2, winter:3 };
+    const targetSeason = seasons[firstDueSeason];
+    const earliest = FB.dateAtTurn(state, (state.turn || 0) + 180);
+    let year = earliest.year;
+    let ordinal = year * 360 + targetSeason * 90 + 29;
+    const earliestOrdinal = FB.dateOrdinal(earliest);
+    if (ordinal < earliestOrdinal) ordinal += 360;
+    return (state.turn || 0) + ordinal - FB.dateOrdinal(state.date);
+  }
+
+  FB.serfTenureDutyInterval = function (tenure, duty) {
+    if (duty && Number(duty.originalIntervalTurns) > 0) {
+      return duty.originalIntervalTurns;
+    }
+    const terms = tenureTransitionTerms(tenure);
+    if (terms.additionalDuty && duty && duty.id === terms.additionalDuty.id) {
+      return terms.additionalDuty.intervalTurns;
+    }
+    const arch = tenure && FBDATA.tenureArchetypes &&
+      FBDATA.tenureArchetypes[tenure.archetypeId];
+    for (let i = 0; i < (arch && arch.duties || []).length; i++) {
+      if (duty && arch.duties[i].id === duty.id) {
+        return arch.duties[i].intervalTurns || 720;
+      }
+    }
+    return 720;
+  };
+
+  function transitionHistoryEntry(state, record, outcome, changedId) {
+    return {
+      id:'tt:' + record.firstTriggerTurn + ':' + record.revision,
+      turn:state.turn || 0,
+      causes:record.causes.slice(),
+      outcome:outcome,
+      dutyId:changedId && changedId.dutyId || null,
+      rightId:changedId && changedId.rightId || null,
+      oldHolderRealmId:record.oldAuthority.holderRealmId,
+      oldHolderGeneration:record.oldAuthority.holderGeneration,
+      newHolderRealmId:record.newAuthority.holderRealmId,
+      newHolderGeneration:record.newAuthority.holderGeneration,
+      provenance:'authority_review',
+      provenanceDetail:record.causes.indexOf('custom_confirmed') >= 0
+        ? 'custom_confirmed' : null
+    };
+  }
+
+  FB.resolveSerfTenureTransition = function (state, transitionRevision, outcome) {
+    if (['preserve','accept','restore','decline_restore'].indexOf(outcome) < 0) {
+      return false;
+    }
+    const p = state && state.player;
+    const tenure = FB.activeSerfTenure(state);
+    const record = p && p.tenureTransition;
+    if (!tenure || !record || record.status !== 'queued' || !record.queued ||
+        record.revision !== transitionRevision ||
+        !transitionRecordValid(state, record)) return false;
+    const proposal = record.proposal;
+    if (outcome === 'accept' &&
+        ['add_duty','commute_duty','challenge_right'].indexOf(
+          proposal.kind) < 0) return false;
+    if (outcome === 'restore' &&
+        ['restore_right','confirm'].indexOf(proposal.kind) < 0) return false;
+    if (outcome === 'decline_restore' &&
+        proposal.kind !== 'restore_right') return false;
+    let mechanicsChanged = false;
+    let historyOutcome = 'confirmed';
+    const changedId = { dutyId:null, rightId:null };
+    if (outcome === 'accept') {
+      if (proposal.kind === 'add_duty') {
+        const terms = tenureTransitionTerms(tenure).additionalDuty;
+        if (!terms || terms.id !== proposal.additionalDutyId ||
+            !FBDATA.tenureDuties || !FBDATA.tenureDuties[terms.id] ||
+            !FB.eventById(terms.eventId) ||
+            tenure.duties.length >= 4 || tenureDutyById(tenure, terms.id)) {
+          return false;
+        }
+        tenure.duties.push({
+          id:terms.id, eventId:terms.eventId,
+          nextDueTurn:nextTransitionDutyTurn(state, terms.firstDueSeason),
+          lastResolvedTurn:null,
+          addedByTransition:'tt:' + record.firstTriggerTurn + ':' + record.revision
+        });
+        mechanicsChanged = true;
+        historyOutcome = 'added_duty';
+        changedId.dutyId = terms.id;
+      } else if (proposal.kind === 'commute_duty') {
+        const duty = tenureDutyById(tenure, proposal.dutyId);
+        if (!duty || duty.mode === 'coin' ||
+            safeCommutableDuty(state, tenure) !== duty) return false;
+        duty.sourceEventId = duty.eventId;
+        duty.originalIntervalTurns = FB.serfTenureDutyInterval(tenure, duty);
+        duty.eventId = 'serf_commuted_due';
+        duty.mode = 'coin';
+        duty.commutationGold = proposal.commutationGold;
+        duty.changedByTransition = 'tt:' + record.firstTriggerTurn + ':' +
+          record.revision;
+        mechanicsChanged = true;
+        historyOutcome = 'commuted_duty';
+        changedId.dutyId = duty.id;
+      } else if (proposal.kind === 'challenge_right') {
+        const index = tenure.rights.indexOf(proposal.rightId);
+        if (index < 0) return false;
+        tenure.rights.splice(index, 1);
+        mechanicsChanged = true;
+        historyOutcome = 'challenged_right';
+        changedId.rightId = proposal.rightId;
+      }
+    } else if (outcome === 'restore') {
+      const rightId = proposal.rightId ||
+        transitionHistoryRight(tenure, 'challenged_right');
+      if (!rightId || archetypeRightIds(tenure).indexOf(rightId) < 0 ||
+          tenure.rights.indexOf(rightId) >= 0 || tenure.rights.length >= 2) {
+        return false;
+      }
+      tenure.rights.push(rightId);
+      mechanicsChanged = true;
+      historyOutcome = 'restored_right';
+      changedId.rightId = rightId;
+    } else if (outcome === 'decline_restore') {
+      historyOutcome = 'declined_restoration';
+    } else if (proposal.kind !== 'confirm') {
+      historyOutcome = 'preserved_terms';
+    }
+    if (mechanicsChanged) tenure.revision++;
+    tenure.transitionHistory.push(transitionHistoryEntry(
+      state, record, historyOutcome, changedId));
+    if (tenure.transitionHistory.length > 8) tenure.transitionHistory.shift();
+    const current = FB.serfHomeAuthority(state);
+    tenure.authorityCheckpoint = copySerfAuthority(current || record.newAuthority);
+    tenure.authorityCheckpoint.acknowledgedTurn = state.turn || 0;
+    tenure.transitionEligibleTurn = (state.turn || 0) +
+      (FBDATA.balance.serfTenureTransitionCooldown || 360);
+    delete p.tenureTransition;
+    removeQueuedTenureReviews(state);
+    if (mechanicsChanged && state.eventQueue) {
+      state.eventQueue = state.eventQueue.filter(function (item) {
+        const ev = FB.eventById(item.id);
+        return !(ev && ev.contextValidator === 'serf_tenure_context_valid' &&
+          item.ctx && item.ctx.tenureFormedTurn === tenure.formedTurn &&
+          (item.ctx.tenureRevision === undefined ? 0 :
+            item.ctx.tenureRevision) !== tenure.revision);
+      });
+    }
+    if (mechanicsChanged && p.freedomOffer &&
+        p.freedomOffer.status === 'offered') {
+      p.freedomOffer.status = 'superseded';
+    }
+    FB.news(state, mechanicsChanged
+      ? FB.msg('news.serf.tenure_review_amended',
+        'The household custom at {province} is amended under the current authority.',
+        { province:FB.world.byId[tenure.provinceId].name })
+      : FB.msg('news.serf.tenure_review_confirmed',
+        'The household custom at {province} is confirmed without changing its terms.',
+        { province:FB.world.byId[tenure.provinceId].name }));
+    return true;
+  };
+
   FB.closeSerfTenure = function (state, reason) {
     if (!state || !state.player || !state.player.tenure) return null;
     const tenure = state.player.tenure;
+    delete state.player.tenureTransition;
+    removeQueuedTenureReviews(state);
     if (tenure.status === 'closed') return tenure;
     tenure.status = 'closed';
     tenure.endedTurn = state.turn || 0;
@@ -5476,9 +6468,15 @@ window.FB = window.FB || {};
       const d = tenure.duties[i];
       const dDef = (FBDATA.tenureDuties && FBDATA.tenureDuties[d.id]) || null;
       if (!dDef) continue;
-      const dName = FB.tenureText(state, charId, 'tenureDuty', d.id, dDef, 'name', 'nameKey')
+      let dName = FB.tenureText(state, charId, 'tenureDuty', d.id, dDef, 'name', 'nameKey')
         || FB.T('Customary obligation');
-      const dDesc = FB.tenureText(state, charId, 'tenureDuty', d.id, dDef, 'desc', 'descKey');
+      let dDesc = FB.tenureText(state, charId, 'tenureDuty', d.id, dDef, 'desc', 'descKey');
+      if (d.mode === 'coin' && Number.isInteger(d.commutationGold)) {
+        dName = FB.T('{duty} (commuted)', { duty:dName });
+        dDesc = FB.T('Commuted to {money:amount} at each due date. {description}', {
+          amount:d.commutationGold, description:dDesc
+        });
+      }
       const dueDate = FB.dateAtTurn(state, d.nextDueTurn);
       const daysRemain = Math.max(0, d.nextDueTurn - (state.turn || 0));
       const dateLabel = FB.seasonName(dueDate.season) + ' ' + dueDate.year;
@@ -5486,6 +6484,8 @@ window.FB = window.FB || {};
         id: d.id,
         name: dName,
         desc: dDesc,
+        mode:d.mode || 'labor',
+        commutationGold:d.mode === 'coin' ? d.commutationGold : null,
         nextDueTurn: d.nextDueTurn,
         dateLabel: dateLabel,
         daysRemaining: daysRemain,
@@ -5572,6 +6572,79 @@ window.FB = window.FB || {};
     };
   };
 
+  FB.reconcileSerfHomeAuthority = function (state) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure) return false;
+    normalizeSerfTenure(state, tenure);
+    const current = FB.serfHomeAuthority(state);
+    const record = state.player.tenureTransition;
+    const observed = record && transitionRecordShapeValid(state, record)
+      ? record.newAuthority : tenure.authorityCheckpoint;
+    if (!current || !observed || serfAuthorityEqual(current, observed)) {
+      return false;
+    }
+    let cause = null;
+    if (observed.localLordId !== current.localLordId) {
+      cause = 'local_lord_succession';
+    } else if (observed.holderRealmId !== current.holderRealmId) {
+      cause = 'county_transfer';
+    } else if (observed.holderGeneration !== current.holderGeneration) {
+      cause = 'holder_succession';
+    } else if (transitionCauseRelevant('sovereign_change', observed, current)) {
+      cause = 'sovereign_change';
+    }
+    return cause
+      ? FB.noteSerfHomeTransition(state, cause, observed, current) : false;
+  };
+
+  function queueSerfTenureReview(state, tenure) {
+    const record = state.player.tenureTransition;
+    if (record && record.witnessId) {
+      const witness = state.chars && state.chars[record.witnessId];
+      if (!witness || witness.dead || !FB.characterResidence ||
+          FB.characterResidence(state, witness) !== record.provinceId) {
+        record.witnessId = null;
+        record.revision++;
+        record.status = 'pending';
+        record.queued = false;
+        removeQueuedTenureReviews(state);
+      }
+    }
+    if (!record || record.status !== 'pending' || record.queued ||
+        (state.turn || 0) < record.eligibleTurn ||
+        !transitionRecordShapeValid(state, record) ||
+        !serfAuthorityEqual(record.newAuthority,
+          FB.serfHomeAuthority(state))) return false;
+    const latestProposal = FB.serfTenureTransitionProposal(state, record);
+    const proposalFields = [
+      'kind','dutyId','rightId','additionalDutyId','commutationGold'
+    ];
+    let proposalChanged = false;
+    for (let i = 0; i < proposalFields.length; i++) {
+      if (authorityValue(latestProposal[proposalFields[i]]) !==
+          authorityValue(record.proposal[proposalFields[i]])) {
+        proposalChanged = true;
+        break;
+      }
+    }
+    if (proposalChanged) {
+      record.proposal = latestProposal;
+      record.revision++;
+      removeQueuedTenureReviews(state);
+    }
+    if (!transitionRecordValid(state, record)) return false;
+    record.status = 'queued';
+    record.queued = true;
+    const queued = FB.queueEvent(state, 'serf_tenure_review',
+      transitionContext(state, record));
+    if (!queued) {
+      record.status = 'pending';
+      record.queued = false;
+      return false;
+    }
+    return true;
+  }
+
   FB.tenureDay = function (state) {
     if (!state || !state.player || state.player.tier !== 0) return;
     if (state.player.travel) return;
@@ -5582,8 +6655,22 @@ window.FB = window.FB || {};
     const tenure = FB.activeSerfTenure(state);
     if (!tenure || typeof tenure !== 'object' || !tenure.archetypeId || !Array.isArray(tenure.duties) || !tenure.provinceId) return;
 
+    if (state.player.tenureTransition &&
+        !transitionRecordShapeValid(state, state.player.tenureTransition)) {
+      delete state.player.tenureTransition;
+      removeQueuedTenureReviews(state);
+    }
+
     const curLocation = state.player.travel ? state.player.travel.currentId : (state.player.provinceId || state.player.home);
     if (curLocation !== tenure.provinceId) return;
+
+    const pending = state.player.tenureTransition;
+    const indexedLordId = state.roles && state.roles.lord;
+    if (pending && !FB.localLordAt(state, indexedLordId, false)) {
+      FB.getRole(state, 'lord', true);
+    }
+    FB.reconcileSerfHomeAuthority(state);
+    if (queueSerfTenureReview(state, tenure)) return;
 
     const activeWarId = currentRealmWarId(state, tenure.provinceId);
 
@@ -5653,6 +6740,7 @@ window.FB = window.FB || {};
 
     FB.queueEvent(state, candidate.duty.eventId, {
       tenureFormedTurn: tenure.formedTurn,
+      tenureRevision: tenure.revision,
       archetypeId: tenure.archetypeId,
       tenureArchetypeId: tenure.archetypeId,
       tenureProvinceId: tenure.provinceId,
@@ -5662,6 +6750,7 @@ window.FB = window.FB || {};
       duty: { $data: 'tenureDuty', id: candidate.duty.id },
       dutyName: { $data: 'tenureDuty', id: candidate.duty.id },
       dueTurn: dueTurn,
+      commutationGold:candidate.duty.commutationGold,
       protagonistId: state.player.charId,
       locationId: curLocation
     });
@@ -6490,6 +7579,16 @@ window.FB = window.FB || {};
   FB.serfParticipantSuccession = function (state) {
     if (state.player.serfStory) clearOldCustom(state, null, true);
     clearNeighborConsequence(state, null);
+    delete state.player.tenureTransition;
+    removeQueuedTenureReviews(state);
+    const tenure = FB.activeSerfTenure(state);
+    if (tenure) {
+      const current = FB.serfHomeAuthority(state);
+      if (current) {
+        tenure.authorityCheckpoint = copySerfAuthority(current);
+        tenure.authorityCheckpoint.acknowledgedTurn = state.turn || 0;
+      }
+    }
   };
 
   FB.serfParticipantRankChanged = function (state, quietStory) {
@@ -6506,6 +7605,8 @@ window.FB = window.FB || {};
     if (state.player.serfNeighborConsequence) {
       clearNeighborConsequence(state, 'tenure');
     }
+    delete state.player.tenureTransition;
+    removeQueuedTenureReviews(state);
   };
 
   FB.fns = FB.fns || {};
@@ -6516,6 +7617,11 @@ window.FB = window.FB || {};
     if (!tenure || typeof tenure !== 'object' || tenure.status !== 'active') return false;
     if (!ctx || typeof ctx !== 'object') return false;
     if (ctx.tenureFormedTurn !== tenure.formedTurn) return false;
+    const contextRevision = ctx.tenureRevision === undefined
+      ? 0 : ctx.tenureRevision;
+    const activeRevision = Number.isInteger(tenure.revision)
+      ? tenure.revision : 0;
+    if (contextRevision !== activeRevision) return false;
     if (ctx.archetypeId && ctx.archetypeId !== tenure.archetypeId) return false;
     if (ctx.tenureArchetypeId !== undefined &&
         ctx.tenureArchetypeId !== tenure.archetypeId) return false;
@@ -6555,6 +7661,11 @@ window.FB = window.FB || {};
     }
     if (!matchingDuty) return false;
     if (ev && matchingDuty.eventId !== ev.id) return false;
+    if (matchingDuty.mode === 'coin') {
+      if (!Number.isInteger(matchingDuty.commutationGold) ||
+          ctx.commutationGold !== matchingDuty.commutationGold) return false;
+    } else if (ctx.commutationGold !== undefined &&
+        ctx.commutationGold !== null) return false;
 
     const expectedDueTurn = isConditional ? matchingDuty.pendingTurn : matchingDuty.nextDueTurn;
     if (ctx.dueTurn !== expectedDueTurn) return false;
@@ -6563,6 +7674,133 @@ window.FB = window.FB || {};
     return true;
   };
 
+  FB.fns.serf_tenure_transition_valid = function (state, ctx) {
+    const record = state && state.player && state.player.tenureTransition;
+    if (!record || record.status !== 'queued' || !record.queued ||
+        !transitionRecordValid(state, record) ||
+        !transitionContextMatches(record, ctx)) return false;
+    const proposal = FB.serfTenureTransitionProposal(state, record);
+    const fields = ['kind','dutyId','rightId','additionalDutyId','commutationGold'];
+    for (let i = 0; i < fields.length; i++) {
+      if (authorityValue(proposal[fields[i]]) !==
+          authorityValue(record.proposal[fields[i]])) return false;
+    }
+    if (record.witnessId) {
+      const witness = state.chars && state.chars[record.witnessId];
+      if (!witness || witness.dead || !FB.characterResidence ||
+          FB.characterResidence(state, witness) !== record.provinceId) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  function transitionIsAdverse(state, ctx) {
+    return FB.fns.serf_tenure_transition_valid(state, ctx) &&
+      ['add_duty','commute_duty','challenge_right'].indexOf(
+        state.player.tenureTransition.proposal.kind) >= 0;
+  }
+
+  function transitionStanding(state, characterId, amount) {
+    const c = characterId && state.chars && state.chars[characterId];
+    if (!c || c.dead || state.roles.lord !== c.id) return;
+    FB.adjustStanding(state, { kind:'character', id:c.id }, amount,
+      'event:serf_tenure_review');
+  }
+
+  FB.fns.serf_transition_adverse = function (state, ctx) {
+    return transitionIsAdverse(state, ctx);
+  };
+  FB.fns.serf_transition_restore = function (state, ctx) {
+    return FB.fns.serf_tenure_transition_valid(state, ctx) &&
+      state.player.tenureTransition.proposal.kind === 'restore_right';
+  };
+  FB.fns.serf_transition_witness = function (state, ctx) {
+    if (!FB.fns.serf_tenure_transition_valid(state, ctx)) return false;
+    const record = state.player.tenureTransition;
+    const tenure = FB.activeSerfTenure(state);
+    const confirmRestore = record.proposal.kind === 'confirm' &&
+      tenure.rights.length < 2 &&
+      !!transitionHistoryRight(tenure, 'challenged_right');
+    return (transitionIsAdverse(state, ctx) || confirmRestore) &&
+      !!(record.witnessId && state.chars[record.witnessId] &&
+        !state.chars[record.witnessId].dead);
+  };
+  FB.fns.serf_transition_pay_ready = function (state, ctx) {
+    return FB.fns.serf_tenure_transition_valid(state, ctx) &&
+      state.player.tenureTransition.proposal.kind !== 'restore_right' &&
+      state.player.gold >= 4;
+  };
+  FB.fns.serf_transition_primary = function (state, ctx) {
+    if (!FB.fns.serf_tenure_transition_valid(state, ctx)) return false;
+    const record = state.player.tenureTransition;
+    const revision = record.revision;
+    const lordId = record.newAuthority.localLordId;
+    const kind = record.proposal.kind;
+    const resolved = FB.resolveSerfTenureTransition(state, revision,
+      kind === 'restore_right' ? 'restore' : 'preserve');
+    if (resolved && kind !== 'confirm' && kind !== 'restore_right') {
+      transitionStanding(state, lordId, -5);
+    }
+    return resolved;
+  };
+  FB.fns.serf_transition_accept = function (state, ctx) {
+    if (!transitionIsAdverse(state, ctx)) return false;
+    const record = state.player.tenureTransition;
+    const revision = record.revision;
+    const lordId = record.newAuthority.localLordId;
+    const resolved = FB.resolveSerfTenureTransition(state, revision, 'accept');
+    if (resolved) transitionStanding(state, lordId, 8);
+    return resolved;
+  };
+  FB.fns.serf_transition_pay = function (state, ctx) {
+    if (!FB.fns.serf_transition_pay_ready(state, ctx)) return false;
+    const record = state.player.tenureTransition;
+    const revision = record.revision;
+    const lordId = record.newAuthority.localLordId;
+    const confirmation = record.proposal.kind === 'confirm';
+    const resolved = FB.resolveSerfTenureTransition(state, revision, 'preserve');
+    if (!resolved) return false;
+    state.player.gold -= 4;
+    transitionStanding(state, lordId, confirmation ? 5 : 3);
+    return true;
+  };
+  FB.fns.serf_transition_witness_success = function (state, ctx) {
+    if (!FB.fns.serf_transition_witness(state, ctx)) return false;
+    const record = state.player.tenureTransition;
+    const revision = record.revision;
+    const confirmation = record.proposal.kind === 'confirm';
+    const resolved = FB.resolveSerfTenureTransition(state, revision,
+      confirmation ? 'restore' : 'preserve');
+    if (resolved && !confirmation) state.player.prestige += 3;
+    return resolved;
+  };
+  FB.fns.serf_transition_witness_failure = function (state, ctx) {
+    if (!FB.fns.serf_transition_witness(state, ctx)) return false;
+    const record = state.player.tenureTransition;
+    const revision = record.revision;
+    const confirmation = record.proposal.kind === 'confirm';
+    const resolved = FB.resolveSerfTenureTransition(state, revision,
+      confirmation ? 'preserve' : 'accept');
+    if (resolved && !confirmation) state.player.prestige -= 3;
+    return resolved;
+  };
+  FB.fns.serf_transition_decline_restore = function (state, ctx) {
+    if (!FB.fns.serf_transition_restore(state, ctx)) return false;
+    return FB.resolveSerfTenureTransition(state,
+      state.player.tenureTransition.revision, 'decline_restore');
+  };
+  FB.fns.serf_commuted_pay_ready = function (state, ctx) {
+    return FB.fns.serf_tenure_context_valid(state, ctx,
+      FB.eventById('serf_commuted_due')) &&
+      Number.isInteger(ctx.commutationGold) && ctx.commutationGold >= 0 &&
+      state.player.gold >= ctx.commutationGold;
+  };
+  FB.fns.serf_commuted_pay = function (state, ctx) {
+    if (!FB.fns.serf_commuted_pay_ready(state, ctx)) return false;
+    state.player.gold -= ctx.commutationGold;
+    return true;
+  };
   /* Shadow index from an effects object to its durable event-log key. It is
      rebuilt after mods apply, without writing metadata into moddable data.
      Register every effective event/scripted-history source at the same time:
@@ -6710,7 +7948,7 @@ window.FB = window.FB || {};
   }
 
   function customPermanent(id) {
-    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|raid_plunder|raid_enslave|county_petition_grant|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted)$/.test(id);
+    return /^(?:df_fall|df_fall_flee|bondage_submit|bondage_flee|raid_plunder|raid_enslave|county_petition_grant|vassal_release|vassal_crush|intrigue_hearing_flee|sibling_marriage_success|sibling_proposal_refused|annul_granted|serf_transition_accept|serf_transition_decline_restore|serf_transition_pay|serf_transition_primary|serf_transition_witness_failure|serf_transition_witness_success)$/.test(id);
   }
 
   /* Core ids are explicit so a newly authored custom option cannot silently
@@ -6726,9 +7964,9 @@ window.FB = window.FB || {};
     'ghw_recruit_adventurers ghw_recruit_knights ghw_recruit_mercenaries ghw_recruit_volunteers ghw_service_danger ghw_service_safe guild_monopoly_paid guild_monopoly_persuade_failure guild_monopoly_persuade_success hc_defy intrigue_captive_ransom_pay intrigue_captive_ransom_refuse intrigue_hearing_challenge intrigue_hearing_flee intrigue_hearing_pay intrigue_hearing_penance intrigue_hearing_resist intrigue_hearing_submit intrigue_warning_countertrap intrigue_warning_ignore intrigue_warning_investigate intrigue_warning_security local_council_elected ' +
     'loot_item lifepath_author_work merc_contract_accept merc_contract_collect merc_contract_release merc_contract_renew offer_gear offer_item open_item_shop papal_grant_absolution papal_refuse_absolution parliament_aid_hike_rebuff parliament_aid_up parliament_emergency_subsidy_won parliament_levy_relief_won parliament_motion_done parliament_redress_lost parliament_redress_won parliament_revocation_consent_pass parliament_scutage_lost parliament_scutage_pass parliament_subsidy_pay parliament_trade_redress ' +
     'plot_correspondence_failure plot_correspondence_preserve plot_correspondence_provoke plot_correspondence_steal plot_council_expose plot_council_failure plot_council_manufacture plot_council_mercy plot_discovery_abandon plot_discovery_contain plot_discovery_failure plot_discovery_success plot_end plot_guild_compensation plot_guild_defend plot_guild_expose plot_guild_failure plot_loot plot_obligation_evidence plot_obligation_failure plot_obligation_relief plot_rival_discredit plot_rival_dossier plot_rival_failure plot_rival_settlement polly_court polly_rout prison_cede_land prison_pay record_liege_grant ' +
-    'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
+    'raid_enslave raid_plunder realm_policy_persecution_noted realm_policy_refugees_refused realm_policy_refugees_welcome realm_policy_settlers_employ realm_policy_settlers_welcome serf_commuted_pay serf_flight_failure serf_neighbor_clear serf_neighbor_context_valid serf_neighbor_officer_current serf_neighbor_shifted serf_old_custom_ready serf_old_custom_replace_officer serf_old_custom_replacement_valid serf_old_custom_sync serf_transition_accept serf_transition_decline_restore serf_transition_pay serf_transition_primary serf_transition_witness_failure serf_transition_witness_success sibling_courtship_approach sibling_exposure_end sibling_marriage_success sibling_proposal_refused travel_capstone_done travel_expedition_record travel_study_career travel_trade_bold_failure travel_trade_bold_success travel_trade_cautious travel_work_career vassal_crush vassal_favor vassal_insist vassal_reclaim vassal_refuse vassal_release vassal_snub ' +
     'war_accept_tribute war_allied_withdrawal war_desert war_discipline war_discipline_deserters war_disorder war_hold war_hunt war_loss war_mass war_mercs war_negotiated_withdrawal war_pay_deserters war_press_on war_raise war_siege war_submission_tribute war_submit war_supply war_terms war_thin war_win ' +
-    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
+    'agency_marriage_affordable attainder_can_pay attainder_risk barony_offer_eligible bishop_simony_accept can_afford_item council_charter_due council_domain_pressure_due council_has_members council_has_sycophant council_has_unseated council_market_charter_due council_market_concession council_market_prerogative council_muster_due council_sanctuary_confirm council_sanctuary_due council_sanctuary_relief council_sanctuary_tax council_scheme_ripe council_scheme_watched council_two_members diplomacy_alliance_active diplomacy_can_offer_alliance diplomacy_can_offer_pact diplomacy_pact_active distraint_can_settle distraint_can_yield finance_can_invest finance_in_default friendship_kindled_ready ghw_has_field_host intrigue_captive_ransom_can_pay intrigue_hearing_can_pay intrigue_hearing_can_penance intrigue_hearing_can_resist lifepath_realm_at_peace merc_contract_ongoing parliament_aid_can_rise parliament_has_scutage parliament_motion_failed parliament_motion_passed parliament_redress_possible prison_can_cede prison_can_pay serf_commuted_pay_ready serf_transition_adverse serf_transition_pay_ready serf_transition_restore serf_transition_witness suitor_above_station war_active_occupation war_campaign_deep war_campaign_exhausted war_can_hunt war_can_pay_deserters war_can_siege war_deserters_due war_enemy_offer_possible war_has_allied_host war_host_abroad war_host_under_pressure war_live_host war_negotiation_possible war_objective_under_debate war_submission_tribute_affordable wed_above_station wed_below_station'
   ).split(' ');
   FB.coreEventImpactCustomIds = CORE_CUSTOM_EFFECT_IDS.slice();
   FB.eventImpactAdapters = FB.eventImpactAdapters || {};
@@ -8770,16 +10008,8 @@ window.FB = window.FB || {};
           }
         }
         if (regularDuty && regularDuty.nextDueTurn === ctx.dueTurn) {
-          const arch = FBDATA.tenureArchetypes && FBDATA.tenureArchetypes[tenure.archetypeId];
-          let interval = 720;
-          if (arch && arch.duties) {
-            for (let d = 0; d < arch.duties.length; d++) {
-              if (arch.duties[d].id === ctx.dutyId && arch.duties[d].intervalTurns) {
-                interval = arch.duties[d].intervalTurns;
-                break;
-              }
-            }
-          }
+          const interval = FB.serfTenureDutyInterval
+            ? FB.serfTenureDutyInterval(tenure, regularDuty) : 720;
           while (regularDuty.nextDueTurn <= (state.turn || 0)) {
             regularDuty.nextDueTurn += interval;
           }

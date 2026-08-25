@@ -6,6 +6,94 @@ FBDATA.events = FBDATA.events || [];
 
 FBDATA.events.push(
 
+/* ---------- authority and customary tenure ---------- */
+{ id:'serf_tenure_review',
+  title:{ forms:{ select:'value', param:'proposalKind', cases:{
+    add_duty:'A New Burden in the Custom',
+    commute_duty:'Labor Reckoned in Coin',
+    challenge_right:'A Right Called into Question',
+    restore_right:'The Old Right Confirmed',
+    other:'The Custom Under New Authority'
+  }}},
+  trigger:{ never:true },
+  contextValidator:'serf_tenure_transition_valid',
+  participants:[
+    { slot:'formerLord', source:'context', allowDead:true },
+    { slot:'currentLord', source:'context', sameHome:true },
+    { slot:'witness', source:'context', sameHome:true }
+  ],
+  participantCards:['formerLord','currentLord','witness'],
+  text:{ forms:{ select:'value', param:'proposalKind', cases:{
+    add_duty:'{authorityChange} Grounds recorded: {transitionCauses}. Under {rname}, the household custom at {province} is read again before {currentLord}, and {term} is proposed as an additional service.',
+    commute_duty:'{authorityChange} Grounds recorded: {transitionCauses}. Under {rname}, the household custom at {province} is read again before {currentLord}, and {term} is proposed as a coin due instead of labor.',
+    challenge_right:'{authorityChange} Grounds recorded: {transitionCauses}. Under {rname} and before {currentLord}, the householdâ€™s claim to {term} at {province} is called into question.',
+    restore_right:'{authorityChange} Grounds recorded: {transitionCauses}. Written or remembered custom at {province}, under {rname}, supports restoring {term} to the household.',
+    other:'{authorityChange} Grounds recorded: {transitionCauses}. The existing household terms at {province}, under {rname}, may be confirmed without alteration.'
+  }}},
+  options:[
+    { label:{ forms:{ select:'value', param:'proposalKind', cases:{
+        restore_right:'Enter the right in the confirmed custom.',
+        confirm:'Receive confirmation of the existing terms.',
+        other:'Stand on the old custom.'
+      }}},
+      desc:{ forms:{ select:'value', param:'proposalKind', cases:{
+        restore_right:'Restore the named right without charge.',
+        confirm:'Acknowledge the current authority without changing a duty or right.',
+        other:'Keep every current term and risk the current lordâ€™s displeasure.'
+      }}}, effects:{ custom:'serf_transition_primary' } },
+    { label:'Accept the proposed term.',
+      desc:'Apply exactly the named amendment and gain 8 Standing with the current local lord.',
+      require:{ custom:'serf_transition_adverse' },
+      effects:{ custom:'serf_transition_accept' } },
+    { label:'Bring the witness or record.',
+      desc:{ forms:{ select:'value', param:'proposalKind', cases:{
+        confirm:'Learning may restore a recorded right; failure merely confirms the existing terms.',
+        other:'Learning may preserve the old term; failure accepts the proposed amendment.'
+      }}},
+      require:{ custom:'serf_transition_witness' }, chance:'skill_lea',
+      success:{ text:{ forms:{ select:'value', param:'proposalKind', cases:{
+        confirm:'The witness restores the old right to the confirmed custom.',
+        other:'The witness fixes the old term in the settlementâ€™s memory.'
+      }}},
+        effects:{ custom:'serf_transition_witness_success' } },
+      failure:{ text:{ forms:{ select:'value', param:'proposalKind', cases:{
+        confirm:'The testimony fails, but the existing terms are simply confirmed.',
+        other:'The testimony fails, and the proposed term is entered instead.'
+      }}},
+        effects:{ custom:'serf_transition_witness_failure' } } },
+    { label:'Pay to have the old terms entered. ({money:4})',
+      desc:{ forms:{ select:'value', param:'proposalKind', cases:{
+        confirm:'Spend 4 gold to preserve every term and gain 5 Standing with the current local lord.',
+        other:'Spend 4 gold to preserve the old term and gain 3 Standing with the current local lord.'
+      }}},
+      require:{ custom:'serf_transition_pay_ready' },
+      effects:{ custom:'serf_transition_pay' } },
+    { label:'Leave the old dispute closed.',
+      desc:'Acknowledge authority without restoring the challenged right.',
+      require:{ custom:'serf_transition_restore' },
+      effects:{ custom:'serf_transition_decline_restore' } }
+  ]},
+
+{ id:'serf_commuted_due', title:'The Commuted Labor Due',
+  trigger:{ never:true }, contextValidator:'serf_tenure_context_valid',
+  text:'The customary labor recorded as {duty} now falls due in coin. The saved agreement demands {money:commutationGold}, though work or an appeal can still answer an empty purse.',
+  options:[
+    { label:'Pay the commuted due. ({money:commutationGold})',
+      desc:'Meet the recorded coin payment and leave the labor turn settled.',
+      require:{ custom:'serf_commuted_pay_ready' },
+      effects:{ custom:'serf_commuted_pay' } },
+    { label:'Work the obligation off.',
+      desc:'Keep the coin and spend health on the labor instead.',
+      effects:{ health:-1 } },
+    { label:'Appeal the reckoning.',
+      desc:'Learning may excuse this payment; failure sends you back to the work.',
+      chance:'skill_lea',
+      success:{ text:'The old tally supports your reading, and this payment is excused.',
+        effects:{ prestige:2 } },
+      failure:{ text:'The tally defeats the appeal, and the labor must be worked off.',
+        effects:{ health:-1 } } }
+  ]},
+
 /* ---------- the farming year ---------- */
 { id:'spring_sowing', title:'Sowing Season',
   trigger:{ tierMax:1, professions:['farmer'], seasons:[0], chance:0.5 }, weight:10, cooldown:3,

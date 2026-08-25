@@ -13,10 +13,18 @@ pasture, fuel, and water rights, and those rights then pass to later generations
 **Customary Serf Tenure is distinct from owned property.** Tier 0 serf households do not
 own their land; they hold customary strips and dwelling use under an active tenure archetype
 (`latin_manorial`, `irrigated_fellah`, `pagan_household_service`, `dependent_farming`).
+Regional packages also include `pastoral_steppe`, `woodland_dependence`, and
+`norse_coastal_service`.
 This tenure records recognized rights (such as post-harvest gleaning or irrigation turns)
 and recurring customary service obligations (week-work, boon harvests, multure, tithes,
 cartage). Customary tenure is held by custom rather than bought as property, and lawful
 freedom ends all personal service obligations.
+
+A change of local or political authority does not reselect the household's regional
+tenure. It can review at most one named term: preserve everything, add one bounded
+archetype-authored service, commute an eligible labor duty to a saved coin due, challenge
+one current right, or restore one historically challenged right. Amendments are recorded
+as semantic tenure history rather than property, modifiers, or hidden ownership changes.
 
 Freedom does not convert customary strips into owned plots. Purchase, negotiated
 manumission, or an Old Custom victory closes the personal tenure and raises the household

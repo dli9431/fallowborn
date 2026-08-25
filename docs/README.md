@@ -106,6 +106,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
    such as manorial strips, irrigation, herds, woodland, or coastal service — while its
    pay, risk, training, and daily mechanics remain the same. **Station & home** shows that
    ordinary work beside the exact duties and limited customary rights.
+   When the local lord or political authority changes, one consolidated review may confirm
+   those terms or propose a single named amendment. Standing on the old custom is always
+   the safe first response; accepted coin commutation still has a work-it-off choice when
+   the household cannot pay.
    The **Ongoing commitments** ledger above the deeds keeps personal and political attention,
    national research policy, active travel, and financial contracts together; compact layouts
    also show the daily focus and link it to the top of the focus list. Select a row to reach

@@ -677,7 +677,8 @@ FBDATA.tenureArchetypes = {
     rights: [
       { terrainAny: ['forest', 'hills', 'mountains'], rightId: 'deadwood_after_frost' },
       { terrainAny: ['farmland'], rightId: 'gleaning_after_harvest' }
-    ]
+    ],
+    transitionTerms: { commutableDuties: ['week_work'] }
   },
   irrigated_fellah: {
     id: 'irrigated_fellah',
@@ -706,7 +707,8 @@ FBDATA.tenureArchetypes = {
     conditionalDuties: [
       { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
     ],
-    rights: ['irrigation_turn']
+    rights: ['irrigation_turn'],
+    transitionTerms: { commutableDuties: ['irrigation_labor'] }
   },
   norse_coastal_service: {
     id: 'norse_coastal_service',
@@ -736,7 +738,14 @@ FBDATA.tenureArchetypes = {
     conditionalDuties: [
       { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
     ],
-    rights: ['customary_shore_landing']
+    rights: ['customary_shore_landing'],
+    transitionTerms: {
+      commutableDuties: ['boat_service'],
+      additionalDuty: {
+        id:'authority_boat_service', eventId:'serf_weekwork_tally',
+        firstDueSeason:'spring', intervalTurns:1440
+      }
+    }
   },
   pastoral_steppe: {
     id: 'pastoral_steppe',
@@ -766,7 +775,14 @@ FBDATA.tenureArchetypes = {
     conditionalDuties: [
       { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
     ],
-    rights: ['customary_grazing_turn']
+    rights: ['customary_grazing_turn'],
+    transitionTerms: {
+      commutableDuties: ['herd_service'],
+      additionalDuty: {
+        id:'authority_herd_due', eventId:'serf_pannage_due',
+        firstDueSeason:'autumn', intervalTurns:1440
+      }
+    }
   },
   woodland_dependence: {
     id: 'woodland_dependence',
@@ -797,7 +813,8 @@ FBDATA.tenureArchetypes = {
     conditionalDuties: [
       { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
     ],
-    rights: ['storm_fallen_wood', 'seasonal_common_grazing']
+    rights: ['storm_fallen_wood', 'seasonal_common_grazing'],
+    transitionTerms: { commutableDuties: ['woodland_service'] }
   },
   pagan_household_service: {
     id: 'pagan_household_service',
@@ -834,7 +851,14 @@ FBDATA.tenureArchetypes = {
     conditionalDuties: [
       { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
     ],
-    rights: []
+    rights: [],
+    transitionTerms: {
+      commutableDuties: ['household_service'],
+      additionalDuty: {
+        id:'authority_cartage', eventId:'serf_bridge_cartage',
+        firstDueSeason:'summer', intervalTurns:1440
+      }
+    }
   },
   dependent_farming: {
     id: 'dependent_farming',
@@ -856,7 +880,14 @@ FBDATA.tenureArchetypes = {
     conditionalDuties: [
       { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
     ],
-    rights: []
+    rights: [],
+    transitionTerms: {
+      commutableDuties: ['customary_labor'],
+      additionalDuty: {
+        id:'authority_cartage', eventId:'serf_bridge_cartage',
+        firstDueSeason:'summer', intervalTurns:1440
+      }
+    }
   }
 };
 
@@ -889,7 +920,10 @@ FBDATA.tenureDuties = {
   deadwood_due: { name: 'Deadwood boundary due', desc: 'A customary dispute or service concerning limited collection of fallen wood.' },
   boat_service: { name: 'Boat service', desc: 'A customary work turn repairing, loading, or rowing boats under local authority.' },
   seasonal_catch_share: { name: 'Seasonal catch share', desc: 'A customary share or labor demand tied to the season’s shore catch.' },
-  shore_transport: { name: 'Shore transport', desc: 'Customary boat, landing, or shore carriage labor.' }
+  shore_transport: { name: 'Shore transport', desc: 'Customary boat, landing, or shore carriage labor.' },
+  authority_cartage: { name: 'Authority cartage', desc: 'Additional cartage imposed when a new authority reviews the household custom.' },
+  authority_herd_due: { name: 'Authority herd due', desc: 'Additional herd service imposed when a new authority reviews the household custom.' },
+  authority_boat_service: { name: 'Authority boat service', desc: 'Additional boat service imposed when a new authority reviews the household custom.' }
 };
 
 FBDATA.tenureRights = {

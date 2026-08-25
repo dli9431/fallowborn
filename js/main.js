@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.159.0';
+  FB.VERSION = '1.160.0';
   FB.CHANGELOG = [
+    { v: '1.160.0', date: '2026-08-25', changes: [
+      'Serf households now review customary duties and rights when their local or political authority changes.'
+    ] },
     { v: '1.159.0', date: '2026-08-25', changes: [
       'Serf households now reflect pastoral steppe, woodland, and Norse coastal customary tenure through regional work, duties, rights, and event language.'
     ] },

@@ -495,6 +495,8 @@ test('offer acceptance revalidates every saved authority before mutation and spe
           function () { p.homeSettlement--; }),
         tenure:blocked(function () { p.tenure.formedTurn++; },
           function () { p.tenure.formedTurn--; }),
+        tenureRevision:blocked(function () { p.tenure.revision++; },
+          function () { p.tenure.revision--; }),
         standing:blocked(function () {
           FB.adjustStanding(s, target, 19 - FB.standingOf(s, target),
             'test:standing_drop');

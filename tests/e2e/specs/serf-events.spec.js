@@ -11,6 +11,7 @@ dependsOnRuntime(__filename, [
   'js/i18n.js',
   'js/messages.js',
   'js/model.js',
+  'js/modifiers.js',
   'js/events.js',
   'js/actions.js',
   'js/save.js',
@@ -1587,12 +1588,437 @@ test('travel invalidates tenure context and halts daily scheduler while away',
     expect(result.queueLengthAtHome).toBeGreaterThanOrEqual(1);
   });
 
+test('Phase 5 local authority succession keeps exact people, queues one review, and confirms without changing terms',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const tenure = FB.ensureSerfTenure(state, 'legacy_repair');
+      const oldLord = FB.getRole(state, 'lord', true);
+      FB.ensureSerfTenure(state, 'legacy_repair');
+      const checkpointLordId = tenure.authorityCheckpoint.localLordId;
+      const dutiesBefore = JSON.stringify(tenure.duties);
+      const rightsBefore = JSON.stringify(tenure.rights);
+      const rngBefore = JSON.stringify(FB.getRngState());
+      FB.killChar(state, oldLord);
+      const afterDeath = state.player.tenureTransition;
+      const deathRevision = afterDeath && afterDeath.revision;
+      const exactFormer = FB.localLordAt(state, oldLord.id, true);
+      state.roles.lord = oldLord.id;
+      state.eventQueue = [];
+      FB.tenureDay(state);
+      const replacement = FB.getRole(state, 'lord', false);
+      const record = state.player.tenureTransition;
+      const rngAfterReplacement = JSON.stringify(FB.getRngState());
+      const queued = state.eventQueue.filter(function (item) {
+        return item.id === 'serf_tenure_review';
+      });
+      const event = FB.eventById('serf_tenure_review');
+      const contextValid = queued.length === 1 &&
+        FB.fns.serf_tenure_transition_valid(state, queued[0].ctx);
+      const receipt = queued.length && FB.resolveEventOption(
+        state, event, event.options[0], queued[0].ctx, { automated:false });
+      return {
+        checkpointLordId:checkpointLordId,
+        oldLordId:oldLord.id,
+        exactFormerDead:!!(exactFormer && exactFormer.dead),
+        deathRevision:deathRevision,
+        coalescedRevision:record && record.revision,
+        oldAuthorityId:record && record.oldAuthority.localLordId,
+        newAuthorityId:record && record.newAuthority.localLordId,
+        replacementId:replacement.id,
+        queueCount:queued.length,
+        contextValid:contextValid,
+        receipt:!!receipt,
+        cleared:!state.player.tenureTransition,
+        tenureRevision:tenure.revision,
+        cooldown:tenure.transitionEligibleTurn - state.turn,
+        dutiesUnchanged:JSON.stringify(tenure.duties) === dutiesBefore,
+        rightsUnchanged:JSON.stringify(tenure.rights) === rightsBefore,
+        historyOutcome:tenure.transitionHistory.length &&
+          tenure.transitionHistory[tenure.transitionHistory.length - 1].outcome,
+        rngChangedByReplacement:rngBefore !== rngAfterReplacement
+      };
+    });
+
+    expect(result.checkpointLordId).toBe(result.oldLordId);
+    expect(result.exactFormerDead).toBe(true);
+    expect(result.deathRevision).toBe(1);
+    expect(result.coalescedRevision).toBe(2);
+    expect(result.oldAuthorityId).toBe(result.oldLordId);
+    expect(result.newAuthorityId).toBe(result.replacementId);
+    expect(result.queueCount).toBe(1);
+    expect(result.contextValid).toBe(true);
+    expect(result.receipt).toBe(true);
+    expect(result.cleared).toBe(true);
+    expect(result.tenureRevision).toBe(0);
+    expect(result.cooldown).toBe(360);
+    expect(result.dutiesUnchanged).toBe(true);
+    expect(result.rightsUnchanged).toBe(true);
+    expect(result.historyOutcome).toBe('confirmed');
+    expect(result.rngChangedByReplacement).toBe(true);
+  });
+
+test('Phase 5 authority snapshots remain pure and unresolved historical rulers fall back to their realm',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const tenure = FB.ensureSerfTenure(state, 'legacy_repair');
+      const localLord = FB.getRole(state, 'lord', true);
+      FB.ensureSerfTenure(state, 'legacy_repair');
+      const authority = FB.serfHomeAuthority(state);
+      const realm = state.realms[authority.holderRealmId];
+      const generation = authority.holderGeneration;
+      const current = FB.realmRulerAtGeneration(state,
+        authority.holderRealmId, generation);
+      const currentName = current && (current.id && state.chars[current.id]
+        ? FB.fullName(state.chars[current.id])
+        : current.charId && state.chars[current.charId]
+          ? FB.fullName(state.chars[current.charId]) : current.name);
+      const rngBefore = JSON.stringify(FB.getRngState());
+      const again = FB.serfHomeAuthority(state);
+      const missing = FB.realmRulerAtGeneration(state,
+        authority.holderRealmId, generation + 999);
+      const params = FB.textParams(state, state.player.charId,
+        '{authorityChange}', {
+          transitionCauses:['holder_succession'],
+          oldLocalLordId:localLord.id,
+          newLocalLordId:localLord.id,
+          oldHolderRealmId:authority.holderRealmId,
+          oldHolderGeneration:generation + 999,
+          newHolderRealmId:authority.holderRealmId,
+          newHolderGeneration:generation,
+          oldSovereignRealmId:authority.sovereignRealmId,
+          oldSovereignGeneration:authority.sovereignGeneration,
+          newSovereignRealmId:authority.sovereignRealmId,
+          newSovereignGeneration:authority.sovereignGeneration,
+          oldRulerCultureTraditionId:authority.rulerCultureTraditionId,
+          newRulerCultureTraditionId:authority.rulerCultureTraditionId,
+          oldHouseholdFaithRelation:authority.householdFaithRelation,
+          newHouseholdFaithRelation:authority.householdFaithRelation
+        }, false);
+      return {
+        localLordId:authority.localLordId,
+        holderRealmId:authority.holderRealmId,
+        sovereignRealmId:authority.sovereignRealmId,
+        stable:JSON.stringify(authority) === JSON.stringify(again),
+        missing:missing,
+        fallbackText:params.authorityChange,
+        realmName:realm.name,
+        currentName:currentName,
+        rngStable:rngBefore === JSON.stringify(FB.getRngState()),
+        tenureUnchanged:tenure.revision === 0
+      };
+    });
+
+    expect(result.localLordId).toBeTruthy();
+    expect(result.holderRealmId).toBeTruthy();
+    expect(result.localLordId).not.toBe(result.holderRealmId);
+    expect(result.sovereignRealmId).toBeTruthy();
+    expect(result.stable).toBe(true);
+    expect(result.missing).toBeNull();
+    expect(result.fallbackText).toContain(result.realmName);
+    expect(result.fallbackText).toContain(result.currentName);
+    expect(result.rngStable).toBe(true);
+    expect(result.tenureUnchanged).toBe(true);
+  });
+
+test('Phase 5 authority proposals add and commute bounded duties while preserving schedules and stale identities',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const tenure = FB.ensureSerfTenure(state, 'legacy_repair');
+      const home = tenure.provinceId;
+      const settlement = tenure.settlement;
+      const site = FB.world.sitesByProv[home].list[settlement];
+      const originalKind = site.kind;
+      const realmIds = Object.keys(state.realms).filter(function (rid) {
+        return rid !== 'player' && state.realms[rid] && state.realms[rid].alive;
+      });
+      const originalHolder = state.holder[home] || state.owner[home];
+      const nextRealms = realmIds.filter(function (rid) {
+        return rid !== originalHolder;
+      });
+      tenure.archetypeId = 'dependent_farming';
+      tenure.duties = [
+        { id:'customary_labor', eventId:'serf_weekwork_tally',
+          nextDueTurn:state.turn + 300, lastResolvedTurn:null },
+        { id:'seasonal_harvest', eventId:'serf_boon_harvest',
+          nextDueTurn:state.turn + 600, lastResolvedTurn:null }
+      ];
+      tenure.rights = [];
+      tenure.revision = 0;
+      tenure.transitionHistory = [];
+      tenure.authorityCheckpoint = FB.serfHomeAuthority(state);
+      tenure.authorityCheckpoint.acknowledgedTurn = state.turn;
+      site.kind = 'village';
+
+      const beforeAdd = FB.serfHomeAuthority(state);
+      state.holder[home] = nextRealms[0];
+      state.owner[home] = nextRealms[0];
+      const afterAdd = FB.serfHomeAuthority(state);
+      const rngBeforeRouter = JSON.stringify(FB.getRngState());
+      FB.noteSerfHomeTransition(state, 'county_transfer', beforeAdd, afterAdd);
+      const rngAfterAddRouter = JSON.stringify(FB.getRngState());
+      const addRecord = state.player.tenureTransition;
+      const addProposal = addRecord.proposal;
+      const pendingResolve = FB.resolveSerfTenureTransition(
+        state, addRecord.revision, 'accept');
+      state.eventQueue = [];
+      FB.tenureDay(state);
+      const addResolved = FB.resolveSerfTenureTransition(
+        state, addRecord.revision, 'accept');
+      const added = tenure.duties.filter(function (duty) {
+        return duty.id === 'authority_cartage';
+      })[0];
+      const addDelay = added && added.nextDueTurn - state.turn;
+      added.nextDueTurn = state.turn + 700;
+
+      site.kind = 'town';
+      tenure.transitionEligibleTurn = state.turn;
+      const labor = tenure.duties[0];
+      const dueBeforeCommutation = labor.nextDueTurn;
+      const beforeCommute = FB.serfHomeAuthority(state);
+      state.holder[home] = nextRealms[1];
+      state.owner[home] = nextRealms[1];
+      const afterCommute = FB.serfHomeAuthority(state);
+      FB.noteSerfHomeTransition(state, 'county_transfer',
+        beforeCommute, afterCommute);
+      const rngAfterCommuteRouter = JSON.stringify(FB.getRngState());
+      const commuteRecord = state.player.tenureTransition;
+      const commuteProposal = commuteRecord.proposal;
+      state.eventQueue = [];
+      FB.tenureDay(state);
+      const staleRevision = commuteRecord.revision;
+      const commuteResolved = FB.resolveSerfTenureTransition(
+        state, commuteRecord.revision, 'accept');
+      const staleResolve = FB.resolveSerfTenureTransition(
+        state, staleRevision, 'accept');
+
+      state.eventQueue = [];
+      tenure.lastPresentedSeasonKey = null;
+      state.turn = labor.nextDueTurn;
+      FB.tenureDay(state);
+      const dueItem = state.eventQueue.filter(function (item) {
+        return item.id === 'serf_commuted_due';
+      })[0];
+      const dueEvent = FB.eventById('serf_commuted_due');
+      const nonGoldReady = !!(dueItem &&
+        FB.eventOptionStatus(state, dueEvent, dueEvent.options[1],
+          dueItem.ctx).ready);
+      const healthBefore = state.chars[state.player.charId].health;
+      const dueReceipt = dueItem && FB.resolveEventOption(state, dueEvent,
+        dueEvent.options[1], dueItem.ctx, { automated:false });
+      const commutedView = FB.tenureView(state).duties.filter(function (duty) {
+        return duty.id === 'customary_labor';
+      })[0];
+      site.kind = originalKind;
+      return {
+        addKind:addProposal.kind,
+        addId:addProposal.additionalDutyId,
+        pendingResolve:pendingResolve,
+        addResolved:addResolved,
+        addDelay:addDelay,
+        routerRngStable:rngBeforeRouter === rngAfterAddRouter &&
+          rngBeforeRouter === rngAfterCommuteRouter,
+        revisionAfterAdd:commuteRecord.tenureRevision,
+        commuteKind:commuteProposal.kind,
+        commuteDutyId:commuteProposal.dutyId,
+        commuteGold:commuteProposal.commutationGold,
+        commuteResolved:commuteResolved,
+        staleResolve:staleResolve,
+        laborEventId:labor.eventId,
+        laborMode:labor.mode,
+        duePreserved:dueBeforeCommutation === labor.lastResolvedTurn ||
+          dueBeforeCommutation < labor.nextDueTurn,
+        originalInterval:labor.originalIntervalTurns,
+        dueContextRevision:dueItem && dueItem.ctx.tenureRevision,
+        activeRevision:tenure.revision,
+        nonGoldReady:nonGoldReady,
+        dueReceipt:!!dueReceipt,
+        healthCost:healthBefore - state.chars[state.player.charId].health,
+        nextInterval:labor.nextDueTurn - dueBeforeCommutation,
+        viewMode:commutedView.mode,
+        viewGold:commutedView.commutationGold,
+        historyLength:tenure.transitionHistory.length,
+        historyOutcomes:tenure.transitionHistory.map(function (entry) {
+          return entry.outcome;
+        }),
+        technologyImpact:FBDATA.techImpactReviews.features
+          .serf_tenure_authority_review.mode
+      };
+    });
+
+    expect(result.addKind).toBe('add_duty');
+    expect(result.addId).toBe('authority_cartage');
+    expect(result.pendingResolve).toBe(false);
+    expect(result.addResolved).toBe(true);
+    expect(result.addDelay).toBeGreaterThanOrEqual(180);
+    expect(result.routerRngStable).toBe(true);
+    expect(result.revisionAfterAdd).toBe(1);
+    expect(result.commuteKind).toBe('commute_duty');
+    expect(result.commuteDutyId).toBe('customary_labor');
+    expect(result.commuteGold).toBe(3);
+    expect(result.commuteResolved).toBe(true);
+    expect(result.staleResolve).toBe(false);
+    expect(result.laborEventId).toBe('serf_commuted_due');
+    expect(result.laborMode).toBe('coin');
+    expect(result.duePreserved).toBe(true);
+    expect(result.originalInterval).toBe(720);
+    expect(result.dueContextRevision).toBe(result.activeRevision);
+    expect(result.nonGoldReady).toBe(true);
+    expect(result.dueReceipt).toBe(true);
+    expect(result.healthCost).toBe(1);
+    expect(result.nextInterval).toBe(720);
+    expect(result.viewMode).toBe('coin');
+    expect(result.viewGold).toBe(3);
+    expect(result.historyLength).toBe(2);
+    expect(result.historyOutcomes).toEqual(['added_duty','commuted_duty']);
+    expect(result.technologyImpact).toBe('none');
+  });
+
+test('Phase 5 authority review keeps former and current people navigable at a 390px viewport',
+  async function ({ page }, testInfo) {
+    await page.setViewportSize({ width:390, height:844 });
+    await startGame(page, testInfo);
+    const people = await page.evaluate(function () {
+      const state = FB.state;
+      const tenure = FB.ensureSerfTenure(state, 'legacy_repair');
+      const former = FB.getRole(state, 'lord', true);
+      FB.ensureSerfTenure(state, 'legacy_repair');
+      FB.killChar(state, former);
+      const current = FB.getRole(state, 'lord', true);
+      state.eventQueue = [];
+      FB.tenureDay(state);
+      const item = state.eventQueue.filter(function (queued) {
+        return queued.id === 'serf_tenure_review';
+      })[0];
+      state.eventQueue = [];
+      FB.ui.runEvents([item]);
+      return {
+        formerId:former.id, formerName:FB.fullName(former),
+        currentId:current.id, currentName:FB.fullName(current)
+      };
+    });
+
+    await expect(page.getByRole('heading', {
+      name:'The Custom Under New Authority', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#ev-text')).toContainText(
+      'local-lord succession');
+    await expect(page.locator('#ev-text')).toContainText(people.formerName);
+    await expect(page.locator('#ev-text')).toContainText(people.currentName);
+    const formerCard = page.locator(
+      '[data-event-participant="formerLord"]');
+    const currentCard = page.locator(
+      '[data-event-participant="currentLord"]');
+    await expect(formerCard).toHaveCount(1);
+    await expect(currentCard).toHaveCount(1);
+    await expect(formerCard).toContainText(people.formerName);
+    await expect(currentCard).toContainText(people.currentName);
+    await formerCard.locator(
+      '[data-event-character="' + people.formerId + '"]').click();
+    await expect(page.getByRole('heading', {
+      name:people.formerName, exact:true
+    })).toBeVisible();
+    await expect(page.locator('#cm-close')).toContainText('Back');
+    await page.locator('#cm-close').click();
+    await expect(page.getByRole('heading', {
+      name:'The Custom Under New Authority', exact:true
+    })).toBeVisible();
+    await expect(formerCard.locator(
+      '[data-event-character="' + people.formerId + '"]')).toBeFocused();
+  });
+
+test('Phase 5 effective custom confirmation restores and later challenges only the recorded right',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const tenure = FB.ensureSerfTenure(state, 'legacy_repair');
+      const home = tenure.provinceId;
+      tenure.archetypeId = 'latin_manorial';
+      tenure.rights = [];
+      tenure.transitionHistory = [{
+        id:'tt:test:1', turn:state.turn, causes:['county_transfer'],
+        outcome:'challenged_right', dutyId:null,
+        rightId:'gleaning_after_harvest',
+        oldHolderRealmId:null, oldHolderGeneration:null,
+        newHolderRealmId:null, newHolderGeneration:null,
+        provenance:'authority_review', provenanceDetail:null
+      }];
+      if (FB.hasModifier(state, 'custom_confirmed', home)) {
+        FB.removeModifier(state, 'custom_confirmed', home);
+      }
+      delete state.player.tenureTransition;
+      tenure.authorityCheckpoint = FB.serfHomeAuthority(state);
+      tenure.authorityCheckpoint.acknowledgedTurn = state.turn;
+
+      const added = FB.addModifier(state, 'custom_confirmed', home,
+        { silent:true });
+      const restoreRecord = state.player.tenureTransition;
+      const restoreRevision = restoreRecord.revision;
+      const repeated = FB.addModifier(state, 'custom_confirmed', home,
+        { silent:true });
+      const revisionAfterRepeat = state.player.tenureTransition.revision;
+      state.eventQueue = [];
+      FB.tenureDay(state);
+      const restored = FB.resolveSerfTenureTransition(state,
+        restoreRecord.revision, 'restore');
+
+      tenure.transitionEligibleTurn = state.turn;
+      const removed = FB.removeModifier(state, 'custom_confirmed', home);
+      const challengeRecord = state.player.tenureTransition;
+      state.eventQueue = [];
+      FB.tenureDay(state);
+      const preserved = FB.resolveSerfTenureTransition(state,
+        challengeRecord.revision, 'preserve');
+      return {
+        added:added, repeated:repeated,
+        restoreKind:restoreRecord.proposal.kind,
+        restoreRight:restoreRecord.proposal.rightId,
+        restoreRevision:restoreRevision,
+        revisionAfterRepeat:revisionAfterRepeat,
+        restored:restored,
+        rightPresent:tenure.rights.indexOf('gleaning_after_harvest') >= 0,
+        removed:removed,
+        challengeKind:challengeRecord.proposal.kind,
+        challengeRight:challengeRecord.proposal.rightId,
+        preserved:preserved,
+        tenureRevision:tenure.revision,
+        outcomes:tenure.transitionHistory.map(function (entry) {
+          return entry.outcome;
+        })
+      };
+    });
+
+    expect(result.added).toBe(true);
+    expect(result.repeated).toBe(true);
+    expect(result.restoreKind).toBe('restore_right');
+    expect(result.restoreRight).toBe('gleaning_after_harvest');
+    expect(result.revisionAfterRepeat).toBe(result.restoreRevision);
+    expect(result.restored).toBe(true);
+    expect(result.rightPresent).toBe(true);
+    expect(result.removed).toBe(true);
+    expect(result.challengeKind).toBe('challenge_right');
+    expect(result.challengeRight).toBe('gleaning_after_harvest');
+    expect(result.preserved).toBe(true);
+    expect(result.tenureRevision).toBe(1);
+    expect(result.outcomes).toEqual([
+      'challenged_right','restored_right','preserved_terms'
+    ]);
+  });
+
 test('serf tenure details render across archetypes in Station & home with stable data attributes and Escape dismissal',
   async function ({ page }, testInfo) {
     await page.setViewportSize({ width:390, height:844 });
     await startGame(page, testInfo);
     const steward = await page.evaluate(function () {
       const c = FB.getRole(FB.state, 'steward', true);
+      FB.ui.refresh();
+      FB.ui.showTab('char');
       return { id:c.id, name:FB.fullName(c) };
     });
     const rank = page.locator('#self-rank-details');

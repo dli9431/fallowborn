@@ -103,6 +103,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Formation-time household and home context changes the description of baseline serf work and obligations; it is not an optional capability unlocked by sovereign research.'
       },
+      serf_tenure_authority_review:{
+        mode:'none',
+        rationale:'A household responding when its existing local or political authority changes is a baseline social and customary consequence, not a capability unlocked by sovereign research.'
+      },
       minor_household_standard_reduction:{
         mode:'none',
         rationale:'A child household head giving up an inherited recurring expense is a baseline recovery control; no innovation credibly unlocks abandoning a living standard.'

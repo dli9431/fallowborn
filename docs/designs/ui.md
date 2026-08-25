@@ -25,6 +25,14 @@ An active Old Custom case adds one compact linked witness/officer line. Each nat
 opens the standard character sheet; visible or browser Back restores the same Station &
 home sheet and keyboard focus.
 
+The authority-review event uses the same generic modal, participant cards, realm card,
+number-key choices, nested Back route, and Escape dismissal. It identifies the permanent
+home, exact retained former/current local people and political authority, consolidated
+causes, and one affected duty or right from saved semantic context. At 390 CSS pixels the cards and proposal text
+wrap within the scroll sheet; no color-only meaning or new political roster is introduced.
+After acceptance, **Station & home** labels a commuted duty and its saved per-due coin
+amount rather than continuing to describe it as labor only.
+
 The same modal contains a **Routes to Freedom** section. It shows the direct price,
 current-lord Standing and petition threshold, exact saved offer price/service/expiry and
 acceptance lock, or paid final-service completion. Its stable selectors are

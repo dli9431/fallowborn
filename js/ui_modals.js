@@ -483,9 +483,11 @@ window.FB = window.FB || {};
     return false;
   }
 
-  /* Every living person an event names gets one card. Exact participant
-     slots are considered before legacy role tokens so their card always owns
-     the native character-sheet route and can return to this event. */
+  /* Every living person an event names gets one card. An exact historical
+     context slot may also retain a dead person's sheet when its declaration
+     explicitly allows that identity. Exact participant slots are considered
+     before legacy role tokens so their card always owns the native
+     character-sheet route and can return to this event. */
   function eventCharCards(s, ev, ctx, carded) {
     let raw = ' ';
     function add(x) {
@@ -501,8 +503,8 @@ window.FB = window.FB || {};
     }
     let h = '';
     let cardCount = Object.keys(carded).length;
-    function addCharacter(c, participant) {
-      if (!c || c.dead || carded[c.id] || cardCount >= 4) return;
+    function addCharacter(c, participant, allowDead) {
+      if (!c || (c.dead && !allowDead) || carded[c.id] || cardCount >= 4) return;
       carded[c.id] = 1;
       cardCount++;
       if (participant) {
@@ -518,11 +520,14 @@ window.FB = window.FB || {};
     const cardedRealms = {};
     const explicitCards = ev.participantCards || [];
     const participantSlots = [];
+    const participantAllowsDead = {};
     for (let declaredIndex = 0; declaredIndex < (ev.participants || []).length;
          declaredIndex++) {
       const declaredSlot = ev.participants[declaredIndex].slot;
       if (ctx && ctx.participants && ctx.participants[declaredSlot]) {
         participantSlots.push(declaredSlot);
+        participantAllowsDead[declaredSlot] =
+          !!ev.participants[declaredIndex].allowDead;
       }
     }
     for (let participantIndex = 0; participantIndex < participantSlots.length;
@@ -530,7 +535,8 @@ window.FB = window.FB || {};
       const slot = participantSlots[participantIndex];
       if (raw.indexOf('{' + slot + '}') < 0 &&
           explicitCards.indexOf(slot) < 0) continue;
-      addCharacter(s.chars[ctx.participants[slot]], slot);
+      addCharacter(s.chars[ctx.participants[slot]], slot,
+        participantAllowsDead[slot]);
     }
     for (const role of ['lord', 'priest', 'friend', 'rival', 'spouse', 'suitor']) {
       if (raw.indexOf('{' + role + '}') < 0) continue;

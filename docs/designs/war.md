@@ -651,6 +651,12 @@ burns holdings season by season (`FB.devastationSeason` → `devastation_raiders
 and after two burnings the local lord offers his wall in exchange for the family's
 freedom (`devastation_protection` → commendation to serfdom, by choice).
 
+The first burn may add semantic `war_pressure` to an authority review that is already
+pending, but never creates a tenure review by itself and never duplicates the raider loss.
+Later burns, continued occupation, and independent wartime quartering do not add review
+revisions. This is descriptive consolidation around existing war consequences, so it has
+no separate technology gate.
+
 **Riding with the liege's host builds a service record.** Vassal players who answer
 the banner call (`with_liege_host`) fight through the `host_*` events; those and the
 war's end pay into the lifetime `player.warService` tally, which gates the

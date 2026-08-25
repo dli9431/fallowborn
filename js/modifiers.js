@@ -232,12 +232,18 @@ window.FB = window.FB || {};
   FB.addModifier = function (state, id, pid, options) {
     const def = definition(id);
     if (!state || !def) return false;
+    const tenure = id === 'custom_confirmed' && FB.activeSerfTenure &&
+      FB.activeSerfTenure(state);
+    const authorityBefore = tenure && def.scope === 'county' &&
+      tenure.provinceId === pid && FB.serfHomeAuthority
+      ? FB.serfHomeAuthority(state) : null;
     const list = listFor(state, def.scope, pid, true);
     if (!list) return false;
     let record = null;
     for (let i = 0; i < list.length; i++) {
       if (list[i].id === id) { record = list[i]; break; }
     }
+    const recordWasActive = record && active(record, state);
     const endTurn = def.days === undefined ? null :
       state.turn + Math.max(0, Math.floor(Number(def.days) || 0));
     if (record) {
@@ -251,6 +257,10 @@ window.FB = window.FB || {};
         FB.recordModifierPrivilege(state, id, pid, options || {});
       }
       noteModifierMutation();
+      if (!recordWasActive && authorityBefore && FB.noteSerfHomeTransition) {
+        FB.noteSerfHomeTransition(state, 'custom_confirmed', authorityBefore,
+          FB.serfHomeAuthority(state));
+      }
       return true;
     }
     record = { id:id };
@@ -265,17 +275,28 @@ window.FB = window.FB || {};
     }
     if (!(options && options.silent)) notice(state, id, def.scope, pid, true);
     noteModifierMutation();
+    if (authorityBefore && FB.noteSerfHomeTransition) {
+      FB.noteSerfHomeTransition(state, 'custom_confirmed', authorityBefore,
+        FB.serfHomeAuthority(state));
+    }
     return true;
   };
 
   FB.removeModifier = function (state, id, pid, options) {
     const def = definition(id);
     if (!state || !def) return false;
+    const tenure = id === 'custom_confirmed' && FB.activeSerfTenure &&
+      FB.activeSerfTenure(state);
+    const authorityBefore = tenure && def.scope === 'county' &&
+      tenure.provinceId === pid && FB.serfHomeAuthority
+      ? FB.serfHomeAuthority(state) : null;
     const list = listFor(state, def.scope, pid, false);
     if (!list) return false;
     let removed = false;
+    let removedActive = false;
     for (let i = list.length - 1; i >= 0; i--) {
       if (list[i].id !== id) continue;
+      if (active(list[i], state)) removedActive = true;
       list.splice(i, 1);
       removed = true;
     }
@@ -285,6 +306,10 @@ window.FB = window.FB || {};
     }
     if (removed && options && options.notice) notice(state, id, def.scope, pid, false);
     if (removed) noteModifierMutation();
+    if (removedActive && authorityBefore && FB.noteSerfHomeTransition) {
+      FB.noteSerfHomeTransition(state, 'custom_unconfirmed', authorityBefore,
+        FB.serfHomeAuthority(state));
+    }
     return removed;
   };
 

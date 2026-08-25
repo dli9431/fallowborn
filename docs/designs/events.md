@@ -32,7 +32,24 @@ requirements, choices, chances, effects, autoresolve, and advancement mechanics.
 whose generic prose would otherwise contradict pastoral, woodland, or shore work may set
 `tenureAware:true`; `FB.eventContextFor` snapshots the same active-tenure identity and
 expires it after rank, home, protagonist, formation, or archetype changes. Invalid context
-never falls back to generic copy and still charges the household.
+never falls back to generic copy and never charges the household.
+
+Authority changes reach that saved custom through one code-queued
+`serf_tenure_review`, not through the random event pool. `FB.serfHomeAuthority` keeps the
+home-local lord, direct county holder, and top sovereign distinct; transfer, succession,
+effective `custom_confirmed` changes, and an exact local-lord replacement coalesce into
+one revisioned record. The earliest acknowledged authority and latest live authority are
+retained as semantic ids and ruler generations. A deterministic proposal can confirm the
+existing terms, add one archetype-authored duty, commute one safe labor duty, challenge
+one recognized right, or restore a previously challenged right. The safe first option
+preserves existing terms, so autoresolve cannot silently worsen them.
+
+Mechanical amendments increment the active tenure revision once. Ordinary duty contexts
+and freedom offers carry that revision, making an older queued choice stale before any
+effect. A commuted duty uses `serf_commuted_due`, preserves its original schedule, and
+always offers a non-gold work response. Reviews have technology impact **none**: reacting
+to a change of local or political authority is baseline customary life, not a researched
+capability.
 
 ## Exact local event participants
 

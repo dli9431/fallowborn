@@ -8,6 +8,18 @@ consuming RNG or bumping save format 3:
 - Unknown optional duty, conditional-duty, and right IDs remain harmless save data and are ignored by scheduling and display.
 - No rendered text, active calculations, or volatile references enter serialized state.
 
+The same version-1 tenure additively stores `revision`, a bounded eight-entry
+`transitionHistory`, `transitionEligibleTurn`, and an `authorityCheckpoint` containing
+semantic ids, ruler generations, and faith/culture classifications. Missing fields repair
+to revision 0, empty history, and the first read-only current authority snapshot without
+manufacturing an event. At most one `player.tenureTransition` stores a protagonist and
+tenure stamp, earliest old and latest new authority, canonical causes, a deterministic
+proposal, witness id, cooldown eligibility, and queue revision. It contains no copied
+names or rendered prose. Mechanical amendments advance the tenure revision; confirmation
+does not. Freedom, relocation, or tenure replacement clears it, while protagonist
+succession preserves tenure terms and history but clears the personal review and resets
+the authority checkpoint for the new head. Save wrapper format remains 3.
+
 The same version-1 record supports all seven core archetype ids, including the additive
 `pastoral_steppe`, `woodland_dependence`, and `norse_coastal_service` definitions. It does
 not persist a second selector snapshot or contextual work text: the chosen archetype,
@@ -22,6 +34,9 @@ Tenure-scheduled queue context may additionally contain `tenureArchetypeId`,
 are additive to the legacy `archetypeId`/duty context and contain no rendered prose.
 Older queued events remain valid through the legacy fields; newly snapshotted fields, when
 present, must match exactly or the event expires before effects.
+New ordinary duty contexts and freedom offers also carry `tenureRevision`. A missing
+revision is compatible only with an active revision-0 tenure; a later amendment expires
+the older context atomically.
 
 Freedom bargaining is also optional additive save-format-3 state. At most one
 `player.freedomOffer` freezes version, status, source, term id, protagonist and lord ids,

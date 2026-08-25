@@ -1311,7 +1311,14 @@ window.FB = window.FB || {};
     const sources = ['petition','lords_notice','legacy_invitation'];
     let invalid = record.version !== 1 || statuses.indexOf(record.status) < 0 ||
       sources.indexOf(record.source) < 0;
-    const integerFields = ['tenureFormedTurn','settlementIndex',
+    const activeTenure = p.tenure && p.tenure.status === 'active'
+      ? p.tenure : null;
+    const activeTenureRevision = activeTenure &&
+      Number.isInteger(activeTenure.revision) ? activeTenure.revision : 0;
+    if (record.tenureRevision === undefined && activeTenureRevision === 0) {
+      record.tenureRevision = 0;
+    }
+    const integerFields = ['tenureFormedTurn','tenureRevision','settlementIndex',
       'requiredStanding','baseCost','price','serviceDays',
       'createdTurn','expiryTurn','cooldownUntil'];
     for (let i = 0; i < integerFields.length; i++) {
@@ -1514,6 +1521,9 @@ window.FB = window.FB || {};
     if (!tenure || tenure.formedTurn !== record.tenureFormedTurn) {
       out.reason = FB.T('The tenure named in the offer is no longer active.'); return out;
     }
+    if ((tenure.revision || 0) !== record.tenureRevision) {
+      out.reason = FB.T('The customary terms named in the offer have changed.'); return out;
+    }
     if (home.provinceId !== record.provinceId ||
         home.settlementIndex !== record.settlementIndex ||
         tenure.provinceId !== record.provinceId ||
@@ -1656,6 +1666,7 @@ window.FB = window.FB || {};
       version:1, status:'offered', source:source,
       termId:selected.id, protagonistId:p.charId, lordId:resolvedLord.id,
       tenureFormedTurn:tenure.formedTurn,
+      tenureRevision:tenure.revision || 0,
       provinceId:home.provinceId, settlementIndex:home.settlementIndex,
       standingAtCreation:actualStanding,
       requiredStanding:selected.minStanding,
@@ -1827,6 +1838,7 @@ window.FB = window.FB || {};
       provinceId:record.provinceId,
       settlementIndex:record.settlementIndex,
       tenureFormedTurn:record.tenureFormedTurn,
+      tenureRevision:record.tenureRevision,
       price:record.price,
       serviceDays:record.serviceDays,
       expiryTurn:record.expiryTurn
@@ -1856,6 +1868,7 @@ window.FB = window.FB || {};
       ctx.provinceId === offer.provinceId &&
       ctx.settlementIndex === offer.settlementIndex &&
       ctx.tenureFormedTurn === offer.tenureFormedTurn &&
+      ctx.tenureRevision === offer.tenureRevision &&
       ctx.price === offer.price &&
       ctx.serviceDays === offer.serviceDays &&
       ctx.expiryTurn === offer.expiryTurn)) return false;
@@ -1869,6 +1882,7 @@ window.FB = window.FB || {};
       p.charId === offer.protagonistId && (state.turn || 0) <= offer.expiryTurn &&
       lord && lord.id === offer.lordId && tenure &&
       tenure.formedTurn === offer.tenureFormedTurn &&
+      (tenure.revision || 0) === offer.tenureRevision &&
       tenure.provinceId === offer.provinceId &&
       tenure.settlement === offer.settlementIndex &&
       home.provinceId === offer.provinceId &&

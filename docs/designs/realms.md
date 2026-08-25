@@ -1,5 +1,21 @@
 # Realms, the liege hierarchy & tiers
 
+## Serf home authority
+
+A tier-0 household can answer to three different identities: the exact local manor lord
+in `state.roles.lord`, the realm that directly holds its home county, and the top sovereign
+resolved through `FB.topRealm`. `FB.serfHomeAuthority` reads those layers without creating
+a character or court. Home transfer and direct-holder succession capture before/after
+snapshots at their authoritative mutation boundaries; a bounded daily reconciliation
+catches an effective sovereign change caused by liege reparenting without scanning every
+realm. Same-tradition culture drift alone is not material, while a changed sovereign,
+culture tradition, or directional faith-relation severity is.
+
+Compact succession members retain the generation in which they reigned, allowing
+`FB.realmRulerAtGeneration` to resolve a former ruler for display without materializing a
+court. This household review capability has technology impact **none** because political
+subordination is an existing condition rather than an optional researched action.
+
 ## Dynastic realm identity
 
 Every living dynastic rank-1 through rank-4 AI realm carries `realm.succession`: lightweight

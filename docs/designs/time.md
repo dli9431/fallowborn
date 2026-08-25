@@ -25,6 +25,12 @@ year); woodland households carry four (2 slots per campaign year). Every duty ke
 720-day interval and authored first-due calendar recipe, while the existing one-per-season
 ceiling remains authoritative. Their contextual work labels do not alter wage, gain,
 health risk, elapsed days, eligibility, skill training, or RNG order.
+An existing pending authority review is checked at the same bounded daily tenure boundary
+before ordinary duties. Reviews coalesce during a 360-day cooldown and queue once when
+eligible; they do not scan world realms or consume RNG. An accepted additional duty recurs
+every 1,440 days and first falls in its authored season at least 180 days later. A commuted
+duty retains its saved next due turn and original interval, and its code-queued event still
+counts against the ordinary one-per-season presentation ceiling.
 Freedom offers last 180 days and measure their 360-day petition cooldown from creation.
 Creating, reopening, or declining an offer spends no day. Acceptance spends one day.
 The highest-Standing offer includes 90 days of final service: its price is charged once,

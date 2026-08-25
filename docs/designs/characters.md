@@ -748,6 +748,11 @@ without another charge. The bounded `player.familyFreedom` landmark also survive
 handover, preserving the original negotiating protagonist rather than rewriting history
 around the heir.
 
+Active tenure duties, rights, revision, and bounded authority-review history also belong
+to the continuing household. A pending or queued tenure review is personal to the outgoing
+head and clears on succession; the new head silently acknowledges the current authority as
+their checkpoint, so no old lord, witness Standing, or unresolved proposal transfers.
+
 `FB.heirReview` is the shared read-only succession explanation. `FB.heirsOf` filters
 that review instead of rebuilding the order. The review preserves the existing named
 heir, children-first, then same-house grandchildren/siblings/nieces-nephews/
