@@ -22,6 +22,10 @@ Freedom does not convert customary strips into owned plots. Purchase, negotiated
 manumission, or an Old Custom victory closes the personal tenure and raises the household
 to freeholder; flight closes it without a lawful charter. In every case, ordinary
 freehold land must still be acquired through the existing plot system.
+Paid freedom covers the living family: the head pays the base share, living spouses add
+a half share each, and every living descendant adds a quarter share, even after marriage
+or departure into another household. Negotiated terms freeze the covered family and its
+price when offered.
 
 `FBDATA.householdStandards` (`data/economy.js`) is deliberately different from
 property. Board, wares, quarters, luxuries, transport, and profession-specific work

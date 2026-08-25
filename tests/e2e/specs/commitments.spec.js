@@ -5,6 +5,7 @@ dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
   'js/events.js',
+  'js/main.js',
   'js/model.js',
   'js/world.js',
   'js/keys.js',
@@ -269,6 +270,24 @@ test('daily focuses use deed disclosures and Settings can disable guide hints',
       name:/Hide ongoing commitments/
     })).toHaveCount(0);
 
+    const repeatDeedSectionKeys = page.getByRole('checkbox', {
+      name:/Repeat Deeds section keys/
+    });
+    await expect(repeatDeedSectionKeys).not.toBeChecked();
+    await expect(page.locator('label.autorow', {
+      has:repeatDeedSectionKeys
+    })).toContainText('section keys always leave their section open');
+    await repeatDeedSectionKeys.check();
+    await expect.poll(async function () {
+      return page.evaluate(function () {
+        return {
+          preference:FB.game.uiPrefs.repeatDeedSectionHotkeys,
+          stored:JSON.parse(localStorage.getItem('fb_ui'))
+            .repeatDeedSectionHotkeys
+        };
+      });
+    }).toEqual({ preference:true, stored:true });
+
     const hideBeginnerHints = page.getByRole('checkbox', {
       name:/Disable guide hints/
     });
@@ -287,7 +306,7 @@ test('daily focuses use deed disclosures and Settings can disable guide hints',
     }).toEqual({ preference:true, stored:true });
   });
 
-test('deed section keys toggle, scroll, and use a local QWE-ASD-ZXC grid',
+test('deed section keys preserve selection and optionally toggle a local QWE-ASD-ZXC grid',
   async function ({ page }) {
     await page.evaluate(function () {
       const s = FB.state;
@@ -318,10 +337,10 @@ test('deed section keys toggle, scroll, and use a local QWE-ASD-ZXC grid',
     await page.keyboard.press('Digit1');
     await expect(focusList).toBeFocused();
     await expect(focusList).toHaveAttribute('aria-current', 'true');
-    await expect(focusList).toHaveAttribute('aria-expanded', 'false');
-    await expect(panel.locator('[data-action-group-body="focus"]')).toBeHidden();
+    await expect(focusList).toHaveAttribute('aria-expanded', 'true');
+    await expect(panel.locator('[data-action-group-body="focus"]')).toBeVisible();
     await expect(panel.locator('[data-focus-id] .deed-item-keyhint'))
-      .toHaveCount(0);
+      .toHaveCount(5);
     await page.keyboard.press('Digit1');
     await expect(focusList).toBeFocused();
     await expect(focusList).toHaveAttribute('aria-expanded', 'true');
@@ -342,6 +361,16 @@ test('deed section keys toggle, scroll, and use a local QWE-ASD-ZXC grid',
       { id:'govern', key:'A' },
       { id:'patronize', key:'S' }
     ]);
+    await panel.locator(
+      '[data-action-group-body="work"] [data-action-id]').first().evaluate(
+      function (button) {
+        const original = FB.runInstant;
+        FB.runInstant = function () {};
+        button.click();
+        FB.runInstant = original;
+      });
+    await expect(focusList).toHaveAttribute('aria-current', 'true');
+    await expect(work).not.toHaveAttribute('aria-current', 'true');
     const activeSectionClick = await panel.evaluate(function (element) {
       const hint = element.querySelector(
         '[data-focus-id="rest"] .deed-item-keyhint');
@@ -427,6 +456,14 @@ test('deed section keys toggle, scroll, and use a local QWE-ASD-ZXC grid',
 
     await lifeBody.locator('[data-action-id]').first().evaluate(
       function (button) { button._deedsAccordionProbe = true; });
+    await page.keyboard.press('Digit3');
+    await expect(life).toHaveAttribute('aria-expanded', 'true');
+    await expect(lifeBody).toHaveCount(1);
+
+    await page.evaluate(function () {
+      FB.game.uiPrefs.repeatDeedSectionHotkeys = true;
+      FB.game.saveUiPrefs();
+    });
     await page.keyboard.press('Digit3');
     await expect(life).toHaveAttribute('aria-expanded', 'false');
     await expect(lifeBody).toHaveCount(0);

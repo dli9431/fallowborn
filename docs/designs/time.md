@@ -92,6 +92,8 @@ player war tick, and pre-roll 1–2 random event "slot days" (`state.slotDays`);
 `G.setSpeed`, +/- keys or menu → Settings) while unpaused (`G.paused` / `G.togglePause`); death, succession,
 load, skip, a hidden tab, and — on phone-sized screens — window blur all re-pause. The ticker is gated by open event
 modals/dialogs. `G.skipAhead` fast-forwards until an event/season/death.
+Starting a fast-forward counts as letting the days flow for first-life guidance, even when
+the player has not previously used Play.
 It still executes the authoritative daily tick for every date, but invariant
 repair work is retained between relevant mutations. Political courts key off
 the realm revision plus compact Standing, commerce, council, relationship, and

@@ -24,6 +24,8 @@ or requirements. Role, local-neighbor, local-witness, flight-contact, active-sto
 caller-context sources are allowlisted. Candidate order is deterministic and consumes no
 RNG unless a required neighbor or witness must materialize the single local `notable`
 fallback. Validation never substitutes a different person for an already-bound id.
+Participant slots and their `storySlot`/`kindParam` context keys start with a lowercase
+ASCII letter and may use lower camel case or underscores.
 
 Participant tokens resolve before legacy role tokens. `standingCharacter` and the
 participant form of `rivalContact` target only the bound id, while participant Standing
@@ -60,6 +62,25 @@ writes one route-specific message descriptor, and records bounded semantic famil
 history. Autoresolve scores `serfFreedom` and the exact-offer acceptance handler as
 positive rank transitions, but can select acceptance only while the saved context and
 price remain valid.
+
+Purchase prices cover the living family that receives the rank change, rather than
+charging the same amount to a lone serf and a large family. The household head costs
+100% of `freedomCost`, each living spouse adds 50%, and every living descendant adds
+25%, including married descendants living elsewhere. Each share rounds up separately.
+A negotiated offer snapshots this family quote before applying its Standing discount,
+while direct purchase uses the current living family.
+
+This is a broad playable abstraction, not a claim of one European tariff. Girona's
+recorded custom usually valued redemption against the person's goods, and its account
+books show both collective redemptions and sharply different values within one family:
+a father paid 140 sous where his son paid 25, while one entire family was redeemed for
+900. The age, work capacity, wealth, and future growth of a household were all relevant
+to the lord's loss. A 1278 Peterborough charter likewise liberated a villein together
+with his whole progeny. See Rosa Lluch Bramon, [“El precio de la libertad de los
+remensas”](https://journals.openedition.org/framespa/3065?lang=es), and the translated
+[Peterborough manumission](https://sourcebooks.web.fordham.edu/source/manumission.asp).
+The family-price change is a numeric balance correction, so it does not add a technology
+impact entry.
 
 The Phase 2 freedom capabilities deliberately have technology impact **none**:
 `serf_freedom_petition` is a baseline appeal to an existing lord, and

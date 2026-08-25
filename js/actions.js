@@ -1152,20 +1152,103 @@ window.FB = window.FB || {};
     return freedomTerms().byId[id] || null;
   };
 
+  function freedomOfferFamilyValid(record) {
+    const fields = ['headCost','spouseCount','spouseUnitCost',
+      'descendantCount','descendantUnitCost','familySize'];
+    let present = 0;
+    for (let i = 0; i < fields.length; i++) {
+      if (record && record[fields[i]] !== undefined) present++;
+    }
+    if (!present) return true;
+    if (!record || present !== fields.length) return false;
+    for (let i = 0; i < fields.length; i++) {
+      if (!Number.isInteger(record[fields[i]]) || record[fields[i]] < 0) {
+        return false;
+      }
+    }
+    return record.headCost > 0 &&
+      record.familySize === 1 + record.spouseCount + record.descendantCount &&
+      record.baseCost === record.headCost +
+        record.spouseCount * record.spouseUnitCost +
+        record.descendantCount * record.descendantUnitCost;
+  }
+
   function freedomOfferTermValid(record, term) {
     return !!(record && term && Number.isInteger(record.baseCost) &&
       record.baseCost > 0 && Number.isInteger(record.price) && record.price >= 0 &&
       Number.isInteger(record.requiredStanding) &&
       Number.isInteger(record.serviceDays) &&
-      record.serviceDays === term.serviceDays);
+      record.serviceDays === term.serviceDays &&
+      freedomOfferFamilyValid(record));
   }
   FB.freedomOfferSemanticsValid = function (record) {
     return freedomOfferTermValid(record,
       record && freedomTerms().byId[record.termId]);
   };
-  FB.freedomPurchasePrice = function () {
-    const price = Math.ceil(Number(FBDATA.balance.freedomCost));
-    return isFinite(price) && price > 0 ? price : 0;
+  function freedomPriceFactor(key, fallback) {
+    const value = Number(FBDATA.balance[key]);
+    return isFinite(value) && value >= 0 ? value : fallback;
+  }
+
+  FB.freedomPurchaseQuote = function (state) {
+    const headCost = Math.ceil(Number(FBDATA.balance.freedomCost));
+    const validHeadCost = isFinite(headCost) && headCost > 0 ? headCost : 0;
+    const quote = {
+      headCost:validHeadCost,
+      spouseCount:0,
+      spouseUnitCost:validHeadCost
+        ? Math.ceil(validHeadCost * freedomPriceFactor(
+          'freedomSpouseFactor', 0.50)) : 0,
+      descendantCount:0,
+      descendantUnitCost:validHeadCost
+        ? Math.ceil(validHeadCost * freedomPriceFactor(
+          'freedomDescendantFactor', 0.25)) : 0,
+      familySize:validHeadCost ? 1 : 0,
+      price:validHeadCost
+    };
+    if (!validHeadCost || !state || !state.player || !state.chars ||
+        !FB.childrenOf) return quote;
+    const protagonist = state.chars[state.player.charId];
+    if (!protagonist || protagonist.dead) return quote;
+    const spouses = FB.spousesSnapshot
+      ? FB.spousesSnapshot(state, protagonist)
+      : (protagonist.spouseId && state.chars[protagonist.spouseId] &&
+          !state.chars[protagonist.spouseId].dead
+        ? [state.chars[protagonist.spouseId]] : []);
+    quote.spouseCount = spouses.length;
+    const seen = {};
+    seen[protagonist.id] = 1;
+    const ancestors = [protagonist];
+    for (let i = 0; i < ancestors.length; i++) {
+      const children = FB.childrenOf(state, ancestors[i]);
+      for (let j = 0; j < children.length; j++) {
+        const child = children[j];
+        if (!child || seen[child.id]) continue;
+        seen[child.id] = 1;
+        ancestors.push(child);
+        if (!child.dead) quote.descendantCount++;
+      }
+    }
+    quote.familySize = 1 + quote.spouseCount + quote.descendantCount;
+    quote.price = quote.headCost + quote.spouseCount * quote.spouseUnitCost +
+      quote.descendantCount * quote.descendantUnitCost;
+    return quote;
+  };
+
+  FB.freedomPurchasePrice = function (state) {
+    return FB.freedomPurchaseQuote(state).price;
+  };
+
+  FB.freedomPurchaseBreakdown = function (state, quote) {
+    quote = quote || FB.freedomPurchaseQuote(state);
+    return FB.T(
+      'Family shares: head {money:head}; spouse shares {spouses} × {money:spouse}; descendant shares {descendants} × {money:descendant}.', {
+        head:quote.headCost,
+        spouses:quote.spouseCount,
+        spouse:quote.spouseUnitCost,
+        descendants:quote.descendantCount,
+        descendant:quote.descendantUnitCost
+      });
   };
 
   function freedomHome(state) {
@@ -1562,7 +1645,8 @@ window.FB = window.FB || {};
       -100, 100);
     const selected = freedomTermAtStanding(effectiveStanding);
     if (!selected) return false;
-    const baseCost = FB.freedomPurchasePrice();
+    const familyQuote = FB.freedomPurchaseQuote(state);
+    const baseCost = familyQuote.price;
     if (!baseCost) return false;
     const home = freedomHome(state);
     const tenure = FB.activeSerfTenure(state);
@@ -1576,6 +1660,12 @@ window.FB = window.FB || {};
       standingAtCreation:actualStanding,
       requiredStanding:selected.minStanding,
       baseCost:baseCost,
+      headCost:familyQuote.headCost,
+      spouseCount:familyQuote.spouseCount,
+      spouseUnitCost:familyQuote.spouseUnitCost,
+      descendantCount:familyQuote.descendantCount,
+      descendantUnitCost:familyQuote.descendantUnitCost,
+      familySize:familyQuote.familySize,
       price:Math.ceil(baseCost * selected.priceFactor),
       serviceDays:selected.serviceDays,
       createdTurn:createdTurn,
@@ -1637,6 +1727,16 @@ window.FB = window.FB || {};
         : (province ? FB.L(province.name) : FB.T('the former home')),
       price:Number.isInteger(record.price) ? record.price : 0,
       baseCost:Number.isInteger(record.baseCost) ? record.baseCost : 0,
+      familyPricing:freedomOfferFamilyValid(record) &&
+        record.familySize !== undefined ? {
+          headCost:record.headCost,
+          spouseCount:record.spouseCount,
+          spouseUnitCost:record.spouseUnitCost,
+          descendantCount:record.descendantCount,
+          descendantUnitCost:record.descendantUnitCost,
+          familySize:record.familySize,
+          price:record.baseCost
+        } : null,
       serviceDays:Number.isInteger(record.serviceDays) ? record.serviceDays : 0,
       requiredStanding:Number.isInteger(record.requiredStanding)
         ? record.requiredStanding : 0,
@@ -2555,9 +2655,12 @@ window.FB = window.FB || {};
     } },
 
   { id: 'buy_freedom', requiresAdult:true,
-    desc: function () {
-      return FB.T('Pay {money:gold} to be struck from the serf-roll.',
-        { gold: FB.freedomPurchasePrice() });
+    desc: function (s) {
+      const quote = FB.freedomPurchaseQuote(s);
+      return FB.T('Pay {money:gold} to free your living family. {breakdown}', {
+        gold:quote.price,
+        breakdown:FB.freedomPurchaseBreakdown(s, quote)
+      });
     },
     show: function (s) { return s.player.tier === 0; },
     can: function (s) {
@@ -2567,7 +2670,7 @@ window.FB = window.FB || {};
       if (!FB.activeSerfTenure || !FB.activeSerfTenure(s)) {
         return FB.T('No active customary tenure binds this household.');
       }
-      const price = FB.freedomPurchasePrice();
+      const price = FB.freedomPurchasePrice(s);
       if (!price) return FB.T('The purchase price is unavailable.');
       if (s.player.gold < price) return FB.T('Not enough money.');
       const lord = freedomCurrentLord(s);

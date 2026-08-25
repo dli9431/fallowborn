@@ -37,7 +37,8 @@ Open `index.html` in any modern browser. That's it — no build step, no server,
   Self/Kin/Deeds/Land/Network/Chronicle panels (shown in badges beside the tab titles) · in Deeds,
   `1–6` select Daily Focus and the five deed sections, then `Q W E` / `A S D` / `Z X C`
   activate the first nine entries in that section (and `Shift+Q W E` / `A S D` / `Z X C` for
-  items 10–18) · Network uses `1–5` and the same letter grid for management actions only ·
+  items 10–18); section keys leave their section open unless repeat-key toggling is enabled in
+  Settings · Network uses `1–5` and the same letter grid for management actions only ·
   in events and dialogs, `1–9` choose an
   item and `Shift+1–9` reaches items 10–18 (the number row and numpad both work) · `Space`/`E` play/pause the
   flow of days · `+`/`−` change the speed of days · `F` skips to the next happening ·
@@ -255,6 +256,10 @@ buys freedom outright, or an adult serf with +20 Standing can ask the current lo
 exact saved terms in **Rank & Realm** or **Deeds**. Better Standing lowers the frozen
 cash price; at +60 the best terms add 90 days of final service before promotion. Offers
 last two seasons, can be reviewed without spending a day, and are rechecked when accepted.
+The displayed price covers the living family: 100g for the household head, plus 50g
+per living spouse and 25g per living descendant. A saved offer keeps the family quote
+agreed when it was made; a direct purchase uses the family alive now. Married descendants
+are included because the family's freedom also ends their inherited servile status.
 The Kin panel remembers how the family first became free, including flight without a
 lawful charter. Freeholders then buy inherited plots settlement by settlement. Land held together grows more
 productive, and five plots in one settlement can be declared a manor once the family has

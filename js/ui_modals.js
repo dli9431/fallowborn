@@ -1779,6 +1779,7 @@ window.FB = window.FB || {};
     const showReview = !!view && !options.intro;
     const advocates = !showReview && petition.ready && FB.freedomAdvocates
       ? FB.freedomAdvocates(s) : [];
+    const purchaseQuote = FB.freedomPurchaseQuote(s);
     let h = '<div class="gm-body-text" data-freedom-routes>' +
       '<p>' + esc(FB.T(
         'A petition asks the current lord for one exact, saved offer. It spends no day and uses no chance roll.')) + '</p>' +
@@ -1788,8 +1789,10 @@ window.FB = window.FB || {};
         standing:petition.threshold
       }))) +
       kv('Buy freedom outright', esc(FB.T('{money:price}', {
-        price:FB.freedomPurchasePrice()
-      })));
+        price:purchaseQuote.price
+      }))) +
+      '<p class="adesc" data-freedom-family-price>' +
+        esc(FB.freedomPurchaseBreakdown(s, purchaseQuote)) + '</p>';
 
     if (!showReview) {
       h += '<p class="adesc">' + esc(FB.T(
@@ -1888,7 +1891,15 @@ window.FB = window.FB || {};
       kv('Lord', esc(view.lordName)) +
       '<div data-freedom-offer-price>' +
         kv('Exact cash price', esc(FB.T('{money:price}', { price:view.price }))) +
-      '</div><div data-freedom-offer-service>' +
+      '</div>' +
+      (view.familyPricing
+        ? '<p class="adesc" data-freedom-offer-family-price>' +
+          esc(FB.T(
+            'Standing terms were applied to this saved family base. {breakdown}', {
+              breakdown:FB.freedomPurchaseBreakdown(s, view.familyPricing)
+            })) + '</p>'
+        : '') +
+      '<div data-freedom-offer-service>' +
         kv('Continued service', esc(serviceText)) +
       '</div><div data-freedom-offer-expiry>' +
         kv('Offer expires', esc(view.expiryLabel)) +
@@ -22016,6 +22027,13 @@ window.FB = window.FB || {};
       const bindingCount = Object.keys(shortcutBindings()).length;
       h += '<div class="gm-body-text" style="margin-top:8px"><p>' +
         esc(FB.T('Keyboard')) + '</p></div>' +
+        '<label class="autorow"><input type="checkbox" ' +
+        'id="set-repeat-deed-section-hotkeys"' +
+        (G.uiPrefs.repeatDeedSectionHotkeys ? ' checked' : '') + '> <b>' +
+        esc(FB.T('Repeat Deeds section keys to toggle them')) +
+        '</b><span class="adesc">' + esc(FB.T(
+          'When enabled, pressing the number for the active Deeds section again collapses or expands it. By default, section keys always leave their section open.')) +
+        '</span></label>' +
         '<button type="button" class="btn shortcut-settings-entry" ' +
         'id="set-shortcuts"><span class="shortcut-settings-title">' +
         esc(FB.T('Keyboard shortcuts…')) + '</span><span class="adesc">' + esc(FB.T(
@@ -22164,6 +22182,13 @@ window.FB = window.FB || {};
     });
     if ($('set-shortcuts')) {
       $('set-shortcuts').addEventListener('click', UI.showShortcutSettings);
+    }
+    if ($('set-repeat-deed-section-hotkeys')) {
+      $('set-repeat-deed-section-hotkeys').addEventListener('change', function () {
+        G.uiPrefs.repeatDeedSectionHotkeys =
+          $('set-repeat-deed-section-hotkeys').checked;
+        G.saveUiPrefs();
+      });
     }
     if ($('set-reset-starts')) {
       $('set-reset-starts').addEventListener('click', UI.showResetStartProgression);

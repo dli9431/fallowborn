@@ -856,6 +856,7 @@ window.FB = window.FB || {};
     required:1, create:1, createFallback:1, authorityRole:1,
     sameHome:1, allowDead:1, kindParam:1
   };
+  const EVENT_PARTICIPANT_IDENTIFIER = /^[a-z][A-Za-z0-9_]*$/;
 
   function participantDefinitionError(ev) {
     if (!ev) return '';
@@ -898,8 +899,9 @@ window.FB = window.FB || {};
         }
       }
       if (typeof spec.slot !== 'string' ||
-          !/^[a-z][a-z0-9_]*$/.test(spec.slot) || seen[spec.slot]) {
-        return 'participant slots must be unique lowercase identifiers.';
+          !EVENT_PARTICIPANT_IDENTIFIER.test(spec.slot) || seen[spec.slot]) {
+        return 'participant slots must be unique ASCII identifiers starting ' +
+          'with a lowercase letter.';
       }
       seen[spec.slot] = 1;
       if (spec.required) requiredSlots[spec.slot] = 1;
@@ -944,7 +946,7 @@ window.FB = window.FB || {};
       }
       if (spec.storySlot !== undefined && (spec.source !== 'story' ||
           typeof spec.storySlot !== 'string' ||
-          !/^[a-z][a-z0-9_]*$/.test(spec.storySlot))) {
+          !EVENT_PARTICIPANT_IDENTIFIER.test(spec.storySlot))) {
         return 'participant ' + spec.slot + ' has an invalid storySlot.';
       }
       if (spec.authorityRole !== undefined &&
@@ -955,7 +957,7 @@ window.FB = window.FB || {};
         return 'allowDead is valid only for context participants.';
       }
       if (spec.kindParam !== undefined && (typeof spec.kindParam !== 'string' ||
-          !/^[a-z][a-z0-9_]*$/.test(spec.kindParam))) {
+          !EVENT_PARTICIPANT_IDENTIFIER.test(spec.kindParam))) {
         return 'participant ' + spec.slot + ' has an invalid kindParam.';
       }
     }
@@ -5696,7 +5698,7 @@ window.FB = window.FB || {};
       if (FB.standingOf(state, { kind:'character', id:lord.id }) < -20) {
         out.reason = 'hostile_lord'; return out;
       }
-      price = FB.freedomPurchasePrice ? FB.freedomPurchasePrice() : 0;
+      price = FB.freedomPurchasePrice ? FB.freedomPurchasePrice(state) : 0;
       if (!price || p.gold < price) {
         out.reason = 'unaffordable'; return out;
       }

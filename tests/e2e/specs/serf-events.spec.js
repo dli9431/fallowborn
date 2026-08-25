@@ -426,7 +426,7 @@ test('descent and ascent routes: freedom deed, flight event, debt bondage, comme
 
       // 1. Manumission / Freedom via buy_freedom action
       FB.ensureSerfTenure(state, 'new_game');
-      state.player.gold = FBDATA.balance.freedomCost;
+      state.player.gold = FB.freedomPurchasePrice(state);
       FB.getRole(state, 'lord', true);
       var buyFreedom = FB.instants.filter(function (d) { return d.id === 'buy_freedom'; })[0];
       if (buyFreedom) buyFreedom.run(state);
@@ -1083,6 +1083,21 @@ test('exact participant binding is deterministic, bounded, persistent, and never
           slot:'confidant', source:'flight_contact', kindParam:'confidantKind'
         }], options:[{ label:'Wait.', effects:{} }]
       };
+      let camelKindParamValid = true;
+      try { FB.validateEventParticipants(flight); }
+      catch (error) { camelKindParamValid = false; }
+      const camelSlots = {
+        id:'camel_participant_slots_test', participants:[
+          { slot:'formerOfficer', source:'context', allowDead:true },
+          {
+            slot:'newOfficer', source:'story', storyId:'old_custom',
+            storySlot:'newOfficer'
+          }
+        ]
+      };
+      let camelSlotsValid = true;
+      try { FB.validateEventParticipants(camelSlots); }
+      catch (error) { camelSlotsValid = false; }
       delete s.roles.friend;
       delete s.roles.rival;
       const optional = FB.eventContextFor(s, flight, {});
@@ -1094,6 +1109,16 @@ test('exact participant binding is deterministic, bounded, persistent, and never
         { id:'unknown', participants:[{ slot:'x', source:'village_roster' }] },
         { id:'bad_create', participants:[{
           slot:'x', source:'role', role:'rival', create:true
+        }] },
+        { id:'bad_kind_param', participants:[{
+          slot:'x', source:'flight_contact', kindParam:'Confidant Kind'
+        }] },
+        { id:'bad_slot', participants:[{
+          slot:'FormerOfficer', source:'context'
+        }] },
+        { id:'bad_story_slot', participants:[{
+          slot:'officer', source:'story', storyId:'old_custom',
+          storySlot:'New Officer'
         }] }
       ];
       definitions.forEach(function (definition) {
@@ -1120,6 +1145,8 @@ test('exact participant binding is deterministic, bounded, persistent, and never
         retainedStillValid:retainedStillValid,
         falseKindInvalid:falseKindInvalid,
         deadInvalid:deadInvalid,
+        camelKindParamValid:camelKindParamValid,
+        camelSlotsValid:camelSlotsValid,
         optionalHasConfidant:Object.prototype.hasOwnProperty.call(
           optional.participants, 'confidant'),
         invalidSchemas:invalidSchemas,
@@ -1137,9 +1164,12 @@ test('exact participant binding is deterministic, bounded, persistent, and never
     expect(result.retainedStillValid).toBe(true);
     expect(result.falseKindInvalid).toBe(false);
     expect(result.deadInvalid).toBe(false);
+    expect(result.camelKindParamValid).toBe(true);
+    expect(result.camelSlotsValid).toBe(true);
     expect(result.optionalHasConfidant).toBe(false);
     expect(result.invalidSchemas).toEqual([
-      'too_many','duplicate','unknown','bad_create'
+      'too_many','duplicate','unknown','bad_create','bad_kind_param',
+      'bad_slot','bad_story_slot'
     ]);
     expect(result.restoredParticipants).toEqual(result.queuedParticipants);
   });

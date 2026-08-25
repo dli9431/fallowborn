@@ -326,6 +326,43 @@ test('active customary tenure is initialized immediately on start before the fir
     expect(timing.sameArchetype).toBe(true);
   });
 
+test('a fresh serf life can fast-forward before Play is used',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.game.uiPrefs.tipsGrandfathered = true;
+      FB.game.uiPrefs.onboardingStarted = true;
+      FB.game.uiPrefs.hideTips = true;
+      FB.game.saveUiPrefs();
+    });
+    await startWithSerfCode(page, 'TENUREC-867-serf-barcelona-f-Ada');
+    const before = await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        paused:FB.game.paused,
+        timeStarted:!!FB.state.player.flags.tut_unpause
+      };
+    });
+
+    await page.locator('#btn-skip').click();
+    await expect.poll(function () {
+      return page.evaluate(function () { return !FB.game.fastForwarding; });
+    }).toBe(true);
+
+    const after = await page.evaluate(function () {
+      return {
+        turn:FB.state.turn,
+        paused:FB.game.paused,
+        timeStarted:!!FB.state.player.flags.tut_unpause,
+        tenureStatus:FB.state.player.tenure && FB.state.player.tenure.status
+      };
+    });
+    expect(before).toEqual({ turn:0, paused:true, timeStarted:false });
+    expect(after.turn).toBeGreaterThan(before.turn);
+    expect(after.paused).toBe(true);
+    expect(after.timeStarted).toBe(true);
+    expect(after.tenureStatus).toBe('active');
+  });
+
 test('tier 1 or higher starts do not form serf tenure placeholder records',
   async function ({ page }) {
     await page.evaluate(function () { FB.startProgression.noteTier(1); });

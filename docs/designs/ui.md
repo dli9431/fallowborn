@@ -150,8 +150,11 @@ The desktop Deeds panel has its own two-stage keyboard layer. `1` selects Daily 
 `2`–`6` select Work & Wealth, Life & Family, Faith & Community, Rank & Realm, and War &
 Diplomacy respectively. Selection opens a closed category, scrolls its heading to the top of
 the panel, focuses and highlights it, and assigns `Q W E / A S D / Z X C` to its first nine
-rendered focuses or deeds. Pressing the active section's number again collapses it; its next
-press reopens it. Daily Focus is the active, expanded section by default when a life opens on
+rendered focuses or deeds. Taking a focus or deed never changes this keyboard selection merely
+because its button belongs to another section. By default, pressing the active section's number
+again leaves it open. Desktop Settings offers a persistent opt-in that makes a repeated active
+section key collapse the section and a later press reopen it. Daily Focus is the active,
+expanded section by default when a life opens on
 desktop, so its letter badges and shortcuts are present from the panel's first render rather
 than appearing after the first click. Touch layouts have no default keyboard section. If a
 section extends beyond nine items, subsequent items are

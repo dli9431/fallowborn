@@ -1225,7 +1225,9 @@ FBDATA.currency = {
 /* Game balance knobs — modders welcome */
 FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,
-  freedomCost: 100, landPlotCost: 120, landPlotYield: 0.6,
+  freedomCost: 100, freedomSpouseFactor: 0.50,
+  freedomDescendantFactor: 0.25,
+  landPlotCost: 120, landPlotYield: 0.6,
   serfAdvocacyStanding:40, serfAdvocacyBonus:10,
   serfNeighborConsequenceDays:90,
   serfFlightFriendChance:0.65, serfFlightRivalChance:0.35,

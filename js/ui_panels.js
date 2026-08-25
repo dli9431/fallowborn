@@ -208,8 +208,10 @@ window.FB = window.FB || {};
     const id = index === 0 ? 'focus' : ACTION_GROUPS[index - 1].id;
     const header = box.querySelector('[data-action-section="' + id + '"]');
     if (!header) return true;
+    const repeatToggles = !!(FB.game && FB.game.uiPrefs &&
+      FB.game.uiPrefs.repeatDeedSectionHotkeys);
     if (header.getAttribute('aria-expanded') === 'false' ||
-        activeActionSection === id) {
+        (repeatToggles && activeActionSection === id)) {
       header.click();
     } else {
       setActiveActionSection(id);
@@ -1213,7 +1215,6 @@ window.FB = window.FB || {};
         btn.innerHTML = shortcutHintFor('action:' + item.a.id) + esc(label);
         (function (id) {
           btn.addEventListener('click', function () {
-            setActiveActionSection(groupId);
             UI._gmModalAction = id;
             UI._gmModalTarget = 'action:' + id;
             FB.runInstant(FB.state, id);
@@ -1332,7 +1333,6 @@ window.FB = window.FB || {};
         (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label'));
       (function (id) {
         btn.addEventListener('click', function () {
-          setActiveActionSection('focus');
           FB.setFocus(FB.state, id);
         });
       })(f.id);
@@ -1602,7 +1602,7 @@ window.FB = window.FB || {};
     if (s.player.tier === 0) {
       return '<div class="progressnote path-hint">🧭 ' + esc(FB.T(
         'Path: save {money:gold} to buy freedom outright, or reach +20 Standing with your lord and petition for exact terms.',
-        { gold: FB.freedomPurchasePrice() })) + '</div>';
+        { gold: FB.freedomPurchasePrice(s) })) + '</div>';
     }
     if (s.player.tier === 1) {
       const cluster = FB.largestLandCluster(s);
@@ -2485,15 +2485,16 @@ window.FB = window.FB || {};
           !s.chars[freedomLordId].dead ? s.chars[freedomLordId] : null;
         const freedomLordStanding = freedomLord
           ? FB.standingOf(s, { kind:'character', id:freedomLord.id }) : 0;
+        const freedomQuote = FB.freedomPurchaseQuote(s);
         const purchaseBlocked = s.player.freedomOffer &&
           s.player.freedomOffer.status === 'service'
           ? FB.T('Final service is already underway.')
           : (!freedomHead || freedomHead.dead ||
               FB.ageOf(freedomHead, s.date.year) < 16
             ? FB.T('You can do this when you come of age at 16.')
-            : (s.player.gold < FB.freedomPurchasePrice()
+            : (s.player.gold < freedomQuote.price
             ? FB.T('Requires {money:price}; you have {money:gold}.', {
-              price:FB.freedomPurchasePrice(),
+              price:freedomQuote.price,
               gold:Math.floor(s.player.gold)
             })
             : (!freedomLord
@@ -2504,8 +2505,10 @@ window.FB = window.FB || {};
         h += '<div class="freedom-routes" data-freedom-routes>' +
           '<div class="panelh">' + esc(FB.T('Routes to Freedom')) + '</div>' +
           kv('Buy freedom outright', esc(FB.T('{money:price}', {
-            price:FB.freedomPurchasePrice()
+            price:freedomQuote.price
           }))) +
+          '<p class="adesc" data-freedom-family-price>' +
+            esc(FB.freedomPurchaseBreakdown(s, freedomQuote)) + '</p>' +
           '<p class="adesc">' + esc(purchaseBlocked) + '</p>' +
           (petition && petition.lord
             ? kv('Standing with current lord', esc(FB.T('{standing} (petition at +{threshold})', {
@@ -2522,6 +2525,14 @@ window.FB = window.FB || {};
               kv('Saved price', esc(FB.T('{money:price}', {
                 price:offer.price
               }))) + '</div>' +
+            (offer.familyPricing
+              ? '<p class="adesc" data-freedom-offer-family-price>' +
+                esc(FB.T(
+                  'Standing terms were applied to this saved family base. {breakdown}', {
+                    breakdown:FB.freedomPurchaseBreakdown(
+                      s, offer.familyPricing)
+                  })) +
+                '</p>' : '') +
             '<div data-freedom-offer-service>' +
               kv('Final service', esc(offerService)) + '</div>' +
             '<div data-freedom-offer-expiry>' +

@@ -13,6 +13,7 @@ dependsOnRuntime(__filename, [
   'js/i18n.js',
   'js/main.js',
   'js/messages.js',
+  'js/model.js',
   'js/save.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
@@ -192,6 +193,138 @@ test('freedom terms validate and Standing deterministically freezes exact offers
     });
   });
 
+test('freedom prices the living family and freezes that family in negotiated terms',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const me = s.chars[p.charId];
+      const spouse = FB.makeCharacter(s, {
+        name:'Resident Spouse', sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 28, station:0, traitsN:0,
+        dyn:me.dyn
+      });
+      me.spouseId = spouse.id;
+      spouse.spouseId = me.id;
+      function child(name, age) {
+        const c = FB.makeCharacter(s, {
+          name:name, sex:'f', culture:me.culture, religion:me.religion,
+          born:s.date.year - age, station:0, traitsN:0, dyn:me.dyn,
+          fatherId:me.sex === 'm' ? me.id : spouse.id,
+          motherId:me.sex === 'f' ? me.id : spouse.id
+        });
+        me.childrenIds.push(c.id);
+        spouse.childrenIds.push(c.id);
+        return c;
+      }
+      const separateChild = child('Married Child', 18);
+      child('Resident Child', 10);
+      const separateSpouse = FB.makeCharacter(s, {
+        name:'Separate Spouse', sex:'m', culture:me.culture,
+        religion:me.religion, born:s.date.year - 20,
+        station:0, traitsN:0
+      });
+      separateChild.spouseId = separateSpouse.id;
+      separateSpouse.spouseId = separateChild.id;
+      const grandchild = FB.makeCharacter(s, {
+        name:'Living Grandchild', sex:'m', culture:me.culture,
+        religion:me.religion, born:s.date.year - 1,
+        station:0, traitsN:0, dyn:me.dyn,
+        motherId:separateChild.id, fatherId:separateSpouse.id
+      });
+      separateChild.childrenIds.push(grandchild.id);
+      separateSpouse.childrenIds.push(grandchild.id);
+
+      const originalCost = FBDATA.balance.freedomCost;
+      FBDATA.balance.freedomCost = 101;
+      const rounded = FB.freedomPurchaseQuote(s);
+      FBDATA.balance.freedomCost = originalCost;
+      const initial = FB.freedomPurchaseQuote(s);
+      const lord = FB.getRole(s, 'lord', true);
+      const target = { kind:'character', id:lord.id };
+      FB.adjustStanding(s, target, 40 - FB.standingOf(s, target),
+        'test:household_freedom');
+      const offer = FB.createFreedomOffer(s, 'petition');
+      const saved = {
+        baseCost:offer.baseCost,
+        price:offer.price,
+        headCost:offer.headCost,
+        spouseCount:offer.spouseCount,
+        descendantCount:offer.descendantCount,
+        familySize:offer.familySize
+      };
+      child('Later Child', 1);
+      const current = FB.freedomPurchaseQuote(s);
+      const view = FB.freedomOfferView(s);
+      const malformed = JSON.parse(JSON.stringify(offer));
+      malformed.descendantCount++;
+      const malformedValid = FB.freedomOfferSemanticsValid(malformed);
+      const buyFreedom = FB.instants.filter(function (deed) {
+        return deed.id === 'buy_freedom';
+      })[0];
+      p.gold = current.price - 1;
+      const blocked = buyFreedom.can(s);
+      p.gold = current.price;
+      const goldBefore = p.gold;
+      const resolved = buyFreedom.run(s);
+      return {
+        rounded:rounded,
+        initial:initial,
+        saved:saved,
+        current:current,
+        viewPricing:view.familyPricing,
+        malformedValid:malformedValid,
+        blocked:blocked,
+        resolved:!!resolved,
+        charged:goldBefore - p.gold,
+        recordedPrice:p.familyFreedom.first.price
+      };
+    });
+
+    expect(result.rounded).toEqual({
+      headCost:101,
+      spouseCount:1,
+      spouseUnitCost:51,
+      descendantCount:3,
+      descendantUnitCost:26,
+      familySize:5,
+      price:230
+    });
+    expect(result.initial).toEqual({
+      headCost:100,
+      spouseCount:1,
+      spouseUnitCost:50,
+      descendantCount:3,
+      descendantUnitCost:25,
+      familySize:5,
+      price:225
+    });
+    expect(result.saved).toEqual({
+      baseCost:225,
+      price:169,
+      headCost:100,
+      spouseCount:1,
+      descendantCount:3,
+      familySize:5
+    });
+    expect(result.current).toEqual({
+      headCost:100,
+      spouseCount:1,
+      spouseUnitCost:50,
+      descendantCount:4,
+      descendantUnitCost:25,
+      familySize:6,
+      price:250
+    });
+    expect(result.viewPricing).toEqual(result.initial);
+    expect(result.malformedValid).toBe(false);
+    expect(result.blocked).toContain('Not enough money');
+    expect(result.resolved).toBe(true);
+    expect(result.charged).toBe(250);
+    expect(result.recordedPrice).toBe(250);
+  });
+
 test('purchase uses the shared resolver once while a generic rank change creates no history',
   async function ({ page }) {
     const result = await page.evaluate(function () {
@@ -206,7 +339,7 @@ test('purchase uses the shared resolver once while a generic rank change creates
       const target = { kind:'character', id:lord.id };
       FB.adjustStanding(s, target, 0 - FB.standingOf(s, target),
         'test:purchase');
-      p.gold = FBDATA.balance.freedomCost + 20;
+      p.gold = FB.freedomPurchasePrice(s) + 20;
       const before = {
         gold:p.gold, prestige:p.prestige, piety:p.piety,
         log:s.log.length, rng:JSON.stringify(FB.getRngState())
@@ -585,6 +718,14 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     const record = await page.evaluate(function () {
       const s = FB.state;
       const p = s.player;
+      const me = s.chars[p.charId];
+      const spouse = FB.makeCharacter(s, {
+        name:'Quoted Spouse', sex:me.sex === 'm' ? 'f' : 'm',
+        culture:me.culture, religion:me.religion,
+        born:s.date.year - 28, station:0, traitsN:0, dyn:me.dyn
+      });
+      me.spouseId = spouse.id;
+      spouse.spouseId = me.id;
       const lord = FB.getRole(s, 'lord', true);
       const target = { kind:'character', id:lord.id };
       FB.adjustStanding(s, target, 40 - FB.standingOf(s, target),
@@ -606,8 +747,12 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     expect(record.wrapper).toBe(3);
     expect(record.restored).toEqual(record.offer);
     await expect(page.locator('[data-freedom-routes]')).toBeVisible();
+    await expect(page.locator('[data-freedom-family-price]'))
+      .toContainText('spouse shares 1 × 50');
     await expect(page.locator('[data-freedom-offer-price]'))
-      .toContainText('75');
+      .toContainText('113');
+    await expect(page.locator('[data-freedom-offer-family-price]'))
+      .toContainText('head 100');
     await expect(page.locator('[data-freedom-offer-service]'))
       .toContainText('none');
     await expect(page.locator('[data-freedom-offer-expiry]')).toBeVisible();
@@ -615,6 +760,8 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
     await page.locator('#rank-petition-freedom').click();
     await expect(page.getByRole('heading', { name:'Terms of freedom' }))
       .toBeVisible();
+    await expect(page.locator('[data-freedom-offer-family-price]'))
+      .toContainText('spouse shares 1 × 50');
     await expect(page.locator('#freedom-offer-accept')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);

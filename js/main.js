@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.157.0';
+  FB.VERSION = '1.158.0';
   FB.CHANGELOG = [
+    { v: '1.158.0', date: '2026-08-25', changes: [
+      'Freedom purchases now account for the living family being released, and saved offers preserve that household price.',
+      'Deeds hotkeys keep their selected section unless repeat-to-toggle is enabled in Settings, and fast-forward now safely starts a fresh paused game.'
+    ] },
     { v: '1.157.0', date: '2026-08-25', changes: [
       'Serf manor and village events now reuse named local people across recurring stories, and trusted stewards or priests can support a household’s freedom petition.'
     ] },
@@ -2827,6 +2831,12 @@ window.FB = window.FB || {};
   const FAST_FORWARD_MAX_DAYS_PER_FRAME = 2;
   G.fastForwarding = false;
 
+  function notePlayerTimeStarted() {
+    if (FB.state && FB.state.player && FB.state.player.flags && !G.observe) {
+      FB.state.player.flags.tut_unpause = 1;
+    }
+  }
+
   G.skipAhead = function () {
     if (G.fastForwarding ||
         (FB.ui && FB.ui.coachmarkOpen && FB.ui.coachmarkOpen())) return;
@@ -2835,6 +2845,7 @@ window.FB = window.FB || {};
        by a coachmark remains distinguishable and can still stop the skip. */
     G.fastForwarding = true;
     G.paused = false;
+    notePlayerTimeStarted();
 
     let daysLeft = 92;
     function finishFastForward() {
@@ -2915,6 +2926,7 @@ window.FB = window.FB || {};
     musicOfflineBanks:{},
     musicOfflineFallback:null,
     musicOfflineAll:false,
+    repeatDeedSectionHotkeys:false,
     actionBindings:{ q:'action:livelihoods' }
   };
   let storedTipsLayer = false;
@@ -2985,6 +2997,8 @@ window.FB = window.FB || {};
         G.uiPrefs.musicOfflineFallback = storedUiPrefs.musicOfflineFallback;
       }
       G.uiPrefs.musicOfflineAll = !!storedUiPrefs.musicOfflineAll;
+      G.uiPrefs.repeatDeedSectionHotkeys =
+        !!storedUiPrefs.repeatDeedSectionHotkeys;
       if (storedUiPrefs.actionBindings &&
           typeof storedUiPrefs.actionBindings === 'object') {
         G.uiPrefs.actionBindings = {};
@@ -3356,10 +3370,7 @@ window.FB = window.FB || {};
 
   G.setPaused = function (v) {
     G.paused = !!v;
-    if (!v && FB.state && FB.state.player && FB.state.player.flags &&
-        !G.observe) {
-      FB.state.player.flags.tut_unpause = 1; // First steps: let the days flow
-    }
+    if (!v) notePlayerTimeStarted(); // First steps: let the days flow
     if (FB.state && FB.ui && FB.ui.refresh) FB.ui.refresh();
   };
   G.togglePause = function () { G.setPaused(!G.paused); };

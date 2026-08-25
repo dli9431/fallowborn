@@ -200,7 +200,12 @@ A JSON mod is one object with any of these keys:
   "titles":    { "christian": ["Serf", "..."], "christian_f": ["Serf", "..."] },
   "papacy":    { ...complete Catholic Papacy definition... },
   "currency":  { "id": "sterling", "label": "Sterling", "icon": "£", ... },
-  "balance":   { "freedomCost": 30, "coinageSymbol": "£" },
+  "balance":   {
+    "freedomCost": 30,
+    "freedomSpouseFactor": 0.5,
+    "freedomDescendantFactor": 0.25,
+    "coinageSymbol": "£"
+  },
   "land": [ ... ], "seas": [ ... ], "rivers": [ ... ], "bounds": { ... }
 }
 ```
@@ -213,6 +218,12 @@ The listed keys are the complete public top-level runtime-mod API. An unrecogniz
 including a generated-only table or internal compatibility alias, rejects that mod
 before any of its data mutates `FBDATA`. The validated configuration records below
 also reject unknown fields and cross-references at application time.
+
+`balance.freedomCost` is the household head's direct-purchase share. Each living
+spouse adds `freedomSpouseFactor` times that share and every living descendant adds
+`freedomDescendantFactor` times it; every share rounds up separately. Negotiated
+freedom terms snapshot the resulting family total before applying their Standing
+factor. Married descendants remain included.
 
 `bookmarks` is an atomic replacement table. Each keyed value replaces that complete
 start world; bookmark definitions do not merge by province or realm. The older
@@ -1173,7 +1184,8 @@ An event may additionally declare at most four exact character participants:
 
 Each participant record accepts only `slot`, `source`, `role`, `storyId`, `storySlot`,
 `required`, `create`, `createFallback`, `authorityRole`, `sameHome`, `allowDead`, and
-`kindParam`. Slots are unique lowercase ASCII identifiers. Sources are `role`,
+`kindParam`. Slots are unique ASCII identifiers that start with a lowercase letter; slots,
+`storySlot`, and `kindParam` context keys may use lower camel case or underscores. Sources are `role`,
 `local_neighbor`, `local_witness`, `flight_contact`, `story`, and `context`. Role sources
 allow `lord`, `steward`, `priest`, `friend`, `rival`, and `notable`; creation is limited to
 the local `lord`, `steward`, `priest`, or `notable`. `story` requires `storyId` and may map
