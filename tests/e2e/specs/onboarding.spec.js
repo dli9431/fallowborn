@@ -1011,23 +1011,39 @@ test('unlanded rank details modal shows settlement, county ruler, customary tenu
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
   });
 
-test('Station & home modal renders all four archetypes into DOM with exact duty counts and rights',
+test('Station & home modal renders all seven archetypes with contextual work, exact duty counts, and rights',
   async function ({ page }) {
+    await page.setViewportSize({ width:390, height:844 });
     await startDeterministicGame(page);
 
     const archetypes = [
       { id:'latin_manorial', title:'Manorial customary tenure', dutyCount:4,
         culture:'english', faith:'catholic', terrain:'farmland', dev0:5, kind:'village',
-        rights:['gleaning_after_harvest'], nearest:'Boon harvest', pending:true },
+        rights:['gleaning_after_harvest'], nearest:'Boon harvest', pending:true,
+        work:'Tend strips and serve the demesne' },
       { id:'irrigated_fellah', title:'Irrigated fellah tenure', dutyCount:4,
         culture:'arabic', faith:'sunni', terrain:'farmland', dev0:6, kind:'village',
-        rights:['irrigation_turn'], nearest:'Crop-share delivery' },
+        rights:['irrigation_turn'], nearest:'Crop-share delivery', work:'Tend fields and waterworks' },
+      { id:'norse_coastal_service', title:'Coastal household-service tenure', dutyCount:3,
+        culture:'norse', faith:'norse_pagan', terrain:'farmland', dev0:4, kind:'town',
+        coastal:true, bookmarkId:'867', rights:['customary_shore_landing'],
+        nearest:'Seasonal catch share', work:'Work shore, boats, and transport' },
+      { id:'pastoral_steppe', title:'Pastoral dependent tenure', dutyCount:3,
+        culture:'magyar', faith:'tengri', terrain:'steppe', dev0:3, kind:'village',
+        coastal:false, bookmarkId:'867', rights:['customary_grazing_turn'],
+        nearest:'Pasture due', work:'Tend the household herds' },
+      { id:'woodland_dependence', title:'Woodland customary tenure', dutyCount:4,
+        culture:'slavic', faith:'slavic_pagan', terrain:'forest', dev0:3, kind:'village',
+        coastal:false, bookmarkId:'1066', rights:['storm_fallen_wood', 'seasonal_common_grazing'],
+        nearest:'Woodland mast due', work:'Work woodland and clearings' },
       { id:'pagan_household_service', title:'Household-service tenure', dutyCount:3,
-        culture:'slavic', faith:'slavic_pagan', terrain:'forest', dev0:2, kind:'village',
-        rights:[], nearest:'Master’s harvest' },
+        culture:'norse', faith:'norse_pagan', terrain:'forest', dev0:2, kind:'village',
+        coastal:false, bookmarkId:'867', rights:[], nearest:'Master’s harvest',
+        work:'Serve the master’s household' },
       { id:'dependent_farming', title:'Dependent farming tenure', dutyCount:2,
         culture:'khazar', faith:'jewish', terrain:'steppe', dev0:1, kind:'town',
-        rights:[], nearest:'Seasonal harvest' }
+        coastal:false, bookmarkId:'867', rights:[], nearest:'Seasonal harvest',
+        work:'Work the household holding' }
     ];
 
     for (const arch of archetypes) {
@@ -1038,6 +1054,7 @@ test('Station & home modal renders all four archetypes into DOM with exact duty 
         const res = FB.selectSerfTenureArchetype({
           provinceId:prov, settlementIndex:sett, culture:fixture.culture,
           faith:fixture.faith, terrain:fixture.terrain, dev0:fixture.dev0,
+          coastal:!!fixture.coastal, bookmarkId:fixture.bookmarkId,
           settlementKind:fixture.kind, state:FB.state
         });
         if (res.archetype.id !== fixture.id) throw new Error('Unexpected tenure archetype.');
@@ -1074,6 +1091,9 @@ test('Station & home modal renders all four archetypes into DOM with exact duty 
 
       await expect(page.locator('#gm-body [data-tenure-summary]')).toBeVisible();
       await expect(page.locator('#gm-body .tenure-archetype-name')).toContainText(arch.title);
+      await expect(page.locator('#gm-body [data-tenure-work]')).toBeVisible();
+      await expect(page.locator('#gm-body .tenure-work-name')).toContainText(arch.work);
+      await expect(page.locator('#gm-body [data-tenure-work-description]')).not.toBeEmpty();
       await expect(page.locator('#gm-body [data-tenure-duty]')).toHaveCount(arch.dutyCount);
       await expect(page.locator('#gm-body [data-tenure-next-due]')).toContainText(arch.nearest);
       if (arch.rights.length) {
@@ -1086,6 +1106,10 @@ test('Station & home modal renders all four archetypes into DOM with exact duty 
       }
       await expect(page.locator('#gm-body [data-tenure-conditional]'))
         .toHaveCount(arch.pending ? 1 : 0);
+      const hasHorizontalOverflow = await page.locator('#gm-body').evaluate(function (element) {
+        return element.scrollWidth > element.clientWidth + 1;
+      });
+      expect(hasHorizontalOverflow).toBe(false);
       await page.locator('#rank-details-close').click();
     }
   });
@@ -1111,8 +1135,8 @@ test('Station & home modal renders English and an injected test locale without u
     expect(englishText.hasRawIds).toBe(false);
     await page.locator('#rank-details-close').click();
 
-    // 2. Load the real Preview-locale path, inject two exact records before
-    // activation, and prove both UI and tenure keys are consumed.
+    // 2. Load the real Preview-locale path, inject exact records before
+    // activation, and prove archetype, work, duty, and right keys are consumed.
     var localized = await page.evaluate(function () {
       return new Promise(function (resolve) {
         localStorage.setItem('fb_lang', 'fr');
@@ -1122,26 +1146,95 @@ test('Station & home modal renders English and an injected test locale without u
             text:'Statut et foyer',
             hash:FB.i18nHash({ text:'Station & home' })
           };
-          catalog.entries.tenure_archetype_latin_manorial_name = {
-            text:'Tenure coutumière seigneuriale',
-            hash:FB.i18nHash({ text:'Manorial customary tenure' })
+          Object.keys(FBDATA.tenureArchetypes).forEach(function (archetypeId) {
+            var definition = FBDATA.tenureArchetypes[archetypeId];
+            catalog.entries[definition.nameKey] = {
+              text:'Tenure ' + archetypeId,
+              hash:FB.i18nHash({ text:definition.name })
+            };
+            catalog.entries[definition.summaryKey] = {
+              text:'Résumé ' + archetypeId,
+              hash:FB.i18nHash({ text:definition.desc })
+            };
+            catalog.entries[definition.workLabelKey] = {
+              text:'Travail ' + archetypeId,
+              hash:FB.i18nHash({ text:definition.workLabel })
+            };
+            catalog.entries[definition.workDescriptionKey] = {
+              text:'Description ' + archetypeId,
+              hash:FB.i18nHash({ text:definition.workDescription })
+            };
+          });
+          catalog.entries['tenureDuty.herd_service.name.default'] = {
+            text:'Service des troupeaux',
+            hash:FB.i18nHash({ text:FBDATA.tenureDuties.herd_service.name })
+          };
+          catalog.entries['tenureRight.customary_grazing_turn.name.default'] = {
+            text:'Tour de pâturage attribué',
+            hash:FB.i18nHash({ text:FBDATA.tenureRights.customary_grazing_turn.name })
+          };
+          var regionalEvent = FB.eventById('serf_weekwork_tally');
+          function translateForm(value, key) {
+            if (typeof value === 'string') {
+              return key === 'select' || key === 'param' ? value : 'Essai ' + value;
+            }
+            var translated = {};
+            Object.keys(value || {}).forEach(function (childKey) {
+              translated[childKey] = translateForm(value[childKey], childKey);
+            });
+            return translated;
+          }
+          catalog.entries['event.serf_weekwork_tally.title.default'] = {
+            forms:translateForm(regionalEvent.title.forms, 'forms'),
+            hash:FB.i18nHash(regionalEvent.title)
           };
           FB.finalizeLocale(loaded);
           FB.ui.showRankDetails();
           var body = document.getElementById('gm-body');
           var heading = document.getElementById('gm-title');
+          var workTranslations = Object.keys(FBDATA.tenureArchetypes).map(function (archetypeId) {
+            var definition = FBDATA.tenureArchetypes[archetypeId];
+            return {
+              id:archetypeId,
+              name:FB.renderKey(definition.nameKey, definition.name),
+              summary:FB.renderKey(definition.summaryKey, definition.desc),
+              work:FB.renderKey(definition.workLabelKey, definition.workLabel),
+              description:FB.renderKey(definition.workDescriptionKey, definition.workDescription)
+            };
+          });
           localStorage.setItem('fb_lang', 'en');
           resolve({
             locale:FB.locale,
             heading:heading ? heading.textContent : '',
-            text:body ? body.innerText : ''
+            text:body ? body.innerText : '',
+            workTranslations:workTranslations,
+            regionalEvent:FB.eventText(FB.state, FB.state.player.charId,
+              regionalEvent, 'title', {
+                dutyId:'herd_service', archetypeId:'pastoral_steppe',
+                tenureArchetypeId:'pastoral_steppe'
+              }),
+            duty:FB.dataText(FB.state, FB.state.player.charId, 'tenureDuty',
+              'herd_service', FBDATA.tenureDuties.herd_service, 'name'),
+            right:FB.dataText(FB.state, FB.state.player.charId, 'tenureRight',
+              'customary_grazing_turn', FBDATA.tenureRights.customary_grazing_turn, 'name')
           });
         });
       });
     });
     expect(localized.locale).toBe('fr');
     expect(localized.heading).toContain('Statut et foyer');
-    expect(localized.text).toContain('Tenure coutumière seigneuriale');
+    expect(localized.text).toContain('Tenure latin_manorial');
+    expect(localized.text).toContain('Travail latin_manorial');
+    expect(localized.workTranslations).toHaveLength(7);
+    localized.workTranslations.forEach(function (entry) {
+      expect(entry.name).toBe('Tenure ' + entry.id);
+      expect(entry.summary).toBe('Résumé ' + entry.id);
+      expect(entry.work).toBe('Travail ' + entry.id);
+      expect(entry.description).toBe('Description ' + entry.id);
+    });
+    expect(localized.duty).toBe('Service des troupeaux');
+    expect(localized.right).toBe('Tour de pâturage attribué');
+    expect(localized.regionalEvent).toContain('Essai Another Turn with the Herds');
     await page.locator('#rank-details-close').click();
   });
 

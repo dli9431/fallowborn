@@ -4375,8 +4375,44 @@ window.FB = window.FB || {};
     return out;
   };
 
+  function snapshotTenureAwareContext(state, ev, ctx) {
+    if (!ev || !ev.tenureAware) return ctx;
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    if (!tenure) return ctx;
+    if (ctx.tenureFormedTurn === undefined) {
+      ctx.tenureFormedTurn = tenure.formedTurn;
+    }
+    if (ctx.tenureArchetypeId === undefined) {
+      ctx.tenureArchetypeId = tenure.archetypeId;
+    }
+    if (ctx.archetypeId === undefined) ctx.archetypeId = tenure.archetypeId;
+    if (ctx.tenureProvinceId === undefined) {
+      ctx.tenureProvinceId = tenure.provinceId;
+    }
+    if (ctx.tenureSettlement === undefined) {
+      ctx.tenureSettlement = tenure.settlement;
+    }
+    if (ctx.dutyId && ctx.tenureVariantId === undefined) {
+      ctx.tenureVariantId = tenure.archetypeId + ':' + ctx.dutyId;
+    }
+    return ctx;
+  }
+
+  function tenureAwareContextStillValid(state, ev, ctx) {
+    if (!ev || !ev.tenureAware || !ctx ||
+        ctx.tenureFormedTurn === undefined) return true;
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(state);
+    if (!tenure || ctx.protagonistId !== state.player.charId) return false;
+    if (ctx.tenureFormedTurn !== tenure.formedTurn ||
+        ctx.tenureArchetypeId !== tenure.archetypeId ||
+        ctx.tenureProvinceId !== tenure.provinceId ||
+        ctx.tenureSettlement !== tenure.settlement) return false;
+    return true;
+  }
+
   FB.eventContextFor = function (state, ev, ctx) {
     const out = FB.eventContext(state, ctx);
+    snapshotTenureAwareContext(state, ev, out);
     const bound = FB.bindEventParticipants(state, ev, out);
     if (!bound || !FB.eventParticipantsStillValid(state, ev, bound)) return false;
     return bound;
@@ -4393,6 +4429,7 @@ window.FB = window.FB || {};
         'protagonistId','locationId']) {
       if (ctx[key] === undefined) ctx[key] = normalized[key];
     }
+    snapshotTenureAwareContext(state, ev, ctx);
     if (!ev || !ev.participants || !ev.participants.length) return ctx;
     return FB.bindEventParticipants(state, ev, ctx);
   };
@@ -4422,6 +4459,7 @@ window.FB = window.FB || {};
   FB.eventContextStillValid = function (state, ev, ctx) {
     if (!ev) return false;
     if (!FB.eventParticipantsStillValid(state, ev, ctx || {})) return false;
+    if (!tenureAwareContextStillValid(state, ev, ctx || {})) return false;
     if (ev.contextValidator) {
       const validator = FB.fns && FB.fns[ev.contextValidator];
       if (!validator || !validator(state, ctx || {})) return false;
@@ -4774,6 +4812,27 @@ window.FB = window.FB || {};
     const knownSettlementKinds = ['village', 'town', 'castle', 'monastery', 'city', 'camp'];
     const knownTraditions = FBDATA.cultureTraditions ? Object.keys(FBDATA.cultureTraditions) : [];
     const knownFaithAncestors = ['catholic', 'orthodox', 'muslim', 'pagan', 'sunni', 'shia', 'jewish', 'tengri', 'christian'];
+    const knownBookmarks = FBDATA.bookmarks ? Object.keys(FBDATA.bookmarks) : [];
+    const knownCultures = FBDATA.cultures ? Object.keys(FBDATA.cultures) : [];
+    const knownProvinceIds = [];
+    for (let b = 0; b < knownBookmarks.length; b++) {
+      const bookmark = FBDATA.bookmarks[knownBookmarks[b]];
+      const provinces = (bookmark && bookmark.provinces) || {};
+      for (const provinceKey in provinces) {
+        if (!Object.prototype.hasOwnProperty.call(provinces, provinceKey)) continue;
+        const province = provinces[provinceKey];
+        const provinceId = province && province.id || provinceKey;
+        if (provinceId && knownProvinceIds.indexOf(provinceId) < 0) {
+          knownProvinceIds.push(provinceId);
+        }
+      }
+    }
+    const selectorFields = {
+      bookmarksAny:1, culturesAny:1, faithAncestor:1,
+      traditionsAny:1, provinceIdsAny:1, terrainAny:1,
+      coastal:1, settlementKindsAny:1, dev0Min:1, dev0Max:1,
+      minDev0:1
+    };
 
     for (const dutyKey in dutiesCatalogue) {
       if (!Object.prototype.hasOwnProperty.call(dutiesCatalogue, dutyKey)) continue;
@@ -4816,41 +4875,85 @@ window.FB = window.FB || {};
       const sel = arch.selector;
       if (!sel || typeof sel !== 'object') throw new Error('Archetype ' + archKey + ' selector must be an object.');
 
-      const hasConstraints = !!(
-        (sel.faithAncestor && sel.faithAncestor.length) ||
-        (sel.traditionsAny && sel.traditionsAny.length) ||
-        (sel.terrainAny && sel.terrainAny.length) ||
-        (sel.settlementKindsAny && sel.settlementKindsAny.length) ||
-        sel.minDev0 !== undefined
-      );
+      for (const selectorField in sel) {
+        if (!selectorFields[selectorField]) {
+          throw new Error('Archetype ' + archKey + ' selector has unknown field ' + selectorField + '.');
+        }
+      }
+
+      const hasConstraints = Object.keys(sel).length > 0;
       if (arch.priority === 0 && !hasConstraints) unconditionalFallbackCount++;
+
+      const arraySelectors = [
+        { field:'bookmarksAny', known:knownBookmarks, noun:'bookmark' },
+        { field:'culturesAny', known:knownCultures, noun:'culture' },
+        { field:'traditionsAny', known:knownTraditions, noun:'culture tradition' },
+        { field:'provinceIdsAny', known:knownProvinceIds, noun:'province' },
+        { field:'terrainAny', known:knownTerrains, noun:'terrain' },
+        { field:'settlementKindsAny', known:knownSettlementKinds, noun:'settlement kind' }
+      ];
+      for (let a = 0; a < arraySelectors.length; a++) {
+        const rule = arraySelectors[a];
+        if (sel[rule.field] === undefined) continue;
+        if (!Array.isArray(sel[rule.field]) || !sel[rule.field].length) {
+          throw new Error('Archetype ' + archKey + ' selector ' + rule.field +
+            ' must be a non-empty array.');
+        }
+        for (let v = 0; v < sel[rule.field].length; v++) {
+          const value = sel[rule.field][v];
+          if (sel[rule.field].indexOf(value) !== v) {
+            throw new Error('Archetype ' + archKey + ' selector ' + rule.field +
+              ' contains duplicate value ' + value + '.');
+          }
+          if (rule.known.length && rule.known.indexOf(value) < 0) {
+            throw new Error('Archetype ' + archKey + ' selector ' + rule.field +
+              ' names unknown ' + rule.noun + ': ' + value);
+          }
+        }
+      }
+
+      if (sel.provinceIdsAny && !sel.bookmarksAny) {
+        throw new Error('Archetype ' + archKey +
+          ' selector provinceIdsAny requires bookmarksAny.');
+      }
+      if (sel.coastal !== undefined && typeof sel.coastal !== 'boolean') {
+        throw new Error('Archetype ' + archKey + ' selector coastal must be boolean.');
+      }
+      if (sel.dev0Min !== undefined && sel.minDev0 !== undefined) {
+        throw new Error('Archetype ' + archKey +
+          ' selector may not declare both dev0Min and legacy minDev0.');
+      }
+      const minimumDev = sel.dev0Min !== undefined ? sel.dev0Min : sel.minDev0;
+      for (const devField of ['dev0Min','dev0Max','minDev0']) {
+        if (sel[devField] !== undefined &&
+            (!Number.isInteger(sel[devField]) || sel[devField] < 1 || sel[devField] > 10)) {
+          throw new Error('Archetype ' + archKey + ' selector ' + devField +
+            ' must be an integer within development 1–10.');
+        }
+      }
+      if (minimumDev !== undefined && sel.dev0Max !== undefined &&
+          minimumDev > sel.dev0Max) {
+        throw new Error('Archetype ' + archKey +
+          ' selector dev0Min may not exceed dev0Max.');
+      }
+
+      const expectedWorkLabelKey = 'tenure_work_' + archId + '_label';
+      const expectedWorkDescriptionKey = 'tenure_work_' + archId + '_desc';
+      if (arch.workLabelKey !== expectedWorkLabelKey ||
+          typeof arch.workLabel !== 'string' || !arch.workLabel) {
+        throw new Error('Archetype ' + archKey +
+          ' has unknown workLabelKey or missing workLabel.');
+      }
+      if (arch.workDescriptionKey !== expectedWorkDescriptionKey ||
+          typeof arch.workDescription !== 'string' || !arch.workDescription) {
+        throw new Error('Archetype ' + archKey +
+          ' has unknown workDescriptionKey or missing workDescription.');
+      }
 
       if (sel.faithAncestor && knownFaithAncestors.indexOf(sel.faithAncestor) < 0 &&
           !(FBDATA.religions && FBDATA.religions[sel.faithAncestor])) {
         throw new Error('Archetype ' + archKey + ' names unknown faith ancestor: ' + sel.faithAncestor);
       }
-      if (sel.traditionsAny) {
-        for (let i = 0; i < sel.traditionsAny.length; i++) {
-          if (knownTraditions.length && knownTraditions.indexOf(sel.traditionsAny[i]) < 0) {
-            throw new Error('Archetype ' + archKey + ' names unknown culture tradition: ' + sel.traditionsAny[i]);
-          }
-        }
-      }
-      if (sel.terrainAny) {
-        for (let i = 0; i < sel.terrainAny.length; i++) {
-          if (knownTerrains.indexOf(sel.terrainAny[i]) < 0) {
-            throw new Error('Archetype ' + archKey + ' names unknown terrain: ' + sel.terrainAny[i]);
-          }
-        }
-      }
-      if (sel.settlementKindsAny) {
-        for (let i = 0; i < sel.settlementKindsAny.length; i++) {
-          if (knownSettlementKinds.indexOf(sel.settlementKindsAny[i]) < 0) {
-            throw new Error('Archetype ' + archKey + ' names unknown settlement kind: ' + sel.settlementKindsAny[i]);
-          }
-        }
-      }
-
       const slots = arch.contextSlots || [];
       const seenSlotIds = {};
       for (let s = 0; s < slots.length; s++) {
@@ -4885,8 +4988,8 @@ window.FB = window.FB || {};
       }
 
       const duties = arch.duties || [];
-      if (!Array.isArray(duties) || duties.length > 4) {
-        throw new Error('Archetype ' + archKey + ' duties must be an array of at most 4 items.');
+      if (!Array.isArray(duties) || duties.length < 2 || duties.length > 4) {
+        throw new Error('Archetype ' + archKey + ' duties must be an array of 2 to 4 items.');
       }
       const archDutyIds = {};
       for (let i = 0; i < duties.length; i++) {
@@ -4950,13 +5053,13 @@ window.FB = window.FB || {};
       throw new Error('Tenure catalogue must contain exactly one unconditional fallback archetype (found ' + unconditionalFallbackCount + ').');
     }
 
-    _validatedTenureCatalogue = catalogue;
+    if (catalogue === FBDATA.tenureArchetypes) {
+      _validatedTenureCatalogue = catalogue;
+    }
     return catalogue;
   };
 
-  FB.selectSerfTenureArchetype = function (context, catalogue) {
-    catalogue = catalogue || _validatedTenureCatalogue || FB.validateTenureData();
-    context = context || {};
+  function sortedTenureArchetypes(catalogue) {
     const archetypes = [];
     let declIndex = 0;
     for (const key in catalogue) {
@@ -4969,41 +5072,109 @@ window.FB = window.FB || {};
       if (pDiff !== 0) return pDiff;
       return a.declIndex - b.declIndex;
     });
+    return archetypes;
+  }
 
+  function tenureSelectorFailures(state, context, arch) {
+    const sel = arch.selector || {};
+    const failed = [];
+    const bookmarkId = context.bookmarkId || context.bookmark;
+    if (sel.bookmarksAny && sel.bookmarksAny.indexOf(bookmarkId) < 0) {
+      failed.push('bookmarksAny');
+    }
+    if (sel.culturesAny && sel.culturesAny.indexOf(context.culture) < 0) {
+      failed.push('culturesAny');
+    }
+    if (sel.faithAncestor) {
+      const matchesFaith = context.faith && state && FB.faithIsA
+        ? FB.faithIsA(context.faith, sel.faithAncestor, state)
+        : (context.faith === sel.faithAncestor ||
+          (FBDATA.religions && FBDATA.religions[context.faith] &&
+            (FBDATA.religions[context.faith].parent === sel.faithAncestor ||
+             FBDATA.religions[context.faith].group === sel.faithAncestor)));
+      if (!matchesFaith) failed.push('faithAncestor');
+    }
+    if (sel.traditionsAny) {
+      const cul = FBDATA.cultures && FBDATA.cultures[context.culture];
+      const tradition = cul ? cul.tradition : null;
+      if (!tradition || sel.traditionsAny.indexOf(tradition) < 0) {
+        failed.push('traditionsAny');
+      }
+    }
+    if (sel.provinceIdsAny && sel.provinceIdsAny.indexOf(context.provinceId) < 0) {
+      failed.push('provinceIdsAny');
+    }
+    if (sel.terrainAny && sel.terrainAny.indexOf(context.terrain) < 0) {
+      failed.push('terrainAny');
+    }
+    if (sel.coastal !== undefined &&
+        (typeof context.coastal !== 'boolean' || context.coastal !== sel.coastal)) {
+      failed.push('coastal');
+    }
+    if (sel.settlementKindsAny &&
+        sel.settlementKindsAny.indexOf(context.settlementKind) < 0) {
+      failed.push('settlementKindsAny');
+    }
+    const minimumDev = sel.dev0Min !== undefined ? sel.dev0Min : sel.minDev0;
+    const development = Number(context.dev0);
+    if (minimumDev !== undefined &&
+        (!isFinite(development) || development < minimumDev)) {
+      failed.push('dev0Min');
+    }
+    if (sel.dev0Max !== undefined &&
+        (!isFinite(development) || development > sel.dev0Max)) {
+      failed.push('dev0Max');
+    }
+    return failed;
+  }
+
+  function tenureSelectionReport(state, context, catalogue) {
+    const archetypes = sortedTenureArchetypes(catalogue);
+    const matched = [];
+    const rejected = [];
     let selected = null;
     for (let i = 0; i < archetypes.length; i++) {
       const arch = archetypes[i].arch;
-      const sel = arch.selector || {};
-      if (sel.faithAncestor) {
-        if (!context.faith) continue;
-        const matchesFaith = context.state && FB.faithIsA
-          ? FB.faithIsA(context.faith, sel.faithAncestor, context.state)
-          : (context.faith === sel.faithAncestor ||
-             (FBDATA.religions && FBDATA.religions[context.faith] &&
-              FBDATA.religions[context.faith].parent === sel.faithAncestor));
-        if (!matchesFaith) continue;
+      const failed = tenureSelectorFailures(state, context, arch);
+      if (failed.length) {
+        rejected.push({ archetypeId:arch.id, fields:failed });
+      } else {
+        matched.push(arch.id);
+        if (!selected) selected = arch;
       }
-      if (sel.traditionsAny && sel.traditionsAny.length) {
-        const cul = FBDATA.cultures && FBDATA.cultures[context.culture];
-        const tradition = cul ? cul.tradition : null;
-        if (!tradition || sel.traditionsAny.indexOf(tradition) < 0) continue;
-      }
-      if (sel.terrainAny && sel.terrainAny.length) {
-        if (sel.terrainAny.indexOf(context.terrain) < 0) continue;
-      }
-      if (sel.settlementKindsAny && sel.settlementKindsAny.length) {
-        if (sel.settlementKindsAny.indexOf(context.settlementKind) < 0) continue;
-      }
-      if (sel.minDev0 !== undefined) {
-        if ((context.dev0 || 0) < sel.minDev0) continue;
-      }
-      selected = arch;
-      break;
     }
-
     if (!selected) {
       selected = catalogue.dependent_farming || archetypes[archetypes.length - 1].arch;
     }
+    return {
+      selected:selected,
+      archetypeId:selected && selected.id,
+      matched:matched,
+      rejected:rejected
+    };
+  }
+
+  FB.serfTenureSelection = function (state, formationInput) {
+    const catalogue = _validatedTenureCatalogue || FB.validateTenureData();
+    return tenureSelectionReport(state, formationInput || {}, catalogue).selected;
+  };
+
+  FB.serfTenureSelectionReason = function (state, formationInput) {
+    const catalogue = _validatedTenureCatalogue || FB.validateTenureData();
+    const report = tenureSelectionReport(state, formationInput || {}, catalogue);
+    return {
+      archetypeId:report.archetypeId,
+      matched:report.matched.slice(),
+      rejected:report.rejected.map(function (entry) {
+        return { archetypeId:entry.archetypeId, fields:entry.fields.slice() };
+      })
+    };
+  };
+
+  FB.selectSerfTenureArchetype = function (context, catalogue) {
+    catalogue = catalogue || _validatedTenureCatalogue || FB.validateTenureData();
+    context = context || {};
+    const selected = tenureSelectionReport(context.state, context, catalogue).selected;
 
     const resolvedDuties = [];
     const slotsMap = {};
@@ -5106,6 +5277,7 @@ window.FB = window.FB || {};
       culture: culture,
       faith: faith,
       terrain: terrain,
+      coastal: !!prov.coastal,
       dev0: dev0,
       settlementKind: settlementKind,
       bookmarkId: bookmarkId,
@@ -5254,6 +5426,19 @@ window.FB = window.FB || {};
     const archetypeSummary = (archDef
       ? FB.tenureText(state, charId, 'tenureArchetype', tenure.archetypeId, archDef, 'desc', ['summaryKey', 'descKey'])
       : '') || FB.T('A household holding used by local custom in return for labor and seasonal service.');
+    let toilFocus = null;
+    for (let f = 0; f < (FB.focuses || []).length; f++) {
+      if (FB.focuses[f].id === 'toil') { toilFocus = FB.focuses[f]; break; }
+    }
+    const workLabel = FB.focusLabel && toilFocus
+      ? FB.focusLabel(state, toilFocus)
+      : (archDef ? FB.tenureText(state, charId, 'tenureArchetype',
+        tenure.archetypeId, archDef, 'workLabel', 'workLabelKey') : '');
+    const workDescription = FB.focusDescription && toilFocus
+      ? FB.focusDescription(state, toilFocus)
+      : (archDef ? FB.tenureText(state, charId, 'tenureArchetype',
+        tenure.archetypeId, archDef, 'workDescription',
+        'workDescriptionKey') : '');
 
     const settlements = FB.settlementsOf(state, tenure.provinceId);
     const homeSett = settlements[tenure.settlement] || settlements[0] || {};
@@ -5357,6 +5542,9 @@ window.FB = window.FB || {};
       archetypeId: tenure.archetypeId,
       archetypeName: archetypeName,
       archetypeSummary: archetypeSummary,
+      workLabel: workLabel || FB.T('Work the household holding'),
+      workDescription: workDescription || FB.T(
+        'Work the customary holding and meet its seasonal service.'),
       provinceId: tenure.provinceId,
       settlement: tenure.settlement,
       settlementName: settlementName,
@@ -5466,6 +5654,10 @@ window.FB = window.FB || {};
     FB.queueEvent(state, candidate.duty.eventId, {
       tenureFormedTurn: tenure.formedTurn,
       archetypeId: tenure.archetypeId,
+      tenureArchetypeId: tenure.archetypeId,
+      tenureProvinceId: tenure.provinceId,
+      tenureSettlement: tenure.settlement,
+      tenureVariantId: tenure.archetypeId + ':' + candidate.duty.id,
       dutyId: candidate.duty.id,
       duty: { $data: 'tenureDuty', id: candidate.duty.id },
       dutyName: { $data: 'tenureDuty', id: candidate.duty.id },
@@ -6325,6 +6517,14 @@ window.FB = window.FB || {};
     if (!ctx || typeof ctx !== 'object') return false;
     if (ctx.tenureFormedTurn !== tenure.formedTurn) return false;
     if (ctx.archetypeId && ctx.archetypeId !== tenure.archetypeId) return false;
+    if (ctx.tenureArchetypeId !== undefined &&
+        ctx.tenureArchetypeId !== tenure.archetypeId) return false;
+    if (ctx.tenureProvinceId !== undefined &&
+        ctx.tenureProvinceId !== tenure.provinceId) return false;
+    if (ctx.tenureSettlement !== undefined &&
+        ctx.tenureSettlement !== tenure.settlement) return false;
+    if (ctx.tenureVariantId !== undefined &&
+        ctx.tenureVariantId !== tenure.archetypeId + ':' + ctx.dutyId) return false;
 
     const homeProvId = state.player.provinceId || state.player.home;
     const settIdx = (state.player.homeSettlement !== undefined ? state.player.homeSettlement : (state.player.settlement !== undefined ? state.player.settlement : 0)) | 0;
@@ -7752,8 +7952,9 @@ window.FB = window.FB || {};
       for (let focusIndex = 0; focusIndex < (FB.focuses || []).length; focusIndex++) {
         if (FB.focuses[focusIndex].id === focusId) {
           const focusDef = FB.focuses[focusIndex];
-          focus = FB.dataText(state, state.player.charId, 'focus', focusId,
-            focusDef, 'label', {});
+          focus = FB.focusLabel ? FB.focusLabel(state, focusDef) :
+            FB.dataText(state, state.player.charId, 'focus', focusId,
+              focusDef, 'label', {});
           break;
         }
       }

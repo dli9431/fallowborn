@@ -33,6 +33,14 @@ marching into the county, and the supply drain of campaigning across it
 (`balance.terrainBattleFactors`, `terrainDefenseBonus`, `terrainMarchMult`, and
 `supplyDrainTerrain`; see [war.md](war.md)).
 
+Serf tenure formation also reads permanent-home facts from this boundary. It combines
+the bookmark province id, authored terrain and `dev0`, derived `coastal` flag, and the
+baseline saved settlement kind/slot with the protagonist household's culture and faith.
+It does not use travel location, live development, a promoted settlement kind, county
+principal identity, or the current capital. These facts select an archetype only when
+tenure is formed or explicitly replaced; later raster, controller, culture, faith,
+development, and settlement changes do not reclassify an active saved household.
+
 Principal culture is bookmark data rather than a ruler proxy. The 867 county table now
 uses distinct Occitan, Lombard, Finnic, Sámi, and Khazar cores where the older generic
 labels were too broad; 1066 derivation supplies Norman Normandy and Rus realm counties.

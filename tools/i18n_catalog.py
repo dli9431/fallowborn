@@ -708,6 +708,27 @@ def extract_structured(inv: Inventory) -> None:
                         f"{namespace} {item_id}, {field}, faith branch {branch}.",
                         TOKEN_RE.findall(record["text"]),
                     )
+            if data_name == "tenureArchetypes":
+                explicit_fields = (
+                    ("nameKey", "name"),
+                    ("summaryKey", "desc"),
+                    ("workLabelKey", "workLabel"),
+                    ("workDescriptionKey", "workDescription"),
+                )
+                for key_field, source_field in explicit_fields:
+                    key_node = item.get(key_field)
+                    source_node = item.get(source_field)
+                    if (key_node is None or key_node.kind != "string" or
+                            source_node is None or source_node.kind != "string"):
+                        continue
+                    record = {"text": source_node.value}
+                    inv.add(
+                        key_node.value,
+                        record,
+                        f"{rel}:{source_node.line}",
+                        f"{namespace} {item_id}, explicit {source_field} key.",
+                        TOKEN_RE.findall(record["text"]),
+                    )
             if data_name == "religions":
                 properties = node_object(item.get("properties")) or {}
                 head = (node_object(properties.get("head")) or

@@ -15,6 +15,25 @@ protection and context validation guarantee that invalidated, stale, or relocate
 discarded without gameplay side effects or double-charging. Extraordinary burdens
 (`serf_extraordinary_tallage`, `serf_seed_grain_requisition`) remain in the random pool.
 
+The catalogue contains seven formation-time archetypes: `latin_manorial`,
+`irrigated_fellah`, `pastoral_steppe`, `woodland_dependence`,
+`norse_coastal_service`, `pagan_household_service`, and the unconditional
+`dependent_farming` fallback. `FB.serfTenureSelection` and its read-only diagnostic share
+one priority/declaration-order matcher. Selection combines household culture and faith
+with the bookmark and permanent home's baseline terrain, derived coast, `dev0`, and
+settlement; an active saved record remains authoritative until the explicit replacement
+lifecycle runs. Regional tenure has technology impact **none**: it describes baseline
+social conditions rather than unlocking a capability through research.
+
+Scheduled event context additively carries the exact tenure archetype, province,
+settlement, formed turn, duty, due turn, and composite variant id. Regional localized
+forms select from that saved identity while retaining each event's one id and exact
+requirements, choices, chances, effects, autoresolve, and advancement mechanics. Events
+whose generic prose would otherwise contradict pastoral, woodland, or shore work may set
+`tenureAware:true`; `FB.eventContextFor` snapshots the same active-tenure identity and
+expires it after rank, home, protagonist, formation, or archetype changes. Invalid context
+never falls back to generic copy and still charges the household.
+
 ## Exact local event participants
 
 An event may declare up to four ordered `participants`. `FB.eventContextFor` binds each

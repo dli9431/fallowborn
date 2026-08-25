@@ -389,7 +389,7 @@ window.FB = window.FB || {};
       if (!focus) return null;
       return {
         kind:'focus', id:id, definition:focus,
-        label:s ? dt(s, 'focus', id, focus, 'label') : FB.T(focus.label)
+        label:s && FB.focusLabel ? FB.focusLabel(s, focus) : FB.T(focus.label)
       };
     }
     return null;
@@ -450,7 +450,8 @@ window.FB = window.FB || {};
     const label = definition.kind === 'focus-family'
       ? FB.T('{family}: {focus}', {
         family:definition.label,
-        focus:dt(s, 'focus', selected.id, selected, 'label')
+        focus:FB.focusLabel ? FB.focusLabel(s, selected) :
+          dt(s, 'focus', selected.id, selected, 'label')
       }) : definition.label;
     return {
       available:true, label:label, reason:'',
@@ -736,7 +737,8 @@ window.FB = window.FB || {};
       icon:'◉',
       label:FB.T('Daily focus'),
       status:focus
-        ? dt(s, 'focus', focus.id, focus, 'label') +
+        ? (FB.focusLabel ? FB.focusLabel(s, focus) :
+          dt(s, 'focus', focus.id, focus, 'label')) +
           (travel ? ' · ' + FB.T('paused while traveling') : '')
         : FB.T('No focus selected'),
       action:travel ? FB.T('Paused') : FB.T('Change…'),
@@ -1330,7 +1332,8 @@ window.FB = window.FB || {};
       btn.setAttribute('aria-describedby', detailsId);
       btn.disabled = !item.can;
       btn.innerHTML = shortcutHintFor(focusShortcutTarget(f)) +
-        (cur ? '◉ ' : '○ ') + esc(dt(s, 'focus', f.id, f, 'label'));
+        (cur ? '◉ ' : '○ ') + esc(FB.focusLabel
+          ? FB.focusLabel(s, f) : dt(s, 'focus', f.id, f, 'label'));
       (function (id) {
         btn.addEventListener('click', function () {
           FB.setFocus(FB.state, id);
@@ -1351,7 +1354,8 @@ window.FB = window.FB || {};
       details.id = detailsId;
       details.className = 'settcard-details deed-details hidden';
       details.innerHTML = esc(FB.translateKnown(
-        item.can ? f.desc(s) : item.reason)) + focusPreviewHtml(item.preview);
+        item.can && FB.focusDescription ? FB.focusDescription(s, f) :
+          (item.can ? f.desc(s) : item.reason))) + focusPreviewHtml(item.preview);
       row.appendChild(btn);
       row.appendChild(actions);
       row.appendChild(details);
@@ -2414,6 +2418,13 @@ window.FB = window.FB || {};
                 esc(view.stewardName) + '</button>'
               : esc(view.stewardName)) +
             '</div>';
+
+          h += '<div class="tenure-work-block" data-tenure-work>' +
+            '<div class="panelh">' + esc(FB.T('Ordinary Work')) + '</div>' +
+            '<div class="tenure-work-name"><strong>' +
+              esc(view.workLabel) + '</strong></div>' +
+            '<p class="adesc" data-tenure-work-description>' +
+              esc(view.workDescription) + '</p></div>';
 
           if (view.oldCustom) {
             const witnessButton =

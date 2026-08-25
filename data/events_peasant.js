@@ -58,13 +58,18 @@ FBDATA.events.push(
   ]},
 
 /* ---------- the lord's shadow (serfs) ---------- */
-{ id:'corvee', title:'The Lord’s Due',
+{ id:'corvee', title:'The Lord’s Due', tenureAware:true,
   trigger:{ tierMax:0, chance:0.35 }, weight:10, cooldown:4,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true}
   ],
-  text:'{officer}, the manor officer, bangs on doors at dawn: {lord} requires labor — hauling stone, mending the mill-race, digging ditches.',
+  text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'{officer} calls at dawn: {lord} requires added labor moving animals, supplies, and fodder beyond the household’s ordinary turns.',
+    woodland_dependence:'{officer} calls at dawn: {lord} requires added labor cutting, clearing, and hauling beyond the household’s ordinary woodland service.',
+    norse_coastal_service:'{officer} calls at dawn: {lord} requires added labor loading, rowing, and carrying beyond the household’s ordinary shore service.',
+    other:'{officer}, the manor officer, bangs on doors at dawn: {lord} requires labor — hauling stone, mending the mill-race, digging ditches.'
+  }}},
   options:[
     { label:'Work hard and be noticed.', desc:'Sweat spent where the powerful can see it.', effects:{ health:-1, standingCharacter:{participant:'lord', amt:8}, log:'Labored on the lord’s works.' } },
     { label:'Do the least you can.', desc:'Save your strength — if {officer}’s stick stays elsewhere.', chance:0.7,
@@ -74,11 +79,14 @@ FBDATA.events.push(
   ]},
 /* ---------- customary burdens (serfs) ---------- */
 { id:'serf_boon_harvest',
-  title:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'The Lord’s Harvest First',
-    irrigated_fellah:'The Estate Harvest First',
-    pagan_household_service:'The Master’s Harvest First',
-    other:'The Customary Harvest First'
+  title:{ forms:{ select:'value', param:'dutyId', cases:{
+    seasonal_catch_share:'The Shore Share First',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'The Lord’s Harvest First',
+      irrigated_fellah:'The Estate Harvest First',
+      pagan_household_service:'The Master’s Harvest First',
+      other:'The Customary Harvest First'
+    }}
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
@@ -87,30 +95,58 @@ FBDATA.events.push(
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
     {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
   ],
-  text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Your own grain stands ripe when {officer}’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip.',
-    irrigated_fellah:'Your household fields are ready for harvest, but {officer} calls every laborer to the estate crop first. The shared ditches and storehouses must receive their {duty} before private sickles work.',
-    pagan_household_service:'The grain in your household plot is ripe when {officer} sounds the master’s horn for every hand to enter the great fields first. Custom commands that the master’s sheaves stand bound before your own are cut.',
-    other:'Your own grain stands ripe when {officer} sounds the horn. Custom summons every able hand to harvest the estate fields before sickles may touch household ground.'
+  text:{ forms:{ select:'value', param:'dutyId', cases:{
+    seasonal_catch_share:'The season’s catch is coming ashore when {officer} calls every able hand to sort, carry, and render {lord}’s customary share before household baskets are filled.',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Your own grain stands ripe when {officer}’s horn sounds. Every able hand is summoned to reap {lord}’s demesne before a sickle may touch a household strip.',
+      irrigated_fellah:'Your household fields are ready for harvest, but {officer} calls every laborer to the estate crop first. The shared ditches and storehouses must receive their {duty} before private sickles work.',
+      pagan_household_service:'The grain in your household plot is ripe when {officer} sounds the master’s horn for every hand to enter the great fields first. Custom commands that the master’s sheaves stand bound before your own are cut.',
+      other:'Your own grain stands ripe when {officer} sounds the horn. Custom summons every able hand to harvest the estate fields before sickles may touch household ground.'
+    }}
   }}},
   options:[
-    { label:'Send every hand to the demesne.', desc:'The lord’s grain comes in while yours waits under the weather.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'Send every hand to the shore work.', other:'Send every hand to the demesne.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'The authority’s share comes in while the household catch waits.', other:'The lord’s grain comes in while yours waits under the weather.'
+      }}},
       effects:{ health:-1, gold:-2, standingCharacter:{participant:'lord', amt:4} } },
-    { label:'Hire someone to answer for you. ({money:4})', require:{ goldMin:4 }, desc:'Buy back the day your own harvest needs.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'Hire someone to answer at the landing. ({money:4})', other:'Hire someone to answer for you. ({money:4})'
+      }}}, require:{ goldMin:4 }, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'Buy back the shore turn the household work needs.', other:'Buy back the day your own harvest needs.'
+      }}},
       effects:{ gold:-4 } },
-    { label:'Keep one reaper hidden at home.', desc:'One pair of hands for your field, if the tally misses them.', chance:'skill_int',
-      success:{ text:'The count tallies heads, not shadows. Your hidden reaper saves the ripest rows.', effects:{ skills:{int:1} } },
-      failure:{ text:'The missing hand is named before noon. The amercement costs more than the grain it saved.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'Keep one worker with the household baskets.', other:'Keep one reaper hidden at home.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'One pair of hands for the household share, if the shore tally misses them.', other:'One pair of hands for your field, if the tally misses them.'
+      }}}, chance:'skill_int',
+      success:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          seasonal_catch_share:'The count follows baskets, not shadows. The hidden worker saves the best of the household catch.', other:'The count tallies heads, not shadows. Your hidden reaper saves the ripest rows.'
+        }}}, effects:{ skills:{int:1} } },
+      failure:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          seasonal_catch_share:'The missing worker is named before the catch is sorted. The amercement costs more than the saved share.', other:'The missing hand is named before noon. The amercement costs more than the grain it saved.'
+        }}},
         effects:{ gold:-4, standingCharacter:{participant:'officer', amt:-8} } } },
-    { label:'Take {neighbor}’s row after your own.', desc:'Spend what strength remains so a neighbor’s grain does not spoil.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'Help sort {neighbor}’s share after your own.', other:'Take {neighbor}’s row after your own.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_catch_share:'Spend what strength remains so a neighbor’s catch does not spoil.', other:'Spend what strength remains so a neighbor’s grain does not spoil.'
+      }}},
       effects:{ health:-2, prestige:2, standingCharacter:{participant:'neighbor', amt:12} } }
   ]},
 { id:'serf_weekwork_tally',
-  title:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'A Longer Week',
-    irrigated_fellah:'The Labor Tally',
-    pagan_household_service:'The Service Roll',
-    other:'A Longer Tally'
+  title:{ forms:{ select:'value', param:'dutyId', cases:{
+    herd_service:'Another Turn with the Herds',
+    woodland_service:'Another Woodland Turn',
+    boat_service:'Another Boat-Service Turn',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'A Longer Week',
+      irrigated_fellah:'The Labor Tally',
+      pagan_household_service:'The Service Roll',
+      other:'A Longer Tally'
+    }}
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
@@ -119,20 +155,41 @@ FBDATA.events.push(
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
     {slot:'witness', source:'local_witness', required:true, createFallback:true, sameHome:true}
   ],
-  text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'{officer} measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed.',
-    irrigated_fellah:'{officer}, the estate supervisor, inspects the household plots and records an added measure of canal and field labor for {duty} beyond the customary tally.',
-    pagan_household_service:'{officer}, the master’s bailiff, inspects the household dwellings and marks another day of heavy service onto the wooden tally stick.',
-    other:'{officer}, the steward, measures every holding anew, then announces that your household owes an added day of customary labor beyond the old tally.'
+  text:{ forms:{ select:'value', param:'dutyId', cases:{
+    herd_service:'{officer} recounts the authority’s animals and announces that your household owes another turn watching, watering, and moving the herds beyond the old tally.',
+    woodland_service:'{officer} walks the clearing edge and marks another turn of cutting, maintenance, and woodland labor against your household.',
+    boat_service:'{officer} inspects the landing and marks another household turn for loading, repair, or rowing onto the service tally.',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'{officer} measures every holding anew, then announces that your household owes one more day of week-work than the old tally showed.',
+      irrigated_fellah:'{officer}, the estate supervisor, inspects the household plots and records an added measure of canal and field labor for {duty} beyond the customary tally.',
+      pagan_household_service:'{officer}, the master’s bailiff, inspects the household dwellings and marks another day of heavy service onto the wooden tally stick.',
+      other:'{officer}, the steward, measures every holding anew, then announces that your household owes an added day of customary labor beyond the old tally.'
+    }}
   }}},
   options:[
-    { label:'Give the added day.', desc:'A day for the lord is a day stolen from your own ground.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        herd_service:'Give the added herd turn.', woodland_service:'Give the added woodland turn.', boat_service:'Give the added boat-service turn.', other:'Give the added day.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        herd_service:'A day with the authority’s animals is lost from household work.', woodland_service:'A day in the woodland is lost from household work.', boat_service:'A day at the landing is lost from household work.', other:'A day for the lord is a day stolen from your own ground.'
+      }}},
       effects:{ health:-1, standingCharacter:{participant:'officer', amt:3} } },
-    { label:'Commute it into coin. ({money:3})', require:{ goldMin:3 }, desc:'Silver works even when your back does not.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        herd_service:'Commute the herd turn into coin. ({money:3})', woodland_service:'Commute the woodland turn into coin. ({money:3})', boat_service:'Commute the boat turn into coin. ({money:3})', other:'Commute it into coin. ({money:3})'
+      }}}, require:{ goldMin:3 }, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        herd_service:'Coin watches the herd when your household cannot.', woodland_service:'Coin answers the woodland tally when your back does not.', boat_service:'Coin answers the landing tally when your back does not.', other:'Silver works even when your back does not.'
+      }}},
       effects:{ gold:-3 } },
-    { label:'Call {witness}, who remembers the old tally.', desc:'Custom lives in witnesses, but stewards keep the ink.', chance:'skill_lea',
-      success:{ text:'{witness} repeats the old number. {officer} restores the missing stroke.', effects:{ prestige:3, skills:{lea:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}] } },
-      failure:{ text:'{witness}’s memory bends under {officer}’s questions. The new tally stands.', effects:{ health:-1, prestige:-3, standingCharacter:[{participant:'officer', amt:-5},{participant:'witness', amt:-3}] } } }
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        herd_service:'Call {witness}, who remembers the old herd turns.', woodland_service:'Call {witness}, who remembers the old woodland turns.', boat_service:'Call {witness}, who remembers the old boat turns.', other:'Call {witness}, who remembers the old tally.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        herd_service:'Pasture custom lives in witnesses, but officers keep the tally.', woodland_service:'Woodland custom lives in witnesses, but officers keep the tally.', boat_service:'Shore custom lives in witnesses, but officers keep the tally.', other:'Custom lives in witnesses, but stewards keep the ink.'
+      }}}, chance:'skill_lea',
+      success:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          herd_service:'{witness} repeats the old herd service. {officer} removes the added turn.', woodland_service:'{witness} repeats the old woodland service. {officer} removes the added turn.', boat_service:'{witness} repeats the old boat service. {officer} removes the added turn.', other:'{witness} repeats the old number. {officer} restores the missing stroke.'
+        }}}, effects:{ prestige:3, skills:{lea:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}] } },
+      failure:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          herd_service:'{witness}’s memory bends under {officer}’s questions. The added herd turn stands.', woodland_service:'{witness}’s memory bends under {officer}’s questions. The added woodland turn stands.', boat_service:'{witness}’s memory bends under {officer}’s questions. The added boat turn stands.', other:'{witness}’s memory bends under {officer}’s questions. The new tally stands.'
+        }}}, effects:{ health:-1, prestige:-3, standingCharacter:[{participant:'officer', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
 { id:'serf_mill_multure',
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
@@ -162,24 +219,48 @@ FBDATA.events.push(
         effects:{ gold:-5, standingCharacter:{participant:'officer', amt:-6} } } }
   ]},
 { id:'serf_pannage_due',
-  title:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Under the Oak Mast',
-    pagan_household_service:'Woodland Pasture Due',
-    other:'Pannage in the Woods'
+  title:{ forms:{ select:'value', param:'dutyId', cases:{
+    pasture_due:'The Pasture Due',
+    mast_due:'The Woodland Mast Due',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Under the Oak Mast',
+      pagan_household_service:'Woodland Pasture Due',
+      other:'Pannage in the Woods'
+    }}
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
-  text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Acorns lie thick beneath the lord’s oaks, enough to fatten every village pig. The forester waits at the wood’s edge to collect pannage before a snout crosses the ditch.',
-    pagan_household_service:'Fallen acorns and beech mast cover the master’s sacred woods. The woodsman demands the customary tribute before your swine may fatten under the trees.',
-    other:'Acorns lie thick beneath the estate oaks. The forester waits at the wood’s edge to collect the customary {duty} before swine may forage.'
+  text:{ forms:{ select:'value', param:'dutyId', cases:{
+    pasture_due:'The assigned grazing turn has opened, but the herd counter demands the customary share or an equal service before your animals enter the pasture.',
+    mast_due:'Mast lies thick beneath the woodland canopy. The keeper demands the customary due before household animals may use the assigned seasonal grazing.',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Acorns lie thick beneath the lord’s oaks, enough to fatten every village pig. The forester waits at the wood’s edge to collect pannage before a snout crosses the ditch.',
+      pagan_household_service:'Fallen acorns and beech mast cover the master’s sacred woods. The woodsman demands the customary tribute before your swine may fatten under the trees.',
+      other:'Acorns lie thick beneath the estate oaks. The forester waits at the wood’s edge to collect the customary {duty} before swine may forage.'
+    }}
   }}},
   options:[
-    { label:'Pay for the woodland mast.', desc:'A lean purse now for a fatter animal in winter.', effects:{ gold:-2 } },
-    { label:'Keep the swine penned and feed them grain.', desc:'Save the fee and spend the household’s own food instead.', effects:{ gold:-2 } },
-    { label:'Drive them in after moonrise.', desc:'The pigs know no law; the forester does.', chance:'skill_int',
-      success:{ text:'By dawn the herd is round-bellied and back behind its wattle fence.', effects:{ skills:{int:1} } },
-      failure:{ text:'A bellwether squeals beneath the forester’s window. He takes the fattest pig as amercement.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        pasture_due:'Render the customary pasture due.', mast_due:'Render the customary woodland due.', other:'Pay for the woodland mast.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        pasture_due:'A lean purse now preserves the household grazing turn.', mast_due:'A lean purse now preserves the household’s seasonal woodland use.', other:'A lean purse now for a fatter animal in winter.'
+      }}}, effects:{ gold:-2 } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        pasture_due:'Keep the animals from the assigned grazing.', mast_due:'Keep the animals outside the woodland.', other:'Keep the swine penned and feed them grain.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        pasture_due:'Save the due and spend the household’s own fodder instead.', mast_due:'Save the due and spend the household’s own feed instead.', other:'Save the fee and spend the household’s own food instead.'
+      }}}, effects:{ gold:-2 } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        pasture_due:'Use the pasture after moonrise.', mast_due:'Use the woodland after moonrise.', other:'Drive them in after moonrise.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        pasture_due:'The animals know no tally; the herd counter does.', mast_due:'The animals know no boundary; the keeper does.', other:'The pigs know no law; the forester does.'
+      }}}, chance:'skill_int',
+      success:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          pasture_due:'By dawn the animals have grazed and returned before the pasture is counted.', mast_due:'By dawn the animals have fed beneath the canopy and returned to the clearing.', other:'By dawn the herd is round-bellied and back behind its wattle fence.'
+        }}}, effects:{ skills:{int:1} } },
+      failure:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          pasture_due:'A restless animal gives the household away. The herd counter takes the heaviest beast as amercement.', mast_due:'A bell sounds beneath the keeper’s window. The best-fed animal is taken as amercement.', other:'A bellwether squeals beneath the forester’s window. He takes the fattest pig as amercement.'
+        }}},
         effects:{ gold:-5, opinion:{role:'lord', amt:-8} } } }
   ]},
 { id:'serf_marriage_leave',
@@ -230,11 +311,16 @@ FBDATA.events.push(
         effects:{ gold:-5, piety:-4 } } }
   ]},
 { id:'serf_bridge_cartage',
-  title:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Timber for the Bridge',
-    irrigated_fellah:'Waterworks Cartage',
-    pagan_household_service:'Hauling for the Fort',
-    other:'Communal Cartage Due'
+  title:{ forms:{ select:'value', param:'dutyId', cases:{
+    seasonal_drove:'The Seasonal Drove',
+    timber_cartage:'Timber from the Woodland',
+    shore_transport:'Carriage Along the Shore',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Timber for the Bridge',
+      irrigated_fellah:'Waterworks Cartage',
+      pagan_household_service:'Hauling for the Fort',
+      other:'Communal Cartage Due'
+    }}
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
@@ -242,19 +328,44 @@ FBDATA.events.push(
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
     {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
   ],
-  text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Floodwater has bitten through the bridge piles. {officer} apportions timber, carts, and labor by holding; your mark appears beside the longest haul.',
-    irrigated_fellah:'Seasonal floods have damaged the irrigation dikes and stone bridges. {officer} assigns cartage and heavy labor for {duty} to every holding; your household receives the longest run.',
-    pagan_household_service:'Heavy spring rains have washed out the ford and palisade ditch. {officer} assigns logs, stone, and carts from every serf dwelling to restore the master’s works.',
-    other:'Seasonal floods have damaged the local roadways and bridges. {officer} apportions timber and carts by holding; your mark appears beside the longest haul.'
+  text:{ forms:{ select:'value', param:'dutyId', cases:{
+    seasonal_drove:'Seasonal movement has begun. {officer} apportions animals, supplies, and road turns by household; your mark stands beside the longest drove.',
+    timber_cartage:'Cut timber waits beyond the clearing. {officer} apportions carts and hauling turns; your household receives the longest woodland road.',
+    shore_transport:'Boats and shore stores must move before the weather changes. {officer} apportions loading and carriage by household; your mark receives the longest run.',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Floodwater has bitten through the bridge piles. {officer} apportions timber, carts, and labor by holding; your mark appears beside the longest haul.',
+      irrigated_fellah:'Seasonal floods have damaged the irrigation dikes and stone bridges. {officer} assigns cartage and heavy labor for {duty} to every holding; your household receives the longest run.',
+      pagan_household_service:'Heavy spring rains have washed out the ford and palisade ditch. {officer} assigns logs, stone, and carts from every serf dwelling to restore the master’s works.',
+      other:'Seasonal floods have damaged the local roadways and bridges. {officer} apportions timber and carts by holding; your mark appears beside the longest haul.'
+    }}
   }}},
   options:[
-    { label:'Take the cart road and haul it.', desc:'A sound bridge for everyone, paid for by your bones.', effects:{ health:-1 } },
-    { label:'Lend the household cart and stay afield.', desc:'Let wheel and axle suffer in your place.', effects:{ gold:-2 } },
-    { label:'Find a shorter way through the shallows.', desc:'Save half the road if your eye for ground is true.', chance:'skill_ste',
-      success:{ text:'The ford holds, the timber arrives early, and others follow your track.', effects:{ skills:{ste:1}, prestige:2 } },
-      failure:{ text:'A wheel sinks to the hub. Dragging it free costs the strength you meant to save.', effects:{ health:-2 } } },
-    { label:'Pay {neighbor} to take your mark. ({money:3})', require:{ goldMin:3 }, desc:'Their household takes the mud; yours pays the coin.', effects:{ gold:-3, standingCharacter:{participant:'neighbor', amt:5} } }
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Take the assigned route and drive it.', timber_cartage:'Take the woodland road and haul it.', shore_transport:'Take the shore route and carry it.', other:'Take the cart road and haul it.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'The seasonal movement is paid for by your bones.', timber_cartage:'The timber reaches the clearing, paid for by your bones.', shore_transport:'The shore stores arrive, paid for by your bones.', other:'A sound bridge for everyone, paid for by your bones.'
+      }}}, effects:{ health:-1 } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Lend household animals and stay at work.', timber_cartage:'Lend the household cart and stay at the clearing.', shore_transport:'Lend household transport and stay at work.', other:'Lend the household cart and stay afield.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Let animal and gear suffer in your place.', timber_cartage:'Let wheel and axle suffer in your place.', shore_transport:'Let boat, sledge, or cart suffer in your place.', other:'Let wheel and axle suffer in your place.'
+      }}}, effects:{ gold:-2 } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Find a shorter drove route.', timber_cartage:'Find a shorter way through the woodland.', shore_transport:'Find a shorter way along the shore.', other:'Find a shorter way through the shallows.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Save half the road if your eye for ground is true.', timber_cartage:'Save half the woodland road if your eye for ground is true.', shore_transport:'Save half the shore route if your eye for weather and ground is true.', other:'Save half the road if your eye for ground is true.'
+      }}}, chance:'skill_ste',
+      success:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          seasonal_drove:'The ground holds, the drove arrives early, and others follow your track.', timber_cartage:'The woodland track holds, the timber arrives early, and others follow your marks.', shore_transport:'The weather holds, the load arrives early, and others follow your shore route.', other:'The ford holds, the timber arrives early, and others follow your track.'
+        }}}, effects:{ skills:{ste:1}, prestige:2 } },
+      failure:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          seasonal_drove:'An animal founders in bad ground. Freeing it costs the strength you meant to save.', timber_cartage:'A wheel sinks among the roots. Dragging it free costs the strength you meant to save.', shore_transport:'The load founders at the water’s edge. Freeing it costs the strength you meant to save.', other:'A wheel sinks to the hub. Dragging it free costs the strength you meant to save.'
+        }}}, effects:{ health:-2 } } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Pay {neighbor} to take your drove mark. ({money:3})', timber_cartage:'Pay {neighbor} to take your timber mark. ({money:3})', shore_transport:'Pay {neighbor} to take your shore mark. ({money:3})', other:'Pay {neighbor} to take your mark. ({money:3})'
+      }}}, require:{ goldMin:3 }, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        seasonal_drove:'Their household takes the road; yours pays the coin.', timber_cartage:'Their household takes the woodland road; yours pays the coin.', shore_transport:'Their household takes the water and shore; yours pays the coin.', other:'Their household takes the mud; yours pays the coin.'
+      }}}, effects:{ gold:-3, standingCharacter:{participant:'neighbor', amt:5} } }
   ]},
 { id:'serf_common_oven',
   title:{ forms:{ select:'value', param:'archetypeId', cases:{
@@ -280,32 +391,59 @@ FBDATA.events.push(
         effects:{ gold:-4, opinion:{role:'lord', amt:-5} } } }
   ]},
 { id:'serf_deadwood_amerced',
-  title:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Whose Fallen Wood?',
-    pagan_household_service:'Fuel from the Master’s Wood',
-    other:'Deadwood Gathering Due'
+  title:{ forms:{ select:'value', param:'dutyId', cases:{
+    deadwood_due:'The Boundary of Fallen Wood',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Whose Fallen Wood?',
+      pagan_household_service:'Fuel from the Master’s Wood',
+      other:'Deadwood Gathering Due'
+    }}
   }}},
   trigger:{ never:true },
   contextValidator:'serf_tenure_context_valid',
-  text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'The forester stops your sledge at the wood’s edge. You gathered only storm-fallen limbs, but he says even dead wood belongs first to {lord}.',
-    pagan_household_service:'The woodsman blocks your way as you pull dry branches from the master’s forest. He declares that even dead timber and frost-cracked wood belong to the master’s store.',
-    other:'The forester stops your cart at the wood’s edge. You gathered only storm-fallen limbs, but he insists that all deadwood belongs first to the estate under {duty}.'
+  text:{ forms:{ select:'value', param:'dutyId', cases:{
+    deadwood_due:'The woodland keeper stops your sledge at the clearing edge. Your household holds a limited custom of taking storm-fallen wood, but he says this bundle crossed its boundary.',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'The forester stops your sledge at the wood’s edge. You gathered only storm-fallen limbs, but he says even dead wood belongs first to {lord}.',
+      pagan_household_service:'The woodsman blocks your way as you pull dry branches from the master’s forest. He declares that even dead timber and frost-cracked wood belong to the master’s store.',
+      other:'The forester stops your cart at the wood’s edge. You gathered only storm-fallen limbs, but he insists that all deadwood belongs first to the estate under {duty}.'
+    }}
   }}},
   options:[
-    { label:'Pay the wood amercement. ({money:3})', require:{ goldMin:3 }, desc:'Keep the fuel and surrender the coin.', effects:{ gold:-3 } },
-    { label:'Leave the whole bundle.', desc:'Walk home cold rather than enter the forester’s book.', effects:{ health:-1 } },
-    { label:'Name the old right to fallen branches.', desc:'Custom may shelter the poor, if anyone admits remembering it.', chance:'skill_lea',
-      success:{ text:'An elder confirms the right before the forester can close the question.', effects:{ prestige:2, skills:{lea:1} } },
-      failure:{ text:'The forester calls custom a tale told by thieves. The fine doubles.',
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        deadwood_due:'Pay the boundary amercement. ({money:3})', other:'Pay the wood amercement. ({money:3})'
+      }}}, require:{ goldMin:3 }, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        deadwood_due:'Keep the fallen wood and surrender the coin.', other:'Keep the fuel and surrender the coin.'
+      }}}, effects:{ gold:-3 } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        deadwood_due:'Leave the disputed bundle.', other:'Leave the whole bundle.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        deadwood_due:'Walk home cold rather than let a boundary dispute become a greater fine.', other:'Walk home cold rather than enter the forester’s book.'
+      }}}, effects:{ health:-1 } },
+    { label:{ forms:{ select:'value', param:'dutyId', cases:{
+        deadwood_due:'Name the limited right to storm-fallen wood.', other:'Name the old right to fallen branches.'
+      }}}, desc:{ forms:{ select:'value', param:'dutyId', cases:{
+        deadwood_due:'Custom may settle the boundary, if anyone admits remembering it.', other:'Custom may shelter the poor, if anyone admits remembering it.'
+      }}}, chance:'skill_lea',
+      success:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          deadwood_due:'An elder confirms that the bundle lies within the household’s limited customary use.', other:'An elder confirms the right before the forester can close the question.'
+        }}}, effects:{ prestige:2, skills:{lea:1} } },
+      failure:{ text:{ forms:{ select:'value', param:'dutyId', cases:{
+          deadwood_due:'The keeper says the bundle crossed the remembered boundary. The amercement doubles.', other:'The forester calls custom a tale told by thieves. The fine doubles.'
+        }}},
         effects:{ gold:-4, opinion:{role:'lord', amt:-5} } } }
   ]},
-{ id:'serf_officers_quartered',
-  title:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'Boots by the Hearth',
-    irrigated_fellah:'Quartering the Retainers',
-    pagan_household_service:'Warriors at the Door',
-    other:'Billeting and Quartering'
+{ id:'serf_officers_quartered', tenureAware:true,
+  title:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'Riders Beside the Herds',
+    woodland_dependence:'Warriors in the Clearing',
+    norse_coastal_service:'A Crew at the Hearth',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'Boots by the Hearth',
+      irrigated_fellah:'Quartering the Retainers',
+      pagan_household_service:'Warriors at the Door',
+      other:'Billeting and Quartering'
+    }}
   }}},
   wartime:true,
   trigger:{ never:true },
@@ -315,21 +453,46 @@ FBDATA.events.push(
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
     {slot:'neighbor', source:'local_neighbor', required:true, createFallback:true, sameHome:true}
   ],
-  text:{ forms:{ select:'value', param:'archetypeId', cases:{
-    latin_manorial:'{officer} assigns mounted officers in {lord}’s colors to your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently.',
-    irrigated_fellah:'At dusk {officer} assigns armed riders from the garrison to your shelter, barley, and household store while the realm is at war under {duty}.',
-    pagan_household_service:'{officer} billets the master’s returning warband in the serf dwellings. They take the hearth, grain, and straw by right of martial service.',
-    other:'{officer} assigns armed retainers in the lord’s colors to your hearth, fodder, and food for the night under the customary wartime billeting obligation.'
+  text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'{officer} assigns armed riders to your shelter, fodder, and herd stores for the night. By morning the pasture custom may count for less than their hunger.',
+    woodland_dependence:'{officer} billets armed retainers in the clearing households. They claim firewood, food, and bedding under the customary wartime burden.',
+    norse_coastal_service:'{officer} sends an armed crew from the shore to your hearth, stores, and bedding for the night under the household’s wartime service.',
+    other:{ select:'value', param:'archetypeId', cases:{
+      latin_manorial:'{officer} assigns mounted officers in {lord}’s colors to your fire, fodder, supper, and bedding for the night. By custom they pay; by morning they may remember the custom differently.',
+      irrigated_fellah:'At dusk {officer} assigns armed riders from the garrison to your shelter, barley, and household store while the realm is at war under {duty}.',
+      pagan_household_service:'{officer} billets the master’s returning warband in the serf dwellings. They take the hearth, grain, and straw by right of martial service.',
+      other:'{officer} assigns armed retainers in the lord’s colors to your hearth, fodder, and food for the night under the customary wartime billeting obligation.'
+    }}
   }}},
   options:[
-    { label:'Set out everything they ask.', desc:'An empty larder may purchase a favorable word.',
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Set out the fodder and stores they ask.', woodland_dependence:'Set out the firewood and stores they ask.', norse_coastal_service:'Set out the shore provisions they ask.', other:'Set out everything they ask.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'A diminished herd store may purchase a favorable word.', woodland_dependence:'An empty woodland store may purchase a favorable word.', norse_coastal_service:'An empty shore store may purchase a favorable word.', other:'An empty larder may purchase a favorable word.'
+      }}},
       effects:{ gold:-4, standingCharacter:{participant:'lord', amt:4} } },
-    { label:'Give them the hearth and sleep in the byre.', desc:'Spare some food by yielding every comfort.', effects:{ gold:-2, health:-1 } },
-    { label:'Hide the best stores before they dismount.', desc:'A bare shelf can lie more smoothly than its owner.', chance:'skill_int',
-      success:{ text:'They eat coarse bread, complain, and never find the smoked meat overhead.', effects:{ skills:{int:1} } },
-      failure:{ text:'A trooper finds the false panel. They take the hidden food as well as the supper.',
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Give them the shelter and sleep beside the animals.', woodland_dependence:'Give them the hearth and sleep at the clearing edge.', norse_coastal_service:'Give them the hearth and sleep by the landing.', other:'Give them the hearth and sleep in the byre.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Spare some fodder by yielding every comfort.', woodland_dependence:'Spare some food and fuel by yielding every comfort.', norse_coastal_service:'Spare some provisions by yielding every comfort.', other:'Spare some food by yielding every comfort.'
+      }}}, effects:{ gold:-2, health:-1 } },
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Hide the best herd stores before they arrive.', woodland_dependence:'Hide the best woodland stores before they arrive.', norse_coastal_service:'Hide the best shore stores before they arrive.', other:'Hide the best stores before they dismount.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'An empty fodder stack can lie more smoothly than its owner.', woodland_dependence:'An empty store can lie more smoothly than its owner.', norse_coastal_service:'An empty fish rack can lie more smoothly than its owner.', other:'A bare shelf can lie more smoothly than its owner.'
+      }}}, chance:'skill_int',
+      success:{ text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+          pastoral_steppe:'The riders take coarse fodder, complain, and never find the better stores.', woodland_dependence:'The retainers burn brushwood, eat coarse bread, and never find the better stores.', norse_coastal_service:'The crew eats coarse fare, complains, and never finds the smoked catch overhead.', other:'They eat coarse bread, complain, and never find the smoked meat overhead.'
+        }}}, effects:{ skills:{int:1} } },
+      failure:{ text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+          pastoral_steppe:'A rider finds the covered fodder pit. They take the hidden stores as well as supper.', woodland_dependence:'A retainer finds the concealed stack. They take the hidden stores as well as supper.', norse_coastal_service:'A crewman finds the covered rack. They take the hidden provisions as well as supper.', other:'A trooper finds the false panel. They take the hidden food as well as the supper.'
+        }}},
         effects:{ gold:-6, health:-1 } } },
-    { label:'Send them toward {neighbor}’s roof.', desc:'Move the burden to that household and live with the village’s memory.',
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Send them toward {neighbor}’s herd shelter.', woodland_dependence:'Send them toward {neighbor}’s clearing.', norse_coastal_service:'Send them toward {neighbor}’s shore hearth.', other:'Send them toward {neighbor}’s roof.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Move the burden to that household and live with the settlement’s memory.', woodland_dependence:'Move the burden to that household and live with the clearing’s memory.', norse_coastal_service:'Move the burden to that household and live with the landing’s memory.', other:'Move the burden to that household and live with the village’s memory.'
+      }}},
       effects:{ prestige:-3, popularOpinion:-2, standingCharacter:{participant:'neighbor', amt:-15}, rivalContact:{participant:'neighbor', score:2, cause:'shifted_quartering'}, custom:'serf_neighbor_shifted' } }
   ]},
 
@@ -365,16 +528,36 @@ FBDATA.events.push(
     { label:'Refuse before the manor court.', desc:'Keep coin and strength; let defiance become the next debt.',
       effects:{ prestige:-8, standingCharacter:[{participant:'lord', amt:-15},{participant:'officer', amt:-10}] } }
   ]},
-{ id:'serf_seed_grain_requisition', title:'The Granary Is Opened', once:true, wartime:true,
+{ id:'serf_seed_grain_requisition', tenureAware:true,
+  title:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'The Herd Stores Are Opened', woodland_dependence:'The Woodland Stores Are Opened', norse_coastal_service:'The Shore Stores Are Opened', other:'The Granary Is Opened'
+  }}}, once:true, wartime:true,
   trigger:{ tierMax:0, minAge:16, realmAtWar:true, seasons:[2,3], chance:0.05 },
   weight:2, cooldown:24,
-  text:'The war has eaten the lord’s stores. Armed men break the seal on your granary and name its seed corn provisions for the host; what they leave will not sow every strip.',
+  text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'War has eaten the authority’s stores. Armed riders claim fodder, dried food, and household animals for the host; what they leave will not sustain every seasonal turn.',
+    woodland_dependence:'War has eaten the authority’s stores. Armed men claim food, fuel, and hauling gear from the clearing households; what they leave will not sustain the winter work.',
+    norse_coastal_service:'War has eaten the authority’s stores. Armed men claim dried catch, cordage, and household transport for the host; what they leave will not sustain the next shore season.',
+    other:'The war has eaten the lord’s stores. Armed men break the seal on your granary and name its seed corn provisions for the host; what they leave will not sow every strip.'
+  }}},
   options:[
-    { label:'Yield the seed grain.', desc:'Feed the host now and meet winter with a hollow bin.',
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Yield the herd stores.', woodland_dependence:'Yield the clearing stores.', norse_coastal_service:'Yield the shore stores.', other:'Yield the seed grain.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Feed the host now and meet the next herd turn with too little.', woodland_dependence:'Feed the host now and meet winter with a hollow store.', norse_coastal_service:'Feed the host now and meet the next shore season with a hollow store.', other:'Feed the host now and meet winter with a hollow bin.'
+      }}},
       effects:{ gold:-8, health:-1, setFlag:'lean_winter' } },
-    { label:'Surrender cart and draft gear instead.', desc:'Keep seed enough to sow by giving up the means to haul it.',
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Surrender animals and gear instead.', woodland_dependence:'Surrender cart and cutting gear instead.', norse_coastal_service:'Surrender transport and cordage instead.', other:'Surrender cart and draft gear instead.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Keep food and fodder by giving up the means to move them.', woodland_dependence:'Keep the stores by giving up the means to cut and haul.', norse_coastal_service:'Keep the provisions by giving up the means to carry them.', other:'Keep seed enough to sow by giving up the means to haul it.'
+      }}},
       effects:{ gold:-10, prestige:-2 } },
-    { label:'Stand in the granary door.', desc:'Make them move you before they move the sacks.',
+    { label:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Stand before the herd stores.', woodland_dependence:'Stand before the clearing stores.', norse_coastal_service:'Stand before the shore stores.', other:'Stand in the granary door.'
+      }}}, desc:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+        pastoral_steppe:'Make them move you before they move the animals and fodder.', woodland_dependence:'Make them move you before they move the bundles and gear.', norse_coastal_service:'Make them move you before they move the baskets and cordage.', other:'Make them move you before they move the sacks.'
+      }}},
       effects:{ health:-2, prestige:-5, opinion:{role:'lord', amt:-15} } }
   ]},
 
@@ -390,14 +573,19 @@ FBDATA.events.push(
       success:{ text:'The collector sighs and moves on.', effects:{ } },
       failure:{ text:'He takes your goods in lieu of coin.', effects:{ gold:-4 } } }
   ]},
-{ id:'lord_squeezes', title:'A Tally With Your Name On It',
+{ id:'lord_squeezes', title:'A Tally With Your Name On It', tenureAware:true,
   trigger:{ tierMax:2, roleOpinionBelow:{role:'lord', value:-40}, chance:0.25 }, weight:7, cooldown:8,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},
     {slot:'witness', source:'local_witness', required:true, createFallback:true, sameHome:true}
   ],
-  text:'{officer} arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger.',
+  text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'{officer} arrives with a new tally, and your name sits at the top of it — extra herd turns and a “customary” gift no other household is asked to pay. {lord}’s dislike has found its way into the count.',
+    woodland_dependence:'{officer} arrives with a new tally, and your name sits at the top of it — extra woodland turns and a “customary” gift no other household is asked to pay. {lord}’s dislike has found its way into the count.',
+    norse_coastal_service:'{officer} arrives with a new tally, and your name sits at the top of it — extra shore turns and a “customary” gift no other household is asked to pay. {lord}’s dislike has found its way into the count.',
+    other:'{officer} arrives with a new tally, and your name sits at the top of it — extra boon-days, and a “customary” gift no one else is asked to pay. {lord}’s dislike has found its way into the ledger.'
+  }}},
   options:[
     { label:'Pay without a word. ({money:4})', require:{ goldMin:4 }, desc:'Coin today, and the tally-man moves on.', effects:{ gold:-4 } },
     { label:'Work the extra days instead.', desc:'The back pays what the purse is spared.', effects:{ health:-1 } },
@@ -405,9 +593,14 @@ FBDATA.events.push(
       success:{ text:'{witness} names the custom. {officer} scratches out the line, scowling.', effects:{ prestige:3, skills:{lea:1}, standingCharacter:[{participant:'officer', amt:-8},{participant:'witness', amt:5}] } },
       failure:{ text:'“Custom is what the lord says it is.” The tally stands — and there is a fine for arguing.', effects:{ gold:-4, health:-1, standingCharacter:[{participant:'lord', amt:-5},{participant:'witness', amt:-3}] } } }
   ]},
-{ id:'lords_notice', title:'The Lord’s Eye',
+{ id:'lords_notice', title:'The Lord’s Eye', tenureAware:true,
   trigger:{ tierMax:0, roleOpinionAbove:{role:'lord', value:25}, chance:0.4 }, weight:10, once:true,
-  text:'{lord} reins in beside your strip of field. “You. You’re the one who works like two men. What is it you want in this life?”',
+  text:{ forms:{ select:'value', param:'tenureArchetypeId', cases:{
+    pastoral_steppe:'{lord} reins in beside the household herds. “You. You’re the one who works like two people. What is it you want in this life?”',
+    woodland_dependence:'{lord} stops beside the household clearing. “You. You’re the one who works like two people. What is it you want in this life?”',
+    norse_coastal_service:'{lord} stops beside the household’s shore work. “You. You’re the one who works like two people. What is it you want in this life?”',
+    other:'{lord} reins in beside your strip of field. “You. You’re the one who works like two men. What is it you want in this life?”'
+  }}},
   options:[
     { label:'“My freedom, lord, if I earn it.”', desc:'Receive one exact favorable offer; it still must be afforded and accepted.', effects:{ opinion:{role:'lord', amt:5}, custom:'freedom_lords_notice' } },
     { label:'“Only to serve, lord.”', desc:'Humility pleases the powerful, and asks for nothing.', effects:{ opinion:{role:'lord', amt:10} } },

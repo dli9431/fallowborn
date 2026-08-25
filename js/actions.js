@@ -4328,6 +4328,44 @@ window.FB = window.FB || {};
 
   FB.rebuildActionCatalogs();
 
+  function focusDefinitionRecord(focus) {
+    if (typeof focus === 'string') return focusById[focus] || null;
+    return focus && focus.id ? focus : null;
+  }
+
+  function contextualTenureFocusText(state, focus, field, keyField) {
+    focus = focusDefinitionRecord(focus);
+    if (!state || !state.player || state.player.tier !== 0 ||
+        !focus || focus.id !== 'toil' || !FB.activeSerfTenure) return '';
+    const tenure = FB.activeSerfTenure(state);
+    const arch = tenure && FBDATA.tenureArchetypes &&
+      FBDATA.tenureArchetypes[tenure.archetypeId];
+    if (!arch || !arch[keyField] || !FB.tenureText) return '';
+    return FB.tenureText(state, state.player.charId, 'tenureArchetype',
+      tenure.archetypeId, arch, field, keyField);
+  }
+
+  FB.focusLabel = function (state, focus) {
+    focus = focusDefinitionRecord(focus);
+    if (!focus) return '';
+    const contextual = contextualTenureFocusText(state, focus,
+      'workLabel', 'workLabelKey');
+    if (contextual) return contextual;
+    return FB.dataText(state, state && state.player && state.player.charId,
+      'focus', focus.id, focus, 'label', {});
+  };
+
+  FB.focusDescription = function (state, focus) {
+    focus = focusDefinitionRecord(focus);
+    if (!focus) return '';
+    const contextual = contextualTenureFocusText(state, focus,
+      'workDescription', 'workDescriptionKey');
+    if (contextual) return contextual;
+    if (typeof focus.desc === 'function') return focus.desc(state);
+    return FB.dataText(state, state && state.player && state.player.charId,
+      'focus', focus.id, focus, 'desc', {});
+  };
+
   /* ================= shared helpers ================= */
 
   const LOCAL_COUNCIL_DAYS = 360;
@@ -5624,7 +5662,7 @@ window.FB = window.FB || {};
     if (fg) {
       let flabel = null;
       for (const f of FB.focuses) {
-        if (f.id === p.focus) { flabel = FB.dataText(state, p.charId, 'focus', f.id, f, 'label'); break; }
+        if (f.id === p.focus) { flabel = FB.focusLabel(state, f); break; }
       }
       for (const k in fg) { if (lines[k]) add(k, flabel, fg[k]); }
     }

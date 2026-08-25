@@ -634,8 +634,8 @@ FBDATA.householdStandards = {
 };
 
 /* Persistent serf tenure archetypes (tier 0 households).
-   Core game data: deterministic selectors match faith ancestry, culture
-   traditions, terrain, and starting development. */
+   Core game data: deterministic selectors match bookmark, household identity,
+   permanent-home environment, settlement, and starting development. */
 FBDATA.tenureArchetypes = {
   latin_manorial: {
     id: 'latin_manorial',
@@ -644,6 +644,10 @@ FBDATA.tenureArchetypes = {
     desc: 'A cottage and household strips held by custom in return for work and local dues.',
     nameKey: 'tenure_archetype_latin_manorial_name',
     summaryKey: 'tenure_archetype_latin_manorial_summary',
+    workLabel: 'Tend strips and serve the demesne',
+    workDescription: 'Work the household strips and meet the labor owed on the lord’s demesne.',
+    workLabelKey: 'tenure_work_latin_manorial_label',
+    workDescriptionKey: 'tenure_work_latin_manorial_desc',
     selector: {
       faithAncestor: 'catholic',
       traditionsAny: ['west_european', 'celtic', 'romance'],
@@ -682,6 +686,10 @@ FBDATA.tenureArchetypes = {
     desc: 'Household fields held through village custom, with shared waterwork and crop obligations.',
     nameKey: 'tenure_archetype_irrigated_fellah_name',
     summaryKey: 'tenure_archetype_irrigated_fellah_summary',
+    workLabel: 'Tend fields and waterworks',
+    workDescription: 'Work the household fields and maintain the shared water on which they depend.',
+    workLabelKey: 'tenure_work_irrigated_fellah_label',
+    workDescriptionKey: 'tenure_work_irrigated_fellah_desc',
     selector: {
       faithAncestor: 'muslim',
       traditionsAny: ['middle_eastern', 'african', 'romance'],
@@ -700,6 +708,97 @@ FBDATA.tenureArchetypes = {
     ],
     rights: ['irrigation_turn']
   },
+  norse_coastal_service: {
+    id: 'norse_coastal_service',
+    priority: 550,
+    name: 'Coastal household-service tenure',
+    desc: 'A dependent household place held through shore work, boat service, and seasonal dues.',
+    nameKey: 'tenure_archetype_norse_coastal_service_name',
+    summaryKey: 'tenure_archetype_norse_coastal_service_summary',
+    workLabel: 'Work shore, boats, and transport',
+    workDescription: 'Labor for the household through boats, shore work, and local transport.',
+    workLabelKey: 'tenure_work_norse_coastal_service_label',
+    workDescriptionKey: 'tenure_work_norse_coastal_service_desc',
+    selector: {
+      bookmarksAny: ['867', '1066'],
+      culturesAny: ['norse'],
+      faithAncestor: 'pagan',
+      coastal: true,
+      terrainAny: ['farmland', 'forest', 'hills', 'marsh'],
+      settlementKindsAny: ['village', 'town']
+    },
+    duties: [
+      { id: 'boat_service', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'seasonal_catch_share', eventId: 'serf_boon_harvest', firstDue: { season: 'autumn', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'shore_transport', eventId: 'serf_bridge_cartage', firstDue: { season: 'summer', day: 30, cycle: 1 }, intervalTurns: 720 }
+    ],
+    contextSlots: [],
+    conditionalDuties: [
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: ['customary_shore_landing']
+  },
+  pastoral_steppe: {
+    id: 'pastoral_steppe',
+    priority: 500,
+    name: 'Pastoral dependent tenure',
+    desc: 'A household place among the herds, held through pasture custom and seasonal service.',
+    nameKey: 'tenure_archetype_pastoral_steppe_name',
+    summaryKey: 'tenure_archetype_pastoral_steppe_summary',
+    workLabel: 'Tend the household herds',
+    workDescription: 'Keep the herds, pasture, and seasonal service that sustain the household.',
+    workLabelKey: 'tenure_work_pastoral_steppe_label',
+    workDescriptionKey: 'tenure_work_pastoral_steppe_desc',
+    selector: {
+      bookmarksAny: ['867', '1066'],
+      faithAncestor: 'pagan',
+      traditionsAny: ['steppe'],
+      terrainAny: ['steppe'],
+      settlementKindsAny: ['village'],
+      dev0Max: 3
+    },
+    duties: [
+      { id: 'herd_service', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'pasture_due', eventId: 'serf_pannage_due', firstDue: { season: 'autumn', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'seasonal_drove', eventId: 'serf_bridge_cartage', firstDue: { season: 'summer', day: 30, cycle: 1 }, intervalTurns: 720 }
+    ],
+    contextSlots: [],
+    conditionalDuties: [
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: ['customary_grazing_turn']
+  },
+  woodland_dependence: {
+    id: 'woodland_dependence',
+    priority: 450,
+    name: 'Woodland customary tenure',
+    desc: 'A household clearing held through woodland labor, seasonal dues, and limited customary use.',
+    nameKey: 'tenure_archetype_woodland_dependence_name',
+    summaryKey: 'tenure_archetype_woodland_dependence_summary',
+    workLabel: 'Work woodland and clearings',
+    workDescription: 'Tend the clearing and meet the woodland labor owed by the household.',
+    workLabelKey: 'tenure_work_woodland_dependence_label',
+    workDescriptionKey: 'tenure_work_woodland_dependence_desc',
+    selector: {
+      bookmarksAny: ['867', '1066'],
+      faithAncestor: 'pagan',
+      traditionsAny: ['slavic_baltic', 'uralic'],
+      terrainAny: ['forest'],
+      settlementKindsAny: ['village'],
+      dev0Max: 3
+    },
+    duties: [
+      { id: 'woodland_service', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'mast_due', eventId: 'serf_pannage_due', firstDue: { season: 'autumn', day: 30, cycle: 0 }, intervalTurns: 720 },
+      { id: 'timber_cartage', eventId: 'serf_bridge_cartage', firstDue: { season: 'summer', day: 30, cycle: 1 }, intervalTurns: 720 },
+      { id: 'deadwood_due', eventId: 'serf_deadwood_amerced', firstDue: { season: 'winter', day: 30, cycle: 1 }, intervalTurns: 720 }
+    ],
+    contextSlots: [],
+    conditionalDuties: [
+      { id: 'officers_quartered', eventId: 'serf_officers_quartered' }
+    ],
+    rights: ['storm_fallen_wood', 'seasonal_common_grazing']
+  },
   pagan_household_service: {
     id: 'pagan_household_service',
     priority: 300,
@@ -707,6 +806,10 @@ FBDATA.tenureArchetypes = {
     desc: 'A dwelling and subsistence use held under the authority of a master’s household.',
     nameKey: 'tenure_archetype_pagan_household_service_name',
     summaryKey: 'tenure_archetype_pagan_household_service_summary',
+    workLabel: 'Serve the master’s household',
+    workDescription: 'Labor within the master’s household and its dependent fields.',
+    workLabelKey: 'tenure_work_pagan_household_service_label',
+    workDescriptionKey: 'tenure_work_pagan_household_service_desc',
     selector: {
       faithAncestor: 'pagan',
       traditionsAny: ['west_european', 'slavic_baltic', 'uralic'],
@@ -740,6 +843,10 @@ FBDATA.tenureArchetypes = {
     desc: 'A household holding used by local custom in return for labor and seasonal service.',
     nameKey: 'tenure_archetype_dependent_farming_name',
     summaryKey: 'tenure_archetype_dependent_farming_summary',
+    workLabel: 'Work the household holding',
+    workDescription: 'Work the customary holding and meet its seasonal service.',
+    workLabelKey: 'tenure_work_dependent_farming_label',
+    workDescriptionKey: 'tenure_work_dependent_farming_desc',
     selector: {},
     duties: [
       { id: 'customary_labor', eventId: 'serf_weekwork_tally', firstDue: { season: 'spring', day: 30, cycle: 0 }, intervalTurns: 720 },
@@ -772,13 +879,27 @@ FBDATA.tenureDuties = {
   pannage_due: { name: 'Pannage due', desc: 'Customary toll paid for foraging swine in estate woodlands.' },
   common_oven: { name: 'Common oven due', desc: 'Customary toll owed for baking household loaves at the communal oven.' },
   deadwood_amerced: { name: 'Wood gathering due', desc: 'Amercement or service owed for taking gathered timber from woodland.' },
-  bridge_cartage: { name: 'Bridge cartage', desc: 'Customary transport service for hauling bridge and roadway materials.' }
+  bridge_cartage: { name: 'Bridge cartage', desc: 'Customary transport service for hauling bridge and roadway materials.' },
+  herd_service: { name: 'Herd service', desc: 'A customary work turn tending animals under local authority.' },
+  pasture_due: { name: 'Pasture due', desc: 'A customary share or service owed for the household’s assigned pasture use.' },
+  seasonal_drove: { name: 'Seasonal drove', desc: 'Seasonal labor moving animals or supplies under local authority.' },
+  woodland_service: { name: 'Woodland service', desc: 'Customary labor maintaining clearings and working woodland resources.' },
+  mast_due: { name: 'Woodland mast due', desc: 'A customary share or service owed for seasonal woodland grazing.' },
+  timber_cartage: { name: 'Timber cartage', desc: 'Customary transport labor hauling timber or woodland supplies.' },
+  deadwood_due: { name: 'Deadwood boundary due', desc: 'A customary dispute or service concerning limited collection of fallen wood.' },
+  boat_service: { name: 'Boat service', desc: 'A customary work turn repairing, loading, or rowing boats under local authority.' },
+  seasonal_catch_share: { name: 'Seasonal catch share', desc: 'A customary share or labor demand tied to the season’s shore catch.' },
+  shore_transport: { name: 'Shore transport', desc: 'Customary boat, landing, or shore carriage labor.' }
 };
 
 FBDATA.tenureRights = {
   deadwood_after_frost: { name: 'Deadwood gathering', desc: 'Customary right to collect fallen branches and deadwood for household fuel after frost.' },
   gleaning_after_harvest: { name: 'Post-harvest gleaning', desc: 'Customary right to glean remaining grain heads from harvested fields.' },
-  irrigation_turn: { name: 'Irrigation turn', desc: 'Recognized customary rotational turn to draw water from shared irrigation channels.' }
+  irrigation_turn: { name: 'Irrigation turn', desc: 'Recognized customary rotational turn to draw water from shared irrigation channels.' },
+  customary_grazing_turn: { name: 'Assigned grazing turn', desc: 'Limited customary access to an assigned grazing turn or area under local authority.' },
+  storm_fallen_wood: { name: 'Storm-fallen wood', desc: 'Limited customary collection of wood brought down by storms.' },
+  seasonal_common_grazing: { name: 'Seasonal common grazing', desc: 'Limited seasonal use of an assigned common grazing area.' },
+  customary_shore_landing: { name: 'Customary shore landing', desc: 'Limited customary use of an assigned landing place for household work.' }
 };
 
 /* Bounded auctions remain generally available at a suitable market. Each lot

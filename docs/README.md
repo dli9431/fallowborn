@@ -102,6 +102,10 @@ Time passes **day by day** (90-day seasons, 360-day years).
 
 1. Set a **focus** in the *Deeds* tab — it is pursued every day until you change it: work your
    land, drill with the levy, haggle at market, copy manuscripts, or manage your household.
+   A serf's Toil name and description reflect the household's saved customary setting —
+   such as manorial strips, irrigation, herds, woodland, or coastal service — while its
+   pay, risk, training, and daily mechanics remain the same. **Station & home** shows that
+   ordinary work beside the exact duties and limited customary rights.
    The **Ongoing commitments** ledger above the deeds keeps personal and political attention,
    national research policy, active travel, and financial contracts together; compact layouts
    also show the daily focus and link it to the top of the focus list. Select a row to reach

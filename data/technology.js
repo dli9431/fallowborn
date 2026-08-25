@@ -99,6 +99,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Household tenure, customary service, and awareness of local obligations are baseline social conditions, not capabilities unlocked by sovereign research.'
       },
+      regional_serf_tenure:{
+        mode:'none',
+        rationale:'Formation-time household and home context changes the description of baseline serf work and obligations; it is not an optional capability unlocked by sovereign research.'
+      },
       minor_household_standard_reduction:{
         mode:'none',
         rationale:'A child household head giving up an inherited recurring expense is a baseline recovery control; no innovation credibly unlocks abandoning a living standard.'

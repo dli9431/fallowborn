@@ -14,9 +14,14 @@ Broad identities such as `christian`, `muslim`, and `pagan` are ordinary nodes w
 a person or map province. This keeps “Christian” useful as an ancestor without creating
 characters whose only identity is Christianity.
 
-Serf tenure archetype selectors query this inheritance graph through `FB.faithIsA(faith, ancestor, state)`
-so that Catholic, Sunni/Shia, and Slavic/Norse/Baltic pagan serfs receive culturally and doctrinally
-distinct customary tenure packages (`latin_manorial`, `irrigated_fellah`, `pagan_household_service`).
+Serf tenure archetype selectors query this inheritance graph through
+`FB.faithIsA(faith, ancestor, state)`. Faith ancestry is only one formation-time
+constraint: household culture/tradition and permanent-home facts further narrow the
+Latin manorial, irrigated fellah, pastoral steppe, woodland, Norse coastal, and broad
+pagan household-service packages, with neutral dependent farming as fallback. The
+protagonist household's faith is authoritative even when the county principal differs.
+Conversion after formation does not rewrite saved tenure, and possessing a faith ancestry
+does not by itself grant a duty, right, item, holding, modifier, or hidden bonus.
 
 Identity and lifecycle fields stay local (an omitted icon alone may fall back to the
 parent's icon):

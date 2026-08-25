@@ -8,6 +8,21 @@ consuming RNG or bumping save format 3:
 - Unknown optional duty, conditional-duty, and right IDs remain harmless save data and are ignored by scheduling and display.
 - No rendered text, active calculations, or volatile references enter serialized state.
 
+The same version-1 record supports all seven core archetype ids, including the additive
+`pastoral_steppe`, `woodland_dependence`, and `norse_coastal_service` definitions. It does
+not persist a second selector snapshot or contextual work text: the chosen archetype,
+resolved duties, rights, home, settlement, and formed turn are sufficient. Known active
+Phase 1 records remain byte-stable and authoritative after load and render; conversion,
+controller change, live development, settlement promotion, and catalogue updates do not
+silently reselect them. Legacy tier-0 saves without tenure still select exactly once
+through the existing repair path. Save format remains 3 and tenure version remains 1.
+
+Tenure-scheduled queue context may additionally contain `tenureArchetypeId`,
+`tenureProvinceId`, `tenureSettlement`, and `tenureVariantId`. These semantic snapshots
+are additive to the legacy `archetypeId`/duty context and contain no rendered prose.
+Older queued events remain valid through the legacy fields; newly snapshotted fields, when
+present, must match exactly or the event expires before effects.
+
 Freedom bargaining is also optional additive save-format-3 state. At most one
 `player.freedomOffer` freezes version, status, source, term id, protagonist and lord ids,
 tenure/home identity, Standing threshold, base cost, exact price, service days, creation,

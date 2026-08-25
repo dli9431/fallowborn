@@ -2,6 +2,7 @@
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/map_data.js',
+  'data/bookmarks.js',
   'data/cultures.js',
   'data/economy.js',
   'data/events_peasant.js',
@@ -283,6 +284,627 @@ test('deterministic archetype selection matches culture, faith, and terrain with
     expect(selection.paganHeavyServiceDuty.eventId).toBe('serf_deadwood_amerced');
     expect(selection.fallbackArch).toBe('dependent_farming');
     expect(selection.fallbackRights).toEqual([]);
+  });
+
+test('Phase 4 tenure catalogue ships seven complete definitions and validates every expanded selector field',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      function validationError(mutate) {
+        const copy = JSON.parse(JSON.stringify(FBDATA.tenureArchetypes));
+        mutate(copy.pastoral_steppe, copy);
+        try {
+          FB.validateTenureData(copy);
+          return '';
+        } catch (error) {
+          return String(error && error.message || error);
+        }
+      }
+      const definitions = Object.keys(FBDATA.tenureArchetypes).map(function (id) {
+        const definition = FBDATA.tenureArchetypes[id];
+        return {
+          id:id,
+          declaredId:definition.id,
+          priority:definition.priority,
+          duties:definition.duties.map(function (duty) { return duty.id; }),
+          events:definition.duties.map(function (duty) {
+            return duty.eventId || null;
+          }),
+          rights:(definition.rights || []).map(function (right) {
+            return typeof right === 'string' ? right : right.rightId;
+          }),
+          workLabelKey:definition.workLabelKey,
+          workDescriptionKey:definition.workDescriptionKey,
+          hasMechanicalOverride:['wage', 'risk', 'gain', 'career'].some(function (field) {
+            return Object.prototype.hasOwnProperty.call(definition, field);
+          }),
+          unconditional:Object.keys(definition.selector || {}).length === 0
+        };
+      });
+      return {
+        definitions:definitions,
+        validation:!!FB.validateTenureData(),
+        technologyImpact:FBDATA.techImpactReviews.features.regional_serf_tenure,
+        errors:{
+          bookmark:validationError(function (arch) {
+            arch.selector.bookmarksAny = ['unknown_bookmark'];
+          }),
+          culture:validationError(function (arch) {
+            arch.selector.culturesAny = ['unknown_culture'];
+          }),
+          province:validationError(function (arch) {
+            arch.selector.provinceIdsAny = ['unknown_province'];
+          }),
+          provinceNeedsBookmark:validationError(function (arch) {
+            arch.selector.provinceIdsAny = [Object.keys(FBDATA.bookmarks['867'].provinces)[0]];
+            delete arch.selector.bookmarksAny;
+          }),
+          coastal:validationError(function (arch) {
+            arch.selector.coastal = 'yes';
+          }),
+          emptyAny:validationError(function (arch) {
+            arch.selector.terrainAny = [];
+          }),
+          duplicateAny:validationError(function (arch) {
+            arch.selector.bookmarksAny = ['867', '867'];
+          }),
+          nonIntegerDev:validationError(function (arch) {
+            arch.selector.dev0Max = 3.5;
+          }),
+          outOfRangeDev:validationError(function (arch) {
+            arch.selector.dev0Max = 11;
+          }),
+          invertedDev:validationError(function (arch) {
+            arch.selector.dev0Min = 4;
+            arch.selector.dev0Max = 3;
+          }),
+          unknownWorkKey:validationError(function (arch) {
+            arch.workLabelKey = 'tenure_work_unknown_label';
+          }),
+          tooFewDuties:validationError(function (arch) {
+            arch.duties = arch.duties.slice(0, 1);
+          })
+        }
+      };
+    });
+
+    expect(result.validation).toBe(true);
+    expect(result.technologyImpact.mode).toBe('none');
+    expect(result.definitions).toHaveLength(7);
+    expect(result.definitions.map(function (definition) { return definition.id; })).toEqual([
+      'latin_manorial', 'irrigated_fellah', 'norse_coastal_service',
+      'pastoral_steppe', 'woodland_dependence',
+      'pagan_household_service', 'dependent_farming'
+    ]);
+    expect(result.definitions.filter(function (definition) {
+      return definition.unconditional;
+    }).map(function (definition) { return definition.id; })).toEqual(['dependent_farming']);
+    result.definitions.forEach(function (definition) {
+      expect(definition.declaredId).toBe(definition.id);
+      expect(definition.workLabelKey).toBe('tenure_work_' + definition.id + '_label');
+      expect(definition.workDescriptionKey).toBe('tenure_work_' + definition.id + '_desc');
+      expect(definition.duties.length).toBeGreaterThanOrEqual(2);
+      expect(definition.duties.length).toBeLessThanOrEqual(4);
+      expect(new Set(definition.duties).size).toBe(definition.duties.length);
+      expect(definition.rights.length).toBeLessThanOrEqual(2);
+      expect(definition.hasMechanicalOverride).toBe(false);
+    });
+    Object.keys(result.errors).forEach(function (field) {
+      expect(result.errors[field], field).toContain('Archetype pastoral_steppe');
+    });
+    expect(result.errors.bookmark).toContain('bookmarksAny');
+    expect(result.errors.culture).toContain('culturesAny');
+    expect(result.errors.province).toContain('provinceIdsAny');
+    expect(result.errors.provinceNeedsBookmark).toContain('requires bookmarksAny');
+    expect(result.errors.coastal).toContain('coastal');
+    expect(result.errors.emptyAny).toContain('terrainAny');
+    expect(result.errors.duplicateAny).toContain('duplicate value');
+    expect(result.errors.nonIntegerDev).toContain('dev0Max');
+    expect(result.errors.outOfRangeDev).toContain('dev0Max');
+    expect(result.errors.invertedDev).toContain('may not exceed');
+    expect(result.errors.unknownWorkKey).toContain('workLabelKey');
+    expect(result.errors.tooFewDuties).toContain('2 to 4');
+  });
+
+test('Phase 4 selection uses formation facts, explains rejections, preserves declaration ties, and consumes no RNG',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      function choose(input) {
+        const before = JSON.stringify(FB.getRngState());
+        const definition = FB.serfTenureSelection(state, input);
+        const reason = FB.serfTenureSelectionReason(state, input);
+        const after = JSON.stringify(FB.getRngState());
+        return {
+          selected:definition.id,
+          reason:reason,
+          rngUnchanged:before === after
+        };
+      }
+      const fixtures = {
+        latin:{ bookmarkId:'867', provinceId:'barcelona', culture:'iberian', faith:'catholic', terrain:'farmland', coastal:true, dev0:5, settlementKind:'village' },
+        fellah:{ bookmarkId:'1066', provinceId:'fustat', culture:'arabic', faith:'sunni', terrain:'farmland', coastal:false, dev0:6, settlementKind:'village' },
+        pastoral:{ bookmarkId:'867', provinceId:'etelkoz', culture:'magyar', faith:'tengri', terrain:'steppe', coastal:false, dev0:3, settlementKind:'village' },
+        woodland:{ bookmarkId:'1066', provinceId:'novgorod', culture:'slavic', faith:'slavic_pagan', terrain:'forest', coastal:false, dev0:3, settlementKind:'village' },
+        coastal:{ bookmarkId:'867', provinceId:'sjaelland', culture:'norse', faith:'norse_pagan', terrain:'farmland', coastal:true, dev0:4, settlementKind:'town' },
+        inlandNorse:{ bookmarkId:'867', provinceId:'unknown_fixture', culture:'norse', faith:'norse_pagan', terrain:'forest', coastal:false, dev0:2, settlementKind:'village' },
+        fallback:{ bookmarkId:'867', provinceId:'unknown_fixture', culture:'khazar', faith:'jewish', terrain:'steppe', coastal:false, dev0:2, settlementKind:'town' }
+      };
+      const selected = {};
+      Object.keys(fixtures).forEach(function (key) {
+        selected[key] = choose(fixtures[key]);
+      });
+
+      const boundaryFailures = {};
+      function changed(base, field, value) {
+        const input = Object.assign({}, base);
+        input[field] = value;
+        return choose(input);
+      }
+      boundaryFailures.pastoralBookmark = changed(fixtures.pastoral, 'bookmarkId', 'unsupported');
+      boundaryFailures.pastoralFaith = changed(fixtures.pastoral, 'faith', 'catholic');
+      boundaryFailures.pastoralTerrain = changed(fixtures.pastoral, 'terrain', 'plains');
+      boundaryFailures.pastoralDev = changed(fixtures.pastoral, 'dev0', 4);
+      boundaryFailures.pastoralSettlement = changed(fixtures.pastoral, 'settlementKind', 'town');
+      boundaryFailures.woodlandTradition = changed(fixtures.woodland, 'culture', 'norse');
+      boundaryFailures.woodlandTerrain = changed(fixtures.woodland, 'terrain', 'hills');
+      boundaryFailures.coastalCulture = changed(fixtures.coastal, 'culture', 'slavic');
+      boundaryFailures.coastalFaith = changed(fixtures.coastal, 'faith', 'catholic');
+      boundaryFailures.coastalStatus = changed(fixtures.coastal, 'coastal', false);
+      boundaryFailures.coastalTerrain = changed(fixtures.coastal, 'terrain', 'steppe');
+      boundaryFailures.coastalSettlement = changed(fixtures.coastal, 'settlementKind', 'city');
+
+      const tieCatalogue = JSON.parse(JSON.stringify(FBDATA.tenureArchetypes));
+      tieCatalogue.latin_manorial.priority = 900;
+      tieCatalogue.irrigated_fellah.priority = 900;
+      tieCatalogue.latin_manorial.selector = {};
+      tieCatalogue.irrigated_fellah.selector = {};
+      const tie = FB.selectSerfTenureArchetype({ state:state }, tieCatalogue);
+      return { selected:selected, boundaryFailures:boundaryFailures, tie:tie.archetype.id };
+    });
+
+    expect(result.selected.latin.selected).toBe('latin_manorial');
+    expect(result.selected.fellah.selected).toBe('irrigated_fellah');
+    expect(result.selected.pastoral.selected).toBe('pastoral_steppe');
+    expect(result.selected.woodland.selected).toBe('woodland_dependence');
+    expect(result.selected.coastal.selected).toBe('norse_coastal_service');
+    expect(result.selected.inlandNorse.selected).toBe('pagan_household_service');
+    expect(result.selected.fallback.selected).toBe('dependent_farming');
+    Object.keys(result.selected).forEach(function (key) {
+      const entry = result.selected[key];
+      expect(entry.reason.archetypeId).toBe(entry.selected);
+      expect(entry.reason.matched).toContain(entry.selected);
+      expect(entry.rngUnchanged).toBe(true);
+    });
+    expect(result.boundaryFailures.pastoralBookmark.reason.rejected.filter(function (entry) {
+      return entry.archetypeId === 'pastoral_steppe';
+    })[0].fields).toContain('bookmarksAny');
+    expect(result.boundaryFailures.pastoralDev.reason.rejected.filter(function (entry) {
+      return entry.archetypeId === 'pastoral_steppe';
+    })[0].fields).toContain('dev0Max');
+    expect(result.boundaryFailures.coastalStatus.reason.rejected.filter(function (entry) {
+      return entry.archetypeId === 'norse_coastal_service';
+    })[0].fields).toContain('coastal');
+    Object.keys(result.boundaryFailures).forEach(function (key) {
+      expect(result.boundaryFailures[key].rngUnchanged).toBe(true);
+    });
+    expect(result.tie).toBe('latin_manorial');
+  });
+
+test('all seven serf tenures share Toil mechanics while contextual work presentation remains read-only',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const player = state.player;
+      const toil = FB.focuses.filter(function (focus) {
+        return focus.id === 'toil';
+      })[0];
+      const rest = FB.focuses.filter(function (focus) {
+        return focus.id === 'rest';
+      })[0];
+      const expected = {
+        latin_manorial:['Tend strips and serve the demesne', 'Work the household strips and meet the labor owed on the lord’s demesne.'],
+        irrigated_fellah:['Tend fields and waterworks', 'Work the household fields and maintain the shared water on which they depend.'],
+        norse_coastal_service:['Work shore, boats, and transport', 'Labor for the household through boats, shore work, and local transport.'],
+        pastoral_steppe:['Tend the household herds', 'Keep the herds, pasture, and seasonal service that sustain the household.'],
+        woodland_dependence:['Work woodland and clearings', 'Tend the clearing and meet the woodland labor owed by the household.'],
+        pagan_household_service:['Serve the master’s household', 'Labor within the master’s household and its dependent fields.'],
+        dependent_farming:['Work the household holding', 'Work the customary holding and meet its seasonal service.']
+      };
+      const originalTenure = JSON.parse(JSON.stringify(player.tenure));
+      const labels = {};
+      Object.keys(expected).forEach(function (archetypeId) {
+        player.tenure = JSON.parse(JSON.stringify(originalTenure));
+        player.tenure.status = 'active';
+        player.tenure.archetypeId = archetypeId;
+        const beforeState = JSON.stringify(state);
+        const beforeRng = JSON.stringify(FB.getRngState());
+        const firstLabel = FB.focusLabel(state, toil);
+        const secondLabel = FB.focusLabel(state, toil);
+        const description = FB.focusDescription(state, toil);
+        const view = FB.tenureView(state);
+        const gain = toil.gain(state);
+        labels[archetypeId] = {
+          label:firstLabel,
+          repeated:secondLabel,
+          description:description,
+          viewLabel:view.workLabel,
+          viewDescription:view.workDescription,
+          gain:gain,
+          eligible:toil.show(state),
+          stateUnchanged:beforeState === JSON.stringify(state),
+          rngUnchanged:beforeRng === JSON.stringify(FB.getRngState())
+        };
+      });
+      player.tenure = JSON.parse(JSON.stringify(originalTenure));
+      player.tier = 1;
+      const tierOne = {
+        label:FB.focusLabel(state, toil),
+        description:FB.focusDescription(state, toil)
+      };
+      player.tier = 0;
+      player.tenure.status = 'closed';
+      const closed = FB.focusLabel(state, toil);
+      player.tenure.status = 'active';
+      player.tenure.archetypeId = 'unknown_archetype';
+      const unknown = FB.focusLabel(state, toil);
+      const nonToil = FB.focusLabel(state, rest);
+      return {
+        labels:labels,
+        expected:expected,
+        identity:{
+          id:toil.id,
+          handler:toil.handler,
+          shortcutFamily:toil.shortcutFamily,
+          savedFocus:player.focus
+        },
+        tierOne:tierOne,
+        closed:closed,
+        unknown:unknown,
+        nonToil:nonToil,
+        genericToil:FBDATA.focuses.filter(function (focus) {
+          return focus.id === 'toil';
+        })[0].label,
+        genericRest:FBDATA.focuses.filter(function (focus) {
+          return focus.id === 'rest';
+        })[0].label
+      };
+    });
+
+    Object.keys(result.expected).forEach(function (archetypeId) {
+      const entry = result.labels[archetypeId];
+      expect(entry.label).toBe(result.expected[archetypeId][0]);
+      expect(entry.repeated).toBe(entry.label);
+      expect(entry.description).toBe(result.expected[archetypeId][1]);
+      expect(entry.viewLabel).toBe(entry.label);
+      expect(entry.viewDescription).toBe(entry.description);
+      expect(entry.gain).toEqual(result.labels.dependent_farming.gain);
+      expect(entry.eligible).toBe(result.labels.dependent_farming.eligible);
+      expect(entry.stateUnchanged).toBe(true);
+      expect(entry.rngUnchanged).toBe(true);
+    });
+    expect(result.identity).toMatchObject({
+      id:'toil', handler:'toil', shortcutFamily:'farmer-work'
+    });
+    expect(result.tierOne.label).toBe(result.genericToil);
+    expect(result.closed).toBe(result.genericToil);
+    expect(result.unknown).toBe(result.genericToil);
+    expect(result.nonToil).toBe(result.genericRest);
+  });
+
+test('identical seeded Toil ticks produce identical economy, health, skill, and RNG results for every archetype',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const baseline = FB.save.serialize();
+      const archetypeIds = Object.keys(FBDATA.tenureArchetypes);
+      return archetypeIds.map(function (archetypeId) {
+        FB.save.restore(JSON.parse(baseline));
+        const state = FB.state;
+        const player = state.player;
+        player.tier = 0;
+        player.focus = 'toil';
+        player.tenure.status = 'active';
+        player.tenure.archetypeId = archetypeId;
+        const character = state.chars[player.charId];
+        const toil = FB.focuses.filter(function (focus) {
+          return focus.id === 'toil';
+        })[0];
+        FB.setRngState(246813579);
+        const before = {
+          gold:player.gold,
+          prestige:player.prestige,
+          piety:player.piety,
+          health:character.health,
+          skills:JSON.parse(JSON.stringify(character.skills || {}))
+        };
+        toil.tick(state);
+        return {
+          archetypeId:archetypeId,
+          before:before,
+          after:{
+            gold:player.gold,
+            prestige:player.prestige,
+            piety:player.piety,
+            health:character.health,
+            skills:JSON.parse(JSON.stringify(character.skills || {}))
+          },
+          rng:FB.getRngState()
+        };
+      });
+    });
+
+    expect(result).toHaveLength(7);
+    result.forEach(function (entry) {
+      expect(entry.before).toEqual(result[0].before);
+      expect(entry.after).toEqual(result[0].after);
+      expect(entry.rng).toEqual(result[0].rng);
+    });
+  });
+
+test('regional tenure events localize every changed surface while retaining one event definition and mechanics',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const playerId = state.player.charId;
+      const fixtures = [
+        { eventId:'serf_boon_harvest', dutyId:'seasonal_catch_share', archetypeId:'norse_coastal_service', genericDuty:'demesne_harvest' },
+        { eventId:'serf_weekwork_tally', dutyId:'herd_service', archetypeId:'pastoral_steppe', genericDuty:'week_work' },
+        { eventId:'serf_weekwork_tally', dutyId:'woodland_service', archetypeId:'woodland_dependence', genericDuty:'week_work' },
+        { eventId:'serf_weekwork_tally', dutyId:'boat_service', archetypeId:'norse_coastal_service', genericDuty:'week_work' },
+        { eventId:'serf_pannage_due', dutyId:'pasture_due', archetypeId:'pastoral_steppe', genericDuty:'pannage_due' },
+        { eventId:'serf_pannage_due', dutyId:'mast_due', archetypeId:'woodland_dependence', genericDuty:'pannage_due' },
+        { eventId:'serf_bridge_cartage', dutyId:'seasonal_drove', archetypeId:'pastoral_steppe', genericDuty:'bridge_cartage' },
+        { eventId:'serf_bridge_cartage', dutyId:'timber_cartage', archetypeId:'woodland_dependence', genericDuty:'bridge_cartage' },
+        { eventId:'serf_bridge_cartage', dutyId:'shore_transport', archetypeId:'norse_coastal_service', genericDuty:'bridge_cartage' },
+        { eventId:'serf_deadwood_amerced', dutyId:'deadwood_due', archetypeId:'woodland_dependence', genericDuty:'deadwood_amerced' }
+      ];
+      function copyPaths(event) {
+        const paths = ['title', 'text'];
+        event.options.forEach(function (option, index) {
+          paths.push('options.' + index + '.label');
+          paths.push('options.' + index + '.desc');
+          if (option.success && option.success.text) {
+            paths.push('options.' + index + '.success.text');
+          }
+          if (option.failure && option.failure.text) {
+            paths.push('options.' + index + '.failure.text');
+          }
+        });
+        return paths;
+      }
+      const beforeState = JSON.stringify(state);
+      const beforeRng = JSON.stringify(FB.getRngState());
+      const rendered = fixtures.map(function (fixture) {
+        const event = FB.eventById(fixture.eventId);
+        const regionalContext = {
+          dutyId:fixture.dutyId,
+          archetypeId:fixture.archetypeId,
+          tenureArchetypeId:fixture.archetypeId
+        };
+        const genericContext = {
+          dutyId:fixture.genericDuty,
+          archetypeId:'dependent_farming',
+          tenureArchetypeId:'dependent_farming'
+        };
+        const paths = copyPaths(event);
+        return {
+          eventId:fixture.eventId,
+          dutyId:fixture.dutyId,
+          definitionCount:FBDATA.events.filter(function (candidate) {
+            return candidate.id === fixture.eventId;
+          }).length,
+          paths:paths.map(function (path) {
+            return {
+              path:path,
+              regional:FB.eventText(state, playerId, event, path, regionalContext),
+              generic:FB.eventText(state, playerId, event, path, genericContext)
+            };
+          }),
+          mechanics:event.options.map(function (option) {
+            return {
+              require:option.require || null,
+              chance:option.chance || null,
+              effects:option.effects || null,
+              success:option.success && option.success.effects || null,
+              failure:option.failure && option.failure.effects || null
+            };
+          })
+        };
+      });
+      const quartering = FB.eventById('serf_officers_quartered');
+      const quarteringPaths = copyPaths(quartering);
+      const quarteringVariants = [
+        'pastoral_steppe', 'woodland_dependence', 'norse_coastal_service'
+      ].map(function (archetypeId) {
+        return {
+          archetypeId:archetypeId,
+          paths:quarteringPaths.map(function (path) {
+            return {
+              path:path,
+              regional:FB.eventText(state, playerId, quartering, path, {
+                tenureArchetypeId:archetypeId, archetypeId:archetypeId
+              }),
+              generic:FB.eventText(state, playerId, quartering, path, {
+                tenureArchetypeId:'dependent_farming', archetypeId:'dependent_farming'
+              })
+            };
+          })
+        };
+      });
+      return {
+        rendered:rendered,
+        quarteringVariants:quarteringVariants,
+        stateUnchanged:beforeState === JSON.stringify(state),
+        rngUnchanged:beforeRng === JSON.stringify(FB.getRngState())
+      };
+    });
+
+    const mechanicsByEvent = {};
+    result.rendered.forEach(function (fixture) {
+      expect(fixture.definitionCount).toBe(1);
+      if (mechanicsByEvent[fixture.eventId]) {
+        expect(fixture.mechanics).toEqual(mechanicsByEvent[fixture.eventId]);
+      } else {
+        mechanicsByEvent[fixture.eventId] = fixture.mechanics;
+      }
+      fixture.paths.forEach(function (entry) {
+        expect(entry.regional, fixture.eventId + ' ' + fixture.dutyId + ' ' + entry.path).toBeTruthy();
+        expect(entry.regional, fixture.eventId + ' ' + fixture.dutyId + ' ' + entry.path).not.toBe(entry.generic);
+      });
+    });
+    result.quarteringVariants.forEach(function (fixture) {
+      fixture.paths.forEach(function (entry) {
+        expect(entry.regional, fixture.archetypeId + ' ' + entry.path).toBeTruthy();
+        expect(entry.regional, fixture.archetypeId + ' ' + entry.path).not.toBe(entry.generic);
+      });
+    });
+    expect(result.stateUnchanged).toBe(true);
+    expect(result.rngUnchanged).toBe(true);
+  });
+
+test('every new regional duty keeps its authored cadence and queues exact saved tenure context once',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const player = state.player;
+      const fixtures = [
+        { archetypeId:'pastoral_steppe', dutyId:'herd_service', eventId:'serf_weekwork_tally', season:'spring', day:30, cycle:0 },
+        { archetypeId:'pastoral_steppe', dutyId:'pasture_due', eventId:'serf_pannage_due', season:'autumn', day:30, cycle:0 },
+        { archetypeId:'pastoral_steppe', dutyId:'seasonal_drove', eventId:'serf_bridge_cartage', season:'summer', day:30, cycle:1 },
+        { archetypeId:'woodland_dependence', dutyId:'woodland_service', eventId:'serf_weekwork_tally', season:'spring', day:30, cycle:0 },
+        { archetypeId:'woodland_dependence', dutyId:'mast_due', eventId:'serf_pannage_due', season:'autumn', day:30, cycle:0 },
+        { archetypeId:'woodland_dependence', dutyId:'timber_cartage', eventId:'serf_bridge_cartage', season:'summer', day:30, cycle:1 },
+        { archetypeId:'woodland_dependence', dutyId:'deadwood_due', eventId:'serf_deadwood_amerced', season:'winter', day:30, cycle:1 },
+        { archetypeId:'norse_coastal_service', dutyId:'boat_service', eventId:'serf_weekwork_tally', season:'spring', day:30, cycle:0 },
+        { archetypeId:'norse_coastal_service', dutyId:'seasonal_catch_share', eventId:'serf_boon_harvest', season:'autumn', day:30, cycle:0 },
+        { archetypeId:'norse_coastal_service', dutyId:'shore_transport', eventId:'serf_bridge_cartage', season:'summer', day:30, cycle:1 }
+      ];
+      const home = player.provinceId;
+      const settlement = player.homeSettlement || 0;
+      return fixtures.map(function (fixture) {
+        const definition = FBDATA.tenureArchetypes[fixture.archetypeId];
+        const authored = definition.duties.filter(function (duty) {
+          return duty.id === fixture.dutyId;
+        })[0];
+        player.tenure = {
+          version:1,
+          status:'active',
+          archetypeId:fixture.archetypeId,
+          formedTurn:state.turn,
+          formedBy:'new_game',
+          provinceId:home,
+          settlement:settlement,
+          rights:[],
+          duties:[{
+            id:fixture.dutyId,
+            eventId:fixture.eventId,
+            nextDueTurn:state.turn,
+            lastResolvedTurn:null
+          }],
+          conditional:[],
+          lastPresentedSeasonKey:null
+        };
+        state.eventQueue = [];
+        FB.tenureDay(state);
+        const queued = state.eventQueue[0];
+        const event = FB.eventById(fixture.eventId);
+        const valid = queued && FB.fns.serf_tenure_context_valid(state, queued.ctx, event);
+        FB.tenureDay(state);
+        return {
+          fixture:fixture,
+          intervalTurns:authored.intervalTurns,
+          firstDue:authored.firstDue,
+          queueCount:state.eventQueue.length,
+          queuedId:queued && queued.id,
+          context:queued && queued.ctx,
+          valid:!!valid
+        };
+      });
+    });
+
+    expect(result).toHaveLength(10);
+    result.forEach(function (entry) {
+      expect(entry.intervalTurns).toBe(720);
+      expect(entry.firstDue).toEqual({
+        season:entry.fixture.season,
+        day:entry.fixture.day,
+        cycle:entry.fixture.cycle
+      });
+      expect(entry.queueCount).toBe(1);
+      expect(entry.queuedId).toBe(entry.fixture.eventId);
+      expect(entry.context).toMatchObject({
+        tenureFormedTurn:expect.any(Number),
+        archetypeId:entry.fixture.archetypeId,
+        tenureArchetypeId:entry.fixture.archetypeId,
+        dutyId:entry.fixture.dutyId,
+        dueTurn:expect.any(Number),
+        protagonistId:expect.any(String),
+        locationId:expect.any(String),
+        tenureProvinceId:expect.any(String),
+        tenureVariantId:entry.fixture.archetypeId + ':' + entry.fixture.dutyId
+      });
+      expect(entry.valid).toBe(true);
+    });
+  });
+
+test('only conflicting extraordinary serf prose snapshots active tenure and expires after identity changes',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    const result = await page.evaluate(function () {
+      const state = FB.state;
+      const tenure = FB.activeSerfTenure(state);
+      tenure.archetypeId = 'pastoral_steppe';
+      const ids = [
+        'corvee', 'serf_seed_grain_requisition', 'lord_squeezes', 'lords_notice'
+      ];
+      const snapshots = ids.map(function (id) {
+        const event = FB.eventById(id);
+        const context = FB.eventContextFor(state, event, {});
+        const regional = FB.eventText(state, state.player.charId, event, 'text', context);
+        const generic = FB.eventText(state, state.player.charId, event, 'text', {
+          tenureArchetypeId:'dependent_farming', archetypeId:'dependent_farming'
+        });
+        const validBefore = FB.eventContextStillValid(state, event, context);
+        tenure.archetypeId = 'woodland_dependence';
+        const validAfter = FB.eventContextStillValid(state, event, context);
+        tenure.archetypeId = 'pastoral_steppe';
+        return {
+          id:id,
+          tenureAware:event.tenureAware,
+          context:context,
+          regional:regional,
+          generic:generic,
+          validBefore:validBefore,
+          validAfter:validAfter
+        };
+      });
+      return {
+        snapshots:snapshots,
+        tallageTenureAware:!!FB.eventById('serf_extraordinary_tallage').tenureAware
+      };
+    });
+
+    result.snapshots.forEach(function (entry) {
+      expect(entry.tenureAware).toBe(true);
+      expect(entry.context).toMatchObject({
+        tenureFormedTurn:expect.any(Number),
+        tenureArchetypeId:'pastoral_steppe',
+        archetypeId:'pastoral_steppe',
+        tenureProvinceId:expect.any(String),
+        tenureSettlement:expect.any(Number),
+        protagonistId:expect.any(String)
+      });
+      expect(entry.regional).toBeTruthy();
+      expect(entry.regional).not.toBe(entry.generic);
+      expect(entry.validBefore).toBe(true);
+      expect(entry.validAfter).toBe(false);
+    });
+    expect(result.tallageTenureAware).toBe(false);
   });
 
 test('ordinary serf burden stories are never selected by the random event generator without matching tenure duties',

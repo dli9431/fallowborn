@@ -15139,7 +15139,8 @@ window.FB = window.FB || {};
       kv('Standing with the Pope', standingSpan(pope && FB.papalOpinionOfCandidate
         ? FB.papalOpinionOfCandidate(s, me, obedienceId) : 0)) +
       kv('Current focus', esc(currentFocus
-        ? dt(s, 'focus', currentFocus.id, currentFocus, 'label')
+        ? (FB.focusLabel ? FB.focusLabel(s, currentFocus) :
+          dt(s, 'focus', currentFocus.id, currentFocus, 'label'))
         : FB.T('None'))) +
       '</section><section class="papacy-card">' + panelh('Temporalities') +
       kv('Seasonal revenue', esc(FB.T('{money:gold}', {
@@ -20974,7 +20975,8 @@ window.FB = window.FB || {};
       seen[target] = 1;
       const label = focus.shortcutFamily
         ? shortcutFamilyLabel(focus.shortcutFamily)
-        : (s ? dt(s, 'focus', focus.id, focus, 'label') : FB.T(focus.label));
+        : (s ? (FB.focusLabel ? FB.focusLabel(s, focus) :
+          dt(s, 'focus', focus.id, focus, 'label')) : FB.T(focus.label));
       focusOptions += '<option value="' + esc(target) + '"' +
         (selected === target ? ' selected' : '') + '>' + esc(label) +
         '</option>';

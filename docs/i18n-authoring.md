@@ -28,6 +28,11 @@ though the game still *runs*.
   the same `FB.dataText` path as `name` and `desc`.
   Career rank names, learned-license names, and specialty names are nested structured
   display fields and must also render through their exact `FB.dataText` paths.
+  Serf tenure duties and rights use the normal `tenureDuty` / `tenureRight` structured
+  paths. Tenure archetypes additionally declare stable `nameKey`, `summaryKey`,
+  `workLabelKey`, and `workDescriptionKey` owners beside their English `name`, `desc`,
+  `workLabel`, and `workDescription`; extraction registers both owner and current source
+  hash, and runtime rendering must use `FB.tenureText` rather than exposing semantic ids.
   Baseline focus and deed labels plus static descriptions live in `data/actions.js` under
   stable `focus.<id>` and `action.<id>` owners. A truly state-dependent description remains
   in its private `js/actions.js` handler and routes its complete phrases through `FB.T`.

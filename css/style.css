@@ -2824,11 +2824,13 @@ textarea.modjson, textarea.savetext {
 @media (pointer: coarse) { .portrait-equip { min-height: 44px; } }
 
 /* Serf customary tenure details in rank modal */
-.tenure-summary-block, .tenure-next-due-block, .tenure-conditional-block {
+.tenure-summary-block, .tenure-work-block, .tenure-next-due-block,
+.tenure-conditional-block {
   margin: 6px 0 10px;
 }
-.tenure-archetype-name {
+.tenure-archetype-name, .tenure-work-name {
   color: #d8b24a; font-size: 15px; margin-bottom: 3px;
+  overflow-wrap: anywhere;
 }
 .tenure-duty-item, .tenure-right-item {
   margin: 5px 0 8px; padding: 4px 0; border-bottom: 1px solid rgba(85, 69, 42, .3);

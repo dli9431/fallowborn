@@ -18,6 +18,13 @@ an immediate deed such as Poach is visibly different from a picker-backed deed s
 into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
+
+Regional serf packages reuse that scheduler without changing Toil. Pastoral steppe and
+Norse coastal households each carry three two-year duties (1.5 due slots per campaign
+year); woodland households carry four (2 slots per campaign year). Every duty keeps the
+720-day interval and authored first-due calendar recipe, while the existing one-per-season
+ceiling remains authoritative. Their contextual work labels do not alter wage, gain,
+health risk, elapsed days, eligibility, skill training, or RNG order.
 Freedom offers last 180 days and measure their 360-day petition cooldown from creation.
 Creating, reopening, or declining an offer spends no day. Acceptance spends one day.
 The highest-Standing offer includes 90 days of final service: its price is charged once,

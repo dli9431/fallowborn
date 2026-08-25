@@ -126,6 +126,19 @@ for travel, gifts, friendship, rivalry, and mortality; unrelated dead Cardinals 
 into the Papal archive while genealogy-critical family members remain as minimal dead
 characters. See [papacy.md](papacy.md).
 
+## Contextual serf livelihood
+
+All tier-0 serf households retain profession `farmer`, focus `toil`, handler `toil`, and
+shortcut family `farmer-work`. An active saved tenure changes only the displayed work
+label and description: strips and demesne, fields and waterworks, household service,
+pastoral herds, woodland and clearings, shore/boat transport, or neutral dependent
+farming. `FB.focusLabel` and `FB.focusDescription` are the one read-only presentation
+boundary. Tier 1+ farmers, non-Toil focuses, and missing, closed, or unknown tenure retain
+generic focus text. No regional archetype changes wage, gain, health risk, skill growth,
+eligibility, elapsed time, or RNG order. This capability has technology impact **none**
+because it describes an existing household's baseline livelihood rather than a researched
+option.
+
 ## Skills
 
 **Skills grow on an uncapped diminishing-return curve.** Every skill gain (focus

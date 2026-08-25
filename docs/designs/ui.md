@@ -14,6 +14,13 @@ customary tenure (`FB.tenureView`) within the **Station & home** modal. It displ
 localized archetype name, summary, holding controller, linked current lord and steward, recognized rights,
 ordinary duties with full calendar dates and days remaining, and any pending conditional obligations,
 using stable `data-tenure-*` selectors and responsive mobile layout.
+An **Ordinary Work** block uses the same `FB.focusLabel` / `FB.focusDescription`
+adapter as the Deeds action card, active-focus display, picker, shortcuts, receipts, and
+event interpolation. For an active tier-0 tenure it describes the saved regional
+archetype; non-Toil focuses, tier 1+ farmers, and missing, closed, or unknown tenure use
+the generic authored focus text. Reading either helper never creates, repairs, or mutates
+tenure and consumes no RNG. The work, duty, and right text wraps at the 390-pixel layout
+without adding a modal or color-only meaning.
 An active Old Custom case adds one compact linked witness/officer line. Each native link
 opens the standard character sheet; visible or browser Back restores the same Station &
 home sheet and keyboard focus.
