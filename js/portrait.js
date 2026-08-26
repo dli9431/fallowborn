@@ -45,7 +45,7 @@ window.FB = window.FB || {};
     const kind = item.art && item.art.kind || 'generic';
     const metal = pickArt(item, ['metals'], '#afb5b3', 1);
     const base = pickArt(item,
-      ['cloths', 'leathers', 'woods', 'covers', 'grips', 'cords', 'wraps'],
+      ['cloths', 'leathers', 'stones', 'woods', 'covers', 'grips', 'cords', 'wraps'],
       '#5b402b', 2);
     const accent = pickArt(item,
       ['gems', 'threads', 'trims', 'pages'], '#c5a454', 3);
@@ -220,6 +220,84 @@ window.FB = window.FB || {};
       ctx.fillStyle = metal;
       ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(2, -4); ctx.lineTo(2, 4);
       ctx.closePath(); ctx.fill();
+    } else if (kind === 'sickle') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(-9, 8); ctx.lineTo(12, 43); ctx.stroke();
+      ctx.strokeStyle = metal; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.arc(1, -11, 25, Math.PI * 0.12, Math.PI * 1.18); ctx.stroke();
+      ctx.strokeStyle = polish; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(1, -11, 20, Math.PI * 0.18, Math.PI * 1.1); ctx.stroke();
+    } else if (kind === 'spade') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(0, -40); ctx.lineTo(0, 28); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-9, -39); ctx.lineTo(9, -39); ctx.stroke();
+      ctx.fillStyle = metal; ctx.strokeStyle = '#292521'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-14, 25); ctx.lineTo(14, 25);
+      ctx.lineTo(10, 48); ctx.quadraticCurveTo(0, 54, -10, 48);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (kind === 'crook') {
+      ctx.strokeStyle = base; ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.moveTo(2, 48); ctx.lineTo(2, -31);
+      ctx.bezierCurveTo(2, -53, 31, -54, 31, -34);
+      ctx.bezierCurveTo(31, -22, 18, -19, 12, -27); ctx.stroke();
+      ctx.strokeStyle = polish; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(0, 43); ctx.lineTo(0, -28); ctx.stroke();
+    } else if (kind === 'billhook') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(0, -23); ctx.lineTo(0, 49); ctx.stroke();
+      ctx.fillStyle = metal; ctx.strokeStyle = '#292521'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-3, -27); ctx.lineTo(3, -47);
+      ctx.quadraticCurveTo(29, -37, 24, -10);
+      ctx.quadraticCurveTo(18, -23, 5, -19); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = polish; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(6, -39); ctx.quadraticCurveTo(20, -32, 19, -18); ctx.stroke();
+    } else if (kind === 'hook') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(0, 49); ctx.lineTo(0, -34); ctx.stroke();
+      ctx.strokeStyle = metal; ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(0, -35); ctx.lineTo(0, -47);
+      ctx.bezierCurveTo(24, -49, 29, -27, 14, -19); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -42); ctx.lineTo(-13, -29); ctx.stroke();
+    } else if (kind === 'quern') {
+      ctx.fillStyle = base; ctx.strokeStyle = '#2f2b26'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(0, 14, 33, 17, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(0, -2, 29, 15, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#302c27';
+      ctx.beginPath(); ctx.ellipse(0, -3, 6, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = pickArt(item, ['woods'], '#68462a', 4); ctx.lineWidth = 5;
+      ctx.beginPath(); ctx.moveTo(19, -9); ctx.lineTo(23, -37); ctx.stroke();
+    } else if (kind === 'peel') {
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.moveTo(0, -48); ctx.lineTo(0, 18); ctx.stroke();
+      ctx.fillStyle = base; ctx.strokeStyle = '#2d211a'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-20, 15); ctx.quadraticCurveTo(0, 7, 20, 15);
+      ctx.lineTo(17, 43); ctx.quadraticCurveTo(0, 51, -17, 43);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(45,33,26,0.45)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(-12, 24); ctx.lineTo(12, 24);
+      ctx.moveTo(-10, 34); ctx.lineTo(10, 34); ctx.stroke();
+    } else if (kind === 'tally') {
+      ctx.strokeStyle = base; ctx.lineWidth = 12;
+      ctx.beginPath(); ctx.moveTo(-24, 34); ctx.lineTo(24, -34); ctx.stroke();
+      ctx.strokeStyle = '#33261b'; ctx.lineWidth = 2;
+      for (let t = -14; t <= 14; t += 9) {
+        ctx.beginPath(); ctx.moveTo(t - 7, -t - 1); ctx.lineTo(t + 3, -t + 6); ctx.stroke();
+      }
+      ctx.strokeStyle = polish; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(-21, 31); ctx.lineTo(21, -31); ctx.stroke();
+    } else if (kind === 'basket') {
+      ctx.fillStyle = base; ctx.strokeStyle = '#34251a'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-31, -5); ctx.quadraticCurveTo(-27, 35, 0, 42);
+      ctx.quadraticCurveTo(27, 35, 31, -5); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#c29a5c'; ctx.lineWidth = 2;
+      for (let w = -20; w <= 20; w += 10) {
+        ctx.beginPath(); ctx.moveTo(w, 0); ctx.quadraticCurveTo(w * 0.7, 24, w * 0.35, 37); ctx.stroke();
+      }
+      for (let y = 5; y <= 31; y += 8) {
+        ctx.beginPath(); ctx.moveTo(-27 + y * 0.15, y); ctx.lineTo(27 - y * 0.15, y); ctx.stroke();
+      }
+      ctx.strokeStyle = base; ctx.lineWidth = 6;
+      ctx.beginPath(); ctx.arc(0, -3, 27, Math.PI, 0); ctx.stroke();
     } else if (kind === 'staff') {
       ctx.strokeStyle = base; ctx.lineWidth = 6;
       ctx.beginPath(); ctx.moveTo(0, -46); ctx.lineTo(0, 48); ctx.stroke();

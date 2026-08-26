@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.160.1';
+  FB.VERSION = '1.160.2';
   FB.CHANGELOG = [
+    { v: '1.160.2', date: '2026-08-26', changes: [
+      'Serf life now has clearer duty encounters, more fitting work and equipment details, and easier access to lieges and family status history.',
+      'Game speed now starts fastest and persists locally, while compact tooltips keep event choices and participants in view.'
+    ] },
     { v: '1.160.1', date: '2026-08-26', changes: [
       'The serf opening now links its tenure guidance, scheduled duties, freedom terms, and family history through one accessible household story.'
     ] },
@@ -2488,7 +2492,9 @@ window.FB = window.FB || {};
       G.saveUiPrefs();
       state.player.flags.tutorial = 1; // offered once per browser profile
     }
-    state.peakTitleData = FB.titleSnapshot(state);
+    state.peakTitleData = FB.playerStatusTitleSnapshot
+      ? FB.playerStatusTitleSnapshot(state) : FB.titleSnapshot(state);
+    if (FB.notePlayerStatus) FB.notePlayerStatus(state, state.peakTitleData);
     G.paused = true;
 
     FB.ui.mapDirty();
@@ -2916,10 +2922,10 @@ window.FB = window.FB || {};
   };
 
   /* ---------- the flow of days: auto-tick with pause/unpause ----------
-     Speed is adjustable (+/- keys or menu → Settings); the default middle
-     step is the old 350 ms ≈ 3 days per second. */
+     Speed is adjustable (+/- keys or menu → Settings), persists as a
+     browser-local UI preference, and defaults to the fastest step. */
   G.SPEEDS = [700, 500, 350, 230, 140]; // ms per day, slowest → fastest
-  G.speedIdx = 2;
+  G.speedIdx = G.SPEEDS.length - 1;
   G.paused = true;
   G.observe = false; // New Game → 👁 Observe: watch a character-less world
   G.obsQuiet = false; //   …silence the world-news toasts while watching
@@ -2928,6 +2934,7 @@ window.FB = window.FB || {};
   G.MAIN_TEXT_COLOR_DEFAULT = '#f2eadb';
   G.HELPER_TEXT_COLOR_DEFAULT = '#c9b991';
   G.uiPrefs = {
+    speedIdx:G.speedIdx,
     commitmentsCollapsed:false,
     workFiltersCollapsed:true,
     hideBeginnerHints:false,
@@ -2955,6 +2962,14 @@ window.FB = window.FB || {};
   try {
     const storedUiPrefs = JSON.parse(localStorage.getItem('fb_ui') || 'null');
     if (storedUiPrefs && typeof storedUiPrefs === 'object') {
+      if (typeof storedUiPrefs.speedIdx === 'number' &&
+          isFinite(storedUiPrefs.speedIdx) &&
+          Math.floor(storedUiPrefs.speedIdx) === storedUiPrefs.speedIdx &&
+          storedUiPrefs.speedIdx >= 0 &&
+          storedUiPrefs.speedIdx < G.SPEEDS.length) {
+        G.speedIdx = storedUiPrefs.speedIdx;
+        G.uiPrefs.speedIdx = storedUiPrefs.speedIdx;
+      }
       G.uiPrefs.commitmentsCollapsed =
         Object.prototype.hasOwnProperty.call(
           storedUiPrefs, 'commitmentsCollapsed')
@@ -3434,6 +3449,8 @@ window.FB = window.FB || {};
   }
   G.setSpeed = function (d) {
     G.speedIdx = FB.clamp(G.speedIdx + d, 0, G.SPEEDS.length - 1);
+    G.uiPrefs.speedIdx = G.speedIdx;
+    G.saveUiPrefs();
     startTicker();
     if (FB.ui && FB.ui.toast) {
       FB.ui.toast('⏱ Speed {current}/{total}',
@@ -4242,6 +4259,10 @@ window.FB = window.FB || {};
      first death after they load. */
   function recordLegend(s, me, causeMsg, causeText, provenance, titleData) {
     if (!s.legends) s.legends = [];
+    if (FB.noteCharacterStatus) {
+      FB.noteCharacterStatus(s, me, s.player.tier,
+        titleData || FB.playerStatusTitleSnapshot(s));
+    }
     const legend = {
       id: me.id,
       name: FB.fullName(me),
@@ -4368,6 +4389,7 @@ window.FB = window.FB || {};
       if (!livingAbdication) FB.ui.gameOver();
       return false;
     }
+    if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     const successorIsChild = (old.childrenIds || []).indexOf(heir.id) >= 0;
     const tutorialCarry = FB.tutorialActive(s) ? {} : null;
     if (tutorialCarry) {
@@ -4567,6 +4589,7 @@ window.FB = window.FB || {};
       s.realms.player.liege = p.liege || null;
       s.realms.player.religion = heir.religion;
     }
+    if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     if (FB.papacyPlayerSuccession) FB.papacyPlayerSuccession(s, old.id);
     if (FB.enterpriseList) FB.enterpriseList(s);
     if (FB.repairAlliances) FB.repairAlliances(s);

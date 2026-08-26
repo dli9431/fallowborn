@@ -21,8 +21,11 @@ calls the same `FB.resolveEventOption` boundary. Every duty has a continuity res
 valid without gold or a named optional participant. Custom payments expose their exact impact to
 both the preview ledger and Automation scoring. Only the shared resolver consumes the old due turn,
 advances or clears the saved schedule once, and writes the one receipt; stale copies cannot repeat
-effects. The first duty actually shown in each save adds a compact cadence and valid-choice lesson;
-an autoresolved duty deliberately leaves that lesson available for the next visible duty.
+effects. Every visible scheduled duty makes its event-description text the compact **How this
+duty works** control; its cadence and vertically listed valid-choice lesson use the shared desktop
+tooltip or compact `?` disclosure without adding a separate teaching row. The first one records
+the one-time teaching acknowledgement, while an autoresolved duty deliberately leaves that
+acknowledgement available for the next visible duty.
 
 The catalogue contains seven formation-time archetypes: `latin_manorial`,
 `irrigated_fellah`, `pastoral_steppe`, `woodland_dependence`,

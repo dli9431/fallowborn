@@ -4667,6 +4667,10 @@ window.FB = window.FB || {};
     const p = state.player;
     const oldTier = p.tier;
     tier = FB.clamp(Math.floor(tier), 0, 7);
+    /* Preserve the outgoing dignity before a demotion can make it
+       unrecoverable from current state. Reasserting the same tier also repairs
+       additive status history in an older save. */
+    if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     if (tier === oldTier) return false;
     const oldRole = FB.societalRole(oldTier);
     const newRole = FB.societalRole(tier);
@@ -4735,6 +4739,7 @@ window.FB = window.FB || {};
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
     if (FB.repairPolitics) FB.repairPolitics(state);
     if (FB.localGovernmentTierChanged) FB.localGovernmentTierChanged(state);
+    if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     return true;
   };
   FB.fns.barony_offer_eligible = function (state) {

@@ -859,6 +859,9 @@ window.FB = window.FB || {};
     backfillParents(FB.state);
     if (FB.ensureCharacterBynames) FB.ensureCharacterBynames(FB.state);
     if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    if (FB.ensureCharacterStatusHistory) {
+      FB.ensureCharacterStatusHistory(FB.state);
+    }
     if (FB.ensureFaithStandingBaselines) {
       FB.ensureFaithStandingBaselines(FB.state);
     }

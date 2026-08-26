@@ -1,7 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'data/map_data.js',
   'js/items.js',
+  'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
@@ -11,6 +13,80 @@ dependsOnRuntime(__filename, [
 const { test, expect } = require('../support/fixture');
 const { openGame } = require('../support/game/navigation');
 const { startDeterministicGame } = require('../support/game/start');
+
+test('serf work and household items cover the tenure duties with supported icons and art',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+
+    const result = await page.evaluate(function () {
+      const expected = {
+        reaping_sickle:'sickle',
+        irrigation_spade:'spade',
+        shepherds_crook:'crook',
+        woodland_billhook:'billhook',
+        boat_hook:'hook',
+        hand_quern:'quern',
+        oven_peel:'peel',
+        tally_stick:'tally',
+        gathering_basket:'basket'
+      };
+      const items = {};
+      for (const id in expected) {
+        const def = FBDATA.items[id];
+        const canvas = document.createElement('canvas');
+        canvas.width = 96;
+        canvas.height = 96;
+        FB.paintItem(canvas, FB.state, {
+          ref:'serf-work-' + id,
+          defId:id,
+          quality:'plain',
+          visualSeed:1776
+        });
+        items[id] = {
+          rarity:def && def.rarity,
+          repeatable:def && def.unique === false,
+          slot:def && def.slot,
+          kind:def && def.art && def.art.kind,
+          expectedKind:expected[id],
+          rendered:canvas.toDataURL().length > 300
+        };
+      }
+      return {
+        items:items,
+        helmIcons:[
+          FBDATA.items.nasal_helm.icon,
+          FBDATA.items.kettle_helm.icon,
+          FBDATA.items.spangenhelm.icon
+        ],
+        quarterstaffIcon:FBDATA.items.quarterstaff.icon
+      };
+    });
+
+    expect(Object.keys(result.items)).toEqual([
+      'reaping_sickle',
+      'irrigation_spade',
+      'shepherds_crook',
+      'woodland_billhook',
+      'boat_hook',
+      'hand_quern',
+      'oven_peel',
+      'tally_stick',
+      'gathering_basket'
+    ]);
+    for (const id in result.items) {
+      expect(result.items[id]).toEqual({
+        rarity:'common',
+        repeatable:true,
+        slot:'hand',
+        kind:result.items[id].expectedKind,
+        expectedKind:result.items[id].expectedKind,
+        rendered:true
+      });
+    }
+    expect(result.helmIcons).toEqual(['⛑', '⛑', '⛑']);
+    expect(result.quarterstaffIcon).toBe('🎋');
+  });
 
 test('applies Equip Best immediately for one managed character',
   async function ({ page }, testInfo) {

@@ -45,7 +45,7 @@ FBDATA.travelPurposes = {
   },
   frontier: {
     name:'Withdraw into the wastes',
-    icon:'🛖',
+    icon:'⛺',
     desc:'Leave settled life for an empty frontier beside a reachable county, endure a year of survival and work, and raise a permanent homestead — never a title.',
     cost:10,
     minTier:1,

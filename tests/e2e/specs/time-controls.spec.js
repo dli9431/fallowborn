@@ -34,6 +34,67 @@ test.beforeEach(async function ({ page }, testInfo) {
   await openGame(page, testInfo);
 });
 
+test('game speed defaults to fastest and persists as a bounded browser preference',
+  async function ({ page }) {
+    expect(await page.evaluate(function () {
+      return {
+        speedIdx:FB.game.speedIdx,
+        preference:FB.game.uiPrefs.speedIdx,
+        fastest:FB.game.SPEEDS.length - 1
+      };
+    })).toEqual({ speedIdx:4, preference:4, fastest:4 });
+
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(page.locator('#set-speed')).toHaveValue('4');
+    await expect(page.locator('#set-speed-label')).toContainText('fastest');
+    await page.locator('#set-speed').evaluate(function (input) {
+      input.value = '1';
+      input.dispatchEvent(new Event('input', { bubbles:true }));
+      input.dispatchEvent(new Event('change', { bubbles:true }));
+    });
+    expect(await page.evaluate(function () {
+      return {
+        speedIdx:FB.game.speedIdx,
+        preference:FB.game.uiPrefs.speedIdx,
+        stored:JSON.parse(localStorage.getItem('fb_ui')).speedIdx
+      };
+    })).toEqual({ speedIdx:1, preference:1, stored:1 });
+
+    await page.reload({ waitUntil:'domcontentloaded' });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!(window.FB && FB.game && FB.game.bootReady && FB.ui);
+      });
+    }).toBe(true);
+    expect(await page.evaluate(function () {
+      return {
+        speedIdx:FB.game.speedIdx,
+        preference:FB.game.uiPrefs.speedIdx
+      };
+    })).toEqual({ speedIdx:1, preference:1 });
+    await page.evaluate(function () { FB.ui.showSettings(); });
+    await expect(page.locator('#set-speed')).toHaveValue('1');
+
+    await page.evaluate(function () {
+      const stored = JSON.parse(localStorage.getItem('fb_ui'));
+      stored.speedIdx = 99;
+      localStorage.setItem('fb_ui', JSON.stringify(stored));
+    });
+    await page.reload({ waitUntil:'domcontentloaded' });
+    await expect.poll(function () {
+      return page.evaluate(function () {
+        return !!(window.FB && FB.game && FB.game.bootReady);
+      });
+    }).toBe(true);
+    expect(await page.evaluate(function () {
+      return {
+        speedIdx:FB.game.speedIdx,
+        preference:FB.game.uiPrefs.speedIdx,
+        fastest:FB.game.SPEEDS.length - 1
+      };
+    })).toEqual({ speedIdx:4, preference:4, fastest:4 });
+  });
+
 test('map interaction defers exact Deeds and Land war-card rebuilds until release',
   async function ({ page }) {
     await startDeterministicGame(page);

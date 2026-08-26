@@ -453,6 +453,17 @@ from traits, stats, and cause of death, but its text is rendered in the currentl
 (`UI.gameOver`) also accepts legacy rendered `title`, `cause`, and `quip` fields, so no save
 migration is required.
 
+Family-tree rank history is additive character state and keeps save format 3.
+`character.statusTier` stores the last exact playable or reigning tier, while optional
+semantic `character.highestTitleData` stores only the greatest tier-3-or-higher title
+that character actually held, including its place. Rank words remain locale-neutral
+title snapshots and render in the active locale. New games stamp the first protagonist;
+all player tier transitions stamp both sides of the change; succession stamps outgoing
+and incoming heads; a foreign ruler's succession or realm fall stamps its departing crown
+while a current reign remains derivable from the live realm. Restore repairs the current
+head and retained protagonist legends without consuming RNG. A legacy life with no
+surviving title evidence remains unstamped rather than receiving invented history.
+
 Item/equipment state is additive and keeps save format 3. Repeatable objects live in
 `state.itemInstances[ref] = {defId,quality,visualSeed,motif?}`; `player.items` is the
 shared armory's exact-reference list and `player.loadouts[characterId]` maps the eight
@@ -506,8 +517,10 @@ resolved impact records. Entries without `kind` — including every old-save ent
 as News. Chronicle filter selection and unread state are not saved. The saved log still
 caps at 300 entries; each UI filter independently shows its newest 80 matches.
 
-The selected locale (`fb_lang`) is browser-local display preference in `localStorage`, not
-part of `FB.state`, a save slot, a start seed, RNG state, or deterministic simulation state.
+The selected locale (`fb_lang`) and live-clock speed (`fb_ui.speedIdx`) are browser-local
+display preferences in `localStorage`, not part of `FB.state`, a save slot, a start seed,
+RNG state, or deterministic simulation state. Speed defaults to the fastest of the five
+bounded intervals when the preference is absent or invalid.
 Save metadata stores `titleData` and renders its slot label in the locale active at display
 time; older metadata with a frozen `title` remains readable.
 

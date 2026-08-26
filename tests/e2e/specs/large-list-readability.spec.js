@@ -7,6 +7,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_modals.js',
   'js/ui_panels.js',
+  'js/world.js',
   'css/style.css'
 ]);
 
@@ -180,6 +181,82 @@ async function makeLargeListFixture(page) {
   await waitForUiRefresh(page);
   return fixture;
 }
+
+test('Network Connections exposes the direct liege character at unlanded and landed ranks',
+  async function ({ page }, testInfo) {
+    await startListGame(page, testInfo);
+    const commoner = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 1;
+      s.player.liege = null;
+      const lord = FB.getRole(s, 'lord', true);
+      FB.ui.showTab('network', { history:false });
+      const ranks = {};
+      for (const tier of [0, 1, 2]) {
+        s.player.tier = tier;
+        FB.ui.refresh();
+        const row = document.querySelector(
+          '[data-list-section="connections"] [data-list-identity="' +
+          lord.id + '"]');
+        ranks[tier] = !!(row && row.textContent.indexOf('Direct liege') >= 0);
+      }
+      return { id:lord.id, name:FB.fullName(lord), ranks:ranks };
+    });
+
+    const connections = page.locator('[data-list-section="connections"]');
+    const commonerLiege = connections.locator(
+      '[data-list-identity="' + commoner.id + '"]');
+    await expect(commonerLiege).toHaveCount(1);
+    await expect(commonerLiege).toContainText(commoner.name);
+    await expect(commonerLiege).toContainText('Direct liege');
+    expect(commoner.ranks).toEqual({ 0:true, 1:true, 2:true });
+
+    const landed = await page.evaluate(function () {
+      const s = FB.state;
+      let rid = null;
+      let ruler = null;
+      for (const id in s.realms) {
+        const candidate = FB.realmRulerCharacterSnapshot(s, id);
+        if (!candidate) continue;
+        rid = id;
+        ruler = candidate;
+        break;
+      }
+      if (!rid || !ruler) throw new Error('Expected a materialized realm ruler.');
+      const ranks = {};
+      for (const tier of [3, 4, 5, 6]) {
+        s.player.tier = tier;
+        s.player.liege = rid;
+        if (s.realms.player) s.realms.player.liege = rid;
+        FB.ui.refresh();
+        const row = document.querySelector(
+          '[data-list-section="connections"] [data-list-identity="' +
+          ruler.id + '"]');
+        ranks[tier] = !!(row && row.textContent.indexOf('Direct liege') >= 0);
+      }
+      return {
+        id:ruler.id,
+        name:FB.fullName(ruler),
+        localLordId:s.roles.lord,
+        ranks:ranks
+      };
+    });
+
+    const landedLiege = connections.locator(
+      '[data-list-identity="' + landed.id + '"]');
+    await expect(landedLiege).toHaveCount(1);
+    await expect(landedLiege).toContainText(landed.name);
+    await expect(landedLiege).toContainText('Direct liege');
+    expect(landed.ranks).toEqual({ 3:true, 4:true, 5:true, 6:true });
+    if (landed.localLordId !== landed.id) {
+      await expect(connections.locator(
+        '[data-list-identity="' + landed.localLordId + '"]'))
+        .not.toContainText('Direct liege');
+    }
+    await landedLiege.locator('button[data-cid]').click();
+    await expect(page.locator('.character-interaction-modal')).toBeVisible();
+    await expect(page.locator('#gm-title')).toContainText(landed.name);
+  });
 
 test('small Work roster keeps all ordinary rows visible without search',
   async function ({ page }, testInfo) {

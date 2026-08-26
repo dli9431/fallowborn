@@ -53,6 +53,10 @@ test('only freeholders and gentry may begin a frontier withdrawal',
     expect(result.freeholder).toBe(true);
     expect(result.gentry).toBe(true);
     expect(result.baron).not.toBe(true);
+
+    await page.evaluate(function () { FB.ui.showTravelPurposes(); });
+    await expect(page.locator('[data-travel-purpose="frontier"]'))
+      .toContainText('⛺ Withdraw into the wastes');
   });
 
 test('frontier routes stay settled until one final wasteland leg',

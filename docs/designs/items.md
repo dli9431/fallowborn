@@ -36,6 +36,17 @@ Definitions may also set `slot`, two-handed `grip:2`, and `ageMin`. Legacy and m
 with none of these fields remain compatible as unique, one-handed objects with generic
 procedural art.
 
+The ordinary common catalogue includes a low-status work-and-household suite grounded in
+the recurring serf-tenure duties: reaping sickle, irrigation spade, shepherd’s crook,
+woodland billhook, boat hook, hand quern, oven peel, tally stick, and gathering basket.
+These are modest wearable hand objects rather than event-only trophies, so markets,
+peddlers, and the existing ordinary-loot paths can turn field, woodland, pastoral, shore,
+mill, oven, weekwork, and gathering flavor into possessions a family actually keeps.
+They use the existing item, acquisition, quality, and effect contracts. Technology impact:
+this catalogue expansion adds content and procedural presentation to those established
+capabilities, not a separately gateable capability, so it requires no new
+`FBDATA.techImpactReviews` entry.
+
 `eventOnly:true` reserves a definition for an explicit grant path. It is excluded from
 ordinary gear, full peddler stock, loot, plots, finds, raids, and war-spoil pools, but may
 still be created by `FB.grantItem` or a specific `giveItem` effect. Author specialties use

@@ -2442,6 +2442,29 @@ test('named event participants render once and their character sheet returns to 
       '[data-event-participant="officer"] [data-event-character="' +
         cast.officer + '"]');
     await expect(officerButton).toHaveCount(1);
+    await expect(officerButton).toContainText('Steward');
+    await expect(officerButton).toContainText('Standing');
+    const collapsedHeight = await page.locator(
+      '[data-event-participant="officer"]').evaluate(function (node) {
+      return node.getBoundingClientRect().height;
+    });
+    expect(collapsedHeight).toBeLessThanOrEqual(80);
+    const participantDetails = page.locator(
+      '[data-event-participant="officer"] .event-participant-details');
+    await expect(participantDetails).toHaveClass(/hidden/);
+    const participantInfo = page.locator(
+      '[data-event-participant="officer"] .settcard-info');
+    await expect(participantInfo).toBeVisible();
+    await participantInfo.click();
+    await expect(participantDetails).not.toHaveClass(/hidden/);
+    await participantInfo.click();
+    await expect(page.locator('#ev-options .evopt').first()).toBeInViewport();
+    await page.setViewportSize({ width:1280, height:800 });
+    await expect(participantInfo).toBeHidden();
+    await officerButton.hover();
+    await expect(page.locator('#tooltip')).toBeVisible();
+    await expect(page.locator('#tooltip')).toContainText(cast.officerName);
+    await expect(page.locator('#tooltip')).toContainText('Learning');
     await officerButton.click();
     await expect(page.getByRole('heading', { name:cast.officerName }))
       .toBeVisible();

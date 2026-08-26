@@ -19,6 +19,11 @@ into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
 
+The five live-clock intervals remain ordered slowest to fastest. A browser with no valid
+preference starts at the fastest interval; changing speed through Settings or the `−`/`+`
+keys updates `uiPrefs.speedIdx` in `fb_ui`, so the choice survives reloads without entering
+campaign state or affecting deterministic simulation.
+
 The active tenure saves a semantic nearest-duty pointer (`nextDutyId`, `nextDutyTurn`,
 conditional marker, and bounded list index). Formation, deterministic normalization, schedule
 resolution, conditional-duty change, amendment, closure, and replacement are the normal

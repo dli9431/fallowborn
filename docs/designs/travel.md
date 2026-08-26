@@ -16,6 +16,10 @@ travel balance values. The core purposes are pilgrimage, trade, study, paid
 service, adventuring expedition, frontier withdrawal, and a character-targeted
 relationship visit:
 
+The purpose picker prefixes each localized name with its data-defined system emoji.
+Frontier withdrawal uses the broadly supported tent glyph (`⛺`) so the option retains
+a visible icon on older Windows emoji fonts.
+
 - pilgrimage uses authored sites filtered by the traveler's exact faith or any faith
   in its inheritance lineage;
 - trade routes the player into the self-founded venture setup, whose finance

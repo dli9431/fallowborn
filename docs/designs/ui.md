@@ -65,7 +65,9 @@ whether it changes the offered term band; choosing no supporter remains explicit
 supported offer names the advocate and shows the actual-plus-bonus Standing snapshot.
 
 Events render every living bound participant named by their selected prose or explicit
-card list exactly once. Each participant card has a native **Open character sheet** button.
+card list exactly once. A compact participant strip keeps portrait, identity, story role,
+and Standing visible; the standard character summary uses the shared desktop tooltip or
+compact `?` disclosure. The strip itself is a native **Open character sheet** button.
 The standard sheet's visible/browser Back returns to the still-open event, restores its
 scroll position, and focuses the originating participant control. Participant ids remain
 simulation context rather than separate browser-history state.
@@ -1565,6 +1567,14 @@ remaining shared cooldown; character and ruler sheets are the primary unified gi
 surface. All assignment, friendship, courtship, and gift buttons are native focusable
 controls, so the same labels and disabled state remain available to keyboard and mobile
 users.
+
+Connections also keeps the protagonist's **Direct liege** as a dedicated person row at
+every station where one exists. Unlanded households use their living local-lord character,
+falling back to the reigning ruler of the home county's direct holder when a start has no
+local role; landed vassals use the reigning ruler of `player.liege`; sovereigns show no
+invented superior. The row deduplicates with friend, rival, lord, or other roles and opens
+the same authoritative character/ruler sheet. This is relationship discoverability only,
+so it introduces no technology-impact review entry.
 
 The panel summarizes other systems and links to their focused controls. Character sheets
 remain the place to call a friend or manage one retainer; Work & Enterprises remains the

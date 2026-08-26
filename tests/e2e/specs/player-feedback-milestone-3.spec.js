@@ -10,7 +10,8 @@ dependsOnRuntime(__filename, [
   'js/model.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
-  'js/ui_panels.js'
+  'js/ui_panels.js',
+  'js/world.js'
 ]);
 
 const { test, expect } = require('../support/fixture');
@@ -393,6 +394,48 @@ test('family tree highlights and connects founders, opens on you, pans, previews
         grandchild:[grandchild.fatherId, grandchild.motherId]
       });
     }, family)).toBe(family.before);
+  });
+
+test('family tree tooltips show current family status and preserve the highest ruling title',
+  async function ({ page }) {
+    const family = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const sibling = FB.siblingsOf(s, me)[0];
+      FB.setPlayerTier(s, 3, { attachLiege:false, stationFarewell:false });
+      const rulingTitle = FB.renderTitleSnapshot(me.highestTitleData);
+      FB.setPlayerTier(s, 2, { attachLiege:false, stationFarewell:false });
+      const currentStatus = FB.renderTitleSnapshot(
+        FB.characterRankTitleSnapshot(s, me, 2, ''));
+      const siblingStatus = FB.renderTitleSnapshot(
+        FB.characterRankTitleSnapshot(s, sibling, 2, ''));
+      FB.ui.showFamilyTree();
+      return {
+        meId:me.id,
+        siblingId:sibling.id,
+        currentStatus:currentStatus,
+        siblingStatus:siblingStatus,
+        rulingTitle:rulingTitle,
+        province:FB.world.byId[s.player.provinceId].name
+      };
+    });
+
+    const playerChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
+      family.meId + '"]').first();
+    await playerChip.locator('.pface').hover();
+    await expect(page.locator('#tooltip [data-family-tree-status]'))
+      .toContainText('Status: ' + family.currentStatus);
+    await expect(page.locator('#tooltip [data-family-tree-highest-title]'))
+      .toContainText('Highest title achieved: ' + family.rulingTitle);
+    expect(family.rulingTitle).toContain(family.province);
+
+    const siblingChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
+      family.siblingId + '"]').first();
+    await siblingChip.locator('.pface').hover();
+    await expect(page.locator('#tooltip [data-family-tree-status]'))
+      .toContainText('Status: ' + family.siblingStatus);
+    await expect(page.locator('#tooltip [data-family-tree-highest-title]'))
+      .toHaveCount(0);
   });
 
 test.describe('mobile-sized family tree', function () {

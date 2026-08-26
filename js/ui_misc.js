@@ -4163,7 +4163,9 @@ window.FB = window.FB || {};
         if (!c) return false;
         return showSideTip(control,
           '<div class="family-tree-character-tooltip">' +
-          UI.charCardHtml(FB.state, c, false, true) + '</div>');
+          UI.charCardHtml(FB.state, c, false, true) +
+          (UI.familyTreeStatusHtml
+            ? UI.familyTreeStatusHtml(FB.state, c) : '') + '</div>');
       }
       document.addEventListener('mouseover', function (e) {
         if (!e.target || !e.target.closest) { scheduleHideTip(); return; }

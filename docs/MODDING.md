@@ -3002,9 +3002,10 @@ unmarried children:
   `qualityFx` zero/one/two times to the base `fx`.
 - `art.kind` selects procedural art (`generic`, `seax`, `sword`, `spear`, `shield`,
   `book`, `jack`, `helm`, `crown`, `ring`, `pendant`, `relic`, `belt`, `boots`,
-  `chest`, `picks`, `axe`, `bow`, or `staff`). The kind accepts the color arrays demonstrated by core items:
+  `chest`, `picks`, `axe`, `bow`, `staff`, `sickle`, `spade`, `crook`, `billhook`,
+  `hook`, `quern`, `peel`, `tally`, or `basket`). The kind accepts the color arrays demonstrated by core items:
   `metals`, `grips`, `woods`, `cloths`, `threads`, `leathers`, `gems`, `trims`,
-  `cords`, `covers`, `pages`, and `wraps`. Missing art uses `generic`. Drawing depends
+  `cords`, `covers`, `pages`, `wraps`, and `stones`. Missing art uses `generic`. Drawing depends
   only on the saved seed; do not put gameplay randomness in an art recipe.
 - `fx` is active only while equipped. `mar/dip/ste/int/lea` and `health` affect the
   wearer; `battle`, `gold`, `prestige`, and `piety` count only on the current head.

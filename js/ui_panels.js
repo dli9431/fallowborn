@@ -3513,6 +3513,28 @@ window.FB = window.FB || {};
     return rows;
   }
 
+  /* Connections names the person immediately above the protagonist, not
+     merely their realm. Unlanded households answer first to their generated
+     local lord; starts without that role fall back to the ruler of the home
+     county's direct holder. Landed households use their explicit feudal
+     parent, while sovereigns correctly have no direct-liege connection. */
+  function networkDirectLiege(s) {
+    const p = s && s.player;
+    if (!p) return null;
+    const localLordId = s.roles && s.roles.lord;
+    const localLord = localLordId && s.chars && s.chars[localLordId];
+    if (p.tier < 3 && localLord && !localLord.dead) return localLord;
+    let rid = p.liege || null;
+    if (!rid && p.tier < 3) {
+      rid = s.holder && s.holder[p.provinceId] ||
+        s.owner && s.owner[p.provinceId] || null;
+    }
+    if (!rid || rid === 'player' || !FB.realmRulerCharacterSnapshot) {
+      return null;
+    }
+    return FB.realmRulerCharacterSnapshot(s, rid);
+  }
+
   function renderNetwork() {
     const s = FB.state;
     const box = $('tab-network');
@@ -3681,6 +3703,8 @@ window.FB = window.FB || {};
       }
     }
     const attentionTarget = FB.socialAttentionTarget(s);
+    const directLiege = networkDirectLiege(s);
+    addConnection(directLiege, FB.T('Direct liege'), -1, false);
     const friend = FB.getRole(s, 'friend', false);
     addConnection(friend, FB.T('Your friend'), 0,
       attentionTarget && friend && attentionTarget.id === friend.id);
@@ -4611,6 +4635,88 @@ window.FB = window.FB || {};
       state.focusCid = active.getAttribute('data-cid');
     }
     return state;
+  };
+
+  function familyTreeLegendTitle(s, c) {
+    const legends = s.legends || [];
+    let best = null;
+    for (let i = 0; i < legends.length; i++) {
+      const legend = legends[i];
+      if (!legend || legend.id !== c.id || !legend.titleData ||
+          Number(legend.titleData.tier) < 3) continue;
+      if (!best || Number(legend.titleData.tier) > Number(best.tier)) {
+        best = legend.titleData;
+      }
+    }
+    return best;
+  }
+
+  function familyTreeRankLabel(s, c, tier) {
+    const snap = FB.characterRankTitleSnapshot
+      ? FB.characterRankTitleSnapshot(s, c, tier, '') : null;
+    return snap && FB.renderTitleSnapshot
+      ? FB.renderTitleSnapshot(snap) : FB.stationName(FB.stationOf(c));
+  }
+
+  /* The tree boxes stay navigationally small. The portrait tooltip supplies
+     the social context, distinguishing a living current status from the
+     highest territorial dignity this person actually held. */
+  UI.familyTreeStatusHtml = function (s, c) {
+    if (!s || !s.player || !c) return '';
+    const isPlayer = c.id === s.player.charId;
+    const realmId = !isPlayer && FB.realmIdForRulerCharacter
+      ? FB.realmIdForRulerCharacter(s, c) : null;
+    const realm = realmId && s.realms && s.realms[realmId];
+    let status = '';
+    let exactTier = null;
+    if (isPlayer) exactTier = s.player.tier;
+    else if (realm) exactTier = FB.clamp((realm.rank || 1) + 3, 4, 7);
+    else if (c.statusTier !== undefined && isFinite(Number(c.statusTier))) {
+      exactTier = FB.clamp(Math.floor(Number(c.statusTier)), 0, 7);
+    }
+
+    /* A living former ruler no longer owns the rank word. Their current
+       standing is Noble/Royalty, while the next line preserves the crown. */
+    const formerLivingRuler = !c.dead && !isPlayer && !realm &&
+      c.highestTitleData && exactTier !== null && exactTier >= 3;
+    if (formerLivingRuler) {
+      status = FB.stationName(FB.clamp(exactTier, 0, 4));
+    } else if (exactTier !== null) {
+      status = familyTreeRankLabel(s, c, exactTier);
+    } else if (c.station !== undefined && c.station !== null) {
+      status = FB.stationName(FB.stationOf(c));
+    } else {
+      const me = s.chars[s.player.charId];
+      const sharesHouse = !!(me && me.dyn && c.dyn === me.dyn);
+      const household = FB.isHouseholdCharacter &&
+        FB.isHouseholdCharacter(s, c.id);
+      const firstFamilyRole = c.role === 'parent' || c.role === 'grandparent' ||
+        c.role === 'sibling' || c.role === 'spouse';
+      if (sharesHouse || household || firstFamilyRole) {
+        status = s.player.tier <= 2
+          ? familyTreeRankLabel(s, c, s.player.tier)
+          : FB.stationName(FB.playerStation(s));
+      } else {
+        status = FB.stationName(FB.stationOf(c));
+      }
+    }
+
+    let highest = c.highestTitleData || familyTreeLegendTitle(s, c);
+    if (!highest && isPlayer && s.player.tier >= 3 &&
+        FB.playerStatusTitleSnapshot) {
+      highest = FB.playerStatusTitleSnapshot(s);
+    } else if (!highest && realm && FB.realmRulerTitleSnapshot) {
+      highest = FB.realmRulerTitleSnapshot(s, realm, c);
+    }
+    let html = '<div class="family-tree-status-block"><div ' +
+      'data-family-tree-status><span>' + esc(FB.T('Status')) + ':</span> ' +
+      esc(status) + '</div>';
+    if (highest && Number(highest.tier) >= 3) {
+      html += '<div data-family-tree-highest-title><span>' +
+        esc(FB.T('Highest title achieved')) + ':</span> ' +
+        esc(FB.renderTitleSnapshot(highest)) + '</div>';
+    }
+    return html + '</div>';
   };
 
   UI.showFamilyTree = function (restoreView) {

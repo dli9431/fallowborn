@@ -741,6 +741,19 @@ parentage, and jump controls target the protagonist, first eligible successor, s
 and house founder. When the founder has moved beyond the nearby generation window, one
 standalone founder card keeps the jump reachable.
 
+The compact tree cards keep names and relationships scannable; their portrait tooltip
+adds a separate current **Status** line. The current protagonist and reigning foreign
+rulers use their exact faith- and sex-aware rank word, commoner members of the current
+house share its Serf/Freeholder/Gentry station where no personal station was recorded,
+and other relatives retain the existing Lowborn/Noble/Royalty vocabulary rather than
+being falsely styled as a ruler. Characters who actually held tier 3 or above also keep
+a locale-neutral `highestTitleData` snapshot, rendered as **Highest title achieved** with
+its place (for example, Baron of York or King of England). `statusTier` records the last
+exact playable or reigning status; demotion, death, retirement, and succession never
+erase the higher title. Old saves repair current heads and retained protagonist legends
+without inventing a title for an unrecorded life. This is saved presentation history,
+not a new gameplay capability, so it has no technology impact entry.
+
 ## Succession and inheritance
 
 A freedom offer belongs to the protagonist who received it, so ordinary death or

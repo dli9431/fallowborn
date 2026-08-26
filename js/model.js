@@ -921,6 +921,13 @@ window.FB = window.FB || {};
   FB.markRealmDead = function (state, realmId) {
     const realm = state && state.realms && state.realms[realmId];
     if (!realm || !realm.alive) return false;
+    const ruler = realmId !== 'player' && FB.realmRulerCharacterSnapshot
+      ? FB.realmRulerCharacterSnapshot(state, realmId) : null;
+    if (ruler && FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
+      FB.noteCharacterStatus(state, ruler,
+        FB.clamp((realm.rank || 1) + 3, 4, 7),
+        FB.realmRulerTitleSnapshot(state, realm, ruler));
+    }
     FB.vacateReligiousHeads(state, realmId);
     realm.alive = false;
     realm.war = null;
@@ -2237,6 +2244,128 @@ window.FB = window.FB || {};
     };
     if (place) snap.place = place;
     return snap;
+  };
+  /* Character-facing rank snapshots cannot borrow the protagonist's sex or
+     faith: the family tree may be describing a woman, a convert, or a foreign
+     ruler several generations away from the current head. */
+  FB.characterRankTitleSnapshot = function (state, c, tier, place) {
+    if (!c) return null;
+    const rank = rankTitleRecord(state, c.religion, c.sex, tier);
+    let group = FB.faithGroup(c.religion, state) || 'christian';
+    if (c.sex === 'f' && FBDATA.titles[group + '_f']) group += '_f';
+    const snap = {
+      group:group,
+      religion:c.religion,
+      titleReligion:rank.sourceId || null,
+      titleSex:rank.sex || c.sex,
+      tier:rank.tier,
+      word:rank.word
+    };
+    if (place) snap.place = place;
+    return snap;
+  };
+
+  FB.realmTitlePlace = function (realm) {
+    if (!realm || !realm.name) return '';
+    return realm.name.replace(
+      /^(?:County|Duchy|Kingdom|Empire|Realm) of\s+/i, '');
+  };
+
+  FB.realmRulerTitleSnapshot = function (state, realm, c) {
+    if (!realm || !c) return null;
+    return FB.characterRankTitleSnapshot(state, c,
+      FB.clamp((realm.rank || 1) + 3, 4, 7),
+      FB.realmTitlePlace(realm));
+  };
+
+  function copyTitleSnapshot(snapshot) {
+    if (!snapshot) return null;
+    const copy = {};
+    for (const key in snapshot) {
+      if (Object.prototype.hasOwnProperty.call(snapshot, key) &&
+          snapshot[key] !== undefined) copy[key] = snapshot[key];
+    }
+    return copy;
+  }
+
+  /* A character owns their status history. Campaign peakTier is an end-screen
+     statistic and cannot identify which life earned a crown. These additive,
+     locale-neutral fields let deceased and retired relatives retain the exact
+     highest ruling title the player actually saw them hold. */
+  FB.noteCharacterStatus = function (state, c, statusTier, titleData) {
+    if (!state || !c) return false;
+    let changed = false;
+    const tier = Number(statusTier);
+    if (isFinite(tier)) {
+      const nextTier = FB.clamp(Math.floor(tier), 0, 7);
+      if (c.statusTier !== nextTier) {
+        c.statusTier = nextTier;
+        changed = true;
+      }
+    }
+    let achieved = titleData && Number(titleData.tier);
+    if (!isFinite(achieved) && isFinite(tier) && tier >= 3) achieved = tier;
+    if (!isFinite(achieved) || achieved < 3) return changed;
+    const snapshot = titleData || FB.characterRankTitleSnapshot(
+      state, c, achieved, '');
+    const former = c.highestTitleData;
+    const formerTier = former ? Number(former.tier) : -1;
+    if (!former || achieved > formerTier ||
+        (achieved === formerTier && snapshot.place &&
+          snapshot.place !== former.place)) {
+      c.highestTitleData = copyTitleSnapshot(snapshot);
+      changed = true;
+    }
+    return changed;
+  };
+
+  FB.playerStatusTitleSnapshot = function (state) {
+    if (!state || !state.player || !state.chars) return null;
+    const p = state.player;
+    const c = state.chars[p.charId];
+    if (!c) return null;
+    const snap = FB.titleSnapshot(state);
+    if (p.tier < 3 || snap.place || snap.headReligion) return snap;
+    let place = '';
+    if (p.tier <= 4) {
+      const pid = p.tier === 4 && p.provs && p.provs.length
+        ? p.provs[0] : p.provinceId;
+      const province = FB.world && FB.world.byId[pid];
+      place = province ? province.name : '';
+    } else if (p.tier === 5 && FB.playerDuchy) {
+      const did = FB.playerDuchy(state);
+      place = did && FBDATA.duchies[did] ? FBDATA.duchies[did].name : '';
+    } else {
+      place = FB.realmTitlePlace(state.realms && state.realms.player);
+    }
+    if (place) snap.place = place;
+    return snap;
+  };
+
+  FB.notePlayerStatus = function (state, titleData) {
+    if (!state || !state.player || !state.chars) return false;
+    const c = state.chars[state.player.charId];
+    if (!c) return false;
+    return FB.noteCharacterStatus(state, c, state.player.tier,
+      titleData || FB.playerStatusTitleSnapshot(state));
+  };
+
+  FB.ensureCharacterStatusHistory = function (state) {
+    if (!state || !state.chars || !state.player) return;
+    const legends = state.legends || [];
+    for (let i = 0; i < legends.length; i++) {
+      const legend = legends[i];
+      const c = legend && state.chars[legend.id];
+      if (!c || !legend.titleData) continue;
+      FB.noteCharacterStatus(state, c, legend.titleData.tier,
+        legend.titleData);
+    }
+    const current = state.chars[state.player.charId];
+    const firstLifePeak = state.generation === 1 && current &&
+      state.peakTitleData && Number(state.peakTitleData.tier) >= 3
+      ? state.peakTitleData : null;
+    if (current) FB.noteCharacterStatus(state, current, state.player.tier,
+      firstLifePeak || FB.playerStatusTitleSnapshot(state));
   };
   FB.renderTitleSnapshot = function (snapshot) {
     if (!snapshot) return '';

@@ -509,16 +509,49 @@ window.FB = window.FB || {};
     }
     let h = '';
     let cardCount = Object.keys(carded).length;
+    function participantLabel(slot) {
+      const labels = {
+        lord:'Local lord', officer:'Steward', neighbor:'Neighbor',
+        witness:'Witness', confidant:'Confidant', priest:'Priest',
+        formerLord:'Former lord', currentLord:'Current lord',
+        formerOfficer:'Former steward', newOfficer:'Current steward'
+      };
+      return FB.T(labels[slot] || 'Named participant');
+    }
+    function participantCard(c, participant) {
+      const detailsId = 'event-participant-details-' + cardCount;
+      const standing = FB.standingOf(s, { kind:'character', id:c.id });
+      const label = participantLabel(participant);
+      return '<div class="event-participant-card settcard" ' +
+        'data-event-participant="' + esc(participant) + '">' +
+        '<div class="event-participant-strip settcard-head">' +
+        '<button type="button" class="event-character-sheet ' +
+        'event-participant-main" data-event-character="' + esc(c.id) +
+        '" aria-describedby="' + detailsId + '" aria-label="' +
+        esc(FB.T('Open character sheet for {name}', {
+          name:FB.fullName(c)
+        })) + '">' + FB.faceTag(c, 44, 50) +
+        '<span class="event-participant-identity"><b>' +
+        esc(FB.fullName(c)) + '</b><span>' + esc(FB.T(
+          '{role} · Standing {standing}', {
+            role:label,
+            standing:FB.standingPresentationText(standing)
+          })) + '</span></span></button>' +
+        '<span class="settcard-actions"><button type="button" ' +
+        'class="btn small settcard-info" aria-expanded="false" ' +
+        'aria-controls="' + detailsId + '" title="' +
+        esc(FB.T('Details')) + '" aria-label="' +
+        esc(FB.T('Details for {name}', { name:FB.fullName(c) })) +
+        '">?</button></span></div>' +
+        '<div class="settcard-details event-participant-details hidden" id="' +
+        detailsId + '">' + UI.charCardHtml(s, c) + '</div></div>';
+    }
     function addCharacter(c, participant, allowDead) {
       if (!c || (c.dead && !allowDead) || carded[c.id] || cardCount >= 4) return;
       carded[c.id] = 1;
       cardCount++;
       if (participant) {
-        h += '<div class="event-participant-card" data-event-participant="' +
-          esc(participant) + '">' + UI.charCardHtml(s, c) +
-          '<button type="button" class="btn small event-character-sheet" ' +
-          'data-event-character="' + esc(c.id) + '">' +
-          esc(FB.T('Open character sheet')) + '</button></div>';
+        h += participantCard(c, participant);
       } else {
         h += UI.charCardHtml(s, c);
       }
@@ -655,10 +688,10 @@ window.FB = window.FB || {};
       '</div>';
   }
 
-  function scheduledDutyTeachingHtml(s, ev, ctx) {
-    const flags = s.player.flags || {};
+  function scheduledDutyTeachingHtml(s, ev, ctx, description) {
+    const flags = s.player.flags = s.player.flags || {};
     const tenure = FB.activeSerfTenure && FB.activeSerfTenure(s);
-    if (!ctx || !ctx.dutyId || flags.hint_serf_first_duty || !tenure ||
+    if (!ctx || !ctx.dutyId || !tenure ||
         ctx.tenureFormedTurn !== tenure.formedTurn ||
         (ctx.tenureRevision || 0) !== (tenure.revision || 0)) return '';
     let duty = null;
@@ -698,17 +731,34 @@ window.FB = window.FB || {};
         })
       : FB.T('This conditional duty arises only when its saved household circumstances require it.');
     flags.hint_serf_first_duty = 1;
-    return '<div class="progressnote" data-serf-duty-teaching><b>' +
+    const detailsId = 'serf-duty-teaching-details';
+    let validHtml = '<div class="event-duty-valid"><b>' +
+      esc(FB.T('Valid answers now')) + '</b><ul>';
+    for (let i = 0; i < valid.length; i++) {
+      validHtml += '<li>' + esc(valid[i]) + '</li>';
+    }
+    validHtml += '</ul></div>';
+    return '<div class="event-duty-help settcard" data-serf-duty-teaching>' +
+      '<div class="settcard-head"><button type="button" ' +
+      'class="event-duty-help-anchor" aria-describedby="' + detailsId +
+      '" aria-label="' + esc(FB.T('How this duty works: {description}', {
+        description:description
+      })) + '">' + esc(description) + '</button>' +
+      '<span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="' + detailsId + '" title="' + esc(FB.T('Details')) +
+      '" aria-label="' + esc(FB.T('Duty details')) + '">?</button></span></div>' +
+      '<div class="settcard-details event-duty-help-details hidden" id="' +
+      detailsId + '"><b class="event-duty-help-title">' +
       esc(FB.T('How this duty works')) + '</b><p class="adesc">' +
       esc(FB.T(
         'It fell due on {season} {year}, day {day}. {cadence}', {
           season:FB.seasonName(dueDate.season), year:dueDate.year,
           day:dueDate.day, cadence:cadence
-        })) + '</p>' +
-      kv('Valid answers now', esc(valid.join(' · '))) +
+        })) + '</p>' + validHtml +
       '<p class="adesc">' + esc(FB.T(
         'These answers settle today’s due only; none changes the household’s future tenure terms.')) +
-      '</p></div>';
+      '</p></div></div>';
   }
 
   function freedomOfferTermsHtml(s, ev) {
@@ -743,8 +793,10 @@ window.FB = window.FB || {};
     $('eventmodal').classList.remove('hidden');
     if (FB.prepareEvent) FB.prepareEvent(s, ev, ctx);
     $('ev-title').textContent = FB.eventText(s, s.player.charId, ev, 'title', ctx);
-    let bodyHtml = esc(FB.eventText(s, s.player.charId, ev, 'text', ctx));
-    bodyHtml += scheduledDutyTeachingHtml(s, ev, ctx);
+    const eventDescription = FB.eventText(
+      s, s.player.charId, ev, 'text', ctx);
+    let bodyHtml = scheduledDutyTeachingHtml(
+      s, ev, ctx, eventDescription) || esc(eventDescription);
     bodyHtml += freedomOfferTermsHtml(s, ev);
     if (ev.id === 'proposal_made' && s.player.courtingId) {
       const suitor = s.chars[s.player.courtingId];
@@ -784,6 +836,15 @@ window.FB = window.FB || {};
     }
     $('ev-text').innerHTML = bodyHtml;
     FB.paintFaces($('ev-text'), s);
+    bindCardInfoToggles($('ev-text'));
+    $('ev-text').querySelectorAll('.event-duty-help-anchor').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (!eventChoiceUsesDisclosure()) return;
+        const card = button.closest('.event-duty-help');
+        const info = card && card.querySelector('.settcard-info');
+        if (info) info.click();
+      });
+    });
     document.querySelectorAll('.event-character-sheet').forEach(function (button) {
       button.addEventListener('click', function () {
         const card = $('eventmodal').querySelector('.modalcard');
@@ -22011,7 +22072,7 @@ window.FB = window.FB || {};
 
   UI.showSettings = function () {
     const G = FB.game;
-    const WORDS = ['slowest', 'slow', 'the default', 'fast', 'fastest'];
+    const WORDS = ['slowest', 'slow', 'medium', 'fast', 'fastest'];
     const desktopKeyboard = !FB.isTouch && !FB.isSmallScreen();
     const mainTextColor = G.uiPrefs.mainTextColor ||
       G.MAIN_TEXT_COLOR_DEFAULT;

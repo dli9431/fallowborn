@@ -3497,6 +3497,14 @@ window.FB = window.FB || {};
         ? FB.realmRulerGeneration(state, rid)
         : (r.ruler && r.ruler.generation || 1);
     }
+    const outgoingCharacter = outgoing && outgoing.charId &&
+      state.chars[outgoing.charId];
+    if (outgoingCharacter && FB.noteCharacterStatus &&
+        FB.realmRulerTitleSnapshot) {
+      FB.noteCharacterStatus(state, outgoingCharacter,
+        FB.clamp((r.rank || 1) + 3, 4, 7),
+        FB.realmRulerTitleSnapshot(state, r, outgoingCharacter));
+    }
     let heirId = null;
     let heir = null;
     let c = null;
@@ -7378,6 +7386,7 @@ window.FB = window.FB || {};
     FB.invalidateRealmCache();
     for (const pid of FB.realmTerritory(state, 'player')) state.owner[pid] = sovereign;
     FB.invalidateRealmCache();
+    if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
   };
 
@@ -7465,6 +7474,11 @@ window.FB = window.FB || {};
     if (!heir.royalLine) heir.royalLine = { realmId:rid, memberId:rootId };
 
     state.realms[rid] = realm;
+    if (FB.noteCharacterStatus && FB.realmRulerTitleSnapshot) {
+      FB.noteCharacterStatus(state, heir,
+        FB.clamp((realm.rank || 1) + 3, 4, 7),
+        FB.realmRulerTitleSnapshot(state, realm, heir));
+    }
     for (const pid in state.owner) {
       if (state.owner[pid] === 'player') state.owner[pid] = rid;
       if (state.holder && state.holder[pid] === 'player') state.holder[pid] = rid;
@@ -7574,6 +7588,7 @@ window.FB = window.FB || {};
     }
     FB.invalidateRealmCache();
     FB.checkTierPromotions(state);
+    if (FB.notePlayerStatus) FB.notePlayerStatus(state);
     if (FB.councilEnsure && p.tier >= 6) FB.councilEnsure(state);
     if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     FB.news(state, FB.msg('news.world.realm_inherited',

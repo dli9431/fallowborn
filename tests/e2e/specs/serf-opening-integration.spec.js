@@ -190,9 +190,27 @@ test('first visible duty teaches its cadence and advances the cached schedule on
       return { oldTurn:oldTurn, dutyId:duty.id };
     });
 
-    await expect(page.locator('[data-serf-duty-teaching]')).toBeVisible();
-    await expect(page.locator('[data-serf-duty-teaching]'))
-      .toContainText('Valid answers now');
+    const teaching = page.locator('[data-serf-duty-teaching]');
+    const teachingDetails = teaching.locator('.event-duty-help-details');
+    const teachingAnchor = teaching.locator('.event-duty-help-anchor');
+    await expect(teaching).toBeVisible();
+    expect(await teachingAnchor.evaluate(function (node) {
+      return node.textContent.trim().length;
+    })).toBeGreaterThan(20);
+    await expect(teachingDetails).toHaveClass(/hidden/);
+    await expect(teachingDetails.locator('.event-duty-valid li').first())
+      .toBeAttached();
+    await teachingAnchor.hover();
+    await expect(page.locator('#tooltip')).toContainText('How this duty works');
+    await expect(page.locator('#tooltip')).toContainText('Valid answers now');
+    await page.setViewportSize({ width:390, height:844 });
+    const dutyInfo = teaching.locator('.settcard-info');
+    await expect(dutyInfo).toBeVisible();
+    await teachingAnchor.click();
+    await expect(teachingDetails).not.toHaveClass(/hidden/);
+    await dutyInfo.click();
+    await expect(teachingDetails).toHaveClass(/hidden/);
+    await expect(page.locator('#ev-options .evopt').first()).toBeInViewport();
     await page.locator('#ev-options .evopt:not([disabled])').first().click();
     const after = await page.evaluate(function (dutyId) {
       const s = FB.state;
@@ -251,6 +269,30 @@ test('major Automation resolves a due duty without consuming unseen teaching',
     expect(result.cachedTurn).toBeGreaterThan(result.oldTurn);
     expect(result.receipts).toBe(1);
     await expect(page.locator('#eventmodal')).toHaveClass(/hidden/);
+  });
+
+test('scheduled duty help remains available after its teaching acknowledgement',
+  async function ({ page }, testInfo) {
+    await startSerfFixture(page, testInfo, false);
+    await page.evaluate(function () {
+      const s = FB.state;
+      const tenure = FB.activeSerfTenure(s);
+      for (let i = 0; i < tenure.duties.length; i++) {
+        tenure.duties[i].nextDueTurn = s.turn + 900 + i;
+      }
+      tenure.duties[0].nextDueTurn = s.turn;
+      tenure.lastPresentedSeasonKey = null;
+      s.player.flags.hint_serf_first_duty = 1;
+      FB.refreshSerfTenureDueCache(s, tenure);
+      FB.tenureDay(s);
+      FB.ui.runEvents(s.eventQueue.splice(0));
+    });
+
+    const teaching = page.locator('[data-serf-duty-teaching]');
+    await expect(teaching).toBeVisible();
+    await teaching.locator('.event-duty-help-anchor').hover();
+    await expect(page.locator('#tooltip')).toBeVisible();
+    await expect(page.locator('#tooltip')).toContainText('Valid answers now');
   });
 
 test('unchanged daily tenure checks retain the cached pointer without rescanning duties',
