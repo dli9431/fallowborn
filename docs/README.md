@@ -441,8 +441,12 @@ a scenario, choose the authored Spring 867 or Spring 1066 world. The latter begi
 Harold Godwinson's coronation and before the Norwegian and Norman invasions; those invasion
 chains are not yet scripted.
 
-**Sharing a start (seeds):** New Game goes directly to the starting dates with a fresh
-seed. Choose **Use a Seed or Start Code** there to paste a friend's full code and begin
+**Starting quickly:** New Game offers six portrait cards with complete Serf lives: Christian,
+pagan, and Muslim choices in both 867 and 1066. Pick one to go straight to the story introduction,
+or use **Choose a Starting Date** below them to choose every detail yourself.
+
+**Sharing a start (seeds):** New Game opens this starting-date screen with a fresh seed.
+Choose **Use a Seed or Start Code** there to paste a friend's full code and begin
 with their exact bookmark, world,
 scenario, province, character, family preset, birthplace settlement, and—where a
 county has more than one—the chosen culture-and-faith community. Six-part principal

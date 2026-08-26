@@ -1,18 +1,21 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'index.html',
   'js/main.js',
+  'js/portrait.js',
   'js/save.js',
   'js/settlement.js',
   'css/style.css',
   'data/bookmarks.js',
+  'data/cultures.js',
   'data/starts.js',
   'data/settlements.js'
 ]);
 
-/* Birthplace settlement picking: the two-stage pick screen (county, then the
-   settlement inside it), the chosen slot in new-game state, and the optional
-   eighth start-code part. Authored per docs/designs/seeds.md; NOT run by the
+/* Quick Start plus birthplace settlement picking: the one-click curated lives,
+   the two-stage custom picker (county, then settlement), and their ordinary
+   start-code state. Authored per docs/designs/seeds.md; NOT run by the
    authoring agent (owner runs the harness). */
 
 const { test, expect } = require('../support/fixture');
@@ -24,13 +27,38 @@ test.beforeEach(async function ({ page }, testInfo) {
   await unlockStartTier(page, 1);
 });
 
-test('New Game opens on starting dates and keeps shared seeds secondary',
+test('New Game offers six quick starts above the dated custom-start path',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
     await expect(page.getByRole('heading', {
       name:'Choose a Starting Date', exact:true
     })).toBeVisible();
+    await expect(page.getByRole('heading', {
+      name:'Quick Start', exact:true
+    })).toBeVisible();
+    await expect(page.locator('#quickstart-divider')).toHaveText('OR');
+    const quickStarts = page.locator('#quickstartlist .quickstart-card');
+    await expect(quickStarts).toHaveCount(6);
+    await expect(quickStarts.nth(0)).toContainText('Aed');
+    await expect(quickStarts.nth(0)).toContainText('Gaelic · Latin Christianity');
+    await expect(quickStarts.nth(2)).toContainText('Berber · Islam (Sunni)');
+    await expect(quickStarts.nth(4)).toContainText('Sámi · Norse Paganism');
+    await expect(quickStarts.nth(5)).toContainText('Arab · Islam (Shia)');
+    expect(await quickStarts.locator('.quickstart-title-location').allTextContents())
+      .toEqual([
+        'Serf | Galway', 'Serf | Uppsala', 'Serf | Tunis',
+        'Serf | Ulaid', 'Serf | Norrland', 'Serf | Fustat'
+      ]);
+    for (let i = 0; i < 3; i++) {
+      await expect(quickStarts.nth(i).locator('.quickstart-date')).toContainText('867');
+      await expect(quickStarts.nth(i + 3).locator('.quickstart-date')).toContainText('1066');
+    }
+    expect(await quickStarts.locator('canvas').first().evaluate(function (canvas) {
+      const pixels = canvas.getContext('2d').getImageData(
+        0, 0, canvas.width, canvas.height).data;
+      return Array.from(pixels).some(function (channel) { return channel !== 0; });
+    })).toBe(true);
     const bookmarkTitle = page.locator('#bookmarklist .scencard h3').first();
     await expect(bookmarkTitle).toContainText(':');
     await expect(bookmarkTitle).not.toContainText('—');
@@ -52,6 +80,34 @@ test('New Game opens on starting dates and keeps shared seeds secondary',
     await page.getByRole('button', { name:'Cancel', exact:true }).click();
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
     await expect(page.locator('#bookmarks:not(.hidden)')).toBeVisible();
+  });
+
+test('a quick start creates its authored Serf life in one selection',
+  async function ({ page }) {
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('[data-quick-start="biera_1066"]').click();
+    await expect(page.getByRole('heading', {
+      name:'Your Story Begins', exact:true
+    })).toBeVisible({ timeout:30 * 1000 });
+    const result = await page.evaluate(function () {
+      const me = FB.state.chars[FB.state.player.charId];
+      return {
+        bookmark:FB.state.start.id,
+        tier:FB.state.player.tier,
+        province:FB.state.player.provinceId,
+        homeSettlement:FB.state.player.homeSettlement,
+        name:me.name,
+        culture:me.culture,
+        religion:me.religion,
+        seed:FB.state.seed
+      };
+    });
+    expect(result).toEqual({
+      bookmark:'1066', tier:0, province:'norrland', homeSettlement:0,
+      name:'Biera', culture:'sami', religion:'norse_pagan',
+      seed:expect.stringMatching(
+        /^[A-Z0-9]+-1066-serf-norrland-m-Biera-standard-0-sami\.norse_pagan$/)
+    });
   });
 
 /* Title → New Game (fresh seed) → first bookmark → Free Farmer → pick screen */

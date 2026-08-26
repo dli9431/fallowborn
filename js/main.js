@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.160.2';
+  FB.VERSION = '1.161.0';
   FB.CHANGELOG = [
+    { v: '1.161.0', date: '2026-08-26', changes: [
+      'New Game now offers six one-click Serf starts across 867 and 1066, with portraits and distinct Christian, pagan, and Muslim homelands.'
+    ] },
     { v: '1.160.2', date: '2026-08-26', changes: [
       'Serf life now has clearer duty encounters, more fitting work and equipment details, and easier access to lieges and family status history.',
       'Game speed now starts fastest and persists locally, while compact tooltips keep event choices and participants in view.'
@@ -1857,6 +1860,7 @@ window.FB = window.FB || {};
 
   function showBookmarks() {
     trackNewGameScreen('starting-date');
+    renderQuickStarts();
     const box = $('bookmarklist');
     box.innerHTML = '';
     const bookmarks = FB.bookmarks(false);
@@ -1879,6 +1883,142 @@ window.FB = window.FB || {};
     note.textContent = warning ? FB.T(warning) : '';
     note.classList.toggle('hidden', !warning);
     FB.ui.showScreen('bookmarks');
+  }
+
+  function quickStartDetails(definition) {
+    if (!definition || !definition.id || !definition.bookmarkId ||
+        !definition.provinceId || !definition.characterName ||
+        (definition.sex !== 'm' && definition.sex !== 'f')) return null;
+    if (FB.mods && FB.mods.bookmarkAvailable &&
+        !FB.mods.bookmarkAvailable(definition.bookmarkId)) return null;
+    const bookmark = FB.bookmark(definition.bookmarkId);
+    if (!bookmark) return null;
+    const province = bookmark.provinces.filter(function (candidate) {
+      return candidate.id === definition.provinceId && !candidate.wasteland;
+    })[0];
+    if (!province) return null;
+    const communities = FB.provinceCommunities(province);
+    const community = communities.filter(function (candidate) {
+      return candidate.culture === definition.culture &&
+        candidate.religion === definition.religion;
+    })[0];
+    if (!community) return null;
+    return { bookmark:bookmark, province:province, community:community };
+  }
+
+  function paintQuickStartPortrait(canvas, definition, details) {
+    const ratio = FB.portraitDpr || 1;
+    canvas.width = Math.round(150 * ratio);
+    canvas.height = Math.round(170 * ratio);
+    FB.paintPortrait(canvas, {
+      id:'quick-start-' + definition.id,
+      name:definition.characterName,
+      sex:definition.sex,
+      culture:details.community.culture,
+      religion:details.community.religion,
+      born:details.bookmark.date.year - FBDATA.balance.startAge,
+      station:0,
+      role:'farmer',
+      health:8,
+      traits:[]
+    }, details.bookmark.date.year, {
+      state:null, tier:0, profession:'farmer', suppressEquipment:true
+    });
+  }
+
+  function beginQuickStart(definition, details) {
+    const scenario = FBDATA.startScenarios.filter(function (candidate) {
+      return candidate.id === 'serf';
+    })[0];
+    if (!scenario || !scenarioUnlocked(scenario)) return;
+    const seed = G.pending && G.pending.seed || freshSeed();
+    G.pending = {
+      seed:seed,
+      bookmarkId:definition.bookmarkId,
+      scenario:scenario,
+      provinceId:definition.provinceId,
+      sex:definition.sex,
+      name:definition.characterName,
+      familyPreset:'standard',
+      settlementIdx:0,
+      culture:details.community.culture,
+      religion:details.community.religion,
+      communityProvinceId:definition.provinceId,
+      quickStartId:definition.id
+    };
+    activatePendingBookmark(definition.bookmarkId, function () {
+      G.pending.settlementIdx = clampSettlementIdx(definition.provinceId, 0);
+      /* Build the existing character controls off-screen, then consume them
+         immediately. Quick Start remains the ordinary campaign constructor
+         and produces the same shareable code as a manually chosen life. */
+      showChargen({ quickStart:true });
+      G.start();
+    });
+  }
+
+  function renderQuickStarts() {
+    const section = $('quickstart-section');
+    const divider = $('quickstart-divider');
+    const box = $('quickstartlist');
+    box.innerHTML = '';
+    const definitions = FBDATA.quickStarts || [];
+    for (const definition of definitions) {
+      const details = quickStartDetails(definition);
+      if (!details) continue;
+      const culture = FB.cultureOf(details.community.culture);
+      const religion = FB.religionOf(details.community.religion);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'quickstart-card';
+      button.setAttribute('data-quick-start', definition.id);
+      button.setAttribute('aria-label', FB.T(
+        'Quick Start as {name}, Serf in {location}, {culture} and {religion}, {season} {year} AD', {
+          name:definition.characterName,
+          location:FB.L(details.province.name),
+          culture:FB.renderKey(
+            'culture.' + details.community.culture + '.name.default',
+            { text:culture.name }, {}),
+          religion:FB.renderKey(
+            'religion.' + details.community.religion + '.name.default',
+            { text:religion.name }, {}),
+          season:FB.seasonName(details.bookmark.date.season),
+          year:details.bookmark.date.year
+        }));
+      const canvas = document.createElement('canvas');
+      canvas.className = 'quickstart-portrait';
+      canvas.setAttribute('aria-hidden', 'true');
+      button.appendChild(canvas);
+      function meta(className, value) {
+        const span = document.createElement('span');
+        span.className = className;
+        span.textContent = value;
+        button.appendChild(span);
+      }
+      meta('quickstart-name', definition.characterName);
+      meta('quickstart-meta quickstart-title-location', FB.T('{title} | {location}', {
+        title:FB.T('Serf'),
+        location:FB.L(details.province.name)
+      }));
+      meta('quickstart-meta quickstart-identity',
+        FB.renderKey('culture.' + details.community.culture + '.name.default',
+          { text:culture.name }, {}) + ' · ' +
+        FB.renderKey('religion.' + details.community.religion + '.name.default',
+          { text:religion.name }, {}));
+      meta('quickstart-meta quickstart-date', FB.T('{season} {year} AD', {
+        season:FB.seasonName(details.bookmark.date.season),
+        year:details.bookmark.date.year
+      }));
+      (function (start, resolved) {
+        button.addEventListener('click', function () {
+          beginQuickStart(start, resolved);
+        });
+      })(definition, details);
+      box.appendChild(button);
+      paintQuickStartPortrait(canvas, definition, details);
+    }
+    const empty = !box.children.length;
+    section.classList.toggle('hidden', empty);
+    divider.classList.toggle('hidden', empty);
   }
 
   function showScenarios() {
@@ -2071,11 +2211,14 @@ window.FB = window.FB || {};
     $('btn-pick-random').textContent = FB.T('Continue');
   }
 
-  function showChargen() {
-    trackNewGameScreen('character', {
-      start_bookmark:G.pending && G.pending.bookmarkId,
-      scenario:G.pending && G.pending.scenario && G.pending.scenario.id
-    });
+  function showChargen(options) {
+    options = options || {};
+    if (!options.quickStart) {
+      trackNewGameScreen('character', {
+        start_bookmark:G.pending && G.pending.bookmarkId,
+        scenario:G.pending && G.pending.scenario && G.pending.scenario.id
+      });
+    }
     /* a sex-locked scenario (Man-at-Arms is male-only) pins the matching radio
        and disables the other; any other scenario leaves both free */
     const scenSex = G.pending.scenario && G.pending.scenario.sex;
@@ -2163,7 +2306,7 @@ window.FB = window.FB || {};
       });
     });
     updateCgSummary();
-    FB.ui.showScreen('chargen');
+    if (!options.quickStart) FB.ui.showScreen('chargen');
   }
 
   function selectedFamilyPreset() {
@@ -2539,6 +2682,7 @@ window.FB = window.FB || {};
     beginTelemetrySession('new-campaign');
     trackTelemetry('campaign-started', {
       entry_type:'new-campaign',
+      quick_start:G.pending && G.pending.quickStartId || 'custom',
       scenario:sc.id,
       family_preset:preset.id,
       starting_location:provId,

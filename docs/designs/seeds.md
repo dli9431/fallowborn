@@ -14,6 +14,12 @@ suggestions, name rerolls) cannot desync two players — identical seed + identi
 identical start, every time, and a second run in the same browser session reproduces the
 first.
 
+The starting-date screen's six **Quick Start** cards use the fresh world seed already rolled
+for that New Game attempt, then supply an authored Serf scenario, bookmark, county-seat
+birthplace, culture/faith community, sex, name, and `standard` family preset. They still run
+through `G.start()` and store its ordinary full start code. A quick life can therefore be shared
+and replayed like any manually assembled life; Quick Start fixes the choices, not the world seed.
+
 ## Formats
 
 - **World seed** — any text normalized to `A-Z0-9` (`FB.hashSeed` in `js/util.js` hashes

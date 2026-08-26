@@ -1,9 +1,13 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'index.html',
   'js/main.js',
+  'js/portrait.js',
   'js/ui_misc.js',
   'js/ui_modals.js',
+  'data/bookmarks.js',
+  'data/cultures.js',
   'data/starts.js'
 ]);
 
@@ -171,6 +175,7 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
         dynasty_generation:1,
         game_year:867,
         entry_type:'new-campaign',
+        quick_start:'custom',
         scenario:'farmer',
         family_preset:'standard',
         starting_location:'london',
@@ -272,6 +277,50 @@ test('gameplay telemetry reports descriptive lifecycle and engagement events',
       game_year:867,
       entry_type:'observer-mode'
     }));
+  });
+
+test('campaign telemetry identifies the selected quick start',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await page.evaluate(function () {
+      window.__telemetryEvents = [];
+      FB.telemetry = {
+        enabled:function () { return true; },
+        track:function (name, data) {
+          window.__telemetryEvents.push({ name:name, data:data });
+          return true;
+        }
+      };
+    });
+
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('[data-quick-start="biera_1066"]').click();
+    await expect(page.getByRole('heading', {
+      name:'Your Story Begins', exact:true
+    })).toBeVisible({ timeout:30 * 1000 });
+
+    const events = await page.evaluate(function () {
+      return window.__telemetryEvents;
+    });
+    const campaignStarted = events.filter(function (event) {
+      return event.name === 'campaign-started';
+    });
+    expect(campaignStarted).toHaveLength(1);
+    expect(campaignStarted[0].data).toEqual(expect.objectContaining({
+      telemetry_schema:2,
+      entry_type:'new-campaign',
+      quick_start:'biera_1066',
+      scenario:'serf',
+      start_bookmark:'1066',
+      starting_location:'norrland',
+      starting_culture:'sami',
+      starting_religion:'norse_pagan'
+    }));
+    expect(events.filter(function (event) {
+      return event.name.indexOf('new-game-') === 0;
+    }).map(function (event) { return event.name; })).toEqual([
+      'new-game-starting-date-viewed'
+    ]);
   });
 
 test('first-time hints report shown, interaction, dismissal, and opt-out actions',

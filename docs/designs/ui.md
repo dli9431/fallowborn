@@ -531,7 +531,20 @@ the persistent, localized **New version available** status banner. Its **Save an
 writes the current playable life synchronously before reloading. First worker installation,
 `file://`, localhost, mirrors, and itch never reveal the banner.
 
-New Game proceeds directly through bookmark → social scenario → province → character,
+New Game opens with six one-click **Quick Start** lives above the ordinary setup path. Every
+quick life is a Serf with an authored name, sex, county, county-seat birthplace, standard young
+family, and exact county community. The first three cover Christian, pagan, and Muslim lives in
+867; the next three do the same in 1066. Each native-button card shows a procedural portrait
+followed by name, one `Serf | location` line, culture and faith, and date. **OR** and a ruled divider
+keep these shortcuts visually and semantically separate from **Choose a Starting Date**.
+Selecting a card activates its bookmark, feeds those choices through the ordinary campaign
+constructor, and reaches the normal story introduction without exposing the intervening setup
+screens. A missing bookmark, county, or exact community under an active mod removes only the
+invalid shortcut; the ordinary path remains available. This is a setup presentation shortcut
+over existing Serf eligibility, not a new gameplay capability, so it needs no technology-impact
+ledger entry.
+
+The ordinary path proceeds directly through bookmark → social scenario → province → character,
 rolling a fresh seed before the starting-date screen so the ordinary path has no preliminary
 choice dialog. The starting-date screen keeps **Use a Seed or Start Code** as a secondary
 action; it opens the paste field for shared full starts or world seeds without placing that
@@ -573,8 +586,10 @@ starting date, the optional seed dialog, beginning, birthplace, and character cr
 screen emits once per New Game attempt, so revisiting it with Back does not inflate the setup
 funnel; bookmark and scenario are the only step-specific context. Once character creation
 commits the campaign, `campaign-started` records stable internal IDs for the starting county and
-the character's selected culture and religion so start preferences can be compared without
-sending names or the world seed.
+the character's selected culture and religion. Its bounded `quick_start` property records the
+selected curated ID, or `custom` for the ordinary setup path, so each card's popularity can be
+compared without sending names or the world seed. Quick Start emits no false viewed events for
+the setup screens it bypasses.
 
 Hover-only affordances need a tap path (item chips toast their description).
 The enterprise catalogue shows every known enterprise for the selected settlement rather
