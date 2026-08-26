@@ -401,20 +401,27 @@ test('family tree tooltips show current family status and preserve the highest r
     const family = await page.evaluate(function () {
       const s = FB.state;
       const me = s.chars[s.player.charId];
-      const sibling = FB.siblingsOf(s, me)[0];
+      const child = FB.makeCharacter(s, {
+        name:'Status Child', sex:'m', born:s.date.year - 1,
+        culture:me.culture, religion:me.religion, dyn:me.dyn,
+        fatherId:me.sex === 'm' ? me.id : null,
+        motherId:me.sex === 'f' ? me.id : null,
+        traits:[]
+      });
+      me.childrenIds.push(child.id);
       FB.setPlayerTier(s, 3, { attachLiege:false, stationFarewell:false });
       const rulingTitle = FB.renderTitleSnapshot(me.highestTitleData);
       FB.setPlayerTier(s, 2, { attachLiege:false, stationFarewell:false });
       const currentStatus = FB.renderTitleSnapshot(
         FB.characterRankTitleSnapshot(s, me, 2, ''));
-      const siblingStatus = FB.renderTitleSnapshot(
-        FB.characterRankTitleSnapshot(s, sibling, 2, ''));
+      const childStatus = FB.renderTitleSnapshot(
+        FB.characterRankTitleSnapshot(s, child, 2, ''));
       FB.ui.showFamilyTree();
       return {
         meId:me.id,
-        siblingId:sibling.id,
+        childId:child.id,
         currentStatus:currentStatus,
-        siblingStatus:siblingStatus,
+        childStatus:childStatus,
         rulingTitle:rulingTitle,
         province:FB.world.byId[s.player.provinceId].name
       };
@@ -429,11 +436,13 @@ test('family tree tooltips show current family status and preserve the highest r
       .toContainText('Highest title achieved: ' + family.rulingTitle);
     expect(family.rulingTitle).toContain(family.province);
 
-    const siblingChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
-      family.siblingId + '"]').first();
-    await siblingChip.locator('.pface').hover();
+    await page.getByRole('button', { name:'You', exact:true }).focus();
+    await expect(page.locator('#tooltip')).toBeHidden();
+    const childChip = page.locator('.family-tree-primary .ftchip[data-cid="' +
+      family.childId + '"]').first();
+    await childChip.locator('.pface').hover();
     await expect(page.locator('#tooltip [data-family-tree-status]'))
-      .toContainText('Status: ' + family.siblingStatus);
+      .toContainText('Status: ' + family.childStatus);
     await expect(page.locator('#tooltip [data-family-tree-highest-title]'))
       .toHaveCount(0);
   });

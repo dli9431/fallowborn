@@ -187,29 +187,31 @@ test('Network Connections exposes the direct liege character at unlanded and lan
     await startListGame(page, testInfo);
     const commoner = await page.evaluate(function () {
       const s = FB.state;
-      s.player.tier = 1;
+      s.player.tier = 0;
       s.player.liege = null;
       const lord = FB.getRole(s, 'lord', true);
       FB.ui.showTab('network', { history:false });
-      const ranks = {};
-      for (const tier of [0, 1, 2]) {
-        s.player.tier = tier;
-        FB.ui.refresh();
-        const row = document.querySelector(
-          '[data-list-section="connections"] [data-list-identity="' +
-          lord.id + '"]');
-        ranks[tier] = !!(row && row.textContent.indexOf('Direct liege') >= 0);
-      }
-      return { id:lord.id, name:FB.fullName(lord), ranks:ranks };
+      return { id:lord.id, name:FB.fullName(lord) };
     });
 
     const connections = page.locator('[data-list-section="connections"]');
     const commonerLiege = connections.locator(
       '[data-list-identity="' + commoner.id + '"]');
+    const commonerRanks = {};
+    for (const tier of [0, 1, 2]) {
+      await page.evaluate(function (nextTier) {
+        FB.state.player.tier = nextTier;
+        FB.state.player.liege = null;
+        FB.ui.refresh();
+      }, tier);
+      await waitForUiRefresh(page);
+      commonerRanks[tier] = await commonerLiege.count() === 1 &&
+        (await commonerLiege.textContent()).indexOf('Direct liege') >= 0;
+    }
     await expect(commonerLiege).toHaveCount(1);
     await expect(commonerLiege).toContainText(commoner.name);
     await expect(commonerLiege).toContainText('Direct liege');
-    expect(commoner.ranks).toEqual({ 0:true, 1:true, 2:true });
+    expect(commonerRanks).toEqual({ 0:true, 1:true, 2:true });
 
     const landed = await page.evaluate(function () {
       const s = FB.state;
@@ -223,31 +225,33 @@ test('Network Connections exposes the direct liege character at unlanded and lan
         break;
       }
       if (!rid || !ruler) throw new Error('Expected a materialized realm ruler.');
-      const ranks = {};
-      for (const tier of [3, 4, 5, 6]) {
-        s.player.tier = tier;
-        s.player.liege = rid;
-        if (s.realms.player) s.realms.player.liege = rid;
-        FB.ui.refresh();
-        const row = document.querySelector(
-          '[data-list-section="connections"] [data-list-identity="' +
-          ruler.id + '"]');
-        ranks[tier] = !!(row && row.textContent.indexOf('Direct liege') >= 0);
-      }
       return {
+        rid:rid,
         id:ruler.id,
         name:FB.fullName(ruler),
-        localLordId:s.roles.lord,
-        ranks:ranks
+        localLordId:s.roles.lord
       };
     });
 
     const landedLiege = connections.locator(
       '[data-list-identity="' + landed.id + '"]');
+    const landedRanks = {};
+    for (const tier of [3, 4, 5, 6]) {
+      await page.evaluate(function (setup) {
+        const s = FB.state;
+        s.player.tier = setup.tier;
+        s.player.liege = setup.rid;
+        if (s.realms.player) s.realms.player.liege = setup.rid;
+        FB.ui.refresh();
+      }, { tier:tier, rid:landed.rid });
+      await waitForUiRefresh(page);
+      landedRanks[tier] = await landedLiege.count() === 1 &&
+        (await landedLiege.textContent()).indexOf('Direct liege') >= 0;
+    }
     await expect(landedLiege).toHaveCount(1);
     await expect(landedLiege).toContainText(landed.name);
     await expect(landedLiege).toContainText('Direct liege');
-    expect(landed.ranks).toEqual({ 3:true, 4:true, 5:true, 6:true });
+    expect(landedRanks).toEqual({ 3:true, 4:true, 5:true, 6:true });
     if (landed.localLordId !== landed.id) {
       await expect(connections.locator(
         '[data-list-identity="' + landed.localLordId + '"]'))

@@ -611,6 +611,10 @@ test('fast-forward matches individual days and avoids invariant repair loops',
     await page.evaluate(function () {
       delete FB.state.player.flags.tutorial;
       FB.state.player.flags.tutorial_done = 1;
+      /* Clicking Skip records that this life has started time. Establish the
+         same durable tutorial metadata before both comparison routes so this
+         control-level receipt is not mistaken for a simulation difference. */
+      FB.state.player.flags.tut_unpause = 1;
       FB.state.slotDays = [];
       FB.state.eventQueue = [];
       /* Put both journeys on the ordinary restored-save boundary so additive
