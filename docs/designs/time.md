@@ -19,6 +19,15 @@ into town. A picker opener is not itself a
 completed deed: cancelling leaves the tutorial step unfinished, while confirming the
 eventual day-spending choice completes it.
 
+The active tenure saves a semantic nearest-duty pointer (`nextDutyId`, `nextDutyTurn`,
+conditional marker, and bounded list index). Formation, deterministic normalization, schedule
+resolution, conditional-duty change, amendment, closure, and replacement are the normal
+recompute boundaries. Ordinary days compare the current turn with that pointer before inspecting a
+duty or the event queue; the realm-wide wartime check is bounded to a weekly wake turn. A visible
+due duty interrupts on its exact day through the normal event modal, while an autoresolved duty
+records its receipt and allows manual flow or fast-forward to continue. Existing fast-forward
+refresh coalescing performs one presentation flush at completion.
+
 Regional serf packages reuse that scheduler without changing Toil. Pastoral steppe and
 Norse coastal households each carry three two-year duties (1.5 due slots per campaign
 year); woodland households carry four (2 slots per campaign year). Every duty keeps the
@@ -42,7 +51,7 @@ pre-selection phase then runs `FB.reconcileSerfStory` and
 officer bridge or due neighbor reckoning is queued, and stale participant state is cleared,
 before ordinary queue validation or random selection.
 
-The 28 baseline focus records and 79 baseline deed records keep their non-executable
+The 28 baseline focus records and 80 baseline deed records keep their non-executable
 metadata in `data/actions.js`. `js/actions.js` owns private handler registries and validates
 and projects those records into the compatible `FB.focuses` / `FB.instants` shapes. Every
 baseline id, order, and handler binding is protected. Fixed cooldowns, technology

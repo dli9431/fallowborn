@@ -5434,6 +5434,72 @@ window.FB = window.FB || {};
     };
   };
 
+  function serfTenureDueCandidate(tenure, id, conditional, index) {
+    const list = conditional ? tenure.conditional : tenure.duties;
+    const duty = list && list[index];
+    const turn = duty && conditional ? duty.pendingTurn :
+      (duty ? duty.nextDueTurn : null);
+    if (!duty || duty.id !== id || !Number.isInteger(turn) || turn < 0) {
+      return null;
+    }
+    return { duty:duty, turn:turn, conditional:!!conditional, index:index };
+  }
+
+  /* The saved pointer is semantic scheduling state, not presentation. Daily
+     tenure work reads it in constant time; only formation, normalization,
+     resolution, and explicit tenure mutations scan the household's bounded
+     duty lists to replace it. */
+  FB.refreshSerfTenureDueCache = function (state, tenure) {
+    tenure = tenure || FB.activeSerfTenure(state);
+    if (!tenure || tenure.status !== 'active') return null;
+    let nearest = null;
+    function consider(duty, conditional, index) {
+      if (!duty || !FBDATA.tenureDuties ||
+          !FBDATA.tenureDuties[duty.id] || !FB.eventById(duty.eventId)) return;
+      const turn = conditional ? duty.pendingTurn : duty.nextDueTurn;
+      if (!Number.isInteger(turn) || turn < 0) return;
+      if (!nearest || turn < nearest.turn) {
+        nearest = {
+          duty:duty, turn:turn, conditional:conditional, index:index
+        };
+      }
+    }
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      consider(tenure.duties[i], false, i);
+    }
+    for (let i = 0; i < (tenure.conditional || []).length; i++) {
+      consider(tenure.conditional[i], true, i);
+    }
+    tenure.nextDutyId = nearest ? nearest.duty.id : null;
+    tenure.nextDutyTurn = nearest ? nearest.turn : null;
+    tenure.nextDutyConditional = nearest ? nearest.conditional : false;
+    tenure.nextDutyIndex = nearest ? nearest.index : null;
+    return nearest;
+  };
+
+  FB.wakeSerfTenureWarCheck = function (state) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure) return false;
+    tenure.nextWarCheckTurn = state.turn || 0;
+    return true;
+  };
+
+  function cachedSerfTenureDue(state, tenure) {
+    if (tenure.nextDutyId === null && tenure.nextDutyTurn === null) return null;
+    if (typeof tenure.nextDutyId !== 'string' ||
+        !Number.isInteger(tenure.nextDutyTurn) ||
+        !Number.isInteger(tenure.nextDutyIndex) ||
+        typeof tenure.nextDutyConditional !== 'boolean') {
+      return FB.refreshSerfTenureDueCache(state, tenure);
+    }
+    const cached = serfTenureDueCandidate(tenure, tenure.nextDutyId,
+      tenure.nextDutyConditional, tenure.nextDutyIndex);
+    if (!cached || cached.turn !== tenure.nextDutyTurn) {
+      return FB.refreshSerfTenureDueCache(state, tenure);
+    }
+    return cached;
+  }
+
   FB.ensureSerfTenure = function (state, formedBy) {
     if (!state || !state.player || state.player.tier !== 0) return null;
     const p = state.player;
@@ -5541,12 +5607,18 @@ window.FB = window.FB || {};
       duties: duties,
       conditional: conditional,
       lastPresentedSeasonKey: null,
+      nextDutyId:null,
+      nextDutyTurn:null,
+      nextDutyConditional:false,
+      nextDutyIndex:null,
+      nextWarCheckTurn:state.turn || 0,
       revision:0,
       transitionHistory:[],
       transitionEligibleTurn:state.turn || 0
     };
 
     p.tenure = tenure;
+    FB.refreshSerfTenureDueCache(state, tenure);
     normalizeSerfTenure(state, tenure);
     return tenure;
   };
@@ -5755,6 +5827,22 @@ window.FB = window.FB || {};
         tenure.authorityCheckpoint.localLordId = current.localLordId;
       }
     }
+    if (!Number.isInteger(tenure.nextWarCheckTurn) ||
+        tenure.nextWarCheckTurn < 0) {
+      tenure.nextWarCheckTurn = state.turn || 0;
+    }
+    const cacheFields = [
+      'nextDutyId','nextDutyTurn','nextDutyConditional','nextDutyIndex'
+    ];
+    let cacheMissing = false;
+    for (let i = 0; i < cacheFields.length; i++) {
+      if (!Object.prototype.hasOwnProperty.call(tenure, cacheFields[i])) {
+        cacheMissing = true;
+        break;
+      }
+    }
+    if (cacheMissing) FB.refreshSerfTenureDueCache(state, tenure);
+    else cachedSerfTenureDue(state, tenure);
     return tenure;
   }
 
@@ -6314,7 +6402,10 @@ window.FB = window.FB || {};
     } else if (proposal.kind !== 'confirm') {
       historyOutcome = 'preserved_terms';
     }
-    if (mechanicsChanged) tenure.revision++;
+    if (mechanicsChanged) {
+      tenure.revision++;
+      FB.refreshSerfTenureDueCache(state, tenure);
+    }
     tenure.transitionHistory.push(transitionHistoryEntry(
       state, record, historyOutcome, changedId));
     if (tenure.transitionHistory.length > 8) tenure.transitionHistory.shift();
@@ -6357,6 +6448,10 @@ window.FB = window.FB || {};
     tenure.status = 'closed';
     tenure.endedTurn = state.turn || 0;
     tenure.endReason = reason || 'rank_change';
+    tenure.nextDutyId = null;
+    tenure.nextDutyTurn = null;
+    tenure.nextDutyConditional = false;
+    tenure.nextDutyIndex = null;
     return tenure;
   };
 
@@ -6489,9 +6584,10 @@ window.FB = window.FB || {};
         nextDueTurn: d.nextDueTurn,
         dateLabel: dateLabel,
         daysRemaining: daysRemain,
-        dateFull: FB.T('{season} {year} ({days} days)', {
+        dateFull: FB.T('{season} {year}, day {day} ({days} days)', {
           season: FB.seasonName(dueDate.season),
           year: dueDate.year,
+          day:dueDate.day,
           days: daysRemain
         })
       };
@@ -6525,17 +6621,38 @@ window.FB = window.FB || {};
           'tenureDuty', cd.id, cdDef, 'desc', 'descKey');
         const dueDate = FB.dateAtTurn(state, cd.pendingTurn);
         const daysRemain = Math.max(0, cd.pendingTurn - (state.turn || 0));
-        pendingConditional = {
+        const conditionalView = {
           id: cd.id,
           name: cdName,
           desc: cdDesc,
           pendingTurn: cd.pendingTurn,
+          nextDueTurn:cd.pendingTurn,
           dateLabel: FB.seasonName(dueDate.season) + ' ' + dueDate.year,
-          daysRemaining: daysRemain
+          daysRemaining: daysRemain,
+          dateFull:FB.T('{season} {year}, day {day} ({days} days)', {
+            season:FB.seasonName(dueDate.season), year:dueDate.year,
+            day:dueDate.day, days:daysRemain
+          })
         };
-        break;
+        if (!pendingConditional ||
+            cd.pendingTurn < pendingConditional.nextDueTurn) {
+          pendingConditional = conditionalView;
+        }
+        if (!nearestDue || cd.pendingTurn < nearestDue.nextDueTurn) {
+          nearestDue = conditionalView;
+        }
       }
     }
+
+    const purchase = FB.freedomPurchaseStatus
+      ? FB.freedomPurchaseStatus(state) : null;
+    const petition = FB.freedomPetitionStatus
+      ? FB.freedomPetitionStatus(state) : null;
+    const offer = FB.freedomOfferView ? FB.freedomOfferView(state) : null;
+    const transition = p.tenureTransition || null;
+    const recentTransition = tenure.transitionHistory &&
+      tenure.transitionHistory.length
+      ? tenure.transitionHistory[tenure.transitionHistory.length - 1] : null;
 
     return {
       status: 'active',
@@ -6566,10 +6683,57 @@ window.FB = window.FB || {};
       hasRights: rights.length > 0,
       emptyRightsText: FB.T('No recognized customary rights recorded.'),
       nearestDue: nearestDue,
+      nearestDueId:tenure.nextDutyId,
+      nearestDueTurn:tenure.nextDutyTurn,
       pendingConditional: pendingConditional,
+      freedom:{
+        purchase:purchase,
+        petition:petition,
+        offer:offer && ['offered','service'].indexOf(offer.status) >= 0
+          ? offer : null
+      },
+      pendingTransition:transition ? {
+        revision:transition.revision,
+        status:transition.status,
+        causes:(transition.causes || []).slice(),
+        eligibleTurn:transition.eligibleTurn,
+        proposalKind:transition.proposal && transition.proposal.kind || 'confirm'
+      } : null,
+      recentTransition:recentTransition ? {
+        turn:recentTransition.turn,
+        outcome:recentTransition.outcome,
+        dutyId:recentTransition.dutyId || null,
+        rightId:recentTransition.rightId || null
+      } : null,
       customaryUseStatement: FB.T('Customary tenure grants household use by local custom, not owned property.'),
       lawfulFreedomStatement: FB.T('Lawful freedom ends personal service obligations.')
     };
+  };
+
+  FB.serfTenurePresentationSignature = function (state) {
+    const tenure = FB.activeSerfTenure(state);
+    if (!tenure) return 'closed';
+    const purchase = FB.freedomPurchaseStatus
+      ? FB.freedomPurchaseStatus(state) : null;
+    const petition = FB.freedomPetitionStatus
+      ? FB.freedomPetitionStatus(state) : null;
+    const offer = state.player.freedomOffer;
+    const offerView = FB.freedomOfferView
+      ? FB.freedomOfferView(state) : null;
+    const transition = state.player.tenureTransition;
+    const family = state.player.familyFreedom;
+    return [
+      tenure.status, tenure.revision || 0,
+      tenure.nextDutyId || '', tenure.nextDutyTurn === null ? '' : tenure.nextDutyTurn,
+      offer && offer.createdTurn || '', offerView && offerView.status || '',
+      offer && offer.expiryTurn || '',
+      petition ? petition.standing : '', petition && petition.ready ? 1 : 0,
+      purchase && purchase.quote ? purchase.quote.price : '',
+      purchase && purchase.affordable ? 1 : 0,
+      transition && transition.revision || '',
+      family && family.first && family.first.turn || '',
+      family && family.firstLawful && family.firstLawful.turn || ''
+    ].join('|');
   };
 
   FB.reconcileSerfHomeAuthority = function (state) {
@@ -6672,32 +6836,39 @@ window.FB = window.FB || {};
     FB.reconcileSerfHomeAuthority(state);
     if (queueSerfTenureReview(state, tenure)) return;
 
-    const activeWarId = currentRealmWarId(state, tenure.provinceId);
-
-    for (let c = 0; c < (tenure.conditional || []).length; c++) {
-      const cd = tenure.conditional[c];
-      if (cd.id === 'officers_quartered') {
-        if (activeWarId !== cd.currentWarId) {
-          cd.currentWarId = activeWarId;
-          if (activeWarId !== null) {
-            const eligible = (cd.lastResolvedTurn === null || cd.lastResolvedTurn === undefined) ||
-              ((state.turn || 0) >= (cd.nextEligibleTurn || 0));
-            if (eligible && cd.pendingTurn === null) {
-              cd.pendingTurn = (state.turn || 0) + 7;
-            }
-          } else {
-            if (cd.pendingTurn !== null) {
-              cd.pendingTurn = null;
-              if (state.eventQueue) {
-                state.eventQueue = state.eventQueue.filter(function (item) {
-                  return item.id !== 'serf_officers_quartered';
-                });
-              }
-            }
+    let conditionalChanged = false;
+    if ((state.turn || 0) >= tenure.nextWarCheckTurn) {
+      const activeWarId = currentRealmWarId(state, tenure.provinceId);
+      tenure.nextWarCheckTurn = (state.turn || 0) + 7;
+      for (let c = 0; c < (tenure.conditional || []).length; c++) {
+        const cd = tenure.conditional[c];
+        if (cd.id !== 'officers_quartered' ||
+            activeWarId === cd.currentWarId) continue;
+        cd.currentWarId = activeWarId;
+        if (activeWarId !== null) {
+          const eligible = (cd.lastResolvedTurn === null ||
+            cd.lastResolvedTurn === undefined) ||
+            ((state.turn || 0) >= (cd.nextEligibleTurn || 0));
+          if (eligible && cd.pendingTurn === null) {
+            cd.pendingTurn = (state.turn || 0) + 7;
+            conditionalChanged = true;
+          }
+        } else if (cd.pendingTurn !== null) {
+          cd.pendingTurn = null;
+          conditionalChanged = true;
+          if (state.eventQueue) {
+            state.eventQueue = state.eventQueue.filter(function (item) {
+              return item.id !== 'serf_officers_quartered';
+            });
           }
         }
       }
     }
+
+    const cachedDue = conditionalChanged
+      ? FB.refreshSerfTenureDueCache(state, tenure)
+      : cachedSerfTenureDue(state, tenure);
+    if (!cachedDue || cachedDue.turn > (state.turn || 0)) return;
 
     const hasValidQueued = (state.eventQueue || []).some(function (item) {
       const ev = FB.eventById(item.id);
@@ -6709,32 +6880,10 @@ window.FB = window.FB || {};
     const currentSeasonKey = state.date.year + '_' + state.date.season;
     if (tenure.lastPresentedSeasonKey === currentSeasonKey) return;
 
-    let candidate = null;
-    let lowestDueTurn = Infinity;
-
-    for (let i = 0; i < (tenure.duties || []).length; i++) {
-      const d = tenure.duties[i];
-      if (!d || !FBDATA.tenureDuties || !FBDATA.tenureDuties[d.id] || !FB.eventById(d.eventId)) continue;
-      if (d.nextDueTurn !== null && d.nextDueTurn !== undefined && d.nextDueTurn <= (state.turn || 0)) {
-        if (d.nextDueTurn < lowestDueTurn) {
-          lowestDueTurn = d.nextDueTurn;
-          candidate = { duty: d, isConditional: false };
-        }
-      }
-    }
-
-    for (let c = 0; c < (tenure.conditional || []).length; c++) {
-      const cd = tenure.conditional[c];
-      if (!cd || !FBDATA.tenureDuties || !FBDATA.tenureDuties[cd.id] || !FB.eventById(cd.eventId)) continue;
-      if (cd.pendingTurn !== null && cd.pendingTurn !== undefined && cd.pendingTurn <= (state.turn || 0)) {
-        if (cd.pendingTurn < lowestDueTurn) {
-          lowestDueTurn = cd.pendingTurn;
-          candidate = { duty: cd, isConditional: true };
-        }
-      }
-    }
-
-    if (!candidate) return;
+    const candidate = {
+      duty:cachedDue.duty,
+      isConditional:cachedDue.conditional
+    };
 
     const dueTurn = candidate.isConditional ? candidate.duty.pendingTurn : candidate.duty.nextDueTurn;
 
@@ -7117,6 +7266,21 @@ window.FB = window.FB || {};
     FB.news(state, message);
   }
 
+  function lawfulFreedomNotice(state, frozen) {
+    if (!frozen.lawful) return;
+    state.player.flags = state.player.flags || {};
+    if (state.player.flags.hint_serf_freed) return;
+    state.player.flags.hint_serf_freed = 1;
+    if (FB.fx && FB.fx.push) {
+      FB.fx.push({
+        kind:'toast', bypassSuppression:true,
+        message:FB.msg('fx.freedom.first_lawful',
+          'Lawful freedom ends the household’s serf tenure: scheduled serf duties and serf-only restrictions no longer apply. As Freeholders, the family may pursue free livelihoods and acquire land; the first lawful freedom is recorded in Family landmarks.', {}),
+        legacyText:null
+      });
+    }
+  }
+
   FB.resolveSerfFreedom = function (state, spec, ctx) {
     const status = FB.serfFreedomStatus(state, spec, ctx);
     if (!status.ready) return false;
@@ -7154,6 +7318,7 @@ window.FB = window.FB || {};
     }
     writeFamilyFreedom(state, frozen);
     freedomChronicle(state, frozen);
+    lawfulFreedomNotice(state, frozen);
     return frozen;
   };
 
@@ -7973,6 +8138,11 @@ window.FB = window.FB || {};
 
   function coreCustomPreview(id, state, ctx) {
     const p = state.player;
+    if (id === 'serf_commuted_pay') {
+      return [impact('gold', {
+        amount:-Math.max(0, Number(ctx && ctx.commutationGold) || 0)
+      })];
+    }
     if (id === 'freedom_lords_notice') {
       return [impact('queue', { eventId:'manumission', possible:true }),
         impact('system', { system:'property', action:'freedom_offer',
@@ -10028,6 +10198,7 @@ window.FB = window.FB || {};
             condDuty.nextEligibleTurn = (state.turn || 0) + 1080;
           }
         }
+        FB.refreshSerfTenureDueCache(state, tenure);
       }
     }
 
@@ -10262,6 +10433,7 @@ window.FB = window.FB || {};
           if ((state.turn || 0) >= (cd.nextEligibleTurn || 0)) {
             cd.pendingTurn = (state.turn || 0) + 1;
             cd.marriageTurn = state.turn || 0;
+            FB.refreshSerfTenureDueCache(state, p.tenure);
           }
           break;
         }

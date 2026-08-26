@@ -28,6 +28,7 @@ const {
   START_CODE, startDeterministicGame:startBaseGame, unlockStartTier
 } = require('../support/game/start');
 const { waitForUiRefresh } = require('../support/game/ui');
+const SERF_START_CODE = 'ASCENT-867-serf-london-f-Ada';
 
 function startDeterministicGame(page, options) {
   const guided = Object.assign({ keepTutorial:true }, options || {});
@@ -73,6 +74,7 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     })).toBeVisible();
     await expect(page.locator('#gm-body'))
       .toContainText('your First steps are listed there');
+    await expect(page.locator('[data-serf-start-pointer]')).toHaveCount(0);
     await expect(page.locator('#gm-body')).not.toContainText('Press Space');
     await page.getByRole('button', { name: 'Begin', exact: true }).click();
 
@@ -117,6 +119,26 @@ test('a new life gets a short intro, a focused orientation, and First steps',
     await expect(card.locator('li.done')).toHaveCount(0);
     await expect(card.locator('li').first())
       .toContainText('Complete a one-time deed (not a Daily Focus)');
+  });
+
+test('fresh serf intro points to Rank & Realm even when guide hints are hidden',
+  async function ({ page }) {
+    await page.evaluate(function () {
+      FB.game.uiPrefs.hideBeginnerHints = true;
+      FB.game.saveUiPrefs();
+    });
+    await page.getByRole('button', { name:'New Game', exact:true }).click();
+    await page.locator('#btn-bm-seed').click();
+    const seedInput = page.locator('#ng-seed');
+    await seedInput.fill(SERF_START_CODE);
+    await seedInput.press('Enter');
+    await expect(page.locator('#chargen:not(.hidden)')).toBeVisible();
+    await page.getByRole('button', { name:'Begin Your Story', exact:true })
+      .click();
+
+    await expect(page.locator('[data-serf-start-pointer]')).toContainText(
+      "Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds.");
+    await expect(page.locator('.coachmark')).toHaveCount(0);
   });
 
 test('a saved guide-hints setting suppresses first-life onboarding surfaces',

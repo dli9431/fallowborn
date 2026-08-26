@@ -3,10 +3,17 @@
 Persistent serf tenure is additive save-format-3 data (`state.player.tenure`).
 `FB.ensureSerfTenure` lazily creates or repairs tenure records on older tier 0 saves without
 consuming RNG or bumping save format 3:
-- Schema fields: `{ version: 1, status: 'active' | 'closed', provinceId, settlement, archetypeId, formedTurn, formedBy, lastPresentedSeasonKey, duties: [{ id, eventId, nextDueTurn, lastResolvedTurn }], conditional: [{ id, eventId, nextEligibleTurn, pendingTurn, lastResolvedTurn, currentWarId, marriageTurn? }], rights: [rightId] }`.
+- Schema fields: `{ version: 1, status: 'active' | 'closed', provinceId, settlement, archetypeId, formedTurn, formedBy, lastPresentedSeasonKey, nextDutyId, nextDutyTurn, nextDutyConditional, nextDutyIndex, nextWarCheckTurn, duties: [{ id, eventId, nextDueTurn, lastResolvedTurn }], conditional: [{ id, eventId, nextEligibleTurn, pendingTurn, lastResolvedTurn, currentWarId, marriageTurn? }], rights: [rightId] }`.
 - When closed on promotion or manumission, `status: 'closed'`, `endedTurn`, and `endReason` are preserved.
 - Unknown optional duty, conditional-duty, and right IDs remain harmless save data and are ignored by scheduling and display.
 - No rendered text, active calculations, or volatile references enter serialized state.
+
+Optional `player.flags.hint_serf_*` acknowledgements are per-save booleans. They record only that
+tenure, first-duty, offer, freedom-route, or lawful-freedom teaching was seen and never gate a
+mechanic. `FB.serfOnboardingState` derives eligibility, while affordability, localized lessons,
+Rank & Realm markup, and its presentation signature remain transient. These additions and the
+deterministically repaired nearest-duty cache retain save format 3. Because tenure belongs to the
+household, these acknowledgements survive protagonist succession with an inherited active tenure.
 
 The same version-1 tenure additively stores `revision`, a bounded eight-entry
 `transitionHistory`, `transitionEligibleTurn`, and an `authorityCheckpoint` containing
@@ -163,7 +170,8 @@ forgets `FB.touchFamily` costs a card that is stale until tomorrow rather than o
 is wrong forever.
 
 The version-3 wire form omits only reconstructible fields. Object-map keys supply realm,
-character, and court-member ids; canonical member `parentId` rebuilds `childIds`; and
+character, and court-member ids; a derived `ro_*` court-character id restores its matching
+`royal_*` lineage member id; canonical member `parentId` rebuilds `childIds`; and
 death years distinguish dead members from the omitted live default. Common null, zero,
 true, health-8, and empty-array/object defaults are restored explicitly. A building with
 an omitted settlement index belongs to the head settlement (`s:0`), matching the legacy

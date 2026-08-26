@@ -66,6 +66,10 @@ test('the serf burden pool contains ten scheduled and two extraordinary stories'
           never: !!(event && event.trigger && event.trigger.never),
           contextValidator: event && event.contextValidator,
           choices: event && event.options ? event.options.length : 0,
+          continuity:!!(event && event.options && event.options.some(
+            function (option) {
+              return !option.manualOnly && !option.require;
+            })),
           complete: !!(event && event.title && event.text &&
             event.options.every(function (option) {
               return !!(option.label && option.desc &&
@@ -95,7 +99,8 @@ test('the serf burden pool contains ten scheduled and two extraordinary stories'
         count: 1,
         never: true,
         contextValidator: 'serf_tenure_context_valid',
-        complete: true
+        complete: true,
+        continuity:true
       });
       expect(event.choices).toBeGreaterThanOrEqual(3);
     });
@@ -1335,6 +1340,7 @@ test('quartering duty triggers at most once per eligible war, cancels on peace, 
       state.realms.france = { id: 'france', alive: true, war: { enemy: 'normandy', years: 0 } };
       state.owner[tenure.provinceId] = 'france';
 
+      FB.wakeSerfTenureWarCheck(state);
       FB.tenureDay(state);
       const warId1 = qDuty.currentWarId;
       const pendingTurn1 = qDuty.pendingTurn;
@@ -1368,20 +1374,24 @@ test('quartering duty triggers at most once per eligible war, cancels on peace, 
 
       // 2. Peace occurs — resets war tracking
       state.realms.france.war = null;
+      FB.wakeSerfTenureWarCheck(state);
       FB.tenureDay(state);
       const warEnded = qDuty.currentWarId === null;
 
       // 3. A distinct war during cooldown remains ineligible.
       state.realms.france.war = { enemy: 'england', years: 0 };
+      FB.wakeSerfTenureWarCheck(state);
       FB.tenureDay(state);
       const warId2 = qDuty.currentWarId;
       const cooldownWarSkipped = warId2 !== warId1 && qDuty.pendingTurn === null;
 
       // End War 2, let the 12-season cooldown elapse, then start War 3.
       state.realms.france.war = null;
+      FB.wakeSerfTenureWarCheck(state);
       FB.tenureDay(state);
       state.turn = cooldownTurn;
       state.realms.france.war = { enemy: 'normandy', years: 0 };
+      FB.wakeSerfTenureWarCheck(state);
       FB.tenureDay(state);
       const warId3 = qDuty.currentWarId;
       const pendingTurnWar3 = qDuty.pendingTurn;
@@ -1389,6 +1399,7 @@ test('quartering duty triggers at most once per eligible war, cancels on peace, 
 
       // 4. War 3 ends before resolution — pending obligation is canceled cleanly.
       state.realms.france.war = null;
+      FB.wakeSerfTenureWarCheck(state);
       FB.tenureDay(state);
       const canceledOnPeace = qDuty.pendingTurn === null && qDuty.currentWarId === null;
 
@@ -1430,6 +1441,7 @@ test('one presentation per season limit restricts burden queuing to once per sea
       // Schedule two duties due today
       tenure.duties[0].nextDueTurn = state.turn;
       tenure.duties[1].nextDueTurn = state.turn;
+      FB.refreshSerfTenureDueCache(state, tenure);
       state.eventQueue = [];
 
       FB.tenureDay(state);
@@ -1784,6 +1796,7 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
       state.holder[home] = nextRealms[1];
       state.owner[home] = nextRealms[1];
       const afterCommute = FB.serfHomeAuthority(state);
+      const rngBeforeCommuteRouter = JSON.stringify(FB.getRngState());
       FB.noteSerfHomeTransition(state, 'county_transfer',
         beforeCommute, afterCommute);
       const rngAfterCommuteRouter = JSON.stringify(FB.getRngState());
@@ -1822,7 +1835,7 @@ test('Phase 5 authority proposals add and commute bounded duties while preservin
         addResolved:addResolved,
         addDelay:addDelay,
         routerRngStable:rngBeforeRouter === rngAfterAddRouter &&
-          rngBeforeRouter === rngAfterCommuteRouter,
+          rngBeforeCommuteRouter === rngAfterCommuteRouter,
         revisionAfterAdd:commuteRecord.tenureRevision,
         commuteKind:commuteProposal.kind,
         commuteDutyId:commuteProposal.dutyId,

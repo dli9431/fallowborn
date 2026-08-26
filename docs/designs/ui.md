@@ -25,6 +25,23 @@ An active Old Custom case adds one compact linked witness/officer line. Each nat
 opens the standard character sheet; visible or browser Back restores the same Station &
 home sheet and keyboard focus.
 
+Rank & Realm also exposes one read-only **Review tenure & freedom** action. The sheet orders
+home/tenure identity, nearest duty, all duties and rights, direct purchase and Standing petition,
+the current valid offer, and any pending or recent authority review. Semantic containers are
+`data-serf-tenure`, `data-serf-next-duty`, `data-serf-freedom-routes`, and `data-serf-offer`;
+Family landmarks retains `data-family-freedom`. Price breakdown, current gold, affordability,
+Standing threshold, disabled reason, service, expiry, issuer, and tenure revision are complete
+text rather than icon or color meaning. Home and character controls use normal modal history,
+focus, Escape, and Back behavior. At 320 CSS pixels rows wrap and coarse-pointer controls retain
+the shared 44-pixel minimum.
+
+A fresh serf introduction points to Rank & Realm without replacing scenario prose or obeying the
+optional hint toggle. First steps retains exactly its three universal requirements and adds only a
+linked home-terms note. After that track, one per-save tenure coachmark precedes optional poaching
+and family lessons; opening the sheet acknowledges it. Visible first duties and favorable offers
+teach their live saved terms, while Automation does not mark unseen teaching as seen. Routine date
+changes use a transient semantic signature and never announce a daily countdown.
+
 The authority-review event uses the same generic modal, participant cards, realm card,
 number-key choices, nested Back route, and Escape dismissal. It identifies the permanent
 home, exact retained former/current local people and political authority, consolidated

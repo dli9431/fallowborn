@@ -276,10 +276,14 @@ window.FB = window.FB || {};
     value -= (Number(fx.desertion) || 0) * 20;
     return value;
   }
-  function fxScore(fx) {
+  function fxScore(fx, s, ctx) {
     if (!fx) return 0;
     let v = 0;
     if (fx.custom && CUSTOM_FX_SCORE[fx.custom]) v += CUSTOM_FX_SCORE[fx.custom];
+    if (fx.custom === 'serf_commuted_pay' && ctx &&
+        Number.isInteger(ctx.commutationGold)) {
+      v -= ctx.commutationGold * 0.5;
+    }
     if (typeof fx.gold === 'number') v += fx.gold * 0.5;
     if (fx.prestige) v += fx.prestige * 0.4;
     if (fx.piety) v += fx.piety * 0.3;
@@ -301,15 +305,17 @@ window.FB = window.FB || {};
     return v;
   }
 
-  function optionScore(s, o, style) {
+  function optionScore(s, o, style, ctx) {
     if (o.chance !== undefined) {
       const p = typeof o.chance === 'string' ? FB.namedChance(s, o.chance) : o.chance;
-      const sv = fxScore(o.effects) + fxScore(o.success && o.success.effects);
-      const fv = fxScore(o.effects) + fxScore(o.failure && o.failure.effects);
+      const sv = fxScore(o.effects, s, ctx) +
+        fxScore(o.success && o.success.effects, s, ctx);
+      const fv = fxScore(o.effects, s, ctx) +
+        fxScore(o.failure && o.failure.effects, s, ctx);
       if (style === 'bold') return sv * (0.4 + p * 0.6) + fv * (1 - p) * 0.5;
       return sv * p + fv * (1 - p) - 1; // prudent: a touch risk-averse
     }
-    return fxScore(o.effects);
+    return fxScore(o.effects, s, ctx);
   }
 
   /* Resolve an event without opening the modal; the chronicle records it. */
@@ -332,7 +338,7 @@ window.FB = window.FB || {};
     if (style !== 'first') {
       let best = -1e9;
       for (const o of opts) {
-        const v = optionScore(s, o, style);
+        const v = optionScore(s, o, style, ctx);
         if (v > best) { best = v; pick = o; }
       }
     }
@@ -649,6 +655,87 @@ window.FB = window.FB || {};
       '</div>';
   }
 
+  function scheduledDutyTeachingHtml(s, ev, ctx) {
+    const flags = s.player.flags || {};
+    const tenure = FB.activeSerfTenure && FB.activeSerfTenure(s);
+    if (!ctx || !ctx.dutyId || flags.hint_serf_first_duty || !tenure ||
+        ctx.tenureFormedTurn !== tenure.formedTurn ||
+        (ctx.tenureRevision || 0) !== (tenure.revision || 0)) return '';
+    let duty = null;
+    let interval = null;
+    for (let i = 0; i < (tenure.duties || []).length; i++) {
+      if (tenure.duties[i].id === ctx.dutyId) {
+        duty = tenure.duties[i];
+        interval = FB.serfTenureDutyInterval
+          ? FB.serfTenureDutyInterval(tenure, duty) : null;
+        break;
+      }
+    }
+    if (!duty) {
+      for (let i = 0; i < (tenure.conditional || []).length; i++) {
+        if (tenure.conditional[i].id === ctx.dutyId) {
+          duty = tenure.conditional[i];
+          break;
+        }
+      }
+    }
+    if (!duty) return '';
+    const dueDate = FB.dateAtTurn(s, ctx.dueTurn);
+    const valid = [];
+    for (let i = 0; i < (ev.options || []).length; i++) {
+      const option = ev.options[i];
+      const status = FB.eventOptionStatus
+        ? FB.eventOptionStatus(s, ev, option, ctx) : { ready:true };
+      if (status.ready) {
+        valid.push(FB.eventText(s, s.player.charId, ev,
+          'options.' + i + '.label', ctx));
+      }
+    }
+    if (!valid.length) return '';
+    const cadence = interval
+      ? FB.T('This recurring duty returns every {days} days under the saved household tenure.', {
+          days:interval
+        })
+      : FB.T('This conditional duty arises only when its saved household circumstances require it.');
+    flags.hint_serf_first_duty = 1;
+    return '<div class="progressnote" data-serf-duty-teaching><b>' +
+      esc(FB.T('How this duty works')) + '</b><p class="adesc">' +
+      esc(FB.T(
+        'It fell due on {season} {year}, day {day}. {cadence}', {
+          season:FB.seasonName(dueDate.season), year:dueDate.year,
+          day:dueDate.day, cadence:cadence
+        })) + '</p>' +
+      kv('Valid answers now', esc(valid.join(' · '))) +
+      '<p class="adesc">' + esc(FB.T(
+        'These answers settle today’s due only; none changes the household’s future tenure terms.')) +
+      '</p></div>';
+  }
+
+  function freedomOfferTermsHtml(s, ev) {
+    if (!ev || ev.id !== 'manumission' || !FB.freedomOfferView) return '';
+    const offer = FB.freedomOfferView(s);
+    if (!offer || offer.status !== 'offered') return '';
+    s.player.flags = s.player.flags || {};
+    s.player.flags.hint_serf_offer_terms = 1;
+    return '<div class="progressnote" data-serf-offer-terms>' +
+      kv('Gold required now', esc(FB.T('{money:price}', {
+        price:offer.price
+      }))) +
+      kv('Final service', esc(offer.serviceDays
+        ? FB.T('{days} days', { days:offer.serviceDays }) : FB.T('None'))) +
+      kv('Expires', esc(FB.T('{date} ({days} days remain)', {
+        date:offer.expiryLabel,
+        days:Math.max(0, offer.expiryTurn - (s.turn || 0))
+      }))) +
+      kv('Issued terms', esc(FB.T('{lord}, tenure revision {revision}', {
+        lord:offer.lordName,
+        revision:s.player.freedomOffer.tenureRevision
+      }))) +
+      '<p class="adesc">' + esc(FB.T(
+        'Expiry or a material change to the named tenure invalidates this offer.')) +
+      '</p></div>';
+  }
+
   function showEvent(ev, ctx) {
     const s = FB.state;
     eventOpen = true;
@@ -657,6 +744,8 @@ window.FB = window.FB || {};
     if (FB.prepareEvent) FB.prepareEvent(s, ev, ctx);
     $('ev-title').textContent = FB.eventText(s, s.player.charId, ev, 'title', ctx);
     let bodyHtml = esc(FB.eventText(s, s.player.charId, ev, 'text', ctx));
+    bodyHtml += scheduledDutyTeachingHtml(s, ev, ctx);
+    bodyHtml += freedomOfferTermsHtml(s, ev);
     if (ev.id === 'proposal_made' && s.player.courtingId) {
       const suitor = s.chars[s.player.courtingId];
       const terms = suitor && FB.courtshipTerms
@@ -6004,7 +6093,8 @@ window.FB = window.FB || {};
     });
   };
 
-  UI.showSettlement = function (pid, idx) {
+  UI.showSettlement = function (pid, idx, options) {
+    options = options || {};
     const s = FB.state;
     const pr = FB.world.byId[pid];
     if (!s || !pr) return;
@@ -6153,8 +6243,11 @@ window.FB = window.FB || {};
       (idx === 0 ? '<button class="btn" id="settlement-market">' +
         esc(FB.T('County market')) + '</button>' : '') +
       '<button class="btn" id="gm-cancel">' +
-      esc(FB.T('Close')) + '</button></div>';
+      esc(FB.T(options.historyBack ? 'Back' : 'Close')) + '</button></div>';
     openModal(SETT_ICON[st.kind] + ' ' + st.name, h, {
+      historyView:!!options.historyView,
+      historyBack:!!options.historyBack,
+      historyBackRender:options.historyBackRender,
       guide:guideModalOption('settlement-guide', 'settlements-development',
         'Guide: settlements and development')
     });
@@ -6202,7 +6295,11 @@ window.FB = window.FB || {};
         $('gm-demolish-back').addEventListener('click', function () { UI.showSettlement(pid, idx); });
       });
     });
-    $('gm-cancel').addEventListener('click', UI.closeModal);
+    $('gm-cancel').addEventListener('click', options.historyBack
+      ? function () {
+        modalHistoryBack(options.historyBackRender || UI.showRankDetails);
+      }
+      : UI.closeModal);
   };
 
   /* ================= plot picker ================= */
@@ -8071,9 +8168,13 @@ window.FB = window.FB || {};
     } else if (returnContext.view === 'rank-details') {
       UI.showRankDetails();
       const focusId = returnContext.focusCharacterId;
-      const control = focusId && document.querySelector(
-        '[data-tenure-character="' + focusId + '"]');
-      if (control) control.focus();
+      /* showRankDetails schedules the modal's ordinary initial focus. Restore
+         the originating tenure link after that task has settled. */
+      setTimeout(function () {
+        const control = focusId && document.querySelector(
+          '[data-tenure-character="' + focusId + '"]');
+        if (control) control.focus({ preventScroll:true });
+      }, 0);
     } else {
       UI.closeModal();
     }

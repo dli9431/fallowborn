@@ -131,7 +131,8 @@ window.FB = window.FB || {};
 
   FB.fx = {
     push: function (intent) {
-      if (toastSuppression && intent && intent.kind === 'toast') return;
+      if (toastSuppression && intent && intent.kind === 'toast' &&
+          !intent.bypassSuppression) return;
       const safe = FB.messageParams(intent);
       for (let i = 0; i < listeners.length; i++) listeners[i](safe);
     },

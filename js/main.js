@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.160.0';
+  FB.VERSION = '1.160.1';
   FB.CHANGELOG = [
+    { v: '1.160.1', date: '2026-08-26', changes: [
+      'The serf opening now links its tenure guidance, scheduled duties, freedom terms, and family history through one accessible household story.'
+    ] },
     { v: '1.160.0', date: '2026-08-25', changes: [
       'Serf households now review customary duties and rights when their local or political authority changes.'
     ] },
@@ -2458,7 +2461,13 @@ window.FB = window.FB || {};
     if (FB.ensurePapacyState) FB.ensurePapacyState(state);
     if (FB.ensurePopulationState) FB.ensurePopulationState(state);
     if (FB.ensureMarket) FB.ensureMarket(state);
-    if (FB.ensureSerfTenure && sc.tier === 0) FB.ensureSerfTenure(state, 'new_game');
+    if (sc.tier === 0) {
+      /* The integrated tenure sheet and lawful-freedom routes name the exact
+         home authority from the first playable frame. Establish the bounded
+         local lord/steward cast before tenure snapshots that authority. */
+      if (FB.getRole) FB.getRole(state, 'lord', true);
+      if (FB.ensureSerfTenure) FB.ensureSerfTenure(state, 'new_game');
+    }
 
     if (sc.tier >= 3) {
       state.player.liege = (state.holder && state.holder[provId]) || state.owner[provId];
@@ -2502,11 +2511,17 @@ window.FB = window.FB || {};
       (G.uiPrefs && G.uiPrefs.hideBeginnerHints)
       ? FB.T('The Deeds tab lists your daily focus and one-shot deeds.')
       : FB.T('Watch the Deeds tab: your First steps are listed there.');
+    const serfIntroPointer = FB.activeSerfTenure &&
+      FB.activeSerfTenure(state)
+      ? '<p class="hint" data-serf-start-pointer>' + FB.esc(FB.T(
+        "Your household's terms and routes to freedom are in Rank & Realm. First steps remain in Deeds.")) + '</p>'
+      : '';
     FB.ui.openModal('Your Story Begins', '<div class="gm-body-text"><p>' +
       FB.esc(FB.dataText(state, state.player.charId, 'scenario', sc.id, sc, introPath, {})) +
       '</p><p class="hint">' +
       FB.esc(introHint) +
-      '</p></div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
+      '</p>' + serfIntroPointer +
+      '</div><button class="btn primary" id="gm-go">' + FB.esc(FB.T('Begin')) + '</button>');
     $('gm-go').addEventListener('click', function () {
       FB.ui.closeModal();
       if (firstPlayerOnboarding && FB.ui.resumeFirstPlayerTip) {
@@ -3087,6 +3102,15 @@ window.FB = window.FB || {};
   const TUTORIAL_TRACKS = [
     { id:'first_steps', icon:'🌱', event:null,
       title:function () { return FB.T('First steps'); },
+      note:function (s) {
+        return FB.activeSerfTenure && FB.activeSerfTenure(s)
+          ? FB.T('Home terms: Review your tenure and routes to freedom in Rank & Realm.')
+          : '';
+      },
+      link:function (s) {
+        return FB.activeSerfTenure && FB.activeSerfTenure(s)
+          ? 'serf-tenure' : '';
+      },
       steps:[
         { id:'deed',    label:function () {
           return FB.T('Complete a one-time deed (not a Daily Focus)');
@@ -3247,6 +3271,20 @@ window.FB = window.FB || {};
     return !!(s && s.player && s.player.flags &&
       (s.player.flags.tutorial || s.player.flags.tutorial_done));
   };
+  FB.serfOnboardingState = function (s) {
+    s = s || FB.state;
+    const flags = s && s.player && s.player.flags || {};
+    return {
+      active:!!(s && FB.activeSerfTenure && FB.activeSerfTenure(s)),
+      tutorial:!!(s && FB.tutorialActive && FB.tutorialActive(s)),
+      firstStepsDone:!!flags.tut_track_first_steps,
+      rankRealmSeen:!!flags.hint_serf_tenure,
+      freedomRoutesSeen:!!flags.hint_serf_freedom_routes,
+      firstDutySeen:!!flags.hint_serf_first_duty,
+      offerTermsSeen:!!flags.hint_serf_offer_terms,
+      lawfulFreedomSeen:!!flags.hint_serf_freed
+    };
+  };
   FB.noteDeedCompleted = function (s, id) {
     if (G.observe || !FB.tutorialLife(s)) return false;
     s.player.flags = s.player.flags || {};
@@ -3263,7 +3301,8 @@ window.FB = window.FB || {};
       steps.push({ id:step.id, label:step.label(s), done:isDone });
     }
     return { track:{ id:track.id, icon:track.icon, title:track.title(),
-        note:track.note ? track.note(s) : '' },
+        note:track.note ? track.note(s) : '',
+        link:track.link ? track.link(s) : '' },
       steps:steps, done:done, total:track.steps.length };
   }
   FB.tutorialStatus = function (s) {
@@ -4437,6 +4476,12 @@ window.FB = window.FB || {};
     if (FB.clearFriendship) FB.clearFriendship(s, true);
     const keep = {};
     for (const fl of ['own_ox']) if (p.flags[fl]) keep[fl] = 1; // household property passes separately
+    /* Serf onboarding describes the inherited household tenure rather than
+       one protagonist's memory. Carry its semantic acknowledgements with the
+       same tenure so succession cannot repeat already-seen teaching. */
+    for (const key in p.flags) {
+      if (key.indexOf('hint_serf_') === 0 && p.flags[key]) keep[key] = 1;
+    }
     if (tutorialCarry) {
       for (const key in tutorialCarry) keep[key] = tutorialCarry[key];
       delete keep.tut_successor_child;

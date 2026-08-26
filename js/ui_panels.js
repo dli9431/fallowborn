@@ -1160,6 +1160,12 @@ window.FB = window.FB || {};
         renderActions();
       });
     }
+    const tutorialTenure = $('tutorial-serf-tenure');
+    if (tutorialTenure) {
+      tutorialTenure.addEventListener('click', function () {
+        UI.showRankDetails();
+      });
+    }
     const focuses = FB.listFocusChoices ? FB.listFocusChoices(s)
       : FB.listFocuses(s).map(function (focus) {
         return { action:focus, can:true, reason:'', preview:null };
@@ -1591,8 +1597,11 @@ window.FB = window.FB || {};
       '<button type="button" class="btn small" id="tutorial-dismiss">' +
       esc(FB.T('Dismiss')) + '</button></div>';
     if (status.track.note) {
-      h += '<p class="cmeta tutorial-context">' +
-        esc(status.track.note) + '</p>';
+      h += status.track.link === 'serf-tenure'
+        ? '<button type="button" class="linklike tutorial-context" ' +
+          'id="tutorial-serf-tenure">' + esc(status.track.note) + '</button>'
+        : '<p class="cmeta tutorial-context">' +
+          esc(status.track.note) + '</p>';
     }
     h += '<ul>';
     for (const step of status.steps) {
@@ -2297,11 +2306,28 @@ window.FB = window.FB || {};
     $('faith-details-close').addEventListener('click', UI.closeModal);
   };
 
-  UI.showRankDetails = function () {
+  let rankDetailsSignature = null;
+  UI.showRankDetails = function (options) {
+    options = options || {};
     const s = FB.state;
     if (!s || !s.player) return;
     const landed = s.player.tier >= 3;
-    let h = '';
+    const replacing = !!options.replaceView;
+    const oldBody = replacing ? $('gm-body') : null;
+    const oldScroll = oldBody ? oldBody.scrollTop : 0;
+    const oldFocusNode = replacing && document.activeElement &&
+      oldBody && oldBody.contains(document.activeElement)
+      ? document.activeElement : null;
+    const oldFocus = oldFocusNode ? {
+      id:oldFocusNode.id || '',
+      tenureHome:oldFocusNode.dataset && oldFocusNode.dataset.tenureHome || '',
+      tenureCharacter:oldFocusNode.dataset &&
+        oldFocusNode.dataset.tenureCharacter || ''
+    } : null;
+    let acknowledgeTenure = false;
+    let acknowledgeFreedomRoutes = false;
+    let acknowledgeOfferTerms = false;
+    let h = '<div data-rank-details-surface>';
 
     if (landed) {
       const direct = (s.player.provs || []).slice();
@@ -2401,11 +2427,19 @@ window.FB = window.FB || {};
         if (FB.ensureSerfTenure) FB.ensureSerfTenure(s, 'legacy_repair');
         const view = FB.tenureView && FB.tenureView(s);
         if (view) {
+          h += '<section class="serf-tenure" data-serf-tenure>';
+          acknowledgeTenure = true;
+          acknowledgeFreedomRoutes = true;
+        }
+        if (view) {
           h += '<div class="panelh" data-tenure-header>' + esc(FB.T('Tenure & Custom')) + '</div>';
           h += '<div class="tenure-summary-block" data-tenure-summary>' +
             '<div class="tenure-archetype-name"><strong>' + esc(view.archetypeName) + '</strong></div>' +
             '<p class="adesc">' + esc(view.archetypeSummary) + '</p>' +
-            kv('Holding', esc(view.settlementName + ', ' + view.countyName)) +
+            kv('Holding', '<button type="button" class="panel-inline-link" ' +
+              'data-tenure-home="' + esc(view.provinceId) + '" ' +
+              'data-tenure-settlement="' + esc(String(view.settlement)) + '">' +
+              esc(view.settlementName + ', ' + view.countyName) + '</button>') +
             kv('Controller', esc(view.controllerName)) +
             kv('Current lord', view.lordId
               ? '<button type="button" class="panel-inline-link tenure-character-link" ' +
@@ -2418,6 +2452,13 @@ window.FB = window.FB || {};
                 esc(view.stewardName) + '</button>'
               : esc(view.stewardName)) +
             '</div>';
+
+          if (view.nearestDue) {
+            h += '<div class="tenure-next-due-block" data-tenure-next-due ' +
+              'data-serf-next-duty>' +
+              kv('Next due obligation', esc(view.nearestDue.name + ' — ' + view.nearestDue.dateFull)) +
+              '</div>';
+          }
 
           h += '<div class="tenure-work-block" data-tenure-work>' +
             '<div class="panelh">' + esc(FB.T('Ordinary Work')) + '</div>' +
@@ -2443,12 +2484,6 @@ window.FB = window.FB || {};
               .replace('__OLD_CUSTOM_OFFICER__', officerButton);
             h += '<p class="adesc tenure-old-custom" data-tenure-old-custom>' +
               storyLine + '</p>';
-          }
-
-          if (view.nearestDue) {
-            h += '<div class="tenure-next-due-block" data-tenure-next-due>' +
-              kv('Next due obligation', esc(view.nearestDue.name + ' — ' + view.nearestDue.dateFull)) +
-              '</div>';
           }
 
           if (view.pendingConditional) {
@@ -2487,51 +2522,46 @@ window.FB = window.FB || {};
             '<p class="adesc">' + esc(view.lawfulFreedomStatement) + '</p>' +
             '</div>';
         }
-        const petition = FB.freedomPetitionStatus
-          ? FB.freedomPetitionStatus(s) : null;
-        const offer = FB.freedomOfferView ? FB.freedomOfferView(s) : null;
-        const freedomHead = s.chars[s.player.charId];
-        const freedomLordId = s.roles && s.roles.lord;
-        const freedomLord = freedomLordId && s.chars[freedomLordId] &&
-          !s.chars[freedomLordId].dead ? s.chars[freedomLordId] : null;
-        const freedomLordStanding = freedomLord
-          ? FB.standingOf(s, { kind:'character', id:freedomLord.id }) : 0;
-        const freedomQuote = FB.freedomPurchaseQuote(s);
-        const purchaseBlocked = s.player.freedomOffer &&
-          s.player.freedomOffer.status === 'service'
-          ? FB.T('Final service is already underway.')
-          : (!freedomHead || freedomHead.dead ||
-              FB.ageOf(freedomHead, s.date.year) < 16
-            ? FB.T('You can do this when you come of age at 16.')
-            : (s.player.gold < freedomQuote.price
-            ? FB.T('Requires {money:price}; you have {money:gold}.', {
-              price:freedomQuote.price,
-              gold:Math.floor(s.player.gold)
-            })
-            : (!freedomLord
-              ? FB.T('No current lord can authorize the purchase.')
-              : (freedomLordStanding < -20
-                ? FB.T('The lord despises you and refuses.')
-                : FB.T('Available now.')))));
-        h += '<div class="freedom-routes" data-freedom-routes>' +
+        const petition = view && view.freedom
+          ? view.freedom.petition : null;
+        const offer = view && view.freedom ? view.freedom.offer : null;
+        const purchase = view && view.freedom
+          ? view.freedom.purchase : null;
+        const freedomQuote = purchase
+          ? purchase.quote : FB.freedomPurchaseQuote(s);
+        const purchaseBlocked = purchase
+          ? purchase.reason : FB.T('The purchase route is unavailable.');
+        h += '<div class="freedom-routes" data-freedom-routes ' +
+          'data-serf-freedom-routes>' +
           '<div class="panelh">' + esc(FB.T('Routes to Freedom')) + '</div>' +
           kv('Buy freedom outright', esc(FB.T('{money:price}', {
             price:freedomQuote.price
           }))) +
           '<p class="adesc" data-freedom-family-price>' +
             esc(FB.freedomPurchaseBreakdown(s, freedomQuote)) + '</p>' +
-          '<p class="adesc">' + esc(purchaseBlocked) + '</p>' +
+          kv('Current gold', esc(FB.T('{money:gold}', {
+            gold:purchase ? purchase.gold : Math.floor(s.player.gold)
+          }))) +
+          kv('Affordable now', esc(purchase && purchase.affordable
+            ? FB.T('Yes') : FB.T('No'))) +
+          '<p class="adesc" data-freedom-purchase-reason>' +
+            esc(purchaseBlocked) + '</p>' +
           (petition && petition.lord
             ? kv('Standing with current lord', esc(FB.T('{standing} (petition at +{threshold})', {
               standing:petition.standing, threshold:petition.threshold
             })))
             : kv('Petition', esc(petition ? petition.reason
+              : FB.T('No current lord can receive the petition.')))) +
+          kv('Petition eligibility', esc(petition && petition.ready
+            ? FB.T('Available now.')
+            : (petition ? petition.reason
               : FB.T('No current lord can receive the petition.'))));
         if (offer) {
+          if (offer.status === 'offered') acknowledgeOfferTerms = true;
           const offerService = offer.serviceDays
             ? FB.T('{days} days', { days:offer.serviceDays })
             : FB.T('none');
-          h += '<div data-freedom-offer>' +
+          h += '<div data-freedom-offer data-serf-offer>' +
             '<div data-freedom-offer-price>' +
               kv('Saved price', esc(FB.T('{money:price}', {
                 price:offer.price
@@ -2548,6 +2578,12 @@ window.FB = window.FB || {};
               kv('Final service', esc(offerService)) + '</div>' +
             '<div data-freedom-offer-expiry>' +
               kv('Offer expiry', esc(offer.expiryLabel)) + '</div>' +
+            kv('Issued terms', esc(FB.T('{lord}, tenure revision {revision}', {
+              lord:offer.lordName, revision:offer.tenureRevision
+            }))) +
+            '<p class="adesc">' + esc(FB.T(
+              'Expiry or a material change to the named tenure invalidates this offer.')) +
+              '</p>' +
             (!offer.acceptanceReady && offer.status === 'offered'
               ? '<p class="warnote">' + esc(offer.acceptanceReason) + '</p>'
               : '') + '</div>';
@@ -2562,11 +2598,26 @@ window.FB = window.FB || {};
         h += '<button type="button" class="btn" id="rank-petition-freedom"' +
           (petition && petition.ready ? '' : ' disabled') + '>' +
           esc(FB.T('Petition for terms of freedom…')) + '</button></div>';
+        if (view && view.pendingTransition) {
+          h += '<div class="progressnote" data-serf-authority-review>' +
+            esc(FB.T(
+              'A review of the household custom is pending under the current authority.')) +
+            '</div>';
+        } else if (view && view.recentTransition) {
+          h += '<div class="hint" data-serf-recent-review>' + esc(FB.T(
+            'Recent authority review: {outcome}.', {
+              outcome:view.recentTransition.outcome.replace(/_/g, ' ')
+            })) + '</div>';
+        }
+        if (view) h += '</section>';
       }
     }
-    h += '<div class="gm-footer"><button class="btn" id="rank-details-close">' +
+    h += '</div><div class="gm-footer"><button class="btn" id="rank-details-close">' +
       esc(FB.T('Close')) + '</button></div>';
-    openModal(FB.T(landed ? 'Realm & demesne' : 'Station & home'), h);
+    openModal(FB.T(landed ? 'Realm & demesne' : 'Station & home'), h,
+      replacing ? { replaceView:true, noFocus:true } : undefined);
+    rankDetailsSignature = FB.serfTenurePresentationSignature
+      ? FB.serfTenurePresentationSignature(s) : null;
     const freedomPetition = $('rank-petition-freedom');
     if (freedomPetition) freedomPetition.addEventListener('click', function () {
       if (UI.showFreedomPetition) UI.showFreedomPetition();
@@ -2578,7 +2629,73 @@ window.FB = window.FB || {};
         });
       });
     });
+    document.querySelectorAll('[data-tenure-home]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        UI.showSettlement(button.dataset.tenureHome,
+          Number(button.dataset.tenureSettlement) || 0, {
+            historyView:true, historyBack:true,
+            historyBackRender:UI.showRankDetails
+          });
+      });
+    });
     $('rank-details-close').addEventListener('click', UI.closeModal);
+    /* Building a sheet stays a pure state read. Once the mounted surface has
+       actually reached the user, persist only its semantic teaching flags. */
+    if (UI.acknowledgeHint && (acknowledgeTenure ||
+        acknowledgeFreedomRoutes || acknowledgeOfferTerms)) {
+      setTimeout(function () {
+        if ($('genmodal').classList.contains('hidden') ||
+            !$('gm-body').querySelector('[data-rank-details-surface]')) return;
+        if (acknowledgeTenure) UI.acknowledgeHint('serf_tenure');
+        if (acknowledgeFreedomRoutes) {
+          UI.acknowledgeHint('serf_freedom_routes');
+        }
+        if (acknowledgeOfferTerms) UI.acknowledgeHint('serf_offer_terms');
+      }, 0);
+    }
+    if (!replacing) {
+      /* Rank details historically opens on its Close control. Preserve that
+         modal contract now that linked home and character controls precede it. */
+      setTimeout(function () {
+        const close = $('rank-details-close');
+        if (close && !$('genmodal').classList.contains('hidden')) {
+          close.focus({ preventScroll:true });
+        }
+      }, 0);
+    }
+    if (replacing) {
+      $('gm-body').scrollTop = oldScroll;
+      setTimeout(function () {
+        let target = oldFocus && oldFocus.id ? $(oldFocus.id) : null;
+        const controls = $('gm-body').querySelectorAll(
+          '[data-tenure-home], [data-tenure-character]');
+        for (let i = 0; !target && oldFocus && i < controls.length; i++) {
+          if ((oldFocus.tenureHome &&
+              controls[i].dataset.tenureHome === oldFocus.tenureHome) ||
+              (oldFocus.tenureCharacter &&
+              controls[i].dataset.tenureCharacter ===
+                oldFocus.tenureCharacter)) target = controls[i];
+        }
+        if (target && $('gm-body').contains(target)) {
+          target.focus({ preventScroll:true });
+        } else {
+          $('genmodal').focus({ preventScroll:true });
+        }
+      }, 0);
+    }
+  };
+
+  UI.refreshSerfTenureSheet = function () {
+    const modal = $('genmodal');
+    if (!modal || modal.classList.contains('hidden') ||
+        !$('gm-body').querySelector('[data-rank-details-surface]') ||
+        !$('gm-body').querySelector('[data-serf-tenure]') ||
+        !$('eventmodal').classList.contains('hidden') ||
+        !FB.serfTenurePresentationSignature) return false;
+    const next = FB.serfTenurePresentationSignature(FB.state);
+    if (next === rankDetailsSignature) return false;
+    UI.showRankDetails({ replaceView:true });
+    return true;
   };
 
   function renderChar() {

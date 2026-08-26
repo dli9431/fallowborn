@@ -1239,6 +1239,64 @@ window.FB = window.FB || {};
     return FB.freedomPurchaseQuote(state).price;
   };
 
+  FB.freedomPurchaseStatus = function (state) {
+    const quote = FB.freedomPurchaseQuote(state);
+    const out = {
+      ready:false, reason:'', quote:quote,
+      gold:state && state.player ? Math.floor(state.player.gold) : 0,
+      affordable:false, lord:null, lordStanding:0
+    };
+    if (!state || !state.player || state.player.tier !== 0) {
+      out.reason = FB.T('Only a serf household needs to purchase freedom.');
+      return out;
+    }
+    out.affordable = out.gold >= quote.price;
+    const protagonist = state.chars && state.chars[state.player.charId];
+    if (!protagonist || protagonist.dead ||
+        FB.ageOf(protagonist, state.date.year) < 16) {
+      out.reason = FB.T('You can do this when you come of age at 16.');
+      return out;
+    }
+    if (state.player.travel) {
+      out.reason = FB.T('Return home before purchasing freedom.');
+      return out;
+    }
+    if (!FB.activeSerfTenure || !FB.activeSerfTenure(state)) {
+      out.reason = FB.T('No active customary tenure binds this household.');
+      return out;
+    }
+    if (state.player.freedomOffer &&
+        state.player.freedomOffer.status === 'service') {
+      out.reason = FB.T('Final service is already underway.');
+      return out;
+    }
+    const lord = freedomCurrentLord(state);
+    out.lord = lord;
+    out.lordStanding = lord
+      ? FB.standingOf(state, { kind:'character', id:lord.id }) : 0;
+    if (!lord) {
+      out.reason = FB.T('No current lord can authorize the purchase.');
+      return out;
+    }
+    if (out.lordStanding < -20) {
+      out.reason = FB.T('The lord despises you and refuses.');
+      return out;
+    }
+    if (!quote.price) {
+      out.reason = FB.T('The purchase price is unavailable.');
+      return out;
+    }
+    if (!out.affordable) {
+      out.reason = FB.T('Requires {money:price}; you have {money:gold}.', {
+        price:quote.price, gold:out.gold
+      });
+      return out;
+    }
+    out.ready = true;
+    out.reason = FB.T('Available now.');
+    return out;
+  };
+
   FB.freedomPurchaseBreakdown = function (state, quote) {
     quote = quote || FB.freedomPurchaseQuote(state);
     return FB.T(
@@ -1733,6 +1791,7 @@ window.FB = window.FB || {};
       status:effectiveStatus,
       source:record.source,
       termId:record.termId,
+      lordId:record.lordId,
       lordName:lord ? FB.fullName(lord) : FB.T('the former local lord'),
       homeName:settlement ? settlement.name
         : (province ? FB.L(province.name) : FB.T('the former home')),
@@ -1765,6 +1824,7 @@ window.FB = window.FB || {};
           unassistedTerm.id !== record.termId)
       } : null,
       createdTurn:record.createdTurn,
+      tenureRevision:record.tenureRevision,
       expiryTurn:record.expiryTurn,
       expiryLabel:expiryKnown ? freedomDateLabel(state, record.expiryTurn)
         : FB.T('Unknown'),
@@ -2643,6 +2703,18 @@ window.FB = window.FB || {};
       }
     } },
 
+  { id:'review_serf_tenure', opensChoices:true, noConsume:true,
+    desc:function () {
+      return FB.T('Review your household tenure, next duty, customary rights, and lawful routes to freedom.');
+    },
+    show:function (s) {
+      return s.player.tier === 0 && !!(FB.activeSerfTenure &&
+        FB.activeSerfTenure(s));
+    },
+    run:function () {
+      if (FB.ui && FB.ui.showRankDetails) FB.ui.showRankDetails();
+    } },
+
   { id:'petition_freedom', opensChoices:true, noConsume:true,
     requiresAdult:true,
     desc:function (s) {
@@ -2678,21 +2750,8 @@ window.FB = window.FB || {};
     },
     show: function (s) { return s.player.tier === 0; },
     can: function (s) {
-      if (s.player.freedomOffer && s.player.freedomOffer.status === 'service') {
-        return FB.T('Final service is already underway.');
-      }
-      if (!FB.activeSerfTenure || !FB.activeSerfTenure(s)) {
-        return FB.T('No active customary tenure binds this household.');
-      }
-      const price = FB.freedomPurchasePrice(s);
-      if (!price) return FB.T('The purchase price is unavailable.');
-      if (s.player.gold < price) return FB.T('Not enough money.');
-      const lord = freedomCurrentLord(s);
-      if (!lord) return FB.T('No current lord can authorize the purchase.');
-      if (lord && FB.standingOf(s, { kind:'character', id:lord.id }) < -20) {
-        return FB.T('The lord despises you and refuses.');
-      }
-      return true;
+      const status = FB.freedomPurchaseStatus(s);
+      return status.ready ? true : status.reason;
     },
     run: function (s) {
       return FB.resolveSerfFreedom(s, { route:'purchase' }, {});

@@ -157,6 +157,7 @@ window.FB = window.FB || {};
       $('btn-endturn').innerHTML = (FB.isTouch ? '' : '<span class="keyhint">Space</span> ') +
         '<span class="pp">' + esc(FB.T(FB.game.paused ? '▶ Play' : '❚❚ Pause')) + '</span>';
       renderActiveTab(liveTick ? { liveTick:true } : undefined);
+      if (UI.refreshSerfTenureSheet) UI.refreshSerfTenureSheet();
       return;
     }
     const me = s.chars[s.player.charId];
@@ -205,6 +206,7 @@ window.FB = window.FB || {};
         (autoAccess.build && FB.game.auto.build) ||
         (autoAccess.research && FB.game.auto.research)) ? '✓' : '');
     renderActiveTab(liveTick ? { liveTick:true } : undefined);
+    if (UI.refreshSerfTenureSheet) UI.refreshSerfTenureSheet();
   }
 
   /* ===== shared exports (bound by the later UI files) ===== */

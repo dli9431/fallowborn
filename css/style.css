@@ -2824,6 +2824,7 @@ textarea.modjson, textarea.savetext {
 @media (pointer: coarse) { .portrait-equip { min-height: 44px; } }
 
 /* Serf customary tenure details in rank modal */
+.serf-tenure { min-width: 0; overflow-wrap: anywhere; }
 .tenure-summary-block, .tenure-work-block, .tenure-next-due-block,
 .tenure-conditional-block {
   margin: 6px 0 10px;
@@ -2854,6 +2855,13 @@ textarea.modjson, textarea.savetext {
   border-radius: 8px; overflow-wrap: anywhere;
 }
 [data-freedom-offer] { overflow-wrap: anywhere; }
+@media (pointer: coarse), (max-width: 480px) {
+  .serf-tenure button, .tutorial-card #tutorial-serf-tenure {
+    min-height: 44px;
+  }
+  .serf-tenure .kv { align-items: flex-start; }
+  .serf-tenure .kv > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+}
 
 /* Governance is the territorial ruler's political home. Its section strip
    switches one consistent content surface instead of stacking mismatched

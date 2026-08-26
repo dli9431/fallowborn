@@ -105,7 +105,9 @@ Time passes **day by day** (90-day seasons, 360-day years).
    A serf's Toil name and description reflect the household's saved customary setting —
    such as manorial strips, irrigation, herds, woodland, or coastal service — while its
    pay, risk, training, and daily mechanics remain the same. **Station & home** shows that
-   ordinary work beside the exact duties and limited customary rights.
+   ordinary work beside the exact duties and limited customary rights. Serfs can also use
+   **Rank & Realm → Review tenure & freedom** to see the next duty, current gold and exact
+   family purchase price, Standing petition threshold, and any valid offer.
    When the local lord or political authority changes, one consolidated review may confirm
    those terms or propose a single named amendment. Standing on the old custom is always
    the safe first response; accepted coin commutation still has a work-it-off choice when

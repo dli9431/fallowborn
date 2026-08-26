@@ -31,7 +31,7 @@ window.FB = window.FB || {};
     faithStandingBase:1,
     liege:1, aggression:1, war:1, op:1, s:1, devGranted:1,
     reserve:1, active:1, completed:1, progress:1, priorities:1, exposed:1,
-    heirId:1
+    heirId:1, royalLine:1
   };
 
   function own(o, key) {
@@ -197,6 +197,11 @@ window.FB = window.FB || {};
   function saveReplacer(key, value) {
     const holder = this;
     if (!SAVE_COMPACT_KEYS[key]) return value;
+    if (key === 'royalLine' && value && holder &&
+        typeof holder.id === 'string' && holder.id.indexOf('ro_') === 0 &&
+        value.memberId === 'royal_' + holder.id.slice(3)) {
+      return { realmId:value.realmId };
+    }
     if (ROYAL_COMPACT_KEYS[key] && royalMemberRecord(holder)) {
       if (key === 'id') return undefined;
       if (key === 'childIds') return undefined;
@@ -292,6 +297,10 @@ window.FB = window.FB || {};
       if (!own(c, 'fatherId')) c.fatherId = null;
       if (!own(c, 'motherId')) c.motherId = null;
       if (!own(c, 'spouseId')) c.spouseId = null;
+      if (c.royalLine && !own(c.royalLine, 'memberId') &&
+          id.indexOf('ro_') === 0) {
+        c.royalLine.memberId = 'royal_' + id.slice(3);
+      }
       if (!Array.isArray(c.traits)) c.traits = [];
       if (!Array.isArray(c.childrenIds)) c.childrenIds = [];
     }

@@ -444,7 +444,7 @@ built-in deed.
       "handler": "declarative_deed",
       "label": "Endow the wayfarers",
       "desc": "Set coin aside for travelers and pilgrims.",
-      "order": 79,
+      "order": 80,
       "group": "faith",
       "cooldownDays": 90,
       "spendsDay": false,
@@ -462,7 +462,7 @@ built-in deed.
       "handler": "declarative_deed",
       "label": "Seek a charter audience",
       "desc": "Pay the clerks to arrange a hearing.",
-      "order": 80,
+      "order": 81,
       "group": "realm",
       "cooldownDays": 30,
       "spendsDay": true,
@@ -495,7 +495,7 @@ checks are composed into that same status. These checks and the preview are pure
 no RNG draws.
 
 `order` participates in the complete effective deed permutation. The first added deed is
-normally 79, the next 80, and so on; later mods adding deeds append after every effective
+normally 80, the next 81, and so on; later mods adding deeds append after every effective
 definition. A later mod replacing a declarative deed must restate the complete record.
 This avoids silently inheriting costs or effects from a different mod load order.
 

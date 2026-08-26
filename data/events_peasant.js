@@ -697,10 +697,10 @@ FBDATA.events.push(
 { id:'manumission', title:'A Man of Your Own',
   trigger:{ never:true }, weight:20,
   contextValidator:'freedom_offer_context_valid',
-  text:'The {holy} drafts the exact terms by candlelight. {lord} asks {money:price}; the record names {serviceDays} days of final service.',
+  text:'The {holy} drafts the exact terms by candlelight. {lord} asks {money:price} now; the record names {serviceDays} days of final service.',
   options:[
-    { label:'Accept these exact terms.', require:{ custom:'freedom_offer_accept_ready' }, desc:'Pay the saved price once; any written final service must then be completed.', effects:{ custom:'freedom_accept_offer' } },
-    { label:'Not yet.', desc:'The saved offer remains unchanged until its exact expiry.', effects:{ } }
+    { label:'Pay {money:price} now and accept {serviceDays} days of final service.', require:{ custom:'freedom_offer_accept_ready' }, desc:'Pay the saved price once; any written final service must then be completed.', effects:{ custom:'freedom_accept_offer' } },
+    { label:'Not yet; keep these terms until their stated expiry.', desc:'The saved offer remains unchanged until its exact expiry.', effects:{ } }
   ]},
 
 /* ---------- village life ---------- */

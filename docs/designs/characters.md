@@ -365,7 +365,10 @@ add the target's `opinion/500` to success — a trusting victim is easier to und
 **Recurring local event characters are ordinary people, not a village roster.**
 Serf manor stories bind exact living character ids for the current lord, steward,
 priest, witness, neighbor, friend, or rival and continue to use typed Standing,
-cultivation, friendship, and rivalry for every personal consequence. Deterministic
+cultivation, friendship, and rivalry for every personal consequence. Fresh serf
+starts materialize the bounded local lord and steward before customary
+tenure snapshots its authority, so Rank & Realm can name and link the relevant
+people from the first playable frame. Deterministic
 selection reuses an eligible local friend, rival, cultivated contact, or witness
 before materializing the one bounded `state.roles.notable` fallback. That notable is
 an adult local peer (station 0 for a serf household and never above station 1 later),

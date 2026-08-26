@@ -242,6 +242,8 @@ test('save compaction rehydrates succession, court links, and technology exposur
         !own.call(rawChar, 'motherId') &&
         !own.call(rawChar, 'health') &&
         !own.call(rawChar, 'faithStandingBase') &&
+        rawChar.royalLine &&
+        !own.call(rawChar.royalLine, 'memberId') &&
         !own.call(rawEmptyChildChar, 'childrenIds') &&
         !own.call(rawTech, 'active') &&
         !own.call(rawTech, 'progress') &&
@@ -283,6 +285,8 @@ test('save compaction rehydrates succession, court links, and technology exposur
         character:!!restoredChar && restoredChar.id === sample.charId &&
           restoredChar.dead === false && restoredChar.health === 8 &&
           restoredChar.faithStandingBase === 0 &&
+          restoredChar.royalLine &&
+          restoredChar.royalLine.memberId === sample.memberId &&
           restoredChar.role === null && restoredChar.fatherId === null &&
           restoredChar.motherId === null &&
           !!restoredEmptyChildChar &&
@@ -624,6 +628,11 @@ test('serf customary tenure round-trips through format-3 serialization and resto
       const state = FB.state;
       FB.setPlayerTier(state, 0, { tenureFormationReason:'rank_change' });
       const originalTenure = FB.ensureSerfTenure(state, 'storage_test');
+      state.player.flags.hint_serf_tenure = 1;
+      state.player.flags.hint_serf_freedom_routes = 1;
+      state.player.flags.hint_serf_first_duty = 1;
+      state.player.flags.hint_serf_offer_terms = 1;
+      state.player.flags.hint_serf_freed = 1;
       const serialized = FB.save.serialize();
       const parsedSave = JSON.parse(serialized);
       const restored = FB.save.restore(parsedSave);
@@ -639,8 +648,18 @@ test('serf customary tenure round-trips through format-3 serialization and resto
         hasDuties: restoredTenure && restoredTenure.duties && restoredTenure.duties.length > 0,
         hasRights: restoredTenure && restoredTenure.rights && restoredTenure.rights.length > 0,
         hasConditional: restoredTenure && restoredTenure.conditional && restoredTenure.conditional.length > 0,
+        cachedDutyId:restoredTenure && restoredTenure.nextDutyId,
+        cachedDutyTurn:restoredTenure && restoredTenure.nextDutyTurn,
+        hints:[
+          !!FB.state.player.flags.hint_serf_tenure,
+          !!FB.state.player.flags.hint_serf_freedom_routes,
+          !!FB.state.player.flags.hint_serf_first_duty,
+          !!FB.state.player.flags.hint_serf_offer_terms,
+          !!FB.state.player.flags.hint_serf_freed
+        ],
         matchesOriginalDuties: JSON.stringify(restoredTenure.duties) === JSON.stringify(originalTenure.duties),
-        omitsResolvedCalendarLabel: !Object.prototype.hasOwnProperty.call(restoredTenure, 'formedYear')
+        omitsResolvedCalendarLabel: !Object.prototype.hasOwnProperty.call(restoredTenure, 'formedYear'),
+        omitsRenderedPanel: serialized.indexOf('data-serf-tenure') < 0
       };
     })).toEqual({
       saveFormatVersion: 3,
@@ -652,8 +671,12 @@ test('serf customary tenure round-trips through format-3 serialization and resto
       hasDuties: true,
       hasRights: true,
       hasConditional: true,
+      cachedDutyId: expect.any(String),
+      cachedDutyTurn: expect.any(Number),
+      hints:[true, true, true, true, true],
       matchesOriginalDuties: true,
-      omitsResolvedCalendarLabel: true
+      omitsResolvedCalendarLabel: true,
+      omitsRenderedPanel: true
     });
   });
 

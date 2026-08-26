@@ -1886,8 +1886,9 @@ window.FB = window.FB || {};
     UI.layoutMapToasts(true);
     setTimeout(function () { removeToastElement(el); }, 6000);
   };
-  UI.toastMessage = function (message, legacyText) {
-    if (UI.suppressEventEffectToasts) return;
+  UI.toastMessage = function (message, legacyText, options) {
+    if (UI.suppressEventEffectToasts &&
+        !(options && options.bypassSuppression)) return;
     const box = $('toasts');
     if (!box) return;
     const el = document.createElement('div');
@@ -1911,7 +1912,8 @@ window.FB = window.FB || {};
   function deferFastForwardNewsToast(intent) {
     fastForwardNewsToasts.push({
       message:intent.message || null,
-      legacyText:intent.legacyText || null
+      legacyText:intent.legacyText || null,
+      bypassSuppression:!!intent.bypassSuppression
     });
     /* The live toast rail retains only five notices. Keep the same visible
        result without creating and removing DOM nodes inside the simulation
@@ -1924,7 +1926,9 @@ window.FB = window.FB || {};
     const pending = fastForwardNewsToasts.splice(0,
       fastForwardNewsToasts.length);
     for (const intent of pending) {
-      UI.toastMessage(intent.message, intent.legacyText);
+      UI.toastMessage(intent.message, intent.legacyText, {
+        bypassSuppression:!!intent.bypassSuppression
+      });
     }
   }
   UI.eventReceiptToast = function (receipt) {
@@ -2026,6 +2030,12 @@ window.FB = window.FB || {};
     if (FB.game.saveUiPrefs) FB.game.saveUiPrefs();
   }
 
+  function rememberSaveHint(item) {
+    if (!item || !item.saveHintId || !FB.state || !FB.state.player) return;
+    FB.state.player.flags = FB.state.player.flags || {};
+    FB.state.player.flags['hint_' + item.saveHintId] = 1;
+  }
+
   function releasePendingTip(item) {
     if (item && item.tipId) delete tipPending[item.tipId];
   }
@@ -2042,6 +2052,9 @@ window.FB = window.FB || {};
     } else if ((followUp === 'first-event-result' ||
         followUp === 'first-poach') && UI.resumePostFirstStepsTips) {
       UI.resumePostFirstStepsTips();
+    } else if (followUp === 'serf-tenure' &&
+        UI.resumePostFirstStepsTips) {
+      UI.resumePostFirstStepsTips();
     } else if (followUp === 'family-guidance' && UI.maybeSelfTip) {
       UI.maybeSelfTip();
     } else if (followUp === 'area-self' && UI.resumePostFirstStepsTips) {
@@ -2057,7 +2070,8 @@ window.FB = window.FB || {};
 
   function acknowledgeCoachmark(action) {
     const item = coachItem;
-    const followUp = item && item.tipId;
+    const followUp = item && (item.followUp || item.tipId);
+    rememberSaveHint(item);
     rememberFirstTimeTip(item);
     coachTelemetry('hint-dismissed', item, { dismiss_action:action });
     dismissCoachmark();
@@ -2071,6 +2085,7 @@ window.FB = window.FB || {};
     if (firstTimeOnly) FB.game.uiPrefs.hideTips = true;
     else FB.game.uiPrefs.hideBeginnerHints = true;
     rememberFirstTimeTip(item);
+    rememberSaveHint(item);
     const kept = [];
     for (const queued of coachQueue) {
       const remove = firstTimeOnly
@@ -2342,8 +2357,9 @@ window.FB = window.FB || {};
     if (ev && ev.type === 'click' && coachItem && coachItem.noNext &&
         !coachItem.overTarget) {
       const usedItem = coachItem;
-      const followUp = usedItem.tipId;
+      const followUp = usedItem.followUp || usedItem.tipId;
       rememberFirstTimeTip(usedItem);
+      rememberSaveHint(usedItem);
       coachTelemetry('hint-dismissed', usedItem, {
         dismiss_action:'highlighted-control'
       });
@@ -2621,6 +2637,41 @@ window.FB = window.FB || {};
     };
     if (opts) for (const key in opts) coachOpts[key] = opts[key];
     UI.coachmark(text, target, coachOpts);
+    return true;
+  };
+  UI.acknowledgeHint = function (id) {
+    const s = FB.state;
+    if (!s || !s.player) return false;
+    s.player.flags = s.player.flags || {};
+    s.player.flags['hint_' + id] = 1;
+    coachQueue = coachQueue.filter(function (item) {
+      return item.saveHintId !== id;
+    });
+    if (coachItem && coachItem.saveHintId === id) dismissCoachmark();
+    return true;
+  };
+
+  UI.maybeSerfTenureTip = function () {
+    const s = FB.state;
+    const onboarding = s && FB.serfOnboardingState
+      ? FB.serfOnboardingState(s) : null;
+    if (!onboarding || !onboarding.active || !onboarding.tutorial ||
+        !onboarding.firstStepsDone || onboarding.rankRealmSeen ||
+        (FB.game.uiPrefs && FB.game.uiPrefs.hideBeginnerHints)) return false;
+    if ((coachItem && coachItem.saveHintId === 'serf_tenure') ||
+        coachQueue.some(function (item) {
+          return item.saveHintId === 'serf_tenure';
+        })) return false;
+    const exposed = UI.revealDeedAction &&
+      UI.revealDeedAction('review_serf_tenure');
+    UI.coachmark(FB.T(
+      'Rank & Realm contains your household terms, next duty, and routes to freedom.'),
+      exposed
+        ? '#tab-actions [data-action-id="review_serf_tenure"]'
+        : '#sidetabs .tab[data-tab="actions"]', {
+        hintId:'serf-tenure', hintKind:'guide', noNext:true,
+        saveHintId:'serf_tenure', followUp:'serf-tenure'
+      });
     return true;
   };
 
@@ -2980,6 +3031,7 @@ window.FB = window.FB || {};
     if (flags.tut_event && !seen['first-event-result']) {
       return UI.maybeFirstEventResultTip();
     }
+    if (UI.maybeSerfTenureTip && UI.maybeSerfTenureTip()) return true;
     if (!openingPoachDone(s)) {
       return seen['first-event-result'] ? UI.maybePoachTip() : false;
     }
@@ -3176,6 +3228,8 @@ window.FB = window.FB || {};
     view.modalTarget = UI._gmModalTarget;
     view.modalAction = UI._gmModalAction;
     view.historyBack = !!(genericNavSnapshot && genericNavSnapshot.historyBack);
+    view.historyBackRender = genericNavSnapshot &&
+      genericNavSnapshot.historyBackRender;
     view.returnFocus = UI._gmReturnFocus;
     view.returnAction = UI._gmReturnAction;
     view.modalClass = UI._gmModalClass || '';
@@ -3207,6 +3261,7 @@ window.FB = window.FB || {};
     genericNavSnapshot = {
       dismiss:view.dismiss,
       historyBack:view.historyBack,
+      historyBackRender:view.historyBackRender,
       returnFocus:view.returnFocus,
       returnAction:view.returnAction,
       modalClass:view.modalClass,
@@ -3461,6 +3516,9 @@ window.FB = window.FB || {};
         ? retainedNavigation.noHotkeys : UI._gmNoHotkeys,
       historyBack:retainedNavigation
         ? retainedNavigation.historyBack : !!(opts && opts.historyBack),
+      historyBackRender:retainedNavigation
+        ? retainedNavigation.historyBackRender
+        : (opts && opts.historyBackRender),
       returnFocus:retainedNavigation
         ? retainedNavigation.returnFocus : UI._gmReturnFocus,
       returnAction:retainedNavigation
@@ -3547,6 +3605,11 @@ window.FB = window.FB || {};
     setTimeout(function () {
       if (UI.maybeShowCoachmark) UI.maybeShowCoachmark();
     }, 0);
+  };
+  UI.backModal = function () {
+    const historyBackRender = genericNavSnapshot &&
+      genericNavSnapshot.historyBackRender;
+    modalHistoryBack(historyBackRender || UI.closeModal);
   };
 
   /* ================= boot-time wiring ================= */
@@ -3742,7 +3805,9 @@ window.FB = window.FB || {};
         deferFastForwardNewsToast(intent);
         return;
       }
-      UI.toastMessage(intent.message, intent.legacyText);
+      UI.toastMessage(intent.message, intent.legacyText, {
+        bypassSuppression:!!intent.bypassSuppression
+      });
     });
     document.querySelectorAll('#sidetabs .tab[data-tab], #lefttabs .tab[data-tab]').forEach(function (t) {
       t.addEventListener('click', function (ev) {

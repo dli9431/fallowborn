@@ -154,7 +154,12 @@ window.FB = window.FB || {};
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) {
       if (k === 'Enter' && t.id === 'cg-name') { e.preventDefault(); $('btn-cg-start').click(); }
       if (k === 'Enter' && t.id === 'ev-name') { e.preventDefault(); clickNth('#ev-options .evopt', 0); return; }
-      if (k === 'Escape' && genOpen()) { e.preventDefault(); FB.ui.closeModal(); return; }
+      if (k === 'Escape' && genOpen()) {
+        e.preventDefault();
+        if (FB.ui.backModal) FB.ui.backModal();
+        else FB.ui.closeModal();
+        return;
+      }
       /* Checkboxes and radios take no typed text, so a focused one (a
          dialog's first control can be a protection checkbox) swallows
          ordinary letters. The key that opened its current modal remains a
@@ -182,7 +187,8 @@ window.FB = window.FB || {};
     if (genOpen()) {
       if (k === 'Escape') {
         e.preventDefault();
-        FB.ui.closeModal();
+        if (FB.ui.backModal) FB.ui.backModal();
+        else FB.ui.closeModal();
         return;
       }
       if (k === 'Tab') {

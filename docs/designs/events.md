@@ -15,6 +15,15 @@ protection and context validation guarantee that invalidated, stale, or relocate
 discarded without gameplay side effects or double-charging. Extraordinary burdens
 (`serf_extraordinary_tallage`, `serf_seed_grain_requisition`) remain in the random pool.
 
+Scheduled duties stay ordinary code-queued major events: minor-event Automation leaves them
+visible, while major/all Automation selects from the same currently valid nonmanual options and
+calls the same `FB.resolveEventOption` boundary. Every duty has a continuity response that remains
+valid without gold or a named optional participant. Custom payments expose their exact impact to
+both the preview ledger and Automation scoring. Only the shared resolver consumes the old due turn,
+advances or clears the saved schedule once, and writes the one receipt; stale copies cannot repeat
+effects. The first duty actually shown in each save adds a compact cadence and valid-choice lesson;
+an autoresolved duty deliberately leaves that lesson available for the next visible duty.
+
 The catalogue contains seven formation-time archetypes: `latin_manorial`,
 `irrigated_fellah`, `pastoral_steppe`, `woodland_dependence`,
 `norse_coastal_service`, `pagan_household_service`, and the unconditional
