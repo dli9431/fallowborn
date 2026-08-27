@@ -98,12 +98,90 @@ test('a restore exception releases the completed world loader with a recoverable
     await expect(page.locator('#gm-title')).toHaveText('Save could not be restored');
     await expect(page.locator('#gm-body')).toContainText(
       'The saved life is still stored and unchanged');
+    await expect(page.locator('#gm-body')).toContainText(
+      'Failed during core save restoration: synthetic restore failure');
     expect(await page.evaluate(function () {
-      const message = FB.game.lastLoadError && FB.game.lastLoadError.message;
+      const result = {
+        message:FB.game.lastLoadError && FB.game.lastLoadError.message,
+        stage:FB.game.lastLoadStage
+      };
       FB.save.restore = window.__restoreBeforeFailureTest;
       delete window.__restoreBeforeFailureTest;
-      return message;
-    })).toBe('synthetic restore failure');
+      return result;
+    })).toEqual({
+      message:'synthetic restore failure',
+      stage:'core save restoration'
+    });
+  });
+
+test('an additive repair failure does not reject an otherwise readable save',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const data = JSON.parse(FB.save.serialize());
+      const original = FB.ensureHouseholdStandards;
+      FB.ensureHouseholdStandards = function () {
+        throw new Error('synthetic household repair failure');
+      };
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(data, function () {
+          FB.ensureHouseholdStandards = original;
+          const warning = FB.game.lastLoadWarnings.filter(function (item) {
+            return item.stage === 'household standards';
+          })[0];
+          resolve({
+            gameVisible:!document.getElementById('game').classList.contains('hidden'),
+            fatal:FB.game.lastLoadError && FB.game.lastLoadError.message,
+            warning:warning && warning.error && warning.error.message
+          });
+        })) {
+          FB.ensureHouseholdStandards = original;
+          reject(new Error('Synthetic save was rejected before restoration'));
+        }
+      });
+    });
+
+    expect(result).toEqual({
+      gameVisible:true,
+      fatal:null,
+      warning:'synthetic household repair failure'
+    });
+  });
+
+test('a noncritical post-restore repair failure still opens the game',
+  async function ({ page }, testInfo) {
+    await openGame(page, testInfo);
+    await startDeterministicGame(page);
+    const result = await page.evaluate(function () {
+      const data = JSON.parse(FB.save.serialize());
+      const original = FB.syncPlayerCareer;
+      FB.syncPlayerCareer = function () {
+        throw new Error('synthetic career repair failure');
+      };
+      return new Promise(function (resolve, reject) {
+        if (!FB.game.loadData(data, function () {
+          FB.syncPlayerCareer = original;
+          const warning = FB.game.lastLoadWarnings.filter(function (item) {
+            return item.stage === 'player career';
+          })[0];
+          resolve({
+            gameVisible:!document.getElementById('game').classList.contains('hidden'),
+            fatal:FB.game.lastLoadError && FB.game.lastLoadError.message,
+            warning:warning && warning.error && warning.error.message
+          });
+        })) {
+          FB.syncPlayerCareer = original;
+          reject(new Error('Synthetic save was rejected before restoration'));
+        }
+      });
+    });
+
+    expect(result).toEqual({
+      gameVisible:true,
+      fatal:null,
+      warning:'synthetic career repair failure'
+    });
   });
 
 test('continue repairs malformed enterprise records and reaches the game screen',

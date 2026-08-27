@@ -837,89 +837,192 @@ window.FB = window.FB || {};
     }
   }
 
+  function restoreRepair(stage, callback) {
+    try {
+      callback();
+      return true;
+    } catch (error) {
+      S.lastRestoreWarnings.push({ stage:stage, error:error });
+      return false;
+    }
+  }
+
   S.restore = function (data) {
+    if (!data || !data.state || typeof data.state !== 'object') {
+      throw new Error('The save has no readable game state.');
+    }
+    S.lastRestoreWarnings = [];
     FB.setRngState(data.rng);
     FB.setUidCounter(data.uid);
     FB.state = inflateState(data.state);
+    if (!FB.state.player || !FB.state.chars || !FB.state.date ||
+        !FB.state.realms || !FB.state.owner) {
+      throw new Error('The save is missing required world or player records.');
+    }
     if (!FB.state.start) {
       FB.state.start = { id:'867', year:867, season:0, day:1 };
     }
-    SP.creditEarnedState(FB.state);
+    restoreRepair('starting-rank progression', function () {
+      SP.creditEarnedState(FB.state);
+    });
     // the realm cache is keyed by state.turn, which two lives can share
     FB.invalidateRealmCache();
     /* Faith definitions are an additive version-3 field. Old lives begin
        with no generated faiths; new lives rebuild the derived graph from the
        saved JSON deltas before any office or character repair consults it. */
-    if (FB.ensureFaithState) FB.ensureFaithState(FB.state);
-    if (FB.configureReligions) FB.configureReligions(FB.state);
+    if (FB.ensureFaithState) restoreRepair('faith state', function () {
+      FB.ensureFaithState(FB.state);
+    });
+    if (FB.configureReligions) restoreRepair('religion definitions', function () {
+      FB.configureReligions(FB.state);
+    });
     /* Save format 3 remains stable: missing religious-office assignments gain
        bookmark-aware defaults; vacancies gain additive turn/former-holder
        metadata, while own null vacancies and changed holders persist. */
-    if (FB.ensureReligiousHeads) FB.ensureReligiousHeads(FB.state);
-    backfillParents(FB.state);
-    if (FB.ensureCharacterBynames) FB.ensureCharacterBynames(FB.state);
-    if (FB.ensureDynasticState) FB.ensureDynasticState(FB.state);
+    if (FB.ensureReligiousHeads) restoreRepair('religious offices', function () {
+      FB.ensureReligiousHeads(FB.state);
+    });
+    restoreRepair('legacy parents', function () { backfillParents(FB.state); });
+    if (FB.ensureCharacterBynames) restoreRepair('character bynames', function () {
+      FB.ensureCharacterBynames(FB.state);
+    });
+    if (FB.ensureDynasticState) restoreRepair('dynastic state', function () {
+      FB.ensureDynasticState(FB.state);
+    });
     if (FB.ensureCharacterStatusHistory) {
-      FB.ensureCharacterStatusHistory(FB.state);
+      restoreRepair('character status history', function () {
+        FB.ensureCharacterStatusHistory(FB.state);
+      });
     }
     if (FB.ensureFaithStandingBaselines) {
-      FB.ensureFaithStandingBaselines(FB.state);
+      restoreRepair('faith standing', function () {
+        FB.ensureFaithStandingBaselines(FB.state);
+      });
     }
     if (FB.ensureStepRelations) {
-      const stepfamilyRng = FB.getRngState();
-      FB.ensureStepRelations(FB.state);
-      FB.setRngState(stepfamilyRng);
+      restoreRepair('stepfamily relations', function () {
+        const stepfamilyRng = FB.getRngState();
+        try {
+          FB.ensureStepRelations(FB.state);
+        } finally {
+          FB.setRngState(stepfamilyRng);
+        }
+      });
     }
     /* The elective Papacy is an additive subsystem. Old saves retain their
        reigning Roman Pope and receive a date-appropriate College around him. */
-    if (FB.ensurePapacyState) FB.ensurePapacyState(FB.state);
+    if (FB.ensurePapacyState) restoreRepair('papacy state', function () {
+      FB.ensurePapacyState(FB.state);
+    });
     /* Dynasty scholarship and innovations from older version-3 lives become
        the effective sovereign nation's first technology record. */
-    if (FB.ensureRealmTech) FB.ensureRealmTech(FB.state);
-    if (FB.migratePlayerDevelopment) FB.migratePlayerDevelopment(FB.state);
-    if (FB.repairForts) FB.repairForts(FB.state);
+    if (FB.ensureRealmTech) restoreRepair('realm technology', function () {
+      FB.ensureRealmTech(FB.state);
+    });
+    if (FB.migratePlayerDevelopment) restoreRepair('player development', function () {
+      FB.migratePlayerDevelopment(FB.state);
+    });
+    if (FB.repairForts) restoreRepair('fortifications', function () {
+      FB.repairForts(FB.state);
+    });
     /* Save format 3 is deliberately stable. The equipment subsystem repairs
        old inventories and grows exact instances/loadouts additively here. */
-    if (FB.ensureItems) FB.ensureItems(FB.state);
-    if (FB.ensureHouseholdStandards) FB.ensureHouseholdStandards(FB.state);
+    if (FB.ensureItems) restoreRepair('items and equipment', function () {
+      FB.ensureItems(FB.state);
+    });
+    if (FB.ensureHouseholdStandards) restoreRepair('household standards', function () {
+      FB.ensureHouseholdStandards(FB.state);
+    });
     /* Freedom bargaining and its bounded family landmark are additive format-3
        records. Repair them without forming tenure, advancing time, or using
        RNG; old freeholder saves deliberately receive no invented history. */
-    if (FB.ensureFreedomOffer) FB.ensureFreedomOffer(FB.state);
-    if (FB.ensureFamilyFreedom) FB.ensureFamilyFreedom(FB.state);
-    if (FB.ensurePopulationState) FB.ensurePopulationState(FB.state);
-    if (FB.ensureMarket) FB.ensureMarket(FB.state);
-    if (FB.ensureEducationPolicy) FB.ensureEducationPolicy(FB.state, true);
-    if (FB.ensureMatchPolicy) FB.ensureMatchPolicy(FB.state, true);
-    if (FB.ensureTraitProgress) FB.ensureTraitProgress(FB.state);
-    if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(FB.state);
-    else if (FB.ensureGuildMonopolies) FB.ensureGuildMonopolies(FB.state);
-    if (FB.repairGreatHolyWar) FB.repairGreatHolyWar(FB.state);
-    if (FB.repairWars) FB.repairWars(FB.state);
+    if (FB.ensureFreedomOffer) restoreRepair('freedom offer', function () {
+      FB.ensureFreedomOffer(FB.state);
+    });
+    if (FB.ensureFamilyFreedom) restoreRepair('family freedom', function () {
+      FB.ensureFamilyFreedom(FB.state);
+    });
+    if (FB.ensurePopulationState) restoreRepair('population state', function () {
+      FB.ensurePopulationState(FB.state);
+    });
+    if (FB.ensureMarket) restoreRepair('market state', function () {
+      FB.ensureMarket(FB.state);
+    });
+    if (FB.ensureEducationPolicy) restoreRepair('education policy', function () {
+      FB.ensureEducationPolicy(FB.state, true);
+    });
+    if (FB.ensureMatchPolicy) restoreRepair('match policy', function () {
+      FB.ensureMatchPolicy(FB.state, true);
+    });
+    if (FB.ensureTraitProgress) restoreRepair('trait progress', function () {
+      FB.ensureTraitProgress(FB.state);
+    });
+    if (FB.invalidateGuildMonopolies) restoreRepair('guild monopolies', function () {
+      FB.invalidateGuildMonopolies(FB.state);
+    });
+    else if (FB.ensureGuildMonopolies) restoreRepair('guild monopolies', function () {
+      FB.ensureGuildMonopolies(FB.state);
+    });
+    if (FB.repairGreatHolyWar) restoreRepair('great holy war', function () {
+      FB.repairGreatHolyWar(FB.state);
+    });
+    if (FB.repairWars) restoreRepair('wars', function () {
+      FB.repairWars(FB.state);
+    });
     /* Vassals orphaned under a dead house (pre-fix revocation) reattach
        upward before any hierarchy reader runs. */
-    if (FB.repairVassalLieges) FB.repairVassalLieges(FB.state);
-    if (FB.ensureModifiers) FB.ensureModifiers(FB.state);
-    if (FB.ensureIntrigue) FB.ensureIntrigue(FB.state);
-    if (FB.fabricatedClaimOf) FB.fabricatedClaimOf(FB.state);
+    if (FB.repairVassalLieges) restoreRepair('vassal hierarchy', function () {
+      FB.repairVassalLieges(FB.state);
+    });
+    if (FB.ensureModifiers) restoreRepair('modifiers', function () {
+      FB.ensureModifiers(FB.state);
+    });
+    if (FB.ensureIntrigue) restoreRepair('intrigue state', function () {
+      FB.ensureIntrigue(FB.state);
+    });
+    if (FB.fabricatedClaimOf) restoreRepair('fabricated claims', function () {
+      FB.fabricatedClaimOf(FB.state);
+    });
     /* An unresolved market lot is a household record. Repair it after claims
        and item ownership so a stale or impossible lot is safely discarded. */
-    if (FB.ensureAuction) FB.ensureAuction(FB.state);
+    if (FB.ensureAuction) restoreRepair('auction state', function () {
+      FB.ensureAuction(FB.state);
+    });
     /* Personal attention and explicit-gift clocks are additive life-local
        fields. This also converts the removed court_suitor focus in old saves. */
-    if (FB.socialAttentionEnsure) FB.socialAttentionEnsure(FB.state);
-    if (FB.ensureCourtshipTerms) FB.ensureCourtshipTerms(FB.state);
-    if (FB.ensureSiblingCourtships) FB.ensureSiblingCourtships(FB.state);
-    if (FB.socialGiftTurns) FB.socialGiftTurns(FB.state);
-    if (FB.realmGiftTurns) FB.realmGiftTurns(FB.state);
-    if (FB.giftDeliveryEnsure) FB.giftDeliveryEnsure(FB.state);
-    if (FB.ensureAgency) FB.ensureAgency(FB.state);
-    if (FB.repairPolitics) FB.repairPolitics(FB.state);
+    if (FB.socialAttentionEnsure) restoreRepair('social attention', function () {
+      FB.socialAttentionEnsure(FB.state);
+    });
+    if (FB.ensureCourtshipTerms) restoreRepair('courtship terms', function () {
+      FB.ensureCourtshipTerms(FB.state);
+    });
+    if (FB.ensureSiblingCourtships) restoreRepair('sibling courtships', function () {
+      FB.ensureSiblingCourtships(FB.state);
+    });
+    if (FB.socialGiftTurns) restoreRepair('social gifts', function () {
+      FB.socialGiftTurns(FB.state);
+    });
+    if (FB.realmGiftTurns) restoreRepair('realm gifts', function () {
+      FB.realmGiftTurns(FB.state);
+    });
+    if (FB.giftDeliveryEnsure) restoreRepair('gift deliveries', function () {
+      FB.giftDeliveryEnsure(FB.state);
+    });
+    if (FB.ensureAgency) restoreRepair('ruler agency', function () {
+      FB.ensureAgency(FB.state);
+    });
+    if (FB.repairPolitics) restoreRepair('politics', function () {
+      FB.repairPolitics(FB.state);
+    });
     if (FB.ensureInstitutions) {
-      FB.ensureInstitutions(FB.state, { silent:true });
+      restoreRepair('institutions', function () {
+        FB.ensureInstitutions(FB.state, { silent:true });
+      });
     }
     if (FB.ensureLocalGovernment) {
-      FB.ensureLocalGovernment(FB.state, true);
+      restoreRepair('local government', function () {
+        FB.ensureLocalGovernment(FB.state, true);
+      });
     }
     return FB.state;
   };

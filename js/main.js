@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.163.1';
+  FB.VERSION = '1.163.2';
   FB.CHANGELOG = [
+    { v: '1.163.2', date: '2026-08-26', changes: [
+      'Continue now skips isolated legacy-record repair failures so an otherwise readable saved life can resume, while unrecoverable saves show the failed stage and error.'
+    ] },
     { v: '1.163.1', date: '2026-08-26', changes: [
       'Continue now repairs malformed enterprise records and returns a recovery message instead of freezing after world creation when a save cannot be restored.'
     ] },
@@ -4921,6 +4924,8 @@ window.FB = window.FB || {};
       return false;
     }
     G.lastLoadError = null;
+    G.lastLoadStage = null;
+    G.lastLoadWarnings = [];
     FB.ui.showScreen('loading');
     $('loadbar').style.width = '0%';
     FB.activateBookmark(bookmarkId, function (frac, msg) {
@@ -4932,48 +4937,90 @@ window.FB = window.FB || {};
         FB.ui.toast('That life’s world could not be activated.');
         return;
       }
+      let loadStage = 'core save restoration';
+      function resumeRepair(stage, callback) {
+        try {
+          callback();
+          return true;
+        } catch (repairError) {
+          G.lastLoadWarnings.push({ stage:stage, error:repairError });
+          return false;
+        }
+      }
       try {
         FB.save.restore(data);
-        FB.syncPlayerCareer(FB.state);
-        if (FB.enterpriseList) FB.enterpriseList(FB.state);
-        if (FB.travelEnsure) FB.travelEnsure(FB.state);
-        if (FB.travelValidate) FB.travelValidate(FB.state);
-        if (FB.validateFocus) FB.validateFocus(FB.state);
+        if (FB.save.lastRestoreWarnings && FB.save.lastRestoreWarnings.length) {
+          G.lastLoadWarnings = FB.save.lastRestoreWarnings.slice();
+        }
+        resumeRepair('player career', function () {
+          FB.syncPlayerCareer(FB.state);
+        });
+        if (FB.enterpriseList) resumeRepair('enterprises', function () {
+          FB.enterpriseList(FB.state);
+        });
+        if (FB.travelEnsure) resumeRepair('travel state', function () {
+          FB.travelEnsure(FB.state);
+        });
+        if (FB.travelValidate) resumeRepair('travel validation', function () {
+          FB.travelValidate(FB.state);
+        });
+        if (FB.validateFocus) resumeRepair('current focus', function () {
+          FB.validateFocus(FB.state);
+        });
         G.observe = false;
         document.body.classList.remove('observing');
         G.pickMode = false;
         G.paused = true;
-        FB.ui.mapDirty();
-        FB.map.playerProv = FB.state.player.provinceId;
-        FB.ui.showGame();
-        const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
-        FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
-        FB.map.select(null);
-        FB.ui.refresh();
-        FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
-          season: FB.seasonName(FB.state.date.season),
-          year: FB.state.date.year
+        resumeRepair('map state', function () {
+          FB.ui.mapDirty();
+          FB.map.playerProv = FB.state.player.provinceId;
         });
-        FB.save.warnIfBlocked();
-        beginTelemetrySession('resumed-campaign');
-        if (!telemetryResumeReported) {
-          telemetryResumeReported = true;
-          trackTelemetry('campaign-resumed', {
-            entry_type:'resumed-campaign'
+        loadStage = 'game interface';
+        FB.ui.showGame();
+        resumeRepair('map position', function () {
+          const wakeLocation = FB.travelLocation ? FB.travelLocation(FB.state) : null;
+          FB.map.centerOn(wakeLocation ? wakeLocation.id : FB.state.player.provinceId, 2.0);
+          FB.map.select(null);
+        });
+        resumeRepair('interface refresh', function () { FB.ui.refresh(); });
+        resumeRepair('resume notice', function () {
+          FB.ui.toast('The chronicle resumes — {season} {year} AD.', {
+            season: FB.seasonName(FB.state.date.season),
+            year: FB.state.date.year
           });
-        }
-        if (FB.ui.resumeFirstPlayerTip) FB.ui.resumeFirstPlayerTip();
+        });
+        resumeRepair('storage warning', function () { FB.save.warnIfBlocked(); });
+        resumeRepair('resume telemetry', function () {
+          beginTelemetrySession('resumed-campaign');
+          if (!telemetryResumeReported) {
+            telemetryResumeReported = true;
+            trackTelemetry('campaign-resumed', {
+              entry_type:'resumed-campaign'
+            });
+          }
+        });
+        if (FB.ui.resumeFirstPlayerTip) resumeRepair('resume guidance', function () {
+          FB.ui.resumeFirstPlayerTip();
+        });
         if (FB.ui.showPendingMarriageResidence) {
-          FB.ui.showPendingMarriageResidence();
+          resumeRepair('marriage residence prompt', function () {
+            FB.ui.showPendingMarriageResidence();
+          });
         }
         if (afterLoad) afterLoad();
       } catch (loadError) {
         G.lastLoadError = loadError;
+        G.lastLoadStage = loadStage;
         FB.ui.showScreen('title');
+        const detail = loadError && loadError.message
+          ? '<p><strong>' + FB.esc(FB.T('Failed during {stage}:', {
+              stage:loadStage
+            })) + '</strong> ' + FB.esc(String(loadError.message)) + '</p>'
+          : '';
         FB.ui.openModal('Save could not be restored',
           '<div class="gm-body-text"><p>' + FB.esc(FB.T(
             'The saved life is still stored and unchanged, but one of its records could not be repaired. Reload the game and try again; if it still fails, download or share the save for recovery.')) +
-          '</p></div><button class="btn primary" id="gm-go">' +
+          '</p>' + detail + '</div><button class="btn primary" id="gm-go">' +
           FB.esc(FB.T('Close')) + '</button>');
         $('gm-go').addEventListener('click', function () { FB.ui.closeModal(); });
       }

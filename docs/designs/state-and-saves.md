@@ -1,5 +1,14 @@
 # Game state & saves
 
+Restore treats the serialized world and player records as the critical save core. Additive
+format-3 subsystem repairs run as isolated stages: if one legacy record cannot be repaired, its
+failure is retained in `FB.save.lastRestoreWarnings` and later repairs still run. Continue also
+isolates noncritical career, enterprise, travel, focus, map-position, notification, and telemetry
+wake-up work in `FB.game.lastLoadWarnings`, so one optional subsystem cannot strand the loader or
+reject an otherwise readable life. A structurally unreadable core still returns to the title and
+the recovery modal names both the failed stage and browser error for mobile diagnosis. The stored
+slot or imported source remains unchanged by a failed attempt.
+
 Persistent serf tenure is additive save-format-3 data (`state.player.tenure`).
 `FB.ensureSerfTenure` lazily creates or repairs tenure records on older tier 0 saves without
 consuming RNG or bumping save format 3:
