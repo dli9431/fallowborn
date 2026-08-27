@@ -3,6 +3,7 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'data/actions.js',
   'js/actions.js',
+  'js/events.js',
   'js/politics.js',
   'js/world.js',
   'js/ui_modals.js'
@@ -418,6 +419,78 @@ test('grantByLiege grants a county inside the realm and keeps the liege',
       dukeKeepsSeat: true,
       grantCounted: true,
       tierStayed: true
+    });
+  });
+
+test('a generated local lord cannot grant a county title',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+    var result = await page.evaluate(function () {
+      var s = FB.state;
+      var p = s.player;
+      var me = s.chars[p.charId];
+      var homeId = LG.resetCount(s);
+      var deed = LG.deed('petition_liege');
+
+      p.tier = 3;
+      p.provs = [];
+      s.realms.player.rank = 0;
+      p.liege = 'lg_story_lord';
+      s.realms.player.liege = 'lg_story_lord';
+      s.chars.lg_story_lord = {
+        id:'lg_story_lord', name:'Lord of Galway', sex:'m', born:s.date.year - 40,
+        culture:me.culture, religion:me.religion, dead:false, role:'lord'
+      };
+      s.owner[homeId] = 'lg_story_lord';
+      s.holder[homeId] = 'lg_story_lord';
+      FB.invalidateRealmCache();
+
+      var blocked = deed.can(s);
+      var rejected = FB.grantByLiege(s);
+      var afterStoryLord = {
+        rejected:rejected === false,
+        reason:blocked,
+        tier:p.tier,
+        holder:s.holder[homeId],
+        provs:p.provs.slice()
+      };
+
+      LG.makeRealm(s, 'lg_duke', 'Test Duchy', 2, null, null,
+        me.religion, me.culture);
+      LG.makeRealm(s, 'lg_count', 'County of Galway', 1, 'lg_duke', homeId,
+        me.religion, me.culture);
+      p.liege = 'lg_count';
+      s.realms.player.liege = 'lg_count';
+      s.owner[homeId] = 'lg_duke';
+      s.holder[homeId] = 'lg_count';
+      FB.setRealmRulerStanding(s, 'lg_count', 100);
+      FB.invalidateRealmCache();
+      var titledCanGrant = deed.can(s) === true;
+      var granted = FB.grantByLiege(s);
+
+      return {
+        blocked:afterStoryLord,
+        titledCanGrant:titledCanGrant,
+        granted:granted,
+        tier:p.tier,
+        holder:s.holder[homeId],
+        liege:p.liege
+      };
+    });
+
+    expect(result).toEqual({
+      blocked:{
+        rejected:true,
+        reason:'Only a titled count or greater lord who directly holds your home county can invest you with it.',
+        tier:3,
+        holder:'lg_story_lord',
+        provs:[]
+      },
+      titledCanGrant:true,
+      granted:true,
+      tier:4,
+      holder:'player',
+      liege:'lg_duke'
     });
   });
 

@@ -132,7 +132,7 @@ window.FBDATA = window.FBDATA || {};
       },
       enterprise_hired_labor:{
         mode:'none',
-        rationale:'Hiring a qualified local worker for an owned household enterprise is a baseline labor contract with recurring pay, not an advanced capability unlocked by national research.'
+        rationale:'Hiring a qualified local worker for an owned household enterprise is a baseline labor contract with recurring pay, not an advanced capability unlocked by national research. Work & Enterprises therefore remains available at every adult station, while individual enterprise requirements keep their authored technology gates.'
       },
       enterprise_upgrades:{
         mode:'hard',

@@ -501,8 +501,11 @@ and ordinary succession bookkeeping. Generated counts, dukes, children, heirs,
 successors, and later houses continue through the saved RNG, so authored start rulers
 do not turn the whole family tree into fixed history.
 Petitioning up from a barony (`title_request` → `FB.grantByLiege`) invests the player
-with his home county: the granting count yields it (dissolving if left landless) and
-the player answers to the granter's own liege — a liege must outrank his man, and
+with his home county only when the petitioned liege is a living territorial realm of count
+rank or greater that directly holds that county. A generated local lord is a story character,
+not a title holder, and has no county to convey. The granting count yields the county
+(dissolving if left landless) and the player answers to the granter's own liege — a liege
+must outrank his man, and
 `FB.checkTierPromotions` walks broken chains back up. For a count or higher the same
 petition instead grants a county out of the liege's own hand
 (`FB.liegeGrantCandidates`): adjacent to the player's lands, never the liege's seat,

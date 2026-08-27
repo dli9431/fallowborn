@@ -4171,6 +4171,7 @@ window.FB = window.FB || {};
       }
       case 'liege_grant': {
         // no land adjoining the player's to give → the suit fails outright
+        if (p.tier === 3 && !FB.liegeHomeCountyGrantAuthority(state)) return 0;
         if (p.tier >= 4 && !FB.liegeGrantCandidates(state).length) return 0;
         const aim = p.liege && FB.rulerAimSnapshot &&
           FB.rulerAimSnapshot(state, p.liege);
@@ -11213,43 +11214,57 @@ window.FB = window.FB || {};
     return cands;
   };
 
+  /* A baron may receive the home county only from its real territorial
+     holder. Generated local "lords" are story characters rather than realm
+     rulers and have no title to convey. */
+  FB.liegeHomeCountyGrantAuthority = function (state) {
+    const p = state.player;
+    if (!p.liege || !p.provinceId || !state.realms || !state.holder) return null;
+    const liege = state.realms[p.liege];
+    if (!liege || !liege.alive || !liege.ruler || liege.rank < 1) return null;
+    if (state.holder[p.provinceId] !== p.liege) return null;
+    return FB.realmHeldCounties(state, p.liege).indexOf(p.provinceId) >= 0
+      ? liege : null;
+  };
+
   FB.grantByLiege = function (state) {
     const p = state.player;
+    let granted = false;
     if (p.tier === 3) {
       // raised to count of the home county. A count cannot make a peer of
       // himself: the granter yields the county and the player answers from
       // now on to the granter's OWN liege (the duke), never to a fellow count.
+      const old = FB.liegeHomeCountyGrantAuthority(state);
+      if (!old) return false;
       p.provs = p.provs || [];
       if (p.provs.indexOf(p.provinceId) < 0) p.provs.push(p.provinceId);
       if (state.holder) state.holder[p.provinceId] = 'player';
       FB.setPlayerTier(state, 4);
       FB.recordLiegeGrant(state);
-      const old = p.liege && state.realms[p.liege];
-      if (old) {
-        // Standing earned with the old lord stays on his name; the new liege
-        // keeps whatever Standing the player had already built with him.
-        const nextLiege = old.liege || null;
-        FB.changePlayerLiege(state, nextLiege, 'realm:liege_grant');
-        FB.foundPlayerRealm(state);
-        FB.invalidateRealmCache();
-        // a granter left holding no county at all dissolves — any vassals of
-        // his reattach upward, exactly as in FB.transferProvince
-        const terr = FB.realmTerritory(state, old.id);
-        if (!terr.length) {
-          if (FB.mergeRealmTech) {
-            FB.mergeRealmTech(state, FB.topRealm(state, p.liege || 'player'), old.id);
-          }
-          FB.markRealmDead(state, old.id);
-          for (const vid in state.realms) if (state.realms[vid].liege === old.id) state.realms[vid].liege = old.liege || null;
-        } else if (old.capital === p.provinceId) {
-          old.capital = terr[0];
+      granted = true;
+      // Standing earned with the old lord stays on his name; the new liege
+      // keeps whatever Standing the player had already built with him.
+      const nextLiege = old.liege || null;
+      FB.changePlayerLiege(state, nextLiege, 'realm:liege_grant');
+      FB.foundPlayerRealm(state);
+      FB.invalidateRealmCache();
+      // a granter left holding no county at all dissolves — any vassals of
+      // his reattach upward, exactly as in FB.transferProvince
+      const terr = FB.realmTerritory(state, old.id);
+      if (!terr.length) {
+        if (FB.mergeRealmTech) {
+          FB.mergeRealmTech(state, FB.topRealm(state, p.liege || 'player'), old.id);
         }
-        if (p.liege && state.realms[p.liege]) {
-          FB.news(state, FB.msg('news.event.invested_under_liege',
-            '👑 Invested, you answer now to {realm}.', { realm: state.realms[p.liege].name }));
-        }
-        if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+        FB.markRealmDead(state, old.id);
+        for (const vid in state.realms) if (state.realms[vid].liege === old.id) state.realms[vid].liege = old.liege || null;
+      } else if (old.capital === p.provinceId) {
+        old.capital = terr[0];
       }
+      if (p.liege && state.realms[p.liege]) {
+        FB.news(state, FB.msg('news.event.invested_under_liege',
+          '👑 Invested, you answer now to {realm}.', { realm: state.realms[p.liege].name }));
+      }
+      if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
     } else if (p.tier >= 4 && p.liege) {
       const cands = FB.liegeGrantCandidates(state);
       if (cands.length) {
@@ -11264,10 +11279,12 @@ window.FB = window.FB || {};
         FB.news(state, FB.msg('news.event.liege_grants_county',
           '🏰 The liege grants you {province}.', { province: FB.world.byId[got].name }));
         if (FB.ui && FB.ui.mapDirty) FB.ui.mapDirty();
+        granted = true;
       }
       FB.checkTierPromotions(state);
     }
     if (FB.invalidateGuildMonopolies) FB.invalidateGuildMonopolies(state);
+    return granted;
   };
 
   /* the liege strips a disgraced vassal and hands the county to the player

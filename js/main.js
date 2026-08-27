@@ -10,8 +10,12 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.164.2';
+  FB.VERSION = '1.164.3';
   FB.CHANGELOG = [
+    { v: '1.164.3', date: '2026-08-27', changes: [
+      'Household and building ledgers now keep compact controls aligned and place section guidance behind details.',
+      'Work & Enterprises remains available at every adult rank, and county-title petitions now require a real titled holder.'
+    ] },
     { v: '1.164.2', date: '2026-08-27', changes: [
       'Preview translations no longer mistake internal interface code for player-facing text.'
     ] },

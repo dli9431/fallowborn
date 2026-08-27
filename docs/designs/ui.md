@@ -615,10 +615,12 @@ no-worker warning remains non-blocking and states that the property will produce
 until staffed. The Work sheet always exposes each household settlement's catalogue entry,
 including when every enterprise there is unavailable.
 
-The Work & Enterprises sheet treats a tier-3+ protagonist's career as a read-only
-former calling. Career changes, guild steps, and personal enterprise assignment are
-removed while household occupations, religious-office advancement, and business
-staffing remain available. Its Group enterprises and Enterprise order selectors use the
+The Work & Enterprises deed remains available to an adult protagonist at every station,
+because an owner may hire qualified local labor even when no resident relative can staff
+a business. The sheet treats a tier-3+ protagonist's career as a read-only former calling.
+Career changes, guild steps, and personal enterprise assignment are removed while household
+occupations, religious-office advancement, business staffing, and local hiring remain
+available. Its Group enterprises and Enterprise order selectors use the
 same parchment treatment as the Market basket picker. The owned-enterprise manager shows
 the current upgrade tier, next construction cost and technology blocker, resulting staffing
 threshold, and authored non-gold benefit. Open positions offer both eligible household
@@ -655,7 +657,8 @@ does not traverse province and settlement dialogs for every work. Its building c
 retain the modal's 1–9 keyboard hints, show the exact live price, and explicitly warn that
 repeat copies in one county become 50% dearer each time. A sticky native county selector stays
 in reach above the scrolling ledger, including on narrow touch layouts, and switches directly
-among all held counties. Exact settlement placement and permanent demolition remain available
+among all held counties. On compact layouts each card's details and Raise controls share one
+aligned 48px action row. Exact settlement placement and permanent demolition remain available
 from the Land-tab settlement view. Every settlement name there links to that settlement's
 sheet and centers the map on its parent county. Province settlement lists wrap between
 places, never inside a settlement name, so each link stays readable.
@@ -731,7 +734,9 @@ The **Better the household…** deed remains available at every station and open
 standards & property sheet. It shows active standards upkeep, reliable seasonal net, and
 the projected purse after one season in a compact three-cell summary before listing five
 general standards, relevant profession outfits, and permanent holdings as separate
-catalogue sections. The catalogue follows Technology's dense scan rhythm: one row shows
+catalogue sections. Each section's explanatory copy lives on its title through the shared
+desktop hover/focus tooltip and compact `?` disclosure instead of occupying permanent ledger
+space. The catalogue follows Technology's dense scan rhythm: one row shows
 the icon, name, level/status, current or next effect, next setup price, and current upkeep.
 Owned property uses the same compact row treatment and a distinct completed state. Each
 standard remains a native button and opens the complete asset/effect detail view. Upgrade

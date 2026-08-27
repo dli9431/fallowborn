@@ -1217,7 +1217,7 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   letter-spacing: .04em; text-transform: uppercase;
 }
 .household-summary .kv b { font-size: 14px; }
-.household-intro, .household-warning, .household-section-hint {
+.household-intro, .household-warning, .household-section-details {
   color: var(--helper-text-color); font-size: 12px; line-height: 1.4;
   overflow-wrap: anywhere;
 }
@@ -1232,7 +1232,15 @@ button.ongoing-commitment-row:focus-visible { background: #302619; }
   margin: 8px 0 4px; color: #bca16a; font-size: 11px;
   letter-spacing: .04em; text-transform: uppercase;
 }
-.household-section-hint { margin: -1px 2px 5px; }
+.household-section-heading {
+  margin: 0 0 5px; padding: 0 2px; border: 0; background: transparent;
+}
+.household-section-heading .settcard-head { align-items: stretch; }
+.household-section-heading h4 { margin: 0; align-self: center; }
+.household-section-heading .settcard-actions { align-self: stretch; }
+.household-section-heading .household-section-details {
+  margin: 4px 0 0; padding: 5px 0 0; border-top: 1px solid #40331f;
+}
 .household-catalogue-list { display: grid; gap: 4px; }
 .household-entry.actionbtn, .household-entry {
   position: relative; display: block; width: 100%; min-height: 48px;
@@ -4018,6 +4026,13 @@ textarea.modjson, textarea.savetext {
      fixed 58px equipment slots. */
   .modal .settcard-actions .btn.small { min-height: 48px; }
   .modal .settcard-actions .btn.small.settcard-info { min-width: 48px; }
+  .building-works-modal .settcard-actions {
+    align-self: stretch; align-items: stretch;
+  }
+  .building-works-modal .settcard-actions .btn.small.settcard-info,
+  .building-works-modal .settcard-actions .btn.small.settcard-raise {
+    box-sizing: border-box; height: 48px; min-height: 48px; margin: 0;
+  }
   .modal .event-duty-help-anchor,
   .modal .large-list-section-toggle { min-height: 48px; }
   .modal .event-duty-help .settcard-head,
@@ -4415,7 +4430,7 @@ textarea.modjson, textarea.savetext {
   }
   .household-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .household-summary .kv:last-child { grid-column: span 2; }
-  .household-intro, .household-warning, .household-section-hint,
+  .household-intro, .household-warning, .household-section-details,
   .household-empty { font-size: 12px; }
   .household-entry-layout {
     grid-template-columns: 28px minmax(0, 1fr) minmax(86px, auto);

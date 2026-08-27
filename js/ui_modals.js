@@ -5618,7 +5618,9 @@ window.FB = window.FB || {};
       }
       h += '</div><button class="btn" id="gm-cancel">' +
         esc(FB.T(provs.length > 1 ? 'Back' : 'Not now')) + '</button>';
-      openModal(FB.T('Building Works in {province}', { province: pr.name }), h);
+      openModal(FB.T('Building Works in {province}', { province: pr.name }), h, {
+        modalClass:'building-works-modal'
+      });
       $('building-auto-protection').addEventListener('change', function () {
         FB.setProtected(s, 'autoBuildCounty', pid,
           $('building-auto-protection').checked);
@@ -5706,7 +5708,9 @@ window.FB = window.FB || {};
         esc(FB.T('Raise')) + '</button>');
     }
     h += '</div><button class="btn" id="gm-cancel">' + esc(FB.T('Back')) + '</button>';
-    openModal(FB.T('Raise a Building in {settlement}', { settlement: st.name }), h);
+    openModal(FB.T('Raise a Building in {settlement}', { settlement: st.name }), h, {
+      modalClass:'building-works-modal'
+    });
     bindCardInfoToggles($('gm-body'));
     document.querySelectorAll('[data-build]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -12617,11 +12621,10 @@ window.FB = window.FB || {};
     const protagonist = s.chars && s.chars[s.player.charId];
     const minor = protagonist && FB.ageOf(protagonist, s.date.year) < 16;
     let h = '<section class="household-catalogue-section" id="household-property" ' +
-      'aria-labelledby="household-property-title"><h4 id="household-property-title">' +
-      esc(FB.T('Permanent household property')) +
-      '</h4><p class="household-section-hint">' + esc(FB.T(
-        'Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property.')) +
-      '</p><div class="household-catalogue-list">';
+      'aria-labelledby="household-property-title">' + householdSectionHeading(
+        'household-property-title', 'Permanent household property',
+        'Property is bought once and passes to heirs; eligible holdings may be sold or pledged. Maintained transport and work outfits above are expenses, not property.') +
+      '<div class="household-catalogue-list">';
     const available = FB.holdingAvailable(s);
     for (const t of available) {
       const cost = FB.holdingCost ? FB.holdingCost(s, t.id) : t.def.cost;
@@ -12671,6 +12674,19 @@ window.FB = window.FB || {};
     return h + '</section>';
   }
 
+  function householdSectionHeading(id, title, details) {
+    const detailsId = id + '-details';
+    return '<div class="household-section-heading settcard"' +
+      (eventChoiceUsesDisclosure() ? '' : ' tabindex="0"') + '>' +
+      '<div class="settcard-head"><h4 id="' + id + '">' + esc(FB.T(title)) +
+      '</h4><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" aria-controls="' +
+      detailsId + '" title="' + esc(FB.T('Details')) + '" aria-label="' +
+      esc(FB.T('Details')) + '">?</button></span></div>' +
+      '<div class="settcard-details household-section-details hidden" id="' +
+      detailsId + '">' + esc(FB.T(details)) + '</div></div>';
+  }
+
   UI.showHousehold = function () {
     const s = FB.state;
     const protagonist = s.chars && s.chars[s.player.charId];
@@ -12695,11 +12711,10 @@ window.FB = window.FB || {};
         '</p>' : '');
 
     h += '<section class="household-catalogue-section" id="household-living" ' +
-      'aria-labelledby="household-living-title"><h4 id="household-living-title">' +
-      esc(FB.T('Living standards')) +
-      '</h4><p class="household-section-hint">' + esc(FB.T(
-        'Living standards benefit the whole resident household.')) +
-      '</p><div class="household-catalogue-list">';
+      'aria-labelledby="household-living-title">' + householdSectionHeading(
+        'household-living-title', 'Living standards',
+        'Living standards benefit the whole resident household.') +
+      '<div class="household-catalogue-list">';
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
       if (def.kind === 'work' || def.kind === 'ruler') continue;
@@ -12707,10 +12722,9 @@ window.FB = window.FB || {};
     }
     h += '</div></section><section class="household-catalogue-section" ' +
       'id="household-ruler" aria-labelledby="household-ruler-title">' +
-      '<h4 id="household-ruler-title">' + esc(FB.T('Ruler establishments')) +
-      '</h4><p class="household-section-hint">' + esc(FB.T(
-        'Paid guards, scholars, and clerks strengthen a landed ruler’s realm. They are discretionary and go dormant below Baron rank.')) +
-      '</p><div class="household-catalogue-list">';
+      householdSectionHeading('household-ruler-title', 'Ruler establishments',
+        'Paid guards, scholars, and clerks strengthen a landed ruler’s realm. They are discretionary and go dormant below Baron rank.') +
+      '<div class="household-catalogue-list">';
     let rulerStandards = 0;
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];
@@ -12724,10 +12738,9 @@ window.FB = window.FB || {};
     }
     h += '</div></section><section class="household-catalogue-section" ' +
       'id="household-outfits" aria-labelledby="household-outfits-title">' +
-      '<h4 id="household-outfits-title">' + esc(FB.T('Work outfits')) +
-      '</h4><p class="household-section-hint">' + esc(FB.T(
-        'Outfits improve matching work and go dormant without an eligible worker.')) +
-      '</p><div class="household-catalogue-list">';
+      householdSectionHeading('household-outfits-title', 'Work outfits',
+        'Outfits improve matching work and go dormant without an eligible worker.') +
+      '<div class="household-catalogue-list">';
     let outfits = 0;
     for (const id of FB.householdStandardIds()) {
       const def = FBDATA.householdStandards[id];

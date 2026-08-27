@@ -180,6 +180,11 @@ key; neither needs a new save field. Work & Enterprises derives localized name, 
 settlement, live yield, and staffing state when sorting or grouping instances. These are
 session UI choices. Household Plan reuses the selected sort for assignment labels, so
 drilling between the screens cannot imply a different enterprise order.
+The Work & Enterprises deed remains available to adult protagonists at every station:
+landed rulers cannot resume a personal calling, but they can still manage family workers,
+owned businesses, and qualified local hires. Local hiring is a baseline labor contract;
+individual enterprise acquisition and upgrade requirements retain their authored technology
+gates.
 `workerLocked:true` preserves all current worker-enterprise pairings from batch
 staffing; a missing field means unlocked, so the addition remains compatible with
 save format 3. One copy of a type may stand in each derived settlement, so a family may

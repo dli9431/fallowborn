@@ -61,6 +61,15 @@ test('adjusts living standards and work outfits inline with tooltip terms',
     });
 
     await expect(page.locator('#genmodal')).toHaveClass(/household-modal/);
+    await expect(page.locator('.household-section-hint')).toHaveCount(0);
+    const livingHeading = page.locator(
+      '#household-living .household-section-heading');
+    await expect(livingHeading).toHaveAttribute('tabindex', '0');
+    await livingHeading.hover();
+    const sectionTooltip = page.locator('#tooltip');
+    await expect(sectionTooltip).toBeVisible();
+    await expect(sectionTooltip).toContainText(
+      'Living standards benefit the whole resident household.');
     const livingRows = page.locator('#household-living .household-standard-stepper');
     const living = page.locator('#household-living [data-household-standard]');
     await expect(livingRows).toHaveCount(setup.generalStandards);
@@ -196,6 +205,19 @@ test('uses the shared question-mark disclosure for household adjustments on comp
     const info = row.locator('.household-standard-info-actions .settcard-info');
     const details = row.locator('.household-standard-adjustment-details');
     const increase = row.locator('[data-household-standard-adjust="1"]');
+    const sectionInfo = page.locator(
+      '#household-living .household-section-heading .settcard-info');
+    const sectionDetails = page.locator('#household-living-title-details');
+
+    await expect(page.locator('.household-section-hint')).toHaveCount(0);
+    await expect(sectionInfo).toBeVisible();
+    await expect(sectionDetails).toBeHidden();
+    await sectionInfo.click();
+    await expect(sectionDetails).toBeVisible();
+    await expect(sectionDetails).toHaveText(
+      'Living standards benefit the whole resident household.');
+    await sectionInfo.click();
+    await expect(sectionDetails).toBeHidden();
 
     await expect(info).toBeVisible();
     await expect(info).toHaveAttribute('aria-expanded', 'false');
@@ -224,6 +246,33 @@ test('uses the shared question-mark disclosure for household adjustments on comp
     await info.click();
     await expect(info).toHaveAttribute('aria-expanded', 'false');
     await expect(details).toBeHidden();
+  });
+
+test('keeps work and enterprise management available at every adult rank',
+  async function ({ page }) {
+    const shown = await page.evaluate(function () {
+      const s = FB.state;
+      const protagonist = s.chars[s.player.charId];
+      protagonist.born = s.date.year - 30;
+      for (const id in s.chars) {
+        if (id !== s.player.charId) s.chars[id].dead = true;
+      }
+      s.player.enterprises = [];
+      s.player.enterpriseLabor = [];
+      s.player.retainers = [];
+      let deed = null;
+      for (let i = 0; i < FB.instants.length; i++) {
+        if (FB.instants[i].id === 'livelihoods') deed = FB.instants[i];
+      }
+      const result = [];
+      for (let tier = 0; tier <= 7; tier++) {
+        s.player.tier = tier;
+        result.push(deed.show(s));
+      }
+      return result;
+    });
+
+    expect(shown).toEqual([true, true, true, true, true, true, true, true]);
   });
 
 test('landed rulers keep household standards active with title-scaled reduction floors',

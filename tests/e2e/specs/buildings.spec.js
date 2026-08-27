@@ -89,8 +89,23 @@ test('raises buildings in two held counties from the narrow county ledger',
     await expect(workDetails).toBeHidden();
 
     // the raise control is a primary button inside the card
-    await expect(millWorkCard.locator(
-      'button.settcard-raise[data-bquick="mill"]')).toBeEnabled();
+    const workRaise = millWorkCard.locator(
+      'button.settcard-raise[data-bquick="mill"]');
+    await expect(workRaise).toBeEnabled();
+    const compactAlignment = await millWorkCard.evaluate(function (card) {
+      const info = card.querySelector('.settcard-info').getBoundingClientRect();
+      const raise = card.querySelector('.settcard-raise').getBoundingClientRect();
+      return {
+        top:Math.abs(info.top - raise.top),
+        bottom:Math.abs(info.bottom - raise.bottom),
+        infoHeight:info.height,
+        raiseHeight:raise.height
+      };
+    });
+    expect(compactAlignment.top).toBeLessThanOrEqual(1);
+    expect(compactAlignment.bottom).toBeLessThanOrEqual(1);
+    expect(compactAlignment.infoHeight).toBe(48);
+    expect(compactAlignment.raiseHeight).toBe(48);
 
     await picker.selectOption(counties.other);
     await expect(picker).toHaveValue(counties.other);

@@ -2893,8 +2893,8 @@ window.FB = window.FB || {};
         : 'Choose occupations, arrange apprenticeships, staff shops, and grow family businesses.';
     },
     show: function (s) {
-      if (s.player.tier < 3) return adult(s) || FB.householdMembers(s).length > 1;
-      return FB.householdWorkers(s).length > 1 || FB.enterpriseList(s).length > 0;
+      return adult(s) || FB.householdMembers(s).length > 1 ||
+        FB.enterpriseList(s).length > 0;
     },
     run: function () { if (FB.ui && FB.ui.showLivelihoods) FB.ui.showLivelihoods(); } },
 
@@ -3243,6 +3243,10 @@ window.FB = window.FB || {};
         !(FB.playerBishopricOnly && FB.playerBishopricOnly(s));
     },
     can: function (s) {
+      if (s.player.tier === 3 && !FB.liegeHomeCountyGrantAuthority(s)) {
+        return FB.T(
+          'Only a titled count or greater lord who directly holds your home county can invest you with it.');
+      }
       const standing = FB.standingOf(s, {
         kind:'realm', id:s.player.liege
       });
