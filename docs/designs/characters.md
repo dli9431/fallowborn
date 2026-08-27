@@ -781,7 +781,9 @@ resolution stamps the exact living people covered by its charter: the protagonis
 living spouses, living descendants, and any parents or siblings explicitly added to the
 purchase or negotiated terms. Personal `character.unfree` state distinguishes those
 bound people from unrelated free Lowborn characters at the same station, so character
-sheets and family-tree status label them Serf. Parents and collateral siblings otherwise remain serfs.
+sheets and family-tree status use the character's faith- and sex-aware tier-0 title
+(for example Serf, Thrall, Fellah/Fellaha, or Bondman/Bondwoman). Parents and collateral
+siblings otherwise remain bound.
 Future children inherit the recorded station of their parents. If a tier-1 head is
 followed by an unmanumitted collateral heir, household property still passes but the new
 head returns to tier 0 and forms a new active serf tenure. A separately manumitted sibling

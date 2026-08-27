@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.164.0';
+  FB.VERSION = '1.164.1';
   FB.CHANGELOG = [
+    { v: '1.164.1', date: '2026-08-27', changes: [
+      'Bound relatives now use their faith- and sex-appropriate rank in family trees and character details, such as Serf, Thrall, Fellah, or Fellaha.'
+    ] },
     { v: '1.164.0', date: '2026-08-27', changes: [
       'The game now starts normally, compact Deeds and scheduled-duty details open at their intended size, and a new founder\u2019s family tree includes their generated kin.',
       'The Old Custom now begins one-fifth as often for a serf, while an active case keeps its existing pace.',

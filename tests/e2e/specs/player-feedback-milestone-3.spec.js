@@ -24,7 +24,7 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
-test('a new founder tree includes generated parents and siblings as serfs',
+test('a new founder tree includes generated kin with bound-status flavor',
   async function ({ page }) {
     const family = await page.evaluate(function () {
       const s = FB.state;
@@ -35,13 +35,41 @@ test('a new founder tree includes generated parents and siblings as serfs',
         name:'Free Lowborn', sex:'m', born:s.date.year - 30,
         culture:me.culture, religion:me.religion, station:0, traitsN:0
       });
+      const flavored = [
+        FB.makeCharacter(s, {
+          name:'Pagan Bound', sex:'m', born:s.date.year - 30,
+          culture:'norse', religion:'norse_pagan', station:0,
+          unfree:true, traitsN:0
+        }),
+        FB.makeCharacter(s, {
+          name:'Muslim Bound', sex:'m', born:s.date.year - 30,
+          culture:'arabic', religion:'sunni', station:0,
+          unfree:true, traitsN:0
+        }),
+        FB.makeCharacter(s, {
+          name:'Muslim Bound Woman', sex:'f', born:s.date.year - 30,
+          culture:'arabic', religion:'sunni', station:0,
+          unfree:true, traitsN:0
+        }),
+        FB.makeCharacter(s, {
+          name:'Zoroastrian Bound Woman', sex:'f', born:s.date.year - 30,
+          culture:'persian', religion:'zoroastrian', station:0,
+          unfree:true, traitsN:0
+        })
+      ];
       const statuses = parents.concat(siblings).map(function (id) {
         return FB.characterStationName(s, s.chars[id]);
       });
       FB.ui.showFamilyTree();
       return {
         me:me.id, parents:parents, siblings:siblings, statuses:statuses,
-        outsiderStatus:FB.characterStationName(s, outsider)
+        outsiderStatus:FB.characterStationName(s, outsider),
+        flavored:flavored.map(function (c) {
+          return {
+            name:FB.characterStationName(s, c),
+            tree:FB.ui.familyTreeStatusHtml(s, c)
+          };
+        })
       };
     });
 
@@ -51,6 +79,11 @@ test('a new founder tree includes generated parents and siblings as serfs',
       return status === 'Serf';
     })).toBe(true);
     expect(family.outsiderStatus).toBe('Lowborn');
+    expect(family.flavored.map(function (entry) { return entry.name; }))
+      .toEqual(['Thrall', 'Fellah', 'Fellaha', 'Bondwoman']);
+    family.flavored.forEach(function (entry) {
+      expect(entry.tree).toContain(entry.name);
+    });
     const primary = page.locator('.family-tree-primary');
     await expect(primary.locator(
       '.ftchip[data-cid="' + family.me + '"]')).toHaveCount(1);

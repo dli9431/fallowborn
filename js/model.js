@@ -1466,8 +1466,13 @@ window.FB = window.FB || {};
     return false;
   };
   FB.characterStationName = function (state, c) {
-    return FB.isUnfreeCharacter(state, c)
-      ? FB.T('Serf') : FB.stationName(FB.stationOf(c));
+    const unfree = FB.isUnfreeCharacter(state, c);
+    if (unfree &&
+        FB.characterRankTitleSnapshot && FB.renderTitleSnapshot) {
+      const title = FB.characterRankTitleSnapshot(state, c, 0, '');
+      if (title) return FB.renderTitleSnapshot(title);
+    }
+    return unfree ? FB.T('Serf') : FB.stationName(FB.stationOf(c));
   };
   /* Political household heads keep authority over their own establishments.
      A generated local lord is recognized through the active role seat or the
