@@ -211,9 +211,10 @@ demand, two adjacency-flow passes, shocks, and prices. Observe mode runs this sa
 market pass without any protagonist settlement. In ordinary play the household then
 receives normal landed/property income and livelihood wages before paying locally quoted
 station and resident-family necessities. An unpaid share becomes market hardship instead
-of a fixed wartime surcharge. Maintained commoner standards settle next. If their total is
-unaffordable, discretionary levels lapse in a stable order until the remainder can be paid;
-surviving luxuries then grant their prestige. Retainer capacity/pay and active
+of a fixed wartime surcharge. Maintained household standards settle next. If their total is
+unaffordable, discretionary levels lapse in a stable order until the remainder can be paid.
+At landed rank, title-floor living standards remain active and their compulsory remainder
+may leave a cash shortfall; surviving luxuries then grant their prestige. Retainer capacity/pay and active
 school terms settle after standards, so a lost quarters level can reduce service capacity
 before contracts are paid. Unaffordable schooling pauses for that term. Any live player
 host then pays its full composition-based logistics as an already-incurred obligation,

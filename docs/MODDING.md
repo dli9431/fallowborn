@@ -2246,7 +2246,7 @@ collateral.
 ## Maintained household standards
 
 `FBDATA.householdStandards` (in `data/economy.js`, mod key
-`householdStandards`) defines optional commoner living standards and profession
+`householdStandards`) defines maintained living standards and profession
 outfits. A same-id mod entry replaces the complete definition, including its ordered
 level array:
 
@@ -2285,8 +2285,9 @@ level array:
   `profession`, naming an id in `FBDATA.careers`.
 - `levels` are sequential. `cost` is the one-time setup price to advance from the
   previous level; `upkeep` is the complete seasonal cost of the current level, not a
-  cumulative sum. `tierMin` gates that level. Standards are dormant at tier 3 and above.
-- A work outfit is also dormant without an adult resident family member practicing that
+  cumulative sum. `tierMin` gates that level. Purchased levels remain active at ruler
+  ranks; general standards cannot be reduced below the ruler's title floor.
+- A work outfit is dormant without an adult resident family member practicing that
   profession, or a matching retainer currently staffing an enterprise. Dormant levels
   keep their saved purchase but have no upkeep or effect.
 - General `fx` keys are `mortality` (subtracted from yearly household mortality chance),

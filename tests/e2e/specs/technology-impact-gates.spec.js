@@ -195,6 +195,7 @@ test('the prospective review ledger and every gate schema validate together',
       'guild_weaver_path',
       'host_splitting_encirclement',
       'item_shop',
+      'landed_household_standards',
       'late_medieval_crafts_commerce',
       'late_medieval_warfare_gear',
       'learned_master_works',
@@ -227,13 +228,14 @@ test('the prospective review ledger and every gate schema validate together',
     ]);
     const additiveNoneIds = [
       'family_freedom_record',
+      'landed_household_standards',
       'minor_household_standard_reduction',
       'negative_household_gold',
       'persistent_serf_tenure',
       'serf_freedom_petition'
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['none', 'none', 'none', 'none', 'none']);
+      .toEqual(['none', 'none', 'none', 'none', 'none', 'none']);
     const establishedModes = result.featureIds.filter(function (id) {
       return additiveNoneIds.indexOf(id) < 0;
     }).map(function (id) { return result.modes[id]; });

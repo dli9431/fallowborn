@@ -1349,7 +1349,7 @@ window.FB = window.FB || {};
     return out;
   };
 
-  /* Maintained commoner living standards are additive save-format-3 state.
+  /* Maintained household living standards are additive save-format-3 state.
      Definitions carry the whole benefit/upkeep of each current level; earlier
      levels are not summed. Work outfits sleep unless somebody can use them. */
   FB.ensureHouseholdStandards = function (state) {
@@ -1409,7 +1409,7 @@ window.FB = window.FB || {};
 
   FB.householdStandardActive = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
-    if (!def || state.player.tier > 2 || !FB.householdStandardLevel(state, id)) return false;
+    if (!def || !FB.householdStandardLevel(state, id)) return false;
     const current = FB.householdStandardLevelDef(state, id);
     if (current && current.requiresTech &&
         !FB.techRequirementMet(state, current.requiresTech)) return false;
@@ -1422,11 +1422,9 @@ window.FB = window.FB || {};
       travelCost:1, travelLegDays:null, work:{}
     };
     const standards = FB.ensureHouseholdStandards(state);
-    /* every standard is inert for landed rulers and when nothing is
-       maintained at all — the per-id active checks (each re-ensuring the
-       table, and the work scan walking the whole household) are then pure
-       waste, so the daily focus tick takes this cheap exit */
-    if (state.player.tier > 2) return out;
+    /* When nothing is maintained, the per-id active checks (each re-ensuring
+       the table, and the work scan walking the whole household) are pure
+       waste, so the daily focus tick takes this cheap exit. */
     let any = false;
     for (const id in standards) { any = true; break; }
     if (!any) return out;
@@ -1488,7 +1486,6 @@ window.FB = window.FB || {};
   FB.householdStandardUpgradeAvailable = function (state, id) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     if (!def || !Array.isArray(def.levels)) return FB.T('That household standard is unavailable.');
-    if (state.player.tier > 2) return FB.T('Maintained household standards are dormant at landed rank.');
     const protagonist = state.chars && state.chars[state.player.charId];
     if (protagonist && FB.ageOf(protagonist, state.date.year) < 16) {
       return FB.T('You may reduce inherited standards during childhood, but new purchases unlock at age 16.');
@@ -1600,17 +1597,22 @@ window.FB = window.FB || {};
     const table = FBDATA.householdStandards || {};
     const priority = ['luxuries', 'wares', 'transport', 'quarters', 'board'];
     for (let i = 0; i < priority.length; i++) {
-      if (FB.householdStandardActive(state, priority[i])) return priority[i];
+      if (FB.householdStandardActive(state, priority[i]) &&
+          FB.householdStandardReductionAvailable(state, priority[i]) === true) {
+        return priority[i];
+      }
     }
     /* A mod-added general standard follows the core discretionary categories
        in stable definition order, before tools needed for current work. */
     for (const id in table) {
       if (priority.indexOf(id) >= 0 || table[id].kind === 'work') continue;
-      if (FB.householdStandardActive(state, id)) return id;
+      if (FB.householdStandardActive(state, id) &&
+          FB.householdStandardReductionAvailable(state, id) === true) return id;
     }
     let best = null, bestLevel = -1;
     for (const id in table) {
-      if (table[id].kind !== 'work' || !FB.householdStandardActive(state, id)) continue;
+      if (table[id].kind !== 'work' || !FB.householdStandardActive(state, id) ||
+          FB.householdStandardReductionAvailable(state, id) !== true) continue;
       const level = FB.householdStandardLevel(state, id);
       if (level > bestLevel) {
         best = id;
@@ -1621,7 +1623,8 @@ window.FB = window.FB || {};
   }
 
   /* Called after ordinary livelihood income and before service, schooling,
-     and finance settlements. Standards lapse rather than create debt. */
+     and finance settlements. Discretionary levels lapse rather than create
+     debt. A landed title floor is compulsory and may leave a cash shortfall. */
   FB.householdStandardsSeason = function (state) {
     const reduced = [];
     let upkeep = FB.householdStandardsUpkeep(state);
@@ -1633,7 +1636,7 @@ window.FB = window.FB || {};
       upkeep = FB.householdStandardsUpkeep(state);
     }
     available = Math.max(0, state.player.gold);
-    const paid = Math.min(available, upkeep);
+    const paid = state.player.tier >= 3 ? upkeep : Math.min(available, upkeep);
     state.player.gold -= paid;
     state.player.prestige += FB.householdStandardEffect(state, 'prestige');
     return { paid:paid, reduced:reduced };

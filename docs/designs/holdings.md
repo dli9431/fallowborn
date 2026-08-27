@@ -48,21 +48,23 @@ format-3 saves begin at level zero. `FB.householdStandardEffects` supplies morta
 education, retainer-capacity, prestige, travel, and profession-output modifiers.
 `FB.householdStandardsUpkeepParts` and `FB.householdStandardsUpkeep` expose only active
 upkeep. Work outfits are dormant without an eligible resident worker (or a retainer
-staffing a matching enterprise), and every standard is dormant above tier 2. Purchased
-levels remain saved through either dormant state. Better the Household remains available
-after the dynasty becomes landed so those saved standards and permanent property stay
-reviewable. General standards gain a title floor when reduced: level 1 for a Baron,
-level 2 for a Count, and level 3 for a Duke, King, or Emperor. Work outfits may still be
-reduced to baseline because vocational tools do not express title dignity.
+staffing a matching enterprise). Living standards and eligible work outfits remain active
+after the dynasty becomes landed, so their benefits and upkeep continue at ruler ranks.
+General standards gain a title floor when reduced: level 1 for a Baron, level 2 for a
+Count, and level 3 for a Duke, King, or Emperor. Work outfits may still be reduced to
+baseline because vocational tools do not express title dignity.
+This ruler-rank expansion has technology impact **none**
+(`landed_household_standards`): rank does not add a second technology lock, while every
+standard level continues to enforce its existing authored `requiresTech` requirement.
 
 At a season boundary, ordinary household and livelihood income settles first.
 `FB.householdStandardsSeason` then pays maintained standards before retainers,
-schooling, and finance. When the purse cannot cover the total, levels lapse without
-debt or another penalty: luxuries, wares, transport, quarters, board, then active work
-outfits. Work outfits lose the highest active level first, with definition order
-breaking ties. A lost or voluntarily reduced level gives no refund and must be bought
-again at full setup cost. Every purchase and lapse writes a locale-neutral durable
-Chronicle descriptor.
+schooling, and finance. When the purse cannot cover the total, reducible levels lapse:
+luxuries, wares, transport, quarters, board, then active work outfits. Work outfits lose
+the highest active level first, with definition order breaking ties. A landed ruler's
+remaining title-floor upkeep is compulsory and may leave a cash shortfall. A lost or
+voluntarily reduced level gives no refund and must be bought again at full setup cost.
+Every purchase and lapse writes a locale-neutral durable Chronicle descriptor.
 
 The household sheet is a compact catalogue rather than a stack of complete
 asset ledgers. Each maintained living standard or work outfit is one three-part

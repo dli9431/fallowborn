@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.161.1';
+  FB.VERSION = '1.161.2';
   FB.CHANGELOG = [
+    { v: '1.161.2', date: '2026-08-26', changes: [
+      'Household living standards and eligible work outfits now keep their benefits and upkeep at landed rank.'
+    ] },
     { v: '1.161.1', date: '2026-08-26', changes: [
       'Losing a salvage auction or leaving a bounded auction before the hammer falls now keeps the household’s gold.',
       'Ruler sheets now show one clear cultivation journey action.',

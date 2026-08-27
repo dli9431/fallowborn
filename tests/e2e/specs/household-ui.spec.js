@@ -218,10 +218,36 @@ test('uses the shared question-mark disclosure for household adjustments on comp
     await expect(details).toBeHidden();
   });
 
-test('landed rulers retain Better the Household with title-scaled reduction floors',
+test('landed rulers keep household standards active with title-scaled reduction floors',
   async function ({ page }) {
     const result = await page.evaluate(function () {
       const s = FB.state;
+      const record = FB.realmTechRecord(s, FB.techRealmId(s));
+      for (const id in FBDATA.tech) {
+        if (record.completed.indexOf(id) < 0) record.completed.push(id);
+      }
+      const protagonist = s.chars[s.player.charId];
+      protagonist.career = {
+        profession:'farmer', rank:'journeyman', chosen:true,
+        experience:1, guildRank:'none', guildStanding:0
+      };
+      s.player.tier = 3;
+      s.player.gold = 1000;
+      s.player.householdStandards = { board:1, outfit_farmer:1 };
+      const effects = FB.householdStandardEffects(s);
+      const landedActivity = {
+        board:FB.householdStandardActive(s, 'board'),
+        outfit:FB.householdStandardActive(s, 'outfit_farmer'),
+        mortality:effects.mortality,
+        farmerWork:effects.work.farmer,
+        upkeep:FB.householdStandardsUpkeep(s),
+        upkeepIds:FB.householdStandardsUpkeepParts(s).lines.map(function (line) {
+          return line.id;
+        }),
+        boardUpgrade:FB.householdStandardUpgradeAvailable(s, 'board'),
+        outfitUpgrade:FB.householdStandardUpgradeAvailable(s, 'outfit_farmer')
+      };
+
       s.player.householdStandards = { board:3, outfit_farmer:3 };
       const floors = [2, 3, 4, 5, 7].map(function (tier) {
         s.player.tier = tier;
@@ -245,9 +271,24 @@ test('landed rulers retain Better the Household with title-scaled reduction floo
         FB.reduceHouseholdStandard(s, 'outfit_farmer')
       ];
       const workLevel = FB.householdStandardLevel(s, 'outfit_farmer');
+
+      s.player.householdStandards = { board:2, outfit_farmer:1 };
+      s.player.gold = 0;
+      const floorSettlement = FB.householdStandardsSeason(s);
+      const landedShortfall = {
+        paid:floorSettlement.paid,
+        reduced:floorSettlement.reduced,
+        gold:s.player.gold,
+        boardLevel:FB.householdStandardLevel(s, 'board'),
+        outfitLevel:FB.householdStandardLevel(s, 'outfit_farmer')
+      };
+
+      s.player.gold = 1000;
+      s.player.householdStandards = { board:1, outfit_farmer:1 };
       const deed = FB.instantStatus(s, 'better_household');
       FB.ui.showTab('actions', { history:false });
       return {
+        landedActivity:landedActivity,
         floors:floors,
         countBlocked:countBlocked,
         reductions:[first, second, third],
@@ -255,11 +296,22 @@ test('landed rulers retain Better the Household with title-scaled reduction floo
         workFloor:workFloor,
         workReductions:workReductions,
         workLevel:workLevel,
+        landedShortfall:landedShortfall,
         rank:FB.titleWordFor(s, s.player.tier),
         deed:{ shown:deed.shown, can:deed.can }
       };
     });
 
+    expect(result.landedActivity).toMatchObject({
+      board:true,
+      outfit:true,
+      mortality:0.001,
+      farmerWork:0.05,
+      upkeepIds:['board', 'outfit_farmer'],
+      boardUpgrade:true,
+      outfitUpgrade:true
+    });
+    expect(result.landedActivity.upkeep).toBeGreaterThan(0);
     expect(result.floors).toEqual([0, 1, 2, 3, 3]);
     expect(result.countBlocked).toBe(false);
     expect(result.reductions).toEqual([true, true, false]);
@@ -267,6 +319,12 @@ test('landed rulers retain Better the Household with title-scaled reduction floo
     expect(result.workFloor).toBe(0);
     expect(result.workReductions).toEqual([true, true, true]);
     expect(result.workLevel).toBe(0);
+    expect(result.landedShortfall.reduced).toEqual(['board', 'outfit_farmer']);
+    expect(result.landedShortfall.boardLevel).toBe(1);
+    expect(result.landedShortfall.outfitLevel).toBe(0);
+    expect(result.landedShortfall.paid).toBeGreaterThan(0);
+    expect(result.landedShortfall.gold)
+      .toBeCloseTo(-result.landedShortfall.paid, 8);
     expect(result.deed).toEqual({ shown:true, can:true });
 
     const workGroup = page.locator('#tab-actions [data-action-group="work"]');
@@ -278,11 +336,19 @@ test('landed rulers retain Better the Household with title-scaled reduction floo
     await expect(household).toBeEnabled();
     await household.click();
     const boardRow = page.locator('[data-household-standard-row="board"]');
+    await expect(boardRow).not.toContainText('Dormant');
+    await expect(boardRow).toContainText(
+      'Reduces yearly household mortality by 0.1 percentage points.');
+    await expect(boardRow).toContainText('/season');
     await expect(boardRow.locator('[data-household-standard-adjust="-1"]'))
       .toBeDisabled();
     await expect(boardRow.locator('.household-standard-adjustment-details'))
       .toContainText(result.rank +
         ' households may not reduce this standard below level 1');
+    const outfitRow = page.locator(
+      '[data-household-standard-row="outfit_farmer"]');
+    await expect(outfitRow).not.toContainText('Dormant');
+    await expect(outfitRow).toContainText('Raises farming output by 5%.');
   });
 
 test('minor succession keeps adult deeds visible, limits focuses to Study and Play, and permits only inherited-standard reductions',

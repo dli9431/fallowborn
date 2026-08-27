@@ -731,7 +731,9 @@ Reduction applies one level at a time after engine revalidation, with its detail
 naming the lost level and no-refund/re-purchase rule. `UI.showHoldings` remains an alias to this sheet for older
 deeds and mods. Landed households retain a title-scaled floor for general standards:
 Barons cannot reduce below level 1, Counts below level 2, and Dukes or greater rulers
-below level 3. Profession-specific work outfits have no title floor.
+below level 3. Those standards keep their effects and upkeep at landed rank, and any
+title-floor upkeep that remains after reducible levels lapse is compulsory.
+Profession-specific work outfits have no title floor and remain active for eligible workers.
 
 The gold topbar renders an actual negative balance in the warning tone. Its resource
 breakdown explains that future income first clears this cash shortfall and that it is

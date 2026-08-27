@@ -118,7 +118,7 @@ Time passes **day by day** (90-day seasons, 360-day years).
    its existing control, or select the ledger title to collapse it.
 2. Act on **deeds** when the moment is right — one-shot acts like poaching, scheming, proposing
    marriage, or petitioning your lord. Each spends the day; many need time before repeating.
-   Commoners can open **🏠 Better the household…** without spending a day. Five living
+   Households can open **🏠 Better the household…** without spending a day. Five living
    standards and profession-specific work outfits rise through purchased levels with
    seasonal upkeep; the sheet previews the next season before every upgrade. Better food
    and quarters protect the household, wares aid education, luxuries bring prestige,

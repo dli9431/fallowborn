@@ -438,7 +438,7 @@ FBDATA.enterprises = {
   }
 };
 
-/* Optional maintained living standards for commoner households. Costs on a
+/* Maintained living standards for households at every rank. Costs on a
    level are paid when advancing from the previous level; upkeep is the full
    seasonal cost of the current level, not a sum of earlier levels. */
 FBDATA.householdStandards = {
