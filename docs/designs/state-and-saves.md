@@ -473,6 +473,18 @@ while a current reign remains derivable from the live realm. Restore repairs the
 head and retained protagonist legends without consuming RNG. A legacy life with no
 surviving title evidence remains unstamped rather than receiving invented history.
 
+Personal commoner station is also additive character state. New starts stamp every
+generated relative, births derive station from their recorded parents, and the optional
+`character.unfree:true` marker distinguishes personal bondage from a free Lowborn
+station-0 character. Freedom resolutions clear it for the exact covered character ids.
+New `player.familyFreedom` entries
+retain a bounded `memberIds` snapshot; restore derives the old spouse-and-descendant
+scope only for legacy entries that predate it, never parents or collateral siblings.
+Restore also derives a missing current protagonist station from the saved player tier,
+without assigning that tier to any other relative.
+An optional `character.manumission` receipt records the turn, year, sponsor, lord, and
+price of a later exact-relative redemption. Missing fields require no save-format bump.
+
 Item/equipment state is additive and keeps save format 3. Repeatable objects live in
 `state.itemInstances[ref] = {defId,quality,visualSeed,motif?}`; `player.items` is the
 shared armory's exact-reference list and `player.loadouts[characterId]` maps the eight

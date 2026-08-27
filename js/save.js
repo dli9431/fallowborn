@@ -883,6 +883,16 @@ window.FB = window.FB || {};
       FB.ensureReligiousHeads(FB.state);
     });
     restoreRepair('legacy parents', function () { backfillParents(FB.state); });
+    restoreRepair('player personal station', function () {
+      const player = FB.state.player;
+      const current = player && FB.state.chars &&
+        FB.state.chars[player.charId];
+      if (current && (current.station === undefined || current.station === null)) {
+        current.station = FB.clamp(player.tier, 0, 4);
+      }
+      if (current && player.tier === 0) current.unfree = true;
+      else if (current) delete current.unfree;
+    });
     if (FB.ensureCharacterBynames) restoreRepair('character bynames', function () {
       FB.ensureCharacterBynames(FB.state);
     });

@@ -115,8 +115,14 @@ Purchase prices cover the living family that receives the rank change, rather th
 charging the same amount to a lone serf and a large family. The household head costs
 100% of `freedomCost`, each living spouse adds 50%, and every living descendant adds
 25%, including married descendants living elsewhere. Each share rounds up separately.
-A negotiated offer snapshots this family quote before applying its Standing discount,
-while direct purchase uses the current living family.
+Parents and collateral siblings are not included automatically. The purchase and
+petition sheets may add named living serf parents or siblings at
+`freedomRelativeFactor` each (50% by default); a negotiated offer snapshots the exact
+selected character ids and family quote before applying its Standing discount, while
+direct purchase uses the selected living family at confirmation. The same exact people
+receive personal Freeholder station when the shared resolver closes the household tenure.
+An omitted relative can later receive a separately priced personal manumission from their
+character sheet.
 
 This is a broad playable abstraction, not a claim of one European tariff. Girona's
 recorded custom usually valued redemption against the person's goods, and its account
@@ -133,6 +139,8 @@ impact entry.
 The Phase 2 freedom capabilities deliberately have technology impact **none**:
 `serf_freedom_petition` is a baseline appeal to an existing lord, and
 `family_freedom_record` is household memory rather than a researched capability.
+The later `individual_family_manumission` capability is likewise **none** because it is
+a baseline personal/legal recovery action rather than sovereign research.
 
 `lords_notice` now creates or reuses one favorable saved offer instead of promising an
 independent random promotion. `manumission` has `trigger.never:true` and is only queued
@@ -615,10 +623,10 @@ readiness trigger and formalizes that exact person in both visible and autoresol
 it does not add a second lump of Standing. Other events remain gated by `hasRole:'friend'`
 when they require a canonical friendship.
 
-**Lower-station stories have two paces.** The Old Custom landmark chain starts randomly
-for an adult at tier 0–2, then advances through high-weight stage flags so its five
-chapters unfold across later event slots. Its hearing uses four stat-specific formulas,
-with accumulated evidence and the player's situation modifying the case. The Mill's Due,
+**Lower-station stories have two paces.** The Old Custom landmark chain has a 4% opener
+roll per eligible random-event slot for an adult serf, then advances through high-weight
+stage flags so its five chapters unfold across later event slots. Its hearing uses four
+stat-specific formulas, with accumulated evidence and the player's situation modifying the case. The Mill's Due,
 Master's Empty Bench, and Words Before Dawn are two-part stories whose second decision is
 queued immediately; they are once per life. Short lower-station incidents remain ordinary
 cooldown events. Chain flags are life-local and disappear at succession with the rest of

@@ -807,7 +807,7 @@ FBDATA.events.push(
 
 /* ================= THE OLD CUSTOM — five-part landmark chain ================= */
 { id:'old_custom_stakes', title:'Stakes in the Common',
-  trigger:{ tierMax:0, minAge:16, chance:0.2 }, weight:15, once:true,
+  trigger:{ tierMax:0, minAge:16, chance:0.04 }, weight:15, once:true,
   participants:[
     {slot:'lord', source:'role', role:'lord', required:true, create:true, authorityRole:'lord', sameHome:true},
     {slot:'officer', source:'role', role:'steward', required:true, create:true, authorityRole:'steward', sameHome:true},

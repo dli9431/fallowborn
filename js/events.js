@@ -4672,7 +4672,35 @@ window.FB = window.FB || {};
     /* Preserve the outgoing dignity before a demotion can make it
        unrecoverable from current state. Reasserting the same tier also repairs
        additive status history in an older save. */
-    if (FB.notePlayerStatus) FB.notePlayerStatus(state);
+    if (!opts.skipOutgoingStatus && FB.notePlayerStatus) {
+      FB.notePlayerStatus(state);
+    }
+    const current = state.chars && state.chars[p.charId];
+    if (current) {
+      current.station = FB.clamp(tier, 0, 4);
+      if (tier === 0) current.unfree = true;
+      else delete current.unfree;
+    }
+    if (tier === 0 && current) {
+      const seen = {};
+      const queue = [current];
+      for (let i = 0; i < queue.length; i++) {
+        const member = queue[i];
+        if (!member || seen[member.id]) continue;
+        seen[member.id] = 1;
+        member.station = 0;
+        member.unfree = true;
+        const spouses = FB.spousesSnapshot
+          ? FB.spousesSnapshot(state, member) : [];
+        for (let j = 0; j < spouses.length; j++) {
+          if (!seen[spouses[j].id]) queue.push(spouses[j]);
+        }
+        const children = FB.childrenOf ? FB.childrenOf(state, member) : [];
+        for (let j = 0; j < children.length; j++) {
+          if (!seen[children[j].id]) queue.push(children[j]);
+        }
+      }
+    }
     if (tier === oldTier) return false;
     const oldRole = FB.societalRole(oldTier);
     const newRole = FB.societalRole(tier);
@@ -6986,6 +7014,17 @@ window.FB = window.FB || {};
     if (lawful && typeof value.termId === 'string' && value.termId) {
       out.termId = value.termId;
     }
+    if (Array.isArray(value.memberIds) && value.memberIds.length <= 128) {
+      const seen = {}, members = [];
+      for (let i = 0; i < value.memberIds.length; i++) {
+        const id = value.memberIds[i];
+        if (typeof id !== 'string' || !id || seen[id]) return null;
+        seen[id] = 1;
+        members.push(id);
+      }
+      if (!seen[value.protagonistId]) return null;
+      out.memberIds = members;
+    }
     return out;
   }
 
@@ -7006,6 +7045,30 @@ window.FB = window.FB || {};
     if (!first.lawful) {
       const lawful = freedomRecordEntry(raw.firstLawful);
       if (lawful && lawful.lawful) normalized.firstLawful = lawful;
+    }
+    const entries = [normalized.first, normalized.firstLawful];
+    let repairedLegacyMembership = false;
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (!entry) continue;
+      if (!entry.memberIds) {
+        repairedLegacyMembership = true;
+        entry.memberIds = frozenFreedomMembers(
+          state, entry.protagonistId, null);
+      }
+      for (let j = 0; j < entry.memberIds.length; j++) {
+        const member = state.chars && state.chars[entry.memberIds[j]];
+        if (member && FB.stationOf(member) < 1) member.station = 1;
+        if (member) delete member.unfree;
+      }
+    }
+    if (repairedLegacyMembership && state.chars) {
+      for (const id in state.chars) {
+        const relative = state.chars[id];
+        if (!relative || relative.dead || FB.stationOf(relative) !== 0) continue;
+        if (relative.role === 'parent' || relative.role === 'grandparent' ||
+            relative.role === 'sibling') relative.unfree = true;
+      }
     }
     state.player.familyFreedom = normalized;
     return normalized;
@@ -7096,6 +7159,31 @@ window.FB = window.FB || {};
     };
   }
 
+  function frozenFreedomMembers(state, protagonistId, savedIds) {
+    if (Array.isArray(savedIds) && savedIds.length) return savedIds.slice();
+    const protagonist = state.chars && state.chars[protagonistId];
+    if (!protagonist) return [];
+    const out = [], seen = {}, queue = [protagonist];
+    function add(c) {
+      if (!c || seen[c.id]) return;
+      seen[c.id] = 1;
+      out.push(c.id);
+    }
+    add(protagonist);
+    const spouses = FB.spousesSnapshot
+      ? FB.spousesSnapshot(state, protagonist) : [];
+    for (let i = 0; i < spouses.length; i++) add(spouses[i]);
+    for (let i = 0; i < queue.length; i++) {
+      const children = FB.childrenOf ? FB.childrenOf(state, queue[i]) : [];
+      for (let j = 0; j < children.length; j++) {
+        if (!children[j] || seen[children[j].id]) continue;
+        queue.push(children[j]);
+        add(children[j]);
+      }
+    }
+    return out;
+  }
+
   FB.serfFreedomStatus = function (state, spec, ctx) {
     spec = spec || {};
     ctx = ctx || {};
@@ -7121,6 +7209,7 @@ window.FB = window.FB || {};
     let termId = null;
     let offer = null;
     let recordProtagonistId = protagonist.id;
+    let memberIds = null;
 
     if (route === 'purchase') {
       if (p.travel || FB.ageOf(protagonist, state.date.year) < 16) {
@@ -7133,10 +7222,14 @@ window.FB = window.FB || {};
       if (FB.standingOf(state, { kind:'character', id:lord.id }) < -20) {
         out.reason = 'hostile_lord'; return out;
       }
-      price = FB.freedomPurchasePrice ? FB.freedomPurchasePrice(state) : 0;
+      price = FB.freedomPurchaseQuote
+        ? FB.freedomPurchaseQuote(state, spec.additionalIds).price : 0;
       if (!price || p.gold < price) {
         out.reason = 'unaffordable'; return out;
       }
+      memberIds = FB.freedomCoveredCharacterIds
+        ? FB.freedomCoveredCharacterIds(state, spec.additionalIds)
+        : [protagonist.id];
     } else if (route === 'manumission') {
       offer = p.freedomOffer;
       if (!offer || spec.offerCreatedTurn !== offer.createdTurn) {
@@ -7176,6 +7269,8 @@ window.FB = window.FB || {};
       if (offer.status === 'service') {
         recordProtagonistId = offer.protagonistId;
       }
+      memberIds = frozenFreedomMembers(state, recordProtagonistId,
+        offer.memberIds);
     } else if (route === 'old_custom') {
       if (!ctx.event || ctx.event.id !== 'old_custom_end' ||
           !p.flags.old_custom_resolve || !p.flags.old_custom_won) {
@@ -7187,6 +7282,10 @@ window.FB = window.FB || {};
         out.reason = 'flight_context'; return out;
       }
       lord = null;
+    }
+    if (!memberIds) {
+      memberIds = FB.freedomCoveredCharacterIds
+        ? FB.freedomCoveredCharacterIds(state, []) : [protagonist.id];
     }
 
     out.ready = true;
@@ -7205,6 +7304,7 @@ window.FB = window.FB || {};
     out.serviceDays = serviceDays;
     out.termId = termId;
     out.offer = offer;
+    out.memberIds = memberIds;
     return out;
   };
 
@@ -7226,6 +7326,7 @@ window.FB = window.FB || {};
       serviceDays:frozen.lawful ? frozen.serviceDays : 0
     };
     if (frozen.termId) entry.termId = frozen.termId;
+    if (frozen.memberIds.length) entry.memberIds = frozen.memberIds.slice();
     if (!history.first) history.first = entry;
     else if (!history.first.lawful && frozen.lawful &&
         !history.firstLawful) history.firstLawful = entry;
@@ -7299,8 +7400,10 @@ window.FB = window.FB || {};
       tenureFormedTurn:status.tenureFormedTurn,
       turn:status.turn, year:status.year,
       chargedPrice:status.price, totalPrice:totalPrice,
-      serviceDays:status.serviceDays, termId:status.termId
+      serviceDays:status.serviceDays, termId:status.termId,
+      memberIds:status.memberIds.slice()
     };
+    if (Object.freeze) Object.freeze(frozen.memberIds);
     if (Object.freeze) Object.freeze(frozen);
 
     if (status.price) state.player.gold -= status.price;
@@ -7313,10 +7416,26 @@ window.FB = window.FB || {};
       activeOffer.status = 'superseded';
       activeOffer.supersededTurn = status.turn;
     }
+    /* Freeze inferred bondage from a legacy tier-0 life before promotion
+       removes the household context used to recognize it. The covered
+       charter members are cleared immediately below. */
+    if (FB.isUnfreeCharacter && state.chars) {
+      for (const id in state.chars) {
+        const relative = state.chars[id];
+        if (FB.isUnfreeCharacter(state, relative)) relative.unfree = true;
+      }
+    }
     FB.setPlayerTier(state, 1, {
       tenureEndReason:status.tenureEndReason,
       freedomResolution:true
     });
+    for (let i = 0; i < frozen.memberIds.length; i++) {
+      const member = state.chars[frozen.memberIds[i]];
+      if (member && !member.dead && FB.stationOf(member) < 1) {
+        member.station = 1;
+      }
+      if (member) delete member.unfree;
+    }
     if (status.route === 'purchase' || status.route === 'manumission') {
       state.player.prestige += 15;
       state.player.piety += 5;

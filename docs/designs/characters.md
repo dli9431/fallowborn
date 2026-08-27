@@ -715,8 +715,8 @@ branch.
 resident relatives the player may put to work: a living sibling of the protagonist by
 recorded parentage (with the same role-plus-dynasty fallback `siblingsOf` uses for
 first-generation kin of old saves) who shares the protagonist's dynasty, is not a
-reigning realm ruler, is not landed — no station of their own (`FB.stationOf` ≥ 1
-covers an explicit station and the lord/notable roles) and no `royalLine` identity —
+reigning realm ruler, is not established above freeholder (`FB.stationOf` ≥ 2), a
+lord/notable, or a holder of a `royalLine` identity —
 is not vowed to the faith (the vow *is* a monk or priest career record), has no living
 spouse (checked in both link directions, exactly as `FB.isHouseholdCharacter`), and is
 resident, meaning `FB.characterResidence` places them at the household home.
@@ -742,7 +742,10 @@ the existing remote-ownership idle behavior.
 **The family tree is a bounded navigator, not an unbounded genealogy dump.** New
 campaigns record `player.houseFounderId` as the first playable head; old saves derive a
 jump target from the earliest protagonist legend or current head without a format
-migration. The modal still renders at most four descendant steps from its nearby root,
+migration. During the founder's own life, the primary tree begins from up to two recorded
+ancestor steps so a generated starting family includes the founder's parents and siblings
+instead of beginning at the downward-only founder node. The modal still renders at most
+four descendant steps from its nearby root,
 plus bounded maternal and stepfamily branches. Search indexes that rendered scope,
 branch controls hide or reveal biological descendant subtrees without rewriting
 parentage, and jump controls target the protagonist, first eligible successor, spouse,
@@ -751,10 +754,9 @@ standalone founder card keeps the jump reachable.
 
 The compact tree cards keep names and relationships scannable; their portrait tooltip
 adds a separate current **Status** line. The current protagonist and reigning foreign
-rulers use their exact faith- and sex-aware rank word, commoner members of the current
-house share its Serf/Freeholder/Gentry station where no personal station was recorded,
-and other relatives retain the existing Lowborn/Noble/Royalty vocabulary rather than
-being falsely styled as a ruler. Characters who actually held tier 3 or above also keep
+rulers use their exact faith- and sex-aware rank word. Other characters use their own
+recorded station; an unstamped relative falls back to Lowborn instead of borrowing the
+current household head's rank. Characters who actually held tier 3 or above also keep
 a locale-neutral `highestTitleData` snapshot, rendered as **Highest title achieved** with
 its place (for example, Baron of York or King of England). `statusTier` records the last
 exact playable or reigning status; demotion, death, retirement, and succession never
@@ -767,10 +769,23 @@ not a new gameplay capability, so it has no technology impact entry.
 A freedom offer belongs to the protagonist who received it, so ordinary death or
 retirement invalidates an unaccepted offer and any queued presentation. Once a final-
 service term is accepted, its paid price and exact end turn belong to the household's
-active tenure and survive succession; a new head completes the same remaining service
-without another charge. The bounded `player.familyFreedom` landmark also survives every
+active tenure and survive succession when the new head is one of the charter's named
+people; that covered heir completes the same remaining service without another charge.
+An unlisted collateral successor cannot receive the promised freedom. The bounded
+`player.familyFreedom` landmark also survives every
 handover, preserving the original negotiating protagonist rather than rewriting history
 around the heir.
+
+**Commoner succession follows the heir's personal station.** A lawful freedom
+resolution stamps the exact living people covered by its charter: the protagonist,
+living spouses, living descendants, and any parents or siblings explicitly added to the
+purchase or negotiated terms. Personal `character.unfree` state distinguishes those
+bound people from unrelated free Lowborn characters at the same station, so character
+sheets and family-tree status label them Serf. Parents and collateral siblings otherwise remain serfs.
+Future children inherit the recorded station of their parents. If a tier-1 head is
+followed by an unmanumitted collateral heir, household property still passes but the new
+head returns to tier 0 and forms a new active serf tenure. A separately manumitted sibling
+therefore remains a valid resident worker and succeeds as a freeholder.
 
 Active tenure duties, rights, revision, and bounded authority-review history also belong
 to the continuing household. A pending or queued tenure review is personal to the outgoing
@@ -885,7 +900,10 @@ It derives identity context, residence, occupation, faith, station, typed
 Standing, current personal attention, courtship, friendship, rivalry,
 betrothal, travel, and household-service commitments. Its actions route to the
 existing gift, targeted visit, courtship/proposal, friendship, rivalry,
-retainer, equipment, education, work, and arranged-match mechanics. The card
+retainer, equipment, education, work, arranged-match, and exact-relative
+manumission mechanics. A free household head may redeem a living serf parent,
+sibling, spouse, or descendant from that person's sheet; the quoted action changes only
+that character's station and spends one day. The card
 does not store a relationship model and does not replace biography, the
 Household Plan, or the long Network roster.
 
@@ -895,6 +913,10 @@ same mechanics before mutation. A reigning ruler represented by a full
 character shares the realm target's typed Standing but has no personal gift
 action; **Realm and court** opens the political sheet that owns ruler gifts
 and ruler-generation commitments.
+
+Individual family manumission has technology impact **none**: redeeming a named bound
+relative is baseline personal and legal recovery, not a capability credibly controlled
+by sovereign research.
 
 **Hostile conduct belongs to exact characters, including AI rulers and accomplices.**
 The optional bounded `character.conduct` record holds successful-scheme progress and

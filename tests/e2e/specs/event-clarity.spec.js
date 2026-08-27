@@ -134,7 +134,7 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
         if (intent.kind === 'toast') emittedToasts++;
       });
       FB.fns.e2e_receipt_custom = function (state) {
-        state.player.gold = Math.max(0, state.player.gold - 2);
+        state.player.gold -= 2;
         FB.news(state, 'Intermediate custom news');
         FB.ui.toast('Intermediate direct toast');
       };
@@ -220,7 +220,7 @@ test('previews are pure, hide rewards, and the shared resolver preserves mechani
     expect(result.result).toBe(result.oldSucceeded ? 'success' : 'failure');
     expect(result.mechanicsEqual).toBe(true);
     expect(result.actualGold).toMatchObject({
-      type:'gold', before:3, after:0, amount:-3
+      type:'gold', before:3, after:-2, amount:-5
     });
     expect(result.decisionImpacts).toBe(0);
     expect(result.receiptText.join(' ')).toContain('Money');

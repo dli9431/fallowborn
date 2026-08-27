@@ -10,8 +10,13 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.163.3';
+  FB.VERSION = '1.164.0';
   FB.CHANGELOG = [
+    { v: '1.164.0', date: '2026-08-27', changes: [
+      'The game now starts normally, compact Deeds and scheduled-duty details open at their intended size, and a new founder\u2019s family tree includes their generated kin.',
+      'The Old Custom now begins one-fifth as often for a serf, while an active case keeps its existing pace.',
+      'Freedom now belongs to the relatives named in its charter. Parents and siblings may be added to the original terms or manumitted later from their character sheets, while an unfreed collateral heir returns the household to serfdom.'
+    ] },
     { v: '1.163.3', date: '2026-08-26', changes: [
       'The title-screen heraldry now redraws whenever the menu returns and recovers safely if its canvas context is discarded.'
     ] },
@@ -2530,7 +2535,8 @@ window.FB = window.FB || {};
     const me = FB.makeCharacter(state, {
       name: name, sex: sex, culture: cultureId, religion: religionId,
       born: start.year - (preset.age || FBDATA.balance.startAge),
-      quality: sc.tier >= 2 ? 2 : 0, traitsN: 2
+      quality: sc.tier >= 2 ? 2 : 0, traitsN: 2,
+      station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
     });
     me.health = 8;
     me.dyn = FB.dynastyName(cultureId, me.name, pr.name, me.sex);
@@ -2554,11 +2560,13 @@ window.FB = window.FB || {};
     // parents — the first rung of the kin tree
     const dad = FB.makeCharacter(state, {
       sex: 'm', culture: cultureId, religion: religionId,
-      born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn
+      born: me.born - FB.ri(20, 40), role: 'parent', quality: 1, dyn: me.dyn,
+      station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
     });
     const mom = FB.makeCharacter(state, {
       sex: 'f', culture: cultureId, religion: religionId,
-      born: me.born - FB.ri(20, 34), role: 'parent'
+      born: me.born - FB.ri(20, 34), role: 'parent',
+      station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
     });
     dad.health = 8; mom.health = 8;
     dad.spouseId = mom.id; mom.spouseId = dad.id;
@@ -2571,11 +2579,13 @@ window.FB = window.FB || {};
       const granddad = FB.makeCharacter(state, {
         sex:'m', culture:cultureId, religion:religionId,
         born:dad.born - FB.ri(20, 40), role:'grandparent',
-        quality:1, dyn:me.dyn, byname:''
+        quality:1, dyn:me.dyn, byname:'', station:FB.clamp(sc.tier, 0, 4),
+        unfree:sc.tier === 0
       });
       const grandmom = FB.makeCharacter(state, {
         sex:'f', culture:cultureId, religion:religionId,
-        born:dad.born - FB.ri(18, 34), role:'grandparent'
+        born:dad.born - FB.ri(18, 34), role:'grandparent',
+        station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
       });
       granddad.health = 8; grandmom.health = 8;
       granddad.spouseId = grandmom.id; grandmom.spouseId = granddad.id;
@@ -2592,7 +2602,8 @@ window.FB = window.FB || {};
         culture: cultureId, religion: religionId,
         born: me.born + (FB.ri(-6, 6) || 2), // never a same-year twin
         role: 'sibling', dyn: me.dyn,
-        fatherId:dad.id, motherId:mom.id
+        fatherId:dad.id, motherId:mom.id,
+        station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
       });
       sib.health = 8;
       sib.fatherId = dad.id; sib.motherId = mom.id;
@@ -2607,7 +2618,8 @@ window.FB = window.FB || {};
         sex: me.sex === 'm' ? 'f' : 'm',
         culture: cultureId, religion: religionId,
         born: me.born - FB.ri(preset.spouseAge[0], preset.spouseAge[1]),
-        role: 'spouse'
+        role: 'spouse', station:FB.clamp(sc.tier, 0, 4),
+        unfree:sc.tier === 0
       });
       spouse.health = 8;
       me.spouseId = spouse.id; spouse.spouseId = me.id;
@@ -2623,7 +2635,8 @@ window.FB = window.FB || {};
           born: start.year - FB.ri(minChildAge, oldestChild),
           dyn: me.dyn, // children of the playable line carry the house name
           fatherId: me.sex === 'm' ? me.id : spouse.id,
-          motherId: me.sex === 'm' ? spouse.id : me.id
+          motherId: me.sex === 'm' ? spouse.id : me.id,
+          station:FB.clamp(sc.tier, 0, 4), unfree:sc.tier === 0
         });
         child.health = 8;
         me.childrenIds.push(child.id); spouse.childrenIds.push(child.id);
@@ -4071,7 +4084,8 @@ window.FB = window.FB || {};
           sex: k.sex === 'm' ? 'f' : 'm',
           culture: k.culture, religion: k.religion,
           born: year - FB.clamp(age + FB.ri(-6, 4), 16, 45),
-          role: 'kinspouse'
+          role: 'kinspouse', station:FB.stationOf(k),
+          unfree:FB.isUnfreeCharacter(s, k)
         });
         sp.health = 8;
         /* A managed kinsman (descendant or resident unwed sibling)
@@ -4123,7 +4137,11 @@ window.FB = window.FB || {};
           culture: k.culture, religion: k.religion, born: year,
           traits: FB.inheritTraits(father, mother), traitsN: 0,
           fatherId: father.id, motherId: mother.id,
-          dyn: k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null
+          dyn: k.sex === 'm' ? (k.dyn || me.dyn) : sp.dyn || null,
+          station:Math.max(FB.stationOf(father), FB.stationOf(mother)),
+          unfree:FB.stationOf(father) === 0 && FB.stationOf(mother) === 0 &&
+            (FB.isUnfreeCharacter(s, father) ||
+              FB.isUnfreeCharacter(s, mother))
         });
         baby.health = 7;
         if (FB.applyCloseKinBirthRisk) {
@@ -4180,7 +4198,13 @@ window.FB = window.FB || {};
           born: s.date.year,
           traits: FB.inheritTraits(father, mother), traitsN: 0,
           fatherId: father ? father.id : null, motherId: mother.id,
-          dyn: lineParent.dyn
+          dyn: lineParent.dyn,
+          station:Math.max(father ? FB.stationOf(father) : 0,
+            FB.stationOf(mother)),
+          unfree:(!father || FB.stationOf(father) === 0) &&
+            FB.stationOf(mother) === 0 &&
+            ((father && FB.isUnfreeCharacter(s, father)) ||
+              FB.isUnfreeCharacter(s, mother))
         });
         baby.health = 7;
         if (FB.applyCloseKinBirthRisk) {
@@ -4562,6 +4586,10 @@ window.FB = window.FB || {};
     }
     if (FB.notePlayerStatus) FB.notePlayerStatus(s);
     const successorIsChild = (old.childrenIds || []).indexOf(heir.id) >= 0;
+    const outgoingTier = p.tier;
+    const successionTier = outgoingTier <= 1
+      ? (FB.isUnfreeCharacter(s, heir)
+        ? 0 : FB.clamp(FB.stationOf(heir), 0, 1)) : outgoingTier;
     const tutorialCarry = FB.tutorialActive(s) ? {} : null;
     if (tutorialCarry) {
       for (const key in p.flags) {
@@ -4624,6 +4652,14 @@ window.FB = window.FB || {};
     FB.careerOf(s, heir); // initialize from the heir's own life before changing the player pointer
     FB.removeTrait(heir, 'excommunicated'); // the sentence was personal to the dead ruler
     p.charId = heir.id;
+    if (successionTier !== p.tier) {
+      FB.setPlayerTier(s, successionTier, {
+        skipOutgoingStatus:true,
+        stationFarewell:false,
+        tenureFormationReason:'succession_personal_status',
+        tenureEndReason:'succession_personal_status'
+      });
+    }
     if (FB.freedomSuccession) FB.freedomSuccession(s);
     if (FB.serfParticipantSuccession) FB.serfParticipantSuccession(s);
     if (FB.resetStandingsForSuccession) {
@@ -4790,6 +4826,12 @@ window.FB = window.FB || {};
       FB.news(s, FB.msg('news.life.succession',
         '👤 {name} takes up the family’s story. Generation {generation}.',
         { name: FB.fullName(heir), generation: s.generation }));
+    }
+    if (outgoingTier === 1 && successionTier === 0) {
+      FB.news(s, FB.msg('news.life.unfree_successor',
+        '⛓ {name} was never included in the family’s manumission. Property passes on, but the new household head remains a serf.', {
+          name:FB.fullName(heir)
+        }));
     }
     if (!livingAbdication && FB.ui && FB.ui.maybeTip) {
       const minor = FB.ageOf(heir, s.date.year) < 16;

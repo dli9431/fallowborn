@@ -1262,7 +1262,7 @@ FBDATA.currency = {
 FBDATA.balance = {
   startYear: 867, startSeason: 0, startAge: 16,
   freedomCost: 100, freedomSpouseFactor: 0.50,
-  freedomDescendantFactor: 0.25,
+  freedomDescendantFactor: 0.25, freedomRelativeFactor: 0.50,
   landPlotCost: 120, landPlotYield: 0.6,
   serfAdvocacyStanding:40, serfAdvocacyBonus:10,
   serfNeighborConsequenceDays:90,

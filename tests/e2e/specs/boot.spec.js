@@ -44,6 +44,7 @@ test('boots the real game without browser, asset, or network errors',
         englishCatalogLoaded: !!(FBDATA.lang && FBDATA.lang.en),
         deferredModals: !!document.querySelector('script[data-deferred-ui="modals"]'),
         modalUiReady: typeof FB.ui.showMenu === 'function',
+        careerApiReady: typeof FB.setCareer === 'function',
         platform: FB.platform,
         platformOrder: scripts.indexOf('js/util.js') < scripts.indexOf('js/main.js'),
         musicOrder: scripts.indexOf('data/music_catalog.js') < scripts.indexOf('js/music.js') &&
@@ -74,6 +75,7 @@ test('boots the real game without browser, asset, or network errors',
     expect(contract.englishCatalogLoaded).toBe(false);
     expect(contract.deferredModals).toBe(true);
     expect(contract.modalUiReady).toBe(true);
+    expect(contract.careerApiReady).toBe(true);
     expect(contract.platform.name).toBe('local');
     expect(contract.platform.isPlay).toBe(false);
     expect(contract.platform.isItch).toBe(false);

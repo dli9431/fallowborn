@@ -1281,6 +1281,7 @@ window.FB = window.FB || {};
           details.appendChild(techButton);
         }
       }
+      if (SH.bindCardInfoToggles) SH.bindCardInfoToggles(body);
       return body;
     }
     function focusPreviewHtml(preview) {
@@ -3065,7 +3066,7 @@ window.FB = window.FB || {};
         '<div><div class="ccname">' + esc(FB.fullName(c)) + house + '</div>' +
         '<div class="ccmeta">' + (epithetText(s, c) ? esc(epithetText(s, c)) + ' · ' : '') +
         esc(FB.T(c.sex === 'f' ? 'Woman' : 'Man')) +
-        (c.station !== undefined && c.station !== null ? ' · ' + esc(FB.stationName(FB.stationOf(c))) : '') +
+        (c.station !== undefined && c.station !== null ? ' · ' + esc(FB.characterStationName(s, c)) : '') +
         ' · ' + esc(cultureName(s, c.culture)) + ' · ' + rel.icon + ' ' +
         esc(religionName(s, c.religion)) + '</div>' +
         homeLineHtml(s, c) +
@@ -3134,7 +3135,7 @@ window.FB = window.FB || {};
         sex: FB.T(c.sex === 'f' ? 'Woman' : 'Man'),
         age: FB.ageOf(c, s.date.year)
       })) +
-      (c.station !== undefined && c.station !== null ? ' · ' + esc(FB.stationName(FB.stationOf(c))) : '') +
+      (c.station !== undefined && c.station !== null ? ' · ' + esc(FB.characterStationName(s, c)) : '') +
       ' · ' + esc(cultureName(s, c.culture)) + ' · ' + rel.icon + ' ' +
       esc(religionName(s, c.religion)) + '</div>' +
       homeLineHtml(s, c) +
@@ -4664,7 +4665,7 @@ window.FB = window.FB || {};
     const snap = FB.characterRankTitleSnapshot
       ? FB.characterRankTitleSnapshot(s, c, tier, '') : null;
     return snap && FB.renderTitleSnapshot
-      ? FB.renderTitleSnapshot(snap) : FB.stationName(FB.stationOf(c));
+      ? FB.renderTitleSnapshot(snap) : FB.characterStationName(s, c);
   }
 
   /* The tree boxes stay navigationally small. The portrait tooltip supplies
@@ -4688,26 +4689,19 @@ window.FB = window.FB || {};
        standing is Noble/Royalty, while the next line preserves the crown. */
     const formerLivingRuler = !c.dead && !isPlayer && !realm &&
       c.highestTitleData && exactTier !== null && exactTier >= 3;
+    const livingPersonalStation = !c.dead && !isPlayer && !realm &&
+      c.station !== undefined && c.station !== null &&
+      (exactTier === null || exactTier < 3);
     if (formerLivingRuler) {
       status = FB.stationName(FB.clamp(exactTier, 0, 4));
+    } else if (livingPersonalStation) {
+      status = FB.characterStationName(s, c);
     } else if (exactTier !== null) {
       status = familyTreeRankLabel(s, c, exactTier);
     } else if (c.station !== undefined && c.station !== null) {
-      status = FB.stationName(FB.stationOf(c));
+      status = FB.characterStationName(s, c);
     } else {
-      const me = s.chars[s.player.charId];
-      const sharesHouse = !!(me && me.dyn && c.dyn === me.dyn);
-      const household = FB.isHouseholdCharacter &&
-        FB.isHouseholdCharacter(s, c.id);
-      const firstFamilyRole = c.role === 'parent' || c.role === 'grandparent' ||
-        c.role === 'sibling' || c.role === 'spouse';
-      if (sharesHouse || household || firstFamilyRole) {
-        status = s.player.tier <= 2
-          ? familyTreeRankLabel(s, c, s.player.tier)
-          : FB.stationName(FB.playerStation(s));
-      } else {
-        status = FB.stationName(FB.stationOf(c));
-      }
+      status = FB.characterStationName(s, c);
     }
 
     let highest = c.highestTitleData || familyTreeLegendTitle(s, c);
@@ -4993,7 +4987,12 @@ window.FB = window.FB || {};
       esc(FB.T('Spouse')) + '</button>' +
       '<button type="button" class="btn small" data-ft-jump="' + esc(founder.id) + '">' +
       esc(FB.T('House founder')) + '</button></div></div>';
-    const root = connectingRoot(founder, me);
+    /* During the founder's own life, rooting at the founder would make the
+       downward-only renderer omit their already-recorded parents and
+       siblings. Include the nearby starting ancestry; later generations
+       still use the founder/current-head connecting root. */
+    const root = founder.id === me.id
+      ? topOf(me, 2) : connectingRoot(founder, me);
     h += '<div class="ftwrap family-tree-canvas family-tree-primary"><div class="fttree">';
     if (root.id === me.id && !FB.parentsOf(s, me).length && FB.siblingsOf(s, me).length) {
       // safety net: save.js backfills parents on load; a tree can still lack

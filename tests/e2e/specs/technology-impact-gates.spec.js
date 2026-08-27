@@ -206,6 +206,7 @@ test('the prospective review ledger and every gate schema validate together',
       'guild_smith_path',
       'guild_weaver_path',
       'host_splitting_encirclement',
+      'individual_family_manumission',
       'item_shop',
       'landed_household_standards',
       'late_medieval_crafts_commerce',
@@ -242,6 +243,7 @@ test('the prospective review ledger and every gate schema validate together',
     const additiveNoneIds = [
       'enterprise_hired_labor',
       'family_freedom_record',
+      'individual_family_manumission',
       'landed_household_standards',
       'minor_household_standard_reduction',
       'negative_household_gold',
@@ -249,7 +251,7 @@ test('the prospective review ledger and every gate schema validate together',
       'serf_freedom_petition'
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none']);
+      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none']);
     const additiveHardIds = [
       'enterprise_upgrades',
       'ruler_household_establishments'

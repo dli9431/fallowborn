@@ -1114,7 +1114,8 @@ window.FB = window.FB || {};
   };
 
   /* ---------- character factory ----------
-     opts: {sex, culture, religion, born, dyn, role, quality (skill bonus), traitsN}
+     opts: {sex, culture, religion, born, dyn, role, station, unfree,
+       quality (skill bonus), traitsN}
      opts.id installs a caller-derived identity instead of drawing the next
      sequential uid. Court records use it so the same succession member always
      resolves to the same character id, whether it was created at world
@@ -1140,6 +1141,7 @@ window.FB = window.FB || {};
       spouseId: null, fatherId: opts.fatherId || null, motherId: opts.motherId || null,
       childrenIds: []
     };
+    if (opts.unfree === true) c.unfree = true;
     /* Explicit opinion remains an exact authored total. A newly encountered
        neutral character instead begins at the current directional faith
        baseline, and the marker lets later schisms rebase only that component. */
@@ -1445,6 +1447,27 @@ window.FB = window.FB || {};
     if (c.role === 'lord') return 3;
     if (c.role === 'notable' && c.dyn) return 3; // the lord’s house shares his name
     return 0;
+  };
+  FB.isUnfreeCharacter = function (state, c) {
+    if (!c || FB.stationOf(c) !== 0) return false;
+    if (c.unfree === true) return true;
+    if (!state || !state.player || !state.chars) return false;
+    if (c.id === state.player.charId) return state.player.tier === 0;
+    /* Legacy tier-0 saves predate personal bondage. Their generated and
+       household kin shared the active serf tenure even though the character
+       record had no marker. */
+    if (state.player.tier === 0) {
+      if (c.role === 'parent' || c.role === 'grandparent' ||
+          c.role === 'sibling' || c.role === 'spouse') return true;
+      if (FB.isHouseholdCharacter && FB.isHouseholdCharacter(state, c.id)) {
+        return true;
+      }
+    }
+    return false;
+  };
+  FB.characterStationName = function (state, c) {
+    return FB.isUnfreeCharacter(state, c)
+      ? FB.T('Serf') : FB.stationName(FB.stationOf(c));
   };
   /* Political household heads keep authority over their own establishments.
      A generated local lord is recognized through the active role seat or the
@@ -1895,9 +1918,8 @@ window.FB = window.FB || {};
      is a LIVING sibling of the protagonist who
        - shares the protagonist's dynasty (house membership, not mere kinship),
        - is NOT a reigning realm ruler,
-       - is NOT landed: no station of their own (FB.stationOf >= 1 covers an
-         explicit station and the lord/notable roles) and no royal-line
-         identity of their own,
+       - is NOT established above freeholder (FB.stationOf >= 2), a lord or
+         notable, and has no royal-line identity of their own,
        - is NOT vowed to the faith: no monastic or priestly career
          (the vow IS the monk/priest profession record),
        - has NO living spouse (checked in both link directions, as in
@@ -1926,7 +1948,8 @@ window.FB = window.FB || {};
     if (FB.isReigningRealmRuler && FB.isReigningRealmRuler(state, c)) {
       return 'reigning';
     }
-    if (FB.stationOf(c) >= 1 || c.royalLine) return 'landed';
+    if (FB.stationOf(c) >= 2 || c.role === 'lord' || c.role === 'notable' ||
+        c.royalLine) return 'landed';
     if (c.career && (c.career.profession === 'monk' ||
         c.career.profession === 'priest')) return 'vowed';
     if (FB.characterResidence(state, c) !== state.player.provinceId) {

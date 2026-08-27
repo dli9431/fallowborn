@@ -204,6 +204,7 @@ A JSON mod is one object with any of these keys:
     "freedomCost": 30,
     "freedomSpouseFactor": 0.5,
     "freedomDescendantFactor": 0.25,
+    "freedomRelativeFactor": 0.5,
     "coinageSymbol": "£"
   },
   "land": [ ... ], "seas": [ ... ], "rivers": [ ... ], "bounds": { ... }
@@ -223,7 +224,10 @@ also reject unknown fields and cross-references at application time.
 spouse adds `freedomSpouseFactor` times that share and every living descendant adds
 `freedomDescendantFactor` times it; every share rounds up separately. Negotiated
 freedom terms snapshot the resulting family total before applying their Standing
-factor. Married descendants remain included.
+factor. Married descendants remain included. Parents and collateral siblings are
+excluded unless selected by exact character id; each selected relative adds
+`freedomRelativeFactor` times the head share. The same factor prices a later individual
+manumission for a parent, sibling, or spouse; descendants use their descendant factor.
 
 `bookmarks` is an atomic replacement table. Each keyed value replaces that complete
 start world; bookmark definitions do not merge by province or realm. The older

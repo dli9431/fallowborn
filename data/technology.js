@@ -91,6 +91,10 @@ window.FBDATA = window.FBDATA || {};
         mode:'none',
         rationale:'Remembering how a household first became free is family history and presentation, not a technology-gated capability.'
       },
+      individual_family_manumission:{
+        mode:'none',
+        rationale:'Redeeming a named bound relative from an existing lord is a baseline personal and legal recovery action, not a capability unlocked by sovereign research.'
+      },
       negative_household_gold:{
         mode:'none',
         rationale:'Household cash shortfalls are a baseline consequence of losses, commitments, and incurred obligations, not an optional capability or a financial technique unlocked by sovereign research.'

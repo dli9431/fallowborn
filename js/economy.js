@@ -4537,7 +4537,7 @@ window.FB = window.FB || {};
       const currentIds = enterpriseAssignedIds(enterprise);
       const proposedIds = proposedByUid[enterprise.uid] || [];
       const required = FB.enterpriseStaffRequired(enterprise);
-      const protected = currentIds.filter(function (id) {
+      const protectedIds = currentIds.filter(function (id) {
         return !!protectedWorkers[id];
       });
       const currentYield = staffingYield(state, enterprise, currentIds);
@@ -4573,7 +4573,7 @@ window.FB = window.FB || {};
       } else if (enterprise.workerLocked) {
         status = 'locked';
         lockedCount++;
-      } else if (protected.length) {
+      } else if (protectedIds.length) {
         status = 'reserved';
         lockedCount++;
       }
@@ -4596,7 +4596,7 @@ window.FB = window.FB || {};
         currentYield:currentYield / 1000,
         proposedYield:proposedYield / 1000,
         workerLocked:!!enterprise.workerLocked,
-        workerProtected:protected.length > 0,
+        workerProtected:protectedIds.length > 0,
         status:status,
         unresolvedReason:unresolvedReason
       });

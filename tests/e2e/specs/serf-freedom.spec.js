@@ -267,7 +267,7 @@ test('freedom prices the living family and freezes that family in negotiated ter
       const blocked = buyFreedom.can(s);
       p.gold = current.price;
       const goldBefore = p.gold;
-      const resolved = buyFreedom.run(s);
+      const resolved = FB.resolveSerfFreedom(s, { route:'purchase' }, {});
       return {
         rounded:rounded,
         initial:initial,
@@ -323,6 +323,173 @@ test('freedom prices the living family and freezes that family in negotiated ter
     expect(result.resolved).toBe(true);
     expect(result.charged).toBe(250);
     expect(result.recordedPrice).toBe(250);
+  });
+
+test('freedom is personal and an unmanumitted collateral heir returns to serfdom',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const p = s.player;
+      const me = s.chars[p.charId];
+      const parents = FB.parentsOf(s, me);
+      const siblings = FB.siblingsOf(s, me);
+      const selectedSibling = siblings[0];
+      let unselectedSibling = siblings[1];
+      if (!unselectedSibling) {
+        unselectedSibling = FB.makeCharacter(s, {
+          name:'Unselected Sibling', sex:selectedSibling.sex === 'm' ? 'f' : 'm',
+          culture:me.culture, religion:me.religion,
+          born:s.date.year - 22, station:0, unfree:true, traitsN:0, dyn:me.dyn,
+          fatherId:me.fatherId, motherId:me.motherId
+        });
+        parents.forEach(function (parent) {
+          parent.childrenIds.push(unselectedSibling.id);
+        });
+        FB.touchFamily();
+      }
+      const lord = FB.getRole(s, 'lord', true);
+      const target = { kind:'character', id:lord.id };
+      FB.adjustStanding(s, target, 0 - FB.standingOf(s, target),
+        'test:personal_freedom');
+      p.gold = 1000;
+      const selectedQuote = FB.freedomPurchaseQuote(s, [selectedSibling.id]);
+      const freedom = FB.resolveSerfFreedom(s, {
+        route:'purchase', additionalIds:[selectedSibling.id]
+      }, {});
+      const afterFreedom = {
+        head:FB.stationOf(me),
+        parent:FB.stationOf(parents[0]),
+        selected:FB.stationOf(selectedSibling),
+        unselected:FB.stationOf(unselectedSibling),
+        parentUnfree:FB.isUnfreeCharacter(s, parents[0]),
+        selectedUnfree:FB.isUnfreeCharacter(s, selectedSibling),
+        unselectedUnfree:FB.isUnfreeCharacter(s, unselectedSibling),
+        parentTree:FB.ui.familyTreeStatusHtml(s, parents[0]),
+        selectedTree:FB.ui.familyTreeStatusHtml(s, selectedSibling),
+        coversHead:freedom.memberIds.indexOf(me.id) >= 0,
+        coversSelected:freedom.memberIds.indexOf(selectedSibling.id) >= 0,
+        coversParent:freedom.memberIds.indexOf(parents[0].id) >= 0,
+        coversUnselected:freedom.memberIds.indexOf(unselectedSibling.id) >= 0,
+        relativeCount:selectedQuote.relativeCount,
+        relativeCost:selectedQuote.relativeUnitCost
+      };
+      const separate = FB.resolveFamilyManumission(s, parents[0].id);
+      p.flags.own_ox = 1;
+      FB.game.succeedTo(unselectedSibling.id);
+      return {
+        afterFreedom:afterFreedom,
+        separatelyFreed:!!separate,
+        parentAfter:FB.stationOf(parents[0]),
+        parentUnfreeAfter:FB.isUnfreeCharacter(s, parents[0]),
+        successorTier:p.tier,
+        successorStation:FB.stationOf(unselectedSibling),
+        tenureStatus:p.tenure && p.tenure.status,
+        inheritedOx:!!p.flags.own_ox,
+        lastKeys:s.log.slice(-3).map(function (entry) {
+          return entry.msg && entry.msg.key;
+        })
+      };
+    });
+
+    expect(result.afterFreedom.head).toBe(1);
+    expect(result.afterFreedom.parent).toBe(0);
+    expect(result.afterFreedom.selected).toBe(1);
+    expect(result.afterFreedom.unselected).toBe(0);
+    expect(result.afterFreedom.parentTree).toContain('Serf');
+    expect(result.afterFreedom.parentTree).not.toContain('Freeholder');
+    expect(result.afterFreedom.selectedTree).toContain('Freeholder');
+    expect(result.afterFreedom.parentUnfree).toBe(true);
+    expect(result.afterFreedom.selectedUnfree).toBe(false);
+    expect(result.afterFreedom.unselectedUnfree).toBe(true);
+    expect(result.afterFreedom.relativeCount).toBe(1);
+    expect(result.afterFreedom.relativeCost).toBe(50);
+    expect(result.afterFreedom.coversHead).toBe(true);
+    expect(result.afterFreedom.coversSelected).toBe(true);
+    expect(result.afterFreedom.coversParent).toBe(false);
+    expect(result.afterFreedom.coversUnselected).toBe(false);
+    expect(result.separatelyFreed).toBe(true);
+    expect(result.parentAfter).toBe(1);
+    expect(result.parentUnfreeAfter).toBe(false);
+    expect(result.successorTier).toBe(0);
+    expect(result.successorStation).toBe(0);
+    expect(result.tenureStatus).toBe('active');
+    expect(result.inheritedOx).toBe(true);
+    expect(result.lastKeys).toContain('news.life.unfree_successor');
+  });
+
+test('legacy restore derives only the current protagonist personal station',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const parent = FB.parentsOf(s, me)[0];
+      const sibling = FB.siblingsOf(s, me)[0];
+      FB.setPlayerTier(s, 1, { freedomResolution:true });
+      const payload = JSON.parse(FB.save.serialize());
+      delete payload.state.chars[me.id].station;
+      delete payload.state.chars[me.id].unfree;
+      delete payload.state.chars[parent.id].unfree;
+      delete payload.state.chars[sibling.id].unfree;
+      delete payload.state.player.familyFreedom;
+      FB.save.restore(payload);
+      return {
+        current:FB.stationOf(FB.state.chars[me.id]),
+        parent:FB.stationOf(FB.state.chars[parent.id]),
+        sibling:FB.stationOf(FB.state.chars[sibling.id])
+      };
+    });
+
+    expect(result).toEqual({ current:1, parent:0, sibling:0 });
+  });
+
+test('purchase selection and a character sheet can manumit exact relatives',
+  async function ({ page }) {
+    const ids = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const parent = FB.parentsOf(s, me)[0];
+      const sibling = FB.siblingsOf(s, me)[0];
+      s.player.gold = 1000;
+      FB.ui.showFreedomPurchase();
+      return { parent:parent.id, sibling:sibling.id };
+    });
+
+    await expect(page.getByRole('heading', { name:'Buy freedom' })).toBeVisible();
+    await page.locator('[data-freedom-relative="' + ids.parent + '"]').check();
+    await expect(page.locator('[data-freedom-family-price]'))
+      .toContainText('Selected parent or sibling shares 1 x');
+    await page.locator('#freedom-purchase-confirm').click();
+    await waitForUiRefresh(page);
+
+    const afterPurchase = await page.evaluate(function (ids) {
+      return {
+        tier:FB.state.player.tier,
+        parent:FB.stationOf(FB.state.chars[ids.parent]),
+        sibling:FB.stationOf(FB.state.chars[ids.sibling])
+      };
+    }, ids);
+    expect(afterPurchase).toEqual({ tier:1, parent:1, sibling:0 });
+
+    await page.evaluate(function (siblingId) {
+      FB.ui.showCharModal(siblingId);
+    }, ids.sibling);
+    await expect(page.locator('#gm-body')).toContainText('Serf');
+    const manumit = page.locator(
+      '[data-interaction-action="management.family.manumission"]');
+    await expect(manumit).toBeVisible();
+    await manumit.click();
+    await expect(page.getByRole('heading', { name:'Family Manumission' }))
+      .toBeVisible();
+    await page.locator('#family-manumission-confirm').click();
+    await waitForUiRefresh(page);
+
+    const inherited = await page.evaluate(function (siblingId) {
+      const s = FB.state;
+      const before = FB.stationOf(s.chars[siblingId]);
+      FB.game.succeedTo(siblingId, { livingAbdication:true });
+      return { before:before, tier:s.player.tier };
+    }, ids.sibling);
+    expect(inherited).toEqual({ before:1, tier:1 });
   });
 
 test('purchase uses the shared resolver once while a generic rank change creates no history',

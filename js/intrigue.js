@@ -597,7 +597,7 @@ window.FB = window.FB || {};
         context:context,
         label:FB.fullName(c),
         desc:FB.T('{station} · {residence}', {
-          station:FB.stationName(FB.stationOf(c)),
+          station:FB.characterStationName(state, c),
           residence:pr ? pr.name : FB.T('unknown residence')
         }),
         icon:'🕸', group:ruling ? 'rulers' :

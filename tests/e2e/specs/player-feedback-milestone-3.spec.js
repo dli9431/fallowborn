@@ -24,6 +24,42 @@ test.beforeEach(async function ({ page }, testInfo) {
   await startDeterministicGame(page);
 });
 
+test('a new founder tree includes generated parents and siblings as serfs',
+  async function ({ page }) {
+    const family = await page.evaluate(function () {
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const parents = FB.parentsOf(s, me).map(function (c) { return c.id; });
+      const siblings = FB.siblingsOf(s, me).map(function (c) { return c.id; });
+      const outsider = FB.makeCharacter(s, {
+        name:'Free Lowborn', sex:'m', born:s.date.year - 30,
+        culture:me.culture, religion:me.religion, station:0, traitsN:0
+      });
+      const statuses = parents.concat(siblings).map(function (id) {
+        return FB.characterStationName(s, s.chars[id]);
+      });
+      FB.ui.showFamilyTree();
+      return {
+        me:me.id, parents:parents, siblings:siblings, statuses:statuses,
+        outsiderStatus:FB.characterStationName(s, outsider)
+      };
+    });
+
+    expect(family.parents.length).toBeGreaterThan(0);
+    expect(family.siblings.length).toBeGreaterThan(0);
+    expect(family.statuses.every(function (status) {
+      return status === 'Serf';
+    })).toBe(true);
+    expect(family.outsiderStatus).toBe('Lowborn');
+    const primary = page.locator('.family-tree-primary');
+    await expect(primary.locator(
+      '.ftchip[data-cid="' + family.me + '"]')).toHaveCount(1);
+    for (const id of family.parents.concat(family.siblings)) {
+      await expect(primary.locator(
+        '.ftchip[data-cid="' + id + '"]')).toHaveCount(1);
+    }
+  });
+
 test('semantic shortcuts reject conflicts, explain blocks, persist, and follow promotion',
   async function ({ page }) {
     await page.evaluate(function () { FB.ui.showShortcutSettings(); });

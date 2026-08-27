@@ -4021,6 +4021,11 @@ textarea.modjson, textarea.savetext {
   .modal .event-duty-help-anchor,
   .modal .large-list-section-toggle { min-height: 48px; }
   .modal .event-duty-help .settcard-head,
+  .modal .event-duty-help-anchor {
+    height: 48px; max-height: 48px;
+  }
+  .modal .event-duty-help-anchor { overflow: hidden; }
+  .modal .event-duty-help .settcard-head,
   .modal .event-participant-strip { align-items: stretch; }
   .modal .event-duty-help .settcard-actions,
   .modal .event-participant-strip .settcard-actions,

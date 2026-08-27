@@ -1052,12 +1052,11 @@ test('descent and ascent routes: freedom deed, flight event, debt bondage, comme
       const state = FB.state;
       const results = {};
 
-      // 1. Manumission / Freedom via buy_freedom action
+      // 1. Manumission / Freedom through the purchase resolver used by its picker
       FB.ensureSerfTenure(state, 'new_game');
       state.player.gold = FB.freedomPurchasePrice(state);
       FB.getRole(state, 'lord', true);
-      var buyFreedom = FB.instants.filter(function (d) { return d.id === 'buy_freedom'; })[0];
-      if (buyFreedom) buyFreedom.run(state);
+      FB.resolveSerfFreedom(state, { route:'purchase' }, {});
       results.freedomTier = state.player.tier;
       results.freedomStatus = state.player.tenure.status;
       results.freedomReason = state.player.tenure.endReason;
@@ -2284,6 +2283,9 @@ test('Old Custom keeps one cast, bridges an officer change explicitly, and clear
       const malformedCleared = !p.flags.old_custom_1 &&
         !p.flags.old_custom_2 && !p.serfStory;
       return {
+        openerChance:opener.trigger.chance,
+        openerWeight:opener.weight,
+        openerOnce:opener.once,
         sameCast:sameCast,
         tenureCast:tenureCast,
         originalOfficerId:original.participants.officer,
@@ -2309,6 +2311,9 @@ test('Old Custom keeps one cast, bridges an officer change explicitly, and clear
       };
     });
 
+    expect(result.openerChance).toBe(0.04);
+    expect(result.openerWeight).toBe(15);
+    expect(result.openerOnce).toBe(true);
     expect(result.sameCast).toBe(true);
     expect(result.tenureCast).toMatchObject({
       witnessId:result.originalWitnessId,

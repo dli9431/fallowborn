@@ -139,7 +139,7 @@ FBDATA.deeds = [
   { id:'petition_freedom', label:'📜 Petition for terms of freedom…', order:37,
     group:'realm', flow:'choices', handler:'petition_freedom' },
   { id:'buy_freedom', label:'⛓ Buy freedom outright', order:38,
-    group:'realm', flow:'immediate', handler:'buy_freedom' },
+    group:'realm', flow:'choices', handler:'buy_freedom' },
   { id:'buy_land', label:'🌾 Buy a plot of land…', order:39,
     group:'realm', flow:'choices', handler:'buy_land' },
   { id:'declare_manor', label:'🏡 Declare a manor', order:40,

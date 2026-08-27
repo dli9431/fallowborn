@@ -1922,6 +1922,105 @@ window.FB = window.FB || {};
     });
   };
 
+  function freedomRelativeChoicesHtml(s) {
+    const relatives = FB.freedomAdditionalRelatives
+      ? FB.freedomAdditionalRelatives(s) : [];
+    if (!relatives.length) return '';
+    let h = '<div class="panelh">' +
+      esc(FB.T('Add relatives to this charter')) + '</div><p class="adesc">' +
+      esc(FB.T(
+        'Spouses and descendants are already included. Parents and siblings remain serfs unless you select them here or manumit them later from their character sheet.')) +
+      '</p><div data-freedom-relative-choices>';
+    for (let i = 0; i < relatives.length; i++) {
+      const relative = relatives[i];
+      const relation = relative.kind === 'parent'
+        ? FB.T('Parent') : FB.T('Sibling');
+      h += '<label class="autorow"><input type="checkbox" ' +
+        'data-freedom-relative="' + esc(relative.id) + '"> <b>' +
+        esc(relative.name) + '</b><span class="adesc">' +
+        esc(FB.T('{relation} · adds {money:price}', {
+          relation:relation, price:relative.cost
+        })) + '</span></label>';
+    }
+    return h + '</div>';
+  }
+
+  function selectedFreedomRelatives(root) {
+    const out = [];
+    const boxes = root.querySelectorAll('[data-freedom-relative]');
+    for (let i = 0; i < boxes.length; i++) {
+      if (boxes[i].checked) out.push(boxes[i].dataset.freedomRelative);
+    }
+    return out;
+  }
+
+  function bindFreedomRelativeChoices(s, root) {
+    if (!root) return;
+    const boxes = root.querySelectorAll('[data-freedom-relative]');
+    function refreshQuote() {
+      const quote = FB.freedomPurchaseQuote(s, selectedFreedomRelatives(root));
+      const price = root.querySelector('[data-freedom-live-price]');
+      const breakdown = root.querySelector('[data-freedom-family-price]');
+      const purchase = root.querySelector('#freedom-purchase-confirm');
+      if (price) price.textContent = FB.T('{money:price}', {
+        price:quote.price
+      });
+      if (breakdown) breakdown.textContent =
+        FB.freedomPurchaseBreakdown(s, quote);
+      if (purchase) {
+        const status = FB.freedomPurchaseStatus(
+          s, selectedFreedomRelatives(root));
+        purchase.disabled = !status.ready;
+        purchase.title = status.ready ? '' : status.reason;
+      }
+    }
+    for (let i = 0; i < boxes.length; i++) {
+      boxes[i].addEventListener('change', refreshQuote);
+    }
+    refreshQuote();
+  }
+
+  UI.showFreedomPurchase = function () {
+    const s = FB.state;
+    if (!s || !s.player || s.player.tier !== 0) return;
+    const quote = FB.freedomPurchaseQuote(s);
+    const h = '<div class="gm-body-text" data-freedom-purchase-sheet>' +
+      '<p>' + esc(FB.T(
+        'Buy a lawful charter for the household head, every living spouse, and every living descendant.')) + '</p>' +
+      '<div class="kv"><span>' + esc(FB.T('Total price')) +
+      '</span><b data-freedom-live-price>' +
+      esc(FB.T('{money:price}', { price:quote.price })) + '</b></div>' +
+      '<p class="adesc" data-freedom-family-price>' +
+      esc(FB.freedomPurchaseBreakdown(s, quote)) + '</p>' +
+      freedomRelativeChoicesHtml(s) + '</div><div class="gm-list">' +
+      '<button type="button" class="actionbtn" id="freedom-purchase-confirm">' +
+      esc(FB.T('Buy the selected charter')) + '</button>' +
+      '<button type="button" class="actionbtn" id="freedom-purchase-close">' +
+      esc(FB.T('Not now')) + '</button></div>';
+    openModal(FB.T('Buy freedom'), h, {
+      historyView:true, historyBack:true
+    });
+    const root = $('gm-body');
+    bindFreedomRelativeChoices(s, root);
+    $('freedom-purchase-confirm').addEventListener('click', function () {
+      const additionalIds = selectedFreedomRelatives(root);
+      const status = FB.freedomPurchaseStatus(s, additionalIds);
+      if (!status.ready) {
+        UI.toast(status.reason || FB.T('The charter can no longer be purchased.'));
+        UI.showFreedomPurchase();
+        return;
+      }
+      UI.closeModal();
+      const result = FB.resolveSerfFreedom(s, {
+        route:'purchase', additionalIds:additionalIds
+      }, {});
+      if (!result) return;
+      if (FB.noteDeedCompleted) FB.noteDeedCompleted(s, 'buy_freedom');
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('freedom-purchase-close').addEventListener('click', UI.closeModal);
+  };
+
   UI.showFreedomPetition = function (options) {
     options = options || {};
     const s = FB.state;
@@ -1944,13 +2043,13 @@ window.FB = window.FB || {};
       kv('Petition threshold', esc(FB.T('+{standing}', {
         standing:petition.threshold
       }))) +
-      kv('Buy freedom outright', esc(FB.T('{money:price}', {
-        price:purchaseQuote.price
-      }))) +
+      kv('Buy freedom outright', '<span data-freedom-live-price>' +
+        esc(FB.T('{money:price}', { price:purchaseQuote.price })) + '</span>') +
       '<p class="adesc" data-freedom-family-price>' +
         esc(FB.freedomPurchaseBreakdown(s, purchaseQuote)) + '</p>';
 
     if (!showReview) {
+      h += freedomRelativeChoicesHtml(s);
       h += '<p class="adesc">' + esc(FB.T(
         'Standing +20 offers the standard price; +40 offers a lower cash price; +60 offers the lowest cash price followed by final service.')) + '</p>';
       if (petition.invitation) {
@@ -2009,9 +2108,12 @@ window.FB = window.FB || {};
       openModal(FB.T('Petition for terms of freedom'), h, {
         historyView:true, historyBack:true
       });
+      const freedomRoot = $('gm-body');
+      bindFreedomRelativeChoices(s, freedomRoot);
       const create = $('freedom-petition-create');
       if (create) create.addEventListener('click', function () {
-        const created = FB.createFreedomOffer(s, 'petition');
+        const created = FB.createFreedomOffer(s, 'petition', null,
+          selectedFreedomRelatives(freedomRoot));
         if (!created) {
           UI.toast(FB.T('Circumstances changed before terms could be offered.'));
           return;
@@ -2021,7 +2123,8 @@ window.FB = window.FB || {};
       document.querySelectorAll('.freedom-advocate-select').forEach(function (button) {
         button.addEventListener('click', function () {
           const created = FB.createFreedomOffer(
-            s, 'petition', button.dataset.freedomAdvocate);
+            s, 'petition', button.dataset.freedomAdvocate,
+            selectedFreedomRelatives(freedomRoot));
           if (!created) {
             UI.toast(FB.T(
               'Circumstances changed before the supporter could confirm the terms.'));
@@ -17816,6 +17919,45 @@ window.FB = window.FB || {};
   };
 
   /* ================= character sheet & trait dialogs ================= */
+  UI.showFamilyManumissionConfirm = function (cid, returnContext) {
+    const s = FB.state;
+    const status = FB.familyManumissionStatus(s, cid);
+    if (!status.relevant) return;
+    const c = status.character;
+    const h = '<p>' + esc(FB.T(
+      'Purchase lawful freedom for {name}? This changes only their personal station; no parent or sibling is freed automatically.', {
+        name:FB.fullName(c)
+      })) + '</p><div class="decision-cost"><b>' +
+      esc(FB.T('Price')) + ':</b> ' +
+      esc(FB.T('{money:price}', { price:status.price })) + '</div>' +
+      (!status.ready ? '<p class="warnote">' + esc(status.reason) + '</p>' : '') +
+      '<div class="gm-list"><button type="button" class="actionbtn" ' +
+      'id="family-manumission-confirm"' + (status.ready ? '' : ' disabled') + '>' +
+      esc(FB.T('Manumit {name}', { name:c.name })) + '</button></div>' +
+      '<div class="gm-footer"><button type="button" class="btn" id="gm-cancel">' +
+      esc(FB.T('Not now')) + '</button></div>';
+    openModal(FB.T('Family Manumission'), h, {
+      historyView:true,
+      historyBackRender:function () {
+        UI.showCharModal(cid, returnContext);
+      }
+    });
+    const confirm = $('family-manumission-confirm');
+    if (confirm) confirm.addEventListener('click', function () {
+      if (!FB.resolveFamilyManumission(s, cid)) {
+        UI.showFamilyManumissionConfirm(cid, returnContext);
+        return;
+      }
+      UI.closeModal();
+      FB.game.passDay({ skipFocus:true });
+    });
+    $('gm-cancel').addEventListener('click', function () {
+      modalHistoryBack(function () {
+        UI.showCharModal(cid, returnContext);
+      });
+    });
+  };
+
   UI.showFriendConfirm = function (cid, returnContext) {
     const s = FB.state;
     const c = s && s.chars[cid];
@@ -18043,7 +18185,7 @@ window.FB = window.FB || {};
           ? residence.name : FB.T('Unknown') },
         { label:FB.T('Occupation'), value:interactionCareerTitle(s, c) },
         { label:FB.T('Faith'), value:religionName(s, c.religion) },
-        { label:FB.T('Station'), value:FB.stationName(FB.stationOf(c)) }
+        { label:FB.T('Station'), value:FB.characterStationName(s, c) }
       ],
       standing:c.id === me.id ? null : {
         value:standing,
@@ -18305,6 +18447,24 @@ window.FB = window.FB || {};
 
     if (!reigningRealmId) {
       addInteractionAction(model, characterGiftAction(s, c, household));
+    }
+    const familyManumission = FB.familyManumissionStatus
+      ? FB.familyManumissionStatus(s, c.id) : null;
+    if (familyManumission && familyManumission.relevant) {
+      addInteractionAction(model, {
+        id:'management.family.manumission',
+        group:'management',
+        label:FB.T('Purchase their freedom…'),
+        detail:FB.T(
+          'A separate lawful manumission costs {money:price} and spends the day.', {
+            price:familyManumission.price
+          }),
+        enabled:familyManumission.ready,
+        blockedReason:familyManumission.reason || null,
+        consequence:FB.T(
+          'Their personal station becomes Freeholder; other relatives are unchanged.'),
+        route:'family-manumission'
+      });
     }
 
     const isSpouse = c.spouseId === me.id || me.spouseId === c.id;
@@ -18978,6 +19138,8 @@ window.FB = window.FB || {};
           UI.showSiblingCourtshipConfirm(c.id, returnContext);
         } else if (action.route === 'character-gift') {
           UI.showCharacterGiftModal(c.id, returnContext);
+        } else if (action.route === 'family-manumission') {
+          UI.showFamilyManumissionConfirm(c.id, returnContext);
         } else if (action.route === 'courtship-begin') {
           UI.closeModal();
           if (!FB.beginCourtship(s, c)) return;
