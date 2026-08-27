@@ -238,7 +238,8 @@ guild stories. Craft and Trade paths each have a small weighted, seasonal-cooldo
 pool whose choices exchange coin, Guild Standing, prestige, skill, or a normal local
 modifier. `guildStanding:n` is a clamp-aware declarative effect on the active guild
 career. There is no guild-day tick, settlement membership list, or generated guild
-population.
+population. The merchant salvage auction requires enough coin to place its bid, but its
+failure branch represents being outbid and therefore leaves household gold untouched.
 
 The rare market invitation is also an ordinary cooldown-controlled event. Its custom
 effect opens the same bounded household auction as the deed; it does not start a

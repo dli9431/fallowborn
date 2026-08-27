@@ -109,7 +109,7 @@ window.FBDATA = window.FBDATA || {};
       },
       minor_household_standard_reduction:{
         mode:'none',
-        rationale:'A child household head giving up an inherited recurring expense is a baseline recovery control; no innovation credibly unlocks abandoning a living standard.'
+        rationale:'A child household head or landed ruler giving up an inherited household standard within the floor allowed by their station is a baseline recovery control; no innovation credibly unlocks abandoning an expense.'
       },
       county_population_demographics:{
         mode:'soft',

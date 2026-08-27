@@ -6,6 +6,7 @@ dependsOnRuntime(__filename, [
   'js/ui_misc.js',
   'js/ui_modals.js',
   'data/events_common.js',
+  'data/events_paths.js',
   'data/events_world.js'
 ]);
 
@@ -298,6 +299,51 @@ test('wedding receipts retain the named suitor after marriage clears courtship',
     expect(result.spouseLinked).toBe(true);
   });
 
+test('a losing salvage auction bid leaves the household gold untouched',
+  async function ({ page }, testInfo) {
+    await startGame(page, testInfo);
+
+    var result = await page.evaluate(function () {
+      var s = FB.state;
+      var authoredEvent = FB.eventById('wreck_auction');
+      var authored = authoredEvent.options[0];
+      var option = {
+        label:authored.label,
+        desc:authored.desc,
+        require:authored.require,
+        chance:0,
+        success:authored.success,
+        failure:authored.failure
+      };
+      var event = {
+        id:authoredEvent.id,
+        title:authoredEvent.title,
+        text:authoredEvent.text,
+        options:[option]
+      };
+      s.player.gold = 8;
+      var before = s.player.gold;
+      var receipt = FB.resolveEventOption(s, event, option, {}, {
+        automated:false
+      });
+      return {
+        result:receipt.result,
+        before:before,
+        after:s.player.gold,
+        requirement:authored.require,
+        outcome:FB.renderMessage(receipt.outcome, {
+          state:s,
+          viewer:s.player.charId
+        })
+      };
+    });
+
+    expect(result.result).toBe('failure');
+    expect(result.after).toBe(result.before);
+    expect(result.requirement).toEqual({ goldMin:8 });
+    expect(result.outcome).toContain('never leaves your purse');
+  });
+
 test('desktop choices keep side tooltips visible and separate from resolution',
   async function ({ page }, testInfo) {
     await startGame(page, testInfo);
@@ -403,14 +449,17 @@ test('touch choices use a full-size question-mark Details control without inline
     await expect(details).toHaveAttribute('aria-label', 'Details');
     var layout = await row.evaluate(function (element) {
       var button = element.querySelector('.event-details-button');
+      var choice = element.querySelector('.evopt');
       var card = element.closest('.modalcard');
       return {
         detailsHeight:button.getBoundingClientRect().height,
+        choiceHeight:choice.getBoundingClientRect().height,
         rowFits:element.scrollWidth <= element.clientWidth + 1,
         cardOverflow:getComputedStyle(card).overflowY
       };
     });
-    expect(layout.detailsHeight).toBeGreaterThanOrEqual(44);
+    expect(layout.detailsHeight).toBe(layout.choiceHeight);
+    expect(layout.detailsHeight).toBeGreaterThanOrEqual(52);
     expect(layout.rowFits).toBe(true);
     expect(['auto', 'scroll']).toContain(layout.cardOverflow);
 

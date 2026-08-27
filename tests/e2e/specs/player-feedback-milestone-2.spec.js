@@ -87,6 +87,59 @@ test('technology search discovers unlocks and locked links follow role access',
       .toHaveCount(0);
   });
 
+test('locked monopoly deed keeps Guild Charters in its shared details surface',
+  async function ({ page }) {
+    await page.setViewportSize({ width:1280, height:800 });
+    await page.evaluate(function () {
+      const s = FB.state;
+      s.player.tier = 3;
+      const technology = FB.realmTechRecord(s, FB.techRealmId(s));
+      technology.completed = technology.completed.filter(function (id) {
+        return id !== 'guild_charters';
+      });
+      technology.active = technology.active.filter(function (id) {
+        return id !== 'guild_charters';
+      });
+      FB.ui.showTab('actions', { history:false });
+    });
+    const realmGroup = page.locator(
+      '#tab-actions [data-action-group="realm"]');
+    if (await realmGroup.getAttribute('aria-expanded') !== 'true') {
+      await realmGroup.click();
+    }
+
+    const grant = page.locator('[data-action-id="grant_monopoly"]');
+    const row = grant.locator('..');
+    const prerequisite = row.locator(
+      '.deed-details [data-action-tech="guild_charters"]');
+    await expect(grant).toBeDisabled();
+    await expect(prerequisite).toHaveCount(1);
+    await expect(page.locator(
+      '[data-action-group-body="realm"] > [data-action-tech="guild_charters"]'))
+      .toHaveCount(0);
+
+    await row.hover();
+    const tooltipPrerequisite = page.locator(
+      '#tooltip [data-action-tech="guild_charters"]');
+    await expect(tooltipPrerequisite).toBeVisible();
+    await expect(tooltipPrerequisite).toContainText(
+      'View prerequisite: Guild Charters');
+    await tooltipPrerequisite.click();
+    await expect(page.getByRole('heading', { name:/Guild Charters/ }))
+      .toBeVisible();
+    await page.evaluate(function () { FB.ui.closeModal(); });
+
+    await page.setViewportSize({ width:900, height:700 });
+    const info = row.locator('.deed-info');
+    await expect(info).toBeVisible();
+    await info.click();
+    await expect(row.locator('.deed-details')).toBeVisible();
+    await expect(prerequisite).toBeVisible();
+    await prerequisite.click();
+    await expect(page.getByRole('heading', { name:/Guild Charters/ }))
+      .toBeVisible();
+  });
+
 test('enterprise catalogue keeps blocked choices explainable and idle warnings actionable',
   async function ({ page }) {
     const fixture = await page.evaluate(function () {

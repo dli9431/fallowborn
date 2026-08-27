@@ -300,8 +300,9 @@ families by higher station, lower immediate expense, lower prestige requirement,
 nearer age. Saving the policy triggers an immediate review, and each New Year reviews
 eligible resident descendants from age 12. `matchRecommendation` records only a candidate
 id and the policy signature;
-it creates a Household Plan marker and one Chronicle notice, not a betrothal. Previewing,
-saving, and refreshing a recommendation spend no resources or days. Replacing a
+it creates a Household Plan marker and one Chronicle notice, not a betrothal. Reviewing
+the live policy details, saving, and refreshing a recommendation spend no resources or
+days. Replacing a
 prospect pool clears its obsolete recommendation and silently reviews the new
 three for that descendant. The ordinary picker lists the recommendation first but preserves all manual choices, and only
 `FB.sealKinMatch` can make the consequential pledge.

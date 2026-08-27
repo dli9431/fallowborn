@@ -290,9 +290,12 @@ layouts the hover tooltip never opens and the `?` button toggles the same detail
 inline instead. `eventChoiceUsesDisclosure` in `ui_misc.js` is the JS half of the
 switch (it also gates the settcard tooltip), and the `.settcard-info` media query in
 `css/style.css` is the CSS half; event-choice stakes follow the same rule with their
-`.event-details-button`. Better Household standard steppers use that same switch:
+`.event-details-button`. On phone and short-screen modal layouts, each disclosure
+control matches the height of the neighboring action family: ordinary card actions,
+participant rows, event choices, and fixed equipment slots remain aligned rather than
+mixing 40–52 px controls. Better Household standard steppers use that same switch:
 roomy pointers get action-specific hover/focus terms, while compact layouts get one
-44 px `?` that expands both decrease and increase consequences inline.
+48 px `?` that expands both decrease and increase consequences inline.
 One-time deed rows use this convention too: the card face keeps only the enlarged action
 name, with gold, green, or blue-green border accents distinguishing day-spending immediate,
 choice-backed, and no-day immediate actions. Timing and descriptive copy live together in
@@ -714,7 +717,7 @@ changing the underlying `player.gold`. The deprecated
 `FBDATA.balance.coinageSymbol` changes only the default icon when no full currency
 definition is active.
 
-The commoner **Better the household…** deed opens the full-screen-capable Household
+The **Better the household…** deed remains available at every station and opens the full-screen-capable Household
 standards & property sheet. It shows active standards upkeep, reliable seasonal net, and
 the projected purse after one season in a compact three-cell summary before listing five
 general standards, relevant profession outfits, and permanent holdings as separate
@@ -724,9 +727,11 @@ Owned property uses the same compact row treatment and a distinct completed stat
 standard remains a native button and opens the complete asset/effect detail view. Upgrade
 confirmation states setup cost, complete new upkeep, benefit, seasonal net, and projected
 purse; a negative projection warns without disabling an otherwise affordable purchase.
-Reduction requires a second explicit confirmation that names the lost level and
-no-refund/re-purchase rule. `UI.showHoldings` remains an alias to this sheet for older
-deeds and mods.
+Reduction applies one level at a time after engine revalidation, with its detail view
+naming the lost level and no-refund/re-purchase rule. `UI.showHoldings` remains an alias to this sheet for older
+deeds and mods. Landed households retain a title-scaled floor for general standards:
+Barons cannot reduce below level 1, Counts below level 2, and Dukes or greater rulers
+below level 3. Profession-specific work outfits have no title floor.
 
 The gold topbar renders an actual negative balance in the warning tone. Its resource
 breakdown explains that future income first clears this cash shortfall and that it is
@@ -1356,7 +1361,9 @@ Standing with the grantor, grantor, cooldown, or occupied-slot condition. Rank &
 **Grant a guild monopoly…** for every baron and greater ruler. Its numbered,
 keyboard-focusable profession picker previews Craft and Trade with the current
 tier-scaled fee, tax, enterprise, duration, and Common Voice terms, then repeats all effects
-in a confirmation sheet before spending the day.
+in a confirmation sheet before spending the day. While Guild Charters is missing, its
+technology-detail control stays inside the deed's shared desktop hover/focus tooltip or
+compact-layout `?` disclosure instead of occupying a separate Deeds row.
 Rank & Realm keeps the no-day-cost **Technology…** deed at landed rank and above; commoners
 have no research controls (sovereigns direct projects, vassals may advocate
 them), so the deed stays hidden below tier 3. `FB.techUiRelevant` is the shared
@@ -1451,6 +1458,8 @@ Every living AI ruler sheet exposes **Cultivate relationship…** and **Offer a 
 Cultivation materializes that ruler only when chosen and opens the ordinary capital-visit
 review; once materialized, the ruler identity card and **Open full character sheet**
 action expose applicable friendship, rivalry, courtship, marriage, and spouse actions.
+The unified ruler-character sheet suppresses the ordinary character travel duplicate and
+shows the ruler-specific cultivation route exactly once.
 Both sheets route gifts back through the
 ruler picker, so its numbered cash choice uses the rank price, exact armory influence,
 Standing, and the ruler-generation cooldown rather than the ordinary five-gold path.
@@ -1546,24 +1555,28 @@ table rather than the intermediate Work & Enterprises sheet.
 
 An **Education Policy** summary and native management button sit above the Household Plan
 ledger. Its keyboard/mobile-safe flow uses a native focus select, instruction checkbox,
-and non-negative number input, then requires a preview before saving. Configuration and preview use the shared footer geometry: canonical Back first, then the equal-sized primary Preview or Save action. The preview names
-every currently affected eligible child and shows the proposed focus, instruction,
-projected yearly chance, per-child seasonal fee, and any institutional mortality warning.
+and non-negative number input. The same sheet provides a direct Save action and a live
+details card: desktop hover or keyboard focus opens the shared tooltip, while compact and
+touch layouts use the adjacent touch-sized `?` disclosure. Those details name every
+currently affected eligible child and show the proposed focus, instruction, projected
+yearly chance, per-child seasonal fee, and any institutional mortality warning. Back and
+Save use the shared equal-sized footer geometry; there is no intermediate review modal.
 It explicitly states that existing choices stay unchanged, the cap is per child, and no
 coin is reserved. Education and instruction cells label policy choices, manual overrides,
 unrecorded choices, and instruction waiting for a focus. Both detailed pickers retain a
 Follow household policy action which clears and reapplies only that picker’s dimension.
 Both pickers also expose a whole-student manual-management reservation. Reserved students
-are omitted from education-policy previews and application until the reservation is removed;
+are omitted from the education-policy details and application until the reservation is removed;
 **Follow household policy** removes it and immediately reapplies that picker’s dimension.
 
 A separate **Descendant Match Assistant** summary and native management button sit above
 the same ledger. Its keyboard/mobile-safe policy form exposes an enable checkbox, station
-select, and optional non-negative caps for dowry, immediate gold, and required prestige,
-then requires a preview before saving. The preview shows every currently eligible
-resident child or grandchild, the recommended family (or the absence of one), station,
-age, dowry, immediate gold, and prestige requirement. It explicitly states that no pledge,
-resource spend, or day advance occurs. Recommended match cells name the candidate and
+select, and optional non-negative caps for dowry, immediate gold, and required prestige.
+Its live shared tooltip/compact `?` details show every currently eligible resident child
+or grandchild, the recommended family (or the absence of one), station, age, dowry,
+immediate gold, and prestige requirement as fields change. The same sheet saves directly,
+without an intermediate review modal, and explicitly states that no pledge, resource
+spend, or day advance occurs. Recommended match cells name the candidate and
 terms; their ordinary match picker puts that candidate first with a visible marker while
 retaining every manual family choice.
 The match picker exposes a whole-descendant manual-management reservation. It removes an

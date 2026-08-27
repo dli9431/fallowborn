@@ -218,6 +218,73 @@ test('uses the shared question-mark disclosure for household adjustments on comp
     await expect(details).toBeHidden();
   });
 
+test('landed rulers retain Better the Household with title-scaled reduction floors',
+  async function ({ page }) {
+    const result = await page.evaluate(function () {
+      const s = FB.state;
+      s.player.householdStandards = { board:3, outfit_farmer:3 };
+      const floors = [2, 3, 4, 5, 7].map(function (tier) {
+        s.player.tier = tier;
+        return FB.householdStandardMinimumLevel(s, 'board');
+      });
+
+      s.player.tier = 4;
+      s.player.householdStandards.board = 2;
+      const countBlocked = FB.reduceHouseholdStandard(s, 'board');
+
+      s.player.tier = 3;
+      s.player.householdStandards.board = 3;
+      const first = FB.reduceHouseholdStandard(s, 'board');
+      const second = FB.reduceHouseholdStandard(s, 'board');
+      const third = FB.reduceHouseholdStandard(s, 'board');
+      const boardLevel = FB.householdStandardLevel(s, 'board');
+      const workFloor = FB.householdStandardMinimumLevel(s, 'outfit_farmer');
+      const workReductions = [
+        FB.reduceHouseholdStandard(s, 'outfit_farmer'),
+        FB.reduceHouseholdStandard(s, 'outfit_farmer'),
+        FB.reduceHouseholdStandard(s, 'outfit_farmer')
+      ];
+      const workLevel = FB.householdStandardLevel(s, 'outfit_farmer');
+      const deed = FB.instantStatus(s, 'better_household');
+      FB.ui.showTab('actions', { history:false });
+      return {
+        floors:floors,
+        countBlocked:countBlocked,
+        reductions:[first, second, third],
+        boardLevel:boardLevel,
+        workFloor:workFloor,
+        workReductions:workReductions,
+        workLevel:workLevel,
+        rank:FB.titleWordFor(s, s.player.tier),
+        deed:{ shown:deed.shown, can:deed.can }
+      };
+    });
+
+    expect(result.floors).toEqual([0, 1, 2, 3, 3]);
+    expect(result.countBlocked).toBe(false);
+    expect(result.reductions).toEqual([true, true, false]);
+    expect(result.boardLevel).toBe(1);
+    expect(result.workFloor).toBe(0);
+    expect(result.workReductions).toEqual([true, true, true]);
+    expect(result.workLevel).toBe(0);
+    expect(result.deed).toEqual({ shown:true, can:true });
+
+    const workGroup = page.locator('#tab-actions [data-action-group="work"]');
+    if (await workGroup.getAttribute('aria-expanded') !== 'true') {
+      await workGroup.click();
+    }
+    const household = page.locator('[data-action-id="better_household"]');
+    await expect(household).toBeVisible();
+    await expect(household).toBeEnabled();
+    await household.click();
+    const boardRow = page.locator('[data-household-standard-row="board"]');
+    await expect(boardRow.locator('[data-household-standard-adjust="-1"]'))
+      .toBeDisabled();
+    await expect(boardRow.locator('.household-standard-adjustment-details'))
+      .toContainText(result.rank +
+        ' households may not reduce this standard below level 1');
+  });
+
 test('minor succession keeps adult deeds visible, limits focuses to Study and Play, and permits only inherited-standard reductions',
   async function ({ page }) {
     const setup = await page.evaluate(function () {

@@ -12344,6 +12344,10 @@ window.FB = window.FB || {};
       }
     }
     const short = next && s.player.gold < nextCost;
+    const reductionAvailability = FB.householdStandardReductionAvailable
+      ? FB.householdStandardReductionAvailable(s, id)
+      : (level ? true : FB.T('Already at baseline.'));
+    const canReduce = reductionAvailability === true;
     const reduceDetailsId = 'household-standard-reduce-details-' + id;
     const upgradeDetailsId = 'household-standard-upgrade-details-' + id;
     const adjustmentDetailsId = 'household-standard-adjustment-details-' + id;
@@ -12358,9 +12362,9 @@ window.FB = window.FB || {};
       : FB.T('{standard} is already at its highest level', {
         standard:householdStandardName(s, id)
       });
-    const reductionDetails = level
+    const reductionDetails = canReduce
       ? householdStandardReductionDetails(s, id, level)
-      : '<p>' + esc(FB.T('Already at baseline.')) + '</p>';
+      : '<p>' + esc(reductionAvailability) + '</p>';
     const upgradeDetails = next
       ? householdStandardUpgradeDetails(s, id, level, next, availability)
       : '<p>' + esc(availability) + '</p>';
@@ -12374,7 +12378,7 @@ window.FB = window.FB || {};
       '<button type="button" class="actionbtn household-standard-step-control ' +
       'household-standard-decrease" data-household-standard-adjust="-1" ' +
       'data-household-standard-id="' + esc(id) + '" aria-label="' +
-      esc(reduceLabel) + '"' + (level
+      esc(reduceLabel) + '"' + (canReduce
         ? ' data-action-tooltip="' + reduceDetailsId +
           '" aria-describedby="' + reduceDetailsId + '"'
         : ' disabled') + '><span aria-hidden="true">−</span></button>' +
@@ -12409,7 +12413,7 @@ window.FB = window.FB || {};
       'aria-label="' + esc(upgradeLabel) + '"' +
       (availability === true ? '' : ' aria-disabled="true"') +
       '><span aria-hidden="true">+</span></button>' +
-      (level ? '<div class="event-choice-details hidden" id="' +
+      (canReduce ? '<div class="event-choice-details hidden" id="' +
         reduceDetailsId + '">' + reductionDetails + '</div>' : '') +
       '<div class="event-choice-details hidden" id="' + upgradeDetailsId + '">' +
       upgradeDetails + '</div>' +
@@ -13537,6 +13541,7 @@ window.FB = window.FB || {};
 
   function showEducationPolicyConfig(value) {
     const draft = educationPolicyDraft(value);
+    const preview = educationPolicyPreviewContent(FB.state, draft);
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Set defaults for unchosen education. Existing choices stay.')) +
       '</p></div><div class="education-policy-form">' +
@@ -13555,9 +13560,22 @@ window.FB = window.FB || {};
       '</span><input type="number" id="education-policy-cap" min="0" step="0.25" inputmode="decimal" value="' +
       esc(draft.feeCap) + '"><small>' + esc(FB.T(
         'Limits new arrangements only; it reserves no money.')) +
-      '</small></label></div><div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="education-policy-preview">' +
-      esc(FB.T('Preview policy')) + '</button>' +
+      '</small></label></div>' +
+      '<div class="household-policy-inline-preview settcard" tabindex="0" ' +
+      'aria-describedby="education-policy-preview-details">' +
+      '<div class="settcard-head"><b>ⓘ ' + esc(FB.T('Policy effects')) +
+      '</b><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="education-policy-preview-details" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span></div><div class="settcard-meta" ' +
+      'id="education-policy-preview-summary">' +
+      esc(educationPolicyPreviewSummary(preview.count)) + '</div>' +
+      '<div class="settcard-details hidden" ' +
+      'id="education-policy-preview-details">' + preview.html +
+      '</div></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="education-policy-save">' +
+      esc(FB.T('Save and apply policy')) + '</button>' +
       '<button type="button" class="btn" id="education-policy-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('🎓 Household Education Policy'), h, {
@@ -13571,10 +13589,27 @@ window.FB = window.FB || {};
       const enabled = $('education-policy-instruction').checked;
       $('education-policy-cap').disabled = !enabled;
     }
-    $('education-policy-instruction').addEventListener('change', syncCap);
+    function syncPreview() {
+      const current = educationPolicyPreviewContent(
+        FB.state, readEducationPolicyDraft());
+      $('education-policy-preview-summary').textContent =
+        educationPolicyPreviewSummary(current.count);
+      $('education-policy-preview-details').innerHTML = current.html;
+    }
+    $('education-policy-focus').addEventListener('change', syncPreview);
+    $('education-policy-instruction').addEventListener('change', function () {
+      syncCap();
+      syncPreview();
+    });
+    $('education-policy-cap').addEventListener('input', syncPreview);
+    $('education-policy-cap').addEventListener('change', syncPreview);
     syncCap();
-    $('education-policy-preview').addEventListener('click', function () {
-      showEducationPolicyPreview(readEducationPolicyDraft());
+    $('education-policy-save').addEventListener('click', function () {
+      FB.setEducationPolicy(FB.state, readEducationPolicyDraft());
+      FB.save.autosave();
+      UI.refresh();
+      UI.showHouseholdPlan();
+      mobileNavClosedAll('modal-view', true);
     });
     $('education-policy-back').addEventListener('click', function () {
       modalHistoryBack(function () { UI.showHouseholdPlan(); });
@@ -13618,10 +13653,16 @@ window.FB = window.FB || {};
         esc(warning) + '</p>' : '') + '</article>';
   }
 
-  function showEducationPolicyPreview(value) {
-    const s = FB.state;
-    const draft = educationPolicyDraft(value);
-    const preview = FB.educationPolicyPreview(s, draft);
+  function educationPolicyPreviewSummary(count) {
+    if (count === 1) return FB.T('1 currently eligible child to review');
+    return count ? FB.T('{count} currently eligible children to review', {
+      count:count
+    }) : FB.T(
+      'No current child is affected; future eligible children will use this policy');
+  }
+
+  function educationPolicyPreviewContent(s, value) {
+    const preview = FB.educationPolicyPreview(s, educationPolicyDraft(value));
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Review the children whose empty choices would be filled now. Existing manual and policy-selected choices remain unchanged.')) +
       '</p><p class="hint">' + esc(FB.T(
@@ -13634,34 +13675,14 @@ window.FB = window.FB || {};
         'No currently eligible child has an empty choice affected by this policy. The policy will still apply when another child becomes eligible.')) +
         '</p>';
     }
-    h += '</div><div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="education-policy-save">' +
-      esc(FB.T('Save and apply policy')) + '</button>' +
-      '<button type="button" class="btn" id="education-policy-edit">' +
-      esc(FB.T('Edit policy')) + '</button></div>';
-    openModal(FB.T('🎓 Preview Education Policy'), h, {
-      historyView:true,
-      modalClass:'fullsheet-modal education-policy-modal',
-      historyBackRender:function () { showEducationPolicyConfig(draft); },
-      guide:guideModalOption('education-preview-guide', 'upbringing',
-        'Guide: upbringing and matches')
-    });
-    $('education-policy-save').addEventListener('click', function () {
-      FB.setEducationPolicy(s, draft);
-      FB.save.autosave();
-      UI.refresh();
-      UI.showHouseholdPlan();
-      mobileNavClosedAll('modal-view', true);
-    });
-    $('education-policy-edit').addEventListener('click', function () {
-      modalHistoryBack(function () { showEducationPolicyConfig(draft); });
-    });
+    return { html:h + '</div>', count:preview.length };
   }
 
   /* ================= descendant match assistant =================
      A saved household policy ranks the ordinary three sounded-out families.
-     Previewing and saving never pledge a match, spend resources, or pass a
-     day; the existing arranged-match picker remains the decision surface. */
+     Reviewing its live details and saving never pledge a match, spend
+     resources, or pass a day; the arranged-match picker remains the decision
+     surface. */
   function matchPolicyDraft(value) {
     const policy = value || FB.ensureMatchPolicy(FB.state);
     function limit(v) {
@@ -13709,6 +13730,7 @@ window.FB = window.FB || {};
 
   function showMatchPolicyConfig(value) {
     const draft = matchPolicyDraft(value);
+    const preview = matchPolicyPreviewContent(FB.state, draft);
     const noLimit = FB.T('No limit');
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
       'Ask the household to recommend one of the same three families available in manual descendant matching.')) +
@@ -13744,9 +13766,23 @@ window.FB = window.FB || {};
       esc(noLimit) + '" value="' + esc(matchPolicyInputValue(draft.maxPrestige)) +
       '"><small>' + esc(FB.T(
         'Prestige gates a match above your station but is not spent by the pledge. Leave blank for no limit.')) +
-      '</small></label></div><div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="match-policy-preview">' +
-      esc(FB.T('Preview recommendations')) + '</button>' +
+      '</small></label></div>' +
+      '<div class="household-policy-inline-preview settcard" tabindex="0" ' +
+      'aria-describedby="match-policy-preview-details">' +
+      '<div class="settcard-head"><b>ⓘ ' +
+      esc(FB.T('Recommendation effects')) +
+      '</b><span class="settcard-actions"><button type="button" ' +
+      'class="btn small settcard-info" aria-expanded="false" ' +
+      'aria-controls="match-policy-preview-details" title="' +
+      esc(FB.T('Details')) + '" aria-label="' + esc(FB.T('Details')) +
+      '">?</button></span></div><div class="settcard-meta" ' +
+      'id="match-policy-preview-summary">' +
+      esc(matchPolicyPreviewSummary(preview.count)) + '</div>' +
+      '<div class="settcard-details hidden" ' +
+      'id="match-policy-preview-details">' + preview.html +
+      '</div></div><div class="gm-footer">' +
+      '<button type="button" class="btn primary" id="match-policy-save">' +
+      esc(FB.T('Save assistant limits')) + '</button>' +
       '<button type="button" class="btn" id="match-policy-back">' +
       esc(FB.T('Back')) + '</button></div>';
     openModal(FB.T('💍 Descendant Match Assistant'), h, {
@@ -13763,10 +13799,31 @@ window.FB = window.FB || {};
         'match-policy-gold', 'match-policy-prestige'
       ]) $(id).disabled = !enabled;
     }
-    $('match-policy-enabled').addEventListener('change', syncFields);
+    function syncPreview() {
+      const current = matchPolicyPreviewContent(
+        FB.state, readMatchPolicyDraft());
+      $('match-policy-preview-summary').textContent =
+        matchPolicyPreviewSummary(current.count);
+      $('match-policy-preview-details').innerHTML = current.html;
+    }
+    $('match-policy-enabled').addEventListener('change', function () {
+      syncFields();
+      syncPreview();
+    });
+    $('match-policy-station').addEventListener('change', syncPreview);
+    for (const id of [
+      'match-policy-dowry', 'match-policy-gold', 'match-policy-prestige'
+    ]) {
+      $(id).addEventListener('input', syncPreview);
+      $(id).addEventListener('change', syncPreview);
+    }
     syncFields();
-    $('match-policy-preview').addEventListener('click', function () {
-      showMatchPolicyPreview(readMatchPolicyDraft());
+    $('match-policy-save').addEventListener('click', function () {
+      FB.setMatchPolicy(FB.state, readMatchPolicyDraft());
+      FB.save.autosave();
+      UI.refresh();
+      UI.showHouseholdPlan();
+      mobileNavClosedAll('modal-view', true);
     });
     $('match-policy-back').addEventListener('click', function () {
       modalHistoryBack(function () { UI.showHouseholdPlan(); });
@@ -13866,12 +13923,18 @@ window.FB = window.FB || {};
       esc(note) + '</p></article>';
   }
 
-  function showMatchPolicyPreview(value) {
-    const s = FB.state;
-    const draft = matchPolicyDraft(value);
-    const preview = FB.matchPolicyPreview(s, draft);
+  function matchPolicyPreviewSummary(count) {
+    if (count === 1) return FB.T('1 currently eligible descendant to review');
+    return count ? FB.T('{count} currently eligible descendants to review', {
+      count:count
+    }) : FB.T(
+      'No current descendant is eligible; future descendants will be reviewed');
+  }
+
+  function matchPolicyPreviewContent(s, value) {
+    const preview = FB.matchPolicyPreview(s, matchPolicyDraft(value));
     let h = '<div class="gm-body-text"><p>' + esc(FB.T(
-      'Review every currently eligible descendant before saving these limits.')) +
+      'Review every currently eligible descendant under these limits.')) +
       '</p><p class="hint">' + esc(FB.T(
         'Only a recommendation marker and Chronicle notice will be created. Open the ordinary match picker to make any pledge.')) +
       '</p></div><div class="education-policy-preview-list match-policy-preview-list">';
@@ -13882,28 +13945,7 @@ window.FB = window.FB || {};
         'No resident child or grandchild is currently eligible. If enabled, the assistant will review each descendant from age 12.')) +
         '</p>';
     }
-    h += '</div><div class="gm-footer">' +
-      '<button type="button" class="btn primary" id="match-policy-save">' +
-      esc(FB.T('Save assistant limits')) + '</button>' +
-      '<button type="button" class="btn" id="match-policy-edit">' +
-      esc(FB.T('Edit limits')) + '</button></div>';
-    openModal(FB.T('💍 Preview Match Recommendations'), h, {
-      historyView:true,
-      modalClass:'fullsheet-modal match-policy-modal',
-      historyBackRender:function () { showMatchPolicyConfig(draft); },
-      guide:guideModalOption('match-preview-guide', 'upbringing',
-        'Guide: upbringing and matches')
-    });
-    $('match-policy-save').addEventListener('click', function () {
-      FB.setMatchPolicy(s, draft);
-      FB.save.autosave();
-      UI.refresh();
-      UI.showHouseholdPlan();
-      mobileNavClosedAll('modal-view', true);
-    });
-    $('match-policy-edit').addEventListener('click', function () {
-      modalHistoryBack(function () { showMatchPolicyConfig(draft); });
-    });
+    return { html:h + '</div>', count:preview.length };
   }
 
   /* ================= household livelihoods & enterprises ================= */
@@ -17975,7 +18017,7 @@ window.FB = window.FB || {};
         consequence:FB.T('Frees the one personal-attention assignment.'),
         route:'attention-stop'
       });
-    } else if (together) {
+    } else if (together && !reigningRealmId) {
       addInteractionAction(model, {
         id:'relationship.attention.assign',
         group:'relationship',
@@ -17994,7 +18036,7 @@ window.FB = window.FB || {};
         route:'attention-assign'
       });
     }
-    if (!together) {
+    if (!together && !reigningRealmId) {
       const visitReady = attention.ready && visit && visit.eligible &&
         visit.cost <= s.player.gold;
       let visitReason = attention.reason;

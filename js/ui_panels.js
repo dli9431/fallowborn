@@ -1278,7 +1278,7 @@ window.FB = window.FB || {};
           techButton.addEventListener('click', function () {
             UI.showTechDetail(techId);
           });
-          body.appendChild(techButton);
+          details.appendChild(techButton);
         }
       }
       return body;

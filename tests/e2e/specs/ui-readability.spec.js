@@ -68,6 +68,77 @@ test('major information sheets expose contextual Guide routes', async function (
     'aria-label', 'Guide: careers and household work');
 });
 
+test('phone modal disclosure controls match their neighboring action family',
+  async function ({ page }) {
+    await page.setViewportSize({ width:390, height:740 });
+    var sizes = await page.evaluate(function () {
+      FB.ui.openModal('Disclosure sizing audit',
+        '<div class="settcard declarative-choice-card">' +
+          '<button id="audit-action" class="actionbtn">Choose</button>' +
+          '<span class="settcard-actions declarative-choice-actions">' +
+            '<button id="audit-action-info" class="btn small settcard-info">?</button>' +
+          '</span></div>' +
+        '<div class="conversion-card settcard"><div class="settcard-head">' +
+          '<b>Conversion</b><span class="settcard-actions">' +
+            '<button id="audit-small-info" class="btn small settcard-info">?</button>' +
+            '<button id="audit-small-action" class="btn small convcard-select">Select</button>' +
+          '</span></div></div>' +
+        '<div class="event-choice has-details">' +
+          '<button id="audit-event" class="evopt">Answer</button>' +
+          '<button id="audit-event-info" class="btn small event-details-button">?</button>' +
+        '</div>' +
+        '<div class="event-participant-card settcard">' +
+          '<div class="event-participant-strip settcard-head">' +
+            '<button id="audit-participant" class="event-participant-main">Person</button>' +
+            '<span class="settcard-actions"><button id="audit-participant-info" ' +
+              'class="btn small settcard-info">?</button></span>' +
+          '</div></div>' +
+        '<div class="event-duty-help settcard"><div class="settcard-head">' +
+          '<button id="audit-duty" class="event-duty-help-anchor">Duty</button>' +
+          '<span class="settcard-actions"><button id="audit-duty-info" ' +
+            'class="btn small settcard-info">?</button></span>' +
+          '</div></div>' +
+        '<div class="large-list-section-heading">' +
+          '<button id="audit-section" class="large-list-section-toggle">Section</button>' +
+          '<span class="settcard-actions large-list-section-actions">' +
+            '<button id="audit-section-info" class="btn small settcard-info">?</button>' +
+          '</span></div>' +
+        '<div class="governance-county-protections">' +
+          '<button id="audit-governance" class="btn">Protect</button>' +
+          '<span class="settcard-actions"><button id="audit-governance-info" ' +
+            'class="btn small settcard-info">?</button></span></div>' +
+        '<div class="equip-slot-face">' +
+          '<button id="audit-equipment" class="equip-slot">Slot</button>' +
+          '<span class="settcard-actions equip-slot-actions">' +
+            '<button id="audit-equipment-info" class="btn small settcard-info equip-slot-info">?</button>' +
+          '</span></div>', { modalClass:'equipment-modal' });
+      function height(id) {
+        return Math.round(document.getElementById(id).getBoundingClientRect().height);
+      }
+      return {
+        action:[height('audit-action'), height('audit-action-info')],
+        small:[height('audit-small-action'), height('audit-small-info')],
+        event:[height('audit-event'), height('audit-event-info')],
+        participant:[height('audit-participant'), height('audit-participant-info')],
+        duty:[height('audit-duty'), height('audit-duty-info')],
+        section:[height('audit-section'), height('audit-section-info')],
+        governance:[height('audit-governance'), height('audit-governance-info')],
+        equipment:[height('audit-equipment'), height('audit-equipment-info')]
+      };
+    });
+
+    expect(sizes).toEqual({
+      action:[48, 48],
+      small:[48, 48],
+      event:[52, 52],
+      participant:[50, 50],
+      duty:[48, 48],
+      section:[48, 48],
+      governance:[48, 48],
+      equipment:[58, 58]
+    });
+  });
+
 test('technology details move the national research audit into responsive help',
   async function ({ page }) {
     await page.evaluate(function () {

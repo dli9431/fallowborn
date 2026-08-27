@@ -161,7 +161,8 @@ invitation, and direct callers cannot create separate market clocks. Opening sav
 one `player.auction` record containing the venue, lot, opening call, fixed increment,
 seeded rival maximum, and bid count. The player has at most three bids of one, two, or
 three increments. The rival either counters immediately from its saved ceiling or
-drops out; only a winner pays, so a loss or withdrawal costs no coin.
+drops out; only a winner pays, so a loss or withdrawal after any countered round costs
+no coin.
 
 Lots are an unowned Fine/Famed item (transferred through the ordinary item API), one
 valid neighboring foreign county title right (the existing single fabricated-claim

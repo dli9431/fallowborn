@@ -463,9 +463,9 @@ FBDATA.events.push(
   trigger:{ professions:['merchant'], goldMin:8, chance:0.15 }, weight:5, cooldown:10,
   text:'A storm-broken cargo goes under the hammer, sight unseen: sodden bales that might be ruined wool — or sea-stained silk.',
   options:[
-    { label:'Bid on the lot. ({money:8})', desc:'Silk or rotten wool — the hammer decides.', chance:0.5,
+    { label:'Bid on the lot. ({money:8})', require:{ goldMin:8 }, desc:'Silk or rotten wool — the hammer decides.', chance:0.5,
       success:{ text:'Under the ruined top layer: silk, barely touched.', effects:{ gold:10, skills:{ste:1} } },
-      failure:{ text:'Wool. Rotten. All of it.', effects:{ gold:-8 } } },
+      failure:{ text:'Another merchant carries the lot; your coin never leaves your purse.', effects:{ } } },
     { label:'Watch others gamble.', desc:'Learn what a wreck is worth at no cost.', effects:{ skills:{ste:1} } }
   ]},
 { id:'sparring_challenge', title:'The Old Sergeant’s Wager',

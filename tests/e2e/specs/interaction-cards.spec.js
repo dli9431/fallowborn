@@ -491,6 +491,14 @@ test('materialized rulers share Standing, keep one gift path, and render without
         mergedRealmGift:character.actions.some(function (action) {
           return action.id === 'gift.ruler';
         }),
+        realmCultivationActions:realm.actions.filter(function (action) {
+          return action.route === 'cultivate-ruler' ||
+            action.route === 'attention-visit';
+        }).length,
+        characterCultivationActions:character.actions.filter(function (action) {
+          return action.route === 'cultivate-ruler' ||
+            action.route === 'attention-visit';
+        }).length,
         portraitStateSame:portraitStateSame,
         stateChangedKeys:stateChangedKeys,
         stateFirstDiff:stateFirstDiff,
@@ -507,6 +515,8 @@ test('materialized rulers share Standing, keep one gift path, and render without
     expect(result.separateRealmAction).toBe(false);
     expect(result.separateCharacterAction).toBe(false);
     expect(result.mergedRealmGift).toBe(true);
+    expect(result.realmCultivationActions).toBe(1);
+    expect(result.characterCultivationActions).toBe(1);
     expect(result.portraitStateSame).toBe(true);
     expect(result.stateChangedKeys).toEqual([]);
     expect(result.stateFirstDiff).toBeNull();
@@ -573,6 +583,9 @@ test('ruler character sheets foreground the titled ruler and linked court',
     await expect(sheet.locator('.realm-ruler-card')).toHaveCount(1);
     await expect(sheet.locator('.realm-heir-chip')).toHaveCount(1);
     await expect(sheet.locator('.interaction-context')).toHaveCount(0);
+    await expect(sheet.locator(
+      '[data-interaction-action="relationship.cultivate"], ' +
+      '[data-interaction-action^="travel.attention."]')).toHaveCount(1);
     await expect(sheet.locator('.realm-ruler-card .character-skills-guide'))
       .toHaveAttribute('aria-label', 'What do these skills affect?');
     expect(await sheet.locator('.realm-ruler-card .ccskills').evaluate(

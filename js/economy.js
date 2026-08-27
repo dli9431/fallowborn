@@ -1544,10 +1544,35 @@ window.FB = window.FB || {};
     return true;
   };
 
+  /* Landed households may shed trade tools, but their general living
+     standards cannot fall below the dignity of the current title. The three
+     authored commoner bands double as Baron, Count, and Duke+ floors. */
+  FB.householdStandardMinimumLevel = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    if (!def || !Array.isArray(def.levels) || def.kind === 'work' ||
+        state.player.tier < 3) return 0;
+    return Math.min(def.levels.length, Math.max(1, state.player.tier - 2));
+  };
+
+  FB.householdStandardReductionAvailable = function (state, id) {
+    const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
+    const level = FB.householdStandardLevel(state, id);
+    if (!def || !level) return FB.T('Already at baseline.');
+    const minimum = FB.householdStandardMinimumLevel(state, id);
+    if (level <= minimum) {
+      return FB.T('{rank} households may not reduce this standard below level {level}.', {
+        rank:FB.titleWordFor(state, state.player.tier),
+        level:minimum
+      });
+    }
+    return true;
+  };
+
   function reduceStandard(state, id, automatic) {
     const def = FBDATA.householdStandards && FBDATA.householdStandards[id];
     const level = FB.householdStandardLevel(state, id);
-    if (!def || !level) return false;
+    if (!def || !level ||
+        FB.householdStandardReductionAvailable(state, id) !== true) return false;
     const map = FB.ensureHouseholdStandards(state);
     if (level > 1) map[id] = level - 1;
     else delete map[id];
@@ -3599,7 +3624,7 @@ window.FB = window.FB || {};
     if (!auction) return false;
     discardAuction(state, auction);
     FB.news(state, FB.msg('news.auction.withdrawn',
-      '⚖ You leave the auction before the hammer falls.', {}));
+      '⚖ You leave the auction before the hammer falls; your purse stays closed.', {}));
     return true;
   };
 

@@ -4279,6 +4279,12 @@ window.FB = window.FB || {};
           hideTipImmediately();
           return;
         }
+        const actionTech = e.target.closest('#tooltip [data-action-tech]');
+        if (actionTech && actionTech.dataset.actionTech) {
+          hideTipImmediately();
+          UI.showTechDetail(actionTech.dataset.actionTech);
+          return;
+        }
         if (e.target.closest('[data-action-tooltip]')) {
           hideTipImmediately();
           return;

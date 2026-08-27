@@ -49,7 +49,11 @@ education, retainer-capacity, prestige, travel, and profession-output modifiers.
 `FB.householdStandardsUpkeepParts` and `FB.householdStandardsUpkeep` expose only active
 upkeep. Work outfits are dormant without an eligible resident worker (or a retainer
 staffing a matching enterprise), and every standard is dormant above tier 2. Purchased
-levels remain saved through either dormant state.
+levels remain saved through either dormant state. Better the Household remains available
+after the dynasty becomes landed so those saved standards and permanent property stay
+reviewable. General standards gain a title floor when reduced: level 1 for a Baron,
+level 2 for a Count, and level 3 for a Duke, King, or Emperor. Work outfits may still be
+reduced to baseline because vocational tools do not express title dignity.
 
 At a season boundary, ordinary household and livelihood income settles first.
 `FB.householdStandardsSeason` then pays maintained standards before retainers,
@@ -79,10 +83,12 @@ it gives up one level immediately. The minus button is disabled at baseline.
 After succession to a minor, Better the Household remains available whenever at least one
 inherited standard can be reduced. A child household head may give up those inherited
 levels to control upkeep, but cannot buy a higher standard or permanent holding until age
-16; the engine revalidates both spending paths. This recovery control has technology impact
-**none** (`minor_household_standard_reduction`): abandoning an expense needs no innovation.
+16; the engine revalidates both spending paths. Landed rulers use the same reduction
+control subject to the title floor above. This recovery control has technology impact
+**none** (`minor_household_standard_reduction`): abandoning an expense within the limits
+of household station needs no innovation.
 On touch, tablet-width, and short layouts, button hover tooltips are suppressed
-and one visible 44 px `?` control on the current-state card toggles both adjustment
+and one visible 48 px `?` control on the current-state card toggles both adjustment
 breakdowns inline; roomy pointer layouts hide that disclosure control. There are
 no separate standard-detail or confirmation sheets. Permanent property
 continues to use its distinct compact purchase and owned rows. This is presentation

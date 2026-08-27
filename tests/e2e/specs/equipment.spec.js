@@ -283,14 +283,16 @@ test('applies Equip Best immediately for one managed character',
       return {
         width:glyph.width,
         height:glyph.height,
+        slotHeight:slot.height,
         centerOffset:Math.abs((glyph.top + glyph.height / 2) -
           (slot.top + slot.height / 2)),
         background:style.backgroundColor,
         border:style.borderTopColor
       };
     });
-    expect(infoLayout.width).toBeGreaterThanOrEqual(44);
-    expect(infoLayout.height).toBeGreaterThanOrEqual(44);
+    expect(infoLayout.width).toBe(58);
+    expect(infoLayout.height).toBe(infoLayout.slotHeight);
+    expect(infoLayout.height).toBe(58);
     expect(infoLayout.centerOffset).toBeLessThan(1);
     expect(infoLayout.background).toBe('rgba(0, 0, 0, 0)');
     expect(infoLayout.border).toBe('rgba(0, 0, 0, 0)');

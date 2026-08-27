@@ -10,8 +10,16 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.161.0';
+  FB.VERSION = '1.161.1';
   FB.CHANGELOG = [
+    { v: '1.161.1', date: '2026-08-26', changes: [
+      'Losing a salvage auction or leaving a bounded auction before the hammer falls now keeps the household’s gold.',
+      'Ruler sheets now show one clear cultivation journey action.',
+      'Mobile modal detail buttons now align with the action controls beside them.',
+      'Locked guild-monopoly deeds now keep their Guild Charters prerequisite inside Deed details.',
+      'Better the Household remains available to rulers, with title-appropriate limits on reducing living standards.',
+      'Household education and descendant-match planners now show live effects in details and save directly.'
+    ] },
     { v: '1.161.0', date: '2026-08-26', changes: [
       'New Game now offers six one-click Serf starts across 867 and 1066, with portraits and distinct Christian, pagan, and Muslim homelands.'
     ] },

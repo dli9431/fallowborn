@@ -1,7 +1,9 @@
 'use strict';
 const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
+  'css/style.css',
   'js/model.js',
+  'js/ui_misc.js',
   'js/ui_modals.js'
 ]);
 
@@ -185,7 +187,7 @@ test('honors age, faith, close-kin, doctrine, compact, and resource gates',
     });
   });
 
-test('previews, saves, and reviews a recommendation from Household Plan',
+test('reviews recommendations in shared details and saves directly from Household Plan',
   async function ({ page }) {
     const family = await addEligibleDescendant(page);
     await page.evaluate(function () {
@@ -208,23 +210,31 @@ test('previews, saves, and reviews a recommendation from Household Plan',
     await page.locator('#match-policy-dowry').fill('10');
     await page.locator('#match-policy-gold').fill('10');
     await page.locator('#match-policy-prestige').fill('0');
-    await page.getByRole('button', {
-      name:'Preview recommendations',
-      exact:true
-    }).click();
+    await expect(page.locator('#match-policy-preview')).toHaveCount(0);
 
-    const card = page.locator('.match-policy-preview-card').filter({
+    const preview = page.locator('.household-policy-inline-preview');
+    await preview.hover();
+    const card = page.locator('#tooltip .match-policy-preview-card').filter({
       hasText:family.childName
     });
+    await expect(card).toBeVisible();
     await expect(card).toContainText(family.peerName);
     await expect(card).toContainText('Gentry');
     await expect(card).toContainText('8');
     await expect(card).toContainText('no pledge has been made');
 
-    await page.getByRole('button', {
-      name:'Save assistant limits',
-      exact:true
-    }).click();
+    await page.setViewportSize({ width:390, height:740 });
+    const info = preview.locator('.settcard-info');
+    await expect(info).toBeVisible();
+    await info.click();
+    const inlineCard = page.locator(
+      '#match-policy-preview-details .match-policy-preview-card').filter({
+      hasText:family.childName
+    });
+    await expect(inlineCard).toBeVisible();
+    await expect(inlineCard).toContainText(family.peerName);
+
+    await page.locator('#match-policy-save').click();
     const matchCell = page.locator(
       '[data-household-plan-action="match"]' +
       '[data-household-plan-cid="' + family.childId + '"]');

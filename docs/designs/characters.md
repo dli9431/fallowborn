@@ -225,7 +225,7 @@ fee, occupation, Standing, existing students, and which current instruction will
 
 **Household education policy fills empty choices, never revises them.** Household Plan
 stores an optional default focus plus an independent “best instruction” mode and
-non-negative seasonal fee cap. When enabled, it applies immediately after confirmation
+non-negative seasonal fee cap. When enabled, it applies immediately after saving
 and before every seasonal school settlement. That catches current empty slots and
 descendants who first become eligible at age six. Existing focuses and arrangements from
 older saves are treated as manual choices; later manual choices, including No directed
@@ -233,7 +233,7 @@ study and explicit home instruction, are overrides. A policy edit affects only f
 empty slots. The per-child Follow household policy actions clear and reconsider only the
 chosen dimension, preserving the other dimension, `lessonBoost`, and `schoolTerms`.
 Placing a student in the `educationCharacter` protection scope omits that person from policy
-previews and applications, including seasonal refill, while leaving every manual focus and
+details and applications, including seasonal refill, while leaving every manual focus and
 instruction control available. Choosing **Follow household policy** is an explicit opt-in:
 it removes that whole-person protection and reapplies only the selected dimension.
 

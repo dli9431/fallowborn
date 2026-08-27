@@ -2647,7 +2647,7 @@ window.FB = window.FB || {};
     run: function () { if (FB.ui && FB.ui.showForeignPolicy) FB.ui.showForeignPolicy(); } },
 
   { id: 'better_household', opensChoices:true, noConsume: true,
-    show: function (s) { return s.player.tier <= 2; },
+    show: function () { return true; },
     can: function (s) {
       if (!adult(s)) {
         FB.ensureHouseholdStandards(s);

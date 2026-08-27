@@ -480,7 +480,7 @@ test.describe('sibling and collateral-household agency', function () {
       await page.locator('#household-plan-close').click();
     });
 
-  test('Education Policy uses canonical equal-sized footer controls',
+  test('Education Policy uses shared details and a direct canonical save action',
     async function ({ page }) {
       await startDeterministicGame(page);
       await page.evaluate(function () {
@@ -488,19 +488,25 @@ test.describe('sibling and collateral-household agency', function () {
       });
 
       const back = page.locator('#education-policy-back');
-      const preview = page.locator('#education-policy-preview');
+      const save = page.locator('#education-policy-save');
       await expect(back).toHaveText('Back');
-      await expect(preview).toHaveText('Preview policy');
+      await expect(save).toHaveText('Save and apply policy');
+      await expect(page.locator('#education-policy-preview')).toHaveCount(0);
+      const details = page.locator('.household-policy-inline-preview');
+      await details.hover();
+      await expect(page.locator('#tooltip')).toBeVisible();
+      await expect(page.locator('#tooltip')).toContainText(
+        'The fee cap applies separately to each child');
       const desktop = await page.evaluate(function () {
         const backRect = document.querySelector(
           '#education-policy-back').getBoundingClientRect();
-        const previewRect = document.querySelector(
-          '#education-policy-preview').getBoundingClientRect();
+        const saveRect = document.querySelector(
+          '#education-policy-save').getBoundingClientRect();
         return {
-          sameRow:Math.abs(backRect.top - previewRect.top) < 2,
-          backLeft:backRect.left < previewRect.left,
-          equalWidth:Math.abs(backRect.width - previewRect.width) < 2,
-          equalHeight:Math.abs(backRect.height - previewRect.height) < 2
+          sameRow:Math.abs(backRect.top - saveRect.top) < 2,
+          backLeft:backRect.left < saveRect.left,
+          equalWidth:Math.abs(backRect.width - saveRect.width) < 2,
+          equalHeight:Math.abs(backRect.height - saveRect.height) < 2
         };
       });
       expect(desktop).toEqual({
@@ -511,15 +517,20 @@ test.describe('sibling and collateral-household agency', function () {
       });
 
       await page.setViewportSize({ width:390, height:740 });
+      const info = details.locator('.settcard-info');
+      await expect(info).toBeVisible();
+      await info.click();
+      await expect(page.locator('#education-policy-preview-details'))
+        .toBeVisible();
       const mobile = await page.evaluate(function () {
         const backRect = document.querySelector(
           '#education-policy-back').getBoundingClientRect();
-        const previewRect = document.querySelector(
-          '#education-policy-preview').getBoundingClientRect();
+        const saveRect = document.querySelector(
+          '#education-policy-save').getBoundingClientRect();
         return {
-          backAbove:backRect.top < previewRect.top,
-          equalWidth:Math.abs(backRect.width - previewRect.width) < 2,
-          equalHeight:Math.abs(backRect.height - previewRect.height) < 2
+          backAbove:backRect.top < saveRect.top,
+          equalWidth:Math.abs(backRect.width - saveRect.width) < 2,
+          equalHeight:Math.abs(backRect.height - saveRect.height) < 2
         };
       });
       expect(mobile).toEqual({
@@ -527,6 +538,15 @@ test.describe('sibling and collateral-household agency', function () {
         equalWidth:true,
         equalHeight:true
       });
+      await page.locator('#education-policy-focus').selectOption('ste');
+      await save.click();
+      await expect(page.getByRole('heading', { name:/Household Plan/ }))
+        .toBeVisible();
+      await expect.poll(async function () {
+        return page.evaluate(function () {
+          return FB.state.player.educationPolicy.focus;
+        });
+      }).toBe('ste');
     });
 
   test('a manageable sibling remains an eligible heir',

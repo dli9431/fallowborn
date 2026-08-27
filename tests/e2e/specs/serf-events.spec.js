@@ -2455,6 +2455,15 @@ test('named event participants render once and their character sheet returns to 
     const participantInfo = page.locator(
       '[data-event-participant="officer"] .settcard-info');
     await expect(participantInfo).toBeVisible();
+    expect(await page.locator(
+      '[data-event-participant="officer"]').evaluate(function (card) {
+      return [
+        Math.round(card.querySelector('.event-participant-main')
+          .getBoundingClientRect().height),
+        Math.round(card.querySelector('.settcard-info')
+          .getBoundingClientRect().height)
+      ];
+    })).toEqual([50, 50]);
     await participantInfo.click();
     await expect(participantDetails).not.toHaveClass(/hidden/);
     await participantInfo.click();

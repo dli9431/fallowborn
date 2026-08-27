@@ -69,7 +69,13 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
         state.turn += FBDATA.balance.auctionCooldownDays;
         const cancelled = FB.beginAuction(state, FB.auctionVenues(state)[0]);
         const cancelledRef = cancelled.lot.ref;
+        cancelled.rivalMaximum = 999999;
+        const goldBeforeCancel = state.player.gold;
+        const cancelledBid = FB.placeAuctionBid(state, 1);
         const cancelledOk = FB.cancelAuction(state);
+        const cancelGoldUnchanged = state.player.gold === goldBeforeCancel;
+        const cancelMessage = FB.newsText(state.log[state.log.length - 1],
+          state, state.player.charId);
         const invitationBlockedAfterCancel =
           !FB.fns.auction_invitation_available(state);
 
@@ -118,7 +124,10 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
           owner:owner && owner.kind,
           immediateRetryBlocked:immediateRetryBlocked,
           cooldownAfterWin:cooldownAfterWin,
+          cancelledBid:cancelledBid && cancelledBid.status,
           cancelledOk:cancelledOk,
+          cancelGoldUnchanged:cancelGoldUnchanged,
+          cancelMessage:cancelMessage,
           invitationBlockedAfterCancel:invitationBlockedAfterCancel,
           cancelledRemoved:!state.itemInstances[cancelledRef],
           lossStatuses:[first && first.status, second && second.status,
@@ -155,7 +164,10 @@ test('bounded item auctions fix their rival, survive restore, and clean temporar
     expect(result.owner).toBe('armory');
     expect(result.immediateRetryBlocked).toBe(true);
     expect(result.cooldownAfterWin).toBeGreaterThan(0);
+    expect(result.cancelledBid).toBe('countered');
     expect(result.cancelledOk).toBe(true);
+    expect(result.cancelGoldUnchanged).toBe(true);
+    expect(result.cancelMessage).toContain('purse stays closed');
     expect(result.invitationBlockedAfterCancel).toBe(true);
     expect(result.cancelledRemoved).toBe(true);
     expect(result.lossStatuses).toEqual(['countered', 'countered', 'lost']);
