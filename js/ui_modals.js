@@ -11446,7 +11446,7 @@ window.FB = window.FB || {};
       const restoreTarget = restoreContext.seatId &&
         $('gm-body').querySelector(
           '.council-ruler-heraldry-button[data-council-seat="' +
-          String(restoreContext.seatId).replace(/"/g, '\\"') + '"]');
+          String(restoreContext.seatId).split('"').join('\\"') + '"]');
       if (isFinite(Number(restoreContext.scrollTop))) {
         $('gm-body').scrollTop = Math.max(0,
           Number(restoreContext.scrollTop));

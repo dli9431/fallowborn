@@ -142,8 +142,16 @@ def lex_js(text: str) -> list[Token]:
                 if c == quote:
                     i += 1
                     break
+                if c == "\n":
+                    raise ValueError(
+                        f"unterminated JavaScript string starting on line {start_line}"
+                    )
                 if c == "\\" and i + 1 < n:
                     nxt = text[i + 1]
+                    if nxt == "\n":
+                        line += 1
+                        i += 2
+                        continue
                     escapes = {
                         "n": "\n",
                         "r": "\r",

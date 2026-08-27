@@ -4,6 +4,7 @@ dependsOnRuntime(__filename, [
   'css/style.css',
   'data/actions.js',
   'js/actions.js',
+  'js/events.js',
   'js/main.js',
   'js/mapview.js',
   'js/market.js',
@@ -29,8 +30,13 @@ test('a new founder tree includes generated kin with bound-status flavor',
     const family = await page.evaluate(function () {
       const s = FB.state;
       const me = s.chars[s.player.charId];
+      FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
       const parents = FB.parentsOf(s, me).map(function (c) { return c.id; });
       const siblings = FB.siblingsOf(s, me).map(function (c) { return c.id; });
+      parents.concat(siblings).forEach(function (id) {
+        s.chars[id].station = 0;
+        s.chars[id].unfree = true;
+      });
       const outsider = FB.makeCharacter(s, {
         name:'Free Lowborn', sex:'m', born:s.date.year - 30,
         culture:me.culture, religion:me.religion, station:0, traitsN:0
@@ -483,8 +489,7 @@ test('family tree tooltips show current family status and preserve the highest r
       FB.setPlayerTier(s, 2, { attachLiege:false, stationFarewell:false });
       const currentStatus = FB.renderTitleSnapshot(
         FB.characterRankTitleSnapshot(s, me, 2, ''));
-      const childStatus = FB.renderTitleSnapshot(
-        FB.characterRankTitleSnapshot(s, child, 2, ''));
+      const childStatus = FB.characterStationName(s, child);
       FB.ui.showFamilyTree();
       return {
         meId:me.id,

@@ -20,6 +20,16 @@ class StaticHtmlExtractionTests(unittest.TestCase):
         self.assertEqual(stripped.count('\n'), source.count('\n'))
 
 
+class JavascriptLexerTests(unittest.TestCase):
+    def test_unterminated_string_cannot_consume_following_source(self):
+        source = "const broken = 'unterminated\nFB.T('Visible text');"
+
+        with self.assertRaisesRegex(
+            ValueError, 'unterminated JavaScript string starting on line 1'
+        ):
+            i18n_catalog.lex_js(source)
+
+
 class StructuredDataExtractionTests(unittest.TestCase):
     def test_culture_tradition_names_use_their_own_namespace(self):
         inventory = i18n_catalog.Inventory()

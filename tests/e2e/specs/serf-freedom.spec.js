@@ -38,6 +38,15 @@ test.beforeEach(async function ({ page }, testInfo) {
     if (s.player.tier !== 0) {
       FB.setPlayerTier(s, 0, { tenureFormationReason:'rank_change' });
     }
+    /* The shared deterministic fixture is authored as a Freeholder. A rank
+       demotion is personal, so establish the pre-existing collateral family
+       as bound explicitly for these serf-family scenarios. */
+    const boundKin = (FB.parentsOf ? FB.parentsOf(s, me) : []).concat(
+      FB.siblingsOf ? FB.siblingsOf(s, me) : []);
+    boundKin.forEach(function (c) {
+      c.station = 0;
+      c.unfree = true;
+    });
     FB.ensureSerfTenure(s, 'new_game');
     FB.getRole(s, 'lord', true);
     s.eventQueue = [];
@@ -319,7 +328,7 @@ test('freedom prices the living family and freezes that family in negotiated ter
     });
     expect(result.viewPricing).toEqual(result.initial);
     expect(result.malformedValid).toBe(false);
-    expect(result.blocked).toContain('Not enough money');
+    expect(result.blocked).toBe('Requires 250 gold; you have 249 gold.');
     expect(result.resolved).toBe(true);
     expect(result.charged).toBe(250);
     expect(result.recordedPrice).toBe(250);
@@ -554,6 +563,15 @@ test('paid final service survives succession and completes on its exact turn wit
       const p = s.player;
       const oldId = p.charId;
       const old = s.chars[oldId];
+      const heir = FB.makeCharacter(s, {
+        name:'Service Heir', sex:old.sex,
+        culture:old.culture, religion:old.religion,
+        born:s.date.year - 20, station:0, unfree:true, traitsN:0,
+        fatherId:old.sex === 'm' ? old.id : null,
+        motherId:old.sex === 'f' ? old.id : null,
+        dyn:old.dyn
+      });
+      old.childrenIds.push(heir.id);
       const lord = FB.getRole(s, 'lord', true);
       const target = { kind:'character', id:lord.id };
       FB.adjustStanding(s, target, 60 - FB.standingOf(s, target),
@@ -566,15 +584,6 @@ test('paid final service survives succession and completes on its exact turn wit
       const acceptanceRngStable = rngBeforeAcceptance ===
         JSON.stringify(FB.getRngState());
       const afterPayment = p.gold;
-      const heir = FB.makeCharacter(s, {
-        name:'Service Heir', sex:old.sex,
-        culture:old.culture, religion:old.religion,
-        born:s.date.year - 20, station:0, traitsN:0,
-        fatherId:old.sex === 'm' ? old.id : null,
-        motherId:old.sex === 'f' ? old.id : null,
-        dyn:old.dyn
-      });
-      old.childrenIds.push(heir.id);
       FB.game.succeedTo(heir.id, { livingAbdication:true });
       const inherited = {
         status:p.freedomOffer.status,
@@ -589,6 +598,12 @@ test('paid final service survives succession and completes on its exact turn wit
       FB.freedomDay(s);
       return {
         serviceStarted:!!service,
+        quotedPrice:offer.price,
+        quoteFamily:{
+          baseCost:offer.baseCost,
+          descendantCount:offer.descendantCount,
+          familySize:offer.familySize
+        },
         paid:goldBefore - afterPayment,
         acceptanceRngStable:acceptanceRngStable,
         originalProtagonistId:oldId,
@@ -602,7 +617,13 @@ test('paid final service survives succession and completes on its exact turn wit
     });
 
     expect(result.serviceStarted).toBe(true);
-    expect(result.paid).toBe(50);
+    expect(result.quoteFamily).toEqual({
+      baseCost:125,
+      descendantCount:1,
+      familySize:2
+    });
+    expect(result.quotedPrice).toBe(63);
+    expect(result.paid).toBe(result.quotedPrice);
     expect(result.acceptanceRngStable).toBe(true);
     expect(result.inherited.status).toBe('service');
     expect(result.inherited.protagonistId)
@@ -933,6 +954,9 @@ test('saved offers round-trip and the rank, petition, and Kin surfaces expose st
       .toContainText('spouse shares 1 × 50');
     await expect(page.locator('#freedom-offer-accept')).toBeFocused();
     await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name:'Station & home' }))
+      .toBeVisible();
+    await page.keyboard.press('Escape');
     await expect(page.locator('#genmodal')).toHaveClass(/hidden/);
 
     await page.evaluate(function () {
@@ -1001,6 +1025,7 @@ test('local advocacy snapshots an exact +10 term and acceptance falls back to th
         40 - FB.standingOf(restored, {
           kind:'character', id:restoredLord.id
         }), 'test:lord_supports');
+      restored.player.gold = restoredOffer.price;
       const independent = FB.freedomOfferAcceptanceStatus(restored);
       const malformed = JSON.parse(JSON.stringify(restoredOffer));
       malformed.effectiveStandingAtCreation += 1;

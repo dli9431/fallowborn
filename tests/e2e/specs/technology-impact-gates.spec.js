@@ -226,10 +226,14 @@ test('the prospective review ledger and every gate schema validate together',
       'raiding_navigation',
       'raiding_party_scale',
       'rare_auction_invitations',
+      'recurring_local_event_participants',
+      'regional_serf_tenure',
       'royal_religious_tolerance_policy',
       'royal_settlement_policy',
       'ruler_household_establishments',
+      'serf_freedom_advocacy',
       'serf_freedom_petition',
+      'serf_tenure_authority_review',
       'settlement_dynamic_rents',
       'soldier_command_assignments',
       'stone_castle_upgrade',
@@ -248,10 +252,15 @@ test('the prospective review ledger and every gate schema validate together',
       'minor_household_standard_reduction',
       'negative_household_gold',
       'persistent_serf_tenure',
-      'serf_freedom_petition'
+      'recurring_local_event_participants',
+      'regional_serf_tenure',
+      'serf_freedom_advocacy',
+      'serf_freedom_petition',
+      'serf_tenure_authority_review'
     ];
     expect(additiveNoneIds.map(function (id) { return result.modes[id]; }))
-      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none']);
+      .toEqual(['none', 'none', 'none', 'none', 'none', 'none', 'none', 'none',
+        'none', 'none', 'none', 'none']);
     const additiveHardIds = [
       'enterprise_upgrades',
       'ruler_household_establishments'

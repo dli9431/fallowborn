@@ -3,9 +3,11 @@ const { dependsOnRuntime } = require('../support/runtime-dependencies');
 dependsOnRuntime(__filename, [
   'index.html',
   'js/main.js',
+  'js/model.js',
   'js/portrait.js',
   'js/save.js',
   'js/settlement.js',
+  'js/ui_panels.js',
   'css/style.css',
   'data/bookmarks.js',
   'data/cultures.js',
@@ -85,29 +87,47 @@ test('New Game offers six quick starts above the dated custom-start path',
 test('a quick start creates its authored Serf life in one selection',
   async function ({ page }) {
     await page.getByRole('button', { name:'New Game', exact:true }).click();
-    await page.locator('[data-quick-start="biera_1066"]').click();
+    await page.locator('[data-quick-start="aed_867"]').click();
     await expect(page.getByRole('heading', {
       name:'Your Story Begins', exact:true
     })).toBeVisible({ timeout:30 * 1000 });
     const result = await page.evaluate(function () {
-      const me = FB.state.chars[FB.state.player.charId];
+      const s = FB.state;
+      const me = s.chars[s.player.charId];
+      const family = FB.parentsOf(s, me).concat(FB.siblingsOf(s, me));
       return {
-        bookmark:FB.state.start.id,
-        tier:FB.state.player.tier,
-        province:FB.state.player.provinceId,
-        homeSettlement:FB.state.player.homeSettlement,
+        bookmark:s.start.id,
+        tier:s.player.tier,
+        province:s.player.provinceId,
+        homeSettlement:s.player.homeSettlement,
         name:me.name,
         culture:me.culture,
         religion:me.religion,
-        seed:FB.state.seed
+        seed:s.seed,
+        familyIds:family.map(function (c) { return c.id; }),
+        familyStatuses:family.map(function (c) {
+          return FB.characterStationName(s, c);
+        })
       };
     });
-    expect(result).toEqual({
-      bookmark:'1066', tier:0, province:'norrland', homeSettlement:0,
-      name:'Biera', culture:'sami', religion:'norse_pagan',
+    expect(result).toMatchObject({
+      bookmark:'867', tier:0, province:'galway', homeSettlement:0,
+      name:'Aed', culture:'gaelic', religion:'catholic',
       seed:expect.stringMatching(
-        /^[A-Z0-9]+-1066-serf-norrland-m-Biera-standard-0-sami\.norse_pagan$/)
+        /^[A-Z0-9]+-867-serf-galway-m-Aed-standard-0-gaelic\.catholic$/)
     });
+    expect(result.familyIds.length).toBeGreaterThan(2);
+    expect(result.familyStatuses.every(function (status) {
+      return status === 'Serf';
+    })).toBe(true);
+
+    await page.evaluate(function () { FB.ui.showFamilyTree(); });
+    await expect(page.getByRole('heading', { name:'The Family Tree' }))
+      .toBeVisible();
+    for (const id of result.familyIds) {
+      await expect(page.locator('.family-tree-primary .ftchip[data-cid="' +
+        id + '"]')).toHaveCount(1);
+    }
   });
 
 /* Title → New Game (fresh seed) → first bookmark → Free Farmer → pick screen */

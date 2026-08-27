@@ -229,7 +229,8 @@ window.FB = window.FB || {};
   };
 
   FB.esc = function (s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').split('"').join('&quot;');
   };
 
   /* color helpers for map tinting */

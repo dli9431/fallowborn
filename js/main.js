@@ -10,8 +10,11 @@ window.FB = window.FB || {};
   G.bootReady = false;
 
   /* version & changelog — numbering and entry rules: docs/VERSIONS.md */
-  FB.VERSION = '1.164.1';
+  FB.VERSION = '1.164.2';
   FB.CHANGELOG = [
+    { v: '1.164.2', date: '2026-08-27', changes: [
+      'Preview translations no longer mistake internal interface code for player-facing text.'
+    ] },
     { v: '1.164.1', date: '2026-08-27', changes: [
       'Bound relatives now use their faith- and sex-appropriate rank in family trees and character details, such as Serf, Thrall, Fellah, or Fellaha.'
     ] },

@@ -1057,15 +1057,16 @@ window.FB = window.FB || {};
 
   /* House names allow letters of any script, spaces, hyphens, and
      apostrophes. The blacklist rejects digits, ASCII punctuation and
-     symbols, control characters, and non-BMP code units (emoji) without a
-     regex u-flag, so old mobile browsers parse it. */
-  const HOUSE_NAME_FORBIDDEN =
-    /[\x00-\x1F\x7F0-9!"#$%&()*+,./:;<=>?@\[\\\]^_`{|}~]/;
+     symbols, control characters, and non-BMP code units (emoji) without
+     Unicode property escapes, so old mobile browsers parse it. */
+  const HOUSE_NAME_FORBIDDEN = '!"#$%&()*+,./:;<=>?@[\\]^_`{|}~';
 
   function houseNameCharsOk(nm) {
-    if (HOUSE_NAME_FORBIDDEN.test(nm)) return false;
     for (let i = 0; i < nm.length; i++) {
       const code = nm.charCodeAt(i);
+      if (code <= 0x1F || code === 0x7F ||
+          (code >= 48 && code <= 57) ||
+          HOUSE_NAME_FORBIDDEN.indexOf(nm.charAt(i)) >= 0) return false;
       /* a surrogate half means an astral character (emoji and friends) */
       if (code >= 0xD800 && code <= 0xDFFF) return false;
     }
